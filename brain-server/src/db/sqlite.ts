@@ -156,6 +156,23 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 6,
+    name: 'add_notifications_table',
+    up: `
+      CREATE TABLE IF NOT EXISTS notifications (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        type TEXT NOT NULL,
+        related_entities TEXT,
+        read_status BOOLEAN NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read_status);
+      CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
+    `,
+  },
 ];
 
 interface Migration {
@@ -299,7 +316,15 @@ export class Database {
   }
 
   async getEntity(id: string): Promise<Entity | null> {
+    const row = await this.get<any>('SELECT * FROM entities WHERE id = ?', [id]);
+    if (!row) return null;
+    // 命中后再 +1 访问计数，未命中不浪费一次写入
     await this._updateEntityAccess(id);
+    return this.rowToEntity(row);
+  }
+
+  // 用于不需要计入访问统计的内部读取（如图谱上下文聚合、Agent 巡视）
+  async peekEntity(id: string): Promise<Entity | null> {
     const row = await this.get<any>('SELECT * FROM entities WHERE id = ?', [id]);
     if (!row) return null;
     return this.rowToEntity(row);
@@ -307,6 +332,14 @@ export class Database {
 
   async getEntitiesByType(type: string): Promise<Entity[]> {
     const rows = await this.all<any>('SELECT * FROM entities WHERE type = ? ORDER BY updated_at DESC', [type]);
+    return rows.map(row => this.rowToEntity(row));
+  }
+
+  async getRecentEntities(limit: number = 100): Promise<Entity[]> {
+    const rows = await this.all<any>(
+      'SELECT * FROM entities ORDER BY updated_at DESC LIMIT ?',
+      [Math.max(1, Math.min(limit, 500))]
+    );
     return rows.map(row => this.rowToEntity(row));
   }
 
@@ -414,6 +447,8 @@ export class Database {
     try {
       await this.run('DELETE FROM fts_entities WHERE entity_id = ?', [id]);
     } catch (e) { /* FTS 删除失败不阻塞 */ }
+    // 防御性清理：即便 PRAGMA foreign_keys 未生效，也保证关系不孤儿
+    await this.run('DELETE FROM relationships WHERE source_id = ? OR target_id = ?', [id, id]);
     await this.run('DELETE FROM entities WHERE id = ?', [id]);
   }
 
@@ -459,6 +494,23 @@ export class Database {
     }));
   }
 
+  async getRelationships(limit: number = 200): Promise<Relationship[]> {
+    const rows = await this.all<any>(
+      'SELECT * FROM relationships ORDER BY weight DESC, last_activated DESC LIMIT ?',
+      [Math.max(1, Math.min(limit, 1000))]
+    );
+    return rows.map(row => ({
+      id: row.id,
+      source_id: row.source_id,
+      target_id: row.target_id,
+      type: row.type,
+      description: row.description,
+      weight: row.weight,
+      created_at: row.created_at,
+      last_activated: row.last_activated,
+    }));
+  }
+
   async getGraphNeighborhood(entityId: string, depth: number = 1): Promise<GraphNeighborhood> {
     depth = Math.min(depth, 3);
     const nodes = new Map<string, Entity>();
@@ -466,7 +518,7 @@ export class Database {
     const visited = new Set([entityId]);
     const queue: Array<{ id: string; d: number }> = [{ id: entityId, d: 0 }];
 
-    const startEntity = await this.getEntity(entityId);
+    const startEntity = await this.peekEntity(entityId);
     if (!startEntity) return { nodes: [], edges: [] };
     nodes.set(entityId, startEntity);
 
@@ -478,7 +530,7 @@ export class Database {
         const neighborId = rel.source_id === id ? rel.target_id : rel.source_id;
         if (!visited.has(neighborId)) {
           visited.add(neighborId);
-          const neighborEntity = await this.getEntity(neighborId);
+          const neighborEntity = await this.peekEntity(neighborId);
           if (neighborEntity) {
             nodes.set(neighborId, neighborEntity);
             if (d < depth) {
@@ -599,6 +651,49 @@ export class Database {
     }
   }
 
+  // ===================== Notifications (Agent Insights) =====================
+
+  async addNotification(notification: Omit<import('../shared-types.js').Notification, 'id' | 'created_at' | 'read_status'> & { id?: string }): Promise<import('../shared-types.js').Notification> {
+    const id = notification.id || uuidv4();
+    const now = new Date().toISOString();
+    const relatedStr = notification.related_entities ? JSON.stringify(notification.related_entities) : null;
+
+    await this.run(
+      `INSERT INTO notifications (id, title, content, type, related_entities, read_status, created_at)
+       VALUES (?, ?, ?, ?, ?, 0, ?)`,
+      [id, notification.title, notification.content, notification.type, relatedStr, now]
+    );
+
+    return {
+      id,
+      title: notification.title,
+      content: notification.content,
+      type: notification.type,
+      related_entities: notification.related_entities,
+      read_status: false,
+      created_at: now,
+    };
+  }
+
+  async getUnreadNotifications(): Promise<import('../shared-types.js').Notification[]> {
+    const rows = await this.all<any>(
+      'SELECT * FROM notifications WHERE read_status = 0 ORDER BY created_at DESC'
+    );
+    return rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      content: row.content,
+      type: row.type,
+      related_entities: row.related_entities ? JSON.parse(row.related_entities) : undefined,
+      read_status: Boolean(row.read_status),
+      created_at: row.created_at,
+    }));
+  }
+
+  async markNotificationRead(id: string): Promise<void> {
+    await this.run('UPDATE notifications SET read_status = 1 WHERE id = ?', [id]);
+  }
+
   /**
    * 将实体同步到 FTS5 全文检索虚拟表
    */
@@ -699,6 +794,10 @@ export function initDatabase(config: string | DatabaseConfig = './data/omni-cont
   }
 
   const db = new sqlite3.Database(dbPath);
+
+  // 始终开启外键约束 — 关系表的 ON DELETE CASCADE 才会真正生效，
+  // 避免删除实体后留下大量孤儿 relationship 行。
+  db.run('PRAGMA foreign_keys = ON');
 
   if (typeof config === 'object') {
     if (config.enableWAL) {

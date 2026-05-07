@@ -15,8 +15,8 @@ import { GraphViewer } from '@/components/GraphViewer';
 import { useKnowledgeGraph } from '@/hooks/useKnowledgeGraph';
 import { useHUD } from '@/components/HUD';
 import { KnowledgeNode } from '@/types';
-import { colors, spacing, typography } from '@/utils/theme';
 import { syncService } from '@/services/syncService';
+import { colors } from '@/utils/theme';
 
 export function KnowledgeGraphScreen() {
   const { t } = useTranslation();
@@ -71,18 +71,21 @@ export function KnowledgeGraphScreen() {
   }, [newNodeLabel, newNodeType, addNode, showMessage]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('knowledgeGraph.title')}</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowNodeModal(true)}>
-          <Text style={styles.addButtonText}>+</Text>
+    <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
+      <View className="flex-row items-center justify-between px-5 py-4 border-b border-white/10">
+        <Text className="text-[#e8e8e8] text-2xl font-bold">{t('knowledgeGraph.title')}</Text>
+        <TouchableOpacity 
+          className="w-9 h-9 rounded-full bg-cyan-400 items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+          onPress={() => setShowNodeModal(true)}
+        >
+          <Text className="text-[#0a0b12] text-2xl font-bold leading-6 mt-[-2px]">+</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>{t('common.loading')}</Text>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#22d3ee" />
+          <Text className="text-gray-400 mt-4">{t('common.loading')}</Text>
         </View>
       ) : (
         <GraphViewer
@@ -93,19 +96,19 @@ export function KnowledgeGraphScreen() {
       )}
 
       {selectedNode && (
-        <View style={styles.nodeDetails}>
-          <View style={styles.nodeDetailsHeader}>
-            <View style={[styles.nodeTypeIndicator, { backgroundColor: selectedNode.color }]} />
-            <Text style={styles.nodeLabel}>{selectedNode.label}</Text>
+        <View className="absolute bottom-[100px] left-4 right-4 bg-black/40 rounded-2xl p-4 border border-white/10 backdrop-blur-xl">
+          <View className="flex-row items-center mb-2">
+            <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: selectedNode.color || '#22d3ee' }} />
+            <Text className="flex-1 text-[#e8e8e8] text-lg font-bold">{selectedNode.label}</Text>
             <TouchableOpacity onPress={() => setSelectedNode(null)}>
-              <Text style={styles.closeButton}>×</Text>
+              <Text className="text-gray-400 text-2xl leading-6 ml-2">×</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.nodeDetailsContent}>
-            <Text style={styles.nodeDetailText}>
+          <View className="border-t border-white/10 pt-2">
+            <Text className="text-gray-400 text-sm mb-1">
               {t('knowledgeGraph.type')}: {t(`knowledgeGraph.${selectedNode.type}`)}
             </Text>
-            <Text style={styles.nodeDetailText}>
+            <Text className="text-gray-400 text-sm mb-1">
               {t('knowledgeGraph.connections')}: {selectedNode.connections.length}
             </Text>
           </View>
@@ -118,45 +121,45 @@ export function KnowledgeGraphScreen() {
         transparent
         onRequestClose={() => setShowNodeModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t('knowledgeGraph.addNode')}</Text>
+        <View className="flex-1 bg-black/70 justify-end">
+          <View className="bg-[#0a0b12] border-t border-white/10 rounded-t-3xl p-5">
+            <Text className="text-[#e8e8e8] text-xl font-bold mb-5 text-center">{t('knowledgeGraph.addNode')}</Text>
             
             <TextInput
-              style={styles.input}
+              className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base mb-4"
               value={newNodeLabel}
               onChangeText={setNewNodeLabel}
               placeholder="节点名称"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor="#64748b"
             />
 
-            <Text style={styles.label}>{t('knowledgeGraph.type')}</Text>
-            <View style={styles.typeContainer}>
+            <Text className="text-gray-400 text-sm mb-2">{t('knowledgeGraph.type')}</Text>
+            <View className="flex-row gap-2 mb-6">
               {(['concept', 'entity', 'topic'] as const).map(type => (
                 <TouchableOpacity
                   key={type}
-                  style={[
-                    styles.typeButton,
-                    newNodeType === type && { backgroundColor: colors.nodeTypes[type] },
-                  ]}
+                  className={`flex-1 py-2 rounded-lg items-center border ${newNodeType === type ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
                   onPress={() => setNewNodeType(type)}
                 >
-                  <Text style={[styles.typeText, newNodeType === type && styles.typeTextActive]}>
+                  <Text className={`text-sm ${newNodeType === type ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}>
                     {t(`knowledgeGraph.${type}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <View style={styles.modalButtons}>
+            <View className="flex-row gap-4">
               <TouchableOpacity
-                style={styles.cancelButton}
+                className="flex-1 py-3 rounded-xl bg-black/40 border border-white/10 items-center"
                 onPress={() => setShowNodeModal(false)}
               >
-                <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
+                <Text className="text-gray-400 text-base">{t('common.cancel')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleAddNode}>
-                <Text style={styles.confirmButtonText}>{t('common.confirm')}</Text>
+              <TouchableOpacity 
+                className="flex-1 py-3 rounded-xl bg-cyan-400 items-center" 
+                onPress={handleAddNode}
+              >
+                <Text className="text-[#0a0b12] text-base font-bold">{t('common.confirm')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -165,170 +168,3 @@ export function KnowledgeGraphScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    color: colors.text,
-    fontSize: typography.fontSizes.xxl,
-    fontWeight: typography.fontWeights.bold,
-  },
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-  },
-  addButtonText: {
-    color: colors.background,
-    fontSize: 24,
-    fontWeight: typography.fontWeights.bold,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    marginTop: spacing.md,
-  },
-  nodeDetails: {
-    position: 'absolute',
-    bottom: 100,
-    left: spacing.md,
-    right: spacing.md,
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 16,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  nodeDetailsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  nodeTypeIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: spacing.sm,
-  },
-  nodeLabel: {
-    flex: 1,
-    color: colors.text,
-    fontSize: typography.fontSizes.lg,
-    fontWeight: typography.fontWeights.bold,
-  },
-  closeButton: {
-    color: colors.textMuted,
-    fontSize: 24,
-  },
-  nodeDetailsContent: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
-  },
-  nodeDetailText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-    marginBottom: spacing.xs,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.backgroundSecondary,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: spacing.lg,
-  },
-  modalTitle: {
-    color: colors.text,
-    fontSize: typography.fontSizes.xl,
-    fontWeight: typography.fontWeights.bold,
-    marginBottom: spacing.lg,
-    textAlign: 'center',
-  },
-  input: {
-    backgroundColor: colors.backgroundTertiary,
-    borderRadius: 12,
-    padding: spacing.md,
-    color: colors.text,
-    fontSize: typography.fontSizes.md,
-    marginBottom: spacing.md,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-    marginBottom: spacing.sm,
-  },
-  typeContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: 8,
-    backgroundColor: colors.backgroundTertiary,
-    alignItems: 'center',
-  },
-  typeText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-  },
-  typeTextActive: {
-    color: colors.background,
-    fontWeight: typography.fontWeights.bold,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: 12,
-    backgroundColor: colors.backgroundTertiary,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.md,
-  },
-  confirmButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    color: colors.background,
-    fontSize: typography.fontSizes.md,
-    fontWeight: typography.fontWeights.bold,
-  },
-});

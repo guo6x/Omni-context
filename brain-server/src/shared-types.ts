@@ -65,3 +65,15 @@ export interface GraphRAGOutput {
   relationships: Relationship[];
   principles: Entity[];
 }
+
+export type NotificationType = 'insight' | 'reminder' | 'system';
+
+export interface Notification {
+  id: string;
+  title: string;
+  content: string;
+  type: NotificationType;
+  related_entities?: string[];
+  read_status: boolean;
+  created_at: string;
+}

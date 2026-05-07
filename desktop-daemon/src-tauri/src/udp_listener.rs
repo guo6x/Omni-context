@@ -4,8 +4,12 @@ use tokio::net::UdpSocket;
 use tokio::sync::mpsc::Sender;
 
 pub async fn start_udp_listener(event_tx: Sender<ButtonEvent>) -> Result<()> {
-    let socket = UdpSocket::bind("0.0.0.0:9090").await?;
-    println!("UDP 监听器已启动，监听端口 9090");
+    // 默认仅监听本机回环，避免 LAN 上任意进程都能触发截图/剪贴板读取。
+    // 如需接入物理硬件按钮等远端触发器，显式 export OMNI_UDP_BIND=0.0.0.0:9090。
+    let bind_addr =
+        std::env::var("OMNI_UDP_BIND").unwrap_or_else(|_| "127.0.0.1:9090".to_string());
+    let socket = UdpSocket::bind(&bind_addr).await?;
+    println!("UDP 监听器已启动 ({})", bind_addr);
     
     let mut buf = [0; 1024];
     

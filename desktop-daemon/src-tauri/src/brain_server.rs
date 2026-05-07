@@ -1,6 +1,6 @@
 use std::process::{Command, Child, Stdio};
 use std::sync::Mutex;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// [核心壁垒] Brain Server 进程管理器
 /// 使用 Mutex 替代 unsafe static mut，确保多线程安全
@@ -41,14 +41,7 @@ pub fn start() -> Result<(), String> {
     println!("[Brain Server] 正在启动...");
 
     // 尝试在不同位置查找 Brain Server
-    let possible_paths = vec![
-        // 从工作目录
-        "./brain-server/dist/mcp-server.js",
-        "./brain-server/src/mcp-server.ts",
-        // 从桌面应用目录
-        "../brain-server/dist/mcp-server.js",
-        "../brain-server/src/mcp-server.ts",
-    ];
+    let possible_paths = brain_server_paths();
 
     // 尝试直接运行 npm 脚本
     let npm_commands: Vec<Vec<&str>> = vec![
@@ -65,6 +58,8 @@ pub fn start() -> Result<(), String> {
         if Path::new(&home_brain).exists() {
             if let Ok(child) = Command::new("node")
                 .arg(&home_brain)
+                .env("HOST", "127.0.0.1")
+                .env("PORT", "3001")
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .spawn()
@@ -79,6 +74,8 @@ pub fn start() -> Result<(), String> {
     for cmd_parts in npm_commands {
         let mut cmd = Command::new(cmd_parts[0]);
         cmd.args(&cmd_parts[1..])
+            .env("HOST", "127.0.0.1")
+            .env("PORT", "3001")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
@@ -96,15 +93,17 @@ pub fn start() -> Result<(), String> {
 
     // 尝试直接运行 JS 文件
     for path in possible_paths {
-        if Path::new(path).exists() {
+        if path.exists() {
             match Command::new("node")
-                .arg(path)
+                .arg(&path)
+                .env("HOST", "127.0.0.1")
+                .env("PORT", "3001")
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .spawn()
             {
                 Ok(child) => {
-                    println!("[Brain Server] 已启动: {}", path);
+                    println!("[Brain Server] 已启动: {}", path.display());
                     store_process(child);
                     return Ok(());
                 }
@@ -160,4 +159,22 @@ fn dirs_or_home() -> Option<String> {
     std::env::var("USERPROFILE")
         .or_else(|_| std::env::var("HOME"))
         .ok()
+}
+
+fn brain_server_paths() -> Vec<PathBuf> {
+    let mut paths = vec![
+        PathBuf::from("./brain-server/mcp-server.js"),
+        PathBuf::from("./brain-server/dist/mcp-server.js"),
+        PathBuf::from("../brain-server/dist/mcp-server.js"),
+    ];
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            paths.push(exe_dir.join("brain-server").join("mcp-server.js"));
+            paths.push(exe_dir.join("resources").join("brain-server").join("mcp-server.js"));
+            paths.push(exe_dir.join("../Resources/brain-server/mcp-server.js"));
+        }
+    }
+
+    paths
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 interface KeyboardShortcut {
   key: string;
@@ -12,10 +12,26 @@ interface KeyboardShortcut {
   category: string;
 }
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (target.isContentEditable) return true;
+  return false;
+}
+
 export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      for (const shortcut of shortcuts) {
+  // 调用方一般传字面量数组，每次渲染都是新引用；
+  // 用 ref 持有最新值，避免 listener 每次渲染都重新挂载
+  const shortcutsRef = useRef(shortcuts);
+  shortcutsRef.current = shortcuts;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 用户在输入框 / 文本域里打字时不应触发全局快捷键，否则 preventDefault 会吃掉字符
+      if (isEditableTarget(event.target)) return;
+
+      for (const shortcut of shortcutsRef.current) {
         const ctrlMatch = shortcut.ctrl ? event.ctrlKey || event.metaKey : !event.ctrlKey && !event.metaKey;
         const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
         const altMatch = shortcut.alt ? event.altKey : !event.altKey;
@@ -27,16 +43,11 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
           return;
         }
       }
-    },
-    [shortcuts]
-  );
-
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleKeyDown]);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 }
 
 export const defaultShortcuts: KeyboardShortcut[] = [

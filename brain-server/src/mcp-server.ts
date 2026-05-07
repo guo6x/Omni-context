@@ -13,6 +13,7 @@ import initDatabase, { Database } from './db/sqlite.js';
 import { GraphRAGExtractor } from './graphrag/extractor.js';
 import { EmbeddingService } from './embedding/service.js';
 import { MemoryDecayScheduler } from './memory/decay-scheduler.js';
+import { AgentLoop } from './agent/agent-loop.js';
 import { createServer } from './api/routes.js';
 import { z } from 'zod';
 import type { EntityType, RelationshipType } from './shared-types.js';
@@ -85,6 +86,7 @@ class OmniContextServer {
   private extractor: GraphRAGExtractor;
   private embeddingService: EmbeddingService;
   private decayScheduler: MemoryDecayScheduler;
+  private agentLoop: AgentLoop | null = null;
   private server: Server;
 
   constructor() {
@@ -474,15 +476,22 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           const savedEntities = [];
           const savedRelationships = [];
 
+          // 先并发生成所有实体的 embedding（带并发上限），再串行落库以避免 SQLite 写竞争
+          const EMBED_CONCURRENCY = 4;
+          for (let i = 0; i < result.entities.length; i += EMBED_CONCURRENCY) {
+            const batch = result.entities.slice(i, i + EMBED_CONCURRENCY);
+            await Promise.all(batch.map(async (entity) => {
+              try {
+                const embeddingText = `${entity.name}: ${entity.description || ''}`;
+                const embResult = await this.embeddingService.embed(embeddingText);
+                entity.embedding = embResult.embedding;
+              } catch {
+                // embedding 失败不阻塞主流程
+              }
+            }));
+          }
+
           for (const entity of result.entities) {
-            // [核心壁垒] 为提取的实体自动生成 embedding
-            try {
-              const embeddingText = `${entity.name}: ${entity.description || ''}`;
-              const embResult = await this.embeddingService.embed(embeddingText);
-              entity.embedding = embResult.embedding;
-            } catch (e) {
-              // embedding 生成失败不阻塞实体保存
-            }
             const saved = await this.db.addEntity(entity);
             savedEntities.push(saved);
             if (parsed.captureId) {
@@ -543,13 +552,10 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           const type = args.type as string;
           const limit = (args.limit as number) || 50;
 
-          let entities;
-          if (type) {
-            entities = await this.db.getEntitiesByType(type);
-          } else {
-            const rows = await this.db.all('SELECT * FROM entities ORDER BY updated_at DESC LIMIT ?', [limit]);
-            entities = rows;
-          }
+          // 走 db API 保证返回结构与 getEntity 一致（tags / metadata 已反序列化）
+          const entities = type
+            ? await this.db.getEntitiesByType(type)
+            : await this.db.getRecentEntities(limit);
 
           return this.formatResponse(entities.slice(0, limit));
         }
@@ -598,9 +604,12 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           }
 
           // 层3：图谱遍历（从搜索命中的实体出发，获取关联上下文）
-          if (includeRels && results.textResults.length > 0) {
-            const topEntityId = results.textResults[0].id;
-            results.graphContext = await this.db.getGraphNeighborhood(topEntityId, 2);
+          // 文本搜索为空时回退用向量搜索的 top 命中作为种子，避免完全丢图谱信号
+          if (includeRels) {
+            const seedId = results.textResults[0]?.id ?? results.vectorResults[0]?.id;
+            if (seedId) {
+              results.graphContext = await this.db.getGraphNeighborhood(seedId, 2);
+            }
           }
 
           // 融合去重
@@ -743,13 +752,23 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
 
     // [生态升级] 同时启动 HTTP API Server 供浏览器插件和移动端使用
     const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
+    const HOST = process.env.HOST || '127.0.0.1';
     const httpServer = createServer(this.db);
-    httpServer.listen(PORT, () => {
-      console.error(`Omni-Context API Server 运行在端口 ${PORT} (供外部生态接入)`);
+    httpServer.listen(PORT, HOST, () => {
+      console.error(`Omni-Context API Server 运行在 http://${HOST}:${PORT} (供外部生态接入)`);
     });
+
+    // [Insights] 主动智能引擎 — 桌面端 InsightsInbox 依赖它产生通知
+    const insightIntervalMs = process.env.INSIGHT_INTERVAL_MS
+      ? Number(process.env.INSIGHT_INTERVAL_MS)
+      : 10 * 60 * 1000;
+    this.agentLoop = new AgentLoop(this.db);
+    this.agentLoop.start(insightIntervalMs);
   }
 
   async stop(): Promise<void> {
+    this.agentLoop?.stop();
+    this.decayScheduler.stop();
     await this.db.close();
   }
 }

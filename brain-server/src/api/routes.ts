@@ -9,7 +9,8 @@ import {
   handleEntityRoutes,
   handlePrincipleRoutes,
   handleGraphRoutes,
-  handleStatsRoutes
+  handleStatsRoutes,
+  handleNotificationRoutes
 } from './handlers/index.js';
 
 export interface RequestContext {
@@ -23,6 +24,45 @@ export interface Route {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   path: string;
   handler: (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => Promise<void>;
+}
+
+const MAX_BODY_BYTES = Number(process.env.MAX_BODY_BYTES || 15 * 1024 * 1024);
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 300);
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'tauri://localhost',
+  'http://tauri.localhost',
+].join(','))
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX_KEYS = 5_000;
+
+// 兜底清理：避免长时间运行下 rate-limit 桶无限累积
+function pruneRateLimitBuckets(now: number) {
+  if (rateLimitBuckets.size <= RATE_LIMIT_MAX_KEYS) return;
+  for (const [key, bucket] of rateLimitBuckets) {
+    if (bucket.resetAt <= now) rateLimitBuckets.delete(key);
+  }
+  // 仍然超限：硬剪到一半，最早过期的先丢
+  if (rateLimitBuckets.size > RATE_LIMIT_MAX_KEYS) {
+    const sorted = [...rateLimitBuckets.entries()].sort((a, b) => a[1].resetAt - b[1].resetAt);
+    const toRemove = sorted.slice(0, sorted.length - Math.floor(RATE_LIMIT_MAX_KEYS / 2));
+    for (const [key] of toRemove) rateLimitBuckets.delete(key);
+  }
+}
+
+export class HttpError extends Error {
+  statusCode: number;
+
+  constructor(statusCode: number, message: string) {
+    super(message);
+    this.statusCode = statusCode;
+  }
 }
 
 export class ApiRouter {
@@ -43,11 +83,12 @@ export class ApiRouter {
       ...handlePrincipleRoutes,
       ...handleGraphRoutes,
       ...handleStatsRoutes,
+      ...handleNotificationRoutes,
     ];
   }
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-    const url = new URL(req.url || '/', `http://${req.headers.host}`);
+    const url = new URL(req.url || '/', 'http://localhost');
     const pathname = url.pathname;
     const method = req.method as Route['method'];
 
@@ -68,11 +109,12 @@ export class ApiRouter {
       res.end(JSON.stringify({ error: 'Not Found' }));
     } catch (error) {
       console.error('API Error:', error);
-      res.statusCode = 500;
-      res.end(JSON.stringify({ 
-        error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      }));
+      if (error instanceof HttpError) {
+        sendError(res, error.statusCode, error.message);
+        return;
+      }
+
+      sendError(res, 500, 'Internal Server Error');
     }
   }
 
@@ -104,17 +146,34 @@ export class ApiRouter {
 export async function parseBody<T>(req: http.IncomingMessage): Promise<T> {
   return new Promise((resolve, reject) => {
     let body = '';
+    let bytes = 0;
+    let settled = false;
+
     req.on('data', chunk => {
+      bytes += chunk.length;
+      if (bytes > MAX_BODY_BYTES) {
+        settled = true;
+        reject(new HttpError(413, `Request body too large. Limit is ${MAX_BODY_BYTES} bytes.`));
+        req.destroy();
+        return;
+      }
       body += chunk.toString();
     });
     req.on('end', () => {
+      if (settled) return;
       try {
+        if (body && !String(req.headers['content-type'] || '').includes('application/json')) {
+          reject(new HttpError(415, 'Content-Type must be application/json'));
+          return;
+        }
         resolve(body ? JSON.parse(body) : {});
       } catch (error) {
-        reject(new Error('Invalid JSON'));
+        reject(new HttpError(400, 'Invalid JSON'));
       }
     });
-    req.on('error', reject);
+    req.on('error', (error) => {
+      if (!settled) reject(error);
+    });
   });
 }
 
@@ -128,17 +187,85 @@ export function sendError(res: http.ServerResponse, statusCode: number, message:
   res.end(JSON.stringify({ error: message }));
 }
 
+function getAllowedOrigin(origin: string | undefined): string | null {
+  if (!origin) return null;
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  if (origin.startsWith('chrome-extension://') || origin.startsWith('moz-extension://')) {
+    return origin;
+  }
+  return null;
+}
+
+function setSecurityHeaders(req: http.IncomingMessage, res: http.ServerResponse): void {
+  const allowedOrigin = getAllowedOrigin(req.headers.origin);
+  if (allowedOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+    res.setHeader('Vary', 'Origin');
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '600');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+}
+
+function isHealthRequest(req: http.IncomingMessage): boolean {
+  if (req.method !== 'GET') return false;
+  const rawUrl = req.url || '/';
+  const pathname = rawUrl.split('?', 1)[0];
+  return pathname === '/health';
+}
+
+function checkRateLimit(req: http.IncomingMessage, res: http.ServerResponse): boolean {
+  if (req.method === 'OPTIONS' || isHealthRequest(req)) return true;
+
+  const now = Date.now();
+  const key = req.socket.remoteAddress || 'unknown';
+  const bucket = rateLimitBuckets.get(key);
+
+  if (!bucket || bucket.resetAt <= now) {
+    rateLimitBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    pruneRateLimitBuckets(now);
+    return true;
+  }
+
+  bucket.count += 1;
+  if (bucket.count > RATE_LIMIT_MAX) {
+    sendError(res, 429, 'Too many requests');
+    return false;
+  }
+
+  return true;
+}
+
 export function createServer(db: Database): http.Server {
   const router = new ApiRouter(db);
 
   return http.createServer(async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    setSecurityHeaders(req, res);
 
     if (req.method === 'OPTIONS') {
       res.statusCode = 204;
       res.end();
+      return;
+    }
+
+    if (!checkRateLimit(req, res)) {
+      return;
+    }
+
+    if (isHealthRequest(req)) {
+      sendResponse(res, 200, {
+        ok: true,
+        service: 'omni-context-brain-server',
+        timestamp: new Date().toISOString(),
+      });
       return;
     }
 

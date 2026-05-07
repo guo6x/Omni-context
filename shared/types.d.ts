@@ -1,6 +1,36 @@
-export type PrincipleType = 'code_principle' | 'design_pattern' | 'workflow_rule' | 'personal_preference' | 'security_rule' | 'performance_optimization';
-export type EntityType = 'principle' | 'evidence' | 'concept' | 'tool' | 'person' | 'project' | 'code_snippet';
-export type RelationshipType = 'derived_from' | 'relates_to' | 'depends_on' | 'conflicts_with' | 'extends' | 'cites' | 'belongs_to';
+export type PrincipleType =
+    | 'code_principle'
+    | 'design_pattern'
+    | 'workflow_rule'
+    | 'personal_preference'
+    | 'security_rule'
+    | 'performance_optimization';
+export type EntityType =
+    | 'principle'
+    | 'evidence'
+    | 'concept'
+    | 'tool'
+    | 'person'
+    | 'project'
+    | 'code_snippet'
+    | 'architecture_pattern'
+    | 'bug_vulnerability'
+    | 'business_logic'
+    | 'critical_review'
+    | 'capture_snapshot'
+    | 'memory';
+export type RelationshipType =
+    | 'derived_from'
+    | 'relates_to'
+    | 'depends_on'
+    | 'conflicts_with'
+    | 'extends'
+    | 'cites'
+    | 'belongs_to'
+    | 'supported_by'
+    | 'extracted_from'
+    | 'reviewed_by'
+    | 'references';
 export interface Entity {
     id: string;
     name: string;
@@ -12,6 +42,8 @@ export interface Entity {
     tags?: string[];
     embedding?: number[];
     metadata?: Record<string, any>;
+    access_count?: number;
+    last_accessed?: string;
 }
 export interface Relationship {
     id: string;
@@ -21,6 +53,7 @@ export interface Relationship {
     description?: string;
     weight: number;
     created_at: string;
+    last_activated?: string;
 }
 export interface Principle {
     id: string;

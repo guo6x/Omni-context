@@ -16,7 +16,6 @@ import { useSync } from '@/hooks/useSync';
 import { useHUD } from '@/components/HUD';
 import { api } from '@/services/api';
 import * as localDb from '@/services/localDb';
-import { colors, spacing, typography } from '@/utils/theme';
 
 interface SettingItemProps {
   label: string;
@@ -28,27 +27,27 @@ interface SettingItemProps {
 function SettingItem({ label, value, children, onPress }: SettingItemProps) {
   return (
     <TouchableOpacity
-      style={styles.settingItem}
+      className="flex-row items-center justify-between p-4 border-b border-white/10"
       onPress={onPress}
       disabled={!onPress}
       activeOpacity={onPress ? 0.7 : 1}
     >
-      <Text style={styles.settingLabel}>{label}</Text>
-      {children || (value && <Text style={styles.settingValue}>{value}</Text>)}
+      <Text className="text-[#e8e8e8] text-base">{label}</Text>
+      {children || (value && <Text className="text-gray-400 text-sm">{value}</Text>)}
     </TouchableOpacity>
   );
 }
 
 interface SettingSectionProps {
   title: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 function SettingSection({ title, children }: SettingSectionProps) {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.sectionContent}>{children}</View>
+    <View className="mt-6 px-5">
+      <Text className="text-gray-400 text-sm font-medium mb-2 uppercase tracking-widest">{title}</Text>
+      <View className="bg-black/40 rounded-xl overflow-hidden border border-white/10">{children}</View>
     </View>
   );
 }
@@ -112,38 +111,38 @@ export function SettingsScreen() {
   }, [showMessage, t]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('settings.title')}</Text>
+    <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+        <View className="px-5 py-4 border-b border-white/10">
+          <Text className="text-[#e8e8e8] text-2xl font-bold">{t('settings.title')}</Text>
         </View>
 
         <SettingSection title={t('settings.theme')}>
           <SettingItem label={t('settings.dark')}>
             <Switch
               value={theme === 'dark'}
-              onValueChange={(value) => setTheme(value ? 'dark' : 'light')}
-              trackColor={{ false: colors.backgroundTertiary, true: colors.primary }}
-              thumbColor={colors.text}
+              onValueChange={(value: boolean) => setTheme(value ? 'dark' : 'light')}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#22d3ee' }}
+              thumbColor="#e8e8e8"
             />
           </SettingItem>
         </SettingSection>
 
         <SettingSection title={t('settings.language')}>
-          <View style={styles.languageButtons}>
+          <View className="flex-row p-4 gap-2">
             <TouchableOpacity
-              style={[styles.languageButton, language === 'zh' && styles.languageButtonActive]}
+              className={`flex-1 py-2 rounded-lg items-center ${language === 'zh' ? 'bg-cyan-500' : 'bg-white/5'}`}
               onPress={() => setLanguage('zh')}
             >
-              <Text style={[styles.languageText, language === 'zh' && styles.languageTextActive]}>
+              <Text className={`text-base ${language === 'zh' ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}>
                 {t('settings.chinese')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.languageButton, language === 'en' && styles.languageButtonActive]}
+              className={`flex-1 py-2 rounded-lg items-center ${language === 'en' ? 'bg-cyan-500' : 'bg-white/5'}`}
               onPress={() => setLanguage('en')}
             >
-              <Text style={[styles.languageText, language === 'en' && styles.languageTextActive]}>
+              <Text className={`text-base ${language === 'en' ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}>
                 {t('settings.english')}
               </Text>
             </TouchableOpacity>
@@ -155,8 +154,8 @@ export function SettingsScreen() {
             <Switch
               value={syncEnabled}
               onValueChange={setSyncEnabled}
-              trackColor={{ false: colors.backgroundTertiary, true: colors.primary }}
-              thumbColor={colors.text}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#22d3ee' }}
+              thumbColor="#e8e8e8"
             />
           </SettingItem>
 
@@ -170,21 +169,21 @@ export function SettingsScreen() {
             <Switch
               value={autoSync}
               onValueChange={setAutoSync}
-              trackColor={{ false: colors.backgroundTertiary, true: colors.primary }}
-              thumbColor={colors.text}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#22d3ee' }}
+              thumbColor="#e8e8e8"
             />
           </SettingItem>
 
-          <View style={styles.syncStatus}>
-            <Text style={styles.syncStatusLabel}>
+          <View className="flex-row items-center justify-between p-4">
+            <Text className="text-gray-400 text-sm">
               {t('sync.pending')}: {status.pending}
             </Text>
             <TouchableOpacity
-              style={[styles.syncButton, isSyncing && styles.syncButtonDisabled]}
+              className={`bg-cyan-400 px-4 py-2 rounded-lg ${isSyncing ? 'opacity-60' : ''}`}
               onPress={handleSyncNow}
               disabled={isSyncing}
             >
-              <Text style={styles.syncButtonText}>
+              <Text className="text-[#0a0b12] text-sm font-bold">
                 {isSyncing ? t('sync.syncing') : t('sync.syncNow')}
               </Text>
             </TouchableOpacity>
@@ -196,8 +195,8 @@ export function SettingsScreen() {
             <Switch
               value={notificationsEnabled}
               onValueChange={setNotificationsEnabled}
-              trackColor={{ false: colors.backgroundTertiary, true: colors.primary }}
-              thumbColor={colors.text}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#22d3ee' }}
+              thumbColor="#e8e8e8"
             />
           </SettingItem>
         </SettingSection>
@@ -206,33 +205,33 @@ export function SettingsScreen() {
           <SettingItem label={t('settings.version')} value="1.0.0" />
         </SettingSection>
 
-        <TouchableOpacity style={styles.clearButton} onPress={handleClearData}>
-          <Text style={styles.clearButtonText}>{t('settings.clearData')}</Text>
+        <TouchableOpacity className="mx-5 mt-8 p-4 rounded-xl bg-red-500/20 items-center border border-red-500/50" onPress={handleClearData}>
+          <Text className="text-red-400 text-base font-bold">{t('settings.clearData')}</Text>
         </TouchableOpacity>
 
         {showServerInput && (
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{t('settings.serverUrl')}</Text>
+          <View className="absolute inset-0 bg-black/70 justify-center items-center p-5 z-50">
+            <View className="bg-[#0a0b12] border border-white/10 rounded-2xl p-5 w-full max-w-sm">
+              <Text className="text-[#e8e8e8] text-lg font-bold mb-4 text-center">{t('settings.serverUrl')}</Text>
               <TextInput
-                style={styles.modalInput}
+                className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base mb-4"
                 value={serverUrlInput}
                 onChangeText={setServerUrlInput}
                 placeholder="https://api.example.com"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor="#64748b"
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
               />
-              <View style={styles.modalButtons}>
+              <View className="flex-row gap-4">
                 <TouchableOpacity
-                  style={styles.modalCancelButton}
+                  className="flex-1 py-3 rounded-xl bg-black/40 border border-white/10 items-center"
                   onPress={() => setShowServerInput(false)}
                 >
-                  <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
+                  <Text className="text-gray-400 text-base">{t('common.cancel')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.modalConfirmButton} onPress={handleSaveServerUrl}>
-                  <Text style={styles.modalConfirmText}>{t('common.save')}</Text>
+                <TouchableOpacity className="flex-1 py-3 rounded-xl bg-cyan-400 items-center" onPress={handleSaveServerUrl}>
+                  <Text className="text-[#0a0b12] text-base font-bold">{t('common.save')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -243,172 +242,4 @@ export function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    paddingBottom: spacing.xxl,
-  },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    color: colors.text,
-    fontSize: typography.fontSizes.xxl,
-    fontWeight: typography.fontWeights.bold,
-  },
-  section: {
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
-  sectionTitle: {
-    color: colors.textMuted,
-    fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  sectionContent: {
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  settingLabel: {
-    color: colors.text,
-    fontSize: typography.fontSizes.md,
-  },
-  settingValue: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-  },
-  languageButtons: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  languageButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: 8,
-    backgroundColor: colors.backgroundTertiary,
-    alignItems: 'center',
-  },
-  languageButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  languageText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.md,
-  },
-  languageTextActive: {
-    color: colors.background,
-    fontWeight: typography.fontWeights.bold,
-  },
-  syncStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.md,
-  },
-  syncStatusLabel: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-  },
-  syncButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 8,
-  },
-  syncButtonDisabled: {
-    opacity: 0.6,
-  },
-  syncButtonText: {
-    color: colors.background,
-    fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.bold,
-  },
-  clearButton: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-    padding: spacing.md,
-    borderRadius: 12,
-    backgroundColor: colors.error,
-    alignItems: 'center',
-  },
-  clearButtonText: {
-    color: colors.text,
-    fontSize: typography.fontSizes.md,
-    fontWeight: typography.fontWeights.bold,
-  },
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  modalContent: {
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 16,
-    padding: spacing.lg,
-    width: '100%',
-    maxWidth: 400,
-  },
-  modalTitle: {
-    color: colors.text,
-    fontSize: typography.fontSizes.lg,
-    fontWeight: typography.fontWeights.bold,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  modalInput: {
-    backgroundColor: colors.backgroundTertiary,
-    borderRadius: 12,
-    padding: spacing.md,
-    color: colors.text,
-    fontSize: typography.fontSizes.md,
-    marginBottom: spacing.md,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  modalCancelButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: 12,
-    backgroundColor: colors.backgroundTertiary,
-    alignItems: 'center',
-  },
-  modalCancelText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.md,
-  },
-  modalConfirmButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-  },
-  modalConfirmText: {
-    color: colors.background,
-    fontSize: typography.fontSizes.md,
-    fontWeight: typography.fontWeights.bold,
-  },
-});
+

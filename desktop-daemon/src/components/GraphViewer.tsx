@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { Brain, Code, FileText, Zap, Shield, TrendingUp, Info, Maximize2, RotateCcw } from "lucide-react";
+import { Brain, Code, FileText, Zap, Shield, TrendingUp, Info, Maximize2, RotateCcw, Search, Network, MousePointer2 } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -67,6 +67,8 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
   const [hovered, setHovered] = useState<string | null>(null);
   const [ForceGraph, setForceGraph] = useState<any>(null);
   const [is3D, setIs3D] = useState(true);
+  const [query, setQuery] = useState("");
+  const [activeType, setActiveType] = useState<string>("all");
 
   // 动态加载 3D 图谱库
   useEffect(() => {
@@ -93,9 +95,34 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
     loadGraph();
   }, [is3D]);
 
+  const availableTypes = useMemo(() => {
+    return Array.from(new Set(entities.map((entity) => entity.type))).sort();
+  }, [entities]);
+
+  const visibleEntities = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return entities.filter((entity) => {
+      const matchesType = activeType === "all" || entity.type === activeType;
+      const matchesQuery =
+        !normalizedQuery ||
+        entity.name.toLowerCase().includes(normalizedQuery) ||
+        entity.description?.toLowerCase().includes(normalizedQuery) ||
+        entity.tags?.some((tag) => tag.toLowerCase().includes(normalizedQuery));
+
+      return matchesType && matchesQuery;
+    });
+  }, [activeType, entities, query]);
+
+  useEffect(() => {
+    if (selectedNode && !visibleEntities.some((entity) => entity.id === selectedNode.id)) {
+      setSelectedNode(null);
+    }
+  }, [selectedNode, visibleEntities]);
+
   // 将 entities 和 relationships 转化为图谱数据
   const graphData = useMemo(() => {
-    const nodes: GraphNode[] = entities.map((entity) => ({
+    const nodes: GraphNode[] = visibleEntities.map((entity) => ({
       id: entity.id,
       name: entity.name,
       type: entity.type,
@@ -106,7 +133,7 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
       accessCount: entity.access_count || 0,
     }));
 
-    const nodeIds = new Set(entities.map((e) => e.id));
+    const nodeIds = new Set(visibleEntities.map((e) => e.id));
     const links: GraphLink[] = relationships
       .filter((rel) => nodeIds.has(rel.source_id) && nodeIds.has(rel.target_id))
       .map((rel) => ({
@@ -120,7 +147,7 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
       }));
 
     return { nodes, links };
-  }, [entities, relationships]);
+  }, [relationships, visibleEntities]);
 
   const handleNodeClick = useCallback(
     (node: any) => {
@@ -217,7 +244,7 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
     return counts;
   }, [relationships]);
 
-  if (!ForceGraph) {
+  if (!ForceGraph && entities.length > 0) {
     return (
       <div className="flex h-full items-center justify-center bg-[#0a0b12]">
         <div className="text-center">
@@ -233,16 +260,38 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
       {/* 图谱主区域 */}
       <div className="flex-1 relative" ref={containerRef}>
         {/* 控制栏 */}
-        <div className="absolute top-4 left-4 z-10 flex gap-2">
+        <div className="absolute top-4 left-4 right-4 z-10 flex flex-wrap items-center gap-2">
+          <div className="flex min-w-[260px] flex-1 max-w-md items-center gap-2 rounded-lg border border-white/10 bg-gray-950/90 px-3 py-2 shadow-2xl shadow-black/30">
+            <Search className="h-4 w-4 text-cyan-400" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索节点、描述或标签"
+              className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
+            />
+          </div>
+          <select
+            value={activeType}
+            onChange={(event) => setActiveType(event.target.value)}
+            className="h-9 rounded-lg border border-white/10 bg-gray-950/90 px-3 text-xs text-gray-200 outline-none hover:border-cyan-500/40"
+            aria-label="筛选节点类型"
+          >
+            <option value="all">全部类型</option>
+            {availableTypes.map((type) => (
+              <option key={type} value={type}>
+                {type.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
           <button
             onClick={() => setIs3D(!is3D)}
-            className="px-3 py-1.5 bg-gray-900/90 border border-gray-700 rounded-lg text-xs text-cyan-400 hover:bg-gray-800 transition-colors"
+            className="h-9 px-3 bg-gray-950/90 border border-white/10 rounded-lg text-xs text-cyan-400 hover:bg-gray-900 hover:border-cyan-500/40 transition-colors"
           >
             {is3D ? "2D 模式" : "3D 模式"}
           </button>
           <button
             onClick={handleResetCamera}
-            className="px-3 py-1.5 bg-gray-900/90 border border-gray-700 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-colors flex items-center gap-1"
+            className="h-9 px-3 bg-gray-950/90 border border-white/10 rounded-lg text-xs text-gray-300 hover:text-white hover:bg-gray-900 hover:border-cyan-500/40 transition-colors flex items-center gap-1"
           >
             <RotateCcw className="w-3 h-3" />
             重置视角
@@ -250,11 +299,11 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
         </div>
 
         {/* 图例 */}
-        <div className="absolute bottom-4 left-4 z-10 bg-gray-900/90 border border-gray-700 rounded-lg p-3 max-w-[200px]">
+        <div className="absolute bottom-4 left-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg p-3 max-w-[240px] shadow-2xl shadow-black/30">
           <p className="text-xs text-gray-500 mb-2 uppercase font-medium">图例</p>
           <div className="grid grid-cols-2 gap-1.5">
             {Object.entries(TYPE_COLORS)
-              .filter(([type]) => entities.some((e) => e.type === type))
+              .filter(([type]) => visibleEntities.some((e) => e.type === type))
               .map(([type, color]) => (
                 <div key={type} className="flex items-center gap-1.5">
                   <div
@@ -270,59 +319,93 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
         </div>
 
         {/* 统计信息 */}
-        <div className="absolute top-4 right-4 z-10 bg-gray-900/90 border border-gray-700 rounded-lg p-3">
+        <div className="absolute bottom-4 right-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg p-3 shadow-2xl shadow-black/30">
           <div className="flex gap-4 text-xs">
             <div>
-              <span className="text-gray-500">节点</span>
-              <p className="text-cyan-400 font-mono font-bold">{entities.length}</p>
+              <span className="text-gray-500">可见节点</span>
+              <p className="text-cyan-400 font-mono font-bold">{visibleEntities.length}</p>
             </div>
             <div>
-              <span className="text-gray-500">关系</span>
-              <p className="text-purple-400 font-mono font-bold">{relationships.length}</p>
+              <span className="text-gray-500">可见关系</span>
+              <p className="text-purple-400 font-mono font-bold">{graphData.links.length}</p>
             </div>
           </div>
         </div>
 
+        {graphData.nodes.length === 0 && (
+          <div className="absolute inset-0 z-[9] flex items-center justify-center bg-[#0a0b12]/70 px-6 backdrop-blur-sm">
+            <div className="max-w-lg rounded-xl border border-cyan-500/20 bg-gray-950/85 p-6 text-center shadow-2xl shadow-cyan-950/30">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10">
+                <Network className="h-6 w-6 text-cyan-300" />
+              </div>
+              <h2 className="text-lg font-semibold text-white">
+                {entities.length === 0 ? "还没有可视化节点" : "没有匹配的节点"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-gray-400">
+                {entities.length === 0
+                  ? "使用沉淀快捷键、浏览器插件或移动端同步内容后，这里会显示实体、证据、原则和它们之间的关系。"
+                  : "调整搜索词或节点类型筛选，图谱会实时恢复匹配的上下文。"}
+              </p>
+              <div className="mt-5 grid grid-cols-3 gap-2 text-left text-xs text-gray-400">
+                <div className="rounded-lg border border-white/10 bg-black/30 p-3">
+                  <Brain className="mb-2 h-4 w-4 text-cyan-300" />
+                  捕获内容
+                </div>
+                <div className="rounded-lg border border-white/10 bg-black/30 p-3">
+                  <Zap className="mb-2 h-4 w-4 text-yellow-300" />
+                  提取关系
+                </div>
+                <div className="rounded-lg border border-white/10 bg-black/30 p-3">
+                  <MousePointer2 className="mb-2 h-4 w-4 text-purple-300" />
+                  点击探索
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 3D/2D 图谱 */}
-        <ForceGraph
-          ref={graphRef}
-          graphData={graphData}
-          nodeId="id"
-          nodeLabel={(node: any) => `${node.name} (${node.type})`}
-          nodeVal={(node: any) => node.val}
-          nodeColor={(node: any) => node.color}
-          linkSource="source"
-          linkTarget="target"
-          linkLabel={(link: any) => link.type.replace(/_/g, " ")}
-          linkColor={(link: any) => link.color}
-          linkWidth={(link: any) => Math.max(0.5, (link.weight || 1) * 1.5)}
-          linkDirectionalArrowLength={3.5}
-          linkDirectionalArrowRelPos={1}
-          linkCurvature={0.15}
-          onNodeClick={handleNodeClick}
-          onNodeHover={(node: any) => setHovered(node?.id || null)}
-          backgroundColor="#0a0b12"
-          // 2D 模式配置
-          {...(!is3D && {
-            nodeCanvasObject,
-            nodeCanvasObjectMode: () => "replace",
-          })}
-          // 3D 模式配置
-          {...(is3D && {
-            nodeThreeObjectExtend: true,
-            nodeThreeObject,
-          })}
-          // 力导向参数
-          d3AlphaDecay={0.02}
-          d3VelocityDecay={0.3}
-          warmupTicks={100}
-          cooldownTicks={200}
-        />
+        {ForceGraph && graphData.nodes.length > 0 && (
+          <ForceGraph
+            ref={graphRef}
+            graphData={graphData}
+            nodeId="id"
+            nodeLabel={(node: any) => `${node.name} (${node.type})`}
+            nodeVal={(node: any) => node.val}
+            nodeColor={(node: any) => node.color}
+            linkSource="source"
+            linkTarget="target"
+            linkLabel={(link: any) => link.type.replace(/_/g, " ")}
+            linkColor={(link: any) => link.color}
+            linkWidth={(link: any) => Math.max(0.5, (link.weight || 1) * 1.5)}
+            linkDirectionalArrowLength={3.5}
+            linkDirectionalArrowRelPos={1}
+            linkCurvature={0.15}
+            onNodeClick={handleNodeClick}
+            onNodeHover={(node: any) => setHovered(node?.id || null)}
+            backgroundColor="#0a0b12"
+            // 2D 模式配置
+            {...(!is3D && {
+              nodeCanvasObject,
+              nodeCanvasObjectMode: () => "replace",
+            })}
+            // 3D 模式配置
+            {...(is3D && {
+              nodeThreeObjectExtend: true,
+              nodeThreeObject,
+            })}
+            // 力导向参数
+            d3AlphaDecay={0.02}
+            d3VelocityDecay={0.3}
+            warmupTicks={100}
+            cooldownTicks={200}
+          />
+        )}
       </div>
 
       {/* 详情面板 */}
       {selectedNode && (
-        <div className="w-80 glass-panel border-l border-white/10 p-4 overflow-y-auto bg-gray-950/95">
+        <div className="absolute bottom-4 left-4 right-4 z-20 max-h-[55vh] glass-panel border border-white/10 p-4 overflow-y-auto bg-gray-950/95 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:w-80 md:max-h-none md:border-l">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-cyan-400">{t("graph.title")}</h3>
             <button
@@ -343,9 +426,11 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
               <span className="text-xs text-gray-500 uppercase">{t("graph.type")}</span>
               <div className="flex items-center gap-2 mt-1">
                 <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: TYPE_COLORS[selectedNode.type] || "#94a3b8" }}
-                />
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10"
+                  style={{ color: TYPE_COLORS[selectedNode.type] || "#94a3b8" }}
+                >
+                  {TYPE_ICONS[selectedNode.type] || <Info className="w-4 h-4" />}
+                </div>
                 <span className="text-cyan-400">{selectedNode.type.replace(/_/g, " ")}</span>
               </div>
             </div>
@@ -427,7 +512,7 @@ export default function GraphViewer3D({ entities, relationships }: GraphViewer3D
       )}
 
       {!selectedNode && (
-        <div className="w-80 glass-panel border-l border-white/10 p-4 flex items-center justify-center bg-gray-950/95">
+        <div className="hidden w-80 glass-panel border-l border-white/10 p-4 md:flex items-center justify-center bg-gray-950/95">
           <div className="text-center">
             <Maximize2 className="w-8 h-8 text-gray-600 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">{t("graph.no_selection")}</p>

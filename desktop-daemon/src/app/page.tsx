@@ -6,95 +6,51 @@ import GraphViewer from "@/components/GraphViewer";
 import Console from "@/components/Console";
 import ShortcutsHelp from "@/components/ShortcutsHelp";
 import SettingsPanel from "@/components/SettingsPanel";
-import { Database, Terminal, Brain, Zap, Settings, Minimize2, HelpCircle } from "lucide-react";
+import InsightsInbox from "@/components/InsightsInbox";
+import { Database, Terminal, Brain, Zap, Settings, Minimize2, HelpCircle, Bell } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useSettings } from "@/hooks/useSettings";
 import { useOmniContext } from "@/hooks/useOmniContext";
 import { useTranslation } from "@/hooks/useTranslation";
 
-const mockEntities: Entity[] = [
-  {
-    id: "1",
-    name: "React 最佳实践",
-    type: "principle",
-    description: "保持组件简洁，单一职责",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    source_file: "App.tsx",
-    tags: ["React", "前端", "最佳实践"],
-  },
-  {
-    id: "2",
-    name: "useState Hook",
-    type: "concept",
-    description: "管理组件状态的基本 Hook",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    tags: ["React", "Hooks"],
-  },
-  {
-    id: "3",
-    name: "防抖函数",
-    type: "code_snippet",
-    description: "延迟执行，防止频繁触发",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    source_file: "utils.ts",
-    tags: ["JavaScript", "性能"],
-  },
-  {
-    id: "4",
-    name: "用户授权检查",
-    type: "principle",
-    description: "所有 API 请求必须携带有效 token",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    source_file: "auth.ts",
-    tags: ["安全", "授权"],
-  },
-];
-
-const mockRelationships: Relationship[] = [
-  {
-    id: "rel1",
-    source_id: "1",
-    target_id: "2",
-    type: "relates_to",
-    weight: 0.8,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "rel2",
-    source_id: "1",
-    target_id: "3",
-    type: "extends",
-    weight: 0.6,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "rel3",
-    source_id: "4",
-    target_id: "1",
-    type: "depends_on",
-    weight: 0.9,
-    created_at: new Date().toISOString(),
-  },
-];
-
 type ViewMode = "graph" | "console";
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>("graph");
   const [showHUD, setShowHUD] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const [hudMessage, setHudMessage] = useState("");
   const [hudStatus, setHudStatus] = useState<"listening" | "processing" | "success" | "error">("listening");
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [relationships, setRelationships] = useState<Relationship[]>([]);
 
   const { settings, showSettings, setShowSettings, updateShortcut, resetShortcuts, updateAppearance, updateBehavior, updateLlmProvider } = useSettings();
-  const { status, addLog, triggerPrecipitate, triggerDecision, triggerReset } = useOmniContext();
+  const { status, addLog, triggerPrecipitate, triggerDecision, triggerReset, refreshTrigger } = useOmniContext();
   const { t, language, setLanguage } = useTranslation();
+
+  useEffect(() => {
+    // 自动拉取真实的图谱数据
+    const fetchGraphData = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/graph/context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ depth: 3 }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setEntities(data.entities || []);
+          setRelationships(data.relationships || []);
+        }
+      } catch (error) {
+        console.warn('获取图谱数据失败:', error);
+      }
+    };
+    fetchGraphData();
+  }, [refreshTrigger]); // 当提取完成后，refreshTrigger 会变，触发重加载
 
   useKeyboardShortcuts([
     ...settings.keyboardShortcuts.map((s) => ({
@@ -220,17 +176,17 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#0a0b12] overflow-hidden" style={{ '--accent-color': settings.appearance.accentColor } as React.CSSProperties}>
-      <header className="flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/30 backdrop-blur-sm">
-        <div className="flex items-center gap-4">
+      <header className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-white/10 bg-black/30 backdrop-blur-sm">
+        <div className="flex min-w-0 items-center gap-4">
           <div className="flex items-center gap-3">
             <Brain className="w-8 h-8 text-cyan-400 animate-pulse-glow" />
-            <div>
-              <h1 className="text-xl font-bold text-white">{t('app.title')}</h1>
-              <p className="text-xs text-gray-400">{t('app.subtitle')}</p>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-white leading-tight">{t('app.title')}</h1>
+              <p className="hidden sm:block text-xs text-gray-400 truncate">{t('app.subtitle')}</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4 ml-8">
+          <div className="hidden xl:flex items-center gap-4 ml-8">
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${status.brain_server_running ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
               <span className="text-xs text-gray-400">{t('status.brain_server')}</span>
@@ -246,13 +202,20 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <button
             onClick={() => setIsMinimized(true)}
             className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             title={t('nav.minimize')}
           >
             <Minimize2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowInsights(!showInsights)}
+            className="p-2 text-cyan-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors relative"
+            title="Insights"
+          >
+            <Bell className="w-4 h-4 animate-pulse" />
           </button>
           <button
             onClick={() => setShowShortcuts(!showShortcuts)}
@@ -295,7 +258,7 @@ export default function Home() {
 
       <main className="flex-1 overflow-hidden relative">
         {viewMode === 'graph' ? (
-          <GraphViewer entities={mockEntities} relationships={mockRelationships} />
+          <GraphViewer entities={entities} relationships={relationships} />
         ) : (
           <Console />
         )}
@@ -326,6 +289,8 @@ export default function Home() {
             onClose={() => setShowSettings(false)}
           />
         )}
+        
+        <InsightsInbox isOpen={showInsights} onClose={() => setShowInsights(false)} />
       </main>
 
       <HUD

@@ -71,9 +71,9 @@ export class ArchivalMemory {
     }
 
     await this.db.run(
-      `INSERT INTO archival_memory (id, content, summary, tags, embedding, created_at, archived_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, finalContent, finalSummary || null, tagsStr, embeddingBlob, now, now]
+      `INSERT INTO archival_memory (id, content, summary, tags, embedding, importance, created_at, archived_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, finalContent, finalSummary || null, tagsStr, embeddingBlob, options.importance || 0, now, now]
     );
 
     return {
@@ -546,7 +546,7 @@ export class ArchivalMemory {
     let score = 0;
 
     if (item.content.toLowerCase().includes(queryLower)) {
-      const matches = (item.content.toLowerCase().match(new RegExp(queryLower, 'g')) || []).length;
+      const matches = item.content.toLowerCase().split(queryLower).length - 1;
       score += Math.min(matches * 0.1, 0.5);
     }
 

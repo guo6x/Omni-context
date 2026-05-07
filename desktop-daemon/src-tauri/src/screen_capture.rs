@@ -30,13 +30,21 @@ pub async fn capture_screen() -> Result<Vec<u8>> {
     let image = primary_screen.capture()
         .map_err(|e| anyhow::anyhow!("屏幕捕获失败: {}", e))?;
     
-    let mut buffer = Vec::new();
-    image.write_to(&mut std::io::Cursor::new(&mut buffer), ImageFormat::Png)
+    let buffer = image.rgba();
+    let width = image.width();
+    let height = image.height();
+    
+    let rgba_image = image::RgbaImage::from_raw(width, height, buffer.to_vec())
+        .ok_or_else(|| anyhow::anyhow!("创建 RgbaImage 失败"))?;
+        
+    let mut png_buffer = Vec::new();
+    let mut cursor = std::io::Cursor::new(&mut png_buffer);
+    rgba_image.write_to(&mut cursor, ImageFormat::Png)
         .map_err(|e| anyhow::anyhow!("PNG 编码失败: {}", e))?;
     
-    println!("[ScreenCapture] 截图成功: {} bytes", buffer.len());
+    println!("[ScreenCapture] 截图成功: {} bytes", png_buffer.len());
     
-    Ok(buffer)
+    Ok(png_buffer)
 }
 
 pub async fn capture_all_screens() -> Result<Vec<ScreenCaptureResult>> {
@@ -56,21 +64,30 @@ pub async fn capture_all_screens() -> Result<Vec<ScreenCaptureResult>> {
         
         match screen.capture() {
             Ok(image) => {
-                let mut buffer = Vec::new();
-                match image.write_to(&mut std::io::Cursor::new(&mut buffer), ImageFormat::Png) {
-                    Ok(_) => {
-                        let base64_data = STANDARD.encode(&buffer);
-                        results.push(ScreenCaptureResult {
-                            width,
-                            height,
-                            base64_data,
-                            display_index: index,
-                        });
-                        println!("[ScreenCapture] 屏幕 {} 截图成功: {} bytes", index, buffer.len());
+                let buffer = image.rgba();
+                let width = image.width();
+                let height = image.height();
+                
+                if let Some(rgba_image) = image::RgbaImage::from_raw(width, height, buffer.to_vec()) {
+                    let mut png_buffer = Vec::new();
+                    let mut cursor = std::io::Cursor::new(&mut png_buffer);
+                    match rgba_image.write_to(&mut cursor, ImageFormat::Png) {
+                        Ok(_) => {
+                            let base64_data = STANDARD.encode(&png_buffer);
+                            results.push(ScreenCaptureResult {
+                                width,
+                                height,
+                                base64_data,
+                                display_index: index,
+                            });
+                            println!("[ScreenCapture] 屏幕 {} 截图成功: {} bytes", index, png_buffer.len());
+                        }
+                        Err(e) => {
+                            println!("[ScreenCapture] 屏幕 {} PNG 编码失败: {}", index, e);
+                        }
                     }
-                    Err(e) => {
-                        println!("[ScreenCapture] 屏幕 {} PNG 编码失败: {}", index, e);
-                    }
+                } else {
+                    println!("[ScreenCapture] 屏幕 {} 创建 RgbaImage 失败", index);
                 }
             }
             Err(e) => {
@@ -106,11 +123,19 @@ pub async fn capture_screen_region(x: i32, y: i32, width: u32, height: u32) -> R
     let image = primary_screen.capture_area(x, y, width, height)
         .map_err(|e| anyhow::anyhow!("区域捕获失败: {}", e))?;
     
-    let mut buffer = Vec::new();
-    image.write_to(&mut std::io::Cursor::new(&mut buffer), ImageFormat::Png)
+    let buffer = image.rgba();
+    let width = image.width();
+    let height = image.height();
+    
+    let rgba_image = image::RgbaImage::from_raw(width, height, buffer.to_vec())
+        .ok_or_else(|| anyhow::anyhow!("创建 RgbaImage 失败"))?;
+        
+    let mut png_buffer = Vec::new();
+    let mut cursor = std::io::Cursor::new(&mut png_buffer);
+    rgba_image.write_to(&mut cursor, ImageFormat::Png)
         .map_err(|e| anyhow::anyhow!("PNG 编码失败: {}", e))?;
     
-    println!("[ScreenCapture] 区域截图成功: {} bytes", buffer.len());
+    println!("[ScreenCapture] 区域截图成功: {} bytes", png_buffer.len());
     
-    Ok(buffer)
+    Ok(png_buffer)
 }

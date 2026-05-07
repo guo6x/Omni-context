@@ -10,6 +10,45 @@ export const handleMemoryRoutes = [
       sendResponse(res, 200, items);
     }
   },
+  // 注意: 静态路径 (stats / search / compress / category) 必须先于 ":key" 注册，
+  // 否则 router 会按顺序匹配，导致这些固定路径被当作动态 key 走到 404。
+  {
+    method: 'GET' as const,
+    path: '/api/memory/core/stats',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const stats = await ctx.coreMemory.getStats();
+      sendResponse(res, 200, stats);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/core/search',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ query: string; category?: string; limit?: number }>(req);
+      const items = await ctx.coreMemory.search(body.query, {
+        category: body.category,
+        limit: body.limit,
+      });
+      sendResponse(res, 200, items);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/core/compress',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ category?: string }>(req);
+      const result = await ctx.coreMemory.compress(body.category);
+      sendResponse(res, 200, result);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/memory/core/category/:category',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const items = await ctx.coreMemory.getByCategory(params.category);
+      sendResponse(res, 200, items);
+    }
+  },
   {
     method: 'GET' as const,
     path: '/api/memory/core/:key',
@@ -43,47 +82,43 @@ export const handleMemoryRoutes = [
   },
   {
     method: 'GET' as const,
-    path: '/api/memory/core/category/:category',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
-      const items = await ctx.coreMemory.getByCategory(params.category);
-      sendResponse(res, 200, items);
-    }
-  },
-  {
-    method: 'POST' as const,
-    path: '/api/memory/core/search',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const body = await parseBody<{ query: string; category?: string; limit?: number }>(req);
-      const items = await ctx.coreMemory.search(body.query, {
-        category: body.category,
-        limit: body.limit,
-      });
-      sendResponse(res, 200, items);
-    }
-  },
-  {
-    method: 'POST' as const,
-    path: '/api/memory/core/compress',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const body = await parseBody<{ category?: string }>(req);
-      const result = await ctx.coreMemory.compress(body.category);
-      sendResponse(res, 200, result);
-    }
-  },
-  {
-    method: 'GET' as const,
-    path: '/api/memory/core/stats',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const stats = await ctx.coreMemory.getStats();
-      sendResponse(res, 200, stats);
-    }
-  },
-  {
-    method: 'GET' as const,
     path: '/api/memory/archival',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const items = await ctx.archivalMemory.getAll({ limit: 100 });
       sendResponse(res, 200, items);
+    }
+  },
+  // 静态路径 (summary / search / compress) 必须先于 ":id" 动态路径
+  {
+    method: 'GET' as const,
+    path: '/api/memory/archival/summary',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const summary = await ctx.archivalMemory.summarize();
+      sendResponse(res, 200, summary);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/archival/search',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{
+        query: string;
+        tags?: string[];
+        limit?: number;
+      }>(req);
+      const results = await ctx.archivalMemory.search(body.query, {
+        tags: body.tags,
+        limit: body.limit,
+      });
+      sendResponse(res, 200, results);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/archival/compress',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const result = await ctx.archivalMemory.compress();
+      sendResponse(res, 200, result);
     }
   },
   {
@@ -143,38 +178,6 @@ export const handleMemoryRoutes = [
       sendResponse(res, 200, { success: deleted });
     }
   },
-  {
-    method: 'POST' as const,
-    path: '/api/memory/archival/search',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const body = await parseBody<{ 
-        query: string; 
-        tags?: string[]; 
-        limit?: number;
-      }>(req);
-      const results = await ctx.archivalMemory.search(body.query, {
-        tags: body.tags,
-        limit: body.limit,
-      });
-      sendResponse(res, 200, results);
-    }
-  },
-  {
-    method: 'POST' as const,
-    path: '/api/memory/archival/compress',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const result = await ctx.archivalMemory.compress();
-      sendResponse(res, 200, result);
-    }
-  },
-  {
-    method: 'GET' as const,
-    path: '/api/memory/archival/summary',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const summary = await ctx.archivalMemory.summarize();
-      sendResponse(res, 200, summary);
-    }
-  },
 ];
 
 export const handleEntityRoutes = [
@@ -182,7 +185,7 @@ export const handleEntityRoutes = [
     method: 'GET' as const,
     path: '/api/entities',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const entities = await ctx.db.all<any>('SELECT * FROM entities LIMIT 100');
+      const entities = await ctx.db.getRecentEntities(100);
       sendResponse(res, 200, entities);
     }
   },
@@ -304,18 +307,6 @@ export const handlePrincipleRoutes = [
     }
   },
   {
-    method: 'GET' as const,
-    path: '/api/principles/:id',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
-      const entity = await ctx.db.getEntity(params.id);
-      if (!entity || entity.type !== 'principle') {
-        return sendError(res, 404, 'Principle not found');
-      }
-      const relationships = await ctx.db.getRelationshipsForEntity(entity.id);
-      sendResponse(res, 200, { ...entity, relationships });
-    }
-  },
-  {
     method: 'POST' as const,
     path: '/api/principles',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
@@ -343,12 +334,13 @@ export const handlePrincipleRoutes = [
       sendResponse(res, 201, entity);
     }
   },
+  // 静态路径 (core / type/:type) 必须先于 ":id"
   {
-    method: 'DELETE' as const,
-    path: '/api/principles/:id',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
-      await ctx.db.deleteEntity(params.id);
-      sendResponse(res, 200, { success: true });
+    method: 'GET' as const,
+    path: '/api/principles/core',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const principles = await ctx.db.getCorePrinciples();
+      sendResponse(res, 200, principles);
     }
   },
   {
@@ -357,8 +349,8 @@ export const handlePrincipleRoutes = [
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
       // 通过 tags 或 metadata.principleType 过滤
       const allPrinciples = await ctx.db.getEntitiesByType('principle');
-      const filtered = allPrinciples.filter(p => 
-        p.tags?.includes(params.type) || 
+      const filtered = allPrinciples.filter(p =>
+        p.tags?.includes(params.type) ||
         p.metadata?.principleType === params.type
       );
       sendResponse(res, 200, filtered);
@@ -366,10 +358,22 @@ export const handlePrincipleRoutes = [
   },
   {
     method: 'GET' as const,
-    path: '/api/principles/core',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const principles = await ctx.db.getCorePrinciples();
-      sendResponse(res, 200, principles);
+    path: '/api/principles/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const entity = await ctx.db.getEntity(params.id);
+      if (!entity || entity.type !== 'principle') {
+        return sendError(res, 404, 'Principle not found');
+      }
+      const relationships = await ctx.db.getRelationshipsForEntity(entity.id);
+      sendResponse(res, 200, { ...entity, relationships });
+    }
+  },
+  {
+    method: 'DELETE' as const,
+    path: '/api/principles/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      await ctx.db.deleteEntity(params.id);
+      sendResponse(res, 200, { success: true });
     }
   },
   {
@@ -417,12 +421,21 @@ export const handleGraphRoutes = [
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const body = await parseBody<{
         text?: string;
+        content?: string;
         clipboard?: string;
         screenshot?: string;
+        source?: string;
       }>(req);
+
+      const textContent = body.text || body.content;
+      if (!textContent && !body.clipboard && !body.screenshot) {
+        return sendError(res, 400, 'Text, clipboard, or screenshot content is required');
+      }
       
       const result = await ctx.extractor.extract({
-        textContent: body.text,
+        textContent: body.source && textContent
+          ? `Source: ${body.source}\n${textContent}`
+          : textContent,
         clipboard: body.clipboard,
         screenshot: body.screenshot,
         timestamp: new Date().toISOString(),
@@ -459,6 +472,14 @@ export const handleGraphRoutes = [
     }
   },
   {
+    method: 'GET' as const,
+    path: '/api/graph/context',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const context = await buildGraphContext(ctx, {});
+      sendResponse(res, 200, context);
+    }
+  },
+  {
     method: 'POST' as const,
     path: '/api/graph/context',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
@@ -467,42 +488,71 @@ export const handleGraphRoutes = [
         query?: string;
         depth?: number;
       }>(req);
-
-      let entities: any[] = [];
-      let relationships: any[] = [];
-
-      if (body.entityId) {
-        const entity = await ctx.db.getEntity(body.entityId);
-        if (entity) {
-          entities.push(entity);
-          const relatedRels = await ctx.db.getRelationshipsForEntity(entity.id);
-          relationships.push(...relatedRels);
-
-          for (const rel of relatedRels) {
-            const relatedId = rel.source_id === entity.id ? rel.target_id : rel.source_id;
-            const related = await ctx.db.getEntity(relatedId);
-            if (related) entities.push(related);
-          }
-        }
-      }
-
-      if (body.query) {
-        const searchResults = await ctx.db.searchEntities(body.query, 5);
-        entities.push(...searchResults);
-      }
-
-      const uniqueEntities = Array.from(
-        new Map(entities.map(e => [e.id, e])).values()
-      );
-
-      sendResponse(res, 200, {
-        entities: uniqueEntities,
-        relationships: relationships.slice(0, 20),
-        depth: body.depth || 2,
-      });
+      const context = await buildGraphContext(ctx, body);
+      sendResponse(res, 200, context);
     }
   },
 ];
+
+async function buildGraphContext(
+  ctx: RequestContext,
+  body: { entityId?: string; query?: string; depth?: number }
+) {
+  let entities: any[] = [];
+  let relationships: any[] = [];
+
+  if (!body.entityId && !body.query) {
+    entities = await ctx.db.getRecentEntities(80);
+    const visibleEntityIds = new Set(entities.map((entity) => entity.id));
+    relationships = (await ctx.db.getRelationships(200))
+      .filter((relationship) =>
+        visibleEntityIds.has(relationship.source_id) && visibleEntityIds.has(relationship.target_id)
+      )
+      .slice(0, 120);
+
+    return {
+      entities,
+      relationships,
+      depth: body.depth || 2,
+    };
+  }
+
+  if (body.entityId) {
+    // 主动查询的目标节点保留 access 计数；其邻居仅展示，不应触发写放大
+    const entity = await ctx.db.getEntity(body.entityId);
+    if (entity) {
+      entities.push(entity);
+      const relatedRels = await ctx.db.getRelationshipsForEntity(entity.id);
+      relationships.push(...relatedRels);
+
+      for (const rel of relatedRels) {
+        const relatedId = rel.source_id === entity.id ? rel.target_id : rel.source_id;
+        const related = await ctx.db.peekEntity(relatedId);
+        if (related) entities.push(related);
+      }
+    }
+  }
+
+  if (body.query) {
+    const searchResults = await ctx.db.searchEntities(body.query, 10);
+    entities.push(...searchResults);
+  }
+
+  const uniqueEntities = Array.from(
+    new Map(entities.map(e => [e.id, e])).values()
+  );
+
+  const visibleEntityIds = new Set(uniqueEntities.map((entity) => entity.id));
+  relationships = relationships.filter((relationship) =>
+    visibleEntityIds.has(relationship.source_id) && visibleEntityIds.has(relationship.target_id)
+  );
+
+  return {
+    entities: uniqueEntities,
+    relationships: relationships.slice(0, 40),
+    depth: body.depth || 2,
+  };
+}
 
 export const handleStatsRoutes = [
   {
@@ -567,4 +617,23 @@ export const handleStatsRoutes = [
       sendResponse(res, 200, { imported });
     }
   },
+];
+
+export const handleNotificationRoutes = [
+  {
+    method: 'GET' as const,
+    path: '/api/notifications',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const notifications = await ctx.db.getUnreadNotifications();
+      sendResponse(res, 200, notifications);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/notifications/:id/read',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      await ctx.db.markNotificationRead(params.id);
+      sendResponse(res, 200, { success: true });
+    }
+  }
 ];

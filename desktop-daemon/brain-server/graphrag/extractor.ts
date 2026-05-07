@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Entity, Relationship, EntityType, RelationshipType } from '../shared-types.js';
+import { Entity, Relationship, Principle, Evidence, GraphRAGOutput, EntityType, RelationshipType } from '../shared-types';
 
 export interface ExtractionInput {
   screenshot?: string;
@@ -28,20 +28,6 @@ export interface RelationshipPattern {
   type: RelationshipType;
   extractEntities: (match: RegExpMatchArray) => { source: string; target: string };
   description?: string;
-}
-
-export interface ExtractedPrinciple {
-  title: string;
-  content: string;
-  type: string;
-  isCore: boolean;
-  version: number;
-}
-
-export interface GraphRAGOutput {
-  entities: Entity[];
-  relationships: Relationship[];
-  principles: ExtractedPrinciple[];
 }
 
 const ENTITY_PATTERNS: EntityPattern[] = [
@@ -277,8 +263,6 @@ export class GraphRAGExtractor {
               description: pattern.description || `从内容中提取的${pattern.type}`,
               created_at: now,
               updated_at: now,
-              last_accessed: now,
-              access_count: 0,
               tags: ['auto-extracted'],
               metadata: {
                 source: input.sourceType || 'manual',
@@ -322,8 +306,6 @@ export class GraphRAGExtractor {
           description: `网站或服务: ${url}`,
           created_at: now,
           updated_at: now,
-          last_accessed: now,
-          access_count: 0,
           tags: ['url', 'web'],
           metadata: { url }
         });
@@ -340,8 +322,6 @@ export class GraphRAGExtractor {
         description: `邮箱地址`,
         created_at: now,
         updated_at: now,
-        last_accessed: now,
-        access_count: 0,
         tags: ['email'],
       });
     }
@@ -356,8 +336,6 @@ export class GraphRAGExtractor {
         description: `版本号: ${versionMatch[0]}`,
         created_at: now,
         updated_at: now,
-        last_accessed: now,
-        access_count: 0,
         tags: ['version'],
       });
     }
@@ -405,7 +383,6 @@ export class GraphRAGExtractor {
                   description: pattern.description,
                   weight: 1.0,
                   created_at: now,
-                  last_activated: now,
                 });
               }
             }
@@ -446,7 +423,6 @@ export class GraphRAGExtractor {
             description: '代码属于项目',
             weight: 0.8,
             created_at: now,
-            last_activated: now,
           });
         }
       }
@@ -466,7 +442,6 @@ export class GraphRAGExtractor {
             description: '原则与概念相关',
             weight: 0.6,
             created_at: now,
-            last_activated: now,
           });
         }
       }
@@ -475,8 +450,9 @@ export class GraphRAGExtractor {
     return relationships;
   }
 
-  private async extractPrinciples(text: string, input: ExtractionInput): Promise<ExtractedPrinciple[]> {
-    const principles: ExtractedPrinciple[] = [];
+  private async extractPrinciples(text: string, input: ExtractionInput): Promise<Principle[]> {
+    const principles: Principle[] = [];
+    const now = new Date().toISOString();
 
     for (const patternGroup of PRINCIPLE_PATTERNS) {
       for (const pattern of patternGroup.patterns) {
@@ -488,11 +464,23 @@ export class GraphRAGExtractor {
           
           if (content.length > 10 && content.length < 500) {
             const title = this.generatePrincipleTitle(content, patternGroup.type);
+            
+            const evidence: Evidence = {
+              id: uuidv4(),
+              content: match[0],
+              source_type: input.sourceType || 'manual',
+              timestamp: input.timestamp,
+            };
+
             principles.push({
+              id: uuidv4(),
               title,
               content,
               type: patternGroup.type,
-              isCore: false,
+              evidence: [evidence],
+              created_at: now,
+              updated_at: now,
+              is_core: false,
               version: 1,
             });
           }
@@ -521,18 +509,69 @@ export class GraphRAGExtractor {
     return `[${typeNames[type] || '原则'}] ${title}...`;
   }
 
-  private deduplicatePrinciples(principles: ExtractedPrinciple[]): ExtractedPrinciple[] {
-    const seen = new Map<string, ExtractedPrinciple>();
+  private deduplicatePrinciples(principles: Principle[]): Principle[] {
+    const seen = new Map<string, Principle>();
     
     for (const principle of principles) {
       const key = principle.content.toLowerCase().trim();
       
       if (!seen.has(key)) {
         seen.set(key, principle);
+      } else {
+        const existing = seen.get(key)!;
+        existing.evidence.push(...principle.evidence);
       }
     }
     
     return Array.from(seen.values());
+  }
+
+  async extractWithContext(text: string, context: Entity[]): Promise<GraphRAGOutput> {
+    const baseResult = await this.extract({
+      textContent: text,
+      timestamp: new Date().toISOString(),
+    });
+
+    const contextRelationships = this.linkWithContext(baseResult.entities, context);
+    baseResult.relationships.push(...contextRelationships);
+
+    return baseResult;
+  }
+
+  private linkWithContext(newEntities: Entity[], contextEntities: Entity[]): Relationship[] {
+    const relationships: Relationship[] = [];
+    const now = new Date().toISOString();
+
+    for (const newEntity of newEntities) {
+      for (const contextEntity of contextEntities) {
+        if (newEntity.type === contextEntity.type) {
+          relationships.push({
+            id: uuidv4(),
+            source_id: newEntity.id,
+            target_id: contextEntity.id,
+            type: 'relates_to',
+            description: `同类型实体: ${newEntity.type}`,
+            weight: 0.5,
+            created_at: now,
+          });
+        }
+
+        if (newEntity.name.toLowerCase().includes(contextEntity.name.toLowerCase()) ||
+            contextEntity.name.toLowerCase().includes(newEntity.name.toLowerCase())) {
+          relationships.push({
+            id: uuidv4(),
+            source_id: newEntity.id,
+            target_id: contextEntity.id,
+            type: 'derived_from',
+            description: '名称相关',
+            weight: 0.7,
+            created_at: now,
+          });
+        }
+      }
+    }
+
+    return relationships;
   }
 
   async summarizeEntities(entities: Entity[]): Promise<string> {

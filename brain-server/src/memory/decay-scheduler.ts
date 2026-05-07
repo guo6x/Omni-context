@@ -51,6 +51,7 @@ export class MemoryDecayScheduler {
   private db: Database;
   private config: DecayConfig;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private warmupTimer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
   private lastReport: DecayReport | null = null;
 
@@ -70,8 +71,11 @@ export class MemoryDecayScheduler {
     if (this.timer) return;
     console.log(`[MemoryDecay] 启动调度器 (间隔: ${this.config.intervalMs / 1000}s)`);
 
-    // 首次延迟 10 秒执行（等待系统初始化）
-    setTimeout(() => this.runDecayCycle(), 10_000);
+    // 首次延迟 10 秒执行（等待系统初始化）— 句柄保留，stop 时清理
+    this.warmupTimer = setTimeout(() => {
+      this.warmupTimer = null;
+      this.runDecayCycle();
+    }, 10_000);
     this.timer = setInterval(() => this.runDecayCycle(), this.config.intervalMs);
   }
 
@@ -79,6 +83,10 @@ export class MemoryDecayScheduler {
    * 停止调度
    */
   stop(): void {
+    if (this.warmupTimer) {
+      clearTimeout(this.warmupTimer);
+      this.warmupTimer = null;
+    }
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
@@ -142,7 +150,8 @@ export class MemoryDecayScheduler {
   }
 
   /**
-   * 衰减关系权重
+   * 衰减关系权重 — 计算阶段先聚合需要更新的行，再用一次事务批量提交，
+   * 避免在大型图谱上做 N 次独立 UPDATE 触发的 fsync 风暴。
    */
   private async _decayRelationships(report: DecayReport): Promise<void> {
     // 查找所有非 dormant 的关系
@@ -156,32 +165,31 @@ export class MemoryDecayScheduler {
 
     report.relationshipsProcessed = relationships.length;
     const now = Date.now();
+    const updates: Array<{ id: string; weight: number; dormant: boolean }> = [];
 
     for (const rel of relationships) {
       const lastActivated = new Date(rel.last_activated).getTime();
       const daysSince = (now - lastActivated) / (1000 * 60 * 60 * 24);
 
-      if (daysSince < 1) continue; // 一天内的不衰减
+      if (daysSince < 1) continue;
 
-      // 艾宾浩斯衰减
       const newWeight = rel.weight * Math.pow(this.config.decayFactor, daysSince);
-
       if (newWeight <= this.config.minWeight) {
-        // 低于阈值，标记为 dormant
-        await this.db.run(
-          `UPDATE relationships SET weight = ? WHERE id = ?`,
-          [this.config.minWeight, rel.id]
-        );
-        report.relationshipsDormant++;
+        updates.push({ id: rel.id, weight: this.config.minWeight, dormant: true });
       } else if (Math.abs(newWeight - rel.weight) > 0.001) {
-        // 有实质性衰减
-        await this.db.run(
-          `UPDATE relationships SET weight = ? WHERE id = ?`,
-          [Math.round(newWeight * 1000) / 1000, rel.id]
-        );
-        report.relationshipsDecayed++;
+        updates.push({ id: rel.id, weight: Math.round(newWeight * 1000) / 1000, dormant: false });
       }
     }
+
+    if (updates.length === 0) return;
+
+    await this.db.withTransaction(async () => {
+      for (const u of updates) {
+        await this.db.run('UPDATE relationships SET weight = ? WHERE id = ?', [u.weight, u.id]);
+        if (u.dormant) report.relationshipsDormant++;
+        else report.relationshipsDecayed++;
+      }
+    });
   }
 
   /**
@@ -200,20 +208,24 @@ export class MemoryDecayScheduler {
       [cutoffStr]
     );
 
-    for (const entity of staleEntities) {
-      try {
-        // 通过 metadata 标记 stale，而不是删除
-        await this.db.run(
-          `UPDATE entities
-           SET metadata = json_set(COALESCE(metadata, '{}'), '$.stale', 1, '$.stale_since', ?)
-           WHERE id = ?`,
-          [new Date().toISOString(), entity.id]
-        );
-        report.entitiesStale++;
-      } catch (e) {
-        // 单个实体标记失败不影响整体
+    if (staleEntities.length === 0) return;
+
+    const stamp = new Date().toISOString();
+    await this.db.withTransaction(async () => {
+      for (const entity of staleEntities) {
+        try {
+          await this.db.run(
+            `UPDATE entities
+             SET metadata = json_set(COALESCE(metadata, '{}'), '$.stale', 1, '$.stale_since', ?)
+             WHERE id = ?`,
+            [stamp, entity.id]
+          );
+          report.entitiesStale++;
+        } catch {
+          // 单个实体标记失败不影响整体
+        }
       }
-    }
+    });
   }
 
   /**

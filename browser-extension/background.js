@@ -5,115 +5,134 @@ let desktopConnection = null;
 
 async function connectToDesktop() {
   try {
-    const response = await fetch(`${API_BASE}/health`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (response.ok) {
-      desktopConnection = { status: 'connected', lastCheck: Date.now() };
-      console.log('Connected to Omni-Context Desktop');
-    }
+    const response = await fetch(`${API_BASE}/health`);
+    desktopConnection = {
+      status: response.ok ? 'connected' : 'disconnected',
+      lastCheck: Date.now(),
+    };
   } catch (error) {
     desktopConnection = { status: 'disconnected', lastCheck: Date.now() };
-    console.log('Desktop app not running');
   }
 }
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Omni-Context Extension installed');
-  chrome.storage.local.set({ 
+  chrome.storage.local.set({
     settings: {
       language: 'en',
       autoCapture: true,
-      syncEnabled: true
-    }
+      syncEnabled: true,
+    },
   });
+
+  chrome.contextMenus.create({
+    id: 'capturePage',
+    title: 'Capture this page',
+    contexts: ['page'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'captureSelection',
+    title: 'Capture selected text',
+    contexts: ['selection'],
+  });
+
   connectToDesktop();
-  setInterval(connectToDesktop, 30000);
+});
+
+chrome.alarms?.create('omni-context-health', { periodInMinutes: 0.5 });
+chrome.alarms?.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'omni-context-health') {
+    connectToDesktop();
+  }
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'CAPTURE_PAGE') {
-    capturePage(message.data);
-  } else if (message.type === 'GET_STATUS') {
-    sendResponse(desktopConnection);
-  } else if (message.type === 'CAPTURE_SELECTION') {
-    captureSelection(message.data, sender.tab);
+    capturePage(message.data).then(sendResponse);
+    return true;
   }
-  return true;
+
+  if (message.type === 'GET_STATUS') {
+    sendResponse(desktopConnection);
+    return false;
+  }
+
+  if (message.type === 'CAPTURE_SELECTION') {
+    captureSelection(message.data, sender.tab).then(sendResponse);
+    return true;
+  }
 });
 
 async function capturePage(data) {
-  try {
-    const response = await fetch(`${API_BASE}/api/capture`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'webpage',
-        url: data.url,
-        title: data.title,
-        content: data.content,
-        timestamp: Date.now()
-      })
-    });
-    
-    if (response.ok) {
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icons/icon48.png',
-        title: 'Omni-Context',
-        message: 'Page captured successfully!'
-      });
-    }
-  } catch (error) {
-    console.error('Failed to capture page:', error);
-  }
+  return sendToBrainServer({
+    type: 'webpage',
+    url: data.url,
+    title: data.title,
+    content: data.content,
+  });
 }
 
 async function captureSelection(data, tab) {
+  return sendToBrainServer({
+    type: 'selection',
+    url: data.url || tab?.url,
+    title: data.title || tab?.title,
+    content: data.content || data.text,
+  });
+}
+
+async function sendToBrainServer(data) {
   try {
-    const response = await fetch(`${API_BASE}/api/capture`, {
+    const response = await fetch(`${API_BASE}/api/graph/extract`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        type: 'selection',
-        url: tab.url,
-        title: tab.title,
-        content: data.text,
-        selection: data.selection,
-        timestamp: Date.now()
-      })
+        text: formatCaptureText(data),
+        source: 'browser-extension',
+      }),
     });
-    
+
     if (response.ok) {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'icons/icon48.png',
         title: 'Omni-Context',
-        message: 'Selection captured!'
+        message: data.type === 'selection' ? 'Selection captured!' : 'Page captured successfully!',
       });
+      return { ok: true };
     }
+
+    return { ok: false, error: `Brain Server returned ${response.status}` };
   } catch (error) {
-    console.error('Failed to capture selection:', error);
+    console.error('Failed to capture content:', error);
+    return { ok: false, error: String(error) };
   }
 }
 
-chrome.contextMenus?.create({
-  id: 'capturePage',
-  title: 'Capture this page',
-  contexts: ['page']
-});
-
-chrome.contextMenus?.create({
-  id: 'captureSelection',
-  title: 'Capture selected text',
-  contexts: ['selection']
-});
+function formatCaptureText(data) {
+  return [
+    `Type: ${data.type}`,
+    `URL: ${data.url || ''}`,
+    `Title: ${data.title || ''}`,
+    '',
+    data.content || '',
+  ].join('\n').slice(0, 12000);
+}
 
 chrome.contextMenus?.onClicked.addListener((info, tab) => {
+  if (!tab?.id) return;
+
   if (info.menuItemId === 'capturePage') {
-    chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_CONTENT' });
-  } else if (info.menuItemId === 'captureSelection') {
-    chrome.tabs.sendMessage(tab.id, { type: 'GET_SELECTION' });
+    chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_CONTENT' }, (page) => {
+      if (chrome.runtime.lastError || !page?.content) return;
+      capturePage(page);
+    });
+  }
+
+  if (info.menuItemId === 'captureSelection') {
+    chrome.tabs.sendMessage(tab.id, { type: 'GET_SELECTION' }, (selection) => {
+      if (chrome.runtime.lastError || !selection?.text) return;
+      captureSelection(selection, tab);
+    });
   }
 });

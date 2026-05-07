@@ -35,7 +35,8 @@ export function QuickCapture() {
 
     try {
       const memory: Memory = {
-        id: Date.now().toString(),
+        // Date.now() 单独使用在快速连续点击下会撞 ID；加上随机后缀
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
         content: content.trim(),
         type,
         tags: tags.split(',').map(t => t.trim()).filter(Boolean),
@@ -58,44 +59,38 @@ export function QuickCapture() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      className="flex-1 bg-[#0a0b12]"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        className="p-5"
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.section}>
-          <Text style={styles.label}>{t('memory.content')}</Text>
+        <View className="mb-6">
+          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.content')}</Text>
           <TextInput
-            style={styles.contentInput}
+            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base min-h-[120px]"
             value={content}
             onChangeText={setContent}
             placeholder={t('capture.placeholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor="#64748b"
             multiline
             numberOfLines={4}
             textAlignVertical="top"
           />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>{t('memory.type')}</Text>
-          <View style={styles.typeContainer}>
+        <View className="mb-6">
+          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.type')}</Text>
+          <View className="flex-row flex-wrap gap-2">
             {MEMORY_TYPES.map(memoryType => (
               <TouchableOpacity
                 key={memoryType}
-                style={[
-                  styles.typeButton,
-                  type === memoryType && styles.typeButtonActive,
-                ]}
+                className={`px-4 py-2 rounded-full border ${type === memoryType ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
                 onPress={() => setType(memoryType)}
               >
                 <Text
-                  style={[
-                    styles.typeText,
-                    type === memoryType && styles.typeTextActive,
-                  ]}
+                  className={`text-sm ${type === memoryType ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}
                 >
                   {t(`memory.${memoryType}`)}
                 </Text>
@@ -104,24 +99,27 @@ export function QuickCapture() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>{t('memory.tags')}</Text>
+        <View className="mb-6">
+          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.tags')}</Text>
           <TextInput
-            style={styles.input}
+            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base"
             value={tags}
             onChangeText={setTags}
             placeholder={t('capture.tagsPlaceholder')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor="#64748b"
             autoCapitalize="none"
           />
         </View>
 
         <TouchableOpacity
-          style={[styles.captureButton, isCapturing && styles.captureButtonDisabled]}
+          className={`bg-cyan-400 rounded-xl p-4 items-center mt-4 shadow-[0_0_15px_rgba(34,211,238,0.5)] ${isCapturing ? 'opacity-60' : ''}`}
           onPress={handleCapture}
           disabled={isCapturing}
+          accessibilityRole="button"
+          accessibilityLabel={isCapturing ? t('capture.capturing') : t('capture.capture')}
+          accessibilityState={{ disabled: isCapturing, busy: isCapturing }}
         >
-          <Text style={styles.captureButtonText}>
+          <Text className="text-[#0a0b12] text-lg font-bold">
             {isCapturing ? t('capture.capturing') : t('capture.capture')}
           </Text>
         </TouchableOpacity>
@@ -129,86 +127,3 @@ export function QuickCapture() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-  },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
-    marginBottom: spacing.sm,
-  },
-  input: {
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 12,
-    padding: spacing.md,
-    color: colors.text,
-    fontSize: typography.fontSizes.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  contentInput: {
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 12,
-    padding: spacing.md,
-    color: colors.text,
-    fontSize: typography.fontSizes.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 120,
-  },
-  typeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  typeButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 20,
-    backgroundColor: colors.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  typeButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  typeText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-  },
-  typeTextActive: {
-    color: colors.background,
-    fontWeight: typography.fontWeights.bold,
-  },
-  captureButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    padding: spacing.lg,
-    alignItems: 'center',
-    marginTop: spacing.md,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  captureButtonDisabled: {
-    opacity: 0.6,
-  },
-  captureButtonText: {
-    color: colors.background,
-    fontSize: typography.fontSizes.lg,
-    fontWeight: typography.fontWeights.bold,
-  },
-});

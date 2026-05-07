@@ -4,12 +4,11 @@ import { Memory, KnowledgeNode, KnowledgeEdge } from '@/types';
 let db: SQLite.SQLiteDatabase | null = null;
 
 export async function initDatabase(): Promise<void> {
-  db = await SQLite.openDatabaseAsync('omni_context.db');
+  db = SQLite.openDatabase('omni_context.db');
   
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    
-    CREATE TABLE IF NOT EXISTS memories (
+  await execStatements([
+    'PRAGMA journal_mode = WAL',
+    `CREATE TABLE IF NOT EXISTS memories (
       id TEXT PRIMARY KEY,
       content TEXT NOT NULL,
       type TEXT NOT NULL,
@@ -18,9 +17,8 @@ export async function initDatabase(): Promise<void> {
       updatedAt INTEGER NOT NULL,
       synced INTEGER DEFAULT 0,
       metadata TEXT
-    );
-    
-    CREATE TABLE IF NOT EXISTS knowledge_nodes (
+    )`,
+    `CREATE TABLE IF NOT EXISTS knowledge_nodes (
       id TEXT PRIMARY KEY,
       label TEXT NOT NULL,
       type TEXT NOT NULL,
@@ -29,26 +27,55 @@ export async function initDatabase(): Promise<void> {
       color TEXT NOT NULL,
       x REAL,
       y REAL
-    );
-    
-    CREATE TABLE IF NOT EXISTS knowledge_edges (
+    )`,
+    `CREATE TABLE IF NOT EXISTS knowledge_edges (
       id TEXT PRIMARY KEY,
       source TEXT NOT NULL,
       target TEXT NOT NULL,
       type TEXT NOT NULL,
       weight REAL NOT NULL
-    );
-    
-    CREATE INDEX IF NOT EXISTS idx_memories_created ON memories(createdAt);
-    CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
-    CREATE INDEX IF NOT EXISTS idx_memories_synced ON memories(synced);
-  `);
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_memories_created ON memories(createdAt)',
+    'CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type)',
+    'CREATE INDEX IF NOT EXISTS idx_memories_synced ON memories(synced)',
+  ]);
+}
+
+function getDb(): SQLite.SQLiteDatabase {
+  if (!db) throw new Error('Database not initialized');
+  return db;
+}
+
+async function execute(sql: string, args: unknown[] = [], readOnly = false): Promise<SQLite.ResultSet> {
+  const [result] = await getDb().execAsync([{ sql, args }], readOnly);
+  if ('error' in result) {
+    throw result.error;
+  }
+  return result;
+}
+
+async function execStatements(statements: string[]): Promise<void> {
+  for (const statement of statements) {
+    await execute(statement);
+  }
+}
+
+async function runAsync(sql: string, args: unknown[] = []): Promise<SQLite.ResultSet> {
+  return execute(sql, args);
+}
+
+async function getAllAsync<T>(sql: string, args: unknown[] = []): Promise<T[]> {
+  const result = await execute(sql, args, true);
+  return result.rows as T[];
+}
+
+async function getFirstAsync<T>(sql: string, args: unknown[] = []): Promise<T | null> {
+  const rows = await getAllAsync<T>(sql, args);
+  return rows[0] ?? null;
 }
 
 export async function addMemory(memory: Memory): Promise<void> {
-  if (!db) throw new Error('Database not initialized');
-  
-  await db.runAsync(
+  await runAsync(
     `INSERT OR REPLACE INTO memories (id, content, type, tags, createdAt, updatedAt, synced, metadata)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -65,9 +92,7 @@ export async function addMemory(memory: Memory): Promise<void> {
 }
 
 export async function getMemories(limit = 50, offset = 0): Promise<Memory[]> {
-  if (!db) throw new Error('Database not initialized');
-  
-  const results = await db.getAllAsync<any>(
+  const results = await getAllAsync<any>(
     `SELECT * FROM memories ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
     [limit, offset]
   );
@@ -85,9 +110,7 @@ export async function getMemories(limit = 50, offset = 0): Promise<Memory[]> {
 }
 
 export async function getMemoryById(id: string): Promise<Memory | null> {
-  if (!db) throw new Error('Database not initialized');
-  
-  const result = await db.getFirstAsync<any>(
+  const result = await getFirstAsync<any>(
     `SELECT * FROM memories WHERE id = ?`,
     [id]
   );
@@ -123,15 +146,11 @@ export async function updateMemory(id: string, updates: Partial<Memory>): Promis
 }
 
 export async function deleteMemory(id: string): Promise<void> {
-  if (!db) throw new Error('Database not initialized');
-  
-  await db.runAsync(`DELETE FROM memories WHERE id = ?`, [id]);
+  await runAsync(`DELETE FROM memories WHERE id = ?`, [id]);
 }
 
 export async function getUnsyncedMemories(): Promise<Memory[]> {
-  if (!db) throw new Error('Database not initialized');
-  
-  const results = await db.getAllAsync<any>(
+  const results = await getAllAsync<any>(
     `SELECT * FROM memories WHERE synced = 0`
   );
   
@@ -148,18 +167,14 @@ export async function getUnsyncedMemories(): Promise<Memory[]> {
 }
 
 export async function markMemorySynced(id: string): Promise<void> {
-  if (!db) throw new Error('Database not initialized');
-  
-  await db.runAsync(
+  await runAsync(
     `UPDATE memories SET synced = 1 WHERE id = ?`,
     [id]
   );
 }
 
 export async function searchMemories(query: string): Promise<Memory[]> {
-  if (!db) throw new Error('Database not initialized');
-  
-  const results = await db.getAllAsync<any>(
+  const results = await getAllAsync<any>(
     `SELECT * FROM memories WHERE content LIKE ? ORDER BY createdAt DESC`,
     [`%${query}%`]
   );
@@ -177,9 +192,7 @@ export async function searchMemories(query: string): Promise<Memory[]> {
 }
 
 export async function addKnowledgeNode(node: KnowledgeNode): Promise<void> {
-  if (!db) throw new Error('Database not initialized');
-  
-  await db.runAsync(
+  await runAsync(
     `INSERT OR REPLACE INTO knowledge_nodes (id, label, type, connections, weight, color, x, y)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -196,9 +209,7 @@ export async function addKnowledgeNode(node: KnowledgeNode): Promise<void> {
 }
 
 export async function getKnowledgeNodes(): Promise<KnowledgeNode[]> {
-  if (!db) throw new Error('Database not initialized');
-  
-  const results = await db.getAllAsync<any>(
+  const results = await getAllAsync<any>(
     `SELECT * FROM knowledge_nodes`
   );
   
@@ -215,9 +226,7 @@ export async function getKnowledgeNodes(): Promise<KnowledgeNode[]> {
 }
 
 export async function addKnowledgeEdge(edge: KnowledgeEdge): Promise<void> {
-  if (!db) throw new Error('Database not initialized');
-  
-  await db.runAsync(
+  await runAsync(
     `INSERT OR REPLACE INTO knowledge_edges (id, source, target, type, weight)
      VALUES (?, ?, ?, ?, ?)`,
     [edge.id, edge.source, edge.target, edge.type, edge.weight]
@@ -225,9 +234,7 @@ export async function addKnowledgeEdge(edge: KnowledgeEdge): Promise<void> {
 }
 
 export async function getKnowledgeEdges(): Promise<KnowledgeEdge[]> {
-  if (!db) throw new Error('Database not initialized');
-  
-  const results = await db.getAllAsync<any>(
+  const results = await getAllAsync<any>(
     `SELECT * FROM knowledge_edges`
   );
   
@@ -241,11 +248,9 @@ export async function getKnowledgeEdges(): Promise<KnowledgeEdge[]> {
 }
 
 export async function clearAllData(): Promise<void> {
-  if (!db) throw new Error('Database not initialized');
-  
-  await db.execAsync(`
-    DELETE FROM memories;
-    DELETE FROM knowledge_nodes;
-    DELETE FROM knowledge_edges;
-  `);
+  await execStatements([
+    'DELETE FROM memories',
+    'DELETE FROM knowledge_nodes',
+    'DELETE FROM knowledge_edges',
+  ]);
 }

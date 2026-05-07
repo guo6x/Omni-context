@@ -27,30 +27,42 @@ export function useTranslation() {
   return context;
 }
 
+function detectInitialLanguage(): Language {
+  // SSR 阶段没有 window —— 静态返回默认值，
+  // useEffect 阶段再切换到真正的语言，避免 hydration 报错
+  if (typeof window === 'undefined') return 'zh';
+  try {
+    const saved = window.localStorage.getItem('omnicontext_language');
+    if (saved === 'zh' || saved === 'en') return saved;
+  } catch {
+    // localStorage 不可用（隐私模式 / file://）
+  }
+  const browserLang = (navigator.language || 'zh').toLowerCase();
+  return browserLang.startsWith('zh') ? 'zh' : 'en';
+}
+
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
+  // 服务端渲染时强制 'zh'，客户端 hydrate 完毕后再用 effect 同步真实偏好。
+  // 这样首屏 HTML 与 first client render 都是 'zh'，避免 React hydration mismatch。
   const [language, setLanguage] = useState<Language>('zh');
-  const [mounted, setMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem('omnicontext_language');
-    if (saved && (saved === 'zh' || saved === 'en')) {
-      setLanguage(saved);
-    } else {
-      const browserLang = navigator.language.toLowerCase();
-      if (browserLang.startsWith('zh')) {
-        setLanguage('zh');
-      } else {
-        setLanguage('en');
-      }
-    }
+    setHydrated(true);
+    const detected = detectInitialLanguage();
+    if (detected !== language) setLanguage(detected);
+    // 只在挂载后跑一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (mounted) {
-      localStorage.setItem('omnicontext_language', language);
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem('omnicontext_language', language);
+    } catch {
+      /* ignore */
     }
-  }, [language, mounted]);
+  }, [language, hydrated]);
 
   const t = useCallback(
     (key: string) => {

@@ -14,18 +14,25 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["ai", "mcp", "graphrag", "memory"],
+  "keywords": [
+    "ai",
+    "mcp",
+    "graphrag",
+    "memory"
+  ],
   "author": "Omni-Context Team",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "@xenova/transformers": "^2.17.2",
+    "sqlite-vec": "^0.1.9",
     "sqlite3": "^5.1.7",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/sqlite3": "^3.1.11",
     "@types/node": "^20.11.16",
+    "@types/sqlite3": "^3.1.11",
     "@types/uuid": "^9.0.7",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",

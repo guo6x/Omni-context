@@ -61,9 +61,9 @@ export default function ShortcutsHelp({ shortcuts, onClose }: ShortcutsHelpProps
               {category}
             </h4>
             <div className="space-y-2">
-              {items.map((shortcut, index) => (
+              {items.map((shortcut) => (
                 <div
-                  key={index}
+                  key={`${category}-${shortcut.description}-${shortcut.key}`}
                   className="flex items-center justify-between py-2 px-3 bg-black/20 rounded-lg border border-white/5 hover:border-cyan-900/50 transition-colors"
                 >
                   <span className="text-sm text-gray-300">{shortcut.description}</span>

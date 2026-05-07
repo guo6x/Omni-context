@@ -14,14 +14,13 @@ import { useTranslation } from 'react-i18next';
 import { useHUD } from '@/components/HUD';
 import { syncService } from '@/services/syncService';
 import { Memory } from '@/types';
-import { colors, spacing, typography } from '@/utils/theme';
 import { format } from 'date-fns';
 
 const TYPE_COLORS: Record<Memory['type'], string> = {
-  note: colors.primary,
-  task: colors.secondary,
-  idea: colors.accent,
-  reference: colors.success,
+  note: '#22d3ee', // cyan-400
+  task: '#c084fc', // purple-400
+  idea: '#9333ea', // purple-600
+  reference: '#164e63', // cyan-900
 };
 
 export function MemoryListScreen() {
@@ -69,82 +68,77 @@ export function MemoryListScreen() {
     : memories;
 
   const renderMemory = useCallback(({ item }: { item: Memory }) => (
-    <TouchableOpacity style={styles.memoryCard} activeOpacity={0.7}>
-      <View style={[styles.typeIndicator, { backgroundColor: TYPE_COLORS[item.type] }]} />
-      <View style={styles.memoryContent}>
-        <Text style={styles.memoryText} numberOfLines={3}>
+    <TouchableOpacity className="flex-row bg-black/40 rounded-xl mb-4 overflow-hidden border border-white/10" activeOpacity={0.7}>
+      <View className="w-1" style={{ backgroundColor: TYPE_COLORS[item.type] }} />
+      <View className="flex-1 p-4">
+        <Text className="text-[#e8e8e8] text-base leading-6 mb-2" numberOfLines={3}>
           {item.content}
         </Text>
-        <View style={styles.memoryMeta}>
-          <Text style={styles.memoryType}>{t(`memory.${item.type}`)}</Text>
-          <Text style={styles.memoryDate}>
+        <View className="flex-row justify-between items-center">
+          <Text className="text-gray-500 text-xs">{t(`memory.${item.type}`)}</Text>
+          <Text className="text-gray-500 text-xs">
             {format(item.createdAt, 'MM/dd HH:mm')}
           </Text>
         </View>
         {item.tags.length > 0 && (
-          <View style={styles.tagsContainer}>
+          <View className="flex-row flex-wrap gap-1 mt-2">
             {item.tags.slice(0, 3).map(tag => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>#{tag}</Text>
+              <View key={tag} className="bg-white/5 px-2 py-0.5 rounded">
+                <Text className="text-cyan-400 text-xs">#{tag}</Text>
               </View>
             ))}
           </View>
         )}
       </View>
-      {!item.synced && <View style={styles.unsyncedIndicator} />}
+      {!item.synced && <View className="w-2 h-2 rounded-full bg-yellow-500 absolute top-2 right-2" />}
     </TouchableOpacity>
   ), [t]);
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>{t('common.loading')}</Text>
+      <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#22d3ee" />
+          <Text className="text-gray-400 mt-4">{t('common.loading')}</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('memory.title')}</Text>
+    <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
+      <View className="px-5 py-4 border-b border-white/10">
+        <Text className="text-[#e8e8e8] text-2xl font-bold">{t('memory.title')}</Text>
       </View>
 
-      <View style={styles.searchContainer}>
+      <View className="px-5 py-4">
         <TextInput
-          style={styles.searchInput}
+          className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base"
           value={searchQuery}
           onChangeText={handleSearch}
           placeholder={t('common.search')}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor="#64748b"
         />
       </View>
 
-      <View style={styles.filterContainer}>
+      <View className="flex-row px-5 pb-4 gap-2">
         <TouchableOpacity
-          style={[styles.filterButton, !selectedType && styles.filterButtonActive]}
+          className={`px-4 py-2 rounded-2xl border ${!selectedType ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
           onPress={() => setSelectedType(null)}
         >
-          <Text style={[styles.filterText, !selectedType && styles.filterTextActive]}>
+          <Text className={`text-sm ${!selectedType ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}>
             全部
           </Text>
         </TouchableOpacity>
         {(['note', 'task', 'idea', 'reference'] as const).map(type => (
           <TouchableOpacity
             key={type}
-            style={[
-              styles.filterButton,
-              selectedType === type && { backgroundColor: TYPE_COLORS[type] },
-            ]}
+            className={`px-4 py-2 rounded-2xl border ${selectedType === type ? 'border-transparent' : 'bg-black/40 border-white/10'}`}
+            style={selectedType === type ? { backgroundColor: TYPE_COLORS[type] } : {}}
             onPress={() => setSelectedType(type)}
           >
             <Text
-              style={[
-                styles.filterText,
-                selectedType === type && styles.filterTextActive,
-              ]}
+              className={`text-sm ${selectedType === type ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}
             >
               {t(`memory.${type}`)}
             </Text>
@@ -156,155 +150,40 @@ export function MemoryListScreen() {
         data={filteredMemories}
         renderItem={renderMemory}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
+        className="px-5 pt-2"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary}
+            tintColor="#22d3ee"
           />
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{t('memory.noMemories')}</Text>
+          <View className="items-center justify-center py-16 px-6">
+            <View className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 items-center justify-center mb-5 shadow-[0_0_25px_rgba(34,211,238,0.15)]">
+              <Text className="text-3xl">🧠</Text>
+            </View>
+            <Text className="text-[#e8e8e8] text-base font-semibold mb-2">
+              {searchQuery ? '没有匹配的记忆' : t('memory.noMemories')}
+            </Text>
+            <Text className="text-gray-500 text-sm text-center leading-5 max-w-[280px]">
+              {searchQuery
+                ? '尝试更短的关键词、不同的拼写，或先在 Quick Capture 中沉淀一些内容。'
+                : '使用 Quick Capture 快速记录想法、任务或参考资料；它们会自动同步到 Brain Server。'}
+            </Text>
+            {!searchQuery && (
+              <TouchableOpacity
+                className="mt-6 px-5 py-3 rounded-xl bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]"
+                onPress={handleRefresh}
+                activeOpacity={0.85}
+              >
+                <Text className="text-[#0a0b12] text-sm font-bold">立即同步</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
       />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    color: colors.text,
-    fontSize: typography.fontSizes.xxl,
-    fontWeight: typography.fontWeights.bold,
-  },
-  searchContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  searchInput: {
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 12,
-    padding: spacing.md,
-    color: colors.text,
-    fontSize: typography.fontSizes.md,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  filterButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 16,
-    backgroundColor: colors.backgroundSecondary,
-  },
-  filterButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  filterText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-  },
-  filterTextActive: {
-    color: colors.background,
-    fontWeight: typography.fontWeights.bold,
-  },
-  listContent: {
-    padding: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  memoryCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 12,
-    marginBottom: spacing.md,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  typeIndicator: {
-    width: 4,
-  },
-  memoryContent: {
-    flex: 1,
-    padding: spacing.md,
-  },
-  memoryText: {
-    color: colors.text,
-    fontSize: typography.fontSizes.md,
-    lineHeight: 22,
-    marginBottom: spacing.sm,
-  },
-  memoryMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  memoryType: {
-    color: colors.textMuted,
-    fontSize: typography.fontSizes.xs,
-  },
-  memoryDate: {
-    color: colors.textMuted,
-    fontSize: typography.fontSizes.xs,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  tag: {
-    backgroundColor: colors.backgroundTertiary,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  tagText: {
-    color: colors.primary,
-    fontSize: typography.fontSizes.xs,
-  },
-  unsyncedIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.warning,
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.sm,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    marginTop: spacing.md,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xxl,
-  },
-  emptyText: {
-    color: colors.textMuted,
-    fontSize: typography.fontSizes.md,
-  },
-});

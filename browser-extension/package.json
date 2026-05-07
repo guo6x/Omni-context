@@ -1,0 +1,13 @@
+{
+  "name": "omni-context-browser-extension",
+  "version": "1.0.0",
+  "description": "Omni-Context Browser Extension (Tailwind)",
+  "main": "popup.js",
+  "scripts": {
+    "build": "npx tailwindcss -i ./src/input.css -o ./content.css --minify",
+    "watch": "npx tailwindcss -i ./src/input.css -o ./content.css --watch"
+  },
+  "dependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}

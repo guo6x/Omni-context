@@ -12,11 +12,6 @@ import Svg, {
   Circle,
   Line,
   Text as SvgText,
-  Defs,
-  Filter,
-  FeGaussianBlur,
-  FeMerge,
-  FeMergeNode,
 } from 'react-native-svg';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -71,25 +66,31 @@ export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerP
 
   const edges = graph?.edges ?? [];
 
-  const pinchGesture = Gesture.Pinch()
-    .onUpdate((e) => {
-      scale.value = savedScale.value * e.scale;
-    })
-    .onEnd(() => {
-      savedScale.value = scale.value;
-    });
+  // Gesture 对象在每次渲染时重新创建会让 react-native-gesture-handler 反复
+  // 注册/卸载 worklet，浪费帧时间。useMemo 让 SharedValue 维持稳定句柄。
+  const composedGesture = useMemo(() => {
+    const pinchGesture = Gesture.Pinch()
+      .onUpdate((e) => {
+        scale.value = savedScale.value * e.scale;
+      })
+      .onEnd(() => {
+        savedScale.value = scale.value;
+      });
 
-  const panGesture = Gesture.Pan()
-    .onUpdate((e) => {
-      translateX.value = savedTranslateX.value + e.translationX;
-      translateY.value = savedTranslateY.value + e.translationY;
-    })
-    .onEnd(() => {
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
-    });
+    const panGesture = Gesture.Pan()
+      .onUpdate((e) => {
+        translateX.value = savedTranslateX.value + e.translationX;
+        translateY.value = savedTranslateY.value + e.translationY;
+      })
+      .onEnd(() => {
+        savedTranslateX.value = translateX.value;
+        savedTranslateY.value = translateY.value;
+      });
 
-  const composedGesture = Gesture.Simultaneous(pinchGesture, panGesture);
+    return Gesture.Simultaneous(pinchGesture, panGesture);
+    // SharedValue 引用本身稳定，依赖留空
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -117,29 +118,23 @@ export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerP
       <GestureDetector gesture={composedGesture}>
         <Animated.View style={[styles.graphContainer, animatedStyle]}>
           <Svg width={GRAPH_SIZE} height={GRAPH_SIZE}>
-            <Defs>
-              <Filter id="glow">
-                <FeGaussianBlur stdDeviation="3" result="coloredBlur" />
-                <FeMerge>
-                  <FeMergeNode in="coloredBlur" />
-                  <FeMergeNode in="SourceGraphic" />
-                </FeMerge>
-              </Filter>
-            </Defs>
-            
             <G>
               {edges.map(edge => {
                 const sourceNode = nodesWithPositions.find(n => n.id === edge.source);
                 const targetNode = nodesWithPositions.find(n => n.id === edge.target);
                 if (!sourceNode || !targetNode) return null;
+                const sourceX = sourceNode.x ?? GRAPH_SIZE / 2;
+                const sourceY = sourceNode.y ?? GRAPH_SIZE / 2;
+                const targetX = targetNode.x ?? GRAPH_SIZE / 2;
+                const targetY = targetNode.y ?? GRAPH_SIZE / 2;
                 
                 return (
                   <Line
                     key={edge.id}
-                    x1={sourceNode.x}
-                    y1={sourceNode.y}
-                    x2={targetNode.x}
-                    y2={targetNode.y}
+                    x1={sourceX}
+                    y1={sourceY}
+                    x2={targetX}
+                    y2={targetY}
                     stroke={colors.textMuted}
                     strokeWidth={1 + edge.weight * 0.5}
                     opacity={0.3}
@@ -152,13 +147,15 @@ export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerP
               {nodesWithPositions.map(node => {
                 const isSelected = selectedNodeId === node.id;
                 const nodeRadius = 20 + node.weight * 5;
+                const nodeX = node.x ?? GRAPH_SIZE / 2;
+                const nodeY = node.y ?? GRAPH_SIZE / 2;
                 
                 return (
                   <G key={node.id}>
                     {isSelected && (
                       <Circle
-                        cx={node.x}
-                        cy={node.y}
+                        cx={nodeX}
+                        cy={nodeY}
                         r={nodeRadius + 8}
                         fill="none"
                         stroke={colors.primary}
@@ -167,16 +164,15 @@ export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerP
                       />
                     )}
                     <Circle
-                      cx={node.x}
-                      cy={node.y}
+                      cx={nodeX}
+                      cy={nodeY}
                       r={nodeRadius}
                       fill={node.color}
-                      filter="url(#glow)"
                       onPress={() => handleNodePress(node)}
                     />
                     <SvgText
-                      x={node.x}
-                      y={node.y + nodeRadius + 15}
+                      x={nodeX}
+                      y={nodeY + nodeRadius + 15}
                       fill={colors.text}
                       fontSize={12}
                       textAnchor="middle"

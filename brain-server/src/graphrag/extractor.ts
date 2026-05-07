@@ -212,6 +212,49 @@ const PRINCIPLE_PATTERNS = [
   }
 ];
 
+const VALID_ENTITY_TYPES: Set<EntityType> = new Set([
+  'principle',
+  'evidence',
+  'concept',
+  'tool',
+  'person',
+  'project',
+  'code_snippet',
+  'architecture_pattern',
+  'bug_vulnerability',
+  'business_logic',
+  'critical_review',
+  'capture_snapshot',
+  'memory',
+]);
+
+const VALID_RELATIONSHIP_TYPES: Set<RelationshipType> = new Set([
+  'derived_from',
+  'relates_to',
+  'depends_on',
+  'conflicts_with',
+  'extends',
+  'cites',
+  'belongs_to',
+  'supported_by',
+  'extracted_from',
+  'reviewed_by',
+  'references',
+]);
+
+const ENTITY_CACHE_LIMIT = 5_000;
+
+function trimMapToLimit<K, V>(map: Map<K, V>, limit: number) {
+  if (map.size <= limit) return;
+  const overflow = map.size - Math.floor(limit / 2);
+  const iter = map.keys();
+  for (let i = 0; i < overflow; i++) {
+    const next = iter.next();
+    if (next.done) break;
+    map.delete(next.value);
+  }
+}
+
 export class GraphRAGExtractor {
   private config: ExtractionConfig;
   private entityCache: Map<string, Entity>;
@@ -245,49 +288,62 @@ export class GraphRAGExtractor {
         const now = new Date().toISOString();
         const seenNames = new Set(entities.map(e => e.name.toLowerCase()));
 
-        // 合并 LLM 提取的实体（去重）
+        // 合并 LLM 提取的实体（去重 + 类型白名单）
         for (const llmEntity of llmResult.entities) {
-          if (!seenNames.has(llmEntity.name.toLowerCase())) {
-            seenNames.add(llmEntity.name.toLowerCase());
-            const entity: Entity = {
-              id: uuidv4(),
-              name: llmEntity.name,
-              type: llmEntity.type as EntityType,
-              description: llmEntity.description,
-              created_at: now,
-              updated_at: now,
-              last_accessed: now,
-              access_count: 0,
-              tags: ['llm-extracted'],
-              metadata: { source: 'llm', model: this.config.llmModel },
-            };
-            entities.push(entity);
-            this.entityCache.set(llmEntity.name.toLowerCase(), entity);
-          }
+          const lowerName = llmEntity.name?.toLowerCase();
+          if (!lowerName || seenNames.has(lowerName)) continue;
+          const candidateType = llmEntity.type as EntityType;
+          // LLM 偶尔会编造没见过的 type，落库前先白名单过滤，
+          // 否则后续按 type 查询、统计、UI 颜色映射都会出现脏值
+          const safeType: EntityType = VALID_ENTITY_TYPES.has(candidateType)
+            ? candidateType
+            : 'concept';
+          seenNames.add(lowerName);
+          const entity: Entity = {
+            id: uuidv4(),
+            name: llmEntity.name,
+            type: safeType,
+            description: llmEntity.description,
+            created_at: now,
+            updated_at: now,
+            last_accessed: now,
+            access_count: 0,
+            tags: ['llm-extracted'],
+            metadata: {
+              source: 'llm',
+              model: this.config.llmModel,
+              ...(safeType !== candidateType ? { originalType: candidateType } : {}),
+            },
+          };
+          entities.push(entity);
+          this.entityCache.set(lowerName, entity);
         }
+        trimMapToLimit(this.entityCache, ENTITY_CACHE_LIMIT);
 
-        // 合并 LLM 提取的关系
+        // 合并 LLM 提取的关系（关系类型同样走白名单）
         const entityMap = new Map(entities.map(e => [e.name.toLowerCase(), e]));
         const seenRels = new Set(relationships.map(r => `${r.source_id}-${r.type}-${r.target_id}`));
         for (const llmRel of llmResult.relationships) {
-          const src = entityMap.get(llmRel.source.toLowerCase());
-          const tgt = entityMap.get(llmRel.target.toLowerCase());
-          if (src && tgt) {
-            const key = `${src.id}-${llmRel.type}-${tgt.id}`;
-            if (!seenRels.has(key)) {
-              seenRels.add(key);
-              relationships.push({
-                id: uuidv4(),
-                source_id: src.id,
-                target_id: tgt.id,
-                type: llmRel.type as RelationshipType,
-                description: llmRel.description,
-                weight: 1.0,
-                created_at: now,
-                last_activated: now,
-              });
-            }
-          }
+          const src = entityMap.get(llmRel.source?.toLowerCase());
+          const tgt = entityMap.get(llmRel.target?.toLowerCase());
+          if (!src || !tgt) continue;
+          const candidateType = llmRel.type as RelationshipType;
+          const safeType: RelationshipType = VALID_RELATIONSHIP_TYPES.has(candidateType)
+            ? candidateType
+            : 'relates_to';
+          const key = `${src.id}-${safeType}-${tgt.id}`;
+          if (seenRels.has(key)) continue;
+          seenRels.add(key);
+          relationships.push({
+            id: uuidv4(),
+            source_id: src.id,
+            target_id: tgt.id,
+            type: safeType,
+            description: llmRel.description,
+            weight: 1.0,
+            created_at: now,
+            last_activated: now,
+          });
         }
 
         // 合并 LLM 提取的原则
@@ -381,6 +437,7 @@ export class GraphRAGExtractor {
       }
     }
 
+    trimMapToLimit(this.entityCache, ENTITY_CACHE_LIMIT);
     return entities;
   }
 
@@ -426,14 +483,20 @@ export class GraphRAGExtractor {
       });
     }
 
-    const versionPattern = /v?\d+\.\d+\.\d+/g;
+    // 版本号识别：要求前面有 version / v / @ 这类语义提示，
+    // 否则 "git checkout 1.2.3" / "192.168.0.1" 会被错误抽成实体
+    const versionPattern = /(?:^|[\s(=])(?:version[:\s]+|v(?=\d)|@)(\d+\.\d+(?:\.\d+)?)/gi;
     let versionMatch;
+    const seenVersions = new Set<string>();
     while ((versionMatch = versionPattern.exec(text)) !== null) {
+      const ver = versionMatch[1];
+      if (seenVersions.has(ver)) continue;
+      seenVersions.add(ver);
       entities.push({
         id: uuidv4(),
-        name: `version-${versionMatch[0]}`,
+        name: `version-${ver}`,
         type: 'concept',
-        description: `版本号: ${versionMatch[0]}`,
+        description: `版本号: ${ver}`,
         created_at: now,
         updated_at: now,
         last_accessed: now,
@@ -512,12 +575,24 @@ export class GraphRAGExtractor {
     const relationships: Relationship[] = [];
     const now = new Date().toISOString();
 
+    // 子串匹配会让短名（如 "API"、"db"）跟所有实体都互相连接，制造垃圾边。
+    // 加入最小长度门槛 + 全词边界匹配，过滤明显的噪音组合。
+    const MIN_LEN = 4;
+    const isMeaningful = (name: string) =>
+      name && name.length >= MIN_LEN && !/^(the|and|for|with|api|app|db|js|ts)$/i.test(name);
+
+    const wordBoundary = (haystack: string, needle: string) => {
+      const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
+    };
+
     const codeEntities = entities.filter(e => e.type === 'code_snippet');
     const projectEntities = entities.filter(e => e.type === 'project');
-    
+
     for (const project of projectEntities) {
+      if (!isMeaningful(project.name)) continue;
       for (const code of codeEntities) {
-        if (code.name.toLowerCase().includes(project.name.toLowerCase())) {
+        if (wordBoundary(code.name, project.name)) {
           relationships.push({
             id: uuidv4(),
             source_id: code.id,
@@ -534,10 +609,11 @@ export class GraphRAGExtractor {
 
     const principles = entities.filter(e => e.type === 'principle');
     const concepts = entities.filter(e => e.type === 'concept');
-    
-    for (const principle of principles) {
-      for (const concept of concepts) {
-        if (principle.name.toLowerCase().includes(concept.name.toLowerCase())) {
+
+    for (const concept of concepts) {
+      if (!isMeaningful(concept.name)) continue;
+      for (const principle of principles) {
+        if (wordBoundary(principle.name, concept.name)) {
           relationships.push({
             id: uuidv4(),
             source_id: principle.id,

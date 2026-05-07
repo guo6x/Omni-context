@@ -6,13 +6,13 @@
   "permissions": [
     "activeTab",
     "storage",
-    "clipboardRead",
-    "clipboardWrite",
     "contextMenus",
-    "notifications"
+    "notifications",
+    "alarms"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "http://localhost:3001/*",
+    "http://127.0.0.1:3001/*"
   ],
   "action": {
     "default_popup": "popup.html",

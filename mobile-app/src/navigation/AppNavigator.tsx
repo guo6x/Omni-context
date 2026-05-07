@@ -55,33 +55,21 @@ const SettingsIcon = ({ color, size }: { color: string; size: number }) => (
   </Svg>
 );
 
-const styles = StyleSheet.create({
-  tabContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.backgroundSecondary,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingBottom: 20,
-    paddingTop: 10,
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '500',
-  },
-});
-
 export function AppNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabContainer,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarLabelStyle: styles.tabLabel,
+        tabBarStyle: {
+          backgroundColor: '#0a0b12',
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(255,255,255,0.1)',
+          paddingBottom: 20,
+          paddingTop: 10,
+        },
+        tabBarActiveTintColor: '#22d3ee', // cyan-400
+        tabBarInactiveTintColor: '#64748b', // slate-500
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '500' },
         tabBarShowLabel: true,
       }}
     >

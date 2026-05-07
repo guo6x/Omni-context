@@ -13,7 +13,13 @@ export type EntityType =
   | 'tool' 
   | 'person' 
   | 'project'
-  | 'code_snippet';
+  | 'code_snippet'
+  | 'architecture_pattern'
+  | 'bug_vulnerability'
+  | 'business_logic'
+  | 'critical_review'
+  | 'capture_snapshot'
+  | 'memory';
 
 export type RelationshipType = 
   | 'derived_from' 
@@ -22,7 +28,11 @@ export type RelationshipType =
   | 'conflicts_with' 
   | 'extends' 
   | 'cites'
-  | 'belongs_to';
+  | 'belongs_to'
+  | 'supported_by'
+  | 'extracted_from'
+  | 'reviewed_by'
+  | 'references';
 
 export interface Entity {
   id: string;
@@ -47,6 +57,7 @@ export interface Relationship {
   description?: string;
   weight: number;
   created_at: string;
+  last_activated?: string;
 }
 
 export interface Principle {

@@ -1,0 +1,609 @@
+import { v4 as uuidv4 } from 'uuid';
+import { LLMExtractorPipeline } from './llm-pipeline.js';
+const ENTITY_PATTERNS = [
+    {
+        patterns: [
+            /class\s+([A-Z][a-zA-Z0-9_]*)/g,
+            /interface\s+([A-Z][a-zA-Z0-9_]*)/g,
+            /type\s+([A-Z][a-zA-Z0-9_]*)/g,
+        ],
+        type: 'code_snippet',
+        extractName: (match) => match[1],
+        description: '代码类型定义'
+    },
+    {
+        patterns: [
+            /function\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,
+            /const\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=/g,
+            /def\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,
+        ],
+        type: 'code_snippet',
+        extractName: (match) => match[1],
+        description: '函数或变量定义'
+    },
+    {
+        patterns: [
+            /@([a-zA-Z_][a-zA-Z0-9_]*)/g,
+        ],
+        type: 'person',
+        extractName: (match) => match[1],
+        description: '用户提及'
+    },
+    {
+        patterns: [
+            /project[:\s]+([a-zA-Z0-9_-]+)/gi,
+            /repo[:\s]+([a-zA-Z0-9_-]+)/gi,
+        ],
+        type: 'project',
+        extractName: (match) => match[1],
+        description: '项目名称'
+    },
+    {
+        patterns: [
+            /principle[:\s]+([^.!\n]+)/gi,
+            /rule[:\s]+([^.!\n]+)/gi,
+        ],
+        type: 'principle',
+        extractName: (match) => match[1].trim(),
+        description: '原则或规则'
+    },
+    {
+        patterns: [
+            /tool[:\s]+([a-zA-Z0-9_-]+)/gi,
+            /using\s+([a-zA-Z0-9_-]+)/gi,
+        ],
+        type: 'tool',
+        extractName: (match) => match[1],
+        description: '工具或库'
+    },
+    {
+        patterns: [
+            /concept[:\s]+([a-zA-Z0-9_\s]+)/gi,
+            /idea[:\s]+([a-zA-Z0-9_\s]+)/gi,
+        ],
+        type: 'concept',
+        extractName: (match) => match[1].trim(),
+        description: '概念或想法'
+    }
+];
+const RELATIONSHIP_PATTERNS = [
+    {
+        patterns: [
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+extends\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+implements\s+([a-zA-Z_][a-zA-Z0-9_]*)/g,
+        ],
+        type: 'extends',
+        extractEntities: (match) => ({ source: match[1], target: match[2] }),
+        description: '继承或实现关系'
+    },
+    {
+        patterns: [
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+depends\s+on\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+requires\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+            /import\s+.*from\s+['"]([^'"]+)['"]/g,
+        ],
+        type: 'depends_on',
+        extractEntities: (match) => ({ source: match[1], target: match[2] || match[1] }),
+        description: '依赖关系'
+    },
+    {
+        patterns: [
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+relates\s+to\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+connects\s+with\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+        ],
+        type: 'relates_to',
+        extractEntities: (match) => ({ source: match[1], target: match[2] }),
+        description: '关联关系'
+    },
+    {
+        patterns: [
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+conflicts\s+with\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+contradicts\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+        ],
+        type: 'conflicts_with',
+        extractEntities: (match) => ({ source: match[1], target: match[2] }),
+        description: '冲突关系'
+    },
+    {
+        patterns: [
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+derived\s+from\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+            /([a-zA-Z_][a-zA-Z0-9_]*)\s+based\s+on\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi,
+        ],
+        type: 'derived_from',
+        extractEntities: (match) => ({ source: match[1], target: match[2] }),
+        description: '派生关系'
+    }
+];
+const PRINCIPLE_PATTERNS = [
+    {
+        patterns: [
+            /always\s+([^.!\n]+)/gi,
+            /never\s+([^.!\n]+)/gi,
+            /should\s+([^.!\n]+)/gi,
+            /must\s+([^.!\n]+)/gi,
+        ],
+        type: 'code_principle'
+    },
+    {
+        patterns: [
+            /security[:\s]+([^.!\n]+)/gi,
+            /vulnerability[:\s]+([^.!\n]+)/gi,
+            /protect\s+([^.!\n]+)/gi,
+        ],
+        type: 'security_rule'
+    },
+    {
+        patterns: [
+            /performance[:\s]+([^.!\n]+)/gi,
+            /optimize\s+([^.!\n]+)/gi,
+            /efficient\s+([^.!\n]+)/gi,
+        ],
+        type: 'performance_optimization'
+    },
+    {
+        patterns: [
+            /pattern[:\s]+([^.!\n]+)/gi,
+            /design\s+pattern[:\s]+([^.!\n]+)/gi,
+        ],
+        type: 'design_pattern'
+    },
+    {
+        patterns: [
+            /workflow[:\s]+([^.!\n]+)/gi,
+            /process[:\s]+([^.!\n]+)/gi,
+            /procedure[:\s]+([^.!\n]+)/gi,
+        ],
+        type: 'workflow_rule'
+    },
+    {
+        patterns: [
+            /prefer\s+([^.!\n]+)/gi,
+            /like\s+([^.!\n]+)/gi,
+            /my\s+([^.!\n]+)/gi,
+        ],
+        type: 'personal_preference'
+    }
+];
+const VALID_ENTITY_TYPES = new Set([
+    'principle',
+    'evidence',
+    'concept',
+    'tool',
+    'person',
+    'project',
+    'code_snippet',
+    'architecture_pattern',
+    'bug_vulnerability',
+    'business_logic',
+    'critical_review',
+    'capture_snapshot',
+    'memory',
+]);
+const VALID_RELATIONSHIP_TYPES = new Set([
+    'derived_from',
+    'relates_to',
+    'depends_on',
+    'conflicts_with',
+    'extends',
+    'cites',
+    'belongs_to',
+    'supported_by',
+    'extracted_from',
+    'reviewed_by',
+    'references',
+]);
+const ENTITY_CACHE_LIMIT = 5000;
+function trimMapToLimit(map, limit) {
+    if (map.size <= limit)
+        return;
+    const overflow = map.size - Math.floor(limit / 2);
+    const iter = map.keys();
+    for (let i = 0; i < overflow; i++) {
+        const next = iter.next();
+        if (next.done)
+            break;
+        map.delete(next.value);
+    }
+}
+export class GraphRAGExtractor {
+    constructor(config = {}) {
+        this.config = config;
+        this.entityCache = new Map();
+        this.relationshipCache = new Map();
+        // [核心壁垒] LLM 提取管道
+        this.llmPipeline = new LLMExtractorPipeline({
+            apiUrl: config.llmBaseUrl || process.env.LLM_API_URL || 'http://localhost:11434/v1',
+            apiKey: config.llmApiKey || process.env.LLM_API_KEY,
+            model: config.llmModel || process.env.LLM_MODEL || 'qwen2.5:7b',
+        });
+    }
+    async extract(input) {
+        const textContent = this.combineInputs(input);
+        // 第一层：正则提取（快速，确定性高）
+        const entities = await this.extractEntities(textContent, input);
+        const relationships = await this.extractRelationships(textContent, entities);
+        const principles = await this.extractPrinciples(textContent, input);
+        // 第二层：LLM 语义提取（深度理解，补充正则的盲区）
+        if (this.llmPipeline.isEnabled() && !this.config.useLocalExtraction) {
+            try {
+                const llmResult = await this.llmPipeline.extract(textContent);
+                const now = new Date().toISOString();
+                const seenNames = new Set(entities.map(e => e.name.toLowerCase()));
+                // 合并 LLM 提取的实体（去重 + 类型白名单）
+                for (const llmEntity of llmResult.entities) {
+                    const lowerName = llmEntity.name?.toLowerCase();
+                    if (!lowerName || seenNames.has(lowerName))
+                        continue;
+                    const candidateType = llmEntity.type;
+                    // LLM 偶尔会编造没见过的 type，落库前先白名单过滤，
+                    // 否则后续按 type 查询、统计、UI 颜色映射都会出现脏值
+                    const safeType = VALID_ENTITY_TYPES.has(candidateType)
+                        ? candidateType
+                        : 'concept';
+                    seenNames.add(lowerName);
+                    const entity = {
+                        id: uuidv4(),
+                        name: llmEntity.name,
+                        type: safeType,
+                        description: llmEntity.description,
+                        created_at: now,
+                        updated_at: now,
+                        last_accessed: now,
+                        access_count: 0,
+                        tags: ['llm-extracted'],
+                        metadata: {
+                            source: 'llm',
+                            model: this.config.llmModel,
+                            ...(safeType !== candidateType ? { originalType: candidateType } : {}),
+                        },
+                    };
+                    entities.push(entity);
+                    this.entityCache.set(lowerName, entity);
+                }
+                trimMapToLimit(this.entityCache, ENTITY_CACHE_LIMIT);
+                // 合并 LLM 提取的关系（关系类型同样走白名单）
+                const entityMap = new Map(entities.map(e => [e.name.toLowerCase(), e]));
+                const seenRels = new Set(relationships.map(r => `${r.source_id}-${r.type}-${r.target_id}`));
+                for (const llmRel of llmResult.relationships) {
+                    const src = entityMap.get(llmRel.source?.toLowerCase());
+                    const tgt = entityMap.get(llmRel.target?.toLowerCase());
+                    if (!src || !tgt)
+                        continue;
+                    const candidateType = llmRel.type;
+                    const safeType = VALID_RELATIONSHIP_TYPES.has(candidateType)
+                        ? candidateType
+                        : 'relates_to';
+                    const key = `${src.id}-${safeType}-${tgt.id}`;
+                    if (seenRels.has(key))
+                        continue;
+                    seenRels.add(key);
+                    relationships.push({
+                        id: uuidv4(),
+                        source_id: src.id,
+                        target_id: tgt.id,
+                        type: safeType,
+                        description: llmRel.description,
+                        weight: 1.0,
+                        created_at: now,
+                        last_activated: now,
+                    });
+                }
+                // 合并 LLM 提取的原则
+                const seenPrinciples = new Set(principles.map(p => p.content.toLowerCase()));
+                for (const llmP of llmResult.principles) {
+                    if (!seenPrinciples.has(llmP.content.toLowerCase())) {
+                        principles.push({
+                            title: llmP.title,
+                            content: llmP.content,
+                            type: llmP.type || 'code_principle',
+                            isCore: llmP.isCore || false,
+                            version: 1,
+                        });
+                    }
+                }
+            }
+            catch (e) {
+                // LLM 提取失败不影响主流程
+                console.warn('[GraphRAGExtractor] LLM 提取失败，仅使用正则结果:', e);
+            }
+        }
+        return {
+            entities,
+            relationships,
+            principles,
+        };
+    }
+    combineInputs(input) {
+        const parts = [];
+        if (input.textContent) {
+            parts.push(input.textContent);
+        }
+        if (input.clipboard) {
+            parts.push(`[Clipboard]\n${input.clipboard}`);
+        }
+        if (input.screenshot) {
+            parts.push(`[Screenshot available]`);
+        }
+        return parts.join('\n\n');
+    }
+    async extractEntities(text, input) {
+        const entities = [];
+        const seenNames = new Set();
+        const now = new Date().toISOString();
+        for (const pattern of ENTITY_PATTERNS) {
+            for (const regex of pattern.patterns) {
+                let match;
+                const globalRegex = new RegExp(regex.source, regex.flags);
+                while ((match = globalRegex.exec(text)) !== null) {
+                    const name = pattern.extractName(match);
+                    if (name && !seenNames.has(name.toLowerCase())) {
+                        seenNames.add(name.toLowerCase());
+                        const entity = {
+                            id: uuidv4(),
+                            name,
+                            type: pattern.type,
+                            description: pattern.description || `从内容中提取的${pattern.type}`,
+                            created_at: now,
+                            updated_at: now,
+                            last_accessed: now,
+                            access_count: 0,
+                            tags: ['auto-extracted'],
+                            metadata: {
+                                source: input.sourceType || 'manual',
+                                timestamp: input.timestamp,
+                            }
+                        };
+                        entities.push(entity);
+                        this.entityCache.set(name.toLowerCase(), entity);
+                    }
+                }
+            }
+        }
+        const additionalEntities = await this.extractSemanticEntities(text, input);
+        for (const entity of additionalEntities) {
+            if (!seenNames.has(entity.name.toLowerCase())) {
+                seenNames.add(entity.name.toLowerCase());
+                entities.push(entity);
+            }
+        }
+        trimMapToLimit(this.entityCache, ENTITY_CACHE_LIMIT);
+        return entities;
+    }
+    async extractSemanticEntities(text, input) {
+        const entities = [];
+        const now = new Date().toISOString();
+        const urlPattern = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/g;
+        let urlMatch;
+        while ((urlMatch = urlPattern.exec(text)) !== null) {
+            const url = urlMatch[0];
+            const domain = this.extractDomain(url);
+            if (domain) {
+                entities.push({
+                    id: uuidv4(),
+                    name: domain,
+                    type: 'tool',
+                    description: `网站或服务: ${url}`,
+                    created_at: now,
+                    updated_at: now,
+                    last_accessed: now,
+                    access_count: 0,
+                    tags: ['url', 'web'],
+                    metadata: { url }
+                });
+            }
+        }
+        const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+        let emailMatch;
+        while ((emailMatch = emailPattern.exec(text)) !== null) {
+            entities.push({
+                id: uuidv4(),
+                name: emailMatch[0],
+                type: 'person',
+                description: `邮箱地址`,
+                created_at: now,
+                updated_at: now,
+                last_accessed: now,
+                access_count: 0,
+                tags: ['email'],
+            });
+        }
+        // 版本号识别：要求前面有 version / v / @ 这类语义提示，
+        // 否则 "git checkout 1.2.3" / "192.168.0.1" 会被错误抽成实体
+        const versionPattern = /(?:^|[\s(=])(?:version[:\s]+|v(?=\d)|@)(\d+\.\d+(?:\.\d+)?)/gi;
+        let versionMatch;
+        const seenVersions = new Set();
+        while ((versionMatch = versionPattern.exec(text)) !== null) {
+            const ver = versionMatch[1];
+            if (seenVersions.has(ver))
+                continue;
+            seenVersions.add(ver);
+            entities.push({
+                id: uuidv4(),
+                name: `version-${ver}`,
+                type: 'concept',
+                description: `版本号: ${ver}`,
+                created_at: now,
+                updated_at: now,
+                last_accessed: now,
+                access_count: 0,
+                tags: ['version'],
+            });
+        }
+        return entities;
+    }
+    extractDomain(url) {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.hostname.replace('www.', '');
+        }
+        catch {
+            return null;
+        }
+    }
+    async extractRelationships(text, entities) {
+        const relationships = [];
+        const entityMap = new Map(entities.map(e => [e.name.toLowerCase(), e]));
+        const now = new Date().toISOString();
+        const seenRelationships = new Set();
+        for (const pattern of RELATIONSHIP_PATTERNS) {
+            for (const regex of pattern.patterns) {
+                let match;
+                const globalRegex = new RegExp(regex.source, regex.flags);
+                while ((match = globalRegex.exec(text)) !== null) {
+                    try {
+                        const { source, target } = pattern.extractEntities(match);
+                        const sourceEntity = entityMap.get(source.toLowerCase());
+                        const targetEntity = entityMap.get(target.toLowerCase());
+                        if (sourceEntity && targetEntity && sourceEntity.id !== targetEntity.id) {
+                            const relKey = `${sourceEntity.id}-${pattern.type}-${targetEntity.id}`;
+                            if (!seenRelationships.has(relKey)) {
+                                seenRelationships.add(relKey);
+                                relationships.push({
+                                    id: uuidv4(),
+                                    source_id: sourceEntity.id,
+                                    target_id: targetEntity.id,
+                                    type: pattern.type,
+                                    description: pattern.description,
+                                    weight: 1.0,
+                                    created_at: now,
+                                    last_activated: now,
+                                });
+                            }
+                        }
+                    }
+                    catch {
+                        continue;
+                    }
+                }
+            }
+        }
+        const inferredRelationships = this.inferRelationships(entities);
+        for (const rel of inferredRelationships) {
+            const relKey = `${rel.source_id}-${rel.type}-${rel.target_id}`;
+            if (!seenRelationships.has(relKey)) {
+                seenRelationships.add(relKey);
+                relationships.push(rel);
+            }
+        }
+        return relationships;
+    }
+    inferRelationships(entities) {
+        const relationships = [];
+        const now = new Date().toISOString();
+        // 子串匹配会让短名（如 "API"、"db"）跟所有实体都互相连接，制造垃圾边。
+        // 加入最小长度门槛 + 全词边界匹配，过滤明显的噪音组合。
+        const MIN_LEN = 4;
+        const isMeaningful = (name) => name && name.length >= MIN_LEN && !/^(the|and|for|with|api|app|db|js|ts)$/i.test(name);
+        const wordBoundary = (haystack, needle) => {
+            const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
+        };
+        const codeEntities = entities.filter(e => e.type === 'code_snippet');
+        const projectEntities = entities.filter(e => e.type === 'project');
+        for (const project of projectEntities) {
+            if (!isMeaningful(project.name))
+                continue;
+            for (const code of codeEntities) {
+                if (wordBoundary(code.name, project.name)) {
+                    relationships.push({
+                        id: uuidv4(),
+                        source_id: code.id,
+                        target_id: project.id,
+                        type: 'belongs_to',
+                        description: '代码属于项目',
+                        weight: 0.8,
+                        created_at: now,
+                        last_activated: now,
+                    });
+                }
+            }
+        }
+        const principles = entities.filter(e => e.type === 'principle');
+        const concepts = entities.filter(e => e.type === 'concept');
+        for (const concept of concepts) {
+            if (!isMeaningful(concept.name))
+                continue;
+            for (const principle of principles) {
+                if (wordBoundary(principle.name, concept.name)) {
+                    relationships.push({
+                        id: uuidv4(),
+                        source_id: principle.id,
+                        target_id: concept.id,
+                        type: 'relates_to',
+                        description: '原则与概念相关',
+                        weight: 0.6,
+                        created_at: now,
+                        last_activated: now,
+                    });
+                }
+            }
+        }
+        return relationships;
+    }
+    async extractPrinciples(text, input) {
+        const principles = [];
+        for (const patternGroup of PRINCIPLE_PATTERNS) {
+            for (const pattern of patternGroup.patterns) {
+                let match;
+                const globalRegex = new RegExp(pattern.source, pattern.flags);
+                while ((match = globalRegex.exec(text)) !== null) {
+                    const content = match[1].trim();
+                    if (content.length > 10 && content.length < 500) {
+                        const title = this.generatePrincipleTitle(content, patternGroup.type);
+                        principles.push({
+                            title,
+                            content,
+                            type: patternGroup.type,
+                            isCore: false,
+                            version: 1,
+                        });
+                    }
+                }
+            }
+        }
+        const deduplicatedPrinciples = this.deduplicatePrinciples(principles);
+        return deduplicatedPrinciples;
+    }
+    generatePrincipleTitle(content, type) {
+        const words = content.split(/\s+/).slice(0, 5);
+        const title = words.join(' ');
+        const typeNames = {
+            'code_principle': '代码原则',
+            'security_rule': '安全规则',
+            'performance_optimization': '性能优化',
+            'design_pattern': '设计模式',
+            'workflow_rule': '工作流规则',
+            'personal_preference': '个人偏好',
+        };
+        return `[${typeNames[type] || '原则'}] ${title}...`;
+    }
+    deduplicatePrinciples(principles) {
+        const seen = new Map();
+        for (const principle of principles) {
+            const key = principle.content.toLowerCase().trim();
+            if (!seen.has(key)) {
+                seen.set(key, principle);
+            }
+        }
+        return Array.from(seen.values());
+    }
+    async summarizeEntities(entities) {
+        const typeGroups = new Map();
+        for (const entity of entities) {
+            const group = typeGroups.get(entity.type) || [];
+            group.push(entity);
+            typeGroups.set(entity.type, group);
+        }
+        const summaryParts = [];
+        for (const [type, group] of typeGroups) {
+            const names = group.map(e => e.name).join(', ');
+            summaryParts.push(`${type}: ${names}`);
+        }
+        return summaryParts.join('\n');
+    }
+    clearCache() {
+        this.entityCache.clear();
+        this.relationshipCache.clear();
+    }
+}
+export default GraphRAGExtractor;

@@ -47,77 +47,43 @@ export function useHUD() {
   return context;
 }
 
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { colors } from '@/utils/theme';
+import { View, Text, Animated, TouchableOpacity } from 'react-native';
 
 interface HUDProps {
   messages: HUDMessage[];
   onDismiss: (id: string) => void;
 }
 
-function HUD({ messages, onDismiss }: HUDProps) {
+export function HUD({ messages, onDismiss }: HUDProps) {
   if (messages.length === 0) return null;
 
+  const getTypeStyles = (type: HUDMessage['type']) => {
+    switch (type) {
+      case 'info':
+        return 'bg-black/80 border-l-4 border-cyan-400';
+      case 'success':
+        return 'bg-[#00ff88]/20 border-l-4 border-[#00ff88]';
+      case 'warning':
+        return 'bg-[#ffaa00]/20 border-l-4 border-[#ffaa00]';
+      case 'error':
+        return 'bg-red-500/20 border-l-4 border-red-500';
+      default:
+        return 'bg-black/80 border-l-4 border-cyan-400';
+    }
+  };
+
   return (
-    <View style={styles.container} pointerEvents="box-none">
+    <View className="absolute top-12 left-0 right-0 items-center z-50" pointerEvents="box-none">
       {messages.map(msg => (
         <TouchableOpacity
           key={msg.id}
-          style={[styles.message, styles[msg.type]]}
+          className={`px-4 py-3 rounded-lg mb-2 max-w-[90%] shadow-[0_0_15px_rgba(34,211,238,0.5)] ${getTypeStyles(msg.type)}`}
           onPress={() => onDismiss(msg.id)}
           activeOpacity={0.8}
         >
-          <Text style={styles.messageText}>{msg.message}</Text>
+          <Text className="text-[#e8e8e8] text-sm font-medium">{msg.message}</Text>
         </TouchableOpacity>
       ))}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 50,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  message: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginBottom: 8,
-    maxWidth: '90%',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  info: {
-    backgroundColor: colors.backgroundTertiary,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-  },
-  success: {
-    backgroundColor: 'rgba(0, 255, 136, 0.2)',
-    borderLeftWidth: 3,
-    borderLeftColor: colors.success,
-  },
-  warning: {
-    backgroundColor: 'rgba(255, 170, 0, 0.2)',
-    borderLeftWidth: 3,
-    borderLeftColor: colors.warning,
-  },
-  error: {
-    backgroundColor: 'rgba(255, 68, 68, 0.2)',
-    borderLeftWidth: 3,
-    borderLeftColor: colors.error,
-  },
-  messageText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});

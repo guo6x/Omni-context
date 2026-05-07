@@ -48,20 +48,26 @@ export class CoreMemory {
   async set(key: string, value: any, category: string = 'general'): Promise<void> {
     const valueStr = JSON.stringify(value);
     const shouldCompress = valueStr.length > this.compressionThreshold;
-    
+
+    // 写入不应计为一次"访问"——否则一条频繁被刷新的记忆会被错误推上 topAccessed。
+    // 保留旧的 access_count，新建项从 0 开始。
     await this.db.run(
-      `INSERT OR REPLACE INTO core_memory (key, value, category, last_accessed, access_count)
-       VALUES (?, ?, ?, datetime('now'), 
-               COALESCE((SELECT access_count FROM core_memory WHERE key = ?), 0) + 1)`,
-      [key, valueStr, category, key]
+      `INSERT INTO core_memory (key, value, category, last_accessed, access_count)
+       VALUES (?, ?, ?, datetime('now'), 0)
+       ON CONFLICT(key) DO UPDATE SET
+         value = excluded.value,
+         category = excluded.category,
+         last_accessed = datetime('now')`,
+      [key, valueStr, category]
     );
 
+    const existing = this.cache.get(key);
     const item: CoreMemoryItem = {
       key,
       value,
       category,
       lastAccessed: new Date().toISOString(),
-      accessCount: 1,
+      accessCount: existing?.accessCount ?? 0,
       compressed: shouldCompress,
     };
 
@@ -149,7 +155,7 @@ export class CoreMemory {
   }
 
   async compress(category?: string): Promise<CompressionResult> {
-    const items = category 
+    const items = category
       ? await this.getByCategory(category)
       : await this.getAll();
 
@@ -162,17 +168,18 @@ export class CoreMemory {
       originalSize += valueStr.length;
 
       if (valueStr.length > this.compressionThreshold) {
+        // 之前实现把 value 整个换成 {_compressed,summary,original} 包装对象，
+        // 而 get() 直接 JSON.parse(row.value) 返回，调用方拿到的就不是原值了。
+        // 改为：value 保持不变，summary 写入独立的 summary 列；这要求表存在该列。
+        // (CoreMemory 表 v3 暂未引入 summary 列，因此当前只标记节省的字符量、
+        //  不再破坏 value 字段，避免数据被静默改形)
         const summary = await this.summarizeValue(item.value);
-        const compressedValue = { _compressed: true, summary, original: item.value };
-        const compressedStr = JSON.stringify(compressedValue);
-        
-        if (compressedStr.length < valueStr.length) {
-          await this.db.run(
-            'UPDATE core_memory SET value = ? WHERE key = ?',
-            [compressedStr, item.key]
-          );
-          compressedSize += compressedStr.length;
+        const wouldSaveSize = valueStr.length - summary.length;
+        if (wouldSaveSize > 0) {
           itemsProcessed++;
+          compressedSize += summary.length;
+          // 仅记录摘要供未来 schema 升级使用，不再覆盖 value
+          this.cache.set(item.key, { ...item, summary, compressed: true });
         } else {
           compressedSize += valueStr.length;
         }

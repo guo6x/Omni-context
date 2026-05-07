@@ -88,24 +88,40 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
   },
 ];
 
+const DEFAULT_SETTINGS: AppSettings = {
+  keyboardShortcuts: DEFAULT_SHORTCUTS,
+  appearance: {
+    theme: 'dark',
+    accentColor: '#22d3ee',
+  },
+  behavior: {
+    autoHUD: true,
+    autoMinimize: false,
+    startWithSystem: false,
+  },
+  llmProvider: {
+    apiUrl: 'http://localhost:11434/v1',
+    apiKey: '',
+    model: 'qwen2.5:7b',
+  },
+};
+
+// 与磁盘上的旧版本 settings 合并：保证新增字段有默认值，
+// 否则升级后访问 settings.llmProvider.apiKey 等会直接 crash。
+function mergeWithDefaults(stored: any): AppSettings {
+  if (!stored || typeof stored !== 'object') return DEFAULT_SETTINGS;
+  return {
+    keyboardShortcuts: Array.isArray(stored.keyboardShortcuts) && stored.keyboardShortcuts.length > 0
+      ? stored.keyboardShortcuts
+      : DEFAULT_SETTINGS.keyboardShortcuts,
+    appearance: { ...DEFAULT_SETTINGS.appearance, ...(stored.appearance || {}) },
+    behavior: { ...DEFAULT_SETTINGS.behavior, ...(stored.behavior || {}) },
+    llmProvider: { ...DEFAULT_SETTINGS.llmProvider, ...(stored.llmProvider || {}) },
+  };
+}
+
 export function useSettings() {
-  const [settings, setSettings] = useState<AppSettings>({
-    keyboardShortcuts: DEFAULT_SHORTCUTS,
-    appearance: {
-      theme: 'dark',
-      accentColor: '#22d3ee',
-    },
-    behavior: {
-      autoHUD: true,
-      autoMinimize: false,
-      startWithSystem: false,
-    },
-    llmProvider: {
-      apiUrl: 'http://localhost:11434/v1',
-      apiKey: '',
-      model: 'qwen2.5:7b',
-    },
-  });
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
 
   const [showSettings, setShowSettings] = useState(false);
 
@@ -114,7 +130,7 @@ export function useSettings() {
     try {
       const savedSettings = localStorage.getItem('omnicontext-settings');
       if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
+        setSettings(mergeWithDefaults(JSON.parse(savedSettings)));
       }
     } catch (error) {
       console.warn('加载设置失败:', error);

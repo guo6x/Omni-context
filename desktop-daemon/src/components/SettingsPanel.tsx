@@ -389,20 +389,18 @@ export default function SettingsPanel({
           </div>
         </div>
 
-        {/* 底部 */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-white/10 bg-black/20">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-          >
-            {t('settings.close')}
-          </button>
+        {/* 底部：设置在每次修改时已通过 useSettings 自动持久化，
+             这里只保留单一的"完成"按钮，避免 Save / Close 看起来是两种语义。 */}
+        <div className="flex items-center justify-between gap-3 p-4 border-t border-white/10 bg-black/20">
+          <span className="text-xs text-gray-500">
+            {t('settings.autosaved') || '改动会即时保存'}
+          </span>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg flex items-center gap-2 transition-colors"
           >
             <Check className="w-4 h-4" />
-            {t('settings.save')}
+            {t('settings.done') || t('settings.close')}
           </button>
         </div>
       </div>

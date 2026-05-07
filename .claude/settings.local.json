@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(npm run *)",
+      "Read(//d/d/AI_code/Omni-context/omni-context-release/browser-extension/**)",
+      "Read(//d/d/AI_code/Omni-context/omni-context-release/**)",
+      "Read(//d/d/AI_code/Omni-context/omni-context-release/desktop-daemon/src/**)",
+      "Read(//d/d/AI_code/Omni-context/omni-context-release/mobile-app/src/**)"
+    ]
+  }
+}

@@ -47,11 +47,7 @@ const SettingsContext = createContext<ReturnType<typeof useSettings> | null>(nul
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const settings = useSettings();
-  return (
-    <SettingsContext.Provider value={settings}>
-      {children}
-    </SettingsContext.Provider>
-  );
+  return React.createElement(SettingsContext.Provider, { value: settings }, children);
 }
 
 export function useSettingsContext() {
