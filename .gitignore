@@ -1,38 +1,54 @@
 # Dependencies
-node_modules/
+**/node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Build outputs
 dist/
 out/
 .next/
+**/dist/
+**/out/
+**/.next/
+**/target/
+**/build/
 
 # Database
 *.db
 *.db-shm
 *.db-wal
 data/
+**/data/*.db
 
-# Tauri
-src-tauri/target/
-src-tauri/Cargo.lock
+# Tauri & Rust
+desktop-daemon/src-tauri/target/
+desktop-daemon/src-tauri/Cargo.lock
+**/Cargo.lock
 
-# Rust
-Cargo.lock
-target/
+# Mobile (Expo/React Native)
+mobile-app/.expo/
+mobile-app/web-build/
+**/ios/Pods/
+**/android/.gradle/
+**/android/app/build/
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Logs
+# Environment & Logs
+.env
+.env.*
+!.env.example
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Temporary files
 *.tmp
