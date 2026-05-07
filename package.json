@@ -1,0 +1,20 @@
+{
+  "name": "omni-context",
+  "version": "0.1.0",
+  "description": "Omni-Context - 全域物理级 AI 记忆操作系统",
+  "scripts": {
+    "install:all": "npm install && cd desktop-daemon && npm install && cd ../brain-server && npm install && cd ../browser-extension && npm install && cd ../mobile-app && npm install",
+    "build:all": "npm run build:brain && npm run build:desktop && npm run build:browser",
+    "build:brain": "cd brain-server && npm run build",
+    "build:desktop": "cd desktop-daemon && npm run tauri build",
+    "build:browser": "cd browser-extension && npm run build:chrome && npm run build:firefox",
+    "build:mobile": "cd mobile-app && npm run build:android && npm run build:ios",
+    "package": "node scripts/package-all.js",
+    "clean": "node scripts/clean-all.js"
+  },
+  "keywords": ["ai", "memory", "knowledge-graph", "mcp", "tauri"],
+  "author": "Omni-Context Team",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}

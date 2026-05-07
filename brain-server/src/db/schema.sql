@@ -1,0 +1,11 @@
+-- ⚠️ 此文件已废弃（DEPRECATED）
+-- 数据库 Schema 现在由 Migration 系统管理（见 sqlite.ts 中的 MIGRATIONS 数组）
+-- 此文件仅保留作为历史参考，不会被任何代码引用
+--
+-- 如需了解当前数据库结构，请查看:
+--   brain-server/src/db/sqlite.ts → MIGRATIONS 常量
+--
+-- 迁移历史:
+--   v1: unified_graph_schema_v2 — entities + relationships + migrations 表
+--   v2: add_performance_indexes_v2 — 性能索引
+--   v3: add_memory_tables — core_memory + archival_memory 表

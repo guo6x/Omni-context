@@ -1,0 +1,32 @@
+// Omni-Context Content Script Styles
+#omni-floating-container {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 2147483647 !important;
+}
+
+#omni-capture-btn {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #00c8ff, #6400ff) !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: white !important;
+  box-shadow: 0 4px 20px rgba(0, 200, 255, 0.4) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+#omni-capture-btn:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 6px 25px rgba(0, 200, 255, 0.5) !important;
+}
+
+#omni-capture-btn svg {
+  width: 24px;
+  height: 24px;
+}

@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+    background-color: #0a0b12;
+    color: #e8e8e8;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply backdrop-blur-xl bg-black/40 border border-white/10 rounded-xl;
+  }
+  
+  .neon-node {
+    @apply transition-all duration-300 hover:scale-105;
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2);
+  }
+  
+  .flow-edge {
+    background: linear-gradient(90deg, #0ea5e9, #22d3ee, #0ea5e9);
+    background-size: 200% 100%;
+    animation: flow-line 2s linear infinite;
+  }
+}

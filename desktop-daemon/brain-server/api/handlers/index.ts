@@ -1,0 +1,540 @@
+import http from 'http';
+import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
+
+export const handleMemoryRoutes = [
+  {
+    method: 'GET' as const,
+    path: '/api/memory/core',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const items = await ctx.coreMemory.getAll();
+      sendResponse(res, 200, items);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/memory/core/:key',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const item = await ctx.coreMemory.get(params.key);
+      if (!item) {
+        return sendError(res, 404, 'Memory item not found');
+      }
+      sendResponse(res, 200, item);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/core',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ key: string; value: any; category?: string }>(req);
+      if (!body.key) {
+        return sendError(res, 400, 'Key is required');
+      }
+      await ctx.coreMemory.set(body.key, body.value, body.category);
+      sendResponse(res, 201, { success: true, key: body.key });
+    }
+  },
+  {
+    method: 'DELETE' as const,
+    path: '/api/memory/core/:key',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      await ctx.coreMemory.delete(params.key);
+      sendResponse(res, 200, { success: true });
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/memory/core/category/:category',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const items = await ctx.coreMemory.getByCategory(params.category);
+      sendResponse(res, 200, items);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/core/search',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ query: string; category?: string; limit?: number }>(req);
+      const items = await ctx.coreMemory.search(body.query, {
+        category: body.category,
+        limit: body.limit,
+      });
+      sendResponse(res, 200, items);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/core/compress',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ category?: string }>(req);
+      const result = await ctx.coreMemory.compress(body.category);
+      sendResponse(res, 200, result);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/memory/core/stats',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const stats = await ctx.coreMemory.getStats();
+      sendResponse(res, 200, stats);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/memory/archival',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const items = await ctx.archivalMemory.getAll({ limit: 100 });
+      sendResponse(res, 200, items);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/memory/archival/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const item = await ctx.archivalMemory.get(params.id);
+      if (!item) {
+        return sendError(res, 404, 'Archival item not found');
+      }
+      sendResponse(res, 200, item);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/archival',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ 
+        content: string; 
+        summary?: string; 
+        tags?: string[];
+        importance?: number;
+      }>(req);
+      if (!body.content) {
+        return sendError(res, 400, 'Content is required');
+      }
+      const item = await ctx.archivalMemory.add(body.content, {
+        summary: body.summary,
+        tags: body.tags,
+        importance: body.importance,
+      });
+      sendResponse(res, 201, item);
+    }
+  },
+  {
+    method: 'PUT' as const,
+    path: '/api/memory/archival/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const body = await parseBody<{ 
+        content?: string; 
+        summary?: string; 
+        tags?: string[];
+        importance?: number;
+      }>(req);
+      const item = await ctx.archivalMemory.update(params.id, body);
+      if (!item) {
+        return sendError(res, 404, 'Archival item not found');
+      }
+      sendResponse(res, 200, item);
+    }
+  },
+  {
+    method: 'DELETE' as const,
+    path: '/api/memory/archival/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const deleted = await ctx.archivalMemory.delete(params.id);
+      sendResponse(res, 200, { success: deleted });
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/archival/search',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ 
+        query: string; 
+        tags?: string[]; 
+        limit?: number;
+      }>(req);
+      const results = await ctx.archivalMemory.search(body.query, {
+        tags: body.tags,
+        limit: body.limit,
+      });
+      sendResponse(res, 200, results);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/memory/archival/compress',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const result = await ctx.archivalMemory.compress();
+      sendResponse(res, 200, result);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/memory/archival/summary',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const summary = await ctx.archivalMemory.summarize();
+      sendResponse(res, 200, summary);
+    }
+  },
+];
+
+export const handleEntityRoutes = [
+  {
+    method: 'GET' as const,
+    path: '/api/entities',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const entities = await ctx.db.all<any>('SELECT * FROM entities LIMIT 100');
+      sendResponse(res, 200, entities);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/entities/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const entity = await ctx.db.getEntity(params.id);
+      if (!entity) {
+        return sendError(res, 404, 'Entity not found');
+      }
+      const relationships = await ctx.db.getRelationshipsForEntity(entity.id);
+      sendResponse(res, 200, { entity, relationships });
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/entities',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{
+        name: string;
+        type: string;
+        description?: string;
+        tags?: string[];
+      }>(req);
+      if (!body.name || !body.type) {
+        return sendError(res, 400, 'Name and type are required');
+      }
+      const entity = await ctx.db.addEntity({
+        name: body.name,
+        type: body.type as any,
+        description: body.description,
+        tags: body.tags,
+      });
+      sendResponse(res, 201, entity);
+    }
+  },
+  {
+    method: 'PUT' as const,
+    path: '/api/entities/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const body = await parseBody<{
+        name?: string;
+        description?: string;
+        tags?: string[];
+      }>(req);
+      await ctx.db.updateEntity(params.id, body);
+      const entity = await ctx.db.getEntity(params.id);
+      sendResponse(res, 200, entity);
+    }
+  },
+  {
+    method: 'DELETE' as const,
+    path: '/api/entities/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      await ctx.db.deleteEntity(params.id);
+      sendResponse(res, 200, { success: true });
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/entities/type/:type',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const entities = await ctx.db.getEntitiesByType(params.type);
+      sendResponse(res, 200, entities);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/entities/search',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ query: string; limit?: number }>(req);
+      const entities = await ctx.db.searchEntities(body.query, body.limit);
+      sendResponse(res, 200, entities);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/relationships',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{
+        sourceId: string;
+        targetId: string;
+        type: string;
+        description?: string;
+        weight?: number;
+      }>(req);
+      if (!body.sourceId || !body.targetId || !body.type) {
+        return sendError(res, 400, 'Source ID, target ID, and type are required');
+      }
+      const relationship = await ctx.db.addRelationship({
+        source_id: body.sourceId,
+        target_id: body.targetId,
+        type: body.type as any,
+        description: body.description,
+        weight: body.weight,
+      });
+      sendResponse(res, 201, relationship);
+    }
+  },
+  {
+    method: 'DELETE' as const,
+    path: '/api/relationships/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      await ctx.db.deleteRelationship(params.id);
+      sendResponse(res, 200, { success: true });
+    }
+  },
+];
+
+export const handlePrincipleRoutes = [
+  {
+    method: 'GET' as const,
+    path: '/api/principles',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const rows = await ctx.db.all<any>('SELECT * FROM principles');
+      const principles = [];
+      for (const row of rows) {
+        const p = await ctx.db.getPrinciple(row.id);
+        if (p) principles.push(p);
+      }
+      sendResponse(res, 200, principles);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/principles/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const principle = await ctx.db.getPrinciple(params.id);
+      if (!principle) {
+        return sendError(res, 404, 'Principle not found');
+      }
+      sendResponse(res, 200, principle);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/principles',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{
+        title: string;
+        content: string;
+        type: string;
+        isCore?: boolean;
+      }>(req);
+      if (!body.title || !body.content || !body.type) {
+        return sendError(res, 400, 'Title, content, and type are required');
+      }
+      const principle = await ctx.db.addPrinciple({
+        title: body.title,
+        content: body.content,
+        type: body.type as any,
+        version: 1,
+        is_core: body.isCore,
+      });
+      sendResponse(res, 201, principle);
+    }
+  },
+  {
+    method: 'DELETE' as const,
+    path: '/api/principles/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      await ctx.db.deletePrinciple(params.id);
+      sendResponse(res, 200, { success: true });
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/principles/type/:type',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const principles = await ctx.db.getPrinciplesByType(params.type);
+      sendResponse(res, 200, principles);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/principles/core',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const principles = await ctx.db.getCorePrinciples();
+      sendResponse(res, 200, principles);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/principles/:id/evidence',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const body = await parseBody<{
+        content: string;
+        sourceType: string;
+        sourceFile?: string;
+        ocrText?: string;
+      }>(req);
+      if (!body.content || !body.sourceType) {
+        return sendError(res, 400, 'Content and source type are required');
+      }
+      const evidence = await ctx.db.addEvidence({
+        content: body.content,
+        source_type: body.sourceType as any,
+        source_file: body.sourceFile,
+        ocr_text: body.ocrText,
+        timestamp: new Date().toISOString(),
+      }, params.id);
+      sendResponse(res, 201, evidence);
+    }
+  },
+];
+
+export const handleGraphRoutes = [
+  {
+    method: 'POST' as const,
+    path: '/api/graph/extract',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{
+        text?: string;
+        clipboard?: string;
+        screenshot?: string;
+      }>(req);
+      
+      const result = await ctx.extractor.extract({
+        textContent: body.text,
+        clipboard: body.clipboard,
+        screenshot: body.screenshot,
+        timestamp: new Date().toISOString(),
+      });
+
+      for (const entity of result.entities) {
+        await ctx.db.addEntity(entity);
+      }
+
+      for (const relationship of result.relationships) {
+        await ctx.db.addRelationship(relationship);
+      }
+
+      for (const principle of result.principles) {
+        await ctx.db.addPrinciple(principle);
+      }
+
+      sendResponse(res, 200, {
+        entities: result.entities.length,
+        relationships: result.relationships.length,
+        principles: result.principles.length,
+        summary: await ctx.extractor.summarizeEntities(result.entities),
+      });
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/graph/context',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{
+        entityId?: string;
+        query?: string;
+        depth?: number;
+      }>(req);
+
+      let entities: any[] = [];
+      let relationships: any[] = [];
+
+      if (body.entityId) {
+        const entity = await ctx.db.getEntity(body.entityId);
+        if (entity) {
+          entities.push(entity);
+          const relatedRels = await ctx.db.getRelationshipsForEntity(entity.id);
+          relationships.push(...relatedRels);
+
+          for (const rel of relatedRels) {
+            const relatedId = rel.source_id === entity.id ? rel.target_id : rel.source_id;
+            const related = await ctx.db.getEntity(relatedId);
+            if (related) entities.push(related);
+          }
+        }
+      }
+
+      if (body.query) {
+        const searchResults = await ctx.db.searchEntities(body.query, 5);
+        entities.push(...searchResults);
+      }
+
+      const uniqueEntities = Array.from(
+        new Map(entities.map(e => [e.id, e])).values()
+      );
+
+      sendResponse(res, 200, {
+        entities: uniqueEntities,
+        relationships: relationships.slice(0, 20),
+        depth: body.depth || 2,
+      });
+    }
+  },
+];
+
+export const handleStatsRoutes = [
+  {
+    method: 'GET' as const,
+    path: '/api/stats',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const dbStats = await ctx.db.getStats();
+      const coreStats = await ctx.coreMemory.getStats();
+      const archivalSummary = await ctx.archivalMemory.summarize();
+
+      sendResponse(res, 200, {
+        database: dbStats,
+        coreMemory: coreStats,
+        archivalMemory: {
+          totalItems: archivalSummary.totalItems,
+          totalSize: archivalSummary.totalSize,
+          topTags: archivalSummary.topTags,
+        },
+      });
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/export',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{
+        type: 'core' | 'archival' | 'all';
+        format: 'json' | 'csv';
+      }>(req);
+
+      const result: any = {};
+
+      if (body.type === 'core' || body.type === 'all') {
+        result.core = await ctx.coreMemory.export(body.format);
+      }
+
+      if (body.type === 'archival' || body.type === 'all') {
+        result.archival = await ctx.archivalMemory.export(body.format);
+      }
+
+      sendResponse(res, 200, result);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/import',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{
+        type: 'core' | 'archival';
+        format: 'json' | 'csv';
+        data: string;
+      }>(req);
+
+      let imported = 0;
+
+      if (body.type === 'core') {
+        imported = await ctx.coreMemory.import(body.data, body.format);
+      } else if (body.type === 'archival') {
+        imported = await ctx.archivalMemory.import(body.data, body.format);
+      }
+
+      sendResponse(res, 200, { imported });
+    }
+  },
+];

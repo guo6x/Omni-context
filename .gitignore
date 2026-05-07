@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+out/
+.next/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Rust
+Cargo.lock
+target/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp

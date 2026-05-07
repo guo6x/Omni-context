@@ -1,0 +1,34 @@
+{
+  "name": "omni-context-brain-server",
+  "version": "1.0.0",
+  "description": "Omni-Context Brain Server - AI记忆中枢",
+  "main": "dist/mcp-server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/mcp-server.ts",
+    "build": "tsc",
+    "start": "node dist/mcp-server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "api": "tsx src/api-server.ts",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["ai", "mcp", "graphrag", "memory"],
+  "author": "Omni-Context Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "sqlite3": "^5.1.7",
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/sqlite3": "^3.1.11",
+    "@types/node": "^20.11.16",
+    "@types/uuid": "^9.0.7",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  }
+}
