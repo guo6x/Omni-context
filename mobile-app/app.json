@@ -17,7 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.omni-context.mobile",
+      "bundleIdentifier": "com.omnicontext.mobile",
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -27,7 +27,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0a0f"
       },
-      "package": "com.omicontext.mobile"
+      "package": "com.omnicontext.mobile",
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
     },
     "web": {
       "bundler": "metro",
