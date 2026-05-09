@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const ROOT_DIR = __dirname;
+const ROOT_DIR = path.join(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
 
 console.log('🚀 开始打包 Omni-Context 所有组件...\n');
@@ -54,8 +54,8 @@ try {
   fs.mkdirSync(brainServerInTauri, { recursive: true });
   copyDir(path.join(ROOT_DIR, 'brain-server', 'dist'), brainServerInTauri);
   
-  // 构建 Tauri 应用
-  execSync('cd desktop-daemon && npm run tauri build', { stdio: 'inherit' });
+  // 构建 Tauri 应用（使用 tauri.prod.conf.json：去掉 unsafe-eval、收紧 connect-src）
+  execSync('cd desktop-daemon && npm run tauri:build', { stdio: 'inherit' });
   
   const desktopDir = path.join(DIST_DIR, 'desktop-app');
   if (!fs.existsSync(desktopDir)) fs.mkdirSync(desktopDir, { recursive: true });
@@ -72,25 +72,45 @@ try {
 }
 
 // 步骤 3: 打包浏览器插件
+// 现在的扩展是手写的 manifest v3 静态文件（不是 Plasmo / webpack），
+// 因此只跑 tailwind build 编 css，再把发布所需的文件复制 + zip 即可。
 console.log('\n📦 3. 打包浏览器插件...');
 try {
-  execSync('cd browser-extension && npm run build:chrome', { stdio: 'inherit' });
-  execSync('cd browser-extension && npm run build:firefox', { stdio: 'inherit' });
-  
+  execSync('cd browser-extension && npm run build', { stdio: 'inherit' });
+
   const browserDir = path.join(DIST_DIR, 'browser-extension');
-  if (!fs.existsSync(browserDir)) fs.mkdirSync(browserDir, { recursive: true });
-  
-  const chromeBuild = path.join(ROOT_DIR, 'browser-extension', 'build', 'chrome-mv3-prod');
-  if (fs.existsSync(chromeBuild)) {
-    copyDir(chromeBuild, path.join(browserDir, 'chrome'));
+  const unpackedDir = path.join(browserDir, 'unpacked');
+  if (fs.existsSync(unpackedDir)) fs.rmSync(unpackedDir, { recursive: true });
+  fs.mkdirSync(unpackedDir, { recursive: true });
+
+  // 打包名单：发布需要的文件 / 目录；不包含 node_modules、src、tailwind config 等
+  const extRoot = path.join(ROOT_DIR, 'browser-extension');
+  const include = [
+    'manifest.json',
+    'background.js',
+    'content.js',
+    'content.css',
+    'popup.html',
+    'popup.js',
+    'icons',
+  ];
+  for (const name of include) {
+    const src = path.join(extRoot, name);
+    if (!fs.existsSync(src)) continue;
+    const dest = path.join(unpackedDir, name);
+    if (fs.statSync(src).isDirectory()) copyDir(src, dest);
+    else copyFile(src, dest);
   }
-  
-  const firefoxBuild = path.join(ROOT_DIR, 'browser-extension', 'build', 'firefox-mv2-prod');
-  if (fs.existsSync(firefoxBuild)) {
-    copyDir(firefoxBuild, path.join(browserDir, 'firefox'));
-  }
-  
-  console.log('✅ 浏览器插件打包完成');
+
+  // 用 PowerShell 自带的 Compress-Archive 打 zip（Windows 必有，免依赖）
+  const zipPath = path.join(browserDir, 'omni-context-extension.zip');
+  if (fs.existsSync(zipPath)) fs.rmSync(zipPath);
+  execSync(
+    `powershell -NoProfile -Command "Compress-Archive -Path '${unpackedDir}\\*' -DestinationPath '${zipPath}' -Force"`,
+    { stdio: 'inherit' }
+  );
+
+  console.log('✅ 浏览器插件打包完成 (unpacked + zip，Chrome/Edge/Firefox 109+ 通用)');
 } catch (e) {
   console.log('❌ 浏览器插件打包失败');
   console.error(e);
@@ -127,41 +147,34 @@ try {
 console.log('\n📖 生成说明文档...');
 const readmeContent = `# Omni-Context 打包输出
 
-## 📦 包含的组件
+## 实际产物
 
-### 桌面应用
-- **Windows**: .msi 安装包
-- **macOS**: .dmg 或 .app
-- **Linux**: .AppImage, .deb 或 .rpm
+### \`desktop-app/\` —— 桌面应用（仅当前打包平台）
+- Windows: \`msi/Omni-Context_*.msi\` 与 \`nsis/Omni-Context_*-setup.exe\`
+- macOS: \`macos/*.dmg\`（仅在 macOS 上跑 \`npm run package\` 才会产出）
+- Linux: \`appimage/*.AppImage\`、\`deb/*.deb\`（仅在 Linux 上）
 
-### 浏览器插件
-- **Chrome/Edge**: Chrome 浏览器插件
-- **Firefox**: Firefox 浏览器插件
+### \`browser-extension/\` —— 浏览器扩展
+- \`unpacked/\`：解压目录，Chrome/Edge 可"加载已解压的扩展"直接调试
+- \`omni-context-extension.zip\`：上架商店或分发用的 zip 包
+- 同一份产物兼容 Chrome / Edge / Firefox 109+（manifest v3）
 
-### 移动端
-- **Android**: .apk 或 .aab (需要签名)
-- **iOS**: .ipa (需要开发者账号)
+### \`mobile-app/\` —— 移动端
+- 当前只复制了 \`app.json\` 与 \`package.json\`
+- 真正的 .apk / .aab / .ipa 需要走 \`eas build\`，参考 \`mobile-app/README.md\`
 
-### 硬件
-- ESP32 固件和文档
+### \`brain-server/\` —— 单跑后端的产物
+- 编译后的 \`dist/\`，可独立 \`node mcp-server.js\` 启动
+- 桌面应用安装包已经把它打进去了，**普通用户不需要单独装这个**
 
-## 🚀 安装说明
+### \`hardware/\` —— ESP32 固件源码与说明
+- 不是二进制，需要用 PlatformIO / Arduino IDE 烧录
 
-### 桌面应用
-1. Windows: 双击 .msi 安装包
-2. macOS: 双击 .dmg，拖拽到 Applications
-3. Linux: chmod +x .AppImage 然后运行
+## 安装说明
 
-### 浏览器插件
-1. Chrome/Edge: 打开 chrome://extensions，开启开发者模式，加载解压的插件
-2. Firefox: 打开 about:debugging，加载临时附加组件
-
-### 移动端
-1. Android: 直接安装 .apk
-2. iOS: 通过 TestFlight 或 Xcode 安装
-
-## 📝 更多信息
-请查看各个目录下的 README.md 了解详细说明。
+- **桌面 (Windows)**: 双击 \`desktop-app/msi/*.msi\` 或 \`nsis/*-setup.exe\` 二选一
+- **浏览器扩展**: \`chrome://extensions\` → 开发者模式 → "加载已解压的扩展" → 选 \`browser-extension/unpacked/\`
+- **移动端 / 硬件**: 需自己走 EAS / PlatformIO，详见各自子项目 README
 
 ---
 Omni-Context v${require('../package.json').version}

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" width="720" height="160">
+  <defs>
+    <linearGradient id="cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+    <linearGradient id="purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#7000ff" />
+    </linearGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#7df9ff" />
+      <stop offset="100%" stop-color="#00bcd4" />
+    </radialGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7df9ff" />
+      <stop offset="60%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b" />
+      <feMerge>
+        <feMergeNode in="b" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g transform="translate(80 80)">
+    <circle r="56" fill="none" stroke="url(#cyan)" stroke-width="5" opacity="0.95" />
+    <g stroke="url(#cyan)" stroke-width="1.4" opacity="0.4" stroke-linecap="round">
+      <line x1="0" y1="-56" x2="0" y2="-19" />
+      <line x1="48.5" y1="-28" x2="16" y2="-9.5" />
+      <line x1="48.5" y1="28" x2="16" y2="9.5" />
+      <line x1="0" y1="56" x2="0" y2="19" />
+      <line x1="-48.5" y1="28" x2="-16" y2="9.5" />
+      <line x1="-48.5" y1="-28" x2="-16" y2="-9.5" />
+    </g>
+    <g filter="url(#glow)">
+      <circle cx="0"     cy="-56" r="7" fill="url(#cyan)" />
+      <circle cx="48.5"  cy="-28" r="6" fill="url(#purple)" />
+      <circle cx="48.5"  cy="28"  r="6" fill="url(#purple)" />
+      <circle cx="0"     cy="56"  r="7" fill="url(#cyan)" />
+      <circle cx="-48.5" cy="28"  r="6" fill="url(#purple)" />
+      <circle cx="-48.5" cy="-28" r="6" fill="url(#purple)" />
+    </g>
+    <circle r="19" fill="url(#core)" filter="url(#glow)" />
+    <circle r="7" fill="#ffffff" opacity="0.95" />
+  </g>
+
+  <text x="170" y="98" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="56" font-weight="700" letter-spacing="2" fill="url(#textGrad)">OMNI-CONTEXT</text>
+</svg>

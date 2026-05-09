@@ -91,4 +91,18 @@ export default {
     tags: 'Tags',
     created_at: 'Created At',
   },
+  empty: {
+    title: 'Welcome to Omni-Context',
+    subtitle: 'Your graph is empty. Try one of the actions below.',
+    quick_actions: 'Quick actions',
+    capture_label: 'Capture current screen',
+    capture_hint: 'Default Ctrl+Shift+P — extract knowledge from clipboard / screenshot',
+    decision_label: 'Find related decisions',
+    decision_hint: 'Default Ctrl+Shift+D — search past memory for similar context',
+    upload_label: 'Upload a file',
+    upload_hint: 'Drop .md / .txt / .pdf / .json — entities & relations are extracted automatically',
+    seed_demo: 'Load demo data',
+    seed_demo_hint: 'Just want to see how it looks? Inject a sample graph.',
+    docs: 'See all shortcuts',
+  },
 };

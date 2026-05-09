@@ -91,4 +91,18 @@ export default {
     tags: '标签',
     created_at: '创建时间',
   },
+  empty: {
+    title: '欢迎使用 Omni-Context',
+    subtitle: '你的图谱还是空的，先用一个快捷键试一下',
+    quick_actions: '试试这几个动作',
+    capture_label: '沉淀当前屏幕',
+    capture_hint: '默认 Ctrl+Shift+P，把当前剪贴板/截图抽取成知识节点',
+    decision_label: '查相关决策',
+    decision_hint: '默认 Ctrl+Shift+D，搜索过往沉淀的相似经验',
+    upload_label: '直接上传文件',
+    upload_hint: '拖入 .md / .txt / .pdf / .json，自动抽取实体与关系',
+    seed_demo: '加载示例数据',
+    seed_demo_hint: '如果你只想看效果，可以注入一份样例图谱',
+    docs: '查看完整快捷键',
+  },
 };

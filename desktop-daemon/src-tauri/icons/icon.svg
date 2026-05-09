@@ -1,114 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#0a0b12" />
+    <radialGradient id="bg" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#1b2547" />
+      <stop offset="100%" stop-color="#070914" />
     </radialGradient>
-    <linearGradient id="cyanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#06b6d4" />
+    <linearGradient id="cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
       <stop offset="100%" stop-color="#22d3ee" />
     </linearGradient>
-    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#a855f7" />
-      <stop offset="100%" stop-color="#8b5cf6" />
+    <linearGradient id="purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#7000ff" />
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#7df9ff" />
+      <stop offset="100%" stop-color="#00bcd4" />
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="b" />
       <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="b" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b" />
+      <feMerge>
+        <feMergeNode in="b" />
+        <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
   </defs>
-  
-  <rect width="512" height="512" fill="url(#bgGradient)" rx="100" />
-  
-  <!-- 外层六边形 -->
-  <polygon 
-    points="256,60 376,130 376,286 256,356 136,286 136,130" 
-    fill="none" 
-    stroke="url(#cyanGradient)" 
-    stroke-width="8" 
-    filter="url(#glow)"
-  />
-  
-  <!-- 内层六边形 -->
-  <polygon 
-    points="256,100 340,155 340,261 256,316 172,261 172,155" 
-    fill="none" 
-    stroke="url(#purpleGradient)" 
-    stroke-width="4" 
-    opacity="0.8"
-  />
-  
-  <!-- 中心大脑图标 -->
-  <g transform="translate(256, 208) scale(0.4)">
-    <path 
-      d="M120,-80 
-         Q180,-100 220,-40 
-         Q260,20 220,80 
-         Q180,140 120,120 
-         Q60,100 40,40 
-         Q20,-20 60,-60 
-         Q100,-100 120,-80 Z" 
-      fill="url(#cyanGradient)" 
-      opacity="0.8"
-    />
-    <path 
-      d="M-120,-80 
-         Q-180,-100 -220,-40 
-         Q-260,20 -220,80 
-         Q-180,140 -120,120 
-         Q-60,100 -40,40 
-         Q-20,-20 -60,-60 
-         Q-100,-100 -120,-80 Z" 
-      fill="url(#purpleGradient)" 
-      opacity="0.8"
-    />
-    
-    <!-- 连接线 -->
-    <path 
-      d="M-20,0 Q0,20 20,0" 
-      stroke="url(#cyanGradient)" 
-      stroke-width="12" 
-      fill="none" 
-      stroke-linecap="round"
-      filter="url(#glow)"
-    />
-    <path 
-      d="M-40,-30 Q0,-40 40,-30" 
-      stroke="url(#cyanGradient)" 
-      stroke-width="8" 
-      fill="none" 
-      stroke-linecap="round"
-      opacity="0.6"
-    />
-    <path 
-      d="M-40,30 Q0,40 40,30" 
-      stroke="url(#cyanGradient)" 
-      stroke-width="8" 
-      fill="none" 
-      stroke-linecap="round"
-      opacity="0.6"
-    />
-    
-    <!-- 中心节点 -->
-    <circle cx="0" cy="0" r="30" fill="url(#cyanGradient)" filter="url(#glow)" />
+
+  <rect width="512" height="512" fill="url(#bg)" rx="112" ry="112" />
+
+  <g transform="translate(256 256)">
+    <circle r="172" fill="none" stroke="url(#cyan)" stroke-width="14" opacity="0.95" filter="url(#softGlow)" />
+
+    <g stroke="url(#cyan)" stroke-width="3" opacity="0.4" stroke-linecap="round">
+      <line x1="0" y1="-172" x2="0" y2="-58" />
+      <line x1="149" y1="-86" x2="50" y2="-29" />
+      <line x1="149" y1="86" x2="50" y2="29" />
+      <line x1="0" y1="172" x2="0" y2="58" />
+      <line x1="-149" y1="86" x2="-50" y2="29" />
+      <line x1="-149" y1="-86" x2="-50" y2="-29" />
+    </g>
+
+    <g filter="url(#glow)">
+      <circle cx="0"     cy="-172" r="22" fill="url(#cyan)" />
+      <circle cx="149"   cy="-86"  r="20" fill="url(#purple)" />
+      <circle cx="149"   cy="86"   r="20" fill="url(#purple)" />
+      <circle cx="0"     cy="172"  r="22" fill="url(#cyan)" />
+      <circle cx="-149"  cy="86"   r="20" fill="url(#purple)" />
+      <circle cx="-149"  cy="-86"  r="20" fill="url(#purple)" />
+    </g>
+
+    <circle r="58" fill="url(#core)" filter="url(#glow)" />
+    <circle r="22" fill="#ffffff" opacity="0.95" />
   </g>
-  
-  <!-- 装饰节点 -->
-  <circle cx="256" cy="80" r="12" fill="url(#cyanGradient)" filter="url(#glow)" />
-  <circle cx="360" cy="150" r="10" fill="url(#purpleGradient)" filter="url(#glow)" />
-  <circle cx="360" cy="270" r="10" fill="url(#purpleGradient)" filter="url(#glow)" />
-  <circle cx="256" cy="340" r="12" fill="url(#cyanGradient)" filter="url(#glow)" />
-  <circle cx="152" cy="270" r="10" fill="url(#purpleGradient)" filter="url(#glow)" />
-  <circle cx="152" cy="150" r="10" fill="url(#purpleGradient)" filter="url(#glow)" />
-  
-  <!-- 装饰线条 -->
-  <line x1="256" y1="80" x2="256" y2="100" stroke="url(#cyanGradient)" stroke-width="3" opacity="0.5" />
-  <line x1="360" y1="150" x2="340" y2="155" stroke="url(#purpleGradient)" stroke-width="3" opacity="0.5" />
-  <line x1="360" y1="270" x2="340" y2="261" stroke="url(#purpleGradient)" stroke-width="3" opacity="0.5" />
-  <line x1="256" y1="340" x2="256" y2="316" stroke="url(#cyanGradient)" stroke-width="3" opacity="0.5" />
-  <line x1="152" y1="270" x2="172" y2="261" stroke="url(#purpleGradient)" stroke-width="3" opacity="0.5" />
-  <line x1="152" y1="150" x2="172" y2="155" stroke="url(#purpleGradient)" stroke-width="3" opacity="0.5" />
 </svg>

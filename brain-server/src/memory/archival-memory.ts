@@ -258,8 +258,16 @@ export class ArchivalMemory {
   } = {}): Promise<ArchivalMemoryItem[]> {
     const limit = options.limit || 100;
     const offset = options.offset || 0;
-    const orderBy = options.orderBy || 'archived_at';
-    const order = options.order || 'DESC';
+    // 运行时白名单：即便上游绕过 TS 类型检查（如来自 HTTP query string），
+    // 也不会把任意字符串拼进 SQL ORDER BY
+    const ALLOWED_ORDER_BY = new Set(['created_at', 'archived_at', 'importance']);
+    const ALLOWED_ORDER = new Set(['ASC', 'DESC']);
+    const orderBy = ALLOWED_ORDER_BY.has(options.orderBy as string)
+      ? (options.orderBy as string)
+      : 'archived_at';
+    const order = ALLOWED_ORDER.has((options.order || '').toUpperCase())
+      ? (options.order as string).toUpperCase()
+      : 'DESC';
 
     const rows = await this.db.all<any>(
       `SELECT * FROM archival_memory ORDER BY ${orderBy} ${order} LIMIT ? OFFSET ?`,

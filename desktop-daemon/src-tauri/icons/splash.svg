@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1284 2778" width="1284" height="2778">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#1b2547" />
+      <stop offset="55%" stop-color="#0a0e1f" />
+      <stop offset="100%" stop-color="#070914" />
+    </radialGradient>
+    <linearGradient id="cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+    <linearGradient id="purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#7000ff" />
+    </linearGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#7df9ff" />
+      <stop offset="100%" stop-color="#00bcd4" />
+    </radialGradient>
+    <linearGradient id="textCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7df9ff" />
+      <stop offset="50%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="b" />
+      <feMerge>
+        <feMergeNode in="b" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b" />
+      <feMerge>
+        <feMergeNode in="b" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1284" height="2778" fill="url(#bg)" />
+
+  <g opacity="0.06" stroke="#7df9ff" stroke-width="1">
+    <line x1="0" y1="694" x2="1284" y2="694" />
+    <line x1="0" y1="1389" x2="1284" y2="1389" />
+    <line x1="0" y1="2083" x2="1284" y2="2083" />
+    <line x1="321" y1="0" x2="321" y2="2778" />
+    <line x1="642" y1="0" x2="642" y2="2778" />
+    <line x1="963" y1="0" x2="963" y2="2778" />
+  </g>
+
+  <g transform="translate(642 1240)">
+    <circle r="320" fill="none" stroke="url(#cyan)" stroke-width="22" opacity="0.95" filter="url(#softGlow)" />
+
+    <g stroke="url(#cyan)" stroke-width="5" opacity="0.4" stroke-linecap="round">
+      <line x1="0" y1="-320" x2="0" y2="-108" />
+      <line x1="277" y1="-160" x2="93" y2="-54" />
+      <line x1="277" y1="160" x2="93" y2="54" />
+      <line x1="0" y1="320" x2="0" y2="108" />
+      <line x1="-277" y1="160" x2="-93" y2="54" />
+      <line x1="-277" y1="-160" x2="-93" y2="-54" />
+    </g>
+
+    <g filter="url(#glow)">
+      <circle cx="0"     cy="-320" r="40" fill="url(#cyan)" />
+      <circle cx="277"   cy="-160" r="36" fill="url(#purple)" />
+      <circle cx="277"   cy="160"  r="36" fill="url(#purple)" />
+      <circle cx="0"     cy="320"  r="40" fill="url(#cyan)" />
+      <circle cx="-277"  cy="160"  r="36" fill="url(#purple)" />
+      <circle cx="-277"  cy="-160" r="36" fill="url(#purple)" />
+    </g>
+
+    <circle r="108" fill="url(#core)" filter="url(#glow)" />
+    <circle r="40" fill="#ffffff" opacity="0.95" />
+  </g>
+
+  <g transform="translate(642 1820)" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text font-size="116" font-weight="700" letter-spacing="14" fill="url(#textCyan)" filter="url(#softGlow)">OMNI-CONTEXT</text>
+    <text y="92" font-size="38" font-weight="400" letter-spacing="10" fill="#7df9ff" opacity="0.7">YOUR SECOND BRAIN</text>
+  </g>
+</svg>

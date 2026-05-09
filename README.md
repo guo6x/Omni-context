@@ -2,6 +2,10 @@
 
 Omni-Context 是一个跨平台的开源 AI 记忆中枢，它致力于做你的“第二大脑”。在 v3.0 版本中，我们引入了 **Proactive Agent (主动智能引擎)**，它不再仅仅是被动等待指令，而是会主动分析你的知识图谱，为你生成跨越维度的深度洞见。
 
+> ⚠️ **项目状态**：v3.0 仍处于早期阶段（桌面端版本号 `0.1.0`），属于实验性 / 个人单机部署。
+> 数据全部存放在本地 SQLite，**不含**多用户、密码、加密落盘、云端同步、公网鉴权等生产级能力。
+> Proactive Agent / 屏幕捕获 / ESP32 硬件 / LLM 抽取 等功能尚未在干净环境做端到端验证。
+
 ---
 
 ## ✨ 核心特性 (v3.0 进化版)
@@ -17,36 +21,39 @@ Omni-Context 是一个跨平台的开源 AI 记忆中枢，它致力于做你的
 
 ## 📂 生态系统架构
 
-- **桌面端 (Desktop)**: Next.js + Tauri + TailwindCSS (v4) + Radix UI. 包含系统级的屏幕/剪贴板捕获。
-- **后台大脑 (Brain Server)**: Node.js + Express + SQLite-vec + Agent Loop. 负责所有计算、检索与主动分析任务。
-- **移动端 (Mobile App)**: React Native + Expo + NativeWind. 支持远程同步与洞见查看。
-- **浏览器插件 (Extension)**: 全新重构的 Manifest V3 插件，实现网页内容的一键深度沉淀。
+- **桌面端 (Desktop)**: Next.js + Tauri + TailwindCSS + lucide-react. 包含系统级的屏幕/剪贴板捕获（实验性）。
+- **后台大脑 (Brain Server)**: Node.js + 自实现 HTTP 路由 + SQLite-vec + Agent Loop. 负责检索、图谱、主动分析。
+- **移动端 (Mobile App)**: React Native + Expo + NativeWind. 通过 **同一 LAN** 内的 HTTP 与 Brain Server 同步（无云端、无鉴权握手）。
+- **浏览器插件 (Extension)**: 原生 Manifest V3 (Chrome/Edge) + V2 (Firefox)，HTTP 调用 Brain Server。Safari 暂未适配。
 
 ---
 
 ## 🚀 快速开始与安装
 
-如果您使用的是 Windows 系统，我们提供了全自动的构建脚本。
-
-### 📦 一键打包 (推荐)
-在项目根目录下，使用 PowerShell 执行：
+### 📦 一键打包（仅 Windows，推荐）
+目前只提供了 Windows PowerShell 打包脚本。在项目根目录下：
 ```powershell
 .\package-windows.ps1
 ```
 该脚本将自动执行以下操作：
 1. 环境检查与 Rust 工具链配置
 2. Brain Server 编译与依赖封装
-3. 前端 Next.js 静态构建
+3. 前端 Next.js 静态构建（生产 CSP 走 `tauri.prod.conf.json`，去除 `unsafe-eval`）
 4. 生成完整的 `.msi` 安装包与 `.exe` 绿色安装程序
+
+> macOS / Linux 暂无打包脚本，请走下面的手动开发模式。详情见 [BUILDING.md](./BUILDING.md)。
 
 ### 🛠️ 手动开发模式
 ```bash
 # 1. 启动 Brain Server (后端)
 cd brain-server && npm install && npm run build && npm start
 
-# 2. 启动 Desktop (前端)
-cd desktop-daemon && npm install && npm run tauri dev
+# 2. 启动 Desktop (前端 + Tauri)
+cd desktop-daemon && npm install && npm run tauri:dev
 ```
+
+> 如需从远程 ESP32 硬件接收 UDP 事件，需要在启动 desktop-daemon 前设置：
+> `OMNI_UDP_BIND=0.0.0.0:9090`（默认仅监听 `127.0.0.1`）。
 
 ---
 

@@ -10,7 +10,8 @@
     "build:browser": "cd browser-extension && npm run build",
     "build:mobile": "cd mobile-app && npm run build:android && npm run build:ios",
     "package": "node scripts/package-all.js",
-    "clean": "node scripts/clean-all.js"
+    "clean": "node scripts/clean-all.js",
+    "seed:demo": "node scripts/seed-demo-data.js"
   },
   "keywords": ["ai", "memory", "knowledge-graph", "mcp", "tauri"],
   "author": "Omni-Context Team",

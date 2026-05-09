@@ -637,3 +637,6 @@ export const handleNotificationRoutes = [
     }
   }
 ];
+
+export { handleAdminRoutes } from './admin.js';
+export { handleIngestRoutes } from './ingest.js';

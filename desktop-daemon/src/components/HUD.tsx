@@ -42,7 +42,15 @@ export default function HUD({ isVisible, onClose, message, status = "listening" 
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             {statusIcon[currentStatus]}
-            <h3 className="text-lg font-semibold text-cyan-400">Omni-Context HUD</h3>
+            <h3
+              className="text-lg font-bold tracking-wider bg-clip-text text-transparent"
+              style={{
+                backgroundImage:
+                  'linear-gradient(90deg, #7df9ff 0%, #00f2fe 60%, #a855f7 100%)',
+              }}
+            >
+              OMNI-CONTEXT
+            </h3>
           </div>
           <button
             onClick={onClose}

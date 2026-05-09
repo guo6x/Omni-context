@@ -4,13 +4,15 @@ import { Database } from '../db/sqlite.js';
 import { CoreMemory } from '../memory/core-memory.js';
 import { ArchivalMemory } from '../memory/archival-memory.js';
 import { GraphRAGExtractor } from '../graphrag/extractor.js';
-import { 
+import {
   handleMemoryRoutes,
   handleEntityRoutes,
   handlePrincipleRoutes,
   handleGraphRoutes,
   handleStatsRoutes,
-  handleNotificationRoutes
+  handleNotificationRoutes,
+  handleAdminRoutes,
+  handleIngestRoutes
 } from './handlers/index.js';
 
 export interface RequestContext {
@@ -84,6 +86,8 @@ export class ApiRouter {
       ...handleGraphRoutes,
       ...handleStatsRoutes,
       ...handleNotificationRoutes,
+      ...handleAdminRoutes,
+      ...handleIngestRoutes,
     ];
   }
 

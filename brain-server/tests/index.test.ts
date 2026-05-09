@@ -104,49 +104,44 @@ describe('Database', () => {
     });
   });
 
-  describe('Principle Operations', () => {
-    it('should add a principle', async () => {
-      const principle = await db.addPrinciple({
-        title: 'Test Principle',
-        content: 'This is a test principle',
-        type: 'code_principle',
-        is_core: true,
+  describe('Principle Operations (as entities of type=principle)', () => {
+    it('should store principle as entity', async () => {
+      const principle = await db.addEntity({
+        name: 'Test Principle',
+        type: 'principle',
+        description: 'This is a test principle',
+        metadata: { isCore: true },
       });
 
       expect(principle.id).toBeDefined();
-      expect(principle.title).toBe('Test Principle');
+      expect(principle.type).toBe('principle');
     });
 
-    it('should get a principle with evidence', async () => {
-      const principle = await db.addPrinciple({
-        title: 'Principle With Evidence',
-        content: 'Content',
-        type: 'workflow_rule',
+    it('should list core principles via getCorePrinciples', async () => {
+      await db.addEntity({
+        name: 'Core Rule',
+        type: 'principle',
+        description: 'Core',
+        metadata: { isCore: true },
       });
-
-      await db.addEvidence({
-        content: 'Evidence content',
-        source_type: 'manual',
-        timestamp: new Date().toISOString(),
-      }, principle.id);
-
-      const found = await db.getPrinciple(principle.id);
-      expect(found?.evidence.length).toBe(1);
+      const core = await db.getCorePrinciples();
+      expect(core.length).toBeGreaterThan(0);
+      expect(core.every(p => p.type === 'principle')).toBe(true);
     });
   });
 
   describe('Vector Search', () => {
     it('should perform vector search', async () => {
-      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
-      
+      // sqlite-vec 的 vec0 虚拟表声明为 FLOAT[384]，向量维度必须匹配 schema
+      const embedding = Array.from({ length: 384 }, (_, i) => (i % 7) * 0.01);
+
       await db.addEntity({
         name: 'VectorEntity',
         type: 'concept',
         embedding,
       });
 
-      const queryEmbedding = [0.1, 0.2, 0.3, 0.4, 0.5];
-      const results = await db.vectorSearch(queryEmbedding, 5);
+      const results = await db.vectorSearch(embedding, 5);
 
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].similarity).toBeCloseTo(1.0, 1);

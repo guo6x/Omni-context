@@ -3,7 +3,7 @@ import { URL } from 'url';
 import { CoreMemory } from '../memory/core-memory.js';
 import { ArchivalMemory } from '../memory/archival-memory.js';
 import { GraphRAGExtractor } from '../graphrag/extractor.js';
-import { handleMemoryRoutes, handleEntityRoutes, handlePrincipleRoutes, handleGraphRoutes, handleStatsRoutes, handleNotificationRoutes } from './handlers/index.js';
+import { handleMemoryRoutes, handleEntityRoutes, handlePrincipleRoutes, handleGraphRoutes, handleStatsRoutes, handleNotificationRoutes, handleAdminRoutes, handleIngestRoutes } from './handlers/index.js';
 const MAX_BODY_BYTES = Number(process.env.MAX_BODY_BYTES || 15 * 1024 * 1024);
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60000);
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 300);
@@ -55,6 +55,8 @@ export class ApiRouter {
             ...handleGraphRoutes,
             ...handleStatsRoutes,
             ...handleNotificationRoutes,
+            ...handleAdminRoutes,
+            ...handleIngestRoutes,
         ];
     }
     async handle(req, res) {

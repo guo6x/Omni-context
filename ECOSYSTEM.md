@@ -77,9 +77,7 @@ omni-context/
 │   └── constants.ts       # 共享常量
 ├── README.md              # 主文档
 ├── ECOSYSTEM.md           # 本文档
-├── BUILDING.md            # 构建文档
-├── PRESENTATION.md        # 产品呈现方式
-└── QUICKSTART.md          # 快速启动
+└── BUILDING.md            # 构建文档
 ```
 
 ## 各组件详细说明
@@ -136,17 +134,15 @@ omni-context/
 - 本地缓存和离线模式
 
 **技术栈**:
-- Plasmo 框架
-- React + Tailwind CSS
+- 原生 Manifest V3 (Chrome/Edge) 与 V2 (Firefox)
 - Chrome Extensions API
-- WebSocket 通信
+- 通过 HTTP REST 调用 Brain Server（3001）
 
 **支持浏览器**:
-- ✅ Chrome
-- ✅ Edge
-- ✅ Firefox
-- ✅ Safari
-- ✅ Brave / Vivaldi 等
+- ✅ Chrome / Edge (Manifest V3)
+- ✅ Firefox (Manifest V2)
+- ✅ Brave / Vivaldi 等 Chromium 系
+- ⚠️ Safari 未实现（需要 Safari Web Extension 适配）
 
 ### 4. 移动端应用
 
@@ -164,9 +160,9 @@ omni-context/
 **技术栈**:
 - React Native / Expo
 - NativeWind (Tailwind for Native)
-- D3.js for graphs
-- WebSocket 同步
-- SQLite 本地存储
+- React Navigation
+- HTTP 同步（同 LAN 内访问 Brain Server 3001）
+- SQLite 本地存储 (expo-sqlite)
 
 **支持平台**:
 - ✅ iOS
@@ -196,21 +192,27 @@ omni-context/
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│                    通信协议矩阵                            │
+│                    通信协议矩阵（实际实现）                 │
 ├───────────────┬─────────────────────┬────────────────────┤
-│  From\To      │  Desktop App        │  Browser Extension │
+│  From\To      │  Brain Server       │  Note              │
 ├───────────────┼─────────────────────┼────────────────────┤
-│ Desktop App   │ -                   │ WebSocket (9999)  │
+│ Desktop UI    │ HTTP (3001)         │ fetch + bearer     │
 ├───────────────┼─────────────────────┼────────────────────┤
-│ Browser Ext   │ WebSocket (9999)    │ -                  │
+│ Browser Ext   │ HTTP (3001)         │ 同 LAN，CORS 允许  │
 ├───────────────┼─────────────────────┼────────────────────┤
-│ Mobile App    │ mDNS + WebSocket    │ mDNS + WebSocket   │
+│ Mobile App    │ HTTP (3001)         │ LAN 内可达即可     │
 ├───────────────┼─────────────────────┼────────────────────┤
-│ ESP32         │ UDP Broadcast (9090)│ -                  │
+│ ESP32         │ UDP (本机 9090)     │ 远程需 OMNI_UDP_BIND │
 ├───────────────┼─────────────────────┼────────────────────┤
-│ MCP Clients   │ MCP Protocol        │ -                  │
+│ MCP Clients   │ stdio (MCP)         │ IDE 直连           │
 └───────────────┴─────────────────────┴────────────────────┘
 ```
+
+> ⚠️ 实现说明：当前不存在跨进程 WebSocket 推送通道。早期文档描述的
+> `WebSocket 9999` / `mDNS` 只是设计草稿，实际通信是各客户端各自轮询
+> Brain Server 的 HTTP API（3001）。UDP 9090 默认仅监听 `127.0.0.1`，
+> ESP32 等远程硬件需要在 desktop-daemon 启动前设置
+> `OMNI_UDP_BIND=0.0.0.0:9090`。
 
 ### 统一消息格式
 
@@ -250,19 +252,15 @@ interface Message {
 ```
 用户沉淀知识
        ↓
-    [本地缓存]
+    [本地 SQLite 缓存（移动端 / 浏览器扩展）]
        ↓
-    [增量同步队列]
-       ↓
-    [WebSocket 连接]
-       ↓
-    [桌面应用]
+    [HTTP POST → Brain Server 3001（自动重试）]
        ↓
     [Brain Server]
        ↓
-    [SQLite + 向量索引]
+    [SQLite + 向量索引 + GraphRAG]
        ↓
-    [广播同步到其他设备]
+    [其他客户端通过 GET / SSE 拉取]
 ```
 
 ## 多语言支持
@@ -342,10 +340,6 @@ npm start
 完整构建请参考 [BUILDING.md](./BUILDING.md)
 
 ## 产品呈现方式
-
-完整的产品呈现方式请参考 [PRESENTATION.md](./PRESENTATION.md)
-
-### 快速查看
 
 产品可以以下方式呈现：
 1. **桌面应用** - 完整功能

@@ -68,7 +68,7 @@ try {
   console.log('   ⚠️ Linux 用户需要安装系统依赖');
   console.log('');
   
-  execSync('npm run tauri build', { cwd: path.join(ROOT_DIR, 'desktop-daemon'), stdio: 'inherit' });
+  execSync('npm run tauri:build', { cwd: path.join(ROOT_DIR, 'desktop-daemon'), stdio: 'inherit' });
   
   const tauriBundle = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target', 'release', 'bundle');
   if (fs.existsSync(tauriBundle)) {

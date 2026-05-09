@@ -173,6 +173,13 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
     `,
   },
+  {
+    version: 7,
+    name: 'add_core_memory_summary',
+    up: `
+      ALTER TABLE core_memory ADD COLUMN summary TEXT;
+    `,
+  },
 ];
 
 interface Migration {
@@ -580,6 +587,10 @@ export class Database {
     // sqlite-vec 要求 Float32Array 格式
     const queryBlob = Buffer.from(new Float32Array(queryEmbedding).buffer);
 
+    // sqlite-vec KNN 需要在 vec0 的 WHERE 中显式提供 k 才能下推；
+    // 经 JOIN 后跟随的 LIMIT 不会被 vec0 视为 k 约束（会报
+    // "A LIMIT or 'k = ?' constraint is required on vec0 knn queries"），
+    // 因此这里强制用 `AND k = ?` 取 KNN，再回 JOIN 取实体明细。
     const rows = await this.all<any>(
       `SELECT
          v.entity_id AS id,
@@ -589,9 +600,8 @@ export class Database {
          e.description
        FROM vec_entities v
        INNER JOIN entities e ON e.id = v.entity_id
-       WHERE v.embedding MATCH ?
-       ORDER BY v.distance
-       LIMIT ?`,
+       WHERE v.embedding MATCH ? AND k = ?
+       ORDER BY v.distance`,
       [queryBlob, limit]
     );
 

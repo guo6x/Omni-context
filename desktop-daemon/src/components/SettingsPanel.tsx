@@ -1,9 +1,10 @@
 "use client";
 
-import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe } from 'lucide-react';
-import { useState } from 'react';
+import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { KeyboardShortcut, AppSettings } from '@/hooks/useSettings';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useToast } from '@/hooks/useToast';
 
 interface SettingsPanelProps {
   settings: AppSettings;
@@ -17,7 +18,7 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-type Tab = 'shortcuts' | 'appearance' | 'behavior' | 'llm';
+type Tab = 'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data';
 
 export default function SettingsPanel({
   settings,
@@ -34,6 +35,7 @@ export default function SettingsPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tempShortcut, setTempShortcut] = useState('');
   const { t } = useTranslation();
+  const toast = useToast();
 
   const handleShortcutKeyDown = (e: React.KeyboardEvent, id: string) => {
     e.preventDefault();
@@ -73,11 +75,94 @@ export default function SettingsPanel({
     setTempShortcut(shortcut.current);
   };
 
+  // ===== 数据管理：备份/恢复 =====
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [dataBusy, setDataBusy] = useState(false);
+  const BRAIN_URL = 'http://localhost:3001';
+
+  const handleExportAll = async () => {
+    if (dataBusy) return;
+    setDataBusy(true);
+    try {
+      const res = await fetch(`${BRAIN_URL}/api/admin/export`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const datePart = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `omni-context-backup-${datePart}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('备份已下载');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('导出失败', msg);
+    } finally {
+      setDataBusy(false);
+    }
+  };
+
+  const handleRestoreClick = () => {
+    if (dataBusy) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleRestoreFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    // 主线程后续会换成 toast；当前用 confirm/alert 把流程跑通即可。
+    const merge = window.confirm(
+      '恢复模式选择：\n\n点击「确定」= 合并 (merge)：保留现有数据，仅追加备份中不存在的记录。\n点击「取消」= 替换 (replace)：先清空当前数据库再导入备份。\n\n替换是不可逆操作，请确认你已经有当前数据的副本。'
+    );
+    const mode = merge ? 'merge' : 'replace';
+    setDataBusy(true);
+    try {
+      const text = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
+        reader.readAsText(file);
+      });
+      let payload: any;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        throw new Error('备份文件不是有效的 JSON');
+      }
+      const res = await fetch(`${BRAIN_URL}/api/admin/import`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, mode }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(result?.error || `HTTP ${res.status}`);
+      }
+      const c = result?.imported || {};
+      toast.success(
+        `恢复成功 (${mode})`,
+        `entities=${c.entities ?? 0} · relationships=${c.relationships ?? 0} · ` +
+          `core=${c.coreMemory ?? 0} · archival=${c.archivalMemory ?? 0} · ` +
+          `notifications=${c.notifications ?? 0}`,
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('恢复失败', msg);
+    } finally {
+      setDataBusy(false);
+    }
+  };
+
   const tabs = [
     { id: 'shortcuts' as Tab, icon: <Keyboard className="w-4 h-4" />, label: t('settings.shortcuts') },
     { id: 'appearance' as Tab, icon: <Palette className="w-4 h-4" />, label: t('settings.appearance') },
     { id: 'behavior' as Tab, icon: <Sliders className="w-4 h-4" />, label: t('settings.behavior') },
     { id: 'llm' as Tab, icon: <Globe className="w-4 h-4" />, label: t('settings.llm_provider') || '大模型配置' },
+    { id: 'data' as Tab, icon: <DatabaseIcon className="w-4 h-4" />, label: t('settings.data') || '数据管理' },
   ];
 
   const categories = [...new Set(settings.keyboardShortcuts.map(s => s.category))];
@@ -381,6 +466,58 @@ export default function SettingsPanel({
                       value={settings.llmProvider.model}
                       onChange={(e) => onUpdateLlmProvider({ model: e.target.value })}
                       placeholder="例如: gpt-4o, qwen2.5:7b"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'data' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{t('settings.data') || '数据管理 / Data'}</h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    导出整个 Omni-Context 数据库为 JSON 备份，或在新机器上从备份恢复。数据完全归你所有。
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                    <div>
+                      <div className="text-white font-medium">导出全部数据</div>
+                      <div className="text-xs text-gray-500">
+                        包含 entities / relationships / coreMemory / archivalMemory / notifications。
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleExportAll}
+                      disabled={dataBusy}
+                      className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {dataBusy ? '处理中…' : '导出 JSON'}
+                    </button>
+                  </div>
+
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                    <div>
+                      <div className="text-white font-medium">从备份恢复</div>
+                      <div className="text-xs text-gray-500">
+                        选择之前导出的 JSON 文件。会询问合并 (merge) 或替换 (replace)。
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleRestoreClick}
+                      disabled={dataBusy}
+                      className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {dataBusy ? '处理中…' : '选择备份文件'}
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/json,.json"
+                      onChange={handleRestoreFile}
+                      className="hidden"
                     />
                   </div>
                 </div>

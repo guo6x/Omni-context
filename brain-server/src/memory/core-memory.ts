@@ -51,13 +51,15 @@ export class CoreMemory {
 
     // 写入不应计为一次"访问"——否则一条频繁被刷新的记忆会被错误推上 topAccessed。
     // 保留旧的 access_count，新建项从 0 开始。
+    // value 变更时 summary 失效（指向旧值），统一置 NULL，下次 compress 重建。
     await this.db.run(
-      `INSERT INTO core_memory (key, value, category, last_accessed, access_count)
-       VALUES (?, ?, ?, datetime('now'), 0)
+      `INSERT INTO core_memory (key, value, category, last_accessed, access_count, summary)
+       VALUES (?, ?, ?, datetime('now'), 0, NULL)
        ON CONFLICT(key) DO UPDATE SET
          value = excluded.value,
          category = excluded.category,
-         last_accessed = datetime('now')`,
+         last_accessed = datetime('now'),
+         summary = NULL`,
       [key, valueStr, category]
     );
 
@@ -84,7 +86,7 @@ export class CoreMemory {
     }
 
     const row = await this.db.get<any>('SELECT * FROM core_memory WHERE key = ?', [key]);
-    
+
     if (!row) {
       return null;
     }
@@ -97,6 +99,8 @@ export class CoreMemory {
       category: row.category,
       lastAccessed: row.last_accessed,
       accessCount: row.access_count,
+      summary: row.summary || undefined,
+      compressed: !!row.summary,
     };
 
     this.updateCache(key, item);
@@ -105,25 +109,29 @@ export class CoreMemory {
 
   async getByCategory(category: string): Promise<CoreMemoryItem[]> {
     const rows = await this.db.all<any>('SELECT * FROM core_memory WHERE category = ?', [category]);
-    
+
     return rows.map(row => ({
       key: row.key,
       value: JSON.parse(row.value),
       category: row.category,
       lastAccessed: row.last_accessed,
       accessCount: row.access_count,
+      summary: row.summary || undefined,
+      compressed: !!row.summary,
     }));
   }
 
   async getAll(): Promise<CoreMemoryItem[]> {
     const rows = await this.db.all<any>('SELECT * FROM core_memory ORDER BY access_count DESC');
-    
+
     return rows.map(row => ({
       key: row.key,
       value: JSON.parse(row.value),
       category: row.category,
       lastAccessed: row.last_accessed,
       accessCount: row.access_count,
+      summary: row.summary || undefined,
+      compressed: !!row.summary,
     }));
   }
 
@@ -168,17 +176,17 @@ export class CoreMemory {
       originalSize += valueStr.length;
 
       if (valueStr.length > this.compressionThreshold) {
-        // 之前实现把 value 整个换成 {_compressed,summary,original} 包装对象，
-        // 而 get() 直接 JSON.parse(row.value) 返回，调用方拿到的就不是原值了。
-        // 改为：value 保持不变，summary 写入独立的 summary 列；这要求表存在该列。
-        // (CoreMemory 表 v3 暂未引入 summary 列，因此当前只标记节省的字符量、
-        //  不再破坏 value 字段，避免数据被静默改形)
+        // value 保持不变（避免改形），summary 写入独立列；
+        // get() 会读取 summary 与 compressed 标记
         const summary = await this.summarizeValue(item.value);
         const wouldSaveSize = valueStr.length - summary.length;
         if (wouldSaveSize > 0) {
+          await this.db.run(
+            'UPDATE core_memory SET summary = ? WHERE key = ?',
+            [summary, item.key]
+          );
           itemsProcessed++;
           compressedSize += summary.length;
-          // 仅记录摘要供未来 schema 升级使用，不再覆盖 value
           this.cache.set(item.key, { ...item, summary, compressed: true });
         } else {
           compressedSize += valueStr.length;
