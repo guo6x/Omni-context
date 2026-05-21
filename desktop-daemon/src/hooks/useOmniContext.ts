@@ -107,6 +107,8 @@ export function useOmniContext() {
         if (res.ok && !status.brain_server_running) {
           setStatus((prev) => ({ ...prev, brain_server_running: true }));
           addLog("Brain Server 已连接并正常运行", "success");
+          // 离线 → 在线时主动触发图谱拉取，避免 EmptyState 卡死
+          setRefreshTrigger((prev) => prev + 1);
         }
       } catch (e) {
         if (status.brain_server_running) {

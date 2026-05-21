@@ -81,6 +81,11 @@ const ExtractFromCaptureSchema = z.object({
   captureId: z.string().optional(),
 });
 
+const GetDecisionContextSchema = z.object({
+  situation: z.string().min(1, 'situation 不能为空'),
+  limit: z.number().min(1).max(20).optional().default(5),
+});
+
 class OmniContextServer {
   private db: Database;
   private extractor: GraphRAGExtractor;
@@ -143,7 +148,7 @@ class OmniContextServer {
       tools: [
         {
           name: 'record_capture',
-          description: '记录沉淀事件（物理按钮或键盘快捷键触发）- 核心入口',
+          description: 'Store a capture event (screenshot, clipboard content, system logs) into the knowledge graph. Use when the user explicitly wants to save a moment or piece of context for future reference.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -167,12 +172,12 @@ class OmniContextServer {
         },
         {
           name: 'get_core_context',
-          description: '获取核心原则上下文（自动注入每次对话系统提示词）',
+          description: 'Get the user\'s core principles—their fundamental rules, preferences, and guidelines for how they work. Call this at the start of a conversation to understand the user\'s values and constraints before giving advice.',
           inputSchema: { type: 'object', properties: {} },
         },
         {
           name: 'search_entities',
-          description: '搜索知识图谱实体',
+          description: 'Search for entities in the knowledge graph by name or description. Use when you need to find specific concepts, tools, people, projects, or code the user has encountered before.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -185,7 +190,7 @@ class OmniContextServer {
         },
         {
           name: 'add_entity',
-          description: '添加实体到知识图谱',
+          description: 'Add a new entity to the knowledge graph. Use when you discover a concept, tool, person, pattern, or piece of information worth remembering for future conversations.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -218,7 +223,7 @@ class OmniContextServer {
         },
         {
           name: 'get_entity',
-          description: '获取指定实体信息',
+          description: 'Retrieve full details and all relationships for a specific entity by its ID. Use when you have an entity ID from search results and need to explore its connections.',
           inputSchema: {
             type: 'object',
             properties: { id: { type: 'string', description: '实体ID' } },
@@ -227,7 +232,7 @@ class OmniContextServer {
         },
         {
           name: 'add_relationship',
-          description: '添加实体关系',
+          description: 'Create a relationship edge between two entities in the knowledge graph (e.g. depends_on, conflicts_with, extends, belongs_to). Use when you discover a meaningful connection between two concepts.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -258,7 +263,7 @@ class OmniContextServer {
         },
         {
           name: 'get_graph_neighborhood',
-          description: '获取图邻域上下文（用于3D可视化）',
+          description: 'Get the graph neighborhood around a specific entity—its directly related entities and their connections. Use when you need to understand the context and ecosystem surrounding a concept, rather than just its properties.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -270,7 +275,7 @@ class OmniContextServer {
         },
         {
           name: 'extract_from_capture',
-          description: '从沉淀内容提取知识图谱（实体、关系、原则）',
+          description: 'Analyze raw text or captured content and automatically extract entities, relationships, and principles into the knowledge graph. Use when processing a saved capture or analyzing a block of user-provided content.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -283,7 +288,7 @@ class OmniContextServer {
         },
         {
           name: 'list_entities',
-          description: '列出知识图谱实体',
+          description: 'List all entities in the knowledge graph, optionally filtered by type. Use to get an overview of what the user has stored, or to browse entities of a specific category.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -294,7 +299,7 @@ class OmniContextServer {
         },
         {
           name: 'update_entity',
-          description: '更新实体信息',
+          description: 'Update an existing entity\'s name, description, tags, or metadata. Use when you need to correct or enrich information about something already in the knowledge graph.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -309,24 +314,24 @@ class OmniContextServer {
         },
         {
           name: 'get_stats',
-          description: '获取系统统计信息',
+          description: 'Get system statistics: total entity count, relationship count, entity type distribution, and memory usage. Use when you need a high-level overview of the knowledge graph\'s size and composition.',
           inputSchema: { type: 'object', properties: {} },
         },
         {
           name: 'vector_search',
-          description: '向量相似度搜索',
+          description: 'Search the knowledge graph by semantic similarity using vector embeddings. Unlike text search, this finds conceptually related entities even when they use different words. Use when a keyword search misses relevant results.',
           inputSchema: {
             type: 'object',
             properties: {
-              embedding: { type: 'array', items: { type: 'number' }, description: '查询向量' },
-              limit: { type: 'number', description: '结果限制', default: 10 },
+              query: { type: 'string', description: 'Search query (natural language, converted to embedding on the server)' },
+              limit: { type: 'number', description: 'Max results', default: 10 },
             },
-            required: ['embedding'],
+            required: ['query'],
           },
         },
         {
           name: 'unified_memory_search',
-          description: '[统一记忆检索] 融合向量搜索 + 文本搜索 + 图谱遍历，一次性返回最相关的记忆',
+          description: 'Fused memory search combining text search, vector similarity, and graph traversal. Returns the most relevant entities for a given query across all three methods, deduplicated. This is the recommended go-to search when you want the most complete results.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -338,8 +343,20 @@ class OmniContextServer {
           },
         },
         {
+          name: 'get_decision_context',
+          description: 'When you are facing a specific situation or decision and need context from the user\'s knowledge graph to inform your judgment. Returns relevant principles, related memories, historical conflicts, and graph neighborhood — but does NOT make the decision for you. Call this before giving advice that depends on the user\'s past patterns or preferences.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              situation: { type: 'string', description: 'The situation or decision you are facing (natural language)' },
+              limit: { type: 'number', description: 'Max items per result category', default: 5 },
+            },
+            required: ['situation'],
+          },
+        },
+        {
           name: 'get_decay_report',
-          description: '获取记忆衰减报告',
+          description: 'Get the memory decay report showing which entities have decayed over time and may need reinforcement or cleanup. Use when maintaining the knowledge graph\'s health.',
           inputSchema: { type: 'object', properties: {} },
         },
       ],
@@ -580,8 +597,18 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
         }
 
         case 'vector_search': {
-          const results = await this.db.vectorSearch(args.embedding as number[], args.limit as number || 10);
-          return this.formatResponse(results);
+          const query = args.query as string;
+          if (!query) {
+            throw new McpError(ErrorCode.InvalidParams, '缺少必需参数: query');
+          }
+          try {
+            const embResult = await this.embeddingService.embed(query);
+            const results = await this.db.vectorSearch(embResult.embedding, args.limit as number || 10);
+            return this.formatResponse(results);
+          } catch (e) {
+            console.warn('[vector_search] 失败:', e);
+            return this.formatResponse({ results: [], error: '向量搜索失败' });
+          }
         }
 
         case 'unified_memory_search': {
@@ -632,6 +659,86 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               vector: results.vectorResults.length,
               graph: results.graphContext?.nodes?.length || 0,
             },
+          });
+        }
+
+        case 'get_decision_context': {
+          const parsed = GetDecisionContextSchema.parse(args);
+          const { situation, limit } = parsed;
+
+          // 层1：文本搜索
+          const textResults = await this.db.searchEntities(situation, limit);
+
+          // 层2：向量搜索
+          let vectorResults: any[] = [];
+          try {
+            const embResult = await this.embeddingService.embed(situation);
+            vectorResults = await this.db.vectorSearch(embResult.embedding, limit);
+          } catch {
+            // embedding 失败不阻塞
+          }
+
+          // 融合去重
+          const seen = new Set<string>();
+          const relevantMemories: any[] = [];
+          for (const source of [textResults, vectorResults]) {
+            for (const item of source) {
+              if (!seen.has(item.id)) {
+                seen.add(item.id);
+                relevantMemories.push(item);
+              }
+            }
+          }
+
+          // 相关原则：核心原则 + 检索结果中的 principle 类型
+          const corePrinciples = await this.db.getCorePrinciples();
+          const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
+          const searchPrinciples = relevantMemories.filter(
+            (m) => m.type === 'principle' && !seenPrincipleIds.has(m.id)
+          );
+          const principles = [...corePrinciples, ...searchPrinciples];
+
+          // 冲突检测：相关实体集合内由 conflicts_with 连接的实体对
+          const relevantIds = new Set(relevantMemories.map((m: any) => m.id));
+          const conflictPairs: any[] = [];
+          const seenConflictKeys = new Set<string>();
+          for (const entity of relevantMemories) {
+            const rels = await this.db.getRelationshipsForEntity(entity.id);
+            for (const rel of rels) {
+              if (rel.type !== 'conflicts_with') continue;
+              const otherId = rel.source_id === entity.id ? rel.target_id : rel.source_id;
+              if (!relevantIds.has(otherId)) continue;
+              const key = [entity.id, otherId].sort().join('|');
+              if (seenConflictKeys.has(key)) continue;
+              seenConflictKeys.add(key);
+              const other = relevantMemories.find((m: any) => m.id === otherId);
+              if (other) {
+                conflictPairs.push({
+                  a: { id: entity.id, name: entity.name },
+                  b: { id: other.id, name: other.name },
+                  description: rel.description || '',
+                });
+              }
+            }
+          }
+
+          // 图谱邻域：以检索 top 命中为种子
+          let graphContext: any = {};
+          const seed = relevantMemories[0];
+          if (seed) {
+            try {
+              graphContext = await this.db.getGraphNeighborhood(seed.id, 2);
+            } catch {
+              // 图谱查询失败不阻塞
+            }
+          }
+
+          return this.formatResponse({
+            situation,
+            principles,
+            relevantMemories,
+            conflicts: conflictPairs,
+            graphContext,
           });
         }
 
@@ -753,17 +860,30 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
     // [生态升级] 同时启动 HTTP API Server 供浏览器插件和移动端使用
     const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
     const HOST = process.env.HOST || '127.0.0.1';
-    const httpServer = createServer(this.db);
-    httpServer.listen(PORT, HOST, () => {
-      console.error(`Omni-Context API Server 运行在 http://${HOST}:${PORT} (供外部生态接入)`);
-    });
-
     // [Insights] 主动智能引擎 — 桌面端 InsightsInbox 依赖它产生通知
     const insightIntervalMs = process.env.INSIGHT_INTERVAL_MS
       ? Number(process.env.INSIGHT_INTERVAL_MS)
       : 10 * 60 * 1000;
     this.agentLoop = new AgentLoop(this.db);
     this.agentLoop.start(insightIntervalMs);
+
+    const httpServer = createServer(this.db, this.agentLoop);
+    // 端口冲突场景：用户既开桌面应用、又通过 MCP 接 Claude Desktop / Cursor，
+    // 第二个实例无法绑定 3001，但 MCP stdio 仍可工作。这里捕获 EADDRINUSE 让进程
+    // 不会因 listen 错误未处理而 crash。
+    httpServer.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(
+          `[brain-server] HTTP 端口 ${HOST}:${PORT} 已被占用，HTTP API 不可用（MCP stdio 仍正常工作）。`,
+          '如果同时打开了 Omni-Context 桌面应用，这是预期现象。'
+        );
+      } else {
+        console.error('[brain-server] HTTP server 错误:', err);
+      }
+    });
+    httpServer.listen(PORT, HOST, () => {
+      console.error(`Omni-Context API Server 运行在 http://${HOST}:${PORT} (供外部生态接入)`);
+    });
   }
 
   async stop(): Promise<void> {

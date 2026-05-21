@@ -24,6 +24,14 @@ class InsightGenerator {
     this.config = { ...DEFAULT_LLM_CONFIG, ...config };
   }
 
+  setConfig(config: Partial<LLMInsightConfig>) {
+    this.config = { ...this.config, ...config };
+  }
+
+  getConfig(): LLMInsightConfig {
+    return { ...this.config };
+  }
+
   async generateInsight(nodes: Entity[]): Promise<{ title: string; content: string } | null> {
     if (!this.config.apiUrl || nodes.length < 2) return null;
 
@@ -117,6 +125,14 @@ export class AgentLoop {
     }, 5000);
 
     this.interval = setInterval(() => this.runCycle(), intervalMs);
+  }
+
+  setLlmConfig(config: { apiUrl: string; apiKey?: string; model: string }) {
+    this.generator.setConfig({
+      apiUrl: config.apiUrl,
+      apiKey: config.apiKey,
+      model: config.model,
+    });
   }
 
   stop() {

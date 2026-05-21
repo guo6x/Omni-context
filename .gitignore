@@ -25,6 +25,9 @@ data/
 desktop-daemon/src-tauri/target/
 desktop-daemon/src-tauri/Cargo.lock
 **/Cargo.lock
+# staging dir 由 scripts/package-all.js 生成，仅供 Tauri 打包用
+desktop-daemon/src-tauri/brain-server/
+desktop-daemon/brain-server/
 
 # Mobile (Expo/React Native)
 mobile-app/.expo/

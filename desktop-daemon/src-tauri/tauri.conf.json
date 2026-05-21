@@ -13,6 +13,7 @@
   "tauri": {
     "windows": [
       {
+        "label": "main",
         "title": "Omni-Context",
         "width": 1400,
         "height": 900,
@@ -21,6 +22,22 @@
         "minWidth": 800,
         "minHeight": 600,
         "center": true
+      },
+      {
+        "label": "hud",
+        "url": "index.html",
+        "title": "Omni-Context HUD",
+        "width": 360,
+        "height": 140,
+        "x": 40,
+        "y": 80,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "focus": false
       }
     ],
     "security": {
@@ -31,7 +48,7 @@
       "targets": "all",
       "identifier": "com.omni-context.app",
       "resources": [
-        "../../brain-server/**/*"
+        "brain-server/**/*"
       ],
       "icon": [
         "icons/32x32.png",

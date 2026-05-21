@@ -21,6 +21,7 @@ export interface AppSettings {
     autoHUD: boolean;
     autoMinimize: boolean;
     startWithSystem: boolean;
+    defaultFloatingHUD: boolean;
   };
   llmProvider: {
     apiUrl: string;
@@ -86,6 +87,14 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     current: 'ctrl+,',
     category: '系统',
   },
+  {
+    id: 'connectHardware',
+    name: '连接硬件',
+    description: '搜索并配对 ESP32 神经末梢（实验性）',
+    default: 'ctrl+shift+e',
+    current: 'ctrl+shift+e',
+    category: '硬件',
+  },
 ];
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -98,6 +107,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     autoHUD: true,
     autoMinimize: false,
     startWithSystem: false,
+    defaultFloatingHUD: false,
   },
   llmProvider: {
     apiUrl: 'http://localhost:11434/v1',
@@ -120,6 +130,20 @@ function mergeWithDefaults(stored: any): AppSettings {
   };
 }
 
+const BRAIN_URL = 'http://localhost:3001';
+
+export async function syncLlmToBrainServer(llmProvider: { apiUrl: string; apiKey: string; model: string }) {
+  try {
+    await fetch(`${BRAIN_URL}/api/settings/llm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(llmProvider),
+    });
+  } catch {
+    // brain-server 未就绪时静默失败
+  }
+}
+
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
 
@@ -136,6 +160,20 @@ export function useSettings() {
       console.warn('加载设置失败:', error);
     }
   }, []);
+
+  // 应用主题到 <html> 根元素
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const html = document.documentElement;
+    html.classList.remove('dark', 'light');
+    const theme = settings.appearance.theme;
+    if (theme === 'auto') {
+      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true;
+      html.classList.add(prefersDark ? 'dark' : 'light');
+    } else {
+      html.classList.add(theme);
+    }
+  }, [settings.appearance.theme]);
 
   // 保存到本地存储
   const saveSettings = useCallback((newSettings: AppSettings) => {

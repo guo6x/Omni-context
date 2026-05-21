@@ -229,10 +229,11 @@ export const handleEntityRoutes = [
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
       const body = await parseBody<{
         name?: string;
+        type?: string;
         description?: string;
         tags?: string[];
       }>(req);
-      await ctx.db.updateEntity(params.id, body);
+      await ctx.db.updateEntity(params.id, body as any);
       const entity = await ctx.db.getEntity(params.id);
       sendResponse(res, 200, entity);
     }
@@ -243,6 +244,22 @@ export const handleEntityRoutes = [
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
       await ctx.db.deleteEntity(params.id);
       sendResponse(res, 200, { success: true });
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/entities/:id/merge',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const body = await parseBody<{ targetId: string }>(req);
+      if (!body.targetId) {
+        return sendError(res, 400, 'targetId is required');
+      }
+      try {
+        const result = await ctx.db.mergeEntities(params.id, body.targetId);
+        sendResponse(res, 200, { success: true, ...result, mergedInto: body.targetId });
+      } catch (e: any) {
+        sendError(res, 400, e?.message || 'merge failed');
+      }
     }
   },
   {
@@ -638,5 +655,6 @@ export const handleNotificationRoutes = [
   }
 ];
 
+export { handleSettingsRoutes } from './settings.js';
 export { handleAdminRoutes } from './admin.js';
 export { handleIngestRoutes } from './ingest.js';

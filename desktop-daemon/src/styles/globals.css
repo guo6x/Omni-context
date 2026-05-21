@@ -5,8 +5,21 @@
 @layer base {
   body {
     @apply bg-background text-foreground;
+  }
+  /* 默认 + dark：当前 UI 默认按深色设计 */
+  html.dark body,
+  html:not(.light) body {
     background-color: #0a0b12;
     color: #e8e8e8;
+  }
+  /* light 主题（实验性，仅切换基础背景；细节组件未完全适配） */
+  html.light body {
+    background-color: #f5f6fa;
+    color: #1a1c25;
+  }
+  html.light .glass-panel {
+    background-color: rgba(255, 255, 255, 0.65);
+    border-color: rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -14,15 +27,264 @@
   .glass-panel {
     @apply backdrop-blur-xl bg-black/40 border border-white/10 rounded-xl;
   }
-  
+
   .neon-node {
     @apply transition-all duration-300 hover:scale-105;
     box-shadow: 0 0 15px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2);
   }
-  
+
   .flow-edge {
     background: linear-gradient(90deg, #0ea5e9, #22d3ee, #0ea5e9);
     background-size: 200% 100%;
     animation: flow-line 2s linear infinite;
   }
+}
+
+/* ============================================================
+ * Light theme overrides
+ * 用于把项目里大量散落的深色 Tailwind 工具类在 light 模式下翻转为
+ * 适配白底的版本。所有 !important 都是为了压过 Tailwind 工具类。
+ * 仅当 <html> 上挂了 `light` class 时生效，不影响默认/dark 分支。
+ * ============================================================ */
+
+/* Glass panel：浅色磨砂 */
+html.light .glass-panel {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #1a1c25;
+}
+
+/* 顶部 header（border-b + bg-black/30 的组合） */
+html.light header.border-b {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 主背景 / 深面板 */
+html.light .bg-gray-950,
+html.light .bg-\[\#0a0b12\] {
+  background-color: #f5f6fa !important;
+}
+
+html.light .bg-\[\#0a0b12\]\/70 {
+  background-color: rgba(245, 246, 250, 0.7) !important;
+}
+
+html.light .bg-\[\#0a0b12\]\/80 {
+  background-color: rgba(245, 246, 250, 0.8) !important;
+}
+
+html.light .bg-\[\#0a0b12\]\/90 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 高频面板：bg-gray-950/90、/95（图谱搜索栏、侧栏、按钮等） */
+html.light .bg-gray-950\/90,
+html.light .bg-gray-950\/95 {
+  background-color: rgba(245, 246, 250, 0.95) !important;
+}
+
+/* hover 态的 bg-gray-900 */
+html.light .hover\:bg-gray-900:hover {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+/* 进度条底色 */
+html.light .bg-gray-800 {
+  background-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+/* 黑色半透明背景（卡片、HUD 项、文件项等） */
+html.light .bg-black\/30 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .bg-black\/40 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+html.light .bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 白色半透明背景（hover / 按钮 / 标签等） */
+html.light .bg-white\/5 {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+}
+
+html.light .bg-white\/10 {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+}
+
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* 文本：白色 / 灰阶反转 */
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-gray-100 {
+  color: #1e293b !important;
+}
+
+html.light .text-gray-200 {
+  color: #334155 !important;
+}
+
+html.light .text-gray-300 {
+  color: #475569 !important;
+}
+
+html.light .text-gray-400 {
+  color: #64748b !important;
+}
+
+html.light .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+/* hover:text-white -> 深色 */
+html.light .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* placeholder */
+html.light .placeholder\:text-gray-500::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* 重音色（cyan/purple/blue）：降饱和以适配白底 */
+html.light .text-cyan-400 {
+  color: #0891b2 !important;
+}
+
+html.light .text-cyan-300 {
+  color: #0e7490 !important;
+}
+
+html.light .text-cyan-200 {
+  color: #155e75 !important;
+}
+
+html.light .text-purple-400 {
+  color: #9333ea !important;
+}
+
+html.light .text-purple-300 {
+  color: #7e22ce !important;
+}
+
+html.light .text-blue-400 {
+  color: #2563eb !important;
+}
+
+/* 边框：白色透明 -> 黑色透明 */
+html.light .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+html.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html.light .border-white\/15 {
+  border-color: rgba(0, 0, 0, 0.14) !important;
+}
+
+html.light .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.18) !important;
+}
+
+/* 强调色背景（cyan-900/30 等） — 浅化为低饱和度的浅蓝/浅紫等
+   保留色相提示，但提高亮度避免和白底反差过大 */
+html.light .bg-cyan-900\/10 {
+  background-color: rgba(8, 145, 178, 0.06) !important;
+}
+
+html.light .bg-cyan-900\/20 {
+  background-color: rgba(8, 145, 178, 0.1) !important;
+}
+
+html.light .bg-cyan-900\/30 {
+  background-color: rgba(8, 145, 178, 0.12) !important;
+}
+
+html.light .bg-cyan-900\/40 {
+  background-color: rgba(8, 145, 178, 0.16) !important;
+}
+
+html.light .hover\:bg-cyan-900\/20:hover {
+  background-color: rgba(8, 145, 178, 0.1) !important;
+}
+
+html.light .hover\:bg-cyan-900\/30:hover {
+  background-color: rgba(8, 145, 178, 0.14) !important;
+}
+
+html.light .bg-purple-900\/20 {
+  background-color: rgba(147, 51, 234, 0.1) !important;
+}
+
+html.light .bg-purple-900\/30 {
+  background-color: rgba(147, 51, 234, 0.12) !important;
+}
+
+html.light .hover\:bg-purple-900\/20:hover {
+  background-color: rgba(147, 51, 234, 0.1) !important;
+}
+
+html.light .hover\:bg-purple-900\/30:hover {
+  background-color: rgba(147, 51, 234, 0.14) !important;
+}
+
+html.light .bg-red-900\/30 {
+  background-color: rgba(220, 38, 38, 0.1) !important;
+}
+
+html.light .hover\:bg-red-900\/20:hover {
+  background-color: rgba(220, 38, 38, 0.08) !important;
+}
+
+html.light .hover\:bg-red-900\/50:hover {
+  background-color: rgba(220, 38, 38, 0.14) !important;
+}
+
+html.light .hover\:bg-green-900\/30:hover {
+  background-color: rgba(22, 163, 74, 0.12) !important;
+}
+
+/* 输入框 / select / textarea 浅色态 */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Toast / 阴影：黑色 shadow 在白底太重，弱化 */
+html.light .shadow-black\/30,
+html.light .shadow-black\/50 {
+  --tw-shadow-color: rgba(15, 23, 42, 0.12) !important;
+  --tw-shadow: var(--tw-shadow-colored) !important;
+}
+
+/* Toast 关闭按钮使用 text-white/40 */
+html.light .text-white\/40 {
+  color: rgba(15, 23, 42, 0.4) !important;
+}
+
+html.light .hover\:text-white\/90:hover {
+  color: rgba(15, 23, 42, 0.9) !important;
 }

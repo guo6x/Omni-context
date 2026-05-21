@@ -397,6 +397,10 @@ export class Database {
       fields.push('name = ?');
       values.push(updates.name);
     }
+    if (updates.type !== undefined) {
+      fields.push('type = ?');
+      values.push(updates.type);
+    }
     if (updates.description !== undefined) {
       fields.push('description = ?');
       values.push(updates.description);
@@ -457,6 +461,72 @@ export class Database {
     // 防御性清理：即便 PRAGMA foreign_keys 未生效，也保证关系不孤儿
     await this.run('DELETE FROM relationships WHERE source_id = ? OR target_id = ?', [id, id]);
     await this.run('DELETE FROM entities WHERE id = ?', [id]);
+  }
+
+  /**
+   * 合并 sourceId 到 targetId：把 source 的所有关系迁移到 target，
+   * 合并 tags（去重），追加 description（如果不同），然后删除 source。
+   * 自环（source 与 target 之间的关系）会被丢弃，避免合并后产生自指。
+   */
+  async mergeEntities(sourceId: string, targetId: string): Promise<{ moved: number; dropped: number }> {
+    if (sourceId === targetId) throw new Error('Cannot merge entity into itself');
+    const source = await this.get<any>('SELECT * FROM entities WHERE id = ?', [sourceId]);
+    const target = await this.get<any>('SELECT * FROM entities WHERE id = ?', [targetId]);
+    if (!source || !target) throw new Error('Source or target entity not found');
+
+    // 合并 tags（去重）
+    const sourceTags: string[] = source.tags ? JSON.parse(source.tags) : [];
+    const targetTags: string[] = target.tags ? JSON.parse(target.tags) : [];
+    const mergedTags = Array.from(new Set([...targetTags, ...sourceTags]));
+
+    // 合并 description（target 已有则追加 source，没有则用 source）
+    let mergedDesc = target.description || '';
+    if (source.description && source.description !== target.description) {
+      mergedDesc = mergedDesc
+        ? `${mergedDesc}\n\n—— 合并自 ${source.name}：\n${source.description}`
+        : source.description;
+    }
+
+    await this.updateEntity(targetId, {
+      tags: mergedTags,
+      description: mergedDesc,
+    });
+
+    // 迁移关系：source → X 改为 target → X，X → source 改为 X → target
+    // 同时丢弃自环
+    const outgoing = await this.all<any>(
+      'SELECT id, target_id FROM relationships WHERE source_id = ?',
+      [sourceId]
+    );
+    const incoming = await this.all<any>(
+      'SELECT id, source_id FROM relationships WHERE target_id = ?',
+      [sourceId]
+    );
+
+    let moved = 0;
+    let dropped = 0;
+    for (const r of outgoing) {
+      if (r.target_id === targetId) {
+        await this.run('DELETE FROM relationships WHERE id = ?', [r.id]);
+        dropped++;
+      } else {
+        await this.run('UPDATE relationships SET source_id = ? WHERE id = ?', [targetId, r.id]);
+        moved++;
+      }
+    }
+    for (const r of incoming) {
+      if (r.source_id === targetId) {
+        await this.run('DELETE FROM relationships WHERE id = ?', [r.id]);
+        dropped++;
+      } else {
+        await this.run('UPDATE relationships SET target_id = ? WHERE id = ?', [targetId, r.id]);
+        moved++;
+      }
+    }
+
+    // 最后删除 source（这会顺带清掉 vec/fts/关系防御清理）
+    await this.deleteEntity(sourceId);
+    return { moved, dropped };
   }
 
   async addRelationship(relationship: Omit<Relationship, 'id' | 'created_at' | 'last_activated'> & {

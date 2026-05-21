@@ -385,42 +385,63 @@ export default function SettingsPanel({
                       value: settings.behavior.autoMinimize,
                     },
                     {
+                      key: 'defaultFloatingHUD',
+                      name: '默认弹出悬浮 HUD',
+                      description: '应用启动后自动显示桌面悬浮 HUD（主窗口最小化也可见）',
+                      value: settings.behavior.defaultFloatingHUD,
+                    },
+                    {
                       key: 'startWithSystem',
                       name: t('settings.start_with_system'),
                       description: t('settings.start_with_system_desc'),
                       value: settings.behavior.startWithSystem,
                     },
-                  ].map((item) => (
-                    <div
-                      key={item.key}
-                      className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="text-white font-medium">{item.name}</div>
-                        <div className="text-xs text-gray-500">{item.description}</div>
-                      </div>
-                      <button
-                        onClick={() =>
-                          onUpdateBehavior({
-                            [item.key]: !settings.behavior[item.key as keyof AppSettings['behavior']],
-                          })
-                        }
-                        className={`w-14 h-7 rounded-full transition-colors relative ${
-                          settings.behavior[item.key as keyof AppSettings['behavior']]
-                            ? 'bg-cyan-600'
-                            : 'bg-gray-700'
+                  ].map((item) => {
+                    // startWithSystem 后端 Tauri 命令尚未实现，这里禁用 toggle 避免给用户错觉
+                    const isUnimplemented = item.key === 'startWithSystem';
+                    return (
+                      <div
+                        key={item.key}
+                        className={`p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between ${
+                          isUnimplemented ? 'opacity-60' : ''
                         }`}
                       >
-                        <div
-                          className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                        <div>
+                          <div className="text-white font-medium">
+                            {item.name}
+                            {isUnimplemented && (
+                              <span className="ml-2 text-[10px] text-amber-400 bg-amber-900/30 px-1.5 py-0.5 rounded">
+                                未实现
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500">{item.description}</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (isUnimplemented) return;
+                            onUpdateBehavior({
+                              [item.key]: !settings.behavior[item.key as keyof AppSettings['behavior']],
+                            });
+                          }}
+                          disabled={isUnimplemented}
+                          className={`w-14 h-7 rounded-full transition-colors relative ${
                             settings.behavior[item.key as keyof AppSettings['behavior']]
-                              ? 'transform translate-x-7'
-                              : ''
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  ))}
+                              ? 'bg-cyan-600'
+                              : 'bg-gray-700'
+                          } ${isUnimplemented ? 'cursor-not-allowed' : ''}`}
+                        >
+                          <div
+                            className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                              settings.behavior[item.key as keyof AppSettings['behavior']]
+                                ? 'transform translate-x-7'
+                                : ''
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

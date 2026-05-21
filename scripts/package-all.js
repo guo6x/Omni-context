@@ -36,6 +36,7 @@ try {
   const brainServerDir = path.join(DIST_DIR, 'brain-server');
   if (!fs.existsSync(brainServerDir)) fs.mkdirSync(brainServerDir, { recursive: true });
   copyDir(path.join(ROOT_DIR, 'brain-server', 'dist'), brainServerDir);
+  copyDir(path.join(ROOT_DIR, 'brain-server', 'models'), path.join(brainServerDir, 'models'));
   copyFile(path.join(ROOT_DIR, 'brain-server', 'package.json'), path.join(brainServerDir, 'package.json'));
   console.log('✅ Brain Server 构建完成');
 } catch (e) {
@@ -46,14 +47,68 @@ try {
 // 步骤 2: 打包桌面应用
 console.log('\n📦 2. 打包桌面应用...');
 try {
-  // 首先构建 Brain Server，确保它被包含在 Tauri 应用中
-  const brainServerInTauri = path.join(ROOT_DIR, 'desktop-daemon', 'brain-server');
+  // 构造 Tauri 资源 staging：仅生产依赖 + 编译产物。
+  // 原本 ../../brain-server/**/* 把 ~446MB 含开发依赖的 node_modules 全打进 MSI，
+  // 导致安装非常慢。改成在 src-tauri/brain-server/ 单独 npm ci --omit=dev，
+  // 路径放在 src-tauri/ 内部是为了让 Tauri 的资源路径转换不出现 _up_ 前缀。
+  const brainServerInTauri = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'brain-server');
+  console.log('   📁 准备 staging（仅 dist/ + 生产依赖）...');
   if (fs.existsSync(brainServerInTauri)) {
     fs.rmSync(brainServerInTauri, { recursive: true });
   }
   fs.mkdirSync(brainServerInTauri, { recursive: true });
-  copyDir(path.join(ROOT_DIR, 'brain-server', 'dist'), brainServerInTauri);
-  
+  copyDir(
+    path.join(ROOT_DIR, 'brain-server', 'dist'),
+    path.join(brainServerInTauri, 'dist')
+  );
+  copyDir(
+    path.join(ROOT_DIR, 'brain-server', 'models'),
+    path.join(brainServerInTauri, 'models')
+  );
+  copyFile(
+    path.join(ROOT_DIR, 'brain-server', 'package.json'),
+    path.join(brainServerInTauri, 'package.json')
+  );
+  const srcLock = path.join(ROOT_DIR, 'brain-server', 'package-lock.json');
+  if (fs.existsSync(srcLock)) {
+    copyFile(srcLock, path.join(brainServerInTauri, 'package-lock.json'));
+  }
+
+  console.log('   📦 安装生产依赖 (npm ci --omit=dev)，第一次约 1-2 分钟...');
+  execSync('npm ci --omit=dev --no-audit --no-fund', {
+    cwd: brainServerInTauri,
+    stdio: 'inherit',
+  });
+
+  // 删 onnxruntime-web（浏览器版 ONNX，服务端永远不会加载，65MB 纯浪费）
+  const onnxWebDir = path.join(brainServerInTauri, 'node_modules', 'onnxruntime-web');
+  if (fs.existsSync(onnxWebDir)) {
+    console.log('   🧹 删除 onnxruntime-web（浏览器版 ONNX，服务端用不到）...');
+    fs.rmSync(onnxWebDir, { recursive: true, force: true });
+  }
+
+  // 内嵌 node.exe 到资源里，避免用户机器 Node 不在 PATH 时 brain-server 启动不了
+  const NODE_VERSION = 'v22.16.0';
+  const NODE_URL = `https://nodejs.org/dist/${NODE_VERSION}/win-x64/node.exe`;
+  const nodeCacheDir = path.join(ROOT_DIR, '.node-cache');
+  const cachedNode = path.join(nodeCacheDir, `node-${NODE_VERSION}-win-x64.exe`);
+  if (!fs.existsSync(cachedNode)) {
+    console.log(`   ⬇️  下载内嵌 Node.js ${NODE_VERSION} (一次性，~80MB)...`);
+    if (!fs.existsSync(nodeCacheDir)) fs.mkdirSync(nodeCacheDir, { recursive: true });
+    try {
+      execSync(
+        `powershell -NoProfile -Command "Invoke-WebRequest -Uri '${NODE_URL}' -OutFile '${cachedNode}'"`,
+        { stdio: 'inherit' }
+      );
+    } catch (err) {
+      console.warn('   ⚠️  Node.js 下载失败，安装包将依赖用户机器自带 Node:', err.message);
+    }
+  }
+  if (fs.existsSync(cachedNode)) {
+    copyFile(cachedNode, path.join(brainServerInTauri, 'node.exe'));
+    console.log('   ✅ 已内嵌 node.exe');
+  }
+
   // 构建 Tauri 应用（使用 tauri.prod.conf.json：去掉 unsafe-eval、收紧 connect-src）
   execSync('cd desktop-daemon && npm run tauri:build', { stdio: 'inherit' });
   

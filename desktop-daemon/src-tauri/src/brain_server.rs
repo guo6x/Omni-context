@@ -1,6 +1,6 @@
 use std::process::{Command, Child, Stdio};
 use std::sync::Mutex;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// [核心壁垒] Brain Server 进程管理器
 /// 使用 Mutex 替代 unsafe static mut，确保多线程安全
@@ -32,6 +32,27 @@ pub fn is_running() -> bool {
     }
 }
 
+/// 查找 node 可执行文件：优先用安装包内嵌的 node.exe，
+/// 找不到时回退到 PATH 里的系统 node。
+fn find_node_executable() -> String {
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let candidates = [
+                exe_dir.join("resources/brain-server/node.exe"),
+                exe_dir.join("brain-server/node.exe"),
+                exe_dir.join("../Resources/brain-server/node.exe"),
+            ];
+            for c in &candidates {
+                if c.exists() {
+                    return c.to_string_lossy().into_owned();
+                }
+            }
+        }
+    }
+    // 兜底用 PATH 中的 node（开发模式 / 用户自己装过 Node 的场景）
+    "node".to_string()
+}
+
 pub fn start() -> Result<(), String> {
     if is_running() {
         println!("[Brain Server] 已经运行中");
@@ -40,81 +61,64 @@ pub fn start() -> Result<(), String> {
 
     println!("[Brain Server] 正在启动...");
 
-    // 尝试在不同位置查找 Brain Server
-    let possible_paths = brain_server_paths();
+    let node_exe = find_node_executable();
+    println!("[Brain Server] 使用 node: {}", node_exe);
 
-    // 尝试直接运行 npm 脚本
-    let npm_commands: Vec<Vec<&str>> = vec![
-        // 从项目根目录运行
-        vec!["npm", "run", "dev", "--prefix", "brain-server"],
-        // 从桌面应用目录运行
-        vec!["npm", "run", "dev", "--prefix", "../brain-server"],
-    ];
+    let candidates = brain_server_paths();
+    let mut tried: Vec<String> = Vec::new();
 
-    // 获取用户主目录（跨平台兼容）
-    let home_path = dirs_or_home();
-    if let Some(ref home) = home_path {
-        let home_brain = format!("{}/omni-context/brain-server/dist/mcp-server.js", home);
-        if Path::new(&home_brain).exists() {
-            if let Ok(child) = Command::new("node")
-                .arg(&home_brain)
-                .env("HOST", "127.0.0.1")
-                .env("PORT", "3001")
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
-            {
-                println!("[Brain Server] 已从用户目录启动: {}", home_brain);
-                store_process(child);
-                return Ok(());
-            }
+    // 直接 node <path>。spawn 成功不代表进程没立刻 exit，所以
+    // 加 800ms 探测：try_wait 仍为 None 才认为真启动了。
+    for path in &candidates {
+        tried.push(path.display().to_string());
+        if !path.exists() {
+            continue;
         }
-    }
 
-    for cmd_parts in npm_commands {
-        let mut cmd = Command::new(cmd_parts[0]);
-        cmd.args(&cmd_parts[1..])
+        let spawn_result = Command::new(&node_exe)
+            .arg(path)
             .env("HOST", "127.0.0.1")
             .env("PORT", "3001")
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+            .stderr(Stdio::piped())
+            .spawn();
 
-        match cmd.spawn() {
-            Ok(child) => {
-                println!("[Brain Server] 已通过 npm 启动");
-                store_process(child);
-                return Ok(());
+        match spawn_result {
+            Ok(mut child) => {
+                std::thread::sleep(std::time::Duration::from_millis(800));
+                match child.try_wait() {
+                    Ok(None) => {
+                        println!("[Brain Server] 已启动: {}", path.display());
+                        store_process(child);
+                        return Ok(());
+                    }
+                    Ok(Some(status)) => {
+                        eprintln!(
+                            "[Brain Server] node {} 立刻退出（status: {}），尝试下一个候选",
+                            path.display(),
+                            status
+                        );
+                    }
+                    Err(e) => {
+                        eprintln!("[Brain Server] try_wait 失败: {}", e);
+                    }
+                }
             }
             Err(e) => {
-                println!("[Brain Server] npm 命令失败: {}", e);
+                eprintln!(
+                    "[Brain Server] spawn 失败 at {}: {}（可能 node 不在 PATH）",
+                    path.display(),
+                    e
+                );
             }
         }
     }
 
-    // 尝试直接运行 JS 文件
-    for path in possible_paths {
-        if path.exists() {
-            match Command::new("node")
-                .arg(&path)
-                .env("HOST", "127.0.0.1")
-                .env("PORT", "3001")
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
-            {
-                Ok(child) => {
-                    println!("[Brain Server] 已启动: {}", path.display());
-                    store_process(child);
-                    return Ok(());
-                }
-                Err(e) => {
-                    println!("[Brain Server] 启动失败: {}", e);
-                }
-            }
-        }
-    }
-
-    Err("无法找到或启动 Brain Server".to_string())
+    Err(format!(
+        "无法启动 Brain Server。\n  使用 node: {}\n  已尝试 JS 入口：\n    {}\n请确认：(1) node 可执行（系统 PATH 或内嵌均可）；(2) brain-server/dist 已构建。",
+        node_exe,
+        tried.join("\n    ")
+    ))
 }
 
 pub fn stop() -> Result<(), String> {
@@ -162,18 +166,37 @@ fn dirs_or_home() -> Option<String> {
 }
 
 fn brain_server_paths() -> Vec<PathBuf> {
-    let mut paths = vec![
-        PathBuf::from("./brain-server/mcp-server.js"),
-        PathBuf::from("./brain-server/dist/mcp-server.js"),
-        PathBuf::from("../brain-server/dist/mcp-server.js"),
-    ];
+    // 编译产物是 dist/mcp-server.js（不是顶层 mcp-server.js）。
+    // Tauri 通过 resources: ["../../brain-server/**/*"] 把整个 brain-server
+    // 目录拷到安装目录的 resources/brain-server/ 下，所以安装包里的真正路径是
+    // <exe-dir>/resources/brain-server/dist/mcp-server.js。
+    let mut paths: Vec<PathBuf> = Vec::new();
 
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
-            paths.push(exe_dir.join("brain-server").join("mcp-server.js"));
-            paths.push(exe_dir.join("resources").join("brain-server").join("mcp-server.js"));
-            paths.push(exe_dir.join("../Resources/brain-server/mcp-server.js"));
+            // Windows MSI/NSIS / Linux：<exe-dir>/resources/brain-server/dist/mcp-server.js
+            paths.push(exe_dir.join("resources/brain-server/dist/mcp-server.js"));
+            paths.push(exe_dir.join("resources/brain-server/mcp-server.js"));
+            // macOS app bundle: <exe>/Contents/MacOS/<app> → ../Resources/brain-server/...
+            paths.push(exe_dir.join("../Resources/brain-server/dist/mcp-server.js"));
+            // Tauri externalBin / sidecar 风格
+            paths.push(exe_dir.join("brain-server/dist/mcp-server.js"));
+            // dev 模式：target/release/<exe>，需要往上回 3 级到 desktop-daemon/，再到 brain-server/
+            paths.push(exe_dir.join("../../../../brain-server/dist/mcp-server.js"));
+            paths.push(exe_dir.join("../../../brain-server/dist/mcp-server.js"));
         }
+    }
+
+    // CWD-based fallback（手动启动场景）
+    paths.push(PathBuf::from("./brain-server/dist/mcp-server.js"));
+    paths.push(PathBuf::from("../brain-server/dist/mcp-server.js"));
+
+    // 用户主目录安装位置
+    if let Some(home) = dirs_or_home() {
+        paths.push(PathBuf::from(format!(
+            "{}/omni-context/brain-server/dist/mcp-server.js",
+            home
+        )));
     }
 
     paths

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Camera, Search, Upload, Sparkles, Keyboard } from 'lucide-react';
+import { Camera, Search, Upload, Sparkles, Keyboard, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LogoMark } from '@/components/BrandMark';
 
@@ -10,6 +10,7 @@ interface EmptyStateProps {
   onDecision: () => void;
   onUploadClick: () => void;
   onShowShortcuts: () => void;
+  onDismiss?: () => void;
 }
 
 export default function EmptyState({
@@ -17,19 +18,30 @@ export default function EmptyState({
   onDecision,
   onUploadClick,
   onShowShortcuts,
+  onDismiss,
 }: EmptyStateProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center p-6 pointer-events-none">
-      <div className="glass-panel pointer-events-auto max-w-xl w-full p-8 rounded-2xl border border-white/10">
-        <div className="flex items-center gap-4 mb-6">
-          <LogoMark size={56} className="shrink-0 animate-pulse-glow" />
-          <div>
-            <h2 className="text-xl font-bold text-white tracking-wide">
+    <div className="absolute inset-0 z-10 flex items-center justify-center p-4 sm:p-6 pointer-events-none overflow-auto">
+      <div className="glass-panel pointer-events-auto relative max-w-xl w-full max-h-[calc(100vh-7rem)] overflow-y-auto p-5 sm:p-7 rounded-2xl border border-white/10">
+        {onDismiss && (
+          <button
+            onClick={onDismiss}
+            aria-label="关闭欢迎卡片"
+            title="关闭（可在 Help 中重新打开）"
+            className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+        <div className="flex items-center gap-3 sm:gap-4 mb-5 pr-8">
+          <LogoMark size={48} className="shrink-0 animate-pulse-glow" />
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide truncate">
               {t('empty.title')}
             </h2>
-            <p className="text-sm text-gray-400 mt-1">{t('empty.subtitle')}</p>
+            <p className="text-xs sm:text-sm text-gray-400 mt-1">{t('empty.subtitle')}</p>
           </div>
         </div>
 

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { invoke } from "@tauri-apps/api/tauri";
 import HUD from "@/components/HUD";
+import FloatingHUD from "@/components/FloatingHUD";
 import GraphViewer from "@/components/GraphViewer";
 import Console from "@/components/Console";
 import ShortcutsHelp from "@/components/ShortcutsHelp";
@@ -9,28 +11,102 @@ import SettingsPanel from "@/components/SettingsPanel";
 import InsightsInbox from "@/components/InsightsInbox";
 import EmptyState from "@/components/EmptyState";
 import FileDropZone from "@/components/FileDropZone";
-import { Database, Terminal, Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload } from "lucide-react";
+import HardwarePairingPanel from "@/components/HardwarePairingPanel";
+import { Database, Terminal, Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, PictureInPicture2 } from "lucide-react";
 import { LogoMark } from "@/components/BrandMark";
 import { Entity, Relationship } from "@shared/types";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useSettings } from "@/hooks/useSettings";
+import { useSettings, syncLlmToBrainServer } from "@/hooks/useSettings";
 import { useOmniContext } from "@/hooks/useOmniContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 
 type ViewMode = "graph" | "console";
 
+// 调用 Tauri window API；非 Tauri 环境（Next.js 浏览器调试）下静默降级
+async function tauriMinimize() {
+  if (typeof window === 'undefined') return;
+  try {
+    const mod = await import('@tauri-apps/api/window');
+    await mod.appWindow.minimize();
+  } catch (e) {
+    console.warn('appWindow.minimize 不可用，可能不在 Tauri 环境:', e);
+  }
+}
+
+// 给悬浮 HUD 窗口推送状态。在非 Tauri 环境无副作用。
+async function pushFloatingHUD(status: string, message: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const { appWindow } = await import('@tauri-apps/api/window');
+    // emit 默认广播到所有窗口，HUD 窗口监听 `hud-update`
+    await appWindow.emit('hud-update', { status, message });
+  } catch {}
+}
+
+// 切换悬浮 HUD 窗口显示
+async function toggleFloatingHUD(forceShow?: boolean) {
+  if (typeof window === 'undefined') return null;
+  try {
+    const { WebviewWindow } = await import('@tauri-apps/api/window');
+    const hudWin = WebviewWindow.getByLabel('hud');
+    if (!hudWin) return null;
+    const isVisible = await hudWin.isVisible();
+    const shouldShow = forceShow !== undefined ? forceShow : !isVisible;
+    if (shouldShow) {
+      await hudWin.show();
+      // alwaysOnTop 已配置；不抢焦点，让主窗口保留 keyboard focus
+    } else {
+      await hudWin.hide();
+    }
+    return shouldShow;
+  } catch (e) {
+    console.warn('floating HUD 控制失败', e);
+    return null;
+  }
+}
+
+function isHudWindowSync(): boolean {
+  if (typeof window === 'undefined') return false;
+  // Tauri 注入 __TAURI_METADATA__，里面 currentWindow.label === 'hud'
+  const meta: any = (window as any).__TAURI_METADATA__;
+  return meta?.currentWindow?.label === 'hud';
+}
+
 export default function Home() {
+  const [isHudWindow, setIsHudWindow] = useState<boolean>(isHudWindowSync());
+
+  // SSR/CSR mismatch 保护：客户端再确认一遍 label
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { appWindow } = await import('@tauri-apps/api/window');
+        if (!cancelled) setIsHudWindow(appWindow.label === 'hud');
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (isHudWindow) {
+    return <FloatingHUD />;
+  }
+
+  return <MainApp />;
+}
+
+function MainApp() {
   const [viewMode, setViewMode] = useState<ViewMode>("graph");
   const [showHUD, setShowHUD] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [hudMessage, setHudMessage] = useState("");
   const [hudStatus, setHudStatus] = useState<"listening" | "processing" | "success" | "error">("listening");
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [showUpload, setShowUpload] = useState(false);
+  const [showHardware, setShowHardware] = useState(false);
+  const [emptyDismissed, setEmptyDismissed] = useState(false);
 
   const { settings, showSettings, setShowSettings, updateShortcut, resetShortcuts, updateAppearance, updateBehavior, updateLlmProvider } = useSettings();
   const { status, addLog, triggerPrecipitate, triggerDecision, triggerReset, refreshTrigger } = useOmniContext();
@@ -65,6 +141,13 @@ export default function Home() {
     fetchGraphData();
   }, [refreshTrigger, fetchGraphData]);
 
+  // 启动时 brain-server 就绪后，以及配置变更后，同步 LLM 配置到 brain-server
+  useEffect(() => {
+    if (status.brain_server_running) {
+      syncLlmToBrainServer(settings.llmProvider);
+    }
+  }, [settings.llmProvider, status.brain_server_running]);
+
   useKeyboardShortcuts([
     ...settings.keyboardShortcuts.map((s) => ({
       id: s.id,
@@ -97,6 +180,9 @@ export default function Home() {
           case 'openSettings':
             setShowSettings(prev => !prev);
             break;
+          case 'connectHardware':
+            handleConnectHardware();
+            break;
         }
       },
     })),
@@ -113,16 +199,20 @@ export default function Home() {
   ]);
 
   const handlePrecipitate = () => {
-    setHudMessage(t('hud.precipitate'));
+    const initial = t('hud.precipitate');
+    setHudMessage(initial);
     setHudStatus("processing");
     setShowHUD(true);
+    pushFloatingHUD("processing", initial);
     addLog(t('shortcuts.precipitate_desc'), "info");
     triggerPrecipitate();
-    
+
     setTimeout(() => {
-      setHudMessage(t('hud.precipitate_success'));
+      const done = t('hud.precipitate_success');
+      setHudMessage(done);
       setHudStatus("success");
-      
+      pushFloatingHUD("success", done);
+
       if (settings.behavior.autoHUD) {
         setTimeout(() => setShowHUD(false), 2000);
       }
@@ -130,38 +220,72 @@ export default function Home() {
   };
 
   const handleDecision = () => {
-    setHudMessage(t('hud.decision'));
+    const initial = t('hud.decision');
+    setHudMessage(initial);
     setHudStatus("processing");
     setShowHUD(true);
+    pushFloatingHUD("processing", initial);
     addLog(t('shortcuts.decision_desc'), "info");
     triggerDecision();
-    
+
     setTimeout(() => {
-      setHudMessage(t('hud.decision_success'));
+      const done = t('hud.decision_success');
+      setHudMessage(done);
       setHudStatus("success");
-      
+      pushFloatingHUD("success", done);
+
       if (settings.behavior.autoHUD) {
         setTimeout(() => setShowHUD(false), 2000);
       }
     }, 1500);
   };
 
+  const handleConnectHardware = useCallback(() => {
+    setShowHardware(true);
+  }, []);
+
+  const handleRestartBrainServer = useCallback(async () => {
+    try {
+      await invoke('restart_brain_server');
+      toast.success('Brain Server 重启中', '请等待数秒，状态会自动刷新。');
+    } catch (e) {
+      toast.error('重启失败', String(e));
+    }
+  }, [toast]);
+
   const handleReset = () => {
-    setHudMessage(t('hud.reset'));
+    const initial = t('hud.reset');
+    setHudMessage(initial);
     setHudStatus("processing");
     setShowHUD(true);
+    pushFloatingHUD("processing", initial);
     addLog(t('shortcuts.reset_desc'), "warning");
     triggerReset();
-    
+
     setTimeout(() => {
-      setHudMessage(t('hud.reset_success'));
+      const done = t('hud.reset_success');
+      setHudMessage(done);
       setHudStatus("success");
-      
+      pushFloatingHUD("success", done);
+
       if (settings.behavior.autoHUD) {
         setTimeout(() => setShowHUD(false), 2000);
       }
     }, 800);
   };
+
+  // 悬浮 HUD 当前显示状态（用于按钮高亮）
+  const [floatingHudOn, setFloatingHudOn] = useState(false);
+  const handleToggleFloatingHUD = useCallback(async () => {
+    const next = await toggleFloatingHUD();
+    if (next !== null) {
+      setFloatingHudOn(next);
+      if (next) {
+        // 显示后推一次当前状态
+        pushFloatingHUD(hudStatus, hudMessage || t('hud.welcome'));
+      }
+    }
+  }, [hudStatus, hudMessage, t]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -173,19 +297,20 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (isMinimized) {
-    return (
-      <div className="flex flex-col h-screen w-screen bg-[#0a0b12] items-center justify-center">
-        <button
-          onClick={() => setIsMinimized(false)}
-          className="flex flex-col items-center gap-3 p-6 glass-panel rounded-2xl hover:border-cyan-800 transition-all hover:scale-105"
-        >
-          <LogoMark size={64} className="animate-pulse" />
-          <span className="text-white font-medium">{t('app.description')}</span>
-        </button>
-      </div>
-    );
-  }
+  // 若用户在设置里开启了「默认弹出悬浮 HUD」，启动后自动显示一次
+  const floatingHudAutoShown = useState(() => ({ done: false }))[0];
+  useEffect(() => {
+    if (floatingHudAutoShown.done) return;
+    if (!settings.behavior.defaultFloatingHUD) return;
+    floatingHudAutoShown.done = true;
+    (async () => {
+      const next = await toggleFloatingHUD(true);
+      if (next) {
+        setFloatingHudOn(true);
+        pushFloatingHUD("listening", t('hud.welcome'));
+      }
+    })();
+  }, [settings.behavior.defaultFloatingHUD, floatingHudAutoShown, t]);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#0a0b12] overflow-hidden" style={{ '--accent-color': settings.appearance.accentColor } as React.CSSProperties}>
@@ -227,7 +352,18 @@ export default function Home() {
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <button
-            onClick={() => setIsMinimized(true)}
+            onClick={handleToggleFloatingHUD}
+            className={`p-2 rounded-lg transition-colors ${
+              floatingHudOn
+                ? 'text-cyan-300 bg-cyan-900/30 border border-cyan-700/40'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+            title={floatingHudOn ? '隐藏悬浮 HUD' : '弹出悬浮 HUD（主窗口最小化也可见）'}
+          >
+            <PictureInPicture2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={tauriMinimize}
             className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             title={t('nav.minimize')}
           >
@@ -279,19 +415,39 @@ export default function Home() {
         </div>
       </header>
 
+      {!status.brain_server_running && (
+        <div className="px-4 py-2 bg-red-900/30 border-b border-red-800/60 flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 text-red-300 shrink-0" />
+          <div className="flex-1 min-w-0 text-xs text-red-100 truncate">
+            Brain Server 离线 —— 文件上传 / 知识图谱 / 通知等功能不可用。可能原因：Node.js 不在 PATH，或 brain-server/dist 未构建。
+          </div>
+          <button
+            onClick={handleRestartBrainServer}
+            className="text-xs px-3 py-1 bg-red-800/40 hover:bg-red-700/40 rounded text-red-100 shrink-0 transition-colors"
+          >
+            重启
+          </button>
+        </div>
+      )}
+
       <main className="flex-1 overflow-hidden relative">
         {viewMode === 'graph' ? (
-          <GraphViewer entities={entities} relationships={relationships} />
+          <GraphViewer
+            entities={entities}
+            relationships={relationships}
+            onDataChanged={fetchGraphData}
+          />
         ) : (
           <Console />
         )}
 
-        {viewMode === 'graph' && entities.length === 0 && (
+        {viewMode === 'graph' && entities.length === 0 && !emptyDismissed && (
           <EmptyState
             onCapture={handlePrecipitate}
             onDecision={handleDecision}
             onUploadClick={() => setShowUpload(true)}
             onShowShortcuts={() => setShowShortcuts(true)}
+            onDismiss={() => setEmptyDismissed(true)}
           />
         )}
 
@@ -358,6 +514,8 @@ export default function Home() {
         )}
         
         <InsightsInbox isOpen={showInsights} onClose={() => setShowInsights(false)} />
+
+        <HardwarePairingPanel isOpen={showHardware} onClose={() => setShowHardware(false)} />
       </main>
 
       <HUD

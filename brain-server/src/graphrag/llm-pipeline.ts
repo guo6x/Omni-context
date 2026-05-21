@@ -27,7 +27,7 @@ const DEFAULT_LLM_CONFIG: LLMExtractionConfig = {
   apiKey: process.env.LLM_API_KEY || '',
   model: process.env.LLM_MODEL || 'qwen2.5:7b',
   timeoutMs: 30_000,
-  maxTokens: 2048,
+  maxTokens: 16000,
 };
 
 /** LLM 输出的结构化提取结果 */
@@ -145,8 +145,12 @@ export class LLMExtractorPipeline {
       }
 
       const data = await response.json() as {
-        choices: Array<{ message: { content: string } }>;
+        choices: Array<{ message: { content: string }; finish_reason: string }>;
       };
+
+      if (data.choices?.[0]?.finish_reason === 'length') {
+        console.warn('[LLMExtractor] LLM 输出被 max_tokens 截断，抽取结果可能不完整');
+      }
 
       const content = data.choices?.[0]?.message?.content;
       if (!content) {
@@ -198,7 +202,7 @@ export class LLMExtractorPipeline {
    * 检查 LLM 服务是否可用
    */
   async healthCheck(): Promise<boolean> {
-    if (!this.enabled) return false;
+    if (!this.config.apiUrl) return false;
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
@@ -211,6 +215,19 @@ export class LLMExtractorPipeline {
     } catch {
       return false;
     }
+  }
+
+  setConfig(config: Partial<LLMExtractionConfig>) {
+    this.config = { ...this.config, ...config };
+  }
+
+  setEnabled(v: boolean) {
+    this.enabled = v;
+    console.log(`[LLMExtractor] LLM 提取已${v ? '启用' : '禁用'}`);
+  }
+
+  getConfig(): LLMExtractionConfig {
+    return { ...this.config };
   }
 
   isEnabled(): boolean {

@@ -4,6 +4,7 @@ import { Database } from '../db/sqlite.js';
 import { CoreMemory } from '../memory/core-memory.js';
 import { ArchivalMemory } from '../memory/archival-memory.js';
 import { GraphRAGExtractor } from '../graphrag/extractor.js';
+import { AgentLoop } from '../agent/agent-loop.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -12,7 +13,8 @@ import {
   handleStatsRoutes,
   handleNotificationRoutes,
   handleAdminRoutes,
-  handleIngestRoutes
+  handleIngestRoutes,
+  handleSettingsRoutes
 } from './handlers/index.js';
 
 export interface RequestContext {
@@ -20,6 +22,7 @@ export interface RequestContext {
   coreMemory: CoreMemory;
   archivalMemory: ArchivalMemory;
   extractor: GraphRAGExtractor;
+  agentLoop: AgentLoop | null;
 }
 
 export interface Route {
@@ -71,12 +74,13 @@ export class ApiRouter {
   private routes: Route[];
   private context: RequestContext;
 
-  constructor(db: Database) {
+  constructor(db: Database, agentLoop: AgentLoop | null = null) {
     this.context = {
       db,
       coreMemory: new CoreMemory(db),
       archivalMemory: new ArchivalMemory(db),
       extractor: new GraphRAGExtractor(),
+      agentLoop,
     };
 
     this.routes = [
@@ -88,6 +92,7 @@ export class ApiRouter {
       ...handleNotificationRoutes,
       ...handleAdminRoutes,
       ...handleIngestRoutes,
+      ...handleSettingsRoutes,
     ];
   }
 
@@ -248,8 +253,8 @@ function checkRateLimit(req: http.IncomingMessage, res: http.ServerResponse): bo
   return true;
 }
 
-export function createServer(db: Database): http.Server {
-  const router = new ApiRouter(db);
+export function createServer(db: Database, agentLoop?: AgentLoop): http.Server {
+  const router = new ApiRouter(db, agentLoop ?? null);
 
   return http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);

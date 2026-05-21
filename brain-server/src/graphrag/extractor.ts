@@ -710,6 +710,30 @@ export class GraphRAGExtractor {
     return summaryParts.join('\n');
   }
 
+  async setLlmConfig(config: { apiUrl: string; apiKey?: string; model: string }): Promise<boolean> {
+    this.config.llmBaseUrl = config.apiUrl;
+    this.config.llmApiKey = config.apiKey;
+    this.config.llmModel = config.model;
+
+    this.llmPipeline.setConfig({
+      apiUrl: config.apiUrl,
+      apiKey: config.apiKey,
+      model: config.model,
+    });
+
+    const healthy = await this.llmPipeline.healthCheck();
+    this.llmPipeline.setEnabled(healthy);
+    return healthy;
+  }
+
+  getLlmConfig(): { apiUrl: string; apiKey: string; model: string } {
+    return {
+      apiUrl: this.config.llmBaseUrl || process.env.LLM_API_URL || 'http://localhost:11434/v1',
+      apiKey: this.config.llmApiKey || process.env.LLM_API_KEY || '',
+      model: this.config.llmModel || process.env.LLM_MODEL || 'qwen2.5:7b',
+    };
+  }
+
   clearCache(): void {
     this.entityCache.clear();
     this.relationshipCache.clear();

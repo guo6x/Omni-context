@@ -1,12 +1,15 @@
 /**
  * [核心壁垒] Embedding 生成服务
- * 
+ *
  * 支持两种模式：
  * 1. 本地模式（默认）: 使用 @xenova/transformers 在本地生成 embedding
  * 2. API 模式: 调用 OpenAI / 其他兼容 API
- * 
+ *
  * 设计原则：本地优先，可插拔切换
  */
+
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 export interface EmbeddingConfig {
   /** 模式: 'local' 使用 transformers.js, 'api' 使用远程 API */
@@ -61,7 +64,12 @@ export class EmbeddingService {
     if (this.config.mode === 'local') {
       try {
         // 动态导入 @xenova/transformers（避免在不使用本地模式时也要求安装）
-        const { pipeline } = await import('@xenova/transformers');
+        const transformers = await import('@xenova/transformers');
+        const pipeline = transformers.pipeline;
+        // @xenova/transformers 的类型声明不完整，env 在运行时确实存在
+        const env = (transformers as any).env;
+        env.allowRemoteModels = false;
+        env.localModelPath = join(dirname(fileURLToPath(import.meta.url)), '../../models');
         console.log(`[EmbeddingService] 正在加载本地模型: ${this.config.localModel}...`);
         this.pipeline = await pipeline('feature-extraction', this.config.localModel, {
           quantized: true, // 使用量化版本，更小更快

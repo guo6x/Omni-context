@@ -5,6 +5,7 @@ mod screen_capture;
 mod clipboard;
 mod commands;
 mod brain_server;
+mod hardware;
 
 use tauri::Manager;
 use tokio::sync::mpsc;
@@ -125,6 +126,10 @@ async fn main() {
             commands::trigger_precipitate,
             commands::trigger_decision,
             commands::trigger_reset,
+            hardware::list_hardware_devices,
+            hardware::pair_hardware_device,
+            hardware::unpair_hardware_device,
+            hardware::forget_hardware_device,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

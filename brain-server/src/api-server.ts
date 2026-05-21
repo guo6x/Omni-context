@@ -19,6 +19,18 @@ async function main() {
 
   const server = createServer(db);
 
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(
+        `[api-server] HTTP 端口 ${HOST}:${PORT} 已被占用。`,
+        '可能 Omni-Context 桌面应用 / 另一个实例已在运行。请检查或 kill 占用进程后重试。'
+      );
+      process.exit(1);
+    }
+    console.error('[api-server] HTTP server 错误:', err);
+    process.exit(1);
+  });
+
   server.listen(PORT, HOST, () => {
     console.log(`Omni-Context API Server running on http://${HOST}:${PORT}`);
     console.log(`Database: ${DB_PATH}`);
