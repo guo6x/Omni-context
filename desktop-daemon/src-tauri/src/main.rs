@@ -42,6 +42,7 @@ async fn main() {
     }
     
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None::<Vec<&str>>))
         .setup(|app| {
             let _app_handle = app.app_handle().clone();
             

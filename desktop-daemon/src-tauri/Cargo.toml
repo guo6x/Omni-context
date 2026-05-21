@@ -21,6 +21,7 @@ screenshots = "0.6"
 base64 = "0.21"
 arboard = "3.3"
 image = "0.24"
+tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 
 [features]
 default = ["custom-protocol"]

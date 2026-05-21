@@ -1,10 +1,32 @@
 "use client";
 
 import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { KeyboardShortcut, AppSettings } from '@/hooks/useSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
+
+// autostart 插件调用。非 Tauri 环境静默降级。
+async function autostartEnable() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/tauri');
+    await invoke('plugin:autostart|enable');
+  } catch {}
+}
+async function autostartDisable() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/tauri');
+    await invoke('plugin:autostart|disable');
+  } catch {}
+}
+async function autostartIsEnabled(): Promise<boolean> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/tauri');
+    return await invoke<boolean>('plugin:autostart|is_enabled');
+  } catch {
+    return false;
+  }
+}
 
 interface SettingsPanelProps {
   settings: AppSettings;
@@ -164,6 +186,17 @@ export default function SettingsPanel({
     { id: 'llm' as Tab, icon: <Globe className="w-4 h-4" />, label: t('settings.llm_provider') || '大模型配置' },
     { id: 'data' as Tab, icon: <DatabaseIcon className="w-4 h-4" />, label: t('settings.data') || '数据管理' },
   ];
+
+  // 启动时以 OS 实际状态对账
+  useEffect(() => {
+    (async () => {
+      const osEnabled = await autostartIsEnabled();
+      if (osEnabled !== settings.behavior.startWithSystem) {
+        onUpdateBehavior({ startWithSystem: osEnabled });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const categories = [...new Set(settings.keyboardShortcuts.map(s => s.category))];
 
@@ -397,39 +430,30 @@ export default function SettingsPanel({
                       value: settings.behavior.startWithSystem,
                     },
                   ].map((item) => {
-                    // startWithSystem 后端 Tauri 命令尚未实现，这里禁用 toggle 避免给用户错觉
-                    const isUnimplemented = item.key === 'startWithSystem';
                     return (
                       <div
                         key={item.key}
-                        className={`p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between ${
-                          isUnimplemented ? 'opacity-60' : ''
-                        }`}
+                        className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between"
                       >
                         <div>
                           <div className="text-white font-medium">
                             {item.name}
-                            {isUnimplemented && (
-                              <span className="ml-2 text-[10px] text-amber-400 bg-amber-900/30 px-1.5 py-0.5 rounded">
-                                未实现
-                              </span>
-                            )}
                           </div>
                           <div className="text-xs text-gray-500">{item.description}</div>
                         </div>
                         <button
                           onClick={() => {
-                            if (isUnimplemented) return;
-                            onUpdateBehavior({
-                              [item.key]: !settings.behavior[item.key as keyof AppSettings['behavior']],
-                            });
+                            const newValue = !settings.behavior[item.key as keyof AppSettings['behavior']];
+                            onUpdateBehavior({ [item.key]: newValue });
+                            if (item.key === 'startWithSystem') {
+                              newValue ? autostartEnable() : autostartDisable();
+                            }
                           }}
-                          disabled={isUnimplemented}
                           className={`w-14 h-7 rounded-full transition-colors relative ${
                             settings.behavior[item.key as keyof AppSettings['behavior']]
                               ? 'bg-cyan-600'
                               : 'bg-gray-700'
-                          } ${isUnimplemented ? 'cursor-not-allowed' : ''}`}
+                          }`}
                         >
                           <div
                             className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${

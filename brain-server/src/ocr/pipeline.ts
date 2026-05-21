@@ -1,12 +1,15 @@
 /**
  * [核心壁垒] OCR 文本提取管道
- * 
+ *
  * 从截图/图片中提取文字内容，作为知识图谱提取的输入源。
- * 
+ *
  * 支持：
  * 1. 基于 Tesseract.js 的本地 OCR（无需服务端）
  * 2. 可选的云端 OCR API 回退
  */
+
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 export interface OCRConfig {
   /** OCR 引擎: 'local' 使用 tesseract.js, 'api' 使用云端 */
@@ -83,7 +86,15 @@ export class OCRPipeline {
       const Tesseract = await import('tesseract.js');
 
       if (!this.worker) {
-        this.worker = await Tesseract.createWorker(this.config.languages);
+        const langPath = join(dirname(fileURLToPath(import.meta.url)), '../../models/tessdata');
+        // tesseract.js v7 类型声明对动态 import 返回的签名偏窄，
+        // 运行时 createWorker(langs, oem, options) 三点都是有效的
+        const createWorker = (Tesseract as any).createWorker || Tesseract.createWorker;
+        this.worker = await createWorker(this.config.languages, 1, {
+          langPath,
+          gzip: true,
+          cacheMethod: 'none',
+        });
         this.initialized = true;
       }
 

@@ -1,5 +1,6 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
+import { OCRPipeline } from '../../ocr/pipeline.js';
 
 // 文件上传抽取管线（v1：仅文本类）
 // 入参形态：JSON { filename, contentType, base64 }
@@ -19,6 +20,12 @@ const PDF_CONTENT_TYPES = new Set([
   'application/pdf',
 ]);
 
+const IMAGE_CONTENT_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+]);
+
 interface IngestFilePayload {
   filename?: string;
   contentType?: string;
@@ -32,8 +39,11 @@ function normalizeContentType(ct: string): string {
 function isAcceptedContentType(ct: string): boolean {
   if (TEXT_CONTENT_TYPES.has(ct)) return true;
   if (PDF_CONTENT_TYPES.has(ct)) return true;
+  if (IMAGE_CONTENT_TYPES.has(ct)) return true;
   // text/* 全开（text/x-yaml 之类用户也可能拖进来）
   if (ct.startsWith('text/')) return true;
+  // image/* 兜底（image/webp 等）
+  if (ct.startsWith('image/')) return true;
   return false;
 }
 
@@ -96,10 +106,20 @@ export const handleIngestRoutes = [
         return sendError(res, 413, `File too large. Limit is ${MAX_INGEST_BYTES} bytes`);
       }
 
+      const isImage = IMAGE_CONTENT_TYPES.has(contentType) || contentType.startsWith('image/');
       let textContent = '';
       try {
         if (PDF_CONTENT_TYPES.has(contentType)) {
           textContent = await extractTextFromPdf(buffer);
+        } else if (isImage) {
+          const ocr = new OCRPipeline();
+          try {
+            const dataUrl = `data:${contentType};base64,${base64}`;
+            const ocrResult = await ocr.extractText(dataUrl);
+            textContent = ocrResult.text;
+          } finally {
+            await ocr.dispose();
+          }
         } else {
           textContent = buffer.toString('utf-8');
         }
@@ -109,7 +129,10 @@ export const handleIngestRoutes = [
 
       textContent = textContent.trim();
       if (!textContent) {
-        return sendError(res, 422, 'No text content extracted from file');
+        const message = isImage
+          ? 'No text recognized in the image'
+          : 'No text content extracted from file';
+        return sendError(res, 422, message);
       }
 
       // 抽取链路：复用现有 extractor，与 /api/graph/extract 保持一致

@@ -29,6 +29,7 @@
     "pdf-parse": "^2.4.5",
     "sqlite-vec": "^0.1.9",
     "sqlite3": "^5.1.7",
+    "tesseract.js": "^7.0.0",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
   },

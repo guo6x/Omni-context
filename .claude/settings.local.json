@@ -39,7 +39,13 @@
       "Bash(rm -f _e2e-test.mjs)",
       "Bash(rm -f data/test-mcp.db data/test-mcp.db-shm data/test-mcp.db-wal data/test-e2e.db data/test-e2e.db-shm data/test-e2e.db-wal)",
       "Bash(grep -nA 12 \"case 'vector_search'\" src/mcp-server.ts)",
-      "Bash(grep -nB1 -A4 \"VectorSearch\\\\|vector_search\" src/mcp-server.ts)"
+      "Bash(grep -nB1 -A4 \"VectorSearch\\\\|vector_search\" src/mcp-server.ts)",
+      "Bash(TEST_KEY=sk-66af77032f39453698eee1223099a19a node \"C:/WINDOWS/TEMP/omni-insight-test.mjs\")",
+      "Bash(PORT=3102 DB_PATH=./data/test-agent.db LLM_API_URL=https://api.deepseek.com LLM_API_KEY=sk-66af77032f39453698eee1223099a19a LLM_MODEL=deepseek-v4-flash INSIGHT_INTERVAL_MS=25000 node dist/api-server.js)",
+      "Bash(gzip -t models/tessdata/eng.traineddata.gz)",
+      "Bash(gzip -t models/tessdata/chi_sim.traineddata.gz)",
+      "Bash(grep -nA3 \"createWorker\" src/ocr/pipeline.ts)",
+      "Bash(PORT=3103 DB_PATH=./data/test-ocr.db LLM_API_URL=https://api.deepseek.com LLM_API_KEY=sk-66af77032f39453698eee1223099a19a LLM_MODEL=deepseek-v4-flash INSIGHT_INTERVAL_MS=3600000 node dist/api-server.js)"
     ]
   }
 }
