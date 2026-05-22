@@ -1,6 +1,10 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
 import { OCRPipeline } from '../../ocr/pipeline.js';
+import { resolveConflicts } from '../../graphrag/conflict-resolver.js';
+import { resolveEntities } from '../../graphrag/entity-resolver.js';
+import { v4 as uuidv4 } from 'uuid';
+import { Entity } from '../../shared-types.js';
 
 // 文件上传抽取管线（v1：仅文本类）
 // 入参形态：JSON { filename, contentType, base64 }
@@ -142,33 +146,74 @@ export const handleIngestRoutes = [
         sourceType: 'manual',
       });
 
-      for (const entity of result.entities) {
+      // 实体消解与重映射
+      const resolution = await resolveEntities(result.entities, result.relationships, ctx.db);
+
+      for (const entity of resolution.entitiesToCreate) {
         await ctx.db.addEntity(entity);
       }
 
-      for (const relationship of result.relationships) {
+      for (const update of resolution.entitiesToUpdate) {
+        await ctx.db.updateEntity(update.id, {
+          description: update.description,
+          tags: update.tags,
+        });
+      }
+
+      // 自动冲突检测与消解
+      try {
+        await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+      } catch (err) {
+        console.error('[Ingest] Conflict resolution failed:', err);
+      }
+
+      for (const relationship of resolution.relationshipsToCreate) {
         await ctx.db.addRelationship(relationship);
       }
 
-      for (const principle of result.principles) {
-        await ctx.db.addEntity({
-          name: principle.title,
-          type: 'principle',
-          description: principle.content,
-          tags: ['auto_extracted', principle.type, 'uploaded-file'],
-          metadata: {
-            isCore: principle.isCore,
-            version: principle.version || 1,
-            principleType: principle.type,
-            sourceFile: filename,
-          },
+      // 原则实体同样走消解，避免重复 ingest 产生重复原则
+      const principleNow = new Date().toISOString();
+      const principleEntities = result.principles.map((principle): Entity => ({
+        id: uuidv4(),
+        name: principle.title,
+        type: 'principle',
+        description: principle.content,
+        created_at: principleNow,
+        updated_at: principleNow,
+        last_accessed: principleNow,
+        access_count: 0,
+        tags: ['auto_extracted', principle.type, 'uploaded-file'],
+        metadata: {
+          isCore: principle.isCore,
+          version: principle.version || 1,
+          principleType: principle.type,
+          sourceFile: filename,
+        },
+      }));
+      const principleResolution = await resolveEntities(principleEntities, [], ctx.db);
+      for (const entity of principleResolution.entitiesToCreate) {
+        await ctx.db.addEntity(entity);
+      }
+      for (const update of principleResolution.entitiesToUpdate) {
+        await ctx.db.updateEntity(update.id, {
+          description: update.description,
+          tags: update.tags,
         });
       }
 
       // 原文落 archival memory，方便事后检索
+      let archivalEmbedding: number[] | undefined;
+      try {
+        const embRes = await ctx.embeddingService.embed(textContent);
+        archivalEmbedding = embRes.embedding;
+      } catch (err) {
+        console.warn('[Ingest] archival embedding failed:', err);
+      }
+
       const archival = await ctx.archivalMemory.add(textContent, {
         tags: ['uploaded-file', filename],
         importance: 0.5,
+        embedding: archivalEmbedding,
       });
 
       const summary = await ctx.extractor.summarizeEntities(result.entities);

@@ -1,5 +1,8 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
+import { resolveEntities } from '../../graphrag/entity-resolver.js';
+import { v4 as uuidv4 } from 'uuid';
+import { Entity } from '../../shared-types.js';
 
 export const handleMemoryRoutes = [
   {
@@ -458,25 +461,49 @@ export const handleGraphRoutes = [
         timestamp: new Date().toISOString(),
       });
 
-      for (const entity of result.entities) {
+      const resolution = await resolveEntities(result.entities, result.relationships, ctx.db);
+
+      for (const entity of resolution.entitiesToCreate) {
         await ctx.db.addEntity(entity);
       }
 
-      for (const relationship of result.relationships) {
+      for (const update of resolution.entitiesToUpdate) {
+        await ctx.db.updateEntity(update.id, {
+          description: update.description,
+          tags: update.tags,
+        });
+      }
+
+      for (const relationship of resolution.relationshipsToCreate) {
         await ctx.db.addRelationship(relationship);
       }
 
-      for (const principle of result.principles) {
-        await ctx.db.addEntity({
-          name: principle.title,
-          type: 'principle',
-          description: principle.content,
-          tags: ['auto_extracted', principle.type],
-          metadata: {
-            isCore: principle.isCore,
-            version: principle.version || 1,
-            principleType: principle.type,
-          },
+      // 原则实体同样走消解，避免重复抽取产生重复原则
+      const principleNow = new Date().toISOString();
+      const principleEntities = result.principles.map((principle): Entity => ({
+        id: uuidv4(),
+        name: principle.title,
+        type: 'principle',
+        description: principle.content,
+        created_at: principleNow,
+        updated_at: principleNow,
+        last_accessed: principleNow,
+        access_count: 0,
+        tags: ['auto_extracted', principle.type],
+        metadata: {
+          isCore: principle.isCore,
+          version: principle.version || 1,
+          principleType: principle.type,
+        },
+      }));
+      const principleResolution = await resolveEntities(principleEntities, [], ctx.db);
+      for (const entity of principleResolution.entitiesToCreate) {
+        await ctx.db.addEntity(entity);
+      }
+      for (const update of principleResolution.entitiesToUpdate) {
+        await ctx.db.updateEntity(update.id, {
+          description: update.description,
+          tags: update.tags,
         });
       }
 

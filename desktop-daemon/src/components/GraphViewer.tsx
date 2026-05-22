@@ -6,6 +6,7 @@ import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { BRAIN_URL } from '@/lib/config';
 
 // 3D 图谱节点数据结构
 interface GraphNode {
@@ -129,7 +130,7 @@ interface GraphViewer3DProps {
   onDataChanged?: () => void;
 }
 
-const BRAIN_URL = "http://localhost:3001";
+
 
 export default function GraphViewer3D({ entities, relationships, onDataChanged }: GraphViewer3DProps) {
   const { t } = useTranslation();

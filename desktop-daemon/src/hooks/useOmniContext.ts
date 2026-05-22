@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
+import { BRAIN_URL } from '@/lib/config';
 
 interface SystemStatus {
   brain_server_running: boolean;
@@ -64,7 +65,7 @@ export function useOmniContext() {
       const clipboard = await invoke<string>("get_clipboard");
 
       addLog("正在通过 Brain Server (LLM) 进行深度图谱提取...", "info");
-      const response = await fetch("http://localhost:3001/api/graph/extract", {
+      const response = await fetch(`${BRAIN_URL}/api/graph/extract`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -103,7 +104,7 @@ export function useOmniContext() {
     // 真实检测 Brain Server 状态
     const checkBrainServer = async () => {
       try {
-        const res = await fetch("http://localhost:3001/health");
+        const res = await fetch(`${BRAIN_URL}/health`);
         if (res.ok && !status.brain_server_running) {
           setStatus((prev) => ({ ...prev, brain_server_running: true }));
           addLog("Brain Server 已连接并正常运行", "success");

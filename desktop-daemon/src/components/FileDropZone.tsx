@@ -2,8 +2,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 import { UploadCloud, FileText, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-
-const BRAIN_URL = process.env.NEXT_PUBLIC_BRAIN_URL || 'http://localhost:3001';
+import { BRAIN_URL } from '@/lib/config';
 
 const ACCEPTED_TYPES = '.md,.txt,.json,.csv,.pdf,text/plain,text/markdown,text/csv,application/json,application/pdf';
 const MAX_BYTES = 5 * 1024 * 1024;

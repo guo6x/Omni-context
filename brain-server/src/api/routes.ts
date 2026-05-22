@@ -5,6 +5,7 @@ import { CoreMemory } from '../memory/core-memory.js';
 import { ArchivalMemory } from '../memory/archival-memory.js';
 import { GraphRAGExtractor } from '../graphrag/extractor.js';
 import { AgentLoop } from '../agent/agent-loop.js';
+import { EmbeddingService } from '../embedding/service.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -23,6 +24,7 @@ export interface RequestContext {
   archivalMemory: ArchivalMemory;
   extractor: GraphRAGExtractor;
   agentLoop: AgentLoop | null;
+  embeddingService: EmbeddingService;
 }
 
 export interface Route {
@@ -74,13 +76,14 @@ export class ApiRouter {
   private routes: Route[];
   private context: RequestContext;
 
-  constructor(db: Database, agentLoop: AgentLoop | null = null) {
+  constructor(db: Database, agentLoop: AgentLoop | null = null, embeddingService: EmbeddingService) {
     this.context = {
       db,
       coreMemory: new CoreMemory(db),
       archivalMemory: new ArchivalMemory(db),
       extractor: new GraphRAGExtractor(),
       agentLoop,
+      embeddingService,
     };
 
     this.routes = [
@@ -253,8 +256,19 @@ function checkRateLimit(req: http.IncomingMessage, res: http.ServerResponse): bo
   return true;
 }
 
-export function createServer(db: Database, agentLoop?: AgentLoop): http.Server {
-  const router = new ApiRouter(db, agentLoop ?? null);
+export function createDefaultEmbeddingService(): EmbeddingService {
+  return new EmbeddingService({
+    mode: (process.env.EMBEDDING_MODE as 'local' | 'api') || 'local',
+    localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/all-MiniLM-L6-v2',
+    apiUrl: process.env.EMBEDDING_API_URL,
+    apiKey: process.env.EMBEDDING_API_KEY,
+    apiModel: process.env.EMBEDDING_API_MODEL,
+  });
+}
+
+export function createServer(db: Database, agentLoop?: AgentLoop, embeddingService?: EmbeddingService): http.Server {
+  const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
+  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService);
 
   return http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);

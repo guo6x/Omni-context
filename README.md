@@ -1,69 +1,83 @@
-# 🧠 Omni-Context v3.0 — 全域主动智能 AI 记忆操作系统
+# 🧠 Omni-Context — 本地优先的 AI 记忆 / 决策中枢
 
-Omni-Context 是一个跨平台的开源 AI 记忆中枢，它致力于做你的“第二大脑”。在 v3.0 版本中，我们引入了 **Proactive Agent (主动智能引擎)**，它不再仅仅是被动等待指令，而是会主动分析你的知识图谱，为你生成跨越维度的深度洞见。
+Omni-Context 是一个**完全本地、跨平台的开源 AI 第二大脑**。你在桌面端或浏览器里捕获的信息，
+会被自动结构化成一张持续生长的**知识图谱**；这张图谱既服务于你，也能通过标准 MCP 协议
+挂给其他 AI 产品，作为它们的「记忆 / 决策层」。
 
-> ⚠️ **项目状态**：v3.0 仍处于早期阶段（桌面端版本号 `0.1.0`），属于实验性 / 个人单机部署。
-> 数据全部存放在本地 SQLite，**不含**多用户、密码、加密落盘、云端同步、公网鉴权等生产级能力。
-> Proactive Agent / 屏幕捕获 / ESP32 硬件 / LLM 抽取 等功能尚未在干净环境做端到端验证。
-
----
-
-## ✨ 核心特性 (v3.0 进化版)
-
-*   **👁️ Proactive Agent (主动智能引擎)**：内置智能巡视器，定期扫描您的知识库。当它发现不同记忆间的潜在关联时，会主动在桌面端与移动端推送“智慧洞见 (Insights)”，帮你连接那些被遗忘的点。
-*   **🔔 实时洞见通知中心**：桌面端新增毛玻璃风格的通知中心，通过闪烁的“灵感铃铛”实时提醒您最新的 AI 发现。
-*   **⚡ 百万级极速检索**：底层采用 `sqlite-vec` 提供原生 KNN 向量检索，并结合 FTS5 实现毫秒级全文索引，性能提升 10 倍以上。
-*   **🕸️ 三层统一融合记忆**：完美融合向量相似度、全文检索匹配、图谱实体关联，一次搜索，全局穿透。
-*   **🧠 LLM 动态配置管线**：支持用户自定义云端或本地大模型 (DeepSeek, GPT-4, Ollama等)。通过桌面端 UI 即可零成本切换。
-*   **🌌 赛博朋克美学 UI**：全栈统一采用 **Cyberpunk Glassmorphism** 设计风格，结合微动画与毛玻璃效果，打造极速且极致的视觉体验。
+> **项目状态（桌面端版本 0.1.0）**：桌面端 + 浏览器插件 + 数字脑子（MCP）这条线已完成并经过
+> 端到端验证，可打包安装使用。数据全部存放在本地 SQLite——**不含**多用户、密码、加密落盘、
+> 云端同步、公网鉴权等能力，这是「本地优先」的刻意取舍。
+> 移动端 / ESP32 硬件目前**暂缓**（代码在仓库里，视后续需求再延伸）；桌面端的系统级屏幕捕获
+> 仍为实验性。
 
 ---
 
-## 📂 生态系统架构
+## ✨ 核心特性
 
-- **桌面端 (Desktop)**: Next.js + Tauri + TailwindCSS + lucide-react. 包含系统级的屏幕/剪贴板捕获（实验性）。
-- **后台大脑 (Brain Server)**: Node.js + 自实现 HTTP 路由 + SQLite-vec + Agent Loop. 负责检索、图谱、主动分析。
-- **移动端 (Mobile App)**: React Native + Expo + NativeWind. 通过 **同一 LAN** 内的 HTTP 与 Brain Server 同步（无云端、无鉴权握手）。
-- **浏览器插件 (Extension)**: 原生 Manifest V3 (Chrome/Edge) + V2 (Firefox)，HTTP 调用 Brain Server。Safari 暂未适配。
+* **🕸️ 知识图谱抽取**：文本、文件、图片（OCR）经 GraphRAG 抽取成「实体 + 关系」入图谱。
+  正则 + LLM 双层抽取，已用云端模型端到端验证。
+* **🧠 数字脑子（MCP 对外接口）**：通过标准 Model Context Protocol，把这张图谱挂给
+  Cursor / Claude 等任意兼容 AI。核心工具 `get_decision_context`——给一个处境，一次性返回
+  相关原则、历史先例与历史冲突，让外部 AI 基于你的历史做判断。详见
+  [docs/MCP-INTEGRATION.md](./docs/MCP-INTEGRATION.md)。
+* **⏳ 时序知识图谱**：关系带「有效期」，事实变化时**失效而非删除**；新知识入库时自动检测
+  与旧知识的冲突——取代旧的就让它失效，genuine 冲突就显式标记出来。
+* **🔔 主动洞见引擎**：Proactive Agent 定期扫描图谱，发现跨记忆的潜在关联后主动推送 Insight。
+* **🔍 三层融合检索**：向量（sqlite-vec 原生 KNN）+ 全文（FTS5）+ 图谱遍历，一次查询穿透。
+* **📴 全离线、零网络依赖**：embedding 模型与 OCR 语言包都已内置进安装包，断网也能用。
+* **🛠️ LLM 可配置**：在设置里填入云端或本地大模型（DeepSeek、GPT-4o、Ollama 等）的
+  API 地址与 Key，即时生效。
+* **🩺 系统自检**：设置面板内的「系统自检」页如实展示 embedding / LLM / OCR / Agent 的真实
+  健康状态，降级（如向量退化）会明确告警。
 
 ---
 
-## 🚀 快速开始与安装
+## 📂 架构
 
-### 📦 一键打包（仅 Windows，推荐）
-目前只提供了 Windows PowerShell 打包脚本。在项目根目录下：
-```powershell
-.\package-windows.ps1
-```
-该脚本将自动执行以下操作：
-1. 环境检查与 Rust 工具链配置
-2. Brain Server 编译与依赖封装
-3. 前端 Next.js 静态构建（生产 CSP 走 `tauri.prod.conf.json`，去除 `unsafe-eval`）
-4. 生成完整的 `.msi` 安装包与 `.exe` 绿色安装程序
+- **桌面端 (Desktop)**：Tauri + Next.js + TailwindCSS。主控台 + 3D 知识图谱可视化 + 悬浮 HUD。
+- **后台大脑 (Brain Server)**：Node.js + SQLite（sqlite-vec + FTS5）。负责抽取、检索、图谱、
+  主动分析，并通过 HTTP API 与 MCP 两个通道对外提供能力。
+- **浏览器插件 (Extension)**：原生 Manifest V3（Chrome / Edge），一键沉淀网页内容。
+- **MCP 接口**：Brain Server 通过 stdio 暴露 MCP 工具，供 IDE / AI Agent 接入。
 
-> macOS / Linux 暂无打包脚本，请走下面的手动开发模式。详情见 [BUILDING.md](./BUILDING.md)。
+> 移动端（React Native）与 ESP32 硬件的代码保留在仓库内，但当前版本不构建、不交付。
 
-### 🛠️ 手动开发模式
+---
+
+## 🚀 快速开始
+
+### 📦 打包（Windows）
+
+在项目根目录：
+
 ```bash
-# 1. 启动 Brain Server (后端)
+npm run install:all   # 首次：安装各子项目依赖
+npm run package       # 构建并产出 dist/desktop-app/ 下的 .msi 与 .exe 安装包
+```
+
+安装包全离线、自带 Node 运行时与模型文件，双击 `.msi` 或 `.exe` 即可安装。
+macOS / Linux 暂无打包脚本。
+
+### 🛠️ 开发模式
+
+```bash
+# 1. 后台大脑
 cd brain-server && npm install && npm run build && npm start
 
-# 2. 启动 Desktop (前端 + Tauri)
+# 2. 桌面端
 cd desktop-daemon && npm install && npm run tauri:dev
 ```
 
-> 如需从远程 ESP32 硬件接收 UDP 事件，需要在启动 desktop-daemon 前设置：
-> `OMNI_UDP_BIND=0.0.0.0:9090`（默认仅监听 `127.0.0.1`）。
+---
+
+## ⚙️ 大模型配置
+
+进入应用内 `设置 → LLM 配置`，填入 API URL、API Key 与模型名。配置会同步到 Brain Server，
+即时生效。推荐 DeepSeek 或 GPT-4o 系列以获得较好的抽取与洞见质量。
+未配置 LLM 时，图谱抽取会退化为仅正则层（仍可用，但语义深度有限）。
 
 ---
 
-## ⚙️ 大模型 (LLM) 配置
-Omni-Context v3.0 现已支持**多模型热切换**。在应用内进入 `Settings -> LLM Configuration`，填入您的 API Key 与端点地址。
-> [!TIP]
-> 推荐使用 **DeepSeek-V3** 或 **GPT-4o** 以获得最佳的主动分析效果。
+## 📄 许可证
 
----
-
-## 📄 许可证与贡献
-本项目基于 **MIT License** 开源。
-欢迎任何形式的 Pull Request 与 Issues，让我们一起构建人类最强的第二大脑！
+本项目基于 **MIT License** 开源。欢迎 Issue 与 Pull Request。

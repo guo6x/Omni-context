@@ -11,6 +11,8 @@ interface EmptyStateProps {
   onUploadClick: () => void;
   onShowShortcuts: () => void;
   onDismiss?: () => void;
+  onLoadDemo: () => void;
+  isLoadingDemo?: boolean;
 }
 
 export default function EmptyState({
@@ -19,6 +21,8 @@ export default function EmptyState({
   onUploadClick,
   onShowShortcuts,
   onDismiss,
+  onLoadDemo,
+  isLoadingDemo = false,
 }: EmptyStateProps) {
   const { t } = useTranslation();
 
@@ -69,6 +73,14 @@ export default function EmptyState({
             hint={t('empty.decision_hint')}
             onClick={onDecision}
           />
+          <ActionRow
+            icon={<Sparkles className="w-5 h-5 text-purple-400" />}
+            label="加载示例图谱 (Onboarding Demo)"
+            hint="一键导入包含 24 个实体、36 条关系和 5 条分析的示例图谱"
+            onClick={onLoadDemo}
+            disabled={isLoadingDemo}
+            loading={isLoadingDemo}
+          />
         </div>
 
         <button
@@ -88,22 +100,38 @@ function ActionRow({
   label,
   hint,
   onClick,
+  disabled,
+  loading,
 }: {
   icon: React.ReactNode;
   label: string;
   hint: string;
   onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-800 hover:bg-cyan-900/10 transition-all text-left group"
+      disabled={disabled || loading}
+      className={`w-full flex items-start gap-3 p-3 rounded-lg border transition-all text-left group ${
+        disabled || loading
+          ? 'bg-white/5 border-white/5 opacity-60 cursor-not-allowed'
+          : 'bg-white/5 border-white/5 hover:border-cyan-800 hover:bg-cyan-900/10'
+      }`}
     >
       <span className="shrink-0 text-cyan-400 group-hover:text-cyan-300 transition-colors mt-0.5">
-        {icon}
+        {loading ? (
+          <span className="block w-5 h-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+        ) : (
+          icon
+        )}
       </span>
       <span className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-white">{label}</span>
+        <span className="block text-sm font-medium text-white flex items-center gap-2">
+          {label}
+          {loading && <span className="text-xs text-cyan-400 animate-pulse">正在生成向量并导入中...</span>}
+        </span>
         <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
       </span>
     </button>

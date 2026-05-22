@@ -211,14 +211,31 @@ export class EmbeddingService {
   }
 
   /**
+   * 获取当前真实运行状态
+   */
+  getStatus(): 'local' | 'api' | 'hash-fallback' | 'pending' {
+    if (!this.initialized) {
+      return 'pending';
+    }
+    if (this.config.mode === 'api') {
+      return 'api';
+    }
+    if (this.pipeline) {
+      return 'local';
+    }
+    return 'hash-fallback';
+  }
+
+  /**
    * 获取当前配置信息
    */
-  getInfo(): { mode: string; model: string; dimensions: number; initialized: boolean } {
+  getInfo(): { mode: string; model: string; dimensions: number; initialized: boolean; status: 'local' | 'api' | 'hash-fallback' | 'pending' } {
     return {
       mode: this.config.mode,
       model: (this.config.mode === 'local' ? this.config.localModel : this.config.apiModel) || 'unknown',
       dimensions: this.config.dimensions || 384,
       initialized: this.initialized,
+      status: this.getStatus(),
     };
   }
 }

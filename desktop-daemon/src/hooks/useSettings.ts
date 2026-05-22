@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import { BRAIN_URL } from '@/lib/config';
 
 export interface KeyboardShortcut {
   id: string;
@@ -130,7 +131,7 @@ function mergeWithDefaults(stored: any): AppSettings {
   };
 }
 
-const BRAIN_URL = 'http://localhost:3001';
+
 
 export async function syncLlmToBrainServer(llmProvider: { apiUrl: string; apiKey: string; model: string }) {
   try {

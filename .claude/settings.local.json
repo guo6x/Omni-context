@@ -45,7 +45,11 @@
       "Bash(gzip -t models/tessdata/eng.traineddata.gz)",
       "Bash(gzip -t models/tessdata/chi_sim.traineddata.gz)",
       "Bash(grep -nA3 \"createWorker\" src/ocr/pipeline.ts)",
-      "Bash(PORT=3103 DB_PATH=./data/test-ocr.db LLM_API_URL=https://api.deepseek.com LLM_API_KEY=sk-66af77032f39453698eee1223099a19a LLM_MODEL=deepseek-v4-flash INSIGHT_INTERVAL_MS=3600000 node dist/api-server.js)"
+      "Bash(PORT=3103 DB_PATH=./data/test-ocr.db LLM_API_URL=https://api.deepseek.com LLM_API_KEY=sk-66af77032f39453698eee1223099a19a LLM_MODEL=deepseek-v4-flash INSIGHT_INTERVAL_MS=3600000 node dist/api-server.js)",
+      "WebSearch",
+      "Bash(grep -nA22 \"/api/status\" src/api/handlers/settings.ts)",
+      "Bash(grep -nA12 \"getStatus\" src/embedding/service.ts)",
+      "Bash(PORT=3104 DB_PATH=./data/test-bug.db LLM_API_URL=https://api.deepseek.com LLM_API_KEY=sk-66af77032f39453698eee1223099a19a LLM_MODEL=deepseek-v4-flash INSIGHT_INTERVAL_MS=3600000 node dist/api-server.js)"
     ]
   }
 }

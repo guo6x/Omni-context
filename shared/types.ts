@@ -58,6 +58,9 @@ export interface Relationship {
   weight: number;
   created_at: string;
   last_activated?: string;
+  valid_from: string;
+  valid_until?: string;
+  invalidated_at?: string;
 }
 
 export interface Principle {

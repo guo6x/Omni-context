@@ -1,5 +1,7 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
+import { v4 as uuidv4 } from 'uuid';
+import { CONCEPTS, TOOLS, PRINCIPLES, MIXED, ARCHIVAL, CORE_MEMORIES, NOTIFICATIONS, REL_TYPES } from '../../demo-data.js';
 
 // 全库 dump / restore 端点。目的是让用户对数据有完全控制权：
 // 任何时候都能拿走完整 JSON 备份，或在新机器上还原。
@@ -218,12 +220,155 @@ export const handleAdminRoutes = [
             counts.notifications++;
           }
         });
+
+        try {
+          await ctx.db.reindexEntities();
+        } catch (reindexErr) {
+          console.error('[Import] Reindexing entities failed:', reindexErr);
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         return sendError(res, 500, `Import failed: ${msg}`);
       }
 
       sendResponse(res, 200, { mode, imported: counts });
+    },
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/admin/seed-demo',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      // 1. 幂等保护：检查实体表是否已有数据
+      const entityCountRow = await ctx.db.get<{ c: number }>('SELECT COUNT(*) AS c FROM entities');
+      const entityCount = entityCountRow ? entityCountRow.c : 0;
+      if (entityCount > 0) {
+        return sendResponse(res, 200, { skipped: true, reason: '图谱已非空' });
+      }
+
+      // 2. 汇总所有示例实体，并在事务开启前计算其 embedding
+      const allEntities: any[] = [];
+      CONCEPTS.forEach(c => allEntities.push({ id: uuidv4(), name: c.name, type: 'concept' as const, description: c.desc, tags: c.tags }));
+      TOOLS.forEach(t => allEntities.push({ id: uuidv4(), name: t.name, type: 'tool' as const, description: t.desc, tags: t.tags }));
+      PRINCIPLES.forEach(p => allEntities.push({ id: uuidv4(), name: p.name, type: 'principle' as const, description: p.desc, tags: p.tags, metadata: { isCore: true } }));
+      MIXED.forEach(m => allEntities.push({ id: uuidv4(), name: m.name, type: m.type, description: m.desc, tags: m.tags }));
+
+      const entitiesWithEmbeddings = [];
+      for (const ent of allEntities) {
+        let embedding: number[] | undefined;
+        try {
+          const embeddingText = `${ent.name}: ${ent.description || ''}`;
+          const embRes = await ctx.embeddingService.embed(embeddingText);
+          embedding = embRes.embedding;
+        } catch (e) {
+          console.warn(`[seed-demo] Generating embedding failed for entity "${ent.name}":`, e);
+        }
+        entitiesWithEmbeddings.push({ ...ent, embedding });
+      }
+
+      const archivalWithEmbeddings = [];
+      for (const arch of ARCHIVAL) {
+        let embedding: number[] | undefined;
+        try {
+          const embRes = await ctx.embeddingService.embed(arch.content);
+          embedding = embRes.embedding;
+        } catch (e) {
+          console.warn(`[seed-demo] Generating embedding failed for archival memory:`, e);
+        }
+        archivalWithEmbeddings.push({ ...arch, embedding });
+      }
+
+      const counts = {
+        entities: 0,
+        relationships: 0,
+        coreMemory: 0,
+        archivalMemory: 0,
+        notifications: 0,
+      };
+
+      try {
+        await ctx.db.withTransaction(async () => {
+          // 1. 写入实体
+          for (const ent of entitiesWithEmbeddings) {
+            await ctx.db.addEntity({
+              id: ent.id,
+              name: ent.name,
+              type: ent.type,
+              description: ent.description,
+              tags: ent.tags,
+              metadata: ent.metadata,
+              embedding: ent.embedding,
+            });
+            counts.entities++;
+          }
+
+          // 2. 随机生成 36 条关系
+          const ids = entitiesWithEmbeddings.map(e => e.id);
+          const seen = new Set<string>();
+          let relCount = 0;
+          let attempts = 0;
+
+          const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+          const randFloat = (min: number, max: number): number => Math.random() * (max - min) + min;
+
+          while (relCount < 36 && attempts < 400) {
+            attempts++;
+            const a = pick(ids);
+            const b = pick(ids);
+            if (a === b) continue;
+            const t = pick(REL_TYPES) as any;
+            const key = `${a}->${b}:${t}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+
+            await ctx.db.addRelationship({
+              source_id: a,
+              target_id: b,
+              type: t,
+              weight: Number(randFloat(0.4, 1.6).toFixed(2)),
+            });
+            counts.relationships++;
+            relCount++;
+          }
+
+          // 3. 写入冷记忆 archival_memory
+          for (const a of archivalWithEmbeddings) {
+            await ctx.archivalMemory.add(a.content, {
+              summary: a.content.slice(0, 60) + '…',
+              tags: a.tags,
+              importance: a.importance,
+              embedding: a.embedding,
+            });
+            counts.archivalMemory++;
+          }
+
+          // 4. 写入热记忆 core_memory
+          for (const c of CORE_MEMORIES) {
+            await ctx.coreMemory.set(c.key, c.value, c.category);
+            counts.coreMemory++;
+          }
+
+          // 5. 写入通知 notifications
+          for (const n of NOTIFICATIONS) {
+            const relEntities: string[] = [];
+            const count = Math.floor(Math.random() * 2) + 2; // 2 或 3
+            for (let i = 0; i < count; i++) {
+              relEntities.push(pick(ids));
+            }
+            await ctx.db.addNotification({
+              title: n.title,
+              content: n.content,
+              type: 'insight',
+              related_entities: relEntities,
+            });
+            counts.notifications++;
+          }
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return sendError(res, 500, `Seed failed: ${msg}`);
+      }
+
+      sendResponse(res, 200, { success: true, imported: counts });
     },
   },
 ];

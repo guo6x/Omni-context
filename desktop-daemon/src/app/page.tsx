@@ -20,6 +20,7 @@ import { useSettings, syncLlmToBrainServer } from "@/hooks/useSettings";
 import { useOmniContext } from "@/hooks/useOmniContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
+import { BRAIN_URL } from '@/lib/config';
 
 type ViewMode = "graph" | "console";
 
@@ -107,6 +108,7 @@ function MainApp() {
   const [showUpload, setShowUpload] = useState(false);
   const [showHardware, setShowHardware] = useState(false);
   const [emptyDismissed, setEmptyDismissed] = useState(false);
+  const [isLoadingDemo, setIsLoadingDemo] = useState(false);
 
   const { settings, showSettings, setShowSettings, updateShortcut, resetShortcuts, updateAppearance, updateBehavior, updateLlmProvider } = useSettings();
   const { status, addLog, triggerPrecipitate, triggerDecision, triggerReset, refreshTrigger } = useOmniContext();
@@ -116,7 +118,7 @@ function MainApp() {
   // 提到组件 scope，方便上传成功 / 手动操作后重拉
   const fetchGraphData = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/graph/context', {
+      const response = await fetch(`${BRAIN_URL}/api/graph/context`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ depth: 3 }),
@@ -140,6 +142,33 @@ function MainApp() {
   useEffect(() => {
     fetchGraphData();
   }, [refreshTrigger, fetchGraphData]);
+
+  const handleLoadDemo = useCallback(async () => {
+    setIsLoadingDemo(true);
+    try {
+      const response = await fetch(`${BRAIN_URL}/api/admin/seed-demo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      if (result.skipped) {
+        toast.success('图谱已有数据', '跳过导入以避免重复。');
+      } else {
+        toast.success(
+          '示例图谱加载成功',
+          `已成功导入示例数据：${result.imported.entities} 实体、${result.imported.relationships} 关系和 ${result.imported.notifications} 条洞见。`
+        );
+        fetchGraphData();
+      }
+    } catch (error) {
+      toast.error('加载示例图谱失败', String(error));
+    } finally {
+      setIsLoadingDemo(false);
+    }
+  }, [toast, fetchGraphData]);
 
   // 启动时 brain-server 就绪后，以及配置变更后，同步 LLM 配置到 brain-server
   useEffect(() => {
@@ -448,6 +477,8 @@ function MainApp() {
             onUploadClick={() => setShowUpload(true)}
             onShowShortcuts={() => setShowShortcuts(true)}
             onDismiss={() => setEmptyDismissed(true)}
+            onLoadDemo={handleLoadDemo}
+            isLoadingDemo={isLoadingDemo}
           />
         )}
 

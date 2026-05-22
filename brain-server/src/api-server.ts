@@ -17,7 +17,14 @@ async function main() {
 
   await db.runMigrations();
 
-  const server = createServer(db);
+  const agentLoop = new AgentLoop(db);
+  // 默认 10 分钟一轮，避免本地 LLM 频繁被唤起；测试可通过 INSIGHT_INTERVAL_MS 缩短
+  const insightIntervalMs = process.env.INSIGHT_INTERVAL_MS
+    ? Number(process.env.INSIGHT_INTERVAL_MS)
+    : 10 * 60 * 1000;
+  agentLoop.start(insightIntervalMs);
+
+  const server = createServer(db, agentLoop);
 
   server.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
@@ -35,13 +42,6 @@ async function main() {
     console.log(`Omni-Context API Server running on http://${HOST}:${PORT}`);
     console.log(`Database: ${DB_PATH}`);
   });
-
-  const agentLoop = new AgentLoop(db);
-  // 默认 10 分钟一轮，避免本地 LLM 频繁被唤起；测试可通过 INSIGHT_INTERVAL_MS 缩短
-  const insightIntervalMs = process.env.INSIGHT_INTERVAL_MS
-    ? Number(process.env.INSIGHT_INTERVAL_MS)
-    : 10 * 60 * 1000;
-  agentLoop.start(insightIntervalMs);
 
   process.on('SIGINT', async () => {
     console.log('\nShutting down...');

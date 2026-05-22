@@ -1,10 +1,11 @@
 "use client";
 
-import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon } from 'lucide-react';
+import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { KeyboardShortcut, AppSettings } from '@/hooks/useSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
+import { BRAIN_URL } from '@/lib/config';
 
 // autostart 插件调用。非 Tauri 环境静默降级。
 async function autostartEnable() {
@@ -40,7 +41,7 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-type Tab = 'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data';
+type Tab = 'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'diagnostics';
 
 export default function SettingsPanel({
   settings,
@@ -58,6 +59,33 @@ export default function SettingsPanel({
   const [tempShortcut, setTempShortcut] = useState('');
   const { t } = useTranslation();
   const toast = useToast();
+
+  const [diagnosticsData, setDiagnosticsData] = useState<any>(null);
+  const [diagnosticsLoading, setDiagnosticsLoading] = useState(false);
+  const [diagnosticsError, setDiagnosticsError] = useState<string | null>(null);
+
+  const fetchDiagnostics = async () => {
+    setDiagnosticsLoading(true);
+    setDiagnosticsError(null);
+    try {
+      const res = await fetch(`${BRAIN_URL}/api/status`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setDiagnosticsData(data);
+    } catch (err) {
+      setDiagnosticsError('后端离线');
+      setDiagnosticsData(null);
+    } finally {
+      setDiagnosticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'diagnostics') {
+      fetchDiagnostics();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const handleShortcutKeyDown = (e: React.KeyboardEvent, id: string) => {
     e.preventDefault();
@@ -100,7 +128,6 @@ export default function SettingsPanel({
   // ===== 数据管理：备份/恢复 =====
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [dataBusy, setDataBusy] = useState(false);
-  const BRAIN_URL = 'http://localhost:3001';
 
   const handleExportAll = async () => {
     if (dataBusy) return;
@@ -185,6 +212,7 @@ export default function SettingsPanel({
     { id: 'behavior' as Tab, icon: <Sliders className="w-4 h-4" />, label: t('settings.behavior') },
     { id: 'llm' as Tab, icon: <Globe className="w-4 h-4" />, label: t('settings.llm_provider') || '大模型配置' },
     { id: 'data' as Tab, icon: <DatabaseIcon className="w-4 h-4" />, label: t('settings.data') || '数据管理' },
+    { id: 'diagnostics' as Tab, icon: <Activity className="w-4 h-4" />, label: '系统自检' },
   ];
 
   // 启动时以 OS 实际状态对账
@@ -566,6 +594,222 @@ export default function SettingsPanel({
                     />
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'diagnostics' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">系统自检</h3>
+                    <p className="text-xs text-gray-400 mt-1">检测核心组件的健康状态，并及时发现潜在的故障与降级风险。</p>
+                  </div>
+                  <button
+                    onClick={fetchDiagnostics}
+                    disabled={diagnosticsLoading}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${diagnosticsLoading ? 'animate-spin' : ''}`} />
+                    重新检测
+                  </button>
+                </div>
+
+                {diagnosticsLoading && (
+                  <div className="p-12 text-center bg-black/20 rounded-lg border border-white/5 flex flex-col items-center justify-center space-y-3">
+                    <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin" />
+                    <span className="text-sm text-gray-400">正在诊断系统状态，请稍候...</span>
+                  </div>
+                )}
+
+                {!diagnosticsLoading && diagnosticsError && (
+                  <div className="p-6 bg-red-950/30 border border-red-800/50 rounded-lg space-y-3">
+                    <div className="flex items-center gap-2 text-red-400 font-semibold">
+                      <XCircle className="w-5 h-5" />
+                      <span>后端服务离线</span>
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      无法连接到本地服务端 (<span className="font-mono">{BRAIN_URL}</span>)。请确保脑端服务 (brain-server) 已启动并在运行中。
+                    </p>
+                  </div>
+                )}
+
+                {!diagnosticsLoading && !diagnosticsError && diagnosticsData && (
+                  <div className="space-y-4 animate-fade-in">
+                    {/* 总体状态看板 */}
+                    <div className={`p-4 rounded-lg border flex items-center justify-between transition-all ${
+                      diagnosticsData.ok
+                        ? 'bg-emerald-950/20 border-emerald-800/40 text-emerald-400'
+                        : 'bg-amber-950/20 border-amber-800/40 text-amber-400'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        {diagnosticsData.ok ? (
+                          <CheckCircle className="w-6 h-6 animate-pulse" />
+                        ) : (
+                          <AlertTriangle className="w-6 h-6 animate-bounce" />
+                        )}
+                        <div>
+                          <div className="font-semibold text-sm">
+                            {diagnosticsData.ok ? '系统运行良好' : '系统已降级'}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {diagnosticsData.ok ? '所有核心组件均处于健康状态，性能优异。' : '检测到降级项，部分高级特征已失效或处于受限状态。'}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-xs font-mono border ${
+                        diagnosticsData.ok
+                          ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400'
+                          : 'bg-amber-950/40 border-amber-800 text-amber-400'
+                      }`}>
+                        {diagnosticsData.ok ? 'HEALTHY' : 'DEGRADED'}
+                      </span>
+                    </div>
+
+                    {/* 各组件状态卡片 */}
+                    <div className="grid grid-cols-1 gap-3">
+                      {/* Embedding */}
+                      <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                        <div className="flex items-start gap-3">
+                          <DatabaseIcon className="w-5 h-5 text-cyan-400 mt-0.5" />
+                          <div>
+                            <div className="text-white text-sm font-medium">向量生成 (Embedding)</div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              模式: <span className="font-mono text-cyan-400">{diagnosticsData.embedding.status}</span> · 模型: <span className="font-mono text-gray-300">{diagnosticsData.embedding.model}</span>
+                            </div>
+                            {diagnosticsData.embedding.status === 'hash-fallback' && (
+                              <div className="mt-2 text-xs text-amber-400/90 bg-amber-950/30 border border-amber-900/40 p-2 rounded leading-relaxed">
+                                <span className="font-semibold">⚠️ 降级警告：</span>本地向量模型加载失败，已降级为简单哈希向量。向量检索已降级，语义搜索不准。
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {diagnosticsData.embedding.status === 'hash-fallback' ? (
+                            <>
+                              <AlertTriangle className="w-4 h-4 text-amber-500" />
+                              <span className="text-xs text-amber-500 font-medium">哈希降级</span>
+                            </>
+                          ) : diagnosticsData.embedding.status === 'pending' ? (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                              <span className="text-xs text-amber-500 font-medium">初始化中</span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              <span className="text-xs text-emerald-500 font-medium">已就绪</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* LLM */}
+                      <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                        <div className="flex items-start gap-3">
+                          <Sliders className="w-5 h-5 text-purple-400 mt-0.5" />
+                          <div>
+                            <div className="text-white text-sm font-medium">大语言模型 (LLM)</div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              模型: <span className="font-mono text-gray-300">{diagnosticsData.llm.model}</span> · 接口: <span className="font-mono text-gray-400">{diagnosticsData.llm.apiUrl}</span>
+                            </div>
+                            {!diagnosticsData.llm.enabled && (
+                              <div className="mt-2 text-xs text-amber-400/90 bg-amber-950/30 border border-amber-900/40 p-2 rounded leading-relaxed">
+                                <span className="font-semibold">⚠️ 连接提示：</span>LLM 未连接，只有正则抽取。高级深度语义提取已被禁用。
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {diagnosticsData.llm.enabled ? (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              <span className="text-xs text-emerald-500 font-medium">已连接</span>
+                            </>
+                          ) : (
+                            <>
+                              <AlertTriangle className="w-4 h-4 text-amber-500" />
+                              <span className="text-xs text-amber-500 font-medium">未连接</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* OCR */}
+                      <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                        <div className="flex items-start gap-3">
+                          <Globe className="w-5 h-5 text-rose-400 mt-0.5" />
+                          <div>
+                            <div className="text-white text-sm font-medium">文字识别 (OCR)</div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {diagnosticsData.ocr.ready ? '内置文本提取引擎语言包完整。' : '未检测到内置 OCR 识别语言包。'}
+                            </div>
+                            {!diagnosticsData.ocr.ready && (
+                              <div className="mt-2 text-xs text-red-400/90 bg-red-950/30 border border-red-900/40 p-2 rounded leading-relaxed">
+                                <span className="font-semibold">❌ 故障警告：</span>语言包未就位。OCR 无法正常识别截图中的文本，请检查 models/tessdata 目录。
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {diagnosticsData.ocr.ready ? (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              <span className="text-xs text-emerald-500 font-medium">已就位</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-4 h-4 text-red-500" />
+                              <span className="text-xs text-red-500 font-medium">语言包缺失</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Agent */}
+                      <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                        <div className="flex items-start gap-3">
+                          <Activity className="w-5 h-5 text-emerald-400 mt-0.5" />
+                          <div>
+                            <div className="text-white text-sm font-medium">智能分析引擎 (Proactive Agent)</div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {diagnosticsData.agent.running ? '智能引擎后台轮询任务正常运行。' : '智能引擎后台任务已挂起。'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {diagnosticsData.agent.running ? (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              <span className="text-xs text-emerald-500 font-medium">运行中</span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-amber-500" />
+                              <span className="text-xs text-amber-500 font-medium">已挂起</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Database */}
+                      <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                        <div className="flex items-start gap-3">
+                          <DatabaseIcon className="w-5 h-5 text-amber-400 mt-0.5" />
+                          <div>
+                            <div className="text-white text-sm font-medium">知识图谱数据库 (Database)</div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              已索引实体: <span className="font-mono text-cyan-400">{diagnosticsData.db.entities}</span> 个 · 关联关系: <span className="font-mono text-cyan-400">{diagnosticsData.db.relationships}</span> 条
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                          <span className="text-xs text-emerald-500 font-medium">正常</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

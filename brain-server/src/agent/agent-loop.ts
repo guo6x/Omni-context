@@ -147,6 +147,10 @@ export class AgentLoop {
     }
   }
 
+  isRunning(): boolean {
+    return this.interval !== null || this.warmupTimer !== null;
+  }
+
   private async runCycle() {
     console.log('[AgentLoop] 唤醒，执行周期任务...');
     try {

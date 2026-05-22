@@ -180,6 +180,17 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE core_memory ADD COLUMN summary TEXT;
     `,
   },
+  {
+    version: 8,
+    name: 'add_temporal_graph_fields',
+    up: `
+      ALTER TABLE relationships ADD COLUMN valid_from TEXT;
+      ALTER TABLE relationships ADD COLUMN valid_until TEXT;
+      ALTER TABLE relationships ADD COLUMN invalidated_at TEXT;
+      UPDATE relationships SET valid_from = created_at WHERE valid_from IS NULL;
+      CREATE INDEX IF NOT EXISTS idx_relationships_valid_until ON relationships(valid_until);
+    `,
+  },
 ];
 
 interface Migration {
@@ -389,6 +400,21 @@ export class Database {
     return rows.map(row => this.rowToEntity(row));
   }
 
+  async reindexEntities(): Promise<void> {
+    try { await this.run('DELETE FROM vec_entities'); } catch { /* 可选 */ }
+    try { await this.run('DELETE FROM fts_entities'); } catch { /* 可选 */ }
+    const rows = await this.all<any>('SELECT id, name, description, tags, embedding FROM entities');
+    for (const row of rows) {
+      if (row.embedding) {
+        try { await this._syncVecEmbedding(row.id, decodeEmbedding(row.embedding)); } catch { /* 可选 */ }
+      }
+      try {
+        const tags = row.tags ? JSON.parse(row.tags) : undefined;
+        await this._syncFtsEntity(row.id, row.name, row.description || '', tags);
+      } catch { /* 可选 */ }
+    }
+  }
+
   async updateEntity(id: string, updates: Partial<Omit<Entity, 'id' | 'created_at' | 'updated_at' | 'last_accessed' | 'access_count'>>): Promise<void> {
     const fields: string[] = [];
     const values: any[] = [];
@@ -529,17 +555,21 @@ export class Database {
     return { moved, dropped };
   }
 
-  async addRelationship(relationship: Omit<Relationship, 'id' | 'created_at' | 'last_activated'> & {
+  async addRelationship(relationship: Omit<Relationship, 'id' | 'created_at' | 'last_activated' | 'valid_from'> & {
     id?: string;
+    valid_from?: string;
   }): Promise<Relationship> {
     const id = relationship.id || uuidv4();
     const now = new Date().toISOString();
+    const validFrom = relationship.valid_from || now;
+    const validUntil = relationship.valid_until || null;
+    const invalidatedAt = relationship.invalidated_at || null;
 
     await this.run(
-      `INSERT OR REPLACE INTO relationships (id, source_id, target_id, type, description, weight, created_at, last_activated)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO relationships (id, source_id, target_id, type, description, weight, created_at, last_activated, valid_from, valid_until, invalidated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, relationship.source_id, relationship.target_id, relationship.type,
-       relationship.description || null, relationship.weight || 1.0, now, now]
+       relationship.description || null, relationship.weight || 1.0, now, now, validFrom, validUntil, invalidatedAt]
     );
 
     return {
@@ -551,44 +581,81 @@ export class Database {
       weight: relationship.weight || 1.0,
       created_at: now,
       last_activated: now,
+      valid_from: validFrom,
+      valid_until: validUntil || undefined,
+      invalidated_at: invalidatedAt || undefined,
     };
   }
 
-  async getRelationshipsForEntity(entityId: string): Promise<Relationship[]> {
-    const rows = await this.all<any>(
-      `SELECT * FROM relationships WHERE source_id = ? OR target_id = ? ORDER BY weight DESC`,
-      [entityId, entityId]
+  async invalidateRelationship(id: string, validUntil?: string): Promise<void> {
+    const now = new Date().toISOString();
+    const until = validUntil || now;
+    await this.run(
+      `UPDATE relationships
+       SET valid_until = ?, invalidated_at = ?
+       WHERE id = ?`,
+      [until, now, id]
     );
+  }
+
+  async getRelationshipsForEntity(entityId: string, includeHistorical: boolean = false): Promise<Relationship[]> {
+    const now = new Date().toISOString();
+    let query = `SELECT * FROM relationships WHERE (source_id = ? OR target_id = ?)`;
+    const params = [entityId, entityId];
+
+    if (!includeHistorical) {
+      query += ` AND (valid_until IS NULL OR valid_until > ?)`;
+      params.push(now);
+    }
+
+    query += ` ORDER BY weight DESC`;
+
+    const rows = await this.all<any>(query, params);
     return rows.map(row => ({
       id: row.id,
       source_id: row.source_id,
       target_id: row.target_id,
       type: row.type,
-      description: row.description,
+      description: row.description || undefined,
       weight: row.weight,
       created_at: row.created_at,
       last_activated: row.last_activated,
+      valid_from: row.valid_from,
+      valid_until: row.valid_until || undefined,
+      invalidated_at: row.invalidated_at || undefined,
     }));
   }
 
-  async getRelationships(limit: number = 200): Promise<Relationship[]> {
-    const rows = await this.all<any>(
-      'SELECT * FROM relationships ORDER BY weight DESC, last_activated DESC LIMIT ?',
-      [Math.max(1, Math.min(limit, 1000))]
-    );
+  async getRelationships(limit: number = 200, includeHistorical: boolean = false): Promise<Relationship[]> {
+    const now = new Date().toISOString();
+    let query = 'SELECT * FROM relationships';
+    const params: any[] = [];
+
+    if (!includeHistorical) {
+      query += ' WHERE (valid_until IS NULL OR valid_until > ?)';
+      params.push(now);
+    }
+
+    query += ' ORDER BY weight DESC, last_activated DESC LIMIT ?';
+    params.push(Math.max(1, Math.min(limit, 1000)));
+
+    const rows = await this.all<any>(query, params);
     return rows.map(row => ({
       id: row.id,
       source_id: row.source_id,
       target_id: row.target_id,
       type: row.type,
-      description: row.description,
+      description: row.description || undefined,
       weight: row.weight,
       created_at: row.created_at,
       last_activated: row.last_activated,
+      valid_from: row.valid_from,
+      valid_until: row.valid_until || undefined,
+      invalidated_at: row.invalidated_at || undefined,
     }));
   }
 
-  async getGraphNeighborhood(entityId: string, depth: number = 1): Promise<GraphNeighborhood> {
+  async getGraphNeighborhood(entityId: string, depth: number = 1, includeHistorical: boolean = false): Promise<GraphNeighborhood> {
     depth = Math.min(depth, 3);
     const nodes = new Map<string, Entity>();
     const edges: Relationship[] = [];
@@ -601,7 +668,7 @@ export class Database {
 
     while (queue.length > 0) {
       const { id, d } = queue.shift()!;
-      const rels = await this.getRelationshipsForEntity(id);
+      const rels = await this.getRelationshipsForEntity(id, includeHistorical);
       for (const rel of rels) {
         edges.push(rel);
         const neighborId = rel.source_id === id ? rel.target_id : rel.source_id;

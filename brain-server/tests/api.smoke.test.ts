@@ -3,6 +3,7 @@ import http from 'http';
 import { AddressInfo } from 'net';
 import initDatabase, { Database } from '../src/db/sqlite.js';
 import { createServer } from '../src/api/routes.js';
+import { decodeEmbedding } from '../src/utils/math.js';
 
 // 端到端 smoke：启动真实 HTTP 服务，验证关键路由不再因路由顺序、
 // CORS 头、参数 404 等问题而被静默打断。
@@ -170,7 +171,7 @@ describe('API smoke: ingest file', () => {
     expect(typeof body.relationships).toBe('number');
     expect(typeof body.archivalId).toBe('string');
     expect(body.archivalId.length).toBeGreaterThan(0);
-  });
+  }, 30000);
 
   it('rejects unsupported contentType with 415', async () => {
     const base64 = Buffer.from('binary', 'utf-8').toString('base64');
@@ -209,3 +210,98 @@ describe('API smoke: admin export', () => {
     expect(headers['content-disposition']).toContain('attachment');
   });
 });
+
+describe('API smoke: admin seed demo', () => {
+  it('imports seed demo data successfully when db is empty and skips on subsequent requests', async () => {
+    // 0. 清空数据库，以防前述测试污染
+    const cleanRes = await request('POST', '/api/admin/import', {
+      version: 1,
+      mode: 'replace',
+      exportedAt: new Date().toISOString(),
+      entities: [],
+      relationships: [],
+      coreMemory: [],
+      archivalMemory: [],
+      notifications: [],
+    });
+    expect(cleanRes.status).toBe(200);
+
+    // 1. 发起 seed 导入
+    const res1 = await request('POST', '/api/admin/seed-demo');
+    expect(res1.status).toBe(200);
+    expect(res1.body).toMatchObject({
+      success: true,
+      imported: {
+        entities: expect.any(Number),
+        relationships: expect.any(Number),
+        coreMemory: expect.any(Number),
+        archivalMemory: expect.any(Number),
+        notifications: expect.any(Number),
+      },
+    });
+    expect(res1.body.imported.entities).toBeGreaterThan(0);
+    expect(res1.body.imported.relationships).toBe(36);
+
+    // 2. 第二次发起 seed 导入，应该被幂等拦截跳过
+    const res2 = await request('POST', '/api/admin/seed-demo');
+    expect(res2.status).toBe(200);
+    expect(res2.body).toEqual({
+      skipped: true,
+      reason: '图谱已非空',
+    });
+
+    // 3. 验证数据确实已存在
+    const { body: backup } = await request('GET', '/api/admin/export');
+    expect(backup.entities.length).toBe(res1.body.imported.entities);
+    expect(backup.relationships.length).toBe(36);
+    expect(backup.coreMemory.length).toBe(res1.body.imported.coreMemory);
+    expect(backup.archivalMemory.length).toBe(res1.body.imported.archivalMemory);
+    expect(backup.notifications.length).toBe(res1.body.imported.notifications);
+  });
+
+  it('assigns embeddings to archival memory on seed-demo and allows semantic retrieval', async () => {
+    const { body: backup } = await request('GET', '/api/admin/export');
+    expect(backup.archivalMemory.length).toBeGreaterThan(0);
+    for (const item of backup.archivalMemory) {
+      expect(item.embedding).toBeDefined();
+      expect(item.embedding).not.toBeNull();
+    }
+
+    const searchRes = await request('POST', '/api/memory/archival/search', {
+      query: 'Letta 范式',
+      limit: 2,
+    });
+    expect(searchRes.status).toBe(200);
+    expect(searchRes.body.length).toBeGreaterThan(0);
+    expect(searchRes.body[0].item.content).toContain('Letta');
+  });
+
+  it('correctly builds search indexes (FTS5 and SQLite-Vec) after importing a backup', async () => {
+    const { body: backup } = await request('GET', '/api/admin/export');
+    expect(backup.entities.length).toBeGreaterThan(0);
+
+    const importRes = await request('POST', '/api/admin/import', {
+      ...backup,
+      mode: 'replace',
+    });
+    expect(importRes.status).toBe(200);
+
+    const ftsRes = await request('POST', '/api/entities/search', {
+      query: '代码安全性优先',
+    });
+    expect(ftsRes.status).toBe(200);
+    expect(ftsRes.body.length).toBeGreaterThan(0);
+    expect(ftsRes.body[0].name).toContain('代码安全性优先');
+
+    const entitiesWithEmbedding = await db.all<any>('SELECT id, name, embedding FROM entities WHERE embedding IS NOT NULL');
+    expect(entitiesWithEmbedding.length).toBeGreaterThan(0);
+    const sampleEntity = entitiesWithEmbedding[0];
+    const storedEmbedding = decodeEmbedding(sampleEntity.embedding);
+
+    const vectorResults = await db.vectorSearch(storedEmbedding, 5);
+    expect(vectorResults.length).toBeGreaterThan(0);
+    const found = vectorResults.some(r => r.id === sampleEntity.id);
+    expect(found).toBe(true);
+  });
+});
+

@@ -343,6 +343,7 @@ export class GraphRAGExtractor {
             weight: 1.0,
             created_at: now,
             last_activated: now,
+            valid_from: now,
           });
         }
 
@@ -549,6 +550,7 @@ export class GraphRAGExtractor {
                   weight: 1.0,
                   created_at: now,
                   last_activated: now,
+                  valid_from: now,
                 });
               }
             }
@@ -602,6 +604,7 @@ export class GraphRAGExtractor {
             weight: 0.8,
             created_at: now,
             last_activated: now,
+            valid_from: now,
           });
         }
       }
@@ -623,6 +626,7 @@ export class GraphRAGExtractor {
             weight: 0.6,
             created_at: now,
             last_activated: now,
+            valid_from: now,
           });
         }
       }
@@ -732,6 +736,10 @@ export class GraphRAGExtractor {
       apiKey: this.config.llmApiKey || process.env.LLM_API_KEY || '',
       model: this.config.llmModel || process.env.LLM_MODEL || 'qwen2.5:7b',
     };
+  }
+
+  isLlmEnabled(): boolean {
+    return this.llmPipeline.isEnabled();
   }
 
   clearCache(): void {

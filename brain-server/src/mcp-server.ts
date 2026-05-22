@@ -11,12 +11,46 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import initDatabase, { Database } from './db/sqlite.js';
 import { GraphRAGExtractor } from './graphrag/extractor.js';
+import { resolveConflicts } from './graphrag/conflict-resolver.js';
+import { resolveEntities } from './graphrag/entity-resolver.js';
 import { EmbeddingService } from './embedding/service.js';
 import { MemoryDecayScheduler } from './memory/decay-scheduler.js';
 import { AgentLoop } from './agent/agent-loop.js';
 import { createServer } from './api/routes.js';
 import { z } from 'zod';
-import type { EntityType, RelationshipType } from './shared-types.js';
+import { v4 as uuidv4 } from 'uuid';
+import type { EntityType, RelationshipType, Entity } from './shared-types.js';
+
+/**
+ * 精简实体，丢弃 embedding 和 metadata，保留关键字段，并截断 description。
+ */
+export function toCompactEntity(entity: any): any {
+  if (!entity) return entity;
+
+  let description = entity.description;
+  if (typeof description === 'string' && description.length > 200) {
+    description = description.substring(0, 200) + '...';
+  }
+
+  const compact: any = {
+    id: entity.id,
+    name: entity.name,
+    type: entity.type,
+    tags: entity.tags,
+    created_at: entity.created_at,
+    access_count: entity.access_count,
+  };
+
+  if (description !== undefined) {
+    compact.description = description;
+  }
+
+  if (entity.similarity !== undefined) {
+    compact.similarity = entity.similarity;
+  }
+
+  return compact;
+}
 
 const RecordCaptureSchema = z.object({
   screenshot: z.string().optional(),
@@ -418,7 +452,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           } else {
             entities = await this.db.searchEntities(query, limit);
           }
-          return this.formatResponse(entities);
+          return this.formatResponse(entities.map(toCompactEntity));
         }
 
         case 'add_entity': {
@@ -452,7 +486,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             throw new McpError(ErrorCode.InvalidRequest, `实体未找到: ${args.id}`);
           }
           const relationships = await this.db.getRelationshipsForEntity(entity.id);
-          return this.formatResponse({ entity, relationships });
+          return this.formatResponse({ entity: toCompactEntity(entity), relationships });
         }
 
         case 'add_relationship': {
@@ -478,6 +512,9 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
         case 'get_graph_neighborhood': {
           const parsed = GetGraphNeighborhoodSchema.parse(args);
           const neighborhood = await this.db.getGraphNeighborhood(parsed.entityId, parsed.depth);
+          if (neighborhood && neighborhood.nodes) {
+            neighborhood.nodes = neighborhood.nodes.map(toCompactEntity);
+          }
           return this.formatResponse(neighborhood);
         }
 
@@ -490,13 +527,16 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             timestamp: new Date().toISOString(),
           };
           const result = await this.extractor.extract(input);
+          // 实体消解与重映射
+          const resolution = await resolveEntities(result.entities, result.relationships, this.db);
+
           const savedEntities = [];
           const savedRelationships = [];
 
           // 先并发生成所有实体的 embedding（带并发上限），再串行落库以避免 SQLite 写竞争
           const EMBED_CONCURRENCY = 4;
-          for (let i = 0; i < result.entities.length; i += EMBED_CONCURRENCY) {
-            const batch = result.entities.slice(i, i + EMBED_CONCURRENCY);
+          for (let i = 0; i < resolution.entitiesToCreate.length; i += EMBED_CONCURRENCY) {
+            const batch = resolution.entitiesToCreate.slice(i, i + EMBED_CONCURRENCY);
             await Promise.all(batch.map(async (entity) => {
               try {
                 const embeddingText = `${entity.name}: ${entity.description || ''}`;
@@ -508,7 +548,22 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }));
           }
 
-          for (const entity of result.entities) {
+          // 对于有描述更新的已有实体，也预先计算 embedding 并附加到更新项中
+          const updateEmbedCandidates = resolution.entitiesToUpdate.filter(u => u.description);
+          for (let i = 0; i < updateEmbedCandidates.length; i += EMBED_CONCURRENCY) {
+            const batch = updateEmbedCandidates.slice(i, i + EMBED_CONCURRENCY);
+            await Promise.all(batch.map(async (updateItem) => {
+              try {
+                const embeddingText = `${updateItem.name}: ${updateItem.description || ''}`;
+                const embResult = await this.embeddingService.embed(embeddingText);
+                updateItem.embedding = embResult.embedding;
+              } catch {
+                // embedding 失败不阻塞
+              }
+            }));
+          }
+
+          for (const entity of resolution.entitiesToCreate) {
             const saved = await this.db.addEntity(entity);
             savedEntities.push(saved);
             if (parsed.captureId) {
@@ -522,7 +577,35 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }
           }
 
-          for (const relationship of result.relationships) {
+          for (const update of resolution.entitiesToUpdate) {
+            await this.db.updateEntity(update.id, {
+              description: update.description,
+              tags: update.tags,
+              embedding: update.embedding,
+            });
+            const current = await this.db.peekEntity(update.id);
+            if (current) {
+              savedEntities.push(current);
+            }
+            if (parsed.captureId) {
+              await this.db.addRelationship({
+                source_id: parsed.captureId,
+                target_id: update.id,
+                type: 'extracted_from',
+                description: '从capture提取的实体',
+                weight: 1.0,
+              });
+            }
+          }
+
+          // 自动冲突检测与消解
+          try {
+            await resolveConflicts(resolution.relationshipsToCreate, this.db, this.extractor);
+          } catch (err) {
+            console.error('[MCP extract_from_capture] Conflict resolution failed:', err);
+          }
+
+          for (const relationship of resolution.relationshipsToCreate) {
             try {
               const saved = await this.db.addRelationship(relationship);
               savedRelationships.push(saved);
@@ -535,26 +618,51 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }
           }
 
-          for (const principle of result.principles) {
-            const saved = await this.db.addEntity({
-              name: principle.title,
-              type: 'principle',
-              description: principle.content,
-              tags: ['auto_extracted'],
-              metadata: {
-                isCore: principle.isCore,
-                version: principle.version || 1,
-              },
-            });
+          // 原则实体走消解，避免重复 capture 产生重复原则
+          const principleNow = new Date().toISOString();
+          const principleEntities = result.principles.map((principle): Entity => ({
+            id: uuidv4(),
+            name: principle.title,
+            type: 'principle',
+            description: principle.content,
+            created_at: principleNow,
+            updated_at: principleNow,
+            last_accessed: principleNow,
+            access_count: 0,
+            tags: ['auto_extracted'],
+            metadata: {
+              isCore: principle.isCore,
+              version: principle.version || 1,
+            },
+          }));
+          const principleResolution = await resolveEntities(principleEntities, [], this.db);
+          for (const entity of principleResolution.entitiesToCreate) {
+            const saved = await this.db.addEntity(entity);
             savedEntities.push(saved);
-            if (parsed.captureId) {
-              await this.db.addRelationship({
-                source_id: parsed.captureId,
-                target_id: saved.id,
-                type: 'extracted_from',
-                description: '从capture提取的原则',
-                weight: 1.0,
-              });
+          }
+          for (const update of principleResolution.entitiesToUpdate) {
+            await this.db.updateEntity(update.id, {
+              description: update.description,
+              tags: update.tags,
+            });
+          }
+          if (parsed.captureId) {
+            for (const pe of principleEntities) {
+              const resolvedId = principleResolution.idMap[pe.id] || pe.id;
+              try {
+                await this.db.addRelationship({
+                  source_id: parsed.captureId,
+                  target_id: resolvedId,
+                  type: 'extracted_from',
+                  description: '从capture提取的原则',
+                  weight: 1.0,
+                });
+              } catch (e) {
+                const msg = e instanceof Error ? e.message : String(e);
+                if (!msg.includes('UNIQUE constraint')) {
+                  console.error(`[extract_from_capture] 原则关系保存失败:`, msg);
+                }
+              }
             }
           }
 
@@ -574,7 +682,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             ? await this.db.getEntitiesByType(type)
             : await this.db.getRecentEntities(limit);
 
-          return this.formatResponse(entities.slice(0, limit));
+          return this.formatResponse(entities.slice(0, limit).map(toCompactEntity));
         }
 
         case 'update_entity': {
@@ -604,7 +712,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           try {
             const embResult = await this.embeddingService.embed(query);
             const results = await this.db.vectorSearch(embResult.embedding, args.limit as number || 10);
-            return this.formatResponse(results);
+            return this.formatResponse(results.map(toCompactEntity));
           } catch (e) {
             console.warn('[vector_search] 失败:', e);
             return this.formatResponse({ results: [], error: '向量搜索失败' });
@@ -651,9 +759,14 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }
           }
 
+          let graphContext = results.graphContext;
+          if (graphContext && graphContext.nodes) {
+            graphContext.nodes = graphContext.nodes.map(toCompactEntity);
+          }
+
           return this.formatResponse({
-            results: unified.slice(0, limit * 2),
-            graphContext: results.graphContext,
+            results: unified.slice(0, limit * 2).map(toCompactEntity),
+            graphContext,
             searchMethods: {
               text: results.textResults.length,
               vector: results.vectorResults.length,
@@ -733,12 +846,19 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }
           }
 
+          const compactPrinciples = principles.map(toCompactEntity);
+          const compactRelevantMemories = relevantMemories.map(toCompactEntity);
+          const compactGraphContext = graphContext && graphContext.nodes ? {
+            ...graphContext,
+            nodes: graphContext.nodes.map(toCompactEntity)
+          } : graphContext;
+
           return this.formatResponse({
             situation,
-            principles,
-            relevantMemories,
+            principles: compactPrinciples,
+            relevantMemories: compactRelevantMemories,
             conflicts: conflictPairs,
-            graphContext,
+            graphContext: compactGraphContext,
           });
         }
 
@@ -867,7 +987,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
     this.agentLoop = new AgentLoop(this.db);
     this.agentLoop.start(insightIntervalMs);
 
-    const httpServer = createServer(this.db, this.agentLoop);
+    const httpServer = createServer(this.db, this.agentLoop, this.embeddingService);
     // 端口冲突场景：用户既开桌面应用、又通过 MCP 接 Claude Desktop / Cursor，
     // 第二个实例无法绑定 3001，但 MCP stdio 仍可工作。这里捕获 EADDRINUSE 让进程
     // 不会因 listen 错误未处理而 crash。
