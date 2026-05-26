@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { Brain, Code, FileText, Zap, Shield, TrendingUp, Info, Maximize2, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock } from "lucide-react";
+import { Brain, Code, FileText, Zap, Shield, TrendingUp, Info, Maximize2, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { BRAIN_URL } from '@/lib/config';
+import { getRelationshipStyle } from '@/lib/relationship-styles';
 
 // 3D 图谱节点数据结构
 interface GraphNode {
@@ -20,6 +21,8 @@ interface GraphNode {
   accessCount: number;
   connections: number;
   lastAccessed?: string;
+  created_at?: string;
+  freshness?: number; // 0-1, 今天=1, 30+天=0
 }
 
 interface GraphLink {
@@ -105,36 +108,43 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
 }
 
-function relativeTime(iso: string): string {
-  if (!iso) return '';
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return '';
-  const diff = Date.now() - then;
-  const sec = Math.floor(diff / 1000);
-  if (sec < 60) return '刚刚';
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min} 分钟前`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr} 小时前`;
-  const day = Math.floor(hr / 24);
-  if (day < 30) return `${day} 天前`;
-  const mo = Math.floor(day / 30);
-  if (mo < 12) return `${mo} 个月前`;
-  const yr = Math.floor(mo / 12);
-  return `${yr} 年前`;
-}
 
 interface GraphViewer3DProps {
   entities: Entity[];
   relationships: Relationship[];
   onDataChanged?: () => void;
+  focusEntityId?: string;
+  onFocusEntityReset?: () => void;
 }
 
-
-
-export default function GraphViewer3D({ entities, relationships, onDataChanged }: GraphViewer3DProps) {
+export default function GraphViewer3D({ 
+  entities, 
+  relationships, 
+  onDataChanged,
+  focusEntityId,
+  onFocusEntityReset
+}: GraphViewer3DProps) {
   const { t } = useTranslation();
   const toast = useToast();
+
+  function relativeTime(iso: string): string {
+    if (!iso) return '';
+    const then = new Date(iso).getTime();
+    if (Number.isNaN(then)) return '';
+    const diff = Date.now() - then;
+    const sec = Math.floor(diff / 1000);
+    if (sec < 60) return t('graph.just_now');
+    const min = Math.floor(sec / 60);
+    if (min < 60) return t('graph.minutes_ago').replace('{n}', String(min));
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return t('graph.hours_ago').replace('{n}', String(hr));
+    const day = Math.floor(hr / 24);
+    if (day < 30) return t('graph.days_ago').replace('{n}', String(day));
+    const mo = Math.floor(day / 30);
+    if (mo < 12) return t('graph.months_ago').replace('{n}', String(mo));
+    const yr = Math.floor(mo / 12);
+    return t('graph.years_ago').replace('{n}', String(yr));
+  }
   const { confirm, dialog } = useConfirm();
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
@@ -162,6 +172,35 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
   // 时间轴：null 表示不筛选；否则只显示 created_at <= timeFilter 的节点
   const [timeFilter, setTimeFilter] = useState<number | null>(null);
   const [showTimeSlider, setShowTimeSlider] = useState(false);
+
+  // Legend 高亮 + 折叠状态
+  const [legendHighlightType, setLegendHighlightType] = useState<string | null>(null);
+  const [legendExpanded, setLegendExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('omni_graph_legend_expanded') !== 'false';
+  });
+
+  // 多选模式
+  const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
+  const isMultiSelect = selectedNodeIds.size > 1;
+
+  // 撤销删除缓存
+  const pendingDeletesRef = useRef<{
+    entities: Entity[];
+    relationships: Relationship[];
+  } | null>(null);
+  const undoToastIdRef = useRef<string | null>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 聚焦脉冲动画
+  const focusAnimRef = useRef<{ nodeId: string; startTime: number } | null>(null);
+  const focusAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toggleLegendExpand = useCallback(() => {
+    setLegendExpanded((prev) => {
+      const next = !prev;
+      localStorage.setItem('omni_graph_legend_expanded', String(next));
+      return next;
+    });
+  }, []);
 
   // 动态加载 3D 图谱库
   useEffect(() => {
@@ -253,23 +292,46 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
       connCount[r.target_id] = (connCount[r.target_id] || 0) + 1;
     });
 
-    const nodes: GraphNode[] = visibleEntities.map((entity) => {
-      const conn = connCount[entity.id] || 0;
-      // 大小综合 access_count + 连接度：枢纽节点更大，孤立节点小
-      const score = (entity.access_count || 0) * 0.6 + conn * 1.2;
-      return {
-        id: entity.id,
-        name: entity.name,
-        type: entity.type,
-        description: entity.description,
-        val: Math.max(4, Math.min(25, score + 5)),
-        color: TYPE_COLORS[entity.type] || "#94a3b8",
-        glyph: TYPE_GLYPHS[entity.type] || '•',
-        accessCount: entity.access_count || 0,
-        connections: conn,
-        lastAccessed: entity.last_accessed,
-      };
-    });
+    const nodes: GraphNode[] = (() => {
+      // 归一化 access_count：避免单个极大值垄断尺寸
+      const maxAccess = visibleEntities.reduce(
+        (max, e) => Math.max(max, e.access_count || 0), 0
+      );
+      const accessNorm = (entity: Entity) =>
+        maxAccess > 0 ? (entity.access_count || 0) / maxAccess : 0;
+
+      const now = Date.now(); // 一次性获取，所有节点共用
+      return visibleEntities.map((entity) => {
+        const conn = connCount[entity.id] || 0;
+        // size = base + scale * access_count_norm, principle +2, max 12
+        const base = 4;
+        const scale = 8;
+        const principleBonus = entity.type === 'principle' ? 2 : 0;
+        const val = Math.min(12, base + scale * accessNorm(entity) + principleBonus);
+        // 预计算 freshness：7 天内=1→0.77, 30 天内线性衰减到 0
+        let freshness = 0;
+        if (entity.created_at) {
+          const ageDays = (now - new Date(entity.created_at).getTime()) / 86400000;
+          if (ageDays < 30) {
+            freshness = Math.max(0, 1 - ageDays / 30);
+          }
+        }
+        return {
+          id: entity.id,
+          name: entity.name,
+          type: entity.type,
+          description: entity.description,
+          val,
+          color: TYPE_COLORS[entity.type] || "#94a3b8",
+          glyph: TYPE_GLYPHS[entity.type] || '•',
+          accessCount: entity.access_count || 0,
+          connections: conn,
+          lastAccessed: entity.last_accessed,
+          created_at: entity.created_at,
+          freshness,
+        };
+      });
+    })();
 
     const nodeIds = new Set(visibleEntities.map((e) => e.id));
     let visibleRels = relationships.filter(
@@ -302,17 +364,14 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
     }
 
     const links: GraphLink[] = visibleRels.map((rel) => {
-      const base = RELATIONSHIP_COLORS[rel.type] || '#64748b';
-      // 透明度反映权重，让强关系更亮
-      const alpha = Math.min(1, (rel.weight || 1) * 0.35 + 0.35);
-      const color = hexToRgba(base, alpha);
+      const style = getRelationshipStyle(rel.type);
       return {
         source: rel.source_id,
         target: rel.target_id,
         type: rel.type,
         description: rel.description,
         weight: rel.weight,
-        color,
+        color: style.color,
       };
     });
 
@@ -320,9 +379,26 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
   }, [relationships, visibleEntities, mstMode]);
 
   const handleNodeClick = useCallback(
-    (node: any) => {
+    (node: any, event?: MouseEvent) => {
+      const isModifier = event?.ctrlKey || event?.metaKey;
       const entity = entities.find((e) => e.id === node.id);
       setSelectedNode(entity || null);
+
+      if (isModifier) {
+        // Ctrl/Cmd+点击：切换多选
+        setSelectedNodeIds((prev) => {
+          const next = new Set(prev);
+          if (next.has(node.id)) {
+            next.delete(node.id);
+          } else {
+            next.add(node.id);
+          }
+          return next;
+        });
+      } else {
+        // 普通点击：单选
+        setSelectedNodeIds(new Set([node.id]));
+      }
 
       // 聚焦到点击的节点
       if (graphRef.current && is3D) {
@@ -354,6 +430,45 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
     },
     [graphData.nodes, entities, handleNodeClick]
   );
+
+  useEffect(() => {
+    if (focusEntityId) {
+      const timer = setTimeout(() => {
+        // 触发聚焦脉冲动画：先清理旧动画再启动新动画
+        if (focusAnimTimerRef.current) clearTimeout(focusAnimTimerRef.current);
+        focusAnimRef.current = { nodeId: focusEntityId, startTime: Date.now() };
+        focusAnimTimerRef.current = setTimeout(() => {
+          focusAnimRef.current = null;
+          focusAnimTimerRef.current = null;
+        }, 500);
+
+        focusNodeById(focusEntityId);
+        onFocusEntityReset?.();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [focusEntityId, focusNodeById, onFocusEntityReset]);
+
+  // 组件卸载时清理动画 timer
+  useEffect(() => {
+    return () => {
+      if (focusAnimTimerRef.current) {
+        clearTimeout(focusAnimTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Esc 退出多选模式
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedNodeIds.size > 0) {
+        setSelectedNodeIds(new Set());
+        setSelectedNode(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedNodeIds.size]);
 
   // 进入编辑模式：把当前选中节点字段填到表单
   const enterEditMode = useCallback(() => {
@@ -389,50 +504,169 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      toast.success("已保存", `${editName} 更新成功`);
+      toast.success(t('toast.graph_saved'), t('toast.graph_saved_detail').replace('{name}', editName));
       setEditMode(false);
       onDataChanged?.();
     } catch (err) {
-      toast.error("保存失败", String(err));
+      toast.error(t('toast.graph_save_failed'), String(err));
     } finally {
       setBusy(false);
     }
   }, [selectedNode, busy, editName, editType, editDesc, editTags, toast, onDataChanged]);
 
+  // 计算删除影响：给定一组 entityId，统计受影响的出入向关系
+  const getRelationImpact = useCallback((entityIds: string[]) => {
+    const idSet = new Set(entityIds);
+    let total = 0;
+    let inbound = 0;
+    let outbound = 0;
+    relationships.forEach((r) => {
+      if (idSet.has(r.source_id) && idSet.has(r.target_id)) {
+        total++;
+      } else if (idSet.has(r.source_id)) {
+        total++;
+        outbound++;
+      } else if (idSet.has(r.target_id)) {
+        total++;
+        inbound++;
+      }
+    });
+    return { total, inbound, outbound };
+  }, [relationships]);
+
   const handleDelete = useCallback(async () => {
     if (!selectedNode || busy) return;
+    const impact = getRelationImpact([selectedNode.id]);
     const ok = await confirm({
-      title: "删除节点",
-      message: `确认删除节点 "${selectedNode.name}"？\n\n它的所有关系也会一起被清除，操作不可撤销。`,
-      confirmText: "删除",
+      title: t('confirm.delete_node_title'),
+      message: t('confirm.delete_node_message_single')
+        .replace('{name}', selectedNode.name)
+        .replace('{total}', String(impact.total))
+        .replace('{inbound}', String(impact.inbound))
+        .replace('{outbound}', String(impact.outbound)),
+      confirmText: t('confirm.delete_confirm_text'),
       destructive: true,
     });
     if (!ok) return;
+
+    // 缓存数据用于撤销
+    const deletedEntity = entities.find((e) => e.id === selectedNode.id);
+    const affectedRels = relationships.filter(
+      (r) => r.source_id === selectedNode.id || r.target_id === selectedNode.id
+    );
+    pendingDeletesRef.current = {
+      entities: deletedEntity ? [deletedEntity] : [],
+      relationships: affectedRels,
+    };
+
     setBusy(true);
     try {
       const res = await fetch(`${BRAIN_URL}/api/entities/${selectedNode.id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      toast.success("已删除", `${selectedNode.name} 及其关系已移除`);
       setSelectedNode(null);
+      setSelectedNodeIds(new Set());
       onDataChanged?.();
+
+      // 显示撤销 toast
+      const undoAction = (
+        <button
+          onClick={() => handleUndoDelete()}
+          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-cyan-600/80 hover:bg-cyan-500 text-white rounded-md transition-colors"
+        >
+          <Undo2 className="w-3 h-3" />
+          {t('graph.undo')}
+        </button>
+      );
+      undoToastIdRef.current = toast.info(
+        t('toast.graph_deleted_undo').replace('{name}', selectedNode.name),
+        undefined,
+        { duration: 10000, action: undoAction }
+      );
+      // 10 秒后清除撤销缓存
+      undoTimerRef.current = setTimeout(() => {
+        pendingDeletesRef.current = null;
+        undoToastIdRef.current = null;
+      }, 10000);
     } catch (err) {
-      toast.error("删除失败", String(err));
+      pendingDeletesRef.current = null;
+      toast.error(t('toast.graph_delete_failed'), String(err));
     } finally {
       setBusy(false);
     }
-  }, [selectedNode, busy, toast, onDataChanged, confirm]);
+  }, [selectedNode, busy, toast, onDataChanged, confirm, getRelationImpact, entities, relationships]);
+
+  // 撤销删除：用缓存数据 POST 重建实体和关系
+  const handleUndoDelete = useCallback(async () => {
+    const pending = pendingDeletesRef.current;
+    if (!pending || pending.entities.length === 0) return;
+    pendingDeletesRef.current = null;
+    if (undoTimerRef.current) { clearTimeout(undoTimerRef.current); undoTimerRef.current = null; }
+    if (undoToastIdRef.current) { toast.dismiss(undoToastIdRef.current); undoToastIdRef.current = null; }
+
+    setBusy(true);
+    const oldToNew: Record<string, string> = {};
+    try {
+      // 重建实体
+      for (const entity of pending.entities) {
+        const res = await fetch(`${BRAIN_URL}/api/entities`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: entity.name,
+            type: entity.type,
+            description: entity.description,
+            tags: entity.tags,
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const created = await res.json();
+        oldToNew[entity.id] = created.id;
+      }
+      // 重建关系
+      for (const rel of pending.relationships) {
+        const newSourceId = oldToNew[rel.source_id];
+        const newTargetId = oldToNew[rel.target_id];
+        if (!newSourceId || !newTargetId) continue;
+        await fetch(`${BRAIN_URL}/api/relationships`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sourceId: newSourceId,
+            targetId: newTargetId,
+            type: rel.type,
+            description: rel.description,
+            weight: rel.weight,
+          }),
+        });
+      }
+      toast.success(
+        t('toast.graph_restored').replace('{count}', String(pending.entities.length)),
+        t('toast.graph_restored_detail').replace('{rels}', String(pending.relationships.length))
+      );
+      onDataChanged?.();
+    } catch (err) {
+      toast.error(t('toast.graph_restore_failed'), String(err));
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, toast, onDataChanged]);
 
   const handleMerge = useCallback(
     async (targetId: string) => {
       if (!selectedNode || busy) return;
       const target = entities.find((e) => e.id === targetId);
       if (!target) return;
+      // 计算合并影响：源节点的关系数
+      const impact = getRelationImpact([selectedNode.id]);
       const ok = await confirm({
-        title: "合并节点",
-        message: `把 "${selectedNode.name}" 合并到 "${target.name}"？\n\n源节点的关系和标签会迁移到目标节点，源节点会被删除。`,
-        confirmText: "合并",
+        title: t('confirm.merge_node_title'),
+        message: t('confirm.merge_node_message_enhanced')
+          .replace('{source}', selectedNode.name)
+          .replace('{target}', target.name)
+          .replace('{total}', String(impact.total)),
+        confirmText: t('confirm.merge_confirm_text'),
         destructive: true,
       });
       if (!ok) return;
@@ -449,8 +683,8 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
         }
         const data = await res.json();
         toast.success(
-          "合并完成",
-          `迁移 ${data.moved} 条关系，丢弃 ${data.dropped} 条自环`
+          t('toast.graph_merge_done'),
+          t('toast.graph_merge_done_detail').replace('{moved}', String(data.moved)).replace('{dropped}', String(data.dropped))
         );
         setMergeMode(false);
         setMergeQuery("");
@@ -458,13 +692,16 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
         setSelectedNode(target);
         onDataChanged?.();
       } catch (err) {
-        toast.error("合并失败", String(err));
+        toast.error(t('toast.graph_merge_failed'), String(err));
       } finally {
         setBusy(false);
       }
     },
-    [selectedNode, busy, entities, toast, onDataChanged, confirm]
+    [selectedNode, busy, entities, toast, onDataChanged, confirm, getRelationImpact]
   );
+
+  const [showBatchTagInput, setShowBatchTagInput] = useState(false);
+  const [batchTagText, setBatchTagText] = useState("");
 
   // 合并目标候选
   const mergeCandidates = useMemo(() => {
@@ -486,7 +723,111 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
     setEditMode(false);
     setMergeMode(false);
     setMergeQuery("");
+    // 切换到非多选模式时重置
+    if (!isMultiSelect) {
+      // 留给单选的干净状态
+    }
   }, [selectedNode?.id]);
+
+  // 批量删除：一次性删除多个实体
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedNodeIds.size === 0 || busy) return;
+    const ids = Array.from(selectedNodeIds);
+    const impact = getRelationImpact(ids);
+    const targetEntities = entities.filter((e) => ids.includes(e.id));
+    const names = targetEntities.map((e) => e.name).slice(0, 5).join(', ');
+    const moreText = targetEntities.length > 5 ? ` +${targetEntities.length - 5}` : '';
+    const ok = await confirm({
+      title: t('confirm.batch_delete_title').replace('{count}', String(ids.length)),
+      message: t('confirm.batch_delete_message')
+        .replace('{count}', String(ids.length))
+        .replace('{names}', names + moreText)
+        .replace('{total}', String(impact.total))
+        .replace('{inbound}', String(impact.inbound))
+        .replace('{outbound}', String(impact.outbound)),
+      confirmText: t('confirm.delete_confirm_text'),
+      destructive: true,
+    });
+    if (!ok) return;
+
+    // 缓存用于撤销
+    const affectedRels = relationships.filter(
+      (r) => ids.includes(r.source_id) || ids.includes(r.target_id)
+    );
+    pendingDeletesRef.current = {
+      entities: targetEntities,
+      relationships: affectedRels,
+    };
+
+    setBusy(true);
+    try {
+      // 批量删除：逐个调 API
+      for (const id of ids) {
+        const res = await fetch(`${BRAIN_URL}/api/entities/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error(`HTTP ${res.status} on ${id}`);
+      }
+      setSelectedNode(null);
+      setSelectedNodeIds(new Set());
+      onDataChanged?.();
+
+      const undoAction = (
+        <button
+          onClick={() => handleUndoDelete()}
+          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-cyan-600/80 hover:bg-cyan-500 text-white rounded-md transition-colors"
+        >
+          <Undo2 className="w-3 h-3" />
+          {t('graph.undo')}
+        </button>
+      );
+      undoToastIdRef.current = toast.info(
+        t('toast.graph_batch_deleted_undo').replace('{count}', String(ids.length)),
+        undefined,
+        { duration: 10000, action: undoAction }
+      );
+      undoTimerRef.current = setTimeout(() => {
+        pendingDeletesRef.current = null;
+        undoToastIdRef.current = null;
+      }, 10000);
+    } catch (err) {
+      pendingDeletesRef.current = null;
+      toast.error(t('toast.graph_delete_failed'), String(err));
+    } finally {
+      setBusy(false);
+    }
+  }, [selectedNodeIds, busy, toast, onDataChanged, confirm, getRelationImpact, entities, relationships, handleUndoDelete]);
+
+  // 批量加标签
+  const handleBatchTag = useCallback(async () => {
+    const tagText = batchTagText.trim();
+    if (!tagText || selectedNodeIds.size === 0 || busy) return;
+    const tags = tagText.split(/[,、]/).map((t) => t.trim()).filter(Boolean);
+    if (tags.length === 0) return;
+    setBusy(true);
+    const ids = Array.from(selectedNodeIds);
+    try {
+      for (const id of ids) {
+        const entity = entities.find((e) => e.id === id);
+        if (!entity) continue;
+        const existingTags = entity.tags || [];
+        const mergedTags = Array.from(new Set([...existingTags, ...tags]));
+        await fetch(`${BRAIN_URL}/api/entities/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tags: mergedTags }),
+        });
+      }
+      toast.success(
+        t('toast.graph_batch_tagged').replace('{count}', String(ids.length)).replace('{tags}', tags.join(', '))
+      );
+      setBatchTagText("");
+      setShowBatchTagInput(false);
+      onDataChanged?.();
+    } catch (err) {
+      toast.error(t('toast.graph_tag_failed'), String(err));
+    } finally {
+      setBusy(false);
+    }
+  }, [batchTagText, selectedNodeIds, busy, entities, toast, onDataChanged]);
 
   const handleSearchKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -512,11 +853,24 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
   const nodeCanvasObject = useCallback(
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const isHover = node.id === hovered;
-      const isSelected = selectedNode?.id === node.id;
-      // 选中某个节点时，其它节点会被淡化以突出焦点
-      const dimmed = !!selectedNode && !isSelected && !isHover;
+      const isSelected = selectedNode?.id === node.id || selectedNodeIds.has(node.id);
+      // 选中某个节点时，其它节点会被淡化以突出焦点；
+      // Legend 高亮时非匹配类型节点也会淡化
+      const dimmed = ((!!selectedNode || selectedNodeIds.size > 0) && !isSelected && !isHover)
+        || (!!legendHighlightType && node.type !== legendHighlightType);
       const sizeScale = isHover || isSelected ? 1.25 : 1;
-      const nodeSize = (node.val || 5) * sizeScale;
+      let nodeSize = (node.val || 5) * sizeScale;
+
+      // 聚焦脉冲动画：缩放脉冲 1x → 1.4x → 1x（500ms，sine 曲线）
+      let focusPulseProgress = 0;
+      const focusAnim = focusAnimRef.current;
+      if (focusAnim && focusAnim.nodeId === node.id) {
+        focusPulseProgress = Math.min(1, (Date.now() - focusAnim.startTime) / 500);
+      }
+      if (focusPulseProgress > 0 && focusPulseProgress < 1) {
+        const pulseScale = 1 + 0.4 * Math.sin(focusPulseProgress * Math.PI);
+        nodeSize *= pulseScale;
+      }
 
       // 外层柔光
       const glowAlpha = dimmed ? 0.05 : isHover || isSelected ? 0.6 : 0.25;
@@ -537,10 +891,31 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
       ctx.fillStyle = dimmed ? hexToRgba(node.color, 0.25) : node.color;
       ctx.fill();
 
+      // 聚焦涟漪：从节点中心向外辐射的 expanding circle
+      if (focusPulseProgress > 0 && focusPulseProgress < 1) {
+        const rippleRadius = nodeSize * (1 + focusPulseProgress * 3.5);
+        const rippleAlpha = 0.45 * (1 - focusPulseProgress);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, rippleRadius, 0, 2 * Math.PI);
+        ctx.strokeStyle = `rgba(125, 249, 255, ${rippleAlpha})`;
+        ctx.lineWidth = 2.5 / globalScale;
+        ctx.stroke();
+      }
+
       // 边框
       ctx.lineWidth = (isHover || isSelected ? 2.5 : 1.5) / globalScale;
       ctx.strokeStyle = isHover || isSelected ? '#ffffff' : hexToRgba(node.color, dimmed ? 0.3 : 0.9);
       ctx.stroke();
+
+      // 新鲜度光环：最近创建的节点外圈加 cyan ring（不影响主色）
+      if (node.freshness && node.freshness > 0 && !dimmed) {
+        const ringAlpha = node.freshness * 0.55;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeSize + 2, 0, 2 * Math.PI);
+        ctx.strokeStyle = `rgba(125, 249, 255, ${ringAlpha})`;
+        ctx.lineWidth = 2.2 / globalScale;
+        ctx.stroke();
+      }
 
       // 中心 glyph：尺寸够大时才画
       if (nodeSize * globalScale > 8) {
@@ -566,7 +941,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
         ctx.fillText(node.name, node.x, node.y + nodeSize + 3);
       }
     },
-    [hovered, selectedNode]
+    [hovered, selectedNode, selectedNodeIds, legendHighlightType]
   );
 
   // 节点3D标签
@@ -649,7 +1024,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
         box-shadow:0 8px 24px rgba(0,0,0,0.4);
       ">
         <div style="color:#7df9ff;font-weight:600;font-size:12px;">${safeName}</div>
-        <div style="color:#94a3b8;font-size:10px;margin-top:2px;">${type} · ${node.connections} 连接 · ${node.accessCount} 次访问${last ? ` · ${last}` : ""}</div>
+          <div style="color:#94a3b8;font-size:10px;margin-top:2px;">${type} · ${node.connections} ${t('graph.connections_label_html')} · ${node.accessCount} ${t('graph.access_count_html')}${last ? ` · ${last}` : ""}</div>
         ${safeDesc ? `<div style="color:#cbd5e1;font-size:11px;margin-top:6px;line-height:1.4;">${safeDesc}</div>` : ""}
       </div>
     `;
@@ -659,10 +1034,8 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
     return (
       <div className="flex h-full items-center justify-center bg-[#0a0b12]">
         <div className="text-center max-w-md px-6">
-          <div className="text-red-400 text-sm mb-2">图谱引擎加载失败</div>
-          <p className="text-xs text-gray-400 mb-4">
-            可能是 react-force-graph 包损坏或内嵌资源缺失。错误信息：
-          </p>
+          <div className="text-red-400 text-sm mb-2">{t('graph.load_engine_failed')}</div>
+          <p className="text-xs text-gray-400 mb-4">{t('graph.load_engine_detail')}</p>
           <pre className="text-[10px] text-gray-500 bg-black/40 p-3 rounded text-left overflow-auto max-h-32">
             {graphLoadError}
           </pre>
@@ -670,7 +1043,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-1.5 text-xs text-cyan-400 border border-cyan-800 rounded hover:bg-cyan-900/20"
           >
-            刷新页面重试
+            {t('graph.reload_page')}
           </button>
         </div>
       </div>
@@ -682,7 +1055,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
       <div className="flex h-full items-center justify-center bg-[#0a0b12]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-cyan-400 mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">正在加载 3D 图谱引擎...</p>
+          <p className="text-gray-400 text-sm">{t('graph.loading_engine')}</p>
         </div>
       </div>
     );
@@ -700,7 +1073,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="搜索节点 · Enter 跳到第一个匹配"
+              placeholder={t('graph.search_placeholder')}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />
           </div>
@@ -708,9 +1081,9 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
             value={activeType}
             onChange={(event) => setActiveType(event.target.value)}
             className="h-9 rounded-lg border border-white/10 bg-gray-950/90 px-3 text-xs text-gray-200 outline-none hover:border-cyan-500/40"
-            aria-label="筛选节点类型"
+            aria-label={t('graph.filter_by_type')}
           >
-            <option value="all">全部类型</option>
+            <option value="all">{t('graph.all_types')}</option>
             {availableTypes.map((type) => (
               <option key={type} value={type}>
                 {type.replace(/_/g, " ")}
@@ -722,9 +1095,9 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
               value={activeTag}
               onChange={(event) => setActiveTag(event.target.value)}
               className="h-9 rounded-lg border border-white/10 bg-gray-950/90 px-3 text-xs text-gray-200 outline-none hover:border-cyan-500/40 max-w-[160px]"
-              aria-label="筛选标签"
+              aria-label={t('graph.filter_by_tag_aria')}
             >
-              <option value="all">全部标签</option>
+              <option value="all">{t('graph.all_tags')}</option>
               {availableTags.map((tag) => (
                 <option key={tag} value={tag}>
                   #{tag}
@@ -736,14 +1109,14 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
             onClick={() => setIs3D(!is3D)}
             className="h-9 px-3 bg-gray-950/90 border border-white/10 rounded-lg text-xs text-cyan-400 hover:bg-gray-900 hover:border-cyan-500/40 transition-colors"
           >
-            {is3D ? "2D 模式" : "3D 模式"}
+            {is3D ? t('graph.mode_2d') : t('graph.mode_3d')}
           </button>
           <button
             onClick={handleResetCamera}
             className="h-9 px-3 bg-gray-950/90 border border-white/10 rounded-lg text-xs text-gray-300 hover:text-white hover:bg-gray-900 hover:border-cyan-500/40 transition-colors flex items-center gap-1"
           >
             <RotateCcw className="w-3 h-3" />
-            重置视角
+            {t('graph.reset_camera')}
           </button>
           <button
             onClick={() => setMstMode((v) => !v)}
@@ -752,10 +1125,10 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                 ? "bg-cyan-900/40 border-cyan-700/50 text-cyan-300"
                 : "bg-gray-950/90 border-white/10 text-gray-300 hover:text-white hover:bg-gray-900 hover:border-cyan-500/40"
             }`}
-            title="只保留最强骨架关系，裁掉冗余边"
+            title={t('graph.mst_tooltip')}
           >
             <GitBranch className="w-3 h-3" />
-            {mstMode ? "骨架视图" : "完整视图"}
+            {mstMode ? t('graph.mst_mode') : t('graph.full_view')}
           </button>
           {timeBounds && (
             <button
@@ -765,10 +1138,10 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                   ? "bg-cyan-900/40 border-cyan-700/50 text-cyan-300"
                   : "bg-gray-950/90 border-white/10 text-gray-300 hover:text-white hover:bg-gray-900 hover:border-cyan-500/40"
               }`}
-              title="按创建时间回放图谱演化"
+              title={t('graph.time_tooltip')}
             >
               <Clock className="w-3 h-3" />
-              时间轴
+              {t('graph.timeline')}
             </button>
           )}
         </div>
@@ -788,53 +1161,90 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                 setTimeFilter(v >= timeBounds.max ? null : v);
               }}
               className="flex-1 accent-cyan-400"
-              aria-label="时间轴筛选"
+              aria-label={t('graph.time_slider_label')}
             />
             <span className="shrink-0 text-xs text-gray-300 font-mono w-[150px] text-right">
               {timeFilter === null
-                ? "全部时间"
+                ? t('graph.all_time')
                 : `≤ ${new Date(timeFilter).toLocaleDateString()} ${new Date(timeFilter).toLocaleTimeString()}`}
             </span>
             <button
               onClick={() => setTimeFilter(null)}
               disabled={timeFilter === null}
               className="shrink-0 text-xs text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-              title="清除时间筛选"
+              title={t('graph.reset_time_filter')}
             >
-              重置
+              {t('graph.reset')}
             </button>
           </div>
         )}
 
-        {/* 图例 */}
-        <div className="absolute bottom-4 left-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg p-3 max-w-[240px] shadow-2xl shadow-black/30">
-          <p className="text-xs text-gray-500 mb-2 uppercase font-medium">图例</p>
-          <div className="grid grid-cols-2 gap-1.5">
-            {Object.entries(TYPE_COLORS)
-              .filter(([type]) => visibleEntities.some((e) => e.type === type))
-              .map(([type, color]) => (
-                <div key={type} className="flex items-center gap-1.5">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-[10px] text-gray-400 truncate">
-                    {type.replace(/_/g, " ")}
-                  </span>
-                </div>
-              ))}
-          </div>
+        {/* 图例：右上角可折叠交互式 Legend */}
+        <div className="absolute top-4 right-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg shadow-2xl shadow-black/30 max-w-[220px]">
+          <button
+            onClick={toggleLegendExpand}
+            className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-400 hover:text-white transition-colors"
+            title={legendExpanded ? t('graph.legend_collapse') : t('graph.legend_expand')}
+          >
+            <span className="uppercase font-medium tracking-wider">{t('graph.legend')}</span>
+            <span className="text-[10px] text-gray-500">{legendExpanded ? '▾' : '▸'}</span>
+          </button>
+          {legendExpanded && (
+            <div className="px-3 pb-2 space-y-1 border-t border-white/5">
+              {legendHighlightType && (
+                <button
+                  onClick={() => setLegendHighlightType(null)}
+                  className="w-full text-left text-[10px] text-cyan-400 hover:text-cyan-300 py-0.5"
+                >
+                  {t('graph.legend_clear_filter')}
+                </button>
+              )}
+              {(() => {
+                // 统计当前画布各类型数量
+                const typeCounts: Record<string, number> = {};
+                visibleEntities.forEach((e) => {
+                  typeCounts[e.type] = (typeCounts[e.type] || 0) + 1;
+                });
+                return Object.entries(typeCounts)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([type, count]) => {
+                    const color = TYPE_COLORS[type] || '#94a3b8';
+                    const isActive = legendHighlightType === type;
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => setLegendHighlightType(isActive ? null : type)}
+                        className={`flex items-center gap-2 w-full text-left py-1 px-1 rounded transition-colors ${
+                          isActive
+                            ? 'bg-cyan-900/30 ring-1 ring-cyan-500/50'
+                            : 'hover:bg-white/5'
+                        }`}
+                      >
+                        <div
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-[11px] text-gray-300 truncate flex-1">
+                          {type.replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-[10px] text-gray-500 font-mono">{count}</span>
+                      </button>
+                    );
+                  });
+              })()}
+            </div>
+          )}
         </div>
 
         {/* 统计信息 */}
         <div className="absolute bottom-4 right-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg p-3 shadow-2xl shadow-black/30">
           <div className="flex gap-4 text-xs">
             <div>
-              <span className="text-gray-500">可见节点</span>
+              <span className="text-gray-500">{t('graph.visible_nodes')}</span>
               <p className="text-cyan-400 font-mono font-bold">{visibleEntities.length}</p>
             </div>
             <div>
-              <span className="text-gray-500">可见关系</span>
+              <span className="text-gray-500">{t('graph.visible_edges')}</span>
               <p className="text-purple-400 font-mono font-bold">{graphData.links.length}</p>
             </div>
           </div>
@@ -847,25 +1257,25 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                 <Network className="h-6 w-6 text-cyan-300" />
               </div>
               <h2 className="text-lg font-semibold text-white">
-                {entities.length === 0 ? "还没有可视化节点" : "没有匹配的节点"}
+                {entities.length === 0 ? t('graph.no_nodes') : t('graph.no_nodes_match')}
               </h2>
               <p className="mt-2 text-sm leading-6 text-gray-400">
                 {entities.length === 0
-                  ? "使用沉淀快捷键、浏览器插件或移动端同步内容后，这里会显示实体、证据、原则和它们之间的关系。"
-                  : "调整搜索词或节点类型筛选，图谱会实时恢复匹配的上下文。"}
+                  ? t('graph.no_nodes_hint')
+                  : t('graph.no_nodes_match_hint')}
               </p>
               <div className="mt-5 grid grid-cols-3 gap-2 text-left text-xs text-gray-400">
                 <div className="rounded-lg border border-white/10 bg-black/30 p-3">
                   <Brain className="mb-2 h-4 w-4 text-cyan-300" />
-                  捕获内容
+                  {t('graph.capture_content')}
                 </div>
                 <div className="rounded-lg border border-white/10 bg-black/30 p-3">
                   <Zap className="mb-2 h-4 w-4 text-yellow-300" />
-                  提取关系
+                  {t('graph.extract_relations')}
                 </div>
                 <div className="rounded-lg border border-white/10 bg-black/30 p-3">
                   <MousePointer2 className="mb-2 h-4 w-4 text-purple-300" />
-                  点击探索
+                  {t('graph.click_explore')}
                 </div>
               </div>
             </div>
@@ -880,12 +1290,18 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
             nodeId="id"
             nodeLabel={nodeLabelHtml}
             nodeVal={(node: any) => node.val}
-            nodeColor={(node: any) => node.color}
+            nodeColor={(node: any) => {
+              if (legendHighlightType && node.type !== legendHighlightType) {
+                return hexToRgba(node.color, 0.18);
+              }
+              return node.color;
+            }}
             linkSource="source"
             linkTarget="target"
-            linkLabel={(link: any) => `${link.type.replace(/_/g, " ")} · w=${(link.weight || 1).toFixed(2)}`}
-            linkColor={(link: any) => link.color}
-            linkWidth={(link: any) => Math.max(0.5, (link.weight || 1) * 1.5)}
+            linkLabel={(link: any) => t('graph.link_label').replace('{type}', link.type.replace(/_/g, " ")).replace('{weight}', (link.weight || 1).toFixed(2))}
+            linkColor={(link: any) => getRelationshipStyle(link.type).color}
+            linkWidth={(link: any) => getRelationshipStyle(link.type).width}
+            linkLineDash={(link: any) => getRelationshipStyle(link.type).dash || null}
             linkDirectionalArrowLength={3.5}
             linkDirectionalArrowRelPos={1}
             linkCurvature={0.15}
@@ -895,7 +1311,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
             linkDirectionalParticleColor={(link: any) => link.color}
             onNodeClick={handleNodeClick}
             onNodeHover={(node: any) => setHovered(node?.id || null)}
-            onBackgroundClick={() => setSelectedNode(null)}
+            onBackgroundClick={() => { setSelectedNode(null); setSelectedNodeIds(new Set()); }}
             backgroundColor="#0a0b12"
             // 2D 模式配置
             {...(!is3D && {
@@ -916,8 +1332,8 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
         )}
       </div>
 
-      {/* 详情面板 */}
-      {selectedNode && (
+      {/* 详情面板（仅单选时显示） */}
+      {selectedNode && !isMultiSelect && (
         <div className="absolute bottom-4 left-4 right-4 z-20 max-h-[55vh] glass-panel border border-white/10 p-4 overflow-y-auto bg-gray-950/95 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:w-80 md:max-h-none md:border-l">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-cyan-400">{t("graph.title")}</h3>
@@ -936,28 +1352,28 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                 onClick={enterEditMode}
                 disabled={busy}
                 className="flex items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:text-cyan-300 hover:bg-cyan-900/20 rounded-md disabled:opacity-40 transition-colors"
-                title="编辑节点"
+                title={t('graph.edit_tooltip')}
               >
                 <Pencil className="w-3.5 h-3.5" />
-                编辑
+                {t('graph.edit')}
               </button>
               <button
                 onClick={() => { setMergeMode(true); setMergeQuery(""); }}
                 disabled={busy}
                 className="flex items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:text-purple-300 hover:bg-purple-900/20 rounded-md disabled:opacity-40 transition-colors"
-                title="合并到另一个节点"
+                title={t('graph.merge_tooltip')}
               >
                 <GitMerge className="w-3.5 h-3.5" />
-                合并
+                {t('graph.merge')}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={busy}
                 className="flex items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:text-red-300 hover:bg-red-900/20 rounded-md disabled:opacity-40 transition-colors ml-auto"
-                title="删除节点（连同关系）"
+                title={t('graph.delete_tooltip')}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                删除
+                {t('graph.delete')}
               </button>
             </div>
           )}
@@ -968,12 +1384,12 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-purple-300 font-medium flex items-center gap-1">
                   <GitMerge className="w-3.5 h-3.5" />
-                  选择合并目标
+                  {t('graph.merge_target')}
                 </span>
                 <button
                   onClick={() => { setMergeMode(false); setMergeQuery(""); }}
                   className="text-gray-400 hover:text-white"
-                  title="取消"
+                  title={t('graph.cancel')}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -981,12 +1397,12 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
               <input
                 value={mergeQuery}
                 onChange={(e) => setMergeQuery(e.target.value)}
-                placeholder="搜索目标节点名称 / 类型"
+                placeholder={t('graph.merge_search_placeholder')}
                 className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white placeholder:text-gray-500 outline-none focus:border-purple-500/60"
               />
               <ul className="mt-2 space-y-1 max-h-48 overflow-y-auto">
                 {mergeCandidates.length === 0 && (
-                  <li className="text-xs text-gray-500 px-2 py-1">无匹配节点</li>
+                  <li className="text-xs text-gray-500 px-2 py-1">{t('graph.merge_no_results')}</li>
                 )}
                 {mergeCandidates.map((e) => (
                   <li key={e.id}>
@@ -1014,7 +1430,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
               <div className="flex items-center justify-between">
                 <span className="text-xs text-cyan-300 font-medium flex items-center gap-1">
                   <Pencil className="w-3.5 h-3.5" />
-                  编辑节点
+                  {t('graph.edit_node')}
                 </span>
                 <div className="flex items-center gap-1">
                   <button
@@ -1023,7 +1439,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                     className="flex items-center gap-1 px-2 py-1 text-xs text-green-300 hover:bg-green-900/30 rounded disabled:opacity-40"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    保存
+                    {t('graph.save')}
                   </button>
                   <button
                     onClick={exitEditMode}
@@ -1031,12 +1447,12 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                     className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:bg-white/10 rounded disabled:opacity-40"
                   >
                     <X className="w-3.5 h-3.5" />
-                    取消
+                    {t('graph.cancel')}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] text-gray-500 uppercase mb-1">名称</label>
+                <label className="block text-[10px] text-gray-500 uppercase mb-1">{t('graph.name')}</label>
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -1044,7 +1460,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-gray-500 uppercase mb-1">类型</label>
+                <label className="block text-[10px] text-gray-500 uppercase mb-1">{t('graph.type')}</label>
                 <select
                   value={editType}
                   onChange={(e) => setEditType(e.target.value)}
@@ -1060,7 +1476,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] text-gray-500 uppercase mb-1">描述</label>
+                <label className="block text-[10px] text-gray-500 uppercase mb-1">{t('graph.description')}</label>
                 <textarea
                   value={editDesc}
                   onChange={(e) => setEditDesc(e.target.value)}
@@ -1069,11 +1485,11 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-gray-500 uppercase mb-1">标签（逗号分隔）</label>
+                <label className="block text-[10px] text-gray-500 uppercase mb-1">{t('graph.tags_comma')}</label>
                 <input
                   value={editTags}
                   onChange={(e) => setEditTags(e.target.value)}
-                  placeholder="tag1, tag2, tag3"
+                  placeholder={t('graph.tags_placeholder')}
                   className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white placeholder:text-gray-500 outline-none focus:border-cyan-500/60"
                 />
               </div>
@@ -1108,15 +1524,15 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
 
             {/* 连接数 */}
             <div>
-              <span className="text-xs text-gray-500 uppercase">连接数</span>
+              <span className="text-xs text-gray-500 uppercase">{t('graph.connections_label')}</span>
               <p className="text-purple-400 font-mono">
-                {connectionCounts[selectedNode.id] || 0} 条关系
+                {t('graph.connections_suffix').replace('{count}', String(connectionCounts[selectedNode.id] || 0))}
               </p>
             </div>
 
             {/* 访问频率 */}
             <div>
-              <span className="text-xs text-gray-500 uppercase">访问频率</span>
+              <span className="text-xs text-gray-500 uppercase">{t('graph.access_frequency')}</span>
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
                   <div
@@ -1148,7 +1564,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                       key={i}
                       onClick={() => setActiveTag(tag)}
                       className="px-2 py-0.5 bg-cyan-900/30 text-cyan-400 text-xs rounded-full border border-cyan-800/50 hover:bg-cyan-800/40 hover:text-cyan-200 transition-colors"
-                      title="点击按此标签筛选"
+                      title={t('graph.filter_by_tag')}
                     >
                       #{tag}
                     </button>
@@ -1160,7 +1576,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
             {/* 邻居列表 */}
             {neighbors.length > 0 && (
               <div>
-                <span className="text-xs text-gray-500 uppercase">邻居 ({neighbors.length})</span>
+                <span className="text-xs text-gray-500 uppercase">{t('graph.neighbors_label').replace('{count}', String(neighbors.length))}</span>
                 <ul className="mt-1 space-y-1 max-h-48 overflow-y-auto pr-1">
                   {neighbors.map((n, i) => (
                     <li key={`${n.entity.id}-${i}`}>
@@ -1182,7 +1598,7 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                         </span>
                         <span
                           className="text-[10px] text-gray-500 font-mono shrink-0"
-                          title="关系权重"
+                          title={t('graph.relationship_weight')}
                         >
                           w{n.weight.toFixed(1)}
                         </span>
@@ -1195,18 +1611,18 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
 
             {/* Embedding 状态 */}
             <div>
-              <span className="text-xs text-gray-500 uppercase">向量索引</span>
+              <span className="text-xs text-gray-500 uppercase">{t('graph.vector_index')}</span>
               <p className={`text-sm ${selectedNode.embedding ? "text-green-400" : "text-gray-600"}`}>
                 {selectedNode.embedding
-                  ? `✓ 已索引 (${selectedNode.embedding.length} 维)`
-                  : "✗ 未索引"}
+                  ? t('graph.indexed').replace('{dims}', String(selectedNode.embedding.length))
+                  : t('graph.not_indexed')}
               </p>
             </div>
 
             {/* 最后访问 + 衰减提示 */}
             {selectedNode.last_accessed && (
               <div>
-                <span className="text-xs text-gray-500 uppercase">最后访问</span>
+                <span className="text-xs text-gray-500 uppercase">{t('graph.last_accessed')}</span>
                 <p className="text-gray-300 text-sm">
                   {relativeTime(selectedNode.last_accessed)}
                   <span className="text-gray-500 text-xs ml-2">
@@ -1218,12 +1634,12 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
                   if (days > 30) {
                     return (
                       <p className="text-amber-400/80 text-[11px] mt-1">
-                        · 长时间未访问，下次衰减时可能被归档
+                        {t('graph.long_idle')}
                       </p>
                     );
                   }
                   if (days > 7) {
-                    return <p className="text-gray-500 text-[11px] mt-1">· 近期未访问</p>;
+                    return <p className="text-gray-500 text-[11px] mt-1">{t('graph.recent_idle')}</p>;
                   }
                   return null;
                 })()}
@@ -1249,9 +1665,63 @@ export default function GraphViewer3D({ entities, relationships, onDataChanged }
             <Maximize2 className="w-8 h-8 text-gray-600 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">{t("graph.no_selection")}</p>
             <p className="text-gray-600 text-xs mt-1">
-              {is3D ? "左键拖拽旋转，右键平移，滚轮缩放" : "拖拽平移，滚轮缩放"}
+              {is3D ? t('graph.camera_hint_3d') : t('graph.camera_hint_2d')}
             </p>
           </div>
+        </div>
+      )}
+
+      {isMultiSelect && (
+        <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-col gap-2 rounded-xl border border-cyan-500/30 bg-gray-950/95 px-4 py-3 shadow-2xl shadow-cyan-950/30 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-cyan-300 font-medium">
+              {t('graph.selected_count').replace('{count}', String(selectedNodeIds.size))}
+            </span>
+            <div className="flex-1" />
+            <button
+              onClick={handleBatchDelete}
+              disabled={busy}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-300 hover:text-red-200 hover:bg-red-900/30 border border-red-800/40 rounded-lg disabled:opacity-40 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {t('graph.batch_delete')}
+            </button>
+            <button
+              onClick={() => setShowBatchTagInput((v) => !v)}
+              disabled={busy}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-yellow-300 hover:text-yellow-200 hover:bg-yellow-900/30 border border-yellow-800/40 rounded-lg disabled:opacity-40 transition-colors"
+            >
+              <Tags className="w-3.5 h-3.5" />
+              {t('graph.batch_tag')}
+            </button>
+            <div className="w-px h-6 bg-white/10" />
+            <button
+              onClick={() => { setSelectedNodeIds(new Set()); setSelectedNode(null); }}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            >
+              {t('graph.deselect')} <span className="text-[10px] text-gray-500">Esc</span>
+            </button>
+          </div>
+          {showBatchTagInput && (
+            <div className="flex items-center gap-2 border-t border-white/5 pt-2">
+              <Tags className="w-3.5 h-3.5 text-yellow-400" />
+              <input
+                value={batchTagText}
+                onChange={(e) => setBatchTagText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleBatchTag(); }}
+                placeholder={t('graph.batch_tag_placeholder')}
+                className="flex-1 bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white placeholder:text-gray-500 outline-none focus:border-yellow-500/60"
+                autoFocus
+              />
+              <button
+                onClick={handleBatchTag}
+                disabled={busy || !batchTagText.trim()}
+                className="px-2 py-1 text-xs text-yellow-300 hover:bg-yellow-900/30 rounded disabled:opacity-40 transition-colors"
+              >
+                <Check className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

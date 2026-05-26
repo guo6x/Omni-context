@@ -3,11 +3,13 @@
 import { useContext, useMemo } from 'react';
 import { ToastContext } from '@/components/Toast';
 
+type ToastOpts = { duration?: number; action?: React.ReactNode };
+
 interface ToastApi {
-  success: (message: string, detail?: string) => string;
-  error: (message: string, detail?: string) => string;
-  warning: (message: string, detail?: string) => string;
-  info: (message: string, detail?: string) => string;
+  success: (message: string, detail?: string, opts?: ToastOpts) => string;
+  error: (message: string, detail?: string, opts?: ToastOpts) => string;
+  warning: (message: string, detail?: string, opts?: ToastOpts) => string;
+  info: (message: string, detail?: string, opts?: ToastOpts) => string;
   dismiss: (id: string) => void;
 }
 
@@ -20,10 +22,10 @@ export function useToast(): ToastApi {
 
   return useMemo<ToastApi>(
     () => ({
-      success: (message, detail) => push({ type: 'success', message, detail }),
-      error: (message, detail) => push({ type: 'error', message, detail }),
-      warning: (message, detail) => push({ type: 'warning', message, detail }),
-      info: (message, detail) => push({ type: 'info', message, detail }),
+      success: (message, detail, opts) => push({ type: 'success', message, detail, ...opts }),
+      error: (message, detail, opts) => push({ type: 'error', message, detail, ...opts }),
+      warning: (message, detail, opts) => push({ type: 'warning', message, detail, ...opts }),
+      info: (message, detail, opts) => push({ type: 'info', message, detail, ...opts }),
       dismiss,
     }),
     [push, dismiss],

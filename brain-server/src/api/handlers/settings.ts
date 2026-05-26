@@ -101,7 +101,9 @@ export const handleSettingsRoutes = [
         ok,
         embedding: {
           status: embeddingStatus,
+          mode: embeddingInfo.mode,
           model: embeddingInfo.model,
+          apiUrl: embeddingInfo.apiUrl,
         },
         llm: {
           enabled: llmEnabled,

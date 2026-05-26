@@ -26,6 +26,7 @@ export interface ToastItem {
   message: string;
   detail?: string;
   duration: number;
+  action?: React.ReactNode;
 }
 
 export interface ToastInput {
@@ -33,6 +34,7 @@ export interface ToastInput {
   message: string;
   detail?: string;
   duration?: number;
+  action?: React.ReactNode;
 }
 
 interface ToastContextValue {
@@ -98,6 +100,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       message: input.message,
       detail: input.detail,
       duration,
+      action: input.action,
     };
     setToasts((prev) => {
       const next = [...prev, item];
@@ -192,6 +195,7 @@ function ToastCard({
         <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${text}`} />
         <div className="min-w-0 flex-1">
           <div className="break-words text-sm leading-snug text-white/95">{toast.message}</div>
+          {toast.action && <div className="mt-1.5">{toast.action}</div>}
           {hasDetail && (
             <>
               <button

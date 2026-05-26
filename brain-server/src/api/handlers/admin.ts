@@ -40,6 +40,21 @@ interface DumpShape {
 export const handleAdminRoutes = [
   {
     method: 'GET' as const,
+    path: '/api/admin/embedding/status',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const info = ctx.embeddingService.getInfo();
+      const healthy = info.status !== 'hash-fallback';
+      sendResponse(res, 200, {
+        mode: info.mode,
+        status: info.status,
+        model: info.model,
+        healthy,
+        apiUrl: info.apiUrl,
+      });
+    },
+  },
+  {
+    method: 'GET' as const,
     path: '/api/admin/export',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const entities = await ctx.db.all<any>('SELECT * FROM entities');
@@ -232,6 +247,31 @@ export const handleAdminRoutes = [
       }
 
       sendResponse(res, 200, { mode, imported: counts });
+    },
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/admin/embedding/reload',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      try {
+        await ctx.embeddingService.reload();
+        const info = ctx.embeddingService.getInfo();
+        sendResponse(res, 200, {
+          success: true,
+          status: info.status,
+          mode: info.mode,
+          model: info.model,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('[Embedding Reload] 重载失败:', msg);
+        sendResponse(res, 500, {
+          success: false,
+          error: msg,
+          // 即使失败也返回当前状态（仍是 hash-fallback）
+          status: ctx.embeddingService.getStatus(),
+        });
+      }
     },
   },
   {

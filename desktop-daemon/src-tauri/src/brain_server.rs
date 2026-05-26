@@ -1,6 +1,18 @@
 use std::process::{Command, Child, Stdio};
 use std::sync::Mutex;
 use std::path::PathBuf;
+use std::io::BufRead;
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
+use std::collections::hash_map::RandomState;
+use std::hash::{BuildHasher, Hasher};
+
+use crate::log_writer;
+
+/// Windows CREATE_NO_WINDOW —— 防止 spawn node.exe 时弹出黑色控制台窗口
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// [核心壁垒] Brain Server 进程管理器
 /// 使用 Mutex 替代 unsafe static mut，确保多线程安全
@@ -38,9 +50,13 @@ fn find_node_executable() -> String {
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
             let candidates = [
+                // Windows node.exe, macOS/Linux node (no extension)
                 exe_dir.join("resources/brain-server/node.exe"),
+                exe_dir.join("resources/brain-server/node"),
                 exe_dir.join("brain-server/node.exe"),
+                exe_dir.join("brain-server/node"),
                 exe_dir.join("../Resources/brain-server/node.exe"),
+                exe_dir.join("../Resources/brain-server/node"),
             ];
             for c in &candidates {
                 if c.exists() {
@@ -75,20 +91,66 @@ pub fn start() -> Result<(), String> {
             continue;
         }
 
-        let spawn_result = Command::new(&node_exe)
-            .arg(path)
+        // 数据库放到用户可写目录，避免 Program Files 只读导致 sqlite open 失败
+        let data_dir = user_data_dir();
+        let _ = std::fs::create_dir_all(&data_dir);
+        let db_path = data_dir.join("omni-context.db");
+
+        let pair_code = ensure_pair_code();
+        let lan_ip = get_lan_ip().unwrap_or_default();
+
+        let mut cmd = Command::new(&node_exe);
+        cmd.arg(path)
+            .current_dir(&data_dir)
             .env("HOST", "127.0.0.1")
             .env("PORT", "3001")
+            .env("DB_PATH", &db_path)
+            .env("PAIR_CODE", &pair_code)
+            .env("LAN_IP", &lan_ip)
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn();
+            .stderr(Stdio::piped());
+        #[cfg(windows)]
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        let spawn_result = cmd.spawn();
 
         match spawn_result {
             Ok(mut child) => {
+                // 要在 store_process 之前取出 stdout/stderr，否则 move 后拿不到
+                let stdout = child.stdout.take();
+                let stderr = child.stderr.take();
+
                 std::thread::sleep(std::time::Duration::from_millis(800));
                 match child.try_wait() {
                     Ok(None) => {
                         println!("[Brain Server] 已启动: {}", path.display());
+
+                        // 启动 stdout/stderr → 日志文件的后台线程
+                        let log_path = log_writer::log_file_path();
+                        if let Some(stdout) = stdout {
+                            let lp = log_path.clone();
+                            std::thread::spawn(move || {
+                                let reader = std::io::BufReader::new(stdout);
+                                for line in reader.lines() {
+                                    match line {
+                                        Ok(l) => log_writer::write_line(&lp, &l, false),
+                                        Err(_) => break,
+                                    }
+                                }
+                            });
+                        }
+                        if let Some(stderr) = stderr {
+                            let lp = log_path.clone();
+                            std::thread::spawn(move || {
+                                let reader = std::io::BufReader::new(stderr);
+                                for line in reader.lines() {
+                                    match line {
+                                        Ok(l) => log_writer::write_line(&lp, &l, true),
+                                        Err(_) => break,
+                                    }
+                                }
+                            });
+                        }
+
                         store_process(child);
                         return Ok(());
                     }
@@ -165,6 +227,70 @@ fn dirs_or_home() -> Option<String> {
         .ok()
 }
 
+/// 用户可写的数据目录：Windows 优先 LOCALAPPDATA，回退到 USERPROFILE/HOME 下。
+fn pair_code_dir() -> PathBuf {
+    if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
+        return PathBuf::from(local_appdata).join("omni-context");
+    }
+    if let Ok(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")) {
+        return PathBuf::from(home).join(".omni-context");
+    }
+    PathBuf::from("./.omni-context")
+}
+
+fn pair_code_file() -> PathBuf {
+    pair_code_dir().join("pair-code.txt")
+}
+
+pub fn ensure_pair_code() -> String {
+    let dir = pair_code_dir();
+    let _ = std::fs::create_dir_all(&dir);
+    let file = pair_code_file();
+
+    if let Ok(existing) = std::fs::read_to_string(&file) {
+        let trimmed = existing.trim().to_string();
+        if trimmed.len() == 6 && trimmed.chars().all(|c| c.is_ascii_digit()) {
+            return trimmed;
+        }
+    }
+
+    generate_and_save_pair_code(&file)
+}
+
+pub fn regenerate_pair_code() -> String {
+    let dir = pair_code_dir();
+    let _ = std::fs::create_dir_all(&dir);
+    let file = pair_code_file();
+    generate_and_save_pair_code(&file)
+}
+
+fn generate_and_save_pair_code(file: &std::path::Path) -> String {
+    let code = generate_pair_code();
+    let _ = std::fs::write(file, &code);
+    code
+}
+
+fn generate_pair_code() -> String {
+    let hash = RandomState::new().build_hasher().finish();
+    let num = (hash % 1_000_000) as u32;
+    format!("{:06}", num)
+}
+
+/// 获取本机 LAN IP，失败返回 None
+pub fn get_lan_ip() -> Option<String> {
+    local_ip_address::local_ip().ok().map(|ip| ip.to_string())
+}
+
+pub fn user_data_dir() -> PathBuf {
+    if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
+        return PathBuf::from(local_appdata).join("omni-context").join("data");
+    }
+    if let Some(home) = dirs_or_home() {
+        return PathBuf::from(home).join(".omni-context").join("data");
+    }
+    PathBuf::from("./data")
+}
+
 fn brain_server_paths() -> Vec<PathBuf> {
     // 编译产物是 dist/mcp-server.js（不是顶层 mcp-server.js）。
     // Tauri 通过 resources: ["../../brain-server/**/*"] 把整个 brain-server
@@ -181,6 +307,8 @@ fn brain_server_paths() -> Vec<PathBuf> {
             paths.push(exe_dir.join("../Resources/brain-server/dist/mcp-server.js"));
             // Tauri externalBin / sidecar 风格
             paths.push(exe_dir.join("brain-server/dist/mcp-server.js"));
+            // build-desktop-only.js 把 dist 平铺到 brain-server/ 下，所以实际路径无 dist/
+            paths.push(exe_dir.join("brain-server/mcp-server.js"));
             // dev 模式：target/release/<exe>，需要往上回 3 级到 desktop-daemon/，再到 brain-server/
             paths.push(exe_dir.join("../../../../brain-server/dist/mcp-server.js"));
             paths.push(exe_dir.join("../../../brain-server/dist/mcp-server.js"));
@@ -200,4 +328,60 @@ fn brain_server_paths() -> Vec<PathBuf> {
     }
 
     paths
+}
+
+pub fn open_folder_in_explorer() -> Result<(), String> {
+    let path = user_data_dir();
+    let _ = std::fs::create_dir_all(&path);
+
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("explorer")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        Command::new("xdg-open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+pub fn open_logs_folder() -> Result<(), String> {
+    let path = log_writer::logs_dir();
+    let _ = std::fs::create_dir_all(&path);
+
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("explorer")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        Command::new("xdg-open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }

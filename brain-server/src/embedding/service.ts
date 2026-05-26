@@ -227,15 +227,29 @@ export class EmbeddingService {
   }
 
   /**
+   * 重新加载模型：销毁当前 pipeline 并重新初始化。
+   * 用于 hash-fallback 降级后尝试恢复，或模型文件更新后热重载。
+   */
+  async reload(): Promise<void> {
+    // 清理旧状态
+    this.pipeline = null;
+    this.initialized = false;
+    this.initPromise = null;
+    // 重新初始化
+    await this._initialize();
+  }
+
+  /**
    * 获取当前配置信息
    */
-  getInfo(): { mode: string; model: string; dimensions: number; initialized: boolean; status: 'local' | 'api' | 'hash-fallback' | 'pending' } {
+  getInfo(): { mode: string; model: string; dimensions: number; initialized: boolean; status: 'local' | 'api' | 'hash-fallback' | 'pending'; apiUrl?: string } {
     return {
       mode: this.config.mode,
       model: (this.config.mode === 'local' ? this.config.localModel : this.config.apiModel) || 'unknown',
       dimensions: this.config.dimensions || 384,
       initialized: this.initialized,
       status: this.getStatus(),
+      apiUrl: this.config.apiUrl,
     };
   }
 }

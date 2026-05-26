@@ -1,11 +1,17 @@
 "use client";
 
-import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw, Share2, Search, Lightbulb, Camera, GitBranch, ChevronDown, ChevronRight, Shield, Info } from 'lucide-react';
+import { useRef, useState, useEffect, useMemo, createElement } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { KeyboardShortcut, AppSettings } from '@/hooks/useSettings';
+import { LLM_PRESETS, LlmPreset } from '@/lib/llm-presets';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
 import { BRAIN_URL } from '@/lib/config';
+import { MCP_CLIENTS } from '@/lib/mcp-clients';
+import { MCP_SCENARIOS } from '@/lib/mcp-scenarios';
+import { findSystemConflict, normalizeShortcut } from '@/lib/known-system-shortcuts';
+import McpClientCard from './McpClientCard';
 
 // autostart 插件调用。非 Tauri 环境静默降级。
 async function autostartEnable() {
@@ -41,7 +47,7 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-type Tab = 'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'diagnostics';
+type Tab = 'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about';
 
 export default function SettingsPanel({
   settings,
@@ -63,6 +69,156 @@ export default function SettingsPanel({
   const [diagnosticsData, setDiagnosticsData] = useState<any>(null);
   const [diagnosticsLoading, setDiagnosticsLoading] = useState(false);
   const [diagnosticsError, setDiagnosticsError] = useState<string | null>(null);
+  
+  const [llmTestState, setLlmTestState] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+  const [llmTestError, setLlmTestError] = useState('');
+  const [embeddingReloading, setEmbeddingReloading] = useState(false);
+  const [pairCodeInfo, setPairCodeInfo] = useState<{ code: string; lan_ip: string; port: number } | null>(null);
+  const [updateChecking, setUpdateChecking] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'available' | 'no-update' | 'error'>('idle');
+  const [updateVersion, setUpdateVersion] = useState('');
+
+  const [mcpStatuses, setMcpStatuses] = useState<any[]>([]);
+  const [mcpServerCmd, setMcpServerCmd] = useState<any>(null);
+  const [scenarioExpanded, setScenarioExpanded] = useState(true);
+
+  const fetchMcpData = async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/tauri');
+      const statuses = await invoke<any[]>('mcp_get_clients_status');
+      const cmd = await invoke<any>('mcp_get_server_command');
+      setMcpStatuses(statuses);
+      setMcpServerCmd(cmd);
+    } catch (e) {
+      console.error('获取 MCP 状态失败:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'mcp') {
+      fetchMcpData();
+    }
+  }, [activeTab]);
+
+  const fetchPairCode = async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/tauri');
+      const info = await invoke<{ code: string; lan_ip: string; port: number }>('get_pair_code');
+      setPairCodeInfo(info);
+    } catch {
+      setPairCodeInfo(null);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'data') {
+      fetchPairCode();
+    }
+  }, [activeTab]);
+
+  const handleRegeneratePairCode = async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/tauri');
+      const info = await invoke<{ code: string; lan_ip: string; port: number }>('regenerate_pair_code');
+      setPairCodeInfo(info);
+      toast.success(t('settings.pair_code_regenerated'));
+    } catch (e) {
+      toast.error(t('settings.pair_code_regen_failed'), String(e));
+    }
+  };
+
+  const handleCheckUpdate = async () => {
+    setUpdateChecking(true);
+    setUpdateStatus('idle');
+    try {
+      const { checkUpdate, installUpdate } = await import('@tauri-apps/api/updater');
+      const { shouldUpdate, manifest } = await checkUpdate();
+      if (shouldUpdate && manifest) {
+        setUpdateStatus('available');
+        setUpdateVersion(manifest.version);
+        const updateMsg = t('settings.update_available').replace('{version}', manifest.version);
+        const dismissId = toast.info(
+          updateMsg,
+          manifest.body || '',
+          {
+            action: (
+              <button
+                onClick={async () => {
+                  toast.dismiss(dismissId);
+                  try {
+                    await installUpdate();
+                    toast.success(t('settings.update_complete'));
+                  } catch (e) {
+                    const msg = e instanceof Error ? e.message : String(e);
+                    toast.error(t('settings.update_download_failed'), msg);
+                  }
+                }}
+                className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold transition-colors ml-2"
+              >
+                {t('settings.update_click_to_update')}
+              </button>
+            ),
+          }
+        );
+      } else {
+        setUpdateStatus('no-update');
+        toast.success(t('settings.update_no_update'));
+      }
+    } catch (e) {
+      setUpdateStatus('error');
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(t('settings.update_check_failed'), msg);
+    } finally {
+      setUpdateChecking(false);
+    }
+  };
+
+  const handleMcpInstall = async (clientId: string) => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/tauri');
+      await invoke('mcp_install_to', { clientId });
+      toast.success(t('settings.mcp_install_success'));
+      fetchMcpData();
+    } catch (e) {
+      toast.error(t('toast.mcp_install_failed'), String(e));
+    }
+  };
+
+  const handleMcpOpenFolder = async (clientId: string) => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/tauri');
+      await invoke('mcp_open_config_folder', { clientId });
+    } catch (e) {
+      toast.error(t('toast.mcp_open_folder_failed'), String(e));
+    }
+  };
+
+  const handleTestLlmConnection = async () => {
+    setLlmTestState('testing');
+    setLlmTestError('');
+    try {
+      const res = await fetch(`${BRAIN_URL}/api/settings/llm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiUrl: settings.llmProvider.apiUrl,
+          apiKey: settings.llmProvider.apiKey,
+          model: settings.llmProvider.model,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.healthy) {
+        setLlmTestState('success');
+        toast.success(t('onboarding.test_success'));
+      } else {
+        setLlmTestState('failed');
+        setLlmTestError(data.warning || t('onboarding.test_failed'));
+      }
+    } catch (err) {
+      setLlmTestState('failed');
+      setLlmTestError(String(err));
+    }
+  };
 
   const fetchDiagnostics = async () => {
     setDiagnosticsLoading(true);
@@ -73,10 +229,31 @@ export default function SettingsPanel({
       const data = await res.json();
       setDiagnosticsData(data);
     } catch (err) {
-      setDiagnosticsError('后端离线');
+      setDiagnosticsError(t('settings.diagnostics_backend_offline'));
       setDiagnosticsData(null);
     } finally {
       setDiagnosticsLoading(false);
+    }
+  };
+
+  const handleEmbeddingReload = async () => {
+    setEmbeddingReloading(true);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`${BRAIN_URL}/api/admin/embedding/reload`, {
+        method: 'POST',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast.success(t('settings.embedding_reloaded'));
+      await fetchDiagnostics();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(t('settings.embedding_reload_failed'), msg);
+    } finally {
+      setEmbeddingReloading(false);
     }
   };
 
@@ -113,12 +290,38 @@ export default function SettingsPanel({
   };
 
   const finishEditing = (id: string) => {
-    if (tempShortcut) {
-      onUpdateShortcut(id, tempShortcut);
+    if (!tempShortcut) return;
+    const conflict = shortcutConflict;
+    if (conflict) {
+      const conflictLabel = conflict.type === 'omni'
+        ? t('graph.conflict_with_omni').replace('{name}', t(conflict.name))
+        : t('graph.conflict_with_system').replace('{name}', language === 'zh' ? conflict.labelZh : conflict.labelEn);
+      const ok = window.confirm(`${conflictLabel}\n\n${t('graph.conflict_confirm')}`);
+      if (!ok) return;
     }
+    onUpdateShortcut(id, tempShortcut);
     setEditingId(null);
     setTempShortcut('');
   };
+
+  // 快捷键冲突检测（实时，在编辑时计算）
+  const shortcutConflict = useMemo<{
+    type: 'omni'; name: string; id: string;
+  } | {
+    type: 'system'; labelZh: string; labelEn: string;
+  } | null>(() => {
+    if (!editingId || !tempShortcut) return null;
+    const normalized = normalizeShortcut(tempShortcut);
+    // 检查 omni 快捷键
+    const omniConflict = settings.keyboardShortcuts.find(
+      s => s.id !== editingId && normalizeShortcut(s.current) === normalized
+    );
+    if (omniConflict) return { type: 'omni', name: omniConflict.name, id: omniConflict.id };
+    // 检查系统快捷键
+    const sysConflict = findSystemConflict(tempShortcut);
+    if (sysConflict) return { type: 'system', labelZh: sysConflict.labelZh, labelEn: sysConflict.labelEn };
+    return null;
+  }, [editingId, tempShortcut, settings.keyboardShortcuts]);
 
   const startEditing = (shortcut: KeyboardShortcut) => {
     setEditingId(shortcut.id);
@@ -145,10 +348,10 @@ export default function SettingsPanel({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('备份已下载');
+      toast.success(t('toast.backup_downloaded'));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      toast.error('导出失败', msg);
+      toast.error(t('toast.export_failed'), msg);
     } finally {
       setDataBusy(false);
     }
@@ -164,9 +367,7 @@ export default function SettingsPanel({
     e.target.value = '';
     if (!file) return;
     // 主线程后续会换成 toast；当前用 confirm/alert 把流程跑通即可。
-    const merge = window.confirm(
-      '恢复模式选择：\n\n点击「确定」= 合并 (merge)：保留现有数据，仅追加备份中不存在的记录。\n点击「取消」= 替换 (replace)：先清空当前数据库再导入备份。\n\n替换是不可逆操作，请确认你已经有当前数据的副本。'
-    );
+    const merge = window.confirm(t('toast.restore_mode_prompt'));
     const mode = merge ? 'merge' : 'replace';
     setDataBusy(true);
     try {
@@ -180,7 +381,7 @@ export default function SettingsPanel({
       try {
         payload = JSON.parse(text);
       } catch {
-        throw new Error('备份文件不是有效的 JSON');
+        throw new Error(t('toast.invalid_backup_json'));
       }
       const res = await fetch(`${BRAIN_URL}/api/admin/import`, {
         method: 'POST',
@@ -193,14 +394,17 @@ export default function SettingsPanel({
       }
       const c = result?.imported || {};
       toast.success(
-        `恢复成功 (${mode})`,
-        `entities=${c.entities ?? 0} · relationships=${c.relationships ?? 0} · ` +
-          `core=${c.coreMemory ?? 0} · archival=${c.archivalMemory ?? 0} · ` +
-          `notifications=${c.notifications ?? 0}`,
+        t('toast.restore_success').replace('{mode}', mode),
+        t('toast.restore_detail')
+          .replace('{entities}', String(c.entities ?? 0))
+          .replace('{relationships}', String(c.relationships ?? 0))
+          .replace('{core}', String(c.coreMemory ?? 0))
+          .replace('{archival}', String(c.archivalMemory ?? 0))
+          .replace('{notifications}', String(c.notifications ?? 0)),
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      toast.error('恢复失败', msg);
+      toast.error(t('toast.restore_failed'), msg);
     } finally {
       setDataBusy(false);
     }
@@ -210,9 +414,12 @@ export default function SettingsPanel({
     { id: 'shortcuts' as Tab, icon: <Keyboard className="w-4 h-4" />, label: t('settings.shortcuts') },
     { id: 'appearance' as Tab, icon: <Palette className="w-4 h-4" />, label: t('settings.appearance') },
     { id: 'behavior' as Tab, icon: <Sliders className="w-4 h-4" />, label: t('settings.behavior') },
-    { id: 'llm' as Tab, icon: <Globe className="w-4 h-4" />, label: t('settings.llm_provider') || '大模型配置' },
-    { id: 'data' as Tab, icon: <DatabaseIcon className="w-4 h-4" />, label: t('settings.data') || '数据管理' },
-    { id: 'diagnostics' as Tab, icon: <Activity className="w-4 h-4" />, label: '系统自检' },
+    { id: 'llm' as Tab, icon: <Globe className="w-4 h-4" />, label: t('settings.llm_provider') },
+    { id: 'data' as Tab, icon: <DatabaseIcon className="w-4 h-4" />, label: t('settings.data') },
+    { id: 'mcp' as Tab, icon: <Share2 className="w-4 h-4" />, label: t('settings.mcp_tab') },
+    { id: 'diagnostics' as Tab, icon: <Activity className="w-4 h-4" />, label: t('settings.diagnostics') },
+    { id: 'privacy' as Tab, icon: <Shield className="w-4 h-4" />, label: t('settings.privacy_title') },
+    { id: 'about' as Tab, icon: <Info className="w-4 h-4" />, label: t('settings.about') },
   ];
 
   // 启动时以 OS 实际状态对账
@@ -292,13 +499,13 @@ export default function SettingsPanel({
                       {settings.keyboardShortcuts
                         .filter((s) => s.category === category)
                         .map((shortcut) => (
-                          <div
-                            key={shortcut.id}
-                            className="flex items-center justify-between p-3 bg-black/20 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
-                          >
+                          <div key={shortcut.id}>
+                            <div
+                              className="flex items-center justify-between p-3 bg-black/20 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
+                            >
                             <div>
-                              <div className="text-white font-medium">{shortcut.name}</div>
-                              <div className="text-xs text-gray-500">{shortcut.description}</div>
+                              <div className="text-white font-medium">{t(shortcut.name)}</div>
+                              <div className="text-xs text-gray-500">{t(shortcut.description)}</div>
                             </div>
                             {editingId === shortcut.id ? (
                               <button
@@ -306,7 +513,7 @@ export default function SettingsPanel({
                                 onClick={() => finishEditing(shortcut.id)}
                                 className="px-3 py-1.5 bg-cyan-900/40 border border-cyan-400 text-cyan-400 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400/50 animate-pulse"
                               >
-                                {tempShortcut || '按任意键'}
+                                {tempShortcut || t('settings.press_any_key')}
                               </button>
                             ) : (
                               <button
@@ -317,6 +524,19 @@ export default function SettingsPanel({
                               </button>
                             )}
                           </div>
+                          {editingId === shortcut.id && shortcutConflict && (
+                            <div className="mt-1 px-3 py-1.5 bg-amber-950/30 border border-amber-800/40 rounded-lg">
+                              <div className="flex items-center gap-2 text-amber-400 text-xs">
+                                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>
+                                  {shortcutConflict.type === 'omni'
+                                    ? t('graph.conflict_with_omni').replace('{name}', t(shortcutConflict.name))
+                                    : t('graph.conflict_with_system').replace('{name}', language === 'zh' ? shortcutConflict.labelZh : shortcutConflict.labelEn)}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         ))}
                     </div>
                   </div>
@@ -349,7 +569,7 @@ export default function SettingsPanel({
                               : 'text-gray-400 hover:text-white hover:bg-white/5 border-white/10'
                           }`}
                         >
-                          中文
+                          {t('settings.language_zh')}
                         </button>
                         <button
                           onClick={() => onUpdateLanguage('en')}
@@ -359,7 +579,7 @@ export default function SettingsPanel({
                               : 'text-gray-400 hover:text-white hover:bg-white/5 border-white/10'
                           }`}
                         >
-                          English
+                          {t('settings.language_en')}
                         </button>
                       </div>
                     </div>
@@ -447,8 +667,8 @@ export default function SettingsPanel({
                     },
                     {
                       key: 'defaultFloatingHUD',
-                      name: '默认弹出悬浮 HUD',
-                      description: '应用启动后自动显示桌面悬浮 HUD（主窗口最小化也可见）',
+                      name: t('settings.default_floating_hud'),
+                      description: t('settings.default_floating_hud_desc'),
                       value: settings.behavior.defaultFloatingHUD,
                     },
                     {
@@ -495,26 +715,137 @@ export default function SettingsPanel({
                     );
                   })}
                 </div>
+
+                {/* [通用] 关闭行为 */}
+                <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
+                  <div>
+                    <div className="text-white font-medium">{t('settings.close_action')}</div>
+                    <div className="text-xs text-gray-500">{t('settings.close_action_desc')}</div>
+                  </div>
+                  <div className="flex gap-6 mt-2">
+                    <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="closeAction"
+                        value="minimize_to_tray"
+                        checked={settings.behavior.closeAction !== 'exit'}
+                        onChange={() => onUpdateBehavior({ closeAction: 'minimize_to_tray' })}
+                        className="text-cyan-600 focus:ring-cyan-500 bg-black/40 border-white/10"
+                      />
+                      {t('settings.close_action_minimize')}
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="closeAction"
+                        value="exit"
+                        checked={settings.behavior.closeAction === 'exit'}
+                        onChange={() => onUpdateBehavior({ closeAction: 'exit' })}
+                        className="text-cyan-600 focus:ring-cyan-500 bg-black/40 border-white/10"
+                      />
+                      {t('settings.close_action_exit')}
+                    </label>
+                  </div>
+                </div>
+
+                {/* [通用] 打开数据目录 */}
+                <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-medium">{t('settings.open_data_dir')}</div>
+                    <div className="text-xs text-gray-500">{t('settings.open_data_dir_desc')}</div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const { invoke } = await import('@tauri-apps/api/tauri');
+                        await invoke('open_data_folder');
+                      } catch (e) {
+                        toast.error(t('toast.cannot_open_dir'), String(e));
+                      }
+                    }}
+                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg text-sm transition-colors"
+                  >
+                    {t('settings.open_dir')}
+                  </button>
+                </div>
+
+                {/* [通用] 重新启动新手引导 */}
+                <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-medium">{t('onboarding.restart_tour')}</div>
+                    <div className="text-xs text-gray-500">{t('settings.restart_tour_desc')}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      onUpdateBehavior({ onboarded: false });
+                      onClose();
+                    }}
+                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg text-sm transition-colors"
+                  >
+                    {t('settings.start_tour')}
+                  </button>
+                </div>
               </div>
             )}
 
             {activeTab === 'llm' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{t('settings.llm_provider') || '大模型配置 (LLM)'}</h3>
-                  <p className="text-xs text-gray-400 mt-1">配置云端或本地大模型，用于知识图谱的深度语义提取。修改后需重启应用生效。</p>
+                  <h3 className="text-lg font-semibold text-white">{t('settings.llm_provider')}</h3>
+                  <p className="text-xs text-gray-400 mt-1">{t('settings.llm_desc')}</p>
                 </div>
 
                 <div className="space-y-4">
+                  {/* [通用] 推荐服务商预设卡片组 */}
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
+                    <label className="text-sm font-medium text-white block">{t('onboarding.preset_label')}</label>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
+                      {LLM_PRESETS.map((preset) => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            if (preset.id !== 'custom') {
+                              onUpdateLlmProvider({
+                                apiUrl: preset.apiUrl,
+                                model: preset.defaultModel,
+                              });
+                            } else {
+                              onUpdateLlmProvider({
+                                apiUrl: '',
+                                model: '',
+                              });
+                            }
+                            setLlmTestState('idle');
+                          }}
+                          className={`p-2 rounded-lg border text-left transition-all ${
+                            settings.llmProvider.apiUrl === preset.apiUrl && (preset.id === 'custom' || settings.llmProvider.model === preset.defaultModel)
+                              ? 'bg-cyan-900/40 border-cyan-400 text-white'
+                              : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/20 hover:text-white'
+                          }`}
+                        >
+                          <div className="text-xs font-bold truncate flex items-center gap-1.5">
+                            <span>{preset.emoji}</span>
+                            <span>{t(preset.name)}</span>
+                          </div>
+                          <div className="text-[10px] text-gray-500 truncate mt-0.5">{t(preset.cost)}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* API URL */}
                   <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
                     <label className="text-sm font-medium text-white block">API URL</label>
                     <input
                       type="text"
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
                       value={settings.llmProvider.apiUrl}
-                      onChange={(e) => onUpdateLlmProvider({ apiUrl: e.target.value })}
-                      placeholder="例如: https://api.openai.com/v1 或 http://localhost:11434/v1"
+                      onChange={(e) => {
+                        onUpdateLlmProvider({ apiUrl: e.target.value });
+                        setLlmTestState('idle');
+                      }}
+                      placeholder={t('settings.llm_api_placeholder')}
                     />
                   </div>
 
@@ -523,23 +854,56 @@ export default function SettingsPanel({
                     <label className="text-sm font-medium text-white block">API Key</label>
                     <input
                       type="password"
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
                       value={settings.llmProvider.apiKey}
-                      onChange={(e) => onUpdateLlmProvider({ apiKey: e.target.value })}
-                      placeholder="sk-... (Ollama等本地模型留空即可)"
+                      onChange={(e) => {
+                        onUpdateLlmProvider({ apiKey: e.target.value });
+                        setLlmTestState('idle');
+                      }}
+                      placeholder={t('settings.llm_key_placeholder')}
                     />
                   </div>
 
                   {/* Model */}
                   <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
-                    <label className="text-sm font-medium text-white block">模型名称 (Model)</label>
+                    <label className="text-sm font-medium text-white block font-sans">{t('settings.llm_model_label')}</label>
                     <input
                       type="text"
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
                       value={settings.llmProvider.model}
-                      onChange={(e) => onUpdateLlmProvider({ model: e.target.value })}
-                      placeholder="例如: gpt-4o, qwen2.5:7b"
+                      onChange={(e) => {
+                        onUpdateLlmProvider({ model: e.target.value });
+                        setLlmTestState('idle');
+                      }}
+                      placeholder={t('settings.llm_model_placeholder')}
                     />
+                  </div>
+
+                  {/* [通用] 测试连接 */}
+                  <div className="flex flex-col gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleTestLlmConnection}
+                      disabled={llmTestState === 'testing' || !settings.llmProvider.apiUrl}
+                      className={`py-2.5 px-4 rounded-lg text-sm font-semibold border transition-all ${
+                        llmTestState === 'success'
+                          ? 'bg-emerald-950/30 border-emerald-500 text-emerald-400'
+                          : llmTestState === 'failed'
+                          ? 'bg-rose-950/30 border-rose-500 text-rose-400 hover:bg-rose-900/20'
+                          : 'bg-cyan-600 hover:bg-cyan-500 text-white border-transparent'
+                      }`}
+                    >
+                      {llmTestState === 'testing'
+                        ? t('onboarding.testing')
+                        : llmTestState === 'success'
+                        ? `🎉 ${t('onboarding.test_success')}`
+                        : t('onboarding.test_btn')}
+                    </button>
+                    {llmTestState === 'failed' && (
+                      <p className="text-xs text-rose-400 text-center leading-relaxed">
+                        {llmTestError}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -548,42 +912,36 @@ export default function SettingsPanel({
             {activeTab === 'data' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{t('settings.data') || '数据管理 / Data'}</h3>
-                  <p className="text-xs text-gray-400 mt-1">
-                    导出整个 Omni-Context 数据库为 JSON 备份，或在新机器上从备份恢复。数据完全归你所有。
-                  </p>
+                  <h3 className="text-lg font-semibold text-white">{t('settings.data')}</h3>
+                  <p className="text-xs text-gray-400 mt-1">{t('settings.dock_desc')}</p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
                     <div>
-                      <div className="text-white font-medium">导出全部数据</div>
-                      <div className="text-xs text-gray-500">
-                        包含 entities / relationships / coreMemory / archivalMemory / notifications。
-                      </div>
+                      <div className="text-white font-medium">{t('settings.export_all')}</div>
+                      <div className="text-xs text-gray-500">{t('settings.export_desc')}</div>
                     </div>
                     <button
                       onClick={handleExportAll}
                       disabled={dataBusy}
                       className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {dataBusy ? '处理中…' : '导出 JSON'}
+                      {dataBusy ? t('settings.processing') : t('settings.export_json')}
                     </button>
                   </div>
 
                   <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
                     <div>
-                      <div className="text-white font-medium">从备份恢复</div>
-                      <div className="text-xs text-gray-500">
-                        选择之前导出的 JSON 文件。会询问合并 (merge) 或替换 (replace)。
-                      </div>
+                      <div className="text-white font-medium">{t('settings.restore')}</div>
+                      <div className="text-xs text-gray-500">{t('settings.restore_desc')}</div>
                     </div>
                     <button
                       onClick={handleRestoreClick}
                       disabled={dataBusy}
                       className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {dataBusy ? '处理中…' : '选择备份文件'}
+                      {dataBusy ? t('settings.processing') : t('settings.choose_backup')}
                     </button>
                     <input
                       ref={fileInputRef}
@@ -593,6 +951,159 @@ export default function SettingsPanel({
                       className="hidden"
                     />
                   </div>
+
+                  {/* 配对码区块：移动端 LAN 连接鉴权 */}
+                  {pairCodeInfo && (
+                    <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-4">
+                      <div>
+                        <div className="text-white font-medium">{t('settings.pair_code_title')}</div>
+                        <div className="text-xs text-gray-500 mt-1">{t('settings.pair_code_desc')}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="bg-black/30 border border-white/10 rounded-lg p-3">
+                          <QRCodeSVG
+                            value={`omni://pair?host=${pairCodeInfo.lan_ip}&port=${pairCodeInfo.port}&code=${pairCodeInfo.code}`}
+                            size={120}
+                            bgColor="#0a0b12"
+                            fgColor="#7df9ff"
+                            level="M"
+                          />
+                        </div>
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <span className="text-xs text-gray-500">{t('settings.pair_code_label')}</span>
+                            <p className="text-2xl font-mono text-cyan-400 tracking-[0.3em]">{pairCodeInfo.code}</p>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {pairCodeInfo.lan_ip}:{pairCodeInfo.port}
+                          </div>
+                          <button
+                            onClick={handleRegeneratePairCode}
+                            className="px-3 py-1.5 text-xs bg-white/5 border border-white/10 hover:bg-white/10 hover:border-amber-700 hover:text-amber-400 text-gray-300 rounded-lg transition-colors"
+                          >
+                            {t('settings.pair_code_regenerate')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'privacy' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{t('settings.privacy_title')}</h3>
+                  <p className="text-xs text-gray-400 mt-1">{t('settings.privacy_pause_desc')}</p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* 暂停抓取 */}
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                    <div>
+                      <div className="text-white font-medium">{t('settings.privacy_pause')}</div>
+                      <div className="text-xs text-gray-500">{t('settings.privacy_pause_desc')}</div>
+                    </div>
+                    <button
+                      onClick={() => onUpdateBehavior({ capturePaused: !settings.behavior.capturePaused })}
+                      className={`w-14 h-7 rounded-full transition-colors relative ${
+                        settings.behavior.capturePaused ? 'bg-amber-600' : 'bg-gray-700'
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                          settings.behavior.capturePaused ? 'transform translate-x-7' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* 敏感应用排除列表 */}
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
+                    <div>
+                      <div className="text-white font-medium">{t('settings.privacy_blocklist_label')}</div>
+                      <div className="text-xs text-gray-500 mt-1">{t('settings.privacy_blocklist_hint')}</div>
+                    </div>
+                    <textarea
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono min-h-[180px] resize-y"
+                      value={(settings.behavior.captureBlocklist || []).join('\n')}
+                      onChange={(e) => {
+                        const lines = e.target.value
+                          .split('\n')
+                          .map((l) => l.trim())
+                          .filter((l) => l.length > 0);
+                        onUpdateBehavior({ captureBlocklist: lines });
+                      }}
+                      placeholder={t('settings.privacy_blocklist_placeholder')}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'about' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{t('settings.about')}</h3>
+                  <p className="text-xs text-gray-400 mt-1">{t('app.subtitle')}</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                    <div>
+                      <div className="text-white font-medium">{t('settings.version')}</div>
+                      <div className="text-xs text-gray-500">Omni-Context Desktop</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 bg-cyan-900/30 border border-cyan-800 rounded text-xs text-cyan-400 font-mono">
+                        v0.1.0
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-white font-medium">{t('settings.update_title')}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {updateStatus === 'available'
+                            ? t('settings.update_available').replace('{version}', updateVersion)
+                            : updateStatus === 'no-update'
+                            ? t('settings.update_no_update')
+                            : updateStatus === 'error'
+                            ? t('settings.update_check_failed')
+                            : t('settings.update_title')}
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleCheckUpdate}
+                        disabled={updateChecking}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
+                          updateStatus === 'available'
+                            ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                            : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300'
+                        } disabled:opacity-50`}
+                      >
+                        <RefreshCw className={`w-4 h-4 ${updateChecking ? 'animate-spin' : ''}`} />
+                        {updateChecking
+                          ? t('settings.update_downloading')
+                          : updateStatus === 'available'
+                          ? t('settings.update_click_to_update')
+                          : t('settings.update_refresh')}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
+                    <div className="text-white font-medium">{t('app.title')}</div>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Omni-Context - {t('app.subtitle')}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {t('settings.version')}: v0.1.0
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -601,23 +1112,39 @@ export default function SettingsPanel({
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">系统自检</h3>
-                    <p className="text-xs text-gray-400 mt-1">检测核心组件的健康状态，并及时发现潜在的故障与降级风险。</p>
+                    <h3 className="text-lg font-semibold text-white">{t('settings.diagnostics')}</h3>
+                    <p className="text-xs text-gray-400 mt-1">{t('settings.diagnostics_desc')}</p>
                   </div>
-                  <button
-                    onClick={fetchDiagnostics}
-                    disabled={diagnosticsLoading}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${diagnosticsLoading ? 'animate-spin' : ''}`} />
-                    重新检测
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const { invoke } = await import('@tauri-apps/api/tauri');
+                          await invoke('open_logs_folder');
+                        } catch (e) {
+                          toast.error(t('toast.cannot_open_dir'), String(e));
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg transition-colors"
+                    >
+                      <DatabaseIcon className="w-4 h-4" />
+                      {t('settings.open_logs_dir')}
+                    </button>
+                    <button
+                      onClick={fetchDiagnostics}
+                      disabled={diagnosticsLoading}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${diagnosticsLoading ? 'animate-spin' : ''}`} />
+                      {t('settings.diagnostics_refresh')}
+                    </button>
+                  </div>
                 </div>
 
                 {diagnosticsLoading && (
                   <div className="p-12 text-center bg-black/20 rounded-lg border border-white/5 flex flex-col items-center justify-center space-y-3">
                     <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin" />
-                    <span className="text-sm text-gray-400">正在诊断系统状态，请稍候...</span>
+                    <span className="text-sm text-gray-400">{t('settings.diagnostics_loading')}</span>
                   </div>
                 )}
 
@@ -625,10 +1152,10 @@ export default function SettingsPanel({
                   <div className="p-6 bg-red-950/30 border border-red-800/50 rounded-lg space-y-3">
                     <div className="flex items-center gap-2 text-red-400 font-semibold">
                       <XCircle className="w-5 h-5" />
-                      <span>后端服务离线</span>
+                      <span>{t('settings.diagnostics_backend_offline')}</span>
                     </div>
                     <p className="text-xs text-gray-400 leading-relaxed">
-                      无法连接到本地服务端 (<span className="font-mono">{BRAIN_URL}</span>)。请确保脑端服务 (brain-server) 已启动并在运行中。
+                      {t('settings.diagnostics_offline_detail')}
                     </p>
                   </div>
                 )}
@@ -649,10 +1176,10 @@ export default function SettingsPanel({
                         )}
                         <div>
                           <div className="font-semibold text-sm">
-                            {diagnosticsData.ok ? '系统运行良好' : '系统已降级'}
+                            {diagnosticsData.ok ? t('settings.diagnostics_healthy') : t('settings.diagnostics_degraded')}
                           </div>
                           <div className="text-xs text-gray-400 mt-0.5">
-                            {diagnosticsData.ok ? '所有核心组件均处于健康状态，性能优异。' : '检测到降级项，部分高级特征已失效或处于受限状态。'}
+                            {diagnosticsData.ok ? t('settings.diagnostics_healthy_detail') : t('settings.diagnostics_degraded_detail')}
                           </div>
                         </div>
                       </div>
@@ -672,33 +1199,53 @@ export default function SettingsPanel({
                         <div className="flex items-start gap-3">
                           <DatabaseIcon className="w-5 h-5 text-cyan-400 mt-0.5" />
                           <div>
-                            <div className="text-white text-sm font-medium">向量生成 (Embedding)</div>
+                            <div className="text-white text-sm font-medium">{t('settings.diagnostics_embedding_label')}</div>
                             <div className="text-xs text-gray-400 mt-1">
-                              模式: <span className="font-mono text-cyan-400">{diagnosticsData.embedding.status}</span> · 模型: <span className="font-mono text-gray-300">{diagnosticsData.embedding.model}</span>
+                              {diagnosticsData.embedding.mode === 'api' ? (
+                                <>{t('settings.diagnostics_embedding_remote_api')} (<span className="font-mono text-cyan-400">{diagnosticsData.embedding.apiUrl || '—'}</span>)</>
+                              ) : diagnosticsData.embedding.status === 'local' ? (
+                                <>{t('settings.diagnostics_embedding_local_model')} <span className="font-mono text-cyan-400">{diagnosticsData.embedding.model}</span> {t('settings.diagnostics_status_ready')}</>
+                              ) : diagnosticsData.embedding.status === 'hash-fallback' ? (
+                                <>{t('settings.diagnostics_label_mode')}<span className="font-mono text-red-400">hash-fallback</span> · {t('settings.diagnostics_label_model')}<span className="font-mono text-gray-300">{diagnosticsData.embedding.model}</span></>
+                              ) : (
+                                <>{t('settings.diagnostics_label_mode')}<span className="font-mono text-cyan-400">{diagnosticsData.embedding.status}</span> · {t('settings.diagnostics_label_model')}<span className="font-mono text-gray-300">{diagnosticsData.embedding.model}</span></>
+                              )}
                             </div>
                             {diagnosticsData.embedding.status === 'hash-fallback' && (
-                              <div className="mt-2 text-xs text-amber-400/90 bg-amber-950/30 border border-amber-900/40 p-2 rounded leading-relaxed">
-                                <span className="font-semibold">⚠️ 降级警告：</span>本地向量模型加载失败，已降级为简单哈希向量。向量检索已降级，语义搜索不准。
+                              <div className="mt-2 text-xs text-red-400/90 bg-red-950/30 border border-red-900/40 p-2 rounded leading-relaxed">
+                                <span className="font-semibold">{t('settings.diagnostics_embedding_hash_warn')}</span>
                               </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          {diagnosticsData.embedding.status === 'hash-fallback' ? (
-                            <>
-                              <AlertTriangle className="w-4 h-4 text-amber-500" />
-                              <span className="text-xs text-amber-500 font-medium">哈希降级</span>
-                            </>
-                          ) : diagnosticsData.embedding.status === 'pending' ? (
-                            <>
-                              <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                              <span className="text-xs text-amber-500 font-medium">初始化中</span>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                              <span className="text-xs text-emerald-500 font-medium">已就绪</span>
-                            </>
+                        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-1.5">
+                            {diagnosticsData.embedding.status === 'hash-fallback' ? (
+                              <>
+                                <XCircle className="w-4 h-4 text-red-500" />
+                                <span className="text-xs text-red-500 font-medium">{t('settings.diagnostics_status_hash_fallback')}</span>
+                              </>
+                            ) : diagnosticsData.embedding.status === 'pending' ? (
+                              <>
+                                <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                                <span className="text-xs text-amber-500 font-medium">{t('settings.diagnostics_status_initializing')}</span>
+                              </>
+                            ) : (
+                              <>
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                <span className="text-xs text-emerald-500 font-medium">{t('settings.diagnostics_status_ready')}</span>
+                              </>
+                            )}
+                          </div>
+                          {(diagnosticsData.embedding.status === 'hash-fallback' || diagnosticsData.embedding.status === 'pending') && (
+                            <button
+                              onClick={handleEmbeddingReload}
+                              disabled={embeddingReloading}
+                              className="flex items-center gap-1 px-2 py-1 text-xs bg-cyan-600/80 hover:bg-cyan-500 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${embeddingReloading ? 'animate-spin' : ''}`} />
+                              {embeddingReloading ? t('settings.embedding_reloading') : t('settings.embedding_reload')}
+                            </button>
                           )}
                         </div>
                       </div>
@@ -708,13 +1255,13 @@ export default function SettingsPanel({
                         <div className="flex items-start gap-3">
                           <Sliders className="w-5 h-5 text-purple-400 mt-0.5" />
                           <div>
-                            <div className="text-white text-sm font-medium">大语言模型 (LLM)</div>
+                            <div className="text-white text-sm font-medium">{t('settings.diagnostics_llm_label')}</div>
                             <div className="text-xs text-gray-400 mt-1">
-                              模型: <span className="font-mono text-gray-300">{diagnosticsData.llm.model}</span> · 接口: <span className="font-mono text-gray-400">{diagnosticsData.llm.apiUrl}</span>
+                              {t('settings.diagnostics_llm_model_prefix')}<span className="font-mono text-gray-300">{diagnosticsData.llm.model}</span> · {t('settings.diagnostics_llm_api_prefix')}<span className="font-mono text-gray-400">{diagnosticsData.llm.apiUrl}</span>
                             </div>
                             {!diagnosticsData.llm.enabled && (
                               <div className="mt-2 text-xs text-amber-400/90 bg-amber-950/30 border border-amber-900/40 p-2 rounded leading-relaxed">
-                                <span className="font-semibold">⚠️ 连接提示：</span>LLM 未连接，只有正则抽取。高级深度语义提取已被禁用。
+                                <span className="font-semibold">{t('settings.diagnostics_llm_disconnected_warn_title')}</span>{t('settings.diagnostics_llm_disconnected_warn_body')}
                               </div>
                             )}
                           </div>
@@ -723,12 +1270,12 @@ export default function SettingsPanel({
                           {diagnosticsData.llm.enabled ? (
                             <>
                               <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                              <span className="text-xs text-emerald-500 font-medium">已连接</span>
+                              <span className="text-xs text-emerald-500 font-medium">{t('settings.diagnostics_status_connected')}</span>
                             </>
                           ) : (
                             <>
                               <AlertTriangle className="w-4 h-4 text-amber-500" />
-                              <span className="text-xs text-amber-500 font-medium">未连接</span>
+                              <span className="text-xs text-amber-500 font-medium">{t('settings.diagnostics_status_disconnected')}</span>
                             </>
                           )}
                         </div>
@@ -739,13 +1286,13 @@ export default function SettingsPanel({
                         <div className="flex items-start gap-3">
                           <Globe className="w-5 h-5 text-rose-400 mt-0.5" />
                           <div>
-                            <div className="text-white text-sm font-medium">文字识别 (OCR)</div>
+                            <div className="text-white text-sm font-medium">{t('settings.diagnostics_ocr_label')}</div>
                             <div className="text-xs text-gray-400 mt-1">
-                              {diagnosticsData.ocr.ready ? '内置文本提取引擎语言包完整。' : '未检测到内置 OCR 识别语言包。'}
+                              {diagnosticsData.ocr.ready ? t('settings.diagnostics_ocr_ready_detail') : t('settings.diagnostics_ocr_missing_detail')}
                             </div>
                             {!diagnosticsData.ocr.ready && (
                               <div className="mt-2 text-xs text-red-400/90 bg-red-950/30 border border-red-900/40 p-2 rounded leading-relaxed">
-                                <span className="font-semibold">❌ 故障警告：</span>语言包未就位。OCR 无法正常识别截图中的文本，请检查 models/tessdata 目录。
+                                <span className="font-semibold">{t('settings.diagnostics_ocr_missing_warn_title')}</span>{t('settings.diagnostics_ocr_missing_warn_body')}
                               </div>
                             )}
                           </div>
@@ -754,12 +1301,12 @@ export default function SettingsPanel({
                           {diagnosticsData.ocr.ready ? (
                             <>
                               <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                              <span className="text-xs text-emerald-500 font-medium">已就位</span>
+                              <span className="text-xs text-emerald-500 font-medium">{t('settings.diagnostics_status_installed')}</span>
                             </>
                           ) : (
                             <>
                               <XCircle className="w-4 h-4 text-red-500" />
-                              <span className="text-xs text-red-500 font-medium">语言包缺失</span>
+                              <span className="text-xs text-red-500 font-medium">{t('settings.diagnostics_status_missing')}</span>
                             </>
                           )}
                         </div>
@@ -770,9 +1317,9 @@ export default function SettingsPanel({
                         <div className="flex items-start gap-3">
                           <Activity className="w-5 h-5 text-emerald-400 mt-0.5" />
                           <div>
-                            <div className="text-white text-sm font-medium">智能分析引擎 (Proactive Agent)</div>
+                            <div className="text-white text-sm font-medium">{t('settings.diagnostics_agent_label')}</div>
                             <div className="text-xs text-gray-400 mt-1">
-                              {diagnosticsData.agent.running ? '智能引擎后台轮询任务正常运行。' : '智能引擎后台任务已挂起。'}
+                              {diagnosticsData.agent.running ? t('settings.diagnostics_agent_running_detail') : t('settings.diagnostics_agent_stopped_detail')}
                             </div>
                           </div>
                         </div>
@@ -780,12 +1327,12 @@ export default function SettingsPanel({
                           {diagnosticsData.agent.running ? (
                             <>
                               <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                              <span className="text-xs text-emerald-500 font-medium">运行中</span>
+                              <span className="text-xs text-emerald-500 font-medium">{t('settings.diagnostics_status_running')}</span>
                             </>
                           ) : (
                             <>
                               <div className="w-2 h-2 rounded-full bg-amber-500" />
-                              <span className="text-xs text-amber-500 font-medium">已挂起</span>
+                              <span className="text-xs text-amber-500 font-medium">{t('settings.diagnostics_status_suspended')}</span>
                             </>
                           )}
                         </div>
@@ -796,20 +1343,162 @@ export default function SettingsPanel({
                         <div className="flex items-start gap-3">
                           <DatabaseIcon className="w-5 h-5 text-amber-400 mt-0.5" />
                           <div>
-                            <div className="text-white text-sm font-medium">知识图谱数据库 (Database)</div>
+                            <div className="text-white text-sm font-medium">{t('settings.diagnostics_database_label')}</div>
                             <div className="text-xs text-gray-400 mt-1">
-                              已索引实体: <span className="font-mono text-cyan-400">{diagnosticsData.db.entities}</span> 个 · 关联关系: <span className="font-mono text-cyan-400">{diagnosticsData.db.relationships}</span> 条
+                              {t('settings.diagnostics_db_entities_prefix')}<span className="font-mono text-cyan-400">{diagnosticsData.db.entities}</span>{t('settings.diagnostics_db_entities_suffix')}{t('settings.diagnostics_db_relationships_infix')}<span className="font-mono text-cyan-400">{diagnosticsData.db.relationships}</span>{t('settings.diagnostics_db_relationships_suffix')}
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                          <span className="text-xs text-emerald-500 font-medium">正常</span>
+                          <span className="text-xs text-emerald-500 font-medium">{t('settings.diagnostics_status_normal')}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'mcp' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{t('settings.mcp_title')}</h3>
+                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">{t('settings.mcp_desc')}</p>
+                </div>
+
+                {/* 能力预览 */}
+                <div className="p-4 bg-black/20 rounded-lg border border-cyan-900/40 space-y-3">
+                  <button
+                    onClick={() => setScenarioExpanded(!scenarioExpanded)}
+                    className="w-full flex items-center justify-between text-left"
+                  >
+                    <span className="text-sm font-semibold text-cyan-400">
+                      {t('settings.mcp.scenario_title')}
+                    </span>
+                    {scenarioExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-cyan-400" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-cyan-400" />
+                    )}
+                  </button>
+                  {scenarioExpanded && (
+                    <div className="space-y-2.5 pt-1">
+                      {MCP_SCENARIOS.map((scenario) => {
+                        const iconEl = (() => {
+                          const icons: Record<string, React.ComponentType<{ className?: string }>> = {
+                            Search, Lightbulb, Camera, GitBranch, AlertTriangle,
+                          };
+                          const C = icons[scenario.icon];
+                          return C ? createElement(C, { className: 'w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5' }) : null;
+                        })();
+                        return (
+                          <div
+                            key={scenario.id}
+                            className="flex items-start gap-3 p-2.5 rounded-lg bg-black/30 border border-white/5 hover:border-cyan-800/50 transition-colors"
+                          >
+                            {iconEl}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-white text-sm font-medium">
+                                {t(scenario.titleKey)}
+                              </div>
+                              <div className="text-xs text-gray-400 mt-0.5">
+                                <span className="text-gray-500">{t('settings.mcp.scenario_prompt_label')} </span>
+                                <span className="text-gray-300 italic">"{t(scenario.promptKey)}"</span>
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 relative group">
+                              <code className="px-1.5 py-0.5 bg-cyan-950/40 border border-cyan-800/40 rounded text-[10px] text-cyan-400 font-mono">
+                                {scenario.tool}
+                              </code>
+                              <div className="absolute bottom-full right-0 mb-1 w-56 p-2 bg-gray-900 border border-white/10 rounded-lg text-[10px] text-gray-300 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                {scenario.toolDescription}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 一键配置组 */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-cyan-400/90 uppercase tracking-wider border-b border-white/5 pb-1">
+                    {t('settings.mcp_auto_section')}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {MCP_CLIENTS.filter(c => c.supports === 'auto').map(client => {
+                      const status = mcpStatuses.find(s => s.id === client.id) || {
+                        installed: false,
+                        configured: false,
+                        config_path: '',
+                      };
+                      return (
+                        <McpClientCard
+                          key={client.id}
+                          client={client}
+                          status={status}
+                          serverCmd={mcpServerCmd}
+                          onInstall={handleMcpInstall}
+                          onOpenFolder={handleMcpOpenFolder}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 手动配置组 */}
+                <div className="space-y-4 pt-4">
+                  <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-1">
+                    {t('settings.mcp_manual_section')}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {MCP_CLIENTS.filter(c => c.supports === 'manual').map(client => {
+                      const status = mcpStatuses.find(s => s.id === client.id) || {
+                        installed: false,
+                        configured: false,
+                        config_path: '',
+                      };
+                      return (
+                        <McpClientCard
+                          key={client.id}
+                          client={client}
+                          status={status}
+                          serverCmd={mcpServerCmd}
+                          onInstall={handleMcpInstall}
+                          onOpenFolder={handleMcpOpenFolder}
+                        />
+                      );
+                    })}
+
+                    {/* 兜底卡片：其他 MCP 客户端 */}
+                    <McpClientCard
+                      client={{
+                        id: 'other',
+                        name: t('mcp.other_name'),
+                        logo: 'other',
+                        supports: 'manual',
+                        config_path_template: t('mcp.other_config_path'),
+                        json_field: t('mcp.other_json_field'),
+                        reload_hint: t('mcp.other_reload_hint'),
+                        steps: [
+                          t('mcp.other_step_0'),
+                          t('mcp.other_step_1'),
+                          t('mcp.other_step_2'),
+                        ]
+                      }}
+                      status={{
+                        installed: true,
+                        configured: false,
+                        config_path: '',
+                      }}
+                      serverCmd={mcpServerCmd}
+                      onInstall={handleMcpInstall}
+                      onOpenFolder={handleMcpOpenFolder}
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -819,14 +1508,14 @@ export default function SettingsPanel({
              这里只保留单一的"完成"按钮，避免 Save / Close 看起来是两种语义。 */}
         <div className="flex items-center justify-between gap-3 p-4 border-t border-white/10 bg-black/20">
           <span className="text-xs text-gray-500">
-            {t('settings.autosaved') || '改动会即时保存'}
+            {t('settings.autosaved')}
           </span>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg flex items-center gap-2 transition-colors"
           >
             <Check className="w-4 h-4" />
-            {t('settings.done') || t('settings.close')}
+            {t('settings.done')}
           </button>
         </div>
       </div>

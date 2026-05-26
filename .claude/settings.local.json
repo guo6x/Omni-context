@@ -49,7 +49,26 @@
       "WebSearch",
       "Bash(grep -nA22 \"/api/status\" src/api/handlers/settings.ts)",
       "Bash(grep -nA12 \"getStatus\" src/embedding/service.ts)",
-      "Bash(PORT=3104 DB_PATH=./data/test-bug.db LLM_API_URL=https://api.deepseek.com LLM_API_KEY=sk-66af77032f39453698eee1223099a19a LLM_MODEL=deepseek-v4-flash INSIGHT_INTERVAL_MS=3600000 node dist/api-server.js)"
+      "Bash(PORT=3104 DB_PATH=./data/test-bug.db LLM_API_URL=https://api.deepseek.com LLM_API_KEY=sk-66af77032f39453698eee1223099a19a LLM_MODEL=deepseek-v4-flash INSIGHT_INTERVAL_MS=3600000 node dist/api-server.js)",
+      "PowerShell(Get-Command *)",
+      "PowerShell($size = \\(Get-ChildItem \"D:\\\\AI_code\\\\Omni-context\\\\omni-context-release\\\\brain-server\\\\node_modules\" -Recurse -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum\\).Sum; \"{0:N0} MB\" -f \\($size / 1MB\\))",
+      "PowerShell(Copy-Item *)",
+      "Bash(cp -v desktop-daemon/src-tauri/target/release/bundle/msi/Omni-Context_0.1.0_x64_en-US.msi dist/desktop-only/msi/)",
+      "Bash(cp -v desktop-daemon/src-tauri/target/release/bundle/nsis/Omni-Context_0.1.0_x64-setup.exe dist/desktop-only/nsis/)",
+      "Bash(npx tauri *)",
+      "Bash(tasklist)",
+      "Bash(taskkill /F /IM node.exe)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(New-Item *)",
+      "Bash(./minisign-win64/minisign.exe -G -W -p omni.pub -s omni.key)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "PowerShell(gh auth *)",
+      "PowerShell(winget install *)",
+      "PowerShell(choco *)",
+      "Bash(grep -iE \"\\\\.\\(env|pem|key|secret|password|token\\)$|credentials\")",
+      "Bash(git check-ignore *)",
+      "Bash(git add *)"
     ]
   }
 }

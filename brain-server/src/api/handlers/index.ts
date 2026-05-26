@@ -685,3 +685,5 @@ export const handleNotificationRoutes = [
 export { handleSettingsRoutes } from './settings.js';
 export { handleAdminRoutes } from './admin.js';
 export { handleIngestRoutes } from './ingest.js';
+export { handleMcpRoutes } from './mcp.js';
+

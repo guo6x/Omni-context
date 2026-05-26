@@ -53,6 +53,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Tauri updater signing keys (private key = secret, never commit)
+*.key
+tauri_priv.key
+desktop-daemon/.tauri-signing/
+
 # Temporary files
 *.tmp
 *.temp

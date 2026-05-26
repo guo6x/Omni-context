@@ -4,6 +4,7 @@ import { Memory, KnowledgeGraph, SyncStatus } from '@/types';
 interface ApiConfig {
   baseUrl: string;
   timeout?: number;
+  authToken?: string;
 }
 
 interface ApiResponse<T> {
@@ -28,18 +29,25 @@ class ApiClient {
 
   configure(config: ApiConfig): void {
     this.baseUrl = config.baseUrl;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (config.authToken) {
+      headers['Authorization'] = `Bearer ${config.authToken}`;
+    }
     this.client = axios.create({
       baseURL: config.baseUrl,
       timeout: config.timeout ?? 30000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     this.client.interceptors.response.use(
       response => response,
       (error: AxiosError) => {
-        const message = error.response?.data 
+        if (error.response?.status === 401) {
+          return Promise.reject(new Error('PAIR_CODE_EXPIRED'));
+        }
+        const message = error.response?.data
           ? JSON.stringify(error.response.data)
           : error.message;
         return Promise.reject(new Error(`API Error: ${message}`));
@@ -222,6 +230,75 @@ class ApiClient {
       const memories = (response.data || [])
         .map((result: any) => this.mapArchivalMemory(result.item || result));
       return { success: true, data: memories };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
+  async searchEntities(query: string, limit: number = 5): Promise<ApiResponse<any[]>> {
+    if (!this.client) {
+      return { success: false, error: 'API client not configured' };
+    }
+
+    try {
+      const response = await this.client.post('/api/entities/search', {
+        query,
+        limit,
+      });
+      return { success: true, data: response.data as any[] };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
+  async searchArchival(query: string, limit: number = 5): Promise<ApiResponse<any[]>> {
+    if (!this.client) {
+      return { success: false, error: 'API client not configured' };
+    }
+
+    try {
+      const response = await this.client.post('/api/memory/archival/search', {
+        query,
+        limit,
+      });
+      return { success: true, data: response.data as any[] };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
+  async searchCore(query: string, limit: number = 5): Promise<ApiResponse<any[]>> {
+    if (!this.client) {
+      return { success: false, error: 'API client not configured' };
+    }
+
+    try {
+      const response = await this.client.post('/api/memory/core/search', {
+        query,
+        limit,
+      });
+      return { success: true, data: response.data as any[] };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
+  async getEntityGraphContext(entityId: string): Promise<ApiResponse<{ entities: any[]; relationships: any[] }>> {
+    if (!this.client) {
+      return { success: false, error: 'API client not configured' };
+    }
+
+    try {
+      const response = await this.client.post('/api/graph/context', {
+        entity_ids: [entityId],
+      });
+      return {
+        success: true,
+        data: {
+          entities: response.data?.entities || [],
+          relationships: response.data?.relationships || [],
+        },
+      };
     } catch (error) {
       return { success: false, error: (error as Error).message };
     }

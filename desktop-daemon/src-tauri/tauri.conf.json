@@ -21,7 +21,8 @@
         "fullscreen": false,
         "minWidth": 800,
         "minHeight": 600,
-        "center": true
+        "center": true,
+        "fileDropEnabled": true
       },
       {
         "label": "hud",
@@ -40,6 +41,35 @@
         "focus": false
       }
     ],
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
+    },
+    "updater": {
+      "active": true,
+      "endpoints": ["https://github.com/guo6x/Omni-context/releases/latest/download/latest.json"],
+      "dialog": false,
+      "pubkey": "RWSKgdxaE8QA/rfPk1VS+gUJLORMPY8SDxRPVvFT47aovkqzo1QqON76"
+    },
+    "allowlist": {
+      "fs": {
+        "readFile": true,
+        "scope": ["**"]
+      },
+      "path": {
+        "all": true
+      },
+      "shell": {
+        "open": true
+      },
+      "window": {
+        "all": true
+      },
+      "clipboard": {
+        "all": true
+      }
+    },
     "security": {
       "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost http://localhost:3000 http://127.0.0.1:3000 ws://localhost:3000 ws://127.0.0.1:3000 http://localhost:3001 http://127.0.0.1:3001; img-src 'self' asset: http://asset.localhost data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; font-src 'self' data:; object-src 'none'; frame-ancestors 'none'"
     },
@@ -62,10 +92,18 @@
       "longDescription": "Omni-Context - 一个 OS 级别的常驻 AI 记忆中枢，融合了 Screenpipe 的静默抓取能力、GraphRAG 的知识图谱范式和 Letta 的多级内存架构。",
       "copyright": "© 2024 Omni-Context Team",
       "deb": {
-        "depends": []
+        "depends": [
+          "libwebkit2gtk-4.0-37",
+          "libgtk-3-0",
+          "libssl3",
+          "libayatana-appindicator3-1",
+          "librsvg2-2"
+        ]
       },
       "macOS": {
-        "exceptionDomain": ""
+        "exceptionDomain": "",
+        "signingIdentity": null,
+        "minimumSystemVersion": "10.15"
       },
       "windows": {
         "certificateThumbprint": null,

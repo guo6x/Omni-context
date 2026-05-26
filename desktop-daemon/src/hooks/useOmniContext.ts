@@ -57,7 +57,7 @@ export function useOmniContext() {
     setLogs((prev) => [...prev, newLog]);
   }, []);
 
-  const triggerPrecipitate = useCallback(async () => {
+  const triggerPrecipitate = useCallback(async (): Promise<{ ok: boolean; entities?: number; relationships?: number; error?: string }> => {
     addLog("开始执行沉淀操作...", "info");
     try {
       addLog("正在捕获屏幕与剪贴板...", "info");
@@ -79,14 +79,19 @@ export function useOmniContext() {
       }
 
       const result = await response.json();
-      addLog(`提取成功！新增节点: ${result.entities}, 关系: ${result.relationships}`, "success");
-      
+      const entityCount = Array.isArray(result.entities) ? result.entities.length : 0;
+      const relationshipCount = Array.isArray(result.relationships) ? result.relationships.length : 0;
+      addLog(`提取成功！新增节点: ${entityCount}, 关系: ${relationshipCount}`, "success");
+
       // 触发 React 重新拉取 Graph 数据
       setRefreshTrigger(prev => prev + 1);
+
+      return { ok: true, entities: entityCount, relationships: relationshipCount };
 
     } catch (error) {
       console.error(error);
       addLog(`沉淀操作失败: ${String(error)}`, "error");
+      return { ok: false, error: String(error) };
     }
   }, [addLog]);
 
@@ -95,10 +100,18 @@ export function useOmniContext() {
     setRefreshTrigger(prev => prev + 1);
   }, [addLog]);
 
-  const triggerReset = useCallback(() => {
-    addLog("触发重置操作", "warning");
-    console.log("重置操作已触发");
-  }, [addLog]);
+  const triggerReset = useCallback(async (): Promise<{ ok: true }> => {
+    setLogs(prev => {
+      const baseline = prev.slice(0, 3);
+      return [...baseline, {
+        id: Date.now().toString(),
+        timestamp: new Date(),
+        message: "会话已重置",
+        type: "success" as const,
+      }];
+    });
+    return { ok: true };
+  }, []);
 
   useEffect(() => {
     // 真实检测 Brain Server 状态

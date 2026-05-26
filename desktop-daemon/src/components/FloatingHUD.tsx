@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Database, Zap, X } from "lucide-react";
+import { Activity, Database, Zap, X, AlertTriangle } from "lucide-react";
 import { clsx } from "clsx";
+import { useTranslation } from "@/hooks/useTranslation";
 
-type HudStatus = "listening" | "processing" | "success" | "error";
+type HudStatus = "listening" | "processing" | "success" | "warning" | "error";
 
 interface HudPayload {
   status?: HudStatus;
@@ -18,8 +19,9 @@ interface HudPayload {
  * alwaysOnTop + skipTaskbar，所以主窗口最小化后这块还在。
  */
 export default function FloatingHUD() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<HudStatus>("listening");
-  const [message, setMessage] = useState<string>("等待信号...");
+  const [message, setMessage] = useState<string>(t('hud.waiting'));
   const [pulse, setPulse] = useState(0);
 
   // 让窗口本身和 body 都透明（Tauri transparent:true 需要页面也透明，否则黑色矩形会盖住）
@@ -73,6 +75,7 @@ export default function FloatingHUD() {
     listening: <Activity className="w-4 h-4 text-cyan-400 animate-pulse" />,
     processing: <Zap className="w-4 h-4 text-yellow-400 animate-pulse" />,
     success: <Database className="w-4 h-4 text-green-400" />,
+    warning: <AlertTriangle className="w-4 h-4 text-amber-400" />,
     error: <X className="w-4 h-4 text-red-400" />,
   } as const;
 
@@ -80,6 +83,7 @@ export default function FloatingHUD() {
     listening: "border-l-cyan-400",
     processing: "border-l-yellow-400",
     success: "border-l-green-400",
+    warning: "border-l-amber-400",
     error: "border-l-red-400",
   } as const;
 
@@ -112,7 +116,7 @@ export default function FloatingHUD() {
           <button
             onClick={handleHide}
             className="text-gray-400 hover:text-white transition-colors"
-            title="隐藏 HUD"
+            title={t('header.hide_hud')}
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -125,7 +129,7 @@ export default function FloatingHUD() {
           {message}
         </div>
         <div className="flex items-center justify-between mt-2 text-[10px] text-gray-500">
-          <span>· 双击拖动 · 主窗口最小化时常驻</span>
+          <span>{t('hud.drag_hint')}</span>
           <span className="font-mono">{status}</span>
         </div>
       </div>

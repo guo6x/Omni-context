@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Entity, Relationship, EntityType, RelationshipType } from '../shared-types.js';
 import { LLMExtractorPipeline } from './llm-pipeline.js';
+import { OCRPipeline } from '../ocr/pipeline.js';
 
 export interface ExtractionInput {
   screenshot?: string;
@@ -274,7 +275,7 @@ export class GraphRAGExtractor {
   }
 
   async extract(input: ExtractionInput): Promise<GraphRAGOutput> {
-    const textContent = this.combineInputs(input);
+    const textContent = await this.combineInputs(input);
     
     // 第一层：正则提取（快速，确定性高）
     const entities = await this.extractEntities(textContent, input);
@@ -373,21 +374,46 @@ export class GraphRAGExtractor {
     };
   }
 
-  private combineInputs(input: ExtractionInput): string {
+  private async combineInputs(input: ExtractionInput): Promise<string> {
     const parts: string[] = [];
-    
+
     if (input.textContent) {
       parts.push(input.textContent);
     }
-    
+
     if (input.clipboard) {
       parts.push(`[Clipboard]\n${input.clipboard}`);
     }
-    
+
     if (input.screenshot) {
-      parts.push(`[Screenshot available]`);
+      try {
+        const normalized = input.screenshot.startsWith('data:')
+          ? input.screenshot
+          : `data:image/png;base64,${input.screenshot}`;
+
+        const ocr = new OCRPipeline();
+        try {
+          const ocrPromise = ocr.extractText(normalized);
+          const timeoutPromise = new Promise<null>((resolve) => {
+            setTimeout(() => resolve(null), 10_000);
+          });
+          const result = await Promise.race([ocrPromise, timeoutPromise]);
+
+          if (result && result.text.trim()) {
+            console.log(`[Extract] OCR identified ${result.text.length} characters from screenshot`);
+            parts.push(`[Screenshot OCR]\n${result.text}`);
+          } else {
+            parts.push('[Screenshot OCR failed]');
+          }
+        } finally {
+          await ocr.dispose();
+        }
+      } catch (e) {
+        console.warn('[Extract] OCR failed, falling back:', e);
+        parts.push('[Screenshot OCR failed]');
+      }
     }
-    
+
     return parts.join('\n\n');
   }
 

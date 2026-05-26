@@ -47,6 +47,9 @@ export interface AppSettings {
   serverUrl: string;
   autoSync: boolean;
   notificationsEnabled: boolean;
+  pairCode: string;
+  pairHost: string;
+  pairPort: number;
 }
 
 export interface HUDMessage {
@@ -54,4 +57,45 @@ export interface HUDMessage {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
   timestamp: number;
+}
+
+// Search types
+export interface SearchEntity {
+  id: string;
+  name: string;
+  type: string;
+  description?: string;
+  tags?: string[];
+  access_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ArchivalSearchItem {
+  item: {
+    id: string;
+    content: string;
+    summary?: string;
+    tags?: string[];
+    createdAt: string;
+    archivedAt: string;
+    importance?: number;
+  };
+  relevanceScore: number;
+  matchType: string;
+}
+
+export interface CoreMemoryItem {
+  key: string;
+  value: any;
+  category: string;
+  lastAccessed: string;
+  accessCount: number;
+  summary?: string;
+}
+
+export interface SearchResults {
+  entities: SearchEntity[];
+  archival: ArchivalSearchItem[];
+  core: CoreMemoryItem[];
 }

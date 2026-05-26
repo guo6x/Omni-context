@@ -1,14 +1,35 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Path, Circle, G } from 'react-native-svg';
 import { colors } from '@/utils/theme';
 import { KnowledgeGraphScreen } from '@/screens/KnowledgeGraphScreen';
 import { MemoryListScreen } from '@/screens/MemoryListScreen';
-import { QuickCaptureScreen } from '@/screens/QuickCaptureScreen';
+import { SearchScreen } from '@/screens/SearchScreen';
+import { EntityDetailScreen } from '@/screens/EntityDetailScreen';
+import { MemoryDetailScreen } from '@/screens/MemoryDetailScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
+
+type SearchStackParamList = {
+  SearchMain: undefined;
+  EntityDetail: { entityId: string; entityName: string };
+  MemoryDetail: { item: any };
+};
+
+const SearchStack = createNativeStackNavigator<SearchStackParamList>();
+
+function SearchStackNavigator() {
+  return (
+    <SearchStack.Navigator screenOptions={{ headerShown: false }}>
+      <SearchStack.Screen name="SearchMain" component={SearchScreen} />
+      <SearchStack.Screen name="EntityDetail" component={EntityDetailScreen} />
+      <SearchStack.Screen name="MemoryDetail" component={MemoryDetailScreen} />
+    </SearchStack.Navigator>
+  );
+}
 
 const GraphIcon = ({ color, size }: { color: string; size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -32,11 +53,10 @@ const ListIcon = ({ color, size }: { color: string; size: number }) => (
   </Svg>
 );
 
-const CaptureIcon = ({ color, size }: { color: string; size: number }) => (
+const SearchIcon = ({ color, size }: { color: string; size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" />
-    <Path d="M12 8V16" stroke={color} strokeWidth="2" strokeLinecap="round" />
-    <Path d="M8 12H16" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    <Circle cx="11" cy="11" r="7" stroke={color} strokeWidth="2" />
+    <Path d="M21 21L16.65 16.65" stroke={color} strokeWidth="2" strokeLinecap="round" />
   </Svg>
 );
 
@@ -74,6 +94,14 @@ export function AppNavigator() {
       }}
     >
       <Tab.Screen
+        name="Search"
+        component={SearchStackNavigator}
+        options={{
+          tabBarLabel: '搜索',
+          tabBarIcon: ({ color, size }) => <SearchIcon color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
         name="KnowledgeGraph"
         component={KnowledgeGraphScreen}
         options={{
@@ -87,14 +115,6 @@ export function AppNavigator() {
         options={{
           tabBarLabel: '记忆',
           tabBarIcon: ({ color, size }) => <ListIcon color={color} size={size} />,
-        }}
-      />
-      <Tab.Screen
-        name="QuickCapture"
-        component={QuickCaptureScreen}
-        options={{
-          tabBarLabel: '捕获',
-          tabBarIcon: ({ color, size }) => <CaptureIcon color={color} size={size} />,
         }}
       />
       <Tab.Screen

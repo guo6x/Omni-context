@@ -45,11 +45,11 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
         const data = await res.json();
         setInsights(Array.isArray(data) ? data : []);
       } else {
-        setError(`Brain Server 返回 ${res.status}`);
+        setError(`Brain Server returned ${res.status}`);
       }
     } catch (e) {
       console.warn('Failed to fetch insights', e);
-      setError('无法连接 Brain Server');
+      setError(t('insights.cannot_connect'));
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
       <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/40 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-cyan-400 animate-pulse" />
-          <h2 className="text-white font-medium">{t('insights.title') || 'AI Insights'}</h2>
+          <h2 className="text-white font-medium">{t('insights.title')}</h2>
           {insights.length > 0 && (
             <span className="bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full text-xs font-bold border border-cyan-500/30">
               {insights.length}
@@ -105,7 +105,7 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
             onClick={markAllAsRead}
             className="p-1.5 text-gray-400 hover:text-cyan-300 hover:bg-white/10 rounded transition-colors disabled:opacity-30"
             disabled={insights.length === 0}
-            title="全部标记为已读"
+            title={t('insights.mark_all_read')}
           >
             <CheckCheck className="w-4 h-4" />
           </button>
@@ -113,14 +113,14 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
             onClick={fetchInsights}
             className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-50"
             disabled={loading}
-            title="刷新洞见"
+            title={t('insights.refresh')}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
-            title="关闭"
+            title={t('insights.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -136,7 +136,7 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
               onClick={fetchInsights}
               className="mt-4 rounded-lg border border-cyan-500/30 px-3 py-2 text-xs text-cyan-300 hover:bg-cyan-500/10"
             >
-              重试连接
+              {t('insights.retry')}
             </button>
           </div>
         ) : loading && insights.length === 0 ? (
@@ -148,8 +148,8 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/5">
               <Database className="w-7 h-7 opacity-50" />
             </div>
-            <p className="text-sm text-gray-300">暂无新的 AI 洞见</p>
-            <p className="text-xs mt-2 max-w-64 leading-5">当 Brain Server 从最近节点中发现新的关联时，会自动出现在这里。</p>
+            <p className="text-sm text-gray-300">{t('insights.empty_title')}</p>
+            <p className="text-xs mt-2 max-w-64 leading-5">{t('insights.empty_desc')}</p>
           </div>
         ) : (
           insights.map((insight) => (

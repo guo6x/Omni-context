@@ -10,6 +10,8 @@ interface SettingsState extends AppSettings {
   setServerUrl: (url: string) => void;
   setAutoSync: (autoSync: boolean) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
+  setPairConfig: (host: string, port: number, code: string) => void;
+  clearPairConfig: () => void;
   reset: () => void;
 }
 
@@ -20,6 +22,9 @@ const defaultSettings: AppSettings = {
   serverUrl: '',
   autoSync: true,
   notificationsEnabled: true,
+  pairCode: '',
+  pairHost: '',
+  pairPort: 3001,
 };
 
 export const useSettings = create<SettingsState>()(
@@ -32,6 +37,8 @@ export const useSettings = create<SettingsState>()(
       setServerUrl: (serverUrl) => set({ serverUrl }),
       setAutoSync: (autoSync) => set({ autoSync }),
       setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
+      setPairConfig: (pairHost, pairPort, pairCode) => set({ pairHost, pairPort, pairCode }),
+      clearPairConfig: () => set({ pairCode: '', pairHost: '', pairPort: 3001 }),
       reset: () => set(defaultSettings),
     }),
     {

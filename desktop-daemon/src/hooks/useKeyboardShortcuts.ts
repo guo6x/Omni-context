@@ -76,6 +76,14 @@ export const defaultShortcuts: KeyboardShortcut[] = [
     category: "操作",
   },
   {
+    key: "k",
+    ctrl: true,
+    shift: true,
+    action: () => console.log("唤起决策助手"),
+    description: "唤起决策助手",
+    category: "操作",
+  },
+  {
     key: "g",
     ctrl: true,
     shift: true,
@@ -87,7 +95,7 @@ export const defaultShortcuts: KeyboardShortcut[] = [
     key: "c",
     ctrl: true,
     shift: true,
-    action: () => console.log("切换到控制台视图"),
+    action: () => console.log("切换到系统控制台"),
     description: "切换到系统控制台",
     category: "视图",
   },

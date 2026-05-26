@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Activity, Database, Zap } from "lucide-react";
+import { X, Activity, Database, Zap, AlertTriangle } from "lucide-react";
 import { clsx } from "clsx";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -9,7 +9,7 @@ interface HUDProps {
   isVisible: boolean;
   onClose: () => void;
   message?: string;
-  status?: "listening" | "processing" | "success" | "error";
+  status?: "listening" | "processing" | "success" | "warning" | "error";
 }
 
 export default function HUD({ isVisible, onClose, message, status = "listening" }: HUDProps) {
@@ -26,6 +26,7 @@ export default function HUD({ isVisible, onClose, message, status = "listening" 
     listening: <Activity className="w-5 h-5 text-cyan-400 animate-pulse" />,
     processing: <Zap className="w-5 h-5 text-yellow-400 animate-pulse" />,
     success: <Database className="w-5 h-5 text-green-400" />,
+    warning: <AlertTriangle className="w-5 h-5 text-amber-400" />,
     error: <X className="w-5 h-5 text-red-400" />,
   };
 
@@ -33,6 +34,7 @@ export default function HUD({ isVisible, onClose, message, status = "listening" 
     listening: t('hud.listening'),
     processing: t('hud.processing'),
     success: t('hud.success'),
+    warning: t('hud.warning'),
     error: t('hud.error'),
   };
 
@@ -65,6 +67,7 @@ export default function HUD({ isVisible, onClose, message, status = "listening" 
             <span className="text-gray-400">{t('hud.listening').split('...')[0]}：</span>
             <span className={clsx(
               currentStatus === "success" ? "text-green-400" :
+              currentStatus === "warning" ? "text-amber-400" :
               currentStatus === "error" ? "text-red-400" :
               "text-cyan-400"
             )}>

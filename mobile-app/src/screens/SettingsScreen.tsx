@@ -68,6 +68,11 @@ export function SettingsScreen() {
     setAutoSync,
     notificationsEnabled,
     setNotificationsEnabled,
+    pairCode,
+    pairHost,
+    pairPort,
+    setPairConfig,
+    clearPairConfig,
     reset,
   } = useSettings();
 
@@ -75,14 +80,45 @@ export function SettingsScreen() {
   const [serverUrlInput, setServerUrlInput] = useState(serverUrl);
   const [showServerInput, setShowServerInput] = useState(false);
 
+  // 配对码输入
+  const [pairHostInput, setPairHostInput] = useState(pairHost || '');
+  const [pairPortInput, setPairPortInput] = useState(String(pairPort || 3001));
+  const [pairCodeInput, setPairCodeInput] = useState(pairCode || '');
+  const [showPairInput, setShowPairInput] = useState(false);
+
   const handleSaveServerUrl = useCallback(() => {
     setServerUrl(serverUrlInput);
     if (serverUrlInput.trim()) {
       api.configure({ baseUrl: serverUrlInput.trim() });
-      showMessage('服务器地址已保存', 'success');
+      showMessage(t('sync.serverSaved'), 'success');
     }
     setShowServerInput(false);
-  }, [serverUrlInput, setServerUrl, showMessage]);
+  }, [serverUrlInput, setServerUrl, showMessage, t]);
+
+  const handlePair = useCallback(async () => {
+    const host = pairHostInput.trim();
+    const port = parseInt(pairPortInput, 10) || 3001;
+    const code = pairCodeInput.trim();
+    if (!host || !code || code.length !== 6) {
+      showMessage(t('settings.pairInvalid'), 'warning');
+      return;
+    }
+    const baseUrl = `http://${host}:${port}`;
+    api.configure({ baseUrl, authToken: code });
+    setServerUrl(baseUrl);
+    setPairConfig(host, port, code);
+    setShowPairInput(false);
+    showMessage(t('settings.pairSuccess'), 'success');
+  }, [pairHostInput, pairPortInput, pairCodeInput, setServerUrl, setPairConfig, showMessage, t]);
+
+  const handleClearPair = useCallback(() => {
+    clearPairConfig();
+    api.clearAuthToken();
+    setPairHostInput('');
+    setPairCodeInput('');
+    setPairPortInput('3001');
+    showMessage(t('settings.pairCleared'), 'info');
+  }, [clearPairConfig, showMessage, t]);
 
   const handleSyncNow = useCallback(async () => {
     if (!api.isConfigured()) {
@@ -205,6 +241,32 @@ export function SettingsScreen() {
           <SettingItem label={t('settings.version')} value="1.0.0" />
         </SettingSection>
 
+        {/* 配对码：连接桌面 Omni-Context */}
+        <SettingSection title={t('settings.pairing')}>
+          {pairCode ? (
+            <>
+              <SettingItem label={t('settings.pairStatus')} value={`${pairHost}:${pairPort}`} />
+              <SettingItem
+                label={t('settings.pairCodeLabel')}
+                value={'•'.repeat(6)}
+                onPress={() => setShowPairInput(true)}
+              />
+              <TouchableOpacity
+                className="mx-4 mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 items-center"
+                onPress={handleClearPair}
+              >
+                <Text className="text-red-400 text-sm">{t('settings.pairClear')}</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <SettingItem
+              label={t('settings.pairSetup')}
+              value={t('settings.pairSetupHint')}
+              onPress={() => setShowPairInput(true)}
+            />
+          )}
+        </SettingSection>
+
         <TouchableOpacity className="mx-5 mt-8 p-4 rounded-xl bg-red-500/20 items-center border border-red-500/50" onPress={handleClearData}>
           <Text className="text-red-400 text-base font-bold">{t('settings.clearData')}</Text>
         </TouchableOpacity>
@@ -232,6 +294,56 @@ export function SettingsScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity className="flex-1 py-3 rounded-xl bg-cyan-400 items-center" onPress={handleSaveServerUrl}>
                   <Text className="text-[#0a0b12] text-base font-bold">{t('common.save')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {showPairInput && (
+          <View className="absolute inset-0 bg-black/70 justify-center items-center p-5 z-50">
+            <View className="bg-[#0a0b12] border border-white/10 rounded-2xl p-5 w-full max-w-sm">
+              <Text className="text-[#e8e8e8] text-lg font-bold mb-4 text-center">{t('settings.pairSetup')}</Text>
+              <Text className="text-gray-400 text-xs mb-3 text-center">{t('settings.pairSetupHint')}</Text>
+              <Text className="text-gray-400 text-sm mb-1 ml-1">{t('settings.pairHost')}</Text>
+              <TextInput
+                className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base mb-3"
+                value={pairHostInput}
+                onChangeText={setPairHostInput}
+                placeholder="192.168.1.x"
+                placeholderTextColor="#64748b"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+              <Text className="text-gray-400 text-sm mb-1 ml-1">{t('settings.pairPort')}</Text>
+              <TextInput
+                className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base mb-3"
+                value={pairPortInput}
+                onChangeText={setPairPortInput}
+                placeholder="3001"
+                placeholderTextColor="#64748b"
+                keyboardType="number-pad"
+              />
+              <Text className="text-gray-400 text-sm mb-1 ml-1">{t('settings.pairCodeLabel')}</Text>
+              <TextInput
+                className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-2xl text-center mb-5 tracking-widest"
+                value={pairCodeInput}
+                onChangeText={(text) => setPairCodeInput(text.replace(/[^0-9]/g, '').slice(0, 6))}
+                placeholder="000000"
+                placeholderTextColor="#64748b"
+                keyboardType="number-pad"
+                maxLength={6}
+              />
+              <View className="flex-row gap-4">
+                <TouchableOpacity
+                  className="flex-1 py-3 rounded-xl bg-black/40 border border-white/10 items-center"
+                  onPress={() => setShowPairInput(false)}
+                >
+                  <Text className="text-gray-400 text-base">{t('common.cancel')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity className="flex-1 py-3 rounded-xl bg-cyan-400 items-center" onPress={handlePair}>
+                  <Text className="text-[#0a0b12] text-base font-bold">{t('settings.pairConnect')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

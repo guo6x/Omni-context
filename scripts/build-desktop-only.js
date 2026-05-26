@@ -12,15 +12,13 @@ if (!fs.existsSync(DIST_DIR)) fs.mkdirSync(DIST_DIR, { recursive: true });
 
 // 步骤 1: 检查依赖
 console.log('\n📦 1. 检查并安装依赖...');
+// 始终跑 npm install：package.json 变更（新增格式解析库等）需要触发更新。
+// npm 会根据 lockfile 决定是否真的下载，命中缓存时接近 no-op。
 try {
-  if (!fs.existsSync(path.join(ROOT_DIR, 'desktop-daemon', 'node_modules'))) {
-    console.log('   安装桌面应用依赖...');
-    execSync('npm install', { cwd: path.join(ROOT_DIR, 'desktop-daemon'), stdio: 'inherit' });
-  }
-  if (!fs.existsSync(path.join(ROOT_DIR, 'brain-server', 'node_modules'))) {
-    console.log('   安装 Brain Server 依赖...');
-    execSync('npm install', { cwd: path.join(ROOT_DIR, 'brain-server'), stdio: 'inherit' });
-  }
+  console.log('   同步桌面应用依赖...');
+  execSync('npm install', { cwd: path.join(ROOT_DIR, 'desktop-daemon'), stdio: 'inherit' });
+  console.log('   同步 Brain Server 依赖...');
+  execSync('npm install', { cwd: path.join(ROOT_DIR, 'brain-server'), stdio: 'inherit' });
   console.log('✅ 依赖检查完成');
 } catch (e) {
   console.log('❌ 依赖安装失败');
@@ -32,16 +30,52 @@ console.log('\n📦 2. 构建 Brain Server...');
 try {
   execSync('npm run build', { cwd: path.join(ROOT_DIR, 'brain-server'), stdio: 'inherit' });
   
-  const brainServerInTauri = path.join(ROOT_DIR, 'desktop-daemon', 'brain-server');
+  // Tauri 的 resources glob `brain-server/**/*` 是相对 src-tauri/ 解析的，
+  // 必须把 brain-server 落到 src-tauri/brain-server/，否则 Tauri 根本不会打包它。
+  const brainServerInTauri = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'brain-server');
+  // 保留 models/（tessdata + Xenova embedding 模型，28MB 左右），避免每次重打都得重新下载
   if (fs.existsSync(brainServerInTauri)) {
-    fs.rmSync(brainServerInTauri, { recursive: true });
+    for (const name of fs.readdirSync(brainServerInTauri)) {
+      if (name === 'models') continue;
+      fs.rmSync(path.join(brainServerInTauri, name), { recursive: true, force: true });
+    }
   }
   fs.mkdirSync(brainServerInTauri, { recursive: true });
   
   // 复制 Brain Server 到 Tauri 应用的资源目录
-  copyDir(path.join(ROOT_DIR, 'brain-server', 'dist'), brainServerInTauri);
+  // 必须保留 dist/ 子目录：embedding/service.ts 和 ocr/pipeline.ts 用 `../../models`
+  // 相对寻址 models，依赖 dist/embedding/ → ../../models 解析到 brain-server/models/。
+  // 如果把 dist 平铺到 brain-server/ 根，路径会多向上一级，加载 Xenova 模型和 tessdata 都会失败。
+  copyDir(path.join(ROOT_DIR, 'brain-server', 'dist'), path.join(brainServerInTauri, 'dist'));
   copyFile(path.join(ROOT_DIR, 'brain-server', 'package.json'), path.join(brainServerInTauri, 'package.json'));
-  
+  const lockPath = path.join(ROOT_DIR, 'brain-server', 'package-lock.json');
+  if (fs.existsSync(lockPath)) {
+    copyFile(lockPath, path.join(brainServerInTauri, 'package-lock.json'));
+  }
+
+  // 装生产依赖（不带 dev），确保安装包能离线运行
+  console.log('   安装 Brain Server 生产依赖（这一步比较慢，但只跑一次）...');
+  execSync('npm install --omit=dev --no-audit --no-fund', {
+    cwd: brainServerInTauri,
+    stdio: 'inherit',
+  });
+
+  // 内嵌 node 可执行文件，让没装 Node 的用户机器也能跑
+  const nodeBinaryName = process.platform === 'win32' ? 'node.exe' : 'node';
+  const bundledNodePath = path.join(brainServerInTauri, nodeBinaryName);
+  const systemNode = process.execPath; // 当前跑脚本的 node 本身
+  if (systemNode && fs.existsSync(systemNode)) {
+    copyFile(systemNode, bundledNodePath);
+    // 确保 macOS/Linux 上可执行
+    if (process.platform !== 'win32') {
+      try {
+        fs.chmodSync(bundledNodePath, 0o755);
+      } catch (_) { /* best-effort */ }
+    }
+    console.log(`   已内嵌 ${nodeBinaryName}: ${systemNode}`);
+  } else {
+    console.warn(`   ⚠️ 未找到合适的 ${nodeBinaryName}（process.execPath=${systemNode}），安装包将依赖用户机器的系统 Node`);
+  }
   console.log('✅ Brain Server 构建完成');
 } catch (e) {
   console.log('❌ Brain Server 构建失败');

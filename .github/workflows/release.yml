@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd desktop-daemon && npm ci
+
+      - name: Build Brain Server
+        run: |
+          cd brain-server && npm ci && npm run build
+
+      - name: Build Desktop Daemon (Next.js)
+        run: |
+          cd desktop-daemon && npm run build
+
+      - name: Bundle Brain Server for Tauri
+        run: |
+          cd desktop-daemon && node scripts/package-all.js
+
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          projectPath: desktop-daemon
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Omni-Context ${{ github.ref_name }}'
+          releaseBody: |
+            详见 [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)。
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true

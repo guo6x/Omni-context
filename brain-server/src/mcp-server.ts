@@ -52,73 +52,22 @@ export function toCompactEntity(entity: any): any {
   return compact;
 }
 
-const RecordCaptureSchema = z.object({
-  screenshot: z.string().optional(),
-  clipboard: z.string().optional(),
-  activeWindow: z.string().optional(),
-  systemLogs: z.string().optional(),
-  source: z.enum(['physical_button', 'keyboard_shortcut', 'manual', 'automated']),
-  buttonType: z.enum(['precipitate', 'decision', 'reset']).optional(),
-});
-
-const AddEntitySchema = z.object({
-  name: z.string().min(1, '名称不能为空'),
-  type: z.enum([
-    'principle',
-    'evidence',
-    'concept',
-    'tool',
-    'person',
-    'project',
-    'code_snippet',
-    'architecture_pattern',
-    'bug_vulnerability',
-    'business_logic',
-    'critical_review',
-    'capture_snapshot',
-    'memory',
-  ]),
-  description: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  metadata: z.any().optional(),
-});
-
-const AddRelationshipSchema = z.object({
-  sourceId: z.string().min(1, '源实体ID不能为空'),
-  targetId: z.string().min(1, '目标实体ID不能为空'),
-  type: z.enum([
-    'derived_from',
-    'relates_to',
-    'depends_on',
-    'conflicts_with',
-    'extends',
-    'cites',
-    'belongs_to',
-    'supported_by',
-    'extracted_from',
-    'reviewed_by',
-    'references',
-  ]),
-  description: z.string().optional(),
-  weight: z.number().min(0).optional(),
-});
-
-const GetGraphNeighborhoodSchema = z.object({
-  entityId: z.string(),
-  depth: z.number().min(1).max(3).optional().default(2),
-});
-
-const ExtractFromCaptureSchema = z.object({
-  text: z.string().optional(),
-  screenshot: z.string().optional(),
-  clipboard: z.string().optional(),
-  captureId: z.string().optional(),
-});
-
-const GetDecisionContextSchema = z.object({
-  situation: z.string().min(1, 'situation 不能为空'),
-  limit: z.number().min(1).max(20).optional().default(5),
-});
+import {
+  tools,
+  RecordCaptureSchema,
+  AddEntitySchema,
+  AddRelationshipSchema,
+  GetGraphNeighborhoodSchema,
+  ExtractFromCaptureSchema,
+  GetDecisionContextSchema,
+  SearchEntitiesSchema,
+  GetEntitySchema,
+  ListEntitiesSchema,
+  UpdateEntitySchema,
+  VectorSearchSchema,
+  UnifiedMemorySearchSchema,
+  SaveConclusionSchema
+} from './mcp-tools.js';
 
 class OmniContextServer {
   private db: Database;
@@ -164,6 +113,15 @@ class OmniContextServer {
           tools: {},
           resources: {},
         },
+        instructions: `You are connected to Omni-Context, the user's long-term memory and decision support system.
+
+Before answering any substantive question:
+1. Call \`unified_memory_search\` with key terms from the user's question to check whether they've discussed this topic before.
+2. If the user is choosing between options or making a decision, call \`get_decision_context\` with their situation as the \`situation\` argument.
+3. Cite matched memories by name in your answer so the user can verify.
+4. At the end of a substantive conversation that produced a conclusion, call \`save_conclusion\` to persist the key takeaway.
+
+These tools are read-cheap; over-call rather than under-call.`,
       }
     );
 
@@ -179,221 +137,11 @@ class OmniContextServer {
 
   private async listTools() {
     return {
-      tools: [
-        {
-          name: 'record_capture',
-          description: 'Store a capture event (screenshot, clipboard content, system logs) into the knowledge graph. Use when the user explicitly wants to save a moment or piece of context for future reference.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              screenshot: { type: 'string', description: '截图数据（base64）' },
-              clipboard: { type: 'string', description: '剪贴板内容' },
-              activeWindow: { type: 'string', description: '当前活动窗口' },
-              systemLogs: { type: 'string', description: '系统日志' },
-              source: {
-                type: 'string',
-                enum: ['physical_button', 'keyboard_shortcut', 'manual', 'automated'],
-                description: '触发源',
-              },
-              buttonType: {
-                type: 'string',
-                enum: ['precipitate', 'decision', 'reset'],
-                description: '按钮类型',
-              },
-            },
-            required: ['source'],
-          },
-        },
-        {
-          name: 'get_core_context',
-          description: 'Get the user\'s core principles—their fundamental rules, preferences, and guidelines for how they work. Call this at the start of a conversation to understand the user\'s values and constraints before giving advice.',
-          inputSchema: { type: 'object', properties: {} },
-        },
-        {
-          name: 'search_entities',
-          description: 'Search for entities in the knowledge graph by name or description. Use when you need to find specific concepts, tools, people, projects, or code the user has encountered before.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              query: { type: 'string', description: '搜索查询' },
-              type: { type: 'string', description: '实体类型过滤' },
-              limit: { type: 'number', description: '结果限制', default: 10 },
-            },
-            required: ['query'],
-          },
-        },
-        {
-          name: 'add_entity',
-          description: 'Add a new entity to the knowledge graph. Use when you discover a concept, tool, person, pattern, or piece of information worth remembering for future conversations.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              name: { type: 'string', description: '实体名称' },
-              type: {
-                type: 'string',
-                enum: [
-                  'principle',
-                  'evidence',
-                  'concept',
-                  'tool',
-                  'person',
-                  'project',
-                  'code_snippet',
-                  'architecture_pattern',
-                  'bug_vulnerability',
-                  'business_logic',
-                  'critical_review',
-                  'capture_snapshot',
-                  'memory',
-                ],
-                description: '实体类型',
-              },
-              description: { type: 'string', description: '实体描述' },
-              tags: { type: 'array', items: { type: 'string' }, description: '标签' },
-              metadata: { type: 'object', description: '扩展元数据（原则的 isCore、version 等）' },
-            },
-            required: ['name', 'type'],
-          },
-        },
-        {
-          name: 'get_entity',
-          description: 'Retrieve full details and all relationships for a specific entity by its ID. Use when you have an entity ID from search results and need to explore its connections.',
-          inputSchema: {
-            type: 'object',
-            properties: { id: { type: 'string', description: '实体ID' } },
-            required: ['id'],
-          },
-        },
-        {
-          name: 'add_relationship',
-          description: 'Create a relationship edge between two entities in the knowledge graph (e.g. depends_on, conflicts_with, extends, belongs_to). Use when you discover a meaningful connection between two concepts.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              sourceId: { type: 'string', description: '源实体ID' },
-              targetId: { type: 'string', description: '目标实体ID' },
-              type: {
-                type: 'string',
-                enum: [
-                  'derived_from',
-                  'relates_to',
-                  'depends_on',
-                  'conflicts_with',
-                  'extends',
-                  'cites',
-                  'belongs_to',
-                  'supported_by',
-                  'extracted_from',
-                  'reviewed_by',
-                  'references',
-                ],
-                description: '关系类型',
-              },
-              description: { type: 'string', description: '关系描述' },
-              weight: { type: 'number', description: '权重（记忆衰减机制）' },
-            },
-            required: ['sourceId', 'targetId', 'type'],
-          },
-        },
-        {
-          name: 'get_graph_neighborhood',
-          description: 'Get the graph neighborhood around a specific entity—its directly related entities and their connections. Use when you need to understand the context and ecosystem surrounding a concept, rather than just its properties.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              entityId: { type: 'string', description: '起始实体ID' },
-              depth: { type: 'number', description: '遍历深度 1-3', default: 2 },
-            },
-            required: ['entityId'],
-          },
-        },
-        {
-          name: 'extract_from_capture',
-          description: 'Analyze raw text or captured content and automatically extract entities, relationships, and principles into the knowledge graph. Use when processing a saved capture or analyzing a block of user-provided content.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              text: { type: 'string', description: '文本内容' },
-              screenshot: { type: 'string', description: '截图数据' },
-              clipboard: { type: 'string', description: '剪贴板内容' },
-              captureId: { type: 'string', description: '关联的capture_snapshot实体ID' },
-            },
-          },
-        },
-        {
-          name: 'list_entities',
-          description: 'List all entities in the knowledge graph, optionally filtered by type. Use to get an overview of what the user has stored, or to browse entities of a specific category.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              type: { type: 'string', description: '按类型过滤' },
-              limit: { type: 'number', description: '结果限制', default: 50 },
-            },
-          },
-        },
-        {
-          name: 'update_entity',
-          description: 'Update an existing entity\'s name, description, tags, or metadata. Use when you need to correct or enrich information about something already in the knowledge graph.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              id: { type: 'string', description: '实体ID' },
-              name: { type: 'string', description: '新名称' },
-              description: { type: 'string', description: '新描述' },
-              tags: { type: 'array', items: { type: 'string' }, description: '新标签' },
-              metadata: { type: 'object', description: '新元数据' },
-            },
-            required: ['id'],
-          },
-        },
-        {
-          name: 'get_stats',
-          description: 'Get system statistics: total entity count, relationship count, entity type distribution, and memory usage. Use when you need a high-level overview of the knowledge graph\'s size and composition.',
-          inputSchema: { type: 'object', properties: {} },
-        },
-        {
-          name: 'vector_search',
-          description: 'Search the knowledge graph by semantic similarity using vector embeddings. Unlike text search, this finds conceptually related entities even when they use different words. Use when a keyword search misses relevant results.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              query: { type: 'string', description: 'Search query (natural language, converted to embedding on the server)' },
-              limit: { type: 'number', description: 'Max results', default: 10 },
-            },
-            required: ['query'],
-          },
-        },
-        {
-          name: 'unified_memory_search',
-          description: 'Fused memory search combining text search, vector similarity, and graph traversal. Returns the most relevant entities for a given query across all three methods, deduplicated. This is the recommended go-to search when you want the most complete results.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              query: { type: 'string', description: '搜索查询（自然语言）' },
-              limit: { type: 'number', description: '每类搜索的结果限制', default: 5 },
-              includeRelationships: { type: 'boolean', description: '是否包含关联关系', default: true },
-            },
-            required: ['query'],
-          },
-        },
-        {
-          name: 'get_decision_context',
-          description: 'When you are facing a specific situation or decision and need context from the user\'s knowledge graph to inform your judgment. Returns relevant principles, related memories, historical conflicts, and graph neighborhood — but does NOT make the decision for you. Call this before giving advice that depends on the user\'s past patterns or preferences.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              situation: { type: 'string', description: 'The situation or decision you are facing (natural language)' },
-              limit: { type: 'number', description: 'Max items per result category', default: 5 },
-            },
-            required: ['situation'],
-          },
-        },
-        {
-          name: 'get_decay_report',
-          description: 'Get the memory decay report showing which entities have decayed over time and may need reinforcement or cleanup. Use when maintaining the knowledge graph\'s health.',
-          inputSchema: { type: 'object', properties: {} },
-        },
-      ],
+      tools: tools.map((t) => ({
+        name: t.name,
+        description: t.description,
+        inputSchema: t.inputSchema,
+      })),
     };
   }
 
@@ -452,6 +200,13 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           } else {
             entities = await this.db.searchEntities(query, limit);
           }
+
+          // 隐式 access tracking（仅 MCP 路径）
+          const returnedIds = entities.map((e: any) => e.id).filter(Boolean);
+          if (returnedIds.length > 0) {
+            this.db.bumpAccessCounts(returnedIds).catch(() => {});
+          }
+
           return this.formatResponse(entities.map(toCompactEntity));
         }
 
@@ -764,6 +519,15 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             graphContext.nodes = graphContext.nodes.map(toCompactEntity);
           }
 
+          // 隐式 access tracking（仅 MCP 路径）
+          const accIds = [
+            ...unified.map((e: any) => e.id),
+            ...(results.graphContext?.nodes || []).map((n: any) => n.id),
+          ].filter(Boolean);
+          if (accIds.length > 0) {
+            this.db.bumpAccessCounts(accIds).catch(() => {});
+          }
+
           return this.formatResponse({
             results: unified.slice(0, limit * 2).map(toCompactEntity),
             graphContext,
@@ -772,6 +536,68 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               vector: results.vectorResults.length,
               graph: results.graphContext?.nodes?.length || 0,
             },
+          });
+        }
+
+        case 'save_conclusion': {
+          const parsed = SaveConclusionSchema.parse(args);
+          const { summary, related_entity_ids, tags } = parsed;
+
+          // 走 ingest pipeline：把 summary 当 textContent 喂给 extractor
+          const input = {
+            textContent: summary,
+            timestamp: new Date().toISOString(),
+          };
+          const extractResult = await this.extractor.extract(input);
+
+          // 实体消解
+          const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, this.db);
+
+          const savedEntityIds: string[] = [];
+          for (const entity of resolution.entitiesToCreate) {
+            const saved = await this.db.addEntity(entity);
+            savedEntityIds.push(saved.id);
+          }
+
+          for (const update of resolution.entitiesToUpdate) {
+            await this.db.updateEntity(update.id, {
+              description: update.description,
+              tags: update.tags,
+            });
+            savedEntityIds.push(update.id);
+          }
+
+          for (const relationship of resolution.relationshipsToCreate) {
+            try {
+              await this.db.addRelationship(relationship);
+            } catch {
+              // 重复关系是预期的
+            }
+          }
+
+          // 关联到 related_entity_ids（如果提供了）
+          if (related_entity_ids && related_entity_ids.length > 0) {
+            for (const savedId of savedEntityIds) {
+              for (const relatedId of related_entity_ids) {
+                if (savedId === relatedId) continue;
+                try {
+                  await this.db.addRelationship({
+                    source_id: savedId,
+                    target_id: relatedId,
+                    type: 'relates_to',
+                    description: 'save_conclusion 关联',
+                    weight: 1.0,
+                  });
+                } catch {
+                  // 重复关系忽略
+                }
+              }
+            }
+          }
+
+          return this.formatResponse({
+            savedEntities: savedEntityIds.length,
+            summary: await this.extractor.summarizeEntities(extractResult.entities),
           });
         }
 
@@ -852,6 +678,16 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             ...graphContext,
             nodes: graphContext.nodes.map(toCompactEntity)
           } : graphContext;
+
+          // 隐式 access tracking（仅 MCP 路径）
+          const decIds = [
+            ...relevantMemories.map((m: any) => m.id),
+            ...principles.map((p: any) => p.id),
+            ...(graphContext?.nodes || []).map((n: any) => n.id),
+          ].filter(Boolean);
+          if (decIds.length > 0) {
+            this.db.bumpAccessCounts(decIds).catch(() => {});
+          }
 
           return this.formatResponse({
             situation,
@@ -984,10 +820,10 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
     const insightIntervalMs = process.env.INSIGHT_INTERVAL_MS
       ? Number(process.env.INSIGHT_INTERVAL_MS)
       : 10 * 60 * 1000;
-    this.agentLoop = new AgentLoop(this.db);
+    this.agentLoop = new AgentLoop(this.db, this.decayScheduler);
     this.agentLoop.start(insightIntervalMs);
 
-    const httpServer = createServer(this.db, this.agentLoop, this.embeddingService);
+    const httpServer = createServer(this.db, this.agentLoop, this.embeddingService, this.decayScheduler);
     // 端口冲突场景：用户既开桌面应用、又通过 MCP 接 Claude Desktop / Cursor，
     // 第二个实例无法绑定 3001，但 MCP stdio 仍可工作。这里捕获 EADDRINUSE 让进程
     // 不会因 listen 错误未处理而 crash。

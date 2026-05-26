@@ -2,11 +2,13 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
   title: string;
   message: string;
+  impact?: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   destructive?: boolean;
@@ -18,12 +20,16 @@ export default function ConfirmDialog({
   isOpen,
   title,
   message,
-  confirmText = '确认',
-  cancelText = '取消',
+  impact,
+  confirmText: confirmTextProp,
+  cancelText: cancelTextProp,
   destructive = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation();
+  const confirmText = confirmTextProp ?? t('confirm.confirm_text');
+  const cancelText = cancelTextProp ?? t('confirm.cancel_text');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -100,7 +106,13 @@ export default function ConfirmDialog({
           {title}
         </h2>
 
-        <p className="text-sm text-gray-300 whitespace-pre-line mb-6">{message}</p>
+        <p className="text-sm text-gray-300 whitespace-pre-line mb-4">{message}</p>
+
+        {impact && (
+          <div className="mb-4 p-3 rounded-lg border border-white/10 bg-white/5 text-xs text-gray-400">
+            {impact}
+          </div>
+        )}
 
         <div className="flex justify-end gap-2">
           <button
@@ -117,7 +129,7 @@ export default function ConfirmDialog({
             disabled={busy}
             className={`${confirmClass} disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {busy ? '处理中...' : confirmText}
+            {busy ? t('confirm.processing') : confirmText}
           </button>
         </div>
       </div>
@@ -134,6 +146,7 @@ type ConfirmOptions = Omit<
   'isOpen' | 'onConfirm' | 'onCancel'
 > & {
   onConfirm?: () => void | Promise<void>;
+  impact?: React.ReactNode;
 };
 
 interface PendingConfirm {
@@ -170,6 +183,7 @@ export function useConfirm() {
       isOpen={pending !== null}
       title={pending?.options.title ?? ''}
       message={pending?.options.message ?? ''}
+      impact={pending?.options.impact}
       confirmText={pending?.options.confirmText}
       cancelText={pending?.options.cancelText}
       destructive={pending?.options.destructive}

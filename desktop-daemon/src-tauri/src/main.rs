@@ -5,10 +5,17 @@ mod screen_capture;
 mod clipboard;
 mod commands;
 mod brain_server;
+mod log_writer;
 mod hardware;
+mod mcp_helper;
+
 
 use tauri::Manager;
 use tokio::sync::mpsc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use tauri::{CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem, SystemTrayEvent};
+
+pub static CLOSE_TO_TRAY: AtomicBool = AtomicBool::new(true); // 默认最小化到托盘
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ButtonEvent {
@@ -41,11 +48,121 @@ async fn main() {
         }
     }
     
+    let show = CustomMenuItem::new("show_main".to_string(), "显示主窗口");
+    let status_text = if brain_server::is_running() {
+        "Brain Server: 在线"
+    } else {
+        "Brain Server: 离线"
+    };
+    let status = CustomMenuItem::new("server_status".to_string(), status_text).disabled();
+    let restart = CustomMenuItem::new("restart_server".to_string(), "重启 Brain Server");
+    let open_data = CustomMenuItem::new("open_data".to_string(), "打开数据目录");
+    let open_logs = CustomMenuItem::new("open_logs".to_string(), "打开日志目录");
+    let settings = CustomMenuItem::new("settings".to_string(), "设置...");
+    let pause_capture = CustomMenuItem::new("pause_capture".to_string(), "暂停抓取");
+    let quit = CustomMenuItem::new("quit".to_string(), "退出 Omni-Context");
+
+    let tray_menu = SystemTrayMenu::new()
+        .add_item(show)
+        .add_native_item(SystemTrayMenuItem::Separator)
+        .add_item(status)
+        .add_item(restart)
+        .add_item(open_data)
+        .add_item(open_logs)
+        .add_item(settings)
+        .add_native_item(SystemTrayMenuItem::Separator)
+        .add_item(pause_capture)
+        .add_native_item(SystemTrayMenuItem::Separator)
+        .add_item(quit);
+
+    let system_tray = SystemTray::new().with_menu(tray_menu);
+
     tauri::Builder::default()
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None::<Vec<&str>>))
+        .system_tray(system_tray)
+        .on_system_tray_event(|app, event| match event {
+            SystemTrayEvent::LeftClick { .. } => {
+                if let Some(window) = app.get_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+            SystemTrayEvent::MenuItemClick { id, .. } => {
+                match id.as_str() {
+                    "show_main" => {
+                        if let Some(window) = app.get_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "restart_server" => {
+                        let _ = brain_server::restart();
+                        let status_text = if brain_server::is_running() {
+                            "Brain Server: 在线"
+                        } else {
+                            "Brain Server: 离线"
+                        };
+                        let _ = app.tray_handle().get_item("server_status").set_title(status_text);
+                    }
+                    "open_data" => {
+                        let _ = brain_server::open_folder_in_explorer();
+                    }
+                    "open_logs" => {
+                        let _ = brain_server::open_logs_folder();
+                    }
+                    "settings" => {
+                        if let Some(window) = app.get_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                            let _ = window.emit("open-settings", ());
+                        }
+                    }
+                    "pause_capture" => {
+                        // 发送事件给前端切换暂停状态
+                        if let Some(window) = app.get_window("main") {
+                            let _ = window.emit("toggle-capture-pause", ());
+                        }
+                    }
+                    "quit" => {
+                        println!("[Omni-Context] 正在通过托盘菜单退出应用，清理 Brain Server...");
+                        let _ = brain_server::stop();
+                        std::process::exit(0);
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        })
         .setup(|app| {
             let _app_handle = app.app_handle().clone();
-            
+
+            // 启动 30 秒后检查更新（避免拖慢启动）
+            let update_handle = app.app_handle().clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                println!("[Omni-Context] 检查更新...");
+                match update_handle.updater().check().await {
+                    Ok(response) => {
+                        if response.is_update_available() {
+                            println!("[Omni-Context] 发现新版本: {}", response.current_version());
+                            let body = response.body().map(|s| s.clone()).unwrap_or_default();
+                            let date = response.date()
+                                .map(|d| d.to_string()).unwrap_or_default();
+                            let _ = update_handle.emit_all("update-available", serde_json::json!({
+                                "version": response.current_version(),
+                                "body": body,
+                                "date": date,
+                            }));
+                        } else {
+                            println!("[Omni-Context] 已是最新版本");
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("[Omni-Context] 检查更新失败: {}", e);
+                    }
+                }
+            });
+
             let (event_tx, mut event_rx) = mpsc::channel::<ButtonEvent>(32);
             
             let udp_event_tx = event_tx.clone();
@@ -102,12 +219,28 @@ async fn main() {
             Ok(())
         })
         .on_window_event(|event| {
-            // 窗口关闭时清理 Brain Server 进程
-            if let tauri::WindowEvent::Destroyed = event.event() {
-                println!("[Omni-Context] 窗口关闭，正在清理...");
-                if let Err(e) = brain_server::stop() {
-                    eprintln!("[Omni-Context] Brain Server 停止失败: {}", e);
+            match event.event() {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
+                    if event.window().label() == "main" {
+                        if CLOSE_TO_TRAY.load(Ordering::SeqCst) {
+                            api.prevent_close();
+                            let _ = event.window().hide();
+                        } else {
+                            println!("[Omni-Context] 窗口关闭且配置为直接退出，正在清理...");
+                            let _ = brain_server::stop();
+                            std::process::exit(0);
+                        }
+                    }
                 }
+                tauri::WindowEvent::Destroyed => {
+                    if event.window().label() == "main" {
+                        println!("[Omni-Context] 主窗口销毁，清理中...");
+                        if let Err(e) = brain_server::stop() {
+                            eprintln!("[Omni-Context] Brain Server 停止失败: {}", e);
+                        }
+                    }
+                }
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![
@@ -127,6 +260,18 @@ async fn main() {
             commands::trigger_precipitate,
             commands::trigger_decision,
             commands::trigger_reset,
+            commands::set_close_behavior,
+            commands::quit_app,
+            commands::open_data_folder,
+            commands::open_logs_folder,
+            commands::process_dropped_paths,
+            commands::mcp_get_server_command,
+            commands::mcp_get_clients_status,
+            commands::mcp_install_to,
+            commands::mcp_open_config_folder,
+            commands::get_foreground_window_info,
+            commands::get_pair_code,
+            commands::regenerate_pair_code,
             hardware::list_hardware_devices,
             hardware::pair_hardware_device,
             hardware::unpair_hardware_device,

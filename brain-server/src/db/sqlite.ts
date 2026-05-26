@@ -885,6 +885,19 @@ export class Database {
     );
   }
 
+  /**
+   * 批量更新实体的 access_count 和 last_accessed（隐式 access tracking）
+   */
+  async bumpAccessCounts(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    const now = new Date().toISOString();
+    const placeholders = ids.map(() => '?').join(',');
+    await this.run(
+      `UPDATE entities SET access_count = access_count + 1, last_accessed = ? WHERE id IN (${placeholders})`,
+      [now, ...ids]
+    );
+  }
+
   async beginTransaction(): Promise<void> {
     await this.run('BEGIN TRANSACTION');
   }

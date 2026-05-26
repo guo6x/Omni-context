@@ -3,6 +3,7 @@
 import initDatabase from './db/sqlite.js';
 import { createServer } from './api/routes.js';
 import { AgentLoop } from './agent/agent-loop.js';
+import { MemoryDecayScheduler } from './memory/decay-scheduler.js';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -17,14 +18,21 @@ async function main() {
 
   await db.runMigrations();
 
-  const agentLoop = new AgentLoop(db);
+  const decayScheduler = new MemoryDecayScheduler(db, {
+    decayFactor: 0.95,
+    staleDays: 90,
+    intervalMs: 60 * 60 * 1000,
+    autoStart: true,
+  });
+
+  const agentLoop = new AgentLoop(db, decayScheduler);
   // 默认 10 分钟一轮，避免本地 LLM 频繁被唤起；测试可通过 INSIGHT_INTERVAL_MS 缩短
   const insightIntervalMs = process.env.INSIGHT_INTERVAL_MS
     ? Number(process.env.INSIGHT_INTERVAL_MS)
     : 10 * 60 * 1000;
   agentLoop.start(insightIntervalMs);
 
-  const server = createServer(db, agentLoop);
+  const server = createServer(db, agentLoop, undefined, decayScheduler);
 
   server.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {

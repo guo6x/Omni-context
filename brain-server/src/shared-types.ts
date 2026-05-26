@@ -19,7 +19,8 @@ export type EntityType =
   | 'business_logic'
   | 'critical_review'
   | 'capture_snapshot'
-  | 'memory';
+  | 'memory'
+  | 'decision';
 
 export type RelationshipType =
   | 'derived_from'
@@ -32,7 +33,8 @@ export type RelationshipType =
   | 'supported_by'
   | 'extracted_from'
   | 'reviewed_by'
-  | 'references';
+  | 'references'
+  | 'decision_referenced';
 
 export interface Entity {
   id: string;
@@ -69,7 +71,7 @@ export interface GraphRAGOutput {
   principles: Entity[];
 }
 
-export type NotificationType = 'insight' | 'reminder' | 'system';
+export type NotificationType = 'insight' | 'reminder' | 'system' | 'decay_warning';
 
 export interface Notification {
   id: string;

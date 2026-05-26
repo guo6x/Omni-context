@@ -26,11 +26,17 @@
   ```bash
   xcode-select --install
   ```
-
-#### Linux
-- 系统依赖库（根据发行版）：
+- Rust toolchain（推荐通过 rustup 安装）:
   ```bash
-  # Debian/Ubuntu
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  # 重启终端后确认
+  rustc -V   # 需要 1.75+
+  ```
+
+#### Linux (Ubuntu 22.04 / Debian)
+- 系统依赖库：
+  ```bash
+  sudo apt update
   sudo apt install libwebkit2gtk-4.0-dev \
     build-essential \
     curl \
@@ -40,6 +46,12 @@
     libgtk-3-dev \
     libayatana-appindicator3-dev \
     librsvg2-dev
+  ```
+- Rust toolchain:
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source ~/.cargo/env
+  rustc -V   # 需要 1.75+
   ```
 
 ### 安装项目依赖
@@ -74,9 +86,20 @@ npm run tauri:dev
 
 ## 打包应用
 
-### 构建应用
+### 一键构建（推荐）
 
-要打包成可执行文件，运行：
+运行跨平台打包脚本，自动完成 Brain Server 构建、内嵌 Node、前端构建和 Tauri 打包：
+
+```bash
+# 在仓库根目录运行
+node scripts/build-desktop-only.js
+```
+
+脚本会根据当前操作系统自动检测 `node` 二进制名称（Windows: `node.exe`，macOS/Linux: `node`）。
+
+### 单独构建 Tauri
+
+如果只需要 Tauri 打包（Brain Server 已就绪）：
 
 ```bash
 cd desktop-daemon
@@ -216,10 +239,14 @@ node icons/generate-icons.js
 ## 发布到应用商店（可选）
 
 ### macOS App Store
-需要额外的签名和公证步骤，请参考 Tauri 官方文档。
+需要 Apple Developer ID 签名 + notarize。本期未配置签名（`signingIdentity: null`），产出 `.dmg` 安装时有安全警告，需用户在「系统设置 > 隐私与安全性」中手动允许。
 
 ### Windows Store
 需要额外的打包和签名步骤，请参考 Tauri 官方文档。
 
 ### Linux
-可以发布到 Flathub、Snap Store 等平台。
+AppImage 可直接分发。DEB 包需配置 `depends` 列表（已在 `tauri.conf.json` 中配置）。
+
+## 已知限制
+
+> **注意**: 当前开发者没有 macOS / Linux 设备进行真机测试。macOS 和 Linux 打包流程的代码已准备就绪，CI 也会在对应平台验证，但欢迎社区贡献者在真实 macOS / Linux 上验证并反馈问题。

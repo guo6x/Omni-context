@@ -30,6 +30,14 @@ const IMAGE_CONTENT_TYPES = new Set([
   'image/webp',
 ]);
 
+const DOCX_CT = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const XLSX_CT = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const PPTX_CT = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+const EPUB_CT = 'application/epub+zip';
+const HTML_CTS = new Set(['text/html', 'application/xhtml+xml']);
+
+const OFFICE_AND_EBOOK_CTS = new Set([DOCX_CT, XLSX_CT, PPTX_CT, EPUB_CT]);
+
 interface IngestFilePayload {
   filename?: string;
   contentType?: string;
@@ -44,11 +52,86 @@ function isAcceptedContentType(ct: string): boolean {
   if (TEXT_CONTENT_TYPES.has(ct)) return true;
   if (PDF_CONTENT_TYPES.has(ct)) return true;
   if (IMAGE_CONTENT_TYPES.has(ct)) return true;
-  // text/* 全开（text/x-yaml 之类用户也可能拖进来）
+  if (OFFICE_AND_EBOOK_CTS.has(ct)) return true;
+  if (HTML_CTS.has(ct)) return true;
+  // text/* 全开（text/x-yaml、application/x-python 之类用户也可能拖进来）
   if (ct.startsWith('text/')) return true;
   // image/* 兜底（image/webp 等）
   if (ct.startsWith('image/')) return true;
   return false;
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<head[\s\S]*?<\/head>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+async function extractTextFromDocx(buffer: Buffer): Promise<string> {
+  const mammoth: any = await import('mammoth');
+  const extractRawText = mammoth.extractRawText || mammoth.default?.extractRawText;
+  const result = await extractRawText({ buffer });
+  return (result?.value || '').toString();
+}
+
+async function extractTextFromXlsx(buffer: Buffer): Promise<string> {
+  const xlsx: any = await import('xlsx');
+  const wb = xlsx.read(buffer, { type: 'buffer' });
+  const parts: string[] = [];
+  for (const sheetName of wb.SheetNames) {
+    const sheet = wb.Sheets[sheetName];
+    const csv = xlsx.utils.sheet_to_csv(sheet);
+    if (csv.trim()) parts.push(`# Sheet: ${sheetName}\n${csv}`);
+  }
+  return parts.join('\n\n');
+}
+
+async function extractTextFromPptx(buffer: Buffer): Promise<string> {
+  const mod: any = await import('jszip');
+  const JSZip = mod.default || mod;
+  const zip = await JSZip.loadAsync(buffer);
+  const slideNames = Object.keys(zip.files)
+    .filter((name: string) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+    .sort((a: string, b: string) => {
+      const an = Number(a.match(/slide(\d+)\.xml$/)?.[1] || 0);
+      const bn = Number(b.match(/slide(\d+)\.xml$/)?.[1] || 0);
+      return an - bn;
+    });
+  const parts: string[] = [];
+  for (const name of slideNames) {
+    const xml: string = await zip.files[name].async('string');
+    // <a:t> 之间的纯文本就是 PPT 显示的文字
+    const texts = Array.from(xml.matchAll(/<a:t[^>]*>([^<]*)<\/a:t>/g)).map((m) => m[1]);
+    if (texts.length) parts.push(texts.join(' '));
+  }
+  return parts.join('\n\n');
+}
+
+async function extractTextFromEpub(buffer: Buffer): Promise<string> {
+  const mod: any = await import('jszip');
+  const JSZip = mod.default || mod;
+  const zip = await JSZip.loadAsync(buffer);
+  // epub 是 zip，内容主要在 *.xhtml / *.html。按名称排序近似阅读顺序。
+  const htmlNames = Object.keys(zip.files)
+    .filter((name: string) => /\.(x?html?)$/i.test(name))
+    .sort();
+  const parts: string[] = [];
+  for (const name of htmlNames) {
+    const html: string = await zip.files[name].async('string');
+    const text = stripHtml(html);
+    if (text) parts.push(text);
+  }
+  return parts.join('\n\n');
 }
 
 async function extractTextFromPdf(buffer: Buffer): Promise<string> {
@@ -71,6 +154,250 @@ async function extractTextFromPdf(buffer: Buffer): Promise<string> {
   }
 }
 
+// --- Async Job Store ---
+
+type JobStatus = 'queued' | 'running' | 'success' | 'failed' | 'cancelled';
+type JobStage = 'parsing' | 'ocr' | 'extracting' | 'resolving' | 'storing' | 'done';
+
+interface JobState {
+  jobId: string;
+  status: JobStatus;
+  stage?: JobStage;
+  filename: string;
+  createdAt: number;
+  completedAt?: number;
+  aborted?: boolean;
+  result?: {
+    entities: number;
+    relationships: number;
+    principles: number;
+    archivalId: string;
+    summary: string;
+  };
+  error?: string;
+}
+
+const MAX_JOBS = 100;
+const JOB_TTL_MS = 5 * 60 * 1000; // 5 minutes after completion
+
+const jobStore = new Map<string, JobState>();
+
+function createJob(filename: string): JobState {
+  // Capacity protection: remove oldest completed/failed jobs first
+  if (jobStore.size >= MAX_JOBS) {
+    const entries = [...jobStore.entries()]
+      .sort((a, b) => (a[1].completedAt || a[1].createdAt) - (b[1].completedAt || b[1].createdAt));
+    for (const [id, job] of entries) {
+      if (job.status === 'success' || job.status === 'failed' || job.status === 'cancelled') {
+        jobStore.delete(id);
+        if (jobStore.size < MAX_JOBS) break;
+      }
+    }
+    // If still over, remove oldest running/queued
+    for (const [id] of entries) {
+      jobStore.delete(id);
+      if (jobStore.size < MAX_JOBS) break;
+    }
+  }
+
+  const jobId = uuidv4();
+  const job: JobState = {
+    jobId,
+    status: 'queued',
+    filename,
+    createdAt: Date.now(),
+  };
+  jobStore.set(jobId, job);
+  return job;
+}
+
+function updateJob(jobId: string, updates: Partial<JobState>): void {
+  const job = jobStore.get(jobId);
+  if (job) Object.assign(job, updates);
+}
+
+function getJob(jobId: string): JobState | null {
+  const job = jobStore.get(jobId);
+  if (!job) return null;
+
+  // Cleanup: remove completed/cancelled jobs older than TTL
+  if ((job.status === 'success' || job.status === 'failed' || job.status === 'cancelled') && job.completedAt) {
+    if (Date.now() - job.completedAt > JOB_TTL_MS) {
+      jobStore.delete(jobId);
+      return null;
+    }
+  }
+  return job;
+}
+
+// --- Async Pipeline Runner ---
+
+async function runIngestPipeline(jobId: string, filename: string, contentType: string, base64: string, buffer: Buffer, ctx: RequestContext): Promise<void> {
+  const FAIL = (stage: JobStage, error: string) => {
+    updateJob(jobId, { status: 'failed', stage, completedAt: Date.now(), error });
+  };
+
+  const CANCEL = () => {
+    updateJob(jobId, { status: 'cancelled', stage: undefined, completedAt: Date.now() });
+  };
+
+  const CHECK_ABORT = (): boolean => {
+    const j = jobStore.get(jobId);
+    return !!(j?.aborted);
+  };
+
+  const isImage = IMAGE_CONTENT_TYPES.has(contentType) || contentType.startsWith('image/');
+
+  // Stage: parsing
+  if (CHECK_ABORT()) return CANCEL();
+  updateJob(jobId, { status: 'running', stage: 'parsing' });
+  let textContent = '';
+  try {
+    if (PDF_CONTENT_TYPES.has(contentType)) {
+      textContent = await extractTextFromPdf(buffer);
+    } else if (contentType === DOCX_CT) {
+      textContent = await extractTextFromDocx(buffer);
+    } else if (contentType === XLSX_CT) {
+      textContent = await extractTextFromXlsx(buffer);
+    } else if (contentType === PPTX_CT) {
+      textContent = await extractTextFromPptx(buffer);
+    } else if (contentType === EPUB_CT) {
+      textContent = await extractTextFromEpub(buffer);
+    } else if (HTML_CTS.has(contentType)) {
+      textContent = stripHtml(buffer.toString('utf-8'));
+    } else if (isImage) {
+      // Stage: ocr
+      updateJob(jobId, { stage: 'ocr' });
+      const ocr = new OCRPipeline();
+      try {
+        const dataUrl = `data:${contentType};base64,${base64}`;
+        const ocrResult = await ocr.extractText(dataUrl);
+        textContent = ocrResult.text;
+      } finally {
+        await ocr.dispose();
+      }
+    } else {
+      textContent = buffer.toString('utf-8');
+    }
+  } catch (err: any) {
+    return FAIL(isImage ? 'ocr' : 'parsing', `Failed to read file content: ${err?.message || err}`);
+  }
+
+  textContent = textContent.trim();
+  if (!textContent) {
+    const message = isImage
+      ? 'No text recognized in the image'
+      : 'No text content extracted from file';
+    return FAIL(isImage ? 'ocr' : 'parsing', message);
+  }
+
+  // Stage: extracting (LLM)
+  if (CHECK_ABORT()) return CANCEL();
+  updateJob(jobId, { stage: 'extracting' });
+  let extractResult;
+  try {
+    extractResult = await ctx.extractor.extract({
+      textContent: `Source file: ${filename}\n${textContent}`,
+      timestamp: new Date().toISOString(),
+      sourceType: 'manual',
+    });
+  } catch (err: any) {
+    return FAIL('extracting', `LLM extraction failed: ${err?.message || err}`);
+  }
+
+  // Stage: resolving
+  if (CHECK_ABORT()) return CANCEL();
+  updateJob(jobId, { stage: 'resolving' });
+  const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db);
+
+  for (const entity of resolution.entitiesToCreate) {
+    await ctx.db.addEntity(entity);
+  }
+
+  for (const update of resolution.entitiesToUpdate) {
+    await ctx.db.updateEntity(update.id, {
+      description: update.description,
+      tags: update.tags,
+    });
+  }
+
+  // Auto conflict detection
+  try {
+    await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+  } catch (err) {
+    console.error('[Ingest] Conflict resolution failed:', err);
+  }
+
+  for (const relationship of resolution.relationshipsToCreate) {
+    await ctx.db.addRelationship(relationship);
+  }
+
+  // Stage: storing
+  if (CHECK_ABORT()) return CANCEL();
+  updateJob(jobId, { stage: 'storing' });
+
+  // Principles
+  const principleNow = new Date().toISOString();
+  const principleEntities = extractResult.principles.map((principle): Entity => ({
+    id: uuidv4(),
+    name: principle.title,
+    type: 'principle',
+    description: principle.content,
+    created_at: principleNow,
+    updated_at: principleNow,
+    last_accessed: principleNow,
+    access_count: 0,
+    tags: ['auto_extracted', principle.type, 'uploaded-file'],
+    metadata: {
+      isCore: principle.isCore,
+      version: principle.version || 1,
+      principleType: principle.type,
+      sourceFile: filename,
+    },
+  }));
+  const principleResolution = await resolveEntities(principleEntities, [], ctx.db);
+  for (const entity of principleResolution.entitiesToCreate) {
+    await ctx.db.addEntity(entity);
+  }
+  for (const update of principleResolution.entitiesToUpdate) {
+    await ctx.db.updateEntity(update.id, {
+      description: update.description,
+      tags: update.tags,
+    });
+  }
+
+  // Archival memory
+  let archivalEmbedding: number[] | undefined;
+  try {
+    const embRes = await ctx.embeddingService.embed(textContent);
+    archivalEmbedding = embRes.embedding;
+  } catch (err) {
+    console.warn('[Ingest] archival embedding failed:', err);
+  }
+
+  const archival = await ctx.archivalMemory.add(textContent, {
+    tags: ['uploaded-file', filename],
+    importance: 0.5,
+    embedding: archivalEmbedding,
+  });
+
+  const summary = await ctx.extractor.summarizeEntities(extractResult.entities);
+
+  // Done
+  updateJob(jobId, {
+    status: 'success',
+    stage: 'done',
+    completedAt: Date.now(),
+    result: {
+      entities: extractResult.entities.length,
+      relationships: extractResult.relationships.length,
+      principles: extractResult.principles.length,
+      archivalId: archival.id,
+      summary,
+    },
+  });
+}
+
 export const handleIngestRoutes = [
   {
     method: 'POST' as const,
@@ -82,15 +409,9 @@ export const handleIngestRoutes = [
       const contentType = normalizeContentType(body.contentType || '');
       const base64 = body.base64 || '';
 
-      if (!filename) {
-        return sendError(res, 400, 'filename is required');
-      }
-      if (!contentType) {
-        return sendError(res, 400, 'contentType is required');
-      }
-      if (!base64) {
-        return sendError(res, 400, 'base64 content is required');
-      }
+      if (!filename) return sendError(res, 400, 'filename is required');
+      if (!contentType) return sendError(res, 400, 'contentType is required');
+      if (!base64) return sendError(res, 400, 'base64 content is required');
 
       if (!isAcceptedContentType(contentType)) {
         return sendError(res, 415, `Unsupported contentType: ${contentType}`);
@@ -103,127 +424,54 @@ export const handleIngestRoutes = [
         return sendError(res, 400, 'Invalid base64 payload');
       }
 
-      if (buffer.length === 0) {
-        return sendError(res, 400, 'Decoded file is empty');
-      }
-      if (buffer.length > MAX_INGEST_BYTES) {
-        return sendError(res, 413, `File too large. Limit is ${MAX_INGEST_BYTES} bytes`);
-      }
+      if (buffer.length === 0) return sendError(res, 400, 'Decoded file is empty');
+      if (buffer.length > MAX_INGEST_BYTES) return sendError(res, 413, `File too large. Limit is ${MAX_INGEST_BYTES} bytes`);
 
-      const isImage = IMAGE_CONTENT_TYPES.has(contentType) || contentType.startsWith('image/');
-      let textContent = '';
-      try {
-        if (PDF_CONTENT_TYPES.has(contentType)) {
-          textContent = await extractTextFromPdf(buffer);
-        } else if (isImage) {
-          const ocr = new OCRPipeline();
-          try {
-            const dataUrl = `data:${contentType};base64,${base64}`;
-            const ocrResult = await ocr.extractText(dataUrl);
-            textContent = ocrResult.text;
-          } finally {
-            await ocr.dispose();
-          }
-        } else {
-          textContent = buffer.toString('utf-8');
-        }
-      } catch (err: any) {
-        return sendError(res, 422, `Failed to read file content: ${err?.message || err}`);
-      }
+      const job = createJob(filename);
 
-      textContent = textContent.trim();
-      if (!textContent) {
-        const message = isImage
-          ? 'No text recognized in the image'
-          : 'No text content extracted from file';
-        return sendError(res, 422, message);
-      }
-
-      // 抽取链路：复用现有 extractor，与 /api/graph/extract 保持一致
-      const result = await ctx.extractor.extract({
-        textContent: `Source file: ${filename}\n${textContent}`,
-        timestamp: new Date().toISOString(),
-        sourceType: 'manual',
+      // Fire-and-forget async pipeline
+      setImmediate(() => {
+        runIngestPipeline(job.jobId, filename, contentType, base64, buffer, ctx);
       });
 
-      // 实体消解与重映射
-      const resolution = await resolveEntities(result.entities, result.relationships, ctx.db);
+      sendResponse(res, 200, { jobId: job.jobId, status: job.status, filename: job.filename });
+    },
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/ingest/job/:jobId/cancel',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, _ctx: RequestContext, params: Record<string, string>) => {
+      const jobId = params.jobId;
+      if (!jobId) return sendError(res, 400, 'jobId is required');
 
-      for (const entity of resolution.entitiesToCreate) {
-        await ctx.db.addEntity(entity);
+      const job = jobStore.get(jobId);
+      if (!job) return sendError(res, 404, 'Job not found or expired');
+
+      if (job.status !== 'running' && job.status !== 'queued') {
+        return sendError(res, 409, `Cannot cancel job in status: ${job.status}`);
       }
 
-      for (const update of resolution.entitiesToUpdate) {
-        await ctx.db.updateEntity(update.id, {
-          description: update.description,
-          tags: update.tags,
-        });
-      }
+      job.aborted = true;
+      sendResponse(res, 200, { jobId, status: 'cancelling' });
+    },
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/ingest/job/:jobId',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, _ctx: RequestContext, params: Record<string, string>) => {
+      const jobId = params.jobId;
+      if (!jobId) return sendError(res, 400, 'jobId is required');
 
-      // 自动冲突检测与消解
-      try {
-        await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
-      } catch (err) {
-        console.error('[Ingest] Conflict resolution failed:', err);
-      }
-
-      for (const relationship of resolution.relationshipsToCreate) {
-        await ctx.db.addRelationship(relationship);
-      }
-
-      // 原则实体同样走消解，避免重复 ingest 产生重复原则
-      const principleNow = new Date().toISOString();
-      const principleEntities = result.principles.map((principle): Entity => ({
-        id: uuidv4(),
-        name: principle.title,
-        type: 'principle',
-        description: principle.content,
-        created_at: principleNow,
-        updated_at: principleNow,
-        last_accessed: principleNow,
-        access_count: 0,
-        tags: ['auto_extracted', principle.type, 'uploaded-file'],
-        metadata: {
-          isCore: principle.isCore,
-          version: principle.version || 1,
-          principleType: principle.type,
-          sourceFile: filename,
-        },
-      }));
-      const principleResolution = await resolveEntities(principleEntities, [], ctx.db);
-      for (const entity of principleResolution.entitiesToCreate) {
-        await ctx.db.addEntity(entity);
-      }
-      for (const update of principleResolution.entitiesToUpdate) {
-        await ctx.db.updateEntity(update.id, {
-          description: update.description,
-          tags: update.tags,
-        });
-      }
-
-      // 原文落 archival memory，方便事后检索
-      let archivalEmbedding: number[] | undefined;
-      try {
-        const embRes = await ctx.embeddingService.embed(textContent);
-        archivalEmbedding = embRes.embedding;
-      } catch (err) {
-        console.warn('[Ingest] archival embedding failed:', err);
-      }
-
-      const archival = await ctx.archivalMemory.add(textContent, {
-        tags: ['uploaded-file', filename],
-        importance: 0.5,
-        embedding: archivalEmbedding,
-      });
-
-      const summary = await ctx.extractor.summarizeEntities(result.entities);
+      const job = getJob(jobId);
+      if (!job) return sendError(res, 404, 'Job not found or expired');
 
       sendResponse(res, 200, {
-        entities: result.entities.length,
-        relationships: result.relationships.length,
-        principles: result.principles.length,
-        archivalId: archival.id,
-        summary,
+        jobId: job.jobId,
+        status: job.status,
+        stage: job.stage,
+        filename: job.filename,
+        result: job.result,
+        error: job.error,
       });
     },
   },

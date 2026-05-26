@@ -2,7 +2,7 @@
 
 > 这份文档是整个项目的「北极星」。所有规划、任务拆分、验收都以它为准。
 > 当现实和这份文档冲突时——要么改代码对齐文档，要么改文档对齐新决定，二选一，不允许含糊。
-> 最后更新：2026-05-21
+> 最后更新：2026-05-26
 
 ---
 
@@ -42,6 +42,7 @@
   - 一周后 Proactive Agent 提示「你上周看的 A 和今天的 B 其实是同一个问题」。
   - 手机上随手记一条想法 → 回到电脑图谱里已经在了。
   - 桌上的物理按钮一按 → 触发截图沉淀。
+  - 在 Cursor / Claude Desktop / Cherry Studio 里问 AI 时，AI 通过 MCP 自动调用你的图谱做依据。
 
 ---
 
@@ -65,11 +66,18 @@
                           | 内嵌启动 / HTTP
                           v
                   [桌面端 Tauri App]   ← 主控台 + 系统级捕获
+
+                          ↑
+                          | mcp-proxy.js (stdio↔HTTP)
+                          |
+                [Claude Desktop / Cursor / Cline / ...]
+                12+ 款 MCP 客户端共享同一份图谱
 ```
 
 - **Brain Server 是唯一数据权威**，其余四个都是它的「感官」或「界面」。
 - 桌面端会内嵌启动 Brain Server（打包时一起带 node.exe）。
 - 移动端/插件/硬件通过网络连到 Brain Server，不自带数据库。
+- 外部 AI 客户端通过 `mcp-proxy.js` 走 stdio 接入，背后转发到本机 brain-server——保证所有客户端共享同一份 DB + LLM 配置。
 
 ---
 
@@ -84,14 +92,17 @@
 | HTTP API 服务 | 实体/关系/图谱/导入导出全套 REST | ✅ | `api-server.ts` |
 | SQLite 存储 | 实体·关系·记忆·通知，FTS5 全文索引 | ✅ | `db/sqlite.ts` |
 | 向量检索 | sqlite-vec 原生 KNN | ✅ | 未做大数据量压测 |
-| 三层融合检索 | 向量+全文+图谱关联，一次查询穿透 | ✅ | 三层均已验证；embedding 修复后向量层恢复真语义 |
-| Embedding 服务 | 本地 Xenova transformers 生成向量 | ✅ | 2026-05-21 模型已内置进仓库，运行时零网络、离线可用 |
-| GraphRAG 抽取 | 从文本抽实体+关系 | ✅ | 2026-05-21 端到端验证：云端 LLM（DeepSeek）抽取质量良好 |
-| 记忆分层 | core / archival 双层 + 衰减调度 | 🟡 | `decay-scheduler` 未验证 |
-| OCR 管线 | 截图转文字 Tesseract | 🟡 | 未端到端验证 |
-| Proactive Agent | 定期扫图谱、生成 Insights 推送 | ✅ | 2026-05-21 端到端验证：扫近期实体→LLM 生成洞见→存为通知，洞见质量良好 |
-| MCP Server | 作为 MCP 工具被 Claude 等调用 | ✅ | `mcp-server.ts` |
-| 数据导入/导出 | 整库 JSON 备份/恢复（merge/replace） | ✅ | |
+| 三层融合检索 | 向量+全文+图谱关联，一次查询穿透 | ✅ | 三层均已验证 |
+| Embedding 服务 | 本地 Xenova transformers 生成向量 | ✅ | 模型内置仓库；降级到 hash-fallback 时通过 `/api/admin/embedding/status` 暴露状态（task 18） |
+| GraphRAG 抽取 | 从文本抽实体+关系 | ✅ | 云端 DeepSeek 实测良好 |
+| 截图 → OCR → 抽取 | 沉淀流程真的解析截图文字 | ✅ | task 09：extractor.combineInputs 接入 OCRPipeline + 10s 超时兜底 |
+| 文件上传（含 Office/EPUB/HTML/代码） | 拖文件 → 自动解析对应格式 → 抽取 | ✅ | task-01/13：支持 30+ 扩展名，docx/xlsx/pptx/epub/html + 各种代码文件 |
+| 上传异步 job + 进度 | POST 立刻返 jobId，前端轮询阶段 | ✅ | task 13：parsing/ocr/extracting/resolving/storing 五阶段，5min TTL |
+| 记忆分层 + 衰减 | core / archival + decay-scheduler + 衰减洞见 | ✅ | task 14：anchor 纳入 updated_at，每 6 cycle 检查 decay_warning |
+| Proactive Agent | 定期扫图谱、生成 Insights 推送 | ✅ | 桌面 App 入口也已正确传入 decayScheduler |
+| MCP Server | 14 个工具（含 get_decision_context、unified_memory_search 等） | ✅ | `mcp-server.ts`（stdio + HTTP 双模） |
+| MCP HTTP 代理 | mcp-proxy.js 薄壳，将各客户端 stdio 转 HTTP 到本机 brain-server | ✅ | task 08：彻底解决 DB 隔离 + LLM 配置不共享 + 并发问题 |
+| 数据导入/导出 | 整库 JSON 备份/恢复（merge/replace） | ✅ | API 已有，桌面 UI 入口待补 |
 
 ### 4.2 桌面端（主控台）
 
@@ -99,20 +110,33 @@
 
 | 特性 | 最终形态 | 状态 | 备注 |
 |---|---|---|---|
-| 知识图谱可视化 | 2D/3D 力导向图，搜索/类型/标签筛选 | ✅ | |
-| 图谱 · MST 骨架视图 | 裁冗余边只留最强骨架 | ✅ | 本轮完成 |
-| 图谱 · 时间轴 | 按创建时间回放图谱演化 | ✅ | 本轮完成 |
+| 知识图谱可视化 | 2D/3D 力导向图 + size/关系线/Legend 三件套 | ✅ | task 21：size 按 access_count 归一、principle +2；关系线按 type 区分颜色/线型（冲突红、依赖蓝、取代虚线灰）；右上 Legend 可折叠 + 点击高亮筛选 |
+| 图谱 · MST 骨架视图 | 裁冗余边只留最强骨架 | ✅ | |
+| 图谱 · 时间轴 | 按创建时间回放图谱演化 | ✅ | |
 | 节点 编辑/删除/合并 | 详情面板内直接操作 | ✅ | |
-| 悬浮 HUD | 独立置顶窗口，主窗口最小化也常驻 | ✅ | |
-| 洞见通知中心 | 毛玻璃 Insights 收件箱 | ✅ | 依赖 Agent 真有产出 |
-| 文件拖拽上传 | 拖文件进来自动抽取入图谱 | ✅ | |
-| 硬件配对面板 | 发现/配对/命名 ESP32 设备 | ✅ | 本轮完成 |
-| 设置面板 | 快捷键/外观/行为/LLM/数据管理 | ✅ | |
-| 浅色主题 | 完整 light 主题适配 | ✅ | 本轮完成 |
-| 屏幕/剪贴板捕获 | 系统级捕获后入库 | 🟡 | Rust 代码在，未端到端验证 |
-| 开机自启 | 跟随系统启动 | ✅ | 2026-05-21 接入 tauri-plugin-autostart，设置开关已打通 |
+| 全窗口拖放上传 | 主窗口任意位置接收文件/文件夹 | ✅ | task 01：Tauri file-drop + Rust 递归扫描（支持 50+ 文件确认弹窗） |
+| 常驻上传入口 | header 区固定「上传文件」按钮 | ✅ | task 03 |
+| 悬浮 HUD | 独立置顶 Tauri 窗口，主窗口最小化也常驻 | ✅ | task 04：从 DOM 浮层切换到独立窗口 |
+| Spotlight 搜索浮层 | Ctrl+K，并发三路搜索 + 跨类别按相关性排序 + 跳图谱聚焦 | ✅ | task 05 + 15 |
+| 决策助手独立页面 | Ctrl+Shift+K，5 行输入框 + 三列结果（原则/历史/冲突） | ✅ | task 22：从 SearchPalette 拆出独立全屏覆盖层 |
+| 洞见通知中心 | 毛玻璃 Insights 收件箱（含 decay_warning） | ✅ | |
+| 系统托盘 + 后台常驻 | 托盘图标 + 关 X 默认最小化 + 菜单（重启 BS / 打开数据目录 / 退出） | ✅ | task 06 |
+| MCP 接入面板 | 12 个客户端卡片 + 一键写入（Claude Desktop/Cursor 等）+ 复制 JSON 兜底 + 能力预览（5 个使用场景） | ✅ | task 02 + 20 |
+| 首启 Wizard + LLM 预设 | 11 家服务商预设（OpenAI/DeepSeek/Moonshot/智谱/通义/火山/Groq/OpenRouter/Ollama 等）+ 测试连接 + LLM 未配横幅引流 | ✅ | task 07 |
+| 沉淀真反馈 | HUD 等待真实 await，三分支显示（成功 N 实体 / 0 内容 / 失败原因） | ✅ | task 09 + 10：截图真 OCR + 防重 ref |
+| 离线横幅文案 | 简短文案 + 折叠"详细信息"展开技术原因 | ✅ | task 17 |
+| 系统自检 Tab | embedding 引擎状态（hash-fallback 时红色警告）+ LLM / OCR / BS 真实状态 | ✅ | task 18 |
+| 国际化 | zh/en 全量覆盖（130+ key，UI 0 硬编码中文残留） | ✅ | task 16 |
+| 设置面板 | 快捷键/外观/行为/LLM/MCP/数据管理/启动行为/常驻 | ✅ | |
+| 浅色主题 | 完整 light 主题适配 | ✅ | |
+| 屏幕/剪贴板捕获 | 系统级捕获后入库 | ✅ | task 09 接通后端 OCR，捕获→图谱链路打通 |
+| 开机自启 | 跟随系统启动 | ✅ | tauri-plugin-autostart |
+| Tauri allowlist + Cargo features | fs.readFile / window / shell / clipboard 全部正确开启 | ✅ | 拖放、HUD、托盘都依赖 |
 | Windows 打包 | msi + nsis 安装包 | ✅ | |
-| macOS / Linux 打包 | 同等安装包 | ⬜ | 无打包脚本 |
+| macOS / Linux 打包 | 同等安装包 | 🟡 | task 29：脚本就绪、CI matrix 就绪，无 mac/linux 设备实测 |
+| 自动更新 | Tauri updater + GitHub Release | 🟡 | task 28：代码就绪，pubkey/endpoint 已填，私钥本地保存待配 GitHub Secret |
+| 抓屏隐私控制 | 暂停 toggle + 敏感应用 blocklist | ✅ | task 24 |
+| 日志落盘 | %LOCALAPPDATA%\omni-context\logs\ + 轮转 | ✅ | task 25 |
 
 ### 4.3 移动端 App
 
@@ -120,13 +144,13 @@
 
 | 特性 | 最终形态 | 状态 | 备注 |
 |---|---|---|---|
-| 快速捕获 | 随手记文字+标签 | ✅ | 代码完成 |
-| 记忆列表 | 浏览/搜索本地记忆 | ✅ | 代码完成 |
-| 知识图谱浏览 | 移动端看图谱 | ✅ | 代码完成 |
-| 设置页 | 配置 Brain Server 地址等 | ✅ | 代码完成 |
-| LAN 同步 | 与 Brain Server HTTP 同步 | 🟡 | `syncService` 在，无鉴权 |
+| 只读搜索 MVP | 搜索框 + 三 API 并发 + 实体/记忆详情 | 🟡 | task 19：代码 + tsc 通过，**未真机/模拟器实测** |
+| 设置页 | 配置 Brain Server 地址 + 配对码 | ✅ | task 27 加配对码输入 |
+| 实体详情 + 邻居 | 调 /api/graph/context 显示关联 | 🟡 | 代码完成，未真机验证 |
+| LAN 同步 + 鉴权 | 配对码 6 位 + Authorization Bearer | ✅ | task 27：127.0.0.1 免鉴权，其他来源需配对码 |
 | Android 打包 | 可安装 APK | ⬜ | 只有 `android/` 工程，未出包 |
 | iOS 打包 | 可安装 IPA | ⬜ | 连 `ios/` 工程都没有 |
+| 截屏沉淀 / 上传 | —— | ❌ | 移动端定位为只读，写入留给桌面 |
 
 ### 4.4 浏览器插件
 
@@ -138,6 +162,7 @@
 | 后台与 Brain Server 通信 | HTTP 调用 | ✅ | |
 | 打包产物 | unpacked + zip | ✅ | |
 | Firefox 适配 | MV2/兼容版本 | 🟡 | 标称兼容 109+，未实测 |
+| 与 task 13 异步 job 协议同步 | 适配 `POST /api/ingest/file` 返回 jobId 的新格式 | ✅ | task 26：chrome.alarms 持久化轮询，SW unload 后恢复 |
 | Safari 适配 | —— | ❌ | 明确不做 |
 
 ### 4.5 ESP32 物理硬件
@@ -155,115 +180,168 @@
 
 | 特性 | 最终形态 | 状态 | 备注 |
 |---|---|---|---|
-| MCP Server | IDE/Agent（Cursor、VS Code、Claude 等）通过 stdio 接入 | ✅ | `mcp-server.ts`，工具集已实现 |
-| 图谱查询工具 | 外部 AI 可检索实体/关系/做关联推理 | ✅ | task 06 按决策支持视角打磨：vector_search 改为接受文本、15 个工具描述全部面向外部 AI 重写 |
-| 决策支持能力 | 外部 AI 提问 → 基于历史图谱给依据充分的判断 | ✅ | 2026-05-21 新增 `get_decision_context` MCP 工具并验证（含历史冲突检测） |
-| HTTP API 对外开放 | 非 MCP 的 AI 产品也能 HTTP 接入 | 🟡 | 已定 MCP 为对外主通道；HTTP API 维持产品内部客户端用，暂不作为第三方契约对外 |
-| 接入文档 | 第三方「如何把 Omni-Context 当脑子用」指南 | ✅ | `docs/MCP-INTEGRATION.md`（2026-05-21 更新：修了 DB_PATH bug、补 get_decision_context、按数字脑子定位重写） |
+| MCP Server | 14 个工具（含决策上下文 / 衰减报告 / 统一记忆搜索） | ✅ | |
+| MCP HTTP 代理 | mcp-proxy.js 把 stdio 转发到本机 brain-server HTTP | ✅ | task 08：客户端无感，但服务端单点。彻底解决多客户端 DB 隔离 + LLM 配置不共享 + 并发风险 |
+| 多客户端一键 / 半自动接入 | Claude Desktop / Cursor / Windsurf / Cline / Continue / Roo Code / Trae / LM Studio / Cherry Studio / ChatBox / Zed / Goose + 兜底 | ✅ | task 02：12 + 1 张卡片在设置面板 |
+| 决策支持能力 | `get_decision_context` 工具 + 桌面端独立 UI（Ctrl+Shift+K）+ 保存决策结果回图谱 | ✅ | task 22+33：独立助手页面 + "我已决定"按钮把决策沉淀为 decision 实体 |
+| AI 大脑三件套 | MCP instructions 引导 + save_conclusion 工具 + 隐式 access_count | ✅ | task 23：让接入的 AI 主动调记忆、把对话结论写回图谱、被引用的记忆自动加权 |
+| HTTP API 对外开放 | 非 MCP 的 AI 产品也能 HTTP 接入 | 🟡 | MCP 为对外主通道；HTTP API 维持产品内部客户端用，暂不作为第三方契约对外 |
+| 接入文档 | 第三方「如何把 Omni-Context 当脑子用」指南 | ✅ | `docs/MCP-INTEGRATION.md` |
+| 能力预览 UI | 5 个使用场景示例（在 Claude 里怎么说 → 触发什么工具） | ✅ | task 20 |
 
 ---
 
-## 5. 当前总体状态快照（2026-05-21）
+## 5. 当前总体状态快照（2026-05-26）
 
-**当前交付形态：桌面端 + 浏览器插件 + 数字脑子（MCP）对外接口。** 这条线已完成并端到端验证。
+**当前交付形态：桌面端 v1.2（"AI 大脑"产品化 + 隐私 + 自动更新就绪） + 浏览器插件（异步 job 适配） + 移动端 LAN 鉴权 + 数字脑子（MCP + 代理 + AI 主动调用三件套）对外接口。**
 
-- **已完成并验证**：图谱 LLM 抽取、离线 embedding、离线 OCR→入图谱、决策上下文工具、
-  打磨过的 MCP 工具面、Proactive Agent、开机自启。桌面安装包（MSI/NSIS）已打出。
-- **暂缓（视市场反馈再延伸）**：移动端 APK/iOS、ESP32 固件、macOS/Linux 打包。
-- **仍为实验性**：桌面端的系统级屏幕/剪贴板捕获（Rust 侧未端到端验证）。
+这一轮（task 01-34）把产品从"功能能用"逐步提升到"AI 用得起来的脑子"：
 
-一句话：**核心产品（桌面 + 浏览器 + 数字脑子）已是完成、验证、可交付的状态。**
+**用户体验**
+- 全窗口拖放 + 文件夹递归 + Office/EPUB/HTML/代码文件
+- Ctrl+K 搜索 + Ctrl+Shift+K 决策助手 + "我已决定"沉淀
+- 系统托盘 + 关 X 最小化 + 抓屏暂停 / 敏感应用排除
+- 首启 Wizard + 11 家 LLM 预设
+- 沉淀真反馈（截图 OCR 接通 + HUD 等真实结果）+ 异步 job 取消
+- 全量 i18n + 离线横幅 + Embedding 降级重载按钮
+- 节点视觉三件套（size 映射 + 关系线 + Legend）+ 聚焦脉冲动画 + 时间新鲜度光环
+- 图谱节点编辑/删除/合并/批量打标签 + 10 秒撤销
+
+**MCP 接入产品化（"AI 大脑"差异化）**
+- 12+ 客户端一键 / 半自动接入卡片
+- mcp-proxy 解决 DB 隔离根本问题
+- **MCP instructions 引导 AI 主动调记忆**（task 23A）
+- **save_conclusion 工具让对话结论写回图谱**（task 23B）
+- **隐式 access_count 给被引用记忆加权**（task 23C）
+- 设置面板能力预览
+
+**工程基础**
+- brain-server 日志落盘 + 轮转 + 一键打开日志目录
+- Tauri auto-update 框架 + GitHub Release CI（pubkey 已配，私钥待 Secret）
+- macOS / Linux 打包脚本 + matrix CI 就绪（无设备实测）
+- 移动端 LAN 鉴权（6 位配对码 + 127.0.0.1 免鉴权）
+
+**仍为实验性 / 暂缓**
+- 移动端 task 19/27 仅 typecheck 通过，未真机验证（无设备）
+- macOS / Linux 打包等社区贡献者实测
+- ESP32 真机仍暂缓
 
 ---
 
-## 6. 通往最终形态的路线图
+## 6. 仍欠的事（v1.2 后的路线）
+
+task 01-34 完成后，原 P1/P2/P3 清单（除社区贡献类）全部消化。剩下的口子按价值/迫切度排：
+
+### 待真机验证（无设备阻塞）
+
+- **移动端真机**（Android / iOS）：task 19 + 27 代码就绪 + 配对码鉴权就绪，等社区在真机/模拟器跑通沉淀→搜索全链路。
+- **macOS / Linux 打包**：task 29 脚本 + matrix CI 就绪，等社区在真机出包 + 安装验证。
+- **ESP32 物理按钮真机**：固件源码 + 桌面 UDP 监听都在，等焊板验证。
+
+### 待外部配置（私钥 / Secret）
+
+- **Tauri auto-update 私钥注入 GitHub Secret**：本地 `desktop-daemon/.tauri-signing/omni.key` 已生成（gitignored），需手动到 GitHub repo Settings → Secrets 设置 `TAURI_PRIVATE_KEY` + `TAURI_KEY_PASSWORD`（空字符串）。完成后下次打 tag 即触发 CI 签名发版。
+
+### 看市场反馈再决定
+
+- **桌面 v1.3+ 主要候选**：图谱时间轴回放、节点笔记附件、Letta 风格的多层 memory tiering 在 UI 暴露、批量重建 embedding 进度条。
+- **HTTP API 对外契约化**：当前 MCP 为主、HTTP 内部用；若有第三方需要 HTTP 直连，再补稳定契约文档。
+- **决策审计 / 复盘视图**：task 33 把决策沉淀进图谱了，但还没"按时间线翻历史决策"的 UI。
+
+### 明确暂缓（不在 v1.x 范围）
+
+- 多用户 / 账号体系
+- 云同步
+- 公网部署 / 鉴权
+- 落盘加密
+- Safari 插件
+- ESP32 双向通信
+- 移动端写入（截屏沉淀、上传）—— 定位为只读
+
+---
+
+## 7. 通往最终形态的历史路线图
 
 > 排序原则（2026-05-21 定）：知识图谱 + 对外接口是护城河，路线图围绕它排。
 > 先保证图谱「抽得准」，再把它打磨成能对外的「数字脑子」；桌面收尾类小活穿插进行。
 
-### 阶段 1 —— 图谱地基：先让图谱抽得准
-- ✅ 1.1 端到端验证 LLM 抽取管线（2026-05-21 完成）。修复了配置链路断裂、token 预算过小两类问题；
-  云端 DeepSeek 实测抽取质量良好（实体干净、类型合理、关系无垃圾边）。
-- ✅ 1.2 OCR → 入图谱链路完成（2026-05-21，task 08）：补齐 tesseract.js 依赖、内置中英文
-  语言包（离线）、`/api/ingest/file` 支持图片上传 → OCR → 抽取入图谱，端到端验证通过。
-  （桌面端截图自动走此链路只差前端一个上传调用；屏幕捕获本身仍为实验性。）
-- ✅ 1.3 解决 embedding 模型下载问题（2026-05-21 完成）：模型文件已内置进 `brain-server/models/`，
-  运行时离线加载，向量检索恢复真语义。
-- 关口：图谱抽取质量不过关，后面的「脑子」都是空中楼阁。
+### 阶段 1 —— 图谱地基：抽得准 ✅（2026-05-21 完成）
+- ✅ 1.1 LLM 抽取管线端到端验证。
+- ✅ 1.2 OCR → 入图谱链路。
+- ✅ 1.3 Embedding 模型内置 + 离线加载。
 
-### 阶段 2 —— 数字脑子：把图谱打磨成可对外的决策层 ✅（2026-05-21 完成）
-- ✅ 2.1 MCP 工具集按「决策支持」视角打磨：新增 `get_decision_context`（task 04）、
-  vector_search 改造 + 工具描述全部面向外部 AI 重写（task 06）。
-- ✅ 2.2 对外通道决策：MCP 定为对外主通道（stdio，专为 AI 集成而生）；
-  HTTP API 维持产品内部客户端用，不另作第三方契约。
-- ✅ 2.3 接入文档 `docs/MCP-INTEGRATION.md` 完成。
+### 阶段 2 —— 数字脑子：可对外的决策层 ✅（2026-05-21）
+- ✅ 2.1 MCP 工具集按决策支持视角打磨。
+- ✅ 2.2 MCP 定为对外主通道。
+- ✅ 2.3 接入文档 `docs/MCP-INTEGRATION.md`。
 
-### 阶段 3 —— 验证其余智能能力 ✅（2026-05-21 完成）
-- ✅ 3.1 Proactive Agent 端到端验证：灌入数据后，Agent 周期自动扫描近期实体、
-  调 LLM 生成洞见、存为通知。实测产出的洞见有真实跨节点洞察价值。
+### 阶段 3 —— 主动智能引擎验证 ✅（2026-05-21）
 
-### 阶段 4 / 阶段 5 —— 暂缓（2026-05-21 范围决定）
+### 阶段 4 / 5 —— 暂缓（2026-05-21 范围决定）
 当前交付形态锁定为 **桌面端 + 浏览器插件 + 数字脑子（MCP）对外接口**。
-移动端（Android APK / iOS）、ESP32 固件真机、macOS/Linux 打包——**暂不投入**，
-留待市场反馈：如果核心产品被认可，再考虑延伸这些端的生态。
-代码与文档保留在仓库里，随时可在具备对应环境时重启。
 
-待重启时的清单：
-- 移动端：Android 出 APK、决定 iOS、LAN 同步加最小鉴权（配对码）。
-- 扩展：ESP32 固件真机验证、macOS / Linux 打包脚本。
+### 阶段 6 —— 产品深化（审查驱动）✅（2026-05-22 完成）
+- ✅ 6.1 时序知识图谱
+- ✅ 6.2 自动冲突检测
+- ✅ 6.3 检索 token 效率
+- ✅ 6.4 系统可观测性（自检 Tab）
+- ✅ 6.5 工程治理（配置收敛）
+- ✅ 6.6 首次体验（demo 图谱）
+- ✅ 6.7 README 据实重写
 
-### 阶段 6 —— 产品深化（审查驱动）✅ 全部完成（2026-05-22）
+### 阶段 7 —— 用户体验产品化（2026-05-25 → 2026-05-26 完成）
 
-经项目审查后确定两条线，按推荐顺序推进。
+34 个 task 让产品从"功能能用"升级到"AI 用得起来的脑子"。
 
-**线 A — 记忆质量（加固护城河）**
-- ✅ 6.1 时序知识图谱（2026-05-21，task 09）：关系边加双时间字段、失效而非删除，
-  读取默认只返回当前有效关系。48 个测试全过。
-- ✅ 6.2 自动冲突检测（2026-05-21，task 13）：新关系入库时检索同对旧关系、LLM 判断
-  取代/冲突/独立，自动失效旧关系或建 `conflicts_with`。52 测试全过。
-- ✅ 6.3 检索 token 效率（2026-05-22，task 14）：MCP 读类工具输出走 `toCompactEntity`，
-  砍掉 embedding/metadata、截断长描述。55 测试全过。
+**第一批：基础 UX 修复（task 01-08）**
+- ✅ 01 拖放修复 + 全窗口 + 文件夹递归
+- ✅ 02 12+ MCP 客户端接入卡片
+- ✅ 03 header 常驻上传按钮
+- ✅ 04 HUD 独立窗口
+- ✅ 05 Spotlight 搜索浮层 + 真实 API 接通
+- ✅ 06 系统托盘 + 后台常驻
+- ✅ 07 LLM 预设 + 首启 Wizard
+- ✅ 08 MCP HTTP 代理薄壳
 
-**线 B — 产品化收尾（交付质量）**
-- ✅ 6.4 系统可观测性（2026-05-21，task 10 + 11）：`/api/status` 自检端点 + 桌面端「系统自检」
-  Tab，如实暴露 embedding / LLM / OCR / Agent 真实状态，降级项明确告警。
-- ✅ 6.5 工程治理（2026-05-21，task 12）：硬编码 brain-server URL 收敛到 `src/lib/config.ts`
-  单一配置。（vitest 测试套件经核查本就健康，48 测试常绿，已是每个任务的验收项。）
-- ✅ 6.6 首次体验（2026-05-22，task 15）：`/api/admin/seed-demo` 端点 + EmptyState
-  「加载示例图谱」按钮，新用户一键看到有内容的图谱。带幂等保护。
-- ✅ 6.7 README 据实重写（2026-05-22）：去掉「百万级/10x」等过度承诺，更新已验证状态，
-  突出数字脑子（MCP）差异化，修正安装命令。
+**第二批：产品最大 bug 修复 + 体验深化（task 09-20）**
+- ✅ 09 截图真 OCR（产品最大功能 bug fix）
+- ✅ 10 沉淀反馈对齐真实结果
+- ✅ 11 triggerReset 实装
+- ✅ 12 决策上下文接入（后被 22 重构）
+- ✅ 13 文件上传异步 job + 进度
+- ✅ 14 AgentLoop 锚点纳入 updated_at + 衰减洞见
+- ✅ 15 搜索结果跨类别按分数排序
+- ✅ 16 i18n 全量扫描（130+ key）
+- ✅ 17 离线横幅文案友好化
+- ✅ 18 Embedding 降级状态在 UI 暴露
+- ✅ 19 移动端只读搜索 MVP（typecheck 通过）
+- ✅ 20 MCP 接入页能力预览
 
-**阶段 6 全部完成。** 剩余唯一动作：重新打包，把 task 09–15 的成果纳入安装包 → 即 v1.0。
+**第三批：视觉 + 决策助手独立化（task 21-22）**
+- ✅ 21 图谱节点视觉三件套
+- ✅ 22 决策助手独立页面 + Ctrl+Shift+K
 
-### 最终完成形态（Definition of Done）
+**第四批：AI 大脑产品化 + 工程基础（task 23-34）**
+- ✅ 23 AI 大脑三件套（instructions + save_conclusion + access_count）
+- ✅ 24 抓屏隐私控制（暂停 + 敏感应用 blocklist）
+- ✅ 25 brain-server 日志落盘 + 轮转
+- ✅ 26 浏览器扩展适配 task 13 异步 job 协议（chrome.alarms）
+- ✅ 27 移动端真机配套 + LAN 配对码鉴权
+- ✅ 28 Tauri 自动更新（pubkey 已配，私钥待 Secret）
+- ✅ 29 macOS / Linux 打包脚本 + matrix CI（待真机验证）
+- ✅ 30 图谱节点编辑/删除/批量/10 秒撤销 UX
+- ✅ 31 图谱聚焦脉冲动画 + 时间新鲜度光环
+- ✅ 32 快捷键冲突检测 + Embedding 模型重载按钮
+- ✅ 33 决策助手"我已决定"沉淀回图谱
+- ✅ 34 异步 job 协作式取消
 
-锁定范围（桌面端 + 浏览器插件 + 数字脑子 MCP）下，「v1.0 可发布」= 同时满足：
+### 阶段 8 —— 见 § 6 路线图
 
-**功能**
-- 图谱抽取（文本 / 文件 / 图片 OCR）质量稳定、全部端到端验证 —— ✅ 已达成
-- 数字脑子：MCP 工具面 + `get_decision_context` + 时序图谱 + 自动冲突检测，外部 AI 可即插即用
-- 主动洞见引擎产出有价值的 Insights —— ✅ 已达成
-- 桌面端：核心功能 + 系统自检面板 + 新用户 onboarding
-
-**质量**
-- vitest 测试套件常绿，作为「完成」的硬门槛
-- 无静默退化：任何降级（embedding / LLM / OCR）都在自检面板里可见
-- 配置收敛、README 据实无误导
-
-**交付**
-- Windows MSI / NSIS 安装包，全离线、零网络依赖 —— ✅ 已达成
-- `docs/MCP-INTEGRATION.md` 让第三方能接入 —— ✅ 已达成
-
-达成以上即 **v1.0 可发布**。移动端 / ESP32 / 跨平台为 v1.0 之后、视市场反馈的延伸。
-
-### 穿插小活（不占主线，随时可做）
-- ✅ 开机自启（2026-05-21，task 07，tauri-plugin-autostart）。
-- 把改动整理成干净 commit（按里程碑滚动提交）。
+剩下的事按"真机验证 / 外部配置 / 市场反馈"三类拆分。
 
 ---
 
-## 7. 明确不做的（防止范围蔓延）
+## 8. 明确不做的（防止范围蔓延）
 
 - ❌ 多用户 / 账号体系 / 密码
 - ❌ 云端存储 / 云同步
@@ -271,16 +349,17 @@
 - ❌ 落盘加密
 - ❌ Safari 插件
 - ❌ ESP32 双向通信
+- ❌ 移动端写入能力（移动端定位为只读）
 
 这些不是「以后做」，是这个产品形态**刻意不要**。要加需先改这份文档第 1 章的定位。
 
 ---
 
-## 8. 附：技术参考
+## 9. 附：技术参考
 
 > 本节整合自旧的 `ECOSYSTEM.md`（已删除）。只保留与现状一致的事实性内容。
 
-### 8.1 组件间通信协议（实际实现）
+### 9.1 组件间通信协议（实际实现）
 
 | From → To | 协议 | 说明 |
 |---|---|---|
@@ -288,29 +367,39 @@
 | 浏览器插件 → Brain Server | HTTP (3001) | 同 LAN，CORS 允许 |
 | 移动端 → Brain Server | HTTP (3001) | LAN 内可达即可，无鉴权 |
 | ESP32 → 桌面端 | UDP (9090) | 单向触发；远程需设 `OMNI_UDP_BIND=0.0.0.0:9090` |
-| MCP 客户端（IDE）→ Brain Server | stdio (MCP) | IDE/Agent 直连 |
+| MCP 客户端（IDE）→ mcp-proxy.js → Brain Server | stdio + HTTP (3001) | 代理转发，所有客户端共享同一份 DB |
 
 > 不存在跨进程 WebSocket 推送通道。旧文档里的 `WebSocket 9999` / `mDNS` 只是早期草稿，从未实现。各客户端是各自轮询 Brain Server 的 HTTP API。UDP 9090 默认仅监听 `127.0.0.1`。
 
-### 8.2 项目结构
+### 9.2 项目结构
 
 ```
 omni-context-release/
-├── brain-server/        # 后台大脑：HTTP API + MCP + SQLite + Agent
+├── brain-server/        # 后台大脑：HTTP API + MCP + MCP 代理 + SQLite + Agent
+│   ├── src/mcp-server.ts    # MCP stdio + HTTP 双模（桌面 App 内嵌入口）
+│   ├── src/mcp-proxy.ts     # MCP 代理薄壳（各客户端 spawn 这个）
+│   ├── src/mcp-tools.ts     # 14 个 MCP 工具的共享定义
+│   └── src/api/handlers/    # 所有 HTTP 端点
 ├── desktop-daemon/      # 桌面端：Tauri(Rust) + Next.js 前端
-│   └── src-tauri/       # Rust 侧：屏幕/剪贴板捕获、UDP、硬件、内嵌 Brain Server
+│   └── src-tauri/       # Rust 侧：屏幕/剪贴板捕获、UDP、硬件、内嵌 Brain Server、托盘、MCP 配置写入
 ├── browser-extension/   # 浏览器插件（Manifest V3）
-├── mobile-app/          # 移动端 React Native（目前仅 android/ 工程）
+├── mobile-app/          # 移动端 React Native（只读搜索 MVP）
 ├── hardware/esp32-firmware/  # ESP32 固件源码 + 接线/BOM 文档
 ├── shared/              # 跨端共享的 types / constants
-├── scripts/             # 打包脚本（package-all.js 等）
-└── docs/                # 文档（产品愿景、构建/打包、MCP 集成）
+├── scripts/             # 打包脚本（build-desktop-only.js 等）
+└── docs/
+    ├── PRODUCT-VISION.md      # 本文档（北极星）
+    ├── MCP-INTEGRATION.md     # 第三方接入指南
+    ├── BUILDING.md / PACKAGE.md
+    ├── RELEASING.md           # task 28：签名 + 发版流程
+    ├── tasks/                 # 34 份任务交付文档
+    └── progress/              # 34 份执行 AI 进度报告
 ```
 
-### 8.3 权限用途
+### 9.3 权限用途
 
 | 组件 | 权限 | 用途 |
 |---|---|---|
-| 桌面端 | 屏幕捕获 / 剪贴板 / UDP 监听 | 沉淀屏幕内容、读写剪贴板、接 ESP32 |
+| 桌面端 | 屏幕捕获 / 剪贴板 / UDP 监听 / fs.readFile / window 控制 / shell.open | 沉淀屏幕内容、读写剪贴板、接 ESP32、拖放读文件、HUD 独立窗口、打开数据目录 |
 | 浏览器插件 | 标签页 / 右键菜单 / 通知 | 捕获网页、入口、HUD 提示 |
-| 移动端 | 相机 / 麦克风 / 本地网络 | 拍照沉淀、语音输入、与 Brain Server 同步 |
+| 移动端 | 本地网络 | 与 Brain Server 同步（只读） |

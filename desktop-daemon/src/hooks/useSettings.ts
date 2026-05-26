@@ -3,6 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BRAIN_URL } from '@/lib/config';
 
+async function safeInvoke(cmd: string, args?: any) {
+  if (typeof window === 'undefined') return;
+  try {
+    const { invoke } = await import('@tauri-apps/api/tauri');
+    return await invoke(cmd, args);
+  } catch (e) {
+    console.warn(`safeInvoke ${cmd} 失败:`, e);
+  }
+}
+
 export interface KeyboardShortcut {
   id: string;
   name: string;
@@ -23,6 +33,10 @@ export interface AppSettings {
     autoMinimize: boolean;
     startWithSystem: boolean;
     defaultFloatingHUD: boolean;
+    closeAction: 'minimize_to_tray' | 'exit';
+    onboarded: boolean;
+    capturePaused: boolean;
+    captureBlocklist: string[];
   };
   llmProvider: {
     apiUrl: string;
@@ -34,67 +48,67 @@ export interface AppSettings {
 const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
   {
     id: 'precipitate',
-    name: '沉淀',
-    description: '捕获当前屏幕并提取知识',
+    name: 'shortcuts.precipitate',
+    description: 'shortcuts.precipitate_desc',
     default: 'ctrl+shift+p',
     current: 'ctrl+shift+p',
-    category: '操作',
+    category: 'action',
   },
   {
     id: 'decision',
-    name: '决策',
-    description: '查询相关决策建议',
+    name: 'shortcuts.decision',
+    description: 'shortcuts.decision_desc',
     default: 'ctrl+shift+d',
     current: 'ctrl+shift+d',
-    category: '操作',
+    category: 'action',
   },
   {
     id: 'reset',
-    name: '重置',
-    description: '重置当前状态',
+    name: 'shortcuts.reset',
+    description: 'shortcuts.reset_desc',
     default: 'ctrl+shift+r',
     current: 'ctrl+shift+r',
-    category: '操作',
+    category: 'action',
   },
   {
     id: 'graphView',
-    name: '图谱视图',
-    description: '切换到知识图谱视图',
+    name: 'shortcuts.graph_view',
+    description: 'shortcuts.graph_view_desc',
     default: 'ctrl+shift+g',
     current: 'ctrl+shift+g',
-    category: '视图',
+    category: 'view',
   },
   {
     id: 'consoleView',
-    name: '控制台视图',
-    description: '切换到系统控制台',
+    name: 'shortcuts.console_view',
+    description: 'shortcuts.console_view_desc',
     default: 'ctrl+shift+c',
     current: 'ctrl+shift+c',
-    category: '视图',
+    category: 'view',
   },
   {
     id: 'toggleHUD',
-    name: 'HUD 显示',
-    description: '显示/隐藏 HUD 悬浮窗',
+    name: 'shortcuts.toggle_hud',
+    description: 'shortcuts.toggle_hud_desc',
     default: 'ctrl+shift+h',
     current: 'ctrl+shift+h',
-    category: '视图',
+    category: 'view',
   },
   {
     id: 'openSettings',
-    name: '设置面板',
-    description: '打开/关闭设置面板',
+    name: 'shortcuts.open_settings',
+    description: 'shortcuts.open_settings_desc',
     default: 'ctrl+,',
     current: 'ctrl+,',
-    category: '系统',
+    category: 'system',
   },
   {
     id: 'connectHardware',
-    name: '连接硬件',
-    description: '搜索并配对 ESP32 神经末梢（实验性）',
+    name: 'shortcuts.connect_hardware',
+    description: 'shortcuts.connect_hardware_desc',
     default: 'ctrl+shift+e',
     current: 'ctrl+shift+e',
-    category: '硬件',
+    category: 'hardware',
   },
 ];
 
@@ -109,6 +123,20 @@ const DEFAULT_SETTINGS: AppSettings = {
     autoMinimize: false,
     startWithSystem: false,
     defaultFloatingHUD: false,
+    closeAction: 'minimize_to_tray',
+    onboarded: false,
+    capturePaused: false,
+    captureBlocklist: [
+      'KeePass',
+      '1Password',
+      'Bitwarden',
+      'WeChat',
+      '微信',
+      'QQ',
+      'Telegram',
+      'Signal',
+      'Bank',
+    ],
   },
   llmProvider: {
     apiUrl: 'http://localhost:11434/v1',
@@ -126,7 +154,15 @@ function mergeWithDefaults(stored: any): AppSettings {
       ? stored.keyboardShortcuts
       : DEFAULT_SETTINGS.keyboardShortcuts,
     appearance: { ...DEFAULT_SETTINGS.appearance, ...(stored.appearance || {}) },
-    behavior: { ...DEFAULT_SETTINGS.behavior, ...(stored.behavior || {}) },
+    behavior: {
+      ...DEFAULT_SETTINGS.behavior,
+      ...(stored.behavior || {}),
+      // captureBlocklist 不参与浅合并：优先取存储值，存储值为空数组则保留（用户显式清空），
+      // 存储值不存在则回退到默认列表
+      captureBlocklist: Array.isArray((stored.behavior || {}).captureBlocklist)
+        ? (stored.behavior || {}).captureBlocklist
+        : DEFAULT_SETTINGS.behavior.captureBlocklist,
+    },
     llmProvider: { ...DEFAULT_SETTINGS.llmProvider, ...(stored.llmProvider || {}) },
   };
 }
@@ -154,8 +190,19 @@ export function useSettings() {
   useEffect(() => {
     try {
       const savedSettings = localStorage.getItem('omnicontext-settings');
+      const onboardedFlag = localStorage.getItem('omni_onboarded') === 'true';
       if (savedSettings) {
-        setSettings(mergeWithDefaults(JSON.parse(savedSettings)));
+        const merged = mergeWithDefaults(JSON.parse(savedSettings));
+        merged.behavior.onboarded = merged.behavior.onboarded || onboardedFlag;
+        setSettings(merged);
+        if (merged.behavior.closeAction) {
+          safeInvoke('set_close_behavior', { behavior: merged.behavior.closeAction }).catch(() => {});
+        }
+      } else {
+        const defaultSettings = { ...DEFAULT_SETTINGS };
+        defaultSettings.behavior.onboarded = onboardedFlag;
+        setSettings(defaultSettings);
+        safeInvoke('set_close_behavior', { behavior: 'minimize_to_tray' }).catch(() => {});
       }
     } catch (error) {
       console.warn('加载设置失败:', error);
@@ -217,10 +264,25 @@ export function useSettings() {
 
   // 更新行为设置
   const updateBehavior = useCallback((updates: Partial<AppSettings['behavior']>) => {
-    saveSettings({
+    const newSettings = {
       ...settings,
       behavior: { ...settings.behavior, ...updates },
-    });
+    };
+    saveSettings(newSettings);
+    
+    if (updates.closeAction !== undefined) {
+      safeInvoke('set_close_behavior', { behavior: updates.closeAction }).catch(() => {});
+    }
+    if (updates.onboarded !== undefined) {
+      localStorage.setItem('omni_onboarded', String(updates.onboarded));
+    }
+    if (updates.startWithSystem !== undefined) {
+      if (updates.startWithSystem) {
+        safeInvoke('plugin:autostart|enable').catch(() => {});
+      } else {
+        safeInvoke('plugin:autostart|disable').catch(() => {});
+      }
+    }
   }, [settings, saveSettings]);
 
   // 更新大模型设置

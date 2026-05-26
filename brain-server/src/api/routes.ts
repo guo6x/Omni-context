@@ -6,6 +6,7 @@ import { ArchivalMemory } from '../memory/archival-memory.js';
 import { GraphRAGExtractor } from '../graphrag/extractor.js';
 import { AgentLoop } from '../agent/agent-loop.js';
 import { EmbeddingService } from '../embedding/service.js';
+import { MemoryDecayScheduler } from '../memory/decay-scheduler.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -15,7 +16,8 @@ import {
   handleNotificationRoutes,
   handleAdminRoutes,
   handleIngestRoutes,
-  handleSettingsRoutes
+  handleSettingsRoutes,
+  handleMcpRoutes
 } from './handlers/index.js';
 
 export interface RequestContext {
@@ -25,6 +27,7 @@ export interface RequestContext {
   extractor: GraphRAGExtractor;
   agentLoop: AgentLoop | null;
   embeddingService: EmbeddingService;
+  decayScheduler?: MemoryDecayScheduler;
 }
 
 export interface Route {
@@ -41,6 +44,8 @@ const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || [
   'http://127.0.0.1:3000',
   'tauri://localhost',
   'http://tauri.localhost',
+  // Windows WebView2 下 Tauri 1.x 的实际 Origin 是 https://tauri.localhost
+  'https://tauri.localhost',
 ].join(','))
   .split(',')
   .map((origin) => origin.trim())
@@ -76,7 +81,7 @@ export class ApiRouter {
   private routes: Route[];
   private context: RequestContext;
 
-  constructor(db: Database, agentLoop: AgentLoop | null = null, embeddingService: EmbeddingService) {
+  constructor(db: Database, agentLoop: AgentLoop | null = null, embeddingService: EmbeddingService, decayScheduler?: MemoryDecayScheduler) {
     this.context = {
       db,
       coreMemory: new CoreMemory(db),
@@ -84,6 +89,12 @@ export class ApiRouter {
       extractor: new GraphRAGExtractor(),
       agentLoop,
       embeddingService,
+      decayScheduler: decayScheduler || new MemoryDecayScheduler(db, {
+        decayFactor: 0.95,
+        staleDays: 90,
+        intervalMs: 60 * 60 * 1000,
+        autoStart: true,
+      }),
     };
 
     this.routes = [
@@ -96,6 +107,7 @@ export class ApiRouter {
       ...handleAdminRoutes,
       ...handleIngestRoutes,
       ...handleSettingsRoutes,
+      ...handleMcpRoutes,
     ];
   }
 
@@ -266,9 +278,30 @@ export function createDefaultEmbeddingService(): EmbeddingService {
   });
 }
 
-export function createServer(db: Database, agentLoop?: AgentLoop, embeddingService?: EmbeddingService): http.Server {
+export function createServer(db: Database, agentLoop?: AgentLoop, embeddingService?: EmbeddingService, decayScheduler?: MemoryDecayScheduler): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
-  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService);
+  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, decayScheduler);
+
+  const pairCode = (process.env.PAIR_CODE || '').trim();
+
+  // 检查 LAN 鉴权：127.0.0.1 白名单放行，其余来源需 Bearer pair code
+  function isAuthorized(req: http.IncomingMessage): boolean {
+    const remoteIp = (req.socket.remoteAddress || '').replace(/^::ffff:/, '');
+    // 本机回环地址一律免鉴权
+    if (remoteIp === '127.0.0.1' || remoteIp === '::1' || remoteIp === 'localhost') {
+      return true;
+    }
+    // 未配置 pair code 时放行（向后兼容）
+    if (!pairCode) {
+      return true;
+    }
+    const authHeader = req.headers.authorization || '';
+    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (bearerMatch && bearerMatch[1] === pairCode) {
+      return true;
+    }
+    return false;
+  }
 
   return http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);
@@ -289,6 +322,12 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
         service: 'omni-context-brain-server',
         timestamp: new Date().toISOString(),
       });
+      return;
+    }
+
+    // LAN 鉴权：非本机请求检查配对码
+    if (!isAuthorized(req)) {
+      sendError(res, 401, 'Unauthorized: pair code required. Use Authorization: Bearer <code> or connect from localhost.');
       return;
     }
 

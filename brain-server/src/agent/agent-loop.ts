@@ -1,5 +1,6 @@
 import { Database } from '../db/sqlite.js';
 import { Entity } from '../shared-types.js';
+import { MemoryDecayScheduler } from '../memory/decay-scheduler.js';
 
 interface LLMInsightConfig {
   apiUrl: string;
@@ -104,15 +105,20 @@ export class AgentLoop {
   private interval: NodeJS.Timeout | null = null;
   private warmupTimer: NodeJS.Timeout | null = null;
   private generator: InsightGenerator;
+  private decayScheduler: MemoryDecayScheduler | null = null;
   // 同一组 entity 不重复生成洞见，避免在没有新数据时反复刷屏
   private lastAnchorKey: string | null = null;
   private lastAnchorAt: number = 0;
   // 即使 anchor 不变，超过该窗口仍允许重新触发一次分析
   private readonly anchorRefreshMs = 30 * 60 * 1000;
+  // 衰减洞见每 6 轮（约 6 分钟）触发一次
+  private cycleCount = 0;
+  private static readonly DECAY_CHECK_INTERVAL = 6;
 
-  constructor(db: Database) {
+  constructor(db: Database, decayScheduler?: MemoryDecayScheduler) {
     this.db = db;
     this.generator = new InsightGenerator();
+    this.decayScheduler = decayScheduler || null;
   }
 
   start(intervalMs: number = 60000) {
@@ -164,9 +170,9 @@ export class AgentLoop {
         return;
       }
 
-      // 2. 去重：相同的最近实体集合 + 短窗口内不重复生成洞见
+      // 2. 去重：纳入 updated_at，实体内容变化时锚点变化、触发重新分析
       const anchorKey = recentEntities
-        .map(e => e.id)
+        .map(e => `${e.id}:${e.updated_at}`)
         .sort()
         .join('|');
       const now = Date.now();
@@ -192,6 +198,29 @@ export class AgentLoop {
         console.log(`[AgentLoop] 产生新洞见: ${insight.title}`);
       } else {
         console.log('[AgentLoop] 本轮未产生有效洞见');
+      }
+
+      // 4. 每 N 轮检查一次记忆衰减，生成 decay_warning 通知
+      this.cycleCount++;
+      if (this.decayScheduler && this.cycleCount % AgentLoop.DECAY_CHECK_INTERVAL === 0) {
+        try {
+          const decayed = await this.decayScheduler.getMostDecayedItems(5);
+          if (decayed.length > 0) {
+            const names = decayed.map((d) => {
+              const daysAgo = Math.round((Date.now() - new Date(d.last_accessed).getTime()) / (1000 * 60 * 60 * 24));
+              return `- **${d.name}** (${d.type}) — ${daysAgo} 天未访问`;
+            }).join('\n');
+            await this.db.addNotification({
+              title: '记忆衰减预警',
+              content: `以下记忆已超过 7 天未访问，可能值得回顾：\n\n${names}`,
+              type: 'decay_warning',
+              related_entities: decayed.map((d) => d.id),
+            });
+            console.log(`[AgentLoop] 产生衰减预警: ${decayed.length} 条`);
+          }
+        } catch (e) {
+          console.warn('[AgentLoop] 衰减分析失败，跳过:', e);
+        }
       }
     } catch (error) {
       console.error('[AgentLoop] 执行周期异常:', error);

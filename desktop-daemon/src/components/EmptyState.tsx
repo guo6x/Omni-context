@@ -32,8 +32,8 @@ export default function EmptyState({
         {onDismiss && (
           <button
             onClick={onDismiss}
-            aria-label="关闭欢迎卡片"
-            title="关闭（可在 Help 中重新打开）"
+            aria-label={t('empty.close_welcome')}
+            title={t('empty.close_hint')}
             className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
           >
             <X className="w-4 h-4" />
@@ -75,11 +75,12 @@ export default function EmptyState({
           />
           <ActionRow
             icon={<Sparkles className="w-5 h-5 text-purple-400" />}
-            label="加载示例图谱 (Onboarding Demo)"
-            hint="一键导入包含 24 个实体、36 条关系和 5 条分析的示例图谱"
+            label={t('empty.load_demo')}
+            hint={t('empty.load_demo_hint')}
             onClick={onLoadDemo}
             disabled={isLoadingDemo}
             loading={isLoadingDemo}
+            loadingText={t('empty.generating_vectors')}
           />
         </div>
 
@@ -102,6 +103,7 @@ function ActionRow({
   onClick,
   disabled,
   loading,
+  loadingText,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -109,6 +111,7 @@ function ActionRow({
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
+  loadingText?: string;
 }) {
   return (
     <button
@@ -130,7 +133,7 @@ function ActionRow({
       <span className="flex-1 min-w-0">
         <span className="block text-sm font-medium text-white flex items-center gap-2">
           {label}
-          {loading && <span className="text-xs text-cyan-400 animate-pulse">正在生成向量并导入中...</span>}
+          {loading && loadingText && <span className="text-xs text-cyan-400 animate-pulse">{loadingText}</span>}
         </span>
         <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
       </span>

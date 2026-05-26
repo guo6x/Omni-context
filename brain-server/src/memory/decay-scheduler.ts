@@ -150,6 +150,33 @@ export class MemoryDecayScheduler {
   }
 
   /**
+   * 获取衰减最严重的 N 条实体（7 天未访问 + 曾被访问过）
+   */
+  async getMostDecayedItems(limit: number = 5): Promise<Array<{ id: string; name: string; type: string; last_accessed: string; access_count: number }>> {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const cutoff = sevenDaysAgo.toISOString();
+
+    const rows = await this.db.all<{
+      id: string;
+      name: string;
+      type: string;
+      last_accessed: string;
+      access_count: number;
+    }>(
+      `SELECT id, name, type, last_accessed, access_count
+       FROM entities
+       WHERE last_accessed < ?
+       AND access_count > 0
+       ORDER BY last_accessed ASC, access_count DESC
+       LIMIT ?`,
+      [cutoff, limit]
+    );
+
+    return rows;
+  }
+
+  /**
    * 衰减关系权重 — 计算阶段先聚合需要更新的行，再用一次事务批量提交，
    * 避免在大型图谱上做 N 次独立 UPDATE 触发的 fsync 风暴。
    */

@@ -56,7 +56,7 @@ async function capturePage() {
       content: page.content,
     });
 
-    showNotification(result ? '网页已沉淀入大脑！' : '捕获网页失败');
+    showNotification(result ? '已提交' : '提交失败');
     loadStats();
   });
 }
@@ -77,7 +77,7 @@ async function captureSelection() {
       selection: true,
     });
 
-    showNotification(result ? '选中内容已沉淀！' : '捕获失败');
+    showNotification(result ? '已提交' : '提交失败');
     loadStats();
   });
 }
