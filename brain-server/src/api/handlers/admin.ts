@@ -2,6 +2,8 @@ import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
 import { v4 as uuidv4 } from 'uuid';
 import { CONCEPTS, TOOLS, PRINCIPLES, MIXED, ARCHIVAL, CORE_MEMORIES, NOTIFICATIONS, REL_TYPES } from '../../demo-data.js';
+import { exportToObsidianVault } from '../../exporters/obsidian-vault.js';
+import { URL } from 'url';
 
 // 全库 dump / restore 端点。目的是让用户对数据有完全控制权：
 // 任何时候都能拿走完整 JSON 备份，或在新机器上还原。
@@ -57,8 +59,37 @@ export const handleAdminRoutes = [
     method: 'GET' as const,
     path: '/api/admin/export',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const url = new URL(req.url || '', 'http://localhost');
+      const format = url.searchParams.get('format');
+      const includeInvalidated = url.searchParams.get('include_invalidated') === 'true' || url.searchParams.get('includeInvalidated') === 'true';
+
+      if (format === 'obsidian-vault') {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="omni-vault-${timestamp}.zip"`
+        );
+        try {
+          await exportToObsidianVault(ctx.db, res);
+        } catch (err) {
+          console.error('[Export Obsidian Vault] Failed:', err);
+          if (!res.writableEnded) {
+            res.end();
+          }
+        }
+        return;
+      }
+
       const entities = await ctx.db.all<any>('SELECT * FROM entities');
-      const relationships = await ctx.db.all<any>('SELECT * FROM relationships');
+      let relQuery = 'SELECT * FROM relationships';
+      const relParams: any[] = [];
+      if (!includeInvalidated) {
+        relQuery += " WHERE (valid_until IS NULL OR valid_until > ?)";
+        relParams.push(new Date().toISOString());
+      }
+      const relationships = await ctx.db.all<any>(relQuery, relParams);
       const coreMemory = await ctx.db.all<any>('SELECT * FROM core_memory');
       const archivalMemory = await ctx.db.all<any>('SELECT * FROM archival_memory');
       const notifications = await ctx.db.all<any>('SELECT * FROM notifications');

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BRAIN_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api-client";
 import { CompactEntity } from "@/hooks/useSearchMemory";
 
 export interface DecisionContextResult {
@@ -26,9 +26,8 @@ export function useDecisionContext() {
     setResult(null);
 
     try {
-      const response = await fetch(`${BRAIN_URL}/api/mcp/tool/get_decision_context`, {
+      const response = await apiFetch('/api/mcp/tool/get_decision_context', {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ arguments: { situation: query, limit: 5 } }),
       });
 
@@ -47,9 +46,8 @@ export function useDecisionContext() {
 
   const saveDecision = async (situation: string, conclusion: string, citedEntityIds: string[]): Promise<string | null> => {
     try {
-      const response = await fetch(`${BRAIN_URL}/api/mcp/tool/save_decision`, {
+      const response = await apiFetch('/api/mcp/tool/save_decision', {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           arguments: {
             situation,

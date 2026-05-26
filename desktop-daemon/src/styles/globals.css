@@ -9,13 +9,13 @@
   /* 默认 + dark：当前 UI 默认按深色设计 */
   html.dark body,
   html:not(.light) body {
-    background-color: #0a0b12;
-    color: #e8e8e8;
+    background-color: var(--color-bg);
+    color: var(--color-fg);
   }
-  /* light 主题（实验性，仅切换基础背景；细节组件未完全适配） */
+  /* light 主题 */
   html.light body {
-    background-color: #f5f6fa;
-    color: #1a1c25;
+    background-color: var(--color-bg);
+    color: var(--color-fg);
   }
   html.light .glass-panel {
     background-color: rgba(255, 255, 255, 0.65);
@@ -30,11 +30,11 @@
 
   .neon-node {
     @apply transition-all duration-300 hover:scale-105;
-    box-shadow: 0 0 15px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2);
+    box-shadow: 0 0 15px var(--color-accent), 0 0 30px var(--color-accent);
   }
 
   .flow-edge {
-    background: linear-gradient(90deg, #0ea5e9, #22d3ee, #0ea5e9);
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accentHover), var(--color-accent));
     background-size: 200% 100%;
     animation: flow-line 2s linear infinite;
   }

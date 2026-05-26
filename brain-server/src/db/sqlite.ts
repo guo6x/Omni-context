@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
-import { Entity, Relationship } from '../shared-types.js';
+import { Entity, Relationship, SINGLE_VALUED_REL_TYPES } from '../shared-types.js';
 import { cosineSimilarity, encodeEmbedding, decodeEmbedding } from '../utils/math.js';
 import * as sqliteVec from 'sqlite-vec';
 
@@ -191,6 +191,13 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_relationships_valid_until ON relationships(valid_until);
     `,
   },
+  {
+    version: 9,
+    name: 'add_invalidation_reason_to_relationships',
+    up: `
+      ALTER TABLE relationships ADD COLUMN invalidation_reason TEXT;
+    `,
+  },
 ];
 
 interface Migration {
@@ -334,28 +341,79 @@ export class Database {
   }
 
   async getEntity(id: string): Promise<Entity | null> {
-    const row = await this.get<any>('SELECT * FROM entities WHERE id = ?', [id]);
+    let currentId = id;
+    const seenIds = new Set<string>();
+    let row = await this.get<any>('SELECT * FROM entities WHERE id = ?', [currentId]);
+    
+    while (row) {
+      if (seenIds.has(currentId)) break;
+      seenIds.add(currentId);
+      
+      let meta: any = {};
+      if (typeof row.metadata === 'string') {
+        try { meta = JSON.parse(row.metadata) || {}; } catch {}
+      } else if (row.metadata) {
+        meta = row.metadata;
+      }
+      
+      if (meta.merged_into) {
+        currentId = meta.merged_into;
+        row = await this.get<any>('SELECT * FROM entities WHERE id = ?', [currentId]);
+      } else {
+        break;
+      }
+    }
+    
     if (!row) return null;
     // 命中后再 +1 访问计数，未命中不浪费一次写入
-    await this._updateEntityAccess(id);
+    await this._updateEntityAccess(row.id);
     return this.rowToEntity(row);
   }
 
-  // 用于不需要计入访问统计的内部读取（如图谱上下文聚合、Agent 巡视）
+  // 用于不需要计入访问统计 of 内部读取（如图谱上下文聚合、Agent 巡视）
   async peekEntity(id: string): Promise<Entity | null> {
-    const row = await this.get<any>('SELECT * FROM entities WHERE id = ?', [id]);
+    let currentId = id;
+    const seenIds = new Set<string>();
+    let row = await this.get<any>('SELECT * FROM entities WHERE id = ?', [currentId]);
+    
+    while (row) {
+      if (seenIds.has(currentId)) break;
+      seenIds.add(currentId);
+      
+      let meta: any = {};
+      if (typeof row.metadata === 'string') {
+        try { meta = JSON.parse(row.metadata) || {}; } catch {}
+      } else if (row.metadata) {
+        meta = row.metadata;
+      }
+      
+      if (meta.merged_into) {
+        currentId = meta.merged_into;
+        row = await this.get<any>('SELECT * FROM entities WHERE id = ?', [currentId]);
+      } else {
+        break;
+      }
+    }
+    
     if (!row) return null;
     return this.rowToEntity(row);
   }
 
   async getEntitiesByType(type: string): Promise<Entity[]> {
-    const rows = await this.all<any>('SELECT * FROM entities WHERE type = ? ORDER BY updated_at DESC', [type]);
+    const rows = await this.all<any>(
+      `SELECT * FROM entities
+       WHERE type = ? AND json_extract(metadata, '$.merged_into') IS NULL
+       ORDER BY updated_at DESC`,
+      [type]
+    );
     return rows.map(row => this.rowToEntity(row));
   }
 
   async getRecentEntities(limit: number = 100): Promise<Entity[]> {
     const rows = await this.all<any>(
-      'SELECT * FROM entities ORDER BY updated_at DESC LIMIT ?',
+      `SELECT * FROM entities
+       WHERE json_extract(metadata, '$.merged_into') IS NULL
+       ORDER BY updated_at DESC LIMIT ?`,
       [Math.max(1, Math.min(limit, 500))]
     );
     return rows.map(row => this.rowToEntity(row));
@@ -366,6 +424,7 @@ export class Database {
       SELECT * FROM entities
       WHERE type = 'principle'
       AND json_extract(metadata, '$.isCore') = 1
+      AND json_extract(metadata, '$.merged_into') IS NULL
       ORDER BY updated_at DESC
     `);
     return rows.map(row => this.rowToEntity(row));
@@ -377,7 +436,7 @@ export class Database {
       const rows = await this.all<any>(
         `SELECT e.* FROM fts_entities f
          INNER JOIN entities e ON e.id = f.entity_id
-         WHERE fts_entities MATCH ?
+         WHERE fts_entities MATCH ? AND json_extract(e.metadata, '$.merged_into') IS NULL
          ORDER BY rank
          LIMIT ?`,
         [query, limit]
@@ -393,7 +452,7 @@ export class Database {
     const searchTerm = `%${query}%`;
     const rows = await this.all<any>(
       `SELECT * FROM entities
-       WHERE name LIKE ? OR description LIKE ?
+       WHERE (name LIKE ? OR description LIKE ?) AND json_extract(metadata, '$.merged_into') IS NULL
        ORDER BY updated_at DESC LIMIT ?`,
       [searchTerm, searchTerm, limit]
     );
@@ -415,7 +474,7 @@ export class Database {
     }
   }
 
-  async updateEntity(id: string, updates: Partial<Omit<Entity, 'id' | 'created_at' | 'updated_at' | 'last_accessed' | 'access_count'>>): Promise<void> {
+  async updateEntity(id: string, updates: Partial<Omit<Entity, 'id' | 'updated_at' | 'last_accessed'>>): Promise<void> {
     const fields: string[] = [];
     const values: any[] = [];
 
@@ -446,6 +505,14 @@ export class Database {
     if (updates.source_file !== undefined) {
       fields.push('source_file = ?');
       values.push(updates.source_file);
+    }
+    if (updates.created_at !== undefined) {
+      fields.push('created_at = ?');
+      values.push(updates.created_at);
+    }
+    if (updates.access_count !== undefined) {
+      fields.push('access_count = ?');
+      values.push(updates.access_count);
     }
 
     if (fields.length === 0) return;
@@ -558,18 +625,34 @@ export class Database {
   async addRelationship(relationship: Omit<Relationship, 'id' | 'created_at' | 'last_activated' | 'valid_from'> & {
     id?: string;
     valid_from?: string;
+    invalidation_reason?: string;
   }): Promise<Relationship> {
     const id = relationship.id || uuidv4();
     const now = new Date().toISOString();
     const validFrom = relationship.valid_from || now;
     const validUntil = relationship.valid_until || null;
     const invalidatedAt = relationship.invalidated_at || null;
+    const invalidationReason = relationship.invalidation_reason || null;
+
+    // 自动冲突检测：如果是单值关系，且是新增的有效关系
+    if (SINGLE_VALUED_REL_TYPES.includes(relationship.type) && !validUntil && !invalidatedAt) {
+      // 找出该 source 下同 type 但不同 target 的当前有效的旧关系
+      const existing = await this.all<Relationship>(
+        `SELECT * FROM relationships 
+         WHERE source_id = ? AND type = ? AND target_id != ?
+           AND (valid_until IS NULL OR valid_until > ?)`,
+        [relationship.source_id, relationship.type, relationship.target_id, now]
+      );
+      for (const rel of existing) {
+        await this.invalidateRelationship(rel.id, `superseded by extraction at ${validFrom}`);
+      }
+    }
 
     await this.run(
-      `INSERT OR REPLACE INTO relationships (id, source_id, target_id, type, description, weight, created_at, last_activated, valid_from, valid_until, invalidated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO relationships (id, source_id, target_id, type, description, weight, created_at, last_activated, valid_from, valid_until, invalidated_at, invalidation_reason)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, relationship.source_id, relationship.target_id, relationship.type,
-       relationship.description || null, relationship.weight || 1.0, now, now, validFrom, validUntil, invalidatedAt]
+       relationship.description || null, relationship.weight || 1.0, now, now, validFrom, validUntil, invalidatedAt, invalidationReason]
     );
 
     return {
@@ -584,17 +667,18 @@ export class Database {
       valid_from: validFrom,
       valid_until: validUntil || undefined,
       invalidated_at: invalidatedAt || undefined,
+      invalidation_reason: invalidationReason || undefined,
     };
   }
 
-  async invalidateRelationship(id: string, validUntil?: string): Promise<void> {
+  async invalidateRelationship(id: string, reason?: string, validUntil?: string): Promise<void> {
     const now = new Date().toISOString();
     const until = validUntil || now;
     await this.run(
       `UPDATE relationships
-       SET valid_until = ?, invalidated_at = ?
+       SET valid_until = ?, invalidated_at = ?, invalidation_reason = ?
        WHERE id = ?`,
-      [until, now, id]
+      [until, now, reason || null, id]
     );
   }
 
@@ -623,6 +707,7 @@ export class Database {
       valid_from: row.valid_from,
       valid_until: row.valid_until || undefined,
       invalidated_at: row.invalidated_at || undefined,
+      invalidation_reason: row.invalidation_reason || undefined,
     }));
   }
 
@@ -652,6 +737,7 @@ export class Database {
       valid_from: row.valid_from,
       valid_until: row.valid_until || undefined,
       invalidated_at: row.invalidated_at || undefined,
+      invalidation_reason: row.invalidation_reason || undefined,
     }));
   }
 
@@ -737,7 +823,7 @@ export class Database {
          e.description
        FROM vec_entities v
        INNER JOIN entities e ON e.id = v.entity_id
-       WHERE v.embedding MATCH ? AND k = ?
+       WHERE v.embedding MATCH ? AND k = ? AND json_extract(e.metadata, '$.merged_into') IS NULL
        ORDER BY v.distance`,
       [queryBlob, limit]
     );
@@ -757,7 +843,7 @@ export class Database {
    */
   private async _vectorSearchFallback(queryEmbedding: number[], limit: number): Promise<VectorSearchResult[]> {
     const rows = await this.all<any>(
-      'SELECT id, name, type, description, embedding FROM entities WHERE embedding IS NOT NULL'
+      'SELECT id, name, type, description, embedding FROM entities WHERE embedding IS NOT NULL AND json_extract(metadata, \'$.merged_into\') IS NULL'
     );
 
     const results: VectorSearchResult[] = rows

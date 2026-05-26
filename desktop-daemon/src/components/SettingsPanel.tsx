@@ -7,11 +7,12 @@ import { KeyboardShortcut, AppSettings } from '@/hooks/useSettings';
 import { LLM_PRESETS, LlmPreset } from '@/lib/llm-presets';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
-import { BRAIN_URL } from '@/lib/config';
+import { apiFetch } from '@/lib/api-client';
 import { MCP_CLIENTS } from '@/lib/mcp-clients';
 import { MCP_SCENARIOS } from '@/lib/mcp-scenarios';
 import { findSystemConflict, normalizeShortcut } from '@/lib/known-system-shortcuts';
 import McpClientCard from './McpClientCard';
+import { THEMES } from '@/lib/themes';
 
 // autostart 插件调用。非 Tauri 环境静默降级。
 async function autostartEnable() {
@@ -45,6 +46,7 @@ interface SettingsPanelProps {
   onUpdateLlmProvider: (updates: Partial<AppSettings['llmProvider']>) => void;
   onUpdateLanguage: (lang: 'zh' | 'en') => void;
   onClose: () => void;
+  defaultTab?: 'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about';
 }
 
 type Tab = 'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about';
@@ -59,8 +61,15 @@ export default function SettingsPanel({
   onUpdateLlmProvider,
   onUpdateLanguage,
   onClose,
+  defaultTab,
 }: SettingsPanelProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('shortcuts');
+  const [activeTab, setActiveTab] = useState<Tab>(defaultTab || 'shortcuts');
+
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tempShortcut, setTempShortcut] = useState('');
   const { t } = useTranslation();
@@ -74,6 +83,7 @@ export default function SettingsPanel({
   const [llmTestError, setLlmTestError] = useState('');
   const [embeddingReloading, setEmbeddingReloading] = useState(false);
   const [pairCodeInfo, setPairCodeInfo] = useState<{ code: string; lan_ip: string; port: number } | null>(null);
+  const [localApiToken, setLocalApiToken] = useState<string | null>(null);
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'available' | 'no-update' | 'error'>('idle');
   const [updateVersion, setUpdateVersion] = useState('');
@@ -81,6 +91,8 @@ export default function SettingsPanel({
   const [mcpStatuses, setMcpStatuses] = useState<any[]>([]);
   const [mcpServerCmd, setMcpServerCmd] = useState<any>(null);
   const [scenarioExpanded, setScenarioExpanded] = useState(true);
+  // data tab 高级区块折叠状态（默认折叠）
+  const [advancedDataExpanded, setAdvancedDataExpanded] = useState(false);
 
   const fetchMcpData = async () => {
     try {
@@ -113,6 +125,7 @@ export default function SettingsPanel({
   useEffect(() => {
     if (activeTab === 'data') {
       fetchPairCode();
+      fetchLocalApiToken();
     }
   }, [activeTab]);
 
@@ -124,6 +137,36 @@ export default function SettingsPanel({
       toast.success(t('settings.pair_code_regenerated'));
     } catch (e) {
       toast.error(t('settings.pair_code_regen_failed'), String(e));
+    }
+  };
+
+  const fetchLocalApiToken = async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/tauri');
+      const token = await invoke<string>('get_local_api_token');
+      setLocalApiToken(token);
+    } catch {
+      setLocalApiToken(null);
+    }
+  };
+
+  const handleRegenerateLocalToken = async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/tauri');
+      const token = await invoke<string>('regenerate_local_api_token');
+      setLocalApiToken(token);
+      // 清除 api-client 缓存的旧 token
+      const { clearTokenCache } = await import('@/lib/api-client');
+      clearTokenCache();
+      // 重启 brain-server 使新 token 生效
+      try {
+        await invoke('restart_brain_server');
+      } catch {
+        // 重启失败不影响前端
+      }
+      toast.success(t('settings.local_token_regenerated'));
+    } catch (e) {
+      toast.error(t('settings.local_token_regen_failed'), String(e));
     }
   };
 
@@ -197,7 +240,7 @@ export default function SettingsPanel({
     setLlmTestState('testing');
     setLlmTestError('');
     try {
-      const res = await fetch(`${BRAIN_URL}/api/settings/llm`, {
+      const res = await apiFetch('/api/settings/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -224,7 +267,7 @@ export default function SettingsPanel({
     setDiagnosticsLoading(true);
     setDiagnosticsError(null);
     try {
-      const res = await fetch(`${BRAIN_URL}/api/status`);
+      const res = await apiFetch('/api/status');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setDiagnosticsData(data);
@@ -241,7 +284,7 @@ export default function SettingsPanel({
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(`${BRAIN_URL}/api/admin/embedding/reload`, {
+      const res = await apiFetch('/api/admin/embedding/reload', {
         method: 'POST',
         signal: controller.signal,
       });
@@ -336,7 +379,7 @@ export default function SettingsPanel({
     if (dataBusy) return;
     setDataBusy(true);
     try {
-      const res = await fetch(`${BRAIN_URL}/api/admin/export`);
+      const res = await apiFetch('/api/admin/export');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -344,6 +387,31 @@ export default function SettingsPanel({
       const datePart = new Date().toISOString().slice(0, 10);
       a.href = url;
       a.download = `omni-context-backup-${datePart}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(t('toast.backup_downloaded'));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(t('toast.export_failed'), msg);
+    } finally {
+      setDataBusy(false);
+    }
+  };
+
+  const handleExportObsidianVault = async () => {
+    if (dataBusy) return;
+    setDataBusy(true);
+    try {
+      const res = await apiFetch('/api/admin/export?format=obsidian-vault');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      a.href = url;
+      a.download = `omni-vault-${timestamp}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -383,7 +451,7 @@ export default function SettingsPanel({
       } catch {
         throw new Error(t('toast.invalid_backup_json'));
       }
-      const res = await fetch(`${BRAIN_URL}/api/admin/import`, {
+      const res = await apiFetch('/api/admin/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, mode }),
@@ -417,7 +485,7 @@ export default function SettingsPanel({
     { id: 'llm' as Tab, icon: <Globe className="w-4 h-4" />, label: t('settings.llm_provider') },
     { id: 'data' as Tab, icon: <DatabaseIcon className="w-4 h-4" />, label: t('settings.data') },
     { id: 'mcp' as Tab, icon: <Share2 className="w-4 h-4" />, label: t('settings.mcp_tab') },
-    { id: 'diagnostics' as Tab, icon: <Activity className="w-4 h-4" />, label: t('settings.diagnostics') },
+    { id: 'diagnostics' as Tab, icon: <Activity className="w-4 h-4" />, label: t('settings.diagnostics'), badge: 'Advanced' },
     { id: 'privacy' as Tab, icon: <Shield className="w-4 h-4" />, label: t('settings.privacy_title') },
     { id: 'about' as Tab, icon: <Info className="w-4 h-4" />, label: t('settings.about') },
   ];
@@ -469,6 +537,11 @@ export default function SettingsPanel({
               >
                 {tab.icon}
                 <span className="font-medium">{tab.label}</span>
+                {(tab as any).badge && (
+                  <span className="text-[9px] px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-gray-500">
+                    {(tab as any).badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -585,60 +658,77 @@ export default function SettingsPanel({
                     </div>
                   </div>
 
-                  {/* 主题设置 */}
-                  <div className="p-4 bg-black/20 rounded-lg border border-white/5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-white font-medium">{t('settings.theme')}</div>
-                      </div>
-                      <div className="flex gap-2">
-                        {([
-                          { key: 'dark', label: t('settings.theme_dark') },
-                          { key: 'light', label: t('settings.theme_light') },
-                          { key: 'auto', label: t('settings.theme_auto') },
-                        ] as const).map(({ key, label }) => (
+                  {/* 主题选择与预览 */}
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-4">
+                    <div className="text-white font-medium mb-2">{t('settings.theme')}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {Object.values(THEMES).map((theme) => {
+                        const isSelected = settings.appearance.theme === theme.id;
+                        return (
                           <button
-                            key={key}
-                            onClick={() => onUpdateAppearance({ theme: key })}
-                            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-                              settings.appearance.theme === key
-                                ? 'bg-cyan-900/40 text-cyan-400 border-cyan-800'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5 border-white/10'
+                            key={theme.id}
+                            type="button"
+                            onClick={() => {
+                              onUpdateAppearance({ 
+                                theme: theme.id as any,
+                                accentColor: theme.accent
+                              });
+                            }}
+                            className={`flex flex-col text-left rounded-xl p-4 border-2 transition-all hover:scale-[1.02] ${
+                              isSelected
+                                ? 'border-cyan-400 ring-2 ring-cyan-400/20'
+                                : 'border-white/10 hover:border-white/20'
                             }`}
+                            style={{
+                              backgroundColor: theme.bg,
+                              color: theme.fg,
+                            }}
                           >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                            <div className="flex items-center justify-between w-full mb-2">
+                              <span className="font-bold text-sm">
+                                {t(`settings.theme_${theme.id.replace(/-/g, '_')}`)}
+                              </span>
+                              <div className="flex gap-1.5">
+                                <span 
+                                  className="w-3 h-3 rounded-full" 
+                                  style={{ backgroundColor: theme.graphNodeColors.person }}
+                                  title="Person"
+                                />
+                                <span 
+                                  className="w-3 h-3 rounded-full" 
+                                  style={{ backgroundColor: theme.graphNodeColors.concept }}
+                                  title="Concept"
+                                />
+                                <span 
+                                  className="w-3 h-3 rounded-full" 
+                                  style={{ backgroundColor: theme.graphNodeColors.project }}
+                                  title="Project"
+                                />
+                              </div>
+                            </div>
 
-                  {/* 强调色设置 */}
-                  <div className="p-4 bg-black/20 rounded-lg border border-white/5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-white font-medium">{t('settings.accent_color')}</div>
-                      </div>
-                      <div className="flex gap-2">
-                        {[
-                          { color: '#22d3ee', name: 'cyan' },
-                          { color: '#a855f7', name: 'purple' },
-                          { color: '#f472b6', name: 'pink' },
-                          { color: '#10b981', name: 'green' },
-                          { color: '#f59e0b', name: 'amber' },
-                        ].map(({ color, name }) => (
-                          <button
-                            key={name}
-                            onClick={() => onUpdateAppearance({ accentColor: color })}
-                            className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                              settings.appearance.accentColor === color
-                                ? 'border-white shadow-lg'
-                                : 'border-transparent'
-                            }`}
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
+                            <p 
+                              className="text-xs mb-3 line-clamp-2" 
+                              style={{ color: theme.fgMuted }}
+                            >
+                              {t(`settings.theme_${theme.id.replace(/-/g, '_')}_desc`) || `Preview of the ${theme.id} theme layout.`}
+                            </p>
+
+                            <div className="flex items-center justify-between w-full mt-auto pt-2 border-t" style={{ borderColor: theme.border }}>
+                              <span className="text-[10px]" style={{ color: theme.fgMuted }}>
+                                {theme.id}
+                              </span>
+                              {isSelected && (
+                                <span 
+                                  className="px-2 py-0.5 rounded text-[10px] font-semibold text-white bg-green-600"
+                                >
+                                  {t('settings.theme_active') || 'Active'}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -778,6 +868,23 @@ export default function SettingsPanel({
                   <button
                     onClick={() => {
                       onUpdateBehavior({ onboarded: false });
+                      onClose();
+                    }}
+                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg text-sm transition-colors"
+                  >
+                    {t('settings.start_tour')}
+                  </button>
+                </div>
+
+                {/* [通用] 重新启动新手引导 (v2) */}
+                <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-medium">{t('onboarding.restart_tour_v2')}</div>
+                    <div className="text-xs text-gray-500">{t('onboarding.restart_tour_v2_desc')}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      onUpdateBehavior({ onboarded: false, onboarded_v2: false });
                       onClose();
                     }}
                     className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg text-sm transition-colors"
@@ -933,6 +1040,20 @@ export default function SettingsPanel({
 
                   <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
                     <div>
+                      <div className="text-white font-medium">{t('settings.export_obsidian_vault')}</div>
+                      <div className="text-xs text-gray-500">{t('settings.export_obsidian_desc')}</div>
+                    </div>
+                    <button
+                      onClick={handleExportObsidianVault}
+                      disabled={dataBusy}
+                      className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {dataBusy ? t('settings.processing') : t('settings.export_obsidian_vault')}
+                    </button>
+                  </div>
+
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
+                    <div>
                       <div className="text-white font-medium">{t('settings.restore')}</div>
                       <div className="text-xs text-gray-500">{t('settings.restore_desc')}</div>
                     </div>
@@ -952,39 +1073,104 @@ export default function SettingsPanel({
                     />
                   </div>
 
-                  {/* 配对码区块：移动端 LAN 连接鉴权 */}
-                  {pairCodeInfo && (
-                    <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-4">
-                      <div>
-                        <div className="text-white font-medium">{t('settings.pair_code_title')}</div>
-                        <div className="text-xs text-gray-500 mt-1">{t('settings.pair_code_desc')}</div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="bg-black/30 border border-white/10 rounded-lg p-3">
-                          <QRCodeSVG
-                            value={`omni://pair?host=${pairCodeInfo.lan_ip}&port=${pairCodeInfo.port}&code=${pairCodeInfo.code}`}
-                            size={120}
-                            bgColor="#0a0b12"
-                            fgColor="#7df9ff"
-                            level="M"
-                          />
-                        </div>
-                        <div className="flex-1 space-y-3">
+                  {/* 高级折叠区块：配对码 + 本地 API Token */}
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setAdvancedDataExpanded(!advancedDataExpanded)}
+                      className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                      {advancedDataExpanded ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                      <span className="font-medium">Advanced</span>
+                    </button>
+                  </div>
+
+                  {advancedDataExpanded && (
+                    <div className="space-y-4 animate-fade-in">
+                      {/* 配对码区块：移动端 LAN 连接鉴权 */}
+                      {pairCodeInfo && (
+                        <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-4">
                           <div>
-                            <span className="text-xs text-gray-500">{t('settings.pair_code_label')}</span>
-                            <p className="text-2xl font-mono text-cyan-400 tracking-[0.3em]">{pairCodeInfo.code}</p>
+                            <div className="text-white font-medium flex items-center gap-2">
+                              {t('settings.pair_code_title')}
+                              <span className="text-[10px] text-gray-500 font-normal">For mobile devices and LAN access (experimental)</span>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">{t('settings.pair_code_desc')}</div>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {pairCodeInfo.lan_ip}:{pairCodeInfo.port}
+                          <div className="flex items-center gap-4">
+                            <div className="bg-black/30 border border-white/10 rounded-lg p-3">
+                              <QRCodeSVG
+                                value={`omni://pair?host=${pairCodeInfo.lan_ip}&port=${pairCodeInfo.port}&code=${pairCodeInfo.code}`}
+                                size={120}
+                                bgColor="#0a0b12"
+                                fgColor="#7df9ff"
+                                level="M"
+                              />
+                            </div>
+                            <div className="flex-1 space-y-3">
+                              <div>
+                                <span className="text-xs text-gray-500">{t('settings.pair_code_label')}</span>
+                                <p className="text-2xl font-mono text-cyan-400 tracking-[0.3em]">{pairCodeInfo.code}</p>
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {pairCodeInfo.lan_ip}:{pairCodeInfo.port}
+                              </div>
+                              <button
+                                onClick={handleRegeneratePairCode}
+                                className="px-3 py-1.5 text-xs bg-white/5 border border-white/10 hover:bg-white/10 hover:border-amber-700 hover:text-amber-400 text-gray-300 rounded-lg transition-colors"
+                              >
+                                {t('settings.pair_code_regenerate')}
+                              </button>
+                            </div>
                           </div>
-                          <button
-                            onClick={handleRegeneratePairCode}
-                            className="px-3 py-1.5 text-xs bg-white/5 border border-white/10 hover:bg-white/10 hover:border-amber-700 hover:text-amber-400 text-gray-300 rounded-lg transition-colors"
-                          >
-                            {t('settings.pair_code_regenerate')}
-                          </button>
                         </div>
-                      </div>
+                      )}
+
+                      {/* 本地 API Token 区块：桌面端本地鉴权 */}
+                      {localApiToken && (
+                        <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-4">
+                          <div>
+                            <div className="text-white font-medium flex items-center gap-2">
+                              <Shield className="w-4 h-4 text-cyan-400" />
+                              {t('settings.local_token_title')}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">{t('settings.local_token_desc')}</div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1">
+                              <span className="text-xs text-gray-500">{t('settings.local_token_label')}</span>
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-sm font-mono text-cyan-400 bg-black/30 border border-white/10 rounded px-3 py-1.5 break-all select-all">
+                                  {localApiToken}
+                                </p>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(localApiToken);
+                                    toast.success(t('settings.local_token_copied'));
+                                  }}
+                                  className="px-2 py-1.5 text-xs bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg transition-colors shrink-0"
+                                  title={t('settings.local_token_copy')}
+                                >
+                                  {t('settings.copy')}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              onClick={handleRegenerateLocalToken}
+                              className="px-3 py-1.5 text-xs bg-white/5 border border-white/10 hover:bg-white/10 hover:border-amber-700 hover:text-amber-400 text-gray-300 rounded-lg transition-colors"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5 inline mr-1" />
+                              {t('settings.local_token_regenerate')}
+                            </button>
+                            <span className="text-[10px] text-gray-500">{t('settings.local_token_rotate_hint')}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

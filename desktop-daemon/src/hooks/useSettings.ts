@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { BRAIN_URL } from '@/lib/config';
+import { apiFetch } from '@/lib/api-client';
+import { THEMES, ThemeId } from '@/lib/themes';
 
 async function safeInvoke(cmd: string, args?: any) {
   if (typeof window === 'undefined') return;
@@ -25,7 +26,7 @@ export interface KeyboardShortcut {
 export interface AppSettings {
   keyboardShortcuts: KeyboardShortcut[];
   appearance: {
-    theme: 'dark' | 'light' | 'auto';
+    theme: ThemeId;
     accentColor: string;
   };
   behavior: {
@@ -35,6 +36,7 @@ export interface AppSettings {
     defaultFloatingHUD: boolean;
     closeAction: 'minimize_to_tray' | 'exit';
     onboarded: boolean;
+    onboarded_v2: boolean;
     capturePaused: boolean;
     captureBlocklist: string[];
   };
@@ -115,8 +117,8 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
 const DEFAULT_SETTINGS: AppSettings = {
   keyboardShortcuts: DEFAULT_SHORTCUTS,
   appearance: {
-    theme: 'dark',
-    accentColor: '#22d3ee',
+    theme: 'neutral-dark',
+    accentColor: '#3b82f6',
   },
   behavior: {
     autoHUD: true,
@@ -125,7 +127,8 @@ const DEFAULT_SETTINGS: AppSettings = {
     defaultFloatingHUD: false,
     closeAction: 'minimize_to_tray',
     onboarded: false,
-    capturePaused: false,
+    onboarded_v2: false,
+    capturePaused: true,
     captureBlocklist: [
       'KeePass',
       '1Password',
@@ -149,14 +152,33 @@ const DEFAULT_SETTINGS: AppSettings = {
 // 否则升级后访问 settings.llmProvider.apiKey 等会直接 crash。
 function mergeWithDefaults(stored: any): AppSettings {
   if (!stored || typeof stored !== 'object') return DEFAULT_SETTINGS;
+  
+  // 兼容老版本主题切换
+  let theme: ThemeId = 'neutral-dark';
+  if (stored.appearance && stored.appearance.theme) {
+    const oldTheme = stored.appearance.theme;
+    if (oldTheme === 'dark' || oldTheme === 'auto') {
+      theme = 'cyberpunk';
+    } else if (oldTheme === 'light') {
+      theme = 'soft-light';
+    } else {
+      theme = oldTheme as ThemeId;
+    }
+  }
+
   return {
     keyboardShortcuts: Array.isArray(stored.keyboardShortcuts) && stored.keyboardShortcuts.length > 0
       ? stored.keyboardShortcuts
       : DEFAULT_SETTINGS.keyboardShortcuts,
-    appearance: { ...DEFAULT_SETTINGS.appearance, ...(stored.appearance || {}) },
+    appearance: { 
+      ...DEFAULT_SETTINGS.appearance, 
+      ...(stored.appearance || {}),
+      theme
+    },
     behavior: {
       ...DEFAULT_SETTINGS.behavior,
       ...(stored.behavior || {}),
+      onboarded_v2: (stored.behavior || {}).onboarded_v2 ?? false,
       // captureBlocklist 不参与浅合并：优先取存储值，存储值为空数组则保留（用户显式清空），
       // 存储值不存在则回退到默认列表
       captureBlocklist: Array.isArray((stored.behavior || {}).captureBlocklist)
@@ -171,9 +193,8 @@ function mergeWithDefaults(stored: any): AppSettings {
 
 export async function syncLlmToBrainServer(llmProvider: { apiUrl: string; apiKey: string; model: string }) {
   try {
-    await fetch(`${BRAIN_URL}/api/settings/llm`, {
+    await apiFetch('/api/settings/llm', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(llmProvider),
     });
   } catch {
@@ -191,9 +212,11 @@ export function useSettings() {
     try {
       const savedSettings = localStorage.getItem('omnicontext-settings');
       const onboardedFlag = localStorage.getItem('omni_onboarded') === 'true';
+      const onboardedV2Flag = localStorage.getItem('omni_onboarded_v2') === 'true';
       if (savedSettings) {
         const merged = mergeWithDefaults(JSON.parse(savedSettings));
         merged.behavior.onboarded = merged.behavior.onboarded || onboardedFlag;
+        merged.behavior.onboarded_v2 = merged.behavior.onboarded_v2 || onboardedV2Flag;
         setSettings(merged);
         if (merged.behavior.closeAction) {
           safeInvoke('set_close_behavior', { behavior: merged.behavior.closeAction }).catch(() => {});
@@ -201,6 +224,7 @@ export function useSettings() {
       } else {
         const defaultSettings = { ...DEFAULT_SETTINGS };
         defaultSettings.behavior.onboarded = onboardedFlag;
+        defaultSettings.behavior.onboarded_v2 = onboardedV2Flag;
         setSettings(defaultSettings);
         safeInvoke('set_close_behavior', { behavior: 'minimize_to_tray' }).catch(() => {});
       }
@@ -213,13 +237,22 @@ export function useSettings() {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const html = document.documentElement;
+    const themeId = settings.appearance.theme;
+    const themeObj = THEMES[themeId] || THEMES['neutral-dark'];
+    
+    // 写入 CSS 自定义属性
+    for (const [k, v] of Object.entries(themeObj)) {
+      if (typeof v === 'string') {
+        html.style.setProperty(`--color-${k}`, v);
+      }
+    }
+    html.dataset.theme = themeId;
+
     html.classList.remove('dark', 'light');
-    const theme = settings.appearance.theme;
-    if (theme === 'auto') {
-      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true;
-      html.classList.add(prefersDark ? 'dark' : 'light');
+    if (themeId === 'soft-light' || themeId === 'sepia') {
+      html.classList.add('light');
     } else {
-      html.classList.add(theme);
+      html.classList.add('dark');
     }
   }, [settings.appearance.theme]);
 
@@ -228,6 +261,11 @@ export function useSettings() {
     setSettings(newSettings);
     try {
       localStorage.setItem('omnicontext-settings', JSON.stringify(newSettings));
+      const themeId = newSettings.appearance.theme;
+      // 广播同步消息到其他 Tauri 窗口
+      import('@tauri-apps/api/event').then(({ emit }) => {
+        emit('theme-changed', { themeId }).catch(() => {});
+      }).catch(() => {});
     } catch (error) {
       console.warn('保存设置失败:', error);
     }
@@ -275,6 +313,9 @@ export function useSettings() {
     }
     if (updates.onboarded !== undefined) {
       localStorage.setItem('omni_onboarded', String(updates.onboarded));
+    }
+    if (updates.onboarded_v2 !== undefined) {
+      localStorage.setItem('omni_onboarded_v2', String(updates.onboarded_v2));
     }
     if (updates.startWithSystem !== undefined) {
       if (updates.startWithSystem) {

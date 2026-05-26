@@ -272,6 +272,8 @@ async fn main() {
             commands::get_foreground_window_info,
             commands::get_pair_code,
             commands::regenerate_pair_code,
+            commands::get_local_api_token,
+            commands::regenerate_local_api_token,
             hardware::list_hardware_devices,
             hardware::pair_hardware_device,
             hardware::unpair_hardware_device,

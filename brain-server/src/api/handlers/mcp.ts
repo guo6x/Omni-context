@@ -190,38 +190,10 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               timestamp: new Date().toISOString(),
             };
             const extractResult = await ctx.extractor.extract(input);
-            const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db);
+            const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
 
             const savedEntities = [];
             const savedRelationships = [];
-
-            const EMBED_CONCURRENCY = 4;
-            for (let i = 0; i < resolution.entitiesToCreate.length; i += EMBED_CONCURRENCY) {
-              const batch = resolution.entitiesToCreate.slice(i, i + EMBED_CONCURRENCY);
-              await Promise.all(batch.map(async (entity) => {
-                try {
-                  const embeddingText = `${entity.name}: ${entity.description || ''}`;
-                  const embResult = await ctx.embeddingService.embed(embeddingText);
-                  entity.embedding = embResult.embedding;
-                } catch {
-                  // ignore
-                }
-              }));
-            }
-
-            const updateEmbedCandidates = resolution.entitiesToUpdate.filter(u => u.description);
-            for (let i = 0; i < updateEmbedCandidates.length; i += EMBED_CONCURRENCY) {
-              const batch = updateEmbedCandidates.slice(i, i + EMBED_CONCURRENCY);
-              await Promise.all(batch.map(async (updateItem) => {
-                try {
-                  const embeddingText = `${updateItem.name}: ${updateItem.description || ''}`;
-                  const embResult = await ctx.embeddingService.embed(embeddingText);
-                  updateItem.embedding = embResult.embedding;
-                } catch {
-                  // ignore
-                }
-              }));
-            }
 
             for (const entity of resolution.entitiesToCreate) {
               const saved = await ctx.db.addEntity(entity);
@@ -242,6 +214,9 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
                 description: update.description,
                 tags: update.tags,
                 embedding: update.embedding,
+                metadata: update.metadata,
+                created_at: update.created_at,
+                access_count: update.access_count,
               });
               const current = await ctx.db.peekEntity(update.id);
               if (current) {
@@ -292,7 +267,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
                 version: principle.version || 1,
               },
             }));
-            const principleResolution = await resolveEntities(principleEntities, [], ctx.db);
+            const principleResolution = await resolveEntities(principleEntities, [], ctx.db, ctx.embeddingService);
             for (const entity of principleResolution.entitiesToCreate) {
               const saved = await ctx.db.addEntity(entity);
               savedEntities.push(saved);
@@ -301,6 +276,10 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               await ctx.db.updateEntity(update.id, {
                 description: update.description,
                 tags: update.tags,
+                embedding: update.embedding,
+                metadata: update.metadata,
+                created_at: update.created_at,
+                access_count: update.access_count,
               });
             }
             if (parsed.captureId) {
@@ -327,6 +306,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               entitiesAdded: savedEntities.length,
               relationshipsAdded: savedRelationships.length,
               summary: await ctx.extractor.summarizeEntities(extractResult.entities),
+              ...(extractResult.suspicious && extractResult.suspicious.length > 0 ? { suspicious_patterns: extractResult.suspicious } : {}),
             };
             break;
           }
@@ -373,6 +353,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             const parsed = UnifiedMemorySearchSchema.parse(args);
             const limit = parsed.limit || 5;
             const includeRels = parsed.includeRelationships !== false;
+            const includeInvalidated = (parsed as any).include_invalidated === true;
 
             const resultsData: any = { textResults: [], vectorResults: [], graphContext: [] };
             resultsData.textResults = await ctx.db.searchEntities(parsed.query, limit);
@@ -387,7 +368,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             if (includeRels) {
               const seedId = resultsData.textResults[0]?.id ?? resultsData.vectorResults[0]?.id;
               if (seedId) {
-                resultsData.graphContext = await ctx.db.getGraphNeighborhood(seedId, 2);
+                resultsData.graphContext = await ctx.db.getGraphNeighborhood(seedId, 2, includeInvalidated);
               }
             }
 
@@ -522,7 +503,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               timestamp: new Date().toISOString(),
             };
             const extractResult = await ctx.extractor.extract(input);
-            const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db);
+            const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
 
             const savedEntityIds: string[] = [];
             for (const entity of resolution.entitiesToCreate) {
@@ -534,8 +515,18 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               await ctx.db.updateEntity(update.id, {
                 description: update.description,
                 tags: update.tags,
+                embedding: update.embedding,
+                metadata: update.metadata,
+                created_at: update.created_at,
+                access_count: update.access_count,
               });
               savedEntityIds.push(update.id);
+            }
+
+            try {
+              await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+            } catch (err) {
+              console.error('[MCP save_conclusion] Conflict resolution failed:', err);
             }
 
             for (const relationship of resolution.relationshipsToCreate) {
@@ -568,6 +559,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             result = {
               savedEntities: savedEntityIds.length,
               summary: await ctx.extractor.summarizeEntities(extractResult.entities),
+              ...(extractResult.suspicious && extractResult.suspicious.length > 0 ? { suspicious_patterns: extractResult.suspicious } : {}),
             };
             break;
           }

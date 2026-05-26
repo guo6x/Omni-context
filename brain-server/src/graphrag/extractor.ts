@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Entity, Relationship, EntityType, RelationshipType } from '../shared-types.js';
 import { LLMExtractorPipeline } from './llm-pipeline.js';
 import { OCRPipeline } from '../ocr/pipeline.js';
+import { sanitizeForExtraction } from './sanitize.js';
 
 export interface ExtractionInput {
   screenshot?: string;
@@ -9,6 +10,10 @@ export interface ExtractionInput {
   textContent?: string;
   timestamp: string;
   sourceType?: 'screenshot' | 'clipboard' | 'log' | 'manual';
+  sourceMap?: {
+    urls?: Record<string, string>;
+    [key: string]: any;
+  };
 }
 
 export interface ExtractionConfig {
@@ -44,6 +49,7 @@ export interface GraphRAGOutput {
   entities: Entity[];
   relationships: Relationship[];
   principles: ExtractedPrinciple[];
+  suspicious?: string[];
 }
 
 const ENTITY_PATTERNS: EntityPattern[] = [
@@ -241,6 +247,12 @@ const VALID_RELATIONSHIP_TYPES: Set<RelationshipType> = new Set([
   'extracted_from',
   'reviewed_by',
   'references',
+  'decision_referenced',
+  'works_at',
+  'lives_in',
+  'studies_at',
+  'married_to',
+  'leads_to_conclusion',
 ]);
 
 const ENTITY_CACHE_LIMIT = 5_000;
@@ -276,16 +288,17 @@ export class GraphRAGExtractor {
 
   async extract(input: ExtractionInput): Promise<GraphRAGOutput> {
     const textContent = await this.combineInputs(input);
+    const { cleaned, suspicious } = sanitizeForExtraction(textContent);
     
     // 第一层：正则提取（快速，确定性高）
-    const entities = await this.extractEntities(textContent, input);
-    const relationships = await this.extractRelationships(textContent, entities);
-    const principles = await this.extractPrinciples(textContent, input);
+    const entities = await this.extractEntities(cleaned, input);
+    const relationships = await this.extractRelationships(cleaned, entities);
+    const principles = await this.extractPrinciples(cleaned, input);
 
     // 第二层：LLM 语义提取（深度理解，补充正则的盲区）
     if (this.llmPipeline.isEnabled() && !this.config.useLocalExtraction) {
       try {
-        const llmResult = await this.llmPipeline.extract(textContent);
+        const llmResult = await this.llmPipeline.extract(cleaned);
         const now = new Date().toISOString();
         const seenNames = new Set(entities.map(e => e.name.toLowerCase()));
 
@@ -321,14 +334,14 @@ export class GraphRAGExtractor {
         }
         trimMapToLimit(this.entityCache, ENTITY_CACHE_LIMIT);
 
-        // 合并 LLM 提取的关系（关系类型同样走白名单）
+        // [核心壁垒] 合并 LLM 提取的 Fact 事实（映射到 Relationships 表中，Confidence 对应 Weight，SourceSpan 对应 Description，且类型走白名单）
         const entityMap = new Map(entities.map(e => [e.name.toLowerCase(), e]));
         const seenRels = new Set(relationships.map(r => `${r.source_id}-${r.type}-${r.target_id}`));
-        for (const llmRel of llmResult.relationships) {
-          const src = entityMap.get(llmRel.source?.toLowerCase());
-          const tgt = entityMap.get(llmRel.target?.toLowerCase());
+        for (const fact of llmResult.facts) {
+          const src = entityMap.get(fact.subject?.toLowerCase());
+          const tgt = entityMap.get(fact.object?.toLowerCase());
           if (!src || !tgt) continue;
-          const candidateType = llmRel.type as RelationshipType;
+          const candidateType = fact.predicate as RelationshipType;
           const safeType: RelationshipType = VALID_RELATIONSHIP_TYPES.has(candidateType)
             ? candidateType
             : 'relates_to';
@@ -340,8 +353,8 @@ export class GraphRAGExtractor {
             source_id: src.id,
             target_id: tgt.id,
             type: safeType,
-            description: llmRel.description,
-            weight: 1.0,
+            description: fact.source_span || '',
+            weight: typeof fact.confidence === 'number' ? fact.confidence : 1.0,
             created_at: now,
             last_activated: now,
             valid_from: now,
@@ -367,10 +380,61 @@ export class GraphRAGExtractor {
       }
     }
 
+    // 记录 suspicious 到实体的 metadata 中
+    if (suspicious.length > 0) {
+      for (const entity of entities) {
+        if (!entity.metadata) {
+          entity.metadata = {};
+        }
+        entity.metadata.suspicious_patterns = suspicious;
+      }
+    }
+
+    // 后处理：URL 短缩反查还原
+    if (input.sourceMap?.urls) {
+      const urls = input.sourceMap.urls;
+      for (const entity of entities) {
+        for (const [short, long] of Object.entries(urls)) {
+          if (entity.name === short) {
+            entity.name = this.extractDomain(long) || long;
+            if (entity.metadata) {
+              entity.metadata.url = long;
+            }
+          } else if (entity.name.includes(short)) {
+            entity.name = entity.name.replaceAll(short, long);
+          }
+          
+          if (entity.description) {
+            entity.description = entity.description.replaceAll(short, long);
+          }
+          
+          if (entity.metadata?.url === short) {
+            entity.metadata.url = long;
+          }
+        }
+      }
+
+      for (const rel of relationships) {
+        if (rel.description) {
+          for (const [short, long] of Object.entries(urls)) {
+            rel.description = rel.description.replaceAll(short, long);
+          }
+        }
+      }
+
+      for (const p of principles) {
+        for (const [short, long] of Object.entries(urls)) {
+          p.title = p.title.replaceAll(short, long);
+          p.content = p.content.replaceAll(short, long);
+        }
+      }
+    }
+
     return {
       entities,
       relationships,
       principles,
+      ...(suspicious.length > 0 ? { suspicious } : {}),
     };
   }
 
@@ -471,6 +535,29 @@ export class GraphRAGExtractor {
   private async extractSemanticEntities(text: string, input: ExtractionInput): Promise<Entity[]> {
     const entities: Entity[] = [];
     const now = new Date().toISOString();
+
+    // 如果提供了 sourceMap.urls，优先从中抽取实体
+    if (input.sourceMap?.urls) {
+      for (const [short, long] of Object.entries(input.sourceMap.urls)) {
+        if (text.includes(short)) {
+          const domain = this.extractDomain(long);
+          if (domain) {
+            entities.push({
+              id: uuidv4(),
+              name: domain,
+              type: 'tool',
+              description: `网站或服务: ${long}`,
+              created_at: now,
+              updated_at: now,
+              last_accessed: now,
+              access_count: 0,
+              tags: ['url', 'web'],
+              metadata: { url: long }
+            });
+          }
+        }
+      }
+    }
 
     const urlPattern = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/g;
     let urlMatch;

@@ -8,6 +8,8 @@ use std::os::windows::process::CommandExt;
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hasher};
 
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+
 use crate::log_writer;
 
 /// Windows CREATE_NO_WINDOW —— 防止 spawn node.exe 时弹出黑色控制台窗口
@@ -98,6 +100,7 @@ pub fn start() -> Result<(), String> {
 
         let pair_code = ensure_pair_code();
         let lan_ip = get_lan_ip().unwrap_or_default();
+        let local_token = ensure_local_token();
 
         let mut cmd = Command::new(&node_exe);
         cmd.arg(path)
@@ -107,6 +110,7 @@ pub fn start() -> Result<(), String> {
             .env("DB_PATH", &db_path)
             .env("PAIR_CODE", &pair_code)
             .env("LAN_IP", &lan_ip)
+            .env("LOCAL_API_TOKEN", &local_token)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
         #[cfg(windows)]
@@ -274,6 +278,50 @@ fn generate_pair_code() -> String {
     let hash = RandomState::new().build_hasher().finish();
     let num = (hash % 1_000_000) as u32;
     format!("{:06}", num)
+}
+
+// ========== Local API Token ==========
+
+fn local_token_dir() -> PathBuf {
+    pair_code_dir()  // 复用同一个目录: %LOCALAPPDATA%/omni-context/
+}
+
+fn local_token_file() -> PathBuf {
+    local_token_dir().join("local-token.txt")
+}
+
+pub fn ensure_local_token() -> String {
+    let dir = local_token_dir();
+    let _ = std::fs::create_dir_all(&dir);
+    let file = local_token_file();
+
+    if let Ok(existing) = std::fs::read_to_string(&file) {
+        let trimmed = existing.trim().to_string();
+        if !trimmed.is_empty() {
+            return trimmed;
+        }
+    }
+
+    generate_and_save_local_token(&file)
+}
+
+pub fn regenerate_local_token() -> String {
+    let dir = local_token_dir();
+    let _ = std::fs::create_dir_all(&dir);
+    let file = local_token_file();
+    generate_and_save_local_token(&file)
+}
+
+fn generate_and_save_local_token(file: &std::path::Path) -> String {
+    let token = generate_local_token();
+    let _ = std::fs::write(file, &token);
+    token
+}
+
+fn generate_local_token() -> String {
+    let mut bytes = [0u8; 32];
+    getrandom::getrandom(&mut bytes).expect("getrandom failed");
+    URL_SAFE_NO_PAD.encode(&bytes)
 }
 
 /// 获取本机 LAN IP，失败返回 None

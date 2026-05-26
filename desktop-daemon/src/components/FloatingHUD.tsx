@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Activity, Database, Zap, X, AlertTriangle } from "lucide-react";
 import { clsx } from "clsx";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTheme } from "@/hooks/useTheme";
 
 type HudStatus = "listening" | "processing" | "success" | "warning" | "error";
 
@@ -20,6 +21,7 @@ interface HudPayload {
  */
 export default function FloatingHUD() {
   const { t } = useTranslation();
+  const { themeId, currentTheme } = useTheme();
   const [status, setStatus] = useState<HudStatus>("listening");
   const [message, setMessage] = useState<string>(t('hud.waiting'));
   const [pulse, setPulse] = useState(0);
@@ -96,7 +98,7 @@ export default function FloatingHUD() {
       <div
         data-tauri-drag-region
         className={clsx(
-          "w-[340px] rounded-xl border border-white/15 bg-[#0a0b12]/90 backdrop-blur-md shadow-2xl shadow-black/50 p-4 border-l-4 transition-colors",
+          "w-[340px] rounded-xl border border-border bg-bg-subtle/90 backdrop-blur-md shadow-2xl shadow-black/50 p-4 border-l-4 transition-colors",
           accent[status]
         )}
       >
@@ -107,7 +109,9 @@ export default function FloatingHUD() {
               className="text-sm font-bold tracking-wider bg-clip-text text-transparent"
               style={{
                 backgroundImage:
-                  "linear-gradient(90deg, #7df9ff 0%, #00f2fe 60%, #a855f7 100%)",
+                  themeId === 'cyberpunk'
+                    ? "linear-gradient(90deg, #7df9ff 0%, #00f2fe 60%, #a855f7 100%)"
+                    : `linear-gradient(90deg, ${currentTheme.accent} 0%, ${currentTheme.accentHover} 100%)`,
               }}
             >
               OMNI-CONTEXT
@@ -123,12 +127,12 @@ export default function FloatingHUD() {
         </div>
         <div
           key={pulse}
-          className="text-xs text-gray-200 bg-black/40 rounded-md px-2.5 py-2 border border-white/5 animate-pulse"
+          className="text-xs text-fg bg-bg/40 rounded-md px-2.5 py-2 border border-border/30 animate-pulse"
           style={{ animationIterationCount: 1, animationDuration: "0.6s" }}
         >
           {message}
         </div>
-        <div className="flex items-center justify-between mt-2 text-[10px] text-gray-500">
+        <div className="flex items-center justify-between mt-2 text-[10px] text-fg-muted">
           <span>{t('hud.drag_hint')}</span>
           <span className="font-mono">{status}</span>
         </div>

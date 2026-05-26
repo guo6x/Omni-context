@@ -5,6 +5,7 @@ import { resolveConflicts } from '../../graphrag/conflict-resolver.js';
 import { resolveEntities } from '../../graphrag/entity-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Entity } from '../../shared-types.js';
+import { preprocess } from '../../ingest/preprocess.js';
 
 // 文件上传抽取管线（v1：仅文本类）
 // 入参形态：JSON { filename, contentType, base64 }
@@ -173,6 +174,16 @@ interface JobState {
     principles: number;
     archivalId: string;
     summary: string;
+    preprocess?: {
+      originalTokens: number;
+      cleanedTokens: number;
+      reductionRatio: number;
+      droppedSections: Array<{ reason: string; preview: string }>;
+      sourceMap: {
+        urls: Record<string, string>;
+        dropped: Array<{ reason: string; preview: string }>;
+      };
+    };
   };
   error?: string;
 }
@@ -264,7 +275,8 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
     } else if (contentType === EPUB_CT) {
       textContent = await extractTextFromEpub(buffer);
     } else if (HTML_CTS.has(contentType)) {
-      textContent = stripHtml(buffer.toString('utf-8'));
+      // 传递完整的 HTML 字符串，留给后面的 preprocess 进行正文提取
+      textContent = buffer.toString('utf-8');
     } else if (isImage) {
       // Stage: ocr
       updateJob(jobId, { stage: 'ocr' });
@@ -291,15 +303,45 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
     return FAIL(isImage ? 'ocr' : 'parsing', message);
   }
 
+  // 接入 TokenJuice 预处理管线
+  let cleanedText = textContent;
+  let preprocessMeta: any = null;
+
+  try {
+    let sourceType: 'html' | 'markdown' | 'plain' = 'plain';
+    if (HTML_CTS.has(contentType)) {
+      sourceType = 'html';
+    } else if (contentType === 'text/markdown' || contentType === 'text/x-markdown' || filename.endsWith('.md')) {
+      sourceType = 'markdown';
+    }
+
+    const preprocessResult = await preprocess(textContent, { sourceType });
+    cleanedText = preprocessResult.cleaned;
+    preprocessMeta = {
+      originalTokens: preprocessResult.originalTokens,
+      cleanedTokens: preprocessResult.cleanedTokens,
+      reductionRatio: preprocessResult.reductionRatio,
+      droppedSections: preprocessResult.droppedSections,
+      sourceMap: preprocessResult.sourceMap
+    };
+  } catch (err: any) {
+    console.warn('[Ingest] Preprocess failed, falling back to raw text:', err);
+    // 降级兜底：如果是 HTML 且 preprocess 失败，进行一次 stripHtml 提取纯文本
+    if (HTML_CTS.has(contentType)) {
+      cleanedText = stripHtml(textContent);
+    }
+  }
+
   // Stage: extracting (LLM)
   if (CHECK_ABORT()) return CANCEL();
   updateJob(jobId, { stage: 'extracting' });
   let extractResult;
   try {
     extractResult = await ctx.extractor.extract({
-      textContent: `Source file: ${filename}\n${textContent}`,
+      textContent: `Source file: ${filename}\n${cleanedText}`,
       timestamp: new Date().toISOString(),
       sourceType: 'manual',
+      sourceMap: preprocessMeta?.sourceMap,
     });
   } catch (err: any) {
     return FAIL('extracting', `LLM extraction failed: ${err?.message || err}`);
@@ -308,7 +350,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
   // Stage: resolving
   if (CHECK_ABORT()) return CANCEL();
   updateJob(jobId, { stage: 'resolving' });
-  const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db);
+  const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
 
   for (const entity of resolution.entitiesToCreate) {
     await ctx.db.addEntity(entity);
@@ -318,6 +360,10 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
     await ctx.db.updateEntity(update.id, {
       description: update.description,
       tags: update.tags,
+      embedding: update.embedding,
+      metadata: update.metadata,
+      created_at: update.created_at,
+      access_count: update.access_count,
     });
   }
 
@@ -355,7 +401,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
       sourceFile: filename,
     },
   }));
-  const principleResolution = await resolveEntities(principleEntities, [], ctx.db);
+  const principleResolution = await resolveEntities(principleEntities, [], ctx.db, ctx.embeddingService);
   for (const entity of principleResolution.entitiesToCreate) {
     await ctx.db.addEntity(entity);
   }
@@ -363,19 +409,23 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
     await ctx.db.updateEntity(update.id, {
       description: update.description,
       tags: update.tags,
+      embedding: update.embedding,
+      metadata: update.metadata,
+      created_at: update.created_at,
+      access_count: update.access_count,
     });
   }
 
   // Archival memory
   let archivalEmbedding: number[] | undefined;
   try {
-    const embRes = await ctx.embeddingService.embed(textContent);
+    const embRes = await ctx.embeddingService.embed(cleanedText);
     archivalEmbedding = embRes.embedding;
   } catch (err) {
     console.warn('[Ingest] archival embedding failed:', err);
   }
 
-  const archival = await ctx.archivalMemory.add(textContent, {
+  const archival = await ctx.archivalMemory.add(cleanedText, {
     tags: ['uploaded-file', filename],
     importance: 0.5,
     embedding: archivalEmbedding,
@@ -394,6 +444,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
       principles: extractResult.principles.length,
       archivalId: archival.id,
       summary,
+      preprocess: preprocessMeta || undefined,
     },
   });
 }

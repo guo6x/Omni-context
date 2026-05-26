@@ -16,7 +16,29 @@
     <div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" id="statusDot"></div>
     <span class="text-sm text-gray-300 font-medium" id="statusText">正在检查连接...</span>
   </div>
-  
+
+  <!-- Token 设置：首次使用时显示 -->
+  <div id="tokenSetup" class="hidden mb-4 p-3 glass-panel border border-amber-500/30 rounded-lg space-y-2">
+    <p class="text-xs text-amber-400 font-medium">需要本地 API Token</p>
+    <p class="text-[10px] text-gray-400 leading-relaxed">
+      请从桌面端的 <span class="text-cyan-400">设置 → 数据 → 本地 API Token</span> 复制 token，粘贴到下方：
+    </p>
+    <div class="flex gap-2">
+      <input
+        id="tokenInput"
+        type="password"
+        placeholder="粘贴 token..."
+        class="flex-1 bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500"
+      />
+      <button
+        id="saveTokenBtn"
+        class="px-3 py-1.5 text-xs bg-cyan-600 hover:bg-cyan-500 text-white rounded transition-colors shrink-0"
+      >
+        保存
+      </button>
+    </div>
+  </div>
+
   <div class="flex flex-col gap-2">
     <button id="capturePageBtn" class="flex items-center gap-3 px-4 py-3 glass-panel hover:bg-cyan-900/30 hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] text-gray-200 transition-all duration-300 cursor-pointer group" aria-label="一键捕获全页">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-cyan-400 group-hover:scale-110 transition-transform">

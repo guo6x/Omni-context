@@ -2,7 +2,7 @@
 
 import React, { useCallback, useRef, useState, useImperativeHandle } from 'react';
 import { UploadCloud, FileText, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-import { BRAIN_URL } from '@/lib/config';
+import { apiFetch } from '@/lib/api-client';
 
 export const ACCEPTED_EXTENSIONS = [
   '.md', '.txt', '.json', '.csv', '.pdf', '.html', '.htm',
@@ -139,7 +139,7 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
           const contentType = inferContentType(file);
 
           // Submit job
-          const submitRes = await fetch(`${BRAIN_URL}/api/ingest/file`, {
+          const submitRes = await apiFetch('/api/ingest/file', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ filename: file.name, contentType, base64 }),
@@ -157,7 +157,7 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
           // Poll job status every 1 second
           const pollInterval = setInterval(async () => {
             try {
-              const pollRes = await fetch(`${BRAIN_URL}/api/ingest/job/${jobId}`);
+              const pollRes = await apiFetch(`/api/ingest/job/${jobId}`);
               if (!pollRes.ok) {
                 if (pollRes.status === 404) {
                   clearInterval(pollInterval);
@@ -270,7 +270,7 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
         );
         // Send cancel request (fire-and-forget)
         try {
-          await fetch(`${BRAIN_URL}/api/ingest/job/${jobId}/cancel`, { method: 'POST' });
+          await apiFetch(`/api/ingest/job/${jobId}/cancel`, { method: 'POST' });
         } catch {
           // Ignore cancel errors — UI already updated
         }

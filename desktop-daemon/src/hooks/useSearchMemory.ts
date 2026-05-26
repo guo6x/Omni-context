@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { BRAIN_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api-client";
 import { Entity } from "@shared/types";
 
 export interface ArchivalMemoryItem {
@@ -149,27 +149,24 @@ export function useSearchMemory() {
     const limit = 5;
 
     const performSearch = async () => {
-      const searchEntitiesPromise = fetch(`${BRAIN_URL}/api/entities/search`, {
+      const searchEntitiesPromise = apiFetch('/api/entities/search', {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: debouncedQuery, limit }),
       }).then(async (res) => {
         if (!res.ok) throw new Error("Entities search failed");
         return (await res.json()) as Entity[];
       });
 
-      const searchArchivalPromise = fetch(`${BRAIN_URL}/api/memory/archival/search`, {
+      const searchArchivalPromise = apiFetch('/api/memory/archival/search', {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: debouncedQuery, limit }),
       }).then(async (res) => {
         if (!res.ok) throw new Error("Archival search failed");
         return (await res.json()) as ArchivalSearchResult[];
       });
 
-      const searchCorePromise = fetch(`${BRAIN_URL}/api/memory/core/search`, {
+      const searchCorePromise = apiFetch('/api/memory/core/search', {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: debouncedQuery, limit }),
       }).then(async (res) => {
         if (!res.ok) throw new Error("Core search failed");

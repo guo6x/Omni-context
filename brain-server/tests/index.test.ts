@@ -813,12 +813,16 @@ describe('Entity Resolution & Remapping', () => {
 
     const resolution = await resolveEntities(newEntities, newRels, db);
 
-    expect(resolution.entitiesToCreate.length).toBe(1);
-    expect(resolution.entitiesToCreate[0].id).toBe('new-other-id');
+    expect(resolution.entitiesToCreate.length).toBe(2);
+    const newOther = resolution.entitiesToCreate.find(e => e.id === 'new-other-id');
+    const aliasSqlite = resolution.entitiesToCreate.find(e => e.id === 'new-sqlite-id');
+    expect(newOther).toBeDefined();
+    expect(aliasSqlite).toBeDefined();
+    expect(aliasSqlite?.metadata?.merged_into).toBe(existing.id);
 
     expect(resolution.entitiesToUpdate.length).toBe(1);
     expect(resolution.entitiesToUpdate[0].id).toBe(existing.id);
-    expect(resolution.entitiesToUpdate[0].description).toBeUndefined();
+    expect(resolution.entitiesToUpdate[0].description).toBe('New extracted sqlite description');
     expect(resolution.entitiesToUpdate[0].tags).toContain('sqlite');
     expect(resolution.entitiesToUpdate[0].tags).toContain('embedded');
 
@@ -828,5 +832,213 @@ describe('Entity Resolution & Remapping', () => {
     expect(resolution.relationshipsToCreate.length).toBe(1);
     expect(resolution.relationshipsToCreate[0].source_id).toBe(existing.id);
     expect(resolution.relationshipsToCreate[0].target_id).toBe('new-other-id');
+  });
+});
+
+describe('Bitemporal Edges & Single-Valued Relation Invalidation', () => {
+  let db: Database;
+
+  beforeAll(async () => {
+    db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+  });
+
+  afterAll(async () => {
+    await db.close();
+  });
+
+  it('should invalidate old single-valued relationships automatically and record invalidation_reason', async () => {
+    const user = await db.addEntity({ name: 'ZhangSan', type: 'person' });
+    const acme = await db.addEntity({ name: 'Acme Corp', type: 'project' });
+    const globex = await db.addEntity({ name: 'Globex Corp', type: 'project' });
+
+    // 1. 张三在 Acme 工作
+    const rel1 = await db.addRelationship({
+      source_id: user.id,
+      target_id: acme.id,
+      type: 'works_at',
+      weight: 1.0,
+    });
+
+    // 验证一开始有效
+    let activeRels = await db.getRelationshipsForEntity(user.id);
+    expect(activeRels.some(r => r.id === rel1.id)).toBe(true);
+
+    // 2. 事实变更：张三现在在 Globex 工作
+    const rel2 = await db.addRelationship({
+      source_id: user.id,
+      target_id: globex.id,
+      type: 'works_at',
+      weight: 1.0,
+    });
+
+    // 验证 Acme 的关系被自动失效
+    activeRels = await db.getRelationshipsForEntity(user.id, false);
+    expect(activeRels.some(r => r.id === rel1.id)).toBe(false);
+    expect(activeRels.some(r => r.id === rel2.id)).toBe(true);
+
+    // 包含历史记录应可查出 rel1，且包含 invalidation_reason
+    const allRels = await db.getRelationshipsForEntity(user.id, true);
+    const oldRel = allRels.find(r => r.id === rel1.id);
+    expect(oldRel).toBeDefined();
+    expect(oldRel?.valid_until).toBeDefined();
+    expect(oldRel?.invalidated_at).toBeDefined();
+    expect(oldRel?.invalidation_reason).toContain('superseded by extraction');
+  });
+
+  it('should allow multiple targets for multi-valued relationships without invalidation', async () => {
+    const user = await db.addEntity({ name: 'Lisi', type: 'person' });
+    const science = await db.addEntity({ name: 'Science', type: 'concept' });
+    const art = await db.addEntity({ name: 'Art', type: 'concept' });
+
+    // 1. 李四 relates to Science (多值关系)
+    const rel1 = await db.addRelationship({
+      source_id: user.id,
+      target_id: science.id,
+      type: 'relates_to',
+      weight: 1.0,
+    });
+
+    // 2. 李四 relates to Art (多值关系)
+    const rel2 = await db.addRelationship({
+      source_id: user.id,
+      target_id: art.id,
+      type: 'relates_to',
+      weight: 1.0,
+    });
+
+    // 验证两者皆同时有效，未发生任何失效
+    const activeRels = await db.getRelationshipsForEntity(user.id, false);
+    expect(activeRels.some(r => r.id === rel1.id)).toBe(true);
+    expect(activeRels.some(r => r.id === rel2.id)).toBe(true);
+  });
+});
+
+describe('Similarity Deduplication (Task 44)', () => {
+  let db: Database;
+
+  beforeAll(async () => {
+    db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+  });
+
+  afterAll(async () => {
+    await db.close();
+  });
+
+  it('should deduplicate and merge entities based on embedding similarity > 0.92', async () => {
+    const mockEmbeddingService = {
+      embed: async (text: string) => {
+        let vec = Array.from({ length: 384 }, () => 0.0);
+        const lower = text.toLowerCase();
+        if (lower.includes('omni')) {
+          // High similarity vectors
+          vec = Array.from({ length: 384 }, (_, i) => (i === 0 ? 0.99 : 0.01));
+        } else {
+          vec = Array.from({ length: 384 }, (_, i) => (i === 1 ? 0.99 : 0.01));
+        }
+        return { embedding: vec };
+      }
+    };
+
+    // 1. Ingest first entity: "OmniContext 项目"
+    const e1 = {
+      id: 'e1',
+      name: 'OmniContext 项目',
+      type: 'project' as const,
+      description: 'First description',
+      created_at: '2026-05-26T12:00:00Z',
+      access_count: 5,
+    } as any;
+
+    const res1 = await resolveEntities([e1], [], db, mockEmbeddingService);
+    expect(res1.entitiesToCreate.length).toBe(1);
+    await db.addEntity(res1.entitiesToCreate[0]);
+
+    // 2. Ingest second entity: "omni-context" (different name, same type, similar embedding)
+    const e2 = {
+      id: 'e2',
+      name: 'omni-context',
+      type: 'project' as const,
+      description: 'Second longer description here',
+      created_at: '2026-05-26T11:00:00Z',
+      access_count: 10,
+    } as any;
+
+    const res2 = await resolveEntities([e2], [], db, mockEmbeddingService);
+    
+    // Should merge into e1:
+    // - entitiesToCreate has 1 alias (e2) with merged_into = e1 canonical ID
+    expect(res2.entitiesToCreate.length).toBe(1);
+    expect(res2.entitiesToCreate[0].metadata?.merged_into).toBe(res1.entitiesToCreate[0].id);
+    expect(res2.entitiesToCreate[0].tags).toContain('merged-alias');
+
+    // - entitiesToUpdate has 1 update (e1) with:
+    //   - description: 'Second longer description here' (keeps longer)
+    //   - created_at: '2026-05-26T11:00:00Z' (keeps earliest)
+    //   - access_count: 15 (5 + 10)
+    expect(res2.entitiesToUpdate.length).toBe(1);
+    const update = res2.entitiesToUpdate[0];
+    expect(update.id).toBe(res1.entitiesToCreate[0].id);
+    expect(update.description).toBe('Second longer description here');
+    expect(update.created_at).toBe('2026-05-26T11:00:00Z');
+    expect(update.access_count).toBe(15);
+    
+    // Add the alias and run updates
+    await db.addEntity(res2.entitiesToCreate[0]);
+    await db.updateEntity(update.id, update);
+
+    // 3. Query entities list
+    const activeEntities = await db.getEntitiesByType('project');
+    // The alias entity is excluded by metadata.merged_into IS NULL, so only e1 is returned
+    expect(activeEntities.length).toBe(1);
+    expect(activeEntities[0].id).toBe(res1.entitiesToCreate[0].id);
+    expect(activeEntities[0].description).toBe('Second longer description here');
+    expect(activeEntities[0].created_at).toBe('2026-05-26T11:00:00Z');
+    expect(activeEntities[0].access_count).toBe(15);
+
+    // 4. Detail query redirects to canonical
+    const detailedAlias = await db.getEntity('e2');
+    expect(detailedAlias).not.toBeNull();
+    expect(detailedAlias?.id).toBe(res1.entitiesToCreate[0].id); // Redirected to canonical ID!
+    expect(detailedAlias?.name).toBe('OmniContext 项目');
+  });
+});
+
+describe('GraphRAG Fact Mapping (Task 44)', () => {
+  it('should map facts with confidence and source_span to relationships with weight and description', async () => {
+    const extractor = new GraphRAGExtractor();
+    
+    // Mock LLM Pipeline response
+    vi.spyOn((extractor as any).llmPipeline, 'extract').mockResolvedValue({
+      entities: [
+        { name: 'Alice', type: 'person', description: 'A person' },
+        { name: 'Bob', type: 'person', description: 'Another person' }
+      ],
+      facts: [
+        {
+          subject: 'Alice',
+          predicate: 'married_to',
+          object: 'Bob',
+          confidence: 0.98,
+          source_span: 'Alice is happily married to Bob.'
+        }
+      ],
+      principles: []
+    });
+
+    const output = await extractor.extract({
+      textContent: 'Alice is happily married to Bob.',
+      timestamp: new Date().toISOString(),
+    });
+
+    expect(output.entities.length).toBe(2);
+    expect(output.relationships.length).toBe(1);
+    const rel = output.relationships[0];
+    expect(rel.type).toBe('married_to');
+    expect(rel.weight).toBe(0.98);
+    expect(rel.description).toBe('Alice is happily married to Bob.');
+    
+    vi.restoreAllMocks();
   });
 });

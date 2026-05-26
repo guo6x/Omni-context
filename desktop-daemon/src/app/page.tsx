@@ -13,7 +13,7 @@ import EmptyState from "@/components/EmptyState";
 import FileDropZone, { FileDropZoneRef, ACCEPTED_EXTENSIONS, TauriFileLike } from "@/components/FileDropZone";
 import HardwarePairingPanel from "@/components/HardwarePairingPanel";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { Database, Terminal, Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp } from "lucide-react";
+import { Database, Terminal, Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp } from "lucide-react";
 import { LogoMark } from "@/components/BrandMark";
 import { Entity, Relationship } from "@shared/types";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/useToast";
 import SearchPalette from "@/components/SearchPalette";
 import DecisionAssistant from "@/components/DecisionAssistant";
 import { useConfirm } from "@/components/ConfirmDialog";
-import { BRAIN_URL } from '@/lib/config';
+import { apiFetch } from '@/lib/api-client';
 
 type ViewMode = "graph" | "console";
 
@@ -126,11 +126,13 @@ function MainApp() {
   const { status, addLog, triggerPrecipitate, triggerDecision, triggerReset, refreshTrigger } = useOmniContext();
   const { t, language, setLanguage } = useTranslation();
   const toast = useToast();
+  const [settingsTab, setSettingsTab] = useState<'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about'>('shortcuts');
+  const [showWizardForce, setShowWizardForce] = useState(false);
 
   // 提到组件 scope，方便上传成功 / 手动操作后重拉
   const fetchGraphData = useCallback(async () => {
     try {
-      const response = await fetch(`${BRAIN_URL}/api/graph/context`, {
+      const response = await apiFetch('/api/graph/context', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ depth: 3 }),
@@ -242,7 +244,7 @@ function MainApp() {
   const handleLoadDemo = useCallback(async () => {
     setIsLoadingDemo(true);
     try {
-      const response = await fetch(`${BRAIN_URL}/api/admin/seed-demo`, {
+      const response = await apiFetch('/api/admin/seed-demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -443,10 +445,10 @@ function MainApp() {
     },
   ]);
 
-  const handlePrecipitate = async () => {
+  const handlePrecipitate = async (): Promise<{ ok: boolean; entities?: number; relationships?: number; error?: string }> => {
     if (isPrecipitating.current) {
       addLog(t('hud.precipitate_in_progress'), "warning");
-      return;
+      return { ok: false, error: t('hud.precipitate_in_progress') };
     }
 
     // 隐私检查 1：暂停抓取
@@ -466,7 +468,7 @@ function MainApp() {
           setFloatingHudOn(false);
         }, 2000);
       }
-      return;
+      return { ok: false, error: paused };
     }
 
     // 隐私检查 2：敏感应用排除
@@ -494,7 +496,7 @@ function MainApp() {
                 setFloatingHudOn(false);
               }, 2000);
             }
-            return;
+            return { ok: false, error: blocked };
           }
         }
       } catch (e) {
@@ -514,8 +516,11 @@ function MainApp() {
     setFloatingHudOn(true);
     addLog(t('shortcuts.precipitate_desc'), "info");
 
+    let finalResult: { ok: boolean; entities?: number; relationships?: number; error?: string } = { ok: false, error: 'Unknown' };
+
     try {
       const result = await triggerPrecipitate();
+      finalResult = result;
 
       if (result.ok && result.entities !== undefined && result.entities > 0) {
         const done = t('hud.precipitate_success')
@@ -542,6 +547,7 @@ function MainApp() {
       setHudMessage(failed);
       setHudStatus("error");
       pushFloatingHUD("error", failed);
+      finalResult = { ok: false, error: errMsg };
     }
 
     isPrecipitating.current = false;
@@ -553,6 +559,8 @@ function MainApp() {
         setFloatingHudOn(false);
       }, 2000);
     }
+
+    return finalResult;
   };
 
   const handleDecision = () => {
@@ -645,7 +653,7 @@ function MainApp() {
   }, [settings.behavior.defaultFloatingHUD, floatingHudAutoShown, t]);
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0a0b12] overflow-hidden" style={{ '--accent-color': settings.appearance.accentColor } as React.CSSProperties}>
+    <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
       <header className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-white/10 bg-black/30 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex items-center gap-3">
@@ -818,6 +826,30 @@ function MainApp() {
         </div>
       )}
 
+      {/* 老用户尝鲜 Onboarding Wizard v2 的横幅 */}
+      {settings.behavior.onboarded && !settings.behavior.onboarded_v2 && !showWizardForce && (
+        <div className="px-4 py-2 bg-cyan-950/30 border-b border-cyan-900/40 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-cyan-200">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse flex-shrink-0" />
+            <span>{t('onboarding.whats_new_banner')}</span>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setShowWizardForce(true)}
+              className="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-semibold transition-colors"
+            >
+              {t('onboarding.whats_new_btn')}
+            </button>
+            <button
+              onClick={() => updateBehavior({ onboarded_v2: true })}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded text-[11px] transition-colors"
+            >
+              {t('onboarding.whats_new_dismiss')}
+            </button>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 overflow-hidden relative">
         {viewMode === 'graph' ? (
           <GraphViewer
@@ -903,6 +935,7 @@ function MainApp() {
             onUpdateLlmProvider={updateLlmProvider}
             onUpdateLanguage={setLanguage}
             onClose={() => setShowSettings(false)}
+            defaultTab={settingsTab}
           />
         )}
         
@@ -929,16 +962,21 @@ function MainApp() {
           }}
         />
 
-        {/* [通用] 首次启动引导 */}
-        {!settings.behavior.onboarded && (
+        {/* [通用] 首次启动引导 (v2) */}
+        {((!settings.behavior.onboarded && !settings.behavior.onboarded_v2) || showWizardForce) && (
           <OnboardingWizard
             settings={settings}
             onUpdateBehavior={updateBehavior}
             onUpdateLlmProvider={updateLlmProvider}
-            onLoadDemo={handleLoadDemo}
-            isLoadingDemo={isLoadingDemo}
-            onOpenUpload={() => setShowUpload(true)}
-            onClose={() => updateBehavior({ onboarded: true })}
+            triggerPrecipitate={handlePrecipitate}
+            onClose={() => {
+              updateBehavior({ onboarded: true, onboarded_v2: true });
+              setShowWizardForce(false);
+            }}
+            onOpenSettings={(tab) => {
+              setSettingsTab(tab);
+              setShowSettings(true);
+            }}
           />
         )}
       </main>

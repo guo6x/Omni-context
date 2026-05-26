@@ -6,8 +6,10 @@ import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import { useConfirm } from "@/components/ConfirmDialog";
-import { BRAIN_URL } from '@/lib/config';
+import { apiFetch } from '@/lib/api-client';
 import { getRelationshipStyle } from '@/lib/relationship-styles';
+import { useSettings } from "@/hooks/useSettings";
+import { THEMES, NODE_TYPE_TO_THEME_KEY } from "@/lib/themes";
 
 // 3D 图谱节点数据结构
 interface GraphNode {
@@ -126,6 +128,16 @@ export default function GraphViewer3D({
 }: GraphViewer3DProps) {
   const { t } = useTranslation();
   const toast = useToast();
+
+  const { settings } = useSettings();
+  const currentTheme = useMemo(() => {
+    return THEMES[settings.appearance.theme] || THEMES['neutral-dark'];
+  }, [settings.appearance.theme]);
+
+  const getThemeColor = useCallback((type: string) => {
+    const themeKey = NODE_TYPE_TO_THEME_KEY[type] || 'concept';
+    return currentTheme.graphNodeColors[themeKey] || currentTheme.fgMuted;
+  }, [currentTheme]);
 
   function relativeTime(iso: string): string {
     if (!iso) return '';
@@ -322,7 +334,7 @@ export default function GraphViewer3D({
           type: entity.type,
           description: entity.description,
           val,
-          color: TYPE_COLORS[entity.type] || "#94a3b8",
+          color: getThemeColor(entity.type),
           glyph: TYPE_GLYPHS[entity.type] || '•',
           accessCount: entity.access_count || 0,
           connections: conn,
@@ -493,7 +505,7 @@ export default function GraphViewer3D({
         .split(/[,、]/)
         .map((t) => t.trim())
         .filter(Boolean);
-      const res = await fetch(`${BRAIN_URL}/api/entities/${selectedNode.id}`, {
+      const res = await apiFetch(`/api/entities/${selectedNode.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -561,7 +573,7 @@ export default function GraphViewer3D({
 
     setBusy(true);
     try {
-      const res = await fetch(`${BRAIN_URL}/api/entities/${selectedNode.id}`, {
+      const res = await apiFetch(`/api/entities/${selectedNode.id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -610,7 +622,7 @@ export default function GraphViewer3D({
     try {
       // 重建实体
       for (const entity of pending.entities) {
-        const res = await fetch(`${BRAIN_URL}/api/entities`, {
+        const res = await apiFetch('/api/entities', {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -629,7 +641,7 @@ export default function GraphViewer3D({
         const newSourceId = oldToNew[rel.source_id];
         const newTargetId = oldToNew[rel.target_id];
         if (!newSourceId || !newTargetId) continue;
-        await fetch(`${BRAIN_URL}/api/relationships`, {
+        await apiFetch('/api/relationships', {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -672,7 +684,7 @@ export default function GraphViewer3D({
       if (!ok) return;
       setBusy(true);
       try {
-        const res = await fetch(`${BRAIN_URL}/api/entities/${selectedNode.id}/merge`, {
+        const res = await apiFetch(`/api/entities/${selectedNode.id}/merge`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ targetId }),
@@ -763,7 +775,7 @@ export default function GraphViewer3D({
     try {
       // 批量删除：逐个调 API
       for (const id of ids) {
-        const res = await fetch(`${BRAIN_URL}/api/entities/${id}`, { method: "DELETE" });
+        const res = await apiFetch(`/api/entities/${id}`, { method: "DELETE" });
         if (!res.ok) throw new Error(`HTTP ${res.status} on ${id}`);
       }
       setSelectedNode(null);
@@ -810,7 +822,7 @@ export default function GraphViewer3D({
         if (!entity) continue;
         const existingTags = entity.tags || [];
         const mergedTags = Array.from(new Set([...existingTags, ...tags]));
-        await fetch(`${BRAIN_URL}/api/entities/${id}`, {
+        await apiFetch(`/api/entities/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ tags: mergedTags }),
@@ -1208,7 +1220,7 @@ export default function GraphViewer3D({
                 return Object.entries(typeCounts)
                   .sort(([, a], [, b]) => b - a)
                   .map(([type, count]) => {
-                    const color = TYPE_COLORS[type] || '#94a3b8';
+                    const color = getThemeColor(type);
                     const isActive = legendHighlightType === type;
                     return (
                       <button
@@ -1413,7 +1425,7 @@ export default function GraphViewer3D({
                     >
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: TYPE_COLORS[e.type] || "#94a3b8" }}
+                        style={{ backgroundColor: getThemeColor(e.type) }}
                       />
                       <span className="text-xs text-gray-200 truncate flex-1">{e.name}</span>
                       <span className="text-[10px] text-gray-500 shrink-0">{e.type.replace(/_/g, " ")}</span>
@@ -1507,11 +1519,11 @@ export default function GraphViewer3D({
               <div className="flex items-center gap-2 mt-1">
                 <div
                   className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10"
-                  style={{ color: TYPE_COLORS[selectedNode.type] || "#94a3b8" }}
+                  style={{ color: getThemeColor(selectedNode.type) }}
                 >
                   {TYPE_ICONS[selectedNode.type] || <Info className="w-4 h-4" />}
                 </div>
-                <span className="text-cyan-400">{selectedNode.type.replace(/_/g, " ")}</span>
+                <span style={{ color: getThemeColor(selectedNode.type) }}>{selectedNode.type.replace(/_/g, " ")}</span>
               </div>
             </div>
 
@@ -1586,7 +1598,7 @@ export default function GraphViewer3D({
                       >
                         <span
                           className="w-2 h-2 rounded-full shrink-0"
-                          style={{ backgroundColor: TYPE_COLORS[n.entity.type] || "#94a3b8" }}
+                          style={{ backgroundColor: getThemeColor(n.entity.type) }}
                         />
                         <span className="flex-1 min-w-0">
                           <span className="block text-xs text-gray-200 group-hover:text-cyan-300 truncate">

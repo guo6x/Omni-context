@@ -68,7 +68,15 @@
       "PowerShell(choco *)",
       "Bash(grep -iE \"\\\\.\\(env|pem|key|secret|password|token\\)$|credentials\")",
       "Bash(git check-ignore *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git count-objects *)",
+      "Bash(git config *)",
+      "Bash(GIT_HTTP_LOW_SPEED_LIMIT=100 GIT_HTTP_LOW_SPEED_TIME=300 git -c http.postBuffer=524288000 push -v origin main)",
+      "Bash(git fetch *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep -iE \"\\\\.key$|\\\\.pem$|local-token|pair-code|\\\\.env$\")"
     ]
   }
 }

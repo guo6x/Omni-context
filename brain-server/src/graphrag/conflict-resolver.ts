@@ -1,5 +1,5 @@
 import { Database } from '../db/sqlite.js';
-import { Relationship } from '../shared-types.js';
+import { Relationship, SINGLE_VALUED_REL_TYPES } from '../shared-types.js';
 import { GraphRAGExtractor } from './extractor.js';
 
 /**
@@ -27,6 +27,22 @@ export async function resolveConflicts(
   for (const newRel of newRels) {
     try {
       const now = new Date().toISOString();
+
+      // 1. 处理单值关系失效 (SINGLE_VALUED_REL_TYPES)
+      if (SINGLE_VALUED_REL_TYPES.includes(newRel.type)) {
+        const supersededRels = await db.all<Relationship>(
+          `SELECT * FROM relationships
+           WHERE source_id = ? AND type = ? AND target_id != ?
+             AND (valid_until IS NULL OR valid_until > ?)`,
+          [newRel.source_id, newRel.type, newRel.target_id, now]
+        );
+        for (const oldRel of supersededRels) {
+          console.log(`[conflict-resolver] Invalidate superseded single-valued relationship: ${oldRel.id} (${oldRel.type})`);
+          await db.invalidateRelationship(oldRel.id, `superseded by extraction at ${newRel.valid_from || now}`);
+        }
+      }
+
+      // 2. 原有的同一实体对 LLM 冲突消解
       // 查询图谱中同一实体对且当前有效的已有关系（排除 conflicts_with 和当前新关系本身）
       const existingRels = await db.all<Relationship>(
         `SELECT * FROM relationships 

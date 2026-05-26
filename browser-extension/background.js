@@ -3,14 +3,38 @@ const API_BASE = 'http://localhost:3001';
 const JOB_TIMEOUT_MS = 30000;
 const POLL_ALARM_PREFIX = 'poll-';
 const PENDING_JOBS_KEY = 'pendingJobs';
+const TOKEN_SETUP_DONE_KEY = 'tokenSetupDone';
 
 let desktopConnection = null;
+let cachedToken = null;
+
+// --- Token management ---
+
+async function getToken() {
+  if (cachedToken) return cachedToken;
+  const result = await chrome.storage.local.get('localApiToken');
+  cachedToken = result.localApiToken || null;
+  return cachedToken;
+}
+
+/** 带 token 的 fetch 封装 */
+async function apiFetch(path, options = {}) {
+  const token = await getToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return apiFetch('${path}', { ...options, headers });
+}
 
 // --- Desktop health ---
 
 async function connectToDesktop() {
   try {
-    const response = await fetch(`${API_BASE}/health`);
+    const response = await apiFetch('/health');
     desktopConnection = {
       status: response.ok ? 'connected' : 'disconnected',
       lastCheck: Date.now(),
@@ -166,7 +190,7 @@ async function captureSelection(data, tab) {
 
 async function submitAndPoll({ filename, contentType, base64 }) {
   try {
-    const res = await fetch(`${API_BASE}/api/ingest/file`, {
+    const res = await apiFetch('/api/ingest/file', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filename, contentType, base64 }),
@@ -214,7 +238,7 @@ async function handlePoll(jobId) {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/ingest/job/${jobId}`);
+    const res = await apiFetch('/api/ingest/job/${jobId}');
     if (!res.ok) {
       if (res.status === 404) {
         notifyJobError(jobInfo.filename, '任务已过期');

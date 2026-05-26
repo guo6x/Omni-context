@@ -58,6 +58,13 @@ yarn-error.log*
 tauri_priv.key
 desktop-daemon/.tauri-signing/
 
+# Local secrets (generated per machine, never commit)
+*-token.txt
+local-token.txt
+pair-code.txt
+**/local-token.txt
+**/pair-code.txt
+
 # Temporary files
 *.tmp
 *.temp

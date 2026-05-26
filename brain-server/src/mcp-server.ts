@@ -283,40 +283,10 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           };
           const result = await this.extractor.extract(input);
           // 实体消解与重映射
-          const resolution = await resolveEntities(result.entities, result.relationships, this.db);
+          const resolution = await resolveEntities(result.entities, result.relationships, this.db, this.embeddingService);
 
           const savedEntities = [];
           const savedRelationships = [];
-
-          // 先并发生成所有实体的 embedding（带并发上限），再串行落库以避免 SQLite 写竞争
-          const EMBED_CONCURRENCY = 4;
-          for (let i = 0; i < resolution.entitiesToCreate.length; i += EMBED_CONCURRENCY) {
-            const batch = resolution.entitiesToCreate.slice(i, i + EMBED_CONCURRENCY);
-            await Promise.all(batch.map(async (entity) => {
-              try {
-                const embeddingText = `${entity.name}: ${entity.description || ''}`;
-                const embResult = await this.embeddingService.embed(embeddingText);
-                entity.embedding = embResult.embedding;
-              } catch {
-                // embedding 失败不阻塞主流程
-              }
-            }));
-          }
-
-          // 对于有描述更新的已有实体，也预先计算 embedding 并附加到更新项中
-          const updateEmbedCandidates = resolution.entitiesToUpdate.filter(u => u.description);
-          for (let i = 0; i < updateEmbedCandidates.length; i += EMBED_CONCURRENCY) {
-            const batch = updateEmbedCandidates.slice(i, i + EMBED_CONCURRENCY);
-            await Promise.all(batch.map(async (updateItem) => {
-              try {
-                const embeddingText = `${updateItem.name}: ${updateItem.description || ''}`;
-                const embResult = await this.embeddingService.embed(embeddingText);
-                updateItem.embedding = embResult.embedding;
-              } catch {
-                // embedding 失败不阻塞
-              }
-            }));
-          }
 
           for (const entity of resolution.entitiesToCreate) {
             const saved = await this.db.addEntity(entity);
@@ -337,6 +307,9 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               description: update.description,
               tags: update.tags,
               embedding: update.embedding,
+              metadata: update.metadata,
+              created_at: update.created_at,
+              access_count: update.access_count,
             });
             const current = await this.db.peekEntity(update.id);
             if (current) {
@@ -390,7 +363,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               version: principle.version || 1,
             },
           }));
-          const principleResolution = await resolveEntities(principleEntities, [], this.db);
+          const principleResolution = await resolveEntities(principleEntities, [], this.db, this.embeddingService);
           for (const entity of principleResolution.entitiesToCreate) {
             const saved = await this.db.addEntity(entity);
             savedEntities.push(saved);
@@ -399,6 +372,10 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             await this.db.updateEntity(update.id, {
               description: update.description,
               tags: update.tags,
+              embedding: update.embedding,
+              metadata: update.metadata,
+              created_at: update.created_at,
+              access_count: update.access_count,
             });
           }
           if (parsed.captureId) {
@@ -551,7 +528,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           const extractResult = await this.extractor.extract(input);
 
           // 实体消解
-          const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, this.db);
+          const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, this.db, this.embeddingService);
 
           const savedEntityIds: string[] = [];
           for (const entity of resolution.entitiesToCreate) {
@@ -563,6 +540,10 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             await this.db.updateEntity(update.id, {
               description: update.description,
               tags: update.tags,
+              embedding: update.embedding,
+              metadata: update.metadata,
+              created_at: update.created_at,
+              access_count: update.access_count,
             });
             savedEntityIds.push(update.id);
           }

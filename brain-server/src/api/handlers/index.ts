@@ -461,7 +461,7 @@ export const handleGraphRoutes = [
         timestamp: new Date().toISOString(),
       });
 
-      const resolution = await resolveEntities(result.entities, result.relationships, ctx.db);
+      const resolution = await resolveEntities(result.entities, result.relationships, ctx.db, ctx.embeddingService);
 
       for (const entity of resolution.entitiesToCreate) {
         await ctx.db.addEntity(entity);
@@ -471,6 +471,10 @@ export const handleGraphRoutes = [
         await ctx.db.updateEntity(update.id, {
           description: update.description,
           tags: update.tags,
+          embedding: update.embedding,
+          metadata: update.metadata,
+          created_at: update.created_at,
+          access_count: update.access_count,
         });
       }
 
@@ -496,7 +500,7 @@ export const handleGraphRoutes = [
           principleType: principle.type,
         },
       }));
-      const principleResolution = await resolveEntities(principleEntities, [], ctx.db);
+      const principleResolution = await resolveEntities(principleEntities, [], ctx.db, ctx.embeddingService);
       for (const entity of principleResolution.entitiesToCreate) {
         await ctx.db.addEntity(entity);
       }
@@ -504,6 +508,10 @@ export const handleGraphRoutes = [
         await ctx.db.updateEntity(update.id, {
           description: update.description,
           tags: update.tags,
+          embedding: update.embedding,
+          metadata: update.metadata,
+          created_at: update.created_at,
+          access_count: update.access_count,
         });
       }
 

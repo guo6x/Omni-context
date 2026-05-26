@@ -138,7 +138,7 @@
 | 抓屏隐私控制 | 暂停 toggle + 敏感应用 blocklist | ✅ | task 24 |
 | 日志落盘 | %LOCALAPPDATA%\omni-context\logs\ + 轮转 | ✅ | task 25 |
 
-### 4.3 移动端 App
+### 4.3 移动端 App 📦 暂搁（Experimental）
 
 技术栈：React Native + Expo + NativeWind
 
@@ -165,7 +165,7 @@
 | 与 task 13 异步 job 协议同步 | 适配 `POST /api/ingest/file` 返回 jobId 的新格式 | ✅ | task 26：chrome.alarms 持久化轮询，SW unload 后恢复 |
 | Safari 适配 | —— | ❌ | 明确不做 |
 
-### 4.5 ESP32 物理硬件
+### 4.5 ESP32 物理硬件 📦 暂搁（Experimental）
 
 | 特性 | 最终形态 | 状态 | 备注 |
 |---|---|---|---|
@@ -225,6 +225,7 @@
 - 移动端 task 19/27 仅 typecheck 通过，未真机验证（无设备）
 - macOS / Linux 打包等社区贡献者实测
 - ESP32 真机仍暂缓
+- 屏幕抓取首启默认关闭（capturePaused=true），用户可在设置面板手动开启
 
 ---
 
@@ -389,11 +390,12 @@ omni-context-release/
 ├── scripts/             # 打包脚本（build-desktop-only.js 等）
 └── docs/
     ├── PRODUCT-VISION.md      # 本文档（北极星）
+    ├── ARCHITECTURE.md        # 详细技术架构（README 不再展开）
     ├── MCP-INTEGRATION.md     # 第三方接入指南
-    ├── BUILDING.md / PACKAGE.md
-    ├── RELEASING.md           # task 28：签名 + 发版流程
-    ├── tasks/                 # 34 份任务交付文档
-    └── progress/              # 34 份执行 AI 进度报告
+    ├── BUILDING.md / PACKAGE.md / RELEASING.md
+    ├── EXPERIMENTAL.md        # 移动端 / ESP32 / 抓屏现状
+    ├── DEMO_SCRIPT.md         # 90 秒 demo 拍摄脚本
+    └── landing/               # GitHub Pages 静态页
 ```
 
 ### 9.3 权限用途

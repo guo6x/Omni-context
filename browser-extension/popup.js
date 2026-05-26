@@ -1,21 +1,65 @@
 // Omni-Context Popup Script
 const API_BASE = 'http://localhost:3001';
 
+let localToken = '';
+
+async function getToken() {
+  const result = await chrome.storage.local.get('localApiToken');
+  return result.localApiToken || '';
+}
+
+async function apiFetch(path, options = {}) {
+  if (!localToken) {
+    localToken = await getToken();
+  }
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+  if (localToken) {
+    headers['Authorization'] = `Bearer ${localToken}`;
+  }
+  return fetch(`${API_BASE}${path}`, { ...options, headers });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('capturePageBtn')?.addEventListener('click', capturePage);
   document.getElementById('captureSelectionBtn')?.addEventListener('click', captureSelection);
   document.getElementById('openDesktopBtn')?.addEventListener('click', openDesktop);
+  document.getElementById('saveTokenBtn')?.addEventListener('click', saveToken);
 
+  localToken = await getToken();
+
+  if (localToken) {
+    document.getElementById('tokenSetup').classList.add('hidden');
+    checkConnection();
+    loadStats();
+  } else {
+    document.getElementById('tokenSetup').classList.remove('hidden');
+    document.getElementById('statusDot').className = 'w-2 h-2 rounded-full bg-amber-400';
+    document.getElementById('statusText').textContent = '需要设置本地 API Token';
+  }
+});
+
+async function saveToken() {
+  const input = document.getElementById('tokenInput');
+  const token = input.value.trim();
+  if (!token) return;
+
+  await chrome.storage.local.set({ localApiToken: token });
+  localToken = token;
+  document.getElementById('tokenSetup').classList.add('hidden');
+  document.getElementById('statusText').textContent = 'Token 已保存，检查连接...';
   checkConnection();
   loadStats();
-});
+}
 
 async function checkConnection() {
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
 
   try {
-    const response = await fetch(`${API_BASE}/health`);
+    const response = await apiFetch('/health');
     if (response.ok) {
       statusDot.className = 'w-2 h-2 rounded-full bg-green-400';
       statusText.textContent = '已连接到大脑';
@@ -30,7 +74,7 @@ async function checkConnection() {
 
 async function loadStats() {
   try {
-    const response = await fetch(`${API_BASE}/api/stats`);
+    const response = await apiFetch('/api/stats');
     if (response.ok) {
       const stats = await response.json();
       document.getElementById('todayCount').textContent = stats.database?.entities || 0;

@@ -282,22 +282,22 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
   const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, decayScheduler);
 
+  const localApiToken = (process.env.LOCAL_API_TOKEN || '').trim();
   const pairCode = (process.env.PAIR_CODE || '').trim();
 
-  // 检查 LAN 鉴权：127.0.0.1 白名单放行，其余来源需 Bearer pair code
+  // 鉴权：所有非 /health 请求都需要 Bearer token
+  // localhost 也不再免鉴权 —— 恶意网页 JS 可以扫端口
   function isAuthorized(req: http.IncomingMessage): boolean {
-    const remoteIp = (req.socket.remoteAddress || '').replace(/^::ffff:/, '');
-    // 本机回环地址一律免鉴权
-    if (remoteIp === '127.0.0.1' || remoteIp === '::1' || remoteIp === 'localhost') {
-      return true;
-    }
-    // 未配置 pair code 时放行（向后兼容）
-    if (!pairCode) {
-      return true;
-    }
     const authHeader = req.headers.authorization || '';
     const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
-    if (bearerMatch && bearerMatch[1] === pairCode) {
+    const token = bearerMatch ? bearerMatch[1] : '';
+
+    // 本地 token（桌面应用自带）
+    if (localApiToken && token === localApiToken) {
+      return true;
+    }
+    // 配对码（非 localhost 移动端场景）
+    if (pairCode && token === pairCode) {
       return true;
     }
     return false;
@@ -327,7 +327,7 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
 
     // LAN 鉴权：非本机请求检查配对码
     if (!isAuthorized(req)) {
-      sendError(res, 401, 'Unauthorized: pair code required. Use Authorization: Bearer <code> or connect from localhost.');
+      sendError(res, 401, 'Unauthorized. Use Authorization: Bearer <token>');
       return;
     }
 

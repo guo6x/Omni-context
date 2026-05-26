@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { BRAIN_URL } from '@/lib/config';
+import { apiFetch } from '@/lib/api-client';
 
 const REFRESH_INTERVAL_MS = 20_000;
 
@@ -40,7 +40,7 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${BRAIN_URL}/api/notifications`);
+      const res = await apiFetch('/api/notifications');
       if (res.ok) {
         const data = await res.json();
         setInsights(Array.isArray(data) ? data : []);
@@ -65,7 +65,7 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
   const markAsRead = useCallback(async (id: string) => {
     setInsights((prev) => prev.filter((i) => i.id !== id));
     try {
-      await fetch(`${BRAIN_URL}/api/notifications/${id}/read`, {
+      await apiFetch(`/api/notifications/${id}/read`, {
         method: 'POST',
       });
     } catch (e) {
@@ -81,7 +81,7 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
     setInsights([]);
     await Promise.allSettled(
       ids.map((id) =>
-        fetch(`${BRAIN_URL}/api/notifications/${id}/read`, { method: 'POST' })
+        apiFetch(`/api/notifications/${id}/read`, { method: 'POST' })
       )
     );
   }, [insights]);

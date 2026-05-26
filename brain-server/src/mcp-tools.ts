@@ -102,6 +102,7 @@ export const UnifiedMemorySearchSchema = z.object({
   query: z.string().min(1, 'query 不能为空'),
   limit: z.number().min(1).optional().default(5),
   includeRelationships: z.boolean().optional().default(true),
+  include_invalidated: z.boolean().optional().default(false),
 });
 
 export const SaveConclusionSchema = z.object({
@@ -333,6 +334,7 @@ export const tools: McpToolConfig[] = [
         query: { type: 'string', description: '搜索查询（自然语言）' },
         limit: { type: 'number', description: '每类搜索的结果限制', default: 5 },
         includeRelationships: { type: 'boolean', description: '是否包含关联关系', default: true },
+        include_invalidated: { type: 'boolean', description: '是否包含已失效的历史关系', default: false },
       },
       required: ['query'],
     },

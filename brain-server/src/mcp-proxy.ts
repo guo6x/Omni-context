@@ -10,21 +10,45 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { tools } from './mcp-tools.js';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { homedir } from 'os';
 
 const fetchFn = globalThis.fetch;
+
+function getTokenFilePath(): string {
+  const localAppData = process.env.LOCALAPPDATA || join(homedir(), '.omni-context');
+  return join(localAppData, 'omni-context', 'local-token.txt');
+}
+
+function readLocalToken(): string {
+  try {
+    const token = readFileSync(getTokenFilePath(), 'utf-8').trim();
+    if (token) return token;
+  } catch {
+    console.error('[mcp-proxy] 无法读取 local-token.txt，请求将不带鉴权');
+  }
+  return '';
+}
+
+const localToken = readLocalToken();
 
 async function requestBackend(path: string, options: RequestInit): Promise<any> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.signal.aborted || controller.abort(), 30000); // 30s timeout
 
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string> || {},
+    };
+    if (localToken) {
+      headers['Authorization'] = `Bearer ${localToken}`;
+    }
     const res = await fetchFn(`http://localhost:3001${path}`, {
       ...options,
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
     });
 
     clearTimeout(timeoutId);

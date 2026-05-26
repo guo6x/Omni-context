@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Omni-Context — Long-term memory for any AI</title>
+  <meta name="description" content="Plug long-term memory into any AI client via MCP. Runs entirely on your machine, owns your data forever.">
+
+  <meta property="og:title" content="Omni-Context — Long-term memory for any AI">
+  <meta property="og:description" content="Plug long-term memory into any AI client via MCP. Runs entirely on your machine.">
+  <meta property="og:image" content="https://guo6x.github.io/Omni-context/landing/assets/social-preview.svg">
+  <meta property="og:url" content="https://guo6x.github.io/Omni-context/landing/">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0a0b12',
+            cyan: { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .gradient-text {
+      background: linear-gradient(135deg, #22d3ee 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .glass {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(24px);
+    }
+    .glow {
+      box-shadow: 0 0 80px rgba(34,211,238,0.08);
+    }
+  </style>
+</head>
+<body class="bg-ink text-white antialiased">
+
+<!-- Hero -->
+<section class="min-h-screen flex flex-col items-center justify-center px-6 text-center relative overflow-hidden">
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.06),transparent_70%)]"></div>
+  <div class="relative z-10 max-w-3xl">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 glass rounded-full text-xs text-gray-400 mb-8">
+      <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+      v1.2 — Windows · macOS/Linux community builds
+    </div>
+
+    <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight leading-none mb-6">
+      <span class="gradient-text">Memory</span><br>
+      <span class="text-white">for your AI</span>
+    </h1>
+
+    <p class="text-lg md:text-xl text-gray-400 max-w-xl mx-auto mb-10 leading-relaxed">
+      A local knowledge graph that any MCP-compatible AI can use as long-term memory.
+      Your data, your machine, forever.
+    </p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a href="https://github.com/guo6x/Omni-context/releases/latest"
+         class="px-8 py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl transition-colors text-lg">
+        Download for Windows
+      </a>
+      <a href="https://github.com/guo6x/Omni-context"
+         class="px-8 py-3.5 glass hover:border-cyan-500/30 text-gray-300 hover:text-white font-semibold rounded-xl transition-colors text-lg">
+        View on GitHub
+      </a>
+    </div>
+  </div>
+
+  <div class="absolute bottom-8 text-gray-600 text-xs animate-bounce">
+    scroll
+  </div>
+</section>
+
+<!-- Why -->
+<section class="py-32 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-20">
+      Your AI <span class="gradient-text">forgets you</span> every conversation.
+    </h2>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="glass rounded-2xl p-8 glow">
+        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-6">
+          <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M4 7c0-2 1-3 3-3h10c2 0 3 1 3 3M4 7h16"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17h6"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3">Fully local</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          SQLite on your disk. No accounts, no cloud, no servers. Everything stays on your machine. Offline-first by design.
+        </p>
+      </div>
+
+      <div class="glass rounded-2xl p-8 glow">
+        <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
+          <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3">Knowledge graph</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Not just storage. Entities and relationships are extracted automatically. The graph grows as you work.
+        </p>
+      </div>
+
+      <div class="glass rounded-2xl p-8 glow">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-6">
+          <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3">MCP-native</h3>
+        <p class="text-gray-400 text-sm leading-relaxed">
+          Any MCP-compatible AI can access your graph. Claude Desktop, Cursor, Cline — all share the same brain.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How -->
+<section class="py-32 px-6 bg-white/[0.02]">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-6">How it works</h2>
+    <p class="text-gray-400 text-center mb-16 max-w-lg mx-auto">Three steps from capture to AI memory.</p>
+
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+      <div class="glass rounded-2xl p-8 text-center flex-1">
+        <div class="text-4xl mb-4">📥</div>
+        <h3 class="font-semibold mb-2">Capture</h3>
+        <p class="text-gray-400 text-sm">Screenshots, files, web pages, or a physical button. Anything becomes input.</p>
+      </div>
+      <div class="text-gray-600 text-2xl hidden md:block">→</div>
+      <div class="glass rounded-2xl p-8 text-center flex-1">
+        <div class="text-4xl mb-4">🧠</div>
+        <h3 class="font-semibold mb-2">Extract</h3>
+        <p class="text-gray-400 text-sm">OCR + LLM pipeline pulls out entities and relationships into a local knowledge graph.</p>
+      </div>
+      <div class="text-gray-600 text-2xl hidden md:block">→</div>
+      <div class="glass rounded-2xl p-8 text-center flex-1">
+        <div class="text-4xl mb-4">🔌</div>
+        <h3 class="font-semibold mb-2">Connect</h3>
+        <p class="text-gray-400 text-sm">Any MCP-compatible AI client queries your graph. 12+ clients, one brain.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Compare -->
+<section class="py-32 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-6">How we compare</h2>
+    <p class="text-gray-400 text-center mb-16 max-w-lg mx-auto">Omni is local-first and MCP-native. Most alternatives are neither.</p>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead>
+          <tr class="border-b border-white/10">
+            <th class="py-4 px-4 font-medium text-gray-400"></th>
+            <th class="py-4 px-4 font-semibold text-cyan-400">Omni</th>
+            <th class="py-4 px-4 font-medium text-gray-400">ChatGPT Memory</th>
+            <th class="py-4 px-4 font-medium text-gray-400">Mem0</th>
+            <th class="py-4 px-4 font-medium text-gray-400">Letta</th>
+            <th class="py-4 px-4 font-medium text-gray-400">Obsidian</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-white/5">
+            <td class="py-3 px-4 text-gray-400">Runs locally</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+          </tr>
+          <tr class="border-b border-white/5">
+            <td class="py-3 px-4 text-gray-400">MCP-native</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+          </tr>
+          <tr class="border-b border-white/5">
+            <td class="py-3 px-4 text-gray-400">Knowledge graph</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-amber-400">partial</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-amber-400">manual</td>
+          </tr>
+          <tr class="border-b border-white/5">
+            <td class="py-3 px-4 text-gray-400">Cross-AI shared</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-4 text-gray-400">Offline-first</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-emerald-400">✓</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Install -->
+<section class="py-32 px-6 bg-white/[0.02]">
+  <div class="max-w-2xl mx-auto text-center">
+    <h2 class="text-3xl md:text-4xl font-bold mb-6">Get started</h2>
+    <p class="text-gray-400 mb-10">One download. No signup. Works offline.</p>
+
+    <div class="glass rounded-2xl p-8 mb-8">
+      <h3 class="font-semibold text-lg mb-2">Windows</h3>
+      <p class="text-gray-400 text-sm mb-6">Download the installer. Double-click. Done. Node.js runtime and embedding models are bundled.</p>
+      <a href="https://github.com/guo6x/Omni-context/releases/latest"
+         class="inline-block px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl transition-colors">
+        Download for Windows
+      </a>
+    </div>
+
+    <div class="glass rounded-2xl p-8 mb-8">
+      <h3 class="font-semibold text-lg mb-2">Build from source</h3>
+      <div class="bg-black/40 rounded-lg p-4 text-left font-mono text-sm text-gray-300 overflow-x-auto">
+        git clone https://github.com/guo6x/Omni-context.git<br>
+        cd Omni-context<br>
+        npm run install:all<br>
+        npm run package
+      </div>
+    </div>
+
+    <p class="text-gray-500 text-xs">
+      macOS / Linux build scripts ready. Community contributors with hardware: pull requests welcome.
+    </p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-16 px-6 border-t border-white/5">
+  <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+    <div>Omni-Context — MIT License</div>
+    <div class="flex items-center gap-6">
+      <a href="https://github.com/guo6x/Omni-context" class="hover:text-cyan-400 transition-colors">GitHub</a>
+      <a href="https://github.com/guo6x/Omni-context/releases" class="hover:text-cyan-400 transition-colors">Releases</a>
+      <a href="https://github.com/guo6x/Omni-context/issues" class="hover:text-cyan-400 transition-colors">Issues</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

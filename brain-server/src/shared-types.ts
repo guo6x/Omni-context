@@ -34,7 +34,20 @@ export type RelationshipType =
   | 'extracted_from'
   | 'reviewed_by'
   | 'references'
-  | 'decision_referenced';
+  | 'decision_referenced'
+  | 'works_at'
+  | 'lives_in'
+  | 'studies_at'
+  | 'married_to'
+  | 'leads_to_conclusion';
+
+export const SINGLE_VALUED_REL_TYPES: RelationshipType[] = [
+  'works_at',
+  'lives_in',
+  'studies_at',
+  'married_to',
+  'leads_to_conclusion'
+];
 
 export interface Entity {
   id: string;
@@ -63,6 +76,7 @@ export interface Relationship {
   valid_from: string;
   valid_until?: string;
   invalidated_at?: string;
+  invalidation_reason?: string;
 }
 
 export interface GraphRAGOutput {
