@@ -5,7 +5,6 @@ import { invoke } from "@tauri-apps/api/tauri";
 import HUD from "@/components/HUD";
 import FloatingHUD from "@/components/FloatingHUD";
 import GraphViewer from "@/components/GraphViewer";
-import Console from "@/components/Console";
 import ShortcutsHelp from "@/components/ShortcutsHelp";
 import SettingsPanel from "@/components/SettingsPanel";
 import InsightsInbox from "@/components/InsightsInbox";
@@ -13,7 +12,7 @@ import EmptyState from "@/components/EmptyState";
 import FileDropZone, { FileDropZoneRef, ACCEPTED_EXTENSIONS, TauriFileLike } from "@/components/FileDropZone";
 import HardwarePairingPanel from "@/components/HardwarePairingPanel";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { Database, Terminal, Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp } from "lucide-react";
+import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp } from "lucide-react";
 import { LogoMark } from "@/components/BrandMark";
 import { Entity, Relationship } from "@shared/types";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -26,7 +25,6 @@ import DecisionAssistant from "@/components/DecisionAssistant";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
 
-type ViewMode = "graph" | "console";
 
 // 调用 Tauri window API；非 Tauri 环境（Next.js 浏览器调试）下静默降级
 async function tauriMinimize() {
@@ -101,7 +99,6 @@ export default function Home() {
 }
 
 function MainApp() {
-  const [viewMode, setViewMode] = useState<ViewMode>("graph");
   const [showHUD, setShowHUD] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [hudMessage, setHudMessage] = useState("");
@@ -382,12 +379,6 @@ function MainApp() {
           case 'reset':
             handleReset();
             break;
-          case 'graphView':
-            setViewMode('graph');
-            break;
-          case 'consoleView':
-            setViewMode('console');
-            break;
           case 'toggleHUD': {
             setShowHUD(prev => !prev);
             (async () => {
@@ -654,7 +645,7 @@ function MainApp() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
-      <header className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-white/10 bg-black/30 backdrop-blur-sm">
+      <header className="flex items-center justify-between gap-2 px-3 sm:px-5 py-2 border-b border-white/10 bg-black/30 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex items-center gap-3">
             <LogoMark size={36} className="animate-pulse-glow shrink-0" />
@@ -690,35 +681,33 @@ function MainApp() {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2 flex-wrap justify-end">
           {/* [通用] 常驻搜索按钮 */}
           <button
             onClick={() => setShowSearchPalette(true)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 rounded-lg transition-all"
             title={t('search.search_recall') + ' (Ctrl+K)'}
           >
             <Search className="w-4 h-4 text-cyan-400" />
-            <span className="hidden sm:inline">{t('search.search_recall')}</span>
-            <span className="hidden md:inline text-[9px] text-gray-500 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">Ctrl+K</span>
+            <span className="hidden lg:inline">{t('search.search_recall')}</span>
           </button>
           {/* 决策助手按钮 */}
           <button
             onClick={() => { setShowSearchPalette(false); setShowDecisionAssistant(true); }}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 rounded-lg transition-all"
             title={t('header.open_decision_assistant') + ' (Ctrl+Shift+K)'}
           >
             <Scale className="w-4 h-4 text-cyan-400" />
-            <span className="hidden sm:inline">{t('header.open_decision_assistant')}</span>
-            <span className="hidden md:inline text-[9px] text-gray-500 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">Ctrl+Shift+K</span>
+            <span className="hidden lg:inline">{t('header.open_decision_assistant')}</span>
           </button>
           {/* [通用] 常驻上传按钮 */}
           <button
             onClick={() => setShowUpload(true)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30 border border-cyan-800/40 rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30 border border-cyan-800/40 rounded-lg transition-all"
             title={t('header.upload')}
           >
             <Upload className="w-4 h-4 text-cyan-400" />
-            <span className="hidden sm:inline">{t('header.upload')}</span>
+            <span className="hidden lg:inline">{t('header.upload')}</span>
           </button>
           <button
             onClick={handleToggleFloatingHUD}
@@ -757,29 +746,7 @@ function MainApp() {
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
           >
             <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('nav.settings')}</span>
-          </button>
-          <button
-            onClick={() => setViewMode('graph')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-              viewMode === 'graph'
-                ? 'bg-cyan-900/40 text-cyan-400 border border-cyan-800'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Database className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('nav.graph')}</span>
-          </button>
-          <button
-            onClick={() => setViewMode('console')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-              viewMode === 'console'
-                ? 'bg-cyan-900/40 text-cyan-400 border border-cyan-800'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Terminal className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('nav.console')}</span>
+            <span className="hidden lg:inline">{t('nav.settings')}</span>
           </button>
         </div>
       </header>
@@ -851,19 +818,15 @@ function MainApp() {
       )}
 
       <main className="flex-1 overflow-hidden relative">
-        {viewMode === 'graph' ? (
-          <GraphViewer
-            entities={entities}
-            relationships={relationships}
-            onDataChanged={fetchGraphData}
-            focusEntityId={focusEntityId}
-            onFocusEntityReset={() => setFocusEntityId(undefined)}
-          />
-        ) : (
-          <Console />
-        )}
+        <GraphViewer
+          entities={entities}
+          relationships={relationships}
+          onDataChanged={fetchGraphData}
+          focusEntityId={focusEntityId}
+          onFocusEntityReset={() => setFocusEntityId(undefined)}
+        />
 
-        {viewMode === 'graph' && entities.length === 0 && !emptyDismissed && (
+        {entities.length === 0 && !emptyDismissed && (
           <EmptyState
             onCapture={handlePrecipitate}
             onDecision={handleDecision}
@@ -947,7 +910,6 @@ function MainApp() {
           isOpen={showSearchPalette}
           onClose={() => setShowSearchPalette(false)}
           onSelectEntity={(id) => {
-            setViewMode('graph');
             setFocusEntityId(id);
           }}
           allEntities={entities}
@@ -957,7 +919,6 @@ function MainApp() {
           isOpen={showDecisionAssistant}
           onClose={() => setShowDecisionAssistant(false)}
           onSelectEntity={(id) => {
-            setViewMode('graph');
             setFocusEntityId(id);
           }}
         />

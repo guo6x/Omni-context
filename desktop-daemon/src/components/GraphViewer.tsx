@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { Brain, Code, FileText, Zap, Shield, TrendingUp, Info, Maximize2, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags } from "lucide-react";
+import { Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
@@ -1191,8 +1191,11 @@ export default function GraphViewer3D({
           </div>
         )}
 
-        {/* 图例：右上角可折叠交互式 Legend */}
-        <div className="absolute top-4 right-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg shadow-2xl shadow-black/30 max-w-[220px]">
+        {/* 图例：右上角可折叠交互式 Legend，时间轴展开时往下挪避免碰撞 */}
+        <div
+          className="absolute right-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg shadow-2xl shadow-black/30 max-w-[220px] transition-[top] duration-200"
+          style={{ top: showTimeSlider && timeBounds ? 108 : 16 }}
+        >
           <button
             onClick={toggleLegendExpand}
             className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-400 hover:text-white transition-colors"
@@ -1359,11 +1362,11 @@ export default function GraphViewer3D({
 
           {/* 操作工具栏 */}
           {!editMode && !mergeMode && (
-            <div className="flex items-center gap-1 mb-4 pb-3 border-b border-white/5">
+            <div className="flex items-center gap-1.5 mb-4 pb-3 border-b border-white/5">
               <button
                 onClick={enterEditMode}
                 disabled={busy}
-                className="flex items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:text-cyan-300 hover:bg-cyan-900/20 rounded-md disabled:opacity-40 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-cyan-300 hover:text-cyan-200 bg-cyan-950/30 hover:bg-cyan-900/40 border border-cyan-800/40 rounded-lg disabled:opacity-40 transition-colors"
                 title={t('graph.edit_tooltip')}
               >
                 <Pencil className="w-3.5 h-3.5" />
@@ -1372,7 +1375,7 @@ export default function GraphViewer3D({
               <button
                 onClick={() => { setMergeMode(true); setMergeQuery(""); }}
                 disabled={busy}
-                className="flex items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:text-purple-300 hover:bg-purple-900/20 rounded-md disabled:opacity-40 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-purple-300 hover:text-purple-200 bg-purple-950/30 hover:bg-purple-900/40 border border-purple-800/40 rounded-lg disabled:opacity-40 transition-colors"
                 title={t('graph.merge_tooltip')}
               >
                 <GitMerge className="w-3.5 h-3.5" />
@@ -1381,7 +1384,7 @@ export default function GraphViewer3D({
               <button
                 onClick={handleDelete}
                 disabled={busy}
-                className="flex items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:text-red-300 hover:bg-red-900/20 rounded-md disabled:opacity-40 transition-colors ml-auto"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-300 hover:text-red-200 bg-red-950/30 hover:bg-red-900/40 border border-red-800/40 rounded-lg ml-auto disabled:opacity-40 transition-colors"
                 title={t('graph.delete_tooltip')}
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -1674,9 +1677,12 @@ export default function GraphViewer3D({
       {!selectedNode && (
         <div className="hidden w-80 glass-panel border-l border-white/10 p-4 md:flex items-center justify-center bg-gray-950/95">
           <div className="text-center">
-            <Maximize2 className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">{t("graph.no_selection")}</p>
-            <p className="text-gray-600 text-xs mt-1">
+            <MousePointer2 className="w-8 h-8 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400 text-sm">{t("graph.no_selection")}</p>
+            <p className="text-gray-500 text-xs mt-1">
+              {t('graph.click_to_edit_hint')}
+            </p>
+            <p className="text-gray-600 text-[10px] mt-3">
               {is3D ? t('graph.camera_hint_3d') : t('graph.camera_hint_2d')}
             </p>
           </div>

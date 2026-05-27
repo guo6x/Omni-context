@@ -391,10 +391,10 @@ export default function OnboardingWizard({
               {/* 客户端单选卡片 */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 {[
-                  { id: 'claude', name: 'Claude Desktop', desc: 'Auto-write MCP config' },
-                  { id: 'cursor', name: 'Cursor', desc: 'Auto-write global mcp.json' },
-                  { id: 'cline', name: 'Cline (VS Code)', desc: 'Configure settings directory' },
-                  { id: 'other', name: t('onboarding.skip'), desc: 'Configure manually later' },
+                  { id: 'claude', name: 'Claude Desktop', desc: t('onboarding.client_claude_desc') },
+                  { id: 'cursor', name: 'Cursor', desc: t('onboarding.client_cursor_desc') },
+                  { id: 'cline', name: 'Cline (VS Code)', desc: t('onboarding.client_cline_desc') },
+                  { id: 'other', name: t('onboarding.skip'), desc: t('onboarding.client_other_desc') },
                 ].map(client => (
                   <button
                     key={client.id}
@@ -478,10 +478,10 @@ export default function OnboardingWizard({
               {/* 核心服务商预设卡片 (4个) */}
               <div className="grid grid-cols-4 gap-2 pt-2">
                 {[
-                  { id: 'deepseek', emoji: '🐳', name: 'DeepSeek', cost: 'Ultra Low' },
-                  { id: 'openai', emoji: '🤖', name: 'GPT-4o Mini', cost: 'Low Cost' },
-                  { id: 'ollama', emoji: '🏠', name: 'Ollama', cost: 'Local Free' },
-                  { id: 'custom', emoji: '⚙️', name: 'Custom', cost: 'Manual' },
+                  { id: 'deepseek', emoji: '🐳', name: 'DeepSeek', cost: t('onboarding.preset_deepseek_cost') },
+                  { id: 'openai', emoji: '🤖', name: 'GPT-4o Mini', cost: t('onboarding.preset_openai_cost') },
+                  { id: 'ollama', emoji: '🏠', name: 'Ollama', cost: t('onboarding.preset_ollama_cost') },
+                  { id: 'custom', emoji: '⚙️', name: t('onboarding.preset_custom_name'), cost: t('onboarding.preset_custom_cost') },
                 ].map(p => (
                   <button
                     key={p.id}
