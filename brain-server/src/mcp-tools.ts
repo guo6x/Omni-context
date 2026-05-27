@@ -115,6 +115,24 @@ export const SaveDecisionSchema = z.object({
   situation: z.string().min(1, 'situation 不能为空'),
   conclusion: z.string().min(1, 'conclusion 不能为空'),
   cited_entity_ids: z.array(z.string()).optional().default([]),
+  confidence: z.enum(['high', 'medium', 'low']).optional().default('medium'),
+  alternatives: z.string().optional().default(''),
+});
+
+export const AnalyzeDecisionSchema = z.object({
+  situation: z.string().min(1, 'situation 不能为空'),
+});
+
+export const DiscussDecisionSchema = z.object({
+  situation: z.string().min(1, 'situation 不能为空'),
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string(),
+  })),
+});
+
+export const GetDecisionLineageSchema = z.object({
+  decision_id: z.string().min(1, 'decision_id 不能为空'),
 });
 
 export const EmptySchema = z.object({});
@@ -378,6 +396,43 @@ export const tools: McpToolConfig[] = [
         cited_entity_ids: { type: 'array', items: { type: 'string' }, description: 'IDs of principles/history entities this decision references' },
       },
       required: ['situation', 'conclusion'],
+    },
+  },
+  {
+    name: 'analyze_decision',
+    description: 'Analyze a decision situation using the knowledge graph as context. Retrieves relevant principles, history, and conflicts, then feeds them to an LLM for structured analysis including pros/cons, risks, recommendation, and evidence citations. Use when the user wants AI-assisted decision analysis, not just raw data.',
+    zodSchema: AnalyzeDecisionSchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        situation: { type: 'string', description: 'The decision situation to analyze (natural language)' },
+      },
+      required: ['situation'],
+    },
+  },
+  {
+    name: 'discuss_decision',
+    description: 'Continue a decision discussion with AI. Takes the conversation history and returns a follow-up response grounded in the knowledge graph context. Use for multi-turn decision refinement.',
+    zodSchema: DiscussDecisionSchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        situation: { type: 'string', description: 'The original decision situation' },
+        messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string' }, content: { type: 'string' } } }, description: 'Conversation history' },
+      },
+      required: ['situation', 'messages'],
+    },
+  },
+  {
+    name: 'get_decision_lineage',
+    description: 'Trace the lineage of a decision — what sources it cited and what other decisions form a chain with it. Useful for understanding how past decisions connect to form a reasoning path.',
+    zodSchema: GetDecisionLineageSchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: { type: 'string', description: 'The decision entity ID to trace' },
+      },
+      required: ['decision_id'],
     },
   },
   {

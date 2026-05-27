@@ -18,7 +18,10 @@ import {
   VectorSearchSchema,
   UnifiedMemorySearchSchema,
   SaveConclusionSchema,
-  SaveDecisionSchema
+  SaveDecisionSchema,
+  AnalyzeDecisionSchema,
+  DiscussDecisionSchema,
+  GetDecisionLineageSchema,
 } from '../../mcp-tools.js';
 
 export function toCompactEntity(entity: any): any {
@@ -47,6 +50,175 @@ export function toCompactEntity(entity: any): any {
   }
 
   return compact;
+}
+
+// ── shared: retrieve decision context ──
+
+interface DecisionContextData {
+  situation: string;
+  principles: any[];
+  relevantMemories: any[];
+  conflicts: any[];
+}
+
+async function retrieveDecisionContext(
+  ctx: RequestContext,
+  situation: string,
+  limit: number,
+): Promise<DecisionContextData> {
+  const textResults = await ctx.db.searchEntities(situation, limit);
+  let vectorResults: any[] = [];
+  try {
+    const embResult = await ctx.embeddingService.embed(situation);
+    vectorResults = await ctx.db.vectorSearch(embResult.embedding, limit);
+  } catch {
+    // ignore
+  }
+
+  const seen = new Set<string>();
+  const relevantMemories: any[] = [];
+  for (const source of [textResults, vectorResults]) {
+    for (const item of source) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        relevantMemories.push(item);
+      }
+    }
+  }
+
+  const corePrinciples = await ctx.db.getCorePrinciples();
+  const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
+  const searchPrinciples = relevantMemories.filter(
+    (m) => m.type === 'principle' && !seenPrincipleIds.has(m.id)
+  );
+  const principles = [...corePrinciples, ...searchPrinciples];
+
+  const relevantIds = new Set(relevantMemories.map((m: any) => m.id));
+  const conflictPairs: any[] = [];
+  const seenConflictKeys = new Set<string>();
+  for (const entity of relevantMemories) {
+    const rels = await ctx.db.getRelationshipsForEntity(entity.id);
+    for (const rel of rels) {
+      if (rel.type !== 'conflicts_with') continue;
+      const otherId = rel.source_id === entity.id ? rel.target_id : rel.source_id;
+      if (!relevantIds.has(otherId)) continue;
+      const key = [entity.id, otherId].sort().join('|');
+      if (seenConflictKeys.has(key)) continue;
+      seenConflictKeys.add(key);
+      const other = relevantMemories.find((m: any) => m.id === otherId);
+      if (other) {
+        conflictPairs.push({
+          a: { id: entity.id, name: entity.name },
+          b: { id: other.id, name: other.name },
+          description: rel.description || '',
+        });
+      }
+    }
+  }
+
+  // access tracking
+  const accIds = [
+    ...relevantMemories.map((m: any) => m.id),
+    ...principles.map((p: any) => p.id),
+  ].filter(Boolean);
+  if (accIds.length > 0) {
+    ctx.db.bumpAccessCounts(accIds).catch(() => {});
+  }
+
+  return { situation, principles, relevantMemories, conflicts: conflictPairs };
+}
+
+// ── shared: call LLM for decision analysis ──
+
+async function callLlmDecision(
+  ctx: RequestContext,
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<string> {
+  const llmConfig = ctx.extractor.getLlmConfig();
+  if (!llmConfig.apiUrl) {
+    throw new Error('LLM_NOT_CONFIGURED');
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(llmConfig.apiKey ? { Authorization: `Bearer ${llmConfig.apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        model: llmConfig.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 1024,
+        temperature: 0.4,
+        response_format: { type: 'json_object' },
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      throw new Error(`LLM API error: ${response.status}`);
+    }
+
+    const data = (await response.json()) as {
+      choices: Array<{ message: { content: string } }>;
+    };
+
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error('Empty LLM response');
+
+    // try to extract JSON from code blocks
+    const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    return jsonMatch ? jsonMatch[1].trim() : content.trim();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// ── shared: build analysis prompt ──
+
+function buildAnalysisPrompt(situation: string, context: DecisionContextData): string {
+  const principles = context.principles.map((p: any) => `- [${p.type}] ${p.name}: ${p.description || ''}`).join('\n');
+  const history = context.relevantMemories
+    .filter((m: any) => m.type !== 'principle')
+    .slice(0, 8)
+    .map((m: any) => `- [${m.type}] ${m.name}: ${m.description || ''}`)
+    .join('\n');
+  const conflicts = context.conflicts
+    .map((c: any) => `- ${c.a.name} vs ${c.b.name}: ${c.description || ''}`)
+    .join('\n');
+
+  return `用户正在做以下决策：
+"${situation}"
+
+知识图谱中的相关信息：
+
+【核心原则】
+${principles || '(无)'}
+
+【相关历史记忆】
+${history || '(无)'}
+
+【潜在冲突】
+${conflicts || '(无)'}
+
+请基于以上知识图谱数据，进行结构化分析。严格按以下 JSON 格式输出（不要添加任何其他文字）：
+
+{
+  "summary": "对决策情境的简要分析（2-3句话）",
+  "pros": ["有利因素1", "有利因素2", ...],
+  "cons": ["风险/不利因素1", "风险/不利因素2", ...],
+  "recommendation": "基于证据的建议方向（不要替用户做决定，而是给出有依据的方向）"
+}`;
 }
 
 export const handleMcpRoutes = [
@@ -412,58 +584,10 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             const parsed = GetDecisionContextSchema.parse(args);
             const { situation, limit } = parsed;
 
-            const textResults = await ctx.db.searchEntities(situation, limit);
-            let vectorResults: any[] = [];
-            try {
-              const embResult = await ctx.embeddingService.embed(situation);
-              vectorResults = await ctx.db.vectorSearch(embResult.embedding, limit);
-            } catch {
-              // ignore
-            }
-
-            const seen = new Set<string>();
-            const relevantMemories: any[] = [];
-            for (const source of [textResults, vectorResults]) {
-              for (const item of source) {
-                if (!seen.has(item.id)) {
-                  seen.add(item.id);
-                  relevantMemories.push(item);
-                }
-              }
-            }
-
-            const corePrinciples = await ctx.db.getCorePrinciples();
-            const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
-            const searchPrinciples = relevantMemories.filter(
-              (m) => m.type === 'principle' && !seenPrincipleIds.has(m.id)
-            );
-            const principles = [...corePrinciples, ...searchPrinciples];
-
-            const relevantIds = new Set(relevantMemories.map((m: any) => m.id));
-            const conflictPairs: any[] = [];
-            const seenConflictKeys = new Set<string>();
-            for (const entity of relevantMemories) {
-              const rels = await ctx.db.getRelationshipsForEntity(entity.id);
-              for (const rel of rels) {
-                if (rel.type !== 'conflicts_with') continue;
-                const otherId = rel.source_id === entity.id ? rel.target_id : rel.source_id;
-                if (!relevantIds.has(otherId)) continue;
-                const key = [entity.id, otherId].sort().join('|');
-                if (seenConflictKeys.has(key)) continue;
-                seenConflictKeys.add(key);
-                const other = relevantMemories.find((m: any) => m.id === otherId);
-                if (other) {
-                  conflictPairs.push({
-                    a: { id: entity.id, name: entity.name },
-                    b: { id: other.id, name: other.name },
-                    description: rel.description || '',
-                  });
-                }
-              }
-            }
+            const ctxData = await retrieveDecisionContext(ctx, situation, limit);
 
             let graphContext: any = {};
-            const seed = relevantMemories[0];
+            const seed = ctxData.relevantMemories[0];
             if (seed) {
               try {
                 graphContext = await ctx.db.getGraphNeighborhood(seed.id, 2);
@@ -472,26 +596,123 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               }
             }
 
-            // 隐式 access tracking（仅 MCP 路径）
-            const gdcAccIds = [
-              ...relevantMemories.map((m: any) => m.id),
-              ...principles.map((p: any) => p.id),
-              ...(graphContext?.nodes || []).map((n: any) => n.id),
-            ].filter(Boolean);
-            if (gdcAccIds.length > 0) {
-              ctx.db.bumpAccessCounts(gdcAccIds).catch(() => {});
-            }
-
             result = {
               situation,
-              principles: principles.map(toCompactEntity),
-              relevantMemories: relevantMemories.map(toCompactEntity),
-              conflicts: conflictPairs,
+              principles: ctxData.principles.map(toCompactEntity),
+              relevantMemories: ctxData.relevantMemories.map(toCompactEntity),
+              conflicts: ctxData.conflicts,
               graphContext: graphContext && graphContext.nodes ? {
                 ...graphContext,
                 nodes: graphContext.nodes.map(toCompactEntity)
               } : graphContext,
             };
+            break;
+          }
+          case 'analyze_decision': {
+            const parsed = AnalyzeDecisionSchema.parse(args);
+            const { situation } = parsed;
+
+            // Step 1: retrieve context from knowledge graph
+            const ctxData = await retrieveDecisionContext(ctx, situation, 5);
+
+            // Build citations list
+            const rawCitations = [
+              ...ctxData.principles.map((p: any) => ({ id: p.id, name: p.name, type: p.type, description: p.description })),
+              ...ctxData.relevantMemories
+                .filter((m: any) => m.type !== 'principle')
+                .map((m: any) => ({ id: m.id, name: m.name, type: m.type, description: m.description })),
+            ];
+
+            // Step 2: call LLM for structured analysis
+            let analysisJson: any;
+            try {
+              const promptText = buildAnalysisPrompt(situation, ctxData);
+              const llmResponse = await callLlmDecision(
+                ctx,
+                '你是一个决策分析助手。你基于用户的知识图谱数据，帮助分析决策情境。只输出有效的 JSON。使用中文回复。',
+                promptText,
+              );
+              analysisJson = JSON.parse(llmResponse);
+            } catch (e: any) {
+              if (e.message === 'LLM_NOT_CONFIGURED') {
+                sendError(res, 400, 'LLM_NOT_CONFIGURED: LLM provider not configured');
+                return;
+              }
+              console.error('[analyze_decision] LLM analysis failed:', e);
+              // fallback: return structured empty result with citations only
+              analysisJson = {
+                summary: '',
+                pros: [],
+                cons: [],
+                recommendation: '',
+              };
+            }
+
+            result = {
+              summary: analysisJson.summary || '',
+              pros: analysisJson.pros || [],
+              cons: analysisJson.cons || [],
+              recommendation: analysisJson.recommendation || '',
+              evidence: rawCitations.slice(0, 8).map((c: any) => ({
+                entityId: c.id,
+                entityName: c.name,
+                entityType: c.type,
+                relevance: 'relevant',
+              })),
+              rawCitations: rawCitations.slice(0, 8),
+            };
+            break;
+          }
+          case 'discuss_decision': {
+            const parsed = DiscussDecisionSchema.parse(args);
+            const { situation, messages } = parsed;
+
+            const llmConfig = ctx.extractor.getLlmConfig();
+            if (!llmConfig.apiUrl) {
+              sendError(res, 400, 'LLM_NOT_CONFIGURED');
+              return;
+            }
+
+            const systemPrompt = `你是一个决策讨论助手。用户正在讨论一个决策："""${situation}"""
+你在帮助用户深入思考、质疑假设、补充视角。回复要简洁、直接、有帮助。使用中文。`;
+
+            try {
+              const controller = new AbortController();
+              const timeout = setTimeout(() => controller.abort(), 60000);
+
+              const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(llmConfig.apiKey ? { Authorization: `Bearer ${llmConfig.apiKey}` } : {}),
+                },
+                body: JSON.stringify({
+                  model: llmConfig.model,
+                  messages: [
+                    { role: 'system', content: systemPrompt },
+                    ...messages,
+                  ],
+                  max_tokens: 512,
+                  temperature: 0.6,
+                }),
+                signal: controller.signal,
+              });
+
+              clearTimeout(timeout);
+
+              if (!response.ok) {
+                throw new Error(`LLM API error: ${response.status}`);
+              }
+
+              const data = await response.json() as {
+                choices: Array<{ message: { content: string } }>;
+              };
+
+              result = { reply: data.choices?.[0]?.message?.content || '(no response)' };
+            } catch (e: any) {
+              console.error('[discuss_decision] Failed:', e);
+              result = { reply: '抱歉，讨论服务暂时不可用。' };
+            }
             break;
           }
           case 'save_conclusion': {
@@ -565,10 +786,12 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           }
           case 'save_decision': {
             const parsed = SaveDecisionSchema.parse(args);
-            const { situation, conclusion, cited_entity_ids } = parsed;
+            const { situation, conclusion, cited_entity_ids, confidence, alternatives } = parsed;
 
             // Build full description: situation + decision
-            const fullDescription = `情境：${situation}\n\n决策：${conclusion}`;
+            const confidenceLabel = { high: '高', medium: '中', low: '低' }[confidence];
+            const altSection = alternatives ? `\n\n替代方案：${alternatives}` : '';
+            const fullDescription = `情境：${situation}\n\n决策：${conclusion}\n\n置信度：${confidenceLabel}${altSection}`;
             const decisionName = conclusion.length > 60 ? conclusion.substring(0, 60) + '...' : conclusion;
 
             // Generate embedding for the decision entity
@@ -586,11 +809,13 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               name: decisionName,
               type: 'decision',
               description: fullDescription,
-              tags: ['decision'],
+              tags: ['decision', `confidence-${confidence}`],
               embedding,
               metadata: {
                 situation,
                 conclusion,
+                confidence,
+                alternatives,
                 cited_entity_ids: cited_entity_ids || [],
               },
             });
@@ -610,21 +835,107 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
                   // duplicate relationship is expected
                 }
               }
+              // Bump importance of cited entities (反哺：被引用的实体获得权重提升)
+              try {
+                ctx.db.bumpAccessCounts(cited_entity_ids).catch(() => {});
+              } catch {
+                // best effort
+              }
+            }
+
+            // Link to previous related decisions (lineage)
+            try {
+              const prevDecisions = await ctx.db.searchEntities(situation, 3);
+              const prevDecisionIds = prevDecisions
+                .filter((e: any) => e.type === 'decision' && e.id !== decisionEntity.id)
+                .map((e: any) => e.id);
+              for (const prevId of prevDecisionIds.slice(0, 3)) {
+                try {
+                  await ctx.db.addRelationship({
+                    source_id: decisionEntity.id,
+                    target_id: prevId,
+                    type: 'relates_to',
+                    description: '决策链：后续决策关联了此前的相关决策',
+                    weight: 0.8,
+                  });
+                } catch {
+                  // duplicate is fine
+                }
+              }
+            } catch (e) {
+              console.warn('[save_decision] lineage linking failed:', e);
             }
 
             // Write to archival memory
             try {
               await ctx.archivalMemory.add(fullDescription, {
-                summary: `决策: ${conclusion}`,
-                tags: ['decision', 'user-decision'],
+                summary: `决策: ${conclusion} (置信度: ${confidenceLabel})`,
+                tags: ['decision', 'user-decision', `confidence-${confidence}`],
                 embedding,
-                importance: 7,
+                importance: confidence === 'high' ? 8 : confidence === 'medium' ? 7 : 5,
               });
             } catch (e) {
               console.warn('[save_decision] 写入 archival memory 失败:', e);
             }
 
             result = decisionEntity;
+            break;
+          }
+          case 'get_decision_lineage': {
+            const parsed = GetDecisionLineageSchema.parse(args);
+            const { decision_id } = parsed;
+
+            // Get the decision entity
+            const decision = await ctx.db.getEntity(decision_id);
+            if (!decision || decision.type !== 'decision') {
+              sendError(res, 404, 'Decision not found');
+              return;
+            }
+
+            const current: any = {
+              id: decision.id,
+              name: decision.name,
+              conclusion: decision.metadata?.conclusion || decision.description || '',
+              situation: decision.metadata?.situation || '',
+              timestamp: decision.created_at,
+              confidence: decision.metadata?.confidence || 'medium',
+            };
+
+            // Get relationships from this decision
+            const rels = await ctx.db.getRelationshipsForEntity(decision_id);
+
+            // Sources: entities referenced by this decision
+            const sources: any[] = [];
+            const chain: any[] = [];
+            const seenChainIds = new Set<string>();
+            seenChainIds.add(decision_id);
+
+            for (const rel of rels) {
+              const otherId = rel.source_id === decision_id ? rel.target_id : rel.source_id;
+              const other = await ctx.db.getEntity(otherId);
+              if (!other) continue;
+
+              if (rel.type === 'decision_referenced') {
+                sources.push({
+                  entityId: other.id,
+                  entityName: other.name,
+                  entityType: other.type,
+                  relationship: 'decision_referenced',
+                });
+              } else if (rel.type === 'relates_to' && other.type === 'decision' && !seenChainIds.has(other.id)) {
+                seenChainIds.add(other.id);
+                chain.push({
+                  id: other.id,
+                  name: other.name,
+                  conclusion: other.metadata?.conclusion || other.description || '',
+                  situation: other.metadata?.situation || '',
+                  timestamp: other.created_at,
+                  confidence: other.metadata?.confidence || 'medium',
+                });
+              }
+            }
+
+            result = { current, sources, chain };
             break;
           }
           case 'get_decay_report': {

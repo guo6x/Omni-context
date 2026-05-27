@@ -72,6 +72,9 @@ fn find_node_executable() -> String {
 }
 
 pub fn start() -> Result<(), String> {
+    // 先杀掉上一次遗留的 zombie 进程（防止端口 3001 被占用）
+    kill_zombie_by_pid_file();
+
     if is_running() {
         println!("[Brain Server] 已经运行中");
         return Ok(());
@@ -155,6 +158,10 @@ pub fn start() -> Result<(), String> {
                             });
                         }
 
+                        // 写入 PID 文件，下次启动时可清理 zombie
+                        let pid = child.id();
+                        let _ = std::fs::write(pid_file_path(), pid.to_string());
+
                         store_process(child);
                         return Ok(());
                     }
@@ -196,6 +203,8 @@ pub fn stop() -> Result<(), String> {
         child.kill().map_err(|e| format!("终止进程失败: {}", e))?;
         // 等待进程退出，回收资源
         let _ = child.wait();
+        // 清理 PID 文件
+        let _ = std::fs::remove_file(pid_file_path());
         println!("[Brain Server] 已停止");
         Ok(())
     } else {
@@ -327,6 +336,33 @@ fn generate_local_token() -> String {
 /// 获取本机 LAN IP，失败返回 None
 pub fn get_lan_ip() -> Option<String> {
     local_ip_address::local_ip().ok().map(|ip| ip.to_string())
+}
+
+fn pid_file_path() -> PathBuf {
+    user_data_dir().join("brain-server.pid")
+}
+
+/// 读取 PID 文件并尝试杀掉 zombie brain-server 进程
+fn kill_zombie_by_pid_file() {
+    let pid_path = pid_file_path();
+    if let Ok(pid_str) = std::fs::read_to_string(&pid_path) {
+        if let Ok(pid) = pid_str.trim().parse::<u32>() {
+            #[cfg(windows)]
+            {
+                let _ = std::process::Command::new("taskkill")
+                    .args(["/F", "/PID", &pid.to_string()])
+                    .creation_flags(CREATE_NO_WINDOW)
+                    .output();
+            }
+            #[cfg(not(windows))]
+            {
+                let _ = std::process::Command::new("kill")
+                    .args(["-9", &pid.to_string()])
+                    .output();
+            }
+        }
+        let _ = std::fs::remove_file(&pid_path);
+    }
 }
 
 pub fn user_data_dir() -> PathBuf {

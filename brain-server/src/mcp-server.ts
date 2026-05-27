@@ -66,7 +66,11 @@ import {
   UpdateEntitySchema,
   VectorSearchSchema,
   UnifiedMemorySearchSchema,
-  SaveConclusionSchema
+  SaveConclusionSchema,
+  SaveDecisionSchema,
+  AnalyzeDecisionSchema,
+  DiscussDecisionSchema,
+  GetDecisionLineageSchema,
 } from './mcp-tools.js';
 
 class OmniContextServer {
@@ -682,6 +686,91 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
         case 'get_decay_report': {
           const report = this.decayScheduler.getLastReport();
           return this.formatResponse(report || { message: '尚未执行衰减周期' });
+        }
+
+        case 'save_decision': {
+          const parsed = SaveDecisionSchema.parse(args);
+          const { situation, conclusion, cited_entity_ids, confidence } = parsed;
+
+          const confidenceLabel = { high: '高', medium: '中', low: '低' }[confidence];
+          const fullDescription = `情境：${situation}\n\n决策：${conclusion}\n\n置信度：${confidenceLabel}`;
+          const decisionName = conclusion.length > 60 ? conclusion.substring(0, 60) + '...' : conclusion;
+
+          let embedding: number[] | undefined;
+          try {
+            const embResult = await this.embeddingService.embed(`${decisionName}: ${fullDescription}`);
+            embedding = embResult.embedding;
+          } catch { /* ignore */ }
+
+          const decisionEntity = await this.db.addEntity({
+            name: decisionName,
+            type: 'decision',
+            description: fullDescription,
+            tags: ['decision', `confidence-${confidence}`],
+            embedding,
+            metadata: { situation, conclusion, confidence, cited_entity_ids: cited_entity_ids || [] },
+          });
+
+          if (cited_entity_ids && cited_entity_ids.length > 0) {
+            for (const citedId of cited_entity_ids) {
+              try {
+                await this.db.addRelationship({
+                  source_id: decisionEntity.id,
+                  target_id: citedId,
+                  type: 'decision_referenced',
+                  description: '决策引用了此实体',
+                  weight: 1.0,
+                });
+              } catch { /* duplicate */ }
+            }
+          }
+
+          return this.formatResponse(decisionEntity);
+        }
+
+        case 'get_decision_lineage': {
+          const parsed = GetDecisionLineageSchema.parse(args);
+          const { decision_id } = parsed;
+
+          const decision = await this.db.getEntity(decision_id);
+          if (!decision || decision.type !== 'decision') {
+            throw new McpError(ErrorCode.InvalidParams, 'Decision not found');
+          }
+
+          const current = {
+            id: decision.id,
+            name: decision.name,
+            conclusion: decision.metadata?.conclusion || decision.description || '',
+            situation: decision.metadata?.situation || '',
+            timestamp: decision.created_at,
+            confidence: decision.metadata?.confidence || 'medium',
+          };
+
+          const rels = await this.db.getRelationshipsForEntity(decision_id);
+          const sources: any[] = [];
+          const chain: any[] = [];
+          const seenChainIds = new Set<string>([decision_id]);
+
+          for (const rel of rels) {
+            const otherId = rel.source_id === decision_id ? rel.target_id : rel.source_id;
+            const other = await this.db.getEntity(otherId);
+            if (!other) continue;
+
+            if (rel.type === 'decision_referenced') {
+              sources.push({ entityId: other.id, entityName: other.name, entityType: other.type, relationship: 'decision_referenced' });
+            } else if (rel.type === 'relates_to' && other.type === 'decision' && !seenChainIds.has(other.id)) {
+              seenChainIds.add(other.id);
+              chain.push({
+                id: other.id, name: other.name,
+                conclusion: other.metadata?.conclusion || other.description || '',
+                situation: other.metadata?.situation || '',
+                timestamp: other.created_at,
+                confidence: other.metadata?.confidence || 'medium',
+              });
+            }
+          }
+
+          return this.formatResponse({ current, sources, chain });
         }
 
         default:

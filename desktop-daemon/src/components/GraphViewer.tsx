@@ -501,7 +501,7 @@ export default function GraphViewer3D({
         );
       } else if (graphRef.current && !is3D) {
         graphRef.current.centerAt(node.x, node.y, 800);
-        graphRef.current.zoom(0.9, 800);
+        graphRef.current.zoom(2.5, 800);
       }
     },
     [entities, is3D]
