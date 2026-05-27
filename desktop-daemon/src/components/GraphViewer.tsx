@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags } from "lucide-react";
+import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
@@ -108,6 +108,11 @@ function hexToRgba(hex: string, alpha: number): string {
   const g = parseInt(h.slice(2, 4), 16);
   const b = parseInt(h.slice(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+}
+
+function getLinkEndpointId(endpoint: any): string {
+  if (!endpoint) return "";
+  return typeof endpoint === "object" ? String(endpoint.id || "") : String(endpoint);
 }
 
 
@@ -295,6 +300,16 @@ export default function GraphViewer3D({
     }
   }, [selectedNode, visibleEntities]);
 
+  // 连接关系数统计
+  const connectionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    relationships.forEach((r) => {
+      counts[r.source_id] = (counts[r.source_id] || 0) + 1;
+      counts[r.target_id] = (counts[r.target_id] || 0) + 1;
+    });
+    return counts;
+  }, [relationships]);
+
   // 将 entities 和 relationships 转化为图谱数据
   const graphData = useMemo(() => {
     // 先算每个节点的连接数（用于节点大小 + 详情面板）
@@ -390,6 +405,69 @@ export default function GraphViewer3D({
     return { nodes, links };
   }, [relationships, visibleEntities, mstMode]);
 
+  const selectedNeighborhoodIds = useMemo(() => {
+    if (!selectedNode) return new Set<string>();
+    const ids = new Set<string>([selectedNode.id]);
+    relationships.forEach((rel) => {
+      if (rel.source_id === selectedNode.id) ids.add(rel.target_id);
+      if (rel.target_id === selectedNode.id) ids.add(rel.source_id);
+    });
+    return ids;
+  }, [relationships, selectedNode]);
+
+  const isFocusDimmedNode = useCallback((nodeId: string) => {
+    if (selectedNodeIds.size > 1) return !selectedNodeIds.has(nodeId);
+    if (selectedNode) return !selectedNeighborhoodIds.has(nodeId);
+    return false;
+  }, [selectedNeighborhoodIds, selectedNode, selectedNodeIds]);
+
+  const graphSummary = useMemo(() => {
+    const typeCounts = new Map<string, number>();
+    let indexedCount = 0;
+    let recentCount = 0;
+    const now = Date.now();
+
+    entities.forEach((entity) => {
+      typeCounts.set(entity.type, (typeCounts.get(entity.type) || 0) + 1);
+      if (entity.embedding) indexedCount += 1;
+      const createdAt = new Date(entity.created_at).getTime();
+      if (!Number.isNaN(createdAt) && now - createdAt <= 7 * 86400000) {
+        recentCount += 1;
+      }
+    });
+
+    const topTypes = Array.from(typeCounts.entries())
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 4);
+
+    const strongestNodes = [...entities]
+      .sort((a, b) => (connectionCounts[b.id] || 0) - (connectionCounts[a.id] || 0))
+      .slice(0, 3);
+
+    return {
+      totalNodes: entities.length,
+      totalEdges: relationships.length,
+      visibleNodes: visibleEntities.length,
+      visibleEdges: graphData.links.length,
+      typeCount: typeCounts.size,
+      indexedCount,
+      recentCount,
+      topTypes,
+      strongestNodes,
+    };
+  }, [connectionCounts, entities, graphData.links.length, relationships.length, visibleEntities.length]);
+
+  const hasActiveFilter = query.trim() !== "" || activeType !== "all" || activeTag !== "all" || timeFilter !== null || legendHighlightType !== null || mstMode;
+
+  const clearGraphFilters = useCallback(() => {
+    setQuery("");
+    setActiveType("all");
+    setActiveTag("all");
+    setTimeFilter(null);
+    setLegendHighlightType(null);
+    setMstMode(false);
+  }, []);
+
   const handleNodeClick = useCallback(
     (node: any, event?: MouseEvent) => {
       const isModifier = event?.ctrlKey || event?.metaKey;
@@ -423,7 +501,7 @@ export default function GraphViewer3D({
         );
       } else if (graphRef.current && !is3D) {
         graphRef.current.centerAt(node.x, node.y, 800);
-        graphRef.current.zoom(2.5, 800);
+        graphRef.current.zoom(0.9, 800);
       }
     },
     [entities, is3D]
@@ -866,9 +944,8 @@ export default function GraphViewer3D({
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const isHover = node.id === hovered;
       const isSelected = selectedNode?.id === node.id || selectedNodeIds.has(node.id);
-      // 选中某个节点时，其它节点会被淡化以突出焦点；
-      // Legend 高亮时非匹配类型节点也会淡化
-      const dimmed = ((!!selectedNode || selectedNodeIds.size > 0) && !isSelected && !isHover)
+      // 选中某个节点时只突出它的一跳邻域；Legend 高亮时非匹配类型节点也会淡化。
+      const dimmed = (isFocusDimmedNode(node.id) && !isHover)
         || (!!legendHighlightType && node.type !== legendHighlightType);
       const sizeScale = isHover || isSelected ? 1.25 : 1;
       let nodeSize = (node.val || 5) * sizeScale;
@@ -953,7 +1030,7 @@ export default function GraphViewer3D({
         ctx.fillText(node.name, node.x, node.y + nodeSize + 3);
       }
     },
-    [hovered, selectedNode, selectedNodeIds, legendHighlightType]
+    [hovered, selectedNode, selectedNodeIds, legendHighlightType, isFocusDimmedNode]
   );
 
   // 节点3D标签
@@ -978,16 +1055,6 @@ export default function GraphViewer3D({
       return undefined; // 回退到默认渲染
     }
   }, []);
-
-  // 连接关系数统计
-  const connectionCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    relationships.forEach((r) => {
-      counts[r.source_id] = (counts[r.source_id] || 0) + 1;
-      counts[r.target_id] = (counts[r.target_id] || 0) + 1;
-    });
-    return counts;
-  }, [relationships]);
 
   // 选中节点的邻居（连接的实体 + 关系类型 + 方向）
   const neighbors = useMemo(() => {
@@ -1076,7 +1143,7 @@ export default function GraphViewer3D({
   return (
     <div className="flex h-full">
       {/* 图谱主区域 */}
-      <div className="flex-1 relative" ref={containerRef}>
+      <div className="relative min-w-0 flex-1" ref={containerRef}>
         {/* 控制栏 */}
         <div className="absolute top-4 left-4 right-4 z-10 flex flex-wrap items-center gap-2">
           <div className="flex min-w-[260px] flex-1 max-w-md items-center gap-2 rounded-lg border border-white/10 bg-gray-950/90 px-3 py-2 shadow-2xl shadow-black/30">
@@ -1156,6 +1223,36 @@ export default function GraphViewer3D({
               {t('graph.timeline')}
             </button>
           )}
+          <div className="basis-full flex flex-wrap items-center gap-2 pt-1 text-[11px] text-gray-400">
+            <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-gray-950/75 px-2.5 py-1.5 shadow-xl shadow-black/20">
+              <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
+              <span>{t('graph.visible_summary')
+                .replace('{nodes}', String(graphSummary.visibleNodes))
+                .replace('{totalNodes}', String(graphSummary.totalNodes))
+                .replace('{edges}', String(graphSummary.visibleEdges))
+                .replace('{totalEdges}', String(graphSummary.totalEdges))}</span>
+            </div>
+            <div className="hidden md:flex items-center gap-1.5 rounded-lg border border-white/10 bg-gray-950/75 px-2.5 py-1.5 shadow-xl shadow-black/20">
+              <Layers className="h-3.5 w-3.5 text-purple-300" />
+              <span>{t('graph.type_summary')
+                .replace('{types}', String(graphSummary.typeCount))
+                .replace('{indexed}', String(graphSummary.indexedCount))}</span>
+            </div>
+            {selectedNode && (
+              <div className="hidden lg:flex items-center gap-1.5 rounded-lg border border-cyan-500/20 bg-cyan-950/30 px-2.5 py-1.5 text-cyan-200 shadow-xl shadow-cyan-950/20">
+                <Target className="h-3.5 w-3.5" />
+                <span>{t('graph.focus_summary').replace('{count}', String(selectedNeighborhoodIds.size))}</span>
+              </div>
+            )}
+            {hasActiveFilter && (
+              <button
+                onClick={clearGraphFilters}
+                className="rounded-lg border border-cyan-500/20 bg-cyan-950/30 px-2.5 py-1.5 text-cyan-300 hover:bg-cyan-900/40 hover:text-cyan-100 transition-colors"
+              >
+                {t('graph.clear_filters')}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 时间轴面板 */}
@@ -1192,9 +1289,10 @@ export default function GraphViewer3D({
         )}
 
         {/* 图例：右上角可折叠交互式 Legend，时间轴展开时往下挪避免碰撞 */}
+        {graphData.nodes.length > 0 && (
         <div
-          className="absolute right-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg shadow-2xl shadow-black/30 max-w-[220px] transition-[top] duration-200"
-          style={{ top: showTimeSlider && timeBounds ? 108 : 16 }}
+          className="absolute right-4 z-10 hidden max-w-[220px] rounded-lg border border-white/10 bg-gray-950/90 shadow-2xl shadow-black/30 transition-[top] duration-200 lg:block"
+          style={{ top: showTimeSlider && timeBounds ? 118 : 16 }}
         >
           <button
             onClick={toggleLegendExpand}
@@ -1250,9 +1348,11 @@ export default function GraphViewer3D({
             </div>
           )}
         </div>
+        )}
 
         {/* 统计信息 */}
-        <div className="absolute bottom-4 right-4 z-10 bg-gray-950/90 border border-white/10 rounded-lg p-3 shadow-2xl shadow-black/30">
+        {graphData.nodes.length > 0 && (
+        <div className="absolute bottom-4 right-4 z-10 rounded-lg border border-white/10 bg-gray-950/90 p-3 shadow-2xl shadow-black/30">
           <div className="flex gap-4 text-xs">
             <div>
               <span className="text-gray-500">{t('graph.visible_nodes')}</span>
@@ -1264,8 +1364,9 @@ export default function GraphViewer3D({
             </div>
           </div>
         </div>
+        )}
 
-        {graphData.nodes.length === 0 && (
+        {graphData.nodes.length === 0 && entities.length > 0 && (
           <div className="absolute inset-0 z-[9] flex items-center justify-center bg-[#0a0b12]/70 px-6 backdrop-blur-sm">
             <div className="max-w-lg rounded-xl border border-cyan-500/20 bg-gray-950/85 p-6 text-center shadow-2xl shadow-cyan-950/30">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10">
@@ -1306,6 +1407,9 @@ export default function GraphViewer3D({
             nodeLabel={nodeLabelHtml}
             nodeVal={(node: any) => node.val}
             nodeColor={(node: any) => {
+              if (isFocusDimmedNode(node.id)) {
+                return hexToRgba(node.color, 0.16);
+              }
               if (legendHighlightType && node.type !== legendHighlightType) {
                 return hexToRgba(node.color, 0.18);
               }
@@ -1314,13 +1418,34 @@ export default function GraphViewer3D({
             linkSource="source"
             linkTarget="target"
             linkLabel={(link: any) => t('graph.link_label').replace('{type}', link.type.replace(/_/g, " ")).replace('{weight}', (link.weight || 1).toFixed(2))}
-            linkColor={(link: any) => getRelationshipStyle(link.type).color}
-            linkWidth={(link: any) => getRelationshipStyle(link.type).width}
+            linkColor={(link: any) => {
+              const color = getRelationshipStyle(link.type).color;
+              const sourceId = getLinkEndpointId(link.source);
+              const targetId = getLinkEndpointId(link.target);
+              const focusDimmed = selectedNode
+                ? sourceId !== selectedNode.id && targetId !== selectedNode.id
+                : selectedNodeIds.size > 1 && (!selectedNodeIds.has(sourceId) || !selectedNodeIds.has(targetId));
+              return focusDimmed ? hexToRgba(color, 0.12) : color;
+            }}
+            linkWidth={(link: any) => {
+              const baseWidth = getRelationshipStyle(link.type).width;
+              const sourceId = getLinkEndpointId(link.source);
+              const targetId = getLinkEndpointId(link.target);
+              if (selectedNode && (sourceId === selectedNode.id || targetId === selectedNode.id)) {
+                return baseWidth + 1;
+              }
+              return baseWidth;
+            }}
             linkLineDash={(link: any) => getRelationshipStyle(link.type).dash || null}
             linkDirectionalArrowLength={3.5}
             linkDirectionalArrowRelPos={1}
             linkCurvature={0.15}
-            linkDirectionalParticles={(link: any) => Math.max(1, Math.round((link.weight || 1) * 2))}
+            linkDirectionalParticles={(link: any) => {
+              const sourceId = getLinkEndpointId(link.source);
+              const targetId = getLinkEndpointId(link.target);
+              if (selectedNode && sourceId !== selectedNode.id && targetId !== selectedNode.id) return 0;
+              return Math.max(1, Math.round((link.weight || 1) * 2));
+            }}
             linkDirectionalParticleSpeed={0.006}
             linkDirectionalParticleWidth={(link: any) => Math.max(1.5, (link.weight || 1) * 1.2)}
             linkDirectionalParticleColor={(link: any) => link.color}
@@ -1675,18 +1800,98 @@ export default function GraphViewer3D({
       )}
 
       {!selectedNode && (
-        <div className="hidden w-80 glass-panel border-l border-white/10 p-4 md:flex items-center justify-center bg-gray-950/95">
-          <div className="text-center">
-            <MousePointer2 className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">{t("graph.no_selection")}</p>
-            <p className="text-gray-500 text-xs mt-1">
-              {t('graph.click_to_edit_hint')}
-            </p>
-            <p className="text-gray-600 text-[10px] mt-3">
-              {is3D ? t('graph.camera_hint_3d') : t('graph.camera_hint_2d')}
+        <aside className="hidden w-80 shrink-0 glass-panel border-l border-white/10 bg-gray-950/95 p-4 md:flex md:flex-col md:gap-4 md:overflow-y-auto">
+          <div>
+            <div className="flex items-center gap-2 text-cyan-300">
+              <Network className="h-4 w-4" />
+              <h3 className="text-sm font-semibold">{t('graph.overview_title')}</h3>
+            </div>
+            <p className="mt-1 text-xs leading-5 text-gray-500">
+              {graphSummary.totalNodes > 0 ? t('graph.overview_hint') : t('graph.overview_empty_hint')}
             </p>
           </div>
-        </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: t('graph.total_nodes'), value: graphSummary.totalNodes, color: 'text-cyan-300' },
+              { label: t('graph.total_edges'), value: graphSummary.totalEdges, color: 'text-purple-300' },
+              { label: t('graph.type_count'), value: graphSummary.typeCount, color: 'text-yellow-300' },
+              { label: t('graph.recent_nodes'), value: graphSummary.recentCount, color: 'text-green-300' },
+            ].map((item) => (
+              <div key={item.label} className="rounded-lg border border-white/10 bg-black/25 p-3">
+                <div className={`font-mono text-lg font-bold ${item.color}`}>{item.value}</div>
+                <div className="mt-1 text-[10px] uppercase tracking-wider text-gray-500">{item.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {graphSummary.topTypes.length > 0 && (
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs uppercase tracking-wider text-gray-500">{t('graph.type_distribution')}</span>
+                <span className="text-[10px] text-gray-600">{t('graph.click_to_filter')}</span>
+              </div>
+              <div className="space-y-2">
+                {graphSummary.topTypes.map(([type, count]) => {
+                  const pct = graphSummary.totalNodes > 0 ? (count / graphSummary.totalNodes) * 100 : 0;
+                  const color = getThemeColor(type);
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setActiveType(type)}
+                      className="w-full rounded-lg border border-white/5 bg-black/20 px-3 py-2 text-left hover:border-cyan-500/30 hover:bg-cyan-950/20 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                        <span className="min-w-0 flex-1 truncate text-xs text-gray-300">{type.replace(/_/g, ' ')}</span>
+                        <span className="font-mono text-[10px] text-gray-500">{count}</span>
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {graphSummary.strongestNodes.length > 0 && (
+            <div className="min-h-0">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs uppercase tracking-wider text-gray-500">{t('graph.high_signal_nodes')}</span>
+                <span className="text-[10px] text-gray-600">{is3D ? t('graph.camera_hint_3d') : t('graph.camera_hint_2d')}</span>
+              </div>
+              <div className="space-y-1.5">
+                {graphSummary.strongestNodes.map((entity) => (
+                  <button
+                    key={entity.id}
+                    onClick={() => focusNodeById(entity.id)}
+                    className="group flex w-full items-center gap-2 rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2 text-left hover:border-cyan-500/30 hover:bg-cyan-950/20 transition-colors"
+                  >
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/10 text-xs"
+                      style={{ color: getThemeColor(entity.type), backgroundColor: hexToRgba(getThemeColor(entity.type), 0.12) }}
+                    >
+                      {TYPE_GLYPHS[entity.type] || '•'}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs text-gray-200 group-hover:text-cyan-200">{entity.name}</span>
+                      <span className="block truncate text-[10px] text-gray-500">{entity.type.replace(/_/g, ' ')} · {connectionCounts[entity.id] || 0} {t('graph.connections_label_html')}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="shrink-0 rounded-lg border border-cyan-500/15 bg-cyan-950/15 p-3">
+            <div className="flex items-start gap-2">
+              <MousePointer2 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+              <p className="text-xs leading-5 text-gray-400">{t('graph.click_to_edit_hint')}</p>
+            </div>
+          </div>
+        </aside>
       )}
 
       {isMultiSelect && (

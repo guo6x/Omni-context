@@ -120,7 +120,7 @@ export default function FloatingHUD() {
         data-tauri-drag-region
         onMouseDown={handleDragStart}
         className={clsx(
-          "w-[340px] rounded-2xl p-4 transition-all duration-300",
+          "relative w-[340px] overflow-hidden rounded-2xl p-4 transition-all duration-300",
           visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         )}
         style={{

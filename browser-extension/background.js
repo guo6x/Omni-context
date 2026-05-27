@@ -27,7 +27,7 @@ async function apiFetch(path, options = {}) {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  return apiFetch('${path}', { ...options, headers });
+  return fetch(`${API_BASE}${path}`, { ...options, headers });
 }
 
 // --- Desktop health ---
@@ -238,7 +238,7 @@ async function handlePoll(jobId) {
   }
 
   try {
-    const res = await apiFetch('/api/ingest/job/${jobId}');
+    const res = await apiFetch(`/api/ingest/job/${jobId}`);
     if (!res.ok) {
       if (res.status === 404) {
         notifyJobError(jobInfo.filename, '任务已过期');

@@ -360,47 +360,50 @@ function MainApp() {
   }, [confirm, t, toast]);
 
   useKeyboardShortcuts([
-    ...settings.keyboardShortcuts.map((s) => ({
-      id: s.id,
-      key: s.current.split('+').pop() || '',
-      ctrl: s.current.includes('ctrl') || s.current.includes('cmd'),
-      shift: s.current.includes('shift'),
-      alt: s.current.includes('alt'),
-      category: s.category,
-      description: s.description,
-      action: () => {
-        switch (s.id) {
-          case 'precipitate':
-            handlePrecipitate();
-            break;
-          case 'decision':
-            handleDecision();
-            break;
-          case 'reset':
-            handleReset();
-            break;
-          case 'toggleHUD': {
-            setShowHUD(prev => !prev);
-            (async () => {
-              const nextHud = await toggleFloatingHUD();
-              if (nextHud !== null) {
-                setFloatingHudOn(nextHud);
-                if (nextHud) {
-                  pushFloatingHUD(hudStatus || "listening", hudMessage || t('hud.welcome'));
+    ...settings.keyboardShortcuts.map((s) => {
+      const current = s.current.toLowerCase();
+      return {
+        id: s.id,
+        key: current.split('+').pop() || '',
+        ctrl: current.includes('ctrl') || current.includes('cmd'),
+        shift: current.includes('shift'),
+        alt: current.includes('alt'),
+        category: s.category,
+        description: t(s.description),
+        action: () => {
+          switch (s.id) {
+            case 'precipitate':
+              handlePrecipitate();
+              break;
+            case 'decision':
+              handleDecision();
+              break;
+            case 'reset':
+              handleReset();
+              break;
+            case 'toggleHUD': {
+              setShowHUD(prev => !prev);
+              (async () => {
+                const nextHud = await toggleFloatingHUD();
+                if (nextHud !== null) {
+                  setFloatingHudOn(nextHud);
+                  if (nextHud) {
+                    pushFloatingHUD(hudStatus || "listening", hudMessage || t('hud.welcome'));
+                  }
                 }
-              }
-            })();
-            break;
+              })();
+              break;
+            }
+            case 'openSettings':
+              setShowSettings(prev => !prev);
+              break;
+            case 'connectHardware':
+              handleConnectHardware();
+              break;
           }
-          case 'openSettings':
-            setShowSettings(prev => !prev);
-            break;
-          case 'connectHardware':
-            handleConnectHardware();
-            break;
-        }
-      },
-    })),
+        },
+      };
+    }),
     {
       id: 'openSearch',
       key: 'k',
@@ -649,7 +652,7 @@ function MainApp() {
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex items-center gap-3">
             <LogoMark size={36} className="animate-pulse-glow shrink-0" />
-            <div className="min-w-0">
+            <div className="hidden min-w-0 sm:block">
               <h1 className="text-lg sm:text-xl font-bold text-white leading-tight tracking-wide">
                 <span
                   className="bg-clip-text text-transparent"
@@ -876,13 +879,18 @@ function MainApp() {
 
         {showShortcuts && (
           <ShortcutsHelp 
-            shortcuts={settings.keyboardShortcuts.map((s) => ({
-              ...s,
-              key: s.current.split('+').pop() || '',
-              ctrl: s.current.includes('ctrl') || s.current.includes('cmd'),
-              shift: s.current.includes('shift'),
-              alt: s.current.includes('alt'),
-            }))} 
+            shortcuts={settings.keyboardShortcuts.map((s) => {
+              const current = s.current.toLowerCase();
+              return {
+                ...s,
+                key: current.split('+').pop() || '',
+                ctrl: current.includes('ctrl') || current.includes('cmd'),
+                shift: current.includes('shift'),
+                alt: current.includes('alt'),
+                category: t(`settings.category.${s.category.toLowerCase()}`),
+                description: t(s.description),
+              };
+            })} 
             onClose={() => setShowShortcuts(false)} 
           />
         )}

@@ -73,22 +73,6 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     category: 'action',
   },
   {
-    id: 'graphView',
-    name: 'shortcuts.graph_view',
-    description: 'shortcuts.graph_view_desc',
-    default: 'ctrl+shift+g',
-    current: 'ctrl+shift+g',
-    category: 'view',
-  },
-  {
-    id: 'consoleView',
-    name: 'shortcuts.console_view',
-    description: 'shortcuts.console_view_desc',
-    default: 'ctrl+shift+c',
-    current: 'ctrl+shift+c',
-    category: 'view',
-  },
-  {
     id: 'toggleHUD',
     name: 'shortcuts.toggle_hud',
     description: 'shortcuts.toggle_hud_desc',
@@ -113,6 +97,21 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     category: 'hardware',
   },
 ];
+
+function normalizeKeyboardShortcuts(stored: unknown): KeyboardShortcut[] {
+  if (!Array.isArray(stored)) return DEFAULT_SHORTCUTS;
+
+  const storedById = new Map(
+    stored
+      .filter((s): s is KeyboardShortcut => Boolean(s && typeof s === 'object' && 'id' in s))
+      .map((s) => [s.id, s])
+  );
+
+  return DEFAULT_SHORTCUTS.map((shortcut) => ({
+    ...shortcut,
+    current: storedById.get(shortcut.id)?.current || shortcut.default,
+  }));
+}
 
 const DEFAULT_SETTINGS: AppSettings = {
   keyboardShortcuts: DEFAULT_SHORTCUTS,
@@ -167,9 +166,7 @@ function mergeWithDefaults(stored: any): AppSettings {
   }
 
   return {
-    keyboardShortcuts: Array.isArray(stored.keyboardShortcuts) && stored.keyboardShortcuts.length > 0
-      ? stored.keyboardShortcuts
-      : DEFAULT_SETTINGS.keyboardShortcuts,
+    keyboardShortcuts: normalizeKeyboardShortcuts(stored.keyboardShortcuts),
     appearance: { 
       ...DEFAULT_SETTINGS.appearance, 
       ...(stored.appearance || {}),
