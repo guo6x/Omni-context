@@ -12,6 +12,7 @@ import { MCP_CLIENTS } from '@/lib/mcp-clients';
 import { MCP_SCENARIOS } from '@/lib/mcp-scenarios';
 import { findSystemConflict, normalizeShortcut } from '@/lib/known-system-shortcuts';
 import McpClientCard from './McpClientCard';
+import Console from './Console';
 import { THEMES } from '@/lib/themes';
 
 // autostart 插件调用。非 Tauri 环境静默降级。
@@ -1543,6 +1544,16 @@ export default function SettingsPanel({
                     </div>
                   </div>
                 )}
+
+                <div className="mt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="text-sm font-semibold text-gray-300">{t('settings.diagnostics_console_title')}</h4>
+                    <span className="text-[10px] text-gray-500">{t('settings.diagnostics_console_hint')}</span>
+                  </div>
+                  <div className="rounded-lg border border-white/10 overflow-hidden" style={{ height: '320px' }}>
+                    <Console />
+                  </div>
+                </div>
               </div>
             )}
 

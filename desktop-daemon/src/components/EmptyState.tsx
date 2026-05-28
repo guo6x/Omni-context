@@ -27,7 +27,7 @@ export default function EmptyState({
   const { t } = useTranslation();
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center p-4 sm:p-6 pointer-events-none overflow-auto">
+    <div className="absolute inset-0 z-10 flex items-center justify-center p-4 sm:p-6 pointer-events-none overflow-auto bg-gray-950/70 backdrop-blur-sm">
       <div className="glass-panel pointer-events-auto relative max-w-xl w-full max-h-[calc(100vh-7rem)] overflow-y-auto p-5 sm:p-7 rounded-2xl border border-white/10">
         {onDismiss && (
           <button

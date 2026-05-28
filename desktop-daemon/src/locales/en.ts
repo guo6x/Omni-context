@@ -18,6 +18,8 @@ export default {
     help: 'Help',
     minimize: 'Minimize',
     maximize: 'Maximize',
+    more: 'More',
+    insights: 'Insights',
   },
   hud: {
     listening: 'Listening...',
@@ -187,6 +189,8 @@ export default {
     diagnostics_status_normal: 'Normal',
     diagnostics_label_mode: 'Mode: ',
     diagnostics_label_model: 'Model: ',
+    diagnostics_console_title: 'System Console',
+    diagnostics_console_hint: 'Real-time log stream for troubleshooting',
     autosaved: 'Changes are saved instantly',
     done: 'Done',
     about: 'About',

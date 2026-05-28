@@ -40,6 +40,14 @@
   }
 }
 
+@keyframes shimmer-fast {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+.animate-shimmer-fast {
+  animation: shimmer-fast 0.8s ease-in-out infinite;
+}
+
 /* ============================================================
  * Light theme overrides
  * 用于把项目里大量散落的深色 Tailwind 工具类在 light 模式下翻转为

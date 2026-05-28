@@ -18,6 +18,8 @@ export default {
     help: '帮助',
     minimize: '最小化',
     maximize: '最大化',
+    more: '更多',
+    insights: '洞察通知',
   },
   hud: {
     listening: '监听中...',
@@ -187,6 +189,8 @@ export default {
     diagnostics_status_normal: '正常',
     diagnostics_label_mode: '模式: ',
     diagnostics_label_model: '模型: ',
+    diagnostics_console_title: '系统控制台',
+    diagnostics_console_hint: '实时日志流，排查问题时查看',
     autosaved: '改动会即时保存',
     done: '完成',
     about: '关于',

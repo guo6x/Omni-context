@@ -1800,7 +1800,8 @@ export default function GraphViewer3D({
       )}
 
       {!selectedNode && (
-        <aside className="hidden w-80 shrink-0 glass-panel border-l border-white/10 bg-gray-950/95 p-4 md:flex md:flex-col md:gap-4 md:overflow-y-auto">
+        <aside className="hidden w-80 shrink-0 glass-panel border-l border-white/10 bg-gray-950/95 p-4 md:flex md:flex-col md:gap-4">
+          <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto">
           <div>
             <div className="flex items-center gap-2 text-cyan-300">
               <Network className="h-4 w-4" />
@@ -1857,7 +1858,7 @@ export default function GraphViewer3D({
           )}
 
           {graphSummary.strongestNodes.length > 0 && (
-            <div className="min-h-0">
+            <div className="shrink-0">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs uppercase tracking-wider text-gray-500">{t('graph.high_signal_nodes')}</span>
                 <span className="text-[10px] text-gray-600">{is3D ? t('graph.camera_hint_3d') : t('graph.camera_hint_2d')}</span>
@@ -1884,6 +1885,8 @@ export default function GraphViewer3D({
               </div>
             </div>
           )}
+
+          </div>
 
           <div className="shrink-0 rounded-lg border border-cyan-500/15 bg-cyan-950/15 p-3">
             <div className="flex items-start gap-2">

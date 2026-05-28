@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
-import HUD from "@/components/HUD";
 import FloatingHUD from "@/components/FloatingHUD";
 import GraphViewer from "@/components/GraphViewer";
 import ShortcutsHelp from "@/components/ShortcutsHelp";
@@ -12,7 +11,7 @@ import EmptyState from "@/components/EmptyState";
 import FileDropZone, { FileDropZoneRef, ACCEPTED_EXTENSIONS, TauriFileLike } from "@/components/FileDropZone";
 import HardwarePairingPanel from "@/components/HardwarePairingPanel";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp } from "lucide-react";
+import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 import { LogoMark } from "@/components/BrandMark";
 import { Entity, Relationship } from "@shared/types";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -99,7 +98,6 @@ export default function Home() {
 }
 
 function MainApp() {
-  const [showHUD, setShowHUD] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [hudMessage, setHudMessage] = useState("");
   const [hudStatus, setHudStatus] = useState<"listening" | "processing" | "success" | "warning" | "error">("listening");
@@ -125,9 +123,11 @@ function MainApp() {
   const toast = useToast();
   const [settingsTab, setSettingsTab] = useState<'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about'>('shortcuts');
   const [showWizardForce, setShowWizardForce] = useState(false);
+  const [isLoadingGraph, setIsLoadingGraph] = useState(false);
 
   // 提到组件 scope，方便上传成功 / 手动操作后重拉
   const fetchGraphData = useCallback(async () => {
+    setIsLoadingGraph(true);
     try {
       const response = await apiFetch('/api/graph/context', {
         method: 'POST',
@@ -145,6 +145,8 @@ function MainApp() {
       if (entities.length > 0) {
         toast.error(t('toast.refresh_failed'), String(error));
       }
+    } finally {
+      setIsLoadingGraph(false);
     }
     // toast / t / entities.length 在依赖列表里反而会抖动，这里只跟随 refreshTrigger
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -382,7 +384,6 @@ function MainApp() {
               handleReset();
               break;
             case 'toggleHUD': {
-              setShowHUD(prev => !prev);
               (async () => {
                 const nextHud = await toggleFloatingHUD();
                 if (nextHud !== null) {
@@ -450,14 +451,12 @@ function MainApp() {
       const paused = t('hud.capture_paused');
       setHudMessage(paused);
       setHudStatus("warning");
-      setShowHUD(true);
       pushFloatingHUD("warning", paused);
       await toggleFloatingHUD(true);
       setFloatingHudOn(true);
       addLog(paused, "warning");
       if (settings.behavior.autoHUD) {
         setTimeout(async () => {
-          setShowHUD(false);
           await toggleFloatingHUD(false);
           setFloatingHudOn(false);
         }, 2000);
@@ -478,14 +477,12 @@ function MainApp() {
             const blocked = t('hud.capture_blocked').replace('{app}', fgInfo.process_name || fgInfo.title);
             setHudMessage(blocked);
             setHudStatus("warning");
-            setShowHUD(true);
             pushFloatingHUD("warning", blocked);
             await toggleFloatingHUD(true);
             setFloatingHudOn(true);
             addLog(blocked, "warning");
             if (settings.behavior.autoHUD) {
               setTimeout(async () => {
-                setShowHUD(false);
                 await toggleFloatingHUD(false);
                 setFloatingHudOn(false);
               }, 2000);
@@ -504,7 +501,6 @@ function MainApp() {
     const initial = t('hud.precipitate');
     setHudMessage(initial);
     setHudStatus("processing");
-    setShowHUD(true);
     pushFloatingHUD("processing", initial);
     await toggleFloatingHUD(true);
     setFloatingHudOn(true);
@@ -548,7 +544,6 @@ function MainApp() {
 
     if (settings.behavior.autoHUD) {
       setTimeout(async () => {
-        setShowHUD(false);
         await toggleFloatingHUD(false);
         setFloatingHudOn(false);
       }, 2000);
@@ -588,13 +583,11 @@ function MainApp() {
     const done = t('hud.reset_done');
     setHudMessage(done);
     setHudStatus("success");
-    setShowHUD(true);
     pushFloatingHUD("success", done);
     await toggleFloatingHUD(true);
     setFloatingHudOn(true);
 
     setTimeout(async () => {
-      setShowHUD(false);
       await toggleFloatingHUD(false);
       setFloatingHudOn(false);
     }, 1500);
@@ -615,15 +608,12 @@ function MainApp() {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      setShowHUD(true);
       setHudMessage(t('hud.welcome'));
       setHudStatus("listening");
-      // 启动欢迎：也短暂显示独立 HUD 窗口
       pushFloatingHUD("listening", t('hud.welcome'));
       await toggleFloatingHUD(true);
       setFloatingHudOn(true);
       setTimeout(async () => {
-        setShowHUD(false);
         await toggleFloatingHUD(false);
         setFloatingHudOn(false);
       }, 4000);
@@ -645,6 +635,8 @@ function MainApp() {
       }
     })();
   }, [settings.behavior.defaultFloatingHUD, floatingHudAutoShown, t]);
+
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
@@ -723,27 +715,43 @@ function MainApp() {
           >
             <PictureInPicture2 className="w-4 h-4" />
           </button>
-          <button
-            onClick={tauriMinimize}
-            className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-            title={t('nav.minimize')}
-          >
-            <Minimize2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShowInsights(!showInsights)}
-            className="p-2 text-cyan-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors relative"
-            title="Insights"
-          >
-            <Bell className="w-4 h-4 animate-pulse" />
-          </button>
-          <button
-            onClick={() => setShowShortcuts(!showShortcuts)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-          >
-            <HelpCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('nav.help')}</span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              title={t('nav.more')}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+            {showMoreMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 w-48 rounded-lg border border-white/10 bg-gray-900 py-1 shadow-xl shadow-black/30">
+                  <button
+                    onClick={() => { setShowInsights(!showInsights); setShowMoreMenu(false); }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Bell className="w-4 h-4 text-cyan-400" />
+                    {t('nav.insights')}
+                  </button>
+                  <button
+                    onClick={() => { setShowShortcuts(!showShortcuts); setShowMoreMenu(false); }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    {t('nav.help')}
+                  </button>
+                  <button
+                    onClick={() => { tauriMinimize(); setShowMoreMenu(false); }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Minimize2 className="w-4 h-4" />
+                    {t('nav.minimize')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
@@ -821,6 +829,14 @@ function MainApp() {
       )}
 
       <main className="flex-1 overflow-hidden relative">
+        {isLoadingGraph && (
+          <div className="absolute top-0 left-0 right-0 z-30 h-0.5 bg-cyan-500/30 overflow-hidden">
+            <div className="h-full animate-shimmer-fast" style={{
+              background: 'linear-gradient(90deg, transparent 0%, #22d3ee 50%, transparent 100%)',
+              width: '200%',
+            }} />
+          </div>
+        )}
         <GraphViewer
           entities={entities}
           relationships={relationships}
@@ -962,13 +978,6 @@ function MainApp() {
       )}
 
       {dialog}
-
-      <HUD
-        isVisible={showHUD}
-        onClose={() => setShowHUD(false)}
-        status={hudStatus}
-        message={hudMessage}
-      />
     </div>
   );
 }
