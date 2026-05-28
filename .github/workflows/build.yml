@@ -95,7 +95,9 @@ jobs:
         working-directory: desktop-daemon
 
       - name: Build Tauri app
-        run: npm run tauri:build
+        # 用 CI 专用配置（updater 关闭），无需 TAURI_PRIVATE_KEY 也能产出安装包。
+        # 需要带签名/自动更新的正式发布走 release.yml（配 TAURI_PRIVATE_KEY secret）。
+        run: npx tauri build -c src-tauri/tauri.ci.conf.json
         working-directory: desktop-daemon
 
       - name: Upload Windows artifacts
