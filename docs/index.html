@@ -18,7 +18,7 @@
       theme: {
         extend: {
           colors: {
-            ink: '#0a0b12',
+            ink: '#070810',
             cyan: { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2' },
           }
         }
@@ -26,145 +26,228 @@
     }
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    html { scroll-behavior: smooth; }
     body { font-family: 'Inter', system-ui, sans-serif; }
+    :lang(zh) body, html[lang="zh"] body {
+      font-family: 'Inter', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
     .gradient-text {
-      background: linear-gradient(135deg, #22d3ee 0%, #a855f7 100%);
+      background: linear-gradient(120deg, #22d3ee 0%, #818cf8 50%, #c084fc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .glass {
-      background: rgba(255,255,255,0.03);
+      background: rgba(255,255,255,0.025);
       border: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(24px);
+      backdrop-filter: blur(20px);
     }
-    .glow {
-      box-shadow: 0 0 80px rgba(34,211,238,0.08);
+    .glass:hover { border-color: rgba(34,211,238,0.25); }
+
+    /* animated background blobs */
+    .blob { position: absolute; border-radius: 9999px; filter: blur(90px); opacity: 0.5; }
+    @keyframes drift {
+      0%,100% { transform: translate(0,0) scale(1); }
+      50%     { transform: translate(40px,-30px) scale(1.15); }
     }
+    .grid-overlay {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+    }
+
+    /* scroll reveal */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* graph mockup */
+    .node { animation: pulse 3s ease-in-out infinite; transform-origin: center; }
+    .node:nth-child(2) { animation-delay: .6s; }
+    .node:nth-child(3) { animation-delay: 1.2s; }
+    .node:nth-child(4) { animation-delay: 1.8s; }
+    .node:nth-child(5) { animation-delay: 2.4s; }
+    @keyframes pulse { 0%,100% { opacity:.55; } 50% { opacity:1; } }
+    .edge { stroke-dasharray: 6 6; animation: dash 4s linear infinite; }
+    @keyframes dash { to { stroke-dashoffset: -48; } }
+
+    .btn-primary { box-shadow: 0 8px 40px rgba(34,211,238,0.25); }
+    .btn-primary:hover { box-shadow: 0 8px 50px rgba(34,211,238,0.4); }
+
+    nav.scrolled { background: rgba(7,8,16,0.8); border-bottom-color: rgba(255,255,255,0.08); }
   </style>
 </head>
-<body class="bg-ink text-white antialiased">
+<body class="bg-ink text-white antialiased overflow-x-hidden">
 
-<!-- Hero -->
-<section class="min-h-screen flex flex-col items-center justify-center px-6 text-center relative overflow-hidden">
-  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.06),transparent_70%)]"></div>
-  <div class="relative z-10 max-w-3xl">
-    <div class="inline-flex items-center gap-2 px-3 py-1.5 glass rounded-full text-xs text-gray-400 mb-8">
-      <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-      v1.2 — Windows · macOS/Linux community builds
+<!-- ===== Nav ===== -->
+<nav class="fixed top-0 inset-x-0 z-50 border-b border-transparent transition-colors duration-300">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2 font-bold tracking-tight">
+      <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_#22d3ee]"></span>
+      Omni-Context
+    </a>
+    <div class="hidden md:flex items-center gap-8 text-sm text-gray-400">
+      <a href="#why" class="hover:text-white transition-colors" data-en="Features" data-zh="功能"></a>
+      <a href="#how" class="hover:text-white transition-colors" data-en="How it works" data-zh="原理"></a>
+      <a href="#compare" class="hover:text-white transition-colors" data-en="Compare" data-zh="对比"></a>
     </div>
-
-    <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight leading-none mb-6">
-      <span class="gradient-text">Memory</span><br>
-      <span class="text-white">for your AI</span>
-    </h1>
-
-    <p class="text-lg md:text-xl text-gray-400 max-w-xl mx-auto mb-10 leading-relaxed">
-      A local knowledge graph that any MCP-compatible AI can use as long-term memory.
-      Your data, your machine, forever.
-    </p>
-
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+    <div class="flex items-center gap-3">
+      <button id="langToggle" class="px-3 py-1.5 text-sm rounded-lg glass text-gray-300 hover:text-white transition-colors"></button>
       <a href="https://github.com/guo6x/Omni-context/releases/latest"
-         class="px-8 py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl transition-colors text-lg">
-        Download for Windows
-      </a>
-      <a href="https://github.com/guo6x/Omni-context"
-         class="px-8 py-3.5 glass hover:border-cyan-500/30 text-gray-300 hover:text-white font-semibold rounded-xl transition-colors text-lg">
-        View on GitHub
-      </a>
+         class="hidden sm:inline-block px-4 py-1.5 text-sm bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
+         data-en="Download" data-zh="下载"></a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== Hero ===== -->
+<section id="top" class="relative min-h-screen flex items-center pt-24 pb-20 px-6 overflow-hidden">
+  <div class="blob w-[480px] h-[480px] bg-cyan-500/30 -top-20 -left-20" style="animation: drift 14s ease-in-out infinite;"></div>
+  <div class="blob w-[420px] h-[420px] bg-purple-500/25 top-40 right-0" style="animation: drift 18s ease-in-out infinite reverse;"></div>
+  <div class="absolute inset-0 grid-overlay"></div>
+
+  <div class="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center w-full">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 glass rounded-full text-xs text-gray-400 mb-8">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        <span data-en="v1.2 — Windows · macOS/Linux community builds" data-zh="v1.2 — Windows · macOS/Linux 社区构建"></span>
+      </div>
+
+      <h1 class="text-5xl md:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.05] mb-6"
+          data-en="<span class='gradient-text'>Memory</span><br>for your AI"
+          data-zh="给你的 AI<br><span class='gradient-text'>装上长期记忆</span>"></h1>
+
+      <p class="text-lg md:text-xl text-gray-400 max-w-xl mb-10 leading-relaxed"
+         data-en="A local knowledge graph that any MCP-compatible AI can use as long-term memory. Your data, your machine, forever."
+         data-zh="一个本地知识图谱，任何兼容 MCP 的 AI 都能把它当作长期记忆。数据在你自己的机器上，永远属于你。"></p>
+
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <a href="https://github.com/guo6x/Omni-context/releases/latest"
+           class="btn-primary px-8 py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl transition-all text-lg"
+           data-en="Download for Windows" data-zh="下载 Windows 版"></a>
+        <a href="https://github.com/guo6x/Omni-context"
+           class="px-8 py-3.5 glass hover:text-white text-gray-300 font-semibold rounded-xl transition-colors text-lg"
+           data-en="View on GitHub" data-zh="在 GitHub 查看"></a>
+      </div>
+    </div>
+
+    <!-- Graph mockup -->
+    <div class="relative reveal">
+      <div class="glass rounded-2xl p-1.5 shadow-2xl">
+        <div class="flex items-center gap-1.5 px-3 py-2.5">
+          <span class="w-3 h-3 rounded-full bg-red-400/70"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-400/70"></span>
+          <span class="w-3 h-3 rounded-full bg-green-400/70"></span>
+          <span class="ml-3 text-xs text-gray-500">omni-context · knowledge graph</span>
+        </div>
+        <div class="rounded-xl bg-black/40 overflow-hidden">
+          <svg viewBox="0 0 400 280" class="w-full h-auto">
+            <g stroke="#22d3ee" stroke-opacity="0.4" stroke-width="1.5" fill="none">
+              <line class="edge" x1="200" y1="140" x2="90" y2="70"/>
+              <line class="edge" x1="200" y1="140" x2="320" y2="80"/>
+              <line class="edge" x1="200" y1="140" x2="110" y2="210"/>
+              <line class="edge" x1="200" y1="140" x2="310" y2="210"/>
+              <line class="edge" x1="90" y1="70" x2="320" y2="80"/>
+              <line class="edge" x1="110" y1="210" x2="310" y2="210"/>
+            </g>
+            <g>
+              <g class="node"><circle cx="200" cy="140" r="22" fill="#22d3ee" fill-opacity="0.18" stroke="#22d3ee" stroke-width="2"/><circle cx="200" cy="140" r="6" fill="#22d3ee"/></g>
+              <g class="node"><circle cx="90" cy="70" r="16" fill="#818cf8" fill-opacity="0.18" stroke="#818cf8" stroke-width="2"/><circle cx="90" cy="70" r="5" fill="#818cf8"/></g>
+              <g class="node"><circle cx="320" cy="80" r="16" fill="#c084fc" fill-opacity="0.18" stroke="#c084fc" stroke-width="2"/><circle cx="320" cy="80" r="5" fill="#c084fc"/></g>
+              <g class="node"><circle cx="110" cy="210" r="16" fill="#34d399" fill-opacity="0.18" stroke="#34d399" stroke-width="2"/><circle cx="110" cy="210" r="5" fill="#34d399"/></g>
+              <g class="node"><circle cx="310" cy="210" r="16" fill="#22d3ee" fill-opacity="0.18" stroke="#22d3ee" stroke-width="2"/><circle cx="310" cy="210" r="5" fill="#22d3ee"/></g>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="absolute -inset-6 -z-10 bg-cyan-500/10 blur-3xl rounded-full"></div>
     </div>
   </div>
 
-  <div class="absolute bottom-8 text-gray-600 text-xs animate-bounce">
-    scroll
-  </div>
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-600 text-xs animate-bounce"
+       data-en="scroll" data-zh="向下滚动"></div>
 </section>
 
-<!-- Why -->
-<section class="py-32 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-3xl md:text-4xl font-bold text-center mb-20">
-      Your AI <span class="gradient-text">forgets you</span> every conversation.
-    </h2>
+<!-- ===== Why ===== -->
+<section id="why" class="py-28 md:py-32 px-6">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl md:text-5xl font-bold text-center mb-16 md:mb-20 reveal leading-tight"
+        data-en="Your AI <span class='gradient-text'>forgets you</span> every conversation."
+        data-zh="你的 AI 每次对话都把你<span class='gradient-text'>忘得一干二净</span>。"></h2>
 
-    <div class="grid md:grid-cols-3 gap-8">
-      <div class="glass rounded-2xl p-8 glow">
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="glass rounded-2xl p-8 transition-all hover:-translate-y-1 reveal">
         <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-6">
-          <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M4 7c0-2 1-3 3-3h10c2 0 3 1 3 3M4 7h16"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17h6"/>
-          </svg>
+          <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M4 7c0-2 1-3 3-3h10c2 0 3 1 3 3M4 7h16"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17h6"/></svg>
         </div>
-        <h3 class="text-lg font-semibold mb-3">Fully local</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">
-          SQLite on your disk. No accounts, no cloud, no servers. Everything stays on your machine. Offline-first by design.
-        </p>
+        <h3 class="text-lg font-semibold mb-3" data-en="Fully local" data-zh="完全本地"></h3>
+        <p class="text-gray-400 text-sm leading-relaxed"
+           data-en="SQLite on your disk. No accounts, no cloud, no servers. Everything stays on your machine. Offline-first by design."
+           data-zh="数据存在你硬盘上的 SQLite 里。无需账号、无云端、无服务器，一切都在本地。天生离线优先。"></p>
       </div>
 
-      <div class="glass rounded-2xl p-8 glow">
+      <div class="glass rounded-2xl p-8 transition-all hover:-translate-y-1 reveal">
         <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
-          <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
-          </svg>
+          <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
         </div>
-        <h3 class="text-lg font-semibold mb-3">Knowledge graph</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">
-          Not just storage. Entities and relationships are extracted automatically. The graph grows as you work.
-        </p>
+        <h3 class="text-lg font-semibold mb-3" data-en="Knowledge graph" data-zh="知识图谱"></h3>
+        <p class="text-gray-400 text-sm leading-relaxed"
+           data-en="Not just storage. Entities and relationships are extracted automatically. The graph grows as you work."
+           data-zh="不只是存储。自动抽取实体与关系，图谱随你的工作不断生长。"></p>
       </div>
 
-      <div class="glass rounded-2xl p-8 glow">
+      <div class="glass rounded-2xl p-8 transition-all hover:-translate-y-1 reveal">
         <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-6">
-          <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-          </svg>
+          <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         </div>
-        <h3 class="text-lg font-semibold mb-3">MCP-native</h3>
-        <p class="text-gray-400 text-sm leading-relaxed">
-          Any MCP-compatible AI can access your graph. Claude Desktop, Cursor, Cline — all share the same brain.
-        </p>
+        <h3 class="text-lg font-semibold mb-3" data-en="MCP-native" data-zh="原生 MCP"></h3>
+        <p class="text-gray-400 text-sm leading-relaxed"
+           data-en="Any MCP-compatible AI can access your graph. Claude Desktop, Cursor, Cline — all share the same brain."
+           data-zh="任何兼容 MCP 的 AI 都能访问你的图谱。Claude Desktop、Cursor、Cline——共享同一个大脑。"></p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- How -->
-<section class="py-32 px-6 bg-white/[0.02]">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-3xl md:text-4xl font-bold text-center mb-6">How it works</h2>
-    <p class="text-gray-400 text-center mb-16 max-w-lg mx-auto">Three steps from capture to AI memory.</p>
+<!-- ===== How ===== -->
+<section id="how" class="py-28 md:py-32 px-6 bg-white/[0.015] border-y border-white/5">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 reveal" data-en="How it works" data-zh="工作原理"></h2>
+    <p class="text-gray-400 text-center mb-16 reveal" data-en="Three steps from capture to AI memory." data-zh="从捕获到 AI 记忆，只需三步。"></p>
 
-    <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
-      <div class="glass rounded-2xl p-8 text-center flex-1">
+    <div class="flex flex-col md:flex-row items-stretch justify-center gap-4 md:gap-6">
+      <div class="glass rounded-2xl p-8 text-center flex-1 reveal">
         <div class="text-4xl mb-4">📥</div>
-        <h3 class="font-semibold mb-2">Capture</h3>
-        <p class="text-gray-400 text-sm">Screenshots, files, web pages, or a physical button. Anything becomes input.</p>
+        <h3 class="font-semibold mb-2" data-en="Capture" data-zh="捕获"></h3>
+        <p class="text-gray-400 text-sm" data-en="Screenshots, files, web pages, or a physical button. Anything becomes input." data-zh="截图、文件、网页，或一个物理按钮。任何东西都能成为输入。"></p>
       </div>
-      <div class="text-gray-600 text-2xl hidden md:block">→</div>
-      <div class="glass rounded-2xl p-8 text-center flex-1">
+      <div class="hidden md:flex items-center text-gray-600 text-2xl">→</div>
+      <div class="glass rounded-2xl p-8 text-center flex-1 reveal">
         <div class="text-4xl mb-4">🧠</div>
-        <h3 class="font-semibold mb-2">Extract</h3>
-        <p class="text-gray-400 text-sm">OCR + LLM pipeline pulls out entities and relationships into a local knowledge graph.</p>
+        <h3 class="font-semibold mb-2" data-en="Extract" data-zh="抽取"></h3>
+        <p class="text-gray-400 text-sm" data-en="OCR + LLM pipeline pulls out entities and relationships into a local knowledge graph." data-zh="OCR + LLM 流水线把实体与关系抽取进本地知识图谱。"></p>
       </div>
-      <div class="text-gray-600 text-2xl hidden md:block">→</div>
-      <div class="glass rounded-2xl p-8 text-center flex-1">
+      <div class="hidden md:flex items-center text-gray-600 text-2xl">→</div>
+      <div class="glass rounded-2xl p-8 text-center flex-1 reveal">
         <div class="text-4xl mb-4">🔌</div>
-        <h3 class="font-semibold mb-2">Connect</h3>
-        <p class="text-gray-400 text-sm">Any MCP-compatible AI client queries your graph. 12+ clients, one brain.</p>
+        <h3 class="font-semibold mb-2" data-en="Connect" data-zh="连接"></h3>
+        <p class="text-gray-400 text-sm" data-en="Any MCP-compatible AI client queries your graph. 12+ clients, one brain." data-zh="任何兼容 MCP 的 AI 客户端都能查询你的图谱。12+ 客户端，同一个大脑。"></p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Compare -->
-<section class="py-32 px-6">
+<!-- ===== Compare ===== -->
+<section id="compare" class="py-28 md:py-32 px-6">
   <div class="max-w-4xl mx-auto">
-    <h2 class="text-3xl md:text-4xl font-bold text-center mb-6">How we compare</h2>
-    <p class="text-gray-400 text-center mb-16 max-w-lg mx-auto">Omni is local-first and MCP-native. Most alternatives are neither.</p>
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 reveal" data-en="How we compare" data-zh="横向对比"></h2>
+    <p class="text-gray-400 text-center mb-16 reveal" data-en="Omni is local-first and MCP-native. Most alternatives are neither." data-zh="Omni 本地优先、原生 MCP，多数竞品两者都不具备。"></p>
 
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto reveal glass rounded-2xl p-2">
       <table class="w-full text-sm text-left">
         <thead>
           <tr class="border-b border-white/10">
@@ -178,44 +261,24 @@
         </thead>
         <tbody>
           <tr class="border-b border-white/5">
-            <td class="py-3 px-4 text-gray-400">Runs locally</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-gray-400" data-en="Runs locally" data-zh="本地运行"></td>
+            <td class="py-3 px-4 text-emerald-400">✓</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-emerald-400">✓</td><td class="py-3 px-4 text-emerald-400">✓</td>
           </tr>
           <tr class="border-b border-white/5">
-            <td class="py-3 px-4 text-gray-400">MCP-native</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-400" data-en="MCP-native" data-zh="原生 MCP"></td>
+            <td class="py-3 px-4 text-emerald-400">✓</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-gray-600">✗</td>
           </tr>
           <tr class="border-b border-white/5">
-            <td class="py-3 px-4 text-gray-400">Knowledge graph</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-amber-400">partial</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
-            <td class="py-3 px-4 text-amber-400">manual</td>
+            <td class="py-3 px-4 text-gray-400" data-en="Knowledge graph" data-zh="知识图谱"></td>
+            <td class="py-3 px-4 text-emerald-400">✓</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-amber-400" data-en="partial" data-zh="部分"></td><td class="py-3 px-4 text-emerald-400">✓</td><td class="py-3 px-4 text-amber-400" data-en="manual" data-zh="手动"></td>
           </tr>
           <tr class="border-b border-white/5">
-            <td class="py-3 px-4 text-gray-400">Cross-AI shared</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
+            <td class="py-3 px-4 text-gray-400" data-en="Cross-AI shared" data-zh="跨 AI 共享"></td>
+            <td class="py-3 px-4 text-emerald-400">✓</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-emerald-400">✓</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-gray-600">✗</td>
           </tr>
           <tr>
-            <td class="py-3 px-4 text-gray-400">Offline-first</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-gray-600">✗</td>
-            <td class="py-3 px-4 text-emerald-400">✓</td>
+            <td class="py-3 px-4 text-gray-400" data-en="Offline-first" data-zh="离线优先"></td>
+            <td class="py-3 px-4 text-emerald-400">✓</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-gray-600">✗</td><td class="py-3 px-4 text-emerald-400">✓</td>
           </tr>
         </tbody>
       </table>
@@ -223,24 +286,25 @@
   </div>
 </section>
 
-<!-- Install -->
-<section class="py-32 px-6 bg-white/[0.02]">
+<!-- ===== Install ===== -->
+<section class="py-28 md:py-32 px-6 bg-white/[0.015] border-y border-white/5">
   <div class="max-w-2xl mx-auto text-center">
-    <h2 class="text-3xl md:text-4xl font-bold mb-6">Get started</h2>
-    <p class="text-gray-400 mb-10">One download. No signup. Works offline.</p>
+    <h2 class="text-3xl md:text-4xl font-bold mb-4 reveal" data-en="Get started" data-zh="开始使用"></h2>
+    <p class="text-gray-400 mb-12 reveal" data-en="One download. No signup. Works offline." data-zh="一次下载，无需注册，离线可用。"></p>
 
-    <div class="glass rounded-2xl p-8 mb-8">
+    <div class="glass rounded-2xl p-8 mb-6 reveal">
       <h3 class="font-semibold text-lg mb-2">Windows</h3>
-      <p class="text-gray-400 text-sm mb-6">Download the installer. Double-click. Done. Node.js runtime and embedding models are bundled.</p>
+      <p class="text-gray-400 text-sm mb-6"
+         data-en="Download the installer. Double-click. Done. Node.js runtime and embedding models are bundled."
+         data-zh="下载安装包，双击，完成。已内置 Node.js 运行时和嵌入模型。"></p>
       <a href="https://github.com/guo6x/Omni-context/releases/latest"
-         class="inline-block px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl transition-colors">
-        Download for Windows
-      </a>
+         class="inline-block px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl transition-colors"
+         data-en="Download for Windows" data-zh="下载 Windows 版"></a>
     </div>
 
-    <div class="glass rounded-2xl p-8 mb-8">
-      <h3 class="font-semibold text-lg mb-2">Build from source</h3>
-      <div class="bg-black/40 rounded-lg p-4 text-left font-mono text-sm text-gray-300 overflow-x-auto">
+    <div class="glass rounded-2xl p-8 mb-6 reveal">
+      <h3 class="font-semibold text-lg mb-4" data-en="Build from source" data-zh="从源码构建"></h3>
+      <div class="bg-black/50 rounded-lg p-4 text-left font-mono text-sm text-gray-300 overflow-x-auto">
         git clone https://github.com/guo6x/Omni-context.git<br>
         cd Omni-context<br>
         npm run install:all<br>
@@ -248,23 +312,60 @@
       </div>
     </div>
 
-    <p class="text-gray-500 text-xs">
-      macOS / Linux build scripts ready. Community contributors with hardware: pull requests welcome.
-    </p>
+    <p class="text-gray-500 text-xs reveal"
+       data-en="macOS / Linux build scripts ready. Community contributors with hardware: pull requests welcome."
+       data-zh="macOS / Linux 构建脚本已就绪。有相应硬件的社区贡献者欢迎提 PR。"></p>
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="py-16 px-6 border-t border-white/5">
-  <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-    <div>Omni-Context — MIT License</div>
+<!-- ===== Footer ===== -->
+<footer class="py-14 px-6">
+  <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+    <div data-en="Omni-Context — MIT License" data-zh="Omni-Context — MIT 许可证"></div>
     <div class="flex items-center gap-6">
       <a href="https://github.com/guo6x/Omni-context" class="hover:text-cyan-400 transition-colors">GitHub</a>
-      <a href="https://github.com/guo6x/Omni-context/releases" class="hover:text-cyan-400 transition-colors">Releases</a>
-      <a href="https://github.com/guo6x/Omni-context/issues" class="hover:text-cyan-400 transition-colors">Issues</a>
+      <a href="https://github.com/guo6x/Omni-context/releases" class="hover:text-cyan-400 transition-colors" data-en="Releases" data-zh="发布"></a>
+      <a href="https://github.com/guo6x/Omni-context/issues" class="hover:text-cyan-400 transition-colors" data-en="Issues" data-zh="反馈"></a>
     </div>
   </div>
 </footer>
+
+<script>
+  const I18N = { en: { html: 'en', title: 'Omni-Context — Long-term memory for any AI', toggle: '中文' },
+                 zh: { html: 'zh', title: 'Omni-Context — 给任何 AI 装上长期记忆', toggle: 'EN' } };
+
+  function applyLang(lang) {
+    document.querySelectorAll('[data-en]').forEach(el => { el.innerHTML = el.dataset[lang]; });
+    document.documentElement.lang = I18N[lang].html;
+    document.title = I18N[lang].title;
+    document.getElementById('langToggle').textContent = I18N[lang].toggle;
+    try { localStorage.setItem('lang', lang); } catch (e) {}
+  }
+
+  let lang = 'en';
+  try {
+    const saved = localStorage.getItem('lang');
+    if (saved === 'en' || saved === 'zh') lang = saved;
+    else if ((navigator.language || '').toLowerCase().startsWith('zh')) lang = 'zh';
+  } catch (e) {}
+  applyLang(lang);
+
+  document.getElementById('langToggle').addEventListener('click', () => {
+    lang = (lang === 'en') ? 'zh' : 'en';
+    applyLang(lang);
+  });
+
+  // sticky nav bg on scroll
+  const nav = document.querySelector('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 24);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+
+  // scroll reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
 
 </body>
 </html>
