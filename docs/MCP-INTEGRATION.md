@@ -184,3 +184,20 @@ SQLite 的 WAL 模式支持多进程读写，但注意：
 | `MCP error: command failed` | 终端手动跑 `node <path>` 看真实报错；常见是缺 native binding，重装一次依赖 |
 | 工具返回但永远空 | 检查 `DB_PATH`——指向了新文件，里面就是空的 |
 | 任务管理器里 node.exe 越积越多 | MCP 客户端没正确发 shutdown 信号；偶尔 kill 掉无主 node 进程即可 |
+| AI 报 `Tool's name ... is not available in given tool list` | AI 套用了标准 memory server 的工具名（`read_graph` / `search_nodes`），本服务没有这些。用实际工具名（`unified_memory_search` / `search_entities` …），或安装下方的使用 Skill 让 AI 自动用对 |
+
+> 顺带一提：MCP 客户端配置里给本服务**起名别叫 `Memory`**——AI 一看是 "Memory" 就容易默认它是标准 memory server 去猜工具名。建议命名为 `omni-context`。
+
+---
+
+## 十、推荐：安装记忆使用 Skill（Claude Code / Claude）
+
+仓库里附带了一个 Agent Skill：`skills/omni-context-memory/SKILL.md`。它会告诉 AI 本服务的**正确工具名**和调用时机（对话开始先 `get_core_context` + `unified_memory_search`，结束 `save_conclusion`…），从根本上避免 AI 瞎猜 `read_graph` 这类不存在的工具。
+
+安装（任选其一）：
+
+- **Claude Code（项目级）**：把 `skills/omni-context-memory/` 整个目录复制到项目的 `.claude/skills/` 下。
+- **Claude Code（全局）**：复制到 `~/.claude/skills/`。
+- **Claude 桌面 / claude.ai**：在 Skills 设置里上传该目录（含 `SKILL.md`）。
+
+装好后无需手动触发——当对话涉及"回忆/沉淀长期记忆"时，Claude 会按 `description` 自动加载。
