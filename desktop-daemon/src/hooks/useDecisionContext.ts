@@ -77,6 +77,8 @@ export function useDecisionContext() {
   // v2: chat
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  // 当前正在讨论的决策情境（discuss_decision 需要非空 situation）
+  const [decisionSituation, setDecisionSituation] = useState("");
 
   // v2: lineage
   const [lineage, setLineage] = useState<DecisionLineage | null>(null);
@@ -114,6 +116,7 @@ export function useDecisionContext() {
     setIsAnalyzing(true);
     setAnalysisError(null);
     setAnalysis(null);
+    setDecisionSituation(situation);
 
     try {
       const response = await apiFetch('/api/mcp/tool/analyze_decision', {
@@ -163,7 +166,7 @@ export function useDecisionContext() {
         body: JSON.stringify({
           arguments: {
             messages: newHistory,
-            situation: result?.situation || "",
+            situation: decisionSituation || result?.situation || "",
           },
         }),
       });
@@ -179,7 +182,7 @@ export function useDecisionContext() {
     } finally {
       setIsChatLoading(false);
     }
-  }, [chatHistory, result]);
+  }, [chatHistory, result, decisionSituation]);
 
   // ── v2: save with confidence + alternatives ──
 
