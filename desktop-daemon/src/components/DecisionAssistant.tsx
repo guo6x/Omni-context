@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   X, Scale, BookOpen, Loader2, Check, Save,
   ChevronDown, ChevronRight, Send, Sparkles, ThumbsUp,
-  AlertTriangle, Lightbulb, GitBranch, Target, MessageSquare, ArrowRight,
+  AlertTriangle, Lightbulb, GitBranch, Target, MessageSquare, ArrowRight, HelpCircle,
 } from "lucide-react";
 import { useDecisionContext, ChatMessage } from "@/hooks/useDecisionContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -344,6 +344,35 @@ export default function DecisionAssistant({ isOpen, onClose, onSelectEntity }: D
                   accentClass="border-l-cyan-500/60 bg-cyan-500/5"
                 >
                   <p className="text-sm text-gray-200 leading-relaxed">{analysis.recommendation}</p>
+                </AnalysisCard>
+              )}
+
+              {/* ── Clarifying questions ── */}
+              {analysis.questions && analysis.questions.length > 0 && (
+                <AnalysisCard
+                  icon={<HelpCircle className="w-4 h-4" />}
+                  title={t("decision.questions_title")}
+                  accentClass="border-l-violet-500/60 bg-violet-500/5"
+                >
+                  <p className="text-xs text-gray-400 mb-2.5">{t("decision.questions_hint")}</p>
+                  <ul className="space-y-2">
+                    {analysis.questions.map((q, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-200">
+                        <span className="text-violet-400 mt-0.5 shrink-0">?</span>
+                        {q}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() => {
+                      setShowChat(true);
+                      setTimeout(() => chatInputRef.current?.focus(), 100);
+                    }}
+                    className="mt-3 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-600/20 border border-violet-500/40 text-violet-300 hover:bg-violet-600/30 transition-all"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    {t("decision.questions_answer")}
+                  </button>
                 </AnalysisCard>
               )}
 

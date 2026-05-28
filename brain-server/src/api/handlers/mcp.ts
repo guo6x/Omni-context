@@ -217,7 +217,8 @@ ${conflicts || '(无)'}
   "summary": "对决策情境的简要分析（2-3句话）",
   "pros": ["有利因素1", "有利因素2", ...],
   "cons": ["风险/不利因素1", "风险/不利因素2", ...],
-  "recommendation": "基于证据的建议方向（不要替用户做决定，而是给出有依据的方向）"
+  "recommendation": "基于证据的建议方向（不要替用户做决定，而是给出有依据的方向）",
+  "questions": ["当上述信息不足以给出可靠判断时，列出你需要用户补充的关键问题，最多3条；信息已充分则返回空数组 []"]
 }`;
 }
 
@@ -645,6 +646,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               pros: analysisJson.pros || [],
               cons: analysisJson.cons || [],
               recommendation: analysisJson.recommendation || '',
+              questions: Array.isArray(analysisJson.questions) ? analysisJson.questions.slice(0, 3) : [],
               evidence: rawCitations.slice(0, 8).map((c: any) => ({
                 entityId: c.id,
                 entityName: c.name,

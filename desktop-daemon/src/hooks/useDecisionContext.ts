@@ -11,6 +11,7 @@ export interface AnalysisResult {
   pros: string[];
   cons: string[];
   recommendation: string;
+  questions?: string[];
   evidence: Array<{
     entityId: string;
     entityName: string;
