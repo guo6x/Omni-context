@@ -640,7 +640,7 @@ function MainApp() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
-      <header className="flex items-center justify-between gap-2 px-3 sm:px-5 py-2 border-b border-white/10 bg-black/30 backdrop-blur-sm">
+      <header className="relative z-40 flex items-center justify-between gap-2 px-3 sm:px-5 py-2 border-b border-white/10 bg-black/30 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex items-center gap-3">
             <LogoMark size={36} className="animate-pulse-glow shrink-0" />
