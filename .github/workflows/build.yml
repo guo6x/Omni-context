@@ -13,7 +13,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-22.04]
+        # 两个 macOS runner：macos-14=Apple Silicon(arm64)、macos-13=Intel(x86_64)。
+        # 各自原生架构编译，内嵌的 node 二进制也匹配各自架构（universal 外壳配
+        # 单架构 node 会在另一架构上让 brain-server 起不来，故拆成两份单架构包）。
+        include:
+          - os: windows-latest
+            label: windows
+          - os: ubuntu-22.04
+            label: linux
+          - os: macos-14
+            label: macos-apple-silicon
+          - os: macos-13
+            label: macos-intel
 
     steps:
       - name: Checkout
@@ -113,7 +124,7 @@ jobs:
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg
+          name: ${{ matrix.label }}-dmg
           path: |
             desktop-daemon/src-tauri/target/release/bundle/macos/*.app
             desktop-daemon/src-tauri/target/release/bundle/dmg/*.dmg
