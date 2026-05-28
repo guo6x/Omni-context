@@ -184,6 +184,112 @@ async function callLlmDecision(
   }
 }
 
+// ── agentic: let the LLM search the graph itself for missing context ──
+// 给 LLM 一个 search_memory 工具，让它多轮自主检索补齐情境缺失的信息。
+// 模型不支持 tool-calling 时优雅降级（返回空，退回单次检索的基础上下文）。
+async function agenticEnrichMemories(
+  ctx: RequestContext,
+  situation: string,
+  baseMemories: any[],
+  maxIter = 3,
+): Promise<any[]> {
+  const llmConfig = ctx.extractor.getLlmConfig();
+  if (!llmConfig.apiUrl) return [];
+
+  const runSearch = async (query: string, limit = 5): Promise<any[]> => {
+    const text = await ctx.db.searchEntities(query, limit);
+    let vec: any[] = [];
+    try {
+      const emb = await ctx.embeddingService.embed(query);
+      vec = await ctx.db.vectorSearch(emb.embedding, limit);
+    } catch {
+      // vector optional
+    }
+    const out: any[] = [];
+    const seen = new Set<string>();
+    for (const src of [text, vec]) {
+      for (const it of src) {
+        if (!seen.has(it.id)) { seen.add(it.id); out.push(it); }
+      }
+    }
+    return out.map(toCompactEntity);
+  };
+
+  const tools = [{
+    type: 'function',
+    function: {
+      name: 'search_memory',
+      description: '在用户的知识图谱中检索与查询相关的实体（融合关键词 + 语义搜索）。当你缺少判断所需的背景信息时调用。',
+      parameters: {
+        type: 'object',
+        properties: { query: { type: 'string', description: '聚焦的检索查询词' } },
+        required: ['query'],
+      },
+    },
+  }];
+
+  const baseSummary = baseMemories.slice(0, 8).map((m: any) => `- ${m.name}`).join('\n') || '(无)';
+  const messages: any[] = [
+    { role: 'system', content: '你在为一个决策收集背景信息。可调用 search_memory 在用户知识图谱里检索你还缺的信息（最多几次，用聚焦的查询词）。信息足够后直接回复 DONE，不要做分析。' },
+    { role: 'user', content: `决策情境：${situation}\n\n已检索到的相关记忆：\n${baseSummary}\n\n还需要补充信息就调用 search_memory；否则回复 DONE。` },
+  ];
+
+  const found: any[] = [];
+  const foundIds = new Set<string>(baseMemories.map((m: any) => m.id));
+
+  try {
+    for (let i = 0; i < maxIter; i++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
+      let data: any;
+      try {
+        const resp = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(llmConfig.apiKey ? { Authorization: `Bearer ${llmConfig.apiKey}` } : {}),
+          },
+          body: JSON.stringify({
+            model: llmConfig.model,
+            messages,
+            tools,
+            tool_choice: 'auto',
+            temperature: 0.3,
+            max_tokens: 512,
+          }),
+          signal: controller.signal,
+        });
+        if (!resp.ok) break;
+        data = await resp.json();
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      const msg = data?.choices?.[0]?.message;
+      const toolCalls = msg?.tool_calls;
+      if (!msg || !Array.isArray(toolCalls) || toolCalls.length === 0) break; // LLM 收手
+
+      messages.push(msg);
+      for (const tc of toolCalls) {
+        let query = '';
+        try { query = JSON.parse(tc.function?.arguments || '{}').query || ''; } catch { /* bad args */ }
+        const results = query ? await runSearch(query) : [];
+        for (const r of results) {
+          if (!foundIds.has(r.id)) { foundIds.add(r.id); found.push(r); }
+        }
+        messages.push({
+          role: 'tool',
+          tool_call_id: tc.id,
+          content: JSON.stringify(results.map((r: any) => ({ id: r.id, name: r.name, type: r.type, description: r.description }))),
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('[analyze_decision] agentic enrich skipped (model may not support tools):', e);
+  }
+  return found;
+}
+
 // ── shared: build analysis prompt ──
 
 function buildAnalysisPrompt(situation: string, context: DecisionContextData): string {
@@ -607,6 +713,17 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
 
             // Step 1: retrieve context from knowledge graph
             const ctxData = await retrieveDecisionContext(ctx, situation, 5);
+
+            // Step 1b: agentic — let the LLM search for any context it still needs
+            try {
+              const extra = await agenticEnrichMemories(ctx, situation, ctxData.relevantMemories);
+              const known = new Set(ctxData.relevantMemories.map((m: any) => m.id));
+              for (const e of extra) {
+                if (!known.has(e.id)) { known.add(e.id); ctxData.relevantMemories.push(e); }
+              }
+            } catch {
+              // additive enrichment; ignore failures
+            }
 
             // Build citations list
             const rawCitations = [
