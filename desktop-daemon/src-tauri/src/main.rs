@@ -136,8 +136,13 @@ async fn main() {
         .setup(|app| {
             let _app_handle = app.app_handle().clone();
 
-            // 启动 30 秒后检查更新（避免拖慢启动）
+            // 启动 30 秒后检查更新（避免拖慢启动）。
+            // 仅当配置启用 updater（active=true）时 tauri-build 才会发出 cfg(updater)，
+            // AppHandle::updater() 方法随之才存在。CI 用 updater 关闭的配置打包，
+            // 故对整段更新检查加 cfg 守卫，关闭时直接编译掉、跳过检查。
+            #[cfg(updater)]
             let update_handle = app.app_handle().clone();
+            #[cfg(updater)]
             tauri::async_runtime::spawn(async move {
                 tokio::time::sleep(std::time::Duration::from_secs(30)).await;
                 println!("[Omni-Context] 检查更新...");
