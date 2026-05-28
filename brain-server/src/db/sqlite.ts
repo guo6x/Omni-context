@@ -133,6 +133,7 @@ const MIGRATIONS: Migration[] = [
   {
     version: 4,
     name: 'add_vec0_virtual_table',
+    requiresVec: true,
     up: `
       -- sqlite-vec 向量搜索虚拟表
       -- 注意：此表通过 sqlite-vec 扩展创建，需要先加载扩展
@@ -205,12 +206,20 @@ interface Migration {
   name: string;
   up: string;
   down?: string;
+  // 该迁移依赖 sqlite-vec 扩展（vec0 虚拟表）。扩展未加载时跳过，
+  // 且不记入 migrations 表，下次扩展可用时会重试。
+  requiresVec?: boolean;
 }
 
 export class Database {
   private db: sqlite3.Database;
   private dbPath: string;
   private vecEnabled: boolean = false;
+  // vec_entities 当前维度。migration v4 建表时为 384，但实际维度可能因
+  // embedding 模型不同而变（如 OpenAI 1536、bge 768/1024）。首次同步时
+  // 从 sqlite_master 读取真实维度，写入维度不符则按需重建表。
+  private vecDimension: number = 384;
+  private vecDimensionResolved: boolean = false;
 
   constructor(db: sqlite3.Database, dbPath: string, vecEnabled: boolean = false) {
     this.db = db;
@@ -284,6 +293,14 @@ export class Database {
       );
 
       if (!applied) {
+        // 依赖 sqlite-vec 的迁移在扩展缺失时跳过，且不记录——
+        // 否则 vec0 建表会抛 "no such module: vec0"，中断后续所有迁移
+        // （notifications、temporal 字段等都建不出来）。不记录可在
+        // 下次扩展可用时自动重试。
+        if (migration.requiresVec && !this.vecEnabled) {
+          console.warn(`Migration skipped (sqlite-vec unavailable): ${migration.name}`);
+          continue;
+        }
         try {
           await this.exec(migration.up);
           await this.run(
@@ -430,33 +447,53 @@ export class Database {
     return rows.map(row => this.rowToEntity(row));
   }
 
-  async searchEntities(query: string, limit: number = 10): Promise<Entity[]> {
-    // 优先使用 FTS5 全文检索
-    try {
-      const rows = await this.all<any>(
-        `SELECT e.* FROM fts_entities f
-         INNER JOIN entities e ON e.id = f.entity_id
-         WHERE fts_entities MATCH ? AND json_extract(e.metadata, '$.merged_into') IS NULL
-         ORDER BY rank
-         LIMIT ?`,
-        [query, limit]
-      );
-      if (rows.length > 0) {
-        return rows.map(row => this.rowToEntity(row));
+  async searchEntities(query: string, limit: number = 10, type?: string): Promise<Entity[]> {
+    // 优先使用 FTS5 全文检索（用户输入需转义，否则特殊字符会触发语法错或意外布尔逻辑）
+    const ftsQuery = this._toFtsQuery(query);
+    if (ftsQuery) {
+      try {
+        const typeClause = type ? ' AND e.type = ?' : '';
+        const params: any[] = type ? [ftsQuery, type, limit] : [ftsQuery, limit];
+        const rows = await this.all<any>(
+          `SELECT e.* FROM fts_entities f
+           INNER JOIN entities e ON e.id = f.entity_id
+           WHERE fts_entities MATCH ? AND json_extract(e.metadata, '$.merged_into') IS NULL${typeClause}
+           ORDER BY rank
+           LIMIT ?`,
+          params
+        );
+        if (rows.length > 0) {
+          return rows.map(row => this.rowToEntity(row));
+        }
+      } catch (e) {
+        // FTS5 不可用时回退到 LIKE
       }
-    } catch (e) {
-      // FTS5 不可用时回退到 LIKE
     }
 
     // 回退：LIKE 通配符搜索
     const searchTerm = `%${query}%`;
+    const typeClause = type ? ' AND type = ?' : '';
+    const params: any[] = type
+      ? [searchTerm, searchTerm, type, limit]
+      : [searchTerm, searchTerm, limit];
     const rows = await this.all<any>(
       `SELECT * FROM entities
-       WHERE (name LIKE ? OR description LIKE ?) AND json_extract(metadata, '$.merged_into') IS NULL
+       WHERE (name LIKE ? OR description LIKE ?) AND json_extract(metadata, '$.merged_into') IS NULL${typeClause}
        ORDER BY updated_at DESC LIMIT ?`,
-      [searchTerm, searchTerm, limit]
+      params
     );
     return rows.map(row => this.rowToEntity(row));
+  }
+
+  /**
+   * 把任意用户输入转成 FTS5 安全查询：按空白拆词，每个词作为带引号的 phrase
+   * （内部 " 翻倍转义），词间隐式 AND。这样 - ( ) * 和 AND/OR/NOT 等 FTS5
+   * 操作符都被当字面量，不会触发语法错误或意外布尔逻辑。空输入返回空串。
+   */
+  private _toFtsQuery(query: string): string {
+    const tokens = query.split(/\s+/).map(t => t.trim()).filter(Boolean);
+    if (tokens.length === 0) return '';
+    return tokens.map(t => `"${t.replace(/"/g, '""')}"`).join(' ');
   }
 
   async reindexEntities(): Promise<void> {
@@ -842,8 +879,16 @@ export class Database {
    * 回退：JS 内存余弦相似度（当 sqlite-vec 不可用时）
    */
   private async _vectorSearchFallback(queryEmbedding: number[], limit: number): Promise<VectorSearchResult[]> {
+    // 仅在 sqlite-vec 不可用时走这里。一次性把所有带向量的实体读进内存做余弦相似度，
+    // 实体过万时内存可达数百 MB，故按热度（access_count / last_accessed）取前 N 作候选，
+    // 用召回率换取内存安全。
+    const CANDIDATE_CAP = 5000;
     const rows = await this.all<any>(
-      'SELECT id, name, type, description, embedding FROM entities WHERE embedding IS NOT NULL AND json_extract(metadata, \'$.merged_into\') IS NULL'
+      `SELECT id, name, type, description, embedding FROM entities
+       WHERE embedding IS NOT NULL AND json_extract(metadata, '$.merged_into') IS NULL
+       ORDER BY access_count DESC, last_accessed DESC
+       LIMIT ?`,
+      [CANDIDATE_CAP]
     );
 
     const results: VectorSearchResult[] = rows
@@ -872,6 +917,12 @@ export class Database {
   private async _syncVecEmbedding(entityId: string, embedding: number[]): Promise<void> {
     if (!this.vecEnabled) return;
     try {
+      await this._resolveVecDimension();
+      // embedding 维度与 vec 表声明维度不符（用户切换了模型）：按实际维度重建，
+      // 否则 vec0 会拒绝写入，导致整列向量静默丢失、KNN 失效。
+      if (embedding.length !== this.vecDimension) {
+        await this._recreateVecTable(embedding.length);
+      }
       const vecBlob = Buffer.from(new Float32Array(embedding).buffer);
       // 先尝试删除旧记录（vec0 不支持 UPSERT）
       await this.run('DELETE FROM vec_entities WHERE entity_id = ?', [entityId]);
@@ -882,6 +933,35 @@ export class Database {
     } catch (e) {
       console.warn(`[sqlite-vec] 向量同步失败 (${entityId}):`, e);
     }
+  }
+
+  /** 从 sqlite_master 读取 vec_entities 的真实声明维度（只做一次） */
+  private async _resolveVecDimension(): Promise<void> {
+    if (this.vecDimensionResolved) return;
+    this.vecDimensionResolved = true;
+    try {
+      const row = await this.get<{ sql: string }>(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'vec_entities'"
+      );
+      const m = row?.sql?.match(/\[\s*(\d+)\s*\]/);
+      if (m) this.vecDimension = parseInt(m[1], 10);
+    } catch {
+      /* 读不到则保留默认 384 */
+    }
+  }
+
+  /**
+   * 按指定维度重建 vec_entities。切换 embedding 模型会改变向量空间，
+   * 旧向量与新向量本就不可比较，因此重建为空表是可接受的（实体表里的
+   * 旧 embedding BLOB 仍在，如需可调用 reindexEntities 重灌当前维度的向量）。
+   */
+  private async _recreateVecTable(dim: number): Promise<void> {
+    await this.run('DROP TABLE IF EXISTS vec_entities');
+    await this.run(
+      `CREATE VIRTUAL TABLE vec_entities USING vec0(entity_id TEXT PRIMARY KEY, embedding FLOAT[${dim}])`
+    );
+    this.vecDimension = dim;
+    console.warn(`[sqlite-vec] vec_entities 维度已调整为 ${dim}（embedding 模型变更），向量索引已重建`);
   }
 
   // ===================== Notifications (Agent Insights) =====================

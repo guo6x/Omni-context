@@ -683,6 +683,100 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           });
         }
 
+        case 'analyze_decision': {
+          const parsed = AnalyzeDecisionSchema.parse(args);
+          const { situation } = parsed;
+
+          const ctxData = await this._retrieveDecisionContext(situation, 5);
+          const rawCitations = [
+            ...ctxData.principles.map((p: any) => ({ id: p.id, name: p.name, type: p.type, description: p.description })),
+            ...ctxData.relevantMemories
+              .filter((m: any) => m.type !== 'principle')
+              .map((m: any) => ({ id: m.id, name: m.name, type: m.type, description: m.description })),
+          ];
+
+          let analysisJson: any;
+          try {
+            const promptText = this._buildAnalysisPrompt(situation, ctxData);
+            const llmResponse = await this._callLlmDecision(
+              '你是一个决策分析助手。你基于用户的知识图谱数据，帮助分析决策情境。只输出有效的 JSON。使用中文回复。',
+              promptText,
+            );
+            analysisJson = JSON.parse(llmResponse);
+          } catch (e: any) {
+            if (e.message === 'LLM_NOT_CONFIGURED') {
+              throw new McpError(ErrorCode.InvalidRequest, 'LLM_NOT_CONFIGURED: LLM provider not configured');
+            }
+            console.error('[analyze_decision] LLM analysis failed:', e);
+            analysisJson = { summary: '', pros: [], cons: [], recommendation: '' };
+          }
+
+          return this.formatResponse({
+            summary: analysisJson.summary || '',
+            pros: analysisJson.pros || [],
+            cons: analysisJson.cons || [],
+            recommendation: analysisJson.recommendation || '',
+            evidence: rawCitations.slice(0, 8).map((c: any) => ({
+              entityId: c.id,
+              entityName: c.name,
+              entityType: c.type,
+              relevance: 'relevant',
+            })),
+            rawCitations: rawCitations.slice(0, 8),
+          });
+        }
+
+        case 'discuss_decision': {
+          const parsed = DiscussDecisionSchema.parse(args);
+          const { situation, messages } = parsed;
+
+          const llmConfig = this.extractor.getLlmConfig();
+          if (!llmConfig.apiUrl) {
+            throw new McpError(ErrorCode.InvalidRequest, 'LLM_NOT_CONFIGURED');
+          }
+
+          const systemPrompt = `你是一个决策讨论助手。用户正在讨论一个决策："""${situation}"""
+你在帮助用户深入思考、质疑假设、补充视角。回复要简洁、直接、有帮助。使用中文。`;
+
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 60000);
+
+            const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(llmConfig.apiKey ? { Authorization: `Bearer ${llmConfig.apiKey}` } : {}),
+              },
+              body: JSON.stringify({
+                model: llmConfig.model,
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  ...messages,
+                ],
+                max_tokens: 512,
+                temperature: 0.6,
+              }),
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeout);
+
+            if (!response.ok) {
+              throw new Error(`LLM API error: ${response.status}`);
+            }
+
+            const data = await response.json() as {
+              choices: Array<{ message: { content: string } }>;
+            };
+
+            return this.formatResponse({ reply: data.choices?.[0]?.message?.content || '(no response)' });
+          } catch (e: any) {
+            console.error('[discuss_decision] Failed:', e);
+            return this.formatResponse({ reply: '抱歉，讨论服务暂时不可用。' });
+          }
+        }
+
         case 'get_decay_report': {
           const report = this.decayScheduler.getLastReport();
           return this.formatResponse(report || { message: '尚未执行衰减周期' });
@@ -851,6 +945,158 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
     }
 
     throw new McpError(ErrorCode.InvalidRequest, `未知资源: ${uri}`);
+  }
+
+  // ── 决策助手共享逻辑（与 HTTP handler api/handlers/mcp.ts 保持一致） ──
+
+  private async _retrieveDecisionContext(
+    situation: string,
+    limit: number,
+  ): Promise<{ principles: any[]; relevantMemories: any[]; conflicts: any[] }> {
+    const textResults = await this.db.searchEntities(situation, limit);
+    let vectorResults: any[] = [];
+    try {
+      const embResult = await this.embeddingService.embed(situation);
+      vectorResults = await this.db.vectorSearch(embResult.embedding, limit);
+    } catch {
+      // embedding 失败不阻塞
+    }
+
+    const seen = new Set<string>();
+    const relevantMemories: any[] = [];
+    for (const source of [textResults, vectorResults]) {
+      for (const item of source) {
+        if (!seen.has(item.id)) {
+          seen.add(item.id);
+          relevantMemories.push(item);
+        }
+      }
+    }
+
+    const corePrinciples = await this.db.getCorePrinciples();
+    const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
+    const searchPrinciples = relevantMemories.filter(
+      (m) => m.type === 'principle' && !seenPrincipleIds.has(m.id)
+    );
+    const principles = [...corePrinciples, ...searchPrinciples];
+
+    const relevantIds = new Set(relevantMemories.map((m: any) => m.id));
+    const conflicts: any[] = [];
+    const seenConflictKeys = new Set<string>();
+    for (const entity of relevantMemories) {
+      const rels = await this.db.getRelationshipsForEntity(entity.id);
+      for (const rel of rels) {
+        if (rel.type !== 'conflicts_with') continue;
+        const otherId = rel.source_id === entity.id ? rel.target_id : rel.source_id;
+        if (!relevantIds.has(otherId)) continue;
+        const key = [entity.id, otherId].sort().join('|');
+        if (seenConflictKeys.has(key)) continue;
+        seenConflictKeys.add(key);
+        const other = relevantMemories.find((m: any) => m.id === otherId);
+        if (other) {
+          conflicts.push({
+            a: { id: entity.id, name: entity.name },
+            b: { id: other.id, name: other.name },
+            description: rel.description || '',
+          });
+        }
+      }
+    }
+
+    const accIds = [
+      ...relevantMemories.map((m: any) => m.id),
+      ...principles.map((p: any) => p.id),
+    ].filter(Boolean);
+    if (accIds.length > 0) {
+      this.db.bumpAccessCounts(accIds).catch(() => {});
+    }
+
+    return { principles, relevantMemories, conflicts };
+  }
+
+  private _buildAnalysisPrompt(
+    situation: string,
+    context: { principles: any[]; relevantMemories: any[]; conflicts: any[] },
+  ): string {
+    const principles = context.principles.map((p: any) => `- [${p.type}] ${p.name}: ${p.description || ''}`).join('\n');
+    const history = context.relevantMemories
+      .filter((m: any) => m.type !== 'principle')
+      .slice(0, 8)
+      .map((m: any) => `- [${m.type}] ${m.name}: ${m.description || ''}`)
+      .join('\n');
+    const conflicts = context.conflicts
+      .map((c: any) => `- ${c.a.name} vs ${c.b.name}: ${c.description || ''}`)
+      .join('\n');
+
+    return `用户正在做以下决策：
+"${situation}"
+
+知识图谱中的相关信息：
+
+【核心原则】
+${principles || '(无)'}
+
+【相关历史记忆】
+${history || '(无)'}
+
+【潜在冲突】
+${conflicts || '(无)'}
+
+请基于以上知识图谱数据，进行结构化分析。严格按以下 JSON 格式输出（不要添加任何其他文字）：
+
+{
+  "summary": "对决策情境的简要分析（2-3句话）",
+  "pros": ["有利因素1", "有利因素2", ...],
+  "cons": ["风险/不利因素1", "风险/不利因素2", ...],
+  "recommendation": "基于证据的建议方向（不要替用户做决定，而是给出有依据的方向）"
+}`;
+  }
+
+  private async _callLlmDecision(systemPrompt: string, userPrompt: string): Promise<string> {
+    const llmConfig = this.extractor.getLlmConfig();
+    if (!llmConfig.apiUrl) {
+      throw new Error('LLM_NOT_CONFIGURED');
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(llmConfig.apiKey ? { Authorization: `Bearer ${llmConfig.apiKey}` } : {}),
+        },
+        body: JSON.stringify({
+          model: llmConfig.model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          max_tokens: 1024,
+          temperature: 0.4,
+          response_format: { type: 'json_object' },
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`LLM API error: ${response.status}`);
+      }
+
+      const data = (await response.json()) as {
+        choices: Array<{ message: { content: string } }>;
+      };
+
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) throw new Error('Empty LLM response');
+
+      const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+      return jsonMatch ? jsonMatch[1].trim() : content.trim();
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   private formatResponse(data: any) {

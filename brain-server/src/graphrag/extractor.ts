@@ -233,6 +233,7 @@ const VALID_ENTITY_TYPES: Set<EntityType> = new Set([
   'critical_review',
   'capture_snapshot',
   'memory',
+  'decision',
 ]);
 
 const VALID_RELATIONSHIP_TYPES: Set<RelationshipType> = new Set([
@@ -273,6 +274,8 @@ export class GraphRAGExtractor {
   private entityCache: Map<string, Entity>;
   private relationshipCache: Map<string, Relationship>;
   private llmPipeline: LLMExtractorPipeline;
+  // 复用 OCR 管道：worker 懒创建后常驻，避免每张截图重新加载 wasm/语言包
+  private ocrPipeline: OCRPipeline | null = null;
 
   constructor(config: ExtractionConfig = {}) {
     this.config = config;
@@ -455,22 +458,19 @@ export class GraphRAGExtractor {
           ? input.screenshot
           : `data:image/png;base64,${input.screenshot}`;
 
-        const ocr = new OCRPipeline();
-        try {
-          const ocrPromise = ocr.extractText(normalized);
-          const timeoutPromise = new Promise<null>((resolve) => {
-            setTimeout(() => resolve(null), 10_000);
-          });
-          const result = await Promise.race([ocrPromise, timeoutPromise]);
+        // 复用常驻 OCR 实例（worker 懒创建后保留），不再每张截图 new + dispose
+        const ocr = (this.ocrPipeline ??= new OCRPipeline());
+        const ocrPromise = ocr.extractText(normalized);
+        const timeoutPromise = new Promise<null>((resolve) => {
+          setTimeout(() => resolve(null), 10_000);
+        });
+        const result = await Promise.race([ocrPromise, timeoutPromise]);
 
-          if (result && result.text.trim()) {
-            console.log(`[Extract] OCR identified ${result.text.length} characters from screenshot`);
-            parts.push(`[Screenshot OCR]\n${result.text}`);
-          } else {
-            parts.push('[Screenshot OCR failed]');
-          }
-        } finally {
-          await ocr.dispose();
+        if (result && result.text.trim()) {
+          console.log(`[Extract] OCR identified ${result.text.length} characters from screenshot`);
+          parts.push(`[Screenshot OCR]\n${result.text}`);
+        } else {
+          parts.push('[Screenshot OCR failed]');
         }
       } catch (e) {
         console.warn('[Extract] OCR failed, falling back:', e);

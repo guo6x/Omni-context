@@ -81,6 +81,10 @@ export class CoreMemory {
     if (cached) {
       cached.accessCount++;
       cached.lastAccessed = new Date().toISOString();
+      // 刷新 LRU 顺序：删除后重插使其移到 Map 末尾（最近使用），
+      // 这样 updateCache 淘汰首个 key 时才真正淘汰最久未访问项，而非按插入顺序。
+      this.cache.delete(key);
+      this.cache.set(key, cached);
       this.updateAccess(key).catch(() => {});
       return cached;
     }

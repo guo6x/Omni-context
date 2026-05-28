@@ -273,16 +273,8 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             const type = parsed.type;
             const limit = parsed.limit || 10;
 
-            let entities;
-            if (type) {
-              entities = await ctx.db.getEntitiesByType(type);
-              entities = entities.filter((e) =>
-                e.name.toLowerCase().includes(query.toLowerCase()) ||
-                e.description?.toLowerCase().includes(query.toLowerCase())
-              ).slice(0, limit);
-            } else {
-              entities = await ctx.db.searchEntities(query, limit);
-            }
+            // 类型过滤下推到 SQL（searchEntities 第三参），避免全量拉取该类型再 JS 过滤
+            const entities = await ctx.db.searchEntities(query, limit, type);
 
             // 隐式 access tracking（仅 MCP 路径）
             const returnedIds = entities.map((e: any) => e.id).filter(Boolean);
