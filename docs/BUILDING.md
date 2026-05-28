@@ -1,78 +1,76 @@
-# 打包和运行 Omni-Context 桌面应用
+# 打包、运行与发布 Omni-Context
+
+本文档涵盖从环境准备到桌面应用打包、各组件构建，再到正式发版的完整流程。
 
 ## 目录
 
 - [前置要求](#前置要求)
 - [开发模式](#开发模式)
-- [打包应用](#打包应用)
+- [打包桌面应用](#打包桌面应用)
+- [打包其他组件](#打包其他组件)
+- [完整打包与 dist 结构](#完整打包与-dist-结构)
 - [安装和运行](#安装和运行)
 - [图标生成](#图标生成)
+- [发布新版本](#发布新版本)
+- [命令速查](#命令速查)
+- [故障排除](#故障排除)
+- [应用商店与已知限制](#应用商店与已知限制)
 
 ## 前置要求
 
-在开始之前，确保你已经安装了：
-
 ### 基础工具
 
-- **Node.js 18+** - JavaScript 运行时
-- **Rust 1.75+** - Rust 编程语言和工具链
-- **系统构建工具** - 根据你的操作系统：
+- **Node.js 18+** —— JavaScript 运行时
+- **Rust 1.75+** —— Rust 编程语言和工具链
+
+### 系统构建工具（按操作系统）
 
 #### Windows
 - Microsoft Visual Studio C++ Build Tools
 
 #### macOS
-- Xcode Command Line Tools:
-  ```bash
-  xcode-select --install
-  ```
-- Rust toolchain（推荐通过 rustup 安装）:
-  ```bash
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  # 重启终端后确认
-  rustc -V   # 需要 1.75+
-  ```
+```bash
+xcode-select --install
+# Rust toolchain（推荐通过 rustup 安装）
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustc -V   # 需要 1.75+
+```
 
 #### Linux (Ubuntu 22.04 / Debian)
-- 系统依赖库：
-  ```bash
-  sudo apt update
-  sudo apt install libwebkit2gtk-4.0-dev \
-    build-essential \
-    curl \
-    wget \
-    file \
-    libssl-dev \
-    libgtk-3-dev \
-    libayatana-appindicator3-dev \
-    librsvg2-dev
-  ```
-- Rust toolchain:
-  ```bash
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  source ~/.cargo/env
-  rustc -V   # 需要 1.75+
-  ```
+```bash
+sudo apt update
+sudo apt install libwebkit2gtk-4.0-dev \
+  build-essential \
+  curl \
+  wget \
+  file \
+  libssl-dev \
+  libgtk-3-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev
+# Rust toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+rustc -V   # 需要 1.75+
+```
 
 ### 安装项目依赖
 
 ```bash
-# 克隆项目
-git clone <repository-url>
-cd omni-context
+git clone https://github.com/guo6x/Omni-context.git
+cd Omni-context
 
-# 安装桌面应用依赖
-cd desktop-daemon
-npm install
+# 一次安装所有组件依赖
+npm run install:all
 
-# 安装 Brain Server 依赖
-cd ../brain-server
-npm install
+# 或按需单独安装
+cd desktop-daemon && npm install
+cd ../brain-server && npm install
 ```
 
 ## 开发模式
 
-在开发模式下，应用会自动重新加载：
+开发模式下应用会自动重新加载：
 
 ```bash
 cd desktop-daemon
@@ -80,15 +78,15 @@ npm run tauri:dev
 ```
 
 这会同时启动：
-1. **Next.js 开发服务器** - React 前端热重载
-2. **Tauri 开发窗口** - 桌面应用窗口
-3. **Brain Server** - 自动后台启动
+1. **Next.js 开发服务器** —— React 前端热重载
+2. **Tauri 开发窗口** —— 桌面应用窗口
+3. **Brain Server** —— 自动后台启动
 
-## 打包应用
+## 打包桌面应用
 
 ### 一键构建（推荐）
 
-运行跨平台打包脚本，自动完成 Brain Server 构建、内嵌 Node、前端构建和 Tauri 打包：
+跨平台打包脚本会自动完成 Brain Server 构建、内嵌 Node、前端构建和 Tauri 打包：
 
 ```bash
 # 在仓库根目录运行
@@ -99,154 +97,219 @@ node scripts/build-desktop-only.js
 
 ### 单独构建 Tauri
 
-如果只需要 Tauri 打包（Brain Server 已就绪）：
+如果 Brain Server 已就绪，只需要 Tauri 打包：
 
 ```bash
 cd desktop-daemon
 npm run tauri:build
 ```
 
+### 手动打包（理解每一步）
+
+```bash
+# 构建 Brain Server 并集成到桌面应用资源目录
+cd brain-server
+npm install && npm run build
+cd ../desktop-daemon
+mkdir -p src-tauri/brain-server
+cp -r ../brain-server/dist/* src-tauri/brain-server/dist/
+cp ../brain-server/package.json src-tauri/brain-server/
+
+# 构建前端 + 打包桌面应用
+npm run build
+npm run tauri build
+```
+
 ### 打包产物位置
 
-构建完成后，可执行文件位于：
+| 平台 | 产物 |
+|------|------|
+| Windows | `desktop-daemon/src-tauri/target/release/bundle/msi/*.msi`<br>`desktop-daemon/src-tauri/target/release/bundle/nsis/*.exe` |
+| macOS | `desktop-daemon/src-tauri/target/release/bundle/macos/*.app`<br>`desktop-daemon/src-tauri/target/release/bundle/dmg/*.dmg` |
+| Linux | `desktop-daemon/src-tauri/target/release/bundle/appimage/*.AppImage`<br>`desktop-daemon/src-tauri/target/release/bundle/deb/*.deb` |
 
-#### Windows
-```
-desktop-daemon/src-tauri/target/release/bundle/
-├── msie/
-│   └── Omni-Context_0.1.0_x64_en-US.msi
-└── nsis/
-    └── Omni-Context_0.1.0_x64_en-US.exe
+## 打包其他组件
+
+### 浏览器插件
+
+```bash
+cd browser-extension
+npm install
+npm run build:chrome    # Chrome/Edge
+npm run build:firefox   # Firefox
 ```
 
-#### macOS
-```
-desktop-daemon/src-tauri/target/release/bundle/
-└── macos/
-    └── Omni-Context.app
+产物：`browser-extension/build/chrome-mv3-prod/`、`browser-extension/build/firefox-mv2-prod/`
+
+安装（Chrome/Edge）：`chrome://extensions/` → 开启「开发者模式」→「加载已解压的扩展程序」→ 选择 `chrome-mv3-prod` 目录。
+安装（Firefox）：`about:debugging` →「此 Firefox」→「临时载入附加组件」→ 选择 `firefox-mv2-prod/manifest.json`。
+
+### 移动端应用
+
+前置：Expo CLI；Android 需 Android Studio（可选），iOS 需 Xcode（仅 macOS）。
+
+```bash
+cd mobile-app
+npm install
+npm start                  # Expo Go 中预览
+npm run build:android      # 本地构建 Android APK
+# 或用 EAS Build（需 Expo 账号）
+npm install -g eas-cli && eas build:configure && eas build --platform all
 ```
 
-#### Linux
+### ESP32 硬件固件
+
+固件需上传到 ESP32 开发板，而非打包成安装包。
+
+```bash
+cd hardware/esp32-firmware
+pip install platformio
+pio run --target upload
 ```
-desktop-daemon/src-tauri/target/release/bundle/
-├── appimage/
-│   └── Omni-Context_0.1.0_amd64.AppImage
-└── deb/
-    └── Omni-Context_0.1.0_amd64.deb
+
+或用 Arduino IDE 打开 `hardware/esp32-firmware/src/main.ino`，选择正确的开发板和端口后上传。
+
+## 完整打包与 dist 结构
+
+一次性打包所有组件：
+
+```bash
+npm install
+node scripts/package-all.js
+```
+
+清理构建缓存：
+
+```bash
+node scripts/clean-all.js
+```
+
+输出目录结构：
+
+```
+dist/
+├── README.md                 # 打包输出说明
+├── desktop-app/              # 桌面应用安装包
+│   ├── msi/ · nsis/          # Windows
+│   ├── macos/                # macOS DMG/APP
+│   └── appimage/ · deb/      # Linux
+├── browser-extension/        # chrome/ · firefox/
+├── brain-server/             # Brain Server 可执行文件
+├── mobile-app/               # 移动端配置和资源
+└── hardware/                 # 硬件文档和固件
 ```
 
 ## 安装和运行
 
 ### Windows
-
-#### 方法 1: 安装包
-1. 双击运行 `Omni-Context_0.1.0_x64_en-US.msi` 或 `Omni-Context_0.1.0_x64_en-US.exe`
-2. 按照安装向导操作
-3. 在开始菜单中找到并启动应用
-
-#### 方法 2: 直接运行
-也可以直接运行可执行文件：
-```
-desktop-daemon/src-tauri/target/release/Omni-Context.exe
-```
+- **安装包**：双击 `Omni-Context_<版本>_x64_en-US.msi` 或 `.exe`，按向导操作，在开始菜单启动。
+- **直接运行**：`desktop-daemon/src-tauri/target/release/Omni-Context.exe`
 
 ### macOS
-
-#### 方法 1: 拖拽安装
-1. 打开 `Omni-Context.app` 的位置
-2. 拖拽 `Omni-Context.app` 到 `Applications` 文件夹
-3. 在应用程序文件夹中找到并启动
-
-#### 方法 2: 直接运行
-```bash
-open desktop-daemon/src-tauri/target/release/bundle/macos/Omni-Context.app
-```
+- **拖拽安装**：将 `Omni-Context.app` 拖到 `Applications` 文件夹后启动。
+- **直接运行**：`open desktop-daemon/src-tauri/target/release/bundle/macos/Omni-Context.app`
 
 ### Linux
-
-#### 方法 1: AppImage
-```bash
-chmod +x desktop-daemon/src-tauri/target/release/bundle/appimage/Omni-Context_0.1.0_amd64.AppImage
-./desktop-daemon/src-tauri/target/release/bundle/appimage/Omni-Context_0.1.0_amd64.AppImage
-```
-
-#### 方法 2: DEB 包
-```bash
-sudo dpkg -i desktop-daemon/src-tauri/target/release/bundle/deb/Omni-Context_0.1.0_amd64.deb
-```
+- **AppImage**：`chmod +x *.AppImage && ./Omni-Context_<版本>_amd64.AppImage`
+- **DEB 包**：`sudo dpkg -i Omni-Context_<版本>_amd64.deb`
 
 ## 图标生成
 
-如果 `icons` 文件夹中没有所需的图标文件，需要先生成。
-
-### 方法 1: 使用 Node.js 脚本（推荐）
+如果 `src-tauri/icons/` 缺少所需图标文件，需先生成。
 
 ```bash
+# 方法 1：Node.js 脚本（推荐）
 cd desktop-daemon/src-tauri
 npm install canvas
 node icons/generate-icons.js
+
+# 方法 2：在线工具
+# 访问 https://icon.kitchen/ 上传 icons/icon.svg，下载各尺寸 PNG/ICO/ICNS 放回 src-tauri/icons/
 ```
 
-### 方法 2: 使用在线工具
+所需文件：`16/24/32/48/64/72/96/128/256/512` 各尺寸 PNG，以及 `icon.ico`（Windows）、`icon.icns`（macOS）。
 
-1. 访问 https://convertico.com/ 或 https://icon.kitchen/
-2. 上传 `icons/icon.svg` 文件
-3. 下载生成的各种尺寸的 PNG、ICO、ICNS 文件
-4. 放到 `src-tauri/icons/` 文件夹中
+## 发布新版本
 
-### 所需图标文件
+### 首次配置（仅需一次）
 
-确保 `icons/` 文件夹包含：
-- `16x16.png`
-- `24x24.png`
-- `32x32.png`
-- `48x48.png`
-- `64x64.png`
-- `72x72.png`
-- `96x96.png`
-- `128x128.png`
-- `256x256.png`
-- `512x512.png`
-- `icon.ico` (Windows)
-- `icon.icns` (macOS)
+1. **生成签名密钥对**
+   ```bash
+   cargo install tauri-cli --version "^1.5"
+   tauri signer generate -w ~/tauri_priv.key
+   ```
+   生成 `~/tauri_priv.key`（私钥，**绝对保密，不要提交仓库**）并输出公钥（base64）。
 
-## 快速命令参考
+2. **配置公钥**：把公钥贴到 `desktop-daemon/src-tauri/tauri.conf.json` 的 `tauri.updater.pubkey`。
 
-| 命令 | 说明 |
+3. **配置 GitHub Secrets**（Settings → Secrets and variables → Actions）：
+
+   | Name | Value |
+   |------|-------|
+   | `TAURI_PRIVATE_KEY` | `tauri_priv.key` 文件内容（整段 base64，不含换行） |
+   | `TAURI_KEY_PASSWORD` | 生成密钥时设置的密码（无密码可留空 `""`） |
+
+4. **配置 updater endpoint**：修改 `tauri.conf.json` 的 `tauri.updater.endpoints` 为
+   `https://github.com/<用户名>/<仓库名>/releases/latest/download/latest.json`。
+
+### 发版（自动化，推荐）
+
+推送版本 tag 即触发 `release.yml` 自动构建并发布：
+
+```bash
+npm version patch   # 或 minor / major
+git push --follow-tags
+```
+
+GitHub Actions 会构建 Windows 安装包、生成 `latest.json`（update manifest）并上传到 Release。已安装用户启动后约 30 秒内检测到新版本。
+
+> 多平台安装包（Windows / macOS 双架构 / Linux）的 CI 构建走 `build.yml`，用 `workflow_dispatch` 手动触发或 tag 触发，使用 `tauri.ci.conf.json`（关闭 updater），无需签名密钥即可产出安装包。
+
+### 手动测试自动更新
+
+```bash
+# 1. 本地起静态服务器
+cd /tmp && python -m http.server 8080
+```
+
+2. 构造 `latest.json`（tauri updater manifest 格式），指向本地的安装包 URL；
+3. 把 `tauri.conf.json` 的 endpoints 临时指向 `http://localhost:8080/latest.json`；
+4. 启动桌面 App，等待约 30 秒应弹出更新 toast。正式环境改回指向 GitHub Releases。
+
+### 更新流程
+
+```
+用户启动 → 30s 延迟 → 检查更新 → 有新版本 → 弹 Toast → 用户点击更新
+       → 下载 .msi/.exe → 完成后提示重启 → 重启即新版本
+```
+
+检查更新失败时静默处理（写日志，不弹窗）。
+
+## 命令速查
+
+| 任务 | 命令 |
 |------|------|
-| `npm run tauri:dev` | 开发模式运行 |
-| `npm run tauri:build` | 打包应用 |
-| `npm run build` | 只构建 Next.js 前端 |
-| `npm run dev` | 只运行 Next.js 前端 |
+| 安装所有依赖 | `npm run install:all` |
+| 快速打包桌面应用 | `node scripts/build-desktop-only.js` |
+| 打包所有组件 | `node scripts/package-all.js` |
+| 清理构建缓存 | `node scripts/clean-all.js` |
+| 桌面开发模式 | `cd desktop-daemon && npm run tauri:dev` |
+| 桌面打包 | `cd desktop-daemon && npm run tauri:build` |
+| 只构建前端 | `cd desktop-daemon && npm run build` |
+| 浏览器插件开发 | `cd browser-extension && npm run dev` |
+| 移动端预览 | `cd mobile-app && npm start` |
 
 ## 故障排除
 
-### 构建失败
+- **Tauri / 构建失败**：多为缺少系统依赖或 Rust 工具链未装好。按[前置要求](#前置要求)安装对应平台依赖；确认 `rustc -V` ≥ 1.75；建议至少 4GB RAM。
+- **Brain Server 无法集成 / 启动**：确认 `brain-server` 已 `npm install && npm run build`，且 `dist/` 已复制到 `desktop-daemon/src-tauri/brain-server/`。
+- **图标相关错误**：先运行[图标生成](#图标生成)脚本。
+- **Node.js 版本不匹配**：用 nvm 切到 18 LTS（`nvm install --lts && nvm use --lts`）。
 
-如果构建失败，请检查：
-1. Rust 工具链是否安装正确
-2. 系统依赖是否完整
-3. 内存是否足够（建议至少 4GB RAM）
+## 应用商店与已知限制
 
-### 图标错误
+- **macOS App Store**：需 Apple Developer ID 签名 + notarize。本期未配置签名（`signingIdentity: null`），产出的 `.dmg` 安装时会有安全警告，需在「系统设置 > 隐私与安全性」手动允许。
+- **Windows Store**：需额外打包与签名，参考 Tauri 官方文档。
+- **Linux**：AppImage 可直接分发；DEB 包的 `depends` 已在 `tauri.conf.json` 配置。
 
-如果看到图标相关的错误，请先运行图标生成脚本。
-
-### Brain Server 无法启动
-
-确保 `brain-server` 文件夹存在且依赖已安装。
-
-## 发布到应用商店（可选）
-
-### macOS App Store
-需要 Apple Developer ID 签名 + notarize。本期未配置签名（`signingIdentity: null`），产出 `.dmg` 安装时有安全警告，需用户在「系统设置 > 隐私与安全性」中手动允许。
-
-### Windows Store
-需要额外的打包和签名步骤，请参考 Tauri 官方文档。
-
-### Linux
-AppImage 可直接分发。DEB 包需配置 `depends` 列表（已在 `tauri.conf.json` 中配置）。
-
-## 已知限制
-
-> **注意**: 当前开发者没有 macOS / Linux 设备进行真机测试。macOS 和 Linux 打包流程的代码已准备就绪，CI 也会在对应平台验证，但欢迎社区贡献者在真实 macOS / Linux 上验证并反馈问题。
+> **注意**：当前开发者没有 macOS / Linux 设备做真机测试。两平台的打包代码已就绪、CI 也会在对应平台验证，欢迎社区贡献者在真实环境验证并反馈。架构概览见 [ARCHITECTURE.md](ARCHITECTURE.md)。

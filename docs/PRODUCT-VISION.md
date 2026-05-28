@@ -392,10 +392,11 @@ omni-context-release/
     ├── PRODUCT-VISION.md      # 本文档（北极星）
     ├── ARCHITECTURE.md        # 详细技术架构（README 不再展开）
     ├── MCP-INTEGRATION.md     # 第三方接入指南
-    ├── BUILDING.md / PACKAGE.md / RELEASING.md
+    ├── BUILDING.md            # 打包、运行与发布（合并自原 PACKAGE/RELEASING）
     ├── EXPERIMENTAL.md        # 移动端 / ESP32 / 抓屏现状
     ├── DEMO_SCRIPT.md         # 90 秒 demo 拍摄脚本
-    └── landing/               # GitHub Pages 静态页
+    ├── index.html            # GitHub Pages 首页（landing，中英双语）
+    └── landing/assets/        # 首页素材（social-preview 等）
 ```
 
 ### 9.3 权限用途
