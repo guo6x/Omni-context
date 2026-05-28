@@ -13,18 +13,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 两个 macOS runner：macos-14=Apple Silicon(arm64)、macos-13=Intel(x86_64)。
-        # 各自原生架构编译，内嵌的 node 二进制也匹配各自架构（universal 外壳配
-        # 单架构 node 会在另一架构上让 brain-server 起不来，故拆成两份单架构包）。
+        # macOS 只用 macos-14（Apple Silicon/arm64）。Intel 的 macos-13 在本仓库的
+        # 免费额度下长期分配不到 runner（实测排队 1 小时无进展），故移除；Intel Mac
+        # 用户走源码构建。Linux 只打 .deb：runner 上 webkit 版本过新，Tauri v1 的
+        # appimage.sh 适配不了 AppImage 打包，deb 稳定可用。
         include:
           - os: windows-latest
             label: windows
           - os: ubuntu-22.04
             label: linux
+            bundleArgs: --bundles deb
           - os: macos-14
             label: macos-apple-silicon
-          - os: macos-13
-            label: macos-intel
 
     steps:
       - name: Checkout
@@ -112,7 +112,7 @@ jobs:
       - name: Build Tauri app
         # 用 CI 专用配置（updater 关闭），无需 TAURI_PRIVATE_KEY 也能产出安装包。
         # 需要带签名/自动更新的正式发布走 release.yml（配 TAURI_PRIVATE_KEY secret）。
-        run: npx tauri build -c src-tauri/tauri.ci.conf.json
+        run: npx tauri build -c src-tauri/tauri.ci.conf.json ${{ matrix.bundleArgs }}
         working-directory: desktop-daemon
 
       - name: Upload Windows artifacts
@@ -137,7 +137,6 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: linux-appimage
+          name: linux-deb
           path: |
-            desktop-daemon/src-tauri/target/release/bundle/appimage/*.AppImage
             desktop-daemon/src-tauri/target/release/bundle/deb/*.deb
