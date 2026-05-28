@@ -35,6 +35,10 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          # 仓库根没有 lockfile，npm 缓存键由两个子项目的 lockfile 计算。
+          cache-dependency-path: |
+            desktop-daemon/package-lock.json
+            brain-server/package-lock.json
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
