@@ -20,6 +20,7 @@ export default {
     maximize: '最大化',
     more: '更多',
     insights: '洞察通知',
+    decision_log: '决策复盘',
   },
   hud: {
     listening: '监听中...',
@@ -516,6 +517,9 @@ export default {
     questions_title: '助手还想确认',
     questions_hint: '信息不足以可靠判断，补充以下内容能让分析更准：',
     questions_answer: '去补充（进入讨论）',
+    log_title: '决策复盘',
+    log_subtitle: '你的每个决策，连成了现在的你',
+    log_empty: '还没有保存的决策。在决策助手里分析并保存后，会按时间出现在这里。',
     evidence_title: '引用证据',
     evidence_count: '{count} 条引用',
     chat_title: '深入讨论',

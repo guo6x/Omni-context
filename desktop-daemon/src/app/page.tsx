@@ -21,6 +21,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import SearchPalette from "@/components/SearchPalette";
 import DecisionAssistant from "@/components/DecisionAssistant";
+import DecisionTimeline from "@/components/DecisionTimeline";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
 
@@ -110,6 +111,7 @@ function MainApp() {
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
   const [showSearchPalette, setShowSearchPalette] = useState(false);
   const [showDecisionAssistant, setShowDecisionAssistant] = useState(false);
+  const [showDecisionLog, setShowDecisionLog] = useState(false);
   const [focusEntityId, setFocusEntityId] = useState<string | undefined>(undefined);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [showOfflineDetails, setShowOfflineDetails] = useState(false);
@@ -735,6 +737,13 @@ function MainApp() {
                     {t('nav.insights')}
                   </button>
                   <button
+                    onClick={() => { setShowDecisionLog(true); setShowMoreMenu(false); }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Scale className="w-4 h-4 text-cyan-400" />
+                    {t('nav.decision_log')}
+                  </button>
+                  <button
                     onClick={() => { setShowShortcuts(!showShortcuts); setShowMoreMenu(false); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                   >
@@ -942,6 +951,14 @@ function MainApp() {
         <DecisionAssistant
           isOpen={showDecisionAssistant}
           onClose={() => setShowDecisionAssistant(false)}
+          onSelectEntity={(id) => {
+            setFocusEntityId(id);
+          }}
+        />
+
+        <DecisionTimeline
+          isOpen={showDecisionLog}
+          onClose={() => setShowDecisionLog(false)}
           onSelectEntity={(id) => {
             setFocusEntityId(id);
           }}

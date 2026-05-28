@@ -20,6 +20,7 @@ export default {
     maximize: 'Maximize',
     more: 'More',
     insights: 'Insights',
+    decision_log: 'Decision Log',
   },
   hud: {
     listening: 'Listening...',
@@ -516,6 +517,9 @@ export default {
     questions_title: 'A few things to clarify',
     questions_hint: 'Not enough to judge reliably — filling these in will sharpen the analysis:',
     questions_answer: 'Answer in discussion',
+    log_title: 'Decision Log',
+    log_subtitle: 'Every decision you made adds up to who you are now',
+    log_empty: 'No saved decisions yet. Once you analyze and save one in the Decision Assistant, it shows up here in time order.',
     evidence_title: 'Evidence',
     evidence_count: '{count} references',
     chat_title: 'Discussion',
