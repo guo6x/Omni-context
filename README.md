@@ -1,12 +1,14 @@
 # Omni-Context
 
+<p align="center"><strong>English</strong> · <a href="README.zh-CN.md">简体中文</a></p>
+
 > **Plug long-term memory into any AI client via MCP — runs entirely on your machine, owns your data forever.**
 
 <p align="center">
-  <img src="docs/landing/assets/demo.gif" alt="Omni-Context demo" width="720">
+  <img src="docs/landing/assets/social-preview.svg" alt="Omni-Context" width="720">
 </p>
 
-[![Build](https://img.shields.io/github/actions/workflow/status/guo6x/Omni-context/release.yml?branch=main)](https://github.com/guo6x/Omni-context/actions)
+[![Build](https://img.shields.io/github/actions/workflow/status/guo6x/Omni-context/build.yml?branch=main)](https://github.com/guo6x/Omni-context/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 <p align="center">
