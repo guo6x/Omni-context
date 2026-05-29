@@ -2,7 +2,7 @@
 
 > 这份文档是整个项目的「北极星」。所有规划、任务拆分、验收都以它为准。
 > 当现实和这份文档冲突时——要么改代码对齐文档，要么改文档对齐新决定，二选一，不允许含糊。
-> 最后更新：2026-05-26
+> 最后更新：2026-05-29
 
 ---
 
@@ -121,19 +121,22 @@
 | 决策助手独立页面 | Ctrl+Shift+K，5 行输入框 + 三列结果（原则/历史/冲突） | ✅ | task 22：从 SearchPalette 拆出独立全屏覆盖层 |
 | 洞见通知中心 | 毛玻璃 Insights 收件箱（含 decay_warning） | ✅ | |
 | 系统托盘 + 后台常驻 | 托盘图标 + 关 X 默认最小化 + 菜单（重启 BS / 打开数据目录 / 退出） | ✅ | task 06 |
-| MCP 接入面板 | 12 个客户端卡片 + 一键写入（Claude Desktop/Cursor 等）+ 复制 JSON 兜底 + 能力预览（5 个使用场景） | ✅ | task 02 + 20 |
+| MCP 接入面板 | 12 个客户端卡片 + 一键写入（Claude Desktop/Cursor 等）+ 复制 JSON 兜底 + 能力预览（5 个使用场景） | ✅ | task 02 + 20；2026-05-29 诚实化：仅验证过的客户端归「一键（已验证）」，其余归「手动（复制参数）」，不再假装全可一键 |
+| Agent Skills 支持 | `skills/omni-context-memory/SKILL.md` 教 AI 正确的 omni-context 工具名 | ✅ | 2026-05-29：避免 AI 猜标准 memory-server 工具名（read_graph 等）导致调用失败 |
 | 首启 Wizard + LLM 预设 | 11 家服务商预设（OpenAI/DeepSeek/Moonshot/智谱/通义/火山/Groq/OpenRouter/Ollama 等）+ 测试连接 + LLM 未配横幅引流 | ✅ | task 07 |
 | 沉淀真反馈 | HUD 等待真实 await，三分支显示（成功 N 实体 / 0 内容 / 失败原因） | ✅ | task 09 + 10：截图真 OCR + 防重 ref |
 | 离线横幅文案 | 简短文案 + 折叠"详细信息"展开技术原因 | ✅ | task 17 |
 | 系统自检 Tab | embedding 引擎状态（hash-fallback 时红色警告）+ LLM / OCR / BS 真实状态 | ✅ | task 18 |
 | 国际化 | zh/en 全量覆盖（130+ key，UI 0 硬编码中文残留） | ✅ | task 16 |
+| 空状态新手引导 | 「加载 Demo 为主 + 逐功能导览」替代平级四按钮，接入 AI 客户端入口置顶 | ✅ | 2026-05-29：EmptyState 重构，降低新手认知负担 |
+| 决策复盘时间线 | 按时间线翻历史决策 + 展开看来由/证据链 + 点击跳图谱聚焦 | ✅ | 2026-05-29：DecisionTimeline，补齐 §6 旧口子 |
 | 设置面板 | 快捷键/外观/行为/LLM/MCP/数据管理/启动行为/常驻 | ✅ | |
 | 浅色主题 | 完整 light 主题适配 | ✅ | |
 | 屏幕/剪贴板捕获 | 系统级捕获后入库 | ✅ | task 09 接通后端 OCR，捕获→图谱链路打通 |
 | 开机自启 | 跟随系统启动 | ✅ | tauri-plugin-autostart |
 | Tauri allowlist + Cargo features | fs.readFile / window / shell / clipboard 全部正确开启 | ✅ | 拖放、HUD、托盘都依赖 |
 | Windows 打包 | msi + nsis 安装包 | ✅ | |
-| macOS / Linux 打包 | 同等安装包 | 🟡 | task 29：脚本就绪、CI matrix 就绪，无 mac/linux 设备实测 |
+| macOS / Linux 打包 | 同等安装包 | ✅ | task 29 + 2026-05-29：CI matrix 全绿，实测产出 Win(msi+nsis) / macOS-arm(dmg) / Linux(deb)。Intel mac（免费 runner 长期分配不到）+ AppImage（runner webkit 过新）走源码构建 |
 | 自动更新 | Tauri updater + GitHub Release | 🟡 | task 28：代码就绪，pubkey/endpoint 已填，私钥本地保存待配 GitHub Secret |
 | 抓屏隐私控制 | 暂停 toggle + 敏感应用 blocklist | ✅ | task 24 |
 | 日志落盘 | %LOCALAPPDATA%\omni-context\logs\ + 轮转 | ✅ | task 25 |
@@ -183,7 +186,8 @@
 | MCP Server | 14 个工具（含决策上下文 / 衰减报告 / 统一记忆搜索） | ✅ | |
 | MCP HTTP 代理 | mcp-proxy.js 把 stdio 转发到本机 brain-server HTTP | ✅ | task 08：客户端无感，但服务端单点。彻底解决多客户端 DB 隔离 + LLM 配置不共享 + 并发风险 |
 | 多客户端一键 / 半自动接入 | Claude Desktop / Cursor / Windsurf / Cline / Continue / Roo Code / Trae / LM Studio / Cherry Studio / ChatBox / Zed / Goose + 兜底 | ✅ | task 02：12 + 1 张卡片在设置面板 |
-| 决策支持能力 | `get_decision_context` 工具 + 桌面端独立 UI（Ctrl+Shift+K）+ 保存决策结果回图谱 | ✅ | task 22+33：独立助手页面 + "我已决定"按钮把决策沉淀为 decision 实体 |
+| 决策支持能力 | `get_decision_context` 工具 + 桌面端独立 UI（Ctrl+Shift+K）+ 保存决策结果回图谱 | ✅ | task 22+33：独立助手页面 + "我已决定"按钮把决策沉淀为 decision 实体；2026-05-29：信息不足时主动反问（questions）+ agentic 自主检索本地图谱补证据；修复深度讨论 500（situation 透传）。联网搜索经评估明确不做 |
+| 决策复盘视图 | 按时间线翻历史决策 + 来由/证据链 | ✅ | 2026-05-29：DecisionTimeline，兑现 §6 旧候选 |
 | AI 大脑三件套 | MCP instructions 引导 + save_conclusion 工具 + 隐式 access_count | ✅ | task 23：让接入的 AI 主动调记忆、把对话结论写回图谱、被引用的记忆自动加权 |
 | HTTP API 对外开放 | 非 MCP 的 AI 产品也能 HTTP 接入 | 🟡 | MCP 为对外主通道；HTTP API 维持产品内部客户端用，暂不作为第三方契约对外 |
 | 接入文档 | 第三方「如何把 Omni-Context 当脑子用」指南 | ✅ | `docs/MCP-INTEGRATION.md` |
@@ -191,7 +195,21 @@
 
 ---
 
-## 5. 当前总体状态快照（2026-05-26）
+## 5. 当前总体状态快照（2026-05-29）
+
+**本轮增量（2026-05-29）——产品打磨 + 可发布性**
+
+- **新手引导重构**：空状态从「平级四按钮」改为「加载 Demo 为主 + 逐功能导览」，接入 AI 客户端入口置顶，降低"不知道主次"的认知负担（真实用户反馈驱动）。
+- **决策助手补全**：信息不足主动反问 + agentic 自主检索本地图谱补证据 + 修复深度讨论 500；新增决策复盘时间线（兑现 §6 旧候选）。联网搜索评估后明确不做。
+- **MCP 接入诚实化**：一键仅保留验证过的客户端，其余转手动；新增 Agent Skill 教 AI 正确工具名，避免猜标准 memory-server 工具名导致调用失败。
+- **可发布性**：CI matrix 修绿，实测三平台出包（Win msi+nsis / macOS-arm dmg / Linux deb）；GitHub Pages 落地页重做为中英双语；README 中英双语；文档合并去冗余。
+- **桌面端 bug**：右上角 More 菜单被图谱概览遮挡修复（header stacking context）。
+
+> 仍在"卡口"的：Tauri 自动更新私钥待注入 GitHub Secret；移动端 / Intel mac / ESP32 待真机；以及"宣传/分发"这件没人替你写代码的事（见 §6 新增「分发与宣传」）。
+
+---
+
+
 
 **当前交付形态：桌面端 v1.2（"AI 大脑"产品化 + 隐私 + 自动更新就绪） + 浏览器插件（异步 job 适配） + 移动端 LAN 鉴权 + 数字脑子（MCP + 代理 + AI 主动调用三件套）对外接口。**
 
@@ -247,7 +265,17 @@ task 01-34 完成后，原 P1/P2/P3 清单（除社区贡献类）全部消化�
 
 - **桌面 v1.3+ 主要候选**：图谱时间轴回放、节点笔记附件、Letta 风格的多层 memory tiering 在 UI 暴露、批量重建 embedding 进度条。
 - **HTTP API 对外契约化**：当前 MCP 为主、HTTP 内部用；若有第三方需要 HTTP 直连，再补稳定契约文档。
-- **决策审计 / 复盘视图**：task 33 把决策沉淀进图谱了，但还没"按时间线翻历史决策"的 UI。
+- ~~**决策审计 / 复盘视图**~~ ✅ 2026-05-29 完成（DecisionTimeline）。
+
+### 分发与宣传（1→100 的真正战场，非开发量）
+
+> 产品本身 0→1 已基本完成。继续往前不是堆功能，而是"让人看得到、用得上、留得下"。这部分没人能替你写代码，但有方法可循。下面是按"低成本→高投入"排的可执行项，不是必须全做，是给自己一张清单别再空想。
+
+- **一句话价值主张**：对外只说一句——"给任何 AI 装一个有长期记忆、能基于你历史做判断的本地大脑"。落地页 / README / 发帖标题都用这一句，不要罗列功能。
+- **首发渠道**（开发者向产品的典型路径）：GitHub README 打磨（截图 + 30s GIF + 一键安装）→ 发 Show HN / Reddit (r/LocalLLaMA, r/selfhosted) / V2EX / 即刻 → MCP 生态目录收录（Claude/Cursor 社区的 MCP server 列表）。
+- **宣传文案的写法**：先痛点（"和 AI 聊过的东西它转头就忘"）→ 再反差（"换成有记忆的脑子会怎样"）→ 给一个可复现的 30 秒 demo（在 Cursor 里问，它自动调出你上周的笔记）→ 强调本地/无云/数据主权这条差异化。**别一上来列 14 个 MCP 工具**，没人关心。
+- **降低首用门槛**：安装包要无脑（已就绪）、首启即有 Demo（已就绪）、接入第一个 AI 客户端三步内完成（接入面板已就绪）。这三点是转化率命门，比加功能重要。
+- **可信度素材**：一个 90 秒录屏（脚本已有 `docs/DEMO_SCRIPT.md`）、几张真实图谱截图、一句"为什么我做这个"的故事。
 
 ### 明确暂缓（不在 v1.x 范围）
 
@@ -335,6 +363,17 @@ task 01-34 完成后，原 P1/P2/P3 清单（除社区贡献类）全部消化�
 - ✅ 32 快捷键冲突检测 + Embedding 模型重载按钮
 - ✅ 33 决策助手"我已决定"沉淀回图谱
 - ✅ 34 异步 job 协作式取消
+
+### 阶段 7.5 —— 打磨 + 可发布性（2026-05-29）
+
+真实用户（含非技术用户）试用反馈驱动的一轮收尾，把产品从"能用"推向"敢发"：
+
+- ✅ CI matrix 修绿，三平台实测出包（Win/macOS-arm/Linux）
+- ✅ GitHub Pages 落地页中英双语重做 + README 中英双语 + 文档合并去冗余
+- ✅ MCP 接入诚实化（一键仅限验证客户端）+ Agent Skill 教正确工具名
+- ✅ 决策助手：主动反问 + agentic 自主检索 + 深度讨论 500 修复 + 复盘时间线
+- ✅ 空状态新手引导重构（加载 Demo 为主 + 逐功能导览）
+- ✅ 桌面端 More 菜单遮挡修复
 
 ### 阶段 8 —— 见 § 6 路线图
 
