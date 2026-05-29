@@ -89,8 +89,8 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-16 right-6 w-[28rem] max-w-[calc(100vw-3rem)] max-h-[80vh] flex flex-col glass-panel rounded-xl shadow-2xl border border-cyan-500/30 overflow-hidden z-40 animate-in slide-in-from-right-8 duration-300">
-      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/40 backdrop-blur-md">
+    <div className="absolute top-16 right-6 w-[28rem] max-w-[calc(100vw-3rem)] max-h-[80vh] flex flex-col bg-[#0a0b12]/95 rounded-xl shadow-2xl border border-cyan-500/30 overflow-hidden z-40 animate-in slide-in-from-right-8 duration-300">
+      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#0a0b12]/80">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-cyan-400 animate-pulse" />
           <h2 className="text-white font-medium">{t('insights.title')}</h2>

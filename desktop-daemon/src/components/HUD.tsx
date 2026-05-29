@@ -40,7 +40,7 @@ export default function HUD({ isVisible, onClose, message, status = "listening" 
 
   return (
     <div className="fixed top-20 right-4 z-50">
-      <div className="glass-panel p-6 min-w-[320px] border-l-4 border-l-cyan-400">
+      <div className="bg-[#0a0b12]/95 p-6 min-w-[320px] border-l-4 border-l-cyan-400 rounded-xl">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             {statusIcon[currentStatus]}

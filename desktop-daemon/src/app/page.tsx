@@ -105,6 +105,8 @@ function MainApp() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
+  // 总览视图节点上限（后端 300）下，实际总数 / 已显示数，用于「显示 X / 共 Y」角标
+  const [graphTotal, setGraphTotal] = useState(0);
   const [showUpload, setShowUpload] = useState(false);
   const [showHardware, setShowHardware] = useState(false);
   const [emptyDismissed, setEmptyDismissed] = useState(false);
@@ -120,7 +122,7 @@ function MainApp() {
   const { confirm, dialog } = useConfirm();
 
   const { settings, showSettings, setShowSettings, updateShortcut, resetShortcuts, updateAppearance, updateBehavior, updateLlmProvider } = useSettings();
-  const { status, addLog, triggerPrecipitate, triggerDecision, triggerReset, refreshTrigger } = useOmniContext();
+  const { status, hasConnectedOnce, addLog, triggerPrecipitate, triggerDecision, triggerReset, refreshTrigger } = useOmniContext();
   const { t, language, setLanguage } = useTranslation();
   const toast = useToast();
   const [settingsTab, setSettingsTab] = useState<'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about'>('shortcuts');
@@ -142,6 +144,7 @@ function MainApp() {
       const data = await response.json();
       setEntities(data.entities || []);
       setRelationships(data.relationships || []);
+      setGraphTotal(typeof data.total === 'number' ? data.total : (data.entities || []).length);
     } catch (error) {
       // 第一次 brain-server 还没起就别打扰用户；只在已有数据时刷新失败提示
       if (entities.length > 0) {
@@ -642,6 +645,19 @@ function MainApp() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
+      {/* 冷启动遮罩：brain-server 内嵌进程启动较慢，未首次连上前盖一层过渡画面 */}
+      {!hasConnectedOnce && (
+        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-background">
+          <LogoMark size={72} className="animate-pulse-glow" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-3">
+              <span className="block w-5 h-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+              <span className="text-base font-medium text-white">{t('boot.title')}</span>
+            </div>
+            <p className="text-xs text-gray-500">{t('boot.hint')}</p>
+          </div>
+        </div>
+      )}
       <header className="relative z-40 flex items-center justify-between gap-2 px-3 sm:px-5 py-2 border-b border-white/10 bg-black/30 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex items-center gap-3">
@@ -854,6 +870,12 @@ function MainApp() {
           onFocusEntityReset={() => setFocusEntityId(undefined)}
         />
 
+        {graphTotal > entities.length && entities.length > 0 && (
+          <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-md border border-white/10 bg-gray-950/80 px-2.5 py-1 text-[11px] text-gray-400 backdrop-blur-sm">
+            {t('graph.showing_count').replace('{shown}', String(entities.length)).replace('{total}', String(graphTotal))}
+          </div>
+        )}
+
         {entities.length === 0 && !emptyDismissed && (
           <EmptyState
             onLoadDemo={handleLoadDemo}
@@ -870,11 +892,11 @@ function MainApp() {
 
         {showUpload && (
           <div
-            className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black/60"
             onClick={() => setShowUpload(false)}
           >
             <div
-              className="glass-panel w-full max-w-md p-6 rounded-2xl border border-white/10"
+              className="bg-[#0a0b12]/95 w-full max-w-md p-6 rounded-2xl border border-white/10"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -986,7 +1008,7 @@ function MainApp() {
       </main>
 
       {isDraggingFile && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-cyan-950/60 backdrop-blur-sm border-4 border-dashed border-cyan-400 m-4 rounded-2xl pointer-events-none transition-all duration-200">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-cyan-950/60 border-4 border-dashed border-cyan-400 m-4 rounded-2xl pointer-events-none transition-all duration-200">
           <div className="flex flex-col items-center gap-4 bg-black/60 p-8 rounded-2xl border border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.3)] animate-pulse">
             <Upload className="w-12 h-12 text-cyan-400 animate-bounce" />
             <p className="text-lg font-bold text-white tracking-widest uppercase">

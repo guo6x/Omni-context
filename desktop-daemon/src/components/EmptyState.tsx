@@ -39,8 +39,8 @@ export default function EmptyState({
   ];
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center p-4 sm:p-6 pointer-events-none overflow-auto bg-gray-950/70 backdrop-blur-sm">
-      <div className="glass-panel pointer-events-auto relative max-w-xl w-full max-h-[calc(100vh-7rem)] overflow-y-auto p-5 sm:p-7 rounded-2xl border border-white/10">
+    <div className="absolute inset-0 z-10 flex items-center justify-center p-4 sm:p-6 pointer-events-none overflow-auto bg-gray-950/70">
+      <div className="bg-[#0a0b12]/95 pointer-events-auto relative max-w-xl w-full max-h-[calc(100vh-7rem)] overflow-y-auto p-5 sm:p-7 rounded-2xl border border-white/10">
         {onDismiss && (
           <button
             onClick={onDismiss}
@@ -112,7 +112,7 @@ export default function EmptyState({
               className={`w-full flex items-start gap-3 p-2.5 rounded-lg border transition-all text-left group ${
                 g.accent
                   ? 'bg-cyan-950/15 border-cyan-800/30 hover:border-cyan-600/50 hover:bg-cyan-900/20'
-                  : 'bg-white/[0.03] border-white/5 hover:border-white/15 hover:bg-white/5'
+                  : 'bg-white/[0.03] border-white/5 hover:border-white/10 hover:bg-white/5'
               }`}
             >
               <span className={`shrink-0 mt-0.5 ${g.accent ? 'text-cyan-300' : 'text-gray-400 group-hover:text-cyan-300'} transition-colors`}>

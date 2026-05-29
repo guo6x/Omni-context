@@ -188,7 +188,7 @@ function ToastCard({
     <div
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      className={`pointer-events-auto glass-panel border ${border} ${glow} px-3 py-2.5 animate-in slide-in-from-right-4 fade-in duration-200`}
+      className={`pointer-events-auto bg-[#0a0b12]/95 border ${border} ${glow} px-3 py-2.5 rounded-xl animate-in slide-in-from-right-4 fade-in duration-200`}
       role={toast.type === 'error' ? 'alert' : 'status'}
     >
       <div className="flex items-start gap-2.5">

@@ -26,6 +26,10 @@ export function useOmniContext() {
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // 冷启动时 brain-server 还没起，需要一个「曾经连上过」标志来区分
+  // 「首次启动加载中」（显示启动遮罩）和「中途断连」（显示离线横幅）。
+  const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
+
   const [logs, setLogs] = useState<LogEntry[]>([
     {
       id: "1",
@@ -117,6 +121,7 @@ export function useOmniContext() {
     const checkBrainServer = async () => {
       try {
         const res = await apiFetch('/health', { method: 'GET' });
+        if (res.ok) setHasConnectedOnce(true);
         if (res.ok && !status.brain_server_running) {
           setStatus((prev) => ({ ...prev, brain_server_running: true }));
           addLog("Brain Server 已连接并正常运行", "success");
@@ -139,6 +144,7 @@ export function useOmniContext() {
 
   return {
     status,
+    hasConnectedOnce,
     logs,
     addLog,
     triggerPrecipitate,

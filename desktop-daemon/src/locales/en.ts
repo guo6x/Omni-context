@@ -5,6 +5,10 @@ export default {
     subtitle: 'Omni-Physical AI Memory Operating System',
     description: 'Omni-Context - An OS-level resident AI memory center',
   },
+  boot: {
+    title: 'Starting brain service…',
+    hint: 'First launch loads the local model, please wait',
+  },
   header: {
     upload: 'Upload File',
     show_hud: 'Show floating HUD (visible even when minimized)',
@@ -269,6 +273,7 @@ export default {
   },
   graph: {
     title: 'Knowledge Graph',
+    showing_count: 'Showing {shown} of {total} most recent',
     no_selection: 'Select a node to view details',
     click_to_edit_hint: 'Click any node to edit name/type/tags, merge duplicates, or delete',
     type: 'Type',

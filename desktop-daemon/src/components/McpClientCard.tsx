@@ -187,7 +187,7 @@ export default function McpClientCard({
   const showStatus = client.supports === 'auto';
 
   return (
-    <div className="glass-panel p-4 flex flex-col gap-4 border border-white/5 bg-white/5 hover:bg-white/10 transition-all rounded-xl relative overflow-hidden">
+    <div className="bg-[#0a0b12]/60 p-4 flex flex-col gap-4 border border-white/5 hover:border-white/10 transition-all rounded-xl relative overflow-hidden">
       {/* 状态背景线条效果 */}
       {showStatus && status.configured && (
         <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 blur-2xl rounded-full" />

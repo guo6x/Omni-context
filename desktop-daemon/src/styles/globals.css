@@ -25,7 +25,7 @@
 
 @layer components {
   .glass-panel {
-    @apply backdrop-blur-xl bg-black/40 border border-white/10 rounded-xl;
+    @apply bg-black/40 border border-white/10 rounded-xl;
   }
 
   .neon-node {
@@ -295,4 +295,353 @@ html.light .text-white\/40 {
 
 html.light .hover\:text-white\/90:hover {
   color: rgba(15, 23, 42, 0.9) !important;
+}
+
+/* ============================================================
+ * P0：按钮主色（bg-cyan-600 / bg-cyan-500）
+ * ============================================================ */
+html.light .bg-cyan-600 {
+  background-color: #0891b2 !important;
+}
+html.light .bg-cyan-600\/80 {
+  background-color: rgba(8, 145, 178, 0.8) !important;
+}
+html.light .hover\:bg-cyan-500:hover {
+  background-color: #06b6d4 !important;
+}
+
+/* ============================================================
+ * P0：bg-slate-950 系列（弹窗/搜索框主背景）
+ * ============================================================ */
+html.light .bg-slate-950 {
+  background-color: #f1f5f9 !important;
+}
+html.light .bg-slate-950\/80 {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+html.light .bg-slate-950\/85 {
+  background-color: rgba(241, 245, 249, 0.85) !important;
+}
+html.light .bg-slate-950\/90 {
+  background-color: rgba(241, 245, 249, 0.9) !important;
+}
+html.light .bg-slate-950\/95 {
+  background-color: rgba(241, 245, 249, 0.95) !important;
+}
+
+/* ============================================================
+ * P0：bg-black/20/25/70/75/80（高频面板背景）
+ * ============================================================ */
+html.light .bg-black\/20 {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+}
+html.light .bg-black\/25 {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+html.light .bg-black\/70 {
+  background-color: rgba(15, 23, 42, 0.12) !important;
+}
+html.light .bg-black\/75 {
+  background-color: rgba(15, 23, 42, 0.14) !important;
+}
+html.light .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.16) !important;
+}
+
+/* ============================================================
+ * P0：bg-gray-950/70/75/85（统计条 / 空状态）
+ * ============================================================ */
+html.light .bg-gray-950\/70 {
+  background-color: rgba(245, 246, 250, 0.7) !important;
+}
+html.light .bg-gray-950\/75 {
+  background-color: rgba(245, 246, 250, 0.75) !important;
+}
+html.light .bg-gray-950\/85 {
+  background-color: rgba(245, 246, 250, 0.85) !important;
+}
+
+/* ============================================================
+ * P1：bg-cyan-950 系列（信息提示/标签背景）
+ * ============================================================ */
+html.light .bg-cyan-950\/10 {
+  background-color: rgba(8, 145, 178, 0.05) !important;
+}
+html.light .bg-cyan-950\/15 {
+  background-color: rgba(8, 145, 178, 0.08) !important;
+}
+html.light .bg-cyan-950\/20 {
+  background-color: rgba(8, 145, 178, 0.1) !important;
+}
+html.light .bg-cyan-950\/30 {
+  background-color: rgba(8, 145, 178, 0.12) !important;
+}
+html.light .bg-cyan-950\/40 {
+  background-color: rgba(8, 145, 178, 0.16) !important;
+}
+html.light .bg-cyan-950\/60 {
+  background-color: rgba(8, 145, 178, 0.2) !important;
+}
+html.light .hover\:bg-cyan-950\/20:hover {
+  background-color: rgba(8, 145, 178, 0.1) !important;
+}
+html.light .hover\:bg-cyan-950\/30:hover {
+  background-color: rgba(8, 145, 178, 0.14) !important;
+}
+html.light .hover\:bg-cyan-950\/40:hover {
+  background-color: rgba(8, 145, 178, 0.16) !important;
+}
+
+/* ============================================================
+ * P1：bg-emerald-950 系列（成功状态背景）
+ * ============================================================ */
+html.light .bg-emerald-950\/20 {
+  background-color: rgba(4, 120, 87, 0.08) !important;
+}
+html.light .bg-emerald-950\/30 {
+  background-color: rgba(4, 120, 87, 0.1) !important;
+}
+html.light .bg-emerald-950\/40 {
+  background-color: rgba(4, 120, 87, 0.14) !important;
+}
+html.light .hover\:bg-emerald-950\/30:hover {
+  background-color: rgba(4, 120, 87, 0.1) !important;
+}
+
+/* ============================================================
+ * P1：bg-amber-950 系列（警告状态背景）
+ * ============================================================ */
+html.light .bg-amber-950\/20 {
+  background-color: rgba(180, 83, 9, 0.08) !important;
+}
+html.light .bg-amber-950\/30 {
+  background-color: rgba(180, 83, 9, 0.1) !important;
+}
+html.light .bg-amber-950\/40 {
+  background-color: rgba(180, 83, 9, 0.14) !important;
+}
+
+/* ============================================================
+ * P1：bg-purple-950 系列（图谱侧栏相关）
+ * ============================================================ */
+html.light .bg-purple-950\/20 {
+  background-color: rgba(107, 33, 168, 0.08) !important;
+}
+html.light .bg-purple-950\/30 {
+  background-color: rgba(107, 33, 168, 0.1) !important;
+}
+html.light .bg-purple-950\/40 {
+  background-color: rgba(107, 33, 168, 0.14) !important;
+}
+html.light .hover\:bg-purple-950\/20:hover {
+  background-color: rgba(107, 33, 168, 0.08) !important;
+}
+
+/* ============================================================
+ * P2：bg-violet 系列（决策助手状态背景）
+ * ============================================================ */
+html.light .bg-violet-600\/20 {
+  background-color: rgba(124, 58, 237, 0.08) !important;
+}
+html.light .bg-violet-600\/30 {
+  background-color: rgba(124, 58, 237, 0.12) !important;
+}
+html.light .hover\:bg-violet-600\/20:hover {
+  background-color: rgba(124, 58, 237, 0.08) !important;
+}
+
+/* ============================================================
+ * P2：bg-green-600（活跃标签/状态）
+ * ============================================================ */
+html.light .bg-green-600 {
+  background-color: #16a34a !important;
+}
+
+/* ============================================================
+ * P2：bg-emerald-600 / bg-emerald-500（按钮/状态灯）
+ * ============================================================ */
+html.light .bg-emerald-600 {
+  background-color: #059669 !important;
+}
+html.light .bg-emerald-600\/30 {
+  background-color: rgba(5, 150, 105, 0.12) !important;
+}
+html.light .bg-emerald-600\/20 {
+  background-color: rgba(5, 150, 105, 0.08) !important;
+}
+html.light .hover\:bg-emerald-500:hover {
+  background-color: #10b981 !important;
+}
+html.light .bg-emerald-500 {
+  background-color: #10b981 !important;
+}
+html.light .bg-emerald-500\/5 {
+  background-color: rgba(16, 185, 129, 0.04) !important;
+}
+html.light .bg-emerald-500\/20 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* ============================================================
+ * P2：bg-gray-700 / bg-gray-500（toggle 关闭态 / 状态点）
+ * ============================================================ */
+html.light .bg-gray-700 {
+  background-color: #cbd5e1 !important;
+}
+html.light .bg-gray-500 {
+  background-color: #94a3b8 !important;
+}
+
+/* ============================================================
+ * P2：bg-cyan-500 相关
+ * ============================================================ */
+html.light .bg-cyan-500\/5 {
+  background-color: rgba(6, 182, 212, 0.04) !important;
+}
+html.light .bg-cyan-500\/10 {
+  background-color: rgba(6, 182, 212, 0.06) !important;
+}
+html.light .bg-cyan-500\/20 {
+  background-color: rgba(6, 182, 212, 0.08) !important;
+}
+
+/* ============================================================
+ * P2：text-cyan-200（次级高亮文字）
+ * ============================================================ */
+html.light .text-cyan-200 {
+  color: #155e75 !important;
+}
+html.light .hover\:text-cyan-200:hover {
+  color: #155e75 !important;
+}
+html.light .group-hover\:text-cyan-200 {
+  color: #155e75 !important;
+}
+
+/* ============================================================
+ * P2：text-emerald 系列
+ * ============================================================ */
+html.light .text-emerald-300 {
+  color: #34d399 !important;
+}
+html.light .text-emerald-400 {
+  color: #10b981 !important;
+}
+html.light .text-emerald-500 {
+  color: #059669 !important;
+}
+
+/* ============================================================
+ * P2：text-amber 系列
+ * ============================================================ */
+html.light .text-amber-200 {
+  color: #fde68a !important;
+}
+html.light .text-amber-300 {
+  color: #fcd34d !important;
+}
+html.light .text-amber-400 {
+  color: #f59e0b !important;
+}
+html.light .text-amber-400\/80 {
+  color: rgba(245, 158, 11, 0.8) !important;
+}
+html.light .text-amber-500 {
+  color: #d97706 !important;
+}
+html.light .hover\:text-amber-400:hover {
+  color: #f59e0b !important;
+}
+
+/* ============================================================
+ * P2：text-violet 系列
+ * ============================================================ */
+html.light .text-violet-300 {
+  color: #a78bfa !important;
+}
+html.light .text-violet-400 {
+  color: #8b5cf6 !important;
+}
+
+/* ============================================================
+ * P2：text-purple-200（图谱 hover 高亮）
+ * ============================================================ */
+html.light .text-purple-200 {
+  color: #c4b5fd !important;
+}
+html.light .hover\:text-purple-200:hover {
+  color: #c4b5fd !important;
+}
+
+/* ============================================================
+ * P2：shadow / glow 弱化（发光阴影在浅色背景太重）
+ * ============================================================ */
+html.light .shadow-cyan-950\/20 {
+  --tw-shadow-color: rgba(8, 145, 178, 0.06) !important;
+  --tw-shadow: var(--tw-shadow-colored) !important;
+}
+html.light .shadow-cyan-950\/30 {
+  --tw-shadow-color: rgba(8, 145, 178, 0.08) !important;
+  --tw-shadow: var(--tw-shadow-colored) !important;
+}
+html.light .shadow-\[0_0_50px_rgba\(6\2c 182\2c 212\2c 0\.15\)\] {
+  --tw-shadow: 0 0 50px rgba(6, 182, 212, 0.06) !important;
+  --tw-shadow-colored: 0 0 50px rgba(6, 182, 212, 0.06) !important;
+}
+
+/* ============================================================
+ * P3：bg-white/[0.02]/[0.03] 任意值（CSS 选择器无法直接匹配，用属性选择器）
+ * ============================================================ */
+html.light [class*="bg-white\/\[0\.02\]"] {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+}
+html.light [class*="bg-white\/\[0\.03\]"] {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+/* ============================================================
+ * P3：hover 态 bg-cyan-500/5 等
+ * ============================================================ */
+html.light .hover\:bg-cyan-500\/5:hover {
+  background-color: rgba(6, 182, 212, 0.04) !important;
+}
+html.light .hover\:bg-cyan-500\/20:hover {
+  background-color: rgba(6, 182, 212, 0.08) !important;
+}
+
+/* ============================================================
+ * P3：border hover 态
+ * ============================================================ */
+html.light .hover\:border-white\/15:hover {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+html.light .hover\:border-white\/20:hover {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+/* ============================================================
+ * P3：bg-gradient 按钮
+ * ============================================================ */
+html.light .from-cyan-600 {
+  --tw-gradient-from: #0891b2 !important;
+  --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-from), var(--tw-gradient-to)) !important;
+}
+html.light .to-purple-600 {
+  --tw-gradient-to: #9333ea !important;
+}
+
+/* ============================================================
+ * P3：hover:border-*-500/20 等（DecisionTimeline/DecisionAssistant）
+ * ============================================================ */
+html.light .hover\:border-purple-500\/20:hover {
+  border-color: rgba(168, 85, 247, 0.08) !important;
+}
+html.light .hover\:border-cyan-500\/20:hover {
+  border-color: rgba(6, 182, 212, 0.08) !important;
+}
+html.light .hover\:bg-purple-500\/5:hover {
+  background-color: rgba(168, 85, 247, 0.04) !important;
+}
+html.light .hover\:bg-cyan-500\/5:hover {
+  background-color: rgba(6, 182, 212, 0.04) !important;
 }

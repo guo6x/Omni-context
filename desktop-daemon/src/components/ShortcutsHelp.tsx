@@ -40,7 +40,7 @@ export default function ShortcutsHelp({ shortcuts, onClose }: ShortcutsHelpProps
   };
 
   return (
-    <div className="absolute top-4 right-4 z-50 w-96 glass-panel p-6">
+    <div className="absolute top-4 right-4 z-50 w-96 bg-[#0a0b12]/95 border border-white/10 rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Keyboard className="w-5 h-5 text-cyan-400" />

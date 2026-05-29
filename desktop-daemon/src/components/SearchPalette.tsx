@@ -177,12 +177,12 @@ export default function SearchPalette({ isOpen, onClose, onSelectEntity, allEnti
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] p-4 bg-black/75 backdrop-blur-md transition-opacity"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] p-4 bg-black/75 transition-opacity"
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
       <div
-        className="glass-panel w-full max-w-2xl border border-cyan-500/20 bg-slate-950/80 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col max-h-[72vh] relative"
+        className="w-full max-w-2xl border border-cyan-500/20 bg-slate-950/80 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col max-h-[72vh] relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 输入框区域 */}
@@ -313,7 +313,7 @@ export default function SearchPalette({ isOpen, onClose, onSelectEntity, allEnti
         {/* 二级详情框 Modal */}
         {selectedMemory && (
           <div
-            className="absolute inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-md p-6 overflow-y-auto"
+            className="absolute inset-0 z-50 flex flex-col bg-slate-950/95 p-6 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 mb-6 border-b border-white/10 pb-4">

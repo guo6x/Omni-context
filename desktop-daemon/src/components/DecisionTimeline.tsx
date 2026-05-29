@@ -105,11 +105,11 @@ export default function DecisionTimeline({ isOpen, onClose, onSelectEntity }: De
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[6vh] p-4 bg-black/75 backdrop-blur-md transition-opacity"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[6vh] p-4 bg-black/75 transition-opacity"
       onClick={onClose}
     >
       <div
-        className="glass-panel w-full max-w-2xl border border-cyan-500/20 bg-slate-950/85 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl border border-cyan-500/20 bg-slate-950/85 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

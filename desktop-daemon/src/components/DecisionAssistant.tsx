@@ -170,12 +170,12 @@ export default function DecisionAssistant({ isOpen, onClose, onSelectEntity }: D
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[6vh] p-4 bg-black/75 backdrop-blur-md transition-opacity"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[6vh] p-4 bg-black/75 transition-opacity"
       onClick={(e) => { if (phase !== "saving") onClose(); }}
       onKeyDown={handleKeyDown}
     >
       <div
-        className="glass-panel w-full max-w-2xl border border-cyan-500/20 bg-slate-950/85 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl border border-cyan-500/20 bg-slate-950/85 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.15)] flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
@@ -430,7 +430,7 @@ export default function DecisionAssistant({ isOpen, onClose, onSelectEntity }: D
                   className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all border ${
                     showChat
                       ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20"
+                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/10"
                   }`}
                 >
                   <MessageSquare className="w-4 h-4" />

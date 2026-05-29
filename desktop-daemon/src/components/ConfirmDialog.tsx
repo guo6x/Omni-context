@@ -75,12 +75,12 @@ export default function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
       onClick={handleCancel}
       role="presentation"
     >
       <div
-        className="glass-panel border border-white/10 max-w-md w-full p-6 rounded-2xl relative"
+        className="bg-[#0a0b12]/95 border border-white/10 max-w-md w-full p-6 rounded-2xl relative"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

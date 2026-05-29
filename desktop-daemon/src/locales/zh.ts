@@ -5,6 +5,10 @@ export default {
     subtitle: '全域物理级 AI 记忆操作系统',
     description: 'Omni-Context - 一个 OS 级的常驻 AI 记忆中枢',
   },
+  boot: {
+    title: '正在启动大脑服务…',
+    hint: '首次启动需加载本地模型，请稍候',
+  },
   header: {
     upload: '上传文件',
     show_hud: '弹出悬浮 HUD（主窗口最小化也可见）',
@@ -269,6 +273,7 @@ export default {
   },
   graph: {
     title: '知识图谱',
+    showing_count: '显示最近 {shown} / 共 {total} 个',
     no_selection: '选择一个节点查看详情',
     click_to_edit_hint: '点击任意节点即可编辑名称/类型/标签、合并重复节点或删除',
     type: '类型',

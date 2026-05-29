@@ -1087,7 +1087,7 @@ export default function GraphViewer3D({
   const nodeLabelHtml = useCallback((node: any) => {
     const safeName = String(node.name || "").replace(/</g, "&lt;");
     const safeDesc = node.description
-      ? String(node.description).replace(/</g, "&lt;").slice(0, 140)
+      ? String(node.description).replace(/</g, "&lt;").slice(0, 300)
       : "";
     const type = String(node.type || "").replace(/_/g, " ");
     const last = node.lastAccessed ? relativeTime(node.lastAccessed) : "";
@@ -1097,10 +1097,12 @@ export default function GraphViewer3D({
         border:1px solid rgba(125,249,255,0.25);
         border-radius:8px;
         padding:8px 10px;
-        max-width:260px;
+        max-width:360px;
         font-family:Inter,sans-serif;
         color:#e2e8f0;
         box-shadow:0 8px 24px rgba(0,0,0,0.4);
+        word-wrap:break-word;
+        overflow-wrap:break-word;
       ">
         <div style="color:#7df9ff;font-weight:600;font-size:12px;">${safeName}</div>
           <div style="color:#94a3b8;font-size:10px;margin-top:2px;">${type} · ${node.connections} ${t('graph.connections_label_html')} · ${node.accessCount} ${t('graph.access_count_html')}${last ? ` · ${last}` : ""}</div>
@@ -1292,7 +1294,7 @@ export default function GraphViewer3D({
         {graphData.nodes.length > 0 && (
         <div
           className="absolute right-4 z-10 hidden max-w-[220px] rounded-lg border border-white/10 bg-gray-950/90 shadow-2xl shadow-black/30 transition-[top] duration-200 lg:block"
-          style={{ top: showTimeSlider && timeBounds ? 118 : 16 }}
+          style={{ top: showTimeSlider && timeBounds ? 118 : 82 }}
         >
           <button
             onClick={toggleLegendExpand}
@@ -1367,7 +1369,7 @@ export default function GraphViewer3D({
         )}
 
         {graphData.nodes.length === 0 && entities.length > 0 && (
-          <div className="absolute inset-0 z-[9] flex items-center justify-center bg-[#0a0b12]/70 px-6 backdrop-blur-sm">
+          <div className="absolute inset-0 z-[9] flex items-center justify-center bg-[#0a0b12]/70 px-6">
             <div className="max-w-lg rounded-xl border border-cyan-500/20 bg-gray-950/85 p-6 text-center shadow-2xl shadow-cyan-950/30">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10">
                 <Network className="h-6 w-6 text-cyan-300" />
@@ -1474,7 +1476,7 @@ export default function GraphViewer3D({
 
       {/* 详情面板（仅单选时显示） */}
       {selectedNode && !isMultiSelect && (
-        <div className="absolute bottom-4 left-4 right-4 z-20 max-h-[55vh] glass-panel border border-white/10 p-4 overflow-y-auto bg-gray-950/95 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:w-80 md:max-h-none md:border-l">
+        <div className="absolute bottom-4 left-4 right-4 z-20 max-h-[55vh] bg-[#0a0b12] border border-white/5 p-4 overflow-y-auto md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:w-80 md:max-h-none md:border-l md:border-white/5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-cyan-400">{t("graph.title")}</h3>
             <button
@@ -1800,7 +1802,7 @@ export default function GraphViewer3D({
       )}
 
       {!selectedNode && (
-        <aside className="hidden w-80 shrink-0 glass-panel border-l border-white/10 bg-gray-950/95 p-4 md:flex md:flex-col md:gap-4">
+        <aside className="hidden w-80 shrink-0 border-l border-white/10 bg-gray-950/95 p-4 md:flex md:flex-col md:gap-4">
           <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto">
           <div>
             <div className="flex items-center gap-2 text-cyan-300">
@@ -1898,7 +1900,7 @@ export default function GraphViewer3D({
       )}
 
       {isMultiSelect && (
-        <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-col gap-2 rounded-xl border border-cyan-500/30 bg-gray-950/95 px-4 py-3 shadow-2xl shadow-cyan-950/30 backdrop-blur-md">
+        <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-col gap-2 rounded-xl border border-cyan-500/30 bg-gray-950/95 px-4 py-3 shadow-2xl shadow-cyan-950/30">
           <div className="flex items-center gap-3">
             <span className="text-sm text-cyan-300 font-medium">
               {t('graph.selected_count').replace('{count}', String(selectedNodeIds.size))}

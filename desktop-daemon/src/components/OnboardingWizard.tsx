@@ -342,8 +342,8 @@ export default function OnboardingWizard({
   }, [step]);
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-2xl rounded-2xl border border-white/10 overflow-hidden flex flex-col max-h-[90vh] shadow-[0_0_50px_rgba(6,182,212,0.15)]">
+    <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
+      <div className="bg-[#0a0b12]/95 w-full max-w-2xl rounded-2xl border border-white/10 overflow-hidden flex flex-col max-h-[90vh] shadow-[0_0_50px_rgba(6,182,212,0.15)]">
         
         {/* Header Indicator */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
@@ -405,7 +405,7 @@ export default function OnboardingWizard({
                     className={`p-4 rounded-xl border text-left transition-all duration-200 ${
                       selectedClient === client.id
                         ? 'bg-cyan-950/20 border-cyan-400 text-white shadow-lg shadow-cyan-500/10'
-                        : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/15 hover:text-white'
+                        : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10 hover:text-white'
                     }`}
                   >
                     <div className="font-semibold text-sm flex items-center justify-between">
@@ -489,7 +489,7 @@ export default function OnboardingWizard({
                     className={`p-3 rounded-xl border text-center transition-all duration-200 ${
                       selectedPresetId === p.id
                         ? 'bg-cyan-950/20 border-cyan-400 text-white shadow-lg'
-                        : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/15'
+                        : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10'
                     }`}
                   >
                     <div className="text-lg">{p.emoji}</div>

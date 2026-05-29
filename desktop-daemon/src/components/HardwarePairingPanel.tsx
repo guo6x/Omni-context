@@ -144,11 +144,11 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={onClose}
     >
       <div
-        className="glass-panel w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl border border-white/10 shadow-2xl"
+        className="bg-[#0a0b12]/95 w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl border border-white/10 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-white/10">
@@ -209,7 +209,7 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
                   className={`rounded-xl border p-4 transition-colors ${
                     dev.paired
                       ? "border-cyan-500/40 bg-cyan-500/5"
-                      : "border-white/10 bg-white/[0.02] hover:border-white/20"
+                      : "border-white/10 bg-white/[0.02] hover:border-white/10"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">

@@ -505,8 +505,8 @@ export default function SettingsPanel({
   const categories = [...new Set(settings.keyboardShortcuts.map(s => s.category))];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="glass-panel w-full max-w-3xl max-h-[80vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+      <div className="bg-[#0a0b12]/95 w-full max-w-3xl max-h-[80vh] flex flex-col overflow-hidden rounded-xl border border-white/10">
         {/* 头部 */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -525,7 +525,7 @@ export default function SettingsPanel({
 
         <div className="flex flex-1 overflow-hidden">
           {/* 侧边栏 */}
-          <div className="w-48 border-r border-white/10 p-2 bg-black/20">
+          <div className="w-48 border-r border-white/5 p-2 bg-[#0a0b12]">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -678,7 +678,7 @@ export default function SettingsPanel({
                             className={`flex flex-col text-left rounded-xl p-4 border-2 transition-all hover:scale-[1.02] ${
                               isSelected
                                 ? 'border-cyan-400 ring-2 ring-cyan-400/20'
-                                : 'border-white/10 hover:border-white/20'
+                                : 'border-white/10 hover:border-white/10'
                             }`}
                             style={{
                               backgroundColor: theme.bg,
@@ -929,7 +929,7 @@ export default function SettingsPanel({
                           className={`p-2 rounded-lg border text-left transition-all ${
                             settings.llmProvider.apiUrl === preset.apiUrl && (preset.id === 'custom' || settings.llmProvider.model === preset.defaultModel)
                               ? 'bg-cyan-900/40 border-cyan-400 text-white'
-                              : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/20 hover:text-white'
+                              : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10 hover:text-white'
                           }`}
                         >
                           <div className="text-xs font-bold truncate flex items-center gap-1.5">
