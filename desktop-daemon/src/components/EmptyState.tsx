@@ -1,30 +1,42 @@
 'use client';
 
 import React from 'react';
-import { Camera, Search, Upload, Sparkles, Keyboard, X } from 'lucide-react';
+import { Search, Upload, Sparkles, Keyboard, X, Scale, GitBranch, Plug, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LogoMark } from '@/components/BrandMark';
 
 interface EmptyStateProps {
-  onCapture: () => void;
-  onDecision: () => void;
-  onUploadClick: () => void;
-  onShowShortcuts: () => void;
-  onDismiss?: () => void;
   onLoadDemo: () => void;
   isLoadingDemo?: boolean;
+  onSearch: () => void;
+  onDecision: () => void;
+  onUploadClick: () => void;
+  onShowDecisionLog: () => void;
+  onConnectMcp: () => void;
+  onShowShortcuts: () => void;
+  onDismiss?: () => void;
 }
 
 export default function EmptyState({
-  onCapture,
-  onDecision,
-  onUploadClick,
-  onShowShortcuts,
-  onDismiss,
   onLoadDemo,
   isLoadingDemo = false,
+  onSearch,
+  onDecision,
+  onUploadClick,
+  onShowDecisionLog,
+  onConnectMcp,
+  onShowShortcuts,
+  onDismiss,
 }: EmptyStateProps) {
   const { t } = useTranslation();
+
+  const guide = [
+    { icon: <Plug className="w-4 h-4" />, label: t('empty.guide_mcp'), how: t('empty.guide_mcp_how'), onClick: onConnectMcp, accent: true },
+    { icon: <Search className="w-4 h-4" />, label: t('empty.guide_search'), how: t('empty.guide_search_how'), onClick: onSearch },
+    { icon: <Scale className="w-4 h-4" />, label: t('empty.guide_decision'), how: t('empty.guide_decision_how'), onClick: onDecision },
+    { icon: <Upload className="w-4 h-4" />, label: t('empty.guide_upload'), how: t('empty.guide_upload_how'), onClick: onUploadClick },
+    { icon: <GitBranch className="w-4 h-4" />, label: t('empty.guide_log'), how: t('empty.guide_log_how'), onClick: onShowDecisionLog },
+  ];
 
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center p-4 sm:p-6 pointer-events-none overflow-auto bg-gray-950/70 backdrop-blur-sm">
@@ -39,7 +51,9 @@ export default function EmptyState({
             <X className="w-4 h-4" />
           </button>
         )}
-        <div className="flex items-center gap-3 sm:gap-4 mb-5 pr-8">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 pr-8">
           <LogoMark size={48} className="shrink-0 animate-pulse-glow" />
           <div className="min-w-0">
             <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide truncate">
@@ -49,39 +63,68 @@ export default function EmptyState({
           </div>
         </div>
 
-        <div className="text-xs uppercase tracking-wider text-cyan-400/70 mb-3 flex items-center gap-2">
+        {/* Primary: load demo */}
+        <div className="text-xs uppercase tracking-wider text-cyan-400/70 mb-2 flex items-center gap-2">
           <Sparkles className="w-3 h-3" />
-          {t('empty.quick_actions')}
+          {t('empty.start_here')}
         </div>
+        <button
+          onClick={onLoadDemo}
+          disabled={isLoadingDemo}
+          className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
+            isLoadingDemo
+              ? 'bg-cyan-900/20 border-cyan-700/30 opacity-70 cursor-not-allowed'
+              : 'bg-gradient-to-r from-cyan-600/25 to-purple-600/15 border-cyan-500/40 hover:border-cyan-400/60 hover:from-cyan-600/30'
+          }`}
+        >
+          <span className="shrink-0 text-cyan-300">
+            {isLoadingDemo ? (
+              <span className="block w-6 h-6 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+            ) : (
+              <Sparkles className="w-6 h-6" />
+            )}
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-base font-semibold text-white">
+              {t('empty.load_demo')}
+              {!isLoadingDemo && (
+                <span className="ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 align-middle">
+                  {t('empty.recommended')}
+                </span>
+              )}
+            </span>
+            <span className="block text-xs text-gray-400 mt-0.5">
+              {isLoadingDemo ? t('empty.generating_vectors') : t('empty.demo_primary_hint')}
+            </span>
+          </span>
+          {!isLoadingDemo && <ArrowRight className="w-4 h-4 text-cyan-400 shrink-0" />}
+        </button>
 
-        <div className="space-y-2">
-          <ActionRow
-            icon={<Camera className="w-5 h-5" />}
-            label={t('empty.capture_label')}
-            hint={t('empty.capture_hint')}
-            onClick={onCapture}
-          />
-          <ActionRow
-            icon={<Upload className="w-5 h-5" />}
-            label={t('empty.upload_label')}
-            hint={t('empty.upload_hint')}
-            onClick={onUploadClick}
-          />
-          <ActionRow
-            icon={<Search className="w-5 h-5" />}
-            label={t('empty.decision_label')}
-            hint={t('empty.decision_hint')}
-            onClick={onDecision}
-          />
-          <ActionRow
-            icon={<Sparkles className="w-5 h-5 text-purple-400" />}
-            label={t('empty.load_demo')}
-            hint={t('empty.load_demo_hint')}
-            onClick={onLoadDemo}
-            disabled={isLoadingDemo}
-            loading={isLoadingDemo}
-            loadingText={t('empty.generating_vectors')}
-          />
+        {/* Feature guide */}
+        <div className="text-xs uppercase tracking-wider text-gray-500 mt-6 mb-2">
+          {t('empty.guide_title')}
+        </div>
+        <div className="space-y-1.5">
+          {guide.map((g, i) => (
+            <button
+              key={i}
+              onClick={g.onClick}
+              className={`w-full flex items-start gap-3 p-2.5 rounded-lg border transition-all text-left group ${
+                g.accent
+                  ? 'bg-cyan-950/15 border-cyan-800/30 hover:border-cyan-600/50 hover:bg-cyan-900/20'
+                  : 'bg-white/[0.03] border-white/5 hover:border-white/15 hover:bg-white/5'
+              }`}
+            >
+              <span className={`shrink-0 mt-0.5 ${g.accent ? 'text-cyan-300' : 'text-gray-400 group-hover:text-cyan-300'} transition-colors`}>
+                {g.icon}
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-medium text-white">{g.label}</span>
+                <span className="block text-xs text-gray-500 mt-0.5">{g.how}</span>
+              </span>
+              <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-gray-400 shrink-0 mt-1 transition-colors" />
+            </button>
+          ))}
         </div>
 
         <button
@@ -93,50 +136,5 @@ export default function EmptyState({
         </button>
       </div>
     </div>
-  );
-}
-
-function ActionRow({
-  icon,
-  label,
-  hint,
-  onClick,
-  disabled,
-  loading,
-  loadingText,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  hint: string;
-  onClick: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  loadingText?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={`w-full flex items-start gap-3 p-3 rounded-lg border transition-all text-left group ${
-        disabled || loading
-          ? 'bg-white/5 border-white/5 opacity-60 cursor-not-allowed'
-          : 'bg-white/5 border-white/5 hover:border-cyan-800 hover:bg-cyan-900/10'
-      }`}
-    >
-      <span className="shrink-0 text-cyan-400 group-hover:text-cyan-300 transition-colors mt-0.5">
-        {loading ? (
-          <span className="block w-5 h-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-        ) : (
-          icon
-        )}
-      </span>
-      <span className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-white flex items-center gap-2">
-          {label}
-          {loading && loadingText && <span className="text-xs text-cyan-400 animate-pulse">{loadingText}</span>}
-        </span>
-        <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
-      </span>
-    </button>
   );
 }

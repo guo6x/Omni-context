@@ -856,13 +856,15 @@ function MainApp() {
 
         {entities.length === 0 && !emptyDismissed && (
           <EmptyState
-            onCapture={handlePrecipitate}
-            onDecision={handleDecision}
-            onUploadClick={() => setShowUpload(true)}
-            onShowShortcuts={() => setShowShortcuts(true)}
-            onDismiss={() => setEmptyDismissed(true)}
             onLoadDemo={handleLoadDemo}
             isLoadingDemo={isLoadingDemo}
+            onSearch={() => setShowSearchPalette(true)}
+            onDecision={handleDecision}
+            onUploadClick={() => setShowUpload(true)}
+            onShowDecisionLog={() => setShowDecisionLog(true)}
+            onConnectMcp={() => { setSettingsTab('mcp'); setShowSettings(true); }}
+            onShowShortcuts={() => setShowShortcuts(true)}
+            onDismiss={() => setEmptyDismissed(true)}
           />
         )}
 
