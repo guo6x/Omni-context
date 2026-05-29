@@ -165,6 +165,9 @@ export default function GraphViewer3D({
   const { confirm, dialog } = useConfirm();
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
+  // react-force-graph 只在挂载时量一次父容器、之后仅听 window.resize；右侧面板
+  // 出现/消失改变容器宽度时画布尺寸不会更新（半边消失）。用 ResizeObserver 显式喂宽高。
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [selectedNode, setSelectedNode] = useState<Entity | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [ForceGraph, setForceGraph] = useState<any>(null);
@@ -245,6 +248,17 @@ export default function GraphViewer3D({
     };
     loadGraph();
   }, [is3D]);
+
+  // 监听图谱容器尺寸变化，显式喂给 ForceGraph，避免右侧面板增减导致画布半边消失
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setDimensions({ width: el.clientWidth, height: el.clientHeight });
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const availableTypes = useMemo(() => {
     return Array.from(new Set(entities.map((entity) => entity.type))).sort();
@@ -1404,6 +1418,8 @@ export default function GraphViewer3D({
         {ForceGraph && graphData.nodes.length > 0 && (
           <ForceGraph
             ref={graphRef}
+            width={dimensions.width || undefined}
+            height={dimensions.height || undefined}
             graphData={graphData}
             nodeId="id"
             nodeLabel={nodeLabelHtml}

@@ -22,7 +22,8 @@
         "minWidth": 800,
         "minHeight": 600,
         "center": true,
-        "fileDropEnabled": true
+        "fileDropEnabled": true,
+        "theme": "Dark"
       },
       {
         "label": "hud",

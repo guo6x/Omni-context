@@ -49,6 +49,46 @@
 }
 
 /* ============================================================
+ * 自定义滚动条：默认系统滚动条是白色的，和深色 UI 不搭。
+ * 跟随主题：dark 用浅色半透明，light 用深色半透明，hover 时上青色。
+ * ============================================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(125, 249, 255, 0.4);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+html.light * {
+  scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
+}
+html.light *::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.22);
+  background-clip: padding-box;
+}
+html.light *::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(8, 145, 178, 0.5);
+  background-clip: padding-box;
+}
+
+/* ============================================================
  * Light theme overrides
  * 用于把项目里大量散落的深色 Tailwind 工具类在 light 模式下翻转为
  * 适配白底的版本。所有 !important 都是为了压过 Tailwind 工具类。
