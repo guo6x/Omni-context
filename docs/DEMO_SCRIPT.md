@@ -1,10 +1,54 @@
-# 90-Second Demo Script
+# Demo Scripts
+
+两个版本，先拍 **Demo B**——它是传播主力（杀手锏），把"跨 AI 中立 + 数据归你"一镜讲清楚。Demo A 是更完整的"怎么用"解说版，适合 README / 落地页深度展示。
+
+**通用录制**：[OBS Studio](https://obsproject.com/)（免费）或 [Loom](https://www.loom.com/)。1920x1080 @ 30fps。不用真人配音，加字幕即可。
+
+---
+
+## Demo B — 瑞士时刻（主推，~50s）
+
+**目标**：一镜证明"我在一个 AI 工具里存的东西，换另一个 AI 工具能直接用"——这是任何大厂都给不了的。
+
+**前置**：Omni-Context 运行中；**两个**不同的 MCP 客户端都已接入（推荐 Cursor + Claude Desktop）；图谱可以非空（已有一些你的真实内容更可信）。
+
+### 00:00 — 痛点 (8s)
+
+| 画面 | 动作 |
+|------|------|
+| 并排两个窗口：Cursor 和 Claude Desktop | 字幕：*"两个 AI，各记各的。一个知道的，另一个完全不知道。"* |
+
+### 00:08 — 在 A 工具里"存" (15s)
+
+| 画面 | 动作 |
+|------|------|
+| Cursor（或任意 MCP 客户端 A） | 正常对话中说一句结论性的话，比如："记住：这个项目我们最终决定用 SQLite 而不是 Postgres，因为要本地优先。" AI 调用 `save_conclusion` 把它写回图谱。 |
+
+字幕：*"在 Cursor 里随手定了个决定——它被存进了我自己的本地图谱。"*
+
+### 00:23 — 切到 B 工具直接问 (20s)
+
+| 画面 | 动作 |
+|------|------|
+| 切到 Claude Desktop，**全新对话** | 输入："我们这个项目数据库选型是怎么定的？为什么？" Claude 调用 `unified_memory_search`，**准确答出 SQLite + 本地优先的理由**，并标出来源实体。 |
+
+字幕：*"换到 Claude，全新对话——它已经知道了。同一份记忆，跨工具通用。"*
+
+### 00:43 — 收尾 (7s)
+
+| 画面 | 动作 |
+|------|------|
+| 全屏卡片 | 文案："一份记忆，所有 AI 通用，且只属于你。全在你自己机器上。" 下方：GitHub URL + Download |
+
+> **README Hero GIF**：截 00:08–00:43 这段（A 存 → B 知道），15–20 秒，是最强的钩子。
+
+---
+
+## Demo A — 完整解说版（90s）
 
 **Goal**: Show someone what Omni-Context does and convince them to install it.
 
 **What you need**: Windows machine with Omni-Context installed, Claude Desktop with MCP configured, 3 sample files ready.
-
-**Recording tool**: [OBS Studio](https://obsproject.com/) (free) or [Loom](https://www.loom.com/) (quick). Record 1920x1080 at 30fps. No audio needed — captions optional.
 
 ---
 
