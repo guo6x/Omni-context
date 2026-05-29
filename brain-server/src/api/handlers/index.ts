@@ -554,18 +554,22 @@ async function buildGraphContext(
   let relationships: any[] = [];
 
   if (!body.entityId && !body.query) {
-    entities = await ctx.db.getRecentEntities(80);
+    const OVERVIEW_NODE_CAP = 300;
+    entities = await ctx.db.getRecentEntities(OVERVIEW_NODE_CAP);
+    const total = await ctx.db.getEntityCount();
     const visibleEntityIds = new Set(entities.map((entity) => entity.id));
-    relationships = (await ctx.db.getRelationships(200))
+    relationships = (await ctx.db.getRelationships(600))
       .filter((relationship) =>
         visibleEntityIds.has(relationship.source_id) && visibleEntityIds.has(relationship.target_id)
       )
-      .slice(0, 120);
+      .slice(0, 400);
 
     return {
       entities,
       relationships,
       depth: body.depth || 2,
+      total,
+      shown: entities.length,
     };
   }
 

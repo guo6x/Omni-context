@@ -436,6 +436,14 @@ export class Database {
     return rows.map(row => this.rowToEntity(row));
   }
 
+  async getEntityCount(): Promise<number> {
+    const row = await this.get<{ count: number }>(
+      `SELECT COUNT(*) as count FROM entities
+       WHERE json_extract(metadata, '$.merged_into') IS NULL`
+    );
+    return row?.count ?? 0;
+  }
+
   async getCorePrinciples(): Promise<Entity[]> {
     const rows = await this.all<any>(`
       SELECT * FROM entities
