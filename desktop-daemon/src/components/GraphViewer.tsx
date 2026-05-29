@@ -1304,11 +1304,10 @@ export default function GraphViewer3D({
           </div>
         )}
 
-        {/* 图例：右上角可折叠交互式 Legend，时间轴展开时往下挪避免碰撞 */}
+        {/* 图例：左侧中下方可折叠交互式 Legend（展开时向上生长） */}
         {graphData.nodes.length > 0 && (
         <div
-          className="absolute right-4 z-10 hidden max-w-[220px] rounded-lg border border-white/10 bg-gray-950/90 shadow-2xl shadow-black/30 transition-[top] duration-200 lg:block"
-          style={{ top: showTimeSlider && timeBounds ? 118 : 82 }}
+          className="absolute left-4 bottom-36 z-10 hidden max-w-[220px] rounded-lg border border-white/10 bg-gray-950/90 shadow-2xl shadow-black/30 lg:block"
         >
           <button
             onClick={toggleLegendExpand}
@@ -1366,9 +1365,9 @@ export default function GraphViewer3D({
         </div>
         )}
 
-        {/* 统计信息 */}
+        {/* 统计信息：左侧中下方，图例下方 */}
         {graphData.nodes.length > 0 && (
-        <div className="absolute bottom-4 right-4 z-10 rounded-lg border border-white/10 bg-gray-950/90 p-3 shadow-2xl shadow-black/30">
+        <div className="absolute bottom-16 left-4 z-10 rounded-lg border border-white/10 bg-gray-950/90 p-3 shadow-2xl shadow-black/30">
           <div className="flex gap-4 text-xs">
             <div>
               <span className="text-gray-500">{t('graph.visible_nodes')}</span>

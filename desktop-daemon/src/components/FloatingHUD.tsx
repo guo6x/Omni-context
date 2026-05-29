@@ -120,7 +120,7 @@ export default function FloatingHUD() {
         data-tauri-drag-region
         onMouseDown={handleDragStart}
         className={clsx(
-          "relative w-[340px] overflow-hidden rounded-2xl p-4 transition-all duration-300",
+          "relative w-[360px] overflow-hidden rounded-2xl p-5 transition-all duration-300",
           visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         )}
         style={{
@@ -180,7 +180,7 @@ export default function FloatingHUD() {
 
         {/* Message */}
         <div
-          className="text-xs leading-relaxed rounded-lg px-3 py-2.5 border transition-colors duration-300"
+          className="text-sm leading-relaxed rounded-lg px-3 py-3 border transition-colors duration-300 break-words"
           style={{
             color: "rgba(226,232,240,0.9)",
             background: colors.bg,

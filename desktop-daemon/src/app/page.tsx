@@ -871,7 +871,7 @@ function MainApp() {
         />
 
         {graphTotal > entities.length && entities.length > 0 && (
-          <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-md border border-white/10 bg-gray-950/80 px-2.5 py-1 text-[11px] text-gray-400 backdrop-blur-sm">
+          <div className="pointer-events-none absolute bottom-4 right-4 z-10 rounded-md border border-white/10 bg-gray-950/80 px-2.5 py-1 text-[11px] text-gray-400 backdrop-blur-sm">
             {t('graph.showing_count').replace('{shown}', String(entities.length)).replace('{total}', String(graphTotal))}
           </div>
         )}
