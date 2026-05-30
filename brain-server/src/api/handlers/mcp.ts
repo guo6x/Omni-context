@@ -905,6 +905,97 @@ ${contextBlock}`;
             }
             break;
           }
+          case 'graph_answer': {
+            // 图谱原生回答：结构化输出(结论 + 每条依据引用节点) + 命中子图的边，供右栏答案卡 + 图谱高亮
+            const gaMessages: Array<{ role: string; content: string }> = Array.isArray(args.messages)
+              ? args.messages.filter((m: any) => m && typeof m.content === 'string')
+              : [];
+            const gaLastUser = [...gaMessages].reverse().find((m) => m.role === 'user');
+            const gaQuestion = (gaLastUser?.content || (typeof args.query === 'string' ? args.query : '') || '').trim();
+
+            const gaLlm = ctx.extractor.getLlmConfig();
+            if (!gaLlm.apiUrl) { sendError(res, 400, 'LLM_NOT_CONFIGURED'); return; }
+            if (!gaQuestion) { result = { conclusion: '', reasons: [], sources: [], edges: [], citedEntityIds: [] }; break; }
+
+            // 检索 + agentic 自主补检索
+            const gaCtx = await retrieveDecisionContext(ctx, gaQuestion, 6);
+            try {
+              const extra = await agenticEnrichMemories(ctx, gaQuestion, gaCtx.relevantMemories);
+              const known = new Set(gaCtx.relevantMemories.map((m: any) => m.id));
+              for (const e of extra) { if (!known.has(e.id)) { known.add(e.id); gaCtx.relevantMemories.push(e); } }
+            } catch { /* additive */ }
+
+            // 来源：相关记忆优先，原则其次，去重后取前 10（编号即给 LLM 引用用）
+            const gaSeen = new Set<string>();
+            const gaSources: any[] = [];
+            for (const m of [...gaCtx.relevantMemories, ...gaCtx.principles]) {
+              if (m && m.id && !gaSeen.has(m.id)) { gaSeen.add(m.id); gaSources.push(toCompactEntity(m)); }
+            }
+            const gaCapped = gaSources.slice(0, 10);
+            const gaIds = new Set(gaCapped.map((s) => s.id));
+
+            // 命中节点之间的关系（构成高亮子图的边 + 喂给 LLM 做图谱原生推理）
+            const gaEdges: Array<{ source: string; target: string; type: string }> = [];
+            const gaSeenEdge = new Set<string>();
+            for (const s of gaCapped) {
+              const rels = await ctx.db.getRelationshipsForEntity(s.id);
+              for (const r of rels) {
+                if (gaIds.has(r.source_id) && gaIds.has(r.target_id)) {
+                  const k = `${r.source_id}|${r.target_id}|${r.type}`;
+                  if (!gaSeenEdge.has(k)) { gaSeenEdge.add(k); gaEdges.push({ source: r.source_id, target: r.target_id, type: r.type }); }
+                }
+              }
+            }
+
+            const gaCtxBlock = gaCapped.length
+              ? gaCapped.map((m: any, i: number) => `[${i + 1}] (${m.type}) ${m.name}: ${m.description || ''}`).join('\n')
+              : '（没有检索到相关记忆）';
+            const gaConnBlock = gaEdges.length
+              ? gaEdges.map((e) => {
+                  const sn = gaCapped.find((x) => x.id === e.source)?.name || '?';
+                  const tn = gaCapped.find((x) => x.id === e.target)?.name || '?';
+                  return `- ${sn} --[${e.type}]--> ${tn}`;
+                }).join('\n')
+              : '（无已知关系）';
+
+            const gaSystem = `你是用户的「第二大脑」。基于下面从用户本地知识图谱检索到的记忆、以及它们之间的关系来回答。
+要求：
+1. 先给一句话结论(conclusion)，直接、口语化；
+2. 给 2-4 条依据(reasons)，每条尽量用 refs 数组引用上面记忆的编号；
+3. 善用关系信息(冲突/取代/支持/源于)让推理有据，比如"X 和 Y 冲突过"；
+4. 如果记忆不足以回答，就在 conclusion 里如实说明，不要编造，reasons 可为空。
+只输出 JSON：{"conclusion":"...","reasons":[{"text":"...","refs":[1,2]}]}
+使用用户提问所用的语言。
+
+相关记忆：
+${gaCtxBlock}
+
+它们之间的关系：
+${gaConnBlock}`;
+
+            try {
+              const raw = await callLlmDecision(ctx, gaSystem, gaQuestion);
+              const parsed = JSON.parse(raw);
+              const reasons = Array.isArray(parsed.reasons) ? parsed.reasons.slice(0, 5) : [];
+              result = {
+                conclusion: typeof parsed.conclusion === 'string' ? parsed.conclusion : '',
+                reasons: reasons.map((r: any) => ({
+                  text: String(r?.text || ''),
+                  entityIds: Array.isArray(r?.refs)
+                    ? r.refs.map((n: any) => gaCapped[Number(n) - 1]?.id).filter(Boolean)
+                    : [],
+                })).filter((r: any) => r.text),
+                sources: gaCapped,
+                edges: gaEdges,
+                citedEntityIds: gaCapped.map((s) => s.id),
+              };
+            } catch (e: any) {
+              if (e?.message === 'LLM_NOT_CONFIGURED') { sendError(res, 400, 'LLM_NOT_CONFIGURED'); return; }
+              console.error('[graph_answer] Failed:', e);
+              result = { conclusion: '抱歉，回答服务暂时不可用。', reasons: [], sources: gaCapped, edges: gaEdges, citedEntityIds: gaCapped.map((s) => s.id) };
+            }
+            break;
+          }
           case 'save_conclusion': {
             const parsed = SaveConclusionSchema.parse(args);
             const { summary, related_entity_ids, tags } = parsed;
