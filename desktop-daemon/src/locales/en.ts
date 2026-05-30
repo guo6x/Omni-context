@@ -291,6 +291,7 @@ export default {
   graph: {
     title: 'Knowledge Graph',
     showing_count: 'Showing {shown} of {total} most recent',
+    provenance_external: 'Written by an external AI via {tool} (not captured by you — verify if needed)',
     no_selection: 'Select a node to view details',
     click_to_edit_hint: 'Click any node to edit name/type/tags, merge duplicates, or delete',
     type: 'Type',
@@ -669,6 +670,8 @@ export default {
   },
   insights: {
     title: 'AI Insights',
+    highlights_label: 'Memory highlights',
+    highlights_view: 'View',
     mark_all_read: 'Mark all as read',
     refresh: 'Refresh insights',
     close: 'Close',

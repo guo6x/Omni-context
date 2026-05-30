@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers } from "lucide-react";
+import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers, Bot } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
@@ -370,6 +370,7 @@ export default function GraphViewer3D({
           lastAccessed: entity.last_accessed,
           created_at: entity.created_at,
           freshness,
+          provenance: (entity as any).metadata?.provenance ?? null,
         };
       });
     })();
@@ -1535,6 +1536,14 @@ export default function GraphViewer3D({
                 <Trash2 className="w-3.5 h-3.5" />
                 {t('graph.delete')}
               </button>
+            </div>
+          )}
+
+          {/* provenance：外部 AI 写入的记忆给出来源提示，便于用户识别非本人沉淀 */}
+          {!editMode && !mergeMode && (selectedNode as any).provenance?.source === 'external_ai' && (
+            <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-700/30 bg-amber-950/20 px-3 py-2 text-[11px] leading-relaxed text-amber-200/90">
+              <Bot className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>{t('graph.provenance_external').replace('{tool}', (selectedNode as any).provenance.tool || 'MCP')}</span>
             </div>
           )}
 

@@ -407,7 +407,8 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               type: parsed.type as EntityType,
               description: parsed.description,
               tags: parsed.tags,
-              metadata: parsed.metadata,
+              // provenance：记录此实体由外部 AI 经哪个 MCP 工具写入，便于用户识别非本人沉淀的记忆
+              metadata: { ...(parsed.metadata || {}), provenance: { source: 'external_ai', tool: 'add_entity', at: new Date().toISOString() } },
               embedding,
             });
             result = entity;
@@ -916,7 +917,11 @@ ${contextBlock}`;
 
             const savedEntityIds: string[] = [];
             for (const entity of resolution.entitiesToCreate) {
-              const saved = await ctx.db.addEntity(entity);
+              // provenance：save_conclusion 是外部 AI 把对话结论写回图谱，标注来源
+              const saved = await ctx.db.addEntity({
+                ...entity,
+                metadata: { ...((entity as any).metadata || {}), provenance: { source: 'external_ai', tool: 'save_conclusion', at: new Date().toISOString() } },
+              });
               savedEntityIds.push(saved.id);
             }
 

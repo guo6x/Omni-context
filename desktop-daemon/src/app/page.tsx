@@ -101,6 +101,9 @@ export default function Home() {
 
 function MainApp() {
   const [showInsights, setShowInsights] = useState(false);
+  // 首页「记忆亮点」：page 层轻量轮询未读洞见，让主动浮现被看见（铃铛藏在更多菜单里）
+  const [insightHighlights, setInsightHighlights] = useState<Array<{ id: string; title: string; content: string }>>([]);
+  const [insightsHidden, setInsightsHidden] = useState(false);
   const [hudMessage, setHudMessage] = useState("");
   const [hudStatus, setHudStatus] = useState<"listening" | "processing" | "success" | "warning" | "error">("listening");
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -162,6 +165,25 @@ function MainApp() {
   useEffect(() => {
     fetchGraphData();
   }, [refreshTrigger, fetchGraphData]);
+
+  // 轻量轮询未读洞见，驱动首页「记忆亮点」浮条
+  useEffect(() => {
+    let active = true;
+    const fetchInsights = async () => {
+      try {
+        const res = await apiFetch('/api/notifications');
+        if (res.ok && active) {
+          const data = await res.json();
+          setInsightHighlights(Array.isArray(data) ? data : []);
+        }
+      } catch {
+        // brain-server 未就绪时静默
+      }
+    };
+    fetchInsights();
+    const timer = setInterval(fetchInsights, 30000);
+    return () => { active = false; clearInterval(timer); };
+  }, [refreshTrigger]);
 
   // 监听来自托盘的 open-settings 事件
   useEffect(() => {
@@ -897,6 +919,34 @@ function MainApp() {
         {graphTotal > entities.length && entities.length > 0 && (
           <div className="pointer-events-none absolute bottom-4 right-4 z-10 rounded-md border border-white/10 bg-gray-950/80 px-2.5 py-1 text-[11px] text-gray-400 backdrop-blur-sm">
             {t('graph.showing_count').replace('{shown}', String(entities.length)).replace('{total}', String(graphTotal))}
+          </div>
+        )}
+
+        {/* 首页「记忆亮点」浮条：让 Agent Loop 的主动洞见被看见 */}
+        {insightHighlights.length > 0 && !insightsHidden && entities.length > 0 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 w-[min(90%,28rem)]">
+            <div className="flex items-center gap-3 rounded-xl border border-cyan-500/30 bg-gray-950/90 px-3.5 py-2.5 shadow-2xl shadow-cyan-950/30 backdrop-blur-sm">
+              <Sparkles className="w-4 h-4 shrink-0 text-cyan-300 animate-pulse" />
+              <button onClick={() => setShowInsights(true)} className="flex-1 min-w-0 text-left">
+                <span className="block text-[10px] uppercase tracking-wider text-cyan-400/80">
+                  {t('insights.highlights_label')} · {insightHighlights.length}
+                </span>
+                <span className="block text-sm text-gray-200 truncate">{insightHighlights[0].title}</span>
+              </button>
+              <button
+                onClick={() => setShowInsights(true)}
+                className="shrink-0 rounded-md px-2 py-1 text-xs text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200"
+              >
+                {t('insights.highlights_view')}
+              </button>
+              <button
+                onClick={() => setInsightsHidden(true)}
+                className="shrink-0 text-gray-500 hover:text-white"
+                title={t('insights.close')}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         )}
 

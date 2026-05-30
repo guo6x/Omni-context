@@ -291,6 +291,7 @@ export default {
   graph: {
     title: '知识图谱',
     showing_count: '显示最近 {shown} / 共 {total} 个',
+    provenance_external: '由外部 AI 经 {tool} 写入（非你本人沉淀，可自行核对）',
     no_selection: '选择一个节点查看详情',
     click_to_edit_hint: '点击任意节点即可编辑名称/类型/标签、合并重复节点或删除',
     type: '类型',
@@ -669,6 +670,8 @@ export default {
   },
   insights: {
     title: 'AI 洞见',
+    highlights_label: '记忆亮点',
+    highlights_view: '查看',
     mark_all_read: '全部标记为已读',
     refresh: '刷新洞见',
     close: '关闭',
