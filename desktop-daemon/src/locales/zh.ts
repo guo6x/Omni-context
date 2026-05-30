@@ -25,6 +25,17 @@ export default {
     error_no_llm: '还没配置 LLM，无法生成回答。请到设置里配置后再试。',
     error_generic: '抱歉，问答服务暂时不可用，稍后再试。',
   },
+  cmd: {
+    placeholder: '问大脑 / 让它帮你做决策…（回车）',
+    send: '发送',
+    answer_title: '答案',
+    done: '完成',
+    reasons: '依据',
+    no_answer: '我的记忆里暂时没有这部分。',
+    sources_count: '{n} 个来源',
+    need_llm: '需要先在设置里配置 LLM 才能回答。',
+    error: '抱歉，回答服务暂时不可用，稍后再试。',
+  },
   header: {
     upload: '上传文件',
     show_hud: '弹出悬浮 HUD（主窗口最小化也可见）',

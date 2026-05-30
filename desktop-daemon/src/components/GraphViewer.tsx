@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers, Bot } from "lucide-react";
+import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers, Bot, Send } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
@@ -173,6 +173,10 @@ export default function GraphViewer3D({
   const [ForceGraph, setForceGraph] = useState<any>(null);
   const [is3D, setIs3D] = useState(true);
   const [query, setQuery] = useState("");
+  // 命令栏「问大脑」：右栏第三态——结构化答案卡 + 高亮命中子图
+  const [cmdInput, setCmdInput] = useState("");
+  const [gAnswer, setGAnswer] = useState<{ question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] } | null>(null);
+  const [gLoading, setGLoading] = useState(false);
   const [activeType, setActiveType] = useState<string>("all");
   const [activeTag, setActiveTag] = useState<string>("all");
   const [graphLoadError, setGraphLoadError] = useState<string | null>(null);
@@ -534,6 +538,38 @@ export default function GraphViewer3D({
     },
     [graphData.nodes, entities, handleNodeClick]
   );
+
+  // 命令栏提交：调 graph_answer，右栏切到答案卡并高亮命中子图
+  const submitCommand = useCallback(async () => {
+    const q = cmdInput.trim();
+    if (!q || gLoading) return;
+    setGLoading(true);
+    setSelectedNode(null);
+    try {
+      const res = await apiFetch('/api/mcp/tool/graph_answer', {
+        method: 'POST',
+        body: JSON.stringify({ arguments: { messages: [{ role: 'user', content: q }] } }),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        const conclusion = res.status === 400 && body.includes('LLM') ? t('cmd.need_llm') : t('cmd.error');
+        setGAnswer({ question: q, conclusion, reasons: [], sources: [], citedEntityIds: [] });
+        return;
+      }
+      const data = await res.json();
+      setGAnswer({
+        question: q,
+        conclusion: data.conclusion || '',
+        reasons: Array.isArray(data.reasons) ? data.reasons : [],
+        sources: Array.isArray(data.sources) ? data.sources : [],
+        citedEntityIds: Array.isArray(data.citedEntityIds) ? data.citedEntityIds : [],
+      });
+    } catch (e) {
+      setGAnswer({ question: q, conclusion: t('cmd.error'), reasons: [], sources: [], citedEntityIds: [] });
+    } finally {
+      setGLoading(false);
+    }
+  }, [cmdInput, gLoading, t]);
 
   useEffect(() => {
     if (focusEntityId) {
@@ -1163,6 +1199,24 @@ export default function GraphViewer3D({
         {/* 控制栏 + 时间轴：统一放进 top 容器纵向堆叠，时间轴自然落在控制栏下方，
             不再用 top-[60px] 魔法数字，避免与摘要行重叠 */}
         <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2">
+        {/* 命令栏：问大脑 / 决策 的统一入口，回答出现在右栏答案卡 */}
+        <div className="flex items-center gap-2.5 rounded-xl border border-cyan-500/25 bg-gray-950/85 px-3.5 py-2.5 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm">
+          <Brain className="h-4 w-4 shrink-0 text-cyan-300" />
+          <input
+            value={cmdInput}
+            onChange={(e) => setCmdInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitCommand(); } }}
+            placeholder={t('cmd.placeholder')}
+            className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
+          />
+          {gLoading ? (
+            <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+          ) : (
+            <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
+              <Send className="h-4 w-4" />
+            </button>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex min-w-[260px] flex-1 max-w-md items-center gap-2 rounded-lg border border-white/10 bg-gray-950/90 px-3 py-2 shadow-2xl shadow-black/30">
             <Search className="h-4 w-4 text-cyan-400" />
@@ -1427,6 +1481,10 @@ export default function GraphViewer3D({
             nodeLabel={nodeLabelHtml}
             nodeVal={(node: any) => node.val}
             nodeColor={(node: any) => {
+              // 答案态：命中子图的节点保持高亮，其余压暗
+              if (gAnswer && gAnswer.citedEntityIds.length > 0 && !gAnswer.citedEntityIds.includes(node.id)) {
+                return hexToRgba(node.color, 0.12);
+              }
               if (isFocusDimmedNode(node.id)) {
                 return hexToRgba(node.color, 0.16);
               }
@@ -1493,7 +1551,7 @@ export default function GraphViewer3D({
       </div>
 
       {/* 详情面板（仅单选时显示） */}
-      {selectedNode && !isMultiSelect && (
+      {selectedNode && !isMultiSelect && !gAnswer && (
         <div className="absolute bottom-4 left-4 right-4 z-20 max-h-[55vh] bg-gray-950/95 border border-white/10 p-4 overflow-y-auto md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:w-80 md:max-h-none md:border-l">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-cyan-400">{t("graph.title")}</h3>
@@ -1827,7 +1885,67 @@ export default function GraphViewer3D({
         </div>
       )}
 
-      {!selectedNode && (
+      {gAnswer && (
+        <aside className="hidden w-80 shrink-0 flex-col border-l border-white/10 bg-gray-950/95 md:flex">
+          <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+            <Brain className="h-4 w-4 text-cyan-300" />
+            <h3 className="text-sm font-semibold text-cyan-300">{t('cmd.answer_title')}</h3>
+            <button
+              onClick={() => { setGAnswer(null); setCmdInput(""); }}
+              className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-200"
+              title={t('cmd.done')}
+            >
+              <Check className="h-3.5 w-3.5" />
+              {t('cmd.done')}
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
+            <p className="mb-3 text-xs text-gray-500">{gAnswer.question}</p>
+            <div className="text-base font-semibold leading-relaxed text-white">{gAnswer.conclusion || t('cmd.no_answer')}</div>
+            {gAnswer.reasons.length > 0 && (
+              <>
+                <div className="mt-4 mb-2 text-[11px] uppercase tracking-wider text-gray-500">{t('cmd.reasons')}</div>
+                <div className="flex flex-col gap-2.5">
+                  {gAnswer.reasons.map((r, i) => (
+                    <div key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-gray-300">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400/80" />
+                      <span>
+                        {r.text}
+                        {r.entityIds.length > 0 && (
+                          <span className="ml-1 inline-flex flex-wrap gap-1 align-middle">
+                            {r.entityIds.map((id) => {
+                              const s = gAnswer.sources.find((x) => x.id === id);
+                              if (!s) return null;
+                              return (
+                                <button
+                                  key={id}
+                                  onMouseEnter={() => setHovered(id)}
+                                  onMouseLeave={() => setHovered(null)}
+                                  onClick={() => focusNodeById(id)}
+                                  className="inline-flex max-w-[140px] items-center gap-1 rounded-md border border-cyan-900/40 bg-cyan-950/30 px-1.5 py-0.5 text-[11px] text-cyan-300 hover:border-cyan-500/50 hover:bg-cyan-900/40"
+                                >
+                                  <span className="truncate">{s.name}</span>
+                                </button>
+                              );
+                            })}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          {gAnswer.sources.length > 0 && (
+            <div className="border-t border-white/10 px-4 py-2.5 text-[11px] text-gray-500">
+              {t('cmd.sources_count').replace('{n}', String(gAnswer.sources.length))}
+            </div>
+          )}
+        </aside>
+      )}
+
+      {!selectedNode && !gAnswer && (
         <aside className="hidden w-80 shrink-0 border-l border-white/10 bg-gray-950/95 p-4 md:flex md:flex-col md:gap-4">
           <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto">
           <div>

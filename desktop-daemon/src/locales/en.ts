@@ -25,6 +25,17 @@ export default {
     error_no_llm: 'No LLM configured, so answers can’t be generated. Set one up in Settings and try again.',
     error_generic: 'Sorry, the Q&A service is temporarily unavailable. Please try again later.',
   },
+  cmd: {
+    placeholder: 'Ask your brain / let it help you decide…  (Enter)',
+    send: 'Send',
+    answer_title: 'Answer',
+    done: 'Done',
+    reasons: 'Why',
+    no_answer: "That isn't in your memory yet.",
+    sources_count: '{n} sources',
+    need_llm: 'Configure an LLM in Settings to get answers.',
+    error: 'Sorry, the answer service is temporarily unavailable.',
+  },
   header: {
     upload: 'Upload File',
     show_hud: 'Show floating HUD (visible even when minimized)',
