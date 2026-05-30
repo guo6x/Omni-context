@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Upload, Sparkles, Keyboard, X, Scale, GitBranch, Plug, ArrowRight } from 'lucide-react';
+import { Search, Upload, Sparkles, Keyboard, X, Scale, GitBranch, Plug, ArrowRight, Brain } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LogoMark } from '@/components/BrandMark';
 
@@ -10,6 +10,7 @@ interface EmptyStateProps {
   isLoadingDemo?: boolean;
   onSearch: () => void;
   onDecision: () => void;
+  onAskBrain: () => void;
   onUploadClick: () => void;
   onShowDecisionLog: () => void;
   onConnectMcp: () => void;
@@ -22,6 +23,7 @@ export default function EmptyState({
   isLoadingDemo = false,
   onSearch,
   onDecision,
+  onAskBrain,
   onUploadClick,
   onShowDecisionLog,
   onConnectMcp,
@@ -31,6 +33,7 @@ export default function EmptyState({
   const { t } = useTranslation();
 
   const guide = [
+    { icon: <Brain className="w-4 h-4" />, label: t('empty.guide_ask'), how: t('empty.guide_ask_how'), onClick: onAskBrain, accent: true },
     { icon: <Plug className="w-4 h-4" />, label: t('empty.guide_mcp'), how: t('empty.guide_mcp_how'), onClick: onConnectMcp, accent: true },
     { icon: <Search className="w-4 h-4" />, label: t('empty.guide_search'), how: t('empty.guide_search_how'), onClick: onSearch },
     { icon: <Scale className="w-4 h-4" />, label: t('empty.guide_decision'), how: t('empty.guide_decision_how'), onClick: onDecision },

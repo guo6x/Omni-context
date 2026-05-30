@@ -11,7 +11,7 @@ import EmptyState from "@/components/EmptyState";
 import FileDropZone, { FileDropZoneRef, ACCEPTED_EXTENSIONS, TauriFileLike } from "@/components/FileDropZone";
 import HardwarePairingPanel from "@/components/HardwarePairingPanel";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
+import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp, MoreHorizontal, Brain } from "lucide-react";
 import { LogoMark } from "@/components/BrandMark";
 import { Entity, Relationship } from "@shared/types";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -21,6 +21,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import SearchPalette from "@/components/SearchPalette";
 import DecisionAssistant from "@/components/DecisionAssistant";
+import AskBrain from "@/components/AskBrain";
 import DecisionTimeline from "@/components/DecisionTimeline";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
@@ -114,6 +115,7 @@ function MainApp() {
   const [showSearchPalette, setShowSearchPalette] = useState(false);
   const [showDecisionAssistant, setShowDecisionAssistant] = useState(false);
   const [showDecisionLog, setShowDecisionLog] = useState(false);
+  const [showAskBrain, setShowAskBrain] = useState(false);
   const [focusEntityId, setFocusEntityId] = useState<string | undefined>(undefined);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [showOfflineDetails, setShowOfflineDetails] = useState(false);
@@ -434,6 +436,19 @@ function MainApp() {
       category: t('settings.category.action'),
     },
     {
+      id: 'openAskBrain',
+      key: 'j',
+      ctrl: true,
+      shift: false,
+      alt: false,
+      action: () => {
+        if (showSearchPalette) setShowSearchPalette(false);
+        setShowAskBrain(prev => !prev);
+      },
+      description: t('shortcuts.ask_brain_desc'),
+      category: t('settings.category.action'),
+    },
+    {
       id: 'showHelp',
       key: '?',
       ctrl: false,
@@ -704,6 +719,15 @@ function MainApp() {
             <Search className="w-4 h-4 text-cyan-400" />
             <span className="hidden lg:inline">{t('search.search_recall')}</span>
           </button>
+          {/* 问大脑按钮 */}
+          <button
+            onClick={() => { setShowSearchPalette(false); setShowAskBrain(true); }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-cyan-300 hover:text-cyan-200 hover:bg-cyan-950/30 border border-cyan-800/40 rounded-lg transition-all"
+            title={t('ask.title') + ' (Ctrl+J)'}
+          >
+            <Brain className="w-4 h-4 text-cyan-300" />
+            <span className="hidden lg:inline">{t('ask.title')}</span>
+          </button>
           {/* 决策助手按钮 */}
           <button
             onClick={() => { setShowSearchPalette(false); setShowDecisionAssistant(true); }}
@@ -882,6 +906,7 @@ function MainApp() {
             isLoadingDemo={isLoadingDemo}
             onSearch={() => setShowSearchPalette(true)}
             onDecision={handleDecision}
+            onAskBrain={() => setShowAskBrain(true)}
             onUploadClick={() => setShowUpload(true)}
             onShowDecisionLog={() => setShowDecisionLog(true)}
             onConnectMcp={() => { setSettingsTab('mcp'); setShowSettings(true); }}
@@ -978,6 +1003,18 @@ function MainApp() {
           onSelectEntity={(id) => {
             setFocusEntityId(id);
           }}
+        />
+
+        <AskBrain
+          isOpen={showAskBrain}
+          onClose={() => setShowAskBrain(false)}
+          onSelectEntity={(id) => setFocusEntityId(id)}
+          llmConfigured={
+            !!settings.llmProvider.apiKey ||
+            settings.llmProvider.apiUrl.includes('localhost') ||
+            settings.llmProvider.apiUrl.includes('127.0.0.1')
+          }
+          onConfigureLlm={() => { setShowAskBrain(false); setSettingsTab('llm'); setShowSettings(true); }}
         />
 
         <DecisionTimeline

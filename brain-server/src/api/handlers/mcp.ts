@@ -826,6 +826,83 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }
             break;
           }
+          case 'ask_memory': {
+            // App 内「问大脑」：每轮都基于用户最新问题真实检索图谱，再让 LLM 据此作答。
+            // 与 discuss_decision 不同——后者只基于既定 situation 聊天，不自查图谱。
+            const messages: Array<{ role: string; content: string }> = Array.isArray(args.messages)
+              ? args.messages.filter((m: any) => m && typeof m.content === 'string')
+              : [];
+            const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+            const question = (lastUser?.content || '').trim();
+
+            const llmConfig = ctx.extractor.getLlmConfig();
+            if (!llmConfig.apiUrl) {
+              sendError(res, 400, 'LLM_NOT_CONFIGURED');
+              return;
+            }
+            if (!question) {
+              result = { reply: '', sources: [] };
+              break;
+            }
+
+            // grounding：复用决策上下文检索（融合文本+向量+原则+冲突）
+            const ctxData = await retrieveDecisionContext(ctx, question, 6);
+            const seenSrc = new Set<string>();
+            const sources: any[] = [];
+            for (const m of [...ctxData.principles, ...ctxData.relevantMemories]) {
+              if (m && m.id && !seenSrc.has(m.id)) {
+                seenSrc.add(m.id);
+                sources.push(toCompactEntity(m));
+              }
+            }
+            const cappedSources = sources.slice(0, 12);
+            const contextBlock = cappedSources.length
+              ? cappedSources
+                  .map((m: any, i: number) => `[${i + 1}] (${m.type}) ${m.name}: ${m.description || ''}`)
+                  .join('\n')
+              : '（没有检索到相关记忆）';
+
+            const systemPrompt = `你是用户的「第二大脑」。下面是从用户本地知识图谱中检索到的相关记忆。
+请只依据这些记忆回答用户的问题，并在用到某条记忆时用其名称指明来源。
+如果这些记忆里没有答案，就如实说"我的记忆里暂时没有这部分"，可顺带建议用户该捕获什么，不要编造。
+回答简洁、口语化，使用用户提问所用的语言。
+
+相关记忆：
+${contextBlock}`;
+
+            try {
+              const controller = new AbortController();
+              const timeout = setTimeout(() => controller.abort(), 60000);
+              const llmRes = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(llmConfig.apiKey ? { Authorization: `Bearer ${llmConfig.apiKey}` } : {}),
+                },
+                body: JSON.stringify({
+                  model: llmConfig.model,
+                  messages: [
+                    { role: 'system', content: systemPrompt },
+                    ...messages.slice(-8),
+                  ],
+                  max_tokens: 768,
+                  temperature: 0.5,
+                }),
+                signal: controller.signal,
+              });
+              clearTimeout(timeout);
+              if (!llmRes.ok) throw new Error(`LLM API error: ${llmRes.status}`);
+              const data = (await llmRes.json()) as { choices: Array<{ message: { content: string } }> };
+              result = {
+                reply: data.choices?.[0]?.message?.content || '(no response)',
+                sources: cappedSources,
+              };
+            } catch (e) {
+              console.error('[ask_memory] Failed:', e);
+              result = { reply: '抱歉，问答服务暂时不可用。', sources: cappedSources };
+            }
+            break;
+          }
           case 'save_conclusion': {
             const parsed = SaveConclusionSchema.parse(args);
             const { summary, related_entity_ids, tags } = parsed;
