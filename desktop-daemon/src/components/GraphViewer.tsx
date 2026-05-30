@@ -1160,8 +1160,10 @@ export default function GraphViewer3D({
     <div className="flex h-full">
       {/* 图谱主区域 */}
       <div className="relative min-w-0 flex-1" ref={containerRef}>
-        {/* 控制栏 */}
-        <div className="absolute top-4 left-4 right-4 z-10 flex flex-wrap items-center gap-2">
+        {/* 控制栏 + 时间轴：统一放进 top 容器纵向堆叠，时间轴自然落在控制栏下方，
+            不再用 top-[60px] 魔法数字，避免与摘要行重叠 */}
+        <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex min-w-[260px] flex-1 max-w-md items-center gap-2 rounded-lg border border-white/10 bg-gray-950/90 px-3 py-2 shadow-2xl shadow-black/30">
             <Search className="h-4 w-4 text-cyan-400" />
             <input
@@ -1271,9 +1273,9 @@ export default function GraphViewer3D({
           </div>
         </div>
 
-        {/* 时间轴面板 */}
+        {/* 时间轴面板：在控制栏正下方，随其换行高度自然下移 */}
         {showTimeSlider && timeBounds && (
-          <div className="absolute top-[60px] left-4 right-4 z-10 flex items-center gap-3 rounded-lg border border-white/10 bg-gray-950/95 px-4 py-2.5 shadow-2xl shadow-black/30">
+          <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-gray-950/95 px-4 py-2.5 shadow-2xl shadow-black/30">
             <Clock className="h-4 w-4 shrink-0 text-cyan-400" />
             <input
               type="range"
@@ -1303,6 +1305,7 @@ export default function GraphViewer3D({
             </button>
           </div>
         )}
+        </div>
 
         {/* 图例：左侧中下方可折叠交互式 Legend（展开时向上生长） */}
         {graphData.nodes.length > 0 && (
@@ -1491,7 +1494,7 @@ export default function GraphViewer3D({
 
       {/* 详情面板（仅单选时显示） */}
       {selectedNode && !isMultiSelect && (
-        <div className="absolute bottom-4 left-4 right-4 z-20 max-h-[55vh] bg-[#0a0b12] border border-white/5 p-4 overflow-y-auto md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:w-80 md:max-h-none md:border-l md:border-white/5">
+        <div className="absolute bottom-4 left-4 right-4 z-20 max-h-[55vh] bg-gray-950/95 border border-white/10 p-4 overflow-y-auto md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:w-80 md:max-h-none md:border-l">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-cyan-400">{t("graph.title")}</h3>
             <button
