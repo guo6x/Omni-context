@@ -119,6 +119,8 @@ function MainApp() {
   const [showDecisionAssistant, setShowDecisionAssistant] = useState(false);
   const [showDecisionLog, setShowDecisionLog] = useState(false);
   const [showAskBrain, setShowAskBrain] = useState(false);
+  // 启动遮罩兜底：brain-server 长时间起不来时也要放行进 App（由离线横幅接管），避免遮罩锁死 UI
+  const [splashTimedOut, setSplashTimedOut] = useState(false);
   const [focusEntityId, setFocusEntityId] = useState<string | undefined>(undefined);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [showOfflineDetails, setShowOfflineDetails] = useState(false);
@@ -165,6 +167,13 @@ function MainApp() {
   useEffect(() => {
     fetchGraphData();
   }, [refreshTrigger, fetchGraphData]);
+
+  // 启动遮罩超时兜底：20s 还没首次连上就放行，避免 brain-server 异常时锁死 UI
+  useEffect(() => {
+    if (hasConnectedOnce) return;
+    const timer = setTimeout(() => setSplashTimedOut(true), 20000);
+    return () => clearTimeout(timer);
+  }, [hasConnectedOnce]);
 
   // 轻量轮询未读洞见，驱动首页「记忆亮点」浮条
   useEffect(() => {
@@ -683,7 +692,7 @@ function MainApp() {
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
       {/* 冷启动遮罩：brain-server 内嵌进程启动较慢，未首次连上前盖一层过渡画面 */}
-      {!hasConnectedOnce && (
+      {!hasConnectedOnce && !splashTimedOut && (
         <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-background">
           <LogoMark size={72} className="animate-pulse-glow" />
           <div className="flex flex-col items-center gap-3">

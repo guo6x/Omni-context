@@ -847,10 +847,11 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }
 
             // grounding：复用决策上下文检索（融合文本+向量+原则+冲突）
+            // 相关记忆优先于原则，避免原则多时把相关记忆挤出 12 条上限（既丢来源也丢 grounding）
             const ctxData = await retrieveDecisionContext(ctx, question, 6);
             const seenSrc = new Set<string>();
             const sources: any[] = [];
-            for (const m of [...ctxData.principles, ...ctxData.relevantMemories]) {
+            for (const m of [...ctxData.relevantMemories, ...ctxData.principles]) {
               if (m && m.id && !seenSrc.has(m.id)) {
                 seenSrc.add(m.id);
                 sources.push(toCompactEntity(m));
