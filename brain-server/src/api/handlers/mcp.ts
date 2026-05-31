@@ -974,8 +974,29 @@ ${gaCtxBlock}
 ${gaConnBlock}`;
 
             try {
-              const raw = await callLlmDecision(ctx, gaSystem, gaQuestion);
-              const parsed = JSON.parse(raw);
+              // 带对话历史调用，让追问有上下文；要求 JSON 输出
+              const gaController = new AbortController();
+              const gaTimeout = setTimeout(() => gaController.abort(), 60000);
+              let raw = '';
+              try {
+                const llmRes = await fetch(`${gaLlm.apiUrl}/chat/completions`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', ...(gaLlm.apiKey ? { Authorization: `Bearer ${gaLlm.apiKey}` } : {}) },
+                  body: JSON.stringify({
+                    model: gaLlm.model,
+                    messages: [{ role: 'system', content: gaSystem }, ...gaMessages.slice(-8)],
+                    max_tokens: 900,
+                    temperature: 0.4,
+                    response_format: { type: 'json_object' },
+                  }),
+                  signal: gaController.signal,
+                });
+                if (!llmRes.ok) throw new Error(`LLM API error: ${llmRes.status}`);
+                const d = (await llmRes.json()) as { choices: Array<{ message: { content: string } }> };
+                raw = d.choices?.[0]?.message?.content || '';
+              } finally { clearTimeout(gaTimeout); }
+              const jsonMatch = raw.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+              const parsed = JSON.parse(jsonMatch ? jsonMatch[1].trim() : raw.trim());
               const reasons = Array.isArray(parsed.reasons) ? parsed.reasons.slice(0, 5) : [];
               result = {
                 conclusion: typeof parsed.conclusion === 'string' ? parsed.conclusion : '',

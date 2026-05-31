@@ -175,7 +175,8 @@ export default function GraphViewer3D({
   const [query, setQuery] = useState("");
   // 命令栏「问大脑」：右栏第三态——结构化答案卡 + 高亮命中子图
   const [cmdInput, setCmdInput] = useState("");
-  const [gAnswer, setGAnswer] = useState<{ question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] } | null>(null);
+  const [followInput, setFollowInput] = useState("");
+  const [gAnswer, setGAnswer] = useState<{ messages: Array<{ role: 'user' | 'assistant'; content: string }>; question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] } | null>(null);
   const [gLoading, setGLoading] = useState(false);
   const [activeType, setActiveType] = useState<string>("all");
   const [activeTag, setActiveTag] = useState<string>("all");
@@ -539,37 +540,51 @@ export default function GraphViewer3D({
     [graphData.nodes, entities, handleNodeClick]
   );
 
-  // 命令栏提交：调 graph_answer，右栏切到答案卡并高亮命中子图
-  const submitCommand = useCallback(async () => {
-    const q = cmdInput.trim();
-    if (!q || gLoading) return;
+  // 调 graph_answer 跑一轮（首问/追问共用）：右栏切答案卡并高亮命中子图
+  const runAnswer = useCallback(async (history: Array<{ role: 'user' | 'assistant'; content: string }>) => {
     setGLoading(true);
     setSelectedNode(null);
+    const lastUser = [...history].reverse().find((m) => m.role === 'user')?.content || '';
     try {
       const res = await apiFetch('/api/mcp/tool/graph_answer', {
         method: 'POST',
-        body: JSON.stringify({ arguments: { messages: [{ role: 'user', content: q }] } }),
+        body: JSON.stringify({ arguments: { messages: history } }),
       });
       if (!res.ok) {
         const body = await res.text();
         const conclusion = res.status === 400 && body.includes('LLM') ? t('cmd.need_llm') : t('cmd.error');
-        setGAnswer({ question: q, conclusion, reasons: [], sources: [], citedEntityIds: [] });
+        setGAnswer({ messages: history, question: lastUser, conclusion, reasons: [], sources: [], citedEntityIds: [] });
         return;
       }
       const data = await res.json();
+      const conclusion = data.conclusion || '';
       setGAnswer({
-        question: q,
-        conclusion: data.conclusion || '',
+        messages: [...history, { role: 'assistant', content: conclusion || '(no answer)' }],
+        question: lastUser,
+        conclusion,
         reasons: Array.isArray(data.reasons) ? data.reasons : [],
         sources: Array.isArray(data.sources) ? data.sources : [],
         citedEntityIds: Array.isArray(data.citedEntityIds) ? data.citedEntityIds : [],
       });
     } catch (e) {
-      setGAnswer({ question: q, conclusion: t('cmd.error'), reasons: [], sources: [], citedEntityIds: [] });
+      setGAnswer({ messages: history, question: lastUser, conclusion: t('cmd.error'), reasons: [], sources: [], citedEntityIds: [] });
     } finally {
       setGLoading(false);
     }
-  }, [cmdInput, gLoading, t]);
+  }, [t]);
+
+  const submitCommand = useCallback(() => {
+    const q = cmdInput.trim();
+    if (!q || gLoading) return;
+    runAnswer([{ role: 'user', content: q }]);
+  }, [cmdInput, gLoading, runAnswer]);
+
+  const followUp = useCallback(() => {
+    const q = followInput.trim();
+    if (!q || gLoading || !gAnswer) return;
+    setFollowInput("");
+    runAnswer([...gAnswer.messages, { role: 'user', content: q }]);
+  }, [followInput, gLoading, gAnswer, runAnswer]);
 
   useEffect(() => {
     if (focusEntityId) {
@@ -1891,7 +1906,7 @@ export default function GraphViewer3D({
             <Brain className="h-4 w-4 text-cyan-300" />
             <h3 className="text-sm font-semibold text-cyan-300">{t('cmd.answer_title')}</h3>
             <button
-              onClick={() => { setGAnswer(null); setCmdInput(""); }}
+              onClick={() => { setGAnswer(null); setCmdInput(""); setFollowInput(""); }}
               className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-200"
               title={t('cmd.done')}
             >
@@ -1937,11 +1952,28 @@ export default function GraphViewer3D({
               </>
             )}
           </div>
-          {gAnswer.sources.length > 0 && (
-            <div className="border-t border-white/10 px-4 py-2.5 text-[11px] text-gray-500">
-              {t('cmd.sources_count').replace('{n}', String(gAnswer.sources.length))}
+          <div className="border-t border-white/10 p-3">
+            {gAnswer.sources.length > 0 && (
+              <div className="mb-2 px-1 text-[11px] text-gray-500">{t('cmd.sources_count').replace('{n}', String(gAnswer.sources.length))}</div>
+            )}
+            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2">
+              <input
+                value={followInput}
+                onChange={(e) => setFollowInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); followUp(); } }}
+                placeholder={t('cmd.follow_placeholder')}
+                disabled={gLoading}
+                className="w-full bg-transparent text-[13px] text-gray-100 placeholder:text-gray-500 outline-none disabled:opacity-50"
+              />
+              {gLoading ? (
+                <span className="block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+              ) : (
+                <button onClick={followUp} disabled={!followInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
+                  <Send className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
-          )}
+          </div>
         </aside>
       )}
 

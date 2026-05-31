@@ -31,6 +31,7 @@ export default {
     answer_title: 'Answer',
     done: 'Done',
     reasons: 'Why',
+    follow_placeholder: 'Continue / ask a follow-up…',
     no_answer: "That isn't in your memory yet.",
     sources_count: '{n} sources',
     need_llm: 'Configure an LLM in Settings to get answers.',

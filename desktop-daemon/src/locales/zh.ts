@@ -31,6 +31,7 @@ export default {
     answer_title: '答案',
     done: '完成',
     reasons: '依据',
+    follow_placeholder: '继续讨论 / 追问…',
     no_answer: '我的记忆里暂时没有这部分。',
     sources_count: '{n} 个来源',
     need_llm: '需要先在设置里配置 LLM 才能回答。',
