@@ -38,7 +38,36 @@ fn resolve_home_path(path_str: &str) -> Option<PathBuf> {
     }
 }
 
+/// Claude Desktop on Windows：MSIX/商店版实际读 LocalCache 下的路径，而非 %APPDATA%。
+/// 写错位置会被静默忽略（官方已知问题），这里优先返回 MSIX 路径。
+#[cfg(target_os = "windows")]
+fn claude_desktop_config_path_windows() -> PathBuf {
+    if let Ok(local) = std::env::var("LOCALAPPDATA") {
+        let packages = PathBuf::from(&local).join("Packages");
+        if let Ok(entries) = fs::read_dir(&packages) {
+            for entry in entries.flatten() {
+                if entry.file_name().to_string_lossy().starts_with("Claude") {
+                    return entry
+                        .path()
+                        .join("LocalCache")
+                        .join("Roaming")
+                        .join("Claude")
+                        .join("claude_desktop_config.json");
+                }
+            }
+        }
+    }
+    // 回退：经典 .exe 安装
+    let appdata = std::env::var("APPDATA").unwrap_or_default();
+    PathBuf::from(appdata).join("Claude").join("claude_desktop_config.json")
+}
+
 pub fn get_config_path(client_id: &str) -> Option<PathBuf> {
+    // Claude Desktop on Windows 走 MSIX 感知的特殊处理
+    #[cfg(target_os = "windows")]
+    if client_id == "claude" {
+        return Some(claude_desktop_config_path_windows());
+    }
     let raw_path = match client_id {
         "claude" => {
             #[cfg(target_os = "windows")]
