@@ -19,9 +19,6 @@ import { useSettings, syncLlmToBrainServer } from "@/hooks/useSettings";
 import { useOmniContext } from "@/hooks/useOmniContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
-import SearchPalette from "@/components/SearchPalette";
-import DecisionAssistant from "@/components/DecisionAssistant";
-import AskBrain from "@/components/AskBrain";
 import DecisionTimeline from "@/components/DecisionTimeline";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
@@ -115,10 +112,7 @@ function MainApp() {
   const [showHardware, setShowHardware] = useState(false);
   const [emptyDismissed, setEmptyDismissed] = useState(false);
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
-  const [showSearchPalette, setShowSearchPalette] = useState(false);
-  const [showDecisionAssistant, setShowDecisionAssistant] = useState(false);
   const [showDecisionLog, setShowDecisionLog] = useState(false);
-  const [showAskBrain, setShowAskBrain] = useState(false);
   // 启动遮罩兜底：brain-server 长时间起不来时也要放行进 App（由离线横幅接管），避免遮罩锁死 UI
   const [splashTimedOut, setSplashTimedOut] = useState(false);
   const [focusEntityId, setFocusEntityId] = useState<string | undefined>(undefined);
@@ -415,9 +409,6 @@ function MainApp() {
             case 'precipitate':
               handlePrecipitate();
               break;
-            case 'decision':
-              handleDecision();
-              break;
             case 'reset':
               handleReset();
               break;
@@ -567,12 +558,6 @@ function MainApp() {
     return finalResult;
   };
 
-  const handleDecision = () => {
-    addLog(t('shortcuts.decision_desc'), "info");
-    setShowSearchPalette(false);
-    setShowDecisionAssistant(true);
-  };
-
   const handleConnectHardware = useCallback(() => {
     setShowHardware(true);
   }, []);
@@ -589,7 +574,6 @@ function MainApp() {
   const handleReset = async () => {
     // 清 UI 状态
     setFocusEntityId(undefined);
-    setShowSearchPalette(false);
 
     // 重置日志（保留前 3 条基线）
     await triggerReset();
@@ -901,9 +885,6 @@ function MainApp() {
           <EmptyState
             onLoadDemo={handleLoadDemo}
             isLoadingDemo={isLoadingDemo}
-            onSearch={() => setShowSearchPalette(true)}
-            onDecision={handleDecision}
-            onAskBrain={() => setShowAskBrain(true)}
             onUploadClick={() => setShowUpload(true)}
             onShowDecisionLog={() => setShowDecisionLog(true)}
             onConnectMcp={() => { setSettingsTab('mcp'); setShowSettings(true); }}
@@ -985,34 +966,7 @@ function MainApp() {
 
         <HardwarePairingPanel isOpen={showHardware} onClose={() => setShowHardware(false)} />
 
-        <SearchPalette
-          isOpen={showSearchPalette}
-          onClose={() => setShowSearchPalette(false)}
-          onSelectEntity={(id) => {
-            setFocusEntityId(id);
-          }}
-          allEntities={entities}
-        />
-
-        <DecisionAssistant
-          isOpen={showDecisionAssistant}
-          onClose={() => setShowDecisionAssistant(false)}
-          onSelectEntity={(id) => {
-            setFocusEntityId(id);
-          }}
-        />
-
-        <AskBrain
-          isOpen={showAskBrain}
-          onClose={() => setShowAskBrain(false)}
-          onSelectEntity={(id) => setFocusEntityId(id)}
-          llmConfigured={
-            !!settings.llmProvider.apiKey ||
-            settings.llmProvider.apiUrl.includes('localhost') ||
-            settings.llmProvider.apiUrl.includes('127.0.0.1')
-          }
-          onConfigureLlm={() => { setShowAskBrain(false); setSettingsTab('llm'); setShowSettings(true); }}
-        />
+        {/* 搜索 / 问大脑 / 决策助手已由图谱命令栏统一替代 */}
 
         <DecisionTimeline
           isOpen={showDecisionLog}

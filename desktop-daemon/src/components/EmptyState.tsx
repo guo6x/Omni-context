@@ -8,9 +8,6 @@ import { LogoMark } from '@/components/BrandMark';
 interface EmptyStateProps {
   onLoadDemo: () => void;
   isLoadingDemo?: boolean;
-  onSearch: () => void;
-  onDecision: () => void;
-  onAskBrain: () => void;
   onUploadClick: () => void;
   onShowDecisionLog: () => void;
   onConnectMcp: () => void;
@@ -21,9 +18,6 @@ interface EmptyStateProps {
 export default function EmptyState({
   onLoadDemo,
   isLoadingDemo = false,
-  onSearch,
-  onDecision,
-  onAskBrain,
   onUploadClick,
   onShowDecisionLog,
   onConnectMcp,
@@ -33,10 +27,7 @@ export default function EmptyState({
   const { t } = useTranslation();
 
   const guide = [
-    { icon: <Brain className="w-4 h-4" />, label: t('empty.guide_ask'), how: t('empty.guide_ask_how'), onClick: onAskBrain, accent: true },
     { icon: <Plug className="w-4 h-4" />, label: t('empty.guide_mcp'), how: t('empty.guide_mcp_how'), onClick: onConnectMcp, accent: true },
-    { icon: <Search className="w-4 h-4" />, label: t('empty.guide_search'), how: t('empty.guide_search_how'), onClick: onSearch },
-    { icon: <Scale className="w-4 h-4" />, label: t('empty.guide_decision'), how: t('empty.guide_decision_how'), onClick: onDecision },
     { icon: <Upload className="w-4 h-4" />, label: t('empty.guide_upload'), how: t('empty.guide_upload_how'), onClick: onUploadClick },
     { icon: <GitBranch className="w-4 h-4" />, label: t('empty.guide_log'), how: t('empty.guide_log_how'), onClick: onShowDecisionLog },
   ];
