@@ -664,17 +664,22 @@ export default function GraphViewer3D({
     };
   }, []);
 
-  // Esc 退出多选模式
+  // Ctrl/Cmd+K 聚焦命令栏；Esc 关闭答案卡 / 退出多选
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedNodeIds.size > 0) {
-        setSelectedNodeIds(new Set());
-        setSelectedNode(null);
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        cmdInputRef.current?.focus();
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (gAnswer) { setGAnswer(null); setCmdInput(""); setFollowInput(""); return; }
+        if (selectedNodeIds.size > 0) { setSelectedNodeIds(new Set()); setSelectedNode(null); }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedNodeIds.size]);
+  }, [selectedNodeIds.size, gAnswer]);
 
   // 进入编辑模式：把当前选中节点字段填到表单
   const enterEditMode = useCallback(() => {
@@ -1311,7 +1316,7 @@ export default function GraphViewer3D({
                   {cmdExamples.map((ex, i) => (
                     <button
                       key={i}
-                      onMouseDown={(e) => { e.preventDefault(); setCmdInput(ex); setCmdFocused(false); runAnswer([{ role: 'user', content: ex }]); }}
+                      onMouseDown={(e) => { e.preventDefault(); if (gLoading) return; setCmdInput(ex); setCmdFocused(false); runAnswer([{ role: 'user', content: ex }]); }}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-gray-300 hover:bg-cyan-950/30 hover:text-cyan-100"
                     >
                       <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-400/80" />
@@ -1606,6 +1611,11 @@ export default function GraphViewer3D({
               const color = getRelationshipStyle(link.type).color;
               const sourceId = getLinkEndpointId(link.source);
               const targetId = getLinkEndpointId(link.target);
+              // 答案态：只保留命中子图内部的连线，其余压暗
+              if (gAnswer && gAnswer.citedEntityIds.length > 0) {
+                const inSub = gAnswer.citedEntityIds.includes(sourceId) && gAnswer.citedEntityIds.includes(targetId);
+                return inSub ? color : hexToRgba(color, 0.08);
+              }
               const focusDimmed = selectedNode
                 ? sourceId !== selectedNode.id && targetId !== selectedNode.id
                 : selectedNodeIds.size > 1 && (!selectedNodeIds.has(sourceId) || !selectedNodeIds.has(targetId));
@@ -1997,7 +2007,7 @@ export default function GraphViewer3D({
             <Brain className="h-4 w-4 text-cyan-300" />
             <h3 className="text-sm font-semibold text-cyan-300">{t('cmd.answer_title')}</h3>
             <button
-              onClick={() => { setGAnswer(null); setCmdInput(""); setFollowInput(""); }}
+              onClick={() => { setGAnswer(null); setCmdInput(""); setFollowInput(""); setSelectedNode(null); }}
               className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-200"
               title={t('cmd.done')}
             >

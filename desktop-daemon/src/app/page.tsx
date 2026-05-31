@@ -444,42 +444,6 @@ function MainApp() {
       };
     }),
     {
-      id: 'openSearch',
-      key: 'k',
-      ctrl: true,
-      shift: false,
-      alt: false,
-      action: () => setShowSearchPalette(prev => !prev),
-      description: t('shortcuts.open_search'),
-      category: t('settings.category.action'),
-    },
-    {
-      id: 'openDecisionAssistant',
-      key: 'k',
-      ctrl: true,
-      shift: true,
-      alt: false,
-      action: () => {
-        if (showSearchPalette) setShowSearchPalette(false);
-        setShowDecisionAssistant(prev => !prev);
-      },
-      description: t('shortcuts.decision_assistant_desc'),
-      category: t('settings.category.action'),
-    },
-    {
-      id: 'openAskBrain',
-      key: 'j',
-      ctrl: true,
-      shift: false,
-      alt: false,
-      action: () => {
-        if (showSearchPalette) setShowSearchPalette(false);
-        setShowAskBrain(prev => !prev);
-      },
-      description: t('shortcuts.ask_brain_desc'),
-      category: t('settings.category.action'),
-    },
-    {
       id: 'showHelp',
       key: '?',
       ctrl: false,
@@ -741,33 +705,7 @@ function MainApp() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2 flex-wrap justify-end">
-          {/* [通用] 常驻搜索按钮 */}
-          <button
-            onClick={() => setShowSearchPalette(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 rounded-lg transition-all"
-            title={t('search.search_recall') + ' (Ctrl+K)'}
-          >
-            <Search className="w-4 h-4 text-cyan-400" />
-            <span className="hidden lg:inline">{t('search.search_recall')}</span>
-          </button>
-          {/* 问大脑按钮 */}
-          <button
-            onClick={() => { setShowSearchPalette(false); setShowAskBrain(true); }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-cyan-300 hover:text-cyan-200 hover:bg-cyan-950/30 border border-cyan-800/40 rounded-lg transition-all"
-            title={t('ask.title') + ' (Ctrl+J)'}
-          >
-            <Brain className="w-4 h-4 text-cyan-300" />
-            <span className="hidden lg:inline">{t('ask.title')}</span>
-          </button>
-          {/* 决策助手按钮 */}
-          <button
-            onClick={() => { setShowSearchPalette(false); setShowDecisionAssistant(true); }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 rounded-lg transition-all"
-            title={t('header.open_decision_assistant') + ' (Ctrl+Shift+K)'}
-          >
-            <Scale className="w-4 h-4 text-cyan-400" />
-            <span className="hidden lg:inline">{t('header.open_decision_assistant')}</span>
-          </button>
+          {/* 搜索 / 问大脑 / 决策 已合并到图谱顶部的命令栏（Ctrl+K 聚焦） */}
           {/* [通用] 常驻上传按钮 */}
           <button
             onClick={() => setShowUpload(true)}
