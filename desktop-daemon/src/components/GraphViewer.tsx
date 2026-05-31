@@ -547,6 +547,7 @@ export default function GraphViewer3D({
   const runAnswer = useCallback(async (history: Array<{ role: 'user' | 'assistant'; content: string }>) => {
     setGLoading(true);
     setSelectedNode(null);
+    setSelectedNodeIds(new Set());
     const lastUser = [...history].reverse().find((m) => m.role === 'user')?.content || '';
     try {
       const res = await apiFetch('/api/mcp/tool/graph_answer', {
@@ -556,7 +557,7 @@ export default function GraphViewer3D({
       if (!res.ok) {
         const body = await res.text();
         const conclusion = res.status === 400 && body.includes('LLM') ? t('cmd.need_llm') : t('cmd.error');
-        setGAnswer({ messages: history, question: lastUser, conclusion, reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
+        setGAnswer({ messages: [...history, { role: 'assistant', content: conclusion }], question: lastUser, conclusion, reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
         return;
       }
       const data = await res.json();
@@ -572,7 +573,7 @@ export default function GraphViewer3D({
         citedEntityIds: Array.isArray(data.citedEntityIds) ? data.citedEntityIds : [],
       });
     } catch (e) {
-      setGAnswer({ messages: history, question: lastUser, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
+      setGAnswer({ messages: [...history, { role: 'assistant', content: t('cmd.error') }], question: lastUser, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
     } finally {
       setGLoading(false);
     }
@@ -673,7 +674,7 @@ export default function GraphViewer3D({
         return;
       }
       if (e.key === 'Escape') {
-        if (gAnswer) { setGAnswer(null); setCmdInput(""); setFollowInput(""); return; }
+        if (gAnswer) { setGAnswer(null); setCmdInput(""); setFollowInput(""); setSelectedNode(null); return; }
         if (selectedNodeIds.size > 0) { setSelectedNodeIds(new Set()); setSelectedNode(null); }
       }
     };
@@ -2208,7 +2209,7 @@ export default function GraphViewer3D({
         </aside>
       )}
 
-      {isMultiSelect && (
+      {isMultiSelect && !gAnswer && (
         <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-col gap-2 rounded-xl border border-cyan-500/30 bg-gray-950/95 px-4 py-3 shadow-2xl shadow-cyan-950/30">
           <div className="flex items-center gap-3">
             <span className="text-sm text-cyan-300 font-medium">

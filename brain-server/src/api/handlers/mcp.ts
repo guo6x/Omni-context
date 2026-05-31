@@ -352,8 +352,10 @@ function rpcError(id: any, code: number, message: string) {
 // 进程内回环调用现有 REST 工具端点，复用全部工具执行逻辑（含鉴权）
 async function callToolViaLoopback(name: string, args: any): Promise<any> {
   const port = process.env.PORT || '3001';
+  // 连服务器实际监听的地址：HOST 指定了具体 LAN IP 时用它，否则回环
+  const host = process.env.HOST && process.env.HOST !== '0.0.0.0' ? process.env.HOST : '127.0.0.1';
   const token = (process.env.LOCAL_API_TOKEN || '').trim();
-  const resp = await fetch(`http://127.0.0.1:${port}/api/mcp/tool/${encodeURIComponent(name)}`, {
+  const resp = await fetch(`http://${host}:${port}/api/mcp/tool/${encodeURIComponent(name)}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

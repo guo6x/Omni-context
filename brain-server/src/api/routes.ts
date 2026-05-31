@@ -249,6 +249,11 @@ function isHealthRequest(req: http.IncomingMessage): boolean {
 function checkRateLimit(req: http.IncomingMessage, res: http.ServerResponse): boolean {
   if (req.method === 'OPTIONS' || isHealthRequest(req)) return true;
 
+  // 本地回环豁免限流：限流是防远程 DoS，本地进程(含 /mcp 自回环、桌面 UI)不是威胁；
+  // 鉴权仍照常执行，恶意本地网页拿不到 token 一样被 401 拦下。
+  const remote = req.socket.remoteAddress || '';
+  if (remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1') return true;
+
   const now = Date.now();
   const key = req.socket.remoteAddress || 'unknown';
   const bucket = rateLimitBuckets.get(key);

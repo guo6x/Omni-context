@@ -767,7 +767,7 @@ export class Database {
     }
 
     query += ' ORDER BY weight DESC, last_activated DESC LIMIT ?';
-    params.push(Math.max(1, Math.min(limit, 1000)));
+    params.push(Math.max(1, Math.min(limit, 3000)));
 
     const rows = await this.all<any>(query, params);
     return rows.map(row => ({
