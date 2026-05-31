@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/useToast";
 import DecisionTimeline from "@/components/DecisionTimeline";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
+import { resolveNodeCap } from '@/lib/device';
 
 
 // 调用 Tauri window API；非 Tauri 环境（Next.js 浏览器调试）下静默降级
@@ -137,7 +138,7 @@ function MainApp() {
       const response = await apiFetch('/api/graph/context', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ depth: 3 }),
+        body: JSON.stringify({ depth: 3, limit: resolveNodeCap(settings.appearance.graphNodeCap) }),
       });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -154,9 +155,9 @@ function MainApp() {
     } finally {
       setIsLoadingGraph(false);
     }
-    // toast / t / entities.length 在依赖列表里反而会抖动，这里只跟随 refreshTrigger
+    // toast / t / entities.length 在依赖列表里反而会抖动，这里只跟随 refreshTrigger 和节点上限
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [settings.appearance.graphNodeCap]);
 
   useEffect(() => {
     fetchGraphData();

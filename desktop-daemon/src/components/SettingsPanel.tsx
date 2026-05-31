@@ -14,6 +14,7 @@ import { findSystemConflict, normalizeShortcut } from '@/lib/known-system-shortc
 import McpClientCard from './McpClientCard';
 import Console from './Console';
 import { THEMES } from '@/lib/themes';
+import { getDeviceNodeCap } from '@/lib/device';
 
 // autostart 插件调用。非 Tauri 环境静默降级。
 async function autostartEnable() {
@@ -73,6 +74,8 @@ export default function SettingsPanel({
   }, [defaultTab]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tempShortcut, setTempShortcut] = useState('');
+  // 节点上限滑块：拖动时只更新本地草稿，松手才提交(避免每步都重拉图谱)
+  const [capDraft, setCapDraft] = useState<number | null>(null);
   const { t } = useTranslation();
   const toast = useToast();
 
@@ -657,6 +660,54 @@ export default function SettingsPanel({
                         </button>
                       </div>
                     </div>
+                  </div>
+
+                  {/* 图谱节点显示上限 */}
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
+                    <div className="text-white font-medium">{t('settings.graph_node_cap')}</div>
+                    <p className="text-xs text-gray-500">
+                      {t('settings.graph_node_cap_hint').replace('{auto}', String(getDeviceNodeCap()))}
+                    </p>
+                    {(() => {
+                      const effectiveCap = settings.appearance.graphNodeCap || getDeviceNodeCap();
+                      const sliderVal = capDraft ?? effectiveCap;
+                      const commit = () => {
+                        if (capDraft != null) { onUpdateAppearance({ graphNodeCap: capDraft }); setCapDraft(null); }
+                      };
+                      return (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => { onUpdateAppearance({ graphNodeCap: 0 }); setCapDraft(null); }}
+                              className={`shrink-0 px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+                                settings.appearance.graphNodeCap === 0
+                                  ? 'bg-cyan-900/40 text-cyan-400 border-cyan-800'
+                                  : 'text-gray-400 border-white/10 hover:bg-white/5'
+                              }`}
+                            >
+                              {t('settings.graph_node_cap_auto')}
+                            </button>
+                            <input
+                              type="range"
+                              min={50}
+                              max={1000}
+                              step={50}
+                              value={sliderVal}
+                              onChange={(e) => setCapDraft(Number(e.target.value))}
+                              onMouseUp={commit}
+                              onTouchEnd={commit}
+                              onKeyUp={commit}
+                              className="flex-1 accent-cyan-400"
+                              aria-label={t('settings.graph_node_cap')}
+                            />
+                            <span className="w-12 text-right font-mono text-sm text-gray-300">{sliderVal}</span>
+                          </div>
+                          {sliderVal > 600 && (
+                            <p className="text-xs text-amber-400/80">{t('settings.graph_node_cap_warn')}</p>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* 主题选择与预览 */}

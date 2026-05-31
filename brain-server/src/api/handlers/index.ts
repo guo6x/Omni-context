@@ -539,6 +539,7 @@ export const handleGraphRoutes = [
         entityId?: string;
         query?: string;
         depth?: number;
+        limit?: number;
       }>(req);
       const context = await buildGraphContext(ctx, body);
       sendResponse(res, 200, context);
@@ -548,21 +549,22 @@ export const handleGraphRoutes = [
 
 async function buildGraphContext(
   ctx: RequestContext,
-  body: { entityId?: string; query?: string; depth?: number }
+  body: { entityId?: string; query?: string; depth?: number; limit?: number }
 ) {
   let entities: any[] = [];
   let relationships: any[] = [];
 
   if (!body.entityId && !body.query) {
-    const OVERVIEW_NODE_CAP = 300;
-    entities = await ctx.db.getRecentEntities(OVERVIEW_NODE_CAP);
+    // 节点上限由前端按设备/用户自定义传入，这里夹到 [50,1000]
+    const cap = Math.min(Math.max(Number(body.limit) || 300, 50), 1000);
+    entities = await ctx.db.getRecentEntities(cap);
     const total = await ctx.db.getEntityCount();
     const visibleEntityIds = new Set(entities.map((entity) => entity.id));
-    relationships = (await ctx.db.getRelationships(600))
+    relationships = (await ctx.db.getRelationships(cap * 2))
       .filter((relationship) =>
         visibleEntityIds.has(relationship.source_id) && visibleEntityIds.has(relationship.target_id)
       )
-      .slice(0, 400);
+      .slice(0, cap * 2);
 
     return {
       entities,

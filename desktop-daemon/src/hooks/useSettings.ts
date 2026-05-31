@@ -28,6 +28,8 @@ export interface AppSettings {
   appearance: {
     theme: ThemeId;
     accentColor: string;
+    /** 图谱总览最多显示节点数；0 = 按设备自动 */
+    graphNodeCap: number;
   };
   behavior: {
     autoHUD: boolean;
@@ -110,6 +112,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   appearance: {
     theme: 'neutral-dark',
     accentColor: '#3b82f6',
+    graphNodeCap: 0,
   },
   behavior: {
     autoHUD: true,

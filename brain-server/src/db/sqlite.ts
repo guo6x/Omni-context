@@ -431,7 +431,7 @@ export class Database {
       `SELECT * FROM entities
        WHERE json_extract(metadata, '$.merged_into') IS NULL
        ORDER BY updated_at DESC LIMIT ?`,
-      [Math.max(1, Math.min(limit, 500))]
+      [Math.max(1, Math.min(limit, 1000))]
     );
     return rows.map(row => this.rowToEntity(row));
   }
