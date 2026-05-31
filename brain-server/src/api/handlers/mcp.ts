@@ -22,6 +22,7 @@ import {
   AnalyzeDecisionSchema,
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
+  tools as mcpToolDefs,
 } from '../../mcp-tools.js';
 
 export function toCompactEntity(entity: any): any {
@@ -328,7 +329,119 @@ ${conflicts || '(无)'}
 }`;
 }
 
+// ── MCP streamable-HTTP 传输：让客户端直接连 http://localhost:3001/mcp(带 token)，
+//    不用启 stdio 代理、不用写各家配置文件。复用现有工具执行(回环到 /api/mcp/tool)。──
+
+const MCP_HTTP_INSTRUCTIONS = `You are connected to Omni-Context, the user's long-term memory and decision support system.
+
+Before answering any substantive question:
+1. Call \`unified_memory_search\` with key terms from the user's question to check whether they've discussed this topic before.
+2. If the user is choosing between options or making a decision, call \`get_decision_context\` with their situation as the \`situation\` argument.
+3. Cite matched memories by name in your answer so the user can verify.
+4. At the end of a substantive conversation that produced a conclusion, call \`save_conclusion\` to persist the key takeaway.
+
+These tools are read-cheap; over-call rather than under-call.`;
+
+function rpcResult(id: any, result: any) {
+  return { jsonrpc: '2.0', id: id ?? null, result };
+}
+function rpcError(id: any, code: number, message: string) {
+  return { jsonrpc: '2.0', id: id ?? null, error: { code, message } };
+}
+
+// 进程内回环调用现有 REST 工具端点，复用全部工具执行逻辑（含鉴权）
+async function callToolViaLoopback(name: string, args: any): Promise<any> {
+  const port = process.env.PORT || '3001';
+  const token = (process.env.LOCAL_API_TOKEN || '').trim();
+  const resp = await fetch(`http://127.0.0.1:${port}/api/mcp/tool/${encodeURIComponent(name)}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ arguments: args || {} }),
+  });
+  if (!resp.ok) {
+    let msg = `HTTP ${resp.status}`;
+    try { const j = (await resp.json()) as any; if (j?.error) msg = j.error; } catch { /* ignore */ }
+    throw new Error(msg);
+  }
+  return await resp.json();
+}
+
+async function handleMcpRpcMessage(msg: any): Promise<any | null> {
+  const id = msg?.id;
+  const method = msg?.method;
+  const params = msg?.params || {};
+  if (typeof method !== 'string') return null;
+  if (method.startsWith('notifications/')) return null; // 通知不回响应
+
+  try {
+    if (method === 'initialize') {
+      return rpcResult(id, {
+        protocolVersion: typeof params.protocolVersion === 'string' ? params.protocolVersion : '2025-06-18',
+        capabilities: { tools: {} },
+        serverInfo: { name: 'omni-context', version: '2.0.0' },
+        instructions: MCP_HTTP_INSTRUCTIONS,
+      });
+    }
+    if (method === 'ping') return rpcResult(id, {});
+    if (method === 'tools/list') {
+      return rpcResult(id, {
+        tools: mcpToolDefs.map((t: any) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema })),
+      });
+    }
+    if (method === 'tools/call') {
+      const name = params.name;
+      if (!mcpToolDefs.some((t: any) => t.name === name)) {
+        return rpcError(id, -32602, `Unknown tool: ${name}`);
+      }
+      try {
+        const data = await callToolViaLoopback(name, params.arguments || {});
+        return rpcResult(id, { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
+      } catch (e: any) {
+        // 工具执行失败用 isError 内容返回，让 AI 看到错误而非协议级失败
+        return rpcResult(id, { content: [{ type: 'text', text: `Error: ${e?.message || String(e)}` }], isError: true });
+      }
+    }
+    return rpcError(id, -32601, `Method not found: ${method}`);
+  } catch (e: any) {
+    return rpcError(id, -32603, e?.message || String(e));
+  }
+}
+
 export const handleMcpRoutes = [
+  {
+    method: 'POST' as const,
+    path: '/mcp',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse) => {
+      const body = await parseBody<any>(req);
+      let payload: any;
+      if (Array.isArray(body)) {
+        const results = (await Promise.all(body.map(handleMcpRpcMessage))).filter((r) => r !== null);
+        payload = results.length ? results : null;
+      } else {
+        payload = await handleMcpRpcMessage(body);
+      }
+      if (payload === null) {
+        res.statusCode = 202; // 仅通知，无响应体
+        res.end();
+        return;
+      }
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(payload));
+    },
+  },
+  {
+    method: 'GET' as const,
+    path: '/mcp',
+    handler: async (_req: http.IncomingMessage, res: http.ServerResponse) => {
+      // 不做服务端主动推送(SSE)，请求-响应足够
+      res.statusCode = 405;
+      res.end(JSON.stringify({ error: 'Method Not Allowed; use POST for JSON-RPC' }));
+    },
+  },
   {
     method: 'POST' as const,
     path: '/api/mcp/tool/:name',

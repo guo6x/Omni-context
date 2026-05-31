@@ -117,6 +117,35 @@ VS Code 里装 Cline 扩展，打开 Cline 面板 → 设置 → MCP Servers，�
 
 ---
 
+## 五·五、HTTP 直连（streamable HTTP，免代理、免写配置文件）
+
+除了上面 stdio 代理那套，brain-server 现在直接暴露**标准 MCP 的 HTTP 传输端点**：
+
+```
+POST http://localhost:3001/mcp
+Authorization: Bearer <你的本地 token>
+```
+
+支持 HTTP 传输的客户端（Claude Code、Codex 等）**不用启 stdio 进程、不用往各家配置文件里写路径**（也就没有 Claude Desktop MSIX 路径那类坑），连一个网址即可。token 在 `%LOCALAPPDATA%\omni-context\local-token.txt`。
+
+> 仍需桌面应用开着（brain-server 在跑）。端点和其它接口一样要 Bearer token（localhost 也不豁免，防恶意网页扫端口）。
+
+**Claude Code：**
+```bash
+claude mcp add --transport http omni-context http://localhost:3001/mcp --header "Authorization: Bearer <你的本地 token>"
+```
+
+**Codex（`~/.codex/config.toml`）：**
+```toml
+[mcp_servers.omni-context]
+url = "http://localhost:3001/mcp"
+http_headers = { "Authorization" = "Bearer <你的本地 token>" }
+```
+
+> 不支持 HTTP 传输的客户端（部分 IDE 插件、Claude Desktop 当前版本）继续用上面的 stdio 代理方式。两套并存、互补。
+
+---
+
 ## 六、可调用的工具（15 个）
 
 ### 决策与检索 —— 当「脑子」用的核心
