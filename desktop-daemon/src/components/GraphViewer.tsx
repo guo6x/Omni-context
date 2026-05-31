@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers, Bot, Send } from "lucide-react";
+import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers, Bot, Send, Sparkles } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
@@ -176,8 +176,11 @@ export default function GraphViewer3D({
   // 命令栏「问大脑」：右栏第三态——结构化答案卡 + 高亮命中子图
   const [cmdInput, setCmdInput] = useState("");
   const [followInput, setFollowInput] = useState("");
-  const [gAnswer, setGAnswer] = useState<{ messages: Array<{ role: 'user' | 'assistant'; content: string }>; question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] } | null>(null);
+  const [gAnswer, setGAnswer] = useState<{ messages: Array<{ role: 'user' | 'assistant'; content: string }>; question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] } | null>(null);
   const [gLoading, setGLoading] = useState(false);
+  const [gSaving, setGSaving] = useState(false);
+  const [cmdFocused, setCmdFocused] = useState(false);
+  const cmdInputRef = useRef<HTMLInputElement>(null);
   const [activeType, setActiveType] = useState<string>("all");
   const [activeTag, setActiveTag] = useState<string>("all");
   const [graphLoadError, setGraphLoadError] = useState<string | null>(null);
@@ -553,7 +556,7 @@ export default function GraphViewer3D({
       if (!res.ok) {
         const body = await res.text();
         const conclusion = res.status === 400 && body.includes('LLM') ? t('cmd.need_llm') : t('cmd.error');
-        setGAnswer({ messages: history, question: lastUser, conclusion, reasons: [], sources: [], citedEntityIds: [] });
+        setGAnswer({ messages: history, question: lastUser, conclusion, reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
         return;
       }
       const data = await res.json();
@@ -563,15 +566,63 @@ export default function GraphViewer3D({
         question: lastUser,
         conclusion,
         reasons: Array.isArray(data.reasons) ? data.reasons : [],
+        questions: Array.isArray(data.questions) ? data.questions : [],
+        isDecision: !!data.isDecision,
         sources: Array.isArray(data.sources) ? data.sources : [],
         citedEntityIds: Array.isArray(data.citedEntityIds) ? data.citedEntityIds : [],
       });
     } catch (e) {
-      setGAnswer({ messages: history, question: lastUser, conclusion: t('cmd.error'), reasons: [], sources: [], citedEntityIds: [] });
+      setGAnswer({ messages: history, question: lastUser, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
     } finally {
       setGLoading(false);
     }
   }, [t]);
+
+  // 决策：把当前答案作为决定沉淀回图谱（复用 save_decision）
+  const saveDecision = useCallback(async () => {
+    if (!gAnswer || gSaving) return;
+    setGSaving(true);
+    try {
+      await apiFetch('/api/mcp/tool/save_decision', {
+        method: 'POST',
+        body: JSON.stringify({
+          arguments: {
+            situation: gAnswer.question,
+            conclusion: gAnswer.conclusion,
+            cited_entity_ids: gAnswer.citedEntityIds,
+            confidence: 'medium',
+            alternatives: '',
+          },
+        }),
+      });
+      setGAnswer(null);
+      setCmdInput("");
+      setFollowInput("");
+      onDataChanged?.();
+    } catch (e) {
+      // 失败不阻塞；保留当前答案
+    } finally {
+      setGSaving(false);
+    }
+  }, [gAnswer, gSaving, onDataChanged]);
+
+  // 命令栏聚焦时的示例问题：尽量取自用户真实图谱(决策/原则)，不足则补静态
+  const cmdExamples = useMemo(() => {
+    const out: string[] = [];
+    const d = entities.find((e) => (e.type as string) === 'decision');
+    const p = entities.find((e) => (e.type as string) === 'principle');
+    if (d) out.push(t('cmd.ex_review').replace('{name}', d.name));
+    if (p) out.push(t('cmd.ex_view').replace('{name}', p.name));
+    for (const f of [t('cmd.ex_recent'), t('cmd.ex_struggle')]) { if (out.length < 3) out.push(f); }
+    return out.slice(0, 3);
+  }, [entities, t]);
+
+  // 命令栏输入时的匹配节点(找节点 → 跳转，复用 search 功能)
+  const cmdMatches = useMemo(() => {
+    const q = cmdInput.trim().toLowerCase();
+    if (!q) return [] as Entity[];
+    return entities.filter((e) => e.name.toLowerCase().includes(q)).slice(0, 5);
+  }, [cmdInput, entities]);
 
   const submitCommand = useCallback(() => {
     const q = cmdInput.trim();
@@ -1214,22 +1265,62 @@ export default function GraphViewer3D({
         {/* 控制栏 + 时间轴：统一放进 top 容器纵向堆叠，时间轴自然落在控制栏下方，
             不再用 top-[60px] 魔法数字，避免与摘要行重叠 */}
         <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2">
-        {/* 命令栏：问大脑 / 决策 的统一入口，回答出现在右栏答案卡 */}
-        <div className="flex items-center gap-2.5 rounded-xl border border-cyan-500/25 bg-gray-950/85 px-3.5 py-2.5 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm">
-          <Brain className="h-4 w-4 shrink-0 text-cyan-300" />
-          <input
-            value={cmdInput}
-            onChange={(e) => setCmdInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitCommand(); } }}
-            placeholder={t('cmd.placeholder')}
-            className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
-          />
-          {gLoading ? (
-            <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-          ) : (
-            <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
-              <Send className="h-4 w-4" />
-            </button>
+        {/* 命令栏：问大脑 / 决策 / 找节点 的统一入口，回答出现在右栏答案卡 */}
+        <div className="relative">
+          <div className="flex items-center gap-2.5 rounded-xl border border-cyan-500/25 bg-gray-950/85 px-3.5 py-2.5 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm">
+            <Brain className="h-4 w-4 shrink-0 text-cyan-300" />
+            <input
+              ref={cmdInputRef}
+              value={cmdInput}
+              onChange={(e) => setCmdInput(e.target.value)}
+              onFocus={() => setCmdFocused(true)}
+              onBlur={() => setTimeout(() => setCmdFocused(false), 150)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitCommand(); } }}
+              placeholder={t('cmd.placeholder')}
+              className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
+            />
+            {gLoading ? (
+              <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+            ) : (
+              <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
+                <Send className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {cmdFocused && (cmdInput.trim() ? cmdMatches.length > 0 : true) && (
+            <div className="absolute left-0 right-0 top-full z-30 mt-1.5 rounded-xl border border-white/10 bg-gray-950/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-sm">
+              {cmdInput.trim() ? (
+                <>
+                  <div className="px-2 pb-1.5 pt-1 text-[10px] uppercase tracking-wider text-gray-500">{t('cmd.matches')}</div>
+                  {cmdMatches.map((m) => (
+                    <button
+                      key={m.id}
+                      onMouseDown={(e) => { e.preventDefault(); setCmdFocused(false); focusNodeById(m.id); }}
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-gray-300 hover:bg-white/5"
+                    >
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: getThemeColor(m.type) }} />
+                      <span className="flex-1 truncate">{m.name}</span>
+                      <span className="shrink-0 text-[10px] text-gray-600">{m.type.replace(/_/g, ' ')}</span>
+                    </button>
+                  ))}
+                  <div className="mt-1 border-t border-white/5 px-2 pt-1.5 text-[11px] text-gray-500">{t('cmd.enter_hint')}</div>
+                </>
+              ) : (
+                <>
+                  <div className="px-2 pb-1.5 pt-1 text-[10px] uppercase tracking-wider text-gray-500">{t('cmd.try_ask')}</div>
+                  {cmdExamples.map((ex, i) => (
+                    <button
+                      key={i}
+                      onMouseDown={(e) => { e.preventDefault(); setCmdInput(ex); setCmdFocused(false); runAnswer([{ role: 'user', content: ex }]); }}
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-gray-300 hover:bg-cyan-950/30 hover:text-cyan-100"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-400/80" />
+                      <span className="flex-1 truncate">{ex}</span>
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -1915,8 +2006,30 @@ export default function GraphViewer3D({
             </button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            <p className="mb-3 text-xs text-gray-500">{gAnswer.question}</p>
+            {gAnswer.messages.length > 2 && (
+              <div className="mb-3 flex flex-col gap-2 border-b border-white/5 pb-3">
+                {gAnswer.messages.slice(0, -2).map((m, i) => (
+                  m.role === 'user'
+                    ? <div key={i} className="text-[11px] text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{m.content}</div>
+                    : <div key={i} className="text-[12px] leading-relaxed text-gray-400">{m.content}</div>
+                ))}
+              </div>
+            )}
+            <p className="mb-3 text-xs text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{gAnswer.question}</p>
             <div className="text-base font-semibold leading-relaxed text-white">{gAnswer.conclusion || t('cmd.no_answer')}</div>
+            {gAnswer.questions.length > 0 && (
+              <div className="mt-3 rounded-lg border border-violet-700/30 bg-violet-950/20 p-3">
+                <div className="mb-1.5 text-[11px] uppercase tracking-wider text-violet-300/80">{t('cmd.clarify')}</div>
+                <div className="flex flex-col gap-1.5">
+                  {gAnswer.questions.map((q, i) => (
+                    <div key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-violet-100/90">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+                      <span>{q}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {gAnswer.reasons.length > 0 && (
               <>
                 <div className="mt-4 mb-2 text-[11px] uppercase tracking-wider text-gray-500">{t('cmd.reasons')}</div>
@@ -1950,6 +2063,16 @@ export default function GraphViewer3D({
                   ))}
                 </div>
               </>
+            )}
+            {gAnswer.isDecision && !!gAnswer.conclusion && gAnswer.reasons.length > 0 && (
+              <button
+                onClick={saveDecision}
+                disabled={gSaving}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
+              >
+                <Check className="h-3.5 w-3.5" />
+                {gSaving ? t('cmd.saving') : t('cmd.save_decision')}
+              </button>
             )}
           </div>
           <div className="border-t border-white/10 p-3">
