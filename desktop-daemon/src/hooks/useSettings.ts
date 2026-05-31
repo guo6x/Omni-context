@@ -57,14 +57,6 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     category: 'action',
   },
   {
-    id: 'decision',
-    name: 'shortcuts.decision',
-    description: 'shortcuts.decision_desc',
-    default: 'ctrl+shift+d',
-    current: 'ctrl+shift+d',
-    category: 'action',
-  },
-  {
     id: 'reset',
     name: 'shortcuts.reset',
     description: 'shortcuts.reset_desc',
