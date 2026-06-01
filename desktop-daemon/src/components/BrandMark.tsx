@@ -11,55 +11,37 @@ export function LogoMark({ size = 32, className }: { size?: Size; className?: st
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 512 512"
+      viewBox="0 0 100 100"
       width={size}
       height={size}
       className={className}
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id={`${id}-cyan`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#00f2fe" />
-          <stop offset="100%" stopColor="#22d3ee" />
+        <linearGradient id={`${id}-ink`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7df9ff" />
+          <stop offset="55%" stopColor="#22d3ee" />
+          <stop offset="100%" stopColor="#0ea5c4" />
         </linearGradient>
-        <linearGradient id={`${id}-purple`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#c084fc" />
-          <stop offset="100%" stopColor="#7000ff" />
-        </linearGradient>
-        <radialGradient id={`${id}-core`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="40%" stopColor="#7df9ff" />
-          <stop offset="100%" stopColor="#00bcd4" />
+        <radialGradient id={`${id}-core`} cx="50%" cy="45%" r="58%">
+          <stop offset="0%" stopColor="#e6fdff" />
+          <stop offset="100%" stopColor="#19c4e0" />
         </radialGradient>
-        <filter id={`${id}-glow`} x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="8" result="b" />
-          <feMerge>
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
-      <g transform="translate(256 256)">
-        <circle r="172" fill="none" stroke={`url(#${id}-cyan)`} strokeWidth="14" opacity="0.95" />
-        <g stroke={`url(#${id}-cyan)`} strokeWidth="3" opacity="0.4" strokeLinecap="round">
-          <line x1="0" y1="-172" x2="0" y2="-58" />
-          <line x1="149" y1="-86" x2="50" y2="-29" />
-          <line x1="149" y1="86" x2="50" y2="29" />
-          <line x1="0" y1="172" x2="0" y2="58" />
-          <line x1="-149" y1="86" x2="-50" y2="29" />
-          <line x1="-149" y1="-86" x2="-50" y2="-29" />
-        </g>
-        <g filter={`url(#${id}-glow)`}>
-          <circle cx="0" cy="-172" r="22" fill={`url(#${id}-cyan)`} />
-          <circle cx="149" cy="-86" r="20" fill={`url(#${id}-purple)`} />
-          <circle cx="149" cy="86" r="20" fill={`url(#${id}-purple)`} />
-          <circle cx="0" cy="172" r="22" fill={`url(#${id}-cyan)`} />
-          <circle cx="-149" cy="86" r="20" fill={`url(#${id}-purple)`} />
-          <circle cx="-149" cy="-86" r="20" fill={`url(#${id}-purple)`} />
-        </g>
-        <circle r="58" fill={`url(#${id}-core)`} filter={`url(#${id}-glow)`} />
-        <circle r="22" fill="#ffffff" opacity="0.95" />
+      {/* 圆相：一笔书法墨圆（右侧留缺口、三段渐变笔锋：右细 → 左厚） */}
+      <path d="M84.2 38.9 A36 36 0 1 0 84.2 61.1" fill="none" stroke={`url(#${id}-ink)`} strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M62.3 16.2 A36 36 0 1 0 62.3 83.8" fill="none" stroke={`url(#${id}-ink)`} strokeWidth="6.5" strokeLinecap="round" />
+      <path d="M26.9 22.4 A36 36 0 0 0 26.9 77.6" fill="none" stroke={`url(#${id}-ink)`} strokeWidth="8.5" strokeLinecap="round" />
+      {/* 内部几何图谱：核心 + 三节点（西式精准，与墨环的柔形成对比） */}
+      <g stroke="#7df9ff" strokeWidth="2.6" opacity="0.6" strokeLinecap="round">
+        <line x1="50" y1="51" x2="50" y2="32" />
+        <line x1="50" y1="51" x2="68" y2="61" />
+        <line x1="50" y1="51" x2="33" y2="61" />
       </g>
+      <circle cx="50" cy="32" r="5" fill="#00f2fe" />
+      <circle cx="68" cy="61" r="4.5" fill="#a855f7" />
+      <circle cx="33" cy="61" r="4.5" fill="#22d3ee" />
+      <circle cx="50" cy="51" r="9" fill={`url(#${id}-core)`} />
     </svg>
   );
 }

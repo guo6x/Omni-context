@@ -316,12 +316,12 @@ export default function OnboardingWizard({
   };
 
   const handleComplete = () => {
-    onUpdateBehavior({ onboarded: true, onboarded_v2: true });
+    onUpdateBehavior({ onboarded: true });
     onClose();
   };
 
   const handleOpenAdvanced = (tab: 'mcp' | 'llm') => {
-    onUpdateBehavior({ onboarded: true, onboarded_v2: true });
+    onUpdateBehavior({ onboarded: true });
     onClose();
     if (onOpenSettings) {
       setTimeout(() => onOpenSettings(tab), 200);

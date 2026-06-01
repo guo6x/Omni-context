@@ -944,22 +944,6 @@ export default function SettingsPanel({
                   </button>
                 </div>
 
-                {/* [通用] 重新启动新手引导 (v2) */}
-                <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/5 flex items-center justify-between">
-                  <div>
-                    <div className="text-white font-medium">{t('onboarding.restart_tour_v2')}</div>
-                    <div className="text-xs text-gray-500">{t('onboarding.restart_tour_v2_desc')}</div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      onUpdateBehavior({ onboarded: false, onboarded_v2: false });
-                      onClose();
-                    }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-700 hover:text-cyan-400 text-gray-300 rounded-lg text-sm transition-colors"
-                  >
-                    {t('settings.start_tour')}
-                  </button>
-                </div>
               </div>
             )}
 

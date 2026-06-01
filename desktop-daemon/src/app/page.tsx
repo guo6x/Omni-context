@@ -807,30 +807,6 @@ function MainApp() {
         </div>
       )}
 
-      {/* 老用户尝鲜 Onboarding Wizard v2 的横幅 */}
-      {settings.behavior.onboarded && !settings.behavior.onboarded_v2 && !showWizardForce && (
-        <div className="px-4 py-2 bg-cyan-950/30 border-b border-cyan-900/40 flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 text-cyan-200">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse flex-shrink-0" />
-            <span>{t('onboarding.whats_new_banner')}</span>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => setShowWizardForce(true)}
-              className="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-semibold transition-colors"
-            >
-              {t('onboarding.whats_new_btn')}
-            </button>
-            <button
-              onClick={() => updateBehavior({ onboarded_v2: true })}
-              className="px-2 py-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded text-[11px] transition-colors"
-            >
-              {t('onboarding.whats_new_dismiss')}
-            </button>
-          </div>
-        </div>
-      )}
-
       <main className="flex-1 overflow-hidden relative">
         {isLoadingGraph && (
           <div className="absolute top-0 left-0 right-0 z-30 h-0.5 bg-cyan-500/30 overflow-hidden">
@@ -977,15 +953,15 @@ function MainApp() {
           }}
         />
 
-        {/* [通用] 首次启动引导 (v2) */}
-        {((!settings.behavior.onboarded && !settings.behavior.onboarded_v2) || showWizardForce) && (
+        {/* [通用] 首次启动引导 */}
+        {(!settings.behavior.onboarded || showWizardForce) && (
           <OnboardingWizard
             settings={settings}
             onUpdateBehavior={updateBehavior}
             onUpdateLlmProvider={updateLlmProvider}
             triggerPrecipitate={handlePrecipitate}
             onClose={() => {
-              updateBehavior({ onboarded: true, onboarded_v2: true });
+              updateBehavior({ onboarded: true });
               setShowWizardForce(false);
             }}
             onOpenSettings={(tab) => {
