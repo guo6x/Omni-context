@@ -4,59 +4,30 @@
       <stop offset="0%" stop-color="#1b2547" />
       <stop offset="100%" stop-color="#070914" />
     </radialGradient>
-    <linearGradient id="cyan" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00f2fe" />
-      <stop offset="100%" stop-color="#22d3ee" />
+    <linearGradient id="ink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7df9ff" />
+      <stop offset="55%" stop-color="#22d3ee" />
+      <stop offset="100%" stop-color="#0ea5c4" />
     </linearGradient>
-    <linearGradient id="purple" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#c084fc" />
-      <stop offset="100%" stop-color="#7000ff" />
-    </linearGradient>
-    <radialGradient id="core" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="40%" stop-color="#7df9ff" />
-      <stop offset="100%" stop-color="#00bcd4" />
+    <radialGradient id="core" cx="50%" cy="45%" r="58%">
+      <stop offset="0%" stop-color="#e6fdff" />
+      <stop offset="100%" stop-color="#19c4e0" />
     </radialGradient>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="8" result="b" />
-      <feMerge>
-        <feMergeNode in="b" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="4" result="b" />
-      <feMerge>
-        <feMergeNode in="b" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
   </defs>
 
   <rect width="512" height="512" fill="url(#bg)" rx="112" ry="112" />
 
-  <g transform="translate(256 256)">
-    <circle r="172" fill="none" stroke="url(#cyan)" stroke-width="14" opacity="0.95" filter="url(#softGlow)" />
-
-    <g stroke="url(#cyan)" stroke-width="3" opacity="0.4" stroke-linecap="round">
-      <line x1="0" y1="-172" x2="0" y2="-58" />
-      <line x1="149" y1="-86" x2="50" y2="-29" />
-      <line x1="149" y1="86" x2="50" y2="29" />
-      <line x1="0" y1="172" x2="0" y2="58" />
-      <line x1="-149" y1="86" x2="-50" y2="29" />
-      <line x1="-149" y1="-86" x2="-50" y2="-29" />
+  <!-- 圆相 + 几何图谱（与应用内 LogoMark 一致），居中放大 4.2x -->
+  <g transform="translate(46 46) scale(4.2)">
+    <path d="M84.40 63.21 L83.26 66.71 L81.68 70.07 L79.73 73.26 L77.45 76.24 L74.86 79.00 L71.98 81.48 L68.86 83.67 L65.50 85.54 L61.97 87.06 L58.28 88.23 L54.47 89.02 L50.59 89.42 L46.67 89.42 L42.77 89.03 L38.91 88.24 L35.13 87.06 L31.49 85.50 L28.02 83.58 L24.75 81.30 L21.72 78.71 L18.96 75.81 L16.51 72.65 L14.39 69.25 L12.62 65.65 L11.22 61.88 L10.21 57.99 L9.60 54.02 L9.40 50.00 L9.60 45.98 L10.21 42.01 L11.22 38.12 L12.62 34.35 L14.39 30.75 L16.51 27.35 L18.96 24.19 L21.72 21.29 L24.75 18.70 L28.02 16.42 L31.49 14.50 L35.13 12.94 L38.91 11.76 L42.77 10.97 L46.67 10.58 L50.59 10.58 L54.47 10.98 L58.28 11.77 L61.97 12.94 L65.50 14.46 L68.86 16.33 L71.98 18.52 L74.86 21.00 L77.45 23.76 L79.73 26.74 L81.68 29.93 L83.26 33.29 L84.40 36.79 L82.82 37.40 L81.07 34.39 L79.14 31.54 L76.98 28.90 L74.59 26.49 L72.00 24.33 L69.24 22.45 L66.33 20.85 L63.29 19.55 L60.15 18.55 L56.96 17.86 L53.73 17.48 L50.49 17.42 L47.27 17.67 L44.11 18.23 L41.03 19.09 L38.06 20.24 L35.22 21.66 L32.54 23.34 L30.05 25.27 L27.75 27.42 L25.68 29.77 L23.85 32.31 L22.27 35.01 L20.97 37.85 L19.94 40.79 L19.20 43.81 L18.75 46.89 L18.60 50.00 L18.75 53.11 L19.20 56.19 L19.94 59.21 L20.97 62.15 L22.27 64.99 L23.85 67.69 L25.68 70.23 L27.75 72.58 L30.05 74.73 L32.54 76.66 L35.22 78.34 L38.06 79.76 L41.03 80.91 L44.11 81.77 L47.27 82.33 L50.49 82.58 L53.73 82.52 L56.96 82.14 L60.15 81.45 L63.29 80.45 L66.33 79.15 L69.24 77.55 L72.00 75.67 L74.59 73.51 L76.98 71.10 L79.14 68.46 L81.07 65.61 L82.82 62.60 Z" fill="url(#ink)" />
+    <g stroke="#7df9ff" stroke-width="2.6" opacity="0.6" stroke-linecap="round">
+      <line x1="50" y1="51" x2="50" y2="32" />
+      <line x1="50" y1="51" x2="68" y2="61" />
+      <line x1="50" y1="51" x2="33" y2="61" />
     </g>
-
-    <g filter="url(#glow)">
-      <circle cx="0"     cy="-172" r="22" fill="url(#cyan)" />
-      <circle cx="149"   cy="-86"  r="20" fill="url(#purple)" />
-      <circle cx="149"   cy="86"   r="20" fill="url(#purple)" />
-      <circle cx="0"     cy="172"  r="22" fill="url(#cyan)" />
-      <circle cx="-149"  cy="86"   r="20" fill="url(#purple)" />
-      <circle cx="-149"  cy="-86"  r="20" fill="url(#purple)" />
-    </g>
-
-    <circle r="58" fill="url(#core)" filter="url(#glow)" />
-    <circle r="22" fill="#ffffff" opacity="0.95" />
+    <circle cx="50" cy="32" r="5" fill="#00f2fe" />
+    <circle cx="68" cy="61" r="4.5" fill="#a855f7" />
+    <circle cx="33" cy="61" r="4.5" fill="#22d3ee" />
+    <circle cx="50" cy="51" r="9" fill="url(#core)" />
   </g>
 </svg>
