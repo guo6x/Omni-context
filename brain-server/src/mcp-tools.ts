@@ -144,6 +144,13 @@ export interface McpToolConfig {
   zodSchema: z.ZodSchema<any>;
 }
 
+// 问大脑 / 决策助手：接受单个 query（外部 MCP 客户端）或多轮 messages（应用内命令栏）
+export const AskMemorySchema = z.object({
+  query: z.string().optional(),
+  messages: z.array(z.object({ role: z.string(), content: z.string() })).optional(),
+});
+export const GraphAnswerSchema = AskMemorySchema;
+
 export const tools: McpToolConfig[] = [
   {
     name: 'record_capture',
@@ -440,5 +447,29 @@ export const tools: McpToolConfig[] = [
     description: 'Get the memory decay report showing which entities have decayed over time and may need reinforcement or cleanup. Use when maintaining the knowledge graph\'s health.',
     zodSchema: EmptySchema,
     inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'ask_memory',
+    description: 'Ask the user\'s second brain a natural-language question. Retrieves relevant memories from the local knowledge graph and answers grounded in them, citing sources. Use for "what do I know/think about X" style questions.',
+    zodSchema: AskMemorySchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'The question to ask, in natural language' },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'graph_answer',
+    description: 'Answer a question or help with a decision using the user\'s knowledge graph. Returns a structured result: a one-line conclusion, supporting reasons (each citing memory nodes), the cited sub-graph edges, and—for decisions—clarifying questions. Prefer for decisions ("should I…", "which…") and whenever grounded, citable reasoning is wanted.',
+    zodSchema: GraphAnswerSchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'The question or decision to reason about, in natural language' },
+      },
+      required: ['query'],
+    },
   },
 ];

@@ -949,7 +949,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               ? args.messages.filter((m: any) => m && typeof m.content === 'string')
               : [];
             const lastUser = [...messages].reverse().find((m) => m.role === 'user');
-            const question = (lastUser?.content || '').trim();
+            const question = (lastUser?.content || (typeof args.query === 'string' ? args.query : '') || '').trim();
 
             const llmConfig = ctx.extractor.getLlmConfig();
             if (!llmConfig.apiUrl) {
@@ -1000,7 +1000,7 @@ ${contextBlock}`;
                   model: llmConfig.model,
                   messages: [
                     { role: 'system', content: systemPrompt },
-                    ...messages.slice(-8),
+                    ...(messages.length ? messages.slice(-8) : [{ role: 'user', content: question }]),
                   ],
                   max_tokens: 768,
                   temperature: 0.5,
@@ -1102,7 +1102,7 @@ ${gaConnBlock}`;
                   headers: { 'Content-Type': 'application/json', ...(gaLlm.apiKey ? { Authorization: `Bearer ${gaLlm.apiKey}` } : {}) },
                   body: JSON.stringify({
                     model: gaLlm.model,
-                    messages: [{ role: 'system', content: gaSystem }, ...gaMessages.slice(-8)],
+                    messages: [{ role: 'system', content: gaSystem }, ...(gaMessages.length ? gaMessages.slice(-8) : [{ role: 'user', content: gaQuestion }])],
                     max_tokens: 900,
                     temperature: 0.4,
                     response_format: { type: 'json_object' },

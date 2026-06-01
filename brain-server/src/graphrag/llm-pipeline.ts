@@ -93,6 +93,7 @@ Output JSON only.`;
 export class LLMExtractorPipeline {
   private config: LLMExtractionConfig;
   private enabled: boolean = true;
+  private recheckTimer?: ReturnType<typeof setInterval>;
 
   constructor(config: Partial<LLMExtractionConfig> = {}) {
     this.config = { ...DEFAULT_LLM_CONFIG, ...config };
@@ -231,6 +232,28 @@ export class LLMExtractorPipeline {
   setEnabled(v: boolean) {
     this.enabled = v;
     console.log(`[LLMExtractor] LLM 提取已${v ? '启用' : '禁用'}`);
+  }
+
+  /**
+   * 健康检查失败后的后台自愈：每 60s 重试一次，代理/网络恢复后自动重新启用并停止。
+   * 避免启动瞬间网络抖动（如 Clash fake-ip）导致 LLM 被一次性永久禁用。
+   */
+  scheduleHealthRecheck() {
+    if (this.recheckTimer || this.enabled || !this.config.apiUrl) return;
+    this.recheckTimer = setInterval(async () => {
+      if (this.enabled) {
+        clearInterval(this.recheckTimer!);
+        this.recheckTimer = undefined;
+        return;
+      }
+      if (await this.healthCheck()) {
+        this.setEnabled(true);
+        console.log('[LLMExtractor] 健康检查恢复，LLM 已自动重新启用');
+        clearInterval(this.recheckTimer!);
+        this.recheckTimer = undefined;
+      }
+    }, 60_000);
+    this.recheckTimer.unref?.();
   }
 
   getConfig(): LLMExtractionConfig {

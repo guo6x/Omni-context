@@ -840,6 +840,7 @@ export class GraphRAGExtractor {
 
     const healthy = await this.llmPipeline.healthCheck();
     this.llmPipeline.setEnabled(healthy);
+    if (!healthy) this.llmPipeline.scheduleHealthRecheck();
     return healthy;
   }
 
