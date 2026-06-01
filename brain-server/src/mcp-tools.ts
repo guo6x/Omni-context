@@ -148,6 +148,8 @@ export interface McpToolConfig {
 export const AskMemorySchema = z.object({
   query: z.string().optional(),
   messages: z.array(z.object({ role: z.string(), content: z.string() })).optional(),
+}).refine((data) => data.query || data.messages, {
+  message: '必须提供 query 或 messages 中至少一个参数',
 });
 export const GraphAnswerSchema = AskMemorySchema;
 
@@ -456,8 +458,8 @@ export const tools: McpToolConfig[] = [
       type: 'object',
       properties: {
         query: { type: 'string', description: 'The question to ask, in natural language' },
+        messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string' }, content: { type: 'string' } } }, description: 'Conversation history for multi-turn dialogue' },
       },
-      required: ['query'],
     },
   },
   {
@@ -468,8 +470,8 @@ export const tools: McpToolConfig[] = [
       type: 'object',
       properties: {
         query: { type: 'string', description: 'The question or decision to reason about, in natural language' },
+        messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string' }, content: { type: 'string' } } }, description: 'Conversation history for multi-turn dialogue' },
       },
-      required: ['query'],
     },
   },
 ];
