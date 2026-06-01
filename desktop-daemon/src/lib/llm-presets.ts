@@ -8,7 +8,23 @@ export interface LlmPreset {
   defaultModel: string;
   speed: string;
   cost: string;
+  /** 获取 API Key 的控制台地址（本地服务商如 Ollama 无需） */
+  apiKeyUrl?: string;
 }
+
+/** 各服务商获取 API Key 的页面，供设置里「获取 API Key →」跳转 */
+export const LLM_API_KEY_URLS: Record<string, string> = {
+  openai: 'https://platform.openai.com/api-keys',
+  deepseek: 'https://platform.deepseek.com/api_keys',
+  siliconflow: 'https://cloud.siliconflow.cn/account/ak',
+  moonshot: 'https://platform.moonshot.cn/console/api-keys',
+  zhipu: 'https://open.bigmodel.cn/usercenter/apikeys',
+  qwen: 'https://dashscope.console.aliyun.com/apiKey',
+  volcengine: 'https://console.volcengine.com/ark',
+  deepinfra: 'https://deepinfra.com/dash/api_keys',
+  groq: 'https://console.groq.com/keys',
+  openrouter: 'https://openrouter.ai/keys',
+};
 
 export const LLM_PRESETS: LlmPreset[] = [
   {

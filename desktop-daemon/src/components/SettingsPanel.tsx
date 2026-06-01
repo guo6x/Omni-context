@@ -1,10 +1,10 @@
 "use client";
 
-import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw, Share2, Search, Lightbulb, Camera, GitBranch, ChevronDown, ChevronRight, Shield, Info } from 'lucide-react';
+import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw, Share2, Search, Lightbulb, Camera, GitBranch, ChevronDown, ChevronRight, Shield, Info, ExternalLink, Copy, Plug } from 'lucide-react';
 import { useRef, useState, useEffect, useMemo, createElement } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { KeyboardShortcut, AppSettings } from '@/hooks/useSettings';
-import { LLM_PRESETS, LlmPreset } from '@/lib/llm-presets';
+import { LLM_PRESETS, LlmPreset, LLM_API_KEY_URLS } from '@/lib/llm-presets';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
 import { apiFetch } from '@/lib/api-client';
@@ -15,6 +15,7 @@ import McpClientCard from './McpClientCard';
 import Console from './Console';
 import { THEMES } from '@/lib/themes';
 import { getDeviceNodeCap } from '@/lib/device';
+import { OMNI_SKILL_CONTENT, OMNI_SKILL_FILENAME } from '@/lib/omni-skill';
 
 // autostart 插件调用。非 Tauri 环境静默降级。
 async function autostartEnable() {
@@ -113,6 +114,7 @@ export default function SettingsPanel({
   useEffect(() => {
     if (activeTab === 'mcp') {
       fetchMcpData();
+      fetchLocalApiToken();
     }
   }, [activeTab]);
 
@@ -152,6 +154,20 @@ export default function SettingsPanel({
     } catch {
       setLocalApiToken(null);
     }
+  };
+
+  const openExternal = async (url: string) => {
+    try {
+      const { open } = await import('@tauri-apps/api/shell');
+      await open(url);
+    } catch {
+      try { window.open(url, '_blank'); } catch { /* ignore */ }
+    }
+  };
+
+  const copyText = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(t('settings.copied'));
   };
 
   const handleRegenerateLocalToken = async () => {
@@ -509,7 +525,7 @@ export default function SettingsPanel({
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-      <div className="bg-[#0a0b12]/95 w-full max-w-3xl max-h-[80vh] flex flex-col overflow-hidden rounded-xl border border-white/10">
+      <div className="bg-[#0a0b12]/95 w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden rounded-xl border border-white/10">
         {/* 头部 */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -1010,7 +1026,23 @@ export default function SettingsPanel({
 
                   {/* API Key */}
                   <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
-                    <label className="text-sm font-medium text-white block">API Key</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-white block">API Key</label>
+                      {(() => {
+                        const preset = LLM_PRESETS.find((p) => p.apiUrl === settings.llmProvider.apiUrl);
+                        const url = preset ? LLM_API_KEY_URLS[preset.id] : undefined;
+                        return url ? (
+                          <button
+                            type="button"
+                            onClick={() => openExternal(url)}
+                            className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                          >
+                            {t('settings.llm_get_api_key')}
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                        ) : null;
+                      })()}
+                    </div>
                     <input
                       type="password"
                       className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
@@ -1615,6 +1647,43 @@ export default function SettingsPanel({
                   <p className="text-xs text-gray-400 mt-1 leading-relaxed">{t('settings.mcp_desc')}</p>
                 </div>
 
+                {/* HTTP 直连（推荐） */}
+                {(() => {
+                  const url = 'http://localhost:3001/mcp';
+                  const tok = localApiToken || '<你的本地 token>';
+                  const claudeCmd = `claude mcp add --transport http omni-context ${url} --header "Authorization: Bearer ${tok}"`;
+                  const codexToml = `[mcp_servers.omni-context]\nurl = "${url}"\nhttp_headers = { "Authorization" = "Bearer ${tok}" }`;
+                  const Row = ({ label, value, copyVal }: { label: string; value: string; copyVal: string }) => (
+                    <div>
+                      <div className="text-[11px] text-gray-500 mb-1">{label}</div>
+                      <div className="flex items-start gap-2">
+                        <code className="flex-1 min-w-0 whitespace-pre-wrap break-all bg-black/40 border border-white/10 rounded px-2.5 py-1.5 text-[11px] text-gray-300 font-mono leading-relaxed">{value}</code>
+                        <button
+                          onClick={() => copyText(copyVal)}
+                          className="shrink-0 p-1.5 text-gray-400 hover:text-cyan-300 hover:bg-white/5 rounded border border-white/10 transition-colors"
+                          title={t('settings.copy')}
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                  return (
+                    <div className="p-4 bg-cyan-950/15 rounded-lg border border-cyan-800/40 space-y-3.5">
+                      <div className="flex items-center gap-2">
+                        <Plug className="w-4 h-4 text-cyan-400" />
+                        <span className="text-sm font-semibold text-cyan-300">{t('settings.mcp_http_title')}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">{t('settings.recommended')}</span>
+                      </div>
+                      <p className="text-xs text-gray-400 leading-relaxed">{t('settings.mcp_http_desc')}</p>
+                      <Row label={t('settings.mcp_http_url')} value={url} copyVal={url} />
+                      <Row label="Token" value={localApiToken ? '••••••••' + localApiToken.slice(-6) : '…'} copyVal={localApiToken || ''} />
+                      <Row label="Claude Code" value={claudeCmd} copyVal={claudeCmd} />
+                      <Row label="Codex  ~/.codex/config.toml" value={codexToml} copyVal={codexToml} />
+                    </div>
+                  );
+                })()}
+
                 {/* 能力预览 */}
                 <div className="p-4 bg-black/20 rounded-lg border border-cyan-900/40 space-y-3">
                   <button
@@ -1745,6 +1814,27 @@ export default function SettingsPanel({
                       onInstall={handleMcpInstall}
                       onOpenFolder={handleMcpOpenFolder}
                     />
+                  </div>
+                </div>
+
+                {/* Agent Skills */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-cyan-400/90 uppercase tracking-wider border-b border-white/5 pb-1">
+                    {t('settings.mcp_skill_section')}
+                  </h4>
+                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
+                    <p className="text-xs text-gray-400 leading-relaxed">{t('settings.mcp_skill_desc')}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => copyText(OMNI_SKILL_CONTENT)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-cyan-300 bg-cyan-950/30 border border-cyan-800/40 rounded-lg hover:bg-cyan-900/40 transition-colors"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        {t('settings.mcp_skill_copy')}
+                      </button>
+                      <code className="text-[11px] text-gray-500 font-mono">{OMNI_SKILL_FILENAME}</code>
+                    </div>
+                    <p className="text-[11px] text-gray-500 leading-relaxed">{t('settings.mcp_skill_hint')}</p>
                   </div>
                 </div>
               </div>
