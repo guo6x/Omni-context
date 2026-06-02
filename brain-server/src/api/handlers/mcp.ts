@@ -24,6 +24,7 @@ import {
   GetDecisionLineageSchema,
   tools as mcpToolDefs,
 } from '../../mcp-tools.js';
+import { parseTimeWindow } from '../../utils/time-window.js';
 
 export function toCompactEntity(entity: any): any {
   if (!entity) return entity;
@@ -119,6 +120,43 @@ async function rerankByLlm(
   }
 }
 
+// ── Focus-Stack 适配：话题沉淀 ──
+// 多轮"问大脑/决策"聊出结论后，自动把该话题压缩成一条长期记忆。按"首问"去重：
+// 同一话题越聊越深就更新同一条，不重复堆。打 auto_sediment 标记，可追溯/可过滤。
+async function sedimentThread(
+  ctx: RequestContext,
+  firstQuestion: string,
+  conclusion: string,
+  citedIds: string[],
+): Promise<void> {
+  try {
+    const title = (firstQuestion || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+    if (!title || !conclusion) return;
+    const existing = await ctx.db.searchEntities(title, 5, 'memory' as any);
+    const dup = existing.find((e: any) => e.type === 'memory' && (e.name || '').trim() === title);
+    if (dup) {
+      await ctx.db.updateEntity(dup.id, { description: conclusion });
+      ctx.db.bumpAccessCounts([dup.id]).catch(() => {});
+      return;
+    }
+    let embedding: number[] | undefined;
+    try { embedding = (await ctx.embeddingService.embed(`${title}: ${conclusion}`)).embedding; } catch { /* 无向量也存 */ }
+    const ent = await ctx.db.addEntity({
+      name: title,
+      type: 'memory' as any,
+      description: conclusion,
+      metadata: { provenance: { source: 'auto_sediment', tool: 'graph_answer', at: new Date().toISOString() } },
+      embedding,
+    });
+    // 连到引用过的记忆，让沉淀进图谱（最多 3 条）
+    for (const cid of (citedIds || []).slice(0, 3)) {
+      if (cid && cid !== ent.id) {
+        try { await ctx.db.addRelationship({ source_id: ent.id, target_id: cid, type: 'references' as any, description: '自动沉淀引用', weight: 1 }); } catch { /* 边失败不阻塞 */ }
+      }
+    }
+  } catch { /* 沉淀失败绝不影响回答 */ }
+}
+
 // ── shared: retrieve decision context ──
 
 interface DecisionContextData {
@@ -153,6 +191,17 @@ async function retrieveDecisionContext(
       }
     }
   }
+  // 时间词召回：查询含"昨天/上周/这个月"等时，把该时间窗内的实体并入候选
+  const tw = parseTimeWindow(situation);
+  if (tw) {
+    try {
+      const timed = await ctx.db.getEntitiesByTimeWindow(tw.start, tw.end, pool);
+      for (const item of timed) {
+        if (item?.id && !seen.has(item.id)) { seen.add(item.id); candidates.push(item); }
+      }
+    } catch { /* ignore */ }
+  }
+
   // 宽召回后用 LLM 重排挑出真正相关的 top-limit（救弱 embedding 的中文召回）
   const relevantMemories = await rerankByLlm(ctx, situation, candidates, limit);
 
@@ -854,6 +903,15 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   $
               }
             }
 
+            // 时间词召回：把该时间窗内的实体并入候选
+            const utw = parseTimeWindow(parsed.query);
+            if (utw) {
+              try {
+                const timed = await ctx.db.getEntitiesByTimeWindow(utw.start, utw.end, umsPool);
+                for (const item of timed) { if (item?.id && !seenIds.has(item.id)) { seenIds.add(item.id); unified.push(item); } }
+              } catch { /* ignore */ }
+            }
+
             // 宽召回后 LLM 重排，挑出真正相关的（救弱 embedding 的中文召回）
             const ranked = await rerankByLlm(ctx, parsed.query, unified, limit * 2);
 
@@ -1217,6 +1275,11 @@ ${gaConnBlock}`;
                 edges: gaEdges,
                 citedEntityIds: gaCapped.map((s) => s.id),
               };
+              // 多轮话题聊出结论 → 自动沉淀（按首问去重，越聊越深更新同一条）。不阻塞返回。
+              const gaUserTurns = gaMessages.filter((m) => m.role === 'user');
+              if (gaUserTurns.length >= 2 && typeof parsed.conclusion === 'string' && parsed.conclusion.trim()) {
+                void sedimentThread(ctx, gaUserTurns[0].content, parsed.conclusion.trim(), gaCapped.map((s) => s.id));
+              }
             } catch (e: any) {
               if (e?.message === 'LLM_NOT_CONFIGURED') { sendError(res, 400, 'LLM_NOT_CONFIGURED'); return; }
               console.error('[graph_answer] Failed:', e);

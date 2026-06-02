@@ -543,6 +543,28 @@ export class Database {
     );
   }
 
+  // 时间词召回：按 created_at（或 last_accessed）落在 [start, end) 的实体，新到旧。
+  async getEntitiesByTimeWindow(
+    startIso: string,
+    endIso: string,
+    limit: number,
+    field: 'created_at' | 'last_accessed' = 'created_at',
+  ): Promise<any[]> {
+    const col = field === 'last_accessed' ? 'last_accessed' : 'created_at';
+    const rows = await this.all<any>(
+      `SELECT id, name, type, description, tags, created_at, last_accessed, access_count
+       FROM entities
+       WHERE ${col} >= ? AND ${col} < ? AND json_extract(metadata, '$.merged_into') IS NULL
+       ORDER BY ${col} DESC LIMIT ?`,
+      [startIso, endIso, limit],
+    );
+    return rows.map((r) => ({
+      id: r.id, name: r.name, type: r.type, description: r.description,
+      tags: r.tags ? JSON.parse(r.tags) : undefined,
+      created_at: r.created_at, last_accessed: r.last_accessed, access_count: r.access_count,
+    }));
+  }
+
   // 用新模型重算所有实体的向量（换 embedding 模型后必跑：旧向量与新模型不可比）。
   // 重算后回灌 vec / fts。逐条容错，单条失败不影响其余。
   async reembedAllEntities(embed: (text: string) => Promise<number[]>): Promise<number> {
