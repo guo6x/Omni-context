@@ -53,6 +53,72 @@ export function toCompactEntity(entity: any): any {
   return compact;
 }
 
+// ── shared: LLM 重排 ──
+// 弱 embedding（尤其中文）召回的候选相似度挤在一起、噪声多。先宽召回，再用 LLM 按真实相关度
+// 重排挑出 topN。LLM 不可用/超时则优雅降级为原序截断，绝不阻塞检索。
+async function rerankByLlm(
+  ctx: RequestContext,
+  query: string,
+  candidates: any[],
+  topN: number,
+): Promise<any[]> {
+  if (candidates.length <= topN) return candidates;
+  const llm = ctx.extractor.getLlmConfig();
+  if (!llm.apiUrl) return candidates.slice(0, topN);
+
+  const list = candidates
+    .map((c, i) => `[${i}] (${c.type}) ${c.name}: ${(c.description || '').slice(0, 120)}`)
+    .join('\n');
+  const sys = `你是知识图谱检索的重排器。根据用户查询，从候选记忆里挑出真正相关的，按相关度从高到低给出编号；不相关的不要选。只输出 JSON：{"ranking":[编号,...]}，最多 ${topN} 个。`;
+  const user = `查询：${query}\n\n候选：\n${list}`;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
+    let raw = '';
+    try {
+      const r = await fetch(`${llm.apiUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(llm.apiKey ? { Authorization: `Bearer ${llm.apiKey}` } : {}) },
+        body: JSON.stringify({
+          model: llm.model,
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+          max_tokens: 200,
+          temperature: 0,
+          response_format: { type: 'json_object' },
+        }),
+        signal: controller.signal,
+      });
+      if (!r.ok) throw new Error(`rerank ${r.status}`);
+      const d = (await r.json()) as { choices: Array<{ message: { content: string } }> };
+      raw = d.choices?.[0]?.message?.content || '';
+    } finally { clearTimeout(timer); }
+
+    const m = raw.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    const parsed = JSON.parse(m ? m[1].trim() : raw.trim());
+    const order: number[] = Array.isArray(parsed.ranking) ? parsed.ranking : [];
+    const picked: any[] = [];
+    const used = new Set<number>();
+    for (const n of order) {
+      const i = Number(n);
+      if (Number.isInteger(i) && i >= 0 && i < candidates.length && !used.has(i)) {
+        used.add(i);
+        picked.push(candidates[i]);
+        if (picked.length >= topN) break;
+      }
+    }
+    if (!picked.length) return candidates.slice(0, topN);
+    // LLM 选不满 topN 时，用原序候选补齐
+    for (const c of candidates) {
+      if (picked.length >= topN) break;
+      if (!used.has(candidates.indexOf(c))) picked.push(c);
+    }
+    return picked.slice(0, topN);
+  } catch {
+    return candidates.slice(0, topN);
+  }
+}
+
 // ── shared: retrieve decision context ──
 
 interface DecisionContextData {
@@ -67,25 +133,28 @@ async function retrieveDecisionContext(
   situation: string,
   limit: number,
 ): Promise<DecisionContextData> {
-  const textResults = await ctx.db.searchEntities(situation, limit);
+  const pool = Math.max(limit * 4, 16);
+  const textResults = await ctx.db.searchEntities(situation, pool);
   let vectorResults: any[] = [];
   try {
     const embResult = await ctx.embeddingService.embed(situation);
-    vectorResults = await ctx.db.vectorSearch(embResult.embedding, limit);
+    vectorResults = await ctx.db.vectorSearch(embResult.embedding, pool);
   } catch {
     // ignore
   }
 
   const seen = new Set<string>();
-  const relevantMemories: any[] = [];
+  const candidates: any[] = [];
   for (const source of [textResults, vectorResults]) {
     for (const item of source) {
       if (!seen.has(item.id)) {
         seen.add(item.id);
-        relevantMemories.push(item);
+        candidates.push(item);
       }
     }
   }
+  // 宽召回后用 LLM 重排挑出真正相关的 top-limit（救弱 embedding 的中文召回）
+  const relevantMemories = await rerankByLlm(ctx, situation, candidates, limit);
 
   const corePrinciples = await ctx.db.getCorePrinciples();
   const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
@@ -480,10 +549,7 @@ export const handleMcpRoutes = [
               role: 'system',
               content: `[Omni-Context Core Principles]
 
-${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
-   ${p.description || ''}
-   Metadata: ${JSON.stringify(p.metadata, null, 2)}
-`).join('\n')}
+${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.description}` : ''}`).join('\n')}
 
 请务必遵循以上核心原则进行工作。`,
             };
@@ -509,6 +575,23 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           }
           case 'add_entity': {
             const parsed = AddEntitySchema.parse(args);
+            // 写入合并去重：同名同类型已存在则强化（bump + 补全描述）而非重复新建，
+            // 避免外部 AI 反复写入把图谱堆成杂物。仅精确同名同类型才合并，保守不误并。
+            try {
+              const near = await ctx.db.searchEntities(parsed.name, 5, parsed.type as EntityType);
+              const dup = near.find((e: any) =>
+                e.type === parsed.type &&
+                (e.name || '').trim().toLowerCase() === parsed.name.trim().toLowerCase()
+              );
+              if (dup) {
+                ctx.db.bumpAccessCounts([dup.id]).catch(() => {});
+                if (parsed.description && (!dup.description || dup.description.length < parsed.description.length)) {
+                  await ctx.db.updateEntity(dup.id, { description: parsed.description });
+                }
+                result = { ...toCompactEntity(dup), merged: true };
+                break;
+              }
+            } catch { /* 查重失败不阻塞新建 */ }
             let embedding: number[] | undefined;
             try {
               const embeddingText = `${parsed.name}: ${parsed.description || ''}`;
@@ -742,12 +825,13 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             const includeRels = parsed.includeRelationships !== false;
             const includeInvalidated = (parsed as any).include_invalidated === true;
 
+            const umsPool = Math.max(limit * 4, 16);
             const resultsData: any = { textResults: [], vectorResults: [], graphContext: [] };
-            resultsData.textResults = await ctx.db.searchEntities(parsed.query, limit);
+            resultsData.textResults = await ctx.db.searchEntities(parsed.query, umsPool);
 
             try {
               const embResult = await ctx.embeddingService.embed(parsed.query);
-              resultsData.vectorResults = await ctx.db.vectorSearch(embResult.embedding, limit);
+              resultsData.vectorResults = await ctx.db.vectorSearch(embResult.embedding, umsPool);
             } catch (e) {
               // ignore
             }
@@ -770,14 +854,17 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
               }
             }
 
+            // 宽召回后 LLM 重排，挑出真正相关的（救弱 embedding 的中文召回）
+            const ranked = await rerankByLlm(ctx, parsed.query, unified, limit * 2);
+
             let graphContext = resultsData.graphContext;
             if (graphContext && graphContext.nodes) {
               graphContext.nodes = graphContext.nodes.map(toCompactEntity);
             }
 
-            // 隐式 access tracking（仅 MCP 路径）
+            // 隐式 access tracking（仅 MCP 路径）—— 只强化真正返回的
             const umsAccIds = [
-              ...unified.map((e: any) => e.id),
+              ...ranked.map((e: any) => e.id),
               ...(resultsData.graphContext?.nodes || []).map((n: any) => n.id),
             ].filter(Boolean);
             if (umsAccIds.length > 0) {
@@ -785,7 +872,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }
 
             result = {
-              results: unified.slice(0, limit * 2).map(toCompactEntity),
+              results: ranked.map(toCompactEntity),
               graphContext,
               searchMethods: {
                 text: resultsData.textResults.length,
