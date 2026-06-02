@@ -22,6 +22,9 @@ import {
   AnalyzeDecisionSchema,
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
+  DeleteEntitySchema,
+  SetCoreSchema,
+  MergeEntitiesSchema,
   tools as mcpToolDefs,
 } from '../../mcp-tools.js';
 import { parseTimeWindow } from '../../utils/time-window.js';
@@ -850,6 +853,24 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   $
               metadata: parsed.metadata,
             });
             result = await ctx.db.getEntity(parsed.id);
+            break;
+          }
+          case 'merge_entities': {
+            const p = MergeEntitiesSchema.parse(args);
+            await ctx.db.softMergeEntities(p.keepId, p.dropId);
+            result = { kept: p.keepId, merged: p.dropId };
+            break;
+          }
+          case 'set_core_principle': {
+            const p = SetCoreSchema.parse(args);
+            await ctx.db.setCorePrinciple(p.id, p.isCore);
+            result = await ctx.db.getEntity(p.id);
+            break;
+          }
+          case 'delete_entity': {
+            const p = DeleteEntitySchema.parse(args);
+            await ctx.db.hardDeleteEntity(p.id);
+            result = { deleted: p.id };
             break;
           }
           case 'get_stats': {

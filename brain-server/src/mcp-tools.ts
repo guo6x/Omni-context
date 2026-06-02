@@ -153,6 +153,11 @@ export const AskMemorySchema = z.object({
 });
 export const GraphAnswerSchema = AskMemorySchema;
 
+// 整理 / curation
+export const DeleteEntitySchema = z.object({ id: z.string().min(1) });
+export const SetCoreSchema = z.object({ id: z.string().min(1), isCore: z.boolean() });
+export const MergeEntitiesSchema = z.object({ keepId: z.string().min(1), dropId: z.string().min(1) });
+
 export const tools: McpToolConfig[] = [
   {
     name: 'record_capture',
@@ -472,6 +477,42 @@ export const tools: McpToolConfig[] = [
         query: { type: 'string', description: 'The question or decision to reason about, in natural language' },
         messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string' }, content: { type: 'string' } } }, description: 'Conversation history for multi-turn dialogue' },
       },
+    },
+  },
+  {
+    name: 'merge_entities',
+    description: 'Soft-merge two duplicate entities: keep one, fold the other into it (relationships repointed, the other hidden). Reversible. Use to consolidate duplicates instead of deleting.',
+    zodSchema: MergeEntitiesSchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        keepId: { type: 'string', description: '保留的实体 ID' },
+        dropId: { type: 'string', description: '并入并隐藏的实体 ID' },
+      },
+      required: ['keepId', 'dropId'],
+    },
+  },
+  {
+    name: 'set_core_principle',
+    description: 'Mark a principle as core (injected into every AI conversation) or demote it from core. Keep core to the user few distinctive operating principles; demote generic or bulk-imported ones.',
+    zodSchema: SetCoreSchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: '实体 ID' },
+        isCore: { type: 'boolean', description: 'true=设为核心；false=降出核心' },
+      },
+      required: ['id', 'isCore'],
+    },
+  },
+  {
+    name: 'delete_entity',
+    description: 'Permanently delete an entity and its relationships. Irreversible — prefer merge_entities for duplicates. Use only for clearing genuine junk/wrong memories.',
+    zodSchema: DeleteEntitySchema,
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: '要删除的实体 ID' } },
+      required: ['id'],
     },
   },
 ];

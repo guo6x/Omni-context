@@ -125,6 +125,9 @@ export class MemoryDecayScheduler {
       // 3. 强化最近活跃的高频关系
       await this._reinforceActiveRelationships();
 
+      // 4. 睡眠巩固（约每日一次）：合并完全重复 + 生成整理报告
+      await this._consolidate();
+
       report.durationMs = Date.now() - start;
       this.lastReport = report;
 
@@ -272,6 +275,52 @@ export class MemoryDecayScheduler {
        AND last_activated > ?`,
       [cutoff, cutoff, cutoff]
     );
+  }
+
+  /**
+   * 睡眠巩固 — 模拟大脑睡眠时的整理：自动做高置信度的安全合并（完全同名同类型的重复），
+   * 拿不准的（core 臃肿等）只生成报告交给用户，绝不擅自删除。约每 20h 跑一次。
+   */
+  private async _consolidate(): Promise<void> {
+    try {
+      const last = await this.db.getMeta('last_consolidate');
+      if (last && Date.now() - new Date(last).getTime() < 20 * 60 * 60 * 1000) return;
+
+      // a) 自动合并完全重复（高置信度、可逆软合并）
+      const groups = await this.db.findExactDuplicateGroups();
+      let merged = 0;
+      const mergedNames: string[] = [];
+      for (const g of groups) {
+        const [keep, ...drops] = g.ids;
+        for (const d of drops) {
+          await this.db.softMergeEntities(keep, d);
+          merged++;
+        }
+        if (drops.length) mergedNames.push(`${g.name}(${drops.length + 1}→1)`);
+      }
+
+      // b) 判断题只出报告，不动手
+      const stats = await this.db.getStats();
+      const coreCount = (stats as any).corePrinciples ?? 0;
+      const lines: string[] = [];
+      if (merged > 0) lines.push(`已自动合并 ${merged} 条完全重复：${mergedNames.slice(0, 8).join('、')}`);
+      if (coreCount > 40) lines.push(`核心原则 ${coreCount} 条偏多，建议精简到你最独特的 ~30 条（其余降为普通原则，仍可被检索）。`);
+
+      if (lines.length > 0) {
+        try {
+          await this.db.addNotification({
+            title: '🌙 睡眠整理报告',
+            content: lines.join('\n'),
+            type: 'consolidation',
+            related_entities: [],
+          } as any);
+        } catch { /* 通知失败不影响 */ }
+      }
+      await this.db.setMeta('last_consolidate', new Date().toISOString());
+      if (merged > 0) console.log(`[Consolidate] 睡眠巩固：合并 ${merged} 条重复`);
+    } catch (e) {
+      console.warn('[Consolidate] 跳过:', e);
+    }
   }
 
   private _emptyReport(): DecayReport {

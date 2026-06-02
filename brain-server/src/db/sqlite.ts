@@ -581,6 +581,63 @@ export class Database {
     return done;
   }
 
+  // ── 整理 / curation 原语 ──
+
+  // 设/撤核心原则（json_set 非破坏，只翻 isCore，保留其余 metadata）
+  async setCorePrinciple(id: string, isCore: boolean): Promise<void> {
+    await this.run(
+      `UPDATE entities SET metadata = json_set(COALESCE(metadata,'{}'), '$.isCore', ?), updated_at = ? WHERE id = ?`,
+      [isCore ? 1 : 0, new Date().toISOString(), id],
+    );
+  }
+
+  // 软合并：dropId 的关系指到 keepId，dropId 标记 merged_into=keepId（可逆，不硬删）
+  async softMergeEntities(keepId: string, dropId: string): Promise<void> {
+    if (!keepId || !dropId || keepId === dropId) return;
+    await this.withTransaction(async () => {
+      await this.run('UPDATE relationships SET source_id = ? WHERE source_id = ?', [keepId, dropId]);
+      await this.run('UPDATE relationships SET target_id = ? WHERE target_id = ?', [keepId, dropId]);
+      await this.run(
+        `UPDATE entities SET metadata = json_set(COALESCE(metadata,'{}'), '$.merged_into', ?), updated_at = ? WHERE id = ?`,
+        [keepId, new Date().toISOString(), dropId],
+      );
+    });
+    try { await this.run('DELETE FROM vec_entities WHERE entity_id = ?', [dropId]); } catch { /* */ }
+    try { await this.run('DELETE FROM fts_entities WHERE entity_id = ?', [dropId]); } catch { /* */ }
+    this.bumpAccessCounts([keepId]).catch(() => {});
+  }
+
+  // 硬删除（含关系/索引清理）。仅供用户主动调用；睡眠巩固不用它。
+  async hardDeleteEntity(id: string): Promise<void> {
+    await this.withTransaction(async () => {
+      await this.run('DELETE FROM relationships WHERE source_id = ? OR target_id = ?', [id, id]);
+      await this.run('DELETE FROM entities WHERE id = ?', [id]);
+    });
+    try { await this.run('DELETE FROM vec_entities WHERE entity_id = ?', [id]); } catch { /* */ }
+    try { await this.run('DELETE FROM fts_entities WHERE entity_id = ?', [id]); } catch { /* */ }
+  }
+
+  // 找完全同名同类型的重复组（未合并的）。每组按 keeper 优先排序（热度/描述长/最早）。
+  async findExactDuplicateGroups(): Promise<Array<{ ids: string[]; name: string; type: string }>> {
+    const rows = await this.all<any>(
+      `SELECT id, name, type
+       FROM entities
+       WHERE json_extract(metadata, '$.merged_into') IS NULL
+       ORDER BY type, LOWER(TRIM(name)), access_count DESC, LENGTH(COALESCE(description,'')) DESC, created_at ASC`,
+    );
+    const groups = new Map<string, any[]>();
+    for (const r of rows) {
+      const key = (r.type || '') + '|' + (r.name || '').trim().toLowerCase();
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(r);
+    }
+    const dup: Array<{ ids: string[]; name: string; type: string }> = [];
+    for (const arr of groups.values()) {
+      if (arr.length > 1) dup.push({ ids: arr.map((x) => x.id), name: arr[0].name, type: arr[0].type });
+    }
+    return dup;
+  }
+
   async updateEntity(id: string, updates: Partial<Omit<Entity, 'id' | 'updated_at' | 'last_accessed'>>): Promise<void> {
     const fields: string[] = [];
     const values: any[] = [];
