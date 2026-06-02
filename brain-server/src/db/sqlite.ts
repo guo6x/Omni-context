@@ -199,6 +199,16 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE relationships ADD COLUMN invalidation_reason TEXT;
     `,
   },
+  {
+    version: 10,
+    name: 'add_app_meta',
+    up: `
+      CREATE TABLE IF NOT EXISTS app_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      );
+    `,
+  },
 ];
 
 interface Migration {
@@ -517,6 +527,36 @@ export class Database {
         await this._syncFtsEntity(row.id, row.name, row.description || '', tags);
       } catch { /* 可选 */ }
     }
+  }
+
+  async getMeta(key: string): Promise<string | null> {
+    try {
+      const rows = await this.all<any>('SELECT value FROM app_meta WHERE key = ?', [key]);
+      return rows[0]?.value ?? null;
+    } catch { return null; }
+  }
+
+  async setMeta(key: string, value: string): Promise<void> {
+    await this.run(
+      'INSERT INTO app_meta(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+      [key, value],
+    );
+  }
+
+  // 用新模型重算所有实体的向量（换 embedding 模型后必跑：旧向量与新模型不可比）。
+  // 重算后回灌 vec / fts。逐条容错，单条失败不影响其余。
+  async reembedAllEntities(embed: (text: string) => Promise<number[]>): Promise<number> {
+    const rows = await this.all<any>('SELECT id, name, description FROM entities');
+    let done = 0;
+    for (const row of rows) {
+      try {
+        const vec = await embed(`${row.name}: ${row.description || ''}`);
+        await this.run('UPDATE entities SET embedding = ? WHERE id = ?', [encodeEmbedding(vec), row.id]);
+        done++;
+      } catch { /* 单条失败跳过 */ }
+    }
+    try { await this.reindexEntities(); } catch { /* 可选 */ }
+    return done;
   }
 
   async updateEntity(id: string, updates: Partial<Omit<Entity, 'id' | 'updated_at' | 'last_accessed'>>): Promise<void> {

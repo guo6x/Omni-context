@@ -276,16 +276,35 @@ function checkRateLimit(req: http.IncomingMessage, res: http.ServerResponse): bo
 export function createDefaultEmbeddingService(): EmbeddingService {
   return new EmbeddingService({
     mode: (process.env.EMBEDDING_MODE as 'local' | 'api') || 'local',
-    localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/all-MiniLM-L6-v2',
+    localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/multilingual-e5-small',
     apiUrl: process.env.EMBEDDING_API_URL,
     apiKey: process.env.EMBEDDING_API_KEY,
     apiModel: process.env.EMBEDDING_API_MODEL,
   });
 }
 
+// 换 embedding 模型后，后台重算存量向量（旧模型的向量与新模型不可比，否则检索失准）。
+// 用 app_meta 记录上次的模型；不一致才重算，跑完更新标记。不阻塞启动。
+async function maybeReembedOnModelChange(db: Database, emb: EmbeddingService): Promise<void> {
+  try {
+    const current = emb.getInfo().model;
+    if (!current || current === 'unknown') return;
+    const stored = await db.getMeta('embedding_model');
+    if (stored === current) return;
+    console.log(`[reembed] embedding 模型: ${stored || '(无标记)'} -> ${current}，后台重算存量向量...`);
+    const n = await db.reembedAllEntities(async (t) => (await emb.embed(t)).embedding);
+    await db.setMeta('embedding_model', current);
+    console.log(`[reembed] 完成，重算 ${n} 条向量`);
+  } catch (e) {
+    console.warn('[reembed] 跳过:', e);
+  }
+}
+
 export function createServer(db: Database, agentLoop?: AgentLoop, embeddingService?: EmbeddingService, decayScheduler?: MemoryDecayScheduler): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
   const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, decayScheduler);
+
+  void maybeReembedOnModelChange(db, finalEmbeddingService);
 
   const localApiToken = (process.env.LOCAL_API_TOKEN || '').trim();
   const pairCode = (process.env.PAIR_CODE || '').trim();

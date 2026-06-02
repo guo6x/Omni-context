@@ -35,7 +35,7 @@ export interface EmbeddingResult {
 
 const DEFAULT_CONFIG: EmbeddingConfig = {
   mode: 'local',
-  localModel: 'Xenova/all-MiniLM-L6-v2', // 384 维，22MB，速度快
+  localModel: 'Xenova/multilingual-e5-small', // 384 维，多语强中文检索（替换英文向的 MiniLM）
   dimensions: 384,
 };
 

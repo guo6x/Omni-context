@@ -93,7 +93,7 @@ class OmniContextServer {
     // [核心壁垒] Embedding 服务 — 支持本地/API 模式切换
     this.embeddingService = new EmbeddingService({
       mode: (process.env.EMBEDDING_MODE as 'local' | 'api') || 'local',
-      localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/all-MiniLM-L6-v2',
+      localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/multilingual-e5-small',
       apiUrl: process.env.EMBEDDING_API_URL,
       apiKey: process.env.EMBEDDING_API_KEY,
       apiModel: process.env.EMBEDDING_API_MODEL,
