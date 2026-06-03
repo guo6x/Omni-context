@@ -39,6 +39,18 @@
     </div>
   </div>
 
+  <!-- 问大脑：在任意标签页直接问你的记忆 -->
+  <div class="mb-4">
+    <div class="flex gap-2">
+      <input id="askInput" type="text" placeholder="问问你的大脑…"
+        class="flex-1 bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500" />
+      <button id="askBtn"
+        class="px-3 py-1.5 text-xs bg-cyan-600 hover:bg-cyan-500 text-white rounded transition-colors shrink-0">问</button>
+    </div>
+    <div id="askAnswer" class="hidden mt-2 p-3 glass-panel text-xs text-gray-300"
+      style="max-height:170px;overflow-y:auto;white-space:pre-wrap;line-height:1.6"></div>
+  </div>
+
   <div class="flex flex-col gap-2">
     <button id="capturePageBtn" class="flex items-center gap-3 px-4 py-3 glass-panel hover:bg-cyan-900/30 hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] text-gray-200 transition-all duration-300 cursor-pointer group" aria-label="一键捕获全页">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-cyan-400 group-hover:scale-110 transition-transform">

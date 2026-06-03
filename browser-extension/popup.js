@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('captureSelectionBtn')?.addEventListener('click', captureSelection);
   document.getElementById('openDesktopBtn')?.addEventListener('click', openDesktop);
   document.getElementById('saveTokenBtn')?.addEventListener('click', saveToken);
+  document.getElementById('askBtn')?.addEventListener('click', askBrain);
+  document.getElementById('askInput')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') askBrain(); });
 
   localToken = await getToken();
 
@@ -52,6 +54,26 @@ async function saveToken() {
   document.getElementById('statusText').textContent = 'Token 已保存，检查连接...';
   checkConnection();
   loadStats();
+}
+
+async function askBrain() {
+  const input = document.getElementById('askInput');
+  const q = input.value.trim();
+  if (!q) return;
+  const ans = document.getElementById('askAnswer');
+  ans.classList.remove('hidden');
+  ans.textContent = '想一下…';
+  try {
+    const res = await apiFetch('/api/mcp/tool/ask_memory', {
+      method: 'POST',
+      body: JSON.stringify({ arguments: { query: q } }),
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    const d = await res.json().catch(() => ({}));
+    ans.textContent = d.reply || '（我的记忆里暂时没有相关内容）';
+  } catch (e) {
+    ans.textContent = '连不上大脑（确认桌面端在运行、token 已配）';
+  }
 }
 
 async function checkConnection() {
