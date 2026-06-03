@@ -186,6 +186,28 @@ export const handleMemoryRoutes = [
 export const handleEntityRoutes = [
   {
     method: 'GET' as const,
+    path: '/api/entities/review',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const q = new URL(req.url || '', 'http://localhost').searchParams;
+      const result = await ctx.db.listEntitiesForReview({
+        limit: Number(q.get('limit')) || 50,
+        offset: Number(q.get('offset')) || 0,
+        source: q.get('source') || undefined,
+        type: q.get('type') || undefined,
+        q: q.get('q') || undefined,
+      });
+      sendResponse(res, 200, result);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/entities/sources',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      sendResponse(res, 200, await ctx.db.countEntitiesBySource());
+    }
+  },
+  {
+    method: 'GET' as const,
     path: '/api/entities',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const entities = await ctx.db.getRecentEntities(100);

@@ -581,6 +581,54 @@ export class Database {
     return done;
   }
 
+  // 管理/信任面：带 provenance 的实体列表（list_entities 抹了 metadata，这里专门给"看清谁写的"用）
+  async listEntitiesForReview(opts: { limit?: number; offset?: number; source?: string; type?: string; q?: string } = {}): Promise<{ items: any[]; total: number }> {
+    const where: string[] = [`json_extract(metadata, '$.merged_into') IS NULL`];
+    const params: any[] = [];
+    if (opts.type) { where.push('type = ?'); params.push(opts.type); }
+    if (opts.source === '__user__') {
+      where.push(`(json_extract(metadata, '$.provenance.source') IS NULL OR json_extract(metadata, '$.provenance.source') = 'user')`);
+    } else if (opts.source) {
+      where.push(`json_extract(metadata, '$.provenance.source') = ?`); params.push(opts.source);
+    }
+    if (opts.q) { where.push('(name LIKE ? OR description LIKE ?)'); const like = `%${opts.q}%`; params.push(like, like); }
+    const whereSql = where.join(' AND ');
+    const totalRow = await this.get<{ c: number }>(`SELECT COUNT(*) as c FROM entities WHERE ${whereSql}`, params);
+    const limit = Math.min(Math.max(opts.limit || 50, 1), 200);
+    const offset = Math.max(opts.offset || 0, 0);
+    const rows = await this.all<any>(
+      `SELECT id, name, type, description, tags, metadata, created_at, last_accessed, access_count
+       FROM entities WHERE ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, offset],
+    );
+    const items = rows.map((r) => {
+      let meta: any = {};
+      try { meta = r.metadata ? JSON.parse(r.metadata) : {}; } catch { /* */ }
+      const prov = meta.provenance || null;
+      return {
+        id: r.id, name: r.name, type: r.type,
+        description: (r.description || '').slice(0, 180),
+        tags: r.tags ? JSON.parse(r.tags) : [],
+        created_at: r.created_at, last_accessed: r.last_accessed, access_count: r.access_count,
+        isCore: meta.isCore === true || meta.isCore === 1,
+        source: prov?.source || 'user',
+        provenance: prov,
+      };
+    });
+    return { items, total: totalRow?.c ?? items.length };
+  }
+
+  // 按 provenance.source 统计（管理面的过滤角标）
+  async countEntitiesBySource(): Promise<Record<string, number>> {
+    const rows = await this.all<any>(
+      `SELECT COALESCE(json_extract(metadata, '$.provenance.source'), 'user') AS src, COUNT(*) AS c
+       FROM entities WHERE json_extract(metadata, '$.merged_into') IS NULL GROUP BY src`,
+    );
+    const out: Record<string, number> = {};
+    for (const r of rows) out[r.src || 'user'] = r.c;
+    return out;
+  }
+
   // ── 整理 / curation 原语 ──
 
   // 设/撤核心原则（json_set 非破坏，只翻 isCore，保留其余 metadata）

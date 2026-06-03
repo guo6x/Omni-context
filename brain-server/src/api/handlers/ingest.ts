@@ -6,6 +6,7 @@ import { resolveEntities } from '../../graphrag/entity-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Entity } from '../../shared-types.js';
 import { preprocess } from '../../ingest/preprocess.js';
+import { parseChatExport, ParsedConversation } from '../../importers/chat-export.js';
 
 // 文件上传抽取管线（v1：仅文本类）
 // 入参形态：JSON { filename, contentType, base64 }
@@ -185,6 +186,7 @@ interface JobState {
       };
     };
   };
+  importProgress?: { done: number; total: number; entities: number };
   error?: string;
 }
 
@@ -449,6 +451,56 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
   });
 }
 
+// 导入：把解析好的对话逐段喂抽取管线。把会话原始时间写进 created_at（历史也能时间召回），
+// 打 provenance.source='import'。逐段容错，单段失败不影响其余。
+async function runImportPipeline(jobId: string, conversations: ParsedConversation[], platform: string, ctx: RequestContext): Promise<void> {
+  updateJob(jobId, { status: 'running', stage: 'extracting', importProgress: { done: 0, total: conversations.length, entities: 0 } });
+  let done = 0;
+  let entityCount = 0;
+  for (const conv of conversations) {
+    const job = jobStore.get(jobId);
+    if (!job || job.aborted) { updateJob(jobId, { status: 'cancelled', completedAt: Date.now() }); return; }
+    if (conv.text && conv.text.trim().length >= 10) {
+      try {
+        const extractResult = await ctx.extractor.extract({
+          textContent: `对话标题：${conv.title}\n${conv.text}`.slice(0, 12000),
+          timestamp: conv.time || new Date().toISOString(),
+          sourceType: 'manual',
+        });
+        const prov = { source: 'import', platform, title: conv.title, at: new Date().toISOString() };
+        const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
+        for (const e of resolution.entitiesToCreate) {
+          if (conv.time) e.created_at = conv.time;
+          e.tags = Array.from(new Set([...(e.tags || []), 'imported', `import:${platform}`]));
+          e.metadata = { ...(e.metadata || {}), provenance: prov };
+          await ctx.db.addEntity(e);
+          entityCount++;
+        }
+        for (const u of resolution.entitiesToUpdate) {
+          await ctx.db.updateEntity(u.id, { description: u.description, tags: u.tags, embedding: u.embedding, metadata: u.metadata, created_at: u.created_at, access_count: u.access_count });
+        }
+        for (const r of resolution.relationshipsToCreate) { await ctx.db.addRelationship(r); }
+        const pnow = conv.time || new Date().toISOString();
+        for (const p of extractResult.principles) {
+          const pe: Entity = {
+            id: uuidv4(), name: p.title, type: 'principle', description: p.content,
+            created_at: pnow, updated_at: pnow, last_accessed: pnow, access_count: 0,
+            tags: ['imported', `import:${platform}`, p.type],
+            metadata: { isCore: false, principleType: p.type, provenance: prov },
+          };
+          const pr = await resolveEntities([pe], [], ctx.db, ctx.embeddingService);
+          for (const e of pr.entitiesToCreate) { await ctx.db.addEntity(e); entityCount++; }
+        }
+      } catch (err: any) {
+        console.warn('[Import] 跳过一段对话:', err?.message || err);
+      }
+    }
+    done++;
+    updateJob(jobId, { importProgress: { done, total: conversations.length, entities: entityCount } });
+  }
+  updateJob(jobId, { status: 'success', stage: 'done', completedAt: Date.now(), importProgress: { done, total: conversations.length, entities: entityCount } });
+}
+
 export const handleIngestRoutes = [
   {
     method: 'POST' as const,
@@ -522,8 +574,35 @@ export const handleIngestRoutes = [
         stage: job.stage,
         filename: job.filename,
         result: job.result,
+        importProgress: job.importProgress,
         error: job.error,
       });
+    },
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/import/chat',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ base64?: string; text?: string; maxConversations?: number }>(req);
+      let raw = '';
+      if (body.text) raw = body.text;
+      else if (body.base64) {
+        try { raw = Buffer.from(body.base64, 'base64').toString('utf-8'); } catch { return sendError(res, 400, 'Invalid base64'); }
+      } else return sendError(res, 400, '需要 base64 或 text');
+
+      let parsed;
+      try { parsed = parseChatExport(raw); } catch (e: any) { return sendError(res, 400, e?.message || '解析失败'); }
+
+      const convs = parsed.conversations.filter((c) => c.text && c.text.trim());
+      if (convs.length === 0) return sendError(res, 400, '没有可导入的对话');
+      // 新→旧，截断（默认最多 100 段，避免一次性几百次 LLM 抽取）
+      convs.sort((a, b) => (b.time || '').localeCompare(a.time || ''));
+      const cap = Math.max(1, Math.min(Number(body.maxConversations) || 100, 500));
+      const capped = convs.slice(0, cap);
+
+      const job = createJob(`import:${parsed.platform}`);
+      setImmediate(() => runImportPipeline(job.jobId, capped, parsed.platform, ctx));
+      sendResponse(res, 200, { jobId: job.jobId, platform: parsed.platform, parsed: convs.length, importing: capped.length });
     },
   },
 ];
