@@ -316,10 +316,56 @@ export class MemoryDecayScheduler {
           } as any);
         } catch { /* 通知失败不影响 */ }
       }
+      await this._proactive();
       await this.db.setMeta('last_consolidate', new Date().toISOString());
       if (merged > 0) console.log(`[Consolidate] 睡眠巩固：合并 ${merged} 条重复`);
     } catch (e) {
       console.warn('[Consolidate] 跳过:', e);
+    }
+  }
+
+  /**
+   * 主动层 — 让大脑"会提醒你"，而不只是被动等问：
+   * ① 挂太久的未决问题(question)；② 最近和过去的你冲突的记忆。生成通知，进 insights 收件箱。
+   */
+  private async _proactive(): Promise<void> {
+    try {
+      // ① 未决问题：>14 天未碰、未提醒过
+      const cutoff = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
+      const stale = await this.db.all<{ id: string; name: string; created_at: string }>(
+        `SELECT id, name, created_at FROM entities
+         WHERE type = 'question' AND last_accessed < ?
+           AND json_extract(metadata, '$.proactive_notified') IS NULL
+           AND json_extract(metadata, '$.merged_into') IS NULL
+         ORDER BY created_at ASC LIMIT 3`,
+        [cutoff],
+      );
+      for (const q of stale) {
+        const days = Math.max(1, Math.floor((Date.now() - new Date(q.created_at).getTime()) / 864e5));
+        try {
+          await this.db.addNotification({ title: '💡 一个挂着的问题', content: `「${q.name}」你琢磨了 ${days} 天还没结论，要不要现在想想？`, type: 'proactive', related_entities: [q.id] } as any);
+          await this.db.run(`UPDATE entities SET metadata = json_set(COALESCE(metadata,'{}'), '$.proactive_notified', ?) WHERE id = ?`, [new Date().toISOString(), q.id]);
+        } catch { /* */ }
+      }
+
+      // ② 新出现的冲突（近 26h，每日触发≈各通知一次）——"和过去的你吵架"
+      const since = new Date(Date.now() - 26 * 3600 * 1000).toISOString();
+      const conflicts = await this.db.all<{ source_id: string; target_id: string }>(
+        `SELECT source_id, target_id FROM relationships
+         WHERE type = 'conflicts_with' AND created_at > ? ORDER BY created_at DESC LIMIT 2`,
+        [since],
+      );
+      for (const c of conflicts) {
+        const a = await this.db.getEntity(c.source_id);
+        const b = await this.db.getEntity(c.target_id);
+        if (a && b) {
+          try {
+            await this.db.addNotification({ title: '⚔️ 和过去的你冲突了', content: `「${a.name}」和「${b.name}」存在冲突——你的想法可能变了，要不要确认一下？`, type: 'proactive', related_entities: [c.source_id, c.target_id] } as any);
+          } catch { /* */ }
+        }
+      }
+    } catch (e) {
+      console.warn('[Proactive] 跳过:', e);
     }
   }
 

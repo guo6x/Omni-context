@@ -28,6 +28,24 @@ export const LLM_API_KEY_URLS: Record<string, string> = {
 
 export const LLM_PRESETS: LlmPreset[] = [
   {
+    id: 'ollama',
+    name: 'Ollama（本地 · 数据不出机）',
+    emoji: '🏠',
+    apiUrl: 'http://localhost:11434/v1',
+    defaultModel: 'qwen2.5:7b',
+    speed: 'llm_presets.speed_medium',
+    cost: 'llm_presets.cost_free',
+  },
+  {
+    id: 'lmstudio',
+    name: 'LM Studio（本地）',
+    emoji: '🏠',
+    apiUrl: 'http://localhost:1234/v1',
+    defaultModel: 'local-model',
+    speed: 'llm_presets.speed_medium',
+    cost: 'llm_presets.cost_free',
+  },
+  {
     id: 'openai',
     name: 'OpenAI',
     emoji: '🤖',

@@ -7,6 +7,7 @@ import GraphViewer from "@/components/GraphViewer";
 import ShortcutsHelp from "@/components/ShortcutsHelp";
 import SettingsPanel from "@/components/SettingsPanel";
 import InsightsInbox from "@/components/InsightsInbox";
+import MemoryManager from "@/components/MemoryManager";
 import EmptyState from "@/components/EmptyState";
 import FileDropZone, { FileDropZoneRef, ACCEPTED_EXTENSIONS, TauriFileLike } from "@/components/FileDropZone";
 import HardwarePairingPanel from "@/components/HardwarePairingPanel";
@@ -114,6 +115,7 @@ function MainApp() {
   const [emptyDismissed, setEmptyDismissed] = useState(false);
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
   const [showDecisionLog, setShowDecisionLog] = useState(false);
+  const [showMemoryManager, setShowMemoryManager] = useState(false);
   // 启动遮罩兜底：brain-server 长时间起不来时也要放行进 App（由离线横幅接管），避免遮罩锁死 UI
   const [splashTimedOut, setSplashTimedOut] = useState(false);
   const [focusEntityId, setFocusEntityId] = useState<string | undefined>(undefined);
@@ -738,6 +740,13 @@ function MainApp() {
                     {t('nav.decision_log')}
                   </button>
                   <button
+                    onClick={() => { setShowMemoryManager(true); setShowMoreMenu(false); }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Brain className="w-4 h-4 text-cyan-400" />
+                    记忆管理
+                  </button>
+                  <button
                     onClick={() => { setShowShortcuts(!showShortcuts); setShowMoreMenu(false); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                   >
@@ -940,6 +949,7 @@ function MainApp() {
         )}
         
         <InsightsInbox isOpen={showInsights} onClose={() => setShowInsights(false)} />
+        {showMemoryManager && <MemoryManager onClose={() => setShowMemoryManager(false)} />}
 
         <HardwarePairingPanel isOpen={showHardware} onClose={() => setShowHardware(false)} />
 

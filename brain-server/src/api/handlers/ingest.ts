@@ -597,7 +597,10 @@ export const handleIngestRoutes = [
       if (convs.length === 0) return sendError(res, 400, '没有可导入的对话');
       // 新→旧，截断（默认最多 100 段，避免一次性几百次 LLM 抽取）
       convs.sort((a, b) => (b.time || '').localeCompare(a.time || ''));
-      const cap = Math.max(1, Math.min(Number(body.maxConversations) || 100, 500));
+      // 默认全部导入（用户用便宜模型）；可指定 maxConversations 限制。绝对上限 5000 防跑飞。
+      const cap = body.maxConversations
+        ? Math.max(1, Math.min(Number(body.maxConversations), 5000))
+        : Math.min(convs.length, 5000);
       const capped = convs.slice(0, cap);
 
       const job = createJob(`import:${parsed.platform}`);
