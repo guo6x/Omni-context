@@ -73,7 +73,10 @@ EXTRACTION SCHEMA:
   ]
 }
 
-实体类型可选：principle, code_snippet, evidence, concept, tool, security_rule, performance_optimization, architecture_pattern, bug_vulnerability, business_logic, person, project
+实体类型（按"人脑怎么组织记忆"选最贴切的；优先用前面这些通用类型）：
+- concept(概念/事实)、principle(原则/价值观/方法论)、preference(偏好/喜恶)、goal(目标/想达成的)、decision(已做的决策)、question(还没想通的问题/悬念)、task(待办/要做的事)、event(发生过的事/经历)、person(人)、project(项目/正在做的事)、tool(工具/产品/服务)、evidence(证据/具体例子)、memory(以上都不贴切的其他记忆)
+- 仅当内容确实是编程相关时才用：code_snippet, architecture_pattern, bug_vulnerability, business_logic, critical_review
+不要因为名字像就硬归类；分不清就用 concept 或 memory，别硬塞 tool/person。
 关系类型可选：extends, depends_on, relates_to, conflicts_with, derived_from, belongs_to, supported_by, extracted_from, works_at, lives_in, studies_at, married_to, leads_to_conclusion
 原则类型可选：code_principle, security_rule, performance_optimization, design_pattern, workflow_rule, personal_preference
 `;

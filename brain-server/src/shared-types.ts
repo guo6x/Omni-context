@@ -20,7 +20,12 @@ export type EntityType =
   | 'critical_review'
   | 'capture_snapshot'
   | 'memory'
-  | 'decision';
+  | 'decision'
+  | 'goal'
+  | 'question'
+  | 'preference'
+  | 'event'
+  | 'task';
 
 export type RelationshipType =
   | 'derived_from'

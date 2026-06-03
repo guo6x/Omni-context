@@ -53,6 +53,11 @@ const TYPE_COLORS: Record<string, string> = {
   memory: "#0ea5e9",                   // 亮蓝
   person: "#fb923c",                   // 浅橙
   project: "#84cc16",                  // 黄绿
+  goal: "#f59e0b",                     // 琥珀 — 目标
+  question: "#10b981",                 // 翠绿 — 未决
+  preference: "#ec4899",               // 粉 — 偏好
+  event: "#7c3aed",                    // 紫 — 经历
+  task: "#65a30d",                     // 橄榄 — 待办
 };
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -82,6 +87,11 @@ const TYPE_GLYPHS: Record<string, string> = {
   critical_review: '◊',
   capture_snapshot: '◇',
   memory: '◎',
+  goal: '⚑',
+  question: '?',
+  preference: '♥',
+  event: '◷',
+  task: '☑',
 };
 
 // 关系类型颜色：每种关系语义独立着色，避免一团青色边

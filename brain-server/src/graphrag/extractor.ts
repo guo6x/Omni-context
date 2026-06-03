@@ -234,6 +234,11 @@ const VALID_ENTITY_TYPES: Set<EntityType> = new Set([
   'capture_snapshot',
   'memory',
   'decision',
+  'goal',
+  'question',
+  'preference',
+  'event',
+  'task',
 ]);
 
 const VALID_RELATIONSHIP_TYPES: Set<RelationshipType> = new Set([

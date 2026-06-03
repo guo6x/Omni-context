@@ -105,4 +105,9 @@ export const NODE_TYPE_TO_THEME_KEY: Record<string, keyof Theme['graphNodeColors
   critical_review: 'decision',
   capture_snapshot: 'principle',
   memory: 'concept',
+  goal: 'decision',
+  task: 'project',
+  question: 'concept',
+  preference: 'principle',
+  event: 'person',
 };
