@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
+import { listen } from "@tauri-apps/api/event";
 import FloatingHUD from "@/components/FloatingHUD";
 import GraphViewer from "@/components/GraphViewer";
 import ShortcutsHelp from "@/components/ShortcutsHelp";
@@ -24,6 +25,23 @@ import DecisionTimeline from "@/components/DecisionTimeline";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
 import { resolveNodeCap } from '@/lib/device';
+
+// 需要"在任意窗口前都能按"的快捷键，注册为系统全局热键（其余保持应用内）
+const GLOBAL_SHORTCUT_IDS = ['precipitate'];
+// 把 "Ctrl+Shift+P" 转成 Tauri 加速键格式 "CommandOrControl+Shift+P"
+function toTauriAccel(current: string): string {
+  const mods: string[] = [];
+  let key = '';
+  for (const raw of (current || '').split('+')) {
+    const p = raw.trim().toLowerCase();
+    if (['ctrl', 'control', 'cmd', 'command', 'cmdorctrl'].includes(p)) mods.push('CommandOrControl');
+    else if (p === 'shift') mods.push('Shift');
+    else if (p === 'alt' || p === 'option') mods.push('Alt');
+    else if (['meta', 'super', 'win'].includes(p)) mods.push('Super');
+    else if (p) key = p.length === 1 ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1);
+  }
+  return [...mods, key].filter(Boolean).join('+');
+}
 
 
 // 调用 Tauri window API；非 Tauri 环境（Next.js 浏览器调试）下静默降级
@@ -396,8 +414,10 @@ function MainApp() {
     };
   }, [confirm, t, toast]);
 
+  const handlePrecipitateRef = useRef<() => void>(() => {});
+
   useKeyboardShortcuts([
-    ...settings.keyboardShortcuts.map((s) => {
+    ...settings.keyboardShortcuts.filter((s) => !GLOBAL_SHORTCUT_IDS.includes(s.id)).map((s) => {
       const current = s.current.toLowerCase();
       return {
         id: s.id,
@@ -560,6 +580,24 @@ function MainApp() {
 
     return finalResult;
   };
+
+  // 全局热键：把需要"任意窗口前可按"的快捷键注册到系统，触发时跑最新的 handler
+  handlePrecipitateRef.current = () => { void handlePrecipitate(); };
+  const globalAccels = settings.keyboardShortcuts
+    .filter((s) => GLOBAL_SHORTCUT_IDS.includes(s.id))
+    .map((s) => `${s.id}:${toTauriAccel(s.current)}`)
+    .join(',');
+  useEffect(() => {
+    const globals = globalAccels.split(',').filter(Boolean).map((x) => {
+      const i = x.indexOf(':');
+      return { id: x.slice(0, i), accelerator: x.slice(i + 1) };
+    }).filter((s) => s.accelerator);
+    invoke('register_global_shortcuts', { shortcuts: globals }).catch((e) => console.warn('注册全局热键失败:', e));
+    const un = listen<string>('global-shortcut', (e) => {
+      if (e.payload === 'precipitate') handlePrecipitateRef.current();
+    });
+    return () => { un.then((f) => f()).catch(() => {}); };
+  }, [globalAccels]);
 
   const handleConnectHardware = useCallback(() => {
     setShowHardware(true);

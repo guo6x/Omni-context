@@ -221,6 +221,32 @@ pub async fn trigger_reset() -> Result<String, String> {
     Ok("重置操作已触发".to_string())
 }
 
+#[derive(serde::Deserialize)]
+pub struct ShortcutDef {
+    pub id: String,
+    pub accelerator: String,
+}
+
+// 注册系统级全局热键。触发时向前端发 `global-shortcut` 事件（带 id），
+// 由前端跑对应 handler（如沉淀捕获——这样在任何窗口前按都能抓当前屏幕）。
+#[tauri::command]
+pub fn register_global_shortcuts(app: tauri::AppHandle, shortcuts: Vec<ShortcutDef>) -> Result<(), String> {
+    use tauri::{GlobalShortcutManager, Manager};
+    let mut mgr = app.global_shortcut_manager();
+    let _ = mgr.unregister_all();
+    for s in shortcuts {
+        let app2 = app.clone();
+        let id = s.id.clone();
+        let acc = s.accelerator.clone();
+        if let Err(e) = mgr.register(acc.as_str(), move || {
+            let _ = app2.emit_all("global-shortcut", id.clone());
+        }) {
+            eprintln!("[GlobalShortcut] 注册失败 {} ({}): {}", s.id, acc, e);
+        }
+    }
+    Ok(())
+}
+
 use std::fs;
 use std::path::{Path, PathBuf};
 

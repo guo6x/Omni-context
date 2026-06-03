@@ -69,6 +69,9 @@
       },
       "clipboard": {
         "all": true
+      },
+      "globalShortcut": {
+        "all": true
       }
     },
     "security": {

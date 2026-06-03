@@ -265,6 +265,7 @@ async fn main() {
             commands::trigger_precipitate,
             commands::trigger_decision,
             commands::trigger_reset,
+            commands::register_global_shortcuts,
             commands::set_close_behavior,
             commands::quit_app,
             commands::open_data_folder,
