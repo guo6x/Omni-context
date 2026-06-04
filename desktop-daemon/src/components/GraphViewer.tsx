@@ -572,8 +572,11 @@ export default function GraphViewer3D({
       }
       const data = await res.json();
       const conclusion = data.conclusion || '';
+      const reasonsArr = Array.isArray(data.reasons) ? data.reasons : [];
+      // 把依据也存进历史，避免之前轮在多轮后只剩一句结论、看不到分析
+      const assistantContent = [conclusion, ...reasonsArr.map((r: any) => '· ' + (r?.text || ''))].filter(Boolean).join('\n') || '(no answer)';
       setGAnswer({
-        messages: [...history, { role: 'assistant', content: conclusion || '(no answer)' }],
+        messages: [...history, { role: 'assistant', content: assistantContent }],
         question: lastUser,
         conclusion,
         reasons: Array.isArray(data.reasons) ? data.reasons : [],
@@ -2032,7 +2035,7 @@ export default function GraphViewer3D({
                 {gAnswer.messages.slice(0, -2).map((m, i) => (
                   m.role === 'user'
                     ? <div key={i} className="text-[11px] text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{m.content}</div>
-                    : <div key={i} className="text-[12px] leading-relaxed text-gray-400">{m.content}</div>
+                    : <div key={i} className="text-[12px] leading-relaxed text-gray-400 whitespace-pre-wrap">{m.content}</div>
                 ))}
               </div>
             )}

@@ -11,8 +11,8 @@ import { parseChatExport, ParsedConversation } from '../../importers/chat-export
 // 文件上传抽取管线（v1：仅文本类）
 // 入参形态：JSON { filename, contentType, base64 }
 // 复用既有的 parseBody（JSON-only），避免引入 multipart 依赖。
-// 5MB 软上限；同时受 routes.ts 的 MAX_BODY_BYTES 硬上限保护。
-const MAX_INGEST_BYTES = Number(process.env.INGEST_MAX_BYTES || 5 * 1024 * 1024);
+// 30MB 软上限（PDF 等常较大）；同时受 routes.ts 的 MAX_BODY_BYTES 硬上限保护（base64 约 +33%）。
+const MAX_INGEST_BYTES = Number(process.env.INGEST_MAX_BYTES || 30 * 1024 * 1024);
 
 const TEXT_CONTENT_TYPES = new Set([
   'text/plain',

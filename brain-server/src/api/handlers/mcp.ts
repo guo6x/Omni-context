@@ -1244,10 +1244,10 @@ ${contextBlock}`;
 1. 先给一句话结论(conclusion)，直接、口语化；
 2. 给 2-4 条依据(reasons)，每条尽量用 refs 数组引用上面记忆的编号；
 3. 善用关系信息(冲突/取代/支持/源于)让推理有据，比如"X 和 Y 冲突过"；
-4. 如果记忆不足以回答，就在 conclusion 里如实说明，不要编造，reasons 可为空；
+4. 若现有记忆不足以给出有深度的回答（尤其抉择类）：不要硬凑一个浅答案。conclusion 里如实说"要答好这个我得先了解一些情况"，并在 questions 里列出 3-6 个具体、全面的澄清问题——覆盖目标、约束、资源、时间、风险偏好、已有选项等关键维度，别泛泛而问；
 5. 判断用户是不是在做一个抉择(该不该/选哪个/要不要/选型)，是则 is_decision=true：
    - reasons 用 ＋/－ 开头表达利弊权衡；
-   - 若缺少能影响结论的关键信息，在 questions 里提 1-2 个澄清问题(否则 questions 为空)。
+   - 即便能给倾向，也尽量在 questions 里补 2-4 个能让结论更准的关键问题（信息确实够了才可少或为空）。
 只输出 JSON：{"conclusion":"...","reasons":[{"text":"...","refs":[1,2]}],"questions":["..."],"is_decision":false}
 使用用户提问所用的语言。
 
@@ -1269,7 +1269,7 @@ ${gaConnBlock}`;
                   body: JSON.stringify({
                     model: gaLlm.model,
                     messages: [{ role: 'system', content: gaSystem }, ...(gaMessages.length ? gaMessages.slice(-8) : [{ role: 'user', content: gaQuestion }])],
-                    max_tokens: 900,
+                    max_tokens: 1200,
                     temperature: 0.4,
                     response_format: { type: 'json_object' },
                   }),
@@ -1290,7 +1290,7 @@ ${gaConnBlock}`;
                     ? r.refs.map((n: any) => gaCapped[Number(n) - 1]?.id).filter(Boolean)
                     : [],
                 })).filter((r: any) => r.text),
-                questions: Array.isArray(parsed.questions) ? parsed.questions.slice(0, 2).filter((q: any) => typeof q === 'string' && q.trim()) : [],
+                questions: Array.isArray(parsed.questions) ? parsed.questions.slice(0, 6).filter((q: any) => typeof q === 'string' && q.trim()) : [],
                 isDecision: !!parsed.is_decision,
                 sources: gaCapped,
                 edges: gaEdges,

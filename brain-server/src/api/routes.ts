@@ -36,7 +36,7 @@ export interface Route {
   handler: (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => Promise<void>;
 }
 
-const MAX_BODY_BYTES = Number(process.env.MAX_BODY_BYTES || 15 * 1024 * 1024);
+const MAX_BODY_BYTES = Number(process.env.MAX_BODY_BYTES || 45 * 1024 * 1024);
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 300);
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || [
