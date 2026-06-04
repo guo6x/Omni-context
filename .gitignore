@@ -15,6 +15,10 @@ out/
 **/target/
 **/build/
 
+# ML model weights — re-downloadable HuggingFace/Tesseract artifacts.
+# Too big for git (multilingual-e5-small onnx is 113MB, over GitHub's 100MB limit).
+brain-server/models/
+
 # Database
 *.db
 *.db-shm
