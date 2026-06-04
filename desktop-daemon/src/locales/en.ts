@@ -91,7 +91,7 @@ export default {
   upload: {
     title: 'Upload File',
     drop_hint: 'Drop files or click to select',
-    supported_formats: 'Supports Markdown / Office / PDF / eBook / Code / Images · Max 10MB per file',
+    supported_formats: 'Supports Markdown / Office / PDF / eBook / Code / Images · Max 30MB per file',
     size_limit: 'File exceeds {limit}MB limit',
     cancel: 'Cancel',
     cancelled: 'Cancelled',

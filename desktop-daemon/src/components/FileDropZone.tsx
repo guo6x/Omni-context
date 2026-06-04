@@ -24,8 +24,8 @@ const ACCEPTED_TYPES = [
   'application/epub+zip',
 ].join(',');
 
-// brain-server 那边 MAX_BODY_BYTES 默认 15MB，base64 膨胀 ~33%，10MB 文件还原时留出余量
-const MAX_BYTES = 10 * 1024 * 1024;
+// 与 brain-server 的 MAX_INGEST_BYTES 对齐（解码后 30MB）；base64 膨胀 ~33% 后约 40MB，仍在 MAX_BODY_BYTES(45MB) 内
+const MAX_BYTES = 30 * 1024 * 1024;
 
 export class TauriFileLike {
   name: string;
@@ -315,7 +315,7 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
           <UploadCloud className="w-8 h-8 text-cyan-400" />
           <div className="text-sm text-white font-medium">Drag files here or click to select</div>
           <div className="text-xs text-gray-400">
-            Supports Markdown / Office / PDF / eBook / Code / Images · Max 10MB per file
+            Supports Markdown / Office / PDF / eBook / Code / Images · Max 30MB per file
           </div>
           <input
             ref={inputRef}

@@ -91,7 +91,7 @@ export default {
   upload: {
     title: '上传文件',
     drop_hint: '拖入文件 / 点击选择',
-    supported_formats: '支持 Markdown / Office / PDF / 电子书 / 代码 / 图片 · 单文件 ≤ 10MB',
+    supported_formats: '支持 Markdown / Office / PDF / 电子书 / 代码 / 图片 · 单文件 ≤ 30MB',
     size_limit: '文件超过 {limit}MB 上限',
     cancel: '取消',
     cancelled: '已取消',
