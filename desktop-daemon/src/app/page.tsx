@@ -13,7 +13,7 @@ import EmptyState from "@/components/EmptyState";
 import FileDropZone, { FileDropZoneRef, ACCEPTED_EXTENSIONS, TauriFileLike } from "@/components/FileDropZone";
 import HardwarePairingPanel from "@/components/HardwarePairingPanel";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp, MoreHorizontal, Brain } from "lucide-react";
+import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp, MoreHorizontal, Brain, RefreshCw } from "lucide-react";
 import { LogoMark } from "@/components/BrandMark";
 import { Entity, Relationship } from "@shared/types";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -750,6 +750,13 @@ function MainApp() {
             title={floatingHudOn ? t('header.hide_hud') : t('header.show_hud')}
           >
             <PictureInPicture2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => { fetchGraphData(); toast.success('已刷新图谱'); }}
+            className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            title="刷新图谱（看新加进来的记忆）"
+          >
+            <RefreshCw className="w-4 h-4" />
           </button>
           <div className="relative">
             <button

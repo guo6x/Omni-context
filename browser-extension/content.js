@@ -65,10 +65,17 @@
     button.style.transform = 'scale(1)';
   });
 
+  let busy = false;
   button.addEventListener('click', () => {
-    chrome.runtime.sendMessage({
-      type: 'CAPTURE_PAGE',
-      data: getPagePayload(),
+    if (busy) return;
+    busy = true;
+    button.style.opacity = '0.55';
+    showToast('正在沉淀当前页面…');
+    chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: getPagePayload() }, (resp) => {
+      busy = false;
+      button.style.opacity = '1';
+      if (chrome.runtime.lastError) { showToast('✗ 连不上大脑（确认桌面端在运行、token 已配）'); return; }
+      showToast(resp && resp.ok ? '✓ 已捕获，正在后台抽取' : ('✗ ' + ((resp && resp.error) || '提交失败')));
     });
   });
 
@@ -96,5 +103,21 @@
       title: document.title,
       content: document.body.innerText.substring(0, 10000),
     };
+  }
+
+  // 页面内即时提示（chrome 通知常被系统吞，这个一定看得到）
+  let toastTimer = null;
+  function showToast(text) {
+    let toast = document.getElementById('omni-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'omni-toast';
+      toast.style.cssText = 'position:fixed;bottom:80px;right:20px;z-index:1000000;background:rgba(10,11,18,0.96);color:#e8e8e8;padding:9px 14px;border-radius:9px;font-size:13px;font-family:system-ui,-apple-system,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,0.45);border:1px solid rgba(34,211,238,0.35);max-width:280px;transition:opacity 0.25s;';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = text;
+    toast.style.opacity = '1';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.style.opacity = '0'; }, 3200);
   }
 })();
