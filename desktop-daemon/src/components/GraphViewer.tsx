@@ -189,6 +189,11 @@ export default function GraphViewer3D({
   const [gAnswer, setGAnswer] = useState<{ messages: Array<{ role: 'user' | 'assistant'; content: string }>; question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] } | null>(null);
   const [gLoading, setGLoading] = useState(false);
   const [gSaving, setGSaving] = useState(false);
+  const [answerWidth, setAnswerWidth] = useState(320);
+  useEffect(() => {
+    const v = Number(localStorage.getItem('omni_answer_width'));
+    if (v >= 300 && v <= 720) setAnswerWidth(v);
+  }, []);
   const [cmdFocused, setCmdFocused] = useState(false);
   const cmdInputRef = useRef<HTMLInputElement>(null);
   const [activeType, setActiveType] = useState<string>("all");
@@ -2016,7 +2021,25 @@ export default function GraphViewer3D({
       )}
 
       {gAnswer && (
-        <aside className="hidden w-80 shrink-0 flex-col border-l border-white/10 bg-gray-950/95 md:flex">
+        <aside style={{ width: answerWidth }} className="relative hidden shrink-0 flex-col border-l border-white/10 bg-gray-950/95 md:flex">
+          <div
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const startX = e.clientX;
+              const startW = answerWidth;
+              let latest = startW;
+              const onMove = (ev: MouseEvent) => { latest = Math.min(720, Math.max(300, startW + (startX - ev.clientX))); setAnswerWidth(latest); };
+              const onUp = () => {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                try { localStorage.setItem('omni_answer_width', String(latest)); } catch { /* */ }
+              };
+              window.addEventListener('mousemove', onMove);
+              window.addEventListener('mouseup', onUp);
+            }}
+            className="absolute left-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-ew-resize hover:bg-cyan-500/40"
+            title="拖动左边缘调整宽度"
+          />
           <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
             <Brain className="h-4 w-4 text-cyan-300" />
             <h3 className="text-sm font-semibold text-cyan-300">{t('cmd.answer_title')}</h3>
