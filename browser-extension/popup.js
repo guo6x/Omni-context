@@ -25,7 +25,6 @@ async function apiFetch(path, options = {}) {
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('capturePageBtn')?.addEventListener('click', capturePage);
   document.getElementById('captureSelectionBtn')?.addEventListener('click', captureSelection);
-  document.getElementById('openDesktopBtn')?.addEventListener('click', openDesktop);
   document.getElementById('saveTokenBtn')?.addEventListener('click', saveToken);
   document.getElementById('askBtn')?.addEventListener('click', askBrain);
   document.getElementById('askInput')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') askBrain(); });
@@ -62,6 +61,7 @@ async function askBrain() {
   if (!q) return;
   const ans = document.getElementById('askAnswer');
   ans.classList.remove('hidden');
+  if (!(await ensureToken())) { ans.textContent = '请先填好本地 API Token（桌面端 设置→数据）'; return; }
   ans.textContent = '想一下…';
   try {
     const res = await apiFetch('/api/mcp/tool/ask_memory', {
@@ -107,45 +107,59 @@ async function loadStats() {
   }
 }
 
-async function capturePage() {
+// 点按钮时当场在页面里执行，不依赖预先注入的 content.js（重载扩展后旧标签页也能读）
+async function runInPage(func) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) throw new Error('no-tab');
+  const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func });
+  return { tab, result: res?.result };
+}
 
-  chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_CONTENT' }, async (page) => {
-    if (chrome.runtime.lastError || !page?.content) {
-      showNotification('无法读取当前页面内容');
-      return;
-    }
+async function capturePage() {
+  if (!(await ensureToken())) return;
+  let page, tab;
+  try {
+    const r = await runInPage(() => ({
+      url: location.href,
+      title: document.title,
+      content: (document.body?.innerText || '').slice(0, 10000),
+    }));
+    page = r.result; tab = r.tab;
+  } catch {
+    showNotification('这个页面读不了（如 chrome:// 或 PDF），换个普通网页');
+    return;
+  }
+  if (!page?.content) { showNotification('页面没有可读文本'); return; }
 
-    const result = await sendCapture({
-      url: page.url || tab.url,
-      title: page.title || tab.title,
-      content: page.content,
-    });
-
-    showNotification(result ? '已提交' : '提交失败');
-    loadStats();
-  });
+  showNotification('正在沉淀…');
+  const result = await sendCapture({ url: page.url || tab.url, title: page.title || tab.title, content: page.content });
+  showNotification(result ? '✓ 已提交，后台抽取中' : '✗ 提交失败，确认桌面端在运行');
+  loadStats();
 }
 
 async function captureSelection() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-  chrome.tabs.sendMessage(tab.id, { type: 'GET_SELECTION' }, async (response) => {
-    if (chrome.runtime.lastError || !response?.text) {
-      showNotification('没有检测到选中文本');
-      return;
-    }
-
-    const result = await sendCapture({
-      url: response.url || tab.url,
-      title: response.title || tab.title,
-      content: response.text,
-      selection: true,
+  if (!(await ensureToken())) return;
+  let sel, tab;
+  try {
+    const r = await runInPage(() => {
+      let s = window.getSelection()?.toString() || '';
+      const a = document.activeElement;
+      if (!s && a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT')) {
+        try { s = a.value.slice(a.selectionStart, a.selectionEnd); } catch {}
+      }
+      return { url: location.href, title: document.title, text: s };
     });
+    sel = r.result; tab = r.tab;
+  } catch {
+    showNotification('这个页面读不了（如 chrome:// 或 PDF），换个普通网页');
+    return;
+  }
+  if (!sel?.text?.trim()) { showNotification('没有检测到选中文本（先在页面里选一段再点）'); return; }
 
-    showNotification(result ? '已提交' : '提交失败');
-    loadStats();
-  });
+  showNotification('正在沉淀…');
+  const result = await sendCapture({ url: sel.url || tab.url, title: sel.title || tab.title, content: sel.text, selection: true });
+  showNotification(result ? '✓ 已提交，后台抽取中' : '✗ 提交失败，确认桌面端在运行');
+  loadStats();
 }
 
 async function sendCapture(data) {
@@ -160,8 +174,14 @@ async function sendCapture(data) {
   }
 }
 
-function openDesktop() {
-  chrome.tabs.create({ url: 'omni-context://open' });
+async function ensureToken() {
+  if (!localToken) localToken = await getToken();
+  if (!localToken) {
+    document.getElementById('tokenSetup')?.classList.remove('hidden');
+    showNotification('请先填好本地 API Token（桌面端 设置→数据）');
+    return false;
+  }
+  return true;
 }
 
 function showNotification(message) {

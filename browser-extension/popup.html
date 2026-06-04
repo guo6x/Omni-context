@@ -6,9 +6,15 @@
 </head>
 <body class="w-[320px] bg-[#0a0b12] text-[#e8e8e8] font-sans p-5 m-0 selection:bg-cyan-500/30">
   <div class="flex items-center gap-3 mb-5 pb-4 border-b border-white/10">
-    <div class="w-8 h-8 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.3)]">
-      <span class="text-lg">🧠</span>
-    </div>
+    <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <linearGradient id="oink" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7df9ff"/><stop offset="0.55" stop-color="#22d3ee"/><stop offset="1" stop-color="#0ea5c4"/></linearGradient>
+        <radialGradient id="ocore" cx="50%" cy="45%" r="58%"><stop offset="0" stop-color="#e6fdff"/><stop offset="1" stop-color="#19c4e0"/></radialGradient>
+      </defs>
+      <path d="M84.4 63.2 A36 36 0 1 1 84.4 36.8" fill="none" stroke="url(#oink)" stroke-width="7" stroke-linecap="round"/>
+      <g stroke="#7df9ff" stroke-width="2.6" opacity="0.6" stroke-linecap="round"><line x1="50" y1="51" x2="50" y2="32"/><line x1="50" y1="51" x2="68" y2="61"/><line x1="50" y1="51" x2="33" y2="61"/></g>
+      <circle cx="50" cy="32" r="5" fill="#00f2fe"/><circle cx="68" cy="61" r="4.5" fill="#a855f7"/><circle cx="33" cy="61" r="4.5" fill="#22d3ee"/><circle cx="50" cy="51" r="9" fill="url(#ocore)"/>
+    </svg>
     <h1 class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Omni-Context</h1>
   </div>
   
@@ -67,13 +73,6 @@
       </svg>
       <span class="font-medium text-sm">捕获选中文本</span>
     </button>
-    <button id="openDesktopBtn" class="flex items-center gap-3 px-4 py-3 glass-panel hover:bg-gray-800/50 hover:border-gray-500/30 text-gray-200 transition-all duration-300 cursor-pointer group" aria-label="打开桌面图谱">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-400 group-hover:text-white transition-colors">
-        <rect x="2" y="3" width="20" height="14" rx="2"/>
-        <path d="M8 21h8M12 17v4"/>
-      </svg>
-      <span class="font-medium text-sm">打开桌面图谱</span>
-    </button>
   </div>
   
   <div class="mt-5 pt-4 border-t border-white/10">
@@ -88,7 +87,7 @@
   </div>
   
   <div class="mt-5 text-center text-[10px] text-gray-600 font-mono">
-    Omni-Context v0.2
+    Omni-Context v0.2.2
   </div>
   
   <script src="popup.js"></script>
