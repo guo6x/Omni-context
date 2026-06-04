@@ -35,6 +35,7 @@ export default {
     clarify: 'First, tell me',
     save_decision: "I've decided · save to graph",
     saving: 'Saving…',
+    thinking: 'Thinking…',
     follow_placeholder: 'Continue / ask a follow-up…',
     no_answer: "That isn't in your memory yet.",
     sources_count: '{n} sources',

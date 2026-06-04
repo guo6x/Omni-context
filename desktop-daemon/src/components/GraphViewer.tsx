@@ -186,8 +186,13 @@ export default function GraphViewer3D({
   // 命令栏「问大脑」：右栏第三态——结构化答案卡 + 高亮命中子图
   const [cmdInput, setCmdInput] = useState("");
   const [followInput, setFollowInput] = useState("");
-  const [gAnswer, setGAnswer] = useState<{ messages: Array<{ role: 'user' | 'assistant'; content: string }>; question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] } | null>(null);
+  // 答案卡每一轮的完整结构：多轮追问时每轮都保留自己的结论/依据/引用，
+  // 历史轮和当前轮用同一套富文本渲染，不再把旧轮降级成灰色折叠块
+  type AnswerTurn = { question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] };
+  const [gAnswer, setGAnswer] = useState<{ turns: AnswerTurn[] } | null>(null);
   const [gLoading, setGLoading] = useState(false);
+  // 追问加载时立刻显示用户刚问的这句（答案回来前先占位），更像正常聊天
+  const [gPendingQ, setGPendingQ] = useState<string | null>(null);
   const [gSaving, setGSaving] = useState(false);
   const [answerWidth, setAnswerWidth] = useState(320);
   useEffect(() => {
@@ -196,6 +201,12 @@ export default function GraphViewer3D({
   }, []);
   const [cmdFocused, setCmdFocused] = useState(false);
   const cmdInputRef = useRef<HTMLInputElement>(null);
+  const answerScrollRef = useRef<HTMLDivElement>(null);
+  // 新一轮 / 开始思考时把答案卡滚到底，露出最新内容
+  useEffect(() => {
+    const el = answerScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [gAnswer?.turns.length, gLoading]);
   const [activeType, setActiveType] = useState<string>("all");
   const [activeTag, setActiveTag] = useState<string>("all");
   const [graphLoadError, setGraphLoadError] = useState<string | null>(null);
@@ -558,32 +569,37 @@ export default function GraphViewer3D({
     [graphData.nodes, entities, handleNodeClick]
   );
 
-  // 调 graph_answer 跑一轮（首问/追问共用）：右栏切答案卡并高亮命中子图
-  const runAnswer = useCallback(async (history: Array<{ role: 'user' | 'assistant'; content: string }>) => {
+  // 调 graph_answer 跑一轮（首问/追问共用）：右栏切答案卡并高亮命中子图。
+  // priorTurns 是此前已答的各轮，新的一轮追加到末尾；发给后端时把每轮压平成
+  // user/assistant 消息（依据也带上），让模型看得到之前的分析。
+  const runAnswer = useCallback(async (question: string, priorTurns: AnswerTurn[]) => {
     setGLoading(true);
+    setGPendingQ(question);
     setSelectedNode(null);
     setSelectedNodeIds(new Set());
-    const lastUser = [...history].reverse().find((m) => m.role === 'user')?.content || '';
+    const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+    for (const tn of priorTurns) {
+      messages.push({ role: 'user', content: tn.question });
+      const c = [tn.conclusion, ...tn.reasons.map((r) => '· ' + (r?.text || ''))].filter(Boolean).join('\n') || '(no answer)';
+      messages.push({ role: 'assistant', content: c });
+    }
+    messages.push({ role: 'user', content: question });
+    const append = (turn: AnswerTurn) => setGAnswer({ turns: [...priorTurns, turn] });
     try {
       const res = await apiFetch('/api/mcp/tool/graph_answer', {
         method: 'POST',
-        body: JSON.stringify({ arguments: { messages: history } }),
+        body: JSON.stringify({ arguments: { messages } }),
       });
       if (!res.ok) {
         const body = await res.text();
         const conclusion = res.status === 400 && body.includes('LLM') ? t('cmd.need_llm') : t('cmd.error');
-        setGAnswer({ messages: [...history, { role: 'assistant', content: conclusion }], question: lastUser, conclusion, reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
+        append({ question, conclusion, reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
         return;
       }
       const data = await res.json();
-      const conclusion = data.conclusion || '';
-      const reasonsArr = Array.isArray(data.reasons) ? data.reasons : [];
-      // 把依据也存进历史，避免之前轮在多轮后只剩一句结论、看不到分析
-      const assistantContent = [conclusion, ...reasonsArr.map((r: any) => '· ' + (r?.text || ''))].filter(Boolean).join('\n') || '(no answer)';
-      setGAnswer({
-        messages: [...history, { role: 'assistant', content: assistantContent }],
-        question: lastUser,
-        conclusion,
+      append({
+        question,
+        conclusion: data.conclusion || '',
         reasons: Array.isArray(data.reasons) ? data.reasons : [],
         questions: Array.isArray(data.questions) ? data.questions : [],
         isDecision: !!data.isDecision,
@@ -591,24 +607,26 @@ export default function GraphViewer3D({
         citedEntityIds: Array.isArray(data.citedEntityIds) ? data.citedEntityIds : [],
       });
     } catch (e) {
-      setGAnswer({ messages: [...history, { role: 'assistant', content: t('cmd.error') }], question: lastUser, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
+      append({ question, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
     } finally {
       setGLoading(false);
+      setGPendingQ(null);
     }
   }, [t]);
 
   // 决策：把当前答案作为决定沉淀回图谱（复用 save_decision）
   const saveDecision = useCallback(async () => {
-    if (!gAnswer || gSaving) return;
+    const turn = gAnswer && gAnswer.turns.length > 0 ? gAnswer.turns[gAnswer.turns.length - 1] : null;
+    if (!turn || gSaving) return;
     setGSaving(true);
     try {
       await apiFetch('/api/mcp/tool/save_decision', {
         method: 'POST',
         body: JSON.stringify({
           arguments: {
-            situation: gAnswer.question,
-            conclusion: gAnswer.conclusion,
-            cited_entity_ids: gAnswer.citedEntityIds,
+            situation: turn.question,
+            conclusion: turn.conclusion,
+            cited_entity_ids: turn.citedEntityIds,
             confidence: 'medium',
             alternatives: '',
           },
@@ -646,14 +664,14 @@ export default function GraphViewer3D({
   const submitCommand = useCallback(() => {
     const q = cmdInput.trim();
     if (!q || gLoading) return;
-    runAnswer([{ role: 'user', content: q }]);
+    runAnswer(q, []);
   }, [cmdInput, gLoading, runAnswer]);
 
   const followUp = useCallback(() => {
     const q = followInput.trim();
     if (!q || gLoading || !gAnswer) return;
     setFollowInput("");
-    runAnswer([...gAnswer.messages, { role: 'user', content: q }]);
+    runAnswer(q, gAnswer.turns);
   }, [followInput, gLoading, gAnswer, runAnswer]);
 
   useEffect(() => {
@@ -1282,6 +1300,10 @@ export default function GraphViewer3D({
     );
   }
 
+  // 答案态高亮跟随"最新一轮"的命中子图
+  const gLastTurn = gAnswer && gAnswer.turns.length > 0 ? gAnswer.turns[gAnswer.turns.length - 1] : null;
+  const gCited = gLastTurn?.citedEntityIds ?? [];
+
   return (
     <div className="flex h-full">
       {/* 图谱主区域 */}
@@ -1335,7 +1357,7 @@ export default function GraphViewer3D({
                   {cmdExamples.map((ex, i) => (
                     <button
                       key={i}
-                      onMouseDown={(e) => { e.preventDefault(); if (gLoading) return; setCmdInput(ex); setCmdFocused(false); runAnswer([{ role: 'user', content: ex }]); }}
+                      onMouseDown={(e) => { e.preventDefault(); if (gLoading) return; setCmdInput(ex); setCmdFocused(false); runAnswer(ex, []); }}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-gray-300 hover:bg-cyan-950/30 hover:text-cyan-100"
                     >
                       <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-400/80" />
@@ -1612,7 +1634,7 @@ export default function GraphViewer3D({
             nodeVal={(node: any) => node.val}
             nodeColor={(node: any) => {
               // 答案态：命中子图的节点保持高亮，其余压暗
-              if (gAnswer && gAnswer.citedEntityIds.length > 0 && !gAnswer.citedEntityIds.includes(node.id)) {
+              if (gCited.length > 0 && !gCited.includes(node.id)) {
                 return hexToRgba(node.color, 0.12);
               }
               if (isFocusDimmedNode(node.id)) {
@@ -1631,8 +1653,8 @@ export default function GraphViewer3D({
               const sourceId = getLinkEndpointId(link.source);
               const targetId = getLinkEndpointId(link.target);
               // 答案态：只保留命中子图内部的连线，其余压暗
-              if (gAnswer && gAnswer.citedEntityIds.length > 0) {
-                const inSub = gAnswer.citedEntityIds.includes(sourceId) && gAnswer.citedEntityIds.includes(targetId);
+              if (gCited.length > 0) {
+                const inSub = gCited.includes(sourceId) && gCited.includes(targetId);
                 return inSub ? color : hexToRgba(color, 0.08);
               }
               const focusDimmed = selectedNode
@@ -2052,79 +2074,88 @@ export default function GraphViewer3D({
               {t('cmd.done')}
             </button>
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
-            {gAnswer.messages.length > 2 && (
-              <div className="mb-3 flex flex-col gap-2 border-b border-white/5 pb-3">
-                {gAnswer.messages.slice(0, -2).map((m, i) => (
-                  m.role === 'user'
-                    ? <div key={i} className="text-[11px] text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{m.content}</div>
-                    : <div key={i} className="text-[12px] leading-relaxed text-gray-400 whitespace-pre-wrap">{m.content}</div>
-                ))}
-              </div>
-            )}
-            <p className="mb-3 text-xs text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{gAnswer.question}</p>
-            <div className="text-base font-semibold leading-relaxed text-white">{gAnswer.conclusion || t('cmd.no_answer')}</div>
-            {gAnswer.questions.length > 0 && (
-              <div className="mt-3 rounded-lg border border-violet-700/30 bg-violet-950/20 p-3">
-                <div className="mb-1.5 text-[11px] uppercase tracking-wider text-violet-300/80">{t('cmd.clarify')}</div>
-                <div className="flex flex-col gap-1.5">
-                  {gAnswer.questions.map((q, i) => (
-                    <div key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-violet-100/90">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
-                      <span>{q}</span>
+          <div ref={answerScrollRef} className="flex-1 min-h-0 overflow-y-auto p-4">
+            {gAnswer.turns.map((turn, ti) => {
+              const isLast = ti === gAnswer.turns.length - 1;
+              return (
+                <div key={ti} className={ti > 0 ? 'mt-5 border-t border-white/5 pt-5' : ''}>
+                  <p className="mb-3 text-xs text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{turn.question}</p>
+                  <div className="text-base font-semibold leading-relaxed text-white">{turn.conclusion || t('cmd.no_answer')}</div>
+                  {turn.questions.length > 0 && (
+                    <div className="mt-3 rounded-lg border border-violet-700/30 bg-violet-950/20 p-3">
+                      <div className="mb-1.5 text-[11px] uppercase tracking-wider text-violet-300/80">{t('cmd.clarify')}</div>
+                      <div className="flex flex-col gap-1.5">
+                        {turn.questions.map((q, i) => (
+                          <div key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-violet-100/90">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+                            <span>{q}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+                  {turn.reasons.length > 0 && (
+                    <>
+                      <div className="mt-4 mb-2 text-[11px] uppercase tracking-wider text-gray-500">{t('cmd.reasons')}</div>
+                      <div className="flex flex-col gap-2.5">
+                        {turn.reasons.map((r, i) => (
+                          <div key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-gray-300">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400/80" />
+                            <span>
+                              {r.text}
+                              {r.entityIds.length > 0 && (
+                                <span className="ml-1 inline-flex flex-wrap gap-1 align-middle">
+                                  {r.entityIds.map((id) => {
+                                    const s = turn.sources.find((x) => x.id === id);
+                                    if (!s) return null;
+                                    return (
+                                      <button
+                                        key={id}
+                                        onMouseEnter={() => setHovered(id)}
+                                        onMouseLeave={() => setHovered(null)}
+                                        onClick={() => focusNodeById(id)}
+                                        className="inline-flex max-w-[140px] items-center gap-1 rounded-md border border-cyan-900/40 bg-cyan-950/30 px-1.5 py-0.5 text-[11px] text-cyan-300 hover:border-cyan-500/50 hover:bg-cyan-900/40"
+                                      >
+                                        <span className="truncate">{s.name}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {isLast && turn.isDecision && !!turn.conclusion && turn.reasons.length > 0 && (
+                    <button
+                      onClick={saveDecision}
+                      disabled={gSaving}
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      {gSaving ? t('cmd.saving') : t('cmd.save_decision')}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            {gLoading && (
+              <div className={gAnswer.turns.length > 0 ? 'mt-5 border-t border-white/5 pt-5' : ''}>
+                {gPendingQ && (
+                  <p className="mb-3 text-xs text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{gPendingQ}</p>
+                )}
+                <div className="flex items-center gap-2 text-[13px] text-gray-500">
+                  <span className="block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+                  {t('cmd.thinking')}
                 </div>
               </div>
-            )}
-            {gAnswer.reasons.length > 0 && (
-              <>
-                <div className="mt-4 mb-2 text-[11px] uppercase tracking-wider text-gray-500">{t('cmd.reasons')}</div>
-                <div className="flex flex-col gap-2.5">
-                  {gAnswer.reasons.map((r, i) => (
-                    <div key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-gray-300">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400/80" />
-                      <span>
-                        {r.text}
-                        {r.entityIds.length > 0 && (
-                          <span className="ml-1 inline-flex flex-wrap gap-1 align-middle">
-                            {r.entityIds.map((id) => {
-                              const s = gAnswer.sources.find((x) => x.id === id);
-                              if (!s) return null;
-                              return (
-                                <button
-                                  key={id}
-                                  onMouseEnter={() => setHovered(id)}
-                                  onMouseLeave={() => setHovered(null)}
-                                  onClick={() => focusNodeById(id)}
-                                  className="inline-flex max-w-[140px] items-center gap-1 rounded-md border border-cyan-900/40 bg-cyan-950/30 px-1.5 py-0.5 text-[11px] text-cyan-300 hover:border-cyan-500/50 hover:bg-cyan-900/40"
-                                >
-                                  <span className="truncate">{s.name}</span>
-                                </button>
-                              );
-                            })}
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-            {gAnswer.isDecision && !!gAnswer.conclusion && gAnswer.reasons.length > 0 && (
-              <button
-                onClick={saveDecision}
-                disabled={gSaving}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
-              >
-                <Check className="h-3.5 w-3.5" />
-                {gSaving ? t('cmd.saving') : t('cmd.save_decision')}
-              </button>
             )}
           </div>
           <div className="border-t border-white/10 p-3">
-            {gAnswer.sources.length > 0 && (
-              <div className="mb-2 px-1 text-[11px] text-gray-500">{t('cmd.sources_count').replace('{n}', String(gAnswer.sources.length))}</div>
+            {gLastTurn && gLastTurn.sources.length > 0 && (
+              <div className="mb-2 px-1 text-[11px] text-gray-500">{t('cmd.sources_count').replace('{n}', String(gLastTurn.sources.length))}</div>
             )}
             <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2">
               <input

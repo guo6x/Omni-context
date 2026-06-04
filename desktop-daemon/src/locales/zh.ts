@@ -35,6 +35,7 @@ export default {
     clarify: '需要你先回答',
     save_decision: '我已决定 · 存回图谱',
     saving: '保存中…',
+    thinking: '正在思考…',
     follow_placeholder: '继续讨论 / 追问…',
     no_answer: '我的记忆里暂时没有这部分。',
     sources_count: '{n} 个来源',
