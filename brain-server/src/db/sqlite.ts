@@ -657,8 +657,13 @@ export class Database {
   async softMergeEntities(keepId: string, dropId: string): Promise<void> {
     if (!keepId || !dropId || keepId === dropId) return;
     await this.withTransaction(async () => {
-      await this.run('UPDATE relationships SET source_id = ? WHERE source_id = ?', [keepId, dropId]);
-      await this.run('UPDATE relationships SET target_id = ? WHERE target_id = ?', [keepId, dropId]);
+      // 转挂关系：OR IGNORE 跳过会撞 UNIQUE(source_id,target_id,type) 的行（keepId 已有等价关系），
+      // 否则唯一约束冲突会让整个合并事务 500 回滚、合并失败。
+      await this.run('UPDATE OR IGNORE relationships SET source_id = ? WHERE source_id = ?', [keepId, dropId]);
+      await this.run('UPDATE OR IGNORE relationships SET target_id = ? WHERE target_id = ?', [keepId, dropId]);
+      // 清掉转挂副作用：keepId 自环（dropId 原本就与 keepId 相连）+ 因冲突被 IGNORE 仍残留在 dropId 上的重复关系
+      await this.run('DELETE FROM relationships WHERE source_id = ? AND target_id = ?', [keepId, keepId]);
+      await this.run('DELETE FROM relationships WHERE source_id = ? OR target_id = ?', [dropId, dropId]);
       await this.run(
         `UPDATE entities SET metadata = json_set(COALESCE(metadata,'{}'), '$.merged_into', ?), updated_at = ? WHERE id = ?`,
         [keepId, new Date().toISOString(), dropId],
