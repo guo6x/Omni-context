@@ -209,6 +209,20 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 11,
+    name: 'add_discussions_table',
+    up: `
+      CREATE TABLE IF NOT EXISTS discussions (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        turns TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_discussions_updated ON discussions(updated_at DESC);
+    `,
+  },
 ];
 
 interface Migration {
@@ -1180,6 +1194,50 @@ export class Database {
 
   async markNotificationRead(id: string): Promise<void> {
     await this.run('UPDATE notifications SET read_status = 1 WHERE id = ?', [id]);
+  }
+
+  // ── 问大脑会话（可续聊的思考记录，独立于记忆，不进召回）──
+  async listDiscussions(limit = 50): Promise<Array<{ id: string; title: string; updated_at: string; turns: number }>> {
+    const rows = await this.all<any>(
+      'SELECT id, title, turns, updated_at FROM discussions ORDER BY updated_at DESC LIMIT ?',
+      [limit]
+    );
+    return rows.map((r) => {
+      let n = 0;
+      try { const a = JSON.parse(r.turns); n = Array.isArray(a) ? a.length : 0; } catch { /* */ }
+      return { id: r.id, title: r.title, updated_at: r.updated_at, turns: n };
+    });
+  }
+
+  async getDiscussion(id: string): Promise<{ id: string; title: string; turns: any[]; created_at: string; updated_at: string } | null> {
+    const rows = await this.all<any>('SELECT * FROM discussions WHERE id = ?', [id]);
+    const row = rows[0];
+    if (!row) return null;
+    let turns: any[] = [];
+    try { const a = JSON.parse(row.turns); if (Array.isArray(a)) turns = a; } catch { /* */ }
+    return { id: row.id, title: row.title, turns, created_at: row.created_at, updated_at: row.updated_at };
+  }
+
+  async upsertDiscussion(input: { id?: string | null; title: string; turns: any[] }): Promise<{ id: string }> {
+    const now = new Date().toISOString();
+    const turnsStr = JSON.stringify(input.turns || []);
+    if (input.id) {
+      const rows = await this.all<any>('SELECT id FROM discussions WHERE id = ?', [input.id]);
+      if (rows[0]) {
+        await this.run('UPDATE discussions SET title = ?, turns = ?, updated_at = ? WHERE id = ?', [input.title, turnsStr, now, input.id]);
+        return { id: input.id };
+      }
+    }
+    const id = input.id || uuidv4();
+    await this.run(
+      'INSERT INTO discussions (id, title, turns, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+      [id, input.title, turnsStr, now, now]
+    );
+    return { id };
+  }
+
+  async deleteDiscussion(id: string): Promise<void> {
+    await this.run('DELETE FROM discussions WHERE id = ?', [id]);
   }
 
   /**

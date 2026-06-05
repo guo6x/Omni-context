@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Upload, Trash2, Star, Search, RefreshCw, Database, FileUp } from 'lucide-react';
+import { X, Upload, Trash2, Star, Search, RefreshCw, Database, FileUp, Copy, Bookmark } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { useToast } from '@/hooks/useToast';
@@ -37,7 +37,7 @@ function sourceBadge(it: ReviewItem): { text: string; cls: string } {
 
 export default function MemoryManager({ onClose }: { onClose: () => void }) {
   const toast = useToast();
-  const [tab, setTab] = useState<'browse' | 'import'>('browse');
+  const [tab, setTab] = useState<'browse' | 'import' | 'favorites'>('browse');
 
   // ── 浏览 ──
   const [items, setItems] = useState<ReviewItem[]>([]);
@@ -70,6 +70,28 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
   }, [source, q, toast]);
 
   useEffect(() => { if (tab === 'browse') load(); }, [tab, source, load]);
+
+  // ── 收藏夹（存在 archival、打"收藏"标签的记忆）──
+  const [favs, setFavs] = useState<Array<{ id: string; content: string; summary?: string; createdAt?: string }>>([]);
+  const [favLoading, setFavLoading] = useState(false);
+  const loadFavs = useCallback(async () => {
+    setFavLoading(true);
+    try {
+      const r = await apiFetch('/api/memory/archival');
+      const data = await r.json();
+      setFavs((Array.isArray(data) ? data : []).filter((x: any) => Array.isArray(x.tags) && x.tags.includes('收藏')));
+    } catch { toast.error('加载失败'); }
+    finally { setFavLoading(false); }
+  }, [toast]);
+  useEffect(() => { if (tab === 'favorites') loadFavs(); }, [tab, loadFavs]);
+  async function copyFav(content: string) {
+    try { await navigator.clipboard.writeText(content); toast.success('已复制'); }
+    catch { toast.error('复制失败'); }
+  }
+  async function removeFav(id: string) {
+    try { await apiFetch(`/api/memory/archival/${id}`, { method: 'DELETE' }); setFavs((xs) => xs.filter((x) => x.id !== id)); toast.success('已取消收藏'); }
+    catch { toast.error('操作失败'); }
+  }
 
   async function callTool(name: string, args: any) {
     const r = await apiFetch(`/api/mcp/tool/${name}`, { method: 'POST', body: JSON.stringify({ arguments: args }) });
@@ -144,10 +166,10 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex gap-1 px-5 pt-3">
-          {(['browse', 'import'] as const).map((k) => (
+          {(['browse', 'favorites', 'import'] as const).map((k) => (
             <button key={k} onClick={() => setTab(k)}
               className={`px-3 py-1.5 text-sm rounded-lg ${tab === k ? 'bg-cyan-500/15 text-cyan-300' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-              {k === 'browse' ? '浏览' : '导入'}
+              {k === 'browse' ? '浏览' : k === 'favorites' ? '收藏' : '导入'}
             </button>
           ))}
         </div>
@@ -223,6 +245,34 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
               </div>
             )}
             <div className="text-[11px] text-gray-500 mt-4">每段对话会跑一次 LLM 抽取（用你配置的模型）。导入在后台进行，可关闭此窗口。</div>
+          </div>
+        )}
+
+        {tab === 'favorites' && (
+          <div className="flex flex-col min-h-0 flex-1">
+            <div className="px-5 pt-3 flex items-center gap-2">
+              <div className="text-xs text-gray-500">收藏的洞见 · 共 {favs.length} 条（在洞察通知 / 问大脑里点 ★ 收藏）</div>
+              <button onClick={loadFavs} className="ml-auto p-1.5 text-gray-400 hover:text-white"><RefreshCw className={`w-4 h-4 ${favLoading ? 'animate-spin' : ''}`} /></button>
+            </div>
+            <div className="overflow-y-auto px-5 py-2 flex-1">
+              {favs.length === 0 && !favLoading && (
+                <div className="text-sm text-gray-500 text-center py-12">还没有收藏。看到好洞见时点一下 ★ 就收进这里。</div>
+              )}
+              {favs.map((it) => (
+                <div key={it.id} className="group flex items-start gap-2 py-2.5 border-t border-white/5">
+                  <Bookmark className="w-4 h-4 text-yellow-400 fill-yellow-400/30 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    {it.summary && <div className="text-sm text-white truncate">{it.summary}</div>}
+                    <div className="text-xs text-gray-400 whitespace-pre-wrap line-clamp-4">{it.content}</div>
+                    {it.createdAt && <div className="text-[10px] text-gray-600 mt-1">{it.createdAt.slice(0, 10)}</div>}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => copyFav(it.content)} title="复制" className="p-1.5 text-gray-500 hover:text-cyan-300"><Copy className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => removeFav(it.id)} title="取消收藏" className="p-1.5 text-gray-500 hover:text-rose-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

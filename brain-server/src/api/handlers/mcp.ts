@@ -1383,7 +1383,7 @@ ${gaConnBlock}`;
           }
           case 'save_decision': {
             const parsed = SaveDecisionSchema.parse(args);
-            const { situation, conclusion, cited_entity_ids, confidence, alternatives } = parsed;
+            const { situation, conclusion, cited_entity_ids, confidence, alternatives, previous_decision_id } = parsed;
 
             // Build full description: situation + decision
             const confidenceLabel = { high: '高', medium: '中', low: '低' }[confidence];
@@ -1437,6 +1437,21 @@ ${gaConnBlock}`;
                 ctx.db.bumpAccessCounts(cited_entity_ids).catch(() => {});
               } catch {
                 // best effort
+              }
+            }
+
+            // 同一会话里显式承接上一个决策（决策链：A→B→C）
+            if (previous_decision_id && previous_decision_id !== decisionEntity.id) {
+              try {
+                await ctx.db.addRelationship({
+                  source_id: decisionEntity.id,
+                  target_id: previous_decision_id,
+                  type: 'relates_to',
+                  description: '决策链：承接上一个决策',
+                  weight: 1.0,
+                });
+              } catch {
+                // duplicate is fine
               }
             }
 

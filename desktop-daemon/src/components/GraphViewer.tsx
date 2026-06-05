@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers, Bot, Send, Sparkles } from "lucide-react";
+import { BarChart3, Brain, Code, FileText, Zap, Shield, TrendingUp, Info, RotateCcw, Search, Network, MousePointer2, Pencil, Trash2, GitMerge, Check, X, GitBranch, Clock, Undo2, Tags, Target, Layers, Bot, Send, Sparkles, Copy, Bookmark, History } from "lucide-react";
 import { Entity, Relationship } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
@@ -188,7 +188,7 @@ export default function GraphViewer3D({
   const [followInput, setFollowInput] = useState("");
   // 答案卡每一轮的完整结构：多轮追问时每轮都保留自己的结论/依据/引用，
   // 历史轮和当前轮用同一套富文本渲染，不再把旧轮降级成灰色折叠块
-  type AnswerTurn = { question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[] };
+  type AnswerTurn = { question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[]; savedAsDecision?: boolean };
   const [gAnswer, setGAnswer] = useState<{ turns: AnswerTurn[] } | null>(null);
   const [gLoading, setGLoading] = useState(false);
   // 追问加载时立刻显示用户刚问的这句（答案回来前先占位），更像正常聊天
@@ -207,6 +207,11 @@ export default function GraphViewer3D({
     const el = answerScrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [gAnswer?.turns.length, gLoading]);
+  // 会话历史（可续聊）：sessionIdRef = 当前会话；lastDecisionIdRef = 决策链上一个决策（用 ref 避免异步 state 读取）
+  const sessionIdRef = useRef<string | null>(null);
+  const lastDecisionIdRef = useRef<string | null>(null);
+  const [histOpen, setHistOpen] = useState(false);
+  const [histItems, setHistItems] = useState<Array<{ id: string; title: string; updated_at: string; turns: number }>>([]);
   const [activeType, setActiveType] = useState<string>("all");
   const [activeTag, setActiveTag] = useState<string>("all");
   const [graphLoadError, setGraphLoadError] = useState<string | null>(null);
@@ -569,6 +574,18 @@ export default function GraphViewer3D({
     [graphData.nodes, entities, handleNodeClick]
   );
 
+  // 会话自动保存（upsert 到 discussions，可续聊）。best-effort，失败不打扰用户。
+  const saveSession = useCallback(async (turns: AnswerTurn[]) => {
+    if (!turns.length) return;
+    try {
+      const r = await apiFetch('/api/discussions', {
+        method: 'POST',
+        body: JSON.stringify({ id: sessionIdRef.current, title: (turns[0].question || '问大脑').slice(0, 80), turns }),
+      });
+      if (r.ok) { const d = await r.json().catch(() => null); if (d?.id) sessionIdRef.current = d.id; }
+    } catch { /* best effort */ }
+  }, []);
+
   // 调 graph_answer 跑一轮（首问/追问共用）：右栏切答案卡并高亮命中子图。
   // priorTurns 是此前已答的各轮，新的一轮追加到末尾；发给后端时把每轮压平成
   // user/assistant 消息（依据也带上），让模型看得到之前的分析。
@@ -577,6 +594,7 @@ export default function GraphViewer3D({
     setGPendingQ(question);
     setSelectedNode(null);
     setSelectedNodeIds(new Set());
+    if (priorTurns.length === 0) { sessionIdRef.current = null; lastDecisionIdRef.current = null; } // 首问 = 新会话
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
     for (const tn of priorTurns) {
       messages.push({ role: 'user', content: tn.question });
@@ -597,7 +615,7 @@ export default function GraphViewer3D({
         return;
       }
       const data = await res.json();
-      append({
+      const newTurn: AnswerTurn = {
         question,
         conclusion: data.conclusion || '',
         reasons: Array.isArray(data.reasons) ? data.reasons : [],
@@ -605,22 +623,28 @@ export default function GraphViewer3D({
         isDecision: !!data.isDecision,
         sources: Array.isArray(data.sources) ? data.sources : [],
         citedEntityIds: Array.isArray(data.citedEntityIds) ? data.citedEntityIds : [],
-      });
+      };
+      const allTurns = [...priorTurns, newTurn];
+      setGAnswer({ turns: allTurns });
+      saveSession(allTurns); // 续聊：每答完一轮就存，关掉不丢
     } catch (e) {
       append({ question, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
     } finally {
       setGLoading(false);
       setGPendingQ(null);
     }
-  }, [t]);
+  }, [t, saveSession]);
 
-  // 决策：把当前答案作为决定沉淀回图谱（复用 save_decision）
+  // 决策：把当前答案存为决定。存完【不关闭】——决策常是连续多个，方便继续讨论/做下一个；
+  // 同一会话里的后续决策通过 previous_decision_id 自动挂成决策链。
   const saveDecision = useCallback(async () => {
-    const turn = gAnswer && gAnswer.turns.length > 0 ? gAnswer.turns[gAnswer.turns.length - 1] : null;
+    const turns = gAnswer?.turns ?? [];
+    const idx = turns.length - 1;
+    const turn = idx >= 0 ? turns[idx] : null;
     if (!turn || gSaving) return;
     setGSaving(true);
     try {
-      await apiFetch('/api/mcp/tool/save_decision', {
+      const r = await apiFetch('/api/mcp/tool/save_decision', {
         method: 'POST',
         body: JSON.stringify({
           arguments: {
@@ -629,19 +653,70 @@ export default function GraphViewer3D({
             cited_entity_ids: turn.citedEntityIds,
             confidence: 'medium',
             alternatives: '',
+            previous_decision_id: lastDecisionIdRef.current || undefined,
           },
         }),
       });
-      setGAnswer(null);
-      setCmdInput("");
-      setFollowInput("");
+      if (!r.ok) throw new Error();
+      const saved = await r.json().catch(() => null);
+      if (saved?.id) lastDecisionIdRef.current = saved.id; // 决策链：下一个决策承接它
+      const nextTurns = turns.map((tn, i) => (i === idx ? { ...tn, savedAsDecision: true } : tn));
+      setGAnswer({ turns: nextTurns });
+      saveSession(nextTurns); // 把"已存决策"状态也持久化
+      toast.success(t('cmd.decision_saved'));
       onDataChanged?.();
     } catch (e) {
-      // 失败不阻塞；保留当前答案
+      toast.error(t('cmd.error'));
     } finally {
       setGSaving(false);
     }
-  }, [gAnswer, gSaving, onDataChanged]);
+  }, [gAnswer, gSaving, onDataChanged, saveSession, toast, t]);
+
+  // 历史会话：打开列表 / 载入一条续聊 / 删除
+  const openHistory = useCallback(async () => {
+    setHistOpen((v) => !v);
+    try {
+      const r = await apiFetch('/api/discussions');
+      if (r.ok) setHistItems(await r.json());
+    } catch { /* */ }
+  }, []);
+  const loadDiscussion = useCallback(async (id: string) => {
+    try {
+      const r = await apiFetch(`/api/discussions/${id}`);
+      if (!r.ok) return;
+      const d = await r.json();
+      const turns: AnswerTurn[] = Array.isArray(d.turns) ? d.turns : [];
+      if (!turns.length) return;
+      sessionIdRef.current = d.id;
+      lastDecisionIdRef.current = null;
+      setHistOpen(false);
+      setCmdFocused(false);
+      setSelectedNode(null);
+      setGAnswer({ turns });
+    } catch { /* */ }
+  }, []);
+  const deleteDiscussion = useCallback(async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try { await apiFetch(`/api/discussions/${id}`, { method: 'DELETE' }); setHistItems((xs) => xs.filter((x) => x.id !== id)); }
+    catch { /* */ }
+  }, []);
+
+  // 答案卡：复制 / 收藏一轮的洞见（结论 + 依据）
+  const turnText = (turn: AnswerTurn) => [turn.conclusion, ...turn.reasons.map((r) => '· ' + r.text)].filter(Boolean).join('\n');
+  const copyAnswer = useCallback(async (turn: AnswerTurn) => {
+    try { await navigator.clipboard.writeText(turnText(turn)); toast.success(t('actions.copied')); }
+    catch { toast.error(t('actions.copy_failed')); }
+  }, [toast, t]);
+  const favoriteAnswer = useCallback(async (turn: AnswerTurn) => {
+    try {
+      const r = await apiFetch('/api/memory/archival', {
+        method: 'POST',
+        body: JSON.stringify({ content: turnText(turn), summary: turn.question || turn.conclusion.slice(0, 60), tags: ['收藏'], importance: 0.8 }),
+      });
+      if (!r.ok) throw new Error();
+      toast.success(t('actions.favorited'));
+    } catch { toast.error(t('actions.favorite_failed')); }
+  }, [toast, t]);
 
   // 命令栏聚焦时的示例问题：尽量取自用户真实图谱(决策/原则)，不足则补静态
   const cmdExamples = useMemo(() => {
@@ -1319,12 +1394,15 @@ export default function GraphViewer3D({
               ref={cmdInputRef}
               value={cmdInput}
               onChange={(e) => setCmdInput(e.target.value)}
-              onFocus={() => setCmdFocused(true)}
+              onFocus={() => { setCmdFocused(true); setHistOpen(false); }}
               onBlur={() => setTimeout(() => setCmdFocused(false), 150)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitCommand(); } }}
               placeholder={t('cmd.placeholder')}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />
+            <button onClick={openHistory} title={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
+              <History className="h-4 w-4" />
+            </button>
             {gLoading ? (
               <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
             ) : (
@@ -1365,6 +1443,27 @@ export default function GraphViewer3D({
                     </button>
                   ))}
                 </>
+              )}
+            </div>
+          )}
+          {histOpen && (
+            <div className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-80 overflow-y-auto rounded-xl border border-white/10 bg-gray-950/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-sm">
+              <div className="px-2 pb-1.5 pt-1 text-[10px] uppercase tracking-wider text-gray-500">{t('cmd.history')}</div>
+              {histItems.length === 0 ? (
+                <div className="px-2 py-3 text-[13px] text-gray-500">{t('cmd.history_empty')}</div>
+              ) : (
+                histItems.map((h) => (
+                  <div key={h.id} className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
+                    <button onClick={() => loadDiscussion(h.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                      <Clock className="h-3.5 w-3.5 shrink-0 text-cyan-400/70" />
+                      <span className="flex-1 truncate text-[13px] text-gray-200">{h.title}</span>
+                      <span className="shrink-0 text-[10px] text-gray-600">{h.updated_at?.slice(5, 10)}</span>
+                    </button>
+                    <button onClick={(e) => deleteDiscussion(h.id, e)} title="删除" className="shrink-0 text-gray-600 opacity-0 transition-opacity hover:text-rose-400 group-hover:opacity-100">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))
               )}
             </div>
           )}
@@ -2128,7 +2227,19 @@ export default function GraphViewer3D({
                       </div>
                     </>
                   )}
-                  {isLast && turn.isDecision && !!turn.conclusion && turn.reasons.length > 0 && (
+                  {!!turn.conclusion && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <button onClick={() => copyAnswer(turn)} title={t('actions.copy')}
+                        className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-gray-400 transition-colors hover:border-cyan-500/40 hover:text-cyan-300">
+                        <Copy className="h-3 w-3" /> {t('actions.copy')}
+                      </button>
+                      <button onClick={() => favoriteAnswer(turn)} title={t('actions.favorite')}
+                        className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-gray-400 transition-colors hover:border-yellow-500/40 hover:text-yellow-300">
+                        <Bookmark className="h-3 w-3" /> {t('actions.favorite')}
+                      </button>
+                    </div>
+                  )}
+                  {isLast && turn.isDecision && !!turn.conclusion && turn.reasons.length > 0 && !turn.savedAsDecision && (
                     <button
                       onClick={saveDecision}
                       disabled={gSaving}
@@ -2137,6 +2248,11 @@ export default function GraphViewer3D({
                       <Check className="h-3.5 w-3.5" />
                       {gSaving ? t('cmd.saving') : t('cmd.save_decision')}
                     </button>
+                  )}
+                  {turn.savedAsDecision && (
+                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-green-700/40 bg-green-950/20 px-3 py-2 text-[12.5px] font-medium text-green-300">
+                      <Check className="h-3.5 w-3.5" /> {t('cmd.decision_saved')}
+                    </div>
                   )}
                 </div>
               );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle } from 'lucide-react';
+import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle, Copy, Bookmark } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useToast } from '@/hooks/useToast';
 import { apiFetch } from '@/lib/api-client';
 
 const REFRESH_INTERVAL_MS = 20_000;
@@ -32,6 +33,7 @@ interface InsightsInboxProps {
 
 export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
   const { t } = useTranslation();
+  const toast = useToast();
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +76,22 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
       fetchInsights();
     }
   }, [fetchInsights]);
+
+  const copyInsight = useCallback(async (i: Insight) => {
+    try { await navigator.clipboard.writeText(`${i.title}\n\n${i.content}`); toast.success(t('actions.copied')); }
+    catch { toast.error(t('actions.copy_failed')); }
+  }, [toast, t]);
+
+  const favoriteInsight = useCallback(async (i: Insight) => {
+    try {
+      const r = await apiFetch('/api/memory/archival', {
+        method: 'POST',
+        body: JSON.stringify({ content: `${i.title}\n\n${i.content}`, summary: i.title, tags: ['收藏'], importance: 0.8 }),
+      });
+      if (!r.ok) throw new Error();
+      toast.success(t('actions.favorited'));
+    } catch { toast.error(t('actions.favorite_failed')); }
+  }, [toast, t]);
 
   const markAllAsRead = useCallback(async () => {
     if (insights.length === 0) return;
@@ -167,13 +185,29 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
                 >
                   {formatRelative(insight.created_at)}
                 </span>
-                <button
-                  onClick={() => markAsRead(insight.id)}
-                  className="flex items-center gap-1 text-xs text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity hover:bg-cyan-500/20 px-2 py-1 rounded"
-                >
-                  <Check className="w-3 h-3" />
-                  Dismiss
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => copyInsight(insight)}
+                    title={t('actions.copy')}
+                    className="flex items-center gap-1 text-xs text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity hover:text-cyan-300 hover:bg-cyan-500/10 px-2 py-1 rounded"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => favoriteInsight(insight)}
+                    title={t('actions.favorite')}
+                    className="flex items-center gap-1 text-xs text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity hover:text-yellow-300 hover:bg-yellow-500/10 px-2 py-1 rounded"
+                  >
+                    <Bookmark className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => markAsRead(insight.id)}
+                    className="flex items-center gap-1 text-xs text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity hover:bg-cyan-500/20 px-2 py-1 rounded"
+                  >
+                    <Check className="w-3 h-3" />
+                    Dismiss
+                  </button>
+                </div>
               </div>
             </div>
           ))

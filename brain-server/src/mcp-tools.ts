@@ -122,6 +122,7 @@ export const SaveDecisionSchema = z.object({
   cited_entity_ids: z.array(z.string()).optional().default([]),
   confidence: z.enum(['high', 'medium', 'low']).optional().default('medium'),
   alternatives: z.string().optional().default(''),
+  previous_decision_id: z.string().optional(),
 });
 
 export const AnalyzeDecisionSchema = z.object({

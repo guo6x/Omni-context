@@ -718,6 +718,47 @@ export const handleNotificationRoutes = [
   }
 ];
 
+// 问大脑会话历史（可续聊的思考记录）。静态 /api/discussions 必须先于 :id 动态路径。
+export const handleDiscussionRoutes = [
+  {
+    method: 'GET' as const,
+    path: '/api/discussions',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const items = await ctx.db.listDiscussions(50);
+      sendResponse(res, 200, items);
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/discussions',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ id?: string; title?: string; turns?: any[] }>(req);
+      if (!body.title || !Array.isArray(body.turns)) {
+        return sendError(res, 400, 'title 和 turns 必填');
+      }
+      const r = await ctx.db.upsertDiscussion({ id: body.id, title: body.title, turns: body.turns });
+      sendResponse(res, 200, r);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/discussions/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const d = await ctx.db.getDiscussion(params.id);
+      if (!d) return sendError(res, 404, 'Discussion not found');
+      sendResponse(res, 200, d);
+    }
+  },
+  {
+    method: 'DELETE' as const,
+    path: '/api/discussions/:id',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      await ctx.db.deleteDiscussion(params.id);
+      sendResponse(res, 200, { success: true });
+    }
+  },
+];
+
 export { handleSettingsRoutes } from './settings.js';
 export { handleAdminRoutes } from './admin.js';
 export { handleIngestRoutes } from './ingest.js';
