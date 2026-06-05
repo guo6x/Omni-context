@@ -455,7 +455,7 @@ export class Database {
       `SELECT * FROM entities
        WHERE json_extract(metadata, '$.merged_into') IS NULL
        ORDER BY updated_at DESC LIMIT ?`,
-      [Math.max(1, Math.min(limit, 1000))]
+      [Math.max(1, Math.min(limit, 20000))]
     );
     return rows.map(row => this.rowToEntity(row));
   }
@@ -953,7 +953,7 @@ export class Database {
     }
 
     query += ' ORDER BY weight DESC, last_activated DESC LIMIT ?';
-    params.push(Math.max(1, Math.min(limit, 3000)));
+    params.push(Math.max(1, Math.min(limit, 60000)));
 
     const rows = await this.all<any>(query, params);
     return rows.map(row => ({
