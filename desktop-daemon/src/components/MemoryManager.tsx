@@ -204,9 +204,9 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
               className={`mt-4 border border-dashed border-cyan-500/35 rounded-xl py-8 text-center ${importing ? 'opacity-60' : 'cursor-pointer hover:bg-cyan-500/5'}`}>
               <FileUp className="w-6 h-6 mx-auto text-cyan-400" />
               <div className="text-sm mt-2 text-gray-200">{importing ? '处理中…' : '选择导出文件'}</div>
-              <div className="text-[11px] text-gray-500 mt-1">conversations.json（ChatGPT/Claude） · My Activity.json（Gemini）</div>
+              <div className="text-[11px] text-gray-500 mt-1">conversations.json / chat.html（ChatGPT/Claude） · My Activity（Gemini，HTML 或 JSON 都行）</div>
             </div>
-            <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={onFile} />
+            <input ref={fileRef} type="file" accept=".json,.html,.htm,application/json,text/html" className="hidden" onChange={onFile} />
             <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
               导入最近 <input value={limit} onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))} placeholder="全部"
                 className="w-16 text-center bg-gray-800 border border-white/10 rounded px-2 py-1 text-white outline-none" /> 段（留空 = 全部）
