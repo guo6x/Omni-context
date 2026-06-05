@@ -188,7 +188,7 @@ export default function GraphViewer3D({
   const [followInput, setFollowInput] = useState("");
   // 答案卡每一轮的完整结构：多轮追问时每轮都保留自己的结论/依据/引用，
   // 历史轮和当前轮用同一套富文本渲染，不再把旧轮降级成灰色折叠块
-  type AnswerTurn = { question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[]; savedAsDecision?: boolean };
+  type AnswerTurn = { question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[]; savedAsDecision?: boolean; favorited?: boolean };
   const [gAnswer, setGAnswer] = useState<{ turns: AnswerTurn[] } | null>(null);
   const [gLoading, setGLoading] = useState(false);
   // 追问加载时立刻显示用户刚问的这句（答案回来前先占位），更像正常聊天
@@ -707,13 +707,26 @@ export default function GraphViewer3D({
     try { await navigator.clipboard.writeText(turnText(turn)); toast.success(t('actions.copied')); }
     catch { toast.error(t('actions.copy_failed')); }
   }, [toast, t]);
-  const favoriteAnswer = useCallback(async (turn: AnswerTurn) => {
+  const favoriteAnswer = useCallback(async (turn: AnswerTurn, idx: number) => {
+    if (turn.favorited) { toast.success(t('actions.favorited')); return; }
+    const content = turnText(turn);
     try {
-      const r = await apiFetch('/api/memory/archival', {
-        method: 'POST',
-        body: JSON.stringify({ content: turnText(turn), summary: turn.question || turn.conclusion.slice(0, 60), tags: ['收藏'], importance: 0.8 }),
+      // 去重：已有一模一样的收藏就不再重复存
+      const existing = await apiFetch('/api/memory/archival').then((r) => (r.ok ? r.json() : [])).catch(() => []);
+      const dup = Array.isArray(existing) && existing.some((x: any) => Array.isArray(x.tags) && x.tags.includes('收藏') && x.content === content);
+      if (!dup) {
+        const r = await apiFetch('/api/memory/archival', {
+          method: 'POST',
+          body: JSON.stringify({ content, summary: turn.question || turn.conclusion.slice(0, 60), tags: ['收藏'], importance: 0.8 }),
+        });
+        if (!r.ok) throw new Error();
+      }
+      setGAnswer((prev) => {
+        if (!prev) return prev;
+        const next = prev.turns.slice();
+        if (next[idx]) next[idx] = { ...next[idx], favorited: true };
+        return { turns: next };
       });
-      if (!r.ok) throw new Error();
       toast.success(t('actions.favorited'));
     } catch { toast.error(t('actions.favorite_failed')); }
   }, [toast, t]);
@@ -785,13 +798,14 @@ export default function GraphViewer3D({
         return;
       }
       if (e.key === 'Escape') {
+        if (histOpen) { setHistOpen(false); return; }
         if (gAnswer) { setGAnswer(null); setCmdInput(""); setFollowInput(""); setSelectedNode(null); return; }
         if (selectedNodeIds.size > 0) { setSelectedNodeIds(new Set()); setSelectedNode(null); }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedNodeIds.size, gAnswer]);
+  }, [selectedNodeIds.size, gAnswer, histOpen]);
 
   // 进入编辑模式：把当前选中节点字段填到表单
   const enterEditMode = useCallback(() => {
@@ -2233,9 +2247,9 @@ export default function GraphViewer3D({
                         className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-gray-400 transition-colors hover:border-cyan-500/40 hover:text-cyan-300">
                         <Copy className="h-3 w-3" /> {t('actions.copy')}
                       </button>
-                      <button onClick={() => favoriteAnswer(turn)} title={t('actions.favorite')}
-                        className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-gray-400 transition-colors hover:border-yellow-500/40 hover:text-yellow-300">
-                        <Bookmark className="h-3 w-3" /> {t('actions.favorite')}
+                      <button onClick={() => favoriteAnswer(turn, ti)} title={t('actions.favorite')}
+                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] transition-colors ${turn.favorited ? 'border-yellow-500/40 text-yellow-300' : 'border-white/10 text-gray-400 hover:border-yellow-500/40 hover:text-yellow-300'}`}>
+                        <Bookmark className={`h-3 w-3 ${turn.favorited ? 'fill-yellow-400/40' : ''}`} /> {turn.favorited ? t('actions.favorited') : t('actions.favorite')}
                       </button>
                     </div>
                   )}

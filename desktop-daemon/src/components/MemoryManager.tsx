@@ -74,6 +74,7 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
   // ── 收藏夹（存在 archival、打"收藏"标签的记忆）──
   const [favs, setFavs] = useState<Array<{ id: string; content: string; summary?: string; createdAt?: string }>>([]);
   const [favLoading, setFavLoading] = useState(false);
+  const [favDetail, setFavDetail] = useState<{ id: string; content: string; summary?: string; createdAt?: string } | null>(null);
   const loadFavs = useCallback(async () => {
     setFavLoading(true);
     try {
@@ -159,7 +160,7 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl border border-white/10 bg-gray-900 shadow-2xl shadow-black/50" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl border border-white/10 bg-gray-900 shadow-2xl shadow-black/50" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
           <div className="flex items-center gap-2 text-white font-semibold"><Database className="w-4 h-4 text-cyan-400" /> 记忆管理</div>
           <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"><X className="w-4 h-4" /></button>
@@ -261,11 +262,11 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
               {favs.map((it) => (
                 <div key={it.id} className="group flex items-start gap-2 py-2.5 border-t border-white/5">
                   <Bookmark className="w-4 h-4 text-yellow-400 fill-yellow-400/30 mt-0.5 shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    {it.summary && <div className="text-sm text-white truncate">{it.summary}</div>}
+                  <button onClick={() => setFavDetail(it)} title="点击放大查看" className="min-w-0 flex-1 text-left">
+                    {it.summary && <div className="text-sm text-white truncate group-hover:text-cyan-200">{it.summary}</div>}
                     <div className="text-xs text-gray-400 whitespace-pre-wrap line-clamp-4">{it.content}</div>
                     {it.createdAt && <div className="text-[10px] text-gray-600 mt-1">{it.createdAt.slice(0, 10)}</div>}
-                  </div>
+                  </button>
                   <div className="flex items-center gap-1 shrink-0">
                     <button onClick={() => copyFav(it.content)} title="复制" className="p-1.5 text-gray-500 hover:text-cyan-300"><Copy className="w-3.5 h-3.5" /></button>
                     <button onClick={() => removeFav(it.id)} title="取消收藏" className="p-1.5 text-gray-500 hover:text-rose-400"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -273,6 +274,23 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {favDetail && (
+          <div className="absolute inset-0 z-10 flex flex-col rounded-2xl bg-gray-900" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
+              <div className="flex items-center gap-2 min-w-0 text-white font-semibold">
+                <Bookmark className="w-4 h-4 text-yellow-400 fill-yellow-400/30 shrink-0" />
+                <span className="truncate">{favDetail.summary || '收藏'}</span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => copyFav(favDetail.content)} title="复制" className="p-1.5 text-gray-400 hover:text-cyan-300"><Copy className="w-4 h-4" /></button>
+                <button onClick={() => setFavDetail(null)} title="返回" className="p-1.5 text-gray-400 hover:text-white"><X className="w-4 h-4" /></button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4 text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">{favDetail.content}</div>
+            {favDetail.createdAt && <div className="px-5 py-2 text-[10px] text-gray-600 border-t border-white/10">{favDetail.createdAt.slice(0, 10)}</div>}
           </div>
         )}
       </div>

@@ -37,6 +37,7 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [favIds, setFavIds] = useState<Set<string>>(new Set());
 
   const fetchInsights = useCallback(async () => {
     try {
@@ -83,15 +84,23 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
   }, [toast, t]);
 
   const favoriteInsight = useCallback(async (i: Insight) => {
+    if (favIds.has(i.id)) { toast.success(t('actions.favorited')); return; }
+    const content = `${i.title}\n\n${i.content}`;
     try {
-      const r = await apiFetch('/api/memory/archival', {
-        method: 'POST',
-        body: JSON.stringify({ content: `${i.title}\n\n${i.content}`, summary: i.title, tags: ['收藏'], importance: 0.8 }),
-      });
-      if (!r.ok) throw new Error();
+      // 去重：已有一模一样的收藏就不再重复存
+      const existing = await apiFetch('/api/memory/archival').then((r) => (r.ok ? r.json() : [])).catch(() => []);
+      const dup = Array.isArray(existing) && existing.some((x: any) => Array.isArray(x.tags) && x.tags.includes('收藏') && x.content === content);
+      if (!dup) {
+        const r = await apiFetch('/api/memory/archival', {
+          method: 'POST',
+          body: JSON.stringify({ content, summary: i.title, tags: ['收藏'], importance: 0.8 }),
+        });
+        if (!r.ok) throw new Error();
+      }
+      setFavIds((s) => new Set(s).add(i.id));
       toast.success(t('actions.favorited'));
     } catch { toast.error(t('actions.favorite_failed')); }
-  }, [toast, t]);
+  }, [favIds, toast, t]);
 
   const markAllAsRead = useCallback(async () => {
     if (insights.length === 0) return;
@@ -196,9 +205,9 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
                   <button
                     onClick={() => favoriteInsight(insight)}
                     title={t('actions.favorite')}
-                    className="flex items-center gap-1 text-xs text-gray-400 opacity-60 group-hover:opacity-100 transition-opacity hover:text-yellow-300 hover:bg-yellow-500/10 px-2 py-1 rounded"
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-opacity ${favIds.has(insight.id) ? 'text-yellow-300 opacity-100' : 'text-gray-400 opacity-60 group-hover:opacity-100 hover:text-yellow-300 hover:bg-yellow-500/10'}`}
                   >
-                    <Bookmark className="w-3 h-3" />
+                    <Bookmark className={`w-3 h-3 ${favIds.has(insight.id) ? 'fill-yellow-400/40' : ''}`} />
                   </button>
                   <button
                     onClick={() => markAsRead(insight.id)}
