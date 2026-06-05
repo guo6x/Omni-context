@@ -706,7 +706,7 @@ export default function SettingsPanel({
                             <input
                               type="range"
                               min={50}
-                              max={1000}
+                              max={20000}
                               step={50}
                               value={sliderVal}
                               onChange={(e) => setCapDraft(Number(e.target.value))}
@@ -716,9 +716,15 @@ export default function SettingsPanel({
                               className="flex-1 accent-cyan-400"
                               aria-label={t('settings.graph_node_cap')}
                             />
-                            <span className="w-12 text-right font-mono text-sm text-gray-300">{sliderVal}</span>
+                            <button
+                              onClick={() => { onUpdateAppearance({ graphNodeCap: 20000 }); setCapDraft(null); }}
+                              className="shrink-0 px-2.5 py-1.5 rounded-lg border text-xs text-gray-400 border-white/10 hover:bg-white/5 transition-colors"
+                            >
+                              {t('settings.graph_node_cap_all')}
+                            </button>
+                            <span className="w-14 text-right font-mono text-sm text-gray-300">{sliderVal}</span>
                           </div>
-                          {sliderVal > 600 && (
+                          {sliderVal > 2000 && (
                             <p className="text-xs text-amber-400/80">{t('settings.graph_node_cap_warn')}</p>
                           )}
                         </>

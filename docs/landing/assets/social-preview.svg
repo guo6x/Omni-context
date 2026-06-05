@@ -12,21 +12,34 @@
       <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:0.08" />
       <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:0" />
     </radialGradient>
+    <linearGradient id="oink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7df9ff"/>
+      <stop offset="0.55" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#0ea5c4"/>
+    </linearGradient>
+    <radialGradient id="ocore" cx="50%" cy="45%" r="58%">
+      <stop offset="0" stop-color="#e6fdff"/>
+      <stop offset="1" stop-color="#19c4e0"/>
+    </radialGradient>
   </defs>
 
   <!-- Background -->
   <rect width="1280" height="640" fill="url(#bg)" />
   <ellipse cx="640" cy="320" rx="500" ry="300" fill="url(#glow)" />
 
-  <!-- Icon / Logo mark -->
-  <rect x="540" y="140" width="200" height="200" rx="40" fill="none" stroke="url(#text)" stroke-width="4" />
-  <polygon points="580,200 580,300 660,260" fill="url(#text)" />
-  <polygon points="700,200 700,300 620,260" fill="url(#text)" />
-  <!-- Connection dots -->
-  <circle cx="540" cy="200" r="8" fill="#22d3ee" />
-  <circle cx="680" cy="340" r="6" fill="#a855f7" />
-  <circle cx="600" cy="360" r="6" fill="#22d3ee" />
-  <circle cx="740" cy="240" r="5" fill="#a855f7" />
+  <!-- Icon / Logo mark (brand: ink ring + graph + glowing core) -->
+  <g transform="translate(540,140) scale(2)">
+    <path d="M84.4 63.2 A36 36 0 1 1 84.4 36.8" fill="none" stroke="url(#oink)" stroke-width="6" stroke-linecap="round"/>
+    <g stroke="#7df9ff" stroke-width="2.4" opacity="0.65" stroke-linecap="round">
+      <line x1="50" y1="51" x2="50" y2="32"/>
+      <line x1="50" y1="51" x2="68" y2="61"/>
+      <line x1="50" y1="51" x2="33" y2="61"/>
+    </g>
+    <circle cx="50" cy="32" r="5" fill="#00f2fe"/>
+    <circle cx="68" cy="61" r="4.5" fill="#a855f7"/>
+    <circle cx="33" cy="61" r="4.5" fill="#22d3ee"/>
+    <circle cx="50" cy="51" r="9" fill="url(#ocore)"/>
+  </g>
 
   <!-- Title -->
   <text x="640" y="410" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="56" font-weight="800" fill="white">Omni-Context</text>

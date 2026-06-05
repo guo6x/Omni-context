@@ -577,8 +577,8 @@ async function buildGraphContext(
   let relationships: any[] = [];
 
   if (!body.entityId && !body.query) {
-    // 节点上限由前端按设备/用户自定义传入，这里夹到 [50,1000]
-    const cap = Math.min(Math.max(Number(body.limit) || 300, 50), 1000);
+    // 节点上限由前端按设备/用户自定义传入，这里夹到 [50,20000]（重度用户可拉到"全部显示"）
+    const cap = Math.min(Math.max(Number(body.limit) || 300, 50), 20000);
     entities = await ctx.db.getRecentEntities(cap);
     const total = await ctx.db.getEntityCount();
     const visibleEntityIds = new Set(entities.map((entity) => entity.id));

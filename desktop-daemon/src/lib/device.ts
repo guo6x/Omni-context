@@ -11,8 +11,8 @@ export function getDeviceNodeCap(): number {
   return 150;
 }
 
-/** 解析最终生效的节点上限：自定义(>0)优先并夹到 [50,1000]，否则按设备自动。 */
+/** 解析最终生效的节点上限：自定义(>0)优先并夹到 [50,20000]，否则按设备自动。 */
 export function resolveNodeCap(custom: number | undefined | null): number {
-  if (custom && custom > 0) return Math.min(Math.max(custom, 50), 1000);
+  if (custom && custom > 0) return Math.min(Math.max(custom, 50), 20000);
   return getDeviceNodeCap();
 }
