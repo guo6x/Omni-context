@@ -458,6 +458,22 @@ export default function GraphViewer3D({
     return { nodes, links };
   }, [relationships, visibleEntities, mstMode]);
 
+  // 大图布局：节点越多斥力越强 + 连线更长，避免全部显示时挤成中心"毛球"。
+  // react-force-graph 默认斥力(~-30)只够几十个节点，上千节点必塌成一团。
+  useEffect(() => {
+    const fg = graphRef.current;
+    const n = graphData.nodes.length;
+    if (!fg || typeof fg.d3Force !== 'function' || n === 0) return;
+    const charge = fg.d3Force('charge');
+    if (charge && typeof charge.strength === 'function') {
+      charge.strength(-Math.max(40, Math.min(300, n * 0.1)));
+      if (typeof charge.distanceMax === 'function') charge.distanceMax(Math.min(1500, Math.max(400, n * 0.5)));
+    }
+    const link = fg.d3Force('link');
+    if (link && typeof link.distance === 'function') link.distance(n > 600 ? 50 : 34);
+    if (typeof fg.d3ReheatSimulation === 'function') fg.d3ReheatSimulation();
+  }, [graphData.nodes.length, is3D, ForceGraph]);
+
   const selectedNeighborhoodIds = useMemo(() => {
     if (!selectedNode) return new Set<string>();
     const ids = new Set<string>([selectedNode.id]);
@@ -1263,8 +1279,8 @@ export default function GraphViewer3D({
         ctx.fillText(node.glyph || '•', node.x, node.y);
       }
 
-      // 名称标签
-      if (globalScale > 0.5) {
+      // 名称标签：只在节点够大 / 悬停 / 选中时画，避免大图上千个标签糊成一片 + 卡顿
+      if (isHover || isSelected || nodeSize * globalScale > 7) {
         const fontSize = Math.max(10 / globalScale, 3);
         ctx.font = `${isSelected || isHover ? 'bold ' : ''}${fontSize}px Inter, sans-serif`;
         ctx.textAlign = 'center';
@@ -1791,7 +1807,11 @@ export default function GraphViewer3D({
             linkDirectionalParticles={(link: any) => {
               const sourceId = getLinkEndpointId(link.source);
               const targetId = getLinkEndpointId(link.target);
-              if (selectedNode && sourceId !== selectedNode.id && targetId !== selectedNode.id) return 0;
+              if (selectedNode) {
+                return (sourceId === selectedNode.id || targetId === selectedNode.id) ? Math.max(1, Math.round((link.weight || 1) * 2)) : 0;
+              }
+              // 无选中时：大图(>400 节点)关流动粒子省性能，小图保留动效
+              if (graphData.nodes.length > 400) return 0;
               return Math.max(1, Math.round((link.weight || 1) * 2));
             }}
             linkDirectionalParticleSpeed={0.006}
@@ -1814,8 +1834,8 @@ export default function GraphViewer3D({
             // 力导向参数
             d3AlphaDecay={0.02}
             d3VelocityDecay={0.3}
-            warmupTicks={100}
-            cooldownTicks={200}
+            warmupTicks={graphData.nodes.length > 600 ? 200 : 100}
+            cooldownTicks={graphData.nodes.length > 600 ? 400 : 200}
           />
         )}
       </div>
