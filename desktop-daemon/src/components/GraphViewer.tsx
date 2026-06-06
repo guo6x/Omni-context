@@ -175,6 +175,9 @@ export default function GraphViewer3D({
   const { confirm, dialog } = useConfirm();
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
+  // onEngineStop 每次引擎停止都会触发；用此标记保证 zoomToFit 每批数据只自动框一次，
+  // 不打断用户之后的手动缩放/拖动。数据或 2D/3D 切换时在下方布局 effect 里重置。
+  const didFitRef = useRef(false);
   // react-force-graph 只在挂载时量一次父容器、之后仅听 window.resize；右侧面板
   // 出现/消失改变容器宽度时画布尺寸不会更新（半边消失）。用 ResizeObserver 显式喂宽高。
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -457,6 +460,23 @@ export default function GraphViewer3D({
 
     return { nodes, links };
   }, [relationships, visibleEntities, mstMode]);
+
+  // 大图布局：随节点数增大斥力 + 连线距离，避免节点全挤成中心“毛球”。
+  // 关键：不调 d3ReheatSimulation()——3D 下命令式 reheat 会打断相机初始定位导致纯黑（已踩坑，见 0cb65b7）。
+  // 改力后靠当前 cooldown 自然收敛，相机由 ForceGraph 的 onEngineStop→zoomToFit 兜底。
+  useEffect(() => {
+    const fg = graphRef.current;
+    const n = graphData.nodes.length;
+    if (!fg || typeof fg.d3Force !== 'function' || n === 0) return;
+    const charge = fg.d3Force('charge');
+    if (charge && typeof charge.strength === 'function') {
+      charge.strength(-Math.max(40, Math.min(300, n * 0.1)));
+      if (typeof charge.distanceMax === 'function') charge.distanceMax(Math.min(1500, Math.max(400, n * 0.5)));
+    }
+    const link = fg.d3Force('link');
+    if (link && typeof link.distance === 'function') link.distance(n > 600 ? 50 : 34);
+    didFitRef.current = false; // 数据/模式变了，允许下次布局收敛时自动框一次
+  }, [graphData.nodes.length, is3D, ForceGraph]);
 
   const selectedNeighborhoodIds = useMemo(() => {
     if (!selectedNode) return new Set<string>();
@@ -1816,6 +1836,13 @@ export default function GraphViewer3D({
             d3VelocityDecay={0.3}
             warmupTicks={100}
             cooldownTicks={200}
+            // 布局收敛后把相机/视野框住所有节点：无论力把节点摊多开都能看到，
+            // 同时是防“相机看向空处导致黑屏”的兜底保险（替代被 reheat 打断的初始定位）。
+            onEngineStop={() => {
+              if (didFitRef.current) return;       // 只在首次/数据变化后自动框一次
+              didFitRef.current = true;
+              try { graphRef.current?.zoomToFit(400, 80); } catch {}
+            }}
           />
         )}
       </div>
