@@ -1,41 +1,153 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
-  TouchableOpacity,
+  Pressable,
   RefreshControl,
   ActivityIndicator,
   TextInput,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useHUD } from '@/components/HUD';
 import { syncService } from '@/services/syncService';
-import { Memory } from '@/types';
+import { Entity, EntityType } from '@/types';
 import { format } from 'date-fns';
 
-const TYPE_COLORS: Record<Memory['type'], string> = {
-  note: '#22d3ee', // cyan-400
-  task: '#c084fc', // purple-400
-  idea: '#9333ea', // purple-600
-  reference: '#164e63', // cyan-900
+// 实体类型颜色映射
+const TYPE_COLORS: Record<EntityType, string> = {
+  principle: '#f97316',
+  evidence: '#22c55e',
+  concept: '#22d3ee',
+  tool: '#a855f7',
+  person: '#ec4899',
+  project: '#f59e0b',
+  code_snippet: '#14b8a6',
+  architecture_pattern: '#8b5cf6',
+  bug_vulnerability: '#ef4444',
+  business_logic: '#06b6d4',
+  critical_review: '#f43f5e',
+  capture_snapshot: '#71717a',
+  memory: '#64748b',
+  note: '#64748b',
+  task: '#eab308',
+  idea: '#f472b6',
+  reference: '#71717a',
 };
+
+// 实体类型显示名称
+const TYPE_LABELS: Record<EntityType, string> = {
+  principle: '原则',
+  evidence: '证据',
+  concept: '概念',
+  tool: '工具',
+  person: '人物',
+  project: '项目',
+  code_snippet: '代码',
+  architecture_pattern: '架构',
+  bug_vulnerability: '漏洞',
+  business_logic: '业务',
+  critical_review: '评价',
+  capture_snapshot: '快照',
+  memory: '记忆',
+  note: '笔记',
+  task: '任务',
+  idea: '想法',
+  reference: '参考',
+};
+
+// 显示的类型筛选选项
+const FILTER_TYPES: EntityType[] = ['note', 'task', 'idea', 'reference', 'concept', 'project'];
+
+// 优化后的列表项组件（记忆化）
+const EntityItem = memo(({ 
+  item, 
+  onSelect 
+}: { 
+  item: Entity, 
+  onSelect?: (entity: Entity) => void 
+}) => {
+  return (
+    <Pressable 
+      style={styles.itemContainer}
+      onPress={() => onSelect?.(item)}
+    >
+      <View style={[styles.itemAccent, { backgroundColor: TYPE_COLORS[item.type] }]} />
+      <View style={styles.itemContent}>
+        <Text style={styles.itemTitle} numberOfLines={2}>
+          {item.name}
+        </Text>
+        {item.description ? (
+          <Text style={styles.itemDescription} numberOfLines={3}>
+            {item.description}
+          </Text>
+        ) : null}
+        <View style={styles.itemMetaRow}>
+          <Text style={styles.itemTypeLabel}>{TYPE_LABELS[item.type]}</Text>
+          <Text style={styles.itemDate}>
+            {format(new Date(item.created_at), 'MM/dd HH:mm')}
+          </Text>
+        </View>
+        {item.tags && item.tags.length > 0 ? (
+          <View style={styles.itemTagsRow}>
+            {item.tags.slice(0, 3).map((tag) => (
+              <View key={tag} style={styles.itemTag}>
+                <Text style={styles.itemTagText}>#{tag}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+      </View>
+      {(item as any).synced === false ? (
+        <View style={styles.syncIndicator} />
+      ) : null}
+    </Pressable>
+  );
+});
+
+// 筛选按钮组件
+const FilterButton = memo(({
+  type,
+  selected,
+  onPress
+}: {
+  type: EntityType | null,
+  selected: boolean,
+  onPress: () => void
+}) => {
+  return (
+    <Pressable
+      style={[
+        styles.filterButton,
+        selected && (type ? { backgroundColor: TYPE_COLORS[type] } : styles.filterButtonSelected)
+      ]}
+      onPress={onPress}
+    >
+      <Text style={[
+        styles.filterButtonText,
+        selected && styles.filterButtonTextSelected
+      ]}>
+        {type ? TYPE_LABELS[type] : '全部'}
+      </Text>
+    </Pressable>
+  );
+});
 
 export function MemoryListScreen() {
   const { t } = useTranslation();
   const { showMessage } = useHUD();
-  const [memories, setMemories] = useState<Memory[]>([]);
+  const [entities, setEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<Memory['type'] | null>(null);
+  const [selectedType, setSelectedType] = useState<EntityType | null>(null);
 
-  const loadMemories = useCallback(async () => {
+  const loadEntities = useCallback(async () => {
     try {
-      const data = await syncService.getMemories();
-      setMemories(data);
+      const data = await syncService.getEntities();
+      setEntities(data);
     } catch (error) {
       showMessage((error as Error).message, 'error');
     } finally {
@@ -45,113 +157,93 @@ export function MemoryListScreen() {
   }, [showMessage]);
 
   useEffect(() => {
-    loadMemories();
-  }, [loadMemories]);
+    loadEntities();
+  }, [loadEntities]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    loadMemories();
-  }, [loadMemories]);
+    loadEntities();
+  }, [loadEntities]);
 
   const handleSearch = useCallback(async (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      const results = await syncService.searchMemories(query);
-      setMemories(results);
+      const results = await syncService.searchEntities(query);
+      setEntities(results);
     } else {
-      loadMemories();
+      loadEntities();
     }
-  }, [loadMemories]);
+  }, [loadEntities]);
 
-  const filteredMemories = selectedType
-    ? memories.filter(m => m.type === selectedType)
-    : memories;
+  const handleEntitySelect = useCallback((entity: Entity) => {
+    console.log('Selected entity:', entity);
+  }, []);
 
-  const renderMemory = useCallback(({ item }: { item: Memory }) => (
-    <TouchableOpacity className="flex-row bg-black/40 rounded-xl mb-4 overflow-hidden border border-white/10" activeOpacity={0.7}>
-      <View className="w-1" style={{ backgroundColor: TYPE_COLORS[item.type] }} />
-      <View className="flex-1 p-4">
-        <Text className="text-[#e8e8e8] text-base leading-6 mb-2" numberOfLines={3}>
-          {item.content}
-        </Text>
-        <View className="flex-row justify-between items-center">
-          <Text className="text-gray-500 text-xs">{t(`memory.${item.type}`)}</Text>
-          <Text className="text-gray-500 text-xs">
-            {format(item.createdAt, 'MM/dd HH:mm')}
-          </Text>
-        </View>
-        {item.tags.length > 0 && (
-          <View className="flex-row flex-wrap gap-1 mt-2">
-            {item.tags.slice(0, 3).map(tag => (
-              <View key={tag} className="bg-white/5 px-2 py-0.5 rounded">
-                <Text className="text-cyan-400 text-xs">#{tag}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-      {!item.synced && <View className="w-2 h-2 rounded-full bg-yellow-500 absolute top-2 right-2" />}
-    </TouchableOpacity>
-  ), [t]);
+  const handleTypeSelect = useCallback((type: EntityType | null) => {
+    setSelectedType(type);
+  }, []);
+
+  const filteredEntities = selectedType
+    ? entities.filter(e => e.type === selectedType)
+    : entities;
+
+  const renderEntity = useCallback(({ item }: { item: Entity }) => (
+    <EntityItem item={item} onSelect={handleEntitySelect} />
+  ), [handleEntitySelect]);
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
-        <View className="flex-1 items-center justify-center">
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#22d3ee" />
-          <Text className="text-gray-400 mt-4">{t('common.loading')}</Text>
+          <Text style={styles.loadingText}>加载中...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
-      <View className="px-5 py-4 border-b border-white/10">
-        <Text className="text-[#e8e8e8] text-2xl font-bold">{t('memory.title')}</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>记忆</Text>
       </View>
 
-      <View className="px-5 py-4">
+      <View style={styles.searchContainer}>
         <TextInput
-          className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base"
+          style={styles.searchInput}
           value={searchQuery}
           onChangeText={handleSearch}
-          placeholder={t('common.search')}
+          placeholder="搜索..."
           placeholderTextColor="#64748b"
         />
       </View>
 
-      <View className="flex-row px-5 pb-4 gap-2">
-        <TouchableOpacity
-          className={`px-4 py-2 rounded-2xl border ${!selectedType ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
-          onPress={() => setSelectedType(null)}
-        >
-          <Text className={`text-sm ${!selectedType ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}>
-            全部
-          </Text>
-        </TouchableOpacity>
-        {(['note', 'task', 'idea', 'reference'] as const).map(type => (
-          <TouchableOpacity
+      <View style={styles.filtersContainer}>
+        <FilterButton
+          type={null}
+          selected={selectedType === null}
+          onPress={() => handleTypeSelect(null)}
+        />
+        {FILTER_TYPES.map((type) => (
+          <FilterButton
             key={type}
-            className={`px-4 py-2 rounded-2xl border ${selectedType === type ? 'border-transparent' : 'bg-black/40 border-white/10'}`}
-            style={selectedType === type ? { backgroundColor: TYPE_COLORS[type] } : {}}
-            onPress={() => setSelectedType(type)}
-          >
-            <Text
-              className={`text-sm ${selectedType === type ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}
-            >
-              {t(`memory.${type}`)}
-            </Text>
-          </TouchableOpacity>
+            type={type}
+            selected={selectedType === type}
+            onPress={() => handleTypeSelect(type)}
+          />
         ))}
       </View>
 
       <FlatList
-        data={filteredMemories}
-        renderItem={renderMemory}
-        keyExtractor={item => item.id}
-        className="px-5 pt-2"
+        data={filteredEntities}
+        renderItem={renderEntity}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={10}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -160,30 +252,210 @@ export function MemoryListScreen() {
           />
         }
         ListEmptyComponent={
-          <View className="items-center justify-center py-16 px-6">
-            <View className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 items-center justify-center mb-5 shadow-[0_0_25px_rgba(34,211,238,0.15)]">
-              <Text className="text-3xl">🧠</Text>
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconContainer}>
+              <Text style={styles.emptyIcon}>🧠</Text>
             </View>
-            <Text className="text-[#e8e8e8] text-base font-semibold mb-2">
-              {searchQuery ? '没有匹配的记忆' : t('memory.noMemories')}
+            <Text style={styles.emptyTitle}>
+              {searchQuery ? '没有匹配的实体' : '还没有记忆'}
             </Text>
-            <Text className="text-gray-500 text-sm text-center leading-5 max-w-[280px]">
+            <Text style={styles.emptyDescription}>
               {searchQuery
-                ? '尝试更短的关键词、不同的拼写，或先在 Quick Capture 中沉淀一些内容。'
-                : '使用 Quick Capture 快速记录想法、任务或参考资料；它们会自动同步到 Brain Server。'}
+                ? '尝试更短的关键词或不同的拼写'
+                : '同步服务器数据或使用 Quick Capture 开始记录。'}
             </Text>
-            {!searchQuery && (
-              <TouchableOpacity
-                className="mt-6 px-5 py-3 rounded-xl bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]"
+            {!searchQuery ? (
+              <Pressable
+                style={styles.emptySyncButton}
                 onPress={handleRefresh}
-                activeOpacity={0.85}
               >
-                <Text className="text-[#0a0b12] text-sm font-bold">立即同步</Text>
-              </TouchableOpacity>
-            )}
+                <Text style={styles.emptySyncButtonText}>立即同步</Text>
+              </Pressable>
+            ) : null}
           </View>
         }
       />
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0a0b12',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  headerTitle: {
+    color: '#e8e8e8',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  searchInput: {
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    color: '#e8e8e8',
+    fontSize: 16,
+  },
+  filtersContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    gap: 8,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  filterButtonSelected: {
+    backgroundColor: '#22d3ee',
+    borderColor: '#22d3ee',
+  },
+  filterButtonText: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  filterButtonTextSelected: {
+    color: '#0a0b12',
+    fontWeight: 'bold',
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#9ca3af',
+    marginTop: 16,
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  itemAccent: {
+    width: 4,
+  },
+  itemContent: {
+    flex: 1,
+    padding: 16,
+  },
+  itemTitle: {
+    color: '#e8e8e8',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  itemDescription: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  itemMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  itemTypeLabel: {
+    color: '#6b7280',
+    fontSize: 12,
+  },
+  itemDate: {
+    color: '#6b7280',
+    fontSize: 12,
+  },
+  itemTagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 8,
+  },
+  itemTag: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  itemTagText: {
+    color: '#22d3ee',
+    fontSize: 12,
+  },
+  syncIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#eab308',
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 64,
+    paddingHorizontal: 24,
+  },
+  emptyIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: 'rgba(34,211,238,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(34,211,238,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  emptyIcon: {
+    fontSize: 32,
+  },
+  emptyTitle: {
+    color: '#e8e8e8',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptyDescription: {
+    color: '#6b7280',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 280,
+  },
+  emptySyncButton: {
+    marginTop: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#22d3ee',
+  },
+  emptySyncButtonText: {
+    color: '#0a0b12',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+});

@@ -1,6 +1,6 @@
 import { api } from './api';
 import * as localDb from './localDb';
-import { Memory, SyncStatus } from '@/types';
+import { Entity, SyncStatus } from '@/types';
 
 type SyncCallback = (status: SyncStatus) => void;
 
@@ -36,7 +36,7 @@ class SyncService {
 
   private async updatePendingCount(): Promise<void> {
     try {
-      const unsynced = await localDb.getUnsyncedMemories();
+      const unsynced = await localDb.getUnsyncedEntities();
       this.updateStatus({ pending: unsynced.length });
     } catch (error) {
       console.error('Failed to update pending count:', error);
@@ -56,7 +56,7 @@ class SyncService {
     this.updateStatus({ syncing: true, error: null });
 
     try {
-      const unsynced = await localDb.getUnsyncedMemories();
+      const unsynced = await localDb.getUnsyncedEntities();
 
       if (unsynced.length === 0) {
         this.updateStatus({
@@ -70,15 +70,10 @@ class SyncService {
       // 逐条上传，单条失败不阻塞其他记录；只标记真正成功的为 synced
       let successCount = 0;
       let lastError: string | null = null;
-      for (const memory of unsynced) {
-        const res = await api.createMemory({
-          content: memory.content,
-          type: memory.type,
-          tags: memory.tags,
-          metadata: memory.metadata,
-        });
+      for (const entity of unsynced) {
+        const res = await api.addEntity(entity);
         if (res.success) {
-          await localDb.markMemorySynced(memory.id);
+          await localDb.markEntitySynced(entity.id);
           successCount++;
         } else {
           lastError = res.error ?? 'Sync failed';
@@ -99,40 +94,39 @@ class SyncService {
     }
   }
 
-  async pullFromServer(): Promise<Memory[]> {
+  async pullFromServer(): Promise<Entity[]> {
     if (!api.isConfigured()) {
       return [];
     }
 
     try {
-      const lastSync = this.status.lastSync;
-      const result = await api.getMemories(lastSync ?? undefined);
+      // 并行获取实体和关系
+      const [entitiesResult, relationshipsResult] = await Promise.all([
+        api.getEntities({ limit: 1000 }),
+        // 获取关系 - 我们先获取知识图谱来获取关系
+        api.getKnowledgeGraph()
+      ]);
 
-      if (!result.success || !result.data) return [];
+      if (!entitiesResult.success || !entitiesResult.data) return [];
 
-      const merged: Memory[] = [];
-      for (const incoming of result.data) {
-        const local = await localDb.getMemoryById(incoming.id);
-        // 冲突解决：
-        //   - 没有本地记录：直接落库
-        //   - 本地未同步且修改更新：保留本地（用户尚未上传的编辑优先）
-        //   - 服务端 updatedAt 严格更新：覆盖
-        //   - 否则保持本地不变
-        if (!local) {
-          await localDb.addMemory({ ...incoming, synced: true });
-          merged.push(incoming);
-          continue;
-        }
-        if (!local.synced && local.updatedAt >= (incoming.updatedAt ?? 0)) {
-          continue;
-        }
-        if ((incoming.updatedAt ?? 0) > (local.updatedAt ?? 0)) {
-          await localDb.addMemory({ ...incoming, synced: true });
-          merged.push(incoming);
-        }
-      }
+      const serverEntities = entitiesResult.data.items;
+      const serverRelationships = relationshipsResult.success && relationshipsResult.data
+        ? relationshipsResult.data.edges.map(edge => ({
+            id: edge.id,
+            source_id: edge.source,
+            target_id: edge.target,
+            type: edge.type,
+            description: edge.description,
+            weight: edge.weight,
+            created_at: new Date().toISOString(),
+            last_activated: new Date().toISOString(),
+          }))
+        : [];
+
+      await localDb.syncFromServer(serverEntities, serverRelationships);
+      
       await this.updatePendingCount();
-      return merged;
+      return serverEntities;
     } catch (error) {
       console.error('Failed to pull from server:', error);
       return [];
@@ -162,11 +156,11 @@ class SyncService {
     return { ...this.status };
   }
 
-  async addMemory(memory: Memory): Promise<void> {
-    await localDb.addMemory(memory);
+  async addEntity(entity: Entity): Promise<void> {
+    await localDb.addEntity(entity);
     await this.updatePendingCount();
 
-    if (api.isConfigured() && !memory.synced) {
+    if (api.isConfigured() && (entity as any).synced === false) {
       // sync() 内部已捕获错误并写入 status.error；
       // 这里仍包一层 catch，防止 unhandled rejection 出现在 RN 红屏
       this.sync().catch((err) => {
@@ -176,26 +170,26 @@ class SyncService {
     }
   }
 
-  async updateMemory(id: string, updates: Partial<Memory>): Promise<void> {
-    await localDb.updateMemory(id, updates);
+  async updateEntity(id: string, updates: Partial<Entity>): Promise<void> {
+    await localDb.updateEntity(id, updates);
     await this.updatePendingCount();
   }
 
-  async deleteMemory(id: string): Promise<void> {
-    await localDb.deleteMemory(id);
+  async deleteEntity(id: string): Promise<void> {
+    await localDb.deleteEntity(id);
     await this.updatePendingCount();
     
     if (api.isConfigured()) {
-      await api.deleteMemory(id);
+      await api.deleteEntity(id);
     }
   }
 
-  async getMemories(limit?: number, offset?: number): Promise<Memory[]> {
-    return localDb.getMemories(limit, offset);
+  async getEntities(limit?: number, offset?: number): Promise<Entity[]> {
+    return localDb.getEntities(limit, offset);
   }
 
-  async searchMemories(query: string): Promise<Memory[]> {
-    return localDb.searchMemories(query);
+  async searchEntities(query: string): Promise<Entity[]> {
+    return localDb.searchEntitiesLocal(query);
   }
 }
 

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
@@ -11,22 +10,24 @@ import {
 } from 'react-native';
 import { useHUD } from './HUD';
 import { syncService } from '@/services/syncService';
-import { Memory } from '@/types';
-import { colors, spacing, typography } from '@/utils/theme';
+import { Entity, EntityType } from '@/types';
 import { useTranslation } from 'react-i18next';
 
-const MEMORY_TYPES: Memory['type'][] = ['note', 'task', 'idea', 'reference'];
+const ENTITY_TYPES: EntityType[] = ['note', 'task', 'idea', 'reference', 'concept', 'principle'];
 
 export function QuickCapture() {
   const { t } = useTranslation();
   const { showMessage } = useHUD();
   const [content, setContent] = useState('');
+  const [title, setTitle] = useState('');
   const [tags, setTags] = useState('');
-  const [type, setType] = useState<Memory['type']>('note');
+  const [type, setType] = useState<EntityType>('note');
   const [isCapturing, setIsCapturing] = useState(false);
 
   const handleCapture = useCallback(async () => {
-    if (!content.trim()) {
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+    if (!trimmedTitle && !trimmedContent) {
       showMessage(t('capture.placeholder'), 'warning');
       return;
     }
@@ -34,20 +35,24 @@ export function QuickCapture() {
     setIsCapturing(true);
 
     try {
-      const memory: Memory = {
+      const entity: Entity & { synced?: boolean } = {
         // Date.now() 单独使用在快速连续点击下会撞 ID；加上随机后缀
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-        content: content.trim(),
+        name: trimmedTitle || trimmedContent.slice(0, 60) + (trimmedContent.length > 60 ? '...' : ''),
         type,
+        description: trimmedContent,
         tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        source_file: 'quick_capture',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        access_count: 0,
         synced: false,
       };
 
-      await syncService.addMemory(memory);
+      await syncService.addEntity(entity);
       
       setContent('');
+      setTitle('');
       setTags('');
       showMessage(t('capture.success'), 'success');
     } catch (error) {
@@ -55,7 +60,7 @@ export function QuickCapture() {
     } finally {
       setIsCapturing(false);
     }
-  }, [content, tags, type, showMessage, t]);
+  }, [content, title, tags, type, showMessage, t]);
 
   return (
     <KeyboardAvoidingView
@@ -66,6 +71,17 @@ export function QuickCapture() {
         className="p-5"
         keyboardShouldPersistTaps="handled"
       >
+        <View className="mb-6">
+          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.title') || 'Title'}</Text>
+          <TextInput
+            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base"
+            value={title}
+            onChangeText={setTitle}
+            placeholder={t('capture.titlePlaceholder') || 'Enter a title...'}
+            placeholderTextColor="#64748b"
+          />
+        </View>
+
         <View className="mb-6">
           <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.content')}</Text>
           <TextInput
@@ -83,16 +99,16 @@ export function QuickCapture() {
         <View className="mb-6">
           <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.type')}</Text>
           <View className="flex-row flex-wrap gap-2">
-            {MEMORY_TYPES.map(memoryType => (
+            {ENTITY_TYPES.map(entityType => (
               <TouchableOpacity
-                key={memoryType}
-                className={`px-4 py-2 rounded-full border ${type === memoryType ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
-                onPress={() => setType(memoryType)}
+                key={entityType}
+                className={`px-4 py-2 rounded-full border ${type === entityType ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
+                onPress={() => setType(entityType)}
               >
                 <Text
-                  className={`text-sm ${type === memoryType ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}
+                  className={`text-sm ${type === entityType ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}
                 >
-                  {t(`memory.${memoryType}`)}
+                  {t(`memory.${entityType}`) || entityType}
                 </Text>
               </TouchableOpacity>
             ))}

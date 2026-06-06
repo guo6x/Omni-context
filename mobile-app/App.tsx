@@ -11,11 +11,15 @@ import './locales';
 
 function ApiConfigProvider({ children }: { children: React.ReactNode }) {
   const serverUrl = useSettings((s) => s.serverUrl);
+  const authToken = useSettings((s) => s.authToken);
   useEffect(() => {
     if (serverUrl && serverUrl.trim()) {
-      api.configure({ baseUrl: serverUrl.trim() });
+      api.configure({ 
+        baseUrl: serverUrl.trim(), 
+        authToken: authToken?.trim()
+      });
     }
-  }, [serverUrl]);
+  }, [serverUrl, authToken]);
   return <>{children}</>;
 }
 

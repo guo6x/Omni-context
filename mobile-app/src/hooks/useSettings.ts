@@ -8,10 +8,9 @@ interface SettingsState extends AppSettings {
   setLanguage: (language: 'zh' | 'en') => void;
   setSyncEnabled: (enabled: boolean) => void;
   setServerUrl: (url: string) => void;
+  setAuthToken: (token: string) => void;
   setAutoSync: (autoSync: boolean) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
-  setPairConfig: (host: string, port: number, code: string) => void;
-  clearPairConfig: () => void;
   reset: () => void;
 }
 
@@ -20,11 +19,9 @@ const defaultSettings: AppSettings = {
   language: 'zh',
   syncEnabled: false,
   serverUrl: '',
+  authToken: '',
   autoSync: true,
   notificationsEnabled: true,
-  pairCode: '',
-  pairHost: '',
-  pairPort: 3001,
 };
 
 export const useSettings = create<SettingsState>()(
@@ -35,10 +32,9 @@ export const useSettings = create<SettingsState>()(
       setLanguage: (language) => set({ language }),
       setSyncEnabled: (syncEnabled) => set({ syncEnabled }),
       setServerUrl: (serverUrl) => set({ serverUrl }),
+      setAuthToken: (authToken) => set({ authToken }),
       setAutoSync: (autoSync) => set({ autoSync }),
       setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
-      setPairConfig: (pairHost, pairPort, pairCode) => set({ pairHost, pairPort, pairCode }),
-      clearPairConfig: () => set({ pairCode: '', pairHost: '', pairPort: 3001 }),
       reset: () => set(defaultSettings),
     }),
     {
