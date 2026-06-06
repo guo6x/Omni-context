@@ -45,7 +45,7 @@ export function EntityDetailScreen() {
       }
     }).catch(() => {});
 
-    api.getEntityGraphContext(entityId).then((result) => {
+    api.getGraphNeighborhood(entityId).then((result) => {
       setIsLoading(false);
       if (result.success && result.data) {
         setNeighbors(result.data.entities.filter((e: any) => e.id !== entityId));

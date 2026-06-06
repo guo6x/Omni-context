@@ -109,7 +109,7 @@ class SyncService {
 
       if (!entitiesResult.success || !entitiesResult.data) return [];
 
-      const serverEntities = entitiesResult.data.items;
+      const serverEntities = entitiesResult.data;
       const serverRelationships = relationshipsResult.success && relationshipsResult.data
         ? relationshipsResult.data.edges.map(edge => ({
             id: edge.id,

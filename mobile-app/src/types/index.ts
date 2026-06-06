@@ -129,22 +129,21 @@ export interface VectorSearchResult {
 
 // 系统统计
 export interface SystemStats {
-  totalEntities: number;
-  totalRelationships: number;
-  entitiesByType: Record<string, number>;
-  recentActivity: {
-    entitiesLast24h: number;
-    entitiesLastWeek: number;
-    entitiesLastMonth: number;
+  database: {
+    entities: number;
+    relationships: number;
+    principles: number;
+    corePrinciples: number;
+    evidence: number;
   };
-  memoryStats: {
-    coreMemories: number;
-    archivalMemories: number;
-    avgAccessCount: number;
+  coreMemory: {
+    totalItems: number;
+    categories: Record<string, number>;
   };
-  graphStats: {
-    density: number;
-    avgConnections: number;
+  archivalMemory: {
+    totalItems: number;
+    totalSize: number;
+    topTags: string[];
   };
 }
 

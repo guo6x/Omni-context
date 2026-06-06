@@ -210,8 +210,33 @@ export const handleEntityRoutes = [
     method: 'GET' as const,
     path: '/api/entities',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const entities = await ctx.db.getRecentEntities(100);
+      const q = new URL(req.url || '', 'http://localhost').searchParams;
+      const limit = q.get('limit') ? Number(q.get('limit')) : undefined;
+      const queryStr = q.get('q') || undefined;
+      const type = q.get('type') || undefined;
+      
+      let entities;
+      if (queryStr) {
+        entities = await ctx.db.searchEntities(queryStr, limit || 10, type);
+      } else {
+        entities = await ctx.db.getRecentEntities(limit || 100);
+      }
       sendResponse(res, 200, entities);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/entities/:id/neighborhood',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const q = new URL(req.url || '', 'http://localhost').searchParams;
+      const depth = q.get('depth') ? Number(q.get('depth')) : 1;
+      const neighborhood = await ctx.db.getGraphNeighborhood(params.id, depth);
+      sendResponse(res, 200, {
+        nodes: neighborhood.nodes,
+        edges: neighborhood.edges,
+        entities: neighborhood.nodes,
+        relationships: neighborhood.edges
+      });
     }
   },
   {
@@ -326,6 +351,16 @@ export const handleEntityRoutes = [
         weight: body.weight,
       });
       sendResponse(res, 201, relationship);
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/relationships',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const q = new URL(req.url || '', 'http://localhost').searchParams;
+      const limit = q.get('limit') ? Number(q.get('limit')) : 200;
+      const relationships = await ctx.db.getRelationships(limit);
+      sendResponse(res, 200, relationships);
     }
   },
   {

@@ -33,7 +33,7 @@ export function KnowledgeGraphScreen() {
 
   const [showNodeModal, setShowNodeModal] = useState(false);
   const [newNodeLabel, setNewNodeLabel] = useState('');
-  const [newNodeType, setNewNodeType] = useState<KnowledgeNode['type']>('concept');
+  const [newNodeType, setNewNodeType] = useState<'concept' | 'entity' | 'topic'>('concept');
 
   useEffect(() => {
     if (error) {
@@ -55,7 +55,7 @@ export function KnowledgeGraphScreen() {
       const node: KnowledgeNode = {
         id: Date.now().toString(),
         label: newNodeLabel.trim(),
-        type: newNodeType,
+        type: newNodeType as any,
         connections: [],
         weight: 1,
         color: colors.nodeTypes[newNodeType],

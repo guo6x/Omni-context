@@ -80,7 +80,7 @@ export function SettingsScreen() {
 
   const handleSaveConfig = useCallback(() => {
     setServerUrl(serverUrlInput);
-    setAuthToken(authTokenInput);
+    setAuthToken(authTokenInput || '');
     if (serverUrlInput.trim()) {
       api.configure({ 
         baseUrl: serverUrlInput.trim(), 
@@ -229,7 +229,7 @@ export function SettingsScreen() {
                 placeholder="http://192.168.1.x:3001"
                 placeholderTextColor="#64748b"
                 autoCapitalize="none"
-                autoCorrect={false"
+                autoCorrect={false}
                 keyboardType="url"
               />
               

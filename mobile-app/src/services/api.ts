@@ -20,11 +20,7 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-// 搜索实体响应
-interface SearchEntitiesResponse {
-  items: Entity[];
-  total: number;
-}
+
 
 class ApiClient {
   private client: AxiosInstance | null = null;
@@ -95,7 +91,7 @@ class ApiClient {
     type?: string;
     source?: string;
     q?: string;
-  }): Promise<ApiResponse<SearchEntitiesResponse>> {
+  }): Promise<ApiResponse<Entity[]>> {
     if (!this.client) {
       return { success: false, error: 'API client not configured' };
     }
@@ -116,7 +112,7 @@ class ApiClient {
     }
   }
 
-  async getEntity(id: string): Promise<ApiResponse<Entity>> {
+  async getEntity(id: string): Promise<ApiResponse<{ entity: Entity; relationships: Relationship[] }>> {
     if (!this.client) {
       return { success: false, error: 'API client not configured' };
     }
@@ -173,27 +169,39 @@ class ApiClient {
 
   // ============ 搜索相关 API ============
 
-  async searchEntities(query: string, limit?: number, type?: string): Promise<ApiResponse<Entity[]>> {
+  async searchEntities(query: string, limit?: number): Promise<ApiResponse<Entity[]>> {
     if (!this.client) {
       return { success: false, error: 'API client not configured' };
     }
 
     try {
-      const response = await this.client.post('/api/entities/search', { q: query, limit, type });
-      return { success: true, data: response.data.items || response.data };
+      const response = await this.client.post('/api/entities/search', { query, limit });
+      return { success: true, data: response.data };
     } catch (error) {
       return { success: false, error: (error as Error).message };
     }
   }
 
-  async vectorSearch(embedding: number[], limit?: number): Promise<ApiResponse<VectorSearchResult[]>> {
+  async searchArchival(query: string, limit?: number): Promise<ApiResponse<any[]>> {
     if (!this.client) {
       return { success: false, error: 'API client not configured' };
     }
 
     try {
-      const response = await this.client.post('/api/entities/vector-search', {
-        embedding, limit });
+      const response = await this.client.post('/api/memory/archival/search', { query, limit });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
+  async searchCore(query: string, limit?: number): Promise<ApiResponse<any[]>> {
+    if (!this.client) {
+      return { success: false, error: 'API client not configured' };
+    }
+
+    try {
+      const response = await this.client.post('/api/memory/core/search', { query, limit });
       return { success: true, data: response.data };
     } catch (error) {
       return { success: false, error: (error as Error).message };
@@ -211,12 +219,11 @@ class ApiClient {
     }
 
     try {
-      const params = new URLSearchParams();
-      if (includeHistorical) params.set('includeHistorical', 'true');
-      const response = await this.client.get(
-        `/api/entities/${entityId}/relationships?${params.toString()}`
-      );
-      return { success: true, data: response.data };
+      const res = await this.getEntity(entityId);
+      if (res.success && res.data) {
+        return { success: true, data: res.data.relationships };
+      }
+      return { success: false, error: res.error || 'Failed to get relationships' };
     } catch (error) {
       return { success: false, error: (error as Error).message };
     }
@@ -235,7 +242,14 @@ class ApiClient {
       const response = await this.client.get(
         `/api/entities/${entityId}/neighborhood?${params.toString()}`
       );
-      return { success: true, data: response.data };
+      const data = response.data;
+      return {
+        success: true,
+        data: {
+          entities: data.entities || data.nodes || [],
+          relationships: data.relationships || data.edges || [],
+        }
+      };
     } catch (error) {
       return { success: false, error: (error as Error).message };
     }
@@ -255,8 +269,8 @@ class ApiClient {
         this.client.get('/api/relationships?limit=2000'),
       ]);
 
-      const entities: Entity[] = entitiesRes.data.items || entitiesRes.data;
-      const relationships: Relationship[] = relationshipsRes.data.items || relationshipsRes.data;
+      const entities: Entity[] = entitiesRes.data;
+      const relationships: Relationship[] = relationshipsRes.data;
 
       // 构建 connections
       const nodeMap = new Map<string, string[]>();
@@ -290,7 +304,7 @@ class ApiClient {
     }
 
     try {
-      const response = await this.client.get('/api/admin/stats');
+      const response = await this.client.get('/api/stats');
       return { success: true, data: response.data };
     } catch (error) {
       return { success: false, error: (error as Error).message };
