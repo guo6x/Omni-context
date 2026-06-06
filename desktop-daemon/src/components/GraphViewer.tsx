@@ -1296,27 +1296,10 @@ export default function GraphViewer3D({
     [hovered, selectedNode, selectedNodeIds, legendHighlightType, isFocusDimmedNode]
   );
 
-  // 节点3D标签
+  // 节点3D标签 - 暂时禁用自定义 3D 标签来修复节点不显示问题
   const nodeThreeObject = useCallback((node: any) => {
-    // 3D 模式使用 CSS2D 标签
-    if (typeof window === "undefined") return null;
-    try {
-      const { CSS2DObject } = require("three/examples/jsm/renderers/CSS2DRenderer");
-      const div = document.createElement("div");
-      // 在名称前加上类型表意符号，让 3D 标签也能一眼区分节点类型
-      div.textContent = `${node.glyph || "•"} ${node.name}`;
-      div.style.color = node.color;
-      div.style.fontSize = "11px";
-      div.style.fontFamily = "Inter, sans-serif";
-      div.style.padding = "2px 6px";
-      div.style.borderRadius = "4px";
-      div.style.background = "rgba(10, 11, 18, 0.85)";
-      div.style.pointerEvents = "none";
-      div.style.whiteSpace = "nowrap";
-      return new CSS2DObject(div);
-    } catch {
-      return undefined; // 回退到默认渲染
-    }
+    // 暂时禁用自定义 3D 标签，使用默认渲染
+    return undefined;
   }, []);
 
   // 选中节点的邻居（连接的实体 + 关系类型 + 方向）
@@ -1826,11 +1809,8 @@ export default function GraphViewer3D({
               nodeCanvasObject,
               nodeCanvasObjectMode: () => "replace",
             })}
-            // 3D 模式配置
-            {...(is3D && {
-              nodeThreeObjectExtend: true,
-              nodeThreeObject,
-            })}
+            // 3D 模式配置 - 暂时禁用自定义 3D 标签渲染，使用默认渲染
+            {...(is3D && {})}
             // 力导向参数
             d3AlphaDecay={0.02}
             d3VelocityDecay={0.3}
