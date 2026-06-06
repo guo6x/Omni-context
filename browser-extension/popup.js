@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('askBtn')?.addEventListener('click', askBrain);
   document.getElementById('askInput')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') askBrain(); });
 
+  await initAutoCaptureToggle();
+
   localToken = await getToken();
 
   if (localToken) {
@@ -53,6 +55,18 @@ async function saveToken() {
   document.getElementById('statusText').textContent = 'Token 已保存，检查连接...';
   checkConnection();
   loadStats();
+}
+
+async function initAutoCaptureToggle() {
+  const toggle = document.getElementById('autoCaptureToggle');
+  if (!toggle) return;
+  const r = await chrome.storage.local.get('settings');
+  toggle.checked = !!(r.settings && r.settings.autoCapture);
+  toggle.addEventListener('change', async () => {
+    const cur = (await chrome.storage.local.get('settings')).settings || {};
+    cur.autoCapture = toggle.checked;
+    await chrome.storage.local.set({ settings: cur });
+  });
 }
 
 async function askBrain() {
@@ -119,21 +133,29 @@ async function capturePage() {
   if (!(await ensureToken())) return;
   let page, tab;
   try {
-    const r = await runInPage(() => ({
-      url: location.href,
-      title: document.title,
-      content: (document.body?.innerText || '').slice(0, 10000),
-    }));
-    page = r.result; tab = r.tab;
+    const [t] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!t?.id) throw new Error('no-tab');
+    tab = t;
+    // 先确保对话提取器在页面里（重载扩展后旧标签页也能用）
+    try { await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ['extractor.js'] }); } catch {}
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId: t.id },
+      func: () => {
+        const conv = globalThis.__omniExtractConversation && globalThis.__omniExtractConversation();
+        if (conv) return conv;
+        return { url: location.href, title: document.title, content: (document.body?.innerText || '').slice(0, 10000) };
+      },
+    });
+    page = res?.result;
   } catch {
     showNotification('这个页面读不了（如 chrome:// 或 PDF），换个普通网页');
     return;
   }
   if (!page?.content) { showNotification('页面没有可读文本'); return; }
 
-  showNotification('正在沉淀…');
-  const result = await sendCapture({ url: page.url || tab.url, title: page.title || tab.title, content: page.content });
-  showNotification(result ? '✓ 已提交，后台抽取中' : '✗ 提交失败，确认桌面端在运行');
+  showNotification(page.source ? `正在沉淀 ${page.source} 对话（${page.turns} 轮）…` : '正在沉淀…');
+  const result = await sendCapture({ url: page.url || tab.url, title: page.title || tab.title, content: page.content, source: page.source, preformatted: !!page.source });
+  showNotification(result ? (page.source ? `✓ 已提交 ${page.turns} 轮对话，后台抽取中` : '✓ 已提交，后台抽取中') : '✗ 提交失败，确认桌面端在运行');
   loadStats();
 }
 

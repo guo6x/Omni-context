@@ -143,6 +143,7 @@ try {
   const include = [
     'manifest.json',
     'background.js',
+    'extractor.js',
     'content.js',
     'content.css',
     'popup.html',

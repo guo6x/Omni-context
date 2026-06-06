@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Omni-Context",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Omni-Context AI Memory Browser Extension",
   "permissions": [
     "activeTab",
@@ -29,7 +29,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["extractor.js", "content.js"],
       "css": ["content.css"]
     }
   ],

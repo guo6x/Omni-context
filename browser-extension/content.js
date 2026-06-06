@@ -70,12 +70,19 @@
     if (busy) return;
     busy = true;
     button.style.opacity = '0.55';
-    showToast('正在沉淀当前页面…');
-    chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: getPagePayload() }, (resp) => {
+    const payload = getPagePayload();
+    showToast(payload.source ? `正在沉淀 ${payload.source} 对话（${payload.turns} 轮）…` : '正在沉淀当前页面…');
+    chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: payload }, (resp) => {
       busy = false;
       button.style.opacity = '1';
       if (chrome.runtime.lastError) { showToast('✗ 连不上大脑（确认桌面端在运行、token 已配）'); return; }
-      showToast(resp && resp.ok ? '✓ 已捕获，正在后台抽取' : ('✗ ' + ((resp && resp.error) || '提交失败')));
+      if (resp && resp.ok) {
+        // 手动捕获后记下签名，避免自动观察器紧接着重复沉淀同一段对话
+        if (payload.source) { try { setAutoSig(urlKey(), { sig: globalThis.__omniConversationSignature(payload), count: payload.turns }); } catch (e) {} }
+        showToast(payload.source ? `✓ 已捕获 ${payload.turns} 轮对话，后台抽取中` : '✓ 已捕获，正在后台抽取');
+      } else {
+        showToast('✗ ' + ((resp && resp.error) || '提交失败'));
+      }
     });
   });
 
@@ -98,6 +105,11 @@
   });
 
   function getPagePayload() {
+    // 优先按对话提取（ChatGPT / Claude / Gemini），拿不到再回退整页 innerText
+    const conv = globalThis.__omniExtractConversation && globalThis.__omniExtractConversation();
+    if (conv) {
+      return { url: conv.url, title: conv.title, content: conv.content, source: conv.source, turns: conv.turns, preformatted: true };
+    }
     return {
       url: window.location.href,
       title: document.title,
@@ -119,5 +131,76 @@
     toast.style.opacity = '1';
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { toast.style.opacity = '0'; }, 3200);
+  }
+
+  // ---- 自动沉淀 AI 对话（settings.autoCapture 开启时）----
+  // 仅在已识别的 AI 站点挂观察器，避免在普通网页空转。
+  let autoEnabled = false;
+  let autoObserver = null;
+  let autoTimer = null;
+  let autoInFlight = false;
+
+  function urlKey() { return location.origin + location.pathname; }
+
+  async function getAutoSig(key) {
+    try { const r = await chrome.storage.local.get('autoSig'); return (r.autoSig || {})[key] || null; }
+    catch { return null; }
+  }
+  async function setAutoSig(key, entry) {
+    try {
+      const r = await chrome.storage.local.get('autoSig');
+      const map = r.autoSig || {};
+      map[key] = entry;
+      const keys = Object.keys(map);
+      if (keys.length > 200) delete map[keys[0]]; // 控制体积
+      await chrome.storage.local.set({ autoSig: map });
+    } catch {}
+  }
+
+  async function tryAutoCapture() {
+    if (!autoEnabled || autoInFlight) return;
+    const conv = globalThis.__omniExtractConversation && globalThis.__omniExtractConversation();
+    if (!conv || conv.lastRole !== 'assistant') return; // 等这轮回答结束再沉淀
+    const sig = globalThis.__omniConversationSignature(conv);
+    const key = urlKey();
+    const prev = await getAutoSig(key);
+    if (prev && (prev.sig === sig || conv.turns <= prev.count)) return; // 没新内容/被虚拟列表截短
+    autoInFlight = true;
+    showToast(`自动沉淀 ${conv.source} 对话（${conv.turns} 轮）…`);
+    chrome.runtime.sendMessage({
+      type: 'CAPTURE_PAGE',
+      data: { url: conv.url, title: conv.title, content: conv.content, source: conv.source, turns: conv.turns, preformatted: true },
+    }, (resp) => {
+      autoInFlight = false;
+      if (chrome.runtime.lastError) return;
+      if (resp && resp.ok) { setAutoSig(key, { sig, count: conv.turns }); showToast(`✓ 已自动沉淀 ${conv.turns} 轮对话`); }
+    });
+  }
+
+  function scheduleAuto() {
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(tryAutoCapture, 3500); // 对话稳定 3.5s 后再抓（等流式输出结束）
+  }
+  function startAuto() {
+    if (autoObserver) return;
+    autoObserver = new MutationObserver(scheduleAuto);
+    autoObserver.observe(document.body, { childList: true, subtree: true });
+    scheduleAuto(); // 处理「打开时对话已存在」
+  }
+  function stopAuto() {
+    if (autoObserver) { autoObserver.disconnect(); autoObserver = null; }
+    clearTimeout(autoTimer);
+  }
+
+  if (/(^|\.)chatgpt\.com$|(^|\.)chat\.openai\.com$|(^|\.)claude\.ai$|(^|\.)gemini\.google\.com$/i.test(location.hostname)) {
+    chrome.storage.local.get('settings').then((r) => {
+      autoEnabled = !!(r.settings && r.settings.autoCapture);
+      if (autoEnabled) startAuto();
+    });
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !changes.settings) return;
+      autoEnabled = !!(changes.settings.newValue && changes.settings.newValue.autoCapture);
+      if (autoEnabled) startAuto(); else stopAuto();
+    });
   }
 })();

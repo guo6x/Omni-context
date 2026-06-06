@@ -138,8 +138,10 @@ chrome.contextMenus?.onClicked.addListener((info, tab) => {
 // --- Capture helpers ---
 
 function formatCaptureText(data) {
+  // 对话提取已自带「对话来源/标题/URL」头，直接用原文，避免二次包头
+  if (data.preformatted) return (data.content || '').slice(0, 60000);
   return [
-    `Type: ${data.type}`,
+    `Type: ${data.type || 'page'}`,
     `URL: ${data.url || ''}`,
     `Title: ${data.title || ''}`,
     '',
@@ -166,8 +168,9 @@ function sanitizeFilename(name) {
 // --- Capture entry points ---
 
 async function capturePage(data) {
+  const prefix = data.source ? data.source + '-' : '';
   return submitAndPoll({
-    filename: sanitizeFilename(data.title || data.url || 'webpage') + '.txt',
+    filename: sanitizeFilename(prefix + (data.title || data.url || 'webpage')) + '.txt',
     contentType: 'text/plain',
     base64: textToBase64(formatCaptureText(data)),
   });
