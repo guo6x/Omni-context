@@ -1,7 +1,7 @@
 {
   "name": "omni-context-mobile",
   "version": "1.0.0",
-  "main": "node_modules/expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -18,6 +18,7 @@
     "axios": "^1.6.2",
     "date-fns": "^2.30.0",
     "expo": "~49.0.0",
+    "expo-barcode-scanner": "~12.5.3",
     "expo-constants": "~14.4.2",
     "expo-linking": "~5.0.2",
     "expo-router": "~2.0.0",

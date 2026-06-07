@@ -7,7 +7,7 @@ import { AppNavigator } from '@/navigation/AppNavigator';
 import { HUDProvider } from '@/components/HUD';
 import { useSettings } from '@/hooks/useSettings';
 import { api } from '@/services/api';
-import './locales';
+import '@/locales';
 
 function ApiConfigProvider({ children }: { children: React.ReactNode }) {
   const serverUrl = useSettings((s) => s.serverUrl);

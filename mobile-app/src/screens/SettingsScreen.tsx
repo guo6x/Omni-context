@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/hooks/useSettings';
 import { useSync } from '@/hooks/useSync';
@@ -53,6 +54,7 @@ function SettingSection({ title, children }: SettingSectionProps) {
 }
 
 export function SettingsScreen() {
+  const navigation = useNavigation<any>();
   const { t } = useTranslation();
   const { showMessage } = useHUD();
   const {
@@ -79,12 +81,16 @@ export function SettingsScreen() {
   const [showConfigInput, setShowConfigInput] = useState(false);
 
   const handleSaveConfig = useCallback(() => {
+    if (!authTokenInput || !authTokenInput.trim()) {
+      showMessage('请填写配对码', 'warning');
+      return;
+    }
     setServerUrl(serverUrlInput);
-    setAuthToken(authTokenInput || '');
+    setAuthToken(authTokenInput.trim());
     if (serverUrlInput.trim()) {
       api.configure({ 
         baseUrl: serverUrlInput.trim(), 
-        authToken: authTokenInput?.trim() 
+        authToken: authTokenInput.trim() 
       });
       showMessage('配置已保存', 'success');
     }
@@ -172,6 +178,11 @@ export function SettingsScreen() {
             onPress={() => setShowConfigInput(true)}
           />
 
+          <SettingItem
+            label="扫码配对"
+            onPress={() => navigation.navigate('PairScan')}
+          />
+
           <SettingItem label="自动同步">
             <Switch
               value={autoSync}
@@ -233,12 +244,12 @@ export function SettingsScreen() {
                 keyboardType="url"
               />
               
-              <Text className="text-gray-400 text-sm mb-1 ml-1">认证 Token (可选)</Text>
+              <Text className="text-gray-400 text-sm mb-1 ml-1">配对码（必填）</Text>
               <TextInput
                 className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base mb-5"
                 value={authTokenInput}
                 onChangeText={setAuthTokenInput}
-                placeholder="留空或输入认证 Token"
+                placeholder="桌面端显示的配对码"
                 placeholderTextColor="#64748b"
                 autoCapitalize="none"
                 autoCorrect={false}

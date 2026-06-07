@@ -108,7 +108,7 @@ pub fn start() -> Result<(), String> {
         let mut cmd = Command::new(&node_exe);
         cmd.arg(path)
             .current_dir(&data_dir)
-            .env("HOST", "127.0.0.1")
+            .env("HOST", "0.0.0.0")
             .env("PORT", "3001")
             .env("DB_PATH", &db_path)
             .env("PAIR_CODE", &pair_code)

@@ -10,6 +10,7 @@ import { SearchScreen } from '@/screens/SearchScreen';
 import { EntityDetailScreen } from '@/screens/EntityDetailScreen';
 import { MemoryDetailScreen } from '@/screens/MemoryDetailScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
+import { PairScanScreen } from '@/screens/PairScanScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -75,7 +76,9 @@ const SettingsIcon = ({ color, size }: { color: string; size: number }) => (
   </Svg>
 );
 
-export function AppNavigator() {
+const RootStack = createNativeStackNavigator();
+
+function MainTabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -126,5 +129,14 @@ export function AppNavigator() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+export function AppNavigator() {
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      <RootStack.Screen name="MainTabs" component={MainTabNavigator} />
+      <RootStack.Screen name="PairScan" component={PairScanScreen} />
+    </RootStack.Navigator>
   );
 }
