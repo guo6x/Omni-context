@@ -47,6 +47,7 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
   const [mergeFrom, setMergeFrom] = useState<ReviewItem | null>(null);
+  const [detailItem, setDetailItem] = useState<ReviewItem | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -160,16 +161,16 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl border border-white/10 bg-gray-900 shadow-2xl shadow-black/50" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
-          <div className="flex items-center gap-2 text-white font-semibold"><Database className="w-4 h-4 text-cyan-400" /> 记忆管理</div>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"><X className="w-4 h-4" /></button>
+      <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)] shadow-2xl shadow-black/50" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--color-border)]">
+          <div className="flex items-center gap-2 text-[var(--color-fg)] font-semibold"><Database className="w-4 h-4 text-cyan-400" /> 记忆管理</div>
+          <button onClick={onClose} className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-accent)]/10 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex gap-1 px-5 pt-3">
           {(['browse', 'favorites', 'import'] as const).map((k) => (
             <button key={k} onClick={() => setTab(k)}
-              className={`px-3 py-1.5 text-sm rounded-lg ${tab === k ? 'bg-cyan-500/15 text-cyan-300' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${tab === k ? 'bg-[var(--color-accent)]/15 text-[var(--color-fg)] font-medium border border-[var(--color-accent)]/30' : 'text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-accent)]/5'}`}>
               {k === 'browse' ? '浏览' : k === 'favorites' ? '收藏' : '导入'}
             </button>
           ))}
@@ -180,96 +181,96 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
             <div className="px-5 pt-3 flex items-center gap-2 flex-wrap">
               {SOURCE_FILTERS.map((f) => (
                 <button key={f.key} onClick={() => setSource(f.key)}
-                  className={`text-xs rounded-full px-2.5 py-1 border ${source === f.key ? 'border-cyan-400 text-cyan-300 bg-cyan-500/10' : 'border-white/10 text-gray-400 hover:text-white'}`}>
+                  className={`text-xs rounded-full px-2.5 py-1 border transition-colors ${source === f.key ? 'border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-accent)]/10 font-medium' : 'border-[var(--color-border)] text-[var(--color-fgMuted)] hover:text-[var(--color-fg)]'}`}>
                   {f.label}{f.key && counts[f.key === '__user__' ? 'user' : f.key] != null ? ` ${counts[f.key === '__user__' ? 'user' : f.key]}` : ''}
                 </button>
               ))}
-              <div className="ml-auto flex items-center gap-1.5 rounded-lg border border-white/10 px-2">
-                <Search className="w-3.5 h-3.5 text-gray-500" />
+              <div className="ml-auto flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-2.5 bg-[var(--color-bgSubtle)]/50">
+                <Search className="w-3.5 h-3.5 text-[var(--color-fgMuted)]" />
                 <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()}
-                  placeholder="搜索…" className="bg-transparent text-sm text-white py-1.5 w-40 outline-none" />
+                  placeholder="搜索…" className="bg-transparent text-sm text-[var(--color-fg)] py-1.5 w-40 outline-none placeholder:text-[var(--color-fgMuted)]/50" />
               </div>
-              <button onClick={load} className="p-1.5 text-gray-400 hover:text-white"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></button>
+              <button onClick={load} className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] transition-colors"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></button>
             </div>
-            {mergeFrom && <div className="px-5 pt-2 text-xs text-amber-300">合并模式：点另一条把「{mergeFrom.name}」并入它 · <button onClick={() => setMergeFrom(null)} className="underline">取消</button></div>}
-            <div className="text-xs text-gray-500 px-5 pt-2">共 {total} 条</div>
+            {mergeFrom && <div className="px-5 pt-2 text-xs text-amber-500">合并模式：点另一条把「{mergeFrom.name}」并入它 · <button onClick={() => setMergeFrom(null)} className="underline font-semibold text-[var(--color-accent)]">取消</button></div>}
             <div className="overflow-y-auto px-5 py-2 flex-1">
               {items.map((it) => {
                 const b = sourceBadge(it);
+                const isCurrentMergeFrom = mergeFrom && mergeFrom.id === it.id;
                 return (
-                  <div key={it.id} className={`flex items-start gap-2 py-2.5 border-t border-white/5 ${mergeFrom && mergeFrom.id !== it.id ? 'cursor-pointer hover:bg-cyan-500/5' : ''}`}
-                    onClick={() => mergeFrom && doMerge(it)}>
+                  <div key={it.id} className={`flex items-start gap-2 py-2.5 border-t border-[var(--color-border)]/40 cursor-pointer hover:bg-[var(--color-accent)]/5 transition-colors ${isCurrentMergeFrom ? 'bg-[var(--color-accent)]/10 border-l-2 border-l-[var(--color-accent)] pl-1' : ''}`}
+                    onClick={() => mergeFrom ? doMerge(it) : setDetailItem(it)}>
                     <button onClick={(e) => { e.stopPropagation(); toggleCore(it); }} title="设/撤核心" className="mt-0.5">
-                      <Star className={`w-4 h-4 ${it.isCore ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} />
+                      <Star className={`w-4 h-4 ${it.isCore ? 'text-yellow-400 fill-yellow-400' : 'text-[var(--color-fgMuted)]/40 hover:text-yellow-400'}`} />
                     </button>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm text-white truncate">{it.name} <span className="text-[10px] text-gray-500">{it.type}{it.isCore ? ' · 核心' : ''}</span></div>
-                      {it.description && <div className="text-xs text-gray-500 line-clamp-1">{it.description}</div>}
+                      <div className="text-sm text-[var(--color-fg)] truncate font-medium">{it.name} <span className="text-[10px] text-[var(--color-fgMuted)] bg-[var(--color-bgSubtle)] px-1 rounded ml-1">{it.type}{it.isCore ? ' · 核心' : ''}</span></div>
+                      {it.description && <div className="text-xs text-[var(--color-fgMuted)] line-clamp-1 mt-0.5">{it.description}</div>}
                     </div>
-                    <span className={`text-[10px] border rounded px-1.5 py-0.5 whitespace-nowrap ${b.cls}`}>{b.text}</span>
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <button onClick={(e) => { e.stopPropagation(); setMergeFrom(it); }} className="text-xs text-gray-500 hover:text-white">合并</button>
-                      <button onClick={(e) => { e.stopPropagation(); del(it); }} className="text-gray-500 hover:text-rose-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <span className={`text-[10px] border rounded px-1.5 py-0.5 whitespace-nowrap self-center ${b.cls}`}>{b.text}</span>
+                    <div className="flex items-center gap-2 whitespace-nowrap self-center ml-2">
+                      <button onClick={(e) => { e.stopPropagation(); setMergeFrom(it); }} className="text-xs text-[var(--color-fgMuted)] hover:text-[var(--color-accent)] transition-colors">合并</button>
+                      <button onClick={(e) => { e.stopPropagation(); del(it); }} className="text-[var(--color-fgMuted)] hover:text-rose-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                 );
               })}
-              {!loading && items.length === 0 && <div className="text-center text-gray-500 text-sm py-10">没有匹配的记忆</div>}
+              {!loading && items.length === 0 && <div className="text-center text-[var(--color-fgMuted)] text-sm py-10">没有匹配的记忆</div>}
             </div>
           </div>
         )}
 
         {tab === 'import' && (
           <div className="p-5 overflow-y-auto">
-            <div className="text-sm text-gray-300">从 AI 聊天记录导入</div>
-            <div className="text-xs text-gray-500 mt-1 leading-relaxed">把你和 ChatGPT / Claude / Gemini 的历史对话变成大脑记忆。对话的原始日期会保留，所以"上个月想了啥"也能召回。</div>
+            <div className="text-sm text-[var(--color-fg)] font-medium">从 AI 聊天记录导入</div>
+            <div className="text-xs text-[var(--color-fgMuted)] mt-1 leading-relaxed">把你和 ChatGPT / Claude / Gemini 的历史对话变成大脑记忆。对话的原始日期会保留，所以"上个月想了啥"也能召回。</div>
             <div onClick={() => !importing && fileRef.current?.click()}
-              className={`mt-4 border border-dashed border-cyan-500/35 rounded-xl py-8 text-center ${importing ? 'opacity-60' : 'cursor-pointer hover:bg-cyan-500/5'}`}>
-              <FileUp className="w-6 h-6 mx-auto text-cyan-400" />
-              <div className="text-sm mt-2 text-gray-200">{importing ? '处理中…' : '选择导出文件'}</div>
-              <div className="text-[11px] text-gray-500 mt-1">conversations.json / chat.html（ChatGPT/Claude） · My Activity（Gemini，HTML 或 JSON 都行）</div>
+              className={`mt-4 border border-dashed border-[var(--color-border)] rounded-xl py-8 text-center transition-colors ${importing ? 'opacity-60' : 'cursor-pointer hover:bg-[var(--color-accent)]/5 hover:border-[var(--color-accent)]/50'}`}>
+              <FileUp className="w-6 h-6 mx-auto text-[var(--color-accent)] animate-pulse" />
+              <div className="text-sm mt-2 text-[var(--color-fg)] font-medium">{importing ? '处理中…' : '选择导出文件'}</div>
+              <div className="text-[11px] text-[var(--color-fgMuted)] mt-1">conversations.json / chat.html（ChatGPT/Claude） · My Activity（Gemini，HTML 或 JSON 都行）</div>
             </div>
             <input ref={fileRef} type="file" accept=".json,.html,.htm,application/json,text/html" className="hidden" onChange={onFile} />
-            <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+            <div className="mt-4 flex items-center gap-2 text-xs text-[var(--color-fgMuted)]">
               导入最近 <input value={limit} onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))} placeholder="全部"
-                className="w-16 text-center bg-gray-800 border border-white/10 rounded px-2 py-1 text-white outline-none" /> 段（留空 = 全部）
+                className="w-16 text-center bg-[var(--color-bgSubtle)] border border-[var(--color-border)] rounded px-2 py-1 text-[var(--color-fg)] outline-none" /> 段（留空 = 全部）
             </div>
             {(importMsg || prog) && (
-              <div className="mt-4 rounded-lg border border-white/10 bg-gray-800/50 p-3">
-                <div className="text-xs text-gray-300">{importMsg}</div>
+              <div className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bgSubtle)]/50 p-3">
+                <div className="text-xs text-[var(--color-fg)]">{importMsg}</div>
                 {prog && (
                   <>
-                    <div className="text-xs text-gray-400 mt-1">抽取 <b className="text-white">{prog.done}/{prog.total}</b> 段 · 已生成 <b className="text-cyan-300">{prog.entities}</b> 条记忆</div>
-                    <div className="h-1.5 bg-gray-700 rounded mt-2 overflow-hidden"><div className="h-full bg-gradient-to-r from-cyan-400 to-purple-500" style={{ width: `${prog.total ? Math.round(prog.done / prog.total * 100) : 0}%` }} /></div>
+                    <div className="text-xs text-[var(--color-fgMuted)] mt-1">抽取 <b className="text-[var(--color-fg)]">{prog.done}/{prog.total}</b> 段 · 已生成 <b className="text-[var(--color-accent)]">{prog.entities}</b> 条记忆</div>
+                    <div className="h-1.5 bg-[var(--color-bgSubtle)] rounded mt-2 overflow-hidden"><div className="h-full bg-gradient-to-r from-cyan-400 to-purple-500 animate-shimmer-fast" style={{ width: `${prog.total ? Math.round(prog.done / prog.total * 100) : 0}%` }} /></div>
                   </>
                 )}
               </div>
             )}
-            <div className="text-[11px] text-gray-500 mt-4">每段对话会跑一次 LLM 抽取（用你配置的模型）。导入在后台进行，可关闭此窗口。</div>
+            <div className="text-[11px] text-[var(--color-fgMuted)] mt-4">每段对话会跑一次 LLM 抽取（用你配置的模型）。导入在后台进行，可关闭此窗口。</div>
           </div>
         )}
 
         {tab === 'favorites' && (
           <div className="flex flex-col min-h-0 flex-1">
             <div className="px-5 pt-3 flex items-center gap-2">
-              <div className="text-xs text-gray-500">收藏的洞见 · 共 {favs.length} 条（在洞察通知 / 问大脑里点 ★ 收藏）</div>
-              <button onClick={loadFavs} className="ml-auto p-1.5 text-gray-400 hover:text-white"><RefreshCw className={`w-4 h-4 ${favLoading ? 'animate-spin' : ''}`} /></button>
+              <div className="text-xs text-[var(--color-fgMuted)]">收藏的洞见 · 共 {favs.length} 条（在洞察通知 / 问大脑里点 ★ 收藏）</div>
+              <button onClick={loadFavs} className="ml-auto p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] transition-colors"><RefreshCw className={`w-4 h-4 ${favLoading ? 'animate-spin' : ''}`} /></button>
             </div>
             <div className="overflow-y-auto px-5 py-2 flex-1">
               {favs.length === 0 && !favLoading && (
-                <div className="text-sm text-gray-500 text-center py-12">还没有收藏。看到好洞见时点一下 ★ 就收进这里。</div>
+                <div className="text-sm text-[var(--color-fgMuted)] text-center py-12">还没有收藏。看到好洞见时点一下 ★ 就收进这里。</div>
               )}
               {favs.map((it) => (
-                <div key={it.id} className="group flex items-start gap-2 py-2.5 border-t border-white/5">
+                <div key={it.id} className="group flex items-start gap-2 py-2.5 border-t border-[var(--color-border)]/40">
                   <Bookmark className="w-4 h-4 text-yellow-400 fill-yellow-400/30 mt-0.5 shrink-0" />
                   <button onClick={() => setFavDetail(it)} title="点击放大查看" className="min-w-0 flex-1 text-left">
-                    {it.summary && <div className="text-sm text-white truncate group-hover:text-cyan-200">{it.summary}</div>}
-                    <div className="text-xs text-gray-400 whitespace-pre-wrap line-clamp-4">{it.content}</div>
-                    {it.createdAt && <div className="text-[10px] text-gray-600 mt-1">{it.createdAt.slice(0, 10)}</div>}
+                    {it.summary && <div className="text-sm text-[var(--color-fg)] truncate font-semibold group-hover:text-[var(--color-accent)] transition-colors">{it.summary}</div>}
+                    <div className="text-xs text-[var(--color-fgMuted)] whitespace-pre-wrap line-clamp-4 mt-0.5">{it.content}</div>
+                    {it.createdAt && <div className="text-[10px] text-[var(--color-fgMuted)]/40 mt-1">{it.createdAt.slice(0, 10)}</div>}
                   </button>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => copyFav(it.content)} title="复制" className="p-1.5 text-gray-500 hover:text-cyan-300"><Copy className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => removeFav(it.id)} title="取消收藏" className="p-1.5 text-gray-500 hover:text-rose-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    <button onClick={() => copyFav(it.content)} title="复制" className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-accent)] transition-colors"><Copy className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => removeFav(it.id)} title="取消收藏" className="p-1.5 text-[var(--color-fgMuted)] hover:text-rose-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
               ))}
@@ -278,19 +279,136 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
         )}
 
         {favDetail && (
-          <div className="absolute inset-0 z-10 flex flex-col rounded-2xl bg-gray-900" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
-              <div className="flex items-center gap-2 min-w-0 text-white font-semibold">
+          <div className="absolute inset-0 z-10 flex flex-col rounded-2xl bg-[var(--color-bg)] border border-[var(--color-border)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--color-border)]">
+              <div className="flex items-center gap-2 min-w-0 text-[var(--color-fg)] font-semibold">
                 <Bookmark className="w-4 h-4 text-yellow-400 fill-yellow-400/30 shrink-0" />
                 <span className="truncate">{favDetail.summary || '收藏'}</span>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <button onClick={() => copyFav(favDetail.content)} title="复制" className="p-1.5 text-gray-400 hover:text-cyan-300"><Copy className="w-4 h-4" /></button>
-                <button onClick={() => setFavDetail(null)} title="返回" className="p-1.5 text-gray-400 hover:text-white"><X className="w-4 h-4" /></button>
+                <button onClick={() => copyFav(favDetail.content)} title="复制" className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-accent)] rounded-lg transition-colors"><Copy className="w-4 h-4" /></button>
+                <button onClick={() => setFavDetail(null)} title="返回" className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] rounded-lg transition-colors"><X className="w-4 h-4" /></button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4 text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">{favDetail.content}</div>
-            {favDetail.createdAt && <div className="px-5 py-2 text-[10px] text-gray-600 border-t border-white/10">{favDetail.createdAt.slice(0, 10)}</div>}
+            <div className="flex-1 overflow-y-auto px-5 py-4 text-sm text-[var(--color-fg)] whitespace-pre-wrap leading-relaxed">{favDetail.content}</div>
+            {favDetail.createdAt && <div className="px-5 py-2 text-[10px] text-[var(--color-fgMuted)]/40 border-t border-[var(--color-border)]/40">{favDetail.createdAt.slice(0, 10)}</div>}
+          </div>
+        )}
+
+        {detailItem && (
+          <div className="absolute inset-0 z-20 flex flex-col rounded-2xl bg-[var(--color-bg)] border border-[var(--color-border)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--color-border)]">
+              <div className="flex items-center gap-2 min-w-0 text-[var(--color-fg)] font-semibold">
+                <Database className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
+                <span className="truncate">{detailItem.name}</span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => {
+                  navigator.clipboard.writeText(detailItem.description || detailItem.name);
+                  toast.success('描述已复制');
+                }} title="复制描述" className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-accent)] rounded-lg transition-colors">
+                  <Copy className="w-4 h-4" />
+                </button>
+                <button onClick={() => setDetailItem(null)} title="返回" className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] rounded-lg transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {/* 基本元数据展示 */}
+              <div className="grid grid-cols-2 gap-4 bg-[var(--color-bgSubtle)]/50 p-4 rounded-xl border border-[var(--color-border)]/40 text-xs">
+                <div>
+                  <span className="text-[var(--color-fgMuted)]">实体类型</span>
+                  <div className="text-[var(--color-fg)] font-medium mt-1">{detailItem.type}</div>
+                </div>
+                <div>
+                  <span className="text-[var(--color-fgMuted)]">来源</span>
+                  <div className="text-[var(--color-fg)] font-medium mt-1">
+                    {detailItem.source === 'external_ai' ? '外部 AI' : detailItem.source === 'import' ? '导入' : detailItem.source === 'auto_sediment' ? '自动沉淀' : '你写的'}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[var(--color-fgMuted)]">创建时间</span>
+                  <div className="text-[var(--color-fg)] font-medium mt-1">{detailItem.created_at || '未知'}</div>
+                </div>
+                <div>
+                  <span className="text-[var(--color-fgMuted)]">访问次数</span>
+                  <div className="text-[var(--color-fg)] font-medium mt-1">{detailItem.access_count ?? 0} 次</div>
+                </div>
+              </div>
+
+              {/* 标签列表 */}
+              {detailItem.tags && detailItem.tags.length > 0 && (
+                <div>
+                  <span className="text-xs text-[var(--color-fgMuted)]">标签</span>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {detailItem.tags.map((tag) => (
+                      <span key={tag} className="text-xs px-2.5 py-0.5 rounded-full border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/5 text-[var(--color-accent)] font-medium">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 描述内容 */}
+              <div className="flex flex-col flex-1">
+                <span className="text-xs text-[var(--color-fgMuted)] mb-2 font-medium">描述内容</span>
+                <div className="flex-1 min-h-[150px] p-4 bg-[var(--color-bgSubtle)] rounded-xl border border-[var(--color-border)] text-[var(--color-fg)] text-sm whitespace-pre-wrap leading-relaxed select-text overflow-y-auto">
+                  {detailItem.description || <span className="text-[var(--color-fgMuted)] italic">暂无描述</span>}
+                </div>
+              </div>
+
+              {/* 溯源信息 */}
+              {detailItem.provenance && (
+                <div className="text-[10px] text-[var(--color-fgMuted)]/60 border-t border-[var(--color-border)]/40 pt-3">
+                  <span>溯源信息：</span>
+                  {detailItem.provenance.platform && <span>平台 ({detailItem.provenance.platform}) </span>}
+                  {detailItem.provenance.tool && <span>工具 ({detailItem.provenance.tool}) </span>}
+                  {detailItem.provenance.at && <span>时间 ({detailItem.provenance.at}) </span>}
+                </div>
+              )}
+            </div>
+            
+            {/* 底部动作条 */}
+            <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--color-border)] bg-[var(--color-bgSubtle)]/30 rounded-b-2xl">
+              <button 
+                onClick={() => {
+                  toggleCore(detailItem);
+                  setDetailItem(prev => prev ? { ...prev, isCore: !prev.isCore } : null);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                  detailItem.isCore 
+                    ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20' 
+                    : 'border-[var(--color-border)] hover:bg-[var(--color-bgSubtle)] text-[var(--color-fg)]'
+                }`}
+              >
+                <Star className={`w-3.5 h-3.5 ${detailItem.isCore ? 'fill-yellow-500' : ''}`} />
+                {detailItem.isCore ? '核心记忆' : '设为核心'}
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setMergeFrom(detailItem);
+                    setDetailItem(null);
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bgSubtle)] text-xs text-[var(--color-fg)] transition-colors"
+                >
+                  合并此实体
+                </button>
+                <button
+                  onClick={() => {
+                    del(detailItem);
+                    setDetailItem(null);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-medium transition-colors"
+                >
+                  删除实体
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

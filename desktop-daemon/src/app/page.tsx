@@ -414,6 +414,20 @@ function MainApp() {
     };
   }, [confirm, t, toast]);
 
+  // 当拖拽模式被卡住时，按 Esc 键可以退出
+  useEffect(() => {
+    if (!isDraggingFile) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsDraggingFile(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDraggingFile]);
+
   const handlePrecipitateRef = useRef<() => void>(() => {});
 
   useKeyboardShortcuts([
@@ -484,11 +498,14 @@ function MainApp() {
       await toggleFloatingHUD(true);
       setFloatingHudOn(true);
       addLog(paused, "warning");
+      // 显示 toast 提醒用户抓屏已暂停，并提供打开设置的指引
+      const settingsHint = t('hud.capture_paused_hint') || '请在设置 → 行为中开启抓取';
+      toast.warning(paused, settingsHint);
       if (settings.behavior.autoHUD) {
         setTimeout(async () => {
           await toggleFloatingHUD(false);
           setFloatingHudOn(false);
-        }, 2000);
+        }, 3000);
       }
       return { ok: false, error: paused };
     }
@@ -1035,11 +1052,29 @@ function MainApp() {
       </main>
 
       {isDraggingFile && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-cyan-950/60 border-4 border-dashed border-cyan-400 m-4 rounded-2xl pointer-events-none transition-all duration-200">
-          <div className="flex flex-col items-center gap-4 bg-black/60 p-8 rounded-2xl border border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.3)] animate-pulse">
+        <div 
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-cyan-950/60 border-4 border-dashed border-cyan-400 m-4 rounded-2xl pointer-events-auto cursor-pointer transition-all duration-200"
+          onClick={() => setIsDraggingFile(false)}
+        >
+          {/* 右上角关闭按钮 */}
+          <button 
+            onClick={(e) => { e.stopPropagation(); setIsDraggingFile(false); }}
+            className="absolute top-6 right-6 p-2 rounded-full bg-black/40 border border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/20 hover:text-white transition-all hover:scale-115"
+            title="关闭遮罩"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div 
+            className="flex flex-col items-center gap-4 bg-black/70 p-8 rounded-2xl border border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.3)] cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Upload className="w-12 h-12 text-cyan-400 animate-bounce" />
             <p className="text-lg font-bold text-white tracking-widest uppercase">
               {t("drag_drop.overlay_hint")}
+            </p>
+            <p className="text-xs text-gray-400 tracking-wide mt-1">
+              {language === 'zh' ? '提示：点击空白处或按 Esc 键可关闭' : 'Tip: Click empty space or press Esc to close'}
             </p>
           </div>
         </div>

@@ -239,9 +239,33 @@ export class LLMExtractorPipeline {
    */
   async healthCheck(): Promise<boolean> {
     if (!this.config.apiUrl) return false;
+    // 1. 优先尝试极轻量的 chat completions 请求，这既验证了 API Key 也验证了模型是否正确配置
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(`${this.config.apiUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(this.config.apiKey ? { 'Authorization': `Bearer ${this.config.apiKey}` } : {}),
+        },
+        body: JSON.stringify({
+          model: this.config.model || 'qwen2.5:7b',
+          messages: [{ role: 'user', content: 'ping' }],
+          max_tokens: 3,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (response.ok) return true;
+    } catch (err) {
+      console.warn('[LLMExtractor] Chat completion health check failed, trying /models fallback:', err);
+    }
+
+    // 2. 回退到 /models GET 请求（适用于 Ollama / LM Studio 等不要求特定模型或 API Key 的本地服务）
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
       const response = await fetch(`${this.config.apiUrl}/models`, {
         signal: controller.signal,
         headers: this.config.apiKey ? { 'Authorization': `Bearer ${this.config.apiKey}` } : {},

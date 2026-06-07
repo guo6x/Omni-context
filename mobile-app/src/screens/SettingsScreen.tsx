@@ -17,6 +17,7 @@ import { useSync } from '@/hooks/useSync';
 import { useHUD } from '@/components/HUD';
 import { api } from '@/services/api';
 import * as localDb from '@/services/localDb';
+import { syncService } from '@/services/syncService';
 
 interface SettingItemProps {
   label: string;
@@ -102,7 +103,15 @@ export function SettingsScreen() {
       showMessage('未配置服务器', 'warning');
       return;
     }
+    showMessage('正在同步数据...', 'info');
     await fullSync();
+    
+    const latestStatus = syncService.getStatus();
+    if (latestStatus.error) {
+      showMessage(`同步失败: ${latestStatus.error}`, 'error');
+    } else {
+      showMessage('数据同步成功', 'success');
+    }
   }, [fullSync, showMessage]);
 
   const handleClearData = useCallback(() => {

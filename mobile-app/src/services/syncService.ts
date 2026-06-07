@@ -107,7 +107,10 @@ class SyncService {
         api.getKnowledgeGraph()
       ]);
 
-      if (!entitiesResult.success || !entitiesResult.data) return [];
+      if (!entitiesResult.success || !entitiesResult.data) {
+        this.updateStatus({ error: entitiesResult.error ?? '获取服务器数据失败' });
+        return [];
+      }
 
       const serverEntities = entitiesResult.data;
       const serverRelationships = relationshipsResult.success && relationshipsResult.data
@@ -133,6 +136,7 @@ class SyncService {
       return serverEntities;
     } catch (error) {
       console.error('Failed to pull from server:', error);
+      this.updateStatus({ error: (error as Error).message });
       return [];
     }
   }

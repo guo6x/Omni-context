@@ -104,6 +104,7 @@ export default {
     hide: 'Hide HUD',
     drag_hint: '· Double-click to drag · Persistent when main window is minimized',
     capture_paused: 'Capture paused',
+    capture_paused_hint: 'Enable in Settings → Behavior → Screen Capture',
     capture_blocked: 'Skipped: sensitive app detected ({app})',
   },
   upload: {

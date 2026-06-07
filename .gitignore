@@ -73,8 +73,12 @@ pair-code.txt
 # Claude Code per-machine permission allowlist
 # Auto-appends executed Bash commands as patterns, which can include API keys
 # from env-var-prefixed test invocations. NEVER commit.
+.claude/
 .claude/settings.local.json
 
 # Temporary files
 *.tmp
 *.temp
+
+.antigravitycli/
+.codegraph/

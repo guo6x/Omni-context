@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { useNavigation } from '@react-navigation/native';
 import { useSettings } from '@/hooks/useSettings';
@@ -23,7 +23,7 @@ export function PairScanScreen() {
     })();
   }, []);
 
-  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+  const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     if (scanned) return;
 
     // 配对二维码：omni://pair?host=<lan_ip>&port=<port>&code=<配对码>
@@ -40,9 +40,20 @@ export function PairScanScreen() {
     const baseUrl = `http://${host}:${port}`;
 
     try {
+      // 临时配置 api client 进行连通性校验
+      api.configure({ baseUrl, authToken: code });
+      showMessage('正在测试连接...', 'info');
+
+      const isConnected = await api.healthCheck();
+      if (!isConnected) {
+        setScanned(false);
+        showMessage('连通性测试失败，请确认局域网与防火墙设置', 'error');
+        return;
+      }
+
+      // 连接成功，保存配置到设置中
       setServerUrl(baseUrl);
       setAuthToken(code);
-      api.configure({ baseUrl, authToken: code });
       showMessage('配对成功', 'success');
 
       // 触发一次同步
@@ -53,7 +64,7 @@ export function PairScanScreen() {
       navigation.goBack();
     } catch (err) {
       setScanned(false);
-      showMessage('配对失败，请重试', 'error');
+      showMessage(`配对连接异常: ${(err as Error).message}`, 'error');
     }
   };
 
@@ -83,51 +94,100 @@ export function PairScanScreen() {
     );
   }
 
-  return (
-    <View className="flex-1 bg-black">
-      <BarCodeScanner
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-        style={StyleSheet.absoluteFillObject}
-      />
-      
-      {/* 遮罩覆盖层，做出中间镂空发光的效果 */}
-      <View className="absolute inset-0 justify-between">
-        {/* 上半部半透明遮罩 */}
-        <View className="bg-black/60 flex-1 justify-center items-center pt-20">
-          <Text className="text-gray-300 text-base font-medium">请对准桌面端配对二维码</Text>
+    const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+    const SCAN_BOX_SIZE = 280;
+    const topHeight = (screenHeight - SCAN_BOX_SIZE) / 2;
+    const leftWidth = (screenWidth - SCAN_BOX_SIZE) / 2;
+
+    return (
+      <View style={{ flex: 1, backgroundColor: '#000' }}>
+        <BarCodeScanner
+          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+          style={{ position: 'absolute', width: screenWidth, height: screenHeight }}
+        />
+        
+        {/* 遮罩层 - 上 */}
+        <View style={[styles.mask, { top: 0, left: 0, right: 0, height: topHeight, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 30 }]}>
+          <Text style={styles.promptText}>请对准桌面端配对二维码</Text>
         </View>
 
-        {/* 中间行：左遮罩 + 镂空扫描框 + 右遮罩 */}
-        <View className="flex-row h-72">
-          <View className="bg-black/60 flex-1" />
-          <View className="w-72 border-2 border-cyan-400/30 relative justify-center items-center">
-            {/* 四个发光角 */}
-            <View className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-cyan-400" />
-            <View className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-cyan-400" />
-            <View className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-cyan-400" />
-            <View className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-cyan-400" />
-          </View>
-          <View className="bg-black/60 flex-1" />
-        </View>
-
-        {/* 下半部半透明遮罩 */}
-        <View className="bg-black/60 flex-1 items-center justify-between pb-16 pt-5">
-          <Text className="text-gray-400 text-xs text-center px-8 leading-5">
+        {/* 遮罩层 - 下 */}
+        <View style={[styles.mask, { top: topHeight + SCAN_BOX_SIZE, bottom: 0, left: 0, right: 0, alignItems: 'center', paddingTop: 30 }]}>
+          <Text style={styles.infoText}>
             注意：您的手机与运行 Omni-Context 的电脑必须处于同一局域网（Wifi）下。
           </Text>
         </View>
-      </View>
 
-      {/* 悬浮后退按钮 */}
-      <TouchableOpacity
-        className="absolute top-12 left-5 w-12 h-12 rounded-full bg-black/50 border border-white/10 items-center justify-center"
-        onPress={() => navigation.goBack()}
-        activeOpacity={0.7}
-      >
-        <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <Path d="M15 19L8 12L15 5" stroke="#e8e8e8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      </TouchableOpacity>
-    </View>
-  );
-}
+        {/* 遮罩层 - 左 */}
+        <View style={[styles.mask, { top: topHeight, left: 0, width: leftWidth, height: SCAN_BOX_SIZE }]} />
+
+        {/* 遮罩层 - 右 */}
+        <View style={[styles.mask, { top: topHeight, left: leftWidth + SCAN_BOX_SIZE, right: 0, height: SCAN_BOX_SIZE }]} />
+
+        {/* 扫描框层 */}
+        <View style={[styles.scanBox, { top: topHeight, left: leftWidth }]}>
+          {/* 四个发光角 */}
+          <View style={[styles.corner, { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4 }]} />
+          <View style={[styles.corner, { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4 }]} />
+          <View style={[styles.corner, { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4 }]} />
+          <View style={[styles.corner, { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4 }]} />
+        </View>
+
+        {/* 悬浮后退按钮 */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <Path d="M15 19L8 12L15 5" stroke="#e8e8e8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const styles = StyleSheet.create({
+    mask: {
+      position: 'absolute',
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    },
+    promptText: {
+      color: '#e8e8e8',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    infoText: {
+      color: '#9ca3af',
+      fontSize: 12,
+      textAlign: 'center',
+      paddingHorizontal: 32,
+      lineHeight: 20,
+    },
+    scanBox: {
+      position: 'absolute',
+      width: 280,
+      height: 280,
+      borderWidth: 1,
+      borderColor: 'rgba(34, 211, 238, 0.2)',
+    },
+    corner: {
+      position: 'absolute',
+      width: 20,
+      height: 20,
+      borderColor: '#22d3ee', // cyan-400
+    },
+    backButton: {
+      position: 'absolute',
+      top: 50,
+      left: 20,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });

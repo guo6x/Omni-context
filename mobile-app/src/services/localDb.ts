@@ -359,97 +359,119 @@ export async function syncFromServer(
   serverRelationships: Relationship[]
 ): Promise<void> {
   const database = getDb();
-  await database.transactionAsync(async (tx) => {
-    // 在事务中批量写入实体
-    for (const entity of serverEntities) {
-      const now = new Date().toISOString();
-      const tagsStr = entity.tags ? JSON.stringify(entity.tags) : null;
-      const metadataStr = entity.metadata ? JSON.stringify(entity.metadata) : null;
-      await tx.executeSqlAsync(
-        `INSERT OR REPLACE INTO entities (
-          id, name, type, description, source_file, tags, metadata,
-          created_at, updated_at, access_count, last_accessed, synced
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          entity.id,
-          entity.name,
-          entity.type,
-          entity.description || null,
-          entity.source_file || null,
-          tagsStr,
-          metadataStr,
-          entity.created_at || now,
-          entity.updated_at || now,
-          entity.access_count || 0,
-          entity.last_accessed || null,
-          1, // 从服务器拉取的都是已同步的
-        ] as any
-      );
-    }
+  const queries: { sql: string; args: unknown[] }[] = [];
 
-    // 在事务中批量写入关系
-    for (const rel of serverRelationships) {
-      await tx.executeSqlAsync(
-        `INSERT OR REPLACE INTO relationships (
-          id, source_id, target_id, type, description, weight,
-          created_at, last_activated, valid_from, valid_until,
-          invalidated_at, invalidation_reason
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          rel.id,
-          rel.source_id,
-          rel.target_id,
-          rel.type,
-          rel.description || null,
-          rel.weight,
-          rel.created_at,
-          rel.last_activated,
-          rel.valid_from || null,
-          rel.valid_until || null,
-          rel.invalidated_at || null,
-          rel.invalidation_reason || null,
-        ] as any
-      );
-    }
+  // 1. 开启事务
+  queries.push({ sql: 'BEGIN TRANSACTION', args: [] });
 
-    // 在事务中批量更新知识图谱节点
-    for (const entity of serverEntities) {
-      const node = entityToKnowledgeNode(entity);
-      await tx.executeSqlAsync(
-        `INSERT OR REPLACE INTO knowledge_nodes (
-          id, label, type, connections, weight, color, x, y
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          node.id,
-          node.label,
-          node.type,
-          JSON.stringify(node.connections),
-          node.weight,
-          node.color,
-          node.x || null,
-          node.y || null,
-        ] as any
-      );
-    }
+  // 2. 在事务中批量写入实体
+  for (const entity of serverEntities) {
+    const now = new Date().toISOString();
+    const tagsStr = entity.tags ? JSON.stringify(entity.tags) : null;
+    const metadataStr = entity.metadata ? JSON.stringify(entity.metadata) : null;
+    queries.push({
+      sql: `INSERT OR REPLACE INTO entities (
+        id, name, type, description, source_file, tags, metadata,
+        created_at, updated_at, access_count, last_accessed, synced
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        entity.id,
+        entity.name,
+        entity.type,
+        entity.description || null,
+        entity.source_file || null,
+        tagsStr,
+        metadataStr,
+        entity.created_at || now,
+        entity.updated_at || now,
+        entity.access_count || 0,
+        entity.last_accessed || null,
+        1, // 从服务器拉取的都是已同步的
+      ],
+    });
+  }
 
-    // 在事务中批量更新知识图谱边
-    for (const rel of serverRelationships) {
-      const edge = relationshipToKnowledgeEdge(rel);
-      await tx.executeSqlAsync(
-        `INSERT OR REPLACE INTO knowledge_edges (
-          id, source, target, type, weight, description
-        ) VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          edge.id,
-          edge.source,
-          edge.target,
-          edge.type,
-          edge.weight,
-          edge.description || null,
-        ] as any
-      );
+  // 3. 在事务中批量写入关系
+  for (const rel of serverRelationships) {
+    queries.push({
+      sql: `INSERT OR REPLACE INTO relationships (
+        id, source_id, target_id, type, description, weight,
+        created_at, last_activated, valid_from, valid_until,
+        invalidated_at, invalidation_reason
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        rel.id,
+        rel.source_id,
+        rel.target_id,
+        rel.type,
+        rel.description || null,
+        rel.weight,
+        rel.created_at,
+        rel.last_activated,
+        rel.valid_from || null,
+        rel.valid_until || null,
+        rel.invalidated_at || null,
+        rel.invalidation_reason || null,
+      ],
+    });
+  }
+
+  // 4. 在事务中批量更新知识图谱节点
+  for (const entity of serverEntities) {
+    const node = entityToKnowledgeNode(entity);
+    queries.push({
+      sql: `INSERT OR REPLACE INTO knowledge_nodes (
+        id, label, type, connections, weight, color, x, y
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        node.id,
+        node.label,
+        node.type,
+        JSON.stringify(node.connections),
+        node.weight,
+        node.color,
+        node.x || null,
+        node.y || null,
+      ],
+    });
+  }
+
+  // 5. 在事务中批量更新知识图谱边
+  for (const rel of serverRelationships) {
+    const edge = relationshipToKnowledgeEdge(rel);
+    queries.push({
+      sql: `INSERT OR REPLACE INTO knowledge_edges (
+        id, source, target, type, weight, description
+      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [
+        edge.id,
+        edge.source,
+        edge.target,
+        edge.type,
+        edge.weight,
+        edge.description || null,
+      ],
+    });
+  }
+
+  // 6. 提交事务
+  queries.push({ sql: 'COMMIT', args: [] });
+
+  // 7. 批量运行
+  const results = await database.execAsync(queries, false);
+
+  // 8. 校验每一条 SQL 的执行结果
+  for (const result of results) {
+    if ('error' in result) {
+      // 写入出错则尝试回滚
+      try {
+        await database.execAsync([{ sql: 'ROLLBACK', args: [] }], false);
+      } catch (rollbackErr) {
+        console.warn('Rollback failed:', rollbackErr);
+      }
+      throw result.error;
     }
-  });
+  }
 }
 
 export async function clearAllData(): Promise<void> {

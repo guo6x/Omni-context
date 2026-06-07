@@ -297,7 +297,6 @@ export class AgentLoop {
       }
 
       // 4. 每 N 轮检查一次记忆衰减，生成 decay_warning 通知
-      this.cycleCount++;
       if (this.decayScheduler && this.cycleCount % AgentLoop.DECAY_CHECK_INTERVAL === 0) {
         try {
           const decayed = await this.decayScheduler.getMostDecayedItems(5);
@@ -341,5 +340,6 @@ export class AgentLoop {
     } catch (error) {
       console.error('[AgentLoop] 执行周期异常:', error);
     }
+    this.cycleCount++;
   }
 }

@@ -81,9 +81,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace 'com.omicontext.mobile'
+    namespace 'com.omnicontext.mobile'
     defaultConfig {
-        applicationId 'com.omicontext.mobile'
+        applicationId 'com.omnicontext.mobile'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

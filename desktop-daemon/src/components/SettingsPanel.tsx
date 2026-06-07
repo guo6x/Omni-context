@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw, Share2, Search, Lightbulb, Camera, GitBranch, ChevronDown, ChevronRight, Shield, Info, ExternalLink, Copy, Plug } from 'lucide-react';
+import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw, Share2, Search, Lightbulb, Camera, GitBranch, ChevronDown, ChevronRight, Shield, Info, ExternalLink, Copy, Plug, Eye, EyeOff } from 'lucide-react';
 import { useRef, useState, useEffect, useMemo, createElement } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { KeyboardShortcut, AppSettings } from '@/hooks/useSettings';
@@ -86,6 +86,7 @@ export default function SettingsPanel({
   
   const [llmTestState, setLlmTestState] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
   const [llmTestError, setLlmTestError] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
   const [embeddingReloading, setEmbeddingReloading] = useState(false);
   const [pairCodeInfo, setPairCodeInfo] = useState<{ code: string; lan_ip: string; port: number } | null>(null);
   const [localApiToken, setLocalApiToken] = useState<string | null>(null);
@@ -338,23 +339,49 @@ export default function SettingsPanel({
     if (e.altKey) keys.push('alt');
 
     const pressedKey = e.key.toLowerCase();
-    if (!['ctrl', 'cmd', 'shift', 'alt', 'meta'].includes(pressedKey)) {
-      keys.push(pressedKey);
+    
+    // 如果按下的是修饰键本身，只更新状态，不提交保存
+    if (['control', 'shift', 'alt', 'meta'].includes(pressedKey)) {
+      setTempShortcut(keys.join('+'));
+      return;
     }
 
-    setTempShortcut(keys.join('+'));
-
-    if (e.key === 'Enter') {
-      finishEditing(id);
-    } else if (e.key === 'Escape') {
+    if (pressedKey !== 'escape') {
+      keys.push(pressedKey);
+      const newShortcut = keys.join('+');
+      setTempShortcut(newShortcut);
+      finishEditing(id, newShortcut);
+    } else {
+      // Escape 退出
       setEditingId(null);
       setTempShortcut('');
     }
   };
 
-  const finishEditing = (id: string) => {
-    if (!tempShortcut) return;
-    const conflict = shortcutConflict;
+  // 提取为通用的冲突检测逻辑
+  const getConflict = (id: string, shortcutStr: string) => {
+    if (!id || !shortcutStr) return null;
+    const normalized = normalizeShortcut(shortcutStr);
+    // 检查 omni 快捷键
+    const omniConflict = settings.keyboardShortcuts.find(
+      s => s.id !== id && normalizeShortcut(s.current) === normalized
+    );
+    if (omniConflict) return { type: 'omni' as const, name: omniConflict.name, id: omniConflict.id };
+    // 检查系统快捷键
+    const sysConflict = findSystemConflict(shortcutStr);
+    if (sysConflict) return { type: 'system' as const, labelZh: sysConflict.labelZh, labelEn: sysConflict.labelEn };
+    return null;
+  };
+
+  // 快捷键冲突检测（实时，在编辑时计算）
+  const shortcutConflict = useMemo(() => {
+    return getConflict(editingId || '', tempShortcut);
+  }, [editingId, tempShortcut, settings.keyboardShortcuts]);
+
+  const finishEditing = (id: string, newShortcut?: string) => {
+    const shortcutToSave = newShortcut || tempShortcut;
+    if (!shortcutToSave) return;
+    const conflict = getConflict(id, shortcutToSave);
     if (conflict) {
       const conflictLabel = conflict.type === 'omni'
         ? t('graph.conflict_with_omni').replace('{name}', t(conflict.name))
@@ -362,29 +389,10 @@ export default function SettingsPanel({
       const ok = window.confirm(`${conflictLabel}\n\n${t('graph.conflict_confirm')}`);
       if (!ok) return;
     }
-    onUpdateShortcut(id, tempShortcut);
+    onUpdateShortcut(id, shortcutToSave);
     setEditingId(null);
     setTempShortcut('');
   };
-
-  // 快捷键冲突检测（实时，在编辑时计算）
-  const shortcutConflict = useMemo<{
-    type: 'omni'; name: string; id: string;
-  } | {
-    type: 'system'; labelZh: string; labelEn: string;
-  } | null>(() => {
-    if (!editingId || !tempShortcut) return null;
-    const normalized = normalizeShortcut(tempShortcut);
-    // 检查 omni 快捷键
-    const omniConflict = settings.keyboardShortcuts.find(
-      s => s.id !== editingId && normalizeShortcut(s.current) === normalized
-    );
-    if (omniConflict) return { type: 'omni', name: omniConflict.name, id: omniConflict.id };
-    // 检查系统快捷键
-    const sysConflict = findSystemConflict(tempShortcut);
-    if (sysConflict) return { type: 'system', labelZh: sysConflict.labelZh, labelEn: sysConflict.labelEn };
-    return null;
-  }, [editingId, tempShortcut, settings.keyboardShortcuts]);
 
   const startEditing = (shortcut: KeyboardShortcut) => {
     setEditingId(shortcut.id);
@@ -573,6 +581,11 @@ export default function SettingsPanel({
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-white">{t('settings.shortcuts')}</h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {language === 'zh' 
+                        ? '提示：点击快捷键按钮即可自定义，按下新组合键后将自动保存，按 Esc 取消' 
+                        : 'Tip: Click a shortcut button to customize, press new keys to auto-save, Esc to cancel'}
+                    </p>
                   </div>
                   <button
                     onClick={onResetShortcuts}
@@ -604,6 +617,7 @@ export default function SettingsPanel({
                               <button
                                 onKeyDown={(e) => handleShortcutKeyDown(e, shortcut.id)}
                                 onClick={() => finishEditing(shortcut.id)}
+                                onBlur={() => finishEditing(shortcut.id)}
                                 className="px-3 py-1.5 bg-cyan-900/40 border border-cyan-400 text-cyan-400 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400/50 animate-pulse"
                               >
                                 {tempShortcut || t('settings.press_any_key')}
@@ -953,142 +967,194 @@ export default function SettingsPanel({
               </div>
             )}
 
-            {activeTab === 'llm' && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white">{t('settings.llm_provider')}</h3>
-                  <p className="text-xs text-gray-400 mt-1">{t('settings.llm_desc')}</p>
-                </div>
+            {activeTab === 'llm' && (() => {
+              const isMatchingPreset = LLM_PRESETS.some(preset => 
+                preset.id !== 'custom' && 
+                settings.llmProvider.apiUrl === preset.apiUrl && 
+                settings.llmProvider.model === preset.defaultModel
+              );
+              return (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">{t('settings.llm_provider')}</h3>
+                    <p className="text-xs text-gray-400 mt-1">{t('settings.llm_desc')}</p>
+                  </div>
 
-                <div className="space-y-4">
-                  {/* [通用] 推荐服务商预设卡片组 */}
-                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
-                    <label className="text-sm font-medium text-white block">{t('onboarding.preset_label')}</label>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
-                      {LLM_PRESETS.map((preset) => (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => {
-                            if (preset.id !== 'custom') {
-                              onUpdateLlmProvider({
-                                apiUrl: preset.apiUrl,
-                                model: preset.defaultModel,
-                              });
-                            } else {
-                              onUpdateLlmProvider({
-                                apiUrl: '',
-                                model: '',
-                              });
-                            }
+                  <div className="space-y-4">
+                    {/* [通用] 推荐服务商预设卡片组 */}
+                    <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-3">
+                      <label className="text-sm font-medium text-white block">{t('onboarding.preset_label')}</label>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
+                        {LLM_PRESETS.map((preset) => {
+                          const isSelected = preset.id === 'custom'
+                            ? !isMatchingPreset
+                            : (settings.llmProvider.apiUrl === preset.apiUrl && settings.llmProvider.model === preset.defaultModel);
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => {
+                                if (preset.id !== 'custom') {
+                                  onUpdateLlmProvider({
+                                    apiUrl: preset.apiUrl,
+                                    model: preset.defaultModel,
+                                  });
+                                } else {
+                                  onUpdateLlmProvider({
+                                    apiUrl: '',
+                                    model: '',
+                                  });
+                                }
+                                setLlmTestState('idle');
+                              }}
+                              className={`p-2 rounded-lg border text-left transition-all ${
+                                isSelected
+                                  ? 'bg-cyan-900/40 border-cyan-400 text-white'
+                                  : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10 hover:text-white'
+                              }`}
+                            >
+                              <div className="text-xs font-bold truncate flex items-center gap-1.5">
+                                <span>{preset.emoji}</span>
+                                <span>{t(preset.name)}</span>
+                              </div>
+                              <div className="text-[10px] text-gray-500 truncate mt-0.5">{t(preset.cost)}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* API URL */}
+                    <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
+                      <label className="text-sm font-medium text-white block">API URL</label>
+                      <input
+                        type="text"
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
+                        value={settings.llmProvider.apiUrl}
+                        onChange={(e) => {
+                          onUpdateLlmProvider({ apiUrl: e.target.value });
+                          setLlmTestState('idle');
+                        }}
+                        placeholder={t('settings.llm_api_placeholder')}
+                      />
+                    </div>
+
+                    {/* API Key */}
+                    <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-white block">API Key</label>
+                        {(() => {
+                          const preset = LLM_PRESETS.find((p) => p.apiUrl === settings.llmProvider.apiUrl);
+                          const url = preset ? LLM_API_KEY_URLS[preset.id] : undefined;
+                          return url ? (
+                            <button
+                              type="button"
+                              onClick={() => openExternal(url)}
+                              className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                            >
+                              {t('settings.llm_get_api_key')}
+                              <ExternalLink className="w-3 h-3" />
+                            </button>
+                          ) : null;
+                        })()}
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showApiKey ? "text" : "password"}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg pl-3 pr-10 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
+                          value={settings.llmProvider.apiKey}
+                          onChange={(e) => {
+                            onUpdateLlmProvider({ apiKey: e.target.value });
                             setLlmTestState('idle');
                           }}
-                          className={`p-2 rounded-lg border text-left transition-all ${
-                            settings.llmProvider.apiUrl === preset.apiUrl && (preset.id === 'custom' || settings.llmProvider.model === preset.defaultModel)
-                              ? 'bg-cyan-900/40 border-cyan-400 text-white'
-                              : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10 hover:text-white'
-                          }`}
+                          placeholder={t('settings.llm_key_placeholder')}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                          aria-label={showApiKey ? "Hide API Key" : "Show API Key"}
                         >
-                          <div className="text-xs font-bold truncate flex items-center gap-1.5">
-                            <span>{preset.emoji}</span>
-                            <span>{t(preset.name)}</span>
-                          </div>
-                          <div className="text-[10px] text-gray-500 truncate mt-0.5">{t(preset.cost)}</div>
+                          {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
-                      ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* API URL */}
-                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
-                    <label className="text-sm font-medium text-white block">API URL</label>
-                    <input
-                      type="text"
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
-                      value={settings.llmProvider.apiUrl}
-                      onChange={(e) => {
-                        onUpdateLlmProvider({ apiUrl: e.target.value });
-                        setLlmTestState('idle');
-                      }}
-                      placeholder={t('settings.llm_api_placeholder')}
-                    />
-                  </div>
-
-                  {/* API Key */}
-                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-white block">API Key</label>
+                    {/* Model */}
+                    <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
+                      <label className="text-sm font-medium text-white block font-sans">{t('settings.llm_model_label')}</label>
+                      <input
+                        type="text"
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
+                        value={settings.llmProvider.model}
+                        onChange={(e) => {
+                          onUpdateLlmProvider({ model: e.target.value });
+                          setLlmTestState('idle');
+                        }}
+                        placeholder={t('settings.llm_model_placeholder')}
+                      />
+                      
+                      {/* Model Quick-Tags */}
                       {(() => {
-                        const preset = LLM_PRESETS.find((p) => p.apiUrl === settings.llmProvider.apiUrl);
-                        const url = preset ? LLM_API_KEY_URLS[preset.id] : undefined;
-                        return url ? (
-                          <button
-                            type="button"
-                            onClick={() => openExternal(url)}
-                            className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-                          >
-                            {t('settings.llm_get_api_key')}
-                            <ExternalLink className="w-3 h-3" />
-                          </button>
-                        ) : null;
+                        const matchedPreset = LLM_PRESETS.find(p => p.apiUrl && settings.llmProvider.apiUrl === p.apiUrl);
+                        if (matchedPreset && matchedPreset.recommendedModels && matchedPreset.recommendedModels.length > 0) {
+                          return (
+                            <div className="flex flex-wrap gap-1.5 pt-1.5">
+                              <span className="text-[10px] text-gray-500 flex items-center mr-1">推荐:</span>
+                              {matchedPreset.recommendedModels.map((m) => (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => {
+                                    onUpdateLlmProvider({ model: m });
+                                    setLlmTestState('idle');
+                                  }}
+                                  className={`px-2 py-0.5 text-[10px] rounded-md transition-colors font-mono border ${
+                                    settings.llmProvider.model === m
+                                      ? 'bg-cyan-900/60 text-cyan-400 border-cyan-700/60'
+                                      : 'bg-black/30 border-white/5 text-gray-400 hover:text-white hover:border-white/10'
+                                  }`}
+                                >
+                                  {m}
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return null;
                       })()}
                     </div>
-                    <input
-                      type="password"
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
-                      value={settings.llmProvider.apiKey}
-                      onChange={(e) => {
-                        onUpdateLlmProvider({ apiKey: e.target.value });
-                        setLlmTestState('idle');
-                      }}
-                      placeholder={t('settings.llm_key_placeholder')}
-                    />
-                  </div>
 
-                  {/* Model */}
-                  <div className="p-4 bg-black/20 rounded-lg border border-white/5 space-y-2">
-                    <label className="text-sm font-medium text-white block font-sans">{t('settings.llm_model_label')}</label>
-                    <input
-                      type="text"
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono"
-                      value={settings.llmProvider.model}
-                      onChange={(e) => {
-                        onUpdateLlmProvider({ model: e.target.value });
-                        setLlmTestState('idle');
-                      }}
-                      placeholder={t('settings.llm_model_placeholder')}
-                    />
-                  </div>
-
-                  {/* [通用] 测试连接 */}
-                  <div className="flex flex-col gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={handleTestLlmConnection}
-                      disabled={llmTestState === 'testing' || !settings.llmProvider.apiUrl}
-                      className={`py-2.5 px-4 rounded-lg text-sm font-semibold border transition-all ${
-                        llmTestState === 'success'
-                          ? 'bg-emerald-950/30 border-emerald-500 text-emerald-400'
-                          : llmTestState === 'failed'
-                          ? 'bg-rose-950/30 border-rose-500 text-rose-400 hover:bg-rose-900/20'
-                          : 'bg-cyan-600 hover:bg-cyan-500 text-white border-transparent'
-                      }`}
-                    >
-                      {llmTestState === 'testing'
-                        ? t('onboarding.testing')
-                        : llmTestState === 'success'
-                        ? `🎉 ${t('onboarding.test_success')}`
-                        : t('onboarding.test_btn')}
-                    </button>
-                    {llmTestState === 'failed' && (
-                      <p className="text-xs text-rose-400 text-center leading-relaxed">
-                        {llmTestError}
-                      </p>
-                    )}
+                    {/* [通用] 测试连接 */}
+                    <div className="flex flex-col gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleTestLlmConnection}
+                        disabled={llmTestState === 'testing' || !settings.llmProvider.apiUrl}
+                        className={`py-2.5 px-4 rounded-lg text-sm font-semibold border transition-all ${
+                          llmTestState === 'success'
+                            ? 'bg-emerald-950/30 border-emerald-500 text-emerald-400'
+                            : llmTestState === 'failed'
+                            ? 'bg-rose-950/30 border-rose-500 text-rose-400 hover:bg-rose-900/20'
+                            : 'bg-cyan-600 hover:bg-cyan-500 text-white border-transparent'
+                        }`}
+                      >
+                        {llmTestState === 'testing'
+                          ? t('onboarding.testing')
+                          : llmTestState === 'success'
+                          ? `🎉 ${t('onboarding.test_success')}`
+                          : t('onboarding.test_btn')}
+                      </button>
+                      {llmTestState === 'failed' && (
+                        <p className="text-xs text-rose-400 text-center leading-relaxed">
+                          {llmTestError}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {activeTab === 'data' && (
               <div className="space-y-6">

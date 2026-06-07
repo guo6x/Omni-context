@@ -10,7 +10,7 @@ import { AppSettings } from '@/hooks/useSettings';
 import { apiFetch } from '@/lib/api-client';
 import {
   X, Key, Database, ChevronRight, ChevronLeft, Check, Upload,
-  ArrowRight, Loader2, Copy, Brain, Sparkles,
+  ArrowRight, Loader2, Copy, Brain, Sparkles, Eye, EyeOff
 } from 'lucide-react';
 
 async function safeInvoke<T = any>(cmd: string, args?: any): Promise<T | undefined> {
@@ -51,6 +51,7 @@ export default function OnboardingWizard({
     settings.llmProvider.apiKey ? 'idle' : 'idle'
   );
   const [testError, setTestError] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // ② 导入 + 证明
   const fileRef = useRef<HTMLInputElement>(null);
@@ -177,7 +178,7 @@ export default function OnboardingWizard({
                 {[
                   { id: 'deepseek', emoji: '🐳', name: 'DeepSeek', cost: '极便宜' },
                   { id: 'ollama', emoji: '🏠', name: 'Ollama', cost: '本地·免费' },
-                  { id: 'openai', emoji: '🤖', name: 'GPT-4o mini', cost: '便宜' },
+                  { id: 'openai', emoji: '🤖', name: 'GPT-5.4 mini', cost: '便宜' },
                   { id: 'custom', emoji: '⚙️', name: '自定义', cost: '任意' },
                 ].map((p) => (
                   <button key={p.id} onClick={() => selectPreset(p.id)} className={`p-3 rounded-xl border text-center transition-all ${selectedPresetId === p.id ? 'bg-cyan-950/20 border-cyan-400 text-white' : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10'}`}>
@@ -185,11 +186,52 @@ export default function OnboardingWizard({
                   </button>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <input value={apiUrl} onChange={(e) => { setApiUrl(e.target.value); setSelectedPresetId('custom'); setTestState('idle'); }} placeholder="API URL" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
-                <input value={model} onChange={(e) => { setModel(e.target.value); setSelectedPresetId('custom'); setTestState('idle'); }} placeholder="Model" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <input value={apiUrl} onChange={(e) => { setApiUrl(e.target.value); setSelectedPresetId('custom'); setTestState('idle'); }} placeholder="API URL" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
+                  <input value={model} onChange={(e) => { setModel(e.target.value); setSelectedPresetId('custom'); setTestState('idle'); }} placeholder="Model" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
+                </div>
+                {/* Model Quick-Tags */}
+                {(() => {
+                  const matchedPreset = LLM_PRESETS.find(p => p.apiUrl && apiUrl === p.apiUrl);
+                  if (matchedPreset && matchedPreset.recommendedModels && matchedPreset.recommendedModels.length > 0) {
+                    return (
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        <span className="text-[10px] text-gray-500 flex items-center mr-1">推荐:</span>
+                        {matchedPreset.recommendedModels.map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => {
+                              setModel(m);
+                              setTestState('idle');
+                            }}
+                            className={`px-2 py-0.5 text-[9px] rounded-md transition-colors font-mono border ${
+                              model === m
+                                ? 'bg-cyan-900/60 text-cyan-400 border-cyan-700/60'
+                                : 'bg-black/30 border-white/5 text-gray-400 hover:text-white hover:border-white/10'
+                            }`}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
-              <input type="password" value={apiKey} onChange={(e) => { setApiKey(e.target.value); setTestState('idle'); }} placeholder={t('onboarding.apikey_placeholder')} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
+              <div className="relative">
+                <input type={showApiKey ? "text" : "password"} value={apiKey} onChange={(e) => { setApiKey(e.target.value); setTestState('idle'); }} placeholder={t('onboarding.apikey_placeholder')} className="w-full bg-black/40 border border-white/10 rounded-lg pl-3 pr-10 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  aria-label={showApiKey ? "Hide API Key" : "Show API Key"}
+                >
+                  {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               <button onClick={testLlm} disabled={testState === 'testing'} className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 border ${testState === 'success' ? 'bg-emerald-950/30 border-emerald-500 text-emerald-400' : testState === 'failed' ? 'bg-rose-950/30 border-rose-500 text-rose-400' : 'bg-cyan-600 hover:bg-cyan-500 text-white border-transparent'}`}>
                 {testState === 'testing' ? <><Loader2 className="w-4 h-4 animate-spin" />{t('onboarding.testing')}</> : testState === 'success' ? <><Check className="w-4 h-4" />{t('onboarding.test_success')}</> : <span>{t('onboarding.test_btn')}</span>}
               </button>

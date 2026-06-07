@@ -104,6 +104,7 @@ export default {
     hide: '隐藏 HUD',
     drag_hint: '· 双击拖动 · 主窗口最小化时常驻',
     capture_paused: '抓取已暂停',
+    capture_paused_hint: '请在 设置 → 行为 → 抓屏 中开启',
     capture_blocked: '已跳过：检测到敏感应用 {app}',
   },
   upload: {

@@ -126,6 +126,10 @@ html.light .bg-\[\#0a0b12\]\/90 {
   background-color: rgba(255, 255, 255, 0.9) !important;
 }
 
+html.light .bg-\[\#0a0b12\]\/95 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
 /* 高频面板：bg-gray-950/90、/95（图谱搜索栏、侧栏、按钮等） */
 html.light .bg-gray-950\/90,
 html.light .bg-gray-950\/95 {

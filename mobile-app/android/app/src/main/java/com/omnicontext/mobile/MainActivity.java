@@ -1,4 +1,4 @@
-package com.omicontext.mobile;
+package com.omnicontext.mobile;
 
 import android.os.Build;
 import android.os.Bundle;
