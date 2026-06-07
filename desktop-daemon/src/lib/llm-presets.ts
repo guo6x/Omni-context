@@ -65,10 +65,10 @@ export const LLM_PRESETS: LlmPreset[] = [
     name: 'OpenAI',
     emoji: '🤖',
     apiUrl: 'https://api.openai.com/v1',
-    defaultModel: 'gpt-5.4-mini',
+    defaultModel: 'gpt-4o-mini',
     speed: 'llm_presets.speed_fast',
     cost: 'llm_presets.cost_low',
-    recommendedModels: ['gpt-5.4-mini', 'gpt-5.5', 'gpt-5.5-pro', 'gpt-5.4-pro'],
+    recommendedModels: ['gpt-4o-mini', 'gpt-4o', 'o1-mini', 'gpt-4-turbo'],
   },
   {
     id: 'gemini',

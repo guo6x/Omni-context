@@ -176,9 +176,9 @@ export default function OnboardingWizard({
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { id: 'deepseek', emoji: '🐳', name: 'DeepSeek', cost: '极便宜' },
+                  {id: 'deepseek', emoji: '🐳', name: 'DeepSeek', cost: '极便宜' },
                   { id: 'ollama', emoji: '🏠', name: 'Ollama', cost: '本地·免费' },
-                  { id: 'openai', emoji: '🤖', name: 'GPT-5.4 mini', cost: '便宜' },
+                  { id: 'openai', emoji: '🤖', name: 'GPT-4o mini', cost: '便宜' },
                   { id: 'custom', emoji: '⚙️', name: '自定义', cost: '任意' },
                 ].map((p) => (
                   <button key={p.id} onClick={() => selectPreset(p.id)} className={`p-3 rounded-xl border text-center transition-all ${selectedPresetId === p.id ? 'bg-cyan-950/20 border-cyan-400 text-white' : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10'}`}>
