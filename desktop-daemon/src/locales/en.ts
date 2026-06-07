@@ -13,7 +13,10 @@ export default {
     favorited: 'Bookmarked',
     favorite_failed: 'Bookmark failed',
     promote_to_graph: 'Adopt to Graph',
+    promote_all_to_graph: 'Adopt All',
     promoted_to_graph: 'Adopted to knowledge graph',
+    promoted_all_to_graph: 'All adopted to knowledge graph',
+    promote_all_failed: 'Some adoptions failed, please try again later',
     promote_failed: 'Failed to adopt insight, please try again later',
   },
   boot: {
@@ -733,6 +736,11 @@ export default {
     empty_hint: 'When Brain Server discovers new associations from recent nodes, they will appear here automatically.',
     cannot_connect: 'Cannot connect to Brain Server',
     dismiss: 'Dismiss',
+    related_entities: 'Related Entities:',
+    type: {
+      blindspot: 'Blindspot',
+      decay_warning: 'Decay',
+    },
   },
   llm_presets: {
     speed_fast: 'Fast',

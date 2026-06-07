@@ -90,7 +90,7 @@ export interface GraphRAGOutput {
   principles: Entity[];
 }
 
-export type NotificationType = 'insight' | 'reminder' | 'system' | 'decay_warning';
+export type NotificationType = 'insight' | 'reminder' | 'system' | 'decay_warning' | 'blindspot';
 
 export interface Notification {
   id: string;

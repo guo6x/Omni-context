@@ -11,6 +11,14 @@ import {
 
 let db: SQLite.SQLiteDatabase | null = null;
 
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export async function initDatabase(): Promise<void> {
   db = SQLite.openDatabase('omni_context.db');
   
@@ -114,7 +122,7 @@ async function getFirstAsync<T>(sql: string, args: unknown[] = []): Promise<T | 
 export async function addEntity(entity: Entity | EntityInput, synced: boolean = false): Promise<void> {
   const now = new Date().toISOString();
   const entityWithDefaults: Entity = {
-    id: 'id' in entity && entity.id ? entity.id : crypto.randomUUID(),
+    id: 'id' in entity && entity.id ? entity.id : generateUUID(),
     name: entity.name,
     type: entity.type,
     description: entity.description,
@@ -180,7 +188,7 @@ export async function updateEntity(id: string, updates: Partial<Entity>): Promis
     updated_at: new Date().toISOString(),
   };
 
-  await addEntity(updatedEntity);
+  await addEntity(updatedEntity, false);
 }
 
 export async function deleteEntity(id: string): Promise<void> {
@@ -224,6 +232,7 @@ function rowToEntity(row: any): Entity {
     updated_at: row.updated_at,
     access_count: row.access_count || 0,
     last_accessed: row.last_accessed,
+    synced: row.synced === 1,
   };
 }
 
@@ -349,26 +358,98 @@ export async function syncFromServer(
   serverEntities: Entity[],
   serverRelationships: Relationship[]
 ): Promise<void> {
-  // 简单版本，不用事务
-  // 保存实体，从服务器来的都是已同步的
-  for (const entity of serverEntities) {
-    await addEntity(entity, true);
-  }
-  
-  // 保存关系
-  for (const rel of serverRelationships) {
-    await addRelationship(rel);
-  }
-  
-  // 更新知识图谱节点
-  for (const entity of serverEntities) {
-    await addKnowledgeNode(entityToKnowledgeNode(entity));
-  }
-  
-  // 更新知识图谱边
-  for (const rel of serverRelationships) {
-    await addKnowledgeEdge(relationshipToKnowledgeEdge(rel));
-  }
+  const database = getDb();
+  await database.transactionAsync(async (tx) => {
+    // 在事务中批量写入实体
+    for (const entity of serverEntities) {
+      const now = new Date().toISOString();
+      const tagsStr = entity.tags ? JSON.stringify(entity.tags) : null;
+      const metadataStr = entity.metadata ? JSON.stringify(entity.metadata) : null;
+      await tx.executeSqlAsync(
+        `INSERT OR REPLACE INTO entities (
+          id, name, type, description, source_file, tags, metadata,
+          created_at, updated_at, access_count, last_accessed, synced
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          entity.id,
+          entity.name,
+          entity.type,
+          entity.description || null,
+          entity.source_file || null,
+          tagsStr,
+          metadataStr,
+          entity.created_at || now,
+          entity.updated_at || now,
+          entity.access_count || 0,
+          entity.last_accessed || null,
+          1, // 从服务器拉取的都是已同步的
+        ] as any
+      );
+    }
+
+    // 在事务中批量写入关系
+    for (const rel of serverRelationships) {
+      await tx.executeSqlAsync(
+        `INSERT OR REPLACE INTO relationships (
+          id, source_id, target_id, type, description, weight,
+          created_at, last_activated, valid_from, valid_until,
+          invalidated_at, invalidation_reason
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          rel.id,
+          rel.source_id,
+          rel.target_id,
+          rel.type,
+          rel.description || null,
+          rel.weight,
+          rel.created_at,
+          rel.last_activated,
+          rel.valid_from || null,
+          rel.valid_until || null,
+          rel.invalidated_at || null,
+          rel.invalidation_reason || null,
+        ] as any
+      );
+    }
+
+    // 在事务中批量更新知识图谱节点
+    for (const entity of serverEntities) {
+      const node = entityToKnowledgeNode(entity);
+      await tx.executeSqlAsync(
+        `INSERT OR REPLACE INTO knowledge_nodes (
+          id, label, type, connections, weight, color, x, y
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          node.id,
+          node.label,
+          node.type,
+          JSON.stringify(node.connections),
+          node.weight,
+          node.color,
+          node.x || null,
+          node.y || null,
+        ] as any
+      );
+    }
+
+    // 在事务中批量更新知识图谱边
+    for (const rel of serverRelationships) {
+      const edge = relationshipToKnowledgeEdge(rel);
+      await tx.executeSqlAsync(
+        `INSERT OR REPLACE INTO knowledge_edges (
+          id, source, target, type, weight, description
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          edge.id,
+          edge.source,
+          edge.target,
+          edge.type,
+          edge.weight,
+          edge.description || null,
+        ] as any
+      );
+    }
+  });
 }
 
 export async function clearAllData(): Promise<void> {

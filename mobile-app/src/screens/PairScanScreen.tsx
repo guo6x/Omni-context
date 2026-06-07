@@ -12,7 +12,7 @@ export function PairScanScreen() {
   const navigation = useNavigation<any>();
   const { showMessage } = useHUD();
   const { setServerUrl, setAuthToken } = useSettings();
-  const { sync } = useSync();
+  const { fullSync } = useSync();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
 
@@ -46,7 +46,7 @@ export function PairScanScreen() {
       showMessage('配对成功', 'success');
 
       // 触发一次同步
-      sync().catch((err) => {
+      fullSync().catch((err) => {
         console.warn('[PairScan] 自动同步失败:', err);
       });
 

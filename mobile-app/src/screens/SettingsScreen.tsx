@@ -75,7 +75,7 @@ export function SettingsScreen() {
     reset,
   } = useSettings();
 
-  const { status, sync, isSyncing } = useSync();
+  const { status, fullSync, isSyncing } = useSync();
   const [serverUrlInput, setServerUrlInput] = useState(serverUrl);
   const [authTokenInput, setAuthTokenInput] = useState(authToken);
   const [showConfigInput, setShowConfigInput] = useState(false);
@@ -102,8 +102,8 @@ export function SettingsScreen() {
       showMessage('未配置服务器', 'warning');
       return;
     }
-    await sync();
-  }, [sync, showMessage]);
+    await fullSync();
+  }, [fullSync, showMessage]);
 
   const handleClearData = useCallback(() => {
     Alert.alert(

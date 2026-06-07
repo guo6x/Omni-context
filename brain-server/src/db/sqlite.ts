@@ -1501,6 +1501,38 @@ export class Database {
     }
   }
 
+  // ── 图分析洞见查询 ──
+
+  /**
+   * 按实体 type 分组统计近 N 天的访问量，用于注意力分布异常检测。
+   */
+  async getAccessCountByType(days: number): Promise<Array<{type: string, total_access: number, entity_count: number}>> {
+    return this.all<{type: string, total_access: number, entity_count: number}>(
+      `SELECT type, SUM(access_count) as total_access, COUNT(*) as entity_count
+       FROM entities
+       WHERE created_at > datetime('now', '-' || ? || ' days')
+         AND json_extract(metadata, '$.merged_into') IS NULL
+       GROUP BY type
+       ORDER BY total_access DESC`,
+      [days],
+    );
+  }
+
+  /**
+   * 在实体 name/description 中搜索关键词（LIKE 模糊匹配），用于反共识洞见检测。
+   */
+  async searchEntityByKeyword(keyword: string, limit: number = 10): Promise<Entity[]> {
+    const rows = await this.all<any>(
+      `SELECT * FROM entities
+       WHERE (name LIKE ? OR description LIKE ?)
+         AND json_extract(metadata, '$.merged_into') IS NULL
+       ORDER BY updated_at DESC
+       LIMIT ?`,
+      [`%${keyword}%`, `%${keyword}%`, limit],
+    );
+    return rows.map(row => this.rowToEntity(row));
+  }
+
   async getStats(): Promise<{
     entities: number;
     relationships: number;

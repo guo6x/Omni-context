@@ -120,6 +120,10 @@ class SyncService {
             weight: edge.weight,
             created_at: new Date().toISOString(),
             last_activated: new Date().toISOString(),
+            valid_from: undefined,
+            valid_until: undefined,
+            invalidated_at: undefined,
+            invalidation_reason: undefined,
           }))
         : [];
 
@@ -141,7 +145,7 @@ class SyncService {
   startAutoSync(intervalMs: number = 60000): void {
     this.stopAutoSync();
     this.syncInterval = setInterval(() => {
-      this.sync();
+      this.fullSync();
     }, intervalMs);
   }
 
@@ -173,6 +177,13 @@ class SyncService {
   async updateEntity(id: string, updates: Partial<Entity>): Promise<void> {
     await localDb.updateEntity(id, updates);
     await this.updatePendingCount();
+    
+    if (api.isConfigured()) {
+      this.sync().catch((err) => {
+        console.warn('Background sync on update failed:', err);
+        this.updateStatus({ error: (err as Error).message });
+      });
+    }
   }
 
   async deleteEntity(id: string): Promise<void> {

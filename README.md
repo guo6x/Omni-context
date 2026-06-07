@@ -2,7 +2,7 @@
 
 <p align="center"><strong>English</strong> · <a href="README.zh-CN.md">简体中文</a></p>
 
-> **Plug long-term memory into any AI client via MCP — runs entirely on your machine, owns your data forever.**
+> **Plug long-term memory into any AI client via MCP. Not just storage — a second brain that spots your blind spots and challenges your thinking. Fully local, forever yours.**
 
 <p align="center">
   <img src="docs/landing/assets/social-preview.svg" alt="Omni-Context" width="720">
@@ -26,6 +26,8 @@
 **Cloud memory means someone else's server.** Mem0, Letta, Zep — all impressive, all cloud-first. Your second brain lives on their infrastructure.
 
 **Omni-Context gives every MCP-compatible AI a shared, persistent knowledge graph that lives on your machine.** Plug it into Claude Desktop, Cursor, Cline, Windsurf — they all draw from the same brain. The graph grows as you work. Forever yours.
+
+**More than memory.** Most "AI memory" tools are fancy databases. Omni-Context actively analyzes your knowledge graph to find gaps — topics you consume but never act on, perspectives you're missing, connections you haven't noticed. It's not just storage; it's a second brain that questions you.
 
 ---
 
@@ -51,6 +53,7 @@ Browser extension          + vectors + full-text         Claude · Cursor · Cli
 - **Not cloud** — SQLite on your disk. No accounts, no servers, no data ever leaves your machine.
 - **Not locked to one AI** — MCP-native. Use Claude Desktop today, Cursor tomorrow, same memory.
 - **Active, not passive** — the agent scans your graph for connections you've forgotten and surfaces them.
+- **Questions your thinking** — blind spot detection finds what you're missing. Anti-consensus insights challenge your assumptions. Your graph pushes back.
 
 ---
 

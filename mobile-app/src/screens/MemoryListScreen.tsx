@@ -160,9 +160,15 @@ export function MemoryListScreen() {
     loadEntities();
   }, [loadEntities]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    loadEntities();
+    try {
+      await syncService.fullSync();
+    } catch (error) {
+      console.warn('Refresh sync failed:', error);
+    } finally {
+      loadEntities();
+    }
   }, [loadEntities]);
 
   const handleSearch = useCallback(async (query: string) => {

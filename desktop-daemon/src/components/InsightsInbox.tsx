@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle, Copy, Bookmark, Plus } from 'lucide-react';
+import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle, Copy, Bookmark, Plus, Eye } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
 import { apiFetch } from '@/lib/api-client';
@@ -24,14 +24,53 @@ interface Insight {
   type: string;
   created_at: string;
   read_status: boolean;
+  related_entities?: string[];
 }
 
 interface InsightsInboxProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelectEntity?: (id: string) => void;
+  entities?: any[];
 }
 
-export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
+/** 根据通知类型返回卡片样式配置 */
+function getTypeStyles(type: string) {
+  switch (type) {
+    case 'blindspot':
+      return {
+        border: 'border-amber-500/25 hover:border-amber-500/50',
+        shadow: 'hover:shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+        title: 'text-amber-300',
+        labelKey: 'insights.type.blindspot',
+        labelClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+        icon: Eye,
+        tagBtn: 'border-amber-500/20 bg-amber-500/5 text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/40',
+      };
+    case 'decay_warning':
+      return {
+        border: 'border-rose-500/20 hover:border-rose-500/50',
+        shadow: 'hover:shadow-[0_0_15px_rgba(244,63,94,0.15)]',
+        title: 'text-rose-300',
+        labelKey: 'insights.type.decay_warning',
+        labelClass: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+        icon: AlertCircle,
+        tagBtn: 'border-rose-500/20 bg-rose-500/5 text-rose-300 hover:bg-rose-500/15 hover:border-rose-500/40',
+      };
+    default: // insight, system, reminder
+      return {
+        border: 'border-cyan-500/20 hover:border-cyan-500/50',
+        shadow: 'hover:shadow-[0_0_15px_rgba(34,211,238,0.15)]',
+        title: 'text-cyan-300',
+        labelKey: '',
+        labelClass: '',
+        icon: null,
+        tagBtn: 'border-cyan-500/20 bg-cyan-500/5 text-cyan-300 hover:bg-cyan-500/15 hover:border-cyan-500/40',
+      };
+  }
+}
+
+export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entities }: InsightsInboxProps) {
   const { t } = useTranslation();
   const toast = useToast();
   const [insights, setInsights] = useState<Insight[]>([]);
@@ -120,6 +159,25 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
     }
   }, [fetchInsights, toast, t]);
 
+  const promoteAllInsights = useCallback(async () => {
+    const insightItems = insights.filter((i) => i.type === 'insight');
+    if (insightItems.length === 0) return;
+    const ids = insightItems.map((i) => i.id);
+    setInsights((prev) => prev.filter((i) => i.type !== 'insight'));
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        apiFetch(`/api/notifications/${id}/promote`, { method: 'POST' }).then((r) => r.ok)
+      )
+    );
+    const succeeded = results.filter((r) => r.status === 'fulfilled' && r.value).length;
+    if (succeeded === ids.length) {
+      toast.success(t('actions.promoted_all_to_graph'));
+    } else {
+      toast.error(t('actions.promote_all_failed'));
+      fetchInsights();
+    }
+  }, [insights, fetchInsights, toast, t]);
+
   const markAllAsRead = useCallback(async () => {
     if (insights.length === 0) return;
     const ids = insights.map((i) => i.id);
@@ -146,6 +204,14 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
           )}
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={promoteAllInsights}
+            className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded transition-colors disabled:opacity-30"
+            disabled={insights.filter((i) => i.type === 'insight').length === 0}
+            title={t('actions.promote_all_to_graph')}
+          >
+            <Plus className="w-4 h-4" />
+          </button>
           <button
             onClick={markAllAsRead}
             className="p-1.5 text-gray-400 hover:text-cyan-300 hover:bg-white/10 rounded transition-colors disabled:opacity-30"
@@ -197,13 +263,47 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
             <p className="text-xs mt-2 max-w-64 leading-5">{t('insights.empty_desc')}</p>
           </div>
         ) : (
-          insights.map((insight) => (
+          insights.map((insight) => {
+            const styles = getTypeStyles(insight.type);
+            const TypeIcon = styles.icon;
+            return (
             <div
               key={insight.id}
-              className="bg-black/40 border border-cyan-500/20 rounded-lg p-4 relative group hover:border-cyan-500/50 transition-all hover:shadow-[0_0_15px_rgba(34,211,238,0.15)]"
+              className={`bg-black/40 border ${styles.border} rounded-lg p-4 relative group transition-all ${styles.shadow}`}
             >
-              <h3 className="text-cyan-300 font-medium text-sm mb-2 pr-8">{insight.title}</h3>
+              <div className="flex items-center gap-2 mb-2 pr-8">
+                {styles.labelKey && (
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${styles.labelClass}`}>
+                    {TypeIcon && <TypeIcon className="w-3 h-3" />}
+                    {t(styles.labelKey)}
+                  </span>
+                )}
+                <h3 className={`${styles.title} font-medium text-sm`}>{insight.title}</h3>
+              </div>
               <p className="text-gray-300 text-sm leading-relaxed">{insight.content}</p>
+
+              {onSelectEntity && insight.related_entities && insight.related_entities.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3 items-center">
+                  <span className="text-[11px] text-gray-500 font-medium">{t('insights.related_entities')}</span>
+                  {insight.related_entities.map((id) => {
+                    const ent = entities?.find((e: any) => e.id === id);
+                    if (!ent) return null;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          onSelectEntity(id);
+                          onClose();
+                        }}
+                        className={`inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded border transition-colors ${styles.tagBtn}`}
+                        title={ent.description}
+                      >
+                        {ent.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               
               <div className="flex items-center justify-between mt-4">
                 <span
@@ -220,6 +320,7 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
                       className="flex items-center gap-1 text-xs text-green-400 opacity-60 group-hover:opacity-100 transition-opacity hover:text-green-300 hover:bg-green-500/10 px-2 py-1 rounded"
                     >
                       <Plus className="w-3 h-3" />
+                      <span>{t('actions.promote_to_graph')}</span>
                     </button>
                   )}
                   <button
@@ -241,12 +342,13 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
                     className="flex items-center gap-1 text-xs text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity hover:bg-cyan-500/20 px-2 py-1 rounded"
                   >
                     <Check className="w-3 h-3" />
-                    Dismiss
+                    {t('insights.dismiss')}
                   </button>
                 </div>
               </div>
             </div>
-          ))
+          );
+          })
         )}
       </div>
     </div>

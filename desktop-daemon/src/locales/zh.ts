@@ -13,7 +13,10 @@ export default {
     favorited: '已收藏',
     favorite_failed: '收藏失败',
     promote_to_graph: '采纳到图谱',
+    promote_all_to_graph: '全部采纳',
     promoted_to_graph: '已采纳到图谱',
+    promoted_all_to_graph: '已全部采纳到图谱',
+    promote_all_failed: '部分采纳失败，请稍后重试',
     promote_failed: '采纳失败，请稍后重试',
   },
   boot: {
@@ -732,7 +735,12 @@ export default {
     empty: '暂无新的 AI 洞见',
     empty_hint: '当 Brain Server 从最近节点中发现新的关联时，会自动出现在这里。',
     cannot_connect: '无法连接 Brain Server',
-    dismiss: '忽略',
+    dismiss: '已阅',
+    related_entities: '相关实体:',
+    type: {
+      blindspot: '盲区',
+      decay_warning: '衰减',
+    },
   },
   llm_presets: {
     speed_fast: '快速',

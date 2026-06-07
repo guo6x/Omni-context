@@ -993,7 +993,14 @@ function MainApp() {
           />
         )}
         
-        <InsightsInbox isOpen={showInsights} onClose={() => setShowInsights(false)} />
+        <InsightsInbox
+          isOpen={showInsights}
+          onClose={() => setShowInsights(false)}
+          onSelectEntity={(id) => {
+            setFocusEntityId(id);
+          }}
+          entities={entities}
+        />
         {showMemoryManager && <MemoryManager onClose={() => setShowMemoryManager(false)} />}
 
         <HardwarePairingPanel isOpen={showHardware} onClose={() => setShowHardware(false)} />

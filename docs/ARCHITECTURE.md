@@ -39,7 +39,7 @@ Five components, one brain:
 
 | Component | Stack | Purpose |
 |---|---|---|
-| **Brain Server** | Node.js + SQLite (FTS5 + sqlite-vec) | Entity/relation CRUD, vector search, GraphRAG extraction, proactive agent |
+| **Brain Server** | Node.js + SQLite (FTS5 + sqlite-vec) | Entity/relation CRUD, vector search, GraphRAG extraction, proactive agent, blind spot detection, graph-driven insights |
 | **Desktop App** | Tauri 1.x + Next.js 14 + Tailwind | Main console, 3D/2D knowledge graph visualizer, floating HUD |
 | **Browser Extension** | Manifest V3 (Chrome/Edge) | One-click page/selection capture |
 | **MCP Proxy** | Node.js stdio server | Bridges MCP stdio clients to Brain Server HTTP |
@@ -63,10 +63,13 @@ There is no WebSocket, no mDNS, no cross-process push channel. Clients poll Brai
 ```
 omni-context-release/
 ├── brain-server/              # Brain: HTTP API + MCP + proxy + SQLite + Agent
-│   ├── src/mcp-server.ts      # MCP stdio + HTTP dual-mode (desktop embedded entry)
-│   ├── src/mcp-proxy.ts       # MCP proxy (clients spawn this)
-│   ├── src/mcp-tools.ts       # 14 MCP tool definitions
-│   └── src/api/handlers/      # All HTTP endpoints
+│   ├── src/mcp-server.ts           # MCP stdio + HTTP dual-mode (desktop embedded entry)
+│   ├── src/mcp-proxy.ts            # MCP proxy (clients spawn this)
+│   ├── src/mcp-tools.ts            # 14 MCP tool definitions
+│   ├── src/agent/agent-loop.ts     # Agent cycle: consolidate → insight → blind spot → decay
+│   ├── src/agent/blindspot-detector.ts  # Cognitive blind spot detection (task 35-1)
+│   ├── src/agent/graph-insight.ts       # Graph-driven insight generation (task 35-2)
+│   └── src/api/handlers/           # All HTTP endpoints
 ├── desktop-daemon/            # Desktop: Tauri (Rust) + Next.js frontend
 │   └── src-tauri/             # Rust: screen/clipboard capture, UDP, brain-server lifecycle
 ├── browser-extension/         # Browser extension (Manifest V3)

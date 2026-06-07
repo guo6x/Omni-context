@@ -57,6 +57,7 @@ export interface Entity {
   updated_at: string;
   access_count: number;
   last_accessed?: string;
+  synced?: boolean;
 }
 
 // 实体输入（用于创建）
