@@ -139,7 +139,8 @@ describe('Obsidian Vault Exporter', () => {
       
       // 验证失效关系带 strikethrough 样式
       expect(zhangSanContent).toContain('~~knows~~ → [[张三]]');
-      expect(zhangSanContent).toContain('invalidated 2026-05-26');
+      const todayStr = new Date().toISOString().slice(0, 10);
+      expect(zhangSanContent).toContain(`invalidated ${todayStr}`);
 
       // 验证索引文件内容
       const allEntitiesContent = await zip.file('index/all-entities.md')!.async('string');

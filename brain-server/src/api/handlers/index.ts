@@ -750,6 +750,18 @@ export const handleNotificationRoutes = [
       await ctx.db.markNotificationRead(params.id);
       sendResponse(res, 200, { success: true });
     }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/notifications/:id/promote',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const r = await ctx.db.promoteInsightToGraph(params.id);
+      if (!r) {
+        sendError(res, 404, 'insight not found or already processed');
+      } else {
+        sendResponse(res, 200, r);
+      }
+    }
   }
 ];
 

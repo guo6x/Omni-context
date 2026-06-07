@@ -81,8 +81,13 @@ pub fn get_system_status() -> SystemStatus {
 }
 
 #[tauri::command]
-pub fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    brain_server::start()?;
+pub async fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        brain_server::start()
+    })
+    .await
+    .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
+
     let status_text = if brain_server::is_running() {
         "Brain Server: 在线"
     } else {
@@ -93,8 +98,13 @@ pub fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, String
 }
 
 #[tauri::command]
-pub fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    brain_server::stop()?;
+pub async fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        brain_server::stop()
+    })
+    .await
+    .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
+
     let status_text = if brain_server::is_running() {
         "Brain Server: 在线"
     } else {
@@ -105,8 +115,13 @@ pub fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, String>
 }
 
 #[tauri::command]
-pub fn restart_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    brain_server::restart()?;
+pub async fn restart_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        brain_server::restart()
+    })
+    .await
+    .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
+
     let status_text = if brain_server::is_running() {
         "Brain Server: 在线"
     } else {

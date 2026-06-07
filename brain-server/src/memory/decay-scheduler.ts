@@ -222,20 +222,13 @@ export class MemoryDecayScheduler {
     });
   }
 
-  /**
-   * 标记长期未访问的实体
-   */
   private async _markStaleEntities(report: DecayReport): Promise<void> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - this.config.staleDays);
-    const cutoffStr = cutoffDate.toISOString();
-
-    // 查找长期未访问且未标记为 stale 的实体
+    // 查找长期未访问且未标记为 stale 的实体（通过 importance 加权天数差）
     const staleEntities = await this.db.all<{ id: string }>(
       `SELECT id FROM entities
-       WHERE last_accessed < ?
+       WHERE (julianday('now') - julianday(last_accessed)) > (? * (0.5 + COALESCE(cast(json_extract(metadata, '$.importance') as real), 0.5)))
        AND (metadata IS NULL OR json_extract(metadata, '$.stale') IS NULL OR json_extract(metadata, '$.stale') = 0)`,
-      [cutoffStr]
+      [this.config.staleDays]
     );
 
     if (staleEntities.length === 0) return;

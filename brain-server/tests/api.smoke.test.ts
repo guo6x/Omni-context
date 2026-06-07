@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import http from 'http';
 import { AddressInfo } from 'net';
 import initDatabase, { Database } from '../src/db/sqlite.js';
 import { createServer } from '../src/api/routes.js';
 import { decodeEmbedding } from '../src/utils/math.js';
+import { LLMExtractorPipeline } from '../src/graphrag/llm-pipeline.js';
 
 // 端到端 smoke：启动真实 HTTP 服务，验证关键路由不再因路由顺序、
 // CORS 头、参数 404 等问题而被静默打断。
@@ -12,6 +13,17 @@ let server: http.Server;
 let baseUrl: string;
 
 beforeAll(async () => {
+  process.env.LOCAL_API_TOKEN = 'test-token-123';
+
+  // Mock LLM 提取，防止测试环境因没有 Ollama/LLM 导致网络连接 ECONNREFUSED 超时
+  vi.spyOn(LLMExtractorPipeline.prototype, 'extract').mockResolvedValue({
+    entities: [
+      { name: 'UserService', type: 'concept', description: 'mock user service', tags: ['code'] }
+    ],
+    relationships: [],
+    principles: []
+  });
+
   db = initDatabase({ dbPath: ':memory:' });
   await db.runMigrations();
   server = createServer(db);
@@ -34,7 +46,11 @@ async function request(
   headers: Record<string, string> = {}
 ): Promise<{ status: number; body: any; headers: http.IncomingHttpHeaders }> {
   const url = `${baseUrl}${path}`;
-  const init: RequestInit = { method, headers: { ...headers } };
+  const authHeaders: Record<string, string> = {};
+  if (process.env.LOCAL_API_TOKEN) {
+    authHeaders['Authorization'] = `Bearer ${process.env.LOCAL_API_TOKEN}`;
+  }
+  const init: RequestInit = { method, headers: { ...authHeaders, ...headers } };
   if (body !== undefined) {
     (init.headers as Record<string, string>)['Content-Type'] = 'application/json';
     init.body = JSON.stringify(body);
@@ -131,7 +147,10 @@ describe('API smoke: graph extract', () => {
     const url = `${baseUrl}/api/graph/extract`;
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
+      headers: {
+        'Content-Type': 'text/plain',
+        'Authorization': `Bearer ${process.env.LOCAL_API_TOKEN}`
+      },
       body: 'plain text',
     });
     expect(res.status).toBe(415);
@@ -167,10 +186,25 @@ describe('API smoke: ingest file', () => {
       base64,
     });
     expect(status).toBe(200);
-    expect(typeof body.entities).toBe('number');
-    expect(typeof body.relationships).toBe('number');
-    expect(typeof body.archivalId).toBe('string');
-    expect(body.archivalId.length).toBeGreaterThan(0);
+    expect(body.jobId).toBeDefined();
+
+    // 轮询直至成功，超时设为 10 秒
+    const jobId = body.jobId;
+    let jobStatus = body.status;
+    let jobResult: any;
+    const start = Date.now();
+    while (jobStatus !== 'success' && jobStatus !== 'failed' && (Date.now() - start < 10000)) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const getRes = await request('GET', `/api/ingest/job/${jobId}`);
+      jobStatus = getRes.body.status;
+      jobResult = getRes.body.result;
+    }
+
+    expect(jobStatus).toBe('success');
+    expect(typeof jobResult.entities).toBe('number');
+    expect(typeof jobResult.relationships).toBe('number');
+    expect(typeof jobResult.archivalId).toBe('string');
+    expect(jobResult.archivalId.length).toBeGreaterThan(0);
   }, 30000);
 
   it('rejects unsupported contentType with 415', async () => {

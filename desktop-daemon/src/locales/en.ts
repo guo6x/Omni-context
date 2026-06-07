@@ -12,6 +12,9 @@ export default {
     favorite: 'Bookmark',
     favorited: 'Bookmarked',
     favorite_failed: 'Bookmark failed',
+    promote_to_graph: 'Adopt to Graph',
+    promoted_to_graph: 'Adopted to knowledge graph',
+    promote_failed: 'Failed to adopt insight, please try again later',
   },
   boot: {
     title: 'Starting brain service…',

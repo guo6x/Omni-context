@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle, Copy, Bookmark } from 'lucide-react';
+import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle, Copy, Bookmark, Plus } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
 import { apiFetch } from '@/lib/api-client';
@@ -102,6 +102,24 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
     } catch { toast.error(t('actions.favorite_failed')); }
   }, [favIds, toast, t]);
 
+  const promoteInsight = useCallback(async (insight: Insight) => {
+    setInsights((prev) => prev.filter((i) => i.id !== insight.id));
+    try {
+      const res = await apiFetch(`/api/notifications/${insight.id}/promote`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        toast.success(t('actions.promoted_to_graph'));
+      } else {
+        throw new Error();
+      }
+    } catch (e) {
+      console.warn('Failed to promote insight', e);
+      toast.error(t('actions.promote_failed'));
+      fetchInsights();
+    }
+  }, [fetchInsights, toast, t]);
+
   const markAllAsRead = useCallback(async () => {
     if (insights.length === 0) return;
     const ids = insights.map((i) => i.id);
@@ -195,6 +213,15 @@ export default function InsightsInbox({ isOpen, onClose }: InsightsInboxProps) {
                   {formatRelative(insight.created_at)}
                 </span>
                 <div className="flex items-center gap-1">
+                  {insight.type === 'insight' && (
+                    <button
+                      onClick={() => promoteInsight(insight)}
+                      title={t('actions.promote_to_graph')}
+                      className="flex items-center gap-1 text-xs text-green-400 opacity-60 group-hover:opacity-100 transition-opacity hover:text-green-300 hover:bg-green-500/10 px-2 py-1 rounded"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  )}
                   <button
                     onClick={() => copyInsight(insight)}
                     title={t('actions.copy')}

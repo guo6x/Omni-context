@@ -12,6 +12,9 @@ export default {
     favorite: '收藏',
     favorited: '已收藏',
     favorite_failed: '收藏失败',
+    promote_to_graph: '采纳到图谱',
+    promoted_to_graph: '已采纳到图谱',
+    promote_failed: '采纳失败，请稍后重试',
   },
   boot: {
     title: '正在启动大脑服务…',

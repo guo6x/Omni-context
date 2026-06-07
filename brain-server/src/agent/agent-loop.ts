@@ -33,8 +33,9 @@ class InsightGenerator {
     return { ...this.config };
   }
 
-  async generateInsight(nodes: Entity[]): Promise<{ title: string; content: string } | null> {
-    if (!this.config.apiUrl || nodes.length < 2) return null;
+  async generateInsight(nodes: Entity[]): Promise<{ ok: boolean; insight: { title: string; content: string } | null }> {
+    if (!this.config.apiUrl) return { ok: false, insight: null };
+    if (nodes.length < 2) return { ok: true, insight: null };
 
     const contextText = nodes.map(n => `- [${n.type}] ${n.name}: ${n.description}`).join('\n');
     const prompt = `你是一个知识图谱分析专家。以下是用户最近访问或添加的知识节点：\n${contextText}\n
@@ -76,26 +77,52 @@ class InsightGenerator {
 
       clearTimeout(timeout);
 
-      if (!response.ok) return null;
+      if (!response.ok) return { ok: false, insight: null };
 
       const data = await response.json() as {
         choices: Array<{ message: { content: string } }>;
       };
 
       const content = data.choices?.[0]?.message?.content;
-      if (!content) return null;
+      if (!content) {
+        throw new Error('LLM response content is empty');
+      }
 
       const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
       const jsonStr = jsonMatch ? jsonMatch[1] : content;
-      const parsed = JSON.parse(jsonStr.trim());
+      
+      let parsed: any;
+      try {
+        parsed = JSON.parse(jsonStr.trim());
+      } catch (e) {
+        const balanced = (() => {
+          const start = jsonStr.indexOf('{');
+          if (start === -1) return null;
+          let count = 0;
+          for (let i = start; i < jsonStr.length; i++) {
+            if (jsonStr[i] === '{') {
+              count++;
+            } else if (jsonStr[i] === '}') {
+              count--;
+              if (count === 0) return jsonStr.substring(start, i + 1);
+            }
+          }
+          return null;
+        })();
+        if (balanced) {
+          parsed = JSON.parse(balanced);
+        } else {
+          throw e;
+        }
+      }
 
       if (parsed.title && parsed.content) {
-        return { title: parsed.title, content: parsed.content };
+        return { ok: true, insight: { title: parsed.title, content: parsed.content } };
       }
-      return null;
+      return { ok: true, insight: null };
     } catch (e) {
       console.warn('[AgentLoop] 洞见生成失败:', e);
-      return null;
+      return { ok: false, insight: null };
     }
   }
 }
@@ -106,11 +133,6 @@ export class AgentLoop {
   private warmupTimer: NodeJS.Timeout | null = null;
   private generator: InsightGenerator;
   private decayScheduler: MemoryDecayScheduler | null = null;
-  // 同一组 entity 不重复生成洞见，避免在没有新数据时反复刷屏
-  private lastAnchorKey: string | null = null;
-  private lastAnchorAt: number = 0;
-  // 即使 anchor 不变，超过该窗口仍允许重新触发一次分析
-  private readonly anchorRefreshMs = 30 * 60 * 1000;
   // 衰减洞见每 6 轮（约 6 分钟）触发一次
   private cycleCount = 0;
   private static readonly DECAY_CHECK_INTERVAL = 6;
@@ -160,42 +182,28 @@ export class AgentLoop {
   private async runCycle() {
     console.log('[AgentLoop] 唤醒，执行周期任务...');
     try {
-      // 1. 获取最近更新的节点作为锚点 (Fallback for testing: get any principles or memories)
-      const recentEntities = await this.db.all<Entity>(
-        'SELECT * FROM entities ORDER BY updated_at DESC LIMIT 5'
-      );
+      // 1. 获取未整合或更新待重整合的节点
+      const batch = await this.db.getEntitiesForConsolidation(5);
 
-      if (recentEntities.length < 2) {
+      if (batch.length < 2) {
         console.log('[AgentLoop] 数据不足，跳过本轮分析');
         return;
       }
 
-      // 2. 去重：纳入 updated_at，实体内容变化时锚点变化、触发重新分析
-      const anchorKey = recentEntities
-        .map(e => `${e.id}:${e.updated_at}`)
-        .sort()
-        .join('|');
-      const now = Date.now();
-      if (
-        this.lastAnchorKey === anchorKey &&
-        now - this.lastAnchorAt < this.anchorRefreshMs
-      ) {
-        console.log('[AgentLoop] 锚点未变化，跳过 LLM 调用');
-        return;
+      // 2. 生成洞见
+      const result = await this.generator.generateInsight(batch);
+      if (result.ok) {
+        await this.db.markEntitiesConsolidated(batch.map(e => e.id));
       }
 
-      // 3. 生成洞见
-      const insight = await this.generator.generateInsight(recentEntities);
-      this.lastAnchorKey = anchorKey;
-      this.lastAnchorAt = now;
-      if (insight) {
+      if (result.insight) {
         await this.db.addNotification({
-          title: insight.title,
-          content: insight.content,
+          title: result.insight.title,
+          content: result.insight.content,
           type: 'insight',
-          related_entities: recentEntities.map(e => e.id),
+          related_entities: batch.map(e => e.id),
         });
-        console.log(`[AgentLoop] 产生新洞见: ${insight.title}`);
+        console.log(`[AgentLoop] 产生新洞见: ${result.insight.title}`);
       } else {
         console.log('[AgentLoop] 本轮未产生有效洞见');
       }

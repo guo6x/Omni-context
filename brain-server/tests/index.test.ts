@@ -140,7 +140,7 @@ describe('Database', () => {
       expect(found.length).toBe(1);
 
       const validUntil = new Date().toISOString();
-      await db.invalidateRelationship(relationship.id, validUntil);
+      await db.invalidateRelationship(relationship.id, undefined, validUntil);
 
       found = await db.getRelationshipsForEntity(source.id);
       expect(found.length).toBe(0);
@@ -1042,3 +1042,330 @@ describe('GraphRAG Fact Mapping (Task 44)', () => {
     vi.restoreAllMocks();
   });
 });
+
+describe('Notification / Insight Promotion Operations', () => {
+  let db: Database;
+
+  beforeAll(async () => {
+    db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+  });
+
+  afterAll(async () => {
+    await db.close();
+  });
+
+  it('should promote an insight notification to the knowledge graph', async () => {
+    // 1. 创建两个锚点实体
+    const entityA = await db.addEntity({ name: 'NodeA', type: 'concept' });
+    const entityB = await db.addEntity({ name: 'NodeB', type: 'concept' });
+
+    // 2. 写入一条未读通知
+    const notification = await db.addNotification({
+      title: '💡 这是一条测试智能洞见',
+      content: '通过NodeA与NodeB的关联，发现了一条全新的技术选型洞察。',
+      type: 'insight',
+      related_entities: [entityA.id, entityB.id],
+    } as any);
+
+    // 3. 验证可以 getNotification
+    const retrieved = await db.getNotification(notification.id);
+    expect(retrieved).not.toBeNull();
+    expect(retrieved?.id).toBe(notification.id);
+    expect(retrieved?.type).toBe('insight');
+    expect(retrieved?.related_entities).toEqual([entityA.id, entityB.id]);
+    expect(retrieved?.read_status).toBe(false);
+
+    // 4. 调用 promoteInsightToGraph
+    const result = await db.promoteInsightToGraph(notification.id);
+    expect(result).not.toBeNull();
+    expect(result?.entity).toBeDefined();
+    expect(result?.linked).toBe(2);
+
+    const promotedEntity = result!.entity;
+    expect(promotedEntity.name).toBe('💡 这是一条测试智能洞见');
+    expect(promotedEntity.type).toBe('concept');
+    expect(promotedEntity.tags).toEqual(['insight', 'agent-loop']);
+    expect(promotedEntity.metadata?.provenance?.source).toBe('agent-loop');
+
+    // 5. 验证创建的 derived_from 关系
+    const activeRels = await db.getRelationshipsForEntity(promotedEntity.id);
+    expect(activeRels.length).toBe(2);
+    expect(activeRels.every(r => r.type === 'derived_from')).toBe(true);
+
+    // 6. 验证通知状态已被标记为已读（已处理）
+    const updatedNotification = await db.getNotification(notification.id);
+    expect(updatedNotification?.read_status).toBe(true);
+
+    // 7. 防重复物化：再次调用 promoteInsightToGraph 应该返回 null
+    const duplicateResult = await db.promoteInsightToGraph(notification.id);
+    expect(duplicateResult).toBeNull();
+  });
+
+  it('should return null if trying to promote non-insight or already read notification', async () => {
+    // 1. 创建非 insight 通知的 proactive 类型
+    const notification = await db.addNotification({
+      title: 'proactive notification',
+      content: 'content',
+      type: 'proactive',
+      related_entities: [],
+    } as any);
+
+    const res = await db.promoteInsightToGraph(notification.id);
+    expect(res).toBeNull();
+  });
+});
+
+describe('Consolidation Watermark Operations', () => {
+  let db: Database;
+
+  beforeAll(async () => {
+    db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+  });
+
+  afterAll(async () => {
+    await db.close();
+  });
+
+  it('should select unconsolidated entities, exclude them after marking, and re-include after update', async () => {
+    // 1. 新增三个实体
+    const e1 = await db.addEntity({ name: 'ConsolidateNode1', type: 'concept', description: 'Desc1' });
+    const e2 = await db.addEntity({ name: 'ConsolidateNode2', type: 'concept', description: 'Desc2' });
+    const e3 = await db.addEntity({ name: 'ConsolidateNode3', type: 'concept', description: 'Desc3' });
+
+    // 2. getEntitiesForConsolidation 能够选出未整合实体
+    let toConsolidate = await db.getEntitiesForConsolidation(5);
+    const ids = toConsolidate.map(e => e.id);
+    expect(ids).toContain(e1.id);
+    expect(ids).toContain(e2.id);
+    expect(ids).toContain(e3.id);
+
+    // 3. 标记已整合
+    await db.markEntitiesConsolidated([e1.id, e2.id, e3.id]);
+
+    // 4. consolidated_at 被写入且不改变 updated_at
+    const savedE1 = await db.getEntity(e1.id);
+    expect(savedE1?.metadata?.consolidated_at).toBeDefined();
+    expect(savedE1?.updated_at).toBe(e1.updated_at);
+
+    // 5. 从 consolidation 池中排除
+    toConsolidate = await db.getEntitiesForConsolidation(5);
+    const idsAfter = toConsolidate.map(e => e.id);
+    expect(idsAfter).not.toContain(e1.id);
+    expect(idsAfter).not.toContain(e2.id);
+    expect(idsAfter).not.toContain(e3.id);
+
+    // 6. 手动更新 e1 的 updated_at 使其大于 consolidated_at，模拟其在稍后被更新
+    await db.run("UPDATE entities SET updated_at = datetime('now', '+2 seconds'), description = 'Updated Desc1' WHERE id = ?", [e1.id]);
+
+    // 7. e1 重新进池，而 e2 和 e3 依旧排除
+    toConsolidate = await db.getEntitiesForConsolidation(5);
+    const idsFinal = toConsolidate.map(e => e.id);
+    expect(idsFinal).toContain(e1.id);
+    expect(idsFinal).not.toContain(e2.id);
+    expect(idsFinal).not.toContain(e3.id);
+  });
+
+  it('should not mark consolidated when LLM is offline or error (ok = false) during AgentLoop run', async () => {
+    // 1. 创建干净的测试数据库，防止受其它测试实体干扰
+    const testDb = initDatabase({ dbPath: ':memory:' });
+    await testDb.runMigrations();
+
+    // 2. 创建 2 个实体
+    const ea = await testDb.addEntity({ name: 'NodeA', type: 'concept' });
+    const eb = await testDb.addEntity({ name: 'NodeB', type: 'concept' });
+
+    // 3. 初始化 AgentLoop 并故意不配 apiUrl，使其 generateInsight 返回 ok: false
+    const { AgentLoop: TestAgentLoop } = await import('../src/agent/agent-loop.js');
+    const agent = new TestAgentLoop(testDb);
+    agent.setLlmConfig({ apiUrl: '', model: 'test' });
+
+    // 4. 调用 runCycle
+    await (agent as any).runCycle();
+
+    // 5. 验证这批实体没有被打上 consolidated_at 标记
+    const activeEA = await testDb.getEntity(ea.id);
+    const activeEB = await testDb.getEntity(eb.id);
+    expect(activeEA?.metadata?.consolidated_at).toBeUndefined();
+    expect(activeEB?.metadata?.consolidated_at).toBeUndefined();
+
+    await testDb.close();
+  });
+});
+
+describe('Entity Importance Scoring Operations', () => {
+  let db: Database;
+
+  beforeAll(async () => {
+    db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+  });
+
+  afterAll(async () => {
+    await db.close();
+  });
+
+  it('should extract entities with importance (LLM path has parsed value, regex path has type defaults)', async () => {
+    // 1. 测试 LLM 抽取管道解析 importance
+    const { LLMExtractorPipeline } = await import('../src/graphrag/llm-pipeline.js');
+    const pipeline = new LLMExtractorPipeline({ apiUrl: 'http://mock', model: 'test' });
+    
+    // Mock fetch 返回带 importance 的 JSON 字符串
+    vi.stubGlobal('fetch', async () => {
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  entities: [
+                    { name: 'CoreService', type: 'decision', description: 'Core design decision', importance: 0.85 },
+                    { name: 'random term', type: 'concept', description: 'Just a term', importance: 0.15 },
+                    { name: 'invalid importance term', type: 'concept', description: 'Invalid value', importance: 'not-a-number' }
+                  ],
+                  facts: [],
+                  principles: []
+                }),
+              },
+            },
+          ],
+        }),
+      } as any;
+    });
+
+    const result = await pipeline.extract('mock text');
+    expect(result.entities.length).toBe(3);
+    expect(result.entities[0].importance).toBe(0.85);
+    expect(result.entities[1].importance).toBe(0.15);
+    expect(result.entities[2].importance).toBeUndefined(); // 非法值应该过滤掉
+
+    vi.unstubAllGlobals();
+
+    // 2. 测试 Extractor 落库后的 metadata.importance
+    const { GraphRAGExtractor } = await import('../src/graphrag/extractor.js');
+    const extractor = new GraphRAGExtractor();
+    
+    vi.spyOn((extractor as any).llmPipeline, 'extract').mockResolvedValue({
+      entities: [
+        { name: 'CoreService', type: 'decision', description: 'Core design decision', importance: 0.85 },
+        { name: 'random term', type: 'concept', description: 'Just a term', importance: 0.15 },
+        { name: 'invalid importance term', type: 'concept', description: 'Invalid value', importance: undefined }
+      ],
+      facts: [],
+      principles: []
+    });
+
+    const out = await extractor.extract({
+      textContent: 'project omni tool react',
+      timestamp: new Date().toISOString(),
+      sourceType: 'manual'
+    });
+
+    // 3. 验证落库实体数量和 importance
+    const coreService = out.entities.find(e => e.name === 'CoreService');
+    const randomTerm = out.entities.find(e => e.name === 'random term');
+    const invalidTerm = out.entities.find(e => e.name === 'invalid importance term');
+    const omniProject = out.entities.find(e => e.name === 'omni');
+    const reactTool = out.entities.find(e => e.name === 'react');
+
+    expect(coreService?.metadata?.importance).toBe(0.85);
+    expect(randomTerm?.metadata?.importance).toBe(0.15);
+    expect(invalidTerm?.metadata?.importance).toBe(0.5);
+    expect(omniProject?.metadata?.importance).toBe(0.60);
+    expect(reactTool?.metadata?.importance).toBe(0.45);
+
+    vi.restoreAllMocks();
+  });
+
+  it('should rank higher importance entities first in getEntitiesForConsolidation when updated_at is identical', async () => {
+    const testDb = initDatabase({ dbPath: ':memory:' });
+    await testDb.runMigrations();
+
+    // 1. 创建两个实体，设置相同的 updated_at
+    const now = new Date().toISOString();
+    const eLow = await testDb.addEntity({ name: 'LowNode', type: 'concept' });
+    const eHigh = await testDb.addEntity({ name: 'HighNode', type: 'concept' });
+
+    // 2. 将低重要度实体的 metadata.importance 设为 0.2，高重要度设为 0.9，并且拥有完全相同的 updated_at
+    await testDb.run(
+      `UPDATE entities
+       SET metadata = json_set(COALESCE(metadata, '{}'), '$.importance', 0.2), updated_at = ?
+       WHERE id = ?`,
+      [now, eLow.id]
+    );
+    await testDb.run(
+      `UPDATE entities
+       SET metadata = json_set(COALESCE(metadata, '{}'), '$.importance', 0.9), updated_at = ?
+       WHERE id = ?`,
+      [now, eHigh.id]
+    );
+
+    // 3. 捞出待整合实体，验证 HighNode 排在 LowNode 前面 (即使 updated_at 一模一样)
+    const batch = await testDb.getEntitiesForConsolidation(5);
+    const firstNode = batch[0];
+    const secondNode = batch[1];
+
+    expect(firstNode.id).toBe(eHigh.id);
+    expect(secondNode.id).toBe(eLow.id);
+
+    await testDb.close();
+  });
+
+  it('should delay decay based on importance in _markStaleEntities', async () => {
+    const testDb = initDatabase({ dbPath: ':memory:' });
+    await testDb.runMigrations();
+
+    // 1. 创建两个实体，设置相同的 last_accessed
+    const eLow = await testDb.addEntity({ name: 'LowStaleNode', type: 'concept' });
+    const eHigh = await testDb.addEntity({ name: 'HighStaleNode', type: 'concept' });
+
+    const nineDaysAgo = new Date();
+    nineDaysAgo.setDate(nineDaysAgo.getDate() - 9);
+    const lastAccessedStr = nineDaysAgo.toISOString();
+
+    await testDb.run(
+      `UPDATE entities
+       SET metadata = json_set(COALESCE(metadata, '{}'), '$.importance', 0.2), last_accessed = ?
+       WHERE id = ?`,
+      [lastAccessedStr, eLow.id]
+    );
+
+    await testDb.run(
+      `UPDATE entities
+       SET metadata = json_set(COALESCE(metadata, '{}'), '$.importance', 0.9), last_accessed = ?
+       WHERE id = ?`,
+      [lastAccessedStr, eHigh.id]
+    );
+
+    // 2. 使用 staleDays = 10 初始化 MemoryDecayScheduler 并调用私有方法 _markStaleEntities
+    const { MemoryDecayScheduler: TestDecayScheduler } = await import('../src/memory/decay-scheduler.js');
+    const scheduler = new TestDecayScheduler(testDb, { staleDays: 10, autoStart: false });
+
+    const report = {
+      relationshipsProcessed: 0,
+      relationshipsDecayed: 0,
+      relationshipsDormant: 0,
+      entitiesStale: 0,
+      durationMs: 0,
+      timestamp: new Date().toISOString(),
+    };
+
+    await (scheduler as any)._markStaleEntities(report);
+
+    // 3. 验证报告和数据库状态
+    expect(report.entitiesStale).toBe(1);
+
+    const savedLow = await testDb.getEntity(eLow.id);
+    const savedHigh = await testDb.getEntity(eHigh.id);
+
+    expect(savedLow?.metadata?.stale).toBe(1);
+    expect(savedHigh?.metadata?.stale).toBeUndefined();
+
+    await testDb.close();
+  });
+});
+
+
+

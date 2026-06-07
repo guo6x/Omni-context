@@ -4,6 +4,34 @@ import { LLMExtractorPipeline } from './llm-pipeline.js';
 import { OCRPipeline } from '../ocr/pipeline.js';
 import { sanitizeForExtraction } from './sanitize.js';
 
+const DEFAULT_IMPORTANCE_MAP: Record<EntityType, number> = {
+  principle: 0.75,
+  decision: 0.75,
+  goal: 0.75,
+  bug_vulnerability: 0.70,
+  critical_review: 0.70,
+  project: 0.60,
+  person: 0.60,
+  architecture_pattern: 0.60,
+  concept: 0.50,
+  memory: 0.50,
+  business_logic: 0.50,
+  task: 0.50,
+  question: 0.50,
+  preference: 0.50,
+  tool: 0.45,
+  code_snippet: 0.45,
+  event: 0.40,
+  evidence: 0.40,
+  capture_snapshot: 0.30,
+};
+
+function clamp01(x: any): number {
+  const num = Number(x);
+  if (isNaN(num)) return 0.5;
+  return Math.max(0, Math.min(1, num));
+}
+
 export interface ExtractionInput {
   screenshot?: string;
   clipboard?: string;
@@ -334,6 +362,7 @@ export class GraphRAGExtractor {
             metadata: {
               source: 'llm',
               model: this.config.llmModel,
+              importance: clamp01(llmEntity.importance ?? (DEFAULT_IMPORTANCE_MAP[safeType] || 0.5)),
               ...(safeType !== candidateType ? { originalType: candidateType } : {}),
             },
           };
@@ -515,6 +544,7 @@ export class GraphRAGExtractor {
               metadata: {
                 source: input.sourceType || 'manual',
                 timestamp: input.timestamp,
+                importance: DEFAULT_IMPORTANCE_MAP[pattern.type] || 0.5,
               }
             };
             
@@ -557,7 +587,10 @@ export class GraphRAGExtractor {
               last_accessed: now,
               access_count: 0,
               tags: ['url', 'web'],
-              metadata: { url: long }
+              metadata: {
+                url: long,
+                importance: DEFAULT_IMPORTANCE_MAP['tool'] || 0.5,
+              }
             });
           }
         }
@@ -581,7 +614,10 @@ export class GraphRAGExtractor {
           last_accessed: now,
           access_count: 0,
           tags: ['url', 'web'],
-          metadata: { url }
+          metadata: {
+            url,
+            importance: DEFAULT_IMPORTANCE_MAP['tool'] || 0.5,
+          }
         });
       }
     }
@@ -599,6 +635,9 @@ export class GraphRAGExtractor {
         last_accessed: now,
         access_count: 0,
         tags: ['email'],
+        metadata: {
+          importance: DEFAULT_IMPORTANCE_MAP['person'] || 0.5,
+        }
       });
     }
 
@@ -621,6 +660,9 @@ export class GraphRAGExtractor {
         last_accessed: now,
         access_count: 0,
         tags: ['version'],
+        metadata: {
+          importance: DEFAULT_IMPORTANCE_MAP['concept'] || 0.5,
+        }
       });
     }
 

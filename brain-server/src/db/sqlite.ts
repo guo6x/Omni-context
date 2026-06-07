@@ -972,36 +972,126 @@ export class Database {
     }));
   }
 
+  async getRelationshipsForEntities(entityIds: string[], includeHistorical: boolean = false): Promise<Relationship[]> {
+    if (entityIds.length === 0) return [];
+    const now = new Date().toISOString();
+    const placeholders = entityIds.map(() => '?').join(',');
+    let query = `SELECT * FROM relationships WHERE (source_id IN (${placeholders}) OR target_id IN (${placeholders}))`;
+    const params = [...entityIds, ...entityIds];
+
+    if (!includeHistorical) {
+      query += ` AND (valid_until IS NULL OR valid_until > ?)`;
+      params.push(now);
+    }
+
+    query += ` ORDER BY weight DESC`;
+
+    const rows = await this.all<any>(query, params);
+    return rows.map(row => ({
+      id: row.id,
+      source_id: row.source_id,
+      target_id: row.target_id,
+      type: row.type,
+      description: row.description || undefined,
+      weight: row.weight,
+      created_at: row.created_at,
+      last_activated: row.last_activated,
+      valid_from: row.valid_from,
+      valid_until: row.valid_until || undefined,
+      invalidated_at: row.invalidated_at || undefined,
+      invalidation_reason: row.invalidation_reason || undefined,
+    }));
+  }
+
+  async peekEntities(ids: string[]): Promise<Entity[]> {
+    if (ids.length === 0) return [];
+    const placeholders = ids.map(() => '?').join(',');
+    const rows = await this.all<any>(`SELECT * FROM entities WHERE id IN (${placeholders})`, ids);
+    
+    const entities: Entity[] = [];
+    for (const row of rows) {
+      let meta: any = {};
+      if (typeof row.metadata === 'string') {
+        try { meta = JSON.parse(row.metadata) || {}; } catch {}
+      } else if (row.metadata) {
+        meta = row.metadata;
+      }
+      
+      if (meta.merged_into) {
+        // 如果存在 merged_into，单独走 peekEntity 兜底
+        const resolved = await this.peekEntity(row.id);
+        if (resolved) {
+          entities.push(resolved);
+        }
+      } else {
+        entities.push(this.rowToEntity(row));
+      }
+    }
+    return entities;
+  }
+
   async getGraphNeighborhood(entityId: string, depth: number = 1, includeHistorical: boolean = false): Promise<GraphNeighborhood> {
     depth = Math.min(depth, 3);
     const nodes = new Map<string, Entity>();
-    const edges: Relationship[] = [];
-    const visited = new Set([entityId]);
-    const queue: Array<{ id: string; d: number }> = [{ id: entityId, d: 0 }];
+    const edgesMap = new Map<string, Relationship>();
+    const visited = new Set<string>([entityId]);
 
     const startEntity = await this.peekEntity(entityId);
     if (!startEntity) return { nodes: [], edges: [] };
     nodes.set(entityId, startEntity);
 
-    while (queue.length > 0) {
-      const { id, d } = queue.shift()!;
-      const rels = await this.getRelationshipsForEntity(id, includeHistorical);
+    let frontier = [entityId];
+
+    for (let d = 0; d < depth; d++) {
+      if (frontier.length === 0) break;
+
+      const rels = await this.getRelationshipsForEntities(frontier, includeHistorical);
+      const nextFrontierCandidates = new Set<string>();
+
       for (const rel of rels) {
-        edges.push(rel);
-        const neighborId = rel.source_id === id ? rel.target_id : rel.source_id;
-        if (!visited.has(neighborId)) {
-          visited.add(neighborId);
-          const neighborEntity = await this.peekEntity(neighborId);
-          if (neighborEntity) {
-            nodes.set(neighborId, neighborEntity);
-            if (d < depth) {
-              queue.push({ id: neighborId, d: d + 1 });
-            }
+        if (!edgesMap.has(rel.id)) {
+          edgesMap.set(rel.id, rel);
+        }
+
+        const sourceInFrontier = frontier.includes(rel.source_id);
+        const targetInFrontier = frontier.includes(rel.target_id);
+
+        if (sourceInFrontier) {
+          const neighborId = rel.target_id;
+          if (!visited.has(neighborId)) {
+            nextFrontierCandidates.add(neighborId);
+          }
+        }
+        if (targetInFrontier) {
+          const neighborId = rel.source_id;
+          if (!visited.has(neighborId)) {
+            nextFrontierCandidates.add(neighborId);
           }
         }
       }
+
+      if (nextFrontierCandidates.size === 0) {
+        break;
+      }
+
+      const newNeighborsList = Array.from(nextFrontierCandidates);
+      const newEntities = await this.peekEntities(newNeighborsList);
+
+      const nextFrontier: string[] = [];
+      for (const entity of newEntities) {
+        if (!nodes.has(entity.id)) {
+          nodes.set(entity.id, entity);
+          visited.add(entity.id);
+          nextFrontier.push(entity.id);
+        }
+      }
+      frontier = nextFrontier;
     }
-    return { nodes: Array.from(nodes.values()), edges };
+
+    return {
+      nodes: Array.from(nodes.values()),
+      edges: Array.from(edgesMap.values())
+    };
   }
 
   async updateRelationshipWeight(relId: string, weightChange: number = 0.1): Promise<void> {
@@ -1199,6 +1289,91 @@ export class Database {
 
   async markNotificationRead(id: string): Promise<void> {
     await this.run('UPDATE notifications SET read_status = 1 WHERE id = ?', [id]);
+  }
+
+  async getNotification(id: string): Promise<import('../shared-types.js').Notification | null> {
+    const rows = await this.all<any>('SELECT * FROM notifications WHERE id = ?', [id]);
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      id: row.id,
+      title: row.title,
+      content: row.content,
+      type: row.type,
+      related_entities: row.related_entities ? JSON.parse(row.related_entities) : undefined,
+      read_status: Boolean(row.read_status),
+      created_at: row.created_at,
+    };
+  }
+
+  async promoteInsightToGraph(notificationId: string): Promise<{ entity: Entity; linked: number } | null> {
+    const n = await this.getNotification(notificationId);
+    if (!n || n.type !== 'insight' || n.read_status === true) {
+      return null;
+    }
+
+    const entityName = n.title.slice(0, 120);
+    const entityDescription = n.content;
+    const insightEntity = await this.addEntity({
+      name: entityName,
+      type: 'concept',
+      description: entityDescription,
+      tags: ['insight', 'agent-loop'],
+      metadata: {
+        provenance: {
+          source: 'agent-loop',
+          generated_at: n.created_at
+        },
+        insight: true
+      }
+    });
+
+    let linkedCount = 0;
+    const relatedEntities = n.related_entities || [];
+    for (const targetId of relatedEntities) {
+      const targetEntity = await this.peekEntity(targetId);
+      if (targetEntity) {
+        await this.addRelationship({
+          source_id: insightEntity.id,
+          target_id: targetId,
+          type: 'derived_from',
+          description: '由 Agent 洞见关联',
+          weight: 0.6
+        });
+        linkedCount++;
+      }
+    }
+
+    await this.markNotificationRead(notificationId);
+
+    return {
+      entity: insightEntity,
+      linked: linkedCount
+    };
+  }
+
+  async getEntitiesForConsolidation(limit = 5): Promise<Entity[]> {
+    const rows = await this.all<any>(
+      `SELECT * FROM entities
+       WHERE json_extract(metadata, '$.merged_into') IS NULL
+         AND ( json_extract(metadata, '$.consolidated_at') IS NULL
+               OR datetime(json_extract(metadata, '$.consolidated_at')) < datetime(updated_at) )
+       ORDER BY COALESCE(cast(json_extract(metadata, '$.importance') as real), 0.5) DESC, updated_at DESC LIMIT ?`,
+      [limit]
+    );
+    return rows.map(row => this.rowToEntity(row));
+  }
+
+  async markEntitiesConsolidated(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    const now = new Date().toISOString();
+    const placeholders = ids.map(() => '?').join(',');
+    await this.run(
+      `UPDATE entities
+       SET metadata = json_set(COALESCE(metadata, '{}'), '$.consolidated_at', ?)
+       WHERE id IN (${placeholders})`,
+      [now, ...ids]
+    );
   }
 
   // ── 问大脑会话（可续聊的思考记录，独立于记忆，不进召回）──
