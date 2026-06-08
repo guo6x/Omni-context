@@ -36,7 +36,9 @@ async function findStatisticalInsights(db: Database): Promise<GraphInsight[]> {
 
   // 信号 1：注意力分布异常（近 14 天）
   try {
-    const typeStats = await db.getAccessCountByType(14);
+    let typeStats = await db.getAccessCountByType(14);
+    // 过滤掉系统自动或批量生成的 principle 和 evidence 类型，使注意力分布只聚焦在用户主动认知的实体类型（如 concept、project、decision 等）
+    typeStats = typeStats.filter(t => t.type !== 'principle' && t.type !== 'evidence');
     if (typeStats.length >= 2) {
       const totalAccess = typeStats.reduce((sum, t) => sum + t.total_access, 0);
       if (totalAccess > 0) {
