@@ -29,6 +29,8 @@ import {
 } from '../../mcp-tools.js';
 import { parseTimeWindow } from '../../utils/time-window.js';
 
+const CORE_PRINCIPLE_CAP = 3;
+
 export function toCompactEntity(entity: any): any {
   if (!entity) return entity;
 
@@ -208,12 +210,20 @@ async function retrieveDecisionContext(
   // 宽召回后用 LLM 重排挑出真正相关的 top-limit（救弱 embedding 的中文召回）
   const relevantMemories = await rerankByLlm(ctx, situation, candidates, limit);
 
-  const corePrinciples = await ctx.db.getCorePrinciples();
-  const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
+  const corePrincipleCandidates = await ctx.db.getCorePrinciples();
+  // 核心原则是用户的长期约束，但不能绕过相关性判断全量进入回答。
+  // LLM 不可用时 rerankByLlm 会退化为原序截断，至少保证噪声被硬性封顶。
+  const relevantCorePrinciples = await rerankByLlm(
+    ctx,
+    situation,
+    corePrincipleCandidates,
+    CORE_PRINCIPLE_CAP,
+  );
+  const seenPrincipleIds = new Set(relevantCorePrinciples.map((p: any) => p.id));
   const searchPrinciples = relevantMemories.filter(
     (m) => m.type === 'principle' && !seenPrincipleIds.has(m.id)
   );
-  const principles = [...corePrinciples, ...searchPrinciples];
+  const principles = [...relevantCorePrinciples, ...searchPrinciples];
 
   const relevantIds = new Set(relevantMemories.map((m: any) => m.id));
   const conflictPairs: any[] = [];
@@ -1139,19 +1149,34 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   $
               }
             }
             const cappedSources = sources.slice(0, 12);
-            const contextBlock = cappedSources.length
-              ? cappedSources
-                  .map((m: any, i: number) => `[${i + 1}] (${m.type}) ${m.name}: ${m.description || ''}`)
+            const memoryBlockItems = cappedSources
+              .map((m: any, i: number) => ({ item: m, index: i + 1 }))
+              .filter(({ item }) => item.type !== 'principle');
+            const principleBlockItems = cappedSources
+              .map((m: any, i: number) => ({ item: m, index: i + 1 }))
+              .filter(({ item }) => item.type === 'principle');
+            const memoryBlock = memoryBlockItems.length
+              ? memoryBlockItems
+                  .map(({ item, index }) => `[${index}] (${item.type}) ${item.name}: ${item.description || ''}`)
                   .join('\n')
               : '（没有检索到相关记忆）';
+            const principleBlock = principleBlockItems.length
+              ? principleBlockItems
+                  .map(({ item, index }) => `[${index}] (${item.type}) ${item.name}: ${item.description || ''}`)
+                  .join('\n')
+              : '（没有相关核心原则）';
 
-            const systemPrompt = `你是用户的「第二大脑」。下面是从用户本地知识图谱中检索到的相关记忆。
-请只依据这些记忆回答用户的问题，并在用到某条记忆时用其名称指明来源。
+            const systemPrompt = `你是用户的「第二大脑」。下面是从用户本地知识图谱中检索到的相关记忆和少量核心原则。
+请主要依据「相关记忆」回答用户的问题，并在用到某条记忆时用其名称指明来源。
+「核心原则」只有在确实与本问题相关时才参考或引用；无关原则必须忽略，不能为了引用而引用。
 如果这些记忆里没有答案，就如实说"我的记忆里暂时没有这部分"，可顺带建议用户该捕获什么，不要编造。
 回答简洁、口语化，使用用户提问所用的语言。
 
 相关记忆：
-${contextBlock}`;
+${memoryBlock}
+
+核心原则（仅在确与本问题相关时参考/引用，否则忽略）：
+${principleBlock}`;
 
             try {
               const controller = new AbortController();
@@ -1228,9 +1253,18 @@ ${contextBlock}`;
               }
             }
 
-            const gaCtxBlock = gaCapped.length
-              ? gaCapped.map((m: any, i: number) => `[${i + 1}] (${m.type}) ${m.name}: ${m.description || ''}`).join('\n')
+            const gaMemoryItems = gaCapped
+              .map((m: any, i: number) => ({ item: m, index: i + 1 }))
+              .filter(({ item }) => item.type !== 'principle');
+            const gaPrincipleItems = gaCapped
+              .map((m: any, i: number) => ({ item: m, index: i + 1 }))
+              .filter(({ item }) => item.type === 'principle');
+            const gaCtxBlock = gaMemoryItems.length
+              ? gaMemoryItems.map(({ item, index }) => `[${index}] (${item.type}) ${item.name}: ${item.description || ''}`).join('\n')
               : '（没有检索到相关记忆）';
+            const gaPrincipleBlock = gaPrincipleItems.length
+              ? gaPrincipleItems.map(({ item, index }) => `[${index}] (${item.type}) ${item.name}: ${item.description || ''}`).join('\n')
+              : '（没有相关核心原则）';
             const gaConnBlock = gaEdges.length
               ? gaEdges.map((e) => {
                   const sn = gaCapped.find((x) => x.id === e.source)?.name || '?';
@@ -1239,13 +1273,14 @@ ${contextBlock}`;
                 }).join('\n')
               : '（无已知关系）';
 
-            const gaSystem = `你是用户的「第二大脑」。基于下面从用户本地知识图谱检索到的记忆、以及它们之间的关系来回答。
+            const gaSystem = `你是用户的「第二大脑」。基于下面从用户本地知识图谱检索到的记忆、少量核心原则、以及它们之间的关系来回答。
 要求：
 1. 先给一句话结论(conclusion)，直接、口语化；
 2. 给 2-4 条依据(reasons)，每条尽量用 refs 数组引用上面记忆的编号；
 3. 善用关系信息(冲突/取代/支持/源于)让推理有据，比如"X 和 Y 冲突过"；
-4. 若现有记忆不足以给出有深度的回答（尤其抉择类）：不要硬凑一个浅答案。conclusion 里如实说"要答好这个我得先了解一些情况"，并在 questions 里列出 3-6 个具体、全面的澄清问题——覆盖目标、约束、资源、时间、风险偏好、已有选项等关键维度，别泛泛而问；
-5. 判断用户是不是在做一个抉择(该不该/选哪个/要不要/选型)，是则 is_decision=true：
+4. 核心原则仅在确与本问题相关时参考或引用；无关原则必须忽略，不能为了引用而引用；
+5. 若现有记忆不足以给出有深度的回答（尤其抉择类）：不要硬凑一个浅答案。conclusion 里如实说"要答好这个我得先了解一些情况"，并在 questions 里列出 3-6 个具体、全面的澄清问题——覆盖目标、约束、资源、时间、风险偏好、已有选项等关键维度，别泛泛而问；
+6. 判断用户是不是在做一个抉择(该不该/选哪个/要不要/选型)，是则 is_decision=true：
    - reasons 用 ＋/－ 开头表达利弊权衡；
    - 即便能给倾向，也尽量在 questions 里补 2-4 个能让结论更准的关键问题（信息确实够了才可少或为空）。
 只输出 JSON：{"conclusion":"...","reasons":[{"text":"...","refs":[1,2]}],"questions":["..."],"is_decision":false}
@@ -1253,6 +1288,9 @@ ${contextBlock}`;
 
 相关记忆：
 ${gaCtxBlock}
+
+核心原则（仅在确与本问题相关时参考/引用，否则忽略）：
+${gaPrincipleBlock}
 
 它们之间的关系：
 ${gaConnBlock}`;

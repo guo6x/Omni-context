@@ -335,11 +335,14 @@ export class GraphRAGExtractor {
     if (this.llmPipeline.isEnabled() && !this.config.useLocalExtraction) {
       try {
         const llmResult = await this.llmPipeline.extract(cleaned);
+        const llmEntities = Array.isArray(llmResult.entities) ? llmResult.entities : [];
+        const llmFacts = Array.isArray(llmResult.facts) ? llmResult.facts : [];
+        const llmPrinciples = Array.isArray(llmResult.principles) ? llmResult.principles : [];
         const now = new Date().toISOString();
         const seenNames = new Set(entities.map(e => e.name.toLowerCase()));
 
         // 合并 LLM 提取的实体（去重 + 类型白名单）
-        for (const llmEntity of llmResult.entities) {
+        for (const llmEntity of llmEntities) {
           const lowerName = llmEntity.name?.toLowerCase();
           if (!lowerName || seenNames.has(lowerName)) continue;
           const candidateType = llmEntity.type as EntityType;
@@ -374,7 +377,7 @@ export class GraphRAGExtractor {
         // [核心壁垒] 合并 LLM 提取的 Fact 事实（映射到 Relationships 表中，Confidence 对应 Weight，SourceSpan 对应 Description，且类型走白名单）
         const entityMap = new Map(entities.map(e => [e.name.toLowerCase(), e]));
         const seenRels = new Set(relationships.map(r => `${r.source_id}-${r.type}-${r.target_id}`));
-        for (const fact of llmResult.facts) {
+        for (const fact of llmFacts) {
           const src = entityMap.get(fact.subject?.toLowerCase());
           const tgt = entityMap.get(fact.object?.toLowerCase());
           if (!src || !tgt) continue;
@@ -400,7 +403,7 @@ export class GraphRAGExtractor {
 
         // 合并 LLM 提取的原则
         const seenPrinciples = new Set(principles.map(p => p.content.toLowerCase()));
-        for (const llmP of llmResult.principles) {
+        for (const llmP of llmPrinciples) {
           if (!seenPrinciples.has(llmP.content.toLowerCase())) {
             principles.push({
               title: llmP.title,

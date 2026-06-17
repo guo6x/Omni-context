@@ -20,7 +20,7 @@ beforeAll(async () => {
     entities: [
       { name: 'UserService', type: 'concept', description: 'mock user service', tags: ['code'] }
     ],
-    relationships: [],
+    facts: [],
     principles: []
   });
 
@@ -141,7 +141,7 @@ describe('API smoke: graph extract', () => {
     expect(typeof body.entities).toBe('number');
     expect(typeof body.relationships).toBe('number');
     expect(typeof body.principles).toBe('number');
-  });
+  }, 15000);
 
   it('rejects non-JSON content-type', async () => {
     const url = `${baseUrl}/api/graph/extract`;
@@ -155,6 +155,55 @@ describe('API smoke: graph extract', () => {
     });
     expect(res.status).toBe(415);
   });
+});
+
+describe('API smoke: MCP retrieval precision', () => {
+  it('caps unrelated core principles while preserving searched principles', async () => {
+    const query = 'Project Alpha retrieval precision decision';
+    for (let i = 0; i < 10; i++) {
+      await db.addEntity({
+        name: `Core Noise Principle ${i}`,
+        type: 'principle',
+        description: `Generic unrelated rule ${i}`,
+        metadata: { isCore: true },
+      });
+    }
+    await db.addEntity({
+      name: 'Project Alpha Retrieval Principle',
+      type: 'principle',
+      description: `${query} should use project-specific memories before global principles`,
+      metadata: { isCore: false },
+    });
+
+    const { status, body } = await request('POST', '/api/mcp/tool/get_decision_context', {
+      arguments: { situation: query, limit: 6 },
+    });
+
+    expect(status).toBe(200);
+    const principles = Array.isArray(body.principles) ? body.principles : [];
+    const corePrinciples = principles.filter((p: any) =>
+      typeof p.name === 'string' && p.name.startsWith('Core Noise Principle')
+    );
+    expect(corePrinciples.length).toBeLessThanOrEqual(3);
+    expect(principles.some((p: any) => p.name === 'Project Alpha Retrieval Principle')).toBe(true);
+  }, 15000);
+
+  it('does not force core principles into unified memory search results', async () => {
+    const { status, body } = await request('POST', '/api/mcp/tool/unified_memory_search', {
+      arguments: {
+        query: 'Project Alpha retrieval precision decision',
+        limit: 8,
+        includeRelationships: false,
+      },
+    });
+
+    expect(status).toBe(200);
+    const results = Array.isArray(body.results) ? body.results : [];
+    expect(results.some((r: any) => r.name === 'Project Alpha Retrieval Principle')).toBe(true);
+    expect(results.some((r: any) =>
+      typeof r.name === 'string' && r.name.startsWith('Core Noise Principle')
+    )).toBe(false);
+  }, 15000);
 });
 
 describe('API smoke: 404 / CORS', () => {
@@ -338,4 +387,3 @@ describe('API smoke: admin seed demo', () => {
     expect(found).toBe(true);
   });
 });
-

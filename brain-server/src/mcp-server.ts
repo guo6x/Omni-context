@@ -21,6 +21,8 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import type { EntityType, RelationshipType, Entity } from './shared-types.js';
 
+const CORE_PRINCIPLE_CAP = 3;
+
 /**
  * 精简实体，丢弃 embedding 和 metadata，保留关键字段，并截断 description。
  */
@@ -619,8 +621,8 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             }
           }
 
-          // 相关原则：核心原则 + 检索结果中的 principle 类型
-          const corePrinciples = await this.db.getCorePrinciples();
+          // 相关原则：stdio 旧路径没有 LLM 重排，至少对核心原则做硬上限，避免全局原则刷屏。
+          const corePrinciples = (await this.db.getCorePrinciples()).slice(0, CORE_PRINCIPLE_CAP);
           const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
           const searchPrinciples = relevantMemories.filter(
             (m) => m.type === 'principle' && !seenPrincipleIds.has(m.id)
