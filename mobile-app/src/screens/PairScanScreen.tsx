@@ -47,7 +47,11 @@ export function PairScanScreen() {
       const isConnected = await api.healthCheck();
       if (!isConnected) {
         setScanned(false);
-        showMessage('连通性测试失败，请确认局域网与防火墙设置', 'error');
+        if (host.startsWith('198.18.') || host.startsWith('198.19.')) {
+          showMessage('连通失败。扫码IP为代理虚拟网卡，请在电脑端关闭TUN/代理模式，或在设置中手动配置物理IP', 'error');
+        } else {
+          showMessage('连通性测试失败，请确认局域网与防火墙设置', 'error');
+        }
         return;
       }
 
