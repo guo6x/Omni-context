@@ -7,11 +7,12 @@ import { useHUD } from '@/components/HUD';
 import { api } from '@/services/api';
 import { useSync } from '@/hooks/useSync';
 import Svg, { Path } from 'react-native-svg';
+import * as Linking from 'expo-linking';
 
 export function PairScanScreen() {
   const navigation = useNavigation<any>();
   const { showMessage } = useHUD();
-  const { setServerUrl, setAuthToken } = useSettings();
+  const { setServerUrl, setAuthToken, setSyncEnabled } = useSettings();
   const { fullSync } = useSync();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
@@ -23,20 +24,21 @@ export function PairScanScreen() {
     })();
   }, []);
 
-  const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
+  const handleBarCodeScanned = async ({ data }: { type: string; data: string }) => {
     if (scanned) return;
 
-    // 配对二维码：omni://pair?host=<lan_ip>&port=<port>&code=<配对码>
-    const match = data.match(/^omni:\/\/pair\?host=([^&]+)&port=([^&]+)&code=(.+)$/);
-    if (!match) {
+    const parsed = Linking.parse(data);
+    const host = typeof parsed.queryParams?.host === 'string' ? parsed.queryParams.host.trim() : '';
+    const port = typeof parsed.queryParams?.port === 'string' ? parsed.queryParams.port.trim() : '';
+    const code = typeof parsed.queryParams?.code === 'string' ? parsed.queryParams.code.trim() : '';
+    const validPort = Number(port) >= 1 && Number(port) <= 65535;
+
+    if (parsed.scheme !== 'omni' || parsed.hostname !== 'pair' || !host || !validPort || !code) {
       showMessage('无效的配对二维码', 'warning');
       return;
     }
 
     setScanned(true);
-    const host = match[1];
-    const port = match[2];
-    const code = match[3];
     const baseUrl = `http://${host}:${port}`;
 
     try {
@@ -58,6 +60,7 @@ export function PairScanScreen() {
       // 连接成功，保存配置到设置中
       setServerUrl(baseUrl);
       setAuthToken(code);
+      setSyncEnabled(true);
       showMessage('配对成功', 'success');
 
       // 触发一次同步

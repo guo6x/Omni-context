@@ -10,24 +10,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { api } from '@/services/api';
+import { Entity, Relationship } from '@/types';
 
 type SearchStackParamList = {
-  EntityDetail: { entityId: string; entityName: string };
+  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
 };
 
 export function EntityDetailScreen() {
   const { t } = useTranslation();
   const route = useRoute<RouteProp<SearchStackParamList, 'EntityDetail'>>();
   const navigation = useNavigation();
-  const { entityId, entityName } = route.params;
+  const { entityId, entityName, entity: initialEntity } = route.params;
 
-  const [entity, setEntity] = useState<any>(null);
-  const [neighbors, setNeighbors] = useState<any[]>([]);
-  const [relationships, setRelationships] = useState<any[]>([]);
+  const [entity, setEntity] = useState<Entity | null>(initialEntity ?? null);
+  const [neighbors, setNeighbors] = useState<Entity[]>([]);
+  const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!api.isConfigured() && initialEntity) {
+      setIsLoading(false);
+      return;
+    }
     if (!api.isConfigured()) {
       setError(t('search.not_configured'));
       setIsLoading(false);
@@ -37,18 +42,16 @@ export function EntityDetailScreen() {
     setIsLoading(true);
     setError(null);
 
-    // 先搜实体详细信息，再拉图谱上下文
-    api.searchEntities(entityName, 1).then((searchResult) => {
-      if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
-        const found = searchResult.data.find((e: any) => e.id === entityId) || searchResult.data[0];
-        setEntity(found);
+    api.getEntity(entityId).then((result) => {
+      if (result.success && result.data) {
+        setEntity(result.data.entity);
       }
     }).catch(() => {});
 
     api.getGraphNeighborhood(entityId).then((result) => {
       setIsLoading(false);
       if (result.success && result.data) {
-        setNeighbors(result.data.entities.filter((e: any) => e.id !== entityId));
+        setNeighbors(result.data.entities.filter((e) => e.id !== entityId));
         setRelationships(result.data.relationships || []);
       } else {
         setError(result.error || t('search.connect_error'));
@@ -57,7 +60,7 @@ export function EntityDetailScreen() {
       setIsLoading(false);
       setError(t('search.connect_error'));
     });
-  }, [entityId, entityName, t]);
+  }, [entityId, initialEntity, t]);
 
   const getTypeLabel = (type: string): string => {
     const map: Record<string, string> = {
@@ -149,9 +152,9 @@ export function EntityDetailScreen() {
           {neighbors.length === 0 ? (
             <Text className="text-gray-500 text-sm text-center py-8">{t('search.no_neighbors')}</Text>
           ) : (
-            neighbors.map((node: any) => {
+            neighbors.map((node) => {
               const rel = relationships.find(
-                (r: any) => (r.source_id === entityId && r.target_id === node.id) ||
+                (r) => (r.source_id === entityId && r.target_id === node.id) ||
                           (r.target_id === entityId && r.source_id === node.id)
               );
               return (

@@ -1,12 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
-  Modal,
-  TextInput,
-  ScrollView,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,8 +11,6 @@ import { GraphViewer } from '@/components/GraphViewer';
 import { useKnowledgeGraph } from '@/hooks/useKnowledgeGraph';
 import { useHUD } from '@/components/HUD';
 import { KnowledgeNode } from '@/types';
-import { syncService } from '@/services/syncService';
-import { colors } from '@/utils/theme';
 
 export function KnowledgeGraphScreen() {
   const { t } = useTranslation();
@@ -28,12 +22,7 @@ export function KnowledgeGraphScreen() {
     refresh,
     selectedNode,
     setSelectedNode,
-    addNode,
   } = useKnowledgeGraph();
-
-  const [showNodeModal, setShowNodeModal] = useState(false);
-  const [newNodeLabel, setNewNodeLabel] = useState('');
-  const [newNodeType, setNewNodeType] = useState<'concept' | 'entity' | 'topic'>('concept');
 
   useEffect(() => {
     if (error) {
@@ -45,40 +34,20 @@ export function KnowledgeGraphScreen() {
     setSelectedNode(node);
   }, [setSelectedNode]);
 
-  const handleAddNode = useCallback(async () => {
-    if (!newNodeLabel.trim()) {
-      showMessage('请输入节点名称', 'warning');
-      return;
-    }
-
-    try {
-      const node: KnowledgeNode = {
-        id: Date.now().toString(),
-        label: newNodeLabel.trim(),
-        type: newNodeType as any,
-        connections: [],
-        weight: 1,
-        color: colors.nodeTypes[newNodeType],
-      };
-
-      await addNode(node);
-      setShowNodeModal(false);
-      setNewNodeLabel('');
-      showMessage('节点添加成功', 'success');
-    } catch (err) {
-      showMessage((err as Error).message, 'error');
-    }
-  }, [newNodeLabel, newNodeType, addNode, showMessage]);
-
   return (
-    <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
-      <View className="flex-row items-center justify-between px-5 py-4 border-b border-white/10">
-        <Text className="text-[#e8e8e8] text-2xl font-bold">{t('knowledgeGraph.title')}</Text>
-        <TouchableOpacity 
-          className="w-9 h-9 rounded-full bg-cyan-400 items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.5)]"
-          onPress={() => setShowNodeModal(true)}
+    <SafeAreaView className="flex-1 bg-[#0b0f12]" edges={['top']}>
+      <View className="flex-row items-center justify-between px-5 py-4">
+        <View>
+          <Text className="text-[#f2f5f4] text-2xl font-bold">{t('knowledgeGraph.title')}</Text>
+          <Text className="text-[#77818b] text-sm mt-1">
+            {graph?.nodes.length ?? 0} 个节点 · 双指缩放，拖动浏览
+          </Text>
+        </View>
+        <TouchableOpacity
+          className="px-3 py-2 rounded-md bg-[#171d21] border border-[#293139]"
+          onPress={refresh}
         >
-          <Text className="text-[#0a0b12] text-2xl font-bold leading-6 mt-[-2px]">+</Text>
+          <Text className="text-[#8fdccb] text-sm font-semibold">刷新</Text>
         </TouchableOpacity>
       </View>
 
@@ -96,7 +65,7 @@ export function KnowledgeGraphScreen() {
       )}
 
       {selectedNode && (
-        <View className="absolute bottom-[100px] left-4 right-4 bg-black/40 rounded-2xl p-4 border border-white/10 backdrop-blur-xl">
+        <View className="absolute bottom-[82px] left-4 right-4 bg-[#151a1f] rounded-lg p-4 border border-[#2a3239]">
           <View className="flex-row items-center mb-2">
             <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: selectedNode.color || '#22d3ee' }} />
             <Text className="flex-1 text-[#e8e8e8] text-lg font-bold">{selectedNode.label}</Text>
@@ -115,56 +84,6 @@ export function KnowledgeGraphScreen() {
         </View>
       )}
 
-      <Modal
-        visible={showNodeModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowNodeModal(false)}
-      >
-        <View className="flex-1 bg-black/70 justify-end">
-          <View className="bg-[#0a0b12] border-t border-white/10 rounded-t-3xl p-5">
-            <Text className="text-[#e8e8e8] text-xl font-bold mb-5 text-center">{t('knowledgeGraph.addNode')}</Text>
-            
-            <TextInput
-              className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base mb-4"
-              value={newNodeLabel}
-              onChangeText={setNewNodeLabel}
-              placeholder="节点名称"
-              placeholderTextColor="#64748b"
-            />
-
-            <Text className="text-gray-400 text-sm mb-2">{t('knowledgeGraph.type')}</Text>
-            <View className="flex-row gap-2 mb-6">
-              {(['concept', 'entity', 'topic'] as const).map(type => (
-                <TouchableOpacity
-                  key={type}
-                  className={`flex-1 py-2 rounded-lg items-center border ${newNodeType === type ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
-                  onPress={() => setNewNodeType(type)}
-                >
-                  <Text className={`text-sm ${newNodeType === type ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}>
-                    {t(`knowledgeGraph.${type}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View className="flex-row gap-4">
-              <TouchableOpacity
-                className="flex-1 py-3 rounded-xl bg-black/40 border border-white/10 items-center"
-                onPress={() => setShowNodeModal(false)}
-              >
-                <Text className="text-gray-400 text-base">{t('common.cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                className="flex-1 py-3 rounded-xl bg-cyan-400 items-center" 
-                onPress={handleAddNode}
-              >
-                <Text className="text-[#0a0b12] text-base font-bold">{t('common.confirm')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }

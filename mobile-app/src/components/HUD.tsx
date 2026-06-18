@@ -47,7 +47,7 @@ export function useHUD() {
   return context;
 }
 
-import { View, Text, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 
 interface HUDProps {
   messages: HUDMessage[];

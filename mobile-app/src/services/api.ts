@@ -28,7 +28,7 @@ class ApiClient {
   private authToken: string = '';
 
   configure(config: { baseUrl: string; timeout?: number; authToken?: string }) {
-    this.baseUrl = config.baseUrl;
+    this.baseUrl = config.baseUrl.replace(/\/+$/, '');
     this.authToken = config.authToken || '';
     
     const headers: Record<string, string> = {
@@ -39,7 +39,7 @@ class ApiClient {
     }
 
     this.client = axios.create({
-      baseURL: config.baseUrl,
+      baseURL: this.baseUrl,
       timeout: config.timeout ?? 30000,
       headers,
     });
@@ -56,6 +56,12 @@ class ApiClient {
         return Promise.reject(new Error(`API Error: ${message}`));
       }
     );
+  }
+
+  reset() {
+    this.client = null;
+    this.baseUrl = '';
+    this.authToken = '';
   }
 
   setAuthToken(token: string) {

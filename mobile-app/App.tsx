@@ -9,12 +9,14 @@ import { useSettings } from '@/hooks/useSettings';
 import { api } from '@/services/api';
 import { syncService } from '@/services/syncService';
 import '@/locales';
+import i18n from '@/locales';
 
 function ApiConfigProvider({ children }: { children: React.ReactNode }) {
   const serverUrl = useSettings((s) => s.serverUrl);
   const authToken = useSettings((s) => s.authToken);
   const autoSync = useSettings((s) => s.autoSync);
   const syncEnabled = useSettings((s) => s.syncEnabled);
+  const language = useSettings((s) => s.language);
 
   // 初始化本地 SQLite 数据库
   useEffect(() => {
@@ -30,8 +32,14 @@ function ApiConfigProvider({ children }: { children: React.ReactNode }) {
         baseUrl: serverUrl.trim(), 
         authToken: authToken?.trim()
       });
+    } else {
+      api.reset();
     }
   }, [serverUrl, authToken]);
+
+  useEffect(() => {
+    void i18n.changeLanguage(language);
+  }, [language]);
 
   // 控制自动同步生命周期
   useEffect(() => {

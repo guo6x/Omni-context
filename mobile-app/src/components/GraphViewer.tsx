@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import Svg, {
   G,
@@ -17,9 +15,8 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
 } from 'react-native-reanimated';
-import { KnowledgeGraph, KnowledgeNode, KnowledgeEdge } from '@/types';
+import { KnowledgeGraph, KnowledgeNode } from '@/types';
 import { colors } from '@/utils/theme';
 
 interface GraphViewerProps {
@@ -88,8 +85,6 @@ export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerP
       });
 
     return Gesture.Simultaneous(pinchGesture, panGesture);
-    // SharedValue 引用本身稳定，依赖留空
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({

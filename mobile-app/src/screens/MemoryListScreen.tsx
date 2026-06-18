@@ -8,13 +8,20 @@ import {
   ActivityIndicator,
   TextInput,
   StyleSheet,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
 import { useHUD } from '@/components/HUD';
 import { syncService } from '@/services/syncService';
 import { Entity, EntityType } from '@/types';
 import { format } from 'date-fns';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type LibraryStackParamList = {
+  LibraryMain: undefined;
+  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
+};
 
 // 实体类型颜色映射
 const TYPE_COLORS: Record<EntityType, string> = {
@@ -136,8 +143,8 @@ const FilterButton = memo(({
 });
 
 export function MemoryListScreen() {
-  const { t } = useTranslation();
   const { showMessage } = useHUD();
+  const navigation = useNavigation<NativeStackNavigationProp<LibraryStackParamList>>();
   const [entities, setEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -182,8 +189,12 @@ export function MemoryListScreen() {
   }, [loadEntities]);
 
   const handleEntitySelect = useCallback((entity: Entity) => {
-    console.log('Selected entity:', entity);
-  }, []);
+    navigation.navigate('EntityDetail', {
+      entityId: entity.id,
+      entityName: entity.name,
+      entity,
+    });
+  }, [navigation]);
 
   const handleTypeSelect = useCallback((type: EntityType | null) => {
     setSelectedType(type);
@@ -211,7 +222,8 @@ export function MemoryListScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>记忆</Text>
+        <Text style={styles.headerTitle}>知识库</Text>
+        <Text style={styles.headerSubtitle}>{entities.length} 条本地内容</Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -224,7 +236,11 @@ export function MemoryListScreen() {
         />
       </View>
 
-      <View style={styles.filtersContainer}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtersContainer}
+      >
         <FilterButton
           type={null}
           selected={selectedType === null}
@@ -238,7 +254,7 @@ export function MemoryListScreen() {
             onPress={() => handleTypeSelect(type)}
           />
         ))}
-      </View>
+      </ScrollView>
 
       <FlatList
         data={filteredEntities}
@@ -260,7 +276,7 @@ export function MemoryListScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
-              <Text style={styles.emptyIcon}>🧠</Text>
+              <Text style={styles.emptyIcon}>◎</Text>
             </View>
             <Text style={styles.emptyTitle}>
               {searchQuery ? '没有匹配的实体' : '还没有记忆'}
@@ -268,7 +284,7 @@ export function MemoryListScreen() {
             <Text style={styles.emptyDescription}>
               {searchQuery
                 ? '尝试更短的关键词或不同的拼写'
-                : '同步服务器数据或使用 Quick Capture 开始记录。'}
+                : '同步桌面数据，或从“记录”页开始添加内容。'}
             </Text>
             {!searchQuery ? (
               <Pressable
@@ -293,13 +309,17 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomWidth: 0,
   },
   headerTitle: {
     color: '#e8e8e8',
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    color: '#77818b',
+    fontSize: 13,
+    marginTop: 4,
   },
   searchContainer: {
     paddingHorizontal: 20,
@@ -309,8 +329,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     color: '#e8e8e8',
     fontSize: 16,
   },
@@ -323,10 +344,10 @@ const styles = StyleSheet.create({
   filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 7,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: '#151a1f',
   },
   filterButtonSelected: {
     backgroundColor: '#22d3ee',
@@ -356,12 +377,12 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderRadius: 12,
-    marginBottom: 16,
+    backgroundColor: '#13181d',
+    borderRadius: 8,
+    marginBottom: 10,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: '#252d34',
   },
   itemAccent: {
     width: 4,

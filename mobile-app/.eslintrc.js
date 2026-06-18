@@ -2,7 +2,6 @@ module.exports = {
   root: true,
   extends: [
     'eslint:recommended',
-    '@react-native-community',
     'plugin:@typescript-eslint/recommended',
   ],
   parser: '@typescript-eslint/parser',
@@ -15,7 +14,8 @@ module.exports = {
     },
   },
   env: {
-    'react-native/react-native': true,
+    es2021: true,
+    node: true,
   },
   rules: {
     '@typescript-eslint/no-unused-vars': 'warn',

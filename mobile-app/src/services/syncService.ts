@@ -7,6 +7,7 @@ const SYNC_UPLOAD_CONCURRENCY = 5;
 
 class SyncService {
   private syncInterval: NodeJS.Timeout | null = null;
+  private initializePromise: Promise<void> | null = null;
   private callbacks: Set<SyncCallback> = new Set();
   private status: SyncStatus = {
     lastSync: null,
@@ -31,8 +32,20 @@ class SyncService {
   }
 
   async initialize(): Promise<void> {
-    await localDb.initDatabase();
-    await this.updatePendingCount();
+    if (!this.initializePromise) {
+      this.initializePromise = (async () => {
+        await localDb.initDatabase();
+        await this.updatePendingCount();
+      })().catch((error) => {
+        this.initializePromise = null;
+        throw error;
+      });
+    }
+    await this.initializePromise;
+  }
+
+  private async ensureReady(): Promise<void> {
+    await this.initialize();
   }
 
   private async updatePendingCount(): Promise<void> {
@@ -45,6 +58,7 @@ class SyncService {
   }
 
   async sync(): Promise<void> {
+    await this.ensureReady();
     if (this.status.syncing) {
       return;
     }
@@ -85,9 +99,9 @@ class SyncService {
 
       const workerCount = Math.min(SYNC_UPLOAD_CONCURRENCY, unsynced.length);
       const workers = Array.from({ length: workerCount }, async () => {
-        while (true) {
+        while (cursor < unsynced.length) {
           const index = cursor++;
-          if (index >= unsynced.length) return;
+          if (index >= unsynced.length) break;
           await uploadOne(unsynced[index]);
         }
       });
@@ -109,6 +123,7 @@ class SyncService {
   }
 
   async pullFromServer(): Promise<Entity[]> {
+    await this.ensureReady();
     if (!api.isConfigured()) {
       return [];
     }
@@ -181,6 +196,7 @@ class SyncService {
   }
 
   async addEntity(entity: Entity): Promise<void> {
+    await this.ensureReady();
     await localDb.addEntity(entity);
     await this.updatePendingCount();
 
@@ -195,6 +211,7 @@ class SyncService {
   }
 
   async updateEntity(id: string, updates: Partial<Entity>): Promise<void> {
+    await this.ensureReady();
     await localDb.updateEntity(id, updates);
     await this.updatePendingCount();
     
@@ -207,6 +224,7 @@ class SyncService {
   }
 
   async deleteEntity(id: string): Promise<void> {
+    await this.ensureReady();
     await localDb.deleteEntity(id);
     await this.updatePendingCount();
     
@@ -216,10 +234,12 @@ class SyncService {
   }
 
   async getEntities(limit?: number, offset?: number): Promise<Entity[]> {
+    await this.ensureReady();
     return localDb.getEntities(limit, offset);
   }
 
   async searchEntities(query: string): Promise<Entity[]> {
+    await this.ensureReady();
     return localDb.searchEntitiesLocal(query);
   }
 }

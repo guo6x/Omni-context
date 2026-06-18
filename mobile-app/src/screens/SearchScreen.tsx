@@ -6,19 +6,17 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { api } from '@/services/api';
-import { useSettings } from '@/hooks/useSettings';
-import { useHUD } from '@/components/HUD';
+import { Entity } from '@/types';
 
 type SearchStackParamList = {
   SearchMain: undefined;
-  EntityDetail: { entityId: string; entityName: string };
+  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
   MemoryDetail: { item: any };
 };
 
@@ -49,9 +47,6 @@ function getTypeLabel(type: string, t: (k: string) => string): string {
 export function SearchScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<SearchNav>();
-  const { showMessage } = useHUD();
-  const { serverUrl } = useSettings();
-
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [results, setResults] = useState<SearchResultItem[]>([]);
@@ -76,6 +71,8 @@ export function SearchScreen() {
     }
 
     if (!api.isConfigured()) {
+      setIsLoading(false);
+      setHasSearched(true);
       setError(t('search.not_configured'));
       return;
     }
@@ -100,21 +97,27 @@ export function SearchScreen() {
         (outcomes[0].value.data || []).forEach((e: any) => {
           items.push({ type: 'entity', data: e, section: t('search.section_entities') });
         });
-      } else if (outcomes[0].status === 'rejected') errorsCount++;
+      } else {
+        errorsCount++;
+      }
 
       if (outcomes[1].status === 'fulfilled' && outcomes[1].value.success) {
         (outcomes[1].value.data || []).forEach((a: any) => {
           items.push({ type: 'archival', data: a, section: t('search.section_archival') });
         });
-      } else if (outcomes[1].status === 'rejected') errorsCount++;
+      } else {
+        errorsCount++;
+      }
 
       if (outcomes[2].status === 'fulfilled' && outcomes[2].value.success) {
         (outcomes[2].value.data || []).forEach((c: any) => {
           items.push({ type: 'core', data: c, section: t('search.section_core') });
         });
-      } else if (outcomes[2].status === 'rejected') errorsCount++;
+      } else {
+        errorsCount++;
+      }
 
-      if (errorsCount === 3) {
+      if (errorsCount === 3 && items.length === 0) {
         setError(t('search.connect_error'));
       }
 
@@ -130,6 +133,7 @@ export function SearchScreen() {
       navigation.navigate('EntityDetail', {
         entityId: item.data.id,
         entityName: item.data.name || item.data.id,
+        entity: item.data,
       });
     } else {
       navigation.navigate('MemoryDetail', { item: item.data });
@@ -228,28 +232,23 @@ export function SearchScreen() {
     );
   };
 
-  const renderSection = (title: string, type: string) => {
-    const sectionItems = results.filter(r => r.type === type);
-    if (sectionItems.length === 0) return null;
-    return (
-      <View className="mb-4">
-        <Text className="text-gray-400 text-sm font-medium mb-2 px-1">{title}</Text>
-        {sectionItems.map((item, index) => (
-          <View key={`${item.type}-${item.data.id || index}`}>
-            {renderItem({ item })}
-          </View>
-        ))}
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
       <View className="px-5 py-4 border-b border-white/10">
-        <Text className="text-[#e8e8e8] text-2xl font-bold mb-4">{t('search.title')}</Text>
+        <View className="flex-row items-center justify-between mb-4">
+          <View>
+            <Text className="text-[#f2f5f4] text-2xl font-bold">Omni Context</Text>
+            <Text className="text-[#77818b] text-sm mt-1">查找你的知识与记忆</Text>
+          </View>
+          <View className={`px-2.5 py-1 rounded-md ${api.isConfigured() ? 'bg-[#17352f]' : 'bg-[#332a1d]'}`}>
+            <Text className={`text-xs font-semibold ${api.isConfigured() ? 'text-[#63d8c1]' : 'text-[#e3ac55]'}`}>
+              {api.isConfigured() ? '已连接' : '未连接'}
+            </Text>
+          </View>
+        </View>
 
-        <View className="flex-row items-center bg-black/40 border border-white/10 rounded-xl px-4">
-          <Text className="text-gray-400 mr-2 text-base">?</Text>
+        <View className="flex-row items-center bg-[#171c21] border border-[#2a3239] rounded-lg px-4">
+          <Text className="text-[#77818b] mr-2 text-lg">⌕</Text>
           <TextInput
             className="flex-1 py-3 text-[#e8e8e8] text-base"
             value={query}
@@ -265,7 +264,7 @@ export function SearchScreen() {
               className="ml-2 p-1"
               onPress={() => setQuery('')}
             >
-              <Text className="text-gray-500 text-lg">x</Text>
+              <Text className="text-gray-500 text-lg">×</Text>
             </TouchableOpacity>
           )}
         </View>

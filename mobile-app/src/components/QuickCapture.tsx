@@ -41,7 +41,7 @@ export function QuickCapture() {
         name: trimmedTitle || trimmedContent.slice(0, 60) + (trimmedContent.length > 60 ? '...' : ''),
         type,
         description: trimmedContent,
-        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+        tags: tags.split(/[,，]/).map(t => t.trim()).filter(Boolean),
         source_file: 'quick_capture',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -64,28 +64,37 @@ export function QuickCapture() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-[#0a0b12]"
+      className="flex-1 bg-[#0b0f12]"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        className="p-5"
+        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="mb-6">
-          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.title') || 'Title'}</Text>
+        <View className="mb-7">
+          <Text className="text-[#f2f5f4] text-2xl font-bold">快速记录</Text>
+          <Text className="text-[#77818b] text-sm mt-1">先记下来，稍后再整理</Text>
+        </View>
+
+        <View className="mb-5">
+          <Text className="text-[#aab2b9] text-sm font-medium mb-2">标题</Text>
           <TextInput
-            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base"
+            className="bg-[#151a1f] border border-[#293139] rounded-lg px-4 py-3 text-[#f2f5f4] text-base"
             value={title}
             onChangeText={setTitle}
-            placeholder={t('capture.titlePlaceholder') || 'Enter a title...'}
+            placeholder="一句话概括，可留空"
             placeholderTextColor="#64748b"
+            maxLength={100}
           />
         </View>
 
-        <View className="mb-6">
-          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.content')}</Text>
+        <View className="mb-5">
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-[#aab2b9] text-sm font-medium">{t('memory.content')}</Text>
+            <Text className="text-[#65707a] text-xs">{content.length}/5000</Text>
+          </View>
           <TextInput
-            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base min-h-[120px]"
+            className="bg-[#151a1f] border border-[#293139] rounded-lg p-4 text-[#f2f5f4] text-base min-h-[180px]"
             value={content}
             onChangeText={setContent}
             placeholder={t('capture.placeholder')}
@@ -93,20 +102,21 @@ export function QuickCapture() {
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            maxLength={5000}
           />
         </View>
 
-        <View className="mb-6">
-          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.type')}</Text>
+        <View className="mb-5">
+          <Text className="text-[#aab2b9] text-sm font-medium mb-2">{t('memory.type')}</Text>
           <View className="flex-row flex-wrap gap-2">
             {ENTITY_TYPES.map(entityType => (
               <TouchableOpacity
                 key={entityType}
-                className={`px-4 py-2 rounded-full border ${type === entityType ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
+                className={`px-4 py-2 rounded-md border ${type === entityType ? 'bg-[#45c8b0] border-[#45c8b0]' : 'bg-[#151a1f] border-[#293139]'}`}
                 onPress={() => setType(entityType)}
               >
                 <Text
-                  className={`text-sm ${type === entityType ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}
+                  className={`text-sm ${type === entityType ? 'text-[#071411] font-bold' : 'text-[#98a2aa]'}`}
                 >
                   {t(`memory.${entityType}`) || entityType}
                 </Text>
@@ -115,10 +125,10 @@ export function QuickCapture() {
           </View>
         </View>
 
-        <View className="mb-6">
-          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.tags')}</Text>
+        <View className="mb-5">
+          <Text className="text-[#aab2b9] text-sm font-medium mb-2">{t('memory.tags')}</Text>
           <TextInput
-            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base"
+            className="bg-[#151a1f] border border-[#293139] rounded-lg px-4 py-3 text-[#f2f5f4] text-base"
             value={tags}
             onChangeText={setTags}
             placeholder={t('capture.tagsPlaceholder')}
@@ -128,14 +138,14 @@ export function QuickCapture() {
         </View>
 
         <TouchableOpacity
-          className={`bg-cyan-400 rounded-xl p-4 items-center mt-4 shadow-[0_0_15px_rgba(34,211,238,0.5)] ${isCapturing ? 'opacity-60' : ''}`}
+          className={`bg-[#45c8b0] rounded-lg p-4 items-center mt-3 ${isCapturing ? 'opacity-60' : ''}`}
           onPress={handleCapture}
           disabled={isCapturing}
           accessibilityRole="button"
           accessibilityLabel={isCapturing ? t('capture.capturing') : t('capture.capture')}
           accessibilityState={{ disabled: isCapturing, busy: isCapturing }}
         >
-          <Text className="text-[#0a0b12] text-lg font-bold">
+          <Text className="text-[#071411] text-base font-bold">
             {isCapturing ? t('capture.capturing') : t('capture.capture')}
           </Text>
         </TouchableOpacity>

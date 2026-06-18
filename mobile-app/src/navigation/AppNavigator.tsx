@@ -1,9 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, StyleSheet } from 'react-native';
-import Svg, { Path, Circle, G } from 'react-native-svg';
-import { colors } from '@/utils/theme';
+import { View } from 'react-native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { KnowledgeGraphScreen } from '@/screens/KnowledgeGraphScreen';
 import { MemoryListScreen } from '@/screens/MemoryListScreen';
 import { SearchScreen } from '@/screens/SearchScreen';
@@ -11,12 +10,14 @@ import { EntityDetailScreen } from '@/screens/EntityDetailScreen';
 import { MemoryDetailScreen } from '@/screens/MemoryDetailScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { PairScanScreen } from '@/screens/PairScanScreen';
+import { QuickCapture } from '@/components/QuickCapture';
+import { Entity } from '@/types';
 
 const Tab = createBottomTabNavigator();
 
 type SearchStackParamList = {
   SearchMain: undefined;
-  EntityDetail: { entityId: string; entityName: string };
+  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
   MemoryDetail: { item: any };
 };
 
@@ -29,6 +30,22 @@ function SearchStackNavigator() {
       <SearchStack.Screen name="EntityDetail" component={EntityDetailScreen} />
       <SearchStack.Screen name="MemoryDetail" component={MemoryDetailScreen} />
     </SearchStack.Navigator>
+  );
+}
+
+type LibraryStackParamList = {
+  LibraryMain: undefined;
+  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
+};
+
+const LibraryStack = createNativeStackNavigator<LibraryStackParamList>();
+
+function LibraryStackNavigator() {
+  return (
+    <LibraryStack.Navigator screenOptions={{ headerShown: false }}>
+      <LibraryStack.Screen name="LibraryMain" component={MemoryListScreen} />
+      <LibraryStack.Screen name="EntityDetail" component={EntityDetailScreen} />
+    </LibraryStack.Navigator>
   );
 }
 
@@ -61,6 +78,23 @@ const SearchIcon = ({ color, size }: { color: string; size: number }) => (
   </Svg>
 );
 
+const CaptureIcon = ({ color, size }: { color: string; size: number }) => (
+  <View
+    style={{
+      width: size + 14,
+      height: size + 14,
+      borderRadius: 8,
+      backgroundColor: color,
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+  >
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 5V19M5 12H19" stroke="#071414" strokeWidth="2.4" strokeLinecap="round" />
+    </Svg>
+  </View>
+);
+
 const SettingsIcon = ({ color, size }: { color: string; size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
@@ -84,15 +118,16 @@ function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#0a0b12',
+          backgroundColor: '#101419',
           borderTopWidth: 1,
-          borderTopColor: 'rgba(255,255,255,0.1)',
-          paddingBottom: 20,
-          paddingTop: 10,
+          borderTopColor: '#252c33',
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 66,
         },
-        tabBarActiveTintColor: '#22d3ee', // cyan-400
-        tabBarInactiveTintColor: '#64748b', // slate-500
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '500' },
+        tabBarActiveTintColor: '#45c8b0',
+        tabBarInactiveTintColor: '#77818b',
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginBottom: 2 },
         tabBarShowLabel: true,
       }}
     >
@@ -105,19 +140,27 @@ function MainTabNavigator() {
         }}
       />
       <Tab.Screen
+        name="Capture"
+        component={QuickCapture}
+        options={{
+          tabBarLabel: '记录',
+          tabBarIcon: ({ color, size }) => <CaptureIcon color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="MemoryList"
+        component={LibraryStackNavigator}
+        options={{
+          tabBarLabel: '知识库',
+          tabBarIcon: ({ color, size }) => <ListIcon color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
         name="KnowledgeGraph"
         component={KnowledgeGraphScreen}
         options={{
           tabBarLabel: '图谱',
           tabBarIcon: ({ color, size }) => <GraphIcon color={color} size={size} />,
-        }}
-      />
-      <Tab.Screen
-        name="MemoryList"
-        component={MemoryListScreen}
-        options={{
-          tabBarLabel: '记忆',
-          tabBarIcon: ({ color, size }) => <ListIcon color={color} size={size} />,
         }}
       />
       <Tab.Screen

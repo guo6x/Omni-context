@@ -2,16 +2,16 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Switch,
   TextInput,
   Alert,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/hooks/useSettings';
 import { useSync } from '@/hooks/useSync';
 import { useHUD } from '@/components/HUD';
@@ -56,11 +56,8 @@ function SettingSection({ title, children }: SettingSectionProps) {
 
 export function SettingsScreen() {
   const navigation = useNavigation<any>();
-  const { t } = useTranslation();
   const { showMessage } = useHUD();
   const {
-    theme,
-    setTheme,
     language,
     setLanguage,
     syncEnabled,
@@ -71,32 +68,44 @@ export function SettingsScreen() {
     setAuthToken,
     autoSync,
     setAutoSync,
-    notificationsEnabled,
-    setNotificationsEnabled,
-    reset,
   } = useSettings();
 
   const { status, fullSync, isSyncing } = useSync();
   const [serverUrlInput, setServerUrlInput] = useState(serverUrl);
   const [authTokenInput, setAuthTokenInput] = useState(authToken);
   const [showConfigInput, setShowConfigInput] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
 
-  const handleSaveConfig = useCallback(() => {
+  const handleSaveConfig = useCallback(async () => {
+    const normalizedUrl = serverUrlInput.trim().replace(/\/+$/, '');
+    if (!/^https?:\/\/[^/\s]+(?::\d+)?$/i.test(normalizedUrl)) {
+      showMessage('请输入完整地址，例如 http://192.168.1.10:3001', 'warning');
+      return;
+    }
     if (!authTokenInput || !authTokenInput.trim()) {
       showMessage('请填写配对码', 'warning');
       return;
     }
-    setServerUrl(serverUrlInput);
-    setAuthToken(authTokenInput.trim());
-    if (serverUrlInput.trim()) {
-      api.configure({ 
-        baseUrl: serverUrlInput.trim(), 
-        authToken: authTokenInput.trim() 
-      });
-      showMessage('配置已保存', 'success');
+
+    setTestingConnection(true);
+    api.configure({
+      baseUrl: normalizedUrl,
+      authToken: authTokenInput.trim(),
+      timeout: 8000,
+    });
+    const connected = await api.healthCheck();
+    setTestingConnection(false);
+    if (!connected) {
+      showMessage('连接失败，请检查地址、局域网和桌面端防火墙', 'error');
+      return;
     }
+
+    setServerUrl(normalizedUrl);
+    setAuthToken(authTokenInput.trim());
+    setSyncEnabled(true);
+    showMessage('连接成功，配置已保存', 'success');
     setShowConfigInput(false);
-  }, [serverUrlInput, authTokenInput, setServerUrl, setAuthToken, showMessage]);
+  }, [serverUrlInput, authTokenInput, setServerUrl, setAuthToken, setSyncEnabled, showMessage]);
 
   const handleSyncNow = useCallback(async () => {
     if (!api.isConfigured()) {
@@ -135,20 +144,10 @@ export function SettingsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <View className="px-5 py-4 border-b border-white/10">
-          <Text className="text-[#e8e8e8] text-2xl font-bold">设置</Text>
+        <View className="px-5 py-4">
+          <Text className="text-[#f2f5f4] text-2xl font-bold">设置</Text>
+          <Text className="text-[#77818b] text-sm mt-1">连接桌面端并管理本地数据</Text>
         </View>
-
-        <SettingSection title="主题">
-          <SettingItem label="深色模式">
-            <Switch
-              value={theme === 'dark'}
-              onValueChange={(value: boolean) => setTheme(value ? 'dark' : 'light')}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#22d3ee' }}
-              thumbColor="#e8e8e8"
-            />
-          </SettingItem>
-        </SettingSection>
 
         <SettingSection title="语言">
           <View className="flex-row p-4 gap-2">
@@ -217,17 +216,6 @@ export function SettingsScreen() {
           </View>
         </SettingSection>
 
-        <SettingSection title="通知">
-          <SettingItem label="启用通知">
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#22d3ee' }}
-              thumbColor="#e8e8e8"
-            />
-          </SettingItem>
-        </SettingSection>
-
         <SettingSection title="关于">
           <SettingItem label="版本" value="1.0.0" />
         </SettingSection>
@@ -236,8 +224,13 @@ export function SettingsScreen() {
           <Text className="text-red-400 text-base font-bold">清除数据</Text>
         </TouchableOpacity>
 
-        {showConfigInput && (
-          <View className="absolute inset-0 bg-black/70 justify-center items-center p-5 z-50">
+        <Modal
+          visible={showConfigInput}
+          transparent
+          animationType="fade"
+          onRequestClose={() => !testingConnection && setShowConfigInput(false)}
+        >
+          <View className="flex-1 bg-black/70 justify-center items-center p-5">
             <View className="bg-[#0a0b12] border border-white/10 rounded-2xl p-5 w-full max-w-sm">
               <Text className="text-[#e8e8e8] text-lg font-bold mb-4 text-center">服务器配置</Text>
               
@@ -269,16 +262,25 @@ export function SettingsScreen() {
                 <TouchableOpacity
                   className="flex-1 py-3 rounded-xl bg-black/40 border border-white/10 items-center"
                   onPress={() => setShowConfigInput(false)}
+                  disabled={testingConnection}
                 >
                   <Text className="text-gray-400 text-base">取消</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="flex-1 py-3 rounded-xl bg-cyan-400 items-center" onPress={handleSaveConfig}>
-                  <Text className="text-[#0a0b12] text-base font-bold">保存</Text>
+                <TouchableOpacity
+                  className={`flex-1 py-3 rounded-xl bg-cyan-400 items-center ${testingConnection ? 'opacity-60' : ''}`}
+                  onPress={handleSaveConfig}
+                  disabled={testingConnection}
+                >
+                  {testingConnection ? (
+                    <ActivityIndicator color="#0a0b12" />
+                  ) : (
+                    <Text className="text-[#0a0b12] text-base font-bold">测试并保存</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
           </View>
-        )}
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
