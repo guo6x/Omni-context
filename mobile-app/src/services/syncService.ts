@@ -3,6 +3,7 @@ import * as localDb from './localDb';
 import { Entity, SyncStatus } from '@/types';
 
 type SyncCallback = (status: SyncStatus) => void;
+const SYNC_UPLOAD_CONCURRENCY = 5;
 
 class SyncService {
   private syncInterval: NodeJS.Timeout | null = null;
@@ -67,10 +68,12 @@ class SyncService {
         return;
       }
 
-      // 逐条上传，单条失败不阻塞其他记录；只标记真正成功的为 synced
+      // 服务端当前没有批量写入接口；用有限并发降低等待时间，同时只标记真正成功的记录。
       let successCount = 0;
       let lastError: string | null = null;
-      for (const entity of unsynced) {
+      let cursor = 0;
+
+      const uploadOne = async (entity: Entity) => {
         const res = await api.addEntity(entity);
         if (res.success) {
           await localDb.markEntitySynced(entity.id);
@@ -78,7 +81,18 @@ class SyncService {
         } else {
           lastError = res.error ?? 'Sync failed';
         }
-      }
+      };
+
+      const workerCount = Math.min(SYNC_UPLOAD_CONCURRENCY, unsynced.length);
+      const workers = Array.from({ length: workerCount }, async () => {
+        while (true) {
+          const index = cursor++;
+          if (index >= unsynced.length) return;
+          await uploadOne(unsynced[index]);
+        }
+      });
+
+      await Promise.all(workers);
 
       await this.updatePendingCount();
       this.updateStatus({
@@ -101,6 +115,8 @@ class SyncService {
 
     try {
       // 并行获取实体和关系
+      // 移动端有意只镜像最近 1000 个实体（性能保护：完整 1万+ 图谱常驻桌面端，
+      // 手机灌入本地库再渲染不划算）。需要全量请用桌面端。
       const [entitiesResult, relationshipsResult] = await Promise.all([
         api.getEntities({ limit: 1000 }),
         // 获取关系 - 我们先获取知识图谱来获取关系

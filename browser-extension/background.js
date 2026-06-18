@@ -1,6 +1,9 @@
 // Omni-Context Background Service Worker
-const API_BASE = 'http://localhost:3001';
-const JOB_TIMEOUT_MS = 30000;
+const API_BASE = 'http://127.0.0.1:3001';
+const JOB_TIMEOUT_MS = 5 * 60 * 1000;
+const FAST_POLL_INTERVAL_MS = 1500;
+const FAST_POLL_WINDOW_MS = 25000;
+const FALLBACK_ALARM_PERIOD_MINUTES = 1;
 const POLL_ALARM_PREFIX = 'poll-';
 const PENDING_JOBS_KEY = 'pendingJobs';
 const TOKEN_SETUP_DONE_KEY = 'tokenSetupDone';
@@ -16,6 +19,11 @@ async function getToken() {
   cachedToken = result.localApiToken || null;
   return cachedToken;
 }
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'local' || !changes.localApiToken) return;
+  cachedToken = changes.localApiToken.newValue || null;
+});
 
 /** 带 token 的 fetch 封装 */
 async function apiFetch(path, options = {}) {
@@ -77,7 +85,8 @@ chrome.runtime.onInstalled.addListener(() => {
   if (jobIds.length > 0) {
     console.log('[Omni-Context] Recovering', jobIds.length, 'pending poll(s)');
     for (const jobId of jobIds) {
-      chrome.alarms.create(`${POLL_ALARM_PREFIX}${jobId}`, { periodInMinutes: 1 / 60 });
+      chrome.alarms.create(`${POLL_ALARM_PREFIX}${jobId}`, { periodInMinutes: FALLBACK_ALARM_PERIOD_MINUTES });
+      startFastPoll(jobId);
     }
   }
 })();
@@ -189,7 +198,7 @@ async function captureSelection(data, tab) {
   });
 }
 
-// --- Async job: submit + alarm-based polling ---
+// --- Async job: submit + fast polling with alarm fallback ---
 
 async function submitAndPoll({ filename, contentType, base64 }) {
   try {
@@ -204,7 +213,8 @@ async function submitAndPoll({ filename, contentType, base64 }) {
     const jobId = data.jobId;
     await trackPendingJob(jobId, filename);
 
-    chrome.alarms.create(`${POLL_ALARM_PREFIX}${jobId}`, { periodInMinutes: 1 / 60 });
+    chrome.alarms.create(`${POLL_ALARM_PREFIX}${jobId}`, { periodInMinutes: FALLBACK_ALARM_PERIOD_MINUTES });
+    startFastPoll(jobId);
 
     return { ok: true };
   } catch (error) {
@@ -220,11 +230,28 @@ async function submitAndPoll({ filename, contentType, base64 }) {
 }
 
 async function handlePoll(jobId) {
+  await pollOnce(jobId);
+}
+
+function startFastPoll(jobId) {
+  const startedAt = Date.now();
+
+  const tick = async () => {
+    const state = await pollOnce(jobId);
+    if (state !== 'pending') return;
+    if (Date.now() - startedAt >= FAST_POLL_WINDOW_MS) return;
+    setTimeout(tick, FAST_POLL_INTERVAL_MS);
+  };
+
+  tick();
+}
+
+async function pollOnce(jobId) {
   const jobs = await getPendingJobs();
   const jobInfo = jobs[jobId];
   if (!jobInfo) {
     chrome.alarms.clear(`${POLL_ALARM_PREFIX}${jobId}`);
-    return;
+    return 'gone';
   }
 
   // Timeout
@@ -237,7 +264,7 @@ async function handlePoll(jobId) {
     });
     await untrackPendingJob(jobId);
     chrome.alarms.clear(`${POLL_ALARM_PREFIX}${jobId}`);
-    return;
+    return 'done';
   }
 
   try {
@@ -247,8 +274,9 @@ async function handlePoll(jobId) {
         notifyJobError(jobInfo.filename, '任务已过期');
         await untrackPendingJob(jobId);
         chrome.alarms.clear(`${POLL_ALARM_PREFIX}${jobId}`);
+        return 'done';
       }
-      return;
+      return 'pending';
     }
 
     const job = await res.json();
@@ -263,14 +291,18 @@ async function handlePoll(jobId) {
       });
       await untrackPendingJob(jobId);
       chrome.alarms.clear(`${POLL_ALARM_PREFIX}${jobId}`);
+      return 'done';
     } else if (job.status === 'failed') {
       notifyJobError(jobInfo.filename, job.error || '处理失败');
       await untrackPendingJob(jobId);
       chrome.alarms.clear(`${POLL_ALARM_PREFIX}${jobId}`);
+      return 'done';
     }
     // running / queued: keep polling
+    return 'pending';
   } catch {
     // Network error — retry on next alarm tick
+    return 'pending';
   }
 }
 
