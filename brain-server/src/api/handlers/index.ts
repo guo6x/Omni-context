@@ -195,6 +195,8 @@ export const handleEntityRoutes = [
         source: q.get('source') || undefined,
         type: q.get('type') || undefined,
         q: q.get('q') || undefined,
+        coreOnly: q.get('coreOnly') === 'true',
+        unlinkedOnly: q.get('unlinkedOnly') === 'true',
       });
       sendResponse(res, 200, result);
     }
@@ -810,4 +812,3 @@ export { handleSettingsRoutes } from './settings.js';
 export { handleAdminRoutes } from './admin.js';
 export { handleIngestRoutes } from './ingest.js';
 export { handleMcpRoutes } from './mcp.js';
-

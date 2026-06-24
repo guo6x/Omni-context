@@ -22,12 +22,19 @@ import {
   AnalyzeDecisionSchema,
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
+  GetCoreContextSchema,
   DeleteEntitySchema,
   SetCoreSchema,
   MergeEntitiesSchema,
   tools as mcpToolDefs,
 } from '../../mcp-tools.js';
 import { parseTimeWindow } from '../../utils/time-window.js';
+import {
+  capGraphContext,
+  rankMemoryCandidates,
+  selectGeneralCorePrinciples,
+  selectRelevantPrinciples,
+} from '../../mcp-retrieval.js';
 
 const CORE_PRINCIPLE_CAP = 3;
 
@@ -68,11 +75,12 @@ async function rerankByLlm(
   candidates: any[],
   topN: number,
 ): Promise<any[]> {
-  if (candidates.length <= topN) return candidates;
+  const deterministic = rankMemoryCandidates(query, candidates, { decisionMode: true });
+  if (deterministic.length <= topN) return deterministic;
   const llm = ctx.extractor.getLlmConfig();
-  if (!llm.apiUrl) return candidates.slice(0, topN);
+  if (!llm.apiUrl) return deterministic.slice(0, topN);
 
-  const list = candidates
+  const list = deterministic
     .map((c, i) => `[${i}] (${c.type}) ${c.name}: ${(c.description || '').slice(0, 120)}`)
     .join('\n');
   const sys = `你是知识图谱检索的重排器。根据用户查询，从候选记忆里挑出真正相关的，按相关度从高到低给出编号；不相关的不要选。只输出 JSON：{"ranking":[编号,...]}，最多 ${topN} 个。`;
@@ -107,21 +115,21 @@ async function rerankByLlm(
     const used = new Set<number>();
     for (const n of order) {
       const i = Number(n);
-      if (Number.isInteger(i) && i >= 0 && i < candidates.length && !used.has(i)) {
+      if (Number.isInteger(i) && i >= 0 && i < deterministic.length && !used.has(i)) {
         used.add(i);
-        picked.push(candidates[i]);
+        picked.push(deterministic[i]);
         if (picked.length >= topN) break;
       }
     }
-    if (!picked.length) return candidates.slice(0, topN);
+    if (!picked.length) return deterministic.slice(0, topN);
     // LLM 选不满 topN 时，用原序候选补齐
-    for (const c of candidates) {
+    for (const c of deterministic) {
       if (picked.length >= topN) break;
-      if (!used.has(candidates.indexOf(c))) picked.push(c);
+      if (!used.has(deterministic.indexOf(c))) picked.push(c);
     }
     return picked.slice(0, topN);
   } catch {
-    return candidates.slice(0, topN);
+    return deterministic.slice(0, topN);
   }
 }
 
@@ -213,8 +221,7 @@ async function retrieveDecisionContext(
   const corePrincipleCandidates = await ctx.db.getCorePrinciples();
   // 核心原则是用户的长期约束，但不能绕过相关性判断全量进入回答。
   // LLM 不可用时 rerankByLlm 会退化为原序截断，至少保证噪声被硬性封顶。
-  const relevantCorePrinciples = await rerankByLlm(
-    ctx,
+  const relevantCorePrinciples = selectRelevantPrinciples(
     situation,
     corePrincipleCandidates,
     CORE_PRINCIPLE_CAP,
@@ -606,14 +613,21 @@ export const handleMcpRoutes = [
             break;
           }
           case 'get_core_context': {
+            const parsed = GetCoreContextSchema.parse(args);
             const corePrinciples = await ctx.db.getCorePrinciples();
+            const selected = parsed.query
+              ? selectRelevantPrinciples(parsed.query, corePrinciples, parsed.limit)
+              : selectGeneralCorePrinciples(corePrinciples, parsed.limit);
             result = {
               role: 'system',
               content: `[Omni-Context Core Principles]
 
-${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.description}` : ''}`).join('\n')}
+${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.description}` : ''}`).join('\n')}
 
-请务必遵循以上核心原则进行工作。`,
+仅在与当前任务相关时遵循以上原则；不要把无关原则强行套用。`,
+              totalCorePrinciples: corePrinciples.length,
+              returnedPrinciples: selected.length,
+              truncated: selected.length < corePrinciples.length,
             };
             break;
           }
@@ -981,7 +995,11 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   $
             const seed = ctxData.relevantMemories[0];
             if (seed) {
               try {
-                graphContext = await ctx.db.getGraphNeighborhood(seed.id, 2);
+                graphContext = capGraphContext(
+                  await ctx.db.getGraphNeighborhood(seed.id, 2),
+                  Math.max(limit * 2, 8),
+                  Math.max(limit * 3, 12),
+                );
               } catch {
                 // ignore
               }
@@ -1362,6 +1380,7 @@ ${gaConnBlock}`;
               // provenance：save_conclusion 是外部 AI 把对话结论写回图谱，标注来源
               const saved = await ctx.db.addEntity({
                 ...entity,
+                tags: [...new Set([...(entity.tags || []), ...(tags || [])])],
                 metadata: { ...((entity as any).metadata || {}), provenance: { source: 'external_ai', tool: 'save_conclusion', at: new Date().toISOString() } },
               });
               savedEntityIds.push(saved.id);
@@ -1370,7 +1389,7 @@ ${gaConnBlock}`;
             for (const update of resolution.entitiesToUpdate) {
               await ctx.db.updateEntity(update.id, {
                 description: update.description,
-                tags: update.tags,
+                tags: [...new Set([...(update.tags || []), ...(tags || [])])],
                 embedding: update.embedding,
                 metadata: update.metadata,
                 created_at: update.created_at,
@@ -1621,13 +1640,13 @@ ${gaConnBlock}`;
           {
             uri: 'memory://graph',
             name: '知识图谱',
-            description: '完整的知识图谱',
+            description: '知识图谱摘要（最多 100 个实体和 150 条关系）',
             mimeType: 'application/json',
           },
           {
             uri: 'memory://core-principles',
             name: '核心原则',
-            description: '核心原则（Letta Core Memory）',
+            description: '核心原则摘要（最多 20 条）',
             mimeType: 'application/json',
           },
           {
@@ -1665,18 +1684,55 @@ ${gaConnBlock}`;
         let contents: any;
 
         if (uri === 'memory://graph') {
-          const entities = await ctx.db.all('SELECT * FROM entities LIMIT 200');
-          const relationships = await ctx.db.all('SELECT * FROM relationships LIMIT 200');
-          contents = { entities, relationships };
+          const entities = await ctx.db.all<any>(
+            `SELECT id, name, type, description, tags, created_at, access_count
+             FROM entities
+             WHERE json_extract(metadata, '$.merged_into') IS NULL
+             ORDER BY access_count DESC, updated_at DESC
+             LIMIT 100`,
+          );
+          const relationships = await ctx.db.all(
+            `SELECT id, source_id, target_id, type, description, weight
+             FROM relationships
+             WHERE valid_until IS NULL OR valid_until > datetime('now')
+             ORDER BY weight DESC
+             LIMIT 150`,
+          );
+          contents = {
+            entities: entities.map((entity) => ({
+              ...toCompactEntity({
+                ...entity,
+                tags: entity.tags ? JSON.parse(entity.tags) : undefined,
+              }),
+            })),
+            relationships,
+            truncated: true,
+            note: 'Use unified_memory_search or get_graph_neighborhood for topic-specific retrieval.',
+          };
         } else if (uri === 'memory://core-principles') {
-          contents = await ctx.db.getCorePrinciples();
+          const all = await ctx.db.getCorePrinciples();
+          const items = selectGeneralCorePrinciples(all, 20).map(toCompactEntity);
+          contents = {
+            items,
+            total: all.length,
+            returned: items.length,
+            truncated: items.length < all.length,
+          };
         } else if (uri === 'memory://stats') {
           contents = await ctx.db.getStats();
         } else {
           const entityTypeMatch = uri.match(/^memory:\/\/entities\/(.+)$/);
           if (entityTypeMatch) {
             const type = decodeURIComponent(entityTypeMatch[1]);
-            contents = await ctx.db.getEntitiesByType(type);
+            const all = await ctx.db.getEntitiesByType(type);
+            const items = rankMemoryCandidates(type, all).slice(0, 100).map(toCompactEntity);
+            contents = {
+              items,
+              total: all.length,
+              returned: items.length,
+              truncated: items.length < all.length,
+              note: 'Use search_entities or unified_memory_search for precise retrieval.',
+            };
           } else {
             return sendError(res, 404, `未知资源: ${uri}`);
           }

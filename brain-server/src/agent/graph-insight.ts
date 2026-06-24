@@ -61,14 +61,19 @@ async function findStatisticalInsights(db: Database): Promise<GraphInsight[]> {
     console.warn('[GraphInsight] 注意力分布分析失败:', e);
   }
 
-  // 信号 2：未深入主题（近 30 天，无 derived_from 入边，数量 ≥ 5）
+  // 信号 2：待整理主题（近 30 天、没有任何有效关系的孤立实体）
   try {
-    const shallow = await db.all<{ type: string; cnt: number }>(
-      `SELECT e.type, COUNT(*) as cnt
+    const shallow = await db.all<{ type: string; cnt: number; sample_ids: string; sample_names: string }>(
+      `SELECT e.type,
+              COUNT(*) as cnt,
+              GROUP_CONCAT(e.id, '|') as sample_ids,
+              GROUP_CONCAT(REPLACE(e.name, '|', ' '), '|') as sample_names
        FROM entities e
-       LEFT JOIN relationships r ON e.id = r.target_id AND r.type = 'derived_from'
-         AND (r.valid_until IS NULL OR r.valid_until > datetime('now'))
-       WHERE r.target_id IS NULL
+       WHERE NOT EXISTS (
+           SELECT 1 FROM relationships r
+           WHERE (r.source_id = e.id OR r.target_id = e.id)
+             AND (r.valid_until IS NULL OR r.valid_until > datetime('now'))
+         )
          AND e.created_at > datetime('now', '-30 days')
          AND json_extract(e.metadata, '$.merged_into') IS NULL
        GROUP BY e.type
@@ -77,11 +82,17 @@ async function findStatisticalInsights(db: Database): Promise<GraphInsight[]> {
        LIMIT 3`,
     );
     for (const row of shallow) {
+      const titlePrefix = `待整理主题：${row.type}`;
+      const alreadyReported = await db.hasRecentNotification(titlePrefix, 7)
+        || await db.hasRecentNotification(`未深入主题：${row.type}`, 7);
+      if (alreadyReported) continue;
+      const ids = (row.sample_ids || '').split('|').filter(Boolean).slice(0, 8);
+      const names = (row.sample_names || '').split('|').filter(Boolean).slice(0, 3);
       results.push({
         category: 'statistical',
-        title: `未深入主题：${row.type} 类型累积 ${row.cnt} 条未沉淀`,
-        content: `你在 ${row.type} 上累积了 ${row.cnt} 条信息，但没有一条被主动沉淀或关联到决策。考虑深入整理或建立关联。`,
-        related_entities: [],
+        title: `${titlePrefix} 有 ${row.cnt} 条孤立内容`,
+        content: `近 30 天有 ${row.cnt} 条 ${row.type} 尚未建立任何关系。可先整理代表项：${names.join('、') || '暂无名称'}。点击“查看待整理内容”可直接筛选这些内容，再决定合并、删除或保留。`,
+        related_entities: ids,
         confidence: 0.85,
       });
     }

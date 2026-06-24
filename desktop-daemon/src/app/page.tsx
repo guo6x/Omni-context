@@ -134,6 +134,7 @@ function MainApp() {
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
   const [showDecisionLog, setShowDecisionLog] = useState(false);
   const [showMemoryManager, setShowMemoryManager] = useState(false);
+  const [memoryManagerFilter, setMemoryManagerFilter] = useState<{ type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }>({});
   // 启动遮罩兜底：brain-server 长时间起不来时也要放行进 App（由离线横幅接管），避免遮罩锁死 UI
   const [splashTimedOut, setSplashTimedOut] = useState(false);
   const [focusEntityId, setFocusEntityId] = useState<string | undefined>(undefined);
@@ -1017,8 +1018,23 @@ function MainApp() {
             setFocusEntityId(id);
           }}
           entities={entities}
+          onOpenMemoryManager={(filter) => {
+            setMemoryManagerFilter(filter);
+            setShowMemoryManager(true);
+          }}
         />
-        {showMemoryManager && <MemoryManager onClose={() => setShowMemoryManager(false)} />}
+        {showMemoryManager && (
+          <MemoryManager
+            key={`${memoryManagerFilter.type || 'all'}:${memoryManagerFilter.coreOnly ? 'core' : 'all'}:${memoryManagerFilter.unlinkedOnly ? 'unlinked' : 'all'}`}
+            initialType={memoryManagerFilter.type}
+            initialCoreOnly={memoryManagerFilter.coreOnly}
+            initialUnlinkedOnly={memoryManagerFilter.unlinkedOnly}
+            onClose={() => {
+              setShowMemoryManager(false);
+              setMemoryManagerFilter({});
+            }}
+          />
+        )}
 
         <HardwarePairingPanel isOpen={showHardware} onClose={() => setShowHardware(false)} />
 

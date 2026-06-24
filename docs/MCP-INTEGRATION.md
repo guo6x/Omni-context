@@ -19,14 +19,14 @@ MCP 入口是 `mcp-server.js`，路径取决于你怎么用 Omni-Context：
 
 | 场景 | 路径（请改成你机器上的实际值） |
 |---|---|
-| 装了桌面安装包 (Windows MSI/NSIS) | `C:\Program Files\Omni-Context\resources\brain-server\dist\mcp-server.js` |
-| macOS .app | `/Applications/Omni-Context.app/Contents/Resources/brain-server/dist/mcp-server.js` |
-| 直接从源码跑 | `<repo>\brain-server\dist\mcp-server.js`（要先 `cd brain-server && npm run build`） |
+| 装了桌面安装包 (Windows MSI/NSIS) | `<安装目录>\brain-server\dist\mcp-proxy.js`（推荐，与桌面端共用正在运行的 Brain Server） |
+| macOS .app | `/Applications/Omni-Context.app/Contents/Resources/brain-server/dist/mcp-proxy.js` |
+| 直接从源码跑 | `<repo>\brain-server\dist\mcp-server.js`（独立模式，要先构建并正确设置 `DB_PATH`） |
 
 打开终端验证入口能跑：
 
 ```bash
-node "C:\Program Files\Omni-Context\resources\brain-server\dist\mcp-server.js"
+node "<安装目录>\brain-server\dist\mcp-proxy.js"
 ```
 
 会卡住等 stdio 输入，**没有报错就说明路径对**。Ctrl+C 退出。
@@ -59,13 +59,10 @@ MCP 服务通过环境变量 **`DB_PATH`** 决定用哪个 SQLite 数据库文�
 {
   "mcpServers": {
     "omni-context": {
-      "command": "node",
+      "command": "C:\\path\\to\\Omni-Context\\brain-server\\node.exe",
       "args": [
-        "C:\\Program Files\\Omni-Context\\resources\\brain-server\\dist\\mcp-server.js"
-      ],
-      "env": {
-        "DB_PATH": "C:\\Program Files\\Omni-Context\\resources\\brain-server\\data\\omni-context.db"
-      }
+        "C:\\path\\to\\Omni-Context\\brain-server\\dist\\mcp-proxy.js"
+      ]
     }
   }
 }
@@ -74,7 +71,8 @@ MCP 服务通过环境变量 **`DB_PATH`** 决定用哪个 SQLite 数据库文�
 注意：
 
 - Windows 路径用双反斜杠 `\\`
-- `DB_PATH` 让独立跑的 MCP 服务和桌面应用共用同一个数据库；不写就会建新空库
+- 安装版优先使用 `mcp-proxy.js`，它读取本地 token 并转发到桌面端的 3001 服务，不需要配置 `DB_PATH`
+- 只有源码独立运行 `mcp-server.js` 时才需要配置 `DB_PATH`
 - 重启 Claude Desktop（任务栏右键退出再启动），会话里就能用 `omni-context` 工具
 
 ---
@@ -88,7 +86,7 @@ MCP 服务通过环境变量 **`DB_PATH`** 决定用哪个 SQLite 数据库文�
   "mcpServers": {
     "omni-context": {
       "command": "node",
-      "args": ["C:\\Program Files\\Omni-Context\\resources\\brain-server\\dist\\mcp-server.js"]
+      "args": ["C:\\path\\to\\Omni-Context\\brain-server\\dist\\mcp-proxy.js"]
     }
   }
 }
@@ -106,7 +104,7 @@ VS Code 里装 Cline 扩展，打开 Cline 面板 → 设置 → MCP Servers，�
 {
   "omni-context": {
     "command": "node",
-    "args": ["C:\\Program Files\\Omni-Context\\resources\\brain-server\\dist\\mcp-server.js"],
+    "args": ["C:\\path\\to\\Omni-Context\\brain-server\\dist\\mcp-proxy.js"],
     "disabled": false,
     "autoApprove": ["get_decision_context", "search_entities", "get_core_context", "get_stats"]
   }
@@ -146,7 +144,7 @@ http_headers = { "Authorization" = "Bearer <你的本地 token>" }
 
 ---
 
-## 六、可调用的工具（15 个）
+## 六、常用工具（当前共 25 个）
 
 ### 决策与检索 —— 当「脑子」用的核心
 
@@ -156,7 +154,7 @@ http_headers = { "Authorization" = "Bearer <你的本地 token>" }
 | `unified_memory_search` | 三层融合检索（全文 + 向量 + 图谱遍历），一次自然语言查询穿透整张图谱 |
 | `vector_search` | 纯语义向量检索：传一段文本，找概念相近的实体（即使用词不同） |
 | `search_entities` | 按名称 / 描述关键词找实体 |
-| `get_core_context` | 取用户的核心原则——他做事的根本规则和偏好。对话开头调它，先搞清用户的价值观和约束 |
+| `get_core_context` | 按当前主题取相关核心原则；不传主题时只返回精简概览 |
 | `get_entity` | 按 ID 取单个实体的完整信息和全部关系 |
 | `get_graph_neighborhood` | 取某实体周围 N 跳的子图，理解一个概念所处的生态 |
 | `list_entities` | 列出实体（可按类型过滤），用于概览 |
@@ -178,7 +176,7 @@ http_headers = { "Authorization" = "Bearer <你的本地 token>" }
 | `get_stats` | 实体 / 关系数量、类型分布等统计 |
 | `get_decay_report` | 哪些记忆已超过衰减阈值（候选清理） |
 
-每个工具的完整入参 schema 见 `brain-server/src/mcp-server.ts` 的 `listTools()`。
+全部工具及完整入参 schema 见 `brain-server/src/mcp-tools.ts`。
 
 ---
 

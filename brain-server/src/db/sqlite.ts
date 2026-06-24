@@ -596,10 +596,20 @@ export class Database {
   }
 
   // 管理/信任面：带 provenance 的实体列表（list_entities 抹了 metadata，这里专门给"看清谁写的"用）
-  async listEntitiesForReview(opts: { limit?: number; offset?: number; source?: string; type?: string; q?: string } = {}): Promise<{ items: any[]; total: number }> {
+  async listEntitiesForReview(opts: { limit?: number; offset?: number; source?: string; type?: string; q?: string; coreOnly?: boolean; unlinkedOnly?: boolean } = {}): Promise<{ items: any[]; total: number }> {
     const where: string[] = [`json_extract(metadata, '$.merged_into') IS NULL`];
     const params: any[] = [];
     if (opts.type) { where.push('type = ?'); params.push(opts.type); }
+    if (opts.coreOnly) {
+      where.push(`type = 'principle' AND json_extract(metadata, '$.isCore') IN (1, true)`);
+    }
+    if (opts.unlinkedOnly) {
+      where.push(`NOT EXISTS (
+        SELECT 1 FROM relationships r
+        WHERE (r.source_id = entities.id OR r.target_id = entities.id)
+          AND (r.valid_until IS NULL OR r.valid_until > datetime('now'))
+      )`);
+    }
     if (opts.source === '__user__') {
       where.push(`(json_extract(metadata, '$.provenance.source') IS NULL OR json_extract(metadata, '$.provenance.source') = 'user')`);
     } else if (opts.source) {
@@ -1270,6 +1280,21 @@ export class Database {
       read_status: false,
       created_at: now,
     };
+  }
+
+  async hasRecentNotification(titlePrefix: string, days: number, contentIncludes?: string): Promise<boolean> {
+    const safeDays = Math.max(1, Math.min(Math.floor(days), 365));
+    const contentClause = contentIncludes ? ' AND content LIKE ?' : '';
+    const params: Array<string | number> = [`${titlePrefix}%`, safeDays];
+    if (contentIncludes) params.push(`%${contentIncludes}%`);
+    const row = await this.get<{ c: number }>(
+      `SELECT COUNT(*) AS c FROM notifications
+       WHERE title LIKE ?
+         AND created_at > datetime('now', '-' || ? || ' days')
+         ${contentClause}`,
+      params,
+    );
+    return (row?.c ?? 0) > 0;
   }
 
   async getUnreadNotifications(): Promise<import('../shared-types.js').Notification[]> {

@@ -141,6 +141,11 @@ export const GetDecisionLineageSchema = z.object({
   decision_id: z.string().min(1, 'decision_id 不能为空'),
 });
 
+export const GetCoreContextSchema = z.object({
+  query: z.string().min(1).optional(),
+  limit: z.number().min(1).max(20).optional().default(12),
+});
+
 export const EmptySchema = z.object({});
 
 export interface McpToolConfig {
@@ -192,9 +197,15 @@ export const tools: McpToolConfig[] = [
   },
   {
     name: 'get_core_context',
-    description: 'Get the user\'s core principles—their fundamental rules, preferences, and guidelines for how they work. Call this at the start of a conversation to understand the user\'s values and constraints before giving advice.',
-    zodSchema: EmptySchema,
-    inputSchema: { type: 'object', properties: {} },
+    description: 'Get a compact set of the user\'s core principles. Pass the current topic as query when possible so only relevant principles are returned; without a query the server returns a capped general overview, not the full core set.',
+    zodSchema: GetCoreContextSchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Optional current topic used to select only relevant principles' },
+        limit: { type: 'number', description: 'Maximum principles to return', default: 12 },
+      },
+    },
   },
   {
     name: 'search_entities',
@@ -235,6 +246,11 @@ export const tools: McpToolConfig[] = [
             'capture_snapshot',
             'memory',
             'decision',
+            'goal',
+            'question',
+            'preference',
+            'event',
+            'task',
           ],
           description: '实体类型',
         },
@@ -414,6 +430,9 @@ export const tools: McpToolConfig[] = [
         situation: { type: 'string', description: 'The situation/context that prompted the decision' },
         conclusion: { type: 'string', description: 'The final decision (1-2 sentences)' },
         cited_entity_ids: { type: 'array', items: { type: 'string' }, description: 'IDs of principles/history entities this decision references' },
+        confidence: { type: 'string', enum: ['high', 'medium', 'low'], default: 'medium' },
+        alternatives: { type: 'string', description: 'Alternatives considered' },
+        previous_decision_id: { type: 'string', description: 'Previous decision ID when this continues or revises a decision chain' },
       },
       required: ['situation', 'conclusion'],
     },

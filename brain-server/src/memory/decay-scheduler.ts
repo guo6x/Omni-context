@@ -297,12 +297,18 @@ export class MemoryDecayScheduler {
       const coreCount = (stats as any).corePrinciples ?? 0;
       const lines: string[] = [];
       if (merged > 0) lines.push(`已自动合并 ${merged} 条完全重复：${mergedNames.slice(0, 8).join('、')}`);
-      if (coreCount > 40) lines.push(`核心原则 ${coreCount} 条偏多，建议精简到你最独特的 ~30 条（其余降为普通原则，仍可被检索）。`);
+      const shouldSuggestCoreReview = coreCount > 40
+        && !(await this.db.hasRecentNotification('🌙 睡眠整理报告', 14, '核心原则'));
+      if (shouldSuggestCoreReview) {
+        lines.push(`核心原则 ${coreCount} 条偏多。点击“整理核心原则”可直接进入核心原则列表，把不够独特的条目降为普通原则；不会删除，之后仍可检索。`);
+      }
 
       if (lines.length > 0) {
         try {
           await this.db.addNotification({
-            title: '🌙 睡眠整理报告',
+            title: shouldSuggestCoreReview
+              ? '🌙 睡眠整理报告：核心原则待精简'
+              : '🌙 睡眠整理报告',
             content: lines.join('\n'),
             type: 'consolidation',
             related_entities: [],

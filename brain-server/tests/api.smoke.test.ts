@@ -160,7 +160,7 @@ describe('API smoke: graph extract', () => {
 describe('API smoke: MCP retrieval precision', () => {
   it('caps unrelated core principles while preserving searched principles', async () => {
     const query = 'Project Alpha retrieval precision decision';
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 15; i++) {
       await db.addEntity({
         name: `Core Noise Principle ${i}`,
         type: 'principle',
@@ -172,7 +172,7 @@ describe('API smoke: MCP retrieval precision', () => {
       name: 'Project Alpha Retrieval Principle',
       type: 'principle',
       description: `${query} should use project-specific memories before global principles`,
-      metadata: { isCore: false },
+      metadata: { isCore: true },
     });
 
     const { status, body } = await request('POST', '/api/mcp/tool/get_decision_context', {
@@ -184,9 +184,32 @@ describe('API smoke: MCP retrieval precision', () => {
     const corePrinciples = principles.filter((p: any) =>
       typeof p.name === 'string' && p.name.startsWith('Core Noise Principle')
     );
-    expect(corePrinciples.length).toBeLessThanOrEqual(3);
+    expect(corePrinciples).toHaveLength(0);
     expect(principles.some((p: any) => p.name === 'Project Alpha Retrieval Principle')).toBe(true);
   }, 15000);
+
+  it('returns a capped general core context instead of injecting the entire core set', async () => {
+    const { status, body } = await request('POST', '/api/mcp/tool/get_core_context', {
+      arguments: {},
+    });
+
+    expect(status).toBe(200);
+    expect(body.totalCorePrinciples).toBeGreaterThan(12);
+    expect(body.returnedPrinciples).toBe(12);
+    expect(body.truncated).toBe(true);
+    expect(typeof body.content).toBe('string');
+    expect(body.content).not.toContain('Metadata:');
+  });
+
+  it('filters core context by topic when query is provided', async () => {
+    const { status, body } = await request('POST', '/api/mcp/tool/get_core_context', {
+      arguments: { query: 'Project Alpha retrieval precision decision', limit: 5 },
+    });
+
+    expect(status).toBe(200);
+    expect(body.content).toContain('Project Alpha Retrieval Principle');
+    expect(body.content).not.toContain('Core Noise Principle');
+  });
 
   it('does not force core principles into unified memory search results', async () => {
     const { status, body } = await request('POST', '/api/mcp/tool/unified_memory_search', {
@@ -204,6 +227,45 @@ describe('API smoke: MCP retrieval precision', () => {
       typeof r.name === 'string' && r.name.startsWith('Core Noise Principle')
     )).toBe(false);
   }, 15000);
+});
+
+describe('API smoke: MCP resources', () => {
+  async function readResource(uri: string): Promise<any> {
+    const { status, body } = await request('POST', '/api/mcp/resources/read', { uri });
+    expect(status).toBe(200);
+    expect(body.contents).toHaveLength(1);
+    return JSON.parse(body.contents[0].text);
+  }
+
+  it('returns compact capped graph data instead of raw database rows', async () => {
+    const graph = await readResource('memory://graph');
+
+    expect(graph.entities.length).toBeLessThanOrEqual(100);
+    expect(graph.relationships.length).toBeLessThanOrEqual(150);
+    expect(graph.truncated).toBe(true);
+    for (const entity of graph.entities) {
+      expect(entity).not.toHaveProperty('embedding');
+      expect(entity).not.toHaveProperty('metadata');
+    }
+  });
+
+  it('returns compact resource envelopes for principles and entity types', async () => {
+    const principles = await readResource('memory://core-principles');
+    expect(principles.returned).toBeLessThanOrEqual(20);
+    expect(principles.items.length).toBe(principles.returned);
+    for (const entity of principles.items) {
+      expect(entity).not.toHaveProperty('embedding');
+      expect(entity).not.toHaveProperty('metadata');
+    }
+
+    const concepts = await readResource('memory://entities/concept');
+    expect(concepts.returned).toBeLessThanOrEqual(100);
+    expect(concepts.items.length).toBe(concepts.returned);
+    for (const entity of concepts.items) {
+      expect(entity).not.toHaveProperty('embedding');
+      expect(entity).not.toHaveProperty('metadata');
+    }
+  });
 });
 
 describe('API smoke: 404 / CORS', () => {

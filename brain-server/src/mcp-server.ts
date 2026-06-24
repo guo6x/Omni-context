@@ -62,6 +62,7 @@ import {
   GetGraphNeighborhoodSchema,
   ExtractFromCaptureSchema,
   GetDecisionContextSchema,
+  GetCoreContextSchema,
   SearchEntitiesSchema,
   GetEntitySchema,
   ListEntitiesSchema,
@@ -74,6 +75,12 @@ import {
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
 } from './mcp-tools.js';
+import {
+  capGraphContext,
+  rankMemoryCandidates,
+  selectGeneralCorePrinciples,
+  selectRelevantPrinciples,
+} from './mcp-retrieval.js';
 
 class OmniContextServer {
   private db: Database;
@@ -121,13 +128,11 @@ class OmniContextServer {
         },
         instructions: `You are connected to Omni-Context, the user's long-term memory and decision support system.
 
-Before answering any substantive question:
-1. Call \`unified_memory_search\` with key terms from the user's question to check whether they've discussed this topic before.
-2. If the user is choosing between options or making a decision, call \`get_decision_context\` with their situation as the \`situation\` argument.
-3. Cite matched memories by name in your answer so the user can verify.
-4. At the end of a substantive conversation that produced a conclusion, call \`save_conclusion\` to persist the key takeaway.
-
-These tools are read-cheap; over-call rather than under-call.`,
+Use memory selectively:
+1. Call \`unified_memory_search\` when prior user context, project history, preferences, or past decisions could materially improve the answer. Skip it for simple factual, transient, or unrelated requests.
+2. Call \`get_decision_context\` when the user is making a meaningful choice and historical context is relevant.
+3. Cite matched memories by name and ignore results that do not clearly match the current topic.
+4. Call \`save_conclusion\` only for durable, useful conclusions or explicit user preferences. Do not save small talk, temporary details, guesses, or duplicate conclusions.`,
       }
     );
 
@@ -176,36 +181,34 @@ These tools are read-cheap; over-call rather than under-call.`,
         }
 
         case 'get_core_context': {
+          const parsed = GetCoreContextSchema.parse(args);
           const corePrinciples = await this.db.getCorePrinciples();
+          const selected = parsed.query
+            ? selectRelevantPrinciples(parsed.query, corePrinciples, parsed.limit)
+            : selectGeneralCorePrinciples(corePrinciples, parsed.limit);
           const context = {
             role: 'system',
             content: `[Omni-Context Core Principles]
 
-${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
+${selected.map((p, i) => `${i + 1}. **${p.name}**
    ${p.description || ''}
-   Metadata: ${JSON.stringify(p.metadata, null, 2)}
 `).join('\n')}
 
-请务必遵循以上核心原则进行工作。`,
+仅在与当前任务相关时遵循以上原则；不要把无关原则强行套用。`,
+            totalCorePrinciples: corePrinciples.length,
+            returnedPrinciples: selected.length,
+            truncated: selected.length < corePrinciples.length,
           };
           return this.formatResponse(context);
         }
 
         case 'search_entities': {
-          const query = args.query as string;
-          const type = args.type as string;
-          const limit = (args.limit as number) || 10;
-
-          let entities;
-          if (type) {
-            entities = await this.db.getEntitiesByType(type);
-            entities = entities.filter((e) =>
-              e.name.toLowerCase().includes(query.toLowerCase()) ||
-              e.description?.toLowerCase().includes(query.toLowerCase())
-            ).slice(0, limit);
-          } else {
-            entities = await this.db.searchEntities(query, limit);
-          }
+          const parsed = SearchEntitiesSchema.parse(args);
+          const entities = await this.db.searchEntities(
+            parsed.query,
+            parsed.limit,
+            parsed.type as EntityType | undefined,
+          );
 
           // 隐式 access tracking（仅 MCP 路径）
           const returnedIds = entities.map((e: any) => e.id).filter(Boolean);
@@ -542,6 +545,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
             // provenance：save_conclusion 是外部 AI 把对话结论写回图谱（与 HTTP 路径一致）
             const saved = await this.db.addEntity({
               ...entity,
+              tags: [...new Set([...(entity.tags || []), ...(tags || [])])],
               metadata: { ...((entity as any).metadata || {}), provenance: { source: 'external_ai', tool: 'save_conclusion', at: new Date().toISOString() } },
             });
             savedEntityIds.push(saved.id);
@@ -550,7 +554,7 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           for (const update of resolution.entitiesToUpdate) {
             await this.db.updateEntity(update.id, {
               description: update.description,
-              tags: update.tags,
+              tags: [...new Set([...(update.tags || []), ...(tags || [])])],
               embedding: update.embedding,
               metadata: update.metadata,
               created_at: update.created_at,
@@ -611,18 +615,27 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
 
           // 融合去重
           const seen = new Set<string>();
-          const relevantMemories: any[] = [];
+          const candidates: any[] = [];
           for (const source of [textResults, vectorResults]) {
             for (const item of source) {
               if (!seen.has(item.id)) {
                 seen.add(item.id);
-                relevantMemories.push(item);
+                candidates.push(item);
               }
             }
           }
 
-          // 相关原则：stdio 旧路径没有 LLM 重排，至少对核心原则做硬上限，避免全局原则刷屏。
-          const corePrinciples = (await this.db.getCorePrinciples()).slice(0, CORE_PRINCIPLE_CAP);
+          const relevantMemories = rankMemoryCandidates(
+            situation,
+            candidates,
+            { decisionMode: true },
+          ).slice(0, limit);
+
+          const corePrinciples = selectRelevantPrinciples(
+            situation,
+            await this.db.getCorePrinciples(),
+            CORE_PRINCIPLE_CAP,
+          );
           const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
           const searchPrinciples = relevantMemories.filter(
             (m) => m.type === 'principle' && !seenPrincipleIds.has(m.id)
@@ -658,7 +671,11 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
           const seed = relevantMemories[0];
           if (seed) {
             try {
-              graphContext = await this.db.getGraphNeighborhood(seed.id, 2);
+              graphContext = capGraphContext(
+                await this.db.getGraphNeighborhood(seed.id, 2),
+                Math.max(limit * 2, 8),
+                Math.max(limit * 3, 12),
+              );
             } catch {
               // 图谱查询失败不阻塞
             }
@@ -913,13 +930,13 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
         {
           uri: 'memory://graph',
           name: '知识图谱',
-          description: '完整的知识图谱',
+          description: '知识图谱摘要（最多 100 个实体和 150 条关系）',
           mimeType: 'application/json',
         },
         {
           uri: 'memory://core-principles',
           name: '核心原则',
-          description: '核心原则（Letta Core Memory）',
+          description: '核心原则摘要（最多 20 条）',
           mimeType: 'application/json',
         },
         {
@@ -942,14 +959,40 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
     const { uri } = request.params;
 
     if (uri === 'memory://graph') {
-      const entities = await this.db.all('SELECT * FROM entities LIMIT 200');
-      const relationships = await this.db.all('SELECT * FROM relationships LIMIT 200');
-      return this.formatResource(uri, { entities, relationships });
+      const entities = await this.db.all<any>(
+        `SELECT id, name, type, description, tags, created_at, access_count
+         FROM entities
+         WHERE json_extract(metadata, '$.merged_into') IS NULL
+         ORDER BY access_count DESC, updated_at DESC
+         LIMIT 100`,
+      );
+      const relationships = await this.db.all(
+        `SELECT id, source_id, target_id, type, description, weight
+         FROM relationships
+         WHERE valid_until IS NULL OR valid_until > datetime('now')
+         ORDER BY weight DESC
+         LIMIT 150`,
+      );
+      return this.formatResource(uri, {
+        entities: entities.map((entity) => toCompactEntity({
+          ...entity,
+          tags: entity.tags ? JSON.parse(entity.tags) : undefined,
+        })),
+        relationships,
+        truncated: true,
+        note: 'Use unified_memory_search or get_graph_neighborhood for topic-specific retrieval.',
+      });
     }
 
     if (uri === 'memory://core-principles') {
-      const principles = await this.db.getCorePrinciples();
-      return this.formatResource(uri, principles);
+      const all = await this.db.getCorePrinciples();
+      const items = selectGeneralCorePrinciples(all, 20).map(toCompactEntity);
+      return this.formatResource(uri, {
+        items,
+        total: all.length,
+        returned: items.length,
+        truncated: items.length < all.length,
+      });
     }
 
     if (uri === 'memory://stats') {
@@ -960,8 +1003,15 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
     const entityTypeMatch = uri.match(/^memory:\/\/entities\/(.+)$/);
     if (entityTypeMatch) {
       const type = decodeURIComponent(entityTypeMatch[1]);
-      const entities = await this.db.getEntitiesByType(type);
-      return this.formatResource(uri, entities);
+      const all = await this.db.getEntitiesByType(type);
+      const items = rankMemoryCandidates(type, all).slice(0, 100).map(toCompactEntity);
+      return this.formatResource(uri, {
+        items,
+        total: all.length,
+        returned: items.length,
+        truncated: items.length < all.length,
+        note: 'Use search_entities or unified_memory_search for precise retrieval.',
+      });
     }
 
     throw new McpError(ErrorCode.InvalidRequest, `未知资源: ${uri}`);
@@ -983,17 +1033,27 @@ ${corePrinciples.map((p, i) => `${i + 1}. **${p.name}**
     }
 
     const seen = new Set<string>();
-    const relevantMemories: any[] = [];
+    const candidates: any[] = [];
     for (const source of [textResults, vectorResults]) {
       for (const item of source) {
         if (!seen.has(item.id)) {
           seen.add(item.id);
-          relevantMemories.push(item);
+          candidates.push(item);
         }
       }
     }
 
-    const corePrinciples = await this.db.getCorePrinciples();
+    const relevantMemories = rankMemoryCandidates(
+      situation,
+      candidates,
+      { decisionMode: true },
+    ).slice(0, limit);
+
+    const corePrinciples = selectRelevantPrinciples(
+      situation,
+      await this.db.getCorePrinciples(),
+      CORE_PRINCIPLE_CAP,
+    );
     const seenPrincipleIds = new Set(corePrinciples.map((p: any) => p.id));
     const searchPrinciples = relevantMemories.filter(
       (m) => m.type === 'principle' && !seenPrincipleIds.has(m.id)

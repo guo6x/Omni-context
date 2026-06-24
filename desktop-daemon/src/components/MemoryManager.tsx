@@ -35,7 +35,19 @@ function sourceBadge(it: ReviewItem): { text: string; cls: string } {
   return { text: `你 · ${date}`, cls: 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10' };
 }
 
-export default function MemoryManager({ onClose }: { onClose: () => void }) {
+interface MemoryManagerProps {
+  onClose: () => void;
+  initialType?: string;
+  initialCoreOnly?: boolean;
+  initialUnlinkedOnly?: boolean;
+}
+
+export default function MemoryManager({
+  onClose,
+  initialType = '',
+  initialCoreOnly = false,
+  initialUnlinkedOnly = false,
+}: MemoryManagerProps) {
   const toast = useToast();
   const [tab, setTab] = useState<'browse' | 'import' | 'favorites'>('browse');
 
@@ -44,6 +56,9 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
   const [total, setTotal] = useState(0);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [source, setSource] = useState('');
+  const [type, setType] = useState(initialType);
+  const [coreOnly, setCoreOnly] = useState(initialCoreOnly);
+  const [unlinkedOnly, setUnlinkedOnly] = useState(initialUnlinkedOnly);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
   const [mergeFrom, setMergeFrom] = useState<ReviewItem | null>(null);
@@ -54,6 +69,9 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
     try {
       const params = new URLSearchParams({ limit: '80' });
       if (source) params.set('source', source);
+      if (type) params.set('type', type);
+      if (coreOnly) params.set('coreOnly', 'true');
+      if (unlinkedOnly) params.set('unlinkedOnly', 'true');
       if (q.trim()) params.set('q', q.trim());
       const [r, c] = await Promise.all([
         apiFetch(`/api/entities/review?${params.toString()}`),
@@ -68,9 +86,9 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
     } finally {
       setLoading(false);
     }
-  }, [source, q, toast]);
+  }, [source, type, coreOnly, unlinkedOnly, q, toast]);
 
-  useEffect(() => { if (tab === 'browse') load(); }, [tab, source, load]);
+  useEffect(() => { if (tab === 'browse') load(); }, [tab, source, type, coreOnly, unlinkedOnly, load]);
 
   // ── 收藏夹（存在 archival、打"收藏"标签的记忆）──
   const [favs, setFavs] = useState<Array<{ id: string; content: string; summary?: string; createdAt?: string }>>([]);
@@ -179,6 +197,34 @@ export default function MemoryManager({ onClose }: { onClose: () => void }) {
         {tab === 'browse' && (
           <div className="flex flex-col min-h-0 flex-1">
             <div className="px-5 pt-3 flex items-center gap-2 flex-wrap">
+              {(type || coreOnly || unlinkedOnly) && (
+                <div className="flex items-center gap-1.5">
+                  {type && (
+                    <button
+                      onClick={() => setType('')}
+                      className="text-xs rounded-md px-2.5 py-1 border border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
+                    >
+                      类型：{type} ×
+                    </button>
+                  )}
+                  {coreOnly && (
+                    <button
+                      onClick={() => setCoreOnly(false)}
+                      className="text-xs rounded-md px-2.5 py-1 border border-yellow-500/40 bg-yellow-500/10 text-yellow-300"
+                    >
+                      仅核心原则 ×
+                    </button>
+                  )}
+                  {unlinkedOnly && (
+                    <button
+                      onClick={() => setUnlinkedOnly(false)}
+                      className="text-xs rounded-md px-2.5 py-1 border border-amber-500/40 bg-amber-500/10 text-amber-300"
+                    >
+                      仅孤立内容 ×
+                    </button>
+                  )}
+                </div>
+              )}
               {SOURCE_FILTERS.map((f) => (
                 <button key={f.key} onClick={() => setSource(f.key)}
                   className={`text-xs rounded-full px-2.5 py-1 border transition-colors ${source === f.key ? 'border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-accent)]/10 font-medium' : 'border-[var(--color-border)] text-[var(--color-fgMuted)] hover:text-[var(--color-fg)]'}`}>

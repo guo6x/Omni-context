@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle, Copy, Bookmark, Plus, Eye } from 'lucide-react';
+import { Check, CheckCheck, X, Sparkles, Database, RefreshCw, AlertCircle, Copy, Bookmark, Plus, Eye, ListTodo } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
 import { apiFetch } from '@/lib/api-client';
@@ -32,6 +32,7 @@ interface InsightsInboxProps {
   onClose: () => void;
   onSelectEntity?: (id: string) => void;
   entities?: any[];
+  onOpenMemoryManager?: (filter: { type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }) => void;
 }
 
 /** 根据通知类型返回卡片样式配置 */
@@ -70,7 +71,7 @@ function getTypeStyles(type: string) {
   }
 }
 
-export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entities }: InsightsInboxProps) {
+export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entities, onOpenMemoryManager }: InsightsInboxProps) {
   const { t } = useTranslation();
   const toast = useToast();
   const [insights, setInsights] = useState<Insight[]>([]);
@@ -189,6 +190,30 @@ export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entitie
     );
   }, [insights]);
 
+  const getReviewAction = useCallback((insight: Insight) => {
+    if (
+      insight.title.startsWith('🌙 睡眠整理报告：核心原则')
+      || (insight.title === '🌙 睡眠整理报告' && insight.content.includes('核心原则'))
+    ) {
+      return { label: '整理核心原则', filter: { type: 'principle', coreOnly: true } };
+    }
+    const pendingType = insight.title.match(/^(?:待整理主题|未深入主题)：([^\s]+)(?:\s+类型)?/);
+    if (pendingType) {
+      return { label: '查看待整理内容', filter: { type: pendingType[1], unlinkedOnly: true } };
+    }
+    return null;
+  }, []);
+
+  const openReviewTask = useCallback(async (insight: Insight, filter: { type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }) => {
+    onOpenMemoryManager?.(filter);
+    onClose();
+    try {
+      await apiFetch(`/api/notifications/${insight.id}/read`, { method: 'POST' });
+    } catch (e) {
+      console.warn('Failed to mark review task as read', e);
+    }
+  }, [onClose, onOpenMemoryManager]);
+
   if (!isOpen) return null;
 
   return (
@@ -266,6 +291,7 @@ export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entitie
           insights.map((insight) => {
             const styles = getTypeStyles(insight.type);
             const TypeIcon = styles.icon;
+            const reviewAction = getReviewAction(insight);
             return (
             <div
               key={insight.id}
@@ -281,6 +307,16 @@ export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entitie
                 <h3 className={`${styles.title} font-medium text-sm`}>{insight.title}</h3>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">{insight.content}</p>
+
+              {reviewAction && onOpenMemoryManager && (
+                <button
+                  onClick={() => openReviewTask(insight, reviewAction.filter)}
+                  className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20"
+                >
+                  <ListTodo className="h-3.5 w-3.5" />
+                  {reviewAction.label}
+                </button>
+              )}
 
               {onSelectEntity && insight.related_entities && insight.related_entities.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-3 items-center">

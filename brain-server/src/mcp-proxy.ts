@@ -105,13 +105,11 @@ class McpProxyServer {
         },
         instructions: `You are connected to Omni-Context, the user's long-term memory and decision support system.
 
-Before answering any substantive question:
-1. Call \`unified_memory_search\` with key terms from the user's question to check whether they've discussed this topic before.
-2. If the user is choosing between options or making a decision, call \`get_decision_context\` with their situation as the \`situation\` argument.
-3. Cite matched memories by name in your answer so the user can verify.
-4. At the end of a substantive conversation that produced a conclusion, call \`save_conclusion\` to persist the key takeaway.
-
-These tools are read-cheap; over-call rather than under-call.`,
+Use memory selectively:
+1. Call \`unified_memory_search\` when prior user context, project history, preferences, or past decisions could materially improve the answer. Skip it for simple factual, transient, or unrelated requests.
+2. Call \`get_decision_context\` when the user is making a meaningful choice and historical context is relevant.
+3. Cite matched memories by name and ignore results that do not clearly match the current topic.
+4. Call \`save_conclusion\` only for durable, useful conclusions or explicit user preferences. Do not save small talk, temporary details, guesses, or duplicate conclusions.`,
       }
     );
 
