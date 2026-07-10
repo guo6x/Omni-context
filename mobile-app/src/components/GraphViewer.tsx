@@ -1,9 +1,11 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef } from 'react';
 import {
+  Animated,
   View,
   Text,
   StyleSheet,
   Dimensions,
+  PanResponder,
 } from 'react-native';
 import Svg, {
   G,
@@ -11,11 +13,6 @@ import Svg, {
   Line,
   Text as SvgText,
 } from 'react-native-svg';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
 import { KnowledgeGraph, KnowledgeNode } from '@/types';
 import { colors } from '@/utils/theme';
 
@@ -27,6 +24,8 @@ interface GraphViewerProps {
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const GRAPH_SIZE = Math.min(SCREEN_WIDTH, SCREEN_HEIGHT) * 1.5;
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 3;
 
 function calculateNodePositions(nodes: KnowledgeNode[]): KnowledgeNode[] {
   if (nodes.length === 0) return [];
@@ -49,12 +48,13 @@ function calculateNodePositions(nodes: KnowledgeNode[]): KnowledgeNode[] {
 }
 
 export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerProps) {
-  const scale = useSharedValue(1);
-  const savedScale = useSharedValue(1);
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const savedTranslateX = useSharedValue(0);
-  const savedTranslateY = useSharedValue(0);
+  const scale = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const lastScale = useRef(1);
+  const startScale = useRef(1);
+  const lastTranslate = useRef({ x: 0, y: 0 });
+  const startDistance = useRef<number | null>(null);
 
   const nodesWithPositions = useMemo(() => {
     if (!graph) return [];
@@ -63,37 +63,61 @@ export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerP
 
   const edges = graph?.edges ?? [];
 
-  // Gesture 对象在每次渲染时重新创建会让 react-native-gesture-handler 反复
-  // 注册/卸载 worklet，浪费帧时间。useMemo 让 SharedValue 维持稳定句柄。
-  const composedGesture = useMemo(() => {
-    const pinchGesture = Gesture.Pinch()
-      .onUpdate((e) => {
-        scale.value = savedScale.value * e.scale;
-      })
-      .onEnd(() => {
-        savedScale.value = scale.value;
-      });
+  const panResponder = useMemo(() => {
+    const getTouchDistance = (touches: Array<{ pageX: number; pageY: number }>) => {
+      if (touches.length < 2) return null;
+      const [a, b] = touches;
+      return Math.hypot(a.pageX - b.pageX, a.pageY - b.pageY);
+    };
 
-    const panGesture = Gesture.Pan()
-      .onUpdate((e) => {
-        translateX.value = savedTranslateX.value + e.translationX;
-        translateY.value = savedTranslateY.value + e.translationY;
-      })
-      .onEnd(() => {
-        savedTranslateX.value = translateX.value;
-        savedTranslateY.value = translateY.value;
-      });
+    return PanResponder.create({
+      onStartShouldSetPanResponder: (event) => event.nativeEvent.touches.length >= 2,
+      onMoveShouldSetPanResponder: (event, gestureState) => (
+        event.nativeEvent.touches.length >= 2 ||
+        Math.abs(gestureState.dx) > 4 ||
+        Math.abs(gestureState.dy) > 4
+      ),
+      onPanResponderGrant: (event) => {
+        startScale.current = lastScale.current;
+        startDistance.current = getTouchDistance(event.nativeEvent.touches);
+      },
+      onPanResponderMove: (event, gestureState) => {
+        const distance = getTouchDistance(event.nativeEvent.touches);
+        if (distance && startDistance.current) {
+          const nextScale = Math.min(
+            MAX_SCALE,
+            Math.max(MIN_SCALE, startScale.current * (distance / startDistance.current)),
+          );
+          scale.setValue(nextScale);
+          lastScale.current = nextScale;
+          return;
+        }
 
-    return Gesture.Simultaneous(pinchGesture, panGesture);
+        const nextX = lastTranslate.current.x + gestureState.dx;
+        const nextY = lastTranslate.current.y + gestureState.dy;
+        translateX.setValue(nextX);
+        translateY.setValue(nextY);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        lastTranslate.current = {
+          x: lastTranslate.current.x + gestureState.dx,
+          y: lastTranslate.current.y + gestureState.dy,
+        };
+        startDistance.current = null;
+      },
+      onPanResponderTerminate: () => {
+        startDistance.current = null;
+      },
+    });
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const animatedStyle = {
     transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
+      { translateX },
+      { translateY },
+      { scale },
     ],
-  }));
+  };
 
   const handleNodePress = useCallback((node: KnowledgeNode) => {
     onNodePress?.(node);
@@ -110,77 +134,78 @@ export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerP
 
   return (
     <View style={styles.container}>
-      <GestureDetector gesture={composedGesture}>
-        <Animated.View style={[styles.graphContainer, animatedStyle]}>
-          <Svg width={GRAPH_SIZE} height={GRAPH_SIZE}>
-            <G>
-              {edges.map(edge => {
-                const sourceNode = nodesWithPositions.find(n => n.id === edge.source);
-                const targetNode = nodesWithPositions.find(n => n.id === edge.target);
-                if (!sourceNode || !targetNode) return null;
-                const sourceX = sourceNode.x ?? GRAPH_SIZE / 2;
-                const sourceY = sourceNode.y ?? GRAPH_SIZE / 2;
-                const targetX = targetNode.x ?? GRAPH_SIZE / 2;
-                const targetY = targetNode.y ?? GRAPH_SIZE / 2;
-                
-                return (
-                  <Line
-                    key={edge.id}
-                    x1={sourceX}
-                    y1={sourceY}
-                    x2={targetX}
-                    y2={targetY}
-                    stroke={colors.textMuted}
-                    strokeWidth={1 + edge.weight * 0.5}
-                    opacity={0.3}
-                  />
-                );
-              })}
-            </G>
+      <Animated.View
+        style={[styles.graphContainer, animatedStyle]}
+        {...panResponder.panHandlers}
+      >
+        <Svg width={GRAPH_SIZE} height={GRAPH_SIZE}>
+          <G>
+            {edges.map(edge => {
+              const sourceNode = nodesWithPositions.find(n => n.id === edge.source);
+              const targetNode = nodesWithPositions.find(n => n.id === edge.target);
+              if (!sourceNode || !targetNode) return null;
+              const sourceX = sourceNode.x ?? GRAPH_SIZE / 2;
+              const sourceY = sourceNode.y ?? GRAPH_SIZE / 2;
+              const targetX = targetNode.x ?? GRAPH_SIZE / 2;
+              const targetY = targetNode.y ?? GRAPH_SIZE / 2;
 
-            <G>
-              {nodesWithPositions.map(node => {
-                const isSelected = selectedNodeId === node.id;
-                const nodeRadius = 20 + node.weight * 5;
-                const nodeX = node.x ?? GRAPH_SIZE / 2;
-                const nodeY = node.y ?? GRAPH_SIZE / 2;
-                
-                return (
-                  <G key={node.id}>
-                    {isSelected && (
-                      <Circle
-                        cx={nodeX}
-                        cy={nodeY}
-                        r={nodeRadius + 8}
-                        fill="none"
-                        stroke={colors.primary}
-                        strokeWidth={2}
-                        opacity={0.5}
-                      />
-                    )}
+              return (
+                <Line
+                  key={edge.id}
+                  x1={sourceX}
+                  y1={sourceY}
+                  x2={targetX}
+                  y2={targetY}
+                  stroke={colors.textMuted}
+                  strokeWidth={1 + edge.weight * 0.5}
+                  opacity={0.3}
+                />
+              );
+            })}
+          </G>
+
+          <G>
+            {nodesWithPositions.map(node => {
+              const isSelected = selectedNodeId === node.id;
+              const nodeRadius = 20 + node.weight * 5;
+              const nodeX = node.x ?? GRAPH_SIZE / 2;
+              const nodeY = node.y ?? GRAPH_SIZE / 2;
+
+              return (
+                <G key={node.id}>
+                  {isSelected && (
                     <Circle
                       cx={nodeX}
                       cy={nodeY}
-                      r={nodeRadius}
-                      fill={node.color}
-                      onPress={() => handleNodePress(node)}
+                      r={nodeRadius + 8}
+                      fill="none"
+                      stroke={colors.primary}
+                      strokeWidth={2}
+                      opacity={0.5}
                     />
-                    <SvgText
-                      x={nodeX}
-                      y={nodeY + nodeRadius + 15}
-                      fill={colors.text}
-                      fontSize={12}
-                      textAnchor="middle"
-                    >
-                      {node.label.length > 10 ? `${node.label.slice(0, 10)}...` : node.label}
-                    </SvgText>
-                  </G>
-                );
-              })}
-            </G>
-          </Svg>
-        </Animated.View>
-      </GestureDetector>
+                  )}
+                  <Circle
+                    cx={nodeX}
+                    cy={nodeY}
+                    r={nodeRadius}
+                    fill={node.color}
+                    onPress={() => handleNodePress(node)}
+                  />
+                  <SvgText
+                    x={nodeX}
+                    y={nodeY + nodeRadius + 15}
+                    fill={colors.text}
+                    fontSize={12}
+                    textAnchor="middle"
+                  >
+                    {node.label.length > 10 ? `${node.label.slice(0, 10)}...` : node.label}
+                  </SvgText>
+                </G>
+              );
+            })}
+          </G>
+        </Svg>
+      </Animated.View>
     </View>
   );
 }

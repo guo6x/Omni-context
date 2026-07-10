@@ -289,6 +289,7 @@ export function createDefaultEmbeddingService(): EmbeddingService {
 // 用 app_meta 记录上次的模型；不一致才重算，跑完更新标记。不阻塞启动。
 async function maybeReembedOnModelChange(db: Database, emb: EmbeddingService): Promise<void> {
   try {
+    if (db.isInMemory() || process.env.VITEST || process.env.NODE_ENV === 'test') return;
     const current = emb.getInfo().model;
     if (!current || current === 'unknown') return;
     const stored = await db.getMeta('embedding_model');

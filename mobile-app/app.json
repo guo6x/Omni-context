@@ -19,6 +19,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.omnicontext.mobile",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Omni-Context needs local network access to connect to the desktop Brain Server.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      },
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -29,6 +35,7 @@
         "backgroundColor": "#0a0a0f"
       },
       "package": "com.omnicontext.mobile",
+      "usesCleartextTraffic": true,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",

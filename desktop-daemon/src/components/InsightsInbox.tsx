@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/useToast';
 import { apiFetch } from '@/lib/api-client';
 
 const REFRESH_INTERVAL_MS = 20_000;
+const CORE_TARGET_COUNT = 30;
 
 function formatRelative(iso: string): string {
   const then = Date.parse(iso);
@@ -27,12 +28,36 @@ interface Insight {
   related_entities?: string[];
 }
 
+type ReviewFilter = { type?: string; coreOnly?: boolean; unlinkedOnly?: boolean };
+
+interface ReviewTaskSummary {
+  corePrinciples: {
+    total: number;
+    target: number;
+    overLimit: number;
+    lowSignal: number;
+    demoteSamples: Array<{ id: string; name: string; access_count?: number }>;
+  };
+  unlinkedByType: Array<{
+    type: string;
+    total: number;
+    samples: Array<{ id: string; name: string; access_count?: number }>;
+  }>;
+}
+
+type ReviewAction = {
+  kind: 'core-principles' | 'unlinked-type';
+  label: string;
+  filter: ReviewFilter;
+  type?: string;
+};
+
 interface InsightsInboxProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectEntity?: (id: string) => void;
   entities?: any[];
-  onOpenMemoryManager?: (filter: { type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }) => void;
+  onOpenMemoryManager?: (filter: ReviewFilter) => void;
 }
 
 /** 根据通知类型返回卡片样式配置 */
@@ -78,6 +103,7 @@ export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entitie
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [favIds, setFavIds] = useState<Set<string>>(new Set());
+  const [reviewTasks, setReviewTasks] = useState<ReviewTaskSummary | null>(null);
 
   const fetchInsights = useCallback(async () => {
     try {
@@ -96,14 +122,25 @@ export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entitie
     } finally {
       setLoading(false);
     }
+  }, [t]);
+
+  const fetchReviewTasks = useCallback(async () => {
+    try {
+      const res = await apiFetch(`/api/review/tasks?targetCoreCount=${CORE_TARGET_COUNT}`);
+      if (!res.ok) return;
+      setReviewTasks(await res.json());
+    } catch (e) {
+      console.warn('Failed to fetch review tasks', e);
+    }
   }, []);
 
   useEffect(() => {
     if (!isOpen) return;
     fetchInsights();
+    fetchReviewTasks();
     const timer = setInterval(fetchInsights, REFRESH_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [isOpen, fetchInsights]);
+  }, [isOpen, fetchInsights, fetchReviewTasks]);
 
   const markAsRead = useCallback(async (id: string) => {
     setInsights((prev) => prev.filter((i) => i.id !== id));
@@ -190,21 +227,65 @@ export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entitie
     );
   }, [insights]);
 
-  const getReviewAction = useCallback((insight: Insight) => {
+  const getReviewAction = useCallback((insight: Insight): ReviewAction | null => {
     if (
       insight.title.startsWith('🌙 睡眠整理报告：核心原则')
       || (insight.title === '🌙 睡眠整理报告' && insight.content.includes('核心原则'))
     ) {
-      return { label: '整理核心原则', filter: { type: 'principle', coreOnly: true } };
+      return { kind: 'core-principles', label: '整理核心原则', filter: { type: 'principle', coreOnly: true } };
     }
     const pendingType = insight.title.match(/^(?:待整理主题|未深入主题)：([^\s]+)(?:\s+类型)?/);
     if (pendingType) {
-      return { label: '查看待整理内容', filter: { type: pendingType[1], unlinkedOnly: true } };
+      return { kind: 'unlinked-type', label: '查看待整理内容', type: pendingType[1], filter: { type: pendingType[1], unlinkedOnly: true } };
     }
     return null;
   }, []);
 
-  const openReviewTask = useCallback(async (insight: Insight, filter: { type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }) => {
+  const getReviewDetail = useCallback((action: ReviewAction) => {
+    if (action.kind === 'core-principles') {
+      const task = reviewTasks?.corePrinciples;
+      if (!task) return null;
+      return {
+        title: `当前 ${task.total} 条核心原则，目标约 ${task.target} 条`,
+        desc: task.overLimit > 0
+          ? `建议先降级 ${task.overLimit} 条低引用原则；其中 ${task.lowSignal} 条几乎没有被检索使用。`
+          : '当前核心原则数量合理，可以只做逐条复核。',
+        samples: task.demoteSamples,
+      };
+    }
+    const task = reviewTasks?.unlinkedByType.find((x) => x.type === action.type);
+    if (!task) return null;
+    return {
+      title: `${task.type} 孤立内容 ${task.total} 条`,
+      desc: '这些内容没有关系边，优先合并、补关系或删除低价值条目，避免稀释检索。',
+      samples: task.samples,
+    };
+  }, [reviewTasks]);
+
+  const demoteExcessCorePrinciples = useCallback(async () => {
+    const total = reviewTasks?.corePrinciples.total ?? 0;
+    const overLimit = reviewTasks?.corePrinciples.overLimit ?? 0;
+    if (overLimit <= 0) {
+      toast.success('核心原则数量已经在建议范围内');
+      return;
+    }
+    if (!confirm(`将核心原则从 ${total} 条降到约 ${CORE_TARGET_COUNT} 条？\n低引用原则会降为普通原则，不会删除内容。`)) return;
+    try {
+      const res = await apiFetch('/api/review/core-principles/demote-excess', {
+        method: 'POST',
+        body: JSON.stringify({ targetCoreCount: CORE_TARGET_COUNT }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      toast.success(`已降级 ${data.demoted || 0} 条核心原则`);
+      fetchReviewTasks();
+    } catch (e) {
+      console.warn('Failed to demote excess core principles', e);
+      toast.error('批量降级失败');
+    }
+  }, [fetchReviewTasks, reviewTasks, toast]);
+
+  const openReviewTask = useCallback(async (insight: Insight, filter: ReviewFilter) => {
     onOpenMemoryManager?.(filter);
     onClose();
     try {
@@ -292,6 +373,7 @@ export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entitie
             const styles = getTypeStyles(insight.type);
             const TypeIcon = styles.icon;
             const reviewAction = getReviewAction(insight);
+            const reviewDetail = reviewAction ? getReviewDetail(reviewAction) : null;
             return (
             <div
               key={insight.id}
@@ -309,13 +391,41 @@ export default function InsightsInbox({ isOpen, onClose, onSelectEntity, entitie
               <p className="text-gray-300 text-sm leading-relaxed">{insight.content}</p>
 
               {reviewAction && onOpenMemoryManager && (
-                <button
-                  onClick={() => openReviewTask(insight, reviewAction.filter)}
-                  className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20"
-                >
-                  <ListTodo className="h-3.5 w-3.5" />
-                  {reviewAction.label}
-                </button>
+                <div className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                  {reviewDetail && (
+                    <>
+                      <div className="text-xs font-semibold text-emerald-200">{reviewDetail.title}</div>
+                      <div className="mt-1 text-xs leading-5 text-gray-400">{reviewDetail.desc}</div>
+                      {reviewDetail.samples.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {reviewDetail.samples.slice(0, 3).map((sample) => (
+                            <span key={sample.id} className="max-w-[12rem] truncate rounded border border-white/10 bg-black/25 px-2 py-1 text-[11px] text-gray-300">
+                              {sample.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => openReviewTask(insight, reviewAction.filter)}
+                      className="inline-flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20"
+                    >
+                      <ListTodo className="h-3.5 w-3.5" />
+                      {reviewAction.label}
+                    </button>
+                    {reviewAction.kind === 'core-principles' && (
+                      <button
+                        onClick={demoteExcessCorePrinciples}
+                        disabled={!reviewTasks || (reviewTasks.corePrinciples.overLimit || 0) <= 0}
+                        className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-300 hover:bg-amber-500/20 disabled:opacity-40"
+                      >
+                        一键降到约 {CORE_TARGET_COUNT} 条
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
 
               {onSelectEntity && insight.related_entities && insight.related_entities.length > 0 && (

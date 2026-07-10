@@ -1,6 +1,6 @@
 [package]
 name = "omni-context-desktop"
-version = "0.1.0"
+version = "0.1.1"
 description = "Omni-Context - 全域物理级 AI 记忆操作系统"
 authors = ["Omni-Context Team"]
 license = "MIT"

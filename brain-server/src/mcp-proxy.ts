@@ -138,6 +138,7 @@ Use memory selectively:
       try {
         const responseData = await requestBackend(`/api/mcp/tool/${name}`, {
           method: 'POST',
+          headers: { 'X-Omni-Client': 'mcp-proxy' },
           body: JSON.stringify({ arguments: args || {} }),
         });
 

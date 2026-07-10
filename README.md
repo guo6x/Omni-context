@@ -57,6 +57,51 @@ Browser extension          + vectors + full-text         Claude · Cursor · Cli
 
 ---
 
+## Tools
+
+25 MCP tools, grouped by what they do.
+
+### Decision & retrieval — the "brain"
+
+- `get_decision_context` — given a situation, return relevant principles, precedents, conflicts, and graph neighborhood in one call
+- `unified_memory_search` — three-layer fusion search (full-text + vector + graph traversal) in one natural-language query
+- `vector_search` — pure semantic vector search; finds conceptually similar entities even with different wording
+- `ask_memory` — ask a question, get a synthesized answer grounded in your graph
+- `graph_answer` — graph-grounded Q&A with citation to source entities
+- `search_entities` — find entities by name / description keywords
+- `get_core_context` — fetch core principles relevant to a topic (or a compact overview if no topic given)
+- `get_entity` — get one entity's full info and all its relationships by ID
+- `get_graph_neighborhood` — get the N-hop subgraph around an entity
+- `list_entities` — list entities, optionally filtered by type
+
+### Capture & write — grow the memory
+
+- `record_capture` — store a capture snapshot (screenshot / clipboard / text)
+- `extract_from_capture` — auto-extract entities + relationships + principles from a text passage
+- `add_entity` — create a new entity
+- `add_relationship` — link two existing entities
+- `update_entity` — modify an entity's name / description / tags / metadata
+- `set_core_principle` — record or update a core principle
+
+### Decision pipeline — sediment thinking
+
+- `save_conclusion` — persist a conclusion worth remembering
+- `save_decision` — record a decision with its context and reasoning
+- `analyze_decision` — analyze a decision for coherence and potential conflicts
+- `discuss_decision` — explore a decision from multiple angles
+- `get_decision_lineage` — trace how a decision evolved over time
+
+### Graph maintenance
+
+- `merge_entities` — merge duplicate entities into one
+- `delete_entity` — remove an entity
+- `get_stats` — entity / relationship counts, type distribution
+- `get_decay_report` — which memories have crossed the decay threshold (cleanup candidates)
+
+Full parameter schemas: see [`docs/MCP-INTEGRATION.md`](docs/MCP-INTEGRATION.md).
+
+---
+
 ## Install
 
 ### Windows

@@ -43,16 +43,20 @@ export function PairScanScreen() {
 
     try {
       // 临时配置 api client 进行连通性校验
-      api.configure({ baseUrl, authToken: code });
-      showMessage('正在测试连接...', 'info');
+      api.configure({ baseUrl, authToken: code, timeout: 5000 });
+      showMessage('正在等待桌面端服务启动...', 'info');
 
-      const isConnected = await api.healthCheck();
+      const isConnected = await api.waitForHealth({
+        timeoutMs: 50000,
+        intervalMs: 2000,
+        attemptTimeoutMs: 4000,
+      });
       if (!isConnected) {
         setScanned(false);
         if (host.startsWith('198.18.') || host.startsWith('198.19.')) {
           showMessage('连通失败。扫码IP为代理虚拟网卡，请在电脑端关闭TUN/代理模式，或在设置中手动配置物理IP', 'error');
         } else {
-          showMessage('连通性测试失败，请确认局域网与防火墙设置', 'error');
+          showMessage('连通性测试失败：请确认桌面端已打开、Brain Server 在线、手机和电脑在同一局域网，且 Windows 防火墙允许 3001 端口', 'error');
         }
         return;
       }

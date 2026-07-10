@@ -8,7 +8,8 @@ const DIST_DIR = path.join(ROOT_DIR, 'dist', 'desktop-only');
 console.log('🚀 开始快速打包桌面应用（含 Brain Server 集成）...\n');
 console.log('ROOT_DIR:', ROOT_DIR);
 
-if (!fs.existsSync(DIST_DIR)) fs.mkdirSync(DIST_DIR, { recursive: true });
+fs.rmSync(DIST_DIR, { recursive: true, force: true });
+fs.mkdirSync(DIST_DIR, { recursive: true });
 
 // 步骤 1: 检查依赖
 console.log('\n📦 1. 检查并安装依赖...');
@@ -76,6 +77,7 @@ try {
   } else {
     console.warn(`   ⚠️ 未找到合适的 ${nodeBinaryName}（process.execPath=${systemNode}），安装包将依赖用户机器的系统 Node`);
   }
+  validateBrainServerBundle(brainServerInTauri, 'src-tauri/brain-server');
   console.log('✅ Brain Server 构建完成');
 } catch (e) {
   console.log('❌ Brain Server 构建失败');
@@ -101,10 +103,16 @@ try {
   console.log('   ⚠️ 注意：首次打包可能需要下载系统依赖');
   console.log('   ⚠️ Linux 用户需要安装系统依赖');
   console.log('');
+
+  const releaseBrainServer = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target', 'release', 'brain-server');
+  const releaseBundle = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target', 'release', 'bundle');
+  fs.rmSync(releaseBrainServer, { recursive: true, force: true });
+  fs.rmSync(releaseBundle, { recursive: true, force: true });
   
-  execSync('npm run tauri:build', { cwd: path.join(ROOT_DIR, 'desktop-daemon'), stdio: 'inherit' });
+  execSync('npm run tauri:build -- --bundles nsis', { cwd: path.join(ROOT_DIR, 'desktop-daemon'), stdio: 'inherit' });
   
   const tauriBundle = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target', 'release', 'bundle');
+  validateBrainServerBundle(releaseBrainServer, 'target/release/brain-server');
   if (fs.existsSync(tauriBundle)) {
     copyDir(tauriBundle, DIST_DIR);
   }
@@ -113,16 +121,12 @@ try {
   console.log('✅ 桌面应用打包完成！');
   console.log('');
   console.log('📦 输出位置:');
-  console.log('   - Windows: src-tauri/target/release/bundle/msi/*.msi');
   console.log('   - Windows: src-tauri/target/release/bundle/nsis/*.exe');
-  console.log('   - macOS:   src-tauri/target/release/bundle/macos/*.dmg');
-  console.log('   - Linux:   src-tauri/target/release/bundle/appimage/*.AppImage');
+  console.log('   - 本脚本当前只生成 Windows NSIS 安装器');
   
   console.log('');
   console.log('🚀 使用说明:');
-  console.log('   1. Windows: 直接双击 .msi 或 .exe 安装');
-  console.log('   2. macOS: 双击 .dmg，拖拽到 Applications');
-  console.log('   3. Linux: chmod +x .AppImage 然后双击运行');
+  console.log('   Windows: 直接双击 .exe 安装');
   
   console.log('');
   console.log('📖 更多信息请查看 BUILDING.md');
@@ -161,4 +165,28 @@ function copyDir(src, dest) {
 
 function copyFile(src, dest) {
   fs.copyFileSync(src, dest);
+}
+
+function validateBrainServerBundle(dir, label) {
+  const required = [
+    'package.json',
+    'dist/api-server.js',
+    'dist/mcp-server.js',
+    'dist/mcp-proxy.js',
+    'node.exe',
+    'node_modules/@modelcontextprotocol/sdk/package.json',
+    'node_modules/sqlite3/package.json',
+  ];
+  const missing = required.filter((name) => !fs.existsSync(path.join(dir, name)));
+  if (!fs.existsSync(path.join(dir, 'node_modules/sqlite3/build/Release/node_sqlite3.node'))) {
+    missing.push('node_modules/sqlite3/build/Release/node_sqlite3.node');
+  }
+  if (missing.length > 0) {
+    console.error(`❌ Brain Server 打包资源不完整 (${label})，缺少:`);
+    for (const item of missing) {
+      console.error(`   - ${item}`);
+    }
+    process.exit(1);
+  }
+  console.log(`✅ Brain Server 资源校验通过 (${label})`);
 }

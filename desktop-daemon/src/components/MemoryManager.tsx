@@ -18,6 +18,18 @@ interface ReviewItem {
   provenance: { source?: string; platform?: string; tool?: string; at?: string } | null;
 }
 
+interface ReviewTaskSummary {
+  corePrinciples: {
+    total: number;
+    target: number;
+    overLimit: number;
+    lowSignal: number;
+  };
+  unlinkedByType: Array<{ type: string; total: number }>;
+}
+
+const CORE_TARGET_COUNT = 30;
+
 const SOURCE_FILTERS: Array<{ key: string; label: string; cls: string }> = [
   { key: '', label: '全部', cls: 'text-gray-300' },
   { key: '__user__', label: '你写的', cls: 'text-emerald-400' },
@@ -60,9 +72,26 @@ export default function MemoryManager({
   const [coreOnly, setCoreOnly] = useState(initialCoreOnly);
   const [unlinkedOnly, setUnlinkedOnly] = useState(initialUnlinkedOnly);
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');  // 搜索 debounce，避免每键触发 API
   const [loading, setLoading] = useState(false);
   const [mergeFrom, setMergeFrom] = useState<ReviewItem | null>(null);
   const [detailItem, setDetailItem] = useState<ReviewItem | null>(null);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const [reviewSummary, setReviewSummary] = useState<ReviewTaskSummary | null>(null);
+
+  // 搜索 debounce：300ms 内连续输入只触发一次 API
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  // 导入轮询定时器 ref，组件卸载时清理
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+    };
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -72,23 +101,25 @@ export default function MemoryManager({
       if (type) params.set('type', type);
       if (coreOnly) params.set('coreOnly', 'true');
       if (unlinkedOnly) params.set('unlinkedOnly', 'true');
-      if (q.trim()) params.set('q', q.trim());
-      const [r, c] = await Promise.all([
+      if (debouncedQ.trim()) params.set('q', debouncedQ.trim());
+      const [r, c, review] = await Promise.all([
         apiFetch(`/api/entities/review?${params.toString()}`),
         apiFetch('/api/entities/sources'),
+        apiFetch(`/api/review/tasks?targetCoreCount=${CORE_TARGET_COUNT}`),
       ]);
       const data = await r.json();
       setItems(data.items || []);
       setTotal(data.total || 0);
       setCounts((await c.json()) || {});
+      if (review.ok) setReviewSummary(await review.json());
     } catch {
       toast.error('加载失败');
     } finally {
       setLoading(false);
     }
-  }, [source, type, coreOnly, unlinkedOnly, q, toast]);
+  }, [source, type, coreOnly, unlinkedOnly, debouncedQ, toast]);
 
-  useEffect(() => { if (tab === 'browse') load(); }, [tab, source, type, coreOnly, unlinkedOnly, load]);
+  useEffect(() => { if (tab === 'browse') load(); }, [tab, source, type, coreOnly, unlinkedOnly, debouncedQ, load]);
 
   // ── 收藏夹（存在 archival、打"收藏"标签的记忆）──
   const [favs, setFavs] = useState<Array<{ id: string; content: string; summary?: string; createdAt?: string }>>([]);
@@ -138,6 +169,64 @@ export default function MemoryManager({
     setMergeFrom(null);
   }
 
+  async function demoteLowSignalCoreOnPage() {
+    const candidates = items.filter((it) => it.isCore && it.type === 'principle' && it.access_count <= 1);
+    if (candidates.length === 0) {
+      toast.success('本页没有低频核心原则需要降级');
+      return;
+    }
+    if (!confirm(`将本页 ${candidates.length} 条低频核心原则降为普通原则？`)) return;
+    setBatchBusy(true);
+    const ids = new Set(candidates.map((it) => it.id));
+    setItems((xs) => xs.map((x) => ids.has(x.id) ? { ...x, isCore: false } : x));
+    const results = await Promise.allSettled(candidates.map((it) => callTool('set_core_principle', { id: it.id, isCore: false })));
+    const ok = results.filter((r) => r.status === 'fulfilled').length;
+    setBatchBusy(false);
+    toast.success(`已降级 ${ok} 条核心原则`);
+    if (ok !== candidates.length) load();
+  }
+
+  async function demoteExcessCorePrinciples() {
+    const summary = reviewSummary?.corePrinciples;
+    if (!summary || summary.overLimit <= 0) {
+      toast.success('核心原则数量已经在建议范围内');
+      return;
+    }
+    if (!confirm(`将核心原则从 ${summary.total} 条降到约 ${CORE_TARGET_COUNT} 条？\n低引用原则会降为普通原则，不会删除内容。`)) return;
+    setBatchBusy(true);
+    try {
+      const r = await apiFetch('/api/review/core-principles/demote-excess', {
+        method: 'POST',
+        body: JSON.stringify({ targetCoreCount: CORE_TARGET_COUNT }),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const result = await r.json();
+      toast.success(`已降级 ${result.demoted || 0} 条核心原则`);
+      await load();
+    } catch {
+      toast.error('批量降级失败');
+    } finally {
+      setBatchBusy(false);
+    }
+  }
+
+  async function deleteLowSignalUnlinkedConceptsOnPage() {
+    const candidates = items.filter((it) => it.type === 'concept' && it.access_count === 0);
+    if (candidates.length === 0) {
+      toast.success('本页没有未访问的孤立 concept 可清理');
+      return;
+    }
+    if (!confirm(`删除本页 ${candidates.length} 条未访问的孤立 concept？不可恢复。`)) return;
+    setBatchBusy(true);
+    const ids = new Set(candidates.map((it) => it.id));
+    setItems((xs) => xs.filter((x) => !ids.has(x.id)));
+    const results = await Promise.allSettled(candidates.map((it) => callTool('delete_entity', { id: it.id })));
+    const ok = results.filter((r) => r.status === 'fulfilled').length;
+    setBatchBusy(false);
+    toast.success(`已清理 ${ok} 条孤立 concept`);
+    if (ok !== candidates.length) load();
+  }
+
   // ── 导入 ──
   const fileRef = useRef<HTMLInputElement>(null);
   const [limit, setLimit] = useState('');
@@ -166,13 +255,20 @@ export default function MemoryManager({
   }
 
   function poll(jobId: string) {
-    const t = setInterval(async () => {
+    // 清理上一次未完成的轮询（防重入）
+    if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+    pollTimerRef.current = setInterval(async () => {
       try {
         const r = await apiFetch(`/api/ingest/job/${jobId}`);
         const j = await r.json();
         if (j.importProgress) setProg(j.importProgress);
-        if (j.status === 'success') { clearInterval(t); setImporting(false); setImportMsg('导入完成'); toast.success('导入完成'); }
-        else if (j.status === 'failed' || j.status === 'cancelled') { clearInterval(t); setImporting(false); setImportMsg('导入中断'); }
+        if (j.status === 'success') {
+          if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+          setImporting(false); setImportMsg('导入完成'); toast.success('导入完成');
+        } else if (j.status === 'failed' || j.status === 'cancelled') {
+          if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+          setImporting(false); setImportMsg('导入中断');
+        }
       } catch { /* keep polling */ }
     }, 1500);
   }
@@ -239,6 +335,54 @@ export default function MemoryManager({
               <button onClick={load} className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] transition-colors"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></button>
             </div>
             {mergeFrom && <div className="px-5 pt-2 text-xs text-amber-500">合并模式：点另一条把「{mergeFrom.name}」并入它 · <button onClick={() => setMergeFrom(null)} className="underline font-semibold text-[var(--color-accent)]">取消</button></div>}
+            {(coreOnly || unlinkedOnly) && (
+              <div className="mx-5 mt-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+                <div className="text-xs font-medium text-[var(--color-fg)]">
+                  {coreOnly ? '核心原则整理' : '孤立内容整理'}
+                </div>
+                <div className="mt-1 text-xs leading-5 text-[var(--color-fgMuted)]">
+                  {coreOnly
+                    ? `当前核心原则 ${reviewSummary?.corePrinciples.total ?? total} 条，目标约 ${CORE_TARGET_COUNT} 条。先把低引用的通用原则降级，保留真正独特的核心。`
+                    : '先处理本页未访问孤立 concept：这类内容通常来自批量导入，容易稀释检索质量。'}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {coreOnly && (
+                    <>
+                      <button
+                        onClick={demoteExcessCorePrinciples}
+                        disabled={batchBusy || !reviewSummary || reviewSummary.corePrinciples.overLimit <= 0}
+                        className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50"
+                      >
+                        一键降到约 {CORE_TARGET_COUNT} 条
+                      </button>
+                      <button
+                        onClick={demoteLowSignalCoreOnPage}
+                        disabled={batchBusy || items.length === 0}
+                        className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-500/20 disabled:opacity-50"
+                      >
+                        只降级本页低频核心
+                      </button>
+                    </>
+                  )}
+                  {unlinkedOnly && (
+                    <button
+                      onClick={deleteLowSignalUnlinkedConceptsOnPage}
+                      disabled={batchBusy || items.length === 0}
+                      className="rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-300 hover:bg-rose-500/20 disabled:opacity-50"
+                    >
+                      批量清理本页未访问 concept
+                    </button>
+                  )}
+                  <button
+                    onClick={load}
+                    disabled={batchBusy}
+                    className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-xs text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] disabled:opacity-50"
+                  >
+                    刷新筛选
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="overflow-y-auto px-5 py-2 flex-1">
               {items.map((it) => {
                 const b = sourceBadge(it);

@@ -20,7 +20,7 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 class ApiClient {
   private client: AxiosInstance | null = null;
@@ -87,6 +87,37 @@ class ApiClient {
     } catch {
       return false;
     }
+  }
+
+  async waitForHealth(options?: {
+    timeoutMs?: number;
+    intervalMs?: number;
+    attemptTimeoutMs?: number;
+  }): Promise<boolean> {
+    if (!this.client) return false;
+
+    const timeoutMs = options?.timeoutMs ?? 45000;
+    const intervalMs = options?.intervalMs ?? 1500;
+    const attemptTimeoutMs = options?.attemptTimeoutMs ?? 4000;
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      try {
+        const remaining = Math.max(1000, deadline - Date.now());
+        const response = await this.client.get('/health', {
+          timeout: Math.min(attemptTimeoutMs, remaining),
+        });
+        if (response.status === 200) return true;
+      } catch {
+        // Brain Server may still be starting; keep retrying until the deadline.
+      }
+
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      await sleep(Math.min(intervalMs, remaining));
+    }
+
+    return false;
   }
 
   // ============ 实体相关 API ============
@@ -215,6 +246,19 @@ class ApiClient {
   }
 
   // ============ 关系相关 API ============
+
+  async getRelationships(limit: number = 2000): Promise<ApiResponse<Relationship[]>> {
+    if (!this.client) {
+      return { success: false, error: 'API client not configured' };
+    }
+
+    try {
+      const response = await this.client.get(`/api/relationships?limit=${limit}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  }
 
   async getRelationshipsForEntity(
     entityId: string,

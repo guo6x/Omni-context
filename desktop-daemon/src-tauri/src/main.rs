@@ -34,25 +34,12 @@ pub struct SystemStatus {
 #[tokio::main]
 async fn main() {
     println!("[Omni-Context] 启动桌面守护进程...");
-    
-    // 启动 Brain Server 并记录结果
-    match brain_server::start() {
-        Ok(()) => {
-            if let Some(pid) = brain_server::get_pid() {
-                println!("[Omni-Context] Brain Server 已启动 (PID: {})", pid);
-            }
-        }
-        Err(e) => {
-            eprintln!("[Omni-Context] 警告: Brain Server 启动失败: {}", e);
-            eprintln!("[Omni-Context] 请确保 Node.js 已安装且 brain-server 已构建");
-        }
-    }
-    
+
     let show = CustomMenuItem::new("show_main".to_string(), "显示主窗口");
-    let status_text = if brain_server::is_running() {
+    let status_text = if brain_server::is_ready() {
         "Brain Server: 在线"
     } else {
-        "Brain Server: 离线"
+        "Brain Server: 启动中"
     };
     let status = CustomMenuItem::new("server_status".to_string(), status_text).disabled();
     let restart = CustomMenuItem::new("restart_server".to_string(), "重启 Brain Server");
@@ -96,13 +83,17 @@ async fn main() {
                         }
                     }
                     "restart_server" => {
-                        let _ = brain_server::restart();
-                        let status_text = if brain_server::is_running() {
-                            "Brain Server: 在线"
-                        } else {
-                            "Brain Server: 离线"
-                        };
-                        let _ = app.tray_handle().get_item("server_status").set_title(status_text);
+                        let app_handle = app.clone();
+                        let _ = app.tray_handle().get_item("server_status").set_title("Brain Server: 重启中");
+                        std::thread::spawn(move || {
+                            let result = brain_server::restart();
+                            let status_text = if result.is_ok() && brain_server::is_ready() {
+                                "Brain Server: 在线"
+                            } else {
+                                "Brain Server: 离线"
+                            };
+                            let _ = app_handle.tray_handle().get_item("server_status").set_title(status_text);
+                        });
                     }
                     "open_data" => {
                         let _ = brain_server::open_folder_in_explorer();
@@ -134,7 +125,29 @@ async fn main() {
             _ => {}
         })
         .setup(|app| {
-            let _app_handle = app.app_handle().clone();
+            // Brain Server 冷启动可能需要几十秒加载数据库和索引，放到后台避免桌面窗口卡住。
+            let startup_handle = app.app_handle().clone();
+            std::thread::spawn(move || {
+                let result = brain_server::start();
+                match &result {
+                    Ok(()) => {
+                        if let Some(pid) = brain_server::get_pid() {
+                            println!("[Omni-Context] Brain Server 已启动 (PID: {})", pid);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("[Omni-Context] 警告: Brain Server 启动失败: {}", e);
+                        eprintln!("[Omni-Context] 请确保 Node.js 已安装且 brain-server 已构建");
+                    }
+                }
+
+                let status_text = if result.is_ok() && brain_server::is_ready() {
+                    "Brain Server: 在线"
+                } else {
+                    "Brain Server: 离线"
+                };
+                let _ = startup_handle.tray_handle().get_item("server_status").set_title(status_text);
+            });
 
             // 启动 30 秒后检查更新（避免拖慢启动）。
             // 仅当配置启用 updater（active=true）时 tauri-build 才会发出 cfg(updater)，

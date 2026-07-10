@@ -186,6 +186,24 @@ export const handleMemoryRoutes = [
 export const handleEntityRoutes = [
   {
     method: 'GET' as const,
+    path: '/api/review/tasks',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const q = new URL(req.url || '', 'http://localhost').searchParams;
+      const targetCoreCount = Number(q.get('targetCoreCount')) || 30;
+      sendResponse(res, 200, await ctx.db.getReviewTaskSummary(targetCoreCount));
+    }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/review/core-principles/demote-excess',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ targetCoreCount?: number }>(req);
+      const targetCoreCount = Number(body.targetCoreCount) || 30;
+      sendResponse(res, 200, await ctx.db.demoteExcessCorePrinciples(targetCoreCount));
+    }
+  },
+  {
+    method: 'GET' as const,
     path: '/api/entities/review',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const q = new URL(req.url || '', 'http://localhost').searchParams;

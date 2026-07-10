@@ -55,6 +55,7 @@ export default function OnboardingWizard({
 
   // ② 导入 + 证明
   const fileRef = useRef<HTMLInputElement>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState('');
@@ -99,17 +100,34 @@ export default function OnboardingWizard({
   };
 
   const pollJob = (jobId: string) => {
-    const timer = setInterval(async () => {
+    // 清理上一次未完成的轮询（防重入）
+    if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+    pollTimerRef.current = setInterval(async () => {
       try {
         const r = await apiFetch(`/api/ingest/job/${jobId}`);
         const j = await r.json();
         if (j.importProgress) setImportMsg(`抽取 ${j.importProgress.done}/${j.importProgress.total} 段 · 已生成 ${j.importProgress.entities} 条记忆`);
         else if (j.result) setImportMsg(`已生成 ${j.result.entities ?? 0} 条记忆`);
-        if (j.status === 'success') { clearInterval(timer); setImporting(false); setImportMsg('完成，正在读懂你…'); runProof(); }
-        else if (j.status === 'failed' || j.status === 'cancelled') { clearInterval(timer); setImporting(false); setImportMsg('导入中断'); }
-      } catch { /* keep polling */ }
+        if (j.status === 'success') {
+          if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+          setImporting(false); setImportMsg('完成，正在读懂你…'); runProof();
+        } else if (j.status === 'failed' || j.status === 'cancelled') {
+          if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+          setImporting(false); setImportMsg('导入中断');
+        }
+      } catch {
+        // 网络瞬时错误时继续轮询，但连续失败次数过多也应停止避免无限轮询
+        // 简化处理：保持轮询，由后端任务状态最终决定停止
+      }
     }, 1500);
   };
+
+  // 组件卸载时清理轮询定时器，避免内存泄漏和卸载后 setState
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+    };
+  }, []);
 
   const processImport = async (file: File) => {
     setImporting(true); setProof(''); setImportMsg('解析中…');

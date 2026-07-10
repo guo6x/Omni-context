@@ -223,6 +223,25 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_discussions_updated ON discussions(updated_at DESC);
     `,
   },
+  {
+    version: 12,
+    name: 'add_mcp_usage_log',
+    up: `
+      CREATE TABLE IF NOT EXISTS mcp_usage_log (
+        id TEXT PRIMARY KEY,
+        tool_name TEXT NOT NULL,
+        client TEXT,
+        query TEXT,
+        matched_entities TEXT,
+        success INTEGER NOT NULL DEFAULT 1,
+        error TEXT,
+        duration_ms INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_mcp_usage_created ON mcp_usage_log(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_mcp_usage_tool ON mcp_usage_log(tool_name);
+    `,
+  },
 ];
 
 interface Migration {
@@ -298,6 +317,10 @@ export class Database {
 
   getRaw(): sqlite3.Database {
     return this.db;
+  }
+
+  isInMemory(): boolean {
+    return this.dbPath === ':memory:';
   }
 
   async runMigrations(): Promise<void> {
@@ -640,6 +663,135 @@ export class Database {
       };
     });
     return { items, total: totalRow?.c ?? items.length };
+  }
+
+  async getReviewTaskSummary(targetCoreCount = 30): Promise<{
+    generatedAt: string;
+    corePrinciples: {
+      total: number;
+      target: number;
+      overLimit: number;
+      lowSignal: number;
+      keepSamples: any[];
+      demoteSamples: any[];
+    };
+    unlinkedByType: Array<{ type: string; total: number; samples: any[] }>;
+  }> {
+    const target = Math.min(Math.max(Math.floor(Number(targetCoreCount) || 30), 5), 100);
+    const coreWhere = `type = 'principle'
+      AND json_extract(metadata, '$.isCore') IN (1, true)
+      AND json_extract(metadata, '$.merged_into') IS NULL`;
+    const coreRow = await this.get<{ c: number }>(`SELECT COUNT(*) as c FROM entities WHERE ${coreWhere}`);
+    const lowSignalRow = await this.get<{ c: number }>(
+      `SELECT COUNT(*) as c FROM entities
+       WHERE ${coreWhere}
+         AND (COALESCE(access_count, 0) <= 1 OR last_accessed IS NULL)`,
+    );
+    const keepSamples = await this.listEntitiesForReview({ type: 'principle', coreOnly: true, limit: 5 });
+    const demoteRows = await this.all<any>(
+      `SELECT id, name, type, description, tags, metadata, created_at, last_accessed, access_count
+       FROM entities
+       WHERE ${coreWhere}
+       ORDER BY COALESCE(access_count, 0) ASC,
+         CASE WHEN last_accessed IS NULL THEN 0 ELSE 1 END ASC,
+         COALESCE(last_accessed, created_at) ASC,
+         created_at ASC
+       LIMIT 5`,
+    );
+    const demoteSamples = demoteRows.map((r) => {
+      let meta: any = {};
+      try { meta = r.metadata ? JSON.parse(r.metadata) : {}; } catch { /* */ }
+      const prov = meta.provenance || null;
+      return {
+        id: r.id,
+        name: r.name,
+        type: r.type,
+        description: (r.description || '').slice(0, 180),
+        tags: r.tags ? JSON.parse(r.tags) : [],
+        created_at: r.created_at,
+        last_accessed: r.last_accessed,
+        access_count: r.access_count,
+        isCore: meta.isCore === true || meta.isCore === 1,
+        source: prov?.source || 'user',
+        provenance: prov,
+      };
+    });
+
+    const unlinkedRows = await this.all<{ type: string; c: number }>(
+      `SELECT type, COUNT(*) AS c
+       FROM entities
+       WHERE json_extract(metadata, '$.merged_into') IS NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM relationships r
+           WHERE (r.source_id = entities.id OR r.target_id = entities.id)
+             AND (r.valid_until IS NULL OR r.valid_until > datetime('now'))
+         )
+       GROUP BY type
+       HAVING c > 0
+       ORDER BY c DESC
+       LIMIT 8`,
+    );
+    const unlinkedByType = [];
+    for (const row of unlinkedRows) {
+      const samples = await this.listEntitiesForReview({ type: row.type, unlinkedOnly: true, limit: 5 });
+      unlinkedByType.push({ type: row.type, total: row.c, samples: samples.items });
+    }
+
+    const totalCore = coreRow?.c ?? 0;
+    return {
+      generatedAt: new Date().toISOString(),
+      corePrinciples: {
+        total: totalCore,
+        target,
+        overLimit: Math.max(totalCore - target, 0),
+        lowSignal: lowSignalRow?.c ?? 0,
+        keepSamples: keepSamples.items,
+        demoteSamples,
+      },
+      unlinkedByType,
+    };
+  }
+
+  async demoteExcessCorePrinciples(targetCoreCount = 30): Promise<{
+    totalBefore: number;
+    target: number;
+    kept: number;
+    demoted: number;
+    items: Array<{ id: string; name: string; access_count: number }>;
+  }> {
+    const target = Math.min(Math.max(Math.floor(Number(targetCoreCount) || 30), 5), 100);
+    const rows = await this.all<{ id: string; name: string; access_count: number }>(
+      `SELECT id, name, COALESCE(access_count, 0) AS access_count
+       FROM entities
+       WHERE type = 'principle'
+         AND json_extract(metadata, '$.isCore') IN (1, true)
+         AND json_extract(metadata, '$.merged_into') IS NULL
+       ORDER BY COALESCE(access_count, 0) DESC,
+         CASE WHEN last_accessed IS NULL THEN 0 ELSE 1 END DESC,
+         COALESCE(last_accessed, created_at) DESC,
+         LENGTH(COALESCE(description, '')) DESC,
+         created_at ASC`,
+    );
+    if (rows.length <= target) {
+      return { totalBefore: rows.length, target, kept: rows.length, demoted: 0, items: [] };
+    }
+    const demoteRows = rows.slice(target);
+    await this.withTransaction(async () => {
+      const now = new Date().toISOString();
+      for (const row of demoteRows) {
+        await this.run(
+          `UPDATE entities SET metadata = json_set(COALESCE(metadata,'{}'), '$.isCore', 0), updated_at = ? WHERE id = ?`,
+          [now, row.id],
+        );
+      }
+    });
+    return {
+      totalBefore: rows.length,
+      target,
+      kept: target,
+      demoted: demoteRows.length,
+      items: demoteRows.slice(0, 20),
+    };
   }
 
   // 按 provenance.source 统计（管理面的过滤角标）
@@ -1541,6 +1693,77 @@ export class Database {
        ORDER BY total_access DESC`,
       [days],
     );
+  }
+
+  async addMcpUsageLog(entry: {
+    toolName: string;
+    client?: string;
+    query?: string;
+    matchedEntities?: Array<{ id: string; name?: string; type?: string }>;
+    success: boolean;
+    error?: string;
+    durationMs: number;
+  }): Promise<void> {
+    const id = uuidv4();
+    const matched = (entry.matchedEntities || [])
+      .filter((e) => e && e.id)
+      .slice(0, 12)
+      .map((e) => ({ id: e.id, name: e.name || '', type: e.type || '' }));
+
+    await this.run(
+      `INSERT INTO mcp_usage_log
+        (id, tool_name, client, query, matched_entities, success, error, duration_ms, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+      [
+        id,
+        entry.toolName,
+        entry.client || null,
+        entry.query ? entry.query.slice(0, 500) : null,
+        matched.length > 0 ? JSON.stringify(matched) : null,
+        entry.success ? 1 : 0,
+        entry.error ? entry.error.slice(0, 500) : null,
+        Math.max(0, Math.round(entry.durationMs || 0)),
+      ],
+    );
+  }
+
+  async getRecentMcpUsage(limit: number = 20): Promise<Array<{
+    id: string;
+    toolName: string;
+    client: string | null;
+    query: string | null;
+    matchedEntities: Array<{ id: string; name?: string; type?: string }>;
+    success: boolean;
+    error: string | null;
+    durationMs: number;
+    createdAt: string;
+  }>> {
+    const rows = await this.all<any>(
+      `SELECT id, tool_name, client, query, matched_entities, success, error, duration_ms, created_at
+       FROM mcp_usage_log
+       ORDER BY created_at DESC
+       LIMIT ?`,
+      [Math.max(1, Math.min(limit, 100))],
+    );
+    return rows.map((row) => {
+      let matchedEntities: Array<{ id: string; name?: string; type?: string }> = [];
+      try {
+        matchedEntities = row.matched_entities ? JSON.parse(row.matched_entities) : [];
+      } catch {
+        matchedEntities = [];
+      }
+      return {
+        id: row.id,
+        toolName: row.tool_name,
+        client: row.client || null,
+        query: row.query || null,
+        matchedEntities,
+        success: row.success === 1 || row.success === true,
+        error: row.error || null,
+        durationMs: row.duration_ms || 0,
+        createdAt: row.created_at,
+      };
+    });
   }
 
   /**

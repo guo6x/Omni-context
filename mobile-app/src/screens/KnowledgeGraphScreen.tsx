@@ -75,7 +75,7 @@ export function KnowledgeGraphScreen() {
           </View>
           <View className="border-t border-white/10 pt-2">
             <Text className="text-gray-400 text-sm mb-1">
-              {t('knowledgeGraph.type')}: {t(`knowledgeGraph.${selectedNode.type}`)}
+              {t('knowledgeGraph.type')}: {t(`memory.${selectedNode.type}`) || selectedNode.type}
             </Text>
             <Text className="text-gray-400 text-sm mb-1">
               {t('knowledgeGraph.connections')}: {selectedNode.connections.length}

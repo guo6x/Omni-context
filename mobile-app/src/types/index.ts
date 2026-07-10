@@ -1,6 +1,6 @@
 // 与 Brain Server 对齐的类型定义
 
-// 实体类型
+// 实体类型（与 Brain Server shared-types.ts 完全对齐）
 export type EntityType =
   | 'principle'
   | 'evidence'
@@ -15,12 +15,14 @@ export type EntityType =
   | 'critical_review'
   | 'capture_snapshot'
   | 'memory'
-  | 'note'
-  | 'task'
-  | 'idea'
-  | 'reference';
+  | 'decision'
+  | 'goal'
+  | 'question'
+  | 'preference'
+  | 'event'
+  | 'task';
 
-// 关系类型
+// 关系类型（与 Brain Server shared-types.ts 完全对齐）
 export type RelationshipType =
   | 'derived_from'
   | 'relates_to'
@@ -32,7 +34,13 @@ export type RelationshipType =
   | 'supported_by'
   | 'extracted_from'
   | 'reviewed_by'
-  | 'part_of';
+  | 'references'
+  | 'decision_referenced'
+  | 'works_at'
+  | 'lives_in'
+  | 'studies_at'
+  | 'married_to'
+  | 'leads_to_conclusion';
 
 // 原则类型
 export type PrincipleType =
@@ -245,11 +253,13 @@ export interface SearchResults {
 // 辅助函数：将 Entity 转换为向后兼容的格式
 export function entityToMemory(entity: Entity): Memory {
   const typeMap: Partial<Record<EntityType, 'note' | 'task' | 'idea' | 'reference'>> = {
-    note: 'note',
     task: 'task',
-    idea: 'idea',
     memory: 'reference',
     capture_snapshot: 'reference',
+    decision: 'note',
+    goal: 'idea',
+    question: 'idea',
+    preference: 'note',
   };
   const type = typeMap[entity.type] || 'reference';
   
@@ -268,10 +278,10 @@ export function entityToMemory(entity: Entity): Memory {
 // 辅助函数：将向后兼容的 Memory 转换为 Entity
 export function memoryToEntity(memory: Memory): EntityInput {
   const typeMap: Partial<Record<'note' | 'task' | 'idea' | 'reference', EntityType>> = {
-    note: 'note',
+    note: 'memory',
     task: 'task',
-    idea: 'idea',
-    reference: 'reference',
+    idea: 'memory',
+    reference: 'memory',
   };
   
   return {
@@ -300,10 +310,12 @@ export function entityToKnowledgeNode(entity: Entity): KnowledgeNode {
     critical_review: '#f43f5e', // rose
     capture_snapshot: '#71717a', // zinc
     memory: '#64748b',      // slate
-    note: '#64748b',
-    task: '#eab308',
-    idea: '#f472b6',
-    reference: '#71717a',
+    decision: '#3b82f6',    // blue
+    goal: '#10b981',        // emerald
+    question: '#fbbf24',    // yellow
+    preference: '#d946ef',  // fuchsia
+    event: '#8b5cf6',       // violet
+    task: '#eab308',        // yellow
   };
   
   return {

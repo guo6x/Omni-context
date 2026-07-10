@@ -40,6 +40,15 @@ function getTypeLabel(type: string, t: (k: string) => string): string {
     architecture_pattern: t('search.type_arch'),
     bug_vulnerability: t('search.type_bug'),
     business_logic: t('search.type_biz'),
+    critical_review: t('search.type_critical_review'),
+    capture_snapshot: t('search.type_capture_snapshot'),
+    memory: t('search.type_memory'),
+    decision: t('search.type_decision'),
+    goal: t('search.type_goal'),
+    question: t('search.type_question'),
+    preference: t('search.type_preference'),
+    event: t('search.type_event'),
+    task: t('search.type_task'),
   };
   return map[type] || type;
 }

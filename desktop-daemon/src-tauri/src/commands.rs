@@ -74,7 +74,7 @@ pub async fn send_to_brain_server(data: String) -> Result<String, String> {
 #[tauri::command]
 pub fn get_system_status() -> SystemStatus {
     SystemStatus {
-        brain_server_running: brain_server::is_running(),
+        brain_server_running: brain_server::is_ready(),
         udp_listener_running: true,
         last_event: None,
     }
@@ -88,7 +88,7 @@ pub async fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, 
     .await
     .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
-    let status_text = if brain_server::is_running() {
+    let status_text = if brain_server::is_ready() {
         "Brain Server: 在线"
     } else {
         "Brain Server: 离线"
@@ -105,7 +105,7 @@ pub async fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, S
     .await
     .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
-    let status_text = if brain_server::is_running() {
+    let status_text = if brain_server::is_ready() {
         "Brain Server: 在线"
     } else {
         "Brain Server: 离线"
@@ -122,7 +122,7 @@ pub async fn restart_brain_server(app_handle: tauri::AppHandle) -> Result<String
     .await
     .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
-    let status_text = if brain_server::is_running() {
+    let status_text = if brain_server::is_ready() {
         "Brain Server: 在线"
     } else {
         "Brain Server: 离线"
@@ -263,7 +263,7 @@ pub fn register_global_shortcuts(app: tauri::AppHandle, shortcuts: Vec<ShortcutD
 }
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[derive(serde::Serialize)]
 pub struct SupportedFile {

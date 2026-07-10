@@ -365,6 +365,7 @@ export default {
     load_engine_failed: '图谱引擎加载失败',
     load_engine_detail: '可能是 react-force-graph 包损坏或内嵌资源缺失。错误信息：',
     reload_page: '刷新页面重试',
+    fallback_3d_to_2d: '3D 模式不可用，已降级为 2D',
     loading_engine: '正在加载 3D 图谱引擎...',
     search_placeholder: '搜索节点 · Enter 跳到第一个匹配',
     all_types: '全部类型',

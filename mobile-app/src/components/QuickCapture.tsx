@@ -13,7 +13,7 @@ import { syncService } from '@/services/syncService';
 import { Entity, EntityType } from '@/types';
 import { useTranslation } from 'react-i18next';
 
-const ENTITY_TYPES: EntityType[] = ['note', 'task', 'idea', 'reference', 'concept', 'principle'];
+const ENTITY_TYPES: EntityType[] = ['memory', 'task', 'concept', 'principle', 'decision', 'goal'];
 
 export function QuickCapture() {
   const { t } = useTranslation();
@@ -21,7 +21,7 @@ export function QuickCapture() {
   const [content, setContent] = useState('');
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState('');
-  const [type, setType] = useState<EntityType>('note');
+  const [type, setType] = useState<EntityType>('memory');
   const [isCapturing, setIsCapturing] = useState(false);
 
   const handleCapture = useCallback(async () => {

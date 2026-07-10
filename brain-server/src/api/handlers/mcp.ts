@@ -31,12 +31,15 @@ import {
 import { parseTimeWindow } from '../../utils/time-window.js';
 import {
   capGraphContext,
+  memoryCandidateScore,
   rankMemoryCandidates,
   selectGeneralCorePrinciples,
   selectRelevantPrinciples,
 } from '../../mcp-retrieval.js';
 
 const CORE_PRINCIPLE_CAP = 3;
+const MCP_EMBEDDING_TIMEOUT_MS = Number(process.env.MCP_EMBEDDING_TIMEOUT_MS || 2500);
+const MCP_RERANK_TIMEOUT_MS = Number(process.env.MCP_RERANK_TIMEOUT_MS || 2500);
 
 export function toCompactEntity(entity: any): any {
   if (!entity) return entity;
@@ -66,6 +69,67 @@ export function toCompactEntity(entity: any): any {
   return compact;
 }
 
+function getClientLabel(req: http.IncomingMessage): string {
+  const explicit = req.headers['x-omni-client'];
+  if (typeof explicit === 'string' && explicit.trim()) return explicit.trim().slice(0, 80);
+  const ua = req.headers['user-agent'];
+  if (typeof ua === 'string' && ua.trim()) return ua.trim().slice(0, 80);
+  return 'mcp-client';
+}
+
+function extractQuerySummary(args: any): string | undefined {
+  if (!args || typeof args !== 'object') return undefined;
+  const fields = ['query', 'situation', 'question', 'summary', 'name', 'text'];
+  for (const field of fields) {
+    const value = args[field];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim().slice(0, 500);
+    }
+  }
+  return undefined;
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function collectMatchedEntities(value: any, out: Array<{ id: string; name?: string; type?: string }> = []): Array<{ id: string; name?: string; type?: string }> {
+  if (!value || out.length >= 12) return out;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectMatchedEntities(item, out);
+      if (out.length >= 12) break;
+    }
+    return out;
+  }
+  if (typeof value !== 'object') return out;
+
+  const id = typeof value.id === 'string' ? value.id : typeof value.entityId === 'string' ? value.entityId : undefined;
+  const name = typeof value.name === 'string' ? value.name : typeof value.entityName === 'string' ? value.entityName : undefined;
+  const type = typeof value.type === 'string' ? value.type : typeof value.entityType === 'string' ? value.entityType : undefined;
+  if (id && (name || type || value.description)) {
+    if (!out.some((e) => e.id === id)) out.push({ id, name, type });
+  }
+
+  for (const key of ['results', 'sources', 'rawCitations', 'relevantMemories', 'principles', 'nodes', 'graphContext', 'entity']) {
+    if (value[key] !== undefined) {
+      collectMatchedEntities(value[key], out);
+      if (out.length >= 12) break;
+    }
+  }
+  return out;
+}
+
 // ── shared: LLM 重排 ──
 // 弱 embedding（尤其中文）召回的候选相似度挤在一起、噪声多。先宽召回，再用 LLM 按真实相关度
 // 重排挑出 topN。LLM 不可用/超时则优雅降级为原序截断，绝不阻塞检索。
@@ -88,7 +152,7 @@ async function rerankByLlm(
 
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20000);
+      const timer = setTimeout(() => controller.abort(), MCP_RERANK_TIMEOUT_MS);
     let raw = '';
     try {
       const r = await fetch(`${llm.apiUrl}/chat/completions`, {
@@ -188,7 +252,11 @@ async function retrieveDecisionContext(
   const textResults = await ctx.db.searchEntities(situation, pool);
   let vectorResults: any[] = [];
   try {
-    const embResult = await ctx.embeddingService.embed(situation);
+    const embResult = await withTimeout(
+      ctx.embeddingService.embed(situation),
+      MCP_EMBEDDING_TIMEOUT_MS,
+      'embedding timeout',
+    );
     vectorResults = await ctx.db.vectorSearch(embResult.embedding, pool);
   } catch {
     // ignore
@@ -339,7 +407,11 @@ async function agenticEnrichMemories(
     const text = await ctx.db.searchEntities(query, limit);
     let vec: any[] = [];
     try {
-      const emb = await ctx.embeddingService.embed(query);
+      const emb = await withTimeout(
+        ctx.embeddingService.embed(query),
+        MCP_EMBEDDING_TIMEOUT_MS,
+        'embedding timeout',
+      );
       vec = await ctx.db.vectorSearch(emb.embedding, limit);
     } catch {
       // vector optional
@@ -589,6 +661,9 @@ export const handleMcpRoutes = [
       const toolName = params.name;
       const body = await parseBody<{ arguments: any }>(req);
       const args = body.arguments || {};
+      const startedAt = Date.now();
+      const client = getClientLabel(req);
+      const query = extractQuerySummary(args);
 
       try {
         let result: any;
@@ -904,7 +979,11 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
           case 'vector_search': {
             const parsed = VectorSearchSchema.parse(args);
             try {
-              const embResult = await ctx.embeddingService.embed(parsed.query);
+              const embResult = await withTimeout(
+                ctx.embeddingService.embed(parsed.query),
+                MCP_EMBEDDING_TIMEOUT_MS,
+                'embedding timeout',
+              );
               const results = await ctx.db.vectorSearch(embResult.embedding, parsed.limit || 10);
               result = results.map(toCompactEntity);
             } catch (e) {
@@ -924,7 +1003,11 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             resultsData.textResults = await ctx.db.searchEntities(parsed.query, umsPool);
 
             try {
-              const embResult = await ctx.embeddingService.embed(parsed.query);
+              const embResult = await withTimeout(
+                ctx.embeddingService.embed(parsed.query),
+                MCP_EMBEDDING_TIMEOUT_MS,
+                'embedding timeout',
+              );
               resultsData.vectorResults = await ctx.db.vectorSearch(embResult.embedding, umsPool);
             } catch (e) {
               // ignore
@@ -958,7 +1041,8 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             }
 
             // 宽召回后 LLM 重排，挑出真正相关的（救弱 embedding 的中文召回）
-            const ranked = await rerankByLlm(ctx, parsed.query, unified, limit * 2);
+            const ranked = (await rerankByLlm(ctx, parsed.query, unified, limit * 2))
+              .filter((item: any) => memoryCandidateScore(parsed.query, item) > 0);
 
             let graphContext = resultsData.graphContext;
             if (graphContext && graphContext.nodes) {
@@ -1620,11 +1704,37 @@ ${gaConnBlock}`;
             return sendError(res, 404, `未知工具: ${toolName}`);
         }
 
+        ctx.db.addMcpUsageLog({
+          toolName,
+          client,
+          query,
+          matchedEntities: collectMatchedEntities(result),
+          success: true,
+          durationMs: Date.now() - startedAt,
+        }).catch(() => {});
         sendResponse(res, 200, result);
       } catch (error) {
         console.error(`MCP tool execution error (${toolName}):`, error);
+        ctx.db.addMcpUsageLog({
+          toolName,
+          client,
+          query,
+          matchedEntities: [],
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+          durationMs: Date.now() - startedAt,
+        }).catch(() => {});
         sendError(res, 500, error instanceof Error ? error.message : String(error));
       }
+    }
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/mcp/usage',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const q = new URL(req.url || '', 'http://localhost').searchParams;
+      const limit = q.get('limit') ? Number(q.get('limit')) : 20;
+      sendResponse(res, 200, await ctx.db.getRecentMcpUsage(limit));
     }
   },
   {

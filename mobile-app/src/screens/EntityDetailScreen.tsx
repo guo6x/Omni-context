@@ -74,6 +74,15 @@ export function EntityDetailScreen() {
       architecture_pattern: t('search.type_arch'),
       bug_vulnerability: t('search.type_bug'),
       business_logic: t('search.type_biz'),
+      critical_review: t('search.type_critical_review'),
+      capture_snapshot: t('search.type_capture_snapshot'),
+      memory: t('search.type_memory'),
+      decision: t('search.type_decision'),
+      goal: t('search.type_goal'),
+      question: t('search.type_question'),
+      preference: t('search.type_preference'),
+      event: t('search.type_event'),
+      task: t('search.type_task'),
     };
     return map[type] || type;
   };
@@ -86,6 +95,17 @@ export function EntityDetailScreen() {
       belongs_to: t('search.rel_belongs'),
       conflicts_with: t('search.rel_conflicts'),
       extends: t('search.rel_extends'),
+      cites: t('search.rel_cites'),
+      supported_by: t('search.rel_supported_by'),
+      extracted_from: t('search.rel_extracted_from'),
+      reviewed_by: t('search.rel_reviewed_by'),
+      references: t('search.rel_references'),
+      decision_referenced: t('search.rel_decision_referenced'),
+      works_at: t('search.rel_works_at'),
+      lives_in: t('search.rel_lives_in'),
+      studies_at: t('search.rel_studies_at'),
+      married_to: t('search.rel_married_to'),
+      leads_to_conclusion: t('search.rel_leads_to_conclusion'),
     };
     return map[type] || type;
   };

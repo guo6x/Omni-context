@@ -277,19 +277,27 @@ export default function GraphViewer3D({
           setForceGraph(() => mod.default);
         }
       } catch (err3d) {
-        // 3D 不可用时尝试 2D
+        // 3D 不可用时尝试 2D。降级时用 toast 告知用户根因（而非静默），
+        // 但不设置 graphLoadError——那会阻塞 2D 渲染。
+        console.error("[GraphViewer3D] 3D 库加载失败，降级到 2D:", err3d);
         try {
           const mod = await import("react-force-graph-2d");
           setForceGraph(() => mod.default);
           setIs3D(false);
+          // 用 toast 提示降级原因，不阻塞 2D 渲染
+          const errReason = err3d instanceof Error ? err3d.message : String(err3d);
+          toast.warning(
+            t('graph.fallback_3d_to_2d'),
+            errReason
+          );
         } catch (err2d) {
-          console.error("[GraphViewer3D] 图谱库加载失败", err3d, err2d);
+          console.error("[GraphViewer3D] 2D 库也加载失败:", err2d);
           setGraphLoadError(String(err2d));
         }
       }
     };
     loadGraph();
-  }, [is3D]);
+  }, [is3D, toast, t]);
 
   // 监听图谱容器尺寸变化，显式喂给 ForceGraph，避免右侧面板增减导致画布半边消失
   useEffect(() => {
@@ -459,7 +467,7 @@ export default function GraphViewer3D({
     });
 
     return { nodes, links };
-  }, [relationships, visibleEntities, mstMode]);
+  }, [relationships, visibleEntities, mstMode, getThemeColor]);
 
   // 大图布局：随节点数增大斥力 + 连线距离，避免节点全挤成中心“毛球”。
   // 关键：不调 d3ReheatSimulation()——3D 下命令式 reheat 会打断相机初始定位导致纯黑（已踩坑，见 0cb65b7）。
@@ -566,12 +574,17 @@ export default function GraphViewer3D({
       // 聚焦到点击的节点
       if (graphRef.current && is3D) {
         const distance = 120;
-        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-        graphRef.current.cameraPosition(
-          { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
-          node,
-          1500
-        );
+        // 防御：节点尚未被力模拟展开（位置为 0 或 undefined）时，Math.hypot 返回 0
+        // 会导致 distRatio = Infinity，cameraPosition 接收 NaN 后相机矩阵永久损坏。
+        const hypot = Math.hypot(node.x || 0, node.y || 0, node.z || 0);
+        if (hypot > 0.001) {
+          const distRatio = 1 + distance / hypot;
+          graphRef.current.cameraPosition(
+            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+            node,
+            1500
+          );
+        }
       } else if (graphRef.current && !is3D) {
         graphRef.current.centerAt(node.x, node.y, 800);
         graphRef.current.zoom(2.5, 800);
@@ -805,6 +818,9 @@ export default function GraphViewer3D({
     return () => {
       if (focusAnimTimerRef.current) {
         clearTimeout(focusAnimTimerRef.current);
+      }
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
       }
     };
   }, []);
@@ -1376,7 +1392,7 @@ export default function GraphViewer3D({
         ${safeDesc ? `<div style="color:#cbd5e1;font-size:11px;margin-top:6px;line-height:1.4;">${safeDesc}</div>` : ""}
       </div>
     `;
-  }, []);
+  }, [t, relativeTime]);
 
   if (graphLoadError) {
     return (

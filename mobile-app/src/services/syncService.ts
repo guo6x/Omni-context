@@ -1,14 +1,15 @@
 import { api } from './api';
 import * as localDb from './localDb';
-import { Entity, SyncStatus } from '@/types';
+import { Entity, Relationship, SyncStatus } from '@/types';
 
 type SyncCallback = (status: SyncStatus) => void;
 const SYNC_UPLOAD_CONCURRENCY = 5;
 
 class SyncService {
-  private syncInterval: NodeJS.Timeout | null = null;
+  private syncInterval: ReturnType<typeof setInterval> | null = null;
   private initializePromise: Promise<void> | null = null;
   private callbacks: Set<SyncCallback> = new Set();
+  private pulling = false;
   private status: SyncStatus = {
     lastSync: null,
     pending: 0,
@@ -89,8 +90,15 @@ class SyncService {
 
       const uploadOne = async (entity: Entity) => {
         const res = await api.addEntity(entity);
-        if (res.success) {
-          await localDb.markEntitySynced(entity.id);
+        if (res.success && res.data) {
+          // 服务器会生成新 ID，用返回的实体替换本地记录，避免 ID 不一致导致重复
+          const serverEntity = res.data;
+          if (serverEntity.id !== entity.id) {
+            await localDb.deleteEntity(entity.id);
+            await localDb.addEntity(serverEntity, true);
+          } else {
+            await localDb.markEntitySynced(entity.id);
+          }
           successCount++;
         } else {
           lastError = res.error ?? 'Sync failed';
@@ -128,14 +136,19 @@ class SyncService {
       return [];
     }
 
+    // 防止并发 pull（自动同步 60s 一次，上一次可能未完成）
+    if (this.pulling) {
+      return [];
+    }
+    this.pulling = true;
+
     try {
-      // 并行获取实体和关系
+      // 并行获取实体和关系，直接使用 /api/relationships 端点获取完整 Relationship（含时间字段）
       // 移动端有意只镜像最近 1000 个实体（性能保护：完整 1万+ 图谱常驻桌面端，
       // 手机灌入本地库再渲染不划算）。需要全量请用桌面端。
       const [entitiesResult, relationshipsResult] = await Promise.all([
         api.getEntities({ limit: 1000 }),
-        // 获取关系 - 我们先获取知识图谱来获取关系
-        api.getKnowledgeGraph()
+        api.getRelationships(2000),
       ]);
 
       if (!entitiesResult.success || !entitiesResult.data) {
@@ -144,31 +157,19 @@ class SyncService {
       }
 
       const serverEntities = entitiesResult.data;
-      const serverRelationships = relationshipsResult.success && relationshipsResult.data
-        ? relationshipsResult.data.edges.map(edge => ({
-            id: edge.id,
-            source_id: edge.source,
-            target_id: edge.target,
-            type: edge.type,
-            description: edge.description,
-            weight: edge.weight,
-            created_at: new Date().toISOString(),
-            last_activated: new Date().toISOString(),
-            valid_from: undefined,
-            valid_until: undefined,
-            invalidated_at: undefined,
-            invalidation_reason: undefined,
-          }))
-        : [];
+      const serverRelationships: Relationship[] =
+        relationshipsResult.success && relationshipsResult.data ? relationshipsResult.data : [];
 
       await localDb.syncFromServer(serverEntities, serverRelationships);
-      
+
       await this.updatePendingCount();
       return serverEntities;
     } catch (error) {
       console.error('Failed to pull from server:', error);
       this.updateStatus({ error: (error as Error).message });
       return [];
+    } finally {
+      this.pulling = false;
     }
   }
 
@@ -200,7 +201,7 @@ class SyncService {
     await localDb.addEntity(entity);
     await this.updatePendingCount();
 
-    if (api.isConfigured() && (entity as any).synced === false) {
+    if (api.isConfigured() && entity.synced === false) {
       // sync() 内部已捕获错误并写入 status.error；
       // 这里仍包一层 catch，防止 unhandled rejection 出现在 RN 红屏
       this.sync().catch((err) => {
@@ -225,12 +226,17 @@ class SyncService {
 
   async deleteEntity(id: string): Promise<void> {
     await this.ensureReady();
+
+    // 先删远程，成功后再删本地，避免远程失败导致数据不一致
+    if (api.isConfigured()) {
+      const res = await api.deleteEntity(id);
+      if (!res.success) {
+        throw new Error(res.error ?? '删除远程实体失败');
+      }
+    }
+
     await localDb.deleteEntity(id);
     await this.updatePendingCount();
-    
-    if (api.isConfigured()) {
-      await api.deleteEntity(id);
-    }
   }
 
   async getEntities(limit?: number, offset?: number): Promise<Entity[]> {

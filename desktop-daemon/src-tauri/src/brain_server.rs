@@ -1,7 +1,10 @@
 use std::process::{Command, Child, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::path::PathBuf;
-use std::io::BufRead;
+use std::io::{BufRead, Read, Write};
+use std::net::{SocketAddr, TcpStream};
+use std::time::{Duration, Instant};
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
@@ -20,6 +23,7 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 /// 使用 Mutex 替代 unsafe static mut，确保多线程安全
 static BRAIN_SERVER_PROCESS: std::sync::LazyLock<Mutex<Option<Child>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
+static BRAIN_SERVER_STARTING: AtomicBool = AtomicBool::new(false);
 
 pub fn is_running() -> bool {
     let mut guard = match BRAIN_SERVER_PROCESS.lock() {
@@ -43,6 +47,81 @@ pub fn is_running() -> bool {
         }
     } else {
         false
+    }
+}
+
+pub fn is_ready() -> bool {
+    is_running() && health_check(Duration::from_millis(350))
+}
+
+fn health_check(timeout: Duration) -> bool {
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
+    let mut stream = match TcpStream::connect_timeout(&addr, timeout) {
+        Ok(stream) => stream,
+        Err(_) => return false,
+    };
+    let _ = stream.set_read_timeout(Some(timeout));
+    let _ = stream.set_write_timeout(Some(timeout));
+    if stream
+        .write_all(b"GET /health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")
+        .is_err()
+    {
+        return false;
+    }
+
+    let mut buf = [0_u8; 256];
+    match stream.read(&mut buf) {
+        Ok(n) if n > 0 => String::from_utf8_lossy(&buf[..n]).contains("200 OK"),
+        _ => false,
+    }
+}
+
+fn wait_for_health(child: &mut Child, timeout: Duration) -> Result<(), String> {
+    let started = Instant::now();
+    while started.elapsed() < timeout {
+        match child.try_wait() {
+            Ok(None) => {
+                if health_check(Duration::from_millis(700)) {
+                    return Ok(());
+                }
+            }
+            Ok(Some(status)) => {
+                return Err(format!("进程启动后退出（status: {}）", status));
+            }
+            Err(e) => {
+                return Err(format!("检查进程状态失败: {}", e));
+            }
+        }
+        std::thread::sleep(Duration::from_millis(500));
+    }
+    Err(format!("{} 秒内 /health 未就绪", timeout.as_secs()))
+}
+
+fn pipe_output_to_log(stdout: Option<std::process::ChildStdout>, stderr: Option<std::process::ChildStderr>) {
+    let log_path = log_writer::log_file_path();
+    if let Some(stdout) = stdout {
+        let lp = log_path.clone();
+        std::thread::spawn(move || {
+            let reader = std::io::BufReader::new(stdout);
+            for line in reader.lines() {
+                match line {
+                    Ok(l) => log_writer::write_line(&lp, &l, false),
+                    Err(_) => break,
+                }
+            }
+        });
+    }
+    if let Some(stderr) = stderr {
+        let lp = log_path;
+        std::thread::spawn(move || {
+            let reader = std::io::BufReader::new(stderr);
+            for line in reader.lines() {
+                match line {
+                    Ok(l) => log_writer::write_line(&lp, &l, true),
+                    Err(_) => break,
+                }
+            }
+        });
     }
 }
 
@@ -72,12 +151,42 @@ fn find_node_executable() -> String {
 }
 
 pub fn start() -> Result<(), String> {
+    if is_ready() {
+        println!("[Brain Server] 已经运行中");
+        return Ok(());
+    }
+
+    if BRAIN_SERVER_STARTING
+        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        .is_err()
+    {
+        let started = Instant::now();
+        while started.elapsed() < Duration::from_secs(65) {
+            if is_ready() {
+                return Ok(());
+            }
+            std::thread::sleep(Duration::from_millis(500));
+        }
+        return Err("Brain Server 正在启动，但 65 秒内仍未就绪".to_string());
+    }
+
+    let result = start_inner();
+    BRAIN_SERVER_STARTING.store(false, Ordering::Release);
+    result
+}
+
+fn start_inner() -> Result<(), String> {
     // 先杀掉上一次遗留的 zombie 进程（防止端口 3001 被占用）
     kill_zombie_by_pid_file();
 
-    if is_running() {
+    if is_ready() {
         println!("[Brain Server] 已经运行中");
         return Ok(());
+    }
+
+    if is_running() {
+        eprintln!("[Brain Server] 进程存在但 /health 未就绪，先停止后重新启动");
+        let _ = stop();
     }
 
     println!("[Brain Server] 正在启动...");
@@ -88,8 +197,7 @@ pub fn start() -> Result<(), String> {
     let candidates = brain_server_paths();
     let mut tried: Vec<String> = Vec::new();
 
-    // 直接 node <path>。spawn 成功不代表进程没立刻 exit，所以
-    // 加 800ms 探测：try_wait 仍为 None 才认为真启动了。
+    // 直接 node <path>。spawn 成功不代表 HTTP API 已经就绪，所以必须等 /health。
     for path in &candidates {
         tried.push(path.display().to_string());
         if !path.exists() {
@@ -122,41 +230,15 @@ pub fn start() -> Result<(), String> {
 
         match spawn_result {
             Ok(mut child) => {
-                // 要在 store_process 之前取出 stdout/stderr，否则 move 后拿不到
+                // 要在 store_process 之前取出 stdout/stderr，否则 move 后拿不到。
+                // 立即接日志，避免冷启动等待期间没有任何可诊断输出。
                 let stdout = child.stdout.take();
                 let stderr = child.stderr.take();
+                pipe_output_to_log(stdout, stderr);
 
-                std::thread::sleep(std::time::Duration::from_millis(800));
-                match child.try_wait() {
-                    Ok(None) => {
+                match wait_for_health(&mut child, Duration::from_secs(60)) {
+                    Ok(()) => {
                         println!("[Brain Server] 已启动: {}", path.display());
-
-                        // 启动 stdout/stderr → 日志文件的后台线程
-                        let log_path = log_writer::log_file_path();
-                        if let Some(stdout) = stdout {
-                            let lp = log_path.clone();
-                            std::thread::spawn(move || {
-                                let reader = std::io::BufReader::new(stdout);
-                                for line in reader.lines() {
-                                    match line {
-                                        Ok(l) => log_writer::write_line(&lp, &l, false),
-                                        Err(_) => break,
-                                    }
-                                }
-                            });
-                        }
-                        if let Some(stderr) = stderr {
-                            let lp = log_path.clone();
-                            std::thread::spawn(move || {
-                                let reader = std::io::BufReader::new(stderr);
-                                for line in reader.lines() {
-                                    match line {
-                                        Ok(l) => log_writer::write_line(&lp, &l, true),
-                                        Err(_) => break,
-                                    }
-                                }
-                            });
-                        }
 
                         // 写入 PID 文件，下次启动时可清理 zombie
                         let pid = child.id();
@@ -165,15 +247,14 @@ pub fn start() -> Result<(), String> {
                         store_process(child);
                         return Ok(());
                     }
-                    Ok(Some(status)) => {
-                        eprintln!(
-                            "[Brain Server] node {} 立刻退出（status: {}），尝试下一个候选",
-                            path.display(),
-                            status
-                        );
-                    }
                     Err(e) => {
-                        eprintln!("[Brain Server] try_wait 失败: {}", e);
+                        eprintln!(
+                            "[Brain Server] node {} 未就绪：{}，尝试下一个候选",
+                            path.display(),
+                            e
+                        );
+                        let _ = child.kill();
+                        let _ = child.wait();
                     }
                 }
             }
@@ -334,7 +415,45 @@ fn generate_local_token() -> String {
 }
 
 /// 获取本机 LAN IP，失败返回 None
+///
+/// 过滤掉 VPN/TUN 虚拟网卡（如 Clash、Proxifier、企业 VPN 常用的 198.18.0.0/15 网段），
+/// 否则配对二维码会包含手机无法访问的虚拟 IP。
 pub fn get_lan_ip() -> Option<String> {
+    // 枚举所有网卡地址（接口名 + IP），按优先级筛选真实的 LAN IP
+    let ifaces = local_ip_address::list_afinet_netifas().ok()?;
+
+    // 优先级：IPv4 私有地址（10.x / 192.168.x / 172.16-31.x），排除虚拟网卡网段
+    for (_intf, ip) in ifaces.iter() {
+        if let std::net::IpAddr::V4(v4) = ip {
+            let octets = v4.octets();
+            // 排除环回
+            if octets[0] == 127 { continue; }
+            // 排除 198.18.0.0/15（VPN/TUN 虚拟网卡常用，如 Clash）
+            if octets[0] == 198 && (octets[1] == 18 || octets[1] == 19) { continue; }
+            // 排除 169.254.x.x（link-local）
+            if octets[0] == 169 && octets[1] == 254 { continue; }
+            // 只保留私有地址段
+            // 10.0.0.0/8
+            if octets[0] == 10 { return Some(ip.to_string()); }
+            // 192.168.0.0/16
+            if octets[0] == 192 && octets[1] == 168 { return Some(ip.to_string()); }
+            // 172.16.0.0/12
+            if octets[0] == 172 && (octets[1] >= 16 && octets[1] <= 31) { return Some(ip.to_string()); }
+        }
+    }
+
+    // 回退：所有 IPv4 中第一个非环回/非虚拟/非 link-local 的地址
+    for (_intf, ip) in ifaces.iter() {
+        if let std::net::IpAddr::V4(v4) = ip {
+            let octets = v4.octets();
+            if octets[0] == 127 { continue; }
+            if octets[0] == 198 && (octets[1] == 18 || octets[1] == 19) { continue; }
+            if octets[0] == 169 && octets[1] == 254 { continue; }
+            return Some(ip.to_string());
+        }
+    }
+
+    // 最后回退到 local_ip()
     local_ip_address::local_ip().ok().map(|ip| ip.to_string())
 }
 
@@ -376,35 +495,50 @@ pub fn user_data_dir() -> PathBuf {
 }
 
 fn brain_server_paths() -> Vec<PathBuf> {
-    // 编译产物是 dist/mcp-server.js（不是顶层 mcp-server.js）。
+    // 桌面端需要的是 HTTP API，所以优先启动 dist/api-server.js。
+    // dist/mcp-server.js 仍保留为兼容兜底，但它依赖 MCP stdio SDK，
+    // 不应该成为桌面应用能否启动 Brain Server 的唯一入口。
     // Tauri 通过 resources: ["../../brain-server/**/*"] 把整个 brain-server
     // 目录拷到安装目录的 resources/brain-server/ 下，所以安装包里的真正路径是
-    // <exe-dir>/resources/brain-server/dist/mcp-server.js。
+    // <exe-dir>/resources/brain-server/dist/api-server.js。
     let mut paths: Vec<PathBuf> = Vec::new();
 
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
-            // Windows MSI/NSIS / Linux：<exe-dir>/resources/brain-server/dist/mcp-server.js
+            // Windows MSI/NSIS / Linux：<exe-dir>/resources/brain-server/dist/api-server.js
+            paths.push(exe_dir.join("resources/brain-server/dist/api-server.js"));
             paths.push(exe_dir.join("resources/brain-server/dist/mcp-server.js"));
+            paths.push(exe_dir.join("resources/brain-server/api-server.js"));
             paths.push(exe_dir.join("resources/brain-server/mcp-server.js"));
             // macOS app bundle: <exe>/Contents/MacOS/<app> → ../Resources/brain-server/...
+            paths.push(exe_dir.join("../Resources/brain-server/dist/api-server.js"));
             paths.push(exe_dir.join("../Resources/brain-server/dist/mcp-server.js"));
             // Tauri externalBin / sidecar 风格
+            paths.push(exe_dir.join("brain-server/dist/api-server.js"));
             paths.push(exe_dir.join("brain-server/dist/mcp-server.js"));
             // build-desktop-only.js 把 dist 平铺到 brain-server/ 下，所以实际路径无 dist/
+            paths.push(exe_dir.join("brain-server/api-server.js"));
             paths.push(exe_dir.join("brain-server/mcp-server.js"));
             // dev 模式：target/release/<exe>，需要往上回 3 级到 desktop-daemon/，再到 brain-server/
+            paths.push(exe_dir.join("../../../../brain-server/dist/api-server.js"));
             paths.push(exe_dir.join("../../../../brain-server/dist/mcp-server.js"));
+            paths.push(exe_dir.join("../../../brain-server/dist/api-server.js"));
             paths.push(exe_dir.join("../../../brain-server/dist/mcp-server.js"));
         }
     }
 
     // CWD-based fallback（手动启动场景）
+    paths.push(PathBuf::from("./brain-server/dist/api-server.js"));
     paths.push(PathBuf::from("./brain-server/dist/mcp-server.js"));
+    paths.push(PathBuf::from("../brain-server/dist/api-server.js"));
     paths.push(PathBuf::from("../brain-server/dist/mcp-server.js"));
 
     // 用户主目录安装位置
     if let Some(home) = dirs_or_home() {
+        paths.push(PathBuf::from(format!(
+            "{}/omni-context/brain-server/dist/api-server.js",
+            home
+        )));
         paths.push(PathBuf::from(format!(
             "{}/omni-context/brain-server/dist/mcp-server.js",
             home

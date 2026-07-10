@@ -94,6 +94,69 @@ describe('API smoke: notifications', () => {
   });
 });
 
+describe('API smoke: review tasks', () => {
+  it('summarizes actionable curation tasks and demotes excess core principles', async () => {
+    for (let i = 0; i < 35; i++) {
+      await db.addEntity({
+        name: `Review Core Principle ${i}`,
+        type: 'principle',
+        description: `Review task core principle ${i}`,
+        metadata: { isCore: true },
+        access_count: i % 4,
+      });
+    }
+    await db.addEntity({
+      name: 'Review Orphan Concept',
+      type: 'concept',
+      description: 'A concept without graph relationships',
+      access_count: 0,
+    });
+
+    const summary = await request('GET', '/api/review/tasks?targetCoreCount=30');
+    expect(summary.status).toBe(200);
+    expect(summary.body.corePrinciples.total).toBeGreaterThanOrEqual(35);
+    expect(summary.body.corePrinciples.overLimit).toBeGreaterThan(0);
+    expect(summary.body.corePrinciples.demoteSamples.length).toBeGreaterThan(0);
+    expect(summary.body.unlinkedByType.some((x: any) => x.type === 'concept')).toBe(true);
+
+    const demote = await request('POST', '/api/review/core-principles/demote-excess', {
+      targetCoreCount: 30,
+    });
+    expect(demote.status).toBe(200);
+    expect(demote.body.demoted).toBeGreaterThan(0);
+
+    const after = await request('GET', '/api/review/tasks?targetCoreCount=30');
+    expect(after.status).toBe(200);
+    expect(after.body.corePrinciples.total).toBeLessThanOrEqual(30);
+  });
+});
+
+describe('API smoke: MCP usage log', () => {
+  it('records successful MCP tool usage with matched entities', async () => {
+    await db.addEntity({
+      name: 'MCP Usage Trace Entity',
+      type: 'concept',
+      description: '用于验证 MCP 使用痕迹能被首页展示',
+      tags: ['mcp-usage-test'],
+    });
+
+    const searchRes = await request('POST', '/api/mcp/tool/search_entities', {
+      arguments: { query: 'MCP Usage Trace Entity', limit: 3 },
+    }, { 'X-Omni-Client': 'vitest-client' });
+    expect(searchRes.status).toBe(200);
+
+    const usageRes = await request('GET', '/api/mcp/usage?limit=5');
+    expect(usageRes.status).toBe(200);
+    expect(Array.isArray(usageRes.body)).toBe(true);
+    const latest = usageRes.body.find((x: any) => x.toolName === 'search_entities');
+    expect(latest).toBeTruthy();
+    expect(latest.client).toBe('vitest-client');
+    expect(latest.query).toContain('MCP Usage Trace Entity');
+    expect(latest.success).toBe(true);
+    expect(latest.matchedEntities.some((e: any) => e.name === 'MCP Usage Trace Entity')).toBe(true);
+  });
+});
+
 describe('API smoke: archival memory', () => {
   it('responds 200 with empty array on /api/memory/archival', async () => {
     const { status, body } = await request('GET', '/api/memory/archival');

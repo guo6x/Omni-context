@@ -97,6 +97,14 @@ export function rankMemoryCandidates(
     .map(({ candidate }) => candidate);
 }
 
+export function memoryCandidateScore(
+  query: string,
+  candidate: any,
+  options: { decisionMode?: boolean } = {},
+): number {
+  return scoreCandidate(query, candidate, options.decisionMode === true);
+}
+
 export function selectRelevantPrinciples(
   query: string,
   principles: any[],

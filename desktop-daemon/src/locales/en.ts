@@ -365,6 +365,7 @@ export default {
     load_engine_failed: 'Graph engine failed to load',
     load_engine_detail: 'The react-force-graph package may be corrupted or missing assets. Error:',
     reload_page: 'Reload page',
+    fallback_3d_to_2d: '3D mode unavailable, fell back to 2D',
     loading_engine: 'Loading 3D graph engine...',
     search_placeholder: 'Search nodes · Enter to jump to first match',
     all_types: 'All types',

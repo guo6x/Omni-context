@@ -91,12 +91,16 @@ export function SettingsScreen() {
     api.configure({
       baseUrl: normalizedUrl,
       authToken: authTokenInput.trim(),
-      timeout: 8000,
+      timeout: 5000,
     });
-    const connected = await api.healthCheck();
+    const connected = await api.waitForHealth({
+      timeoutMs: 50000,
+      intervalMs: 2000,
+      attemptTimeoutMs: 4000,
+    });
     setTestingConnection(false);
     if (!connected) {
-      showMessage('连接失败，请检查地址、局域网和桌面端防火墙', 'error');
+      showMessage('连接失败：请确认桌面端已打开、Brain Server 在线、手机和电脑在同一局域网，且防火墙允许 3001 端口', 'error');
       return;
     }
 

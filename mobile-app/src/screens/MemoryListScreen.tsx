@@ -38,10 +38,12 @@ const TYPE_COLORS: Record<EntityType, string> = {
   critical_review: '#f43f5e',
   capture_snapshot: '#71717a',
   memory: '#64748b',
-  note: '#64748b',
+  decision: '#3b82f6',
+  goal: '#10b981',
+  question: '#fbbf24',
+  preference: '#d946ef',
+  event: '#8b5cf6',
   task: '#eab308',
-  idea: '#f472b6',
-  reference: '#71717a',
 };
 
 // 实体类型显示名称
@@ -59,14 +61,16 @@ const TYPE_LABELS: Record<EntityType, string> = {
   critical_review: '评价',
   capture_snapshot: '快照',
   memory: '记忆',
-  note: '笔记',
+  decision: '决策',
+  goal: '目标',
+  question: '问题',
+  preference: '偏好',
+  event: '事件',
   task: '任务',
-  idea: '想法',
-  reference: '参考',
 };
 
 // 显示的类型筛选选项
-const FILTER_TYPES: EntityType[] = ['note', 'task', 'idea', 'reference', 'concept', 'project'];
+const FILTER_TYPES: EntityType[] = ['memory', 'task', 'concept', 'project', 'principle', 'decision'];
 
 // 优化后的列表项组件（记忆化）
 const EntityItem = memo(({ 
@@ -107,7 +111,7 @@ const EntityItem = memo(({
           </View>
         ) : null}
       </View>
-      {(item as any).synced === false ? (
+      {item.synced === false ? (
         <View style={styles.syncIndicator} />
       ) : null}
     </Pressable>
@@ -223,7 +227,7 @@ export function MemoryListScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>知识库</Text>
-        <Text style={styles.headerSubtitle}>{entities.length} 条本地内容</Text>
+        <Text style={styles.headerSubtitle}>{filteredEntities.length} 条本地内容</Text>
       </View>
 
       <View style={styles.searchContainer}>
