@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Entity } from '../../shared-types.js';
 import { preprocess } from '../../ingest/preprocess.js';
 import { parseChatExport, ParsedConversation } from '../../importers/chat-export.js';
+import { createHash } from 'crypto';
 
 // 文件上传抽取管线（v1：仅文本类）
 // 入参形态：JSON { filename, contentType, base64 }
@@ -175,6 +176,14 @@ interface JobState {
     principles: number;
     archivalId: string;
     summary: string;
+    documentId?: string;
+    chunking?: {
+      totalChunks: number;
+      processedChunks: number;
+      failedChunks: Array<{ chunkId: string; ordinal: number; error: string }>;
+      coverage: number;
+      truncated: false;
+    };
     preprocess?: {
       originalTokens: number;
       cleanedTokens: number;
@@ -344,9 +353,73 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
       timestamp: new Date().toISOString(),
       sourceType: 'manual',
       sourceMap: preprocessMeta?.sourceMap,
+      documentId: jobId,
+      source: filename,
+      forceChunking: true,
     });
   } catch (err: any) {
     return FAIL('extracting', `LLM extraction failed: ${err?.message || err}`);
+  }
+
+  if (extractResult.chunking) {
+    const now = new Date().toISOString();
+    const failures = new Map(extractResult.chunking.failed_chunks.map((failure) => [failure.chunk_id, failure.error]));
+    const documentStatus = extractResult.chunking.processed_chunks === 0
+      ? 'failed'
+      : extractResult.chunking.failed_chunks.length > 0 ? 'partial' : 'success';
+    try {
+      await ctx.db.withTransaction(async () => {
+        await ctx.db.run(
+          `INSERT OR REPLACE INTO ingestion_documents (
+             id, source, title, content_sha256, character_count, total_chunks,
+             processed_chunks, failed_chunks, coverage, status, created_at, updated_at
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            extractResult.chunking!.document_id,
+            filename,
+            filename,
+            createHash('sha256').update(cleanedText).digest('hex'),
+            cleanedText.length,
+            extractResult.chunking!.total_chunks,
+            extractResult.chunking!.processed_chunks,
+            extractResult.chunking!.failed_chunks.length,
+            extractResult.chunking!.coverage,
+            documentStatus,
+            now,
+            now,
+          ]
+        );
+        for (const chunk of extractResult.chunking!.chunks) {
+          const error = failures.get(chunk.chunk_id);
+          await ctx.db.run(
+            `INSERT OR REPLACE INTO ingestion_chunks (
+               id, document_id, ordinal, source, content, source_span, start_offset,
+               end_offset, source_timestamp, status, attempts, error, extracted_at,
+               created_at, updated_at
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              chunk.chunk_id,
+              chunk.document_id,
+              chunk.ordinal,
+              chunk.source,
+              chunk.content,
+              chunk.source_span,
+              chunk.start_offset,
+              chunk.end_offset,
+              chunk.timestamp,
+              error ? 'failed' : 'success',
+              1,
+              error || null,
+              error ? null : now,
+              now,
+              now,
+            ]
+          );
+        }
+      });
+    } catch (err: any) {
+      return FAIL('storing', `Failed to persist extraction chunks: ${err?.message || err}`);
+    }
   }
 
   // Stage: resolving
@@ -446,6 +519,18 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
       principles: extractResult.principles.length,
       archivalId: archival.id,
       summary,
+      documentId: extractResult.chunking?.document_id,
+      chunking: extractResult.chunking ? {
+        totalChunks: extractResult.chunking.total_chunks,
+        processedChunks: extractResult.chunking.processed_chunks,
+        failedChunks: extractResult.chunking.failed_chunks.map((failure) => ({
+          chunkId: failure.chunk_id,
+          ordinal: failure.ordinal,
+          error: failure.error,
+        })),
+        coverage: extractResult.chunking.coverage,
+        truncated: false,
+      } : undefined,
       preprocess: preprocessMeta || undefined,
     },
   });
@@ -463,9 +548,11 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
     if (conv.text && conv.text.trim().length >= 10) {
       try {
         const extractResult = await ctx.extractor.extract({
-          textContent: `对话标题：${conv.title}\n${conv.text}`.slice(0, 12000),
+          textContent: `对话标题：${conv.title}\n${conv.text}`,
           timestamp: conv.time || new Date().toISOString(),
           sourceType: 'manual',
+          documentId: `${jobId}:${done}`,
+          source: `import:${platform}:${conv.title}`,
         });
         const prov = { source: 'import', platform, title: conv.title, at: new Date().toISOString() };
         const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);

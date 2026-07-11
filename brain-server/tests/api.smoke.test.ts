@@ -396,6 +396,19 @@ describe('API smoke: ingest file', () => {
     expect(typeof jobResult.relationships).toBe('number');
     expect(typeof jobResult.archivalId).toBe('string');
     expect(jobResult.archivalId.length).toBeGreaterThan(0);
+    expect(jobResult.documentId).toBe(jobId);
+    expect(jobResult.chunking).toMatchObject({
+      totalChunks: 1,
+      processedChunks: 1,
+      failedChunks: [],
+      coverage: 1,
+      truncated: false,
+    });
+    const storedDocument = await db.get<any>('SELECT * FROM ingestion_documents WHERE id = ?', [jobId]);
+    const storedChunks = await db.all<any>('SELECT * FROM ingestion_chunks WHERE document_id = ?', [jobId]);
+    expect(storedDocument).toMatchObject({ status: 'success', total_chunks: 1, coverage: 1 });
+    expect(storedChunks).toHaveLength(1);
+    expect(storedChunks[0]).toMatchObject({ status: 'success', attempts: 1, content: expect.stringContaining(text) });
   }, 30000);
 
   it('rejects unsupported contentType with 415', async () => {

@@ -193,15 +193,16 @@ export class LLMExtractorPipeline {
    * @param text 原始文本
    * @returns 提取结果，失败时返回空结果
    */
-  async extract(text: string): Promise<LLMExtractionResult> {
-    if (!this.enabled) return this._emptyResult();
+  async extract(text: string, options: { throwOnError?: boolean } = {}): Promise<LLMExtractionResult> {
+    if (!this.enabled) {
+      if (options.throwOnError) throw new Error('LLM_EXTRACTION_DISABLED');
+      return this._emptyResult();
+    }
 
-    // 截断过长文本（避免 token 超限）
-    const truncated = text.length > 4000 ? text.slice(0, 4000) + '\n...[截断]' : text;
-
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
+      timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
       const response = await auditedAiFetch(`${this.config.apiUrl}/chat/completions`, {
         method: 'POST',
@@ -218,7 +219,7 @@ export class LLMExtractorPipeline {
             },
             {
               role: 'user',
-              content: buildExtractionPrompt(truncated),
+              content: buildExtractionPrompt(text),
             },
           ],
           max_tokens: this.config.maxTokens,
@@ -228,9 +229,8 @@ export class LLMExtractorPipeline {
         signal: controller.signal,
       }, { purpose: 'graphrag.extract', kind: 'llm' });
 
-      clearTimeout(timeout);
-
       if (!response.ok) {
+        if (options.throwOnError) throw new Error(`LLM_HTTP_${response.status}`);
         console.warn(`[LLMExtractor] API 返回 ${response.status}: ${response.statusText}`);
         return this._emptyResult();
       }
@@ -245,25 +245,29 @@ export class LLMExtractorPipeline {
 
       const content = data.choices?.[0]?.message?.content;
       if (!content) {
+        if (options.throwOnError) throw new Error('LLM_EMPTY_RESPONSE');
         console.warn('[LLMExtractor] API 返回空内容');
         return this._emptyResult();
       }
 
-      return this._parseResult(content);
+      return this._parseResult(content, options.throwOnError === true);
     } catch (e) {
+      if (options.throwOnError) throw e;
       if (e instanceof Error && e.name === 'AbortError') {
         console.warn(`[LLMExtractor] 请求超时 (${this.config.timeoutMs}ms)`);
       } else {
         console.warn('[LLMExtractor] 提取失败:', e);
       }
       return this._emptyResult();
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
   }
 
   /**
    * 解析 LLM 输出的 JSON
    */
-  private _parseResult(content: string): LLMExtractionResult {
+  private _parseResult(content: string, throwOnError: boolean = false): LLMExtractionResult {
     try {
       return parseLlmExtractionResult(content);
     } catch (e) {
@@ -271,6 +275,7 @@ export class LLMExtractorPipeline {
         ? e.issues.map((issue) => `${issue.path.join('.')}:${issue.code}`).join(', ')
         : e instanceof Error ? e.message : 'unknown parse error';
       console.warn(`[LLMExtractor] 严格结构验证失败: ${detail}`);
+      if (throwOnError) throw new Error(`LLM_OUTPUT_INVALID:${detail}`);
       return this._emptyResult();
     }
   }

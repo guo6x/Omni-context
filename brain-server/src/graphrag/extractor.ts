@@ -3,6 +3,7 @@ import { Entity, Relationship, EntityType, RelationshipType } from '../shared-ty
 import { LLMExtractorPipeline } from './llm-pipeline.js';
 import { OCRPipeline } from '../ocr/pipeline.js';
 import { sanitizeForExtraction } from './sanitize.js';
+import { chunkDocument, coveredCharacterCount, SourceChunk } from '../ingest/chunker.js';
 
 const DEFAULT_IMPORTANCE_MAP: Record<EntityType, number> = {
   principle: 0.75,
@@ -38,6 +39,10 @@ export interface ExtractionInput {
   textContent?: string;
   timestamp: string;
   sourceType?: 'screenshot' | 'clipboard' | 'log' | 'manual';
+  documentId?: string;
+  source?: string;
+  forceChunking?: boolean;
+  requireLlmSuccess?: boolean;
   sourceMap?: {
     urls?: Record<string, string>;
     [key: string]: any;
@@ -78,6 +83,15 @@ export interface GraphRAGOutput {
   relationships: Relationship[];
   principles: ExtractedPrinciple[];
   suspicious?: string[];
+  chunking?: {
+    document_id: string;
+    chunks: SourceChunk[];
+    total_chunks: number;
+    processed_chunks: number;
+    failed_chunks: Array<{ chunk_id: string; ordinal: number; error: string }>;
+    coverage: number;
+    truncated: false;
+  };
 }
 
 const ENTITY_PATTERNS: EntityPattern[] = [
@@ -325,6 +339,10 @@ export class GraphRAGExtractor {
   async extract(input: ExtractionInput): Promise<GraphRAGOutput> {
     const textContent = await this.combineInputs(input);
     const { cleaned, suspicious } = sanitizeForExtraction(textContent);
+
+    if (input.forceChunking || textContent.length > 3_500) {
+      return this.extractChunked(textContent, input, suspicious);
+    }
     
     // 第一层：正则提取（快速，确定性高）
     const entities = await this.extractEntities(cleaned, input);
@@ -334,7 +352,9 @@ export class GraphRAGExtractor {
     // 第二层：LLM 语义提取（深度理解，补充正则的盲区）
     if (this.llmPipeline.isEnabled() && !this.config.useLocalExtraction) {
       try {
-        const llmResult = await this.llmPipeline.extract(cleaned);
+        const llmResult = await this.llmPipeline.extract(cleaned, {
+          throwOnError: input.requireLlmSuccess,
+        });
         const llmEntities = Array.isArray(llmResult.entities) ? llmResult.entities : [];
         const llmFacts = Array.isArray(llmResult.facts) ? llmResult.facts : [];
         const llmPrinciples = Array.isArray(llmResult.principles) ? llmResult.principles : [];
@@ -425,6 +445,7 @@ export class GraphRAGExtractor {
           }
         }
       } catch (e) {
+        if (input.requireLlmSuccess) throw e;
         // LLM 提取失败不影响主流程
         console.warn('[GraphRAGExtractor] LLM 提取失败，仅使用正则结果:', e);
       }
@@ -485,6 +506,128 @@ export class GraphRAGExtractor {
       relationships,
       principles,
       ...(suspicious.length > 0 ? { suspicious } : {}),
+    };
+  }
+
+  private async extractChunked(
+    text: string,
+    input: ExtractionInput,
+    suspicious: string[],
+  ): Promise<GraphRAGOutput> {
+    const documentId = input.documentId || uuidv4();
+    const chunks = chunkDocument(text, {
+      documentId,
+      source: input.source || input.sourceType || 'inline',
+      timestamp: input.timestamp,
+    });
+    const entitiesByKey = new Map<string, Entity>();
+    const relationshipsByKey = new Map<string, Relationship>();
+    const principlesByKey = new Map<string, ExtractedPrinciple>();
+    const successfulChunks: SourceChunk[] = [];
+    const failedChunks: Array<{ chunk_id: string; ordinal: number; error: string }> = [];
+
+    for (const chunk of chunks) {
+      try {
+        const result = await this.extract({
+          textContent: chunk.content,
+          timestamp: chunk.timestamp,
+          sourceType: input.sourceType,
+          sourceMap: input.sourceMap,
+          documentId,
+          source: chunk.source,
+          requireLlmSuccess: this.llmPipeline.isEnabled() && !this.config.useLocalExtraction,
+        });
+        successfulChunks.push(chunk);
+        const localToCanonical = new Map<string, string>();
+        for (const entity of result.entities) {
+          const key = `${entity.type}:${entity.name.trim().toLocaleLowerCase()}`;
+          const existing = entitiesByKey.get(key);
+          const chunkProvenance = {
+            document_id: documentId,
+            chunk_id: chunk.chunk_id,
+            source: chunk.source,
+            source_span: chunk.source_span,
+            start_offset: chunk.start_offset,
+            end_offset: chunk.end_offset,
+            timestamp: chunk.timestamp,
+          };
+          if (existing) {
+            localToCanonical.set(entity.id, existing.id);
+            existing.tags = Array.from(new Set([...(existing.tags || []), ...(entity.tags || [])]));
+            if ((entity.description || '').length > (existing.description || '').length) {
+              existing.description = entity.description;
+            }
+            const provenance = Array.isArray(existing.metadata?.extraction_chunks)
+              ? existing.metadata.extraction_chunks
+              : [];
+            existing.metadata = {
+              ...(existing.metadata || {}),
+              extraction_chunks: [...provenance, chunkProvenance],
+            };
+          } else {
+            const canonical: Entity = {
+              ...entity,
+              tags: entity.tags ? [...entity.tags] : undefined,
+              metadata: {
+                ...(entity.metadata || {}),
+                extraction_chunks: [chunkProvenance],
+              },
+            };
+            entitiesByKey.set(key, canonical);
+            localToCanonical.set(entity.id, canonical.id);
+          }
+        }
+
+        for (const relationship of result.relationships) {
+          const sourceId = localToCanonical.get(relationship.source_id);
+          const targetId = localToCanonical.get(relationship.target_id);
+          if (!sourceId || !targetId) continue;
+          const key = `${sourceId}:${relationship.type}:${targetId}`;
+          const candidate: Relationship = {
+            ...relationship,
+            source_id: sourceId,
+            target_id: targetId,
+            provenance: {
+              ...(relationship.provenance || {}),
+              document_id: documentId,
+              chunk_id: chunk.chunk_id,
+              source: chunk.source,
+              source_span: relationship.description || chunk.source_span,
+              start_offset: chunk.start_offset,
+              end_offset: chunk.end_offset,
+              timestamp: chunk.timestamp,
+            },
+          };
+          const existing = relationshipsByKey.get(key);
+          if (!existing || candidate.weight > existing.weight) relationshipsByKey.set(key, candidate);
+        }
+        for (const principle of result.principles) {
+          const key = `${principle.type}:${principle.content.trim().toLocaleLowerCase()}`;
+          if (!principlesByKey.has(key)) principlesByKey.set(key, { ...principle });
+        }
+      } catch (error) {
+        failedChunks.push({
+          chunk_id: chunk.chunk_id,
+          ordinal: chunk.ordinal,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return {
+      entities: [...entitiesByKey.values()],
+      relationships: [...relationshipsByKey.values()],
+      principles: [...principlesByKey.values()],
+      ...(suspicious.length > 0 ? { suspicious } : {}),
+      chunking: {
+        document_id: documentId,
+        chunks,
+        total_chunks: chunks.length,
+        processed_chunks: successfulChunks.length,
+        failed_chunks: failedChunks,
+        coverage: text.length === 0 ? 1 : coveredCharacterCount(successfulChunks) / text.length,
+        truncated: false,
+      },
     };
   }
 

@@ -363,6 +363,50 @@ const MIGRATIONS: Migration[] = [
       FROM relationships;
     `,
   },
+  {
+    version: 16,
+    name: 'add_ingestion_documents_and_chunks',
+    up: `
+      CREATE TABLE IF NOT EXISTS ingestion_documents (
+        id TEXT PRIMARY KEY,
+        source TEXT NOT NULL,
+        title TEXT,
+        content_sha256 TEXT NOT NULL,
+        character_count INTEGER NOT NULL CHECK(character_count >= 0),
+        total_chunks INTEGER NOT NULL DEFAULT 0 CHECK(total_chunks >= 0),
+        processed_chunks INTEGER NOT NULL DEFAULT 0 CHECK(processed_chunks >= 0),
+        failed_chunks INTEGER NOT NULL DEFAULT 0 CHECK(failed_chunks >= 0),
+        coverage REAL NOT NULL DEFAULT 0 CHECK(coverage >= 0 AND coverage <= 1),
+        status TEXT NOT NULL CHECK(status IN ('processing', 'partial', 'success', 'failed')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_ingestion_documents_status
+        ON ingestion_documents(status, updated_at DESC);
+
+      CREATE TABLE IF NOT EXISTS ingestion_chunks (
+        id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        ordinal INTEGER NOT NULL CHECK(ordinal >= 0),
+        source TEXT NOT NULL,
+        content TEXT NOT NULL,
+        source_span TEXT NOT NULL,
+        start_offset INTEGER NOT NULL CHECK(start_offset >= 0),
+        end_offset INTEGER NOT NULL CHECK(end_offset > start_offset),
+        source_timestamp TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('pending', 'processing', 'success', 'failed')),
+        attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts >= 0),
+        error TEXT,
+        extracted_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES ingestion_documents(id) ON DELETE CASCADE,
+        UNIQUE(document_id, ordinal)
+      );
+      CREATE INDEX IF NOT EXISTS idx_ingestion_chunks_retry
+        ON ingestion_chunks(document_id, status, ordinal);
+    `,
+  },
 ];
 
 interface Migration {

@@ -535,6 +535,7 @@ export const handleGraphRoutes = [
         clipboard: body.clipboard,
         screenshot: body.screenshot,
         timestamp: new Date().toISOString(),
+        source: body.source || 'api:graph-extract',
       });
 
       const resolution = await resolveEntities(result.entities, result.relationships, ctx.db, ctx.embeddingService);
