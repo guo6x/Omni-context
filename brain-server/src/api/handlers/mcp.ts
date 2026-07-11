@@ -36,8 +36,10 @@ import {
   selectGeneralCorePrinciples,
   selectRelevantPrinciples,
 } from '../../mcp-retrieval.js';
+import { createAuditedAiFetch } from '../../security/audited-ai-fetch.js';
 
 const CORE_PRINCIPLE_CAP = 3;
+const mcpLlmFetch = createAuditedAiFetch({ purpose: 'api.decision-intelligence', kind: 'llm' });
 const MCP_EMBEDDING_TIMEOUT_MS = Number(process.env.MCP_EMBEDDING_TIMEOUT_MS || 2500);
 const MCP_RERANK_TIMEOUT_MS = Number(process.env.MCP_RERANK_TIMEOUT_MS || 2500);
 
@@ -155,7 +157,7 @@ async function rerankByLlm(
       const timer = setTimeout(() => controller.abort(), MCP_RERANK_TIMEOUT_MS);
     let raw = '';
     try {
-      const r = await fetch(`${llm.apiUrl}/chat/completions`, {
+      const r = await mcpLlmFetch(`${llm.apiUrl}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(llm.apiKey ? { Authorization: `Bearer ${llm.apiKey}` } : {}) },
         body: JSON.stringify({
@@ -351,7 +353,7 @@ async function callLlmDecision(
   const timeout = setTimeout(() => controller.abort(), 60000);
 
   try {
-    const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+    const response = await mcpLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -454,7 +456,7 @@ async function agenticEnrichMemories(
       const timeout = setTimeout(() => controller.abort(), 30000);
       let data: any;
       try {
-        const resp = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+        const resp = await mcpLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1185,7 +1187,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               const controller = new AbortController();
               const timeout = setTimeout(() => controller.abort(), 60000);
 
-              const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+              const response = await mcpLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -1283,7 +1285,7 @@ ${principleBlock}`;
             try {
               const controller = new AbortController();
               const timeout = setTimeout(() => controller.abort(), 60000);
-              const llmRes = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+              const llmRes = await mcpLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -1403,7 +1405,7 @@ ${gaConnBlock}`;
               const gaTimeout = setTimeout(() => gaController.abort(), 60000);
               let raw = '';
               try {
-                const llmRes = await fetch(`${gaLlm.apiUrl}/chat/completions`, {
+                const llmRes = await mcpLlmFetch(`${gaLlm.apiUrl}/chat/completions`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', ...(gaLlm.apiKey ? { Authorization: `Bearer ${gaLlm.apiKey}` } : {}) },
                   body: JSON.stringify({

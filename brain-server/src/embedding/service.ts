@@ -10,6 +10,9 @@
 
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createAuditedAiFetch } from '../security/audited-ai-fetch.js';
+
+const embeddingFetch = createAuditedAiFetch({ purpose: 'embedding.remote', kind: 'embedding' });
 
 export interface EmbeddingConfig {
   /** 模式: 'local' 使用 transformers.js, 'api' 使用远程 API */
@@ -139,7 +142,7 @@ export class EmbeddingService {
    * 远程 API embedding（兼容 OpenAI 格式）
    */
   private async embedViaApi(text: string, startTime: number): Promise<EmbeddingResult> {
-    const response = await fetch(`${this.config.apiUrl}/embeddings`, {
+    const response = await embeddingFetch(`${this.config.apiUrl}/embeddings`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

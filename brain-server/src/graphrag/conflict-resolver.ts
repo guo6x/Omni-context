@@ -1,6 +1,9 @@
 import { Database } from '../db/sqlite.js';
 import { Relationship, SINGLE_VALUED_REL_TYPES } from '../shared-types.js';
 import { GraphRAGExtractor } from './extractor.js';
+import { createAuditedAiFetch } from '../security/audited-ai-fetch.js';
+
+const conflictLlmFetch = createAuditedAiFetch({ purpose: 'graphrag.conflict-resolution', kind: 'llm' });
 
 /**
  * 自动冲突检测与消解逻辑
@@ -105,7 +108,7 @@ ${existingRels.map((rel, index) => `
 
       let content = '';
       try {
-        const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+        const response = await conflictLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

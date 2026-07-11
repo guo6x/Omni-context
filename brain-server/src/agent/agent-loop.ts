@@ -3,6 +3,9 @@ import { Entity } from '../shared-types.js';
 import { MemoryDecayScheduler } from '../memory/decay-scheduler.js';
 import { generateGraphInsights, GraphInsight } from './graph-insight.js';
 import { detectBlindspots } from './blindspot-detector.js';
+import { createAuditedAiFetch } from '../security/audited-ai-fetch.js';
+
+const agentLlmFetch = createAuditedAiFetch({ purpose: 'proactive.agent-loop', kind: 'llm' });
 
 interface LLMInsightConfig {
   apiUrl: string;
@@ -52,7 +55,7 @@ class InsightGenerator {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
-      const response = await fetch(`${this.config.apiUrl}/chat/completions`, {
+      const response = await agentLlmFetch(`${this.config.apiUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,7 +197,7 @@ export class AgentLoop {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
 
-      const response = await fetch(`${config.apiUrl}/chat/completions`, {
+      const response = await agentLlmFetch(`${config.apiUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

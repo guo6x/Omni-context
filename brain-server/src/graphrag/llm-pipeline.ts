@@ -1,3 +1,5 @@
+import { auditedAiFetch } from '../security/audited-ai-fetch.js';
+
 /**
  * [核心壁垒] LLM 驱动的知识图谱提取管道
  * 
@@ -130,7 +132,7 @@ export class LLMExtractorPipeline {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
-      const response = await fetch(`${this.config.apiUrl}/chat/completions`, {
+      const response = await auditedAiFetch(`${this.config.apiUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -153,7 +155,7 @@ export class LLMExtractorPipeline {
           response_format: { type: 'json_object' },
         }),
         signal: controller.signal,
-      });
+      }, { purpose: 'graphrag.extract', kind: 'llm' });
 
       clearTimeout(timeout);
 
@@ -243,7 +245,7 @@ export class LLMExtractorPipeline {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${this.config.apiUrl}/chat/completions`, {
+      const response = await auditedAiFetch(`${this.config.apiUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +257,7 @@ export class LLMExtractorPipeline {
           max_tokens: 3,
         }),
         signal: controller.signal,
-      });
+      }, { purpose: 'llm.healthcheck.chat', kind: 'llm' });
       clearTimeout(timeout);
       if (response.ok) return true;
     } catch (err) {
@@ -266,10 +268,10 @@ export class LLMExtractorPipeline {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 3000);
-      const response = await fetch(`${this.config.apiUrl}/models`, {
+      const response = await auditedAiFetch(`${this.config.apiUrl}/models`, {
         signal: controller.signal,
         headers: this.config.apiKey ? { 'Authorization': `Bearer ${this.config.apiKey}` } : {},
-      });
+      }, { purpose: 'llm.healthcheck.models', kind: 'llm' });
       clearTimeout(timeout);
       return response.ok;
     } catch {

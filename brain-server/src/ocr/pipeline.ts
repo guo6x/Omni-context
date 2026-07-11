@@ -10,6 +10,9 @@
 
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createAuditedAiFetch } from '../security/audited-ai-fetch.js';
+
+const ocrFetch = createAuditedAiFetch({ purpose: 'ocr.remote-fallback', kind: 'ocr' });
 
 export interface OCRConfig {
   /** OCR 引擎: 'local' 使用 tesseract.js, 'api' 使用云端 */
@@ -124,7 +127,7 @@ export class OCRPipeline {
    */
   private async _extractViaApi(imageBase64: string, startTime: number): Promise<OCRResult> {
     try {
-      const response = await fetch(`${this.config.apiUrl}/ocr`, {
+      const response = await ocrFetch(`${this.config.apiUrl}/ocr`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

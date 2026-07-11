@@ -20,6 +20,9 @@ import { createServer } from './api/routes.js';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import type { EntityType, RelationshipType, Entity } from './shared-types.js';
+import { createAuditedAiFetch } from './security/audited-ai-fetch.js';
+
+const mcpLlmFetch = createAuditedAiFetch({ purpose: 'mcp.decision-intelligence', kind: 'llm' });
 
 const CORE_PRINCIPLE_CAP = 3;
 
@@ -779,7 +782,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 60000);
 
-            const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+            const response = await mcpLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -1143,7 +1146,7 @@ ${conflicts || '(无)'}
     const timeout = setTimeout(() => controller.abort(), 60000);
 
     try {
-      const response = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+      const response = await mcpLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1237,7 +1240,7 @@ ${conflicts || '(无)'}
         const timeout = setTimeout(() => controller.abort(), 30000);
         let data: any;
         try {
-          const resp = await fetch(`${llmConfig.apiUrl}/chat/completions`, {
+          const resp = await mcpLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
