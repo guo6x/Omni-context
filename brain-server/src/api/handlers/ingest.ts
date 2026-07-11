@@ -8,6 +8,7 @@ import { Entity } from '../../shared-types.js';
 import { preprocess } from '../../ingest/preprocess.js';
 import { parseChatExport, ParsedConversation } from '../../importers/chat-export.js';
 import { createHash } from 'crypto';
+import { coveredCharacterCount } from '../../ingest/chunker.js';
 
 // 文件上传抽取管线（v1：仅文本类）
 // 入参形态：JSON { filename, contentType, base64 }
@@ -196,6 +197,14 @@ interface JobState {
     };
   };
   importProgress?: { done: number; total: number; entities: number };
+  retryProgress?: {
+    documentId: string;
+    done: number;
+    total: number;
+    recovered: number;
+    failed: number;
+    coverage: number;
+  };
   error?: string;
 }
 
@@ -588,6 +597,165 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
   updateJob(jobId, { status: 'success', stage: 'done', completedAt: Date.now(), importProgress: { done, total: conversations.length, entities: entityCount } });
 }
 
+interface StoredChunk {
+  id: string;
+  document_id: string;
+  ordinal: number;
+  source: string;
+  content: string;
+  source_span: string;
+  start_offset: number;
+  end_offset: number;
+  source_timestamp: string;
+  attempts: number;
+}
+
+async function runFailedChunkRetry(jobId: string, documentId: string, ctx: RequestContext): Promise<void> {
+  const chunks = await ctx.db.all<StoredChunk>(
+    `SELECT * FROM ingestion_chunks
+     WHERE document_id = ? AND status = 'failed'
+     ORDER BY ordinal`,
+    [documentId]
+  );
+  let recovered = 0;
+  let failed = 0;
+  updateJob(jobId, {
+    status: 'running',
+    stage: 'extracting',
+    retryProgress: { documentId, done: 0, total: chunks.length, recovered, failed, coverage: 0 },
+  });
+
+  for (const [index, chunk] of chunks.entries()) {
+    const job = jobStore.get(jobId);
+    if (!job || job.aborted) {
+      updateJob(jobId, { status: 'cancelled', completedAt: Date.now() });
+      return;
+    }
+    const now = new Date().toISOString();
+    await ctx.db.run(
+      `UPDATE ingestion_chunks
+       SET status = 'processing', attempts = attempts + 1, error = NULL, updated_at = ?
+       WHERE id = ?`,
+      [now, chunk.id]
+    );
+    try {
+      const result = await ctx.extractor.extract({
+        textContent: chunk.content,
+        timestamp: chunk.source_timestamp,
+        sourceType: 'manual',
+        documentId,
+        source: chunk.source,
+        requireLlmSuccess: true,
+      });
+      const provenance = {
+        document_id: documentId,
+        chunk_id: chunk.id,
+        source: chunk.source,
+        source_span: chunk.source_span,
+        start_offset: chunk.start_offset,
+        end_offset: chunk.end_offset,
+        timestamp: chunk.source_timestamp,
+        retry_attempt: chunk.attempts + 1,
+      };
+      for (const entity of result.entities) {
+        entity.metadata = {
+          ...(entity.metadata || {}),
+          extraction_chunks: [provenance],
+        };
+      }
+      for (const relationship of result.relationships) {
+        relationship.provenance = { ...(relationship.provenance || {}), ...provenance };
+      }
+      const resolution = await resolveEntities(result.entities, result.relationships, ctx.db, ctx.embeddingService);
+      for (const entity of resolution.entitiesToCreate) await ctx.db.addEntity(entity);
+      for (const update of resolution.entitiesToUpdate) {
+        await ctx.db.updateEntity(update.id, {
+          description: update.description,
+          tags: update.tags,
+          embedding: update.embedding,
+          metadata: update.metadata,
+          created_at: update.created_at,
+          access_count: update.access_count,
+        });
+      }
+      await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+      for (const relationship of resolution.relationshipsToCreate) await ctx.db.addRelationship(relationship);
+
+      const principleNow = new Date().toISOString();
+      const principles = result.principles.map((principle): Entity => ({
+        id: uuidv4(),
+        name: principle.title,
+        type: 'principle',
+        description: principle.content,
+        created_at: principleNow,
+        updated_at: principleNow,
+        last_accessed: principleNow,
+        access_count: 0,
+        tags: ['auto_extracted', principle.type, 'retry'],
+        metadata: { isCore: principle.isCore, principleType: principle.type, extraction_chunks: [provenance] },
+      }));
+      const principleResolution = await resolveEntities(principles, [], ctx.db, ctx.embeddingService);
+      for (const entity of principleResolution.entitiesToCreate) await ctx.db.addEntity(entity);
+      for (const update of principleResolution.entitiesToUpdate) {
+        await ctx.db.updateEntity(update.id, {
+          description: update.description,
+          tags: update.tags,
+          embedding: update.embedding,
+          metadata: update.metadata,
+          created_at: update.created_at,
+          access_count: update.access_count,
+        });
+      }
+      await ctx.db.run(
+        `UPDATE ingestion_chunks
+         SET status = 'success', error = NULL, extracted_at = ?, updated_at = ?
+         WHERE id = ?`,
+        [now, now, chunk.id]
+      );
+      recovered++;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await ctx.db.run(
+        `UPDATE ingestion_chunks SET status = 'failed', error = ?, updated_at = ? WHERE id = ?`,
+        [message, now, chunk.id]
+      );
+      failed++;
+    }
+
+    const successful = await ctx.db.all<{ start_offset: number; end_offset: number }>(
+      `SELECT start_offset, end_offset FROM ingestion_chunks
+       WHERE document_id = ? AND status = 'success'`,
+      [documentId]
+    );
+    const document = await ctx.db.get<{ character_count: number; total_chunks: number }>(
+      'SELECT character_count, total_chunks FROM ingestion_documents WHERE id = ?',
+      [documentId]
+    );
+    const coverage = document && document.character_count > 0
+      ? Math.min(1, coveredCharacterCount(successful) / document.character_count)
+      : 0;
+    const remainingFailed = await ctx.db.get<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM ingestion_chunks WHERE document_id = ? AND status = 'failed'`,
+      [documentId]
+    );
+    const processed = await ctx.db.get<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM ingestion_chunks WHERE document_id = ? AND status = 'success'`,
+      [documentId]
+    );
+    const status = (remainingFailed?.count || 0) === 0 ? 'success' : (processed?.count || 0) > 0 ? 'partial' : 'failed';
+    await ctx.db.run(
+      `UPDATE ingestion_documents
+       SET processed_chunks = ?, failed_chunks = ?, coverage = ?, status = ?, updated_at = ?
+       WHERE id = ?`,
+      [processed?.count || 0, remainingFailed?.count || 0, coverage, status, now, documentId]
+    );
+    updateJob(jobId, {
+      retryProgress: { documentId, done: index + 1, total: chunks.length, recovered, failed, coverage },
+    });
+  }
+  updateJob(jobId, { status: 'success', stage: 'done', completedAt: Date.now() });
+}
+
 export const handleIngestRoutes = [
   {
     method: 'POST' as const,
@@ -662,8 +830,29 @@ export const handleIngestRoutes = [
         filename: job.filename,
         result: job.result,
         importProgress: job.importProgress,
+        retryProgress: job.retryProgress,
         error: job.error,
       });
+    },
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/ingest/document/:documentId/retry',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const documentId = params.documentId;
+      const document = await ctx.db.get<{ source: string }>(
+        'SELECT source FROM ingestion_documents WHERE id = ?',
+        [documentId]
+      );
+      if (!document) return sendError(res, 404, 'Ingestion document not found');
+      const failed = await ctx.db.get<{ count: number }>(
+        `SELECT COUNT(*) AS count FROM ingestion_chunks WHERE document_id = ? AND status = 'failed'`,
+        [documentId]
+      );
+      if (!failed?.count) return sendResponse(res, 200, { documentId, retried: 0, status: 'already_complete' });
+      const job = createJob(`retry:${document.source}`);
+      setImmediate(() => runFailedChunkRetry(job.jobId, documentId, ctx));
+      sendResponse(res, 202, { jobId: job.jobId, documentId, retrying: failed.count });
     },
   },
   {

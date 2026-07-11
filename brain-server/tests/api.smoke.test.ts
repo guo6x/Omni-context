@@ -421,6 +421,48 @@ describe('API smoke: ingest file', () => {
     expect(status).toBe(415);
   });
 
+  it('retries only failed persisted chunks and updates attempts and coverage', async () => {
+    const documentId = 'retry-document';
+    const chunkId = 'retry-chunk';
+    const content = 'class RetryEntity {}';
+    const now = new Date().toISOString();
+    await db.run(
+      `INSERT INTO ingestion_documents (
+         id, source, title, content_sha256, character_count, total_chunks,
+         processed_chunks, failed_chunks, coverage, status, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [documentId, 'retry.txt', 'retry.txt', '0'.repeat(64), content.length, 1, 0, 1, 0, 'failed', now, now]
+    );
+    await db.run(
+      `INSERT INTO ingestion_chunks (
+         id, document_id, ordinal, source, content, source_span, start_offset,
+         end_offset, source_timestamp, status, attempts, error, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [chunkId, documentId, 0, 'retry.txt', content, content, 0, content.length, now, 'failed', 1, 'initial failure', now, now]
+    );
+
+    const retry = await request('POST', `/api/ingest/document/${documentId}/retry`);
+    expect(retry.status).toBe(202);
+    let status = 'queued';
+    let progress: any;
+    const started = Date.now();
+    while (!['success', 'failed'].includes(status) && Date.now() - started < 10_000) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const job = await request('GET', `/api/ingest/job/${retry.body.jobId}`);
+      status = job.body.status;
+      progress = job.body.retryProgress;
+    }
+    expect(status).toBe('success');
+    expect(progress).toMatchObject({ documentId, done: 1, total: 1, recovered: 1, failed: 0, coverage: 1 });
+    expect(await db.get<any>('SELECT status, attempts, error FROM ingestion_chunks WHERE id = ?', [chunkId]))
+      .toMatchObject({ status: 'success', attempts: 2, error: null });
+    expect(await db.get<any>('SELECT status, processed_chunks, failed_chunks, coverage FROM ingestion_documents WHERE id = ?', [documentId]))
+      .toMatchObject({ status: 'success', processed_chunks: 1, failed_chunks: 0, coverage: 1 });
+
+    const complete = await request('POST', `/api/ingest/document/${documentId}/retry`);
+    expect(complete).toMatchObject({ status: 200, body: { documentId, retried: 0, status: 'already_complete' } });
+  });
+
   it('rejects missing filename with 400', async () => {
     const base64 = Buffer.from('hi', 'utf-8').toString('base64');
     const { status } = await request('POST', '/api/ingest/file', {
