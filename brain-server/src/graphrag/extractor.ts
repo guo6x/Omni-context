@@ -397,7 +397,17 @@ export class GraphRAGExtractor {
             weight: typeof fact.confidence === 'number' ? fact.confidence : 1.0,
             created_at: now,
             last_activated: now,
-            valid_from: now,
+            valid_from: fact.valid_from || fact.event_time || now,
+            valid_until: fact.valid_until,
+            observed_at: fact.observed_at,
+            event_time: fact.event_time,
+            temporal_confidence: fact.temporal_confidence,
+            temporal_source: fact.temporal_source,
+            timezone: fact.timezone,
+            provenance: {
+              extractor: 'llm',
+              model: this.config.llmModel,
+            },
           });
         }
 

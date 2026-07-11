@@ -1200,6 +1200,25 @@ export class Database {
        relationship.description || null, relationship.weight || 1.0, now, now, validFrom, validUntil, invalidatedAt, invalidationReason]
     );
 
+    // Relationships remain the graph compatibility view; every new edge also becomes
+    // a provenance-aware Assertion so temporal retrieval has a single factual layer.
+    await this.run(
+      `INSERT OR IGNORE INTO assertions (
+        id, subject_id, predicate, object_id, confidence, source_span, provenance,
+        observed_at, recorded_at, event_time, valid_from, valid_until,
+        temporal_confidence, temporal_source, timezone, invalidated_at,
+        invalidation_reason, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        `relationship:${id}`, relationship.source_id, relationship.type, relationship.target_id,
+        Math.max(0, Math.min(1, relationship.weight ?? 1)), relationship.description || null,
+        JSON.stringify({ relationship_id: id, ...(relationship.provenance || {}) }),
+        relationship.observed_at || null, now, relationship.event_time || null, validFrom,
+        validUntil, relationship.temporal_confidence ?? null, relationship.temporal_source || null,
+        relationship.timezone || null, invalidatedAt, invalidationReason, now, now,
+      ],
+    );
+
     return {
       id,
       source_id: relationship.source_id,
@@ -1224,6 +1243,12 @@ export class Database {
        SET valid_until = ?, invalidated_at = ?, invalidation_reason = ?
        WHERE id = ?`,
       [until, now, reason || null, id]
+    );
+    await this.run(
+      `UPDATE assertions
+       SET valid_until = ?, invalidated_at = ?, invalidation_reason = ?, updated_at = ?
+       WHERE id = ?`,
+      [until, now, reason || null, now, `relationship:${id}`],
     );
   }
 

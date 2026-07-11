@@ -53,6 +53,12 @@ export interface Relationship {
   valid_until?: string;
   invalidated_at?: string;
   invalidation_reason?: string;
+  observed_at?: string;
+  event_time?: string;
+  temporal_confidence?: number;
+  temporal_source?: string;
+  timezone?: string;
+  provenance?: Record<string, unknown>;
 }
 
 export interface Assertion {

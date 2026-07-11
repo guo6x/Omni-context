@@ -1,4 +1,7 @@
 import { auditedAiFetch } from '../security/audited-ai-fetch.js';
+import { z } from 'zod';
+import { ENTITY_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
+import { parseTemporalExpression } from '../utils/temporal-parser.js';
 
 /**
  * [核心壁垒] LLM 驱动的知识图谱提取管道
@@ -33,26 +36,94 @@ const DEFAULT_LLM_CONFIG: LLMExtractionConfig = {
 };
 
 /** LLM 输出的结构化提取结果 */
-export interface LLMExtractionResult {
-  entities: Array<{
-    name: string;
-    type: string;
-    description: string;
-    importance?: number;
-  }>;
-  facts: Array<{
-    subject: string;
-    predicate: string;
-    object: string;
-    confidence: number;
-    source_span: string;
-  }>;
-  principles: Array<{
-    title: string;
-    content: string;
-    type: string;
-    isCore: boolean;
-  }>;
+const TemporalTextSchema = z.string().trim().min(1).max(200);
+const LLMExtractionResultSchema = z.object({
+  entities: z.array(z.object({
+    name: z.string().trim().min(1).max(500),
+    type: z.enum(ENTITY_TYPES),
+    description: z.string().max(20_000),
+    importance: z.preprocess(
+      (value) => typeof value === 'number' ? value : undefined,
+      z.number().min(0).max(1).optional(),
+    ),
+  }).strict()).max(500),
+  facts: z.array(z.object({
+    subject: z.string().trim().min(1).max(500),
+    predicate: z.enum(RELATIONSHIP_TYPES),
+    object: z.string().trim().min(1).max(2_000),
+    confidence: z.number().min(0).max(1),
+    source_span: z.string().trim().min(1).max(20_000),
+    observed_at: TemporalTextSchema.optional(),
+    event_time: TemporalTextSchema.optional(),
+    valid_from: TemporalTextSchema.optional(),
+    valid_until: TemporalTextSchema.optional(),
+    temporal_confidence: z.number().min(0).max(1).optional(),
+    temporal_source: z.string().trim().min(1).max(200).optional(),
+    timezone: z.string().trim().min(1).max(100).optional(),
+  }).strict()).max(1_000),
+  principles: z.array(z.object({
+    title: z.string().trim().min(1).max(500),
+    content: z.string().trim().min(1).max(20_000),
+    type: z.enum([
+      'code_principle', 'security_rule', 'performance_optimization',
+      'design_pattern', 'workflow_rule', 'personal_preference',
+    ]),
+    isCore: z.boolean(),
+  }).strict()).max(200),
+}).strict();
+
+export type LLMExtractionResult = z.infer<typeof LLMExtractionResultSchema>;
+
+function normalizeTemporalValue(
+  value: string | undefined,
+  reference: Date,
+  timezone?: string,
+): { value?: string; rangeEnd?: string; confidence?: number; source?: string } {
+  if (!value) return {};
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
+    const parsed = new Date(value);
+    if (Number.isFinite(parsed.getTime())) return { value: parsed.toISOString(), confidence: 1, source: 'iso_timestamp' };
+  }
+  const parsed = parseTemporalExpression(value, { reference, timezone });
+  if (!parsed) throw new Error('INVALID_TEMPORAL_EXPRESSION');
+  return {
+    value: parsed.start,
+    rangeEnd: parsed.end,
+    confidence: parsed.confidence,
+    source: parsed.temporalSource,
+  };
+}
+
+export function parseLlmExtractionResult(
+  content: string,
+  reference: Date = new Date(),
+  defaultTimezone?: string,
+): LLMExtractionResult {
+  const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+  const jsonStr = jsonMatch ? jsonMatch[1] : content;
+  const validated = LLMExtractionResultSchema.parse(JSON.parse(jsonStr.trim()));
+  return {
+    ...validated,
+    facts: validated.facts.map((fact) => {
+      const timezone = fact.timezone || defaultTimezone;
+      const event = normalizeTemporalValue(fact.event_time, reference, timezone);
+      const observed = normalizeTemporalValue(fact.observed_at, reference, timezone);
+      const validFrom = normalizeTemporalValue(fact.valid_from, reference, timezone);
+      const validUntil = normalizeTemporalValue(fact.valid_until, reference, timezone);
+      return {
+        ...fact,
+        event_time: event.value,
+        observed_at: observed.value,
+        valid_from: validFrom.value || event.value,
+        valid_until: validUntil.value || (fact.event_time ? event.rangeEnd : undefined),
+        temporal_confidence: fact.temporal_confidence
+          ?? validFrom.confidence ?? event.confidence ?? observed.confidence,
+        temporal_source: fact.temporal_source
+          ?? validFrom.source ?? event.source ?? observed.source,
+        timezone,
+      };
+    }),
+  };
 }
 
 const EXTRACTION_PROMPT_HEADER = `You are an information extractor for a knowledge graph. Your ONLY task is to extract entities, facts, and principles from the provided content.
@@ -69,7 +140,7 @@ EXTRACTION SCHEMA:
     {"name": "实体名", "type": "类型", "description": "描述", "importance": 0.5}
   ],
   "facts": [
-    {"subject": "源实体名", "predicate": "关系类型", "object": "目标实体名", "confidence": 0.95, "source_span": "原始文本片段"}
+    {"subject": "源实体名", "predicate": "关系类型", "object": "目标实体名或字面值", "confidence": 0.95, "source_span": "必须存在的原始文本片段", "event_time": "可选 ISO 8601 或原文相对时间", "valid_from": "可选", "valid_until": "可选", "temporal_confidence": 0.8, "temporal_source": "explicit_date|relative_expression", "timezone": "可选 IANA 时区"}
   ],
   "principles": [
     {"title": "标题", "content": "内容", "type": "类型", "isCore": false}
@@ -86,7 +157,7 @@ EXTRACTION SCHEMA:
 - concept(概念/事实)、principle(原则/价值观/方法论)、preference(偏好/喜恶)、goal(目标/想达成的)、decision(已做的决策)、question(还没想通的问题/悬念)、task(待办/要做的事)、event(发生过的事/经历)、person(人)、project(项目/正在做的事)、tool(工具/产品/服务)、evidence(证据/具体例子)、memory(以上都不贴切的其他记忆)
 - 仅当内容确实是编程相关时才用：code_snippet, architecture_pattern, bug_vulnerability, business_logic, critical_review
 不要因为名字像就硬归类；分不清就用 concept 或 memory，别硬塞 tool/person。
-关系类型可选：extends, depends_on, relates_to, conflicts_with, derived_from, belongs_to, supported_by, extracted_from, works_at, lives_in, studies_at, married_to, leads_to_conclusion
+关系类型只能是：${RELATIONSHIP_TYPES.join(', ')}
 原则类型可选：code_principle, security_rule, performance_optimization, design_pattern, workflow_rule, personal_preference
 `;
 
@@ -194,44 +265,12 @@ export class LLMExtractorPipeline {
    */
   private _parseResult(content: string): LLMExtractionResult {
     try {
-      // 尝试从 markdown code block 中提取 JSON
-      const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-      const jsonStr = jsonMatch ? jsonMatch[1] : content;
-
-      const parsed = JSON.parse(jsonStr.trim());
-
-      const rawEntities = Array.isArray(parsed.entities) ? parsed.entities.filter(
-        (e: any) => e.name && e.type
-      ) : [];
-
-      const entities = rawEntities.map((e: any) => {
-        let importance: number | undefined = undefined;
-        if (e.importance !== undefined && e.importance !== null) {
-          const val = Number(e.importance);
-          if (!isNaN(val)) {
-            importance = Math.max(0, Math.min(1, val));
-          }
-        }
-        return {
-          name: String(e.name),
-          type: String(e.type),
-          description: String(e.description || ''),
-          ...(importance !== undefined ? { importance } : {})
-        };
-      });
-
-      // 验证结构完整性
-      return {
-        entities,
-        facts: Array.isArray(parsed.facts) ? parsed.facts.filter(
-          (f: any) => f.subject && f.predicate && f.object
-        ) : [],
-        principles: Array.isArray(parsed.principles) ? parsed.principles.filter(
-          (p: any) => p.title && p.content
-        ) : [],
-      };
+      return parseLlmExtractionResult(content);
     } catch (e) {
-      console.warn('[LLMExtractor] JSON 解析失败:', e);
+      const detail = e instanceof z.ZodError
+        ? e.issues.map((issue) => `${issue.path.join('.')}:${issue.code}`).join(', ')
+        : e instanceof Error ? e.message : 'unknown parse error';
+      console.warn(`[LLMExtractor] 严格结构验证失败: ${detail}`);
       return this._emptyResult();
     }
   }

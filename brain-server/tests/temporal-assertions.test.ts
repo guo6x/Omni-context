@@ -88,7 +88,7 @@ describe('temporal assertions', () => {
     await db.close();
   });
 
-  it('backfills legacy relationships as provenance-linked assertions', async () => {
+  it('writes new relationships through to provenance-linked assertions', async () => {
     const db = initDatabase({ dbPath: ':memory:' });
     await db.runMigrations();
     await addSubject(db, 'source-1');
@@ -100,16 +100,11 @@ describe('temporal assertions', () => {
       type: 'knows',
       weight: 0.7,
       description: 'legacy evidence',
+      event_time: '2025-04-01T00:00:00.000Z',
+      valid_from: '2025-04-01T00:00:00.000Z',
+      temporal_confidence: 0.85,
+      temporal_source: 'explicit_date',
     });
-
-    // Re-run the idempotent backfill statement used by migration v15 to model an old row.
-    await db.run(`INSERT OR IGNORE INTO assertions (
-      id, subject_id, predicate, object_id, confidence, source_span, provenance,
-      recorded_at, valid_from, valid_until, invalidated_at, invalidation_reason, created_at, updated_at
-    ) SELECT 'relationship:' || id, source_id, type, target_id, weight, description,
-      '{"migration":"relationships_v15"}', created_at, valid_from, valid_until,
-      invalidated_at, invalidation_reason, created_at, last_activated
-      FROM relationships WHERE id = 'relationship-1'`);
 
     const assertions = await db.getAssertions({ subjectId: 'source-1' });
     expect(assertions).toHaveLength(1);
@@ -118,6 +113,9 @@ describe('temporal assertions', () => {
       predicate: 'knows',
       object_id: 'target-1',
       confidence: 0.7,
+      event_time: '2025-04-01T00:00:00.000Z',
+      temporal_confidence: 0.85,
+      temporal_source: 'explicit_date',
     });
     await db.close();
   });
