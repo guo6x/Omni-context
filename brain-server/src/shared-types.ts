@@ -30,6 +30,14 @@ export interface Entity {
   tags?: string[];
   embedding?: number[];
   metadata?: Record<string, any>;
+  observed_at?: string;
+  recorded_at?: string;
+  event_time?: string;
+  valid_from?: string;
+  valid_until?: string;
+  temporal_confidence?: number;
+  temporal_source?: string;
+  timezone?: string;
 }
 
 export interface Relationship {
@@ -46,6 +54,35 @@ export interface Relationship {
   invalidated_at?: string;
   invalidation_reason?: string;
 }
+
+export interface Assertion {
+  id: string;
+  subject_id: string;
+  predicate: string;
+  object_id?: string;
+  literal_value?: string;
+  confidence: number;
+  source_span?: string;
+  provenance?: Record<string, unknown>;
+  observed_at?: string;
+  recorded_at: string;
+  event_time?: string;
+  valid_from: string;
+  valid_until?: string;
+  temporal_confidence?: number;
+  temporal_source?: string;
+  timezone?: string;
+  invalidated_at?: string;
+  invalidation_reason?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type AssertionInput = Omit<Assertion, 'id' | 'recorded_at' | 'valid_from' | 'created_at' | 'updated_at'> & {
+  id?: string;
+  recorded_at?: string;
+  valid_from?: string;
+};
 
 export interface GraphRAGOutput {
   entities: Entity[];

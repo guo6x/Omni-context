@@ -36,6 +36,7 @@ export const RelationshipTypeSchema = z.enum(RELATIONSHIP_TYPES);
 export const NotificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 
 const MetadataSchema = z.record(z.unknown());
+const IsoTimestampSchema = z.string().datetime({ offset: true });
 
 export const EntityCreateSchema = z.object({
   name: z.string().trim().min(1).max(500),
@@ -43,6 +44,14 @@ export const EntityCreateSchema = z.object({
   description: z.string().max(200_000).optional(),
   tags: z.array(z.string().trim().min(1).max(200)).max(200).optional(),
   metadata: MetadataSchema.optional(),
+  observed_at: IsoTimestampSchema.optional(),
+  recorded_at: IsoTimestampSchema.optional(),
+  event_time: IsoTimestampSchema.optional(),
+  valid_from: IsoTimestampSchema.optional(),
+  valid_until: IsoTimestampSchema.optional(),
+  temporal_confidence: z.number().min(0).max(1).optional(),
+  temporal_source: z.string().trim().min(1).max(200).optional(),
+  timezone: z.string().trim().min(1).max(100).optional(),
 }).strict();
 
 export const EntityUpdateSchema = EntityCreateSchema.partial().refine(
@@ -56,4 +65,6 @@ export const RelationshipCreateSchema = z.object({
   type: RelationshipTypeSchema,
   description: z.string().max(200_000).optional(),
   weight: z.number().min(0).max(1_000).optional(),
+  valid_from: IsoTimestampSchema.optional(),
+  valid_until: IsoTimestampSchema.optional(),
 }).strict();

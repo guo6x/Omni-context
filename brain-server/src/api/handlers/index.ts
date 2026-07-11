@@ -289,6 +289,14 @@ export const handleEntityRoutes = [
         description: body.description,
         tags: body.tags,
         metadata: body.metadata,
+        observed_at: body.observed_at,
+        recorded_at: body.recorded_at,
+        event_time: body.event_time,
+        valid_from: body.valid_from,
+        valid_until: body.valid_until,
+        temporal_confidence: body.temporal_confidence,
+        temporal_source: body.temporal_source,
+        timezone: body.timezone,
       });
       sendResponse(res, 201, entity);
     }
@@ -358,6 +366,8 @@ export const handleEntityRoutes = [
         type: body.type,
         description: body.description,
         weight: body.weight,
+        valid_from: body.valid_from,
+        valid_until: body.valid_until,
       });
       sendResponse(res, 201, relationship);
     }

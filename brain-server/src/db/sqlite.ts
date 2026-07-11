@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
-import { Entity, Relationship, SINGLE_VALUED_REL_TYPES } from '../shared-types.js';
+import { Assertion, AssertionInput, Entity, Relationship, SINGLE_VALUED_REL_TYPES } from '../shared-types.js';
 import { cosineSimilarity, encodeEmbedding, decodeEmbedding } from '../utils/math.js';
 import * as sqliteVec from 'sqlite-vec';
 import { ENTITY_TYPES, NOTIFICATION_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
@@ -301,6 +301,68 @@ const MIGRATIONS: Migration[] = [
       BEGIN SELECT RAISE(ABORT, 'invalid notification type'); END;
     `,
   },
+  {
+    version: 15,
+    name: 'add_temporal_assertions',
+    up: `
+      ALTER TABLE entities ADD COLUMN observed_at TEXT;
+      ALTER TABLE entities ADD COLUMN recorded_at TEXT;
+      ALTER TABLE entities ADD COLUMN event_time TEXT;
+      ALTER TABLE entities ADD COLUMN valid_from TEXT;
+      ALTER TABLE entities ADD COLUMN valid_until TEXT;
+      ALTER TABLE entities ADD COLUMN temporal_confidence REAL;
+      ALTER TABLE entities ADD COLUMN temporal_source TEXT;
+      ALTER TABLE entities ADD COLUMN timezone TEXT;
+
+      UPDATE entities
+      SET recorded_at = COALESCE(recorded_at, created_at),
+          valid_from = COALESCE(valid_from, created_at);
+
+      CREATE TABLE IF NOT EXISTS assertions (
+        id TEXT PRIMARY KEY,
+        subject_id TEXT NOT NULL,
+        predicate TEXT NOT NULL,
+        object_id TEXT,
+        literal_value TEXT,
+        confidence REAL NOT NULL DEFAULT 1.0 CHECK(confidence >= 0 AND confidence <= 1),
+        source_span TEXT,
+        provenance TEXT,
+        observed_at TEXT,
+        recorded_at TEXT NOT NULL,
+        event_time TEXT,
+        valid_from TEXT NOT NULL,
+        valid_until TEXT,
+        temporal_confidence REAL CHECK(temporal_confidence IS NULL OR (temporal_confidence >= 0 AND temporal_confidence <= 1)),
+        temporal_source TEXT,
+        timezone TEXT,
+        invalidated_at TEXT,
+        invalidation_reason TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        CHECK((object_id IS NOT NULL) != (literal_value IS NOT NULL)),
+        FOREIGN KEY(subject_id) REFERENCES entities(id) ON DELETE CASCADE,
+        FOREIGN KEY(object_id) REFERENCES entities(id) ON DELETE RESTRICT
+      );
+      CREATE INDEX IF NOT EXISTS idx_assertions_subject_predicate ON assertions(subject_id, predicate);
+      CREATE INDEX IF NOT EXISTS idx_assertions_object ON assertions(object_id);
+      CREATE INDEX IF NOT EXISTS idx_assertions_validity ON assertions(valid_from, valid_until);
+      CREATE INDEX IF NOT EXISTS idx_assertions_recorded ON assertions(recorded_at);
+
+      INSERT OR IGNORE INTO assertions (
+        id, subject_id, predicate, object_id, confidence, source_span, provenance,
+        recorded_at, valid_from, valid_until, invalidated_at, invalidation_reason,
+        created_at, updated_at
+      )
+      SELECT
+        'relationship:' || id, source_id, type, target_id,
+        CASE WHEN weight < 0 THEN 0 WHEN weight > 1 THEN 1 ELSE weight END,
+        description,
+        '{"migration":"relationships_v15","relationship_id":"' || replace(id, '"', '') || '"}',
+        created_at, COALESCE(valid_from, created_at), valid_until, invalidated_at,
+        invalidation_reason, created_at, COALESCE(last_activated, created_at)
+      FROM relationships;
+    `,
+  },
 ];
 
 interface Migration {
@@ -408,13 +470,20 @@ export class Database {
           continue;
         }
         try {
+          await this.exec('BEGIN IMMEDIATE;');
           await this.exec(migration.up);
           await this.run(
             'INSERT INTO migrations (name) VALUES (?)',
             [migration.name]
           );
+          await this.exec('COMMIT;');
           console.log(`Migration applied: ${migration.name}`);
         } catch (error) {
+          try {
+            await this.exec('ROLLBACK;');
+          } catch (rollbackError) {
+            console.error(`Migration rollback failed: ${migration.name}`, rollbackError);
+          }
           console.error(`Migration failed: ${migration.name}`, error);
           throw error;
         }
@@ -433,10 +502,16 @@ export class Database {
     const embeddingBlob = entity.embedding ? encodeEmbedding(entity.embedding) : null;
 
     await this.run(
-      `INSERT INTO entities (id, name, type, description, source_file, tags, embedding, metadata, created_at, updated_at, last_accessed, access_count)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO entities (
+        id, name, type, description, source_file, tags, embedding, metadata,
+        created_at, updated_at, last_accessed, access_count, observed_at, recorded_at,
+        event_time, valid_from, valid_until, temporal_confidence, temporal_source, timezone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, entity.name, entity.type, entity.description || null, entity.source_file || null,
-       tagsStr, embeddingBlob, metadataStr, now, now, now, entity.access_count || 0]
+       tagsStr, embeddingBlob, metadataStr, now, now, now, entity.access_count || 0,
+       entity.observed_at || null, entity.recorded_at || now, entity.event_time || null,
+       entity.valid_from || entity.event_time || entity.observed_at || now, entity.valid_until || null,
+       entity.temporal_confidence ?? null, entity.temporal_source || null, entity.timezone || null]
     );
 
     // 同步向量到 sqlite-vec 虚拟表
@@ -460,6 +535,14 @@ export class Database {
       metadata: entity.metadata,
       last_accessed: now,
       access_count: entity.access_count || 0,
+      observed_at: entity.observed_at,
+      recorded_at: entity.recorded_at || now,
+      event_time: entity.event_time,
+      valid_from: entity.valid_from || entity.event_time || entity.observed_at || now,
+      valid_until: entity.valid_until,
+      temporal_confidence: entity.temporal_confidence,
+      temporal_source: entity.temporal_source,
+      timezone: entity.timezone,
     };
   }
 
@@ -966,6 +1049,16 @@ export class Database {
       fields.push('access_count = ?');
       values.push(updates.access_count);
     }
+    const temporalFields = [
+      'observed_at', 'recorded_at', 'event_time', 'valid_from', 'valid_until',
+      'temporal_confidence', 'temporal_source', 'timezone',
+    ] as const;
+    for (const field of temporalFields) {
+      if (updates[field] !== undefined) {
+        fields.push(`${field} = ?`);
+        values.push(updates[field]);
+      }
+    }
 
     if (fields.length === 0) return;
 
@@ -1222,6 +1315,120 @@ export class Database {
       invalidated_at: row.invalidated_at || undefined,
       invalidation_reason: row.invalidation_reason || undefined,
     }));
+  }
+
+  async addAssertion(input: AssertionInput): Promise<Assertion> {
+    if (!/^[a-z][a-z0-9_:.\/-]{0,127}$/i.test(input.predicate)) {
+      throw new Error('invalid assertion predicate');
+    }
+    if ((input.object_id == null) === (input.literal_value == null)) {
+      throw new Error('assertion requires exactly one of object_id or literal_value');
+    }
+    const confidence = input.confidence ?? 1;
+    if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
+      throw new Error('assertion confidence must be between 0 and 1');
+    }
+    if (input.temporal_confidence != null
+      && (!Number.isFinite(input.temporal_confidence)
+        || input.temporal_confidence < 0
+        || input.temporal_confidence > 1)) {
+      throw new Error('temporal confidence must be between 0 and 1');
+    }
+
+    const id = input.id || uuidv4();
+    const now = new Date().toISOString();
+    const recordedAt = input.recorded_at || now;
+    const validFrom = input.valid_from || input.event_time || input.observed_at || recordedAt;
+    await this.run(
+      `INSERT INTO assertions (
+        id, subject_id, predicate, object_id, literal_value, confidence, source_span, provenance,
+        observed_at, recorded_at, event_time, valid_from, valid_until, temporal_confidence,
+        temporal_source, timezone, invalidated_at, invalidation_reason, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id, input.subject_id, input.predicate, input.object_id || null, input.literal_value || null,
+        confidence, input.source_span || null,
+        input.provenance ? JSON.stringify(input.provenance) : null,
+        input.observed_at || null, recordedAt, input.event_time || null, validFrom,
+        input.valid_until || null, input.temporal_confidence ?? null, input.temporal_source || null,
+        input.timezone || null, input.invalidated_at || null, input.invalidation_reason || null,
+        now, now,
+      ],
+    );
+    return {
+      ...input,
+      id,
+      confidence,
+      recorded_at: recordedAt,
+      valid_from: validFrom,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  async getAssertions(options: {
+    subjectId?: string;
+    predicate?: string;
+    asOf?: string;
+    includeHistorical?: boolean;
+    limit?: number;
+  } = {}): Promise<Assertion[]> {
+    const clauses: string[] = [];
+    const params: unknown[] = [];
+    if (options.subjectId) {
+      clauses.push('subject_id = ?');
+      params.push(options.subjectId);
+    }
+    if (options.predicate) {
+      clauses.push('predicate = ?');
+      params.push(options.predicate);
+    }
+    if (!options.includeHistorical) {
+      const asOf = options.asOf || new Date().toISOString();
+      clauses.push('valid_from <= ?');
+      clauses.push('(valid_until IS NULL OR valid_until > ?)');
+      params.push(asOf, asOf);
+    }
+    const where = clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '';
+    params.push(Math.max(1, Math.min(options.limit || 200, 1000)));
+    const rows = await this.all<any>(
+      `SELECT * FROM assertions ${where} ORDER BY valid_from DESC, recorded_at DESC LIMIT ?`,
+      params,
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      subject_id: row.subject_id,
+      predicate: row.predicate,
+      object_id: row.object_id || undefined,
+      literal_value: row.literal_value || undefined,
+      confidence: row.confidence,
+      source_span: row.source_span || undefined,
+      provenance: row.provenance ? JSON.parse(row.provenance) : undefined,
+      observed_at: row.observed_at || undefined,
+      recorded_at: row.recorded_at,
+      event_time: row.event_time || undefined,
+      valid_from: row.valid_from,
+      valid_until: row.valid_until || undefined,
+      temporal_confidence: row.temporal_confidence ?? undefined,
+      temporal_source: row.temporal_source || undefined,
+      timezone: row.timezone || undefined,
+      invalidated_at: row.invalidated_at || undefined,
+      invalidation_reason: row.invalidation_reason || undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
+  }
+
+  async invalidateAssertion(id: string, reason: string, validUntil?: string): Promise<void> {
+    const now = new Date().toISOString();
+    const result = await this.run(
+      `UPDATE assertions
+       SET valid_until = COALESCE(?, valid_until, ?), invalidated_at = ?,
+           invalidation_reason = ?, updated_at = ?
+       WHERE id = ? AND invalidated_at IS NULL`,
+      [validUntil || null, now, now, reason, now, id],
+    );
+    if (result.changes === 0) throw new Error('assertion not found or already invalidated');
   }
 
   async peekEntities(ids: string[]): Promise<Entity[]> {
@@ -1687,6 +1894,14 @@ export class Database {
       metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
       last_accessed: row.last_accessed,
       access_count: row.access_count,
+      observed_at: row.observed_at || undefined,
+      recorded_at: row.recorded_at || undefined,
+      event_time: row.event_time || undefined,
+      valid_from: row.valid_from || undefined,
+      valid_until: row.valid_until || undefined,
+      temporal_confidence: row.temporal_confidence ?? undefined,
+      temporal_source: row.temporal_source || undefined,
+      timezone: row.timezone || undefined,
     };
   }
 
