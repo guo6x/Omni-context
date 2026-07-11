@@ -12,12 +12,15 @@ interface HardwarePairingPanelProps {
 }
 
 interface DeviceInfo {
-  ip: string;
-  last_seen: string;
-  last_command: string;
+  device_id: string;
+  ip: string | null;
+  last_seen: string | null;
+  last_command: string | null;
   packets: number;
   paired: boolean;
   alias: string | null;
+  key_version: number;
+  revoked_at: string | null;
 }
 
 const REFRESH_INTERVAL_MS = 2000;
@@ -27,9 +30,10 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pairingIp, setPairingIp] = useState<string | null>(null);
+  const [deviceIdDraft, setDeviceIdDraft] = useState("");
+  const [credentialDraft, setCredentialDraft] = useState("");
   const [aliasDraft, setAliasDraft] = useState<string>("");
-  const [busyIp, setBusyIp] = useState<string | null>(null);
+  const [busyDeviceId, setBusyDeviceId] = useState<string | null>(null);
   // 强制定期刷新相对时间显示
   const [, setTick] = useState(0);
   const { t } = useTranslation();
@@ -85,58 +89,53 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
     };
   }, [isOpen, refresh]);
 
-  const handleStartPair = (ip: string) => {
-    setPairingIp(ip);
-    setAliasDraft("");
-  };
-
-  const handleConfirmPair = async (ip: string) => {
-    setBusyIp(ip);
+  const handleConfirmPair = async () => {
+    const deviceId = deviceIdDraft.trim();
+    const credential = credentialDraft.trim();
+    if (!deviceId || !credential) return;
+    setBusyDeviceId(deviceId);
     try {
       const alias = aliasDraft.trim();
       await invoke("pair_hardware_device", {
-        ip,
+        deviceId,
+        credential,
         alias: alias.length > 0 ? alias : null,
       });
-      toast.success(t('toast.hw_pair_success'), alias ? t('toast.hw_pair_success_detail').replace('{ip}', ip).replace('{alias}', alias) : t('toast.hw_pair_success_simple').replace('{ip}', ip));
-      setPairingIp(null);
+      toast.success(t('toast.hw_pair_success'), deviceId);
+      setDeviceIdDraft("");
+      setCredentialDraft("");
       setAliasDraft("");
       await refresh();
     } catch (e) {
       toast.error(t('toast.hw_pair_failed'), String(e));
     } finally {
-      setBusyIp(null);
+      setBusyDeviceId(null);
     }
   };
 
-  const handleCancelPair = () => {
-    setPairingIp(null);
-    setAliasDraft("");
-  };
-
-  const handleUnpair = async (ip: string) => {
-    setBusyIp(ip);
+  const handleUnpair = async (deviceId: string) => {
+    setBusyDeviceId(deviceId);
     try {
-      await invoke("unpair_hardware_device", { ip });
-      toast.success(t('toast.hw_unpaired'), ip);
+      await invoke("unpair_hardware_device", { deviceId });
+      toast.success(t('toast.hw_unpaired'), deviceId);
       await refresh();
     } catch (e) {
       toast.error(t('toast.hw_unpair_failed'), String(e));
     } finally {
-      setBusyIp(null);
+      setBusyDeviceId(null);
     }
   };
 
-  const handleForget = async (ip: string) => {
-    setBusyIp(ip);
+  const handleForget = async (deviceId: string) => {
+    setBusyDeviceId(deviceId);
     try {
-      await invoke("forget_hardware_device", { ip });
-      toast.success(t('toast.hw_forgotten'), ip);
+      await invoke("forget_hardware_device", { deviceId });
+      toast.success(t('toast.hw_forgotten'), deviceId);
       await refresh();
     } catch (e) {
       toast.error(t('toast.hw_forget_failed'), String(e));
     } finally {
-      setBusyIp(null);
+      setBusyDeviceId(null);
     }
   };
 
@@ -189,6 +188,57 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
             </div>
           )}
 
+          <form
+            className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4 space-y-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleConfirmPair();
+            }}
+          >
+            <div className="flex items-center gap-2 text-sm text-cyan-100">
+              <LinkIcon className="h-4 w-4" />
+              Secure device pairing
+            </div>
+            <p className="text-xs leading-5 text-gray-400">
+              Enter the device ID and one-time credential shown on the ESP32 serial console. The credential is stored locally and never displayed again.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <input
+                value={deviceIdDraft}
+                onChange={(event) => setDeviceIdDraft(event.target.value)}
+                placeholder="Device ID"
+                autoComplete="off"
+                maxLength={128}
+                className="px-3 py-2 text-xs rounded-lg bg-black/40 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50"
+              />
+              <input
+                value={credentialDraft}
+                onChange={(event) => setCredentialDraft(event.target.value)}
+                placeholder="64-character credential"
+                type="password"
+                autoComplete="new-password"
+                maxLength={256}
+                className="px-3 py-2 text-xs rounded-lg bg-black/40 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50"
+              />
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={aliasDraft}
+                onChange={(event) => setAliasDraft(event.target.value)}
+                placeholder={t('hardware.alias_placeholder')}
+                maxLength={64}
+                className="flex-1 px-3 py-2 text-xs rounded-lg bg-black/40 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50"
+              />
+              <button
+                type="submit"
+                disabled={!deviceIdDraft.trim() || credentialDraft.trim().length < 64 || busyDeviceId !== null}
+                className="px-4 py-2 text-xs rounded-lg border border-cyan-500/30 bg-cyan-500/20 text-cyan-100 hover:bg-cyan-500/30 disabled:opacity-40"
+              >
+                {t('hardware.confirm')}
+              </button>
+            </div>
+          </form>
+
           {devices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center text-gray-400">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/5">
@@ -201,11 +251,10 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
             </div>
           ) : (
             devices.map((dev) => {
-              const isBusy = busyIp === dev.ip;
-              const isPairing = pairingIp === dev.ip;
+              const isBusy = busyDeviceId === dev.device_id;
               return (
                 <div
-                  key={dev.ip}
+                  key={dev.device_id}
                   className={`rounded-xl border p-4 transition-colors ${
                     dev.paired
                       ? "border-cyan-500/40 bg-cyan-500/5"
@@ -215,7 +264,7 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-sm text-white">{dev.ip}</span>
+                        <span className="font-mono text-sm text-white">{dev.device_id}</span>
                         {dev.alias && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                             {dev.alias}
@@ -232,39 +281,30 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
                           <span className="text-gray-500">{t('hardware.last_seen')}</span>
                           <div
                             className="text-gray-300 mt-0.5"
-                            title={new Date(dev.last_seen).toLocaleString()}
+                            title={dev.last_seen ? new Date(dev.last_seen).toLocaleString() : undefined}
                           >
-                            {formatRelative(dev.last_seen)}
+                            {dev.last_seen ? formatRelative(dev.last_seen) : "—"}
                           </div>
                         </div>
                         <div>
                           <span className="text-gray-500">{t('hardware.last_command')}</span>
-                          <div className="text-gray-300 mt-0.5 font-mono truncate" title={dev.last_command}>
+                          <div className="text-gray-300 mt-0.5 font-mono truncate" title={dev.last_command ?? undefined}>
                             {dev.last_command || "—"}
                           </div>
                         </div>
                         <div>
                           <span className="text-gray-500">{t('hardware.packets')}</span>
-                          <div className="text-gray-300 mt-0.5">{dev.packets}</div>
+                          <div className="text-gray-300 mt-0.5">{dev.packets} · key v{dev.key_version}</div>
                         </div>
                       </div>
+                      {dev.ip && <div className="mt-2 font-mono text-[11px] text-gray-500">{dev.ip}</div>}
                     </div>
 
                     <div className="flex shrink-0 items-center gap-2">
-                      {!dev.paired && !isPairing && (
-                        <button
-                          onClick={() => handleStartPair(dev.ip)}
-                          disabled={isBusy}
-                          className="px-3 py-1.5 text-xs rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20 transition-colors disabled:opacity-40 flex items-center gap-1.5"
-                        >
-                          <LinkIcon className="w-3.5 h-3.5" />
-                          {t('hardware.pair')}
-                        </button>
-                      )}
                       {dev.paired && (
                         <>
                           <button
-                            onClick={() => handleUnpair(dev.ip)}
+                            onClick={() => handleUnpair(dev.device_id)}
                             disabled={isBusy}
                             className="px-3 py-1.5 text-xs rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 transition-colors disabled:opacity-40 flex items-center gap-1.5"
                           >
@@ -272,7 +312,7 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
                             {t('hardware.unpair')}
                           </button>
                           <button
-                            onClick={() => handleForget(dev.ip)}
+                            onClick={() => handleForget(dev.device_id)}
                             disabled={isBusy}
                             className="p-1.5 text-xs rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors disabled:opacity-40"
                             title={t('hardware.remove_from_list')}
@@ -283,7 +323,7 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
                       )}
                       {!dev.paired && (
                         <button
-                          onClick={() => handleForget(dev.ip)}
+                          onClick={() => handleForget(dev.device_id)}
                           disabled={isBusy}
                           className="p-1.5 text-xs rounded-lg border border-white/10 bg-white/5 text-gray-400 hover:text-red-300 hover:border-red-500/30 hover:bg-red-500/10 transition-colors disabled:opacity-40"
                           title={t('hardware.remove_from_list')}
@@ -293,38 +333,6 @@ export default function HardwarePairingPanel({ isOpen, onClose }: HardwarePairin
                       )}
                     </div>
                   </div>
-
-                  {isPairing && (
-                    <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-2">
-                      <input
-                        type="text"
-                        autoFocus
-                        value={aliasDraft}
-                        onChange={(e) => setAliasDraft(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleConfirmPair(dev.ip);
-                          else if (e.key === "Escape") handleCancelPair();
-                        }}
-                        placeholder={t('hardware.alias_placeholder')}
-                        maxLength={64}
-                        className="flex-1 px-3 py-1.5 text-xs rounded-lg bg-black/40 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50"
-                      />
-                      <button
-                        onClick={() => handleConfirmPair(dev.ip)}
-                        disabled={isBusy}
-                        className="px-3 py-1.5 text-xs rounded-lg border border-cyan-500/30 bg-cyan-500/20 text-cyan-200 hover:bg-cyan-500/30 transition-colors disabled:opacity-40"
-                      >
-                        {t('hardware.confirm')}
-                      </button>
-                      <button
-                        onClick={handleCancelPair}
-                        disabled={isBusy}
-                        className="px-3 py-1.5 text-xs rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 transition-colors disabled:opacity-40"
-                      >
-                        {t('hardware.cancel')}
-                      </button>
-                    </div>
-                  )}
                 </div>
               );
             })

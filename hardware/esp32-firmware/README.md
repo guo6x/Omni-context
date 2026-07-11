@@ -140,9 +140,12 @@ connect                  # 连接 WiFi
 
 ```json
 {
+  "version": 1,
+  "device_id": "esp32-001122aabbcc",
   "action": "precipitate",
-  "timestamp": 12345678,
-  "device": "esp32"
+  "timestamp": 1783785600,
+  "nonce": "00112233445566778899aabbccddeeff",
+  "signature": "HMAC-SHA256 hex"
 }
 ```
 
@@ -174,7 +177,7 @@ upload_protocol = espota
 upload_port = 192.168.1.xxx  ; ESP32 的 IP
 upload_flags = 
     --port=3232
-    --auth=omni2024
+    --auth=${sysenv.OMNI_HW_CREDENTIAL}
 ```
 
 然后执行:
@@ -191,7 +194,7 @@ pio run --target upload
 ### OTA 认证
 
 - 主机名: `omni-context-esp32`
-- 密码: `omni2024`
+- 密码: 设备首次启动随机生成的 32 字节配对凭据（固件不会使用默认密码）
 - 端口: `3232`
 
 ## 故障排除

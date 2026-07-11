@@ -125,6 +125,14 @@ async fn main() {
             _ => {}
         })
         .setup(|app| {
+            let hardware_registry_path = app
+                .path_resolver()
+                .app_data_dir()
+                .ok_or_else(|| anyhow::anyhow!("unable to resolve app data directory"))?
+                .join("hardware-devices.json");
+            hardware::initialize_registry(hardware_registry_path)
+                .map_err(anyhow::Error::msg)?;
+
             // Brain Server 冷启动可能需要几十秒加载数据库和索引，放到后台避免桌面窗口卡住。
             let startup_handle = app.app_handle().clone();
             std::thread::spawn(move || {

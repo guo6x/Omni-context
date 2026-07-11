@@ -20,18 +20,25 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
+#include <esp_system.h>
+#include <mbedtls/md.h>
+#include <time.h>
 
 #define FIRMWARE_VERSION "1.0.0"
 
 #define EEPROM_SIZE 512
 #define EEPROM_SSID_ADDR 0
 #define EEPROM_PASS_ADDR 64
-#define EEPROM_HOST_ADDR 128
-#define EEPROM_MAGIC_ADDR 192
+#define EEPROM_HOST_ADDR 160
+#define EEPROM_DEVICE_ID_ADDR 224
+#define EEPROM_SECRET_ADDR 272
+#define EEPROM_MAGIC_ADDR 400
 
 #define MAX_SSID_LEN 32
-#define MAX_PASS_LEN 32
+#define MAX_PASS_LEN 64
 #define MAX_HOST_LEN 32
+#define MAX_DEVICE_ID_LEN 32
+#define SECRET_HEX_LEN 64
 
 struct ButtonConfig {
   uint8_t pin;
@@ -52,6 +59,8 @@ struct Config {
   char ssid[MAX_SSID_LEN + 1];
   char password[MAX_PASS_LEN + 1];
   char udpHost[MAX_HOST_LEN + 1];
+  char deviceId[MAX_DEVICE_ID_LEN + 1];
+  char deviceSecret[SECRET_HEX_LEN + 1];
   uint16_t udpPort;
 };
 
@@ -97,8 +106,9 @@ void handleWiFi();
 void handleButtons();
 void handleHeartbeat();
 void handleOTA();
-void sendUDP(const char* message);
-void sendUDPWithTimestamp(const char* action);
+void sendSignedUDP(const char* action);
+void generateDeviceCredential();
+bool signPayload(const char* payload, char* output, size_t outputSize);
 void flashLED(int times, int delayMs);
 void setLEDState(bool on);
 void blinkLED(int pattern);
@@ -160,14 +170,27 @@ void loadConfig() {
     strcpy(config.ssid, "");
     strcpy(config.password, "");
     strcpy(config.udpHost, "192.168.1.100");
+    generateDeviceCredential();
     config.udpPort = DEFAULT_UDP_PORT;
     saveConfig();
+    Serial.println("一次性硬件配对信息（请立即保存，之后不会自动显示）:");
+    Serial.print("  Device ID: ");
+    Serial.println(config.deviceId);
+    Serial.print("  Credential: ");
+    Serial.println(config.deviceSecret);
     return;
   }
   
   EEPROM.readString(EEPROM_SSID_ADDR, config.ssid, MAX_SSID_LEN + 1);
   EEPROM.readString(EEPROM_PASS_ADDR, config.password, MAX_PASS_LEN + 1);
   EEPROM.readString(EEPROM_HOST_ADDR, config.udpHost, MAX_HOST_LEN + 1);
+  EEPROM.readString(EEPROM_DEVICE_ID_ADDR, config.deviceId, MAX_DEVICE_ID_LEN + 1);
+  EEPROM.readString(EEPROM_SECRET_ADDR, config.deviceSecret, SECRET_HEX_LEN + 1);
+  if (strlen(config.deviceId) == 0 || strlen(config.deviceSecret) != SECRET_HEX_LEN) {
+    generateDeviceCredential();
+    saveConfig();
+    Serial.println("设备凭据已生成。执行串口命令 'rotate-key' 可生成并显示新的配对凭据。");
+  }
   config.udpPort = DEFAULT_UDP_PORT;
   
   Serial.println("配置已从EEPROM加载");
@@ -177,6 +200,8 @@ void saveConfig() {
   EEPROM.writeString(EEPROM_SSID_ADDR, config.ssid);
   EEPROM.writeString(EEPROM_PASS_ADDR, config.password);
   EEPROM.writeString(EEPROM_HOST_ADDR, config.udpHost);
+  EEPROM.writeString(EEPROM_DEVICE_ID_ADDR, config.deviceId);
+  EEPROM.writeString(EEPROM_SECRET_ADDR, config.deviceSecret);
   
   uint32_t magic = 0xDEADBEEF;
   EEPROM.put(EEPROM_MAGIC_ADDR, magic);
@@ -195,6 +220,18 @@ void printConfig() {
   Serial.println(config.udpHost);
   Serial.print("  UDP端口: ");
   Serial.println(config.udpPort);
+  Serial.print("  Device ID: ");
+  Serial.println(config.deviceId);
+  Serial.println("  Credential: [已隐藏]");
+}
+
+void generateDeviceCredential() {
+  uint64_t chipId = ESP.getEfuseMac();
+  snprintf(config.deviceId, sizeof(config.deviceId), "esp32-%012llx", chipId);
+  for (int index = 0; index < SECRET_HEX_LEN / 8; index++) {
+    snprintf(config.deviceSecret + (index * 8), 9, "%08lx", (unsigned long)esp_random());
+  }
+  config.deviceSecret[SECRET_HEX_LEN] = '\0';
 }
 
 void initButtons() {
@@ -248,13 +285,13 @@ void initWiFi() {
   Serial.println(config.udpPort);
   
   initOTA();
-  
-  sendUDP("device_online");
+  configTime(0, 0, "pool.ntp.org", "time.cloudflare.com");
+  sendSignedUDP("heartbeat");
 }
 
 void initOTA() {
   ArduinoOTA.setHostname("omni-context-esp32");
-  ArduinoOTA.setPassword("omni2024");
+  ArduinoOTA.setPassword(config.deviceSecret);
   
   ArduinoOTA.onStart([]() {
     Serial.println("OTA更新开始...");
@@ -287,7 +324,7 @@ void initOTA() {
   otaEnabled = true;
   Serial.println("OTA服务已启动");
   Serial.println("OTA主机名: omni-context-esp32");
-  Serial.println("OTA密码: omni2024");
+  Serial.println("OTA认证使用设备随机凭据（已隐藏）");
 }
 
 void handleWiFi() {
@@ -316,7 +353,7 @@ void handleWiFi() {
       wifiConnected = true;
       wifiStatus = WIFI_CONNECTED;
       setLEDState(true);
-      sendUDP("device_reconnected");
+      sendSignedUDP("heartbeat");
     }
   }
 }
@@ -348,7 +385,7 @@ void handleButtons() {
             Serial.print(" -> 发送: ");
             Serial.println(buttons[i].action);
             
-            sendUDPWithTimestamp(buttons[i].action);
+            sendSignedUDP(buttons[i].action);
             flashLED(buttons[i].ledFlashes, buttons[i].ledDelay);
           }
         }
@@ -364,7 +401,7 @@ void handleHeartbeat() {
   
   if (currentTime - lastHeartbeat > HEARTBEAT_INTERVAL) {
     lastHeartbeat = currentTime;
-    sendUDP("heartbeat");
+    sendSignedUDP("heartbeat");
     Serial.println("心跳发送");
   }
 }
@@ -375,29 +412,62 @@ void handleOTA() {
   }
 }
 
-void sendUDP(const char* message) {
-  if (!wifiConnected) return;
-  
-  udp.beginPacket(config.udpHost, config.udpPort);
-  udp.write((const uint8_t*)message, strlen(message));
-  udp.endPacket();
+bool signPayload(const char* payload, char* output, size_t outputSize) {
+  if (outputSize < 65) return false;
+  unsigned char digest[32];
+  unsigned char secret[32];
+  for (int index = 0; index < 32; index++) {
+    char pair[3] = {config.deviceSecret[index * 2], config.deviceSecret[index * 2 + 1], '\0'};
+    char* end = nullptr;
+    unsigned long value = strtoul(pair, &end, 16);
+    if (end == pair || *end != '\0') return false;
+    secret[index] = (unsigned char)value;
+  }
+  const mbedtls_md_info_t* md = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+  if (md == nullptr) return false;
+  int result = mbedtls_md_hmac(md,
+    secret, sizeof(secret),
+    (const unsigned char*)payload, strlen(payload), digest);
+  if (result != 0) return false;
+  for (int index = 0; index < 32; index++) {
+    snprintf(output + (index * 2), 3, "%02x", digest[index]);
+  }
+  output[64] = '\0';
+  return true;
 }
 
-void sendUDPWithTimestamp(const char* action) {
+void sendSignedUDP(const char* action) {
   if (!wifiConnected) return;
-  
-  char buffer[128];
-  unsigned long timestamp = millis();
-  
-  snprintf(buffer, sizeof(buffer), "{\"action\":\"%s\",\"timestamp\":%lu,\"device\":\"esp32\"}", 
-           action, timestamp);
+
+  time_t timestamp = time(nullptr);
+  if (timestamp < 1700000000) {
+    Serial.println("系统时间尚未同步，安全起见暂不发送硬件动作");
+    return;
+  }
+  char nonce[33];
+  for (int index = 0; index < 4; index++) {
+    snprintf(nonce + (index * 8), 9, "%08lx", (unsigned long)esp_random());
+  }
+  nonce[32] = '\0';
+  char canonical[256];
+  snprintf(canonical, sizeof(canonical), "1|%s|%s|%lld|%s",
+           config.deviceId, action, (long long)timestamp, nonce);
+  char signature[65];
+  if (!signPayload(canonical, signature, sizeof(signature))) {
+    Serial.println("消息签名失败");
+    return;
+  }
+  char buffer[512];
+  snprintf(buffer, sizeof(buffer),
+    "{\"version\":1,\"device_id\":\"%s\",\"action\":\"%s\",\"timestamp\":%lld,\"nonce\":\"%s\",\"signature\":\"%s\"}",
+    config.deviceId, action, (long long)timestamp, nonce, signature);
   
   udp.beginPacket(config.udpHost, config.udpPort);
   udp.write((const uint8_t*)buffer, strlen(buffer));
   udp.endPacket();
   
-  Serial.print("UDP发送: ");
-  Serial.println(buffer);
+  Serial.print("已发送签名动作: ");
+  Serial.println(action);
 }
 
 void flashLED(int times, int delayMs) {
@@ -488,7 +558,7 @@ void processSerialCommand(String command) {
     printHelp();
   }
   else if (command == "test") {
-    sendUDPWithTimestamp("test");
+    sendSignedUDP("heartbeat");
     flashLED(3, 100);
     Serial.println("测试消息已发送");
   }
@@ -496,8 +566,19 @@ void processSerialCommand(String command) {
     strcpy(config.ssid, "");
     strcpy(config.password, "");
     strcpy(config.udpHost, "192.168.1.100");
+    generateDeviceCredential();
     saveConfig();
     Serial.println("配置已清除");
+  }
+  else if (command == "rotate-key") {
+    generateDeviceCredential();
+    saveConfig();
+    ArduinoOTA.setPassword(config.deviceSecret);
+    Serial.println("凭据已轮换；旧桌面配对立即失效，请使用以下一次性信息重新配对:");
+    Serial.print("  Device ID: ");
+    Serial.println(config.deviceId);
+    Serial.print("  Credential: ");
+    Serial.println(config.deviceSecret);
   }
   else {
     Serial.println("未知命令，输入 'help' 查看帮助");
@@ -545,6 +626,7 @@ void printHelp() {
   Serial.println("  test           - 发送测试消息");
   Serial.println("  restart        - 重启设备");
   Serial.println("  clear          - 清除配置");
+  Serial.println("  rotate-key     - 轮换设备/OTA凭据并显示一次性配对信息");
   Serial.println("  help           - 显示此帮助");
 }
 

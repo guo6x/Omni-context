@@ -1,4 +1,4 @@
-use crate::hardware;
+use crate::hardware::{self, HardwareAction};
 use crate::ButtonEvent;
 use anyhow::Result;
 use tokio::net::UdpSocket;
@@ -7,8 +7,7 @@ use tokio::sync::mpsc::Sender;
 pub async fn start_udp_listener(event_tx: Sender<ButtonEvent>) -> Result<()> {
     // 默认仅监听本机回环，避免 LAN 上任意进程都能触发截图/剪贴板读取。
     // 如需接入物理硬件按钮等远端触发器，显式 export OMNI_UDP_BIND=0.0.0.0:9090。
-    let bind_addr =
-        std::env::var("OMNI_UDP_BIND").unwrap_or_else(|_| "127.0.0.1:9090".to_string());
+    let bind_addr = std::env::var("OMNI_UDP_BIND").unwrap_or_else(|_| "127.0.0.1:9090".to_string());
     // 端口冲突时（如用户开了多个实例）不要把整个 spawn 任务带挂，而是
     // 打印明确提示并优雅退出 — 应用其他模块继续工作。
     let socket = match UdpSocket::bind(&bind_addr).await {
@@ -22,28 +21,26 @@ pub async fn start_udp_listener(event_tx: Sender<ButtonEvent>) -> Result<()> {
         }
     };
     println!("UDP 监听器已启动 ({})", bind_addr);
-    
-    let mut buf = [0; 1024];
-    
+
+    let mut buf = [0; 2048];
+
     loop {
         match socket.recv_from(&mut buf).await {
             Ok((len, addr)) => {
-                let msg = String::from_utf8_lossy(&buf[..len]);
-                let trimmed = msg.trim();
-                println!("收到来自 {} 的消息: {}", addr, trimmed);
-
-                // 任何 UDP 包都登记到硬件注册表，便于 UI 端做发现与配对。
-                let ip_str = addr.ip().to_string();
-                hardware::record_packet(&ip_str, trimmed);
-
-                let event = match trimmed {
-                    "precipitate" => ButtonEvent::Precipitate,
-                    "decision" => ButtonEvent::Decision,
-                    "reset" => ButtonEvent::Reset,
-                    _ => {
-                        println!("未知命令: {}", trimmed);
+                let action = match hardware::verify_packet(&buf[..len], &addr.ip().to_string()) {
+                    Ok(action) => action,
+                    Err(error) => {
+                        // Never log packet contents: they contain an authentication signature.
+                        eprintln!("[UDP Listener] rejected packet from {}: {}", addr, error);
                         continue;
                     }
+                };
+
+                let event = match action {
+                    HardwareAction::Precipitate => ButtonEvent::Precipitate,
+                    HardwareAction::Decision => ButtonEvent::Decision,
+                    HardwareAction::Reset => ButtonEvent::Reset,
+                    HardwareAction::Heartbeat => continue,
                 };
 
                 if let Err(e) = event_tx.send(event).await {

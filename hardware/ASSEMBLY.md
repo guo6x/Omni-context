@@ -288,7 +288,7 @@ MAC地址: xx:xx:xx:xx:xx:xx
 UDP服务已启动，端口: 9090
 OTA服务已启动
 OTA主机名: omni-context-esp32
-OTA密码: omni2024
+OTA认证使用设备随机凭据（已隐藏）
 系统初始化完成
 ```
 
@@ -301,7 +301,7 @@ OTA密码: omni2024
 ```
 按键按下: 沉淀键
 按键释放: 沉淀键 -> 发送: precipitate
-UDP发送: {"action":"precipitate","timestamp":12345,"device":"esp32"}
+已发送签名动作: precipitate
 ```
 
 ### 测试 LED

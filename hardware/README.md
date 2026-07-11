@@ -141,11 +141,16 @@ connect
 
 ```json
 {
+  "version": 1,
+  "device_id": "esp32-001122aabbcc",
   "action": "precipitate",
-  "timestamp": 12345678,
-  "device": "esp32"
+  "timestamp": 1783785600,
+  "nonce": "00112233445566778899aabbccddeeff",
+  "signature": "HMAC-SHA256 hex"
 }
 ```
+
+完整的签名、配对、防重放和模拟器约定见 [`PROTOCOL.md`](PROTOCOL.md)。
 
 ### 支持的动作
 
