@@ -514,6 +514,23 @@ const MIGRATIONS: Migration[] = [
         ON assertion_conflict_audit(new_assertion_id, old_assertion_id);
     `,
   },
+  {
+    version: 19,
+    name: 'add_incremental_relationship_decay',
+    up: `
+      ALTER TABLE relationships ADD COLUMN base_weight REAL;
+      ALTER TABLE relationships ADD COLUMN last_decay_at TEXT;
+      ALTER TABLE relationships ADD COLUMN last_reinforced_at TEXT;
+      ALTER TABLE relationships ADD COLUMN reinforcement_reason TEXT;
+      ALTER TABLE relationships ADD COLUMN decay_version INTEGER NOT NULL DEFAULT 1;
+      UPDATE relationships
+      SET base_weight = COALESCE(base_weight, weight),
+          last_decay_at = COALESCE(last_decay_at, last_activated, created_at),
+          decay_version = 1;
+      CREATE INDEX IF NOT EXISTS idx_relationships_decay_due
+        ON relationships(last_decay_at, weight);
+    `,
+  },
 ];
 
 interface Migration {
@@ -1331,10 +1348,14 @@ export class Database {
     const invalidationReason = relationship.invalidation_reason || null;
 
     await this.run(
-      `INSERT OR REPLACE INTO relationships (id, source_id, target_id, type, description, weight, created_at, last_activated, valid_from, valid_until, invalidated_at, invalidation_reason)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO relationships (
+         id, source_id, target_id, type, description, weight, created_at,
+         last_activated, valid_from, valid_until, invalidated_at, invalidation_reason,
+         base_weight, last_decay_at, decay_version
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
       [id, relationship.source_id, relationship.target_id, relationship.type,
-       relationship.description || null, relationship.weight || 1.0, now, now, validFrom, validUntil, invalidatedAt, invalidationReason]
+       relationship.description || null, relationship.weight || 1.0, now, now, validFrom, validUntil,
+       invalidatedAt, invalidationReason, relationship.weight || 1.0, now]
     );
 
     // Relationships remain the graph compatibility view; every new edge also becomes

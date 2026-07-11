@@ -188,20 +188,20 @@ export class MemoryDecayScheduler {
     const relationships = await this.db.all<{
       id: string;
       weight: number;
-      last_activated: string;
-    }>(`SELECT id, weight, last_activated FROM relationships WHERE weight > ?`, [
+      last_decay_at: string;
+    }>(`SELECT id, weight, last_decay_at FROM relationships WHERE weight > ?`, [
       this.config.minWeight,
     ]);
 
     report.relationshipsProcessed = relationships.length;
     const now = Date.now();
+    const stamp = new Date(now).toISOString();
     const updates: Array<{ id: string; weight: number; dormant: boolean }> = [];
 
     for (const rel of relationships) {
-      const lastActivated = new Date(rel.last_activated).getTime();
-      const daysSince = (now - lastActivated) / (1000 * 60 * 60 * 24);
-
-      if (daysSince < 1) continue;
+      const lastDecay = new Date(rel.last_decay_at).getTime();
+      const daysSince = Math.max(0, (now - lastDecay) / (1000 * 60 * 60 * 24));
+      if (daysSince === 0) continue;
 
       const newWeight = rel.weight * Math.pow(this.config.decayFactor, daysSince);
       if (newWeight <= this.config.minWeight) {
@@ -211,14 +211,22 @@ export class MemoryDecayScheduler {
       }
     }
 
-    if (updates.length === 0) return;
-
     await this.db.withTransaction(async () => {
       for (const u of updates) {
-        await this.db.run('UPDATE relationships SET weight = ? WHERE id = ?', [u.weight, u.id]);
+        await this.db.run(
+          `UPDATE relationships
+           SET weight = ?, last_decay_at = ?, decay_version = 1
+           WHERE id = ?`,
+          [u.weight, stamp, u.id]
+        );
         if (u.dormant) report.relationshipsDormant++;
         else report.relationshipsDecayed++;
       }
+      await this.db.run(
+        `UPDATE relationships SET last_decay_at = ?
+         WHERE weight > ? AND (last_decay_at IS NULL OR last_decay_at < ?)`,
+        [stamp, this.config.minWeight, stamp]
+      );
     });
   }
 
@@ -262,11 +270,14 @@ export class MemoryDecayScheduler {
 
     await this.db.run(
       `UPDATE relationships
-       SET weight = MIN(weight * 1.01, 10.0)
+       SET weight = MIN(weight * 1.01, 10.0),
+           last_reinforced_at = ?,
+           reinforcement_reason = 'recent_endpoint_activation'
        WHERE source_id IN (SELECT id FROM entities WHERE last_accessed > ?)
        AND target_id IN (SELECT id FROM entities WHERE last_accessed > ?)
-       AND last_activated > ?`,
-      [cutoff, cutoff, cutoff]
+       AND last_activated > ?
+       AND (last_reinforced_at IS NULL OR last_activated > last_reinforced_at)`,
+      [new Date().toISOString(), cutoff, cutoff, cutoff]
     );
   }
 
