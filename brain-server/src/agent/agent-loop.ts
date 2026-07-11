@@ -237,14 +237,15 @@ export class AgentLoop {
 
   private async runCycle() {
     console.log('[AgentLoop] 唤醒，执行周期任务...');
+    const cycle = this.cycleCount++;
     try {
-      // 1. 获取未整合或更新待重整合的节点
-      const batch = await this.db.getEntitiesForConsolidation(5);
+      try {
+        // insight_generation / consolidation 独立任务
+        const batch = await this.db.getEntitiesForConsolidation(5);
 
-      if (batch.length < 2) {
-        console.log('[AgentLoop] 数据不足，跳过本轮分析');
-        return;
-      }
+        if (batch.length < 2) {
+          console.log('[AgentLoop] 洞见数据不足，本轮仅跳过 insight_generation');
+        } else {
 
       // 2. 图分析驱动：优先使用 generateGraphInsights
       let result: { ok: boolean; insight: { title: string; content: string } | null } = { ok: false, insight: null };
@@ -287,7 +288,7 @@ export class AgentLoop {
         await this.db.markEntitiesConsolidated(batch.map(e => e.id));
       }
 
-      if (result.insight) {
+          if (result.insight) {
         await this.db.addNotification({
           title: result.insight.title,
           content: result.insight.content,
@@ -295,12 +296,16 @@ export class AgentLoop {
           related_entities: insightRelatedEntities,
         });
         console.log(`[AgentLoop] 产生新洞见: ${result.insight.title}`);
-      } else {
-        console.log('[AgentLoop] 本轮未产生有效洞见');
+          } else {
+            console.log('[AgentLoop] 本轮未产生有效洞见');
+          }
+        }
+      } catch (e) {
+        console.warn('[AgentLoop] insight_generation 失败，继续其他周期任务:', e);
       }
 
       // 4. 每 N 轮检查一次记忆衰减，生成 decay_warning 通知
-      if (this.decayScheduler && this.cycleCount % AgentLoop.DECAY_CHECK_INTERVAL === 0) {
+      if (this.decayScheduler && cycle % AgentLoop.DECAY_CHECK_INTERVAL === 0) {
         try {
           const decayed = await this.decayScheduler.getMostDecayedItems(5);
           if (decayed.length > 0) {
@@ -322,7 +327,7 @@ export class AgentLoop {
       }
 
       // 5. 每 N 轮检查一次认知盲区
-      if (this.cycleCount % AgentLoop.BLINDSPOT_CHECK_INTERVAL === 0) {
+      if (cycle % AgentLoop.BLINDSPOT_CHECK_INTERVAL === 0) {
         try {
           const blindspots = await detectBlindspots(this.db);
           for (const bs of blindspots) {
@@ -343,6 +348,5 @@ export class AgentLoop {
     } catch (error) {
       console.error('[AgentLoop] 执行周期异常:', error);
     }
-    this.cycleCount++;
   }
 }
