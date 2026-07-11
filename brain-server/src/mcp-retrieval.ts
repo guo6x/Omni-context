@@ -45,7 +45,16 @@ function distinctiveIdentifiers(query: string): string[] {
     .filter((term) => !['the', 'and', 'for', 'with', 'from', 'this', 'that'].includes(term));
 }
 
-function scoreCandidate(query: string, candidate: any, decisionMode: boolean): number {
+export interface RankMemoryOptions {
+  decisionMode?: boolean;
+  historicalMode?: boolean;
+  now?: Date;
+  config?: RetrievalConfig;
+}
+
+function scoreCandidate(query: string, candidate: any, options: RankMemoryOptions): number {
+  const decisionMode = options.decisionMode === true;
+  const config = options.config ?? DEFAULT_RETRIEVAL_CONFIG;
   const name = normalize(candidate?.name);
   const description = normalize(candidate?.description);
   const tags = Array.isArray(candidate?.tags) ? candidate.tags.map(normalize) : [];
@@ -79,19 +88,27 @@ function scoreCandidate(query: string, candidate: any, decisionMode: boolean): n
   if (genericTagCount > 0 && matches === 0) score -= genericTagCount * 3;
   if (candidate?.type === 'principle' && matches === 0) score -= 4;
 
+  if (!options.historicalMode) {
+    const now = options.now ?? new Date();
+    const validUntil = candidate?.valid_until ? Date.parse(String(candidate.valid_until)) : Number.NaN;
+    if (Number.isFinite(validUntil) && validUntil <= now.getTime()) score -= config.stalePenalty;
+    if (candidate?.invalidated_at || candidate?.is_invalidated === true) score -= config.invalidatedPenalty;
+  }
+  if (candidate?.conflict_status === 'pending') score -= config.pendingConflictPenalty;
+
   return score;
 }
 
 export function rankMemoryCandidates(
   query: string,
   candidates: any[],
-  options: { decisionMode?: boolean } = {},
+  options: RankMemoryOptions = {},
 ): any[] {
   return candidates
     .map((candidate, index) => ({
       candidate,
       index,
-      score: scoreCandidate(query, candidate, options.decisionMode === true),
+      score: scoreCandidate(query, candidate, options),
     }))
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .map(({ candidate }) => candidate);
@@ -100,9 +117,9 @@ export function rankMemoryCandidates(
 export function memoryCandidateScore(
   query: string,
   candidate: any,
-  options: { decisionMode?: boolean } = {},
+  options: RankMemoryOptions = {},
 ): number {
-  return scoreCandidate(query, candidate, options.decisionMode === true);
+  return scoreCandidate(query, candidate, options);
 }
 
 export function selectRelevantPrinciples(
@@ -115,7 +132,7 @@ export function selectRelevantPrinciples(
     .map((principle, index) => ({
       principle,
       index,
-      score: scoreCandidate(query, principle, true),
+      score: scoreCandidate(query, principle, { decisionMode: true }),
       text: normalize(`${principle?.name || ''} ${(principle?.tags || []).join(' ')} ${principle?.description || ''}`),
     }))
     .filter(({ text }) => identifiers.length === 0 || identifiers.some((term) => text.includes(term)))
@@ -154,3 +171,4 @@ export function capGraphContext(graph: any, maxNodes: number, maxEdges: number):
 
   return { ...graph, nodes, edges };
 }
+import { DEFAULT_RETRIEVAL_CONFIG, type RetrievalConfig } from './retrieval/config.js';
