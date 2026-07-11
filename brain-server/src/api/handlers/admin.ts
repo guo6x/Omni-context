@@ -34,6 +34,7 @@ interface DumpShape {
   exportedAt: string;
   entities: any[];
   relationships: any[];
+  assertions?: any[];
   coreMemory: any[];
   archivalMemory: any[];
   notifications: any[];
@@ -90,6 +91,7 @@ export const handleAdminRoutes = [
         relParams.push(new Date().toISOString());
       }
       const relationships = await ctx.db.all<any>(relQuery, relParams);
+      const assertions = await ctx.db.all<any>('SELECT * FROM assertions');
       const coreMemory = await ctx.db.all<any>('SELECT * FROM core_memory');
       const archivalMemory = await ctx.db.all<any>('SELECT * FROM archival_memory');
       const notifications = await ctx.db.all<any>('SELECT * FROM notifications');
@@ -102,6 +104,7 @@ export const handleAdminRoutes = [
           embedding: bufferToBase64(row.embedding),
         })),
         relationships,
+        assertions,
         coreMemory,
         archivalMemory: archivalMemory.map((row) => ({
           ...row,
@@ -134,6 +137,7 @@ export const handleAdminRoutes = [
       const counts = {
         entities: 0,
         relationships: 0,
+        assertions: 0,
         coreMemory: 0,
         archivalMemory: 0,
         notifications: 0,
@@ -143,6 +147,7 @@ export const handleAdminRoutes = [
       const existing = {
         entities: new Set<string>(),
         relationships: new Set<string>(),
+        assertions: new Set<string>(),
         coreMemory: new Set<string>(),
         archivalMemory: new Set<string>(),
         notifications: new Set<string>(),
@@ -151,8 +156,9 @@ export const handleAdminRoutes = [
       try {
         await ctx.db.withTransaction(async () => {
           if (mode === 'replace') {
-            // 关系先删，避免 FK 报错；FTS / vec 索引由后续插入时不再同步导致脱节，
+            // Assertion 同时引用关系两端实体，必须最先删除；FTS / vec 索引由后续插入时不再同步导致脱节，
             // 这里一并清掉以保证一致性
+            await ctx.db.run('DELETE FROM assertions');
             await ctx.db.run('DELETE FROM relationships');
             await ctx.db.run('DELETE FROM entities');
             await ctx.db.run('DELETE FROM core_memory');
@@ -163,6 +169,7 @@ export const handleAdminRoutes = [
           } else {
             for (const r of await ctx.db.all<any>('SELECT id FROM entities')) existing.entities.add(r.id);
             for (const r of await ctx.db.all<any>('SELECT id FROM relationships')) existing.relationships.add(r.id);
+            for (const r of await ctx.db.all<any>('SELECT id FROM assertions')) existing.assertions.add(r.id);
             for (const r of await ctx.db.all<any>('SELECT key FROM core_memory')) existing.coreMemory.add(r.key);
             for (const r of await ctx.db.all<any>('SELECT id FROM archival_memory')) existing.archivalMemory.add(r.id);
             for (const r of await ctx.db.all<any>('SELECT id FROM notifications')) existing.notifications.add(r.id);
@@ -172,8 +179,12 @@ export const handleAdminRoutes = [
             if (mode === 'merge' && existing.entities.has(e.id)) continue;
             const embeddingBlob = base64ToBuffer(e.embedding);
             await ctx.db.run(
-              `INSERT INTO entities (id, name, type, description, source_file, tags, embedding, metadata, created_at, updated_at, last_accessed, access_count)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO entities (
+                 id, name, type, description, source_file, tags, embedding, metadata,
+                 created_at, updated_at, last_accessed, access_count,
+                 observed_at, recorded_at, event_time, valid_from, valid_until,
+                 temporal_confidence, temporal_source, timezone
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 e.id,
                 e.name,
@@ -187,6 +198,14 @@ export const handleAdminRoutes = [
                 e.updated_at ?? new Date().toISOString(),
                 e.last_accessed ?? new Date().toISOString(),
                 e.access_count ?? 0,
+                e.observed_at ?? null,
+                e.recorded_at ?? e.created_at ?? new Date().toISOString(),
+                e.event_time ?? null,
+                e.valid_from ?? e.created_at ?? new Date().toISOString(),
+                e.valid_until ?? null,
+                e.temporal_confidence ?? null,
+                e.temporal_source ?? null,
+                e.timezone ?? null,
               ]
             );
             counts.entities++;
@@ -195,8 +214,10 @@ export const handleAdminRoutes = [
           for (const r of body.relationships || []) {
             if (mode === 'merge' && existing.relationships.has(r.id)) continue;
             await ctx.db.run(
-              `INSERT INTO relationships (id, source_id, target_id, type, description, weight, created_at, last_activated)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO relationships (
+                 id, source_id, target_id, type, description, weight, created_at,
+                 last_activated, valid_from, valid_until, invalidated_at, invalidation_reason
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 r.id,
                 r.source_id,
@@ -206,10 +227,71 @@ export const handleAdminRoutes = [
                 r.weight ?? 1.0,
                 r.created_at ?? new Date().toISOString(),
                 r.last_activated ?? new Date().toISOString(),
+                r.valid_from ?? r.created_at ?? new Date().toISOString(),
+                r.valid_until ?? null,
+                r.invalidated_at ?? null,
+                r.invalidation_reason ?? null,
               ]
             );
             counts.relationships++;
           }
+
+          for (const a of body.assertions || []) {
+            if (mode === 'merge' && existing.assertions.has(a.id)) continue;
+            const provenance = a.provenance && typeof a.provenance !== 'string'
+              ? JSON.stringify(a.provenance)
+              : a.provenance ?? null;
+            const createdAt = a.created_at ?? new Date().toISOString();
+            await ctx.db.run(
+              `INSERT INTO assertions (
+                 id, subject_id, predicate, object_id, literal_value, confidence,
+                 source_span, provenance, observed_at, recorded_at, event_time,
+                 valid_from, valid_until, temporal_confidence, temporal_source,
+                 timezone, invalidated_at, invalidation_reason, created_at, updated_at
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                a.id,
+                a.subject_id,
+                a.predicate,
+                a.object_id ?? null,
+                a.literal_value ?? null,
+                a.confidence ?? 1,
+                a.source_span ?? null,
+                provenance,
+                a.observed_at ?? null,
+                a.recorded_at ?? createdAt,
+                a.event_time ?? null,
+                a.valid_from ?? createdAt,
+                a.valid_until ?? null,
+                a.temporal_confidence ?? null,
+                a.temporal_source ?? null,
+                a.timezone ?? null,
+                a.invalidated_at ?? null,
+                a.invalidation_reason ?? null,
+                createdAt,
+                a.updated_at ?? createdAt,
+              ]
+            );
+            counts.assertions++;
+          }
+
+          // v1 旧备份没有 assertions；为每条关系恢复兼容的 Assertion 视图。
+          await ctx.db.run(
+            `INSERT OR IGNORE INTO assertions (
+               id, subject_id, predicate, object_id, confidence, source_span, provenance,
+               recorded_at, valid_from, valid_until, invalidated_at, invalidation_reason,
+               created_at, updated_at
+             )
+             SELECT
+               'relationship:' || id, source_id, type, target_id,
+               CASE WHEN weight < 0 THEN 0 WHEN weight > 1 THEN 1 ELSE weight END,
+               description,
+               json_object('backup_restore', 1, 'relationship_id', id),
+               created_at, COALESCE(valid_from, created_at), valid_until,
+               invalidated_at, invalidation_reason, created_at,
+               COALESCE(last_activated, created_at)
+             FROM relationships`
+          );
 
           for (const c of body.coreMemory || []) {
             if (mode === 'merge' && existing.coreMemory.has(c.key)) continue;

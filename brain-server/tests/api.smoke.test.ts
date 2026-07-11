@@ -427,6 +427,7 @@ describe('API smoke: admin export', () => {
       exportedAt: expect.any(String),
       entities: expect.any(Array),
       relationships: expect.any(Array),
+      assertions: expect.any(Array),
       coreMemory: expect.any(Array),
       archivalMemory: expect.any(Array),
       notifications: expect.any(Array),
@@ -510,6 +511,10 @@ describe('API smoke: admin seed demo', () => {
       mode: 'replace',
     });
     expect(importRes.status).toBe(200);
+    const restoredAssertions = await db.get<{ count: number }>('SELECT COUNT(*) AS count FROM assertions');
+    expect(restoredAssertions?.count).toBe(
+      backup.assertions.length > 0 ? backup.assertions.length : backup.relationships.length
+    );
 
     const ftsRes = await request('POST', '/api/entities/search', {
       query: '代码安全性优先',
