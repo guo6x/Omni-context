@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -eu
+
+echo "Running staged secret scan..."
+node scripts/scan-secrets.mjs --staged

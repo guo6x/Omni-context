@@ -61,8 +61,20 @@ yarn-error.log*
 
 # Tauri updater signing keys (private key = secret, never commit)
 *.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
 tauri_priv.key
 desktop-daemon/.tauri-signing/
+
+# Package-manager and cloud credentials
+.npmrc
+.yarnrc
+credentials.json
+service-account*.json
+*credentials*.json
 
 # Local secrets (generated per machine, never commit)
 *-token.txt
@@ -70,6 +82,8 @@ local-token.txt
 pair-code.txt
 **/local-token.txt
 **/pair-code.txt
+*.token
+*.secret
 
 # Claude Code per-machine permission allowlist
 # Auto-appends executed Bash commands as patterns, which can include API keys
