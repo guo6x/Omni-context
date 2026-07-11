@@ -1,0 +1,1601 @@
+﻿diff --git a/mobile-app/.eslintrc.js b/mobile-app/.eslintrc.js
+index 76d2b7d..85cfd18 100644
+--- a/mobile-app/.eslintrc.js
++++ b/mobile-app/.eslintrc.js
+@@ -2,7 +2,6 @@ module.exports = {
+   root: true,
+   extends: [
+     'eslint:recommended',
+-    '@react-native-community',
+     'plugin:@typescript-eslint/recommended',
+   ],
+   parser: '@typescript-eslint/parser',
+@@ -15,7 +14,8 @@ module.exports = {
+     },
+   },
+   env: {
+-    'react-native/react-native': true,
++    es2021: true,
++    node: true,
+   },
+   rules: {
+     '@typescript-eslint/no-unused-vars': 'warn',
+diff --git a/mobile-app/App.tsx b/mobile-app/App.tsx
+index 6ff805e..6b9a00e 100644
+--- a/mobile-app/App.tsx
++++ b/mobile-app/App.tsx
+@@ -9,12 +9,14 @@ import { useSettings } from '@/hooks/useSettings';
+ import { api } from '@/services/api';
+ import { syncService } from '@/services/syncService';
+ import '@/locales';
++import i18n from '@/locales';
+ 
+ function ApiConfigProvider({ children }: { children: React.ReactNode }) {
+   const serverUrl = useSettings((s) => s.serverUrl);
+   const authToken = useSettings((s) => s.authToken);
+   const autoSync = useSettings((s) => s.autoSync);
+   const syncEnabled = useSettings((s) => s.syncEnabled);
++  const language = useSettings((s) => s.language);
+ 
+   // 鍒濆鍖栨湰鍦?SQLite 鏁版嵁搴?   useEffect(() => {
+@@ -30,9 +32,15 @@ function ApiConfigProvider({ children }: { children: React.ReactNode }) {
+         baseUrl: serverUrl.trim(), 
+         authToken: authToken?.trim()
+       });
++    } else {
++      api.reset();
+     }
+   }, [serverUrl, authToken]);
+ 
++  useEffect(() => {
++    void i18n.changeLanguage(language);
++  }, [language]);
++
+   // 鎺у埗鑷姩鍚屾鐢熷懡鍛ㄦ湡
+   useEffect(() => {
+     if (syncEnabled && autoSync && serverUrl && serverUrl.trim()) {
+diff --git a/mobile-app/package-lock.json b/mobile-app/package-lock.json
+index ba6e020..3bfa177 100644
+--- a/mobile-app/package-lock.json
++++ b/mobile-app/package-lock.json
+@@ -38,6 +38,8 @@
+         "@babel/core": "^7.20.0",
+         "@types/node": "^20.10.0",
+         "@types/react": "~18.2.45",
++        "@typescript-eslint/eslint-plugin": "^6.21.0",
++        "@typescript-eslint/parser": "^6.21.0",
+         "eslint": "^8.50.0",
+         "tailwindcss": "3.3.2",
+         "typescript": "^5.1.3"
+@@ -4905,6 +4907,13 @@
+         "csstype": "^3.0.2"
+       }
+     },
++    "node_modules/@types/semver": {
++      "version": "7.7.1",
++      "resolved": "https://registry.npmmirror.com/@types/semver/-/semver-7.7.1.tgz",
++      "integrity": "sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==",
++      "dev": true,
++      "license": "MIT"
++    },
+     "node_modules/@types/stack-utils": {
+       "version": "2.0.3",
+       "resolved": "https://registry.npmmirror.com/@types/stack-utils/-/stack-utils-2.0.3.tgz",
+@@ -4926,6 +4935,269 @@
+       "integrity": "sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==",
+       "license": "MIT"
+     },
++    "node_modules/@typescript-eslint/eslint-plugin": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmmirror.com/@typescript-eslint/eslint-plugin/-/eslint-plugin-6.21.0.tgz",
++      "integrity": "sha512-oy9+hTPCUFpngkEZUSzbf9MxI65wbKFoQYsgPdILTfbUldp5ovUuphZVe4i30emU9M/kP+T64Di0mxl7dSw3MA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@eslint-community/regexpp": "^4.5.1",
++        "@typescript-eslint/scope-manager": "6.21.0",
++        "@typescript-eslint/type-utils": "6.21.0",
++        "@typescript-eslint/utils": "6.21.0",
++        "@typescript-eslint/visitor-keys": "6.21.0",
++        "debug": "^4.3.4",
++        "graphemer": "^1.4.0",
++        "ignore": "^5.2.4",
++        "natural-compare": "^1.4.0",
++        "semver": "^7.5.4",
++        "ts-api-utils": "^1.0.1"
++      },
++      "engines": {
++        "node": "^16.0.0 || >=18.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/typescript-eslint"
++      },
++      "peerDependencies": {
++        "@typescript-eslint/parser": "^6.0.0 || ^6.0.0-alpha",
++        "eslint": "^7.0.0 || ^8.0.0"
++      },
++      "peerDependenciesMeta": {
++        "typescript": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@typescript-eslint/eslint-plugin/node_modules/semver": {
++      "version": "7.8.4",
++      "resolved": "https://registry.npmmirror.com/semver/-/semver-7.8.4.tgz",
++      "integrity": "sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA==",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "semver": "bin/semver.js"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/@typescript-eslint/parser": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmmirror.com/@typescript-eslint/parser/-/parser-6.21.0.tgz",
++      "integrity": "sha512-tbsV1jPne5CkFQCgPBcDOt30ItF7aJoZL997JSF7MhGQqOeT3svWRYxiqlfA5RUdlHN6Fi+EI9bxqbdyAUZjYQ==",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "dependencies": {
++        "@typescript-eslint/scope-manager": "6.21.0",
++        "@typescript-eslint/types": "6.21.0",
++        "@typescript-eslint/typescript-estree": "6.21.0",
++        "@typescript-eslint/visitor-keys": "6.21.0",
++        "debug": "^4.3.4"
++      },
++      "engines": {
++        "node": "^16.0.0 || >=18.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/typescript-eslint"
++      },
++      "peerDependencies": {
++        "eslint": "^7.0.0 || ^8.0.0"
++      },
++      "peerDependenciesMeta": {
++        "typescript": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@typescript-eslint/scope-manager": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmmirror.com/@typescript-eslint/scope-manager/-/scope-manager-6.21.0.tgz",
++      "integrity": "sha512-OwLUIWZJry80O99zvqXVEioyniJMa+d2GrqpUTqi5/v5D5rOrppJVBPa0yKCblcigC0/aYAzxxqQ1B+DS2RYsg==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@typescript-eslint/types": "6.21.0",
++        "@typescript-eslint/visitor-keys": "6.21.0"
++      },
++      "engines": {
++        "node": "^16.0.0 || >=18.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/typescript-eslint"
++      }
++    },
++    "node_modules/@typescript-eslint/type-utils": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmmirror.com/@typescript-eslint/type-utils/-/type-utils-6.21.0.tgz",
++      "integrity": "sha512-rZQI7wHfao8qMX3Rd3xqeYSMCL3SoiSQLBATSiVKARdFGCYSRvmViieZjqc58jKgs8Y8i9YvVVhRbHSTA4VBag==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@typescript-eslint/typescript-estree": "6.21.0",
++        "@typescript-eslint/utils": "6.21.0",
++        "debug": "^4.3.4",
++        "ts-api-utils": "^1.0.1"
++      },
++      "engines": {
++        "node": "^16.0.0 || >=18.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/typescript-eslint"
++      },
++      "peerDependencies": {
++        "eslint": "^7.0.0 || ^8.0.0"
++      },
++      "peerDependenciesMeta": {
++        "typescript": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@typescript-eslint/types": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmmirror.com/@typescript-eslint/types/-/types-6.21.0.tgz",
++      "integrity": "sha512-1kFmZ1rOm5epu9NZEZm1kckCDGj5UJEf7P1kliH4LKu/RkwpsfqqGmY2OOcUs18lSlQBKLDYBOGxRVtrMN5lpg==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": "^16.0.0 || >=18.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/typescript-eslint"
++      }
++    },
++    "node_modules/@typescript-eslint/typescript-estree": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmmirror.com/@typescript-eslint/typescript-estree/-/typescript-estree-6.21.0.tgz",
++      "integrity": "sha512-6npJTkZcO+y2/kr+z0hc4HwNfrrP4kNYh57ek7yCNlrBjWQ1Y0OS7jiZTkgumrvkX5HkEKXFZkkdFNkaW2wmUQ==",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "dependencies": {
++        "@typescript-eslint/types": "6.21.0",
++        "@typescript-eslint/visitor-keys": "6.21.0",
++        "debug": "^4.3.4",
++        "globby": "^11.1.0",
++        "is-glob": "^4.0.3",
++        "minimatch": "9.0.3",
++        "semver": "^7.5.4",
++        "ts-api-utils": "^1.0.1"
++      },
++      "engines": {
++        "node": "^16.0.0 || >=18.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/typescript-eslint"
++      },
++      "peerDependenciesMeta": {
++        "typescript": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion": {
++      "version": "2.1.1",
++      "resolved": "https://registry.npmmirror.com/brace-expansion/-/brace-expansion-2.1.1.tgz",
++      "integrity": "sha512-WR1cURNjuvBLMZBMbqM0UoE+WAfdUcEV1ccD8PVBVOI+Z3ND4+SZbN8RsfT2bMuG1qwz5RFvPukSZm5fF2D5eA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "balanced-match": "^1.0.0"
++      }
++    },
++    "node_modules/@typescript-eslint/typescript-estree/node_modules/minimatch": {
++      "version": "9.0.3",
++      "resolved": "https://registry.npmmirror.com/minimatch/-/minimatch-9.0.3.tgz",
++      "integrity": "sha512-RHiac9mvaRw0x3AYRgDC1CxAP7HTcNrrECeA8YYJeWnpo+2Q5CegtZjaotWTWxDG3UeGA1coE05iH1mPjT/2mg==",
++      "dev": true,
++      "license": "ISC",
++      "dependencies": {
++        "brace-expansion": "^2.0.1"
++      },
++      "engines": {
++        "node": ">=16 || 14 >=14.17"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/isaacs"
++      }
++    },
++    "node_modules/@typescript-eslint/typescript-estree/node_modules/semver": {
++      "version": "7.8.4",
++      "resolved": "https://registry.npmmirror.com/semver/-/semver-7.8.4.tgz",
++      "integrity": "sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA==",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "semver": "bin/semver.js"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/@typescript-eslint/utils": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmmirror.com/@typescript-eslint/utils/-/utils-6.21.0.tgz",
++      "integrity": "sha512-NfWVaC8HP9T8cbKQxHcsJBY5YE1O33+jpMwN45qzWWaPDZgLIbo12toGMWnmhvCpd3sIxkpDw3Wv1B3dYrbDQQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@eslint-community/eslint-utils": "^4.4.0",
++        "@types/json-schema": "^7.0.12",
++        "@types/semver": "^7.5.0",
++        "@typescript-eslint/scope-manager": "6.21.0",
++        "@typescript-eslint/types": "6.21.0",
++        "@typescript-eslint/typescript-estree": "6.21.0",
++        "semver": "^7.5.4"
++      },
++      "engines": {
++        "node": "^16.0.0 || >=18.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/typescript-eslint"
++      },
++      "peerDependencies": {
++        "eslint": "^7.0.0 || ^8.0.0"
++      }
++    },
++    "node_modules/@typescript-eslint/utils/node_modules/semver": {
++      "version": "7.8.4",
++      "resolved": "https://registry.npmmirror.com/semver/-/semver-7.8.4.tgz",
++      "integrity": "sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA==",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "semver": "bin/semver.js"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/@typescript-eslint/visitor-keys": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmmirror.com/@typescript-eslint/visitor-keys/-/visitor-keys-6.21.0.tgz",
++      "integrity": "sha512-JJtkDduxLi9bivAB+cYOVMtbkqdPOhZ+ZI5LC47MIRrDV4Yn2o+ZnW10Nkmr28xRpSpdJ6Sm42Hjf2+REYXm0A==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@typescript-eslint/types": "6.21.0",
++        "eslint-visitor-keys": "^3.4.1"
++      },
++      "engines": {
++        "node": "^16.0.0 || >=18.0.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/typescript-eslint"
++      }
++    },
+     "node_modules/@ungap/structured-clone": {
+       "version": "1.3.1",
+       "resolved": "https://registry.npmmirror.com/@ungap/structured-clone/-/structured-clone-1.3.1.tgz",
+@@ -15134,6 +15406,19 @@
+         "url": "https://github.com/sponsors/ljharb"
+       }
+     },
++    "node_modules/ts-api-utils": {
++      "version": "1.4.3",
++      "resolved": "https://registry.npmmirror.com/ts-api-utils/-/ts-api-utils-1.4.3.tgz",
++      "integrity": "sha512-i3eMG77UTMD0hZhgRS562pv83RC6ukSAC2GMNWc+9dieh/+jDM5u5YG+NHX6VNDRHQcHwmsTHctP9LhbC3WxVw==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=16"
++      },
++      "peerDependencies": {
++        "typescript": ">=4.2.0"
++      }
++    },
+     "node_modules/ts-interface-checker": {
+       "version": "0.1.13",
+       "resolved": "https://registry.npmmirror.com/ts-interface-checker/-/ts-interface-checker-0.1.13.tgz",
+diff --git a/mobile-app/package.json b/mobile-app/package.json
+index 6d351f0..6cb2f9f 100644
+--- a/mobile-app/package.json
++++ b/mobile-app/package.json
+@@ -43,6 +43,8 @@
+     "@babel/core": "^7.20.0",
+     "@types/node": "^20.10.0",
+     "@types/react": "~18.2.45",
++    "@typescript-eslint/eslint-plugin": "^6.21.0",
++    "@typescript-eslint/parser": "^6.21.0",
+     "eslint": "^8.50.0",
+     "tailwindcss": "3.3.2",
+     "typescript": "^5.1.3"
+diff --git a/mobile-app/src/components/GraphViewer.tsx b/mobile-app/src/components/GraphViewer.tsx
+index 6b075eb..ed019ab 100644
+--- a/mobile-app/src/components/GraphViewer.tsx
++++ b/mobile-app/src/components/GraphViewer.tsx
+@@ -4,8 +4,6 @@ import {
+   Text,
+   StyleSheet,
+   Dimensions,
+-  TouchableOpacity,
+-  ScrollView,
+ } from 'react-native';
+ import Svg, {
+   G,
+@@ -17,9 +15,8 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+ import Animated, {
+   useSharedValue,
+   useAnimatedStyle,
+-  withSpring,
+ } from 'react-native-reanimated';
+-import { KnowledgeGraph, KnowledgeNode, KnowledgeEdge } from '@/types';
++import { KnowledgeGraph, KnowledgeNode } from '@/types';
+ import { colors } from '@/utils/theme';
+ 
+ interface GraphViewerProps {
+@@ -88,8 +85,6 @@ export function GraphViewer({ graph, onNodePress, selectedNodeId }: GraphViewerP
+       });
+ 
+     return Gesture.Simultaneous(pinchGesture, panGesture);
+-    // SharedValue 寮曠敤鏈韩绋冲畾锛屼緷璧栫暀绌?-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, []);
+ 
+   const animatedStyle = useAnimatedStyle(() => ({
+diff --git a/mobile-app/src/components/HUD.tsx b/mobile-app/src/components/HUD.tsx
+index 38940d8..223b956 100644
+--- a/mobile-app/src/components/HUD.tsx
++++ b/mobile-app/src/components/HUD.tsx
+@@ -47,7 +47,7 @@ export function useHUD() {
+   return context;
+ }
+ 
+-import { View, Text, Animated, TouchableOpacity } from 'react-native';
++import { View, Text, TouchableOpacity } from 'react-native';
+ 
+ interface HUDProps {
+   messages: HUDMessage[];
+diff --git a/mobile-app/src/components/QuickCapture.tsx b/mobile-app/src/components/QuickCapture.tsx
+index b7f1a10..3930154 100644
+--- a/mobile-app/src/components/QuickCapture.tsx
++++ b/mobile-app/src/components/QuickCapture.tsx
+@@ -41,7 +41,7 @@ export function QuickCapture() {
+         name: trimmedTitle || trimmedContent.slice(0, 60) + (trimmedContent.length > 60 ? '...' : ''),
+         type,
+         description: trimmedContent,
+-        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
++        tags: tags.split(/[,锛宂/).map(t => t.trim()).filter(Boolean),
+         source_file: 'quick_capture',
+         created_at: new Date().toISOString(),
+         updated_at: new Date().toISOString(),
+@@ -64,28 +64,37 @@ export function QuickCapture() {
+ 
+   return (
+     <KeyboardAvoidingView
+-      className="flex-1 bg-[#0a0b12]"
++      className="flex-1 bg-[#0b0f12]"
+       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+     >
+       <ScrollView
+-        className="p-5"
++        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+         keyboardShouldPersistTaps="handled"
+       >
+-        <View className="mb-6">
+-          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.title') || 'Title'}</Text>
++        <View className="mb-7">
++          <Text className="text-[#f2f5f4] text-2xl font-bold">蹇€熻褰?/Text>
++          <Text className="text-[#77818b] text-sm mt-1">鍏堣涓嬫潵锛岀◢鍚庡啀鏁寸悊</Text>
++        </View>
++
++        <View className="mb-5">
++          <Text className="text-[#aab2b9] text-sm font-medium mb-2">鏍囬</Text>
+           <TextInput
+-            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base"
++            className="bg-[#151a1f] border border-[#293139] rounded-lg px-4 py-3 text-[#f2f5f4] text-base"
+             value={title}
+             onChangeText={setTitle}
+-            placeholder={t('capture.titlePlaceholder') || 'Enter a title...'}
++            placeholder="涓€鍙ヨ瘽姒傛嫭锛屽彲鐣欑┖"
+             placeholderTextColor="#64748b"
++            maxLength={100}
+           />
+         </View>
+ 
+-        <View className="mb-6">
+-          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.content')}</Text>
++        <View className="mb-5">
++          <View className="flex-row justify-between mb-2">
++            <Text className="text-[#aab2b9] text-sm font-medium">{t('memory.content')}</Text>
++            <Text className="text-[#65707a] text-xs">{content.length}/5000</Text>
++          </View>
+           <TextInput
+-            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base min-h-[120px]"
++            className="bg-[#151a1f] border border-[#293139] rounded-lg p-4 text-[#f2f5f4] text-base min-h-[180px]"
+             value={content}
+             onChangeText={setContent}
+             placeholder={t('capture.placeholder')}
+@@ -93,20 +102,21 @@ export function QuickCapture() {
+             multiline
+             numberOfLines={4}
+             textAlignVertical="top"
++            maxLength={5000}
+           />
+         </View>
+ 
+-        <View className="mb-6">
+-          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.type')}</Text>
++        <View className="mb-5">
++          <Text className="text-[#aab2b9] text-sm font-medium mb-2">{t('memory.type')}</Text>
+           <View className="flex-row flex-wrap gap-2">
+             {ENTITY_TYPES.map(entityType => (
+               <TouchableOpacity
+                 key={entityType}
+-                className={`px-4 py-2 rounded-full border ${type === entityType ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
++                className={`px-4 py-2 rounded-md border ${type === entityType ? 'bg-[#45c8b0] border-[#45c8b0]' : 'bg-[#151a1f] border-[#293139]'}`}
+                 onPress={() => setType(entityType)}
+               >
+                 <Text
+-                  className={`text-sm ${type === entityType ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}
++                  className={`text-sm ${type === entityType ? 'text-[#071411] font-bold' : 'text-[#98a2aa]'}`}
+                 >
+                   {t(`memory.${entityType}`) || entityType}
+                 </Text>
+@@ -115,10 +125,10 @@ export function QuickCapture() {
+           </View>
+         </View>
+ 
+-        <View className="mb-6">
+-          <Text className="text-gray-400 text-sm font-medium mb-2">{t('memory.tags')}</Text>
++        <View className="mb-5">
++          <Text className="text-[#aab2b9] text-sm font-medium mb-2">{t('memory.tags')}</Text>
+           <TextInput
+-            className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base"
++            className="bg-[#151a1f] border border-[#293139] rounded-lg px-4 py-3 text-[#f2f5f4] text-base"
+             value={tags}
+             onChangeText={setTags}
+             placeholder={t('capture.tagsPlaceholder')}
+@@ -128,14 +138,14 @@ export function QuickCapture() {
+         </View>
+ 
+         <TouchableOpacity
+-          className={`bg-cyan-400 rounded-xl p-4 items-center mt-4 shadow-[0_0_15px_rgba(34,211,238,0.5)] ${isCapturing ? 'opacity-60' : ''}`}
++          className={`bg-[#45c8b0] rounded-lg p-4 items-center mt-3 ${isCapturing ? 'opacity-60' : ''}`}
+           onPress={handleCapture}
+           disabled={isCapturing}
+           accessibilityRole="button"
+           accessibilityLabel={isCapturing ? t('capture.capturing') : t('capture.capture')}
+           accessibilityState={{ disabled: isCapturing, busy: isCapturing }}
+         >
+-          <Text className="text-[#0a0b12] text-lg font-bold">
++          <Text className="text-[#071411] text-base font-bold">
+             {isCapturing ? t('capture.capturing') : t('capture.capture')}
+           </Text>
+         </TouchableOpacity>
+diff --git a/mobile-app/src/navigation/AppNavigator.tsx b/mobile-app/src/navigation/AppNavigator.tsx
+index 575c1c0..4d342db 100644
+--- a/mobile-app/src/navigation/AppNavigator.tsx
++++ b/mobile-app/src/navigation/AppNavigator.tsx
+@@ -1,9 +1,8 @@
+ import React from 'react';
+ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+ import { createNativeStackNavigator } from '@react-navigation/native-stack';
+-import { View, StyleSheet } from 'react-native';
+-import Svg, { Path, Circle, G } from 'react-native-svg';
+-import { colors } from '@/utils/theme';
++import { View } from 'react-native';
++import Svg, { Path, Circle } from 'react-native-svg';
+ import { KnowledgeGraphScreen } from '@/screens/KnowledgeGraphScreen';
+ import { MemoryListScreen } from '@/screens/MemoryListScreen';
+ import { SearchScreen } from '@/screens/SearchScreen';
+@@ -11,12 +10,14 @@ import { EntityDetailScreen } from '@/screens/EntityDetailScreen';
+ import { MemoryDetailScreen } from '@/screens/MemoryDetailScreen';
+ import { SettingsScreen } from '@/screens/SettingsScreen';
+ import { PairScanScreen } from '@/screens/PairScanScreen';
++import { QuickCapture } from '@/components/QuickCapture';
++import { Entity } from '@/types';
+ 
+ const Tab = createBottomTabNavigator();
+ 
+ type SearchStackParamList = {
+   SearchMain: undefined;
+-  EntityDetail: { entityId: string; entityName: string };
++  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
+   MemoryDetail: { item: any };
+ };
+ 
+@@ -32,6 +33,22 @@ function SearchStackNavigator() {
+   );
+ }
+ 
++type LibraryStackParamList = {
++  LibraryMain: undefined;
++  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
++};
++
++const LibraryStack = createNativeStackNavigator<LibraryStackParamList>();
++
++function LibraryStackNavigator() {
++  return (
++    <LibraryStack.Navigator screenOptions={{ headerShown: false }}>
++      <LibraryStack.Screen name="LibraryMain" component={MemoryListScreen} />
++      <LibraryStack.Screen name="EntityDetail" component={EntityDetailScreen} />
++    </LibraryStack.Navigator>
++  );
++}
++
+ const GraphIcon = ({ color, size }: { color: string; size: number }) => (
+   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+     <Circle cx="6" cy="6" r="3" fill={color} />
+@@ -61,6 +78,23 @@ const SearchIcon = ({ color, size }: { color: string; size: number }) => (
+   </Svg>
+ );
+ 
++const CaptureIcon = ({ color, size }: { color: string; size: number }) => (
++  <View
++    style={{
++      width: size + 14,
++      height: size + 14,
++      borderRadius: 8,
++      backgroundColor: color,
++      alignItems: 'center',
++      justifyContent: 'center',
++    }}
++  >
++    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
++      <Path d="M12 5V19M5 12H19" stroke="#071414" strokeWidth="2.4" strokeLinecap="round" />
++    </Svg>
++  </View>
++);
++
+ const SettingsIcon = ({ color, size }: { color: string; size: number }) => (
+   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+     <Path
+@@ -84,15 +118,16 @@ function MainTabNavigator() {
+       screenOptions={{
+         headerShown: false,
+         tabBarStyle: {
+-          backgroundColor: '#0a0b12',
++          backgroundColor: '#101419',
+           borderTopWidth: 1,
+-          borderTopColor: 'rgba(255,255,255,0.1)',
+-          paddingBottom: 20,
+-          paddingTop: 10,
++          borderTopColor: '#252c33',
++          paddingBottom: 8,
++          paddingTop: 8,
++          height: 66,
+         },
+-        tabBarActiveTintColor: '#22d3ee', // cyan-400
+-        tabBarInactiveTintColor: '#64748b', // slate-500
+-        tabBarLabelStyle: { fontSize: 10, fontWeight: '500' },
++        tabBarActiveTintColor: '#45c8b0',
++        tabBarInactiveTintColor: '#77818b',
++        tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginBottom: 2 },
+         tabBarShowLabel: true,
+       }}
+     >
+@@ -105,21 +140,29 @@ function MainTabNavigator() {
+         }}
+       />
+       <Tab.Screen
+-        name="KnowledgeGraph"
+-        component={KnowledgeGraphScreen}
++        name="Capture"
++        component={QuickCapture}
+         options={{
+-          tabBarLabel: '鍥捐氨',
+-          tabBarIcon: ({ color, size }) => <GraphIcon color={color} size={size} />,
++          tabBarLabel: '璁板綍',
++          tabBarIcon: ({ color, size }) => <CaptureIcon color={color} size={size} />,
+         }}
+       />
+       <Tab.Screen
+         name="MemoryList"
+-        component={MemoryListScreen}
++        component={LibraryStackNavigator}
+         options={{
+-          tabBarLabel: '璁板繂',
++          tabBarLabel: '鐭ヨ瘑搴?,
+           tabBarIcon: ({ color, size }) => <ListIcon color={color} size={size} />,
+         }}
+       />
++      <Tab.Screen
++        name="KnowledgeGraph"
++        component={KnowledgeGraphScreen}
++        options={{
++          tabBarLabel: '鍥捐氨',
++          tabBarIcon: ({ color, size }) => <GraphIcon color={color} size={size} />,
++        }}
++      />
+       <Tab.Screen
+         name="Settings"
+         component={SettingsScreen}
+diff --git a/mobile-app/src/screens/EntityDetailScreen.tsx b/mobile-app/src/screens/EntityDetailScreen.tsx
+index 21fa9dc..42aef52 100644
+--- a/mobile-app/src/screens/EntityDetailScreen.tsx
++++ b/mobile-app/src/screens/EntityDetailScreen.tsx
+@@ -10,24 +10,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
+ import { useTranslation } from 'react-i18next';
+ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+ import { api } from '@/services/api';
++import { Entity, Relationship } from '@/types';
+ 
+ type SearchStackParamList = {
+-  EntityDetail: { entityId: string; entityName: string };
++  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
+ };
+ 
+ export function EntityDetailScreen() {
+   const { t } = useTranslation();
+   const route = useRoute<RouteProp<SearchStackParamList, 'EntityDetail'>>();
+   const navigation = useNavigation();
+-  const { entityId, entityName } = route.params;
++  const { entityId, entityName, entity: initialEntity } = route.params;
+ 
+-  const [entity, setEntity] = useState<any>(null);
+-  const [neighbors, setNeighbors] = useState<any[]>([]);
+-  const [relationships, setRelationships] = useState<any[]>([]);
++  const [entity, setEntity] = useState<Entity | null>(initialEntity ?? null);
++  const [neighbors, setNeighbors] = useState<Entity[]>([]);
++  const [relationships, setRelationships] = useState<Relationship[]>([]);
+   const [isLoading, setIsLoading] = useState(true);
+   const [error, setError] = useState<string | null>(null);
+ 
+   useEffect(() => {
++    if (!api.isConfigured() && initialEntity) {
++      setIsLoading(false);
++      return;
++    }
+     if (!api.isConfigured()) {
+       setError(t('search.not_configured'));
+       setIsLoading(false);
+@@ -37,18 +42,16 @@ export function EntityDetailScreen() {
+     setIsLoading(true);
+     setError(null);
+ 
+-    // 鍏堟悳瀹炰綋璇︾粏淇℃伅锛屽啀鎷夊浘璋变笂涓嬫枃
+-    api.searchEntities(entityName, 1).then((searchResult) => {
+-      if (searchResult.success && searchResult.data && searchResult.data.length > 0) {
+-        const found = searchResult.data.find((e: any) => e.id === entityId) || searchResult.data[0];
+-        setEntity(found);
++    api.getEntity(entityId).then((result) => {
++      if (result.success && result.data) {
++        setEntity(result.data.entity);
+       }
+     }).catch(() => {});
+ 
+     api.getGraphNeighborhood(entityId).then((result) => {
+       setIsLoading(false);
+       if (result.success && result.data) {
+-        setNeighbors(result.data.entities.filter((e: any) => e.id !== entityId));
++        setNeighbors(result.data.entities.filter((e) => e.id !== entityId));
+         setRelationships(result.data.relationships || []);
+       } else {
+         setError(result.error || t('search.connect_error'));
+@@ -57,7 +60,7 @@ export function EntityDetailScreen() {
+       setIsLoading(false);
+       setError(t('search.connect_error'));
+     });
+-  }, [entityId, entityName, t]);
++  }, [entityId, initialEntity, t]);
+ 
+   const getTypeLabel = (type: string): string => {
+     const map: Record<string, string> = {
+@@ -149,9 +152,9 @@ export function EntityDetailScreen() {
+           {neighbors.length === 0 ? (
+             <Text className="text-gray-500 text-sm text-center py-8">{t('search.no_neighbors')}</Text>
+           ) : (
+-            neighbors.map((node: any) => {
++            neighbors.map((node) => {
+               const rel = relationships.find(
+-                (r: any) => (r.source_id === entityId && r.target_id === node.id) ||
++                (r) => (r.source_id === entityId && r.target_id === node.id) ||
+                           (r.target_id === entityId && r.source_id === node.id)
+               );
+               return (
+diff --git a/mobile-app/src/screens/KnowledgeGraphScreen.tsx b/mobile-app/src/screens/KnowledgeGraphScreen.tsx
+index cc14eed..b7d253c 100644
+--- a/mobile-app/src/screens/KnowledgeGraphScreen.tsx
++++ b/mobile-app/src/screens/KnowledgeGraphScreen.tsx
+@@ -1,12 +1,8 @@
+-import React, { useState, useCallback, useEffect } from 'react';
++import React, { useCallback, useEffect } from 'react';
+ import {
+   View,
+   Text,
+-  StyleSheet,
+   TouchableOpacity,
+-  Modal,
+-  TextInput,
+-  ScrollView,
+   ActivityIndicator,
+ } from 'react-native';
+ import { SafeAreaView } from 'react-native-safe-area-context';
+@@ -15,8 +11,6 @@ import { GraphViewer } from '@/components/GraphViewer';
+ import { useKnowledgeGraph } from '@/hooks/useKnowledgeGraph';
+ import { useHUD } from '@/components/HUD';
+ import { KnowledgeNode } from '@/types';
+-import { syncService } from '@/services/syncService';
+-import { colors } from '@/utils/theme';
+ 
+ export function KnowledgeGraphScreen() {
+   const { t } = useTranslation();
+@@ -28,13 +22,8 @@ export function KnowledgeGraphScreen() {
+     refresh,
+     selectedNode,
+     setSelectedNode,
+-    addNode,
+   } = useKnowledgeGraph();
+ 
+-  const [showNodeModal, setShowNodeModal] = useState(false);
+-  const [newNodeLabel, setNewNodeLabel] = useState('');
+-  const [newNodeType, setNewNodeType] = useState<'concept' | 'entity' | 'topic'>('concept');
+-
+   useEffect(() => {
+     if (error) {
+       showMessage(error, 'error');
+@@ -45,40 +34,20 @@ export function KnowledgeGraphScreen() {
+     setSelectedNode(node);
+   }, [setSelectedNode]);
+ 
+-  const handleAddNode = useCallback(async () => {
+-    if (!newNodeLabel.trim()) {
+-      showMessage('璇疯緭鍏ヨ妭鐐瑰悕绉?, 'warning');
+-      return;
+-    }
+-
+-    try {
+-      const node: KnowledgeNode = {
+-        id: Date.now().toString(),
+-        label: newNodeLabel.trim(),
+-        type: newNodeType as any,
+-        connections: [],
+-        weight: 1,
+-        color: colors.nodeTypes[newNodeType],
+-      };
+-
+-      await addNode(node);
+-      setShowNodeModal(false);
+-      setNewNodeLabel('');
+-      showMessage('鑺傜偣娣诲姞鎴愬姛', 'success');
+-    } catch (err) {
+-      showMessage((err as Error).message, 'error');
+-    }
+-  }, [newNodeLabel, newNodeType, addNode, showMessage]);
+-
+   return (
+-    <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
+-      <View className="flex-row items-center justify-between px-5 py-4 border-b border-white/10">
+-        <Text className="text-[#e8e8e8] text-2xl font-bold">{t('knowledgeGraph.title')}</Text>
+-        <TouchableOpacity 
+-          className="w-9 h-9 rounded-full bg-cyan-400 items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+-          onPress={() => setShowNodeModal(true)}
++    <SafeAreaView className="flex-1 bg-[#0b0f12]" edges={['top']}>
++      <View className="flex-row items-center justify-between px-5 py-4">
++        <View>
++          <Text className="text-[#f2f5f4] text-2xl font-bold">{t('knowledgeGraph.title')}</Text>
++          <Text className="text-[#77818b] text-sm mt-1">
++            {graph?.nodes.length ?? 0} 涓妭鐐?路 鍙屾寚缂╂斁锛屾嫋鍔ㄦ祻瑙?+          </Text>
++        </View>
++        <TouchableOpacity
++          className="px-3 py-2 rounded-md bg-[#171d21] border border-[#293139]"
++          onPress={refresh}
+         >
+-          <Text className="text-[#0a0b12] text-2xl font-bold leading-6 mt-[-2px]">+</Text>
++          <Text className="text-[#8fdccb] text-sm font-semibold">鍒锋柊</Text>
+         </TouchableOpacity>
+       </View>
+ 
+@@ -96,7 +65,7 @@ export function KnowledgeGraphScreen() {
+       )}
+ 
+       {selectedNode && (
+-        <View className="absolute bottom-[100px] left-4 right-4 bg-black/40 rounded-2xl p-4 border border-white/10 backdrop-blur-xl">
++        <View className="absolute bottom-[82px] left-4 right-4 bg-[#151a1f] rounded-lg p-4 border border-[#2a3239]">
+           <View className="flex-row items-center mb-2">
+             <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: selectedNode.color || '#22d3ee' }} />
+             <Text className="flex-1 text-[#e8e8e8] text-lg font-bold">{selectedNode.label}</Text>
+@@ -115,56 +84,6 @@ export function KnowledgeGraphScreen() {
+         </View>
+       )}
+ 
+-      <Modal
+-        visible={showNodeModal}
+-        animationType="slide"
+-        transparent
+-        onRequestClose={() => setShowNodeModal(false)}
+-      >
+-        <View className="flex-1 bg-black/70 justify-end">
+-          <View className="bg-[#0a0b12] border-t border-white/10 rounded-t-3xl p-5">
+-            <Text className="text-[#e8e8e8] text-xl font-bold mb-5 text-center">{t('knowledgeGraph.addNode')}</Text>
+-            
+-            <TextInput
+-              className="bg-black/40 border border-white/10 rounded-xl p-4 text-gray-200 text-base mb-4"
+-              value={newNodeLabel}
+-              onChangeText={setNewNodeLabel}
+-              placeholder="鑺傜偣鍚嶇О"
+-              placeholderTextColor="#64748b"
+-            />
+-
+-            <Text className="text-gray-400 text-sm mb-2">{t('knowledgeGraph.type')}</Text>
+-            <View className="flex-row gap-2 mb-6">
+-              {(['concept', 'entity', 'topic'] as const).map(type => (
+-                <TouchableOpacity
+-                  key={type}
+-                  className={`flex-1 py-2 rounded-lg items-center border ${newNodeType === type ? 'bg-cyan-500 border-cyan-500' : 'bg-black/40 border-white/10'}`}
+-                  onPress={() => setNewNodeType(type)}
+-                >
+-                  <Text className={`text-sm ${newNodeType === type ? 'text-[#0a0b12] font-bold' : 'text-gray-400'}`}>
+-                    {t(`knowledgeGraph.${type}`)}
+-                  </Text>
+-                </TouchableOpacity>
+-              ))}
+-            </View>
+-
+-            <View className="flex-row gap-4">
+-              <TouchableOpacity
+-                className="flex-1 py-3 rounded-xl bg-black/40 border border-white/10 items-center"
+-                onPress={() => setShowNodeModal(false)}
+-              >
+-                <Text className="text-gray-400 text-base">{t('common.cancel')}</Text>
+-              </TouchableOpacity>
+-              <TouchableOpacity 
+-                className="flex-1 py-3 rounded-xl bg-cyan-400 items-center" 
+-                onPress={handleAddNode}
+-              >
+-                <Text className="text-[#0a0b12] text-base font-bold">{t('common.confirm')}</Text>
+-              </TouchableOpacity>
+-            </View>
+-          </View>
+-        </View>
+-      </Modal>
+     </SafeAreaView>
+   );
+ }
+diff --git a/mobile-app/src/screens/MemoryListScreen.tsx b/mobile-app/src/screens/MemoryListScreen.tsx
+index b1f9f46..ae7a646 100644
+--- a/mobile-app/src/screens/MemoryListScreen.tsx
++++ b/mobile-app/src/screens/MemoryListScreen.tsx
+@@ -8,13 +8,20 @@ import {
+   ActivityIndicator,
+   TextInput,
+   StyleSheet,
++  ScrollView,
+ } from 'react-native';
+ import { SafeAreaView } from 'react-native-safe-area-context';
+-import { useTranslation } from 'react-i18next';
+ import { useHUD } from '@/components/HUD';
+ import { syncService } from '@/services/syncService';
+ import { Entity, EntityType } from '@/types';
+ import { format } from 'date-fns';
++import { useNavigation } from '@react-navigation/native';
++import { NativeStackNavigationProp } from '@react-navigation/native-stack';
++
++type LibraryStackParamList = {
++  LibraryMain: undefined;
++  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
++};
+ 
+ // 瀹炰綋绫诲瀷棰滆壊鏄犲皠
+ const TYPE_COLORS: Record<EntityType, string> = {
+@@ -136,8 +143,8 @@ const FilterButton = memo(({
+ });
+ 
+ export function MemoryListScreen() {
+-  const { t } = useTranslation();
+   const { showMessage } = useHUD();
++  const navigation = useNavigation<NativeStackNavigationProp<LibraryStackParamList>>();
+   const [entities, setEntities] = useState<Entity[]>([]);
+   const [loading, setLoading] = useState(true);
+   const [refreshing, setRefreshing] = useState(false);
+@@ -182,8 +189,12 @@ export function MemoryListScreen() {
+   }, [loadEntities]);
+ 
+   const handleEntitySelect = useCallback((entity: Entity) => {
+-    console.log('Selected entity:', entity);
+-  }, []);
++    navigation.navigate('EntityDetail', {
++      entityId: entity.id,
++      entityName: entity.name,
++      entity,
++    });
++  }, [navigation]);
+ 
+   const handleTypeSelect = useCallback((type: EntityType | null) => {
+     setSelectedType(type);
+@@ -211,7 +222,8 @@ export function MemoryListScreen() {
+   return (
+     <SafeAreaView style={styles.container} edges={['top']}>
+       <View style={styles.header}>
+-        <Text style={styles.headerTitle}>璁板繂</Text>
++        <Text style={styles.headerTitle}>鐭ヨ瘑搴?/Text>
++        <Text style={styles.headerSubtitle}>{entities.length} 鏉℃湰鍦板唴瀹?/Text>
+       </View>
+ 
+       <View style={styles.searchContainer}>
+@@ -224,7 +236,11 @@ export function MemoryListScreen() {
+         />
+       </View>
+ 
+-      <View style={styles.filtersContainer}>
++      <ScrollView
++        horizontal
++        showsHorizontalScrollIndicator={false}
++        contentContainerStyle={styles.filtersContainer}
++      >
+         <FilterButton
+           type={null}
+           selected={selectedType === null}
+@@ -238,7 +254,7 @@ export function MemoryListScreen() {
+             onPress={() => handleTypeSelect(type)}
+           />
+         ))}
+-      </View>
++      </ScrollView>
+ 
+       <FlatList
+         data={filteredEntities}
+@@ -260,7 +276,7 @@ export function MemoryListScreen() {
+         ListEmptyComponent={
+           <View style={styles.emptyContainer}>
+             <View style={styles.emptyIconContainer}>
+-              <Text style={styles.emptyIcon}>馃</Text>
++              <Text style={styles.emptyIcon}>鈼?/Text>
+             </View>
+             <Text style={styles.emptyTitle}>
+               {searchQuery ? '娌℃湁鍖归厤鐨勫疄浣? : '杩樻病鏈夎蹇?}
+@@ -268,7 +284,7 @@ export function MemoryListScreen() {
+             <Text style={styles.emptyDescription}>
+               {searchQuery
+                 ? '灏濊瘯鏇寸煭鐨勫叧閿瘝鎴栦笉鍚岀殑鎷煎啓'
+-                : '鍚屾鏈嶅姟鍣ㄦ暟鎹垨浣跨敤 Quick Capture 寮€濮嬭褰曘€?}
++                : '鍚屾妗岄潰鏁版嵁锛屾垨浠庘€滆褰曗€濋〉寮€濮嬫坊鍔犲唴瀹广€?}
+             </Text>
+             {!searchQuery ? (
+               <Pressable
+@@ -293,14 +309,18 @@ const styles = StyleSheet.create({
+   header: {
+     paddingHorizontal: 20,
+     paddingVertical: 16,
+-    borderBottomWidth: 1,
+-    borderBottomColor: 'rgba(255,255,255,0.1)',
++    borderBottomWidth: 0,
+   },
+   headerTitle: {
+     color: '#e8e8e8',
+     fontSize: 24,
+     fontWeight: 'bold',
+   },
++  headerSubtitle: {
++    color: '#77818b',
++    fontSize: 13,
++    marginTop: 4,
++  },
+   searchContainer: {
+     paddingHorizontal: 20,
+     paddingVertical: 16,
+@@ -309,8 +329,9 @@ const styles = StyleSheet.create({
+     backgroundColor: 'rgba(0,0,0,0.4)',
+     borderWidth: 1,
+     borderColor: 'rgba(255,255,255,0.1)',
+-    borderRadius: 12,
+-    padding: 16,
++    borderRadius: 8,
++    paddingHorizontal: 14,
++    paddingVertical: 12,
+     color: '#e8e8e8',
+     fontSize: 16,
+   },
+@@ -323,10 +344,10 @@ const styles = StyleSheet.create({
+   filterButton: {
+     paddingHorizontal: 16,
+     paddingVertical: 8,
+-    borderRadius: 16,
++    borderRadius: 7,
+     borderWidth: 1,
+     borderColor: 'rgba(255,255,255,0.1)',
+-    backgroundColor: 'rgba(0,0,0,0.4)',
++    backgroundColor: '#151a1f',
+   },
+   filterButtonSelected: {
+     backgroundColor: '#22d3ee',
+@@ -356,12 +377,12 @@ const styles = StyleSheet.create({
+   },
+   itemContainer: {
+     flexDirection: 'row',
+-    backgroundColor: 'rgba(0,0,0,0.4)',
+-    borderRadius: 12,
+-    marginBottom: 16,
++    backgroundColor: '#13181d',
++    borderRadius: 8,
++    marginBottom: 10,
+     overflow: 'hidden',
+     borderWidth: 1,
+-    borderColor: 'rgba(255,255,255,0.1)',
++    borderColor: '#252d34',
+   },
+   itemAccent: {
+     width: 4,
+diff --git a/mobile-app/src/screens/PairScanScreen.tsx b/mobile-app/src/screens/PairScanScreen.tsx
+index 26c1f1c..18ce477 100644
+--- a/mobile-app/src/screens/PairScanScreen.tsx
++++ b/mobile-app/src/screens/PairScanScreen.tsx
+@@ -7,11 +7,12 @@ import { useHUD } from '@/components/HUD';
+ import { api } from '@/services/api';
+ import { useSync } from '@/hooks/useSync';
+ import Svg, { Path } from 'react-native-svg';
++import * as Linking from 'expo-linking';
+ 
+ export function PairScanScreen() {
+   const navigation = useNavigation<any>();
+   const { showMessage } = useHUD();
+-  const { setServerUrl, setAuthToken } = useSettings();
++  const { setServerUrl, setAuthToken, setSyncEnabled } = useSettings();
+   const { fullSync } = useSync();
+   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+   const [scanned, setScanned] = useState(false);
+@@ -23,20 +24,21 @@ export function PairScanScreen() {
+     })();
+   }, []);
+ 
+-  const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
++  const handleBarCodeScanned = async ({ data }: { type: string; data: string }) => {
+     if (scanned) return;
+ 
+-    // 閰嶅浜岀淮鐮侊細omni://pair?host=<lan_ip>&port=<port>&code=<閰嶅鐮?
+-    const match = data.match(/^omni:\/\/pair\?host=([^&]+)&port=([^&]+)&code=(.+)$/);
+-    if (!match) {
++    const parsed = Linking.parse(data);
++    const host = typeof parsed.queryParams?.host === 'string' ? parsed.queryParams.host.trim() : '';
++    const port = typeof parsed.queryParams?.port === 'string' ? parsed.queryParams.port.trim() : '';
++    const code = typeof parsed.queryParams?.code === 'string' ? parsed.queryParams.code.trim() : '';
++    const validPort = Number(port) >= 1 && Number(port) <= 65535;
++
++    if (parsed.scheme !== 'omni' || parsed.hostname !== 'pair' || !host || !validPort || !code) {
+       showMessage('鏃犳晥鐨勯厤瀵逛簩缁寸爜', 'warning');
+       return;
+     }
+ 
+     setScanned(true);
+-    const host = match[1];
+-    const port = match[2];
+-    const code = match[3];
+     const baseUrl = `http://${host}:${port}`;
+ 
+     try {
+@@ -58,6 +60,7 @@ export function PairScanScreen() {
+       // 杩炴帴鎴愬姛锛屼繚瀛橀厤缃埌璁剧疆涓?       setServerUrl(baseUrl);
+       setAuthToken(code);
++      setSyncEnabled(true);
+       showMessage('閰嶅鎴愬姛', 'success');
+ 
+       // 瑙﹀彂涓€娆″悓姝?diff --git a/mobile-app/src/screens/SearchScreen.tsx b/mobile-app/src/screens/SearchScreen.tsx
+index 0ba491c..7f8d6b5 100644
+--- a/mobile-app/src/screens/SearchScreen.tsx
++++ b/mobile-app/src/screens/SearchScreen.tsx
+@@ -6,19 +6,17 @@ import {
+   FlatList,
+   TouchableOpacity,
+   ActivityIndicator,
+-  StyleSheet,
+ } from 'react-native';
+ import { SafeAreaView } from 'react-native-safe-area-context';
+ import { useTranslation } from 'react-i18next';
+ import { useNavigation } from '@react-navigation/native';
+ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+ import { api } from '@/services/api';
+-import { useSettings } from '@/hooks/useSettings';
+-import { useHUD } from '@/components/HUD';
++import { Entity } from '@/types';
+ 
+ type SearchStackParamList = {
+   SearchMain: undefined;
+-  EntityDetail: { entityId: string; entityName: string };
++  EntityDetail: { entityId: string; entityName: string; entity?: Entity };
+   MemoryDetail: { item: any };
+ };
+ 
+@@ -49,9 +47,6 @@ function getTypeLabel(type: string, t: (k: string) => string): string {
+ export function SearchScreen() {
+   const { t } = useTranslation();
+   const navigation = useNavigation<SearchNav>();
+-  const { showMessage } = useHUD();
+-  const { serverUrl } = useSettings();
+-
+   const [query, setQuery] = useState('');
+   const [debouncedQuery, setDebouncedQuery] = useState('');
+   const [results, setResults] = useState<SearchResultItem[]>([]);
+@@ -76,6 +71,8 @@ export function SearchScreen() {
+     }
+ 
+     if (!api.isConfigured()) {
++      setIsLoading(false);
++      setHasSearched(true);
+       setError(t('search.not_configured'));
+       return;
+     }
+@@ -100,21 +97,27 @@ export function SearchScreen() {
+         (outcomes[0].value.data || []).forEach((e: any) => {
+           items.push({ type: 'entity', data: e, section: t('search.section_entities') });
+         });
+-      } else if (outcomes[0].status === 'rejected') errorsCount++;
++      } else {
++        errorsCount++;
++      }
+ 
+       if (outcomes[1].status === 'fulfilled' && outcomes[1].value.success) {
+         (outcomes[1].value.data || []).forEach((a: any) => {
+           items.push({ type: 'archival', data: a, section: t('search.section_archival') });
+         });
+-      } else if (outcomes[1].status === 'rejected') errorsCount++;
++      } else {
++        errorsCount++;
++      }
+ 
+       if (outcomes[2].status === 'fulfilled' && outcomes[2].value.success) {
+         (outcomes[2].value.data || []).forEach((c: any) => {
+           items.push({ type: 'core', data: c, section: t('search.section_core') });
+         });
+-      } else if (outcomes[2].status === 'rejected') errorsCount++;
++      } else {
++        errorsCount++;
++      }
+ 
+-      if (errorsCount === 3) {
++      if (errorsCount === 3 && items.length === 0) {
+         setError(t('search.connect_error'));
+       }
+ 
+@@ -130,6 +133,7 @@ export function SearchScreen() {
+       navigation.navigate('EntityDetail', {
+         entityId: item.data.id,
+         entityName: item.data.name || item.data.id,
++        entity: item.data,
+       });
+     } else {
+       navigation.navigate('MemoryDetail', { item: item.data });
+@@ -228,28 +232,23 @@ export function SearchScreen() {
+     );
+   };
+ 
+-  const renderSection = (title: string, type: string) => {
+-    const sectionItems = results.filter(r => r.type === type);
+-    if (sectionItems.length === 0) return null;
+-    return (
+-      <View className="mb-4">
+-        <Text className="text-gray-400 text-sm font-medium mb-2 px-1">{title}</Text>
+-        {sectionItems.map((item, index) => (
+-          <View key={`${item.type}-${item.data.id || index}`}>
+-            {renderItem({ item })}
+-          </View>
+-        ))}
+-      </View>
+-    );
+-  };
+-
+   return (
+     <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
+       <View className="px-5 py-4 border-b border-white/10">
+-        <Text className="text-[#e8e8e8] text-2xl font-bold mb-4">{t('search.title')}</Text>
++        <View className="flex-row items-center justify-between mb-4">
++          <View>
++            <Text className="text-[#f2f5f4] text-2xl font-bold">Omni Context</Text>
++            <Text className="text-[#77818b] text-sm mt-1">鏌ユ壘浣犵殑鐭ヨ瘑涓庤蹇?/Text>
++          </View>
++          <View className={`px-2.5 py-1 rounded-md ${api.isConfigured() ? 'bg-[#17352f]' : 'bg-[#332a1d]'}`}>
++            <Text className={`text-xs font-semibold ${api.isConfigured() ? 'text-[#63d8c1]' : 'text-[#e3ac55]'}`}>
++              {api.isConfigured() ? '宸茶繛鎺? : '鏈繛鎺?}
++            </Text>
++          </View>
++        </View>
+ 
+-        <View className="flex-row items-center bg-black/40 border border-white/10 rounded-xl px-4">
+-          <Text className="text-gray-400 mr-2 text-base">?</Text>
++        <View className="flex-row items-center bg-[#171c21] border border-[#2a3239] rounded-lg px-4">
++          <Text className="text-[#77818b] mr-2 text-lg">鈱?/Text>
+           <TextInput
+             className="flex-1 py-3 text-[#e8e8e8] text-base"
+             value={query}
+@@ -265,7 +264,7 @@ export function SearchScreen() {
+               className="ml-2 p-1"
+               onPress={() => setQuery('')}
+             >
+-              <Text className="text-gray-500 text-lg">x</Text>
++              <Text className="text-gray-500 text-lg">脳</Text>
+             </TouchableOpacity>
+           )}
+         </View>
+diff --git a/mobile-app/src/screens/SettingsScreen.tsx b/mobile-app/src/screens/SettingsScreen.tsx
+index c5dc68b..1ea09ff 100644
+--- a/mobile-app/src/screens/SettingsScreen.tsx
++++ b/mobile-app/src/screens/SettingsScreen.tsx
+@@ -2,16 +2,16 @@ import React, { useState, useCallback } from 'react';
+ import {
+   View,
+   Text,
+-  StyleSheet,
+   ScrollView,
+   TouchableOpacity,
+   Switch,
+   TextInput,
+   Alert,
++  Modal,
++  ActivityIndicator,
+ } from 'react-native';
+ import { SafeAreaView } from 'react-native-safe-area-context';
+ import { useNavigation } from '@react-navigation/native';
+-import { useTranslation } from 'react-i18next';
+ import { useSettings } from '@/hooks/useSettings';
+ import { useSync } from '@/hooks/useSync';
+ import { useHUD } from '@/components/HUD';
+@@ -56,11 +56,8 @@ function SettingSection({ title, children }: SettingSectionProps) {
+ 
+ export function SettingsScreen() {
+   const navigation = useNavigation<any>();
+-  const { t } = useTranslation();
+   const { showMessage } = useHUD();
+   const {
+-    theme,
+-    setTheme,
+     language,
+     setLanguage,
+     syncEnabled,
+@@ -71,32 +68,44 @@ export function SettingsScreen() {
+     setAuthToken,
+     autoSync,
+     setAutoSync,
+-    notificationsEnabled,
+-    setNotificationsEnabled,
+-    reset,
+   } = useSettings();
+ 
+   const { status, fullSync, isSyncing } = useSync();
+   const [serverUrlInput, setServerUrlInput] = useState(serverUrl);
+   const [authTokenInput, setAuthTokenInput] = useState(authToken);
+   const [showConfigInput, setShowConfigInput] = useState(false);
++  const [testingConnection, setTestingConnection] = useState(false);
+ 
+-  const handleSaveConfig = useCallback(() => {
++  const handleSaveConfig = useCallback(async () => {
++    const normalizedUrl = serverUrlInput.trim().replace(/\/+$/, '');
++    if (!/^https?:\/\/[^/\s]+(?::\d+)?$/i.test(normalizedUrl)) {
++      showMessage('璇疯緭鍏ュ畬鏁村湴鍧€锛屼緥濡?http://192.168.1.10:3001', 'warning');
++      return;
++    }
+     if (!authTokenInput || !authTokenInput.trim()) {
+       showMessage('璇峰～鍐欓厤瀵圭爜', 'warning');
+       return;
+     }
+-    setServerUrl(serverUrlInput);
+-    setAuthToken(authTokenInput.trim());
+-    if (serverUrlInput.trim()) {
+-      api.configure({ 
+-        baseUrl: serverUrlInput.trim(), 
+-        authToken: authTokenInput.trim() 
+-      });
+-      showMessage('閰嶇疆宸蹭繚瀛?, 'success');
++
++    setTestingConnection(true);
++    api.configure({
++      baseUrl: normalizedUrl,
++      authToken: authTokenInput.trim(),
++      timeout: 8000,
++    });
++    const connected = await api.healthCheck();
++    setTestingConnection(false);
++    if (!connected) {
++      showMessage('杩炴帴澶辫触锛岃妫€鏌ュ湴鍧€銆佸眬鍩熺綉鍜屾闈㈢闃茬伀澧?, 'error');
++      return;
+     }
++
++    setServerUrl(normalizedUrl);
++    setAuthToken(authTokenInput.trim());
++    setSyncEnabled(true);
++    showMessage('杩炴帴鎴愬姛锛岄厤缃凡淇濆瓨', 'success');
+     setShowConfigInput(false);
+-  }, [serverUrlInput, authTokenInput, setServerUrl, setAuthToken, showMessage]);
++  }, [serverUrlInput, authTokenInput, setServerUrl, setAuthToken, setSyncEnabled, showMessage]);
+ 
+   const handleSyncNow = useCallback(async () => {
+     if (!api.isConfigured()) {
+@@ -135,21 +144,11 @@ export function SettingsScreen() {
+   return (
+     <SafeAreaView className="flex-1 bg-[#0a0b12]" edges={['top']}>
+       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+-        <View className="px-5 py-4 border-b border-white/10">
+-          <Text className="text-[#e8e8e8] text-2xl font-bold">璁剧疆</Text>
++        <View className="px-5 py-4">
++          <Text className="text-[#f2f5f4] text-2xl font-bold">璁剧疆</Text>
++          <Text className="text-[#77818b] text-sm mt-1">杩炴帴妗岄潰绔苟绠＄悊鏈湴鏁版嵁</Text>
+         </View>
+ 
+-        <SettingSection title="涓婚">
+-          <SettingItem label="娣辫壊妯″紡">
+-            <Switch
+-              value={theme === 'dark'}
+-              onValueChange={(value: boolean) => setTheme(value ? 'dark' : 'light')}
+-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#22d3ee' }}
+-              thumbColor="#e8e8e8"
+-            />
+-          </SettingItem>
+-        </SettingSection>
+-
+         <SettingSection title="璇█">
+           <View className="flex-row p-4 gap-2">
+             <TouchableOpacity
+@@ -217,17 +216,6 @@ export function SettingsScreen() {
+           </View>
+         </SettingSection>
+ 
+-        <SettingSection title="閫氱煡">
+-          <SettingItem label="鍚敤閫氱煡">
+-            <Switch
+-              value={notificationsEnabled}
+-              onValueChange={setNotificationsEnabled}
+-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#22d3ee' }}
+-              thumbColor="#e8e8e8"
+-            />
+-          </SettingItem>
+-        </SettingSection>
+-
+         <SettingSection title="鍏充簬">
+           <SettingItem label="鐗堟湰" value="1.0.0" />
+         </SettingSection>
+@@ -236,8 +224,13 @@ export function SettingsScreen() {
+           <Text className="text-red-400 text-base font-bold">娓呴櫎鏁版嵁</Text>
+         </TouchableOpacity>
+ 
+-        {showConfigInput && (
+-          <View className="absolute inset-0 bg-black/70 justify-center items-center p-5 z-50">
++        <Modal
++          visible={showConfigInput}
++          transparent
++          animationType="fade"
++          onRequestClose={() => !testingConnection && setShowConfigInput(false)}
++        >
++          <View className="flex-1 bg-black/70 justify-center items-center p-5">
+             <View className="bg-[#0a0b12] border border-white/10 rounded-2xl p-5 w-full max-w-sm">
+               <Text className="text-[#e8e8e8] text-lg font-bold mb-4 text-center">鏈嶅姟鍣ㄩ厤缃?/Text>
+               
+@@ -269,16 +262,25 @@ export function SettingsScreen() {
+                 <TouchableOpacity
+                   className="flex-1 py-3 rounded-xl bg-black/40 border border-white/10 items-center"
+                   onPress={() => setShowConfigInput(false)}
++                  disabled={testingConnection}
+                 >
+                   <Text className="text-gray-400 text-base">鍙栨秷</Text>
+                 </TouchableOpacity>
+-                <TouchableOpacity className="flex-1 py-3 rounded-xl bg-cyan-400 items-center" onPress={handleSaveConfig}>
+-                  <Text className="text-[#0a0b12] text-base font-bold">淇濆瓨</Text>
++                <TouchableOpacity
++                  className={`flex-1 py-3 rounded-xl bg-cyan-400 items-center ${testingConnection ? 'opacity-60' : ''}`}
++                  onPress={handleSaveConfig}
++                  disabled={testingConnection}
++                >
++                  {testingConnection ? (
++                    <ActivityIndicator color="#0a0b12" />
++                  ) : (
++                    <Text className="text-[#0a0b12] text-base font-bold">娴嬭瘯骞朵繚瀛?/Text>
++                  )}
+                 </TouchableOpacity>
+               </View>
+             </View>
+           </View>
+-        )}
++        </Modal>
+       </ScrollView>
+     </SafeAreaView>
+   );
+diff --git a/mobile-app/src/services/api.ts b/mobile-app/src/services/api.ts
+index aca3deb..37eea4b 100644
+--- a/mobile-app/src/services/api.ts
++++ b/mobile-app/src/services/api.ts
+@@ -28,7 +28,7 @@ class ApiClient {
+   private authToken: string = '';
+ 
+   configure(config: { baseUrl: string; timeout?: number; authToken?: string }) {
+-    this.baseUrl = config.baseUrl;
++    this.baseUrl = config.baseUrl.replace(/\/+$/, '');
+     this.authToken = config.authToken || '';
+     
+     const headers: Record<string, string> = {
+@@ -39,7 +39,7 @@ class ApiClient {
+     }
+ 
+     this.client = axios.create({
+-      baseURL: config.baseUrl,
++      baseURL: this.baseUrl,
+       timeout: config.timeout ?? 30000,
+       headers,
+     });
+@@ -58,6 +58,12 @@ class ApiClient {
+     );
+   }
+ 
++  reset() {
++    this.client = null;
++    this.baseUrl = '';
++    this.authToken = '';
++  }
++
+   setAuthToken(token: string) {
+     this.authToken = token;
+     if (this.client) {
+diff --git a/mobile-app/src/services/syncService.ts b/mobile-app/src/services/syncService.ts
+index 5377596..1949597 100644
+--- a/mobile-app/src/services/syncService.ts
++++ b/mobile-app/src/services/syncService.ts
+@@ -7,6 +7,7 @@ const SYNC_UPLOAD_CONCURRENCY = 5;
+ 
+ class SyncService {
+   private syncInterval: NodeJS.Timeout | null = null;
++  private initializePromise: Promise<void> | null = null;
+   private callbacks: Set<SyncCallback> = new Set();
+   private status: SyncStatus = {
+     lastSync: null,
+@@ -31,8 +32,20 @@ class SyncService {
+   }
+ 
+   async initialize(): Promise<void> {
+-    await localDb.initDatabase();
+-    await this.updatePendingCount();
++    if (!this.initializePromise) {
++      this.initializePromise = (async () => {
++        await localDb.initDatabase();
++        await this.updatePendingCount();
++      })().catch((error) => {
++        this.initializePromise = null;
++        throw error;
++      });
++    }
++    await this.initializePromise;
++  }
++
++  private async ensureReady(): Promise<void> {
++    await this.initialize();
+   }
+ 
+   private async updatePendingCount(): Promise<void> {
+@@ -45,6 +58,7 @@ class SyncService {
+   }
+ 
+   async sync(): Promise<void> {
++    await this.ensureReady();
+     if (this.status.syncing) {
+       return;
+     }
+@@ -85,9 +99,9 @@ class SyncService {
+ 
+       const workerCount = Math.min(SYNC_UPLOAD_CONCURRENCY, unsynced.length);
+       const workers = Array.from({ length: workerCount }, async () => {
+-        while (true) {
++        while (cursor < unsynced.length) {
+           const index = cursor++;
+-          if (index >= unsynced.length) return;
++          if (index >= unsynced.length) break;
+           await uploadOne(unsynced[index]);
+         }
+       });
+@@ -109,6 +123,7 @@ class SyncService {
+   }
+ 
+   async pullFromServer(): Promise<Entity[]> {
++    await this.ensureReady();
+     if (!api.isConfigured()) {
+       return [];
+     }
+@@ -181,6 +196,7 @@ class SyncService {
+   }
+ 
+   async addEntity(entity: Entity): Promise<void> {
++    await this.ensureReady();
+     await localDb.addEntity(entity);
+     await this.updatePendingCount();
+ 
+@@ -195,6 +211,7 @@ class SyncService {
+   }
+ 
+   async updateEntity(id: string, updates: Partial<Entity>): Promise<void> {
++    await this.ensureReady();
+     await localDb.updateEntity(id, updates);
+     await this.updatePendingCount();
+     
+@@ -207,6 +224,7 @@ class SyncService {
+   }
+ 
+   async deleteEntity(id: string): Promise<void> {
++    await this.ensureReady();
+     await localDb.deleteEntity(id);
+     await this.updatePendingCount();
+     
+@@ -216,10 +234,12 @@ class SyncService {
+   }
+ 
+   async getEntities(limit?: number, offset?: number): Promise<Entity[]> {
++    await this.ensureReady();
+     return localDb.getEntities(limit, offset);
+   }
+ 
+   async searchEntities(query: string): Promise<Entity[]> {
++    await this.ensureReady();
+     return localDb.searchEntitiesLocal(query);
+   }
+ }
+diff --git a/omni-context-extension.zip b/omni-context-extension.zip
+index a977601..06beae2 100644
+Binary files a/omni-context-extension.zip and b/omni-context-extension.zip differ

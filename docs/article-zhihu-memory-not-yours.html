@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你的 AI 记忆不归你 —— 以及怎么拿回来</title>
+<style>
+  :root{
+    --bg:#0e0d0b;
+    --bg-soft:#17150f;
+    --ink:#ede8df;
+    --ink-dim:#9a948a;
+    --ink-faint:#5c574e;
+    --accent:#e8553a;
+    --accent-soft:#7a2e1f;
+    --gold:#c9a961;
+    --rule:#2a2620;
+    --quote:#23201a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:17px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Serif SC","Source Han Serif SC",Georgia,"Times New Roman",serif;
+    line-height:1.85;
+    overflow-x:hidden;
+  }
+  /* grain overlay */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:100;
+    opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .wrap{max-width:680px;margin:0 auto;padding:0 24px}
+
+  /* hero */
+  .hero{padding:96px 0 56px;position:relative}
+  .hero .kicker{
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:28px;
+    opacity:0;animation:fade .8s ease .1s forwards;
+  }
+  .hero h1{
+    font-family:"Noto Serif SC",Georgia,serif;
+    font-weight:900;font-size:clamp(2rem,7vw,3.4rem);
+    line-height:1.12;letter-spacing:-.01em;
+    margin-bottom:20px;
+    opacity:0;animation:fade .9s ease .25s forwards;
+  }
+  .hero h1 .strike{
+    position:relative;color:var(--ink-dim);
+  }
+  .hero h1 .strike::after{
+    content:"";position:absolute;left:-2%;right:-2%;top:54%;height:3px;
+    background:var(--accent);transform:scaleX(0);transform-origin:left;
+    animation:strike 1s ease .9s forwards;
+  }
+  .hero .deck{
+    font-size:1.05rem;color:var(--ink-dim);
+    max-width:540px;
+    opacity:0;animation:fade .9s ease .5s forwards;
+  }
+  .hero .meta{
+    margin-top:36px;display:flex;gap:24px;flex-wrap:wrap;
+    font-family:"JetBrains Mono",monospace;font-size:.72rem;
+    color:var(--ink-faint);letter-spacing:.05em;
+    opacity:0;animation:fade .9s ease .7s forwards;
+  }
+  .hero .meta span::before{content:"◆ ";color:var(--accent-soft)}
+
+  @keyframes fade{to{opacity:1}}
+  @keyframes strike{to{transform:scaleX(1)}}
+
+  /* article body */
+  .body{padding:48px 0 80px}
+  .body p{margin-bottom:1.6em}
+  .body h2{
+    font-family:"Noto Serif SC",serif;font-weight:700;
+    font-size:1.5rem;line-height:1.3;
+    margin:3em 0 1em;color:var(--ink);
+    position:relative;padding-left:0;
+  }
+  .body h2::before{
+    content:"";display:block;width:32px;height:2px;
+    background:var(--accent);margin-bottom:18px;
+  }
+  .body h3{
+    font-family:"Noto Serif SC",serif;font-weight:600;
+    font-size:1.12rem;margin:2.2em 0 .8em;color:var(--gold);
+  }
+  .body strong{color:var(--ink);font-weight:700}
+  .body em{font-style:italic;color:var(--gold)}
+  .body a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-soft)}
+  .body code{
+    font-family:"JetBrains Mono",monospace;font-size:.85em;
+    background:var(--bg-soft);padding:.15em .4em;border-radius:3px;
+    color:var(--gold);
+  }
+
+  /* drop cap */
+  .body > p:first-of-type::first-letter{
+    font-family:Georgia,serif;font-weight:900;
+    font-size:3.4em;line-height:.8;float:left;
+    margin:.05em .12em 0 0;color:var(--accent);
+  }
+
+  /* blockquote */
+  blockquote{
+    margin:2em 0;padding:24px 28px;
+    background:var(--quote);border-left:3px solid var(--accent);
+    font-size:1.05rem;color:var(--ink);
+  }
+  blockquote p{margin:0}
+  blockquote .attr{
+    margin-top:12px;font-size:.8rem;color:var(--ink-faint);
+    font-family:"JetBrains Mono",monospace;letter-spacing:.05em;
+  }
+
+  /* comparison table */
+  .compare{
+    margin:2em 0;border:1px solid var(--rule);border-collapse:collapse;
+    width:100%;font-size:.9rem;
+  }
+  .compare th,.compare td{
+    padding:12px 14px;text-align:left;border-bottom:1px solid var(--rule);
+  }
+  .compare th{
+    font-family:"JetBrains Mono",monospace;font-size:.72rem;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);
+    background:var(--bg-soft);
+  }
+  .compare td:first-child{color:var(--ink);font-weight:600}
+  .compare .yes{color:#6b9e6b}
+  .compare .no{color:var(--accent)}
+  .compare tr:last-child td{border-bottom:none}
+
+  /* callout */
+  .callout{
+    margin:2em 0;padding:28px;background:var(--bg-soft);
+    border:1px solid var(--rule);position:relative;
+  }
+  .callout::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+    background:var(--gold);
+  }
+  .callout .tag{
+    font-family:"JetBrains Mono",monospace;font-size:.7rem;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--gold);
+    margin-bottom:12px;
+  }
+
+  /* interactive reveal */
+  .reveal{margin:2em 0;cursor:pointer}
+  .reveal .q{
+    padding:18px 22px;background:var(--quote);
+    border:1px solid var(--rule);position:relative;
+    transition:border-color .3s;
+  }
+  .reveal .q:hover{border-color:var(--accent-soft)}
+  .reveal .q::after{
+    content:"+";position:absolute;right:22px;top:50%;transform:translateY(-50%);
+    color:var(--accent);font-size:1.3rem;font-weight:300;
+    transition:transform .3s;
+  }
+  .reveal.open .q::after{transform:translateY(-50%) rotate(45deg)}
+  .reveal .a{
+    max-height:0;overflow:hidden;transition:max-height .4s ease;
+    padding:0 22px;
+  }
+  .reveal.open .a{max-height:500px;padding:18px 22px 4px}
+  .reveal .a p{font-size:.92rem;color:var(--ink-dim);margin-bottom:1em}
+
+  /* ending */
+  .ending{
+    margin-top:4em;padding-top:48px;border-top:1px solid var(--rule);
+    text-align:center;
+  }
+  .ending .mark{
+    font-family:"JetBrains Mono",monospace;font-size:.7rem;
+    letter-spacing:.3em;color:var(--ink-faint);margin-bottom:20px;
+  }
+  .ending p{font-size:1.1rem;color:var(--gold);font-style:italic;max-width:480px;margin:0 auto 1.4em}
+
+  .cta{
+    margin:48px 0 0;padding:32px;background:var(--bg-soft);
+    border:1px solid var(--rule);text-align:center;
+  }
+  .cta .label{
+    font-family:"JetBrains Mono",monospace;font-size:.7rem;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--accent);
+    margin-bottom:14px;
+  }
+  .cta .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .cta .links a{
+    display:inline-block;padding:10px 22px;
+    border:1px solid var(--rule);color:var(--ink);
+    font-family:"JetBrains Mono",monospace;font-size:.8rem;
+    text-decoration:none;transition:all .25s;
+  }
+  .cta .links a:hover{border-color:var(--accent);color:var(--accent)}
+  .cta .links a.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+  .cta .links a.primary:hover{background:var(--gold);border-color:var(--gold)}
+
+  footer{
+    padding:48px 0 64px;text-align:center;
+    font-family:"JetBrains Mono",monospace;font-size:.72rem;
+    color:var(--ink-faint);letter-spacing:.05em;
+  }
+  footer a{color:var(--ink-dim);text-decoration:none}
+
+  /* mobile */
+  @media (max-width:560px){
+    html{font-size:16px}
+    .hero{padding:64px 0 40px}
+    .wrap{padding:0 20px}
+    .body h2{font-size:1.3rem}
+    .compare{font-size:.78rem}
+    .compare th,.compare td{padding:8px 8px}
+    .cta .links a{padding:9px 16px;font-size:.72rem}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="kicker">数据主权 · 本地优先 · 2026</div>
+    <h1>你的 AI 记忆<span class="strike">不归你</span></h1>
+    <p class="deck">ChatGPT 记住你半年，Claude 一无所知。换台电脑，记忆跟着账号走了。这篇讲清楚一件事：你以为的"记忆"，所有权不在你手里——以及怎么拿回来。</p>
+    <div class="meta">
+      <span>阅读约 8 分钟</span>
+      <span>观点 · 实操</span>
+      <span>已开源</span>
+    </div>
+  </header>
+
+  <article class="body">
+
+    <p>你跟 ChatGPT 聊了半年。它记住了你写代码的习惯、你在做的项目、你的技术栈、你讨厌的设计模式。某天你打开 Claude，问同一个项目的问题——它一无所知。你又换了台电脑登录 ChatGPT，发现记忆跟着账号走了。</p>
+
+    <p>你大概没认真想过一个问题：<strong>这些"记忆"，存在哪？</strong></p>
+
+    <p>答案很简单：存在他们的服务器上。你产生的数据，你无法完整导出，无法迁移到竞品，无法本地备份，无法一键销毁。你用的是他们的记忆功能，<strong>记忆的所有权是他们的</strong>。你只是被允许访问。</p>
+
+    <blockquote>
+      <p>当一样东西对你越重要，它的所有权就越该属于你。记忆对 AI 比对任何软件都重要——它是 AI 理解你的根基。可这根基，现在长在别人家的院子里。</p>
+      <div class="attr">—— 一个被锁定的用户</div>
+    </blockquote>
+
+    <h2>一、为什么大厂不会帮你解决</h2>
+
+    <p>你可能会想：让各家互通不就行了？让 ChatGPT 的记忆能导出给 Claude？</p>
+
+    <p>他们不会。这不是技术问题，是<strong>结构性利益冲突</strong>。</p>
+
+    <p>记忆是锁定的核心。ChatGPT 记住你越多，你越离不开 ChatGPT——换工具的成本就越高。开放记忆，等于帮竞品降低迁移成本，等于自断护城河。任何一家做了"记忆导出给竞品"的功能，都是在帮对手获客。</p>
+
+    <p>所以你会看到：每家都在做记忆，每家都做得很用心，但<strong>没有一家会做"互通"</strong>。这不是他们做不到，是他们不能做、不该做、做了对不起股东。</p>
+
+    <div class="callout">
+      <div class="tag">本质</div>
+      <p>大厂的记忆，本质是<strong>锁定工具</strong>，不是<strong>用户资产</strong>。这两个东西长得像，但方向相反。锁定工具会越来越强，用户资产会越来越开放。你看到的所有"记忆功能升级"，都是在升级锁定，不是在升级你的资产。</p>
+    </div>
+
+    <h2>二、本地优先：技术其实早就成熟了</h2>
+
+    <p>你会不会觉得，"本地记忆"听起来很美好但很不实用？十年前是这样。现在不是了。</p>
+
+    <p>三个东西变了：</p>
+
+    <h3>1. SQLite 能跑在任意设备上</h3>
+    <p>你手机里、浏览器里、桌面应用里，到处都是 SQLite。它稳定、快、零配置。一个知识图谱存几十万条实体关系，本地查询毫秒级。</p>
+
+    <h3>2. 向量检索可以在本地跑</h3>
+    <p>语义检索不再需要调云端 API。<code>all-MiniLM-L6-v2</code> 这个模型只有 23MB，普通笔记本 CPU 跑推理也就几十毫秒。你的语义检索，完全可以不出本机。</p>
+
+    <h3>3. MCP 协议让任何 AI 都能读同一个数据源</h3>
+    <p>这是关键的一块拼图。Anthropic 推的 Model Context Protocol，本质是给 AI 一个标准化的"外接记忆接口"。任何兼容 MCP 的客户端——Claude Desktop、Cursor、Cline、Windsurf、Claude Code——都能读同一个本地数据源。</p>
+
+    <p>也就是说：<strong>技术上的每一块拼图都已经就位</strong>。缺的不是技术突破，是有人愿意把它们拼起来，做成一个能用的东西。</p>
+
+    <h2>三、我做了什么</h2>
+
+    <p>所以我做了 <a href="https://github.com/guo6x/Omni-context" target="_blank">Omni-Context</a>。</p>
+
+    <p>它是一个跑在你机器上的知识图谱。你随手存的东西——截屏、文件、网页、剪贴板——会被自动抽成"实体+关系"，存进本地 SQLite。然后通过 MCP 协议，同时挂给 Claude、Cursor、Cline。</p>
+
+    <p>我在 Cursor 里存的某个项目决策，晚上回家打开 Claude Desktop 问，它直接就知道。<strong>一份记忆，所有 AI 共享</strong>。</p>
+
+    <p>全本地。SQLite 在你硬盘上，向量模型在你 CPU 上跑，没有云、没有账号、没有公网 endpoint。数据归你，可以带走，可以备份，可以一键销毁。</p>
+
+    <table class="compare">
+      <thead>
+        <tr><th></th><th>Omni-Context</th><th>ChatGPT 记忆</th><th>Mem0</th><th>Obsidian</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>本地运行</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+        <tr><td>MCP 原生</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>知识图谱</td><td class="yes">✓</td><td class="no">✗</td><td>部分</td><td>手动</td></tr>
+        <tr><td>跨 AI 共享</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>数据归你</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+        <tr><td>离线可用</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+      </tbody>
+    </table>
+
+    <p>注意看这张表——<strong>没有一个竞品能同时打六个勾</strong>。Mem0 强但云端；Obsidian 本地但不是 AI 记忆层；ChatGPT 记忆方便但锁死。Omni-Context 是这个交集里目前唯一的选择。</p>
+
+    <h2>四、做着做着，我发现记忆只是第一步</h2>
+
+    <p>第一版做完，我用了一阵，发现一个更深的问​​题。</p>
+
+    <p>如果 AI 只能看到你<em>愿意写下来</em>的东西，那不叫第二大脑，那叫<strong>外接硬盘</strong>。</p>
+
+    <p>真正的认知，不到一半能落于纸面。你花了 15 小时看 React 状态管理的文章，但从未做过一个决策或手动沉淀——这个行为模式本身就是一个洞见，但 AI 看不到，因为你没"写"给它。</p>
+
+    <p>你关注什么，图谱里就有什么；你不关注的东西，永远不会出现。用久了就是自我强化，AI 在帮你巩固信息茧房。</p>
+
+    <p>所以我又加了一层东西：<strong>盲点检测</strong>。</p>
+
+    <div class="reveal" onclick="this.classList.toggle('open')">
+      <div class="q">它具体会怎么"拷问"你？点击展开</div>
+      <div class="a">
+        <p><strong>消费但不行动</strong>：你反复浏览某个主题的文章，但从未做过决策、未手动沉淀。系统会提醒你"你在持续消费这个主题，但没产生任何行动"。</p>
+        <p><strong>来源同质化</strong>：你对某个主题的所有信息都来自同一个视角。系统会提示"你可能只看到了硬币的一面"。</p>
+        <p><strong>搜索未捕获</strong>：你搜了某个东西，但没把它存进记忆。系统会问"你查了这个，但没留下——是忘了，还是不重要？"</p>
+      </div>
+    </div>
+
+    <p>大多数 AI 记忆工具在帮你整理"已知"。Omni-Context 在帮你发现<em>未知的未知</em>。它不只是一个记性好的助手，它是一个会反问你"你确定看过反面观点吗？"的第二大脑。</p>
+
+    <blockquote>
+      <p>记忆的价值不在"存得住"，在"能质疑你"。一个只会附和的记忆，是信息茧房的加速器。</p>
+    </blockquote>
+
+    <h2>五、数据主权不是口号</h2>
+
+    <p>我知道"数据主权"听起来像个又大又空的概念。但它其实非常具体：</p>
+
+    <p>它意味着你的 AI 记忆可以<strong>跨工具</strong>——今天用 Claude，明天用 Cursor，记忆不断。<br>
+    它意味着你的 AI 记忆可以<strong>迁移</strong>——换个工具不用从零开始。<br>
+    它意味着你的 AI 记忆可以<strong>备份</strong>——一个 SQLite 文件拷走就是全部。<br>
+    它意味着你的 AI 记忆可以<strong>销毁</strong>——删掉文件，它就真的没了，不会留在某个你不知道的服务器上。</p>
+
+    <p>而这一切的钥匙，<strong>只在你手里</strong>。</p>
+
+    <p>本地优先不是怀旧，不是反云。它是未来——当 AI 越来越深入你的工作流，当记忆越来越成为 AI 理解你的根基，这个根基长在谁家院子里，就不再是小事。</p>
+
+    <p>我已经把代码开源了。MIT 协议，随便用。如果你同时用多个 AI 工具，又在意数据归自己——试试看。</p>
+
+    <div class="ending">
+      <div class="mark">◆ ◆ ◆</div>
+      <p>大厂的记忆是锁定工具。<br>你的记忆，该是你的资产。</p>
+    </div>
+
+    <div class="cta">
+      <div class="label">拿回你的记忆</div>
+      <p style="color:var(--ink-dim);font-size:.92rem;margin-bottom:8px">开源 · MIT · 全本地 · 25 个 MCP 工具</p>
+      <div class="links">
+        <a class="primary" href="https://github.com/guo6x/Omni-context" target="_blank">GitHub 仓库</a>
+        <a href="https://github.com/guo6x/Omni-context/releases/latest" target="_blank">下载 Windows 版</a>
+        <a href="https://mcp.so/zh/servers/omni-context" target="_blank">MCP 目录</a>
+      </div>
+    </div>
+
+  </article>
+
+  <footer>
+    <p>Omni-Context · <a href="https://github.com/guo6x/Omni-context">github.com/guo6x/Omni-context</a> · MIT</p>
+    <p style="margin-top:8px">如果这篇文章对你有启发，转发给同样被 AI 记忆割裂困扰的人</p>
+  </footer>
+
+</div>
+
+</body>
+</html>
