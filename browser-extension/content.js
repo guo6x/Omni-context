@@ -66,19 +66,33 @@
   });
 
   let busy = false;
-  button.addEventListener('click', () => {
+  button.addEventListener('click', async () => {
     if (busy) return;
     busy = true;
     button.style.opacity = '0.55';
     const payload = getPagePayload();
+    const confirmed = await confirmManualCapture(payload);
+    if (!confirmed) {
+      busy = false;
+      button.style.opacity = '1';
+      return;
+    }
+    payload.previewConfirmed = true;
     showToast(payload.source ? `正在沉淀 ${payload.source} 对话（${payload.turns} 轮）…` : '正在沉淀当前页面…');
-    chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: payload }, (resp) => {
+    chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: payload }, async (resp) => {
       busy = false;
       button.style.opacity = '1';
       if (chrome.runtime.lastError) { showToast('✗ 连不上大脑（确认桌面端在运行、token 已配）'); return; }
       if (resp && resp.ok) {
         // 手动捕获后记下签名，避免自动观察器紧接着重复沉淀同一段对话
-        if (payload.source) { try { setAutoSig(urlKey(), { sig: globalThis.__omniConversationSignature(payload), count: payload.turns }); } catch (e) {} }
+        if (payload.source) {
+          try {
+            const sig = await globalThis.__omniConversationSignature(payload);
+            await setAutoSig(urlKey(), { sig, count: payload.turns });
+          } catch (error) {
+            console.warn('[Omni-Context] Unable to update capture signature', error);
+          }
+        }
         showToast(payload.source ? `✓ 已捕获 ${payload.turns} 轮对话，后台抽取中` : '✓ 已捕获，正在后台抽取');
       } else {
         showToast('✗ ' + ((resp && resp.error) || '提交失败'));
@@ -102,6 +116,39 @@
       });
       return true;
     }
+
+    if (message.type === 'PREVIEW_CAPTURE_PAGE') {
+      (async () => {
+        const payload = getPagePayload();
+        if (!(await confirmManualCapture(payload))) return sendResponse({ ok: false, cancelled: true });
+        payload.previewConfirmed = true;
+        chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: payload }, sendResponse);
+      })().catch((error) => {
+        console.warn('[Omni-Context] Page preview capture failed', error);
+        sendResponse({ ok: false, error: String(error) });
+      });
+      return true;
+    }
+
+    if (message.type === 'PREVIEW_CAPTURE_SELECTION') {
+      (async () => {
+        const payload = {
+          url: location.href,
+          title: document.title,
+          text: window.getSelection()?.toString() || '',
+          content: window.getSelection()?.toString() || '',
+          selection: true,
+        };
+        if (!payload.content.trim()) return sendResponse({ ok: false, error: 'No selection' });
+        if (!(await confirmManualCapture(payload))) return sendResponse({ ok: false, cancelled: true });
+        payload.previewConfirmed = true;
+        chrome.runtime.sendMessage({ type: 'CAPTURE_SELECTION', data: payload }, sendResponse);
+      })().catch((error) => {
+        console.warn('[Omni-Context] Selection preview capture failed', error);
+        sendResponse({ ok: false, error: String(error) });
+      });
+      return true;
+    }
   });
 
   function getPagePayload() {
@@ -115,6 +162,26 @@
       title: document.title,
       content: document.body.innerText.substring(0, 10000),
     };
+  }
+
+  async function confirmManualCapture(payload) {
+    const stored = await chrome.storage.local.get('settings');
+    const settings = OmniPrivacy.mergeSettings(stored.settings);
+    const policy = OmniPrivacy.evaluateCapturePolicy(settings, payload.url || location.href, { automatic: false });
+    if (!policy.allowed) {
+      showToast(`此站点已阻止捕获：${policy.reason}`);
+      return false;
+    }
+    const redacted = settings.redactSensitiveFields
+      ? OmniPrivacy.redactSensitiveText(payload.content || '')
+      : { text: payload.content || '', redactedCount: 0 };
+    const stats = OmniPrivacy.captureStats(redacted.text, redacted.redactedCount);
+    const preview = redacted.text.slice(0, 700);
+    return window.confirm(
+      `即将发送 ${stats.sentCharacters} 个字符（${stats.payloadChunks} 块），已遮盖 ${stats.redactedCount} 处敏感字段。\n`
+      + '内容发送到本机 Brain Server；若已配置远程 LLM，内容可能离开本机。\n\n'
+      + `预览：\n${preview}${redacted.text.length > preview.length ? '\n…' : ''}`,
+    );
   }
 
   // 页面内即时提示（chrome 通知常被系统吞，这个一定看得到）
@@ -144,7 +211,10 @@
 
   async function getAutoSig(key) {
     try { const r = await chrome.storage.local.get('autoSig'); return (r.autoSig || {})[key] || null; }
-    catch { return null; }
+    catch (error) {
+      console.warn('[Omni-Context] Unable to read automatic capture signature', error);
+      return null;
+    }
   }
   async function setAutoSig(key, entry) {
     try {
@@ -154,14 +224,22 @@
       const keys = Object.keys(map);
       if (keys.length > 200) delete map[keys[0]]; // 控制体积
       await chrome.storage.local.set({ autoSig: map });
-    } catch {}
+    } catch (error) {
+      console.warn('[Omni-Context] Unable to persist automatic capture signature', error);
+    }
   }
 
   async function tryAutoCapture() {
     if (!autoEnabled || autoInFlight) return;
     const conv = globalThis.__omniExtractConversation && globalThis.__omniExtractConversation();
     if (!conv || conv.lastRole !== 'assistant') return; // 等这轮回答结束再沉淀
-    const sig = globalThis.__omniConversationSignature(conv);
+    let sig;
+    try {
+      sig = await globalThis.__omniConversationSignature(conv);
+    } catch (error) {
+      console.warn('[Omni-Context] Automatic capture signature failed; capture is stopped', error);
+      return;
+    }
     const key = urlKey();
     const prev = await getAutoSig(key);
     if (prev && (prev.sig === sig || conv.turns <= prev.count)) return; // 没新内容/被虚拟列表截短
@@ -169,7 +247,7 @@
     showToast(`自动沉淀 ${conv.source} 对话（${conv.turns} 轮）…`);
     chrome.runtime.sendMessage({
       type: 'CAPTURE_PAGE',
-      data: { url: conv.url, title: conv.title, content: conv.content, source: conv.source, turns: conv.turns, preformatted: true },
+      data: { url: conv.url, title: conv.title, content: conv.content, source: conv.source, turns: conv.turns, preformatted: true, automatic: true },
     }, (resp) => {
       autoInFlight = false;
       if (chrome.runtime.lastError) return;

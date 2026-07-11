@@ -8,11 +8,21 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createServer } from '../src/api/routes.js';
 import initDatabase, { Database } from '../src/db/sqlite.js';
+import { requiredScope } from '../src/security/auth.js';
 
 async function closeServer(server: http.Server): Promise<void> {
   await new Promise<void>((resolve, reject) =>
     server.close((error) => error ? reject(error) : resolve()));
 }
+
+describe('route scope classification', () => {
+  it('allows the browser read-only question tool without opening other MCP routes', () => {
+    expect(requiredScope({ method: 'POST', url: '/api/mcp/tool/ask_memory' } as http.IncomingMessage))
+      .toBe('memory:read');
+    expect(requiredScope({ method: 'POST', url: '/api/mcp/tool/add_entity' } as http.IncomingMessage))
+      .toBe('admin:delete');
+  });
+});
 
 describe('scoped device authentication', () => {
   let db: Database;

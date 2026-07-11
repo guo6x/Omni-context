@@ -35,7 +35,7 @@
     document.querySelectorAll('[data-message-author-role]').forEach((el) => {
       const role = el.getAttribute('data-message-author-role') === 'user' ? 'user' : 'assistant';
       const body = el.querySelector('.markdown') || el.querySelector('.whitespace-pre-wrap') || el;
-      pushTurn(turns, role, body.innerText);
+      pushTurn(turns, role, body.innerText || body.textContent);
     });
     return turns;
   }
@@ -45,7 +45,7 @@
     const turns = [];
     document.querySelectorAll('[data-testid="user-message"], .font-claude-message').forEach((el) => {
       const isUser = el.matches('[data-testid="user-message"]');
-      pushTurn(turns, isUser ? 'user' : 'assistant', el.innerText);
+      pushTurn(turns, isUser ? 'user' : 'assistant', el.innerText || el.textContent);
     });
     return turns;
   }
@@ -58,7 +58,7 @@
       const body = isUser
         ? (el.querySelector('.query-text') || el)
         : (el.querySelector('message-content') || el.querySelector('.markdown') || el);
-      pushTurn(turns, isUser ? 'user' : 'assistant', body.innerText);
+      pushTurn(turns, isUser ? 'user' : 'assistant', body.innerText || body.textContent);
     });
     return turns;
   }
@@ -95,16 +95,20 @@
         title: document.title,
       };
     } catch (e) {
+      console.warn('[Omni-Context] Conversation DOM extraction failed', e);
       return null;
     }
   };
 
-  // 自动捕获去重用的轻量签名：轮数 + 内容哈希
-  globalThis.__omniConversationSignature = function (data) {
+  // 自动捕获去重使用 SHA-256，避免简单 32 位哈希碰撞导致尾部内容被误判重复。
+  globalThis.__omniConversationSignature = async function (data) {
     if (!data || !data.content) return '';
-    let h = 0;
-    const s = data.content;
-    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-    return data.turns + ':' + (h >>> 0);
+    if (!globalThis.crypto?.subtle) {
+      throw new Error('Web Crypto is required for conversation deduplication');
+    }
+    const bytes = new TextEncoder().encode(data.content);
+    const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+    const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return `${data.turns}:${hex}`;
   };
 })();

@@ -118,12 +118,13 @@ async function readJsonBody(req: http.IncomingMessage): Promise<unknown> {
   });
 }
 
-function requiredScope(req: http.IncomingMessage): AuthScope {
+export function requiredScope(req: http.IncomingMessage): AuthScope {
   const pathname = new URL(req.url || '/', 'http://localhost').pathname;
   const method = req.method || 'GET';
 
   if (pathname === '/api/admin/export') return 'admin:export';
   if (pathname === '/api/admin/import') return 'admin:import';
+  if (pathname === '/api/mcp/tool/ask_memory') return 'memory:read';
   if (pathname === '/mcp' || pathname.startsWith('/api/mcp/')) return 'admin:delete';
   if (pathname.startsWith('/api/settings')) return 'admin:import';
   if (pathname.startsWith('/api/admin/') || pathname.startsWith('/api/auth/devices')) {

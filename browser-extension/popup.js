@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('askBtn')?.addEventListener('click', askBrain);
   document.getElementById('askInput')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') askBrain(); });
 
-  await initAutoCaptureToggle();
+  await initPrivacyControls();
 
   localToken = await getToken();
 
@@ -40,33 +40,118 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     document.getElementById('tokenSetup').classList.remove('hidden');
     document.getElementById('statusDot').className = 'w-2 h-2 rounded-full bg-amber-400';
-    document.getElementById('statusText').textContent = '需要设置本地 API Token';
+    document.getElementById('statusText').textContent = '需要使用短期配对码连接';
   }
 });
 
 async function saveToken() {
   const input = document.getElementById('tokenInput');
-  const token = input.value.trim();
-  if (!token) return;
+  const pairCode = input.value.trim();
+  if (!/^\d{6}$/.test(pairCode)) {
+    showNotification('请输入桌面端显示的 6 位短期配对码');
+    return;
+  }
 
-  await chrome.storage.local.set({ localApiToken: token });
-  localToken = token;
-  document.getElementById('tokenSetup').classList.add('hidden');
-  document.getElementById('statusText').textContent = 'Token 已保存，检查连接...';
-  checkConnection();
-  loadStats();
+  const stored = await chrome.storage.local.get('browserDeviceId');
+  const deviceId = stored.browserDeviceId || `browser-${crypto.randomUUID()}`;
+  await chrome.storage.local.set({ browserDeviceId: deviceId });
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/pair/exchange`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${pairCode}`,
+      },
+      body: JSON.stringify({
+        device_id: deviceId,
+        device_type: 'browser_extension',
+        requested_scopes: ['memory:read', 'memory:write', 'decision:read'],
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.device_token) throw new Error(data.error || `HTTP ${response.status}`);
+    await chrome.storage.local.set({ localApiToken: data.device_token });
+    localToken = data.device_token;
+    input.value = '';
+    document.getElementById('tokenSetup').classList.add('hidden');
+    document.getElementById('statusText').textContent = '设备 Token 已签发，检查连接...';
+    checkConnection();
+    loadStats();
+  } catch (error) {
+    showNotification(`配对失败：${error.message || String(error)}`);
+  }
 }
 
-async function initAutoCaptureToggle() {
+async function getActiveTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab || null;
+}
+
+async function initPrivacyControls() {
   const toggle = document.getElementById('autoCaptureToggle');
-  if (!toggle) return;
+  const pauseToggle = document.getElementById('pauseCaptureToggle');
+  const allowButton = document.getElementById('allowDomainBtn');
+  const blockButton = document.getElementById('blockDomainBtn');
+  const tab = await getActiveTab();
+  const domain = OmniPrivacy.normalizeDomain(tab?.url || '');
   const r = await chrome.storage.local.get('settings');
-  toggle.checked = !!(r.settings && r.settings.autoCapture);
+  const settings = OmniPrivacy.mergeSettings(r.settings);
+  if (toggle) toggle.checked = settings.autoCapture;
+  if (pauseToggle) pauseToggle.checked = settings.capturePaused;
+  const domainLabel = document.getElementById('currentDomain');
+  if (domainLabel) domainLabel.textContent = domain || '不可访问页面';
+
+  const persist = async (next) => {
+    await chrome.storage.local.set({ settings: OmniPrivacy.mergeSettings(next) });
+  };
+
   toggle.addEventListener('change', async () => {
-    const cur = (await chrome.storage.local.get('settings')).settings || {};
-    cur.autoCapture = toggle.checked;
-    await chrome.storage.local.set({ settings: cur });
+    const current = OmniPrivacy.mergeSettings((await chrome.storage.local.get('settings')).settings);
+    if (toggle.checked) {
+      const confirmed = confirm(
+        `启用自动沉淀将允许 Omni-Context 在 ${domain || '当前 AI 站点'} 回答结束后读取对话。\n\n`
+        + '内容会发送到本机 Brain Server；如果你配置了远程 LLM，内容可能离开本机。继续吗？',
+      );
+      if (!confirmed || !domain) {
+        toggle.checked = false;
+        return;
+      }
+      current.allowedDomains = [...current.allowedDomains, domain];
+    }
+    current.autoCapture = toggle.checked;
+    await persist(current);
   });
+
+  pauseToggle?.addEventListener('change', async () => {
+    const current = OmniPrivacy.mergeSettings((await chrome.storage.local.get('settings')).settings);
+    current.capturePaused = pauseToggle.checked;
+    await persist(current);
+  });
+
+  allowButton?.addEventListener('click', async () => {
+    if (!domain) return;
+    const current = OmniPrivacy.mergeSettings((await chrome.storage.local.get('settings')).settings);
+    current.blockedDomains = current.blockedDomains.filter((item) => item !== domain);
+    current.allowedDomains = [...current.allowedDomains, domain];
+    await persist(current);
+    showNotification(`已允许 ${domain}`);
+  });
+
+  blockButton?.addEventListener('click', async () => {
+    if (!domain) return;
+    const current = OmniPrivacy.mergeSettings((await chrome.storage.local.get('settings')).settings);
+    current.allowedDomains = current.allowedDomains.filter((item) => item !== domain);
+    current.blockedDomains = [...current.blockedDomains, domain];
+    await persist(current);
+    showNotification(`已阻止 ${domain}`);
+  });
+
+  const state = await chrome.runtime.sendMessage({ type: 'GET_PRIVACY_STATE', url: tab?.url || '' });
+  if (state?.lastCapture) {
+    const last = state.lastCapture;
+    document.getElementById('lastCapture').textContent =
+      `${last.status} · ${last.sentCharacters || 0} 字符 · ${last.payloadChunks || 0} 块 · 遮盖 ${last.redactedCount || 0}`;
+  }
 }
 
 async function askBrain() {
@@ -75,7 +160,7 @@ async function askBrain() {
   if (!q) return;
   const ans = document.getElementById('askAnswer');
   ans.classList.remove('hidden');
-  if (!(await ensureToken())) { ans.textContent = '请先填好本地 API Token（桌面端 设置→数据）'; return; }
+  if (!(await ensureToken())) { ans.textContent = '请先用桌面端显示的短期配对码连接'; return; }
   ans.textContent = '想一下…';
   try {
     const res = await apiFetch('/api/mcp/tool/ask_memory', {
@@ -153,9 +238,16 @@ async function capturePage() {
   }
   if (!page?.content) { showNotification('页面没有可读文本'); return; }
 
+  const confirmed = await confirmCapturePreview({
+    url: page.url || tab.url,
+    content: page.content,
+    source: page.source,
+  });
+  if (!confirmed) return;
+
   showNotification(page.source ? `正在沉淀 ${page.source} 对话（${page.turns} 轮）…` : '正在沉淀…');
-  const result = await sendCapture({ url: page.url || tab.url, title: page.title || tab.title, content: page.content, source: page.source, preformatted: !!page.source });
-  showNotification(result ? (page.source ? `✓ 已提交 ${page.turns} 轮对话，后台抽取中` : '✓ 已提交，后台抽取中') : '✗ 提交失败，确认桌面端在运行');
+  const result = await sendCapture({ url: page.url || tab.url, title: page.title || tab.title, content: page.content, source: page.source, preformatted: !!page.source, previewConfirmed: true });
+  showNotification(result?.ok ? `✓ 已发送 ${result.sentCharacters} 字符 / ${result.payloadChunks} 块，后台抽取中` : `✗ ${result?.error || '提交失败'}`);
   loadStats();
 }
 
@@ -178,9 +270,12 @@ async function captureSelection() {
   }
   if (!sel?.text?.trim()) { showNotification('没有检测到选中文本（先在页面里选一段再点）'); return; }
 
+  const confirmed = await confirmCapturePreview({ url: sel.url || tab.url, content: sel.text, source: 'selection' });
+  if (!confirmed) return;
+
   showNotification('正在沉淀…');
-  const result = await sendCapture({ url: sel.url || tab.url, title: sel.title || tab.title, content: sel.text, selection: true });
-  showNotification(result ? '✓ 已提交，后台抽取中' : '✗ 提交失败，确认桌面端在运行');
+  const result = await sendCapture({ url: sel.url || tab.url, title: sel.title || tab.title, content: sel.text, selection: true, previewConfirmed: true });
+  showNotification(result?.ok ? `✓ 已发送 ${result.sentCharacters} 字符 / ${result.payloadChunks} 块` : `✗ ${result?.error || '提交失败'}`);
   loadStats();
 }
 
@@ -190,17 +285,36 @@ async function sendCapture(data) {
       type: data.selection ? 'CAPTURE_SELECTION' : 'CAPTURE_PAGE',
       data,
     });
-    return Boolean(response?.ok);
+    return response;
   } catch {
+    return { ok: false, error: '无法连接扩展后台' };
+  }
+}
+
+async function confirmCapturePreview(data) {
+  const settings = OmniPrivacy.mergeSettings((await chrome.storage.local.get('settings')).settings);
+  const policy = OmniPrivacy.evaluateCapturePolicy(settings, data.url || '', { automatic: false });
+  if (!policy.allowed) {
+    showNotification(`此站点已阻止捕获：${policy.reason}`);
     return false;
   }
+  const redacted = settings.redactSensitiveFields
+    ? OmniPrivacy.redactSensitiveText(data.content || '')
+    : { text: data.content || '', redactedCount: 0 };
+  const stats = OmniPrivacy.captureStats(redacted.text, redacted.redactedCount);
+  const preview = redacted.text.slice(0, 700);
+  return confirm(
+    `即将发送 ${stats.sentCharacters} 个字符（${stats.payloadChunks} 块），已遮盖 ${stats.redactedCount} 处敏感字段。\n`
+    + '内容发送到本机 Brain Server；若已配置远程 LLM，内容可能离开本机。\n\n'
+    + `预览：\n${preview}${redacted.text.length > preview.length ? '\n…' : ''}`,
+  );
 }
 
 async function ensureToken() {
   if (!localToken) localToken = await getToken();
   if (!localToken) {
     document.getElementById('tokenSetup')?.classList.remove('hidden');
-    showNotification('请先填好本地 API Token（桌面端 设置→数据）');
+    showNotification('请先使用桌面端显示的 6 位短期配对码连接');
     return false;
   }
   return true;

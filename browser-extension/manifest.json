@@ -28,8 +28,13 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["extractor.js", "content.js"],
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*"
+      ],
+      "js": ["privacy.js", "extractor.js", "content.js"],
       "css": ["content.css"]
     }
   ],

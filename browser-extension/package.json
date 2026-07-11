@@ -5,9 +5,13 @@
   "main": "popup.js",
   "scripts": {
     "build": "npx tailwindcss -i ./src/input.css -o ./content.css --minify",
-    "watch": "npx tailwindcss -i ./src/input.css -o ./content.css --watch"
+    "watch": "npx tailwindcss -i ./src/input.css -o ./content.css --watch",
+    "test": "node --test privacy.test.js extractor.test.js"
   },
   "dependencies": {
     "tailwindcss": "^3.4.1"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
   }
 }
