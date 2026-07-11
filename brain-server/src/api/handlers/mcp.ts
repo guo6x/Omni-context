@@ -37,11 +37,13 @@ import {
   selectRelevantPrinciples,
 } from '../../mcp-retrieval.js';
 import { createAuditedAiFetch } from '../../security/audited-ai-fetch.js';
+import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from '../../retrieval/config.js';
 
 const CORE_PRINCIPLE_CAP = 3;
 const mcpLlmFetch = createAuditedAiFetch({ purpose: 'api.decision-intelligence', kind: 'llm' });
 const MCP_EMBEDDING_TIMEOUT_MS = Number(process.env.MCP_EMBEDDING_TIMEOUT_MS || 2500);
 const MCP_RERANK_TIMEOUT_MS = Number(process.env.MCP_RERANK_TIMEOUT_MS || 2500);
+const RETRIEVAL_CONFIG = loadRetrievalConfig();
 
 export function toCompactEntity(entity: any): any {
   if (!entity) return entity;
@@ -132,6 +134,12 @@ function collectMatchedEntities(value: any, out: Array<{ id: string; name?: stri
   return out;
 }
 
+function rethrowEvaluationEmbeddingFailure(error: unknown): void {
+  if (error instanceof Error && error.message.startsWith('EVALUATION_EMBEDDING_UNAVAILABLE')) {
+    throw error;
+  }
+}
+
 // ── shared: LLM 重排 ──
 // 弱 embedding（尤其中文）召回的候选相似度挤在一起、噪声多。先宽召回，再用 LLM 按真实相关度
 // 重排挑出 topN。LLM 不可用/超时则优雅降级为原序截断，绝不阻塞检索。
@@ -140,8 +148,9 @@ async function rerankByLlm(
   query: string,
   candidates: any[],
   topN: number,
+  options: { decisionMode?: boolean; historicalMode?: boolean } = {},
 ): Promise<any[]> {
-  const deterministic = rankMemoryCandidates(query, candidates, { decisionMode: true });
+  const deterministic = rankMemoryCandidates(query, candidates, { ...options, config: RETRIEVAL_CONFIG });
   if (deterministic.length <= topN) return deterministic;
   const llm = ctx.extractor.getLlmConfig();
   if (!llm.apiUrl) return deterministic.slice(0, topN);
@@ -199,6 +208,53 @@ async function rerankByLlm(
   }
 }
 
+interface AggregatedGraphContext {
+  nodes: any[];
+  edges: any[];
+  seedIds: string[];
+}
+
+async function retrieveGraphContext(
+  ctx: RequestContext,
+  seeds: any[],
+  limit: number,
+  includeInvalidated = false,
+): Promise<AggregatedGraphContext> {
+  const nodeLimit = Math.max(limit * RETRIEVAL_CONFIG.graphNodeLimitMultiplier, 8);
+  const edgeLimit = Math.max(limit * RETRIEVAL_CONFIG.graphEdgeLimitMultiplier, 12);
+  const seedIds = [...new Set<string>(seeds.map((seed) => seed?.id).filter(Boolean))]
+    .slice(0, RETRIEVAL_CONFIG.graphSeedCount);
+  const nodes = new Map<string, any>();
+  const edges = new Map<string, any>();
+
+  for (const seedId of seedIds) {
+    try {
+      const graph = capGraphContext(
+        await ctx.db.getGraphNeighborhood(seedId, RETRIEVAL_CONFIG.graphDepth, includeInvalidated),
+        nodeLimit,
+        edgeLimit,
+      );
+      for (const node of graph?.nodes || []) {
+        if (node?.id && !nodes.has(node.id)) nodes.set(node.id, node);
+      }
+      for (const edge of graph?.edges || []) {
+        const source = edge.source_id ?? edge.source;
+        const target = edge.target_id ?? edge.target;
+        const key = `${source}|${target}|${edge.type || ''}|${edge.id || ''}`;
+        if (source && target && !edges.has(key)) edges.set(key, edge);
+      }
+    } catch {
+      // A broken seed must not discard graph context from the remaining seeds.
+    }
+  }
+
+  return {
+    nodes: [...nodes.values()].slice(0, nodeLimit),
+    edges: [...edges.values()].slice(0, edgeLimit),
+    seedIds,
+  };
+}
+
 // ── Focus-Stack 适配：话题沉淀 ──
 // 多轮"问大脑/决策"聊出结论后，自动把该话题压缩成一条长期记忆。按"首问"去重：
 // 同一话题越聊越深就更新同一条，不重复堆。打 auto_sediment 标记，可追溯/可过滤。
@@ -243,6 +299,7 @@ interface DecisionContextData {
   principles: any[];
   relevantMemories: any[];
   conflicts: any[];
+  graphContext: AggregatedGraphContext;
 }
 
 async function retrieveDecisionContext(
@@ -250,7 +307,10 @@ async function retrieveDecisionContext(
   situation: string,
   limit: number,
 ): Promise<DecisionContextData> {
-  const pool = Math.max(limit * 4, 16);
+  const pool = Math.max(
+    limit * RETRIEVAL_CONFIG.candidatePoolMultiplier,
+    RETRIEVAL_CONFIG.candidatePoolMinimum,
+  );
   const textResults = await ctx.db.searchEntities(situation, pool);
   let vectorResults: any[] = [];
   try {
@@ -259,9 +319,10 @@ async function retrieveDecisionContext(
       MCP_EMBEDDING_TIMEOUT_MS,
       'embedding timeout',
     );
+    assertEvaluationEmbeddingReady(ctx.embeddingService.getStatus());
     vectorResults = await ctx.db.vectorSearch(embResult.embedding, pool);
-  } catch {
-    // ignore
+  } catch (error) {
+    rethrowEvaluationEmbeddingFailure(error);
   }
 
   const seen = new Set<string>();
@@ -285,8 +346,20 @@ async function retrieveDecisionContext(
     } catch { /* ignore */ }
   }
 
+  const graphSeeds = rankMemoryCandidates(situation, candidates, {
+    decisionMode: true,
+    config: RETRIEVAL_CONFIG,
+  });
+  const graphContext = await retrieveGraphContext(ctx, graphSeeds, limit);
+  for (const item of graphContext.nodes) {
+    if (item?.id && !seen.has(item.id)) {
+      seen.add(item.id);
+      candidates.push(item);
+    }
+  }
+
   // 宽召回后用 LLM 重排挑出真正相关的 top-limit（救弱 embedding 的中文召回）
-  const relevantMemories = await rerankByLlm(ctx, situation, candidates, limit);
+  const relevantMemories = await rerankByLlm(ctx, situation, candidates, limit, { decisionMode: true });
 
   const corePrincipleCandidates = await ctx.db.getCorePrinciples();
   // 核心原则是用户的长期约束，但不能绕过相关性判断全量进入回答。
@@ -334,7 +407,7 @@ async function retrieveDecisionContext(
     ctx.db.bumpAccessCounts(accIds).catch(() => {});
   }
 
-  return { situation, principles, relevantMemories, conflicts: conflictPairs };
+  return { situation, principles, relevantMemories, conflicts: conflictPairs, graphContext };
 }
 
 // ── shared: call LLM for decision analysis ──
@@ -989,7 +1062,10 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             const includeRels = parsed.includeRelationships !== false;
             const includeInvalidated = (parsed as any).include_invalidated === true;
 
-            const umsPool = Math.max(limit * 4, 16);
+            const umsPool = Math.max(
+              limit * RETRIEVAL_CONFIG.candidatePoolMultiplier,
+              RETRIEVAL_CONFIG.candidatePoolMinimum,
+            );
             const resultsData: any = { textResults: [], vectorResults: [], graphContext: [] };
             resultsData.textResults = await ctx.db.searchEntities(parsed.query, umsPool);
 
@@ -999,20 +1075,14 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 MCP_EMBEDDING_TIMEOUT_MS,
                 'embedding timeout',
               );
+              assertEvaluationEmbeddingReady(ctx.embeddingService.getStatus());
               resultsData.vectorResults = await ctx.db.vectorSearch(embResult.embedding, umsPool);
-            } catch (e) {
-              // ignore
-            }
-
-            if (includeRels) {
-              const seedId = resultsData.textResults[0]?.id ?? resultsData.vectorResults[0]?.id;
-              if (seedId) {
-                resultsData.graphContext = await ctx.db.getGraphNeighborhood(seedId, 2, includeInvalidated);
-              }
+            } catch (error) {
+              rethrowEvaluationEmbeddingFailure(error);
             }
 
             const seenIds = new Set<string>();
-            const unified = [];
+            const unified: any[] = [];
             for (const source of [resultsData.textResults, resultsData.vectorResults]) {
               for (const item of source) {
                 if (!seenIds.has(item.id)) {
@@ -1031,9 +1101,25 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               } catch { /* ignore */ }
             }
 
+            if (includeRels) {
+              const graphSeeds = rankMemoryCandidates(parsed.query, unified, { config: RETRIEVAL_CONFIG });
+              resultsData.graphContext = await retrieveGraphContext(
+                ctx,
+                graphSeeds,
+                limit,
+                includeInvalidated,
+              );
+              for (const item of resultsData.graphContext.nodes) {
+                if (item?.id && !seenIds.has(item.id)) {
+                  seenIds.add(item.id);
+                  unified.push(item);
+                }
+              }
+            }
+
             // 宽召回后 LLM 重排，挑出真正相关的（救弱 embedding 的中文召回）
             const ranked = (await rerankByLlm(ctx, parsed.query, unified, limit * 2))
-              .filter((item: any) => memoryCandidateScore(parsed.query, item) > 0);
+              .filter((item: any) => memoryCandidateScore(parsed.query, item, { config: RETRIEVAL_CONFIG }) > RETRIEVAL_CONFIG.minimumLexicalScore);
 
             let graphContext = resultsData.graphContext;
             if (graphContext && graphContext.nodes) {
@@ -1066,19 +1152,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
 
             const ctxData = await retrieveDecisionContext(ctx, situation, limit);
 
-            let graphContext: any = {};
-            const seed = ctxData.relevantMemories[0];
-            if (seed) {
-              try {
-                graphContext = capGraphContext(
-                  await ctx.db.getGraphNeighborhood(seed.id, 2),
-                  Math.max(limit * 2, 8),
-                  Math.max(limit * 3, 12),
-                );
-              } catch {
-                // ignore
-              }
-            }
+            const graphContext = ctxData.graphContext;
 
             result = {
               situation,
