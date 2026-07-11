@@ -386,7 +386,7 @@ export const handleAdminRoutes = [
             const a = pick(ids);
             const b = pick(ids);
             if (a === b) continue;
-            const t = pick(REL_TYPES) as any;
+            const t = pick(REL_TYPES);
             const key = `${a}->${b}:${t}`;
             if (seen.has(key)) continue;
             seen.add(key);

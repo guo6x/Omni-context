@@ -6,8 +6,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { Entity, Relationship, SINGLE_VALUED_REL_TYPES } from '../shared-types.js';
 import { cosineSimilarity, encodeEmbedding, decodeEmbedding } from '../utils/math.js';
 import * as sqliteVec from 'sqlite-vec';
+import { ENTITY_TYPES, NOTIFICATION_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function sqlStringList(values: readonly string[]): string {
+  return values.map((value) => `'${value.replaceAll("'", "''")}'`).join(', ');
+}
 
 sqlite3.verbose();
 
@@ -259,6 +264,41 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_device_tokens_device ON device_tokens(device_id);
       CREATE INDEX IF NOT EXISTS idx_device_tokens_expires ON device_tokens(expires_at);
       CREATE INDEX IF NOT EXISTS idx_device_tokens_revoked ON device_tokens(revoked_at);
+    `,
+  },
+  {
+    version: 14,
+    name: 'enforce_domain_type_constraints',
+    up: `
+      CREATE TRIGGER IF NOT EXISTS validate_entity_type_insert
+      BEFORE INSERT ON entities
+      WHEN NEW.type NOT IN (${sqlStringList(ENTITY_TYPES)})
+      BEGIN SELECT RAISE(ABORT, 'invalid entity type'); END;
+
+      CREATE TRIGGER IF NOT EXISTS validate_entity_type_update
+      BEFORE UPDATE OF type ON entities
+      WHEN NEW.type NOT IN (${sqlStringList(ENTITY_TYPES)})
+      BEGIN SELECT RAISE(ABORT, 'invalid entity type'); END;
+
+      CREATE TRIGGER IF NOT EXISTS validate_relationship_type_insert
+      BEFORE INSERT ON relationships
+      WHEN NEW.type NOT IN (${sqlStringList(RELATIONSHIP_TYPES)})
+      BEGIN SELECT RAISE(ABORT, 'invalid relationship type'); END;
+
+      CREATE TRIGGER IF NOT EXISTS validate_relationship_type_update
+      BEFORE UPDATE OF type ON relationships
+      WHEN NEW.type NOT IN (${sqlStringList(RELATIONSHIP_TYPES)})
+      BEGIN SELECT RAISE(ABORT, 'invalid relationship type'); END;
+
+      CREATE TRIGGER IF NOT EXISTS validate_notification_type_insert
+      BEFORE INSERT ON notifications
+      WHEN NEW.type NOT IN (${sqlStringList(NOTIFICATION_TYPES)})
+      BEGIN SELECT RAISE(ABORT, 'invalid notification type'); END;
+
+      CREATE TRIGGER IF NOT EXISTS validate_notification_type_update
+      BEFORE UPDATE OF type ON notifications
+      WHEN NEW.type NOT IN (${sqlStringList(NOTIFICATION_TYPES)})
+      BEGIN SELECT RAISE(ABORT, 'invalid notification type'); END;
     `,
   },
 ];

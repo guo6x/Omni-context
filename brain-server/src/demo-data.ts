@@ -1,4 +1,4 @@
-import { EntityType } from './shared-types.js';
+import { EntityType, RelationshipType } from './shared-types.js';
 
 export interface DemoConcept {
   name: string;
@@ -119,7 +119,7 @@ export const NOTIFICATIONS: DemoNotification[] = [
   { title: '新概念候选', content: '"GraphRAG" 与 "Letta 范式" 在 12 条 archival_memory 中共现，建议提取为 concept 实体。' },
 ];
 
-export const REL_TYPES = [
-  'uses_tech', 'depends_on', 'similar_to', 'contradicts', 'referenced_by',
-  'relates_to', 'derived_from', 'extends', 'cites', 'supported_by',
+export const REL_TYPES: RelationshipType[] = [
+  'depends_on', 'relates_to', 'derived_from', 'extends', 'cites',
+  'supported_by', 'references', 'conflicts_with', 'belongs_to', 'extracted_from',
 ];

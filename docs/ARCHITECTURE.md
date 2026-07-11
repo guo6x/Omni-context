@@ -65,7 +65,7 @@ omni-context-release/
 ├── brain-server/              # Brain: HTTP API + MCP + proxy + SQLite + Agent
 │   ├── src/mcp-server.ts           # MCP stdio + HTTP dual-mode (desktop embedded entry)
 │   ├── src/mcp-proxy.ts            # MCP proxy (clients spawn this)
-│   ├── src/mcp-tools.ts            # 14 MCP tool definitions
+│   ├── src/mcp-tools.ts            # MCP definitions; generated count in /mcp_tool_manifest.json
 │   ├── src/agent/agent-loop.ts     # Agent cycle: consolidate → insight → blind spot → decay
 │   ├── src/agent/blindspot-detector.ts  # Cognitive blind spot detection (task 35-1)
 │   ├── src/agent/graph-insight.ts       # Graph-driven insight generation (task 35-2)

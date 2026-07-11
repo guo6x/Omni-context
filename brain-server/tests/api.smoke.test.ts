@@ -220,6 +220,23 @@ describe('API smoke: graph extract', () => {
   });
 });
 
+describe('API smoke: domain validation', () => {
+  it('rejects unknown entity and relationship types before database writes', async () => {
+    const entity = await request('POST', '/api/entities', {
+      name: 'Invalid entity',
+      type: 'invented_type',
+    });
+    expect(entity.status).toBe(400);
+
+    const relationship = await request('POST', '/api/relationships', {
+      sourceId: 'source',
+      targetId: 'target',
+      type: 'invented_type',
+    });
+    expect(relationship.status).toBe(400);
+  });
+});
+
 describe('API smoke: MCP retrieval precision', () => {
   it('caps unrelated core principles while preserving searched principles', async () => {
     const query = 'Project Alpha retrieval precision decision';

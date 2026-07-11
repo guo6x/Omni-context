@@ -6,53 +6,16 @@ export type PrincipleType =
   | 'security_rule'
   | 'performance_optimization';
 
-export type EntityType =
-  | 'principle'
-  | 'evidence'
-  | 'concept'
-  | 'tool'
-  | 'person'
-  | 'project'
-  | 'code_snippet'
-  | 'architecture_pattern'
-  | 'bug_vulnerability'
-  | 'business_logic'
-  | 'critical_review'
-  | 'capture_snapshot'
-  | 'memory'
-  | 'decision'
-  | 'goal'
-  | 'question'
-  | 'preference'
-  | 'event'
-  | 'task';
+import {
+  SINGLE_VALUED_RELATIONSHIP_TYPES,
+  type EntityType,
+  type NotificationType,
+  type RelationshipType,
+} from './schema/domain.js';
 
-export type RelationshipType =
-  | 'derived_from'
-  | 'relates_to'
-  | 'depends_on'
-  | 'conflicts_with'
-  | 'extends'
-  | 'cites'
-  | 'belongs_to'
-  | 'supported_by'
-  | 'extracted_from'
-  | 'reviewed_by'
-  | 'references'
-  | 'decision_referenced'
-  | 'works_at'
-  | 'lives_in'
-  | 'studies_at'
-  | 'married_to'
-  | 'leads_to_conclusion';
+export type { EntityType, NotificationType, RelationshipType } from './schema/domain.js';
 
-export const SINGLE_VALUED_REL_TYPES: RelationshipType[] = [
-  'works_at',
-  'lives_in',
-  'studies_at',
-  'married_to',
-  'leads_to_conclusion'
-];
+export const SINGLE_VALUED_REL_TYPES: RelationshipType[] = [...SINGLE_VALUED_RELATIONSHIP_TYPES];
 
 export interface Entity {
   id: string;
@@ -89,8 +52,6 @@ export interface GraphRAGOutput {
   relationships: Relationship[];
   principles: Entity[];
 }
-
-export type NotificationType = 'insight' | 'reminder' | 'system' | 'decay_warning' | 'blindspot';
 
 export interface Notification {
   id: string;

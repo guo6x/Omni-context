@@ -6,33 +6,9 @@ export type PrincipleType =
   | 'security_rule'
   | 'performance_optimization';
 
-export type EntityType = 
-  | 'principle' 
-  | 'evidence' 
-  | 'concept' 
-  | 'tool' 
-  | 'person' 
-  | 'project'
-  | 'code_snippet'
-  | 'architecture_pattern'
-  | 'bug_vulnerability'
-  | 'business_logic'
-  | 'critical_review'
-  | 'capture_snapshot'
-  | 'memory';
+import type { EntityType, RelationshipType } from './generated-domain-types';
 
-export type RelationshipType = 
-  | 'derived_from' 
-  | 'relates_to' 
-  | 'depends_on' 
-  | 'conflicts_with' 
-  | 'extends' 
-  | 'cites'
-  | 'belongs_to'
-  | 'supported_by'
-  | 'extracted_from'
-  | 'reviewed_by'
-  | 'references';
+export type { EntityType, NotificationType, RelationshipType } from './generated-domain-types';
 
 export interface Entity {
   id: string;

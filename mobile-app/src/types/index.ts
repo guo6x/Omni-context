@@ -1,46 +1,8 @@
 // 与 Brain Server 对齐的类型定义
 
-// 实体类型（与 Brain Server shared-types.ts 完全对齐）
-export type EntityType =
-  | 'principle'
-  | 'evidence'
-  | 'concept'
-  | 'tool'
-  | 'person'
-  | 'project'
-  | 'code_snippet'
-  | 'architecture_pattern'
-  | 'bug_vulnerability'
-  | 'business_logic'
-  | 'critical_review'
-  | 'capture_snapshot'
-  | 'memory'
-  | 'decision'
-  | 'goal'
-  | 'question'
-  | 'preference'
-  | 'event'
-  | 'task';
-
-// 关系类型（与 Brain Server shared-types.ts 完全对齐）
-export type RelationshipType =
-  | 'derived_from'
-  | 'relates_to'
-  | 'depends_on'
-  | 'conflicts_with'
-  | 'extends'
-  | 'cites'
-  | 'belongs_to'
-  | 'supported_by'
-  | 'extracted_from'
-  | 'reviewed_by'
-  | 'references'
-  | 'decision_referenced'
-  | 'works_at'
-  | 'lives_in'
-  | 'studies_at'
-  | 'married_to'
-  | 'leads_to_conclusion';
+// 由 Brain Server domain schema 生成，禁止手工维护清单。
+import type { EntityType, RelationshipType } from './generated-domain';
+export type { EntityType, NotificationType, RelationshipType } from './generated-domain';
 
 // 原则类型
 export type PrincipleType =

@@ -3,6 +3,11 @@ import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js
 import { resolveEntities } from '../../graphrag/entity-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Entity } from '../../shared-types.js';
+import {
+  EntityCreateSchema,
+  EntityUpdateSchema,
+  RelationshipCreateSchema,
+} from '../../schema/domain.js';
 
 export const handleMemoryRoutes = [
   {
@@ -275,20 +280,15 @@ export const handleEntityRoutes = [
     method: 'POST' as const,
     path: '/api/entities',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const body = await parseBody<{
-        name: string;
-        type: string;
-        description?: string;
-        tags?: string[];
-      }>(req);
-      if (!body.name || !body.type) {
-        return sendError(res, 400, 'Name and type are required');
-      }
+      const parsed = EntityCreateSchema.safeParse(await parseBody<unknown>(req));
+      if (!parsed.success) return sendError(res, 400, parsed.error.issues[0]?.message || 'Invalid entity');
+      const body = parsed.data;
       const entity = await ctx.db.addEntity({
         name: body.name,
-        type: body.type as any,
+        type: body.type,
         description: body.description,
         tags: body.tags,
+        metadata: body.metadata,
       });
       sendResponse(res, 201, entity);
     }
@@ -297,13 +297,9 @@ export const handleEntityRoutes = [
     method: 'PUT' as const,
     path: '/api/entities/:id',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
-      const body = await parseBody<{
-        name?: string;
-        type?: string;
-        description?: string;
-        tags?: string[];
-      }>(req);
-      await ctx.db.updateEntity(params.id, body as any);
+      const parsed = EntityUpdateSchema.safeParse(await parseBody<unknown>(req));
+      if (!parsed.success) return sendError(res, 400, parsed.error.issues[0]?.message || 'Invalid entity update');
+      await ctx.db.updateEntity(params.id, parsed.data);
       const entity = await ctx.db.getEntity(params.id);
       sendResponse(res, 200, entity);
     }
@@ -327,8 +323,8 @@ export const handleEntityRoutes = [
       try {
         const result = await ctx.db.mergeEntities(params.id, body.targetId);
         sendResponse(res, 200, { success: true, ...result, mergedInto: body.targetId });
-      } catch (e: any) {
-        sendError(res, 400, e?.message || 'merge failed');
+      } catch (error: unknown) {
+        sendError(res, 400, error instanceof Error ? error.message : 'merge failed');
       }
     }
   },
@@ -353,20 +349,13 @@ export const handleEntityRoutes = [
     method: 'POST' as const,
     path: '/api/relationships',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const body = await parseBody<{
-        sourceId: string;
-        targetId: string;
-        type: string;
-        description?: string;
-        weight?: number;
-      }>(req);
-      if (!body.sourceId || !body.targetId || !body.type) {
-        return sendError(res, 400, 'Source ID, target ID, and type are required');
-      }
+      const parsed = RelationshipCreateSchema.safeParse(await parseBody<unknown>(req));
+      if (!parsed.success) return sendError(res, 400, parsed.error.issues[0]?.message || 'Invalid relationship');
+      const body = parsed.data;
       const relationship = await ctx.db.addRelationship({
         source_id: body.sourceId,
         target_id: body.targetId,
-        type: body.type as any,
+        type: body.type,
         description: body.description,
         weight: body.weight,
       });

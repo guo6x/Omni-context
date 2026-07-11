@@ -331,7 +331,7 @@ task 01-34 完成后，原 P1/P2/P3 清单（除社区贡献类）全部消化�
 
 - **一句话价值主张**：对外只说一句——"给任何 AI 装一个有长期记忆、能基于你历史做判断的本地大脑"。落地页 / README / 发帖标题都用这一句，不要罗列功能。
 - **首发渠道**（开发者向产品的典型路径）：GitHub README 打磨（截图 + 30s GIF + 一键安装）→ 发 Show HN / Reddit (r/LocalLLaMA, r/selfhosted) / V2EX / 即刻 → MCP 生态目录收录（Claude/Cursor 社区的 MCP server 列表）。
-- **宣传文案的写法**：先痛点（"和 AI 聊过的东西它转头就忘"）→ 再反差（"换成有记忆的脑子会怎样"）→ 给一个可复现的 30 秒 demo（在 Cursor 里问，它自动调出你上周的笔记）→ 强调本地/无云/数据主权这条差异化。**别一上来列 14 个 MCP 工具**，没人关心。
+- **宣传文案的写法**：先痛点（"和 AI 聊过的东西它转头就忘"）→ 再反差（"换成有记忆的脑子会怎样"）→ 给一个可复现的 30 秒 demo（在 Cursor 里问，它自动调出你上周的笔记）→ 强调本地/无云/数据主权这条差异化。**别一上来列 MCP 工具清单**，没人关心；当前清单由 `mcp_tool_manifest.json` 生成。
 - **降低首用门槛**：安装包要无脑（已就绪）、首启即有 Demo（已就绪）、接入第一个 AI 客户端三步内完成（接入面板已就绪）。这三点是转化率命门，比加功能重要。
 - **可信度素材**：一个 90 秒录屏（脚本已有 `docs/DEMO_SCRIPT.md`）、几张真实图谱截图、一句"为什么我做这个"的故事。
 
@@ -491,7 +491,7 @@ omni-context-release/
 ├── brain-server/        # 后台大脑：HTTP API + MCP + MCP 代理 + SQLite + Agent
 │   ├── src/mcp-server.ts    # MCP stdio + HTTP 双模（桌面 App 内嵌入口）
 │   ├── src/mcp-proxy.ts     # MCP 代理薄壳（各客户端 spawn 这个）
-│   ├── src/mcp-tools.ts     # 14 个 MCP 工具的共享定义
+│   ├── src/mcp-tools.ts     # MCP 工具共享定义；数量由 /mcp_tool_manifest.json 生成
 │   └── src/api/handlers/    # 所有 HTTP 端点
 ├── desktop-daemon/      # 桌面端：Tauri(Rust) + Next.js 前端
 │   └── src-tauri/       # Rust 侧：屏幕/剪贴板捕获、UDP、硬件、内嵌 Brain Server、托盘、MCP 配置写入
