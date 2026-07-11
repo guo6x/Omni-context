@@ -1,7 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { KnowledgeGraphScreen } from '@/screens/KnowledgeGraphScreen';
 import { MemoryListScreen } from '@/screens/MemoryListScreen';
@@ -10,7 +9,6 @@ import { EntityDetailScreen } from '@/screens/EntityDetailScreen';
 import { MemoryDetailScreen } from '@/screens/MemoryDetailScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { PairScanScreen } from '@/screens/PairScanScreen';
-import { QuickCapture } from '@/components/QuickCapture';
 import { Entity } from '@/types';
 
 const Tab = createBottomTabNavigator();
@@ -78,23 +76,6 @@ const SearchIcon = ({ color, size }: { color: string; size: number }) => (
   </Svg>
 );
 
-const CaptureIcon = ({ color, size }: { color: string; size: number }) => (
-  <View
-    style={{
-      width: size + 14,
-      height: size + 14,
-      borderRadius: 8,
-      backgroundColor: color,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 5V19M5 12H19" stroke="#071414" strokeWidth="2.4" strokeLinecap="round" />
-    </Svg>
-  </View>
-);
-
 const SettingsIcon = ({ color, size }: { color: string; size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
@@ -137,14 +118,6 @@ function MainTabNavigator() {
         options={{
           tabBarLabel: '搜索',
           tabBarIcon: ({ color, size }) => <SearchIcon color={color} size={size} />,
-        }}
-      />
-      <Tab.Screen
-        name="Capture"
-        component={QuickCapture}
-        options={{
-          tabBarLabel: '记录',
-          tabBarIcon: ({ color, size }) => <CaptureIcon color={color} size={size} />,
         }}
       />
       <Tab.Screen

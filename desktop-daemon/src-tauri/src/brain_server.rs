@@ -8,8 +8,6 @@ use std::time::{Duration, Instant};
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
-use std::collections::hash_map::RandomState;
-use std::hash::{BuildHasher, Hasher};
 
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 
@@ -209,7 +207,10 @@ fn start_inner() -> Result<(), String> {
         let _ = std::fs::create_dir_all(&data_dir);
         let db_path = data_dir.join("omni-context.db");
 
-        let pair_code = ensure_pair_code();
+        // 每次 Brain Server 启动都轮换配对码。运行中再次生成时，服务端
+        // 通过 PAIR_CODE_FILE 的修改时间读取新码并重新开始短期有效窗口。
+        let pair_code = regenerate_pair_code();
+        let pair_code_path = pair_code_file();
         let lan_ip = get_lan_ip().unwrap_or_default();
         let local_token = ensure_local_token();
 
@@ -220,6 +221,7 @@ fn start_inner() -> Result<(), String> {
             .env("PORT", "3001")
             .env("DB_PATH", &db_path)
             .env("PAIR_CODE", &pair_code)
+            .env("PAIR_CODE_FILE", &pair_code_path)
             .env("LAN_IP", &lan_ip)
             .env("LOCAL_API_TOKEN", &local_token)
             .stdout(Stdio::piped())
@@ -365,8 +367,9 @@ fn generate_and_save_pair_code(file: &std::path::Path) -> String {
 }
 
 fn generate_pair_code() -> String {
-    let hash = RandomState::new().build_hasher().finish();
-    let num = (hash % 1_000_000) as u32;
+    let mut bytes = [0_u8; 4];
+    getrandom::getrandom(&mut bytes).expect("secure OS randomness is required for pairing");
+    let num = u32::from_le_bytes(bytes) % 1_000_000;
     format!("{:06}", num)
 }
 

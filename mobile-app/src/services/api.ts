@@ -20,6 +20,14 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+interface PairExchangeResponse {
+  device_token: string;
+  device_id: string;
+  scopes: string[];
+  issued_at: string;
+  expires_at: string;
+}
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 class ApiClient {
@@ -118,6 +126,23 @@ class ApiClient {
     }
 
     return false;
+  }
+
+  async exchangePairingCode(deviceId: string): Promise<ApiResponse<PairExchangeResponse>> {
+    if (!this.client) {
+      return { success: false, error: 'API client not configured' };
+    }
+
+    try {
+      const response = await this.client.post<PairExchangeResponse>('/api/auth/pair/exchange', {
+        device_id: deviceId,
+        device_type: 'mobile',
+        requested_scopes: ['memory:read', 'decision:read'],
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
   }
 
   // ============ 实体相关 API ============

@@ -174,7 +174,9 @@ class SyncService {
   }
 
   async fullSync(): Promise<void> {
-    await this.sync();
+    // Freeze v1 mobile is a read-mostly companion. Do not upload queued local
+    // writes until stable IDs, tombstones, idempotency and conflict resolution
+    // are implemented end-to-end.
     await this.pullFromServer();
   }
 

@@ -242,6 +242,25 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_mcp_usage_tool ON mcp_usage_log(tool_name);
     `,
   },
+  {
+    version: 13,
+    name: 'add_scoped_device_tokens',
+    up: `
+      CREATE TABLE IF NOT EXISTS device_tokens (
+        token_hash TEXT PRIMARY KEY,
+        device_id TEXT NOT NULL,
+        device_type TEXT NOT NULL,
+        scopes TEXT NOT NULL,
+        issued_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        revoked_at TEXT,
+        last_used_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_device_tokens_device ON device_tokens(device_id);
+      CREATE INDEX IF NOT EXISTS idx_device_tokens_expires ON device_tokens(expires_at);
+      CREATE INDEX IF NOT EXISTS idx_device_tokens_revoked ON device_tokens(revoked_at);
+    `,
+  },
 ];
 
 interface Migration {

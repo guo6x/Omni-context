@@ -7,6 +7,7 @@ import { GraphRAGExtractor } from '../graphrag/extractor.js';
 import { AgentLoop } from '../agent/agent-loop.js';
 import { EmbeddingService } from '../embedding/service.js';
 import { MemoryDecayScheduler } from '../memory/decay-scheduler.js';
+import { AuthPrincipal, AuthService } from '../security/auth.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -29,7 +30,10 @@ export interface RequestContext {
   agentLoop: AgentLoop | null;
   embeddingService: EmbeddingService;
   decayScheduler?: MemoryDecayScheduler;
+  auth: AuthPrincipal;
 }
+
+type BaseRequestContext = Omit<RequestContext, 'auth'>;
 
 export interface Route {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -80,7 +84,7 @@ export class HttpError extends Error {
 
 export class ApiRouter {
   private routes: Route[];
-  private context: RequestContext;
+  private context: BaseRequestContext;
 
   constructor(db: Database, agentLoop: AgentLoop | null = null, embeddingService: EmbeddingService, decayScheduler?: MemoryDecayScheduler) {
     this.context = {
@@ -113,7 +117,7 @@ export class ApiRouter {
     ];
   }
 
-  async handle(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+  async handle(req: http.IncomingMessage, res: http.ServerResponse, auth: AuthPrincipal): Promise<void> {
     const url = new URL(req.url || '/', 'http://localhost');
     const pathname = url.pathname;
     const method = req.method as Route['method'];
@@ -126,7 +130,7 @@ export class ApiRouter {
 
         const params = this.matchPath(route.path, pathname);
         if (params !== null) {
-          await route.handler(req, res, this.context, params);
+          await route.handler(req, res, { ...this.context, auth }, params);
           return;
         }
       }
@@ -310,25 +314,12 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
   void maybeReembedOnModelChange(db, finalEmbeddingService);
 
   const localApiToken = (process.env.LOCAL_API_TOKEN || '').trim();
-  const pairCode = (process.env.PAIR_CODE || '').trim();
-
-  // 鉴权：所有非 /health 请求都需要 Bearer token
-  // localhost 也不再免鉴权 —— 恶意网页 JS 可以扫端口
-  function isAuthorized(req: http.IncomingMessage): boolean {
-    const authHeader = req.headers.authorization || '';
-    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
-    const token = bearerMatch ? bearerMatch[1] : '';
-
-    // 本地 token（桌面应用自带）
-    if (localApiToken && token === localApiToken) {
-      return true;
-    }
-    // 配对码（非 localhost 移动端场景）
-    if (pairCode && token === pairCode) {
-      return true;
-    }
-    return false;
-  }
+  const authService = new AuthService(db, {
+    localApiToken,
+    pairCode: (process.env.PAIR_CODE || '').trim(),
+    pairCodeFile: (process.env.PAIR_CODE_FILE || '').trim() || undefined,
+    pairCodeTtlMs: Number(process.env.PAIR_CODE_TTL_MS || 10 * 60 * 1000),
+  });
 
   return http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);
@@ -352,13 +343,27 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
       return;
     }
 
-    // LAN 鉴权：非本机请求检查配对码
-    if (!isAuthorized(req)) {
+    if (authService.isPairExchange(req)) {
+      await authService.handlePairExchange(req, res);
+      return;
+    }
+
+    // localhost 也不免鉴权：恶意网页 JavaScript 可以扫描本机端口。
+    // 配对码只在上面的短期交换端点有效，不能直接访问任何业务 API。
+    const principal = await authService.authenticate(req);
+    if (!principal) {
       sendError(res, 401, 'Unauthorized. Use Authorization: Bearer <token>');
       return;
     }
 
-    await router.handle(req, res);
+    if (!authService.authorize(req, principal)) {
+      sendError(res, 403, 'Forbidden: token scope does not allow this operation');
+      return;
+    }
+
+    if (await authService.handleDeviceAdministration(req, res)) return;
+
+    await router.handle(req, res, principal);
   });
 }
 

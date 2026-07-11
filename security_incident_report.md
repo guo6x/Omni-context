@@ -85,7 +85,7 @@ npm run security:install-hooks
 
 ## Verification and remaining risk
 
-Implementation commit: pending first security hardening commit.
+Implementation commit: `9e15a79cd1feb0af480aa1d4a323128e7591a692`.
 
 Modified files: `.gitignore`, `package.json`, `.githooks/pre-commit`, `scripts/scan-secrets.mjs`, `scripts/scan-secrets.test.mjs`, `.github/workflows/security.yml`, `mobile-app/android/app/debug.keystore`, `security_incident_report.md`.
 

@@ -8,6 +8,7 @@ import { api } from '@/services/api';
 import { useSync } from '@/hooks/useSync';
 import Svg, { Path } from 'react-native-svg';
 import * as Linking from 'expo-linking';
+import { getOrCreateDeviceId } from '@/services/deviceIdentity';
 
 export function PairScanScreen() {
   const navigation = useNavigation<any>();
@@ -61,9 +62,18 @@ export function PairScanScreen() {
         return;
       }
 
-      // 连接成功，保存配置到设置中
+      // 配对码只用于一次性换取受限设备 Token，不能作为长期 API 凭据。
+      const deviceId = await getOrCreateDeviceId();
+      const exchange = await api.exchangePairingCode(deviceId);
+      if (!exchange.success || !exchange.data?.device_token) {
+        throw new Error(exchange.error || '设备 Token 交换失败');
+      }
+      api.setAuthToken(exchange.data.device_token);
+
+      // 连接成功，保存受限设备 Token。Freeze v1 移动端为 read-mostly：
+      // 服务端只授予 memory:read 与 decision:read。
       setServerUrl(baseUrl);
-      setAuthToken(code);
+      setAuthToken(exchange.data.device_token);
       setSyncEnabled(true);
       showMessage('配对成功', 'success');
 
