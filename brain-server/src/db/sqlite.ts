@@ -407,6 +407,50 @@ const MIGRATIONS: Migration[] = [
         ON ingestion_chunks(document_id, status, ordinal);
     `,
   },
+  {
+    version: 17,
+    name: 'add_entity_resolution_review_queue',
+    up: `
+      CREATE INDEX IF NOT EXISTS idx_entities_type_normalized_name
+        ON entities(type, lower(trim(name)));
+
+      CREATE TABLE IF NOT EXISTS entity_merge_candidates (
+        id TEXT PRIMARY KEY,
+        canonical_id TEXT NOT NULL,
+        candidate_entity_id TEXT,
+        candidate_name TEXT NOT NULL,
+        candidate_type TEXT NOT NULL,
+        similarity REAL CHECK(similarity IS NULL OR (similarity >= -1 AND similarity <= 1)),
+        reason TEXT NOT NULL,
+        context TEXT,
+        status TEXT NOT NULL DEFAULT 'pending'
+          CHECK(status IN ('pending', 'confirmed', 'rejected', 'reverted')),
+        operator TEXT,
+        created_at TEXT NOT NULL,
+        reviewed_at TEXT,
+        FOREIGN KEY(canonical_id) REFERENCES entities(id) ON DELETE CASCADE,
+        FOREIGN KEY(candidate_entity_id) REFERENCES entities(id) ON DELETE SET NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_entity_merge_candidates_status
+        ON entity_merge_candidates(status, candidate_type, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS entity_merge_audit (
+        id TEXT PRIMARY KEY,
+        canonical_id TEXT NOT NULL,
+        alias_id TEXT NOT NULL,
+        merge_reason TEXT NOT NULL,
+        similarity REAL,
+        operator TEXT NOT NULL,
+        snapshot TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        reverted_at TEXT,
+        FOREIGN KEY(canonical_id) REFERENCES entities(id) ON DELETE RESTRICT,
+        FOREIGN KEY(alias_id) REFERENCES entities(id) ON DELETE RESTRICT
+      );
+      CREATE INDEX IF NOT EXISTS idx_entity_merge_audit_alias
+        ON entity_merge_audit(alias_id, created_at DESC);
+    `,
+  },
 ];
 
 interface Migration {
@@ -1614,6 +1658,10 @@ export class Database {
   async vectorSearch(queryEmbedding: number[], limit: number = 10): Promise<VectorSearchResult[]> {
     // 优先使用 sqlite-vec 原生搜索
     if (this.vecEnabled) {
+      await this._resolveVecDimension();
+      if (queryEmbedding.length !== this.vecDimension) {
+        await this._recreateVecTable(queryEmbedding.length);
+      }
       return this._vectorSearchNative(queryEmbedding, limit);
     }
     // 回退到 JS 内存计算（兼容 sqlite-vec 不可用的环境）

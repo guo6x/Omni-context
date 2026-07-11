@@ -914,7 +914,7 @@ describe('Bitemporal Edges & Single-Valued Relation Invalidation', () => {
   });
 });
 
-describe('Similarity Deduplication (Task 44)', () => {
+describe('Type-gated Similarity Deduplication', () => {
   let db: Database;
 
   beforeAll(async () => {
@@ -926,7 +926,7 @@ describe('Similarity Deduplication (Task 44)', () => {
     await db.close();
   });
 
-  it('should deduplicate and merge entities based on embedding similarity > 0.92', async () => {
+  it('should deduplicate an aggressive tool type above its type-specific threshold', async () => {
     const mockEmbeddingService = {
       embed: async (text: string) => {
         let vec = Array.from({ length: 384 }, () => 0.0);
@@ -945,7 +945,7 @@ describe('Similarity Deduplication (Task 44)', () => {
     const e1 = {
       id: 'e1',
       name: 'OmniContext 项目',
-      type: 'project' as const,
+      type: 'tool' as const,
       description: 'First description',
       created_at: '2026-05-26T12:00:00Z',
       access_count: 5,
@@ -959,7 +959,7 @@ describe('Similarity Deduplication (Task 44)', () => {
     const e2 = {
       id: 'e2',
       name: 'omni-context',
-      type: 'project' as const,
+      type: 'tool' as const,
       description: 'Second longer description here',
       created_at: '2026-05-26T11:00:00Z',
       access_count: 10,
@@ -989,7 +989,7 @@ describe('Similarity Deduplication (Task 44)', () => {
     await db.updateEntity(update.id, update);
 
     // 3. Query entities list
-    const activeEntities = await db.getEntitiesByType('project');
+    const activeEntities = await db.getEntitiesByType('tool');
     // The alias entity is excluded by metadata.merged_into IS NULL, so only e1 is returned
     expect(activeEntities.length).toBe(1);
     expect(activeEntities[0].id).toBe(res1.entitiesToCreate[0].id);
@@ -1366,6 +1366,5 @@ describe('Entity Importance Scoring Operations', () => {
     await testDb.close();
   });
 });
-
 
 
