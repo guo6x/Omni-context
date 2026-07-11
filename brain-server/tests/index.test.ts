@@ -473,6 +473,8 @@ describe('Conflict Resolution', () => {
                     {
                       oldRelationshipId: oldRel.id,
                       status: 'superseded',
+                      confidence: 0.95,
+                      reason: 'new fact explicitly replaces old fact',
                     },
                   ],
                 }),
@@ -539,6 +541,8 @@ describe('Conflict Resolution', () => {
                     {
                       oldRelationshipId: oldRel.id,
                       status: 'conflict',
+                      confidence: 0.7,
+                      reason: 'both claims cannot be established from current evidence',
                     },
                   ],
                 }),
@@ -552,12 +556,12 @@ describe('Conflict Resolution', () => {
     try {
       await resolveConflicts([newRel], db, extractor);
 
-      // 验证是否生成了 conflicts_with 关系
+      // 低置信度冲突保留两条事实，并进入人工确认审计队列
       const activeRels = await db.getRelationshipsForEntity(source.id, false);
-      const conflictRel = activeRels.find(r => r.type === 'conflicts_with');
-      expect(conflictRel).toBeDefined();
-      expect(conflictRel?.source_id).toBe(source.id);
-      expect(conflictRel?.target_id).toBe(target.id);
+      expect(activeRels.some(r => r.id === oldRel.id)).toBe(true);
+      expect(activeRels.some(r => r.id === newRel.id)).toBe(true);
+      const audit = await db.get<any>('SELECT * FROM assertion_conflict_audit WHERE new_assertion_id = ?', [`relationship:${newRel.id}`]);
+      expect(audit).toMatchObject({ operation: 'conflict', status: 'pending', confidence: 0.7 });
     } finally {
       vi.unstubAllGlobals();
     }
@@ -579,7 +583,7 @@ describe('Conflict Resolution', () => {
       id: 'new-rel-uuid-3',
       source_id: source.id,
       target_id: target.id,
-      type: 'maintained_by',
+      type: 'supported_by',
       description: '项目维护者是 Bob',
       weight: 1.0,
       created_at: new Date().toISOString(),
@@ -599,6 +603,8 @@ describe('Conflict Resolution', () => {
                     {
                       oldRelationshipId: oldRel.id,
                       status: 'independent',
+                      confidence: 0.9,
+                      reason: 'facts describe different compatible dimensions',
                     },
                   ],
                 }),
@@ -865,12 +871,16 @@ describe('Bitemporal Edges & Single-Valued Relation Invalidation', () => {
     expect(activeRels.some(r => r.id === rel1.id)).toBe(true);
 
     // 2. 事实变更：张三现在在 Globex 工作
-    const rel2 = await db.addRelationship({
+    const [rel2] = await resolveConflicts([{
+      id: 'works-at-globex',
       source_id: user.id,
       target_id: globex.id,
       type: 'works_at',
       weight: 1.0,
-    });
+      created_at: new Date().toISOString(),
+      last_activated: new Date().toISOString(),
+      valid_from: new Date().toISOString(),
+    }], db, new GraphRAGExtractor({ useLocalExtraction: true }));
 
     // 验证 Acme 的关系被自动失效
     activeRels = await db.getRelationshipsForEntity(user.id, false);
@@ -883,7 +893,7 @@ describe('Bitemporal Edges & Single-Valued Relation Invalidation', () => {
     expect(oldRel).toBeDefined();
     expect(oldRel?.valid_until).toBeDefined();
     expect(oldRel?.invalidated_at).toBeDefined();
-    expect(oldRel?.invalidation_reason).toContain('superseded by extraction');
+    expect(oldRel?.invalidation_reason).toContain(`superseded by ${rel2.id}`);
   });
 
   it('should allow multiple targets for multi-valued relationships without invalidation', async () => {
@@ -1366,5 +1376,4 @@ describe('Entity Importance Scoring Operations', () => {
     await testDb.close();
   });
 });
-
 

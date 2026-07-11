@@ -451,15 +451,10 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
     });
   }
 
-  // Auto conflict detection
   try {
     await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
   } catch (err) {
-    console.error('[Ingest] Conflict resolution failed:', err);
-  }
-
-  for (const relationship of resolution.relationshipsToCreate) {
-    await ctx.db.addRelationship(relationship);
+    return FAIL('resolving', `Transactional conflict resolution failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   // Stage: storing
@@ -679,7 +674,6 @@ async function runFailedChunkRetry(jobId: string, documentId: string, ctx: Reque
         });
       }
       await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
-      for (const relationship of resolution.relationshipsToCreate) await ctx.db.addRelationship(relationship);
 
       const principleNow = new Date().toISOString();
       const principles = result.principles.map((principle): Entity => ({

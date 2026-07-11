@@ -857,21 +857,10 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             }
 
             try {
-              await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+              savedRelationships.push(...await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor));
             } catch (err) {
               console.error('[MCP extract_from_capture] Conflict resolution failed:', err);
-            }
-
-            for (const relationship of resolution.relationshipsToCreate) {
-              try {
-                const saved = await ctx.db.addRelationship(relationship);
-                savedRelationships.push(saved);
-              } catch (e) {
-                const msg = e instanceof Error ? e.message : String(e);
-                if (!msg.includes('UNIQUE constraint')) {
-                  console.error(`[extract_from_capture] 关系保存失败:`, msg);
-                }
-              }
+              throw err;
             }
 
             const principleNow = new Date().toISOString();
@@ -1488,14 +1477,7 @@ ${gaConnBlock}`;
               await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
             } catch (err) {
               console.error('[MCP save_conclusion] Conflict resolution failed:', err);
-            }
-
-            for (const relationship of resolution.relationshipsToCreate) {
-              try {
-                await ctx.db.addRelationship(relationship);
-              } catch {
-                // 重复关系是预期的
-              }
+              throw err;
             }
 
             if (related_entity_ids && related_entity_ids.length > 0) {

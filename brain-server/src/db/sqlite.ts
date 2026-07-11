@@ -451,6 +451,69 @@ const MIGRATIONS: Migration[] = [
         ON entity_merge_audit(alias_id, created_at DESC);
     `,
   },
+  {
+    version: 18,
+    name: 'add_assertion_conflict_audit',
+    up: `
+      CREATE TABLE relationships_v18 (
+        id TEXT PRIMARY KEY,
+        source_id TEXT NOT NULL,
+        target_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        description TEXT,
+        weight REAL NOT NULL DEFAULT 1.0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        last_activated TEXT NOT NULL DEFAULT (datetime('now')),
+        valid_from TEXT,
+        valid_until TEXT,
+        invalidated_at TEXT,
+        invalidation_reason TEXT,
+        FOREIGN KEY (source_id) REFERENCES entities(id) ON DELETE CASCADE,
+        FOREIGN KEY (target_id) REFERENCES entities(id) ON DELETE CASCADE
+      );
+      INSERT INTO relationships_v18
+      SELECT id, source_id, target_id, type, description, weight, created_at,
+             last_activated, valid_from, valid_until, invalidated_at, invalidation_reason
+      FROM relationships;
+      DROP TABLE relationships;
+      ALTER TABLE relationships_v18 RENAME TO relationships;
+      CREATE INDEX IF NOT EXISTS idx_relationships_source ON relationships(source_id);
+      CREATE INDEX IF NOT EXISTS idx_relationships_target ON relationships(target_id);
+      CREATE INDEX IF NOT EXISTS idx_relationships_type ON relationships(type);
+      CREATE INDEX IF NOT EXISTS idx_relationships_weight ON relationships(weight);
+      CREATE INDEX IF NOT EXISTS idx_relationships_valid_until ON relationships(valid_until);
+      CREATE TRIGGER validate_relationship_type_insert
+      BEFORE INSERT ON relationships
+      WHEN NEW.type NOT IN (${sqlStringList(RELATIONSHIP_TYPES)})
+      BEGIN SELECT RAISE(ABORT, 'invalid relationship type'); END;
+      CREATE TRIGGER validate_relationship_type_update
+      BEFORE UPDATE OF type ON relationships
+      WHEN NEW.type NOT IN (${sqlStringList(RELATIONSHIP_TYPES)})
+      BEGIN SELECT RAISE(ABORT, 'invalid relationship type'); END;
+
+      CREATE TABLE IF NOT EXISTS assertion_conflict_audit (
+        id TEXT PRIMARY KEY,
+        new_assertion_id TEXT NOT NULL,
+        old_assertion_id TEXT,
+        operation TEXT NOT NULL CHECK(operation IN ('supersede', 'conflict', 'independent', 'review')),
+        confidence REAL NOT NULL CHECK(confidence >= 0 AND confidence <= 1),
+        reason TEXT NOT NULL,
+        evidence TEXT NOT NULL,
+        model_output TEXT,
+        status TEXT NOT NULL CHECK(status IN ('applied', 'pending', 'confirmed', 'rejected', 'reverted')),
+        operator TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        reviewed_at TEXT,
+        reverted_at TEXT,
+        FOREIGN KEY(new_assertion_id) REFERENCES assertions(id) ON DELETE RESTRICT,
+        FOREIGN KEY(old_assertion_id) REFERENCES assertions(id) ON DELETE RESTRICT
+      );
+      CREATE INDEX IF NOT EXISTS idx_assertion_conflict_audit_status
+        ON assertion_conflict_audit(status, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_assertion_conflict_audit_assertions
+        ON assertion_conflict_audit(new_assertion_id, old_assertion_id);
+    `,
+  },
 ];
 
 interface Migration {
@@ -1266,20 +1329,6 @@ export class Database {
     const validUntil = relationship.valid_until || null;
     const invalidatedAt = relationship.invalidated_at || null;
     const invalidationReason = relationship.invalidation_reason || null;
-
-    // 自动冲突检测：如果是单值关系，且是新增的有效关系
-    if (SINGLE_VALUED_REL_TYPES.includes(relationship.type) && !validUntil && !invalidatedAt) {
-      // 找出该 source 下同 type 但不同 target 的当前有效的旧关系
-      const existing = await this.all<Relationship>(
-        `SELECT * FROM relationships 
-         WHERE source_id = ? AND type = ? AND target_id != ?
-           AND (valid_until IS NULL OR valid_until > ?)`,
-        [relationship.source_id, relationship.type, relationship.target_id, now]
-      );
-      for (const rel of existing) {
-        await this.invalidateRelationship(rel.id, `superseded by extraction at ${validFrom}`);
-      }
-    }
 
     await this.run(
       `INSERT OR REPLACE INTO relationships (id, source_id, target_id, type, description, weight, created_at, last_activated, valid_from, valid_until, invalidated_at, invalidation_reason)

@@ -339,24 +339,11 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
             }
           }
 
-          // 自动冲突检测与消解
           try {
-            await resolveConflicts(resolution.relationshipsToCreate, this.db, this.extractor);
+            savedRelationships.push(...await resolveConflicts(resolution.relationshipsToCreate, this.db, this.extractor));
           } catch (err) {
             console.error('[MCP extract_from_capture] Conflict resolution failed:', err);
-          }
-
-          for (const relationship of resolution.relationshipsToCreate) {
-            try {
-              const saved = await this.db.addRelationship(relationship);
-              savedRelationships.push(saved);
-            } catch (e) {
-              // UNIQUE 约束冲突（重复关系）是预期的，其他错误需要记录
-              const msg = e instanceof Error ? e.message : String(e);
-              if (!msg.includes('UNIQUE constraint')) {
-                console.error(`[extract_from_capture] 关系保存失败:`, msg);
-              }
-            }
+            throw err;
           }
 
           // 原则实体走消解，避免重复 capture 产生重复原则
