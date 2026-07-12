@@ -3,7 +3,7 @@ import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js
 import { resolveEntities } from '../../graphrag/entity-resolver.js';
 import { resolveConflicts } from '../../graphrag/conflict-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
-import type { EntityType, RelationshipType, Entity } from '../../shared-types.js';
+import type { EntityType, RelationshipType, Entity, Assertion } from '../../shared-types.js';
 import {
   RecordCaptureSchema,
   AddEntitySchema,
@@ -255,6 +255,69 @@ async function retrieveGraphContext(
   };
 }
 
+interface GroundingEvidence {
+  id: string;
+  kind: 'entity' | 'assertion';
+  subjectId?: string;
+  predicate?: string;
+  objectId?: string;
+  literalValue?: string;
+  confidence: number;
+}
+
+interface GroundingEnvelope {
+  status: 'grounded' | 'insufficient_evidence';
+  answerClassification: 'inference' | 'unknown';
+  evidenceCoverage: 'partial' | 'none';
+  confidence: number;
+  evidence: GroundingEvidence[];
+}
+
+async function buildGroundingEnvelope(
+  ctx: RequestContext,
+  sources: Array<{ id?: string; similarity?: number }>,
+): Promise<GroundingEnvelope> {
+  const entitySources = sources.filter((source) => typeof source?.id === 'string');
+  if (!entitySources.length) {
+    return {
+      status: 'insufficient_evidence',
+      answerClassification: 'unknown',
+      evidenceCoverage: 'none',
+      confidence: 0,
+      evidence: [],
+    };
+  }
+
+  const assertionGroups = await Promise.all(
+    entitySources.slice(0, 10).map((source) => ctx.db.getAssertions({ subjectId: source.id, limit: 8 })),
+  );
+  const assertions = assertionGroups.flat().slice(0, 30);
+  const entityEvidence: GroundingEvidence[] = entitySources.slice(0, 12).map((source) => ({
+    id: source.id!,
+    kind: 'entity',
+    confidence: Number.isFinite(source.similarity) ? Math.max(0, Math.min(1, Number(source.similarity))) : 0.6,
+  }));
+  const assertionEvidence: GroundingEvidence[] = assertions.map((assertion: Assertion) => ({
+    id: assertion.id,
+    kind: 'assertion',
+    subjectId: assertion.subject_id,
+    predicate: assertion.predicate,
+    objectId: assertion.object_id,
+    literalValue: assertion.literal_value,
+    confidence: assertion.confidence,
+  }));
+  const evidence = [...assertionEvidence, ...entityEvidence];
+  const confidence = evidence.reduce((sum, item) => sum + item.confidence, 0) / evidence.length;
+
+  return {
+    status: 'grounded',
+    answerClassification: 'inference',
+    evidenceCoverage: 'partial',
+    confidence: Number(confidence.toFixed(3)),
+    evidence,
+  };
+}
+
 // ── Focus-Stack 适配：话题沉淀 ──
 // 多轮"问大脑/决策"聊出结论后，自动把该话题压缩成一条长期记忆。按"首问"去重：
 // 同一话题越聊越深就更新同一条，不重复堆。打 auto_sediment 标记，可追溯/可过滤。
@@ -359,7 +422,11 @@ async function retrieveDecisionContext(
   }
 
   // 宽召回后用 LLM 重排挑出真正相关的 top-limit（救弱 embedding 的中文召回）
-  const relevantMemories = await rerankByLlm(ctx, situation, candidates, limit, { decisionMode: true });
+  const relevantMemories = (await rerankByLlm(ctx, situation, candidates, limit, { decisionMode: true }))
+    .filter((item) => memoryCandidateScore(situation, item, {
+      decisionMode: true,
+      config: RETRIEVAL_CONFIG,
+    }) > RETRIEVAL_CONFIG.minimumLexicalScore);
 
   const corePrincipleCandidates = await ctx.db.getCorePrinciples();
   // 核心原则是用户的长期约束，但不能绕过相关性判断全量进入回答。
@@ -1340,6 +1407,15 @@ ${conflictBlock}`;
               }
             }
             const cappedSources = sources.slice(0, 12);
+            const grounding = await buildGroundingEnvelope(ctx, cappedSources);
+            if (grounding.status === 'insufficient_evidence') {
+              result = {
+                reply: '我的记忆里暂时没有足够证据回答这部分。',
+                sources: [],
+                grounding,
+              };
+              break;
+            }
             const memoryBlockItems = cappedSources
               .map((m: any, i: number) => ({ item: m, index: i + 1 }))
               .filter(({ item }) => item.type !== 'principle');
@@ -1358,7 +1434,7 @@ ${conflictBlock}`;
               : '（没有相关核心原则）';
 
             const systemPrompt = `你是用户的「第二大脑」。下面是从用户本地知识图谱中检索到的相关记忆和少量核心原则。
-请主要依据「相关记忆」回答用户的问题，并在用到某条记忆时用其名称指明来源。
+请主要依据「相关记忆」回答用户的问题，并在每个重要事实后用 [编号] 标明对应 Entity 证据。
 「核心原则」只有在确实与本问题相关时才参考或引用；无关原则必须忽略，不能为了引用而引用。
 如果这些记忆里没有答案，就如实说"我的记忆里暂时没有这部分"，可顺带建议用户该捕获什么，不要编造。
 回答简洁、口语化，使用用户提问所用的语言。
@@ -1395,10 +1471,11 @@ ${principleBlock}`;
               result = {
                 reply: data.choices?.[0]?.message?.content || '(no response)',
                 sources: cappedSources,
+                grounding,
               };
             } catch (e) {
               console.error('[ask_memory] Failed:', e);
-              result = { reply: '抱歉，问答服务暂时不可用。', sources: cappedSources };
+              result = { reply: '抱歉，问答服务暂时不可用。', sources: cappedSources, grounding };
             }
             break;
           }
@@ -1429,6 +1506,20 @@ ${principleBlock}`;
               if (m && m.id && !gaSeen.has(m.id)) { gaSeen.add(m.id); gaSources.push(toCompactEntity(m)); }
             }
             const gaCapped = gaSources.slice(0, 10);
+            const gaGrounding = await buildGroundingEnvelope(ctx, gaCapped);
+            if (gaGrounding.status === 'insufficient_evidence') {
+              result = {
+                conclusion: '我的记忆里暂时没有足够证据回答这部分。',
+                reasons: [],
+                questions: ['你希望我基于哪些事实、约束或历史记录来回答？'],
+                isDecision: false,
+                sources: [],
+                edges: [],
+                citedEntityIds: [],
+                grounding: gaGrounding,
+              };
+              break;
+            }
             const gaIds = new Set(gaCapped.map((s) => s.id));
 
             // 命中节点之间的关系（构成高亮子图的边 + 喂给 LLM 做图谱原生推理）
@@ -1524,6 +1615,7 @@ ${gaConnBlock}`;
                 sources: gaCapped,
                 edges: gaEdges,
                 citedEntityIds: gaCapped.map((s) => s.id),
+                grounding: gaGrounding,
               };
               // 多轮话题聊出结论 → 自动沉淀（按首问去重，越聊越深更新同一条）。不阻塞返回。
               const gaUserTurns = gaMessages.filter((m) => m.role === 'user');
@@ -1533,7 +1625,7 @@ ${gaConnBlock}`;
             } catch (e: any) {
               if (e?.message === 'LLM_NOT_CONFIGURED') { sendError(res, 400, 'LLM_NOT_CONFIGURED'); return; }
               console.error('[graph_answer] Failed:', e);
-              result = { conclusion: '抱歉，回答服务暂时不可用。', reasons: [], sources: gaCapped, edges: gaEdges, citedEntityIds: gaCapped.map((s) => s.id) };
+              result = { conclusion: '抱歉，回答服务暂时不可用。', reasons: [], sources: gaCapped, edges: gaEdges, citedEntityIds: gaCapped.map((s) => s.id), grounding: gaGrounding };
             }
             break;
           }
