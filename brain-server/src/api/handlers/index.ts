@@ -789,6 +789,25 @@ export const handleNotificationRoutes = [
         sendResponse(res, 200, r);
       }
     }
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/notifications/:id/feedback',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const body = await parseBody<{ feedback?: string }>(req);
+      const allowed = new Set(['useful', 'not_useful', 'incorrect', 'remind_later', 'stop_this_type']);
+      if (!body.feedback || !allowed.has(body.feedback)) return sendError(res, 400, 'invalid feedback');
+      const update = await ctx.db.run(
+        `UPDATE proactive_insights SET feedback = ?, feedback_at = ? WHERE notification_id = ?`,
+        [body.feedback, new Date().toISOString(), params.id],
+      );
+      if (!update.changes) return sendError(res, 404, 'proactive insight not found');
+      const eventType = body.feedback === 'remind_later'
+        ? 'alert_dismissed'
+        : body.feedback === 'useful' ? 'alert_clicked' : 'alert_rejected';
+      await ctx.db.recordBehaviorEvent({ eventType, notificationId: params.id, metadata: { feedback: body.feedback } });
+      sendResponse(res, 200, { success: true, feedback: body.feedback });
+    }
   }
 ];
 

@@ -250,6 +250,7 @@ export class AgentLoop {
       // 2. 图分析驱动：优先使用 generateGraphInsights
       let result: { ok: boolean; insight: { title: string; content: string } | null } = { ok: false, insight: null };
       let insightRelatedEntities: string[] = batch.map(e => e.id);
+      let selectedGraphInsight: GraphInsight | undefined;
 
       try {
         const candidates = await generateGraphInsights(this.db, batch);
@@ -257,6 +258,7 @@ export class AgentLoop {
         if (candidates.length > 0) {
           // 选取置信度最高的候选
           const best = candidates[0]; // 已按 confidence 降序排列
+          selectedGraphInsight = best;
 
           if (best.category === 'statistical') {
             // statistical 类型不调 LLM，直接使用模板输出
@@ -289,11 +291,22 @@ export class AgentLoop {
       }
 
           if (result.insight) {
-        await this.db.addNotification({
+        const notification = await this.db.addNotification({
           title: result.insight.title,
           content: result.insight.content,
           type: 'insight',
           related_entities: insightRelatedEntities,
+        });
+        const generatedAt = new Date();
+        const cooldownUntil = new Date(generatedAt.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        await this.db.recordProactiveInsight({
+          notificationId: notification.id,
+          insightType: selectedGraphInsight?.category || 'llm_fallback',
+          trigger: selectedGraphInsight ? 'graph_analysis' : 'consolidation_batch',
+          evidenceIds: insightRelatedEntities,
+          confidence: selectedGraphInsight?.confidence ?? 0.5,
+          reason: selectedGraphInsight?.content || 'LLM fallback over consolidation candidates',
+          cooldownUntil,
         });
         console.log(`[AgentLoop] 产生新洞见: ${result.insight.title}`);
           } else {
@@ -331,11 +344,20 @@ export class AgentLoop {
         try {
           const blindspots = await detectBlindspots(this.db);
           for (const bs of blindspots) {
-            await this.db.addNotification({
+            const notification = await this.db.addNotification({
               title: bs.title,
               content: bs.content,
               type: 'blindspot',
               related_entities: bs.related_entities,
+            });
+            await this.db.recordProactiveInsight({
+              notificationId: notification.id,
+              insightType: bs.type,
+              trigger: 'behavior_blindspot_detection',
+              evidenceIds: bs.related_entities,
+              confidence: bs.confidence,
+              reason: bs.content,
+              cooldownUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             });
           }
           if (blindspots.length > 0) {

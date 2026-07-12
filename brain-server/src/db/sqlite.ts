@@ -1945,6 +1945,30 @@ export class Database {
     });
   }
 
+  async recordProactiveInsight(input: {
+    notificationId?: string;
+    insightType: string;
+    trigger: string;
+    evidenceIds: string[];
+    confidence: number;
+    reason: string;
+    cooldownUntil?: string;
+  }): Promise<string> {
+    const id = uuidv4();
+    await this.run(
+      `INSERT INTO proactive_insights (
+         id, notification_id, insight_type, trigger, evidence_ids, confidence,
+         reason, generated_at, cooldown_until
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id, input.notificationId || null, input.insightType, input.trigger,
+        JSON.stringify(input.evidenceIds), Math.max(0, Math.min(1, input.confidence)),
+        input.reason, new Date().toISOString(), input.cooldownUntil || null,
+      ],
+    );
+    return id;
+  }
+
   async addNotification(notification: Omit<import('../shared-types.js').Notification, 'id' | 'created_at' | 'read_status'> & { id?: string }): Promise<import('../shared-types.js').Notification> {
     const id = notification.id || uuidv4();
     const now = new Date().toISOString();

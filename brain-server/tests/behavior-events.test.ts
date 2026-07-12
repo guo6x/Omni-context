@@ -31,4 +31,32 @@ describe('behavior events', () => {
     expect(row?.count).toBe(1);
     await db.close();
   });
+
+  it('stores auditable proactive insight evidence and feedback', async () => {
+    const db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+    const notification = await db.addNotification({
+      title: 'Insight', content: 'Reason', type: 'blindspot', related_entities: [],
+    });
+    await db.recordProactiveInsight({
+      notificationId: notification.id,
+      insightType: 'search_without_capture',
+      trigger: 'behavior_blindspot_detection',
+      evidenceIds: [],
+      confidence: 0.7,
+      reason: 'Repeated search without captured evidence',
+    });
+    await db.run(
+      `UPDATE proactive_insights SET feedback = 'not_useful', feedback_at = ? WHERE notification_id = ?`,
+      [new Date().toISOString(), notification.id],
+    );
+    const row = await db.get<{ trigger: string; confidence: number; feedback: string }>(
+      'SELECT trigger, confidence, feedback FROM proactive_insights WHERE notification_id = ?',
+      [notification.id],
+    );
+    expect(row).toMatchObject({
+      trigger: 'behavior_blindspot_detection', confidence: 0.7, feedback: 'not_useful',
+    });
+    await db.close();
+  });
 });

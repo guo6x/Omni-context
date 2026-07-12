@@ -164,7 +164,7 @@ async function findLatentConnections(db: Database, entities: Entity[]): Promise<
         n => n.id !== entity.id && latentNeighborIds.has(n.id)
       );
 
-      if (bridges.length > 0) {
+      if (bridges.length > 0 && isSemanticallyConsistent(entity, latentNode)) {
         const bridge = bridges[0];
         results.push({
           category: 'latent_connection',
@@ -182,82 +182,44 @@ async function findLatentConnections(db: Database, entities: Entity[]): Promise<
   return results;
 }
 
+function isSemanticallyConsistent(left: Entity, right: Entity): boolean {
+  const ignored = new Set(['uploaded-file', 'imported', 'auto_extracted', 'llm-extracted', 'web']);
+  const leftTags = new Set((left.tags || []).map((tag) => tag.toLowerCase()).filter((tag) => !ignored.has(tag)));
+  if ((right.tags || []).some((tag) => leftTags.has(tag.toLowerCase()))) return true;
+  const tokens = (text: string) => new Set(
+    text.toLowerCase().match(/[a-z0-9][a-z0-9_-]{2,}|[\u4e00-\u9fff]{2,6}/g) || [],
+  );
+  const leftTokens = tokens(`${left.name} ${left.description || ''}`);
+  return [...tokens(`${right.name} ${right.description || ''}`)].some((token) => leftTokens.has(token));
+}
+
 // ── 反共识洞见 [核心壁垒] ──
 
 async function findAntiConsensus(db: Database): Promise<GraphInsight[]> {
   const results: GraphInsight[] = [];
   const recentPairs = await getRecentInsightPairs(db, 'anti_consensus', 7);
-
-  // 获取近 30 天活跃的实体（降低门槛：有描述或有名字即可参与立场分类）
-  const recentEntities = await db.all<{
-    id: string; name: string; type: string; description: string | null;
-  }>(
-    `SELECT id, name, type, description FROM entities
-     WHERE created_at > datetime('now', '-30 days')
-       AND json_extract(metadata, '$.merged_into') IS NULL
-       AND (description IS NOT NULL AND description != ''
-            OR name IS NOT NULL AND name != '')
-     ORDER BY access_count DESC
-     LIMIT 150`,
+  const conflicts = await db.all<{ source_id: string; target_id: string; description: string | null }>(
+    `SELECT source_id, target_id, description FROM relationships
+     WHERE type = 'conflicts_with'
+       AND (valid_until IS NULL OR valid_until > datetime('now'))
+     ORDER BY created_at DESC LIMIT 20`,
   );
-
-  // 标记每个实体的视角倾向
-  interface TaggedEntity {
-    id: string;
-    name: string;
-    type: string;
-    description: string;
-    stance: 'pro' | 'con' | 'neutral';
-  }
-
-  const tagged: TaggedEntity[] = recentEntities.map(e => {
-    const text = `${e.name} ${e.description || ''}`.toLowerCase();
-    let proScore = 0;
-    let conScore = 0;
-    for (const kw of OPPOSING_KEYWORDS.pro) {
-      if (text.includes(kw)) proScore++;
-    }
-    for (const kw of OPPOSING_KEYWORDS.con) {
-      if (text.includes(kw)) conScore++;
-    }
-    const stance = proScore > conScore ? 'pro' : conScore > proScore ? 'con' : 'neutral';
-    return { ...e, stance };
-  });
-
-  const proEntities = tagged.filter(e => e.stance === 'pro');
-  const conEntities = tagged.filter(e => e.stance === 'con');
-
-  // 找同主题下的对立对：共享一度邻居 → 同主题
-  for (const pro of proEntities.slice(0, 10)) {
-    const proNeighbors = await db.getGraphNeighborhood(pro.id, 1);
-    const proNeighborIds = new Set(proNeighbors.nodes.map(n => n.id));
-
-    for (const con of conEntities.slice(0, 10)) {
-      if (pro.id === con.id) continue;
-      const pairKey = makePairKey(pro.id, con.id);
-      if (recentPairs.has(pairKey)) continue;
-
-      // 检查是否共享一度邻居（代表同主题）
-      const conNeighbors = await db.getGraphNeighborhood(con.id, 1);
-      const sharedNeighbor = conNeighbors.nodes.find(
-        n => n.id !== pro.id && n.id !== con.id && proNeighborIds.has(n.id)
-      );
-
-      if (sharedNeighbor) {
-        results.push({
-          category: 'anti_consensus',
-          title: `对立视角：${pro.name} vs ${con.name}`,
-          content: `关于 ${sharedNeighbor.name} 这个主题，"${pro.name}" 倾向正面视角，而 "${con.name}" 倾向批判视角。审视这对矛盾可能带来新的洞察。`,
-          related_entities: [pro.id, con.id, sharedNeighbor.id],
-          confidence: 0.7,
-        });
-        // 每个 pro 实体最多产出 1 条反共识
-        break;
-      }
-    }
-
-    // 最多产出 2 条反共识洞见
-    if (results.filter(r => r.category === 'anti_consensus').length >= 2) break;
+  for (const conflict of conflicts) {
+    const pairKey = makePairKey(conflict.source_id, conflict.target_id);
+    if (recentPairs.has(pairKey)) continue;
+    const [left, right] = await Promise.all([
+      db.getEntity(conflict.source_id),
+      db.getEntity(conflict.target_id),
+    ]);
+    if (!left || !right) continue;
+    results.push({
+      category: 'anti_consensus',
+      title: `已确认的冲突：${left.name} vs ${right.name}`,
+      content: `${left.name} 与 ${right.name} 存在显式冲突关系${conflict.description ? `：${conflict.description}` : ''}。建议核对当前有效事实后再形成结论。`,
+      related_entities: [left.id, right.id],
+      confidence: 0.9,
+    });
+    if (results.length >= 2) break;
   }
 
   return results;

@@ -258,9 +258,15 @@ export async function detectBlindspots(db: Database): Promise<Blindspot[]> {
 
   // 24h 去重
   const recentKeys = await getRecentBlindspotKeys(db);
+  const suppressedRows = await db.all<{ insight_type: string }>(
+    `SELECT DISTINCT insight_type FROM proactive_insights
+     WHERE feedback = 'stop_this_type'
+        OR (cooldown_until IS NOT NULL AND cooldown_until > datetime('now'))`,
+  );
+  const suppressedTypes = new Set(suppressedRows.map((row) => row.insight_type));
   const deduped = allBlindspots.filter(bs => {
     const key = makeBlindspotDedupeKey(bs);
-    return !recentKeys.has(key);
+    return !recentKeys.has(key) && !suppressedTypes.has(bs.type);
   });
 
   // 按置信度降序排序
