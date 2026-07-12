@@ -1243,8 +1243,28 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               return;
             }
 
+            const latestUserMessage = [...messages].reverse().find((message) => message.role === 'user');
+            const retrievalQuery = `${situation}\n${latestUserMessage?.content || ''}`.trim();
+            const discussionContext = await retrieveDecisionContext(ctx, retrievalQuery, 6);
+            const discussionSources = [...discussionContext.relevantMemories, ...discussionContext.principles]
+              .filter((item, index, all) => item?.id && all.findIndex((candidate) => candidate?.id === item.id) === index)
+              .slice(0, 10)
+              .map(toCompactEntity);
+            const evidenceBlock = discussionSources.length
+              ? discussionSources.map((source, index) => `[${index + 1}] (${source.type}) ${source.name}: ${source.description || ''}`).join('\n')
+              : '（本轮没有检索到相关记忆）';
+            const conflictBlock = discussionContext.conflicts.length
+              ? discussionContext.conflicts.map((conflict) => `- ${conflict.a.name} 与 ${conflict.b.name}: ${conflict.description || '存在冲突'}`).join('\n')
+              : '（未发现相关冲突）';
+
             const systemPrompt = `你是一个决策讨论助手。用户正在讨论一个决策："""${situation}"""
-你在帮助用户深入思考、质疑假设、补充视角。回复要简洁、直接、有帮助。使用中文。`;
+每一轮都必须根据下面重新检索的当前记忆回答，而不是只依赖历史对话。重要事实需用 [编号] 标明依据；证据不足时明确说不知道并提出要补充的信息。帮助用户深入思考、质疑假设、补充视角。回复简洁、直接，使用中文。
+
+本轮证据：
+${evidenceBlock}
+
+已知冲突：
+${conflictBlock}`;
 
             try {
               const controller = new AbortController();
@@ -1278,10 +1298,14 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 choices: Array<{ message: { content: string } }>;
               };
 
-              result = { reply: data.choices?.[0]?.message?.content || '(no response)' };
+              result = {
+                reply: data.choices?.[0]?.message?.content || '(no response)',
+                sources: discussionSources,
+                conflicts: discussionContext.conflicts,
+              };
             } catch (e: any) {
               console.error('[discuss_decision] Failed:', e);
-              result = { reply: '抱歉，讨论服务暂时不可用。' };
+              result = { reply: '抱歉，讨论服务暂时不可用。', sources: discussionSources };
             }
             break;
           }
