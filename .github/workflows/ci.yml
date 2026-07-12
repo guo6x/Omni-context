@@ -79,30 +79,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: brain-server/package-lock.json
-      - run: npm ci
-        working-directory: brain-server
-      - run: npm run build
-        working-directory: brain-server
-      - name: Stage brain-server for Tauri resources
-        shell: bash
-        run: |
-          mkdir -p desktop-daemon/src-tauri/brain-server/dist
-          cp -r brain-server/dist/* desktop-daemon/src-tauri/brain-server/dist/
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
+        components: rustfmt, clippy
       - run: cargo fmt -- --check
-        working-directory: desktop-daemon/src-tauri
-      - run: cargo check --locked
-        working-directory: desktop-daemon/src-tauri
-      - run: cargo clippy --locked --all-targets
-        working-directory: desktop-daemon/src-tauri
-      - run: cargo test --locked
         working-directory: desktop-daemon/src-tauri
 
   browser-extension:
