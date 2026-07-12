@@ -1878,11 +1878,37 @@ ${gaConnBlock}`;
             return sendError(res, 404, `未知工具: ${toolName}`);
         }
 
+        const matchedEntities = collectMatchedEntities(result);
+        const behaviorEvents: import('../../behavior/events.js').BehaviorEventInput[] = [];
+        if (['search_entities', 'vector_search', 'unified_memory_search', 'get_decision_context', 'ask_memory', 'graph_answer'].includes(toolName)) {
+          behaviorEvents.push({ eventType: 'searched', topic: query, intent: 'informational' });
+        }
+        for (const entity of matchedEntities) {
+          behaviorEvents.push({ eventType: 'retrieved', entityId: entity.id, topic: query, intent: 'informational' });
+          if (['ask_memory', 'graph_answer', 'analyze_decision', 'discuss_decision'].includes(toolName)) {
+            behaviorEvents.push({ eventType: 'cited', entityId: entity.id, topic: query, intent: 'informational' });
+          }
+        }
+        if (['record_capture', 'extract_from_capture', 'save_conclusion'].includes(toolName)) {
+          behaviorEvents.push({ eventType: 'captured', topic: query, intent: 'action' });
+        }
+        if (toolName === 'update_entity') {
+          behaviorEvents.push({ eventType: 'edited', entityId: typeof args.id === 'string' ? args.id : undefined, intent: 'action' });
+        }
+        if (toolName === 'save_decision') {
+          behaviorEvents.push({ eventType: 'decided', entityId: typeof result?.id === 'string' ? result.id : undefined, topic: query, intent: 'action' });
+        }
+        try {
+          await ctx.db.recordBehaviorEvents(behaviorEvents);
+        } catch (behaviorError) {
+          console.warn(`[MCP behavior] failed to record ${toolName}:`, behaviorError);
+        }
+
         ctx.db.addMcpUsageLog({
           toolName,
           client,
           query,
-          matchedEntities: collectMatchedEntities(result),
+          matchedEntities,
           success: true,
           durationMs: Date.now() - startedAt,
         }).catch(() => {});
