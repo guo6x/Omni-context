@@ -4,7 +4,8 @@
  *
  * Usage:
  *   npm run benchmark:dev -- --dataset <path-to-locomo10.json>
- *   npm run benchmark:dev -- --dataset <path> --brain-server-url http://127.0.0.1:3001
+ *   npm run benchmark:resume -- --run-id <run_id>
+ *   npm run benchmark:retry-errors -- --run-id <run_id>
  *
  * Required env vars:
  *   LLM_API_URL   — OpenAI-compatible API base URL (e.g., https://api.deepseek.com/v1)
@@ -19,7 +20,12 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { runBenchmark } from "./runner/index.mjs";
+import {
+  runBenchmark,
+  resumeBenchmark,
+  retryErrors,
+  requestShutdown,
+} from "./runner/index.mjs";
 import { BrainServerClient } from "./brain-server-client.mjs";
 import { LLMClient } from "./llm-client.mjs";
 
@@ -29,14 +35,19 @@ const ROOT = path.resolve(
 );
 
 function usage() {
-  console.error("Usage: node src/cli.mjs <dev|heldout> [--dataset <path>] [--brain-server-url <url>] [--runs <dir>]");
+  console.error("Usage:");
+  console.error("  node src/cli.mjs dev [--dataset <path>] [--brain-server-url <url>]");
+  console.error("  node src/cli.mjs resume --run-id <run_id> [--dataset <path>]");
+  console.error("  node src/cli.mjs retry-errors --run-id <run_id> [--dataset <path>]");
   console.error("");
-  console.error("  dev                     Run development conversation 1 only.");
-  console.error("  heldout                 Run held-out conversations (requires freeze authorization).");
-  console.error("  --dataset <path>        Path to official locomo10.json (default: data/locomo10.json).");
-  console.error("  --brain-server-url <url> Brain Server URL (default: http://127.0.0.1:3001).");
-  console.error("  --runs <dir>            Directory for run results (default: runs/).");
-  console.error("  --config <path>         Benchmark config file (default: config/default.json).");
+  console.error("  dev                       Run development conversation 1 (new run).");
+  console.error("  resume                    Resume an existing run by run-id.");
+  console.error("  retry-errors              Retry only error questions from an existing run.");
+  console.error("  --dataset <path>          Path to official locomo10.json (default: data/locomo10.json).");
+  console.error("  --brain-server-url <url>  Brain Server URL (default: http://127.0.0.1:3001).");
+  console.error("  --runs <dir>              Directory for run results (default: runs/).");
+  console.error("  --config <path>           Benchmark config file (default: config/default.json).");
+  console.error("  --run-id <id>             Run ID to resume or retry (required for resume/retry-errors).");
   console.error("");
   console.error("Required env vars: LLM_API_URL, LLM_API_KEY, LLM_MODEL");
   console.error("Optional env vars: JUDGE_MODEL, BRAIN_SERVER_URL, LOCAL_API_TOKEN");
@@ -57,7 +68,9 @@ async function main() {
   if (args.length === 0) usage();
 
   const mode = args[0];
-  if (mode !== "dev" && mode !== "heldout") usage();
+  if (mode !== "dev" && mode !== "heldout" && mode !== "resume" && mode !== "retry-errors") {
+    usage();
+  }
 
   // Parse flags
   const getFlag = (name) => {
@@ -69,6 +82,7 @@ async function main() {
   const brainServerUrl = getFlag("--brain-server-url") || process.env.BRAIN_SERVER_URL || "http://127.0.0.1:3001";
   const runsRoot = getFlag("--runs") || path.join(ROOT, "runs");
   const configPath = getFlag("--config") || path.join(ROOT, "config", "default.json");
+  const runId = getFlag("--run-id");
 
   // Validate env vars
   if (!process.env.LLM_API_URL && !process.env.LLM_API_KEY && !process.env.LLM_MODEL) {
@@ -78,17 +92,26 @@ async function main() {
     process.exit(1);
   }
 
+  // Validate run-id for resume/retry-errors
+  if ((mode === "resume" || mode === "retry-errors") && !runId) {
+    console.error(`ERROR: --run-id is required for ${mode} mode.`);
+    usage();
+  }
+
+  // SIGINT/SIGTERM safe shutdown
+  const shutdownHandler = (signal) => {
+    console.error(`\n[benchmark] ${signal} received, requesting safe shutdown...`);
+    requestShutdown();
+  };
+  process.on("SIGINT", () => shutdownHandler("SIGINT"));
+  process.on("SIGTERM", () => shutdownHandler("SIGTERM"));
+
   const [config, datasetManifest, answerPrompt, judgePrompt] = await Promise.all([
     loadConfig(configPath),
     loadConfig(path.join(ROOT, "dataset_manifest.json")),
     loadPrompt(path.join(ROOT, "prompts", "answer-v1.txt")),
     loadPrompt(path.join(ROOT, "prompts", "judge-v2.txt")),
   ]);
-
-  const split = mode === "dev" ? "development" : "heldout";
-  const conversationIds = mode === "dev"
-    ? [1]
-    : datasetManifest.heldout_conversations;
 
   // Create real Brain Server client
   const brainServerClient = new BrainServerClient({
@@ -104,25 +127,65 @@ async function main() {
   console.log(`[benchmark] Brain Server: ${brainServerUrl}`);
   console.log(`[benchmark] Answer model: ${llmClient.answerConfig.model}`);
   console.log(`[benchmark] Judge model: ${llmClient.judgeConfig.model}`);
-  console.log(`[benchmark] Conversations: ${conversationIds.join(", ")}`);
-  console.log("");
 
-  const result = await runBenchmark({
-    brainServerClient,
-    llmClient,
-    datasetPath,
-    config,
-    answerPrompt,
-    judgePrompt,
-    datasetManifest,
-    split,
-    conversationIds,
-    runsRoot,
-  });
+  let result;
+
+  if (mode === "dev" || mode === "heldout") {
+    const split = mode === "dev" ? "development" : "heldout";
+    const conversationIds = mode === "dev"
+      ? [1]
+      : datasetManifest.heldout_conversations;
+
+    console.log(`[benchmark] Conversations: ${conversationIds.join(", ")}`);
+    console.log("");
+
+    result = await runBenchmark({
+      brainServerClient,
+      llmClient,
+      datasetPath,
+      config,
+      answerPrompt,
+      judgePrompt,
+      datasetManifest,
+      split,
+      conversationIds,
+      runsRoot,
+    });
+  } else if (mode === "resume") {
+    console.log(`[benchmark] Resuming run: ${runId}`);
+    console.log("");
+
+    result = await resumeBenchmark({
+      brainServerClient,
+      llmClient,
+      datasetPath,
+      config,
+      answerPrompt,
+      judgePrompt,
+      datasetManifest,
+      runsRoot,
+      runId,
+    });
+  } else if (mode === "retry-errors") {
+    console.log(`[benchmark] Retrying errors from run: ${runId}`);
+    console.log("");
+
+    result = await retryErrors({
+      brainServerClient,
+      llmClient,
+      datasetPath,
+      config,
+      answerPrompt,
+      judgePrompt,
+      datasetManifest,
+      runsRoot,
+      runId,
+    });
+  }
 
   console.log("");
   console.log("[benchmark] === Run Complete ===");
-  console.log(`  Run ID: ${result.manifest.run_id}`);
+  console.log(`  Run ID: ${result.manifest.run_id || runId}`);
   console.log(`  Run dir: ${result.runDir}`);
   console.log(`  Total questions: ${result.stats.total}`);
   console.log(`  Completed: ${result.stats.done}`);
@@ -135,6 +198,11 @@ async function main() {
   console.log("");
   console.log("To recompute metrics:");
   console.log(`  npm run recompute -- ${result.runDir}`);
+  console.log("");
+  console.log("To resume:");
+  console.log(`  npm run benchmark:resume -- --run-id ${result.manifest.run_id || runId}`);
+  console.log("To retry errors:");
+  console.log(`  npm run benchmark:retry-errors -- --run-id ${result.manifest.run_id || runId}`);
 }
 
 main().catch((err) => {
