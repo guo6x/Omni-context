@@ -225,8 +225,8 @@ async function queueCandidate(
     `INSERT INTO entity_merge_candidates (
        id, canonical_id, candidate_entity_id, candidate_name, candidate_type,
        similarity, reason, context, status, operator, created_at
-     ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, 'pending', NULL, ?)`,
-    [id, canonical.id, entity.name, entity.type, similarity ?? null, reason, JSON.stringify(contextIdentity(entity)), now]
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NULL, ?)`,
+    [id, canonical.id, entity.id, entity.name, entity.type, similarity ?? null, reason, JSON.stringify(contextIdentity(entity)), now]
   );
   return {
     id,
@@ -275,6 +275,7 @@ export async function resolveEntities(
   const updates = new Map<string, ResolutionResult['entitiesToUpdate'][number]>();
   const finalIdMap: Record<string, string> = {};
   const mergeCandidates: MergeCandidate[] = [];
+  const queuedEntityIds = new Set<string>();
 
   for (const entity of batch) {
     const candidates = [
@@ -289,9 +290,17 @@ export async function resolveEntities(
 
     if (exact) {
       if (NEVER_AUTO_MERGE_TYPES.has(entity.type)) {
-        if (!exact.isNew) mergeCandidates.push(await queueCandidate(db, entity, exact, 1, 'exact_name_manual_only'));
+        if (!exact.isNew) {
+          await db.addEntity(entity);
+          queuedEntityIds.add(entity.id);
+          mergeCandidates.push(await queueCandidate(db, entity, exact, 1, 'exact_name_manual_only'));
+        }
       } else if (CONTEXT_GATED_TYPES.has(entity.type) && !contextsCompatible(entity, exact)) {
-        if (!exact.isNew) mergeCandidates.push(await queueCandidate(db, entity, exact, 1, 'exact_name_context_mismatch'));
+        if (!exact.isNew) {
+          await db.addEntity(entity);
+          queuedEntityIds.add(entity.id);
+          mergeCandidates.push(await queueCandidate(db, entity, exact, 1, 'exact_name_context_mismatch'));
+        }
       } else {
         matched = exact;
         mergeReason = 'normalized_name_exact';
@@ -316,6 +325,8 @@ export async function resolveEntities(
         mergeReason = 'type_specific_semantic_match';
         mergeSimilarity = bestSimilarity;
       } else if (best && bestSimilarity >= REVIEW_SIMILARITY && !best.isNew) {
+        await db.addEntity(entity);
+        queuedEntityIds.add(entity.id);
         mergeCandidates.push(await queueCandidate(db, entity, best, bestSimilarity, 'semantic_review_required'));
       }
     }
@@ -356,21 +367,23 @@ export async function resolveEntities(
       });
     } else {
       finalIdMap[entity.id] = entity.id;
-      const candidate: Candidate = {
-        id: entity.id,
-        name: entity.name,
-        type: entity.type,
-        description: entity.description || '',
-        tags: entity.tags ? [...entity.tags] : [],
-        metadata: asRecord(entity.metadata),
-        embedding: entity.embedding,
-        created_at: entity.created_at || new Date().toISOString(),
-        access_count: entity.access_count || 0,
-        isNew: true,
-      };
-      const list = newByType.get(entity.type) || [];
-      list.push(candidate);
-      newByType.set(entity.type, list);
+      if (!queuedEntityIds.has(entity.id)) {
+        const candidate: Candidate = {
+          id: entity.id,
+          name: entity.name,
+          type: entity.type,
+          description: entity.description || '',
+          tags: entity.tags ? [...entity.tags] : [],
+          metadata: asRecord(entity.metadata),
+          embedding: entity.embedding,
+          created_at: entity.created_at || new Date().toISOString(),
+          access_count: entity.access_count || 0,
+          isNew: true,
+        };
+        const list = newByType.get(entity.type) || [];
+        list.push(candidate);
+        newByType.set(entity.type, list);
+      }
     }
   }
 
@@ -447,8 +460,8 @@ export async function confirmMerge(db: Database, mergeId: string): Promise<void>
 
     // Write audit log
     await db.run(
-      "INSERT INTO entity_merge_audit (id, canonical_id, alias_id, action, operator, created_at) VALUES (?, ?, ?, 'confirm', 'system', ?)",
-      [candidateId + '_audit_' + Date.now(), canonicalId, candidateId, now]
+      "INSERT INTO entity_merge_audit (id, canonical_id, alias_id, merge_reason, similarity, operator, snapshot, created_at) VALUES (?, ?, ?, ?, ?, 'system', ?, ?)",
+      [`${mergeId}_audit_${Date.now()}`, canonicalId, candidateId, row.reason ?? 'manual_confirm', row.similarity ?? null, JSON.stringify({ canonical_id: canonicalId, merged_at: now }), now]
     );
   });
 }
@@ -485,10 +498,10 @@ export async function revertMerge(db: Database, mergeId: string): Promise<void> 
       [audit.alias_id]
     );
 
-    // Mark merge candidate as reverted
+    // Restore merge candidate to pending so it can be re-reviewed
     await db.run(
-      "UPDATE entity_merge_candidates SET status = 'reverted', reviewed_at = ? WHERE canonical_id = ? AND status = 'confirmed'",
-      [now, audit.canonical_id]
+      "UPDATE entity_merge_candidates SET status = 'pending', reviewed_at = NULL WHERE id = ? AND status = 'confirmed'",
+      [mergeId]
     );
 
     // Mark audit as reverted

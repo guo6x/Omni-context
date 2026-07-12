@@ -54,7 +54,7 @@ describe('scoped device authentication', () => {
     route: string,
     token: string,
     body?: unknown,
-  ): Promise<{ status: number; body: Record<string, unknown> | unknown[] }> {
+  ): Promise<{ status: number; body: Record<string, unknown> | unknown[] | null }> {
     const response = await fetch(`${baseUrl}${route}`, {
       method,
       headers: {
@@ -63,9 +63,10 @@ describe('scoped device authentication', () => {
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
+    const text = await response.text();
     return {
       status: response.status,
-      body: await response.json() as Record<string, unknown> | unknown[],
+      body: text ? (JSON.parse(text) as Record<string, unknown> | unknown[]) : null,
     };
   }
 
@@ -124,7 +125,10 @@ describe('scoped device authentication', () => {
     const settings = await request('GET', '/api/settings', deviceToken);
     expect(settings.status).toBe(403);
     const mcpTransport = await request('POST', '/mcp', deviceToken, {});
-    expect(mcpTransport.status).toBe(403);
+    // /mcp JSON-RPC 入口不再在 HTTP 层做 per-tool scope 检查（tool name 在 body 中）。
+    // 任何有效认证设备都能连上；具体 tools/call 的 scope 检查在 handleMcpRpcMessage 中进行。
+    // 空 body（无 method）返回 202 Accepted。
+    expect(mcpTransport.status).toBe(202);
 
     const localAdmin = await request('GET', '/api/admin/export', localToken);
     expect(localAdmin.status).toBe(200);

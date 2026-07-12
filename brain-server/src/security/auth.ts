@@ -148,23 +148,26 @@ const MCP_TOOL_SCOPE_MAP: Record<string, AuthScope> = {
   record_decision_outcome: "decision:write",
 };
 
-function scopeForMcpTool(toolName: string): AuthScope | null {
+export function scopeForMcpTool(toolName: string): AuthScope | null {
   return MCP_TOOL_SCOPE_MAP[toolName] || null;
 }
 
-export function requiredScope(req: http.IncomingMessage): AuthScope {
+export function requiredScope(req: http.IncomingMessage): AuthScope | null {
   const pathname = new URL(req.url || '/', 'http://localhost').pathname;
   const method = req.method || 'GET';
 
   if (pathname === '/api/admin/export') return 'admin:export';
   if (pathname === '/api/admin/import') return 'admin:import';
-  if (pathname === '/api/mcp/tool/ask_memory') return 'memory:read';
-    // Per-tool MCP scope resolution
-  if (pathname === '/mcp' || pathname.startsWith('/api/mcp/')) {
-    const url = new URL(req.url || '/', 'http://localhost');
-    const toolFromPath = pathname.split('/').pop();
-    const toolFromQuery = url.searchParams.get('tool');
-    const toolName = (toolFromQuery || toolFromPath || '').trim();
+  // JSON-RPC 入口：tool name 在 body 中，HTTP 层不做 per-tool scope 检查，
+  // 仅要求有效认证；具体 tools/call 的 scope 检查在 handleMcpRpcMessage 中进行。
+  if (pathname === '/mcp') {
+    return null;
+  }
+  // Per-tool MCP scope resolution
+  // REST 入口 /api/mcp/tool/:name：只用 path 中的 tool name，忽略 query 参数，
+  // 防止攻击者用 ?tool=<read-only-tool> 绕过 write/admin scope。
+  if (pathname.startsWith('/api/mcp/')) {
+    const toolName = (pathname.split('/').pop() || '').trim();
     const scope = scopeForMcpTool(toolName);
     if (scope) return scope;
     return 'admin:delete';
@@ -243,7 +246,11 @@ export class AuthService {
   }
 
   authorize(req: http.IncomingMessage, principal: AuthPrincipal): boolean {
-    return principal.scopes.has(requiredScope(req));
+    const scope = requiredScope(req);
+    // null 表示该路由不需要特定 scope，仅要求有效认证（如 /mcp JSON-RPC 入口，
+    // 其 per-tool scope 检查在 handler 内根据 body 中的 tool name 进行）。
+    if (scope === null) return true;
+    return principal.scopes.has(scope);
   }
 
   async handlePairExchange(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {

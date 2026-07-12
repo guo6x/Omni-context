@@ -186,20 +186,10 @@ export class AgentLoop {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
-      if (this.isCycleRunning) {
-      this.skippedCycleCount++;
-      return;
     }
-    this.isCycleRunning = true;
-    const cycleTimeout = setTimeout(() => {
-      if (this.isCycleRunning) {
-        console.warn("[AgentLoop] Cycle timeout - forcing completion");
-        this.isCycleRunning = false;
-      }
-    }, this.cycleTimeoutMs);
-
+    // If a cycle is running, let it finish naturally (it has its own timeout guard).
+    // Do NOT set isCycleRunning here — that was the old bug.
     console.log('[AgentLoop] 已停止主动智能引擎');
-    }
   }
 
   isRunning(): boolean {
@@ -257,8 +247,25 @@ export class AgentLoop {
   }
 
   private async runCycle() {
+    // Concurrency guard: only one cycle at a time
+    if (this.isCycleRunning) {
+      this.skippedCycleCount++;
+      return;
+    }
+    this.isCycleRunning = true;
+    this.lastCycleStart = new Date();
     console.log('[AgentLoop] 唤醒，执行周期任务...');
     const cycle = this.cycleCount++;
+
+    // Timeout guard: force-release the lock if a cycle runs too long
+    const cycleTimeout = setTimeout(() => {
+      if (this.isCycleRunning) {
+        console.warn('[AgentLoop] Cycle timeout — force-releasing lock');
+        this.isCycleRunning = false;
+        this.lastError = new Error('Cycle timeout');
+      }
+    }, this.cycleTimeoutMs);
+
     try {
       try {
         // insight_generation / consolidation 独立任务
@@ -417,6 +424,27 @@ export class AgentLoop {
       }
     } catch (error) {
       console.error('[AgentLoop] 执行周期异常:', error);
+      this.lastError = error instanceof Error ? error : new Error(String(error));
+    } finally {
+      clearTimeout(cycleTimeout);
+      this.isCycleRunning = false;
+      this.lastCycleEnd = new Date();
     }
   }
+
+  /** Expose lifecycle status for monitoring */
+  getStatus() {
+    return {
+      running: this.isCycleRunning,
+      cycleCount: this.cycleCount,
+      skippedCount: this.skippedCycleCount,
+      lastCycleStart: this.lastCycleStart,
+      lastCycleEnd: this.lastCycleEnd,
+      lastError: this.lastError,
+    };
+  }
+
+  private lastCycleStart: Date | null = null;
+  private lastCycleEnd: Date | null = null;
+  private lastError: Error | null = null;
 }

@@ -35,7 +35,7 @@ interface EntityLabel {
 
 interface PlannedResolution {
   old: Relationship;
-  status: 'superseded' | 'conflict' | 'independent' | 'review';
+  status: 'superseded' | 'conflict' | 'independent' | 'review' | 'needs_review';
   confidence: number;
   reason: string;
   modelOutput?: string;
@@ -169,12 +169,26 @@ export async function resolveConflicts(
       [newRelationship.source_id, newRelationship.target_id, newRelationship.id, now]
     );
     const deterministicIds = new Set(singleValued.map((relationship) => relationship.id));
-    const plans: PlannedResolution[] = singleValued.map((old) => ({
-      old,
-      status: 'superseded',
-      confidence: 1,
-      reason: `new current value for single-valued predicate ${newRelationship.type}`,
-    }));
+    const plans: PlannedResolution[] = [];
+    for (const old of singleValued) {
+      const supersedeResult = checkSingleValueSupersede(old, newRelationship);
+      if (supersedeResult.shouldSupersede) {
+        plans.push({
+          old,
+          status: 'superseded' as const,
+          confidence: supersedeResult.confidence,
+          reason: supersedeResult.reason,
+        });
+      } else {
+        // 不满足取代条件 → 进入 review
+        plans.push({
+          old,
+          status: 'needs_review' as const,
+          confidence: 0.5,
+          reason: supersedeResult.reason,
+        });
+      }
+    }
     plans.push(...await planSemanticResolutions(
       newRelationship,
       samePair.filter((relationship) => !deterministicIds.has(relationship.id)),
@@ -241,6 +255,7 @@ const SINGLE_VALUED_PREDICATES = new Set(['works_at', 'lives_in', 'studies_at', 
 
 interface SupersedeCheck {
   shouldSupersede: boolean;
+  confidence: number;
   reason: string;
   action: 'supersede' | 'retain_both' | 'review';
 }
@@ -251,12 +266,12 @@ export function checkSingleValueSupersede(
 ): SupersedeCheck {
   // Only apply to single-valued predicates
   if (!SINGLE_VALUED_PREDICATES.has(incoming.type)) {
-    return { shouldSupersede: false, reason: 'not_single_valued', action: 'retain_both' };
+    return { shouldSupersede: false, confidence: 0.5, reason: 'not_single_valued', action: 'retain_both' };
   }
 
   // Must be same subject and predicate
   if (existing.source_id !== incoming.source_id || existing.type !== incoming.type) {
-    return { shouldSupersede: false, reason: 'different_subject_or_predicate', action: 'retain_both' };
+    return { shouldSupersede: false, confidence: 0.5, reason: 'different_subject_or_predicate', action: 'retain_both' };
   }
 
   const existingTime = existing.event_time || existing.valid_from;
@@ -264,25 +279,25 @@ export function checkSingleValueSupersede(
 
   // New fact with no time cannot supersede old fact with time
   if (!incomingTime && existingTime) {
-    return { shouldSupersede: false, reason: 'incoming_no_time_existing_has_time', action: 'review' };
+    return { shouldSupersede: false, confidence: 0.5, reason: 'incoming_no_time_existing_has_time', action: 'review' };
   }
 
   // New fact earlier than old fact cannot supersede
   if (existingTime && incomingTime && new Date(incomingTime) <= new Date(existingTime)) {
-    return { shouldSupersede: false, reason: 'incoming_not_later', action: 'review' };
+    return { shouldSupersede: false, confidence: 0.5, reason: 'incoming_not_later', action: 'review' };
   }
 
   // Check temporal confidence
   const confidence = incoming.temporal_confidence ?? 0.5;
   if (confidence < 0.7) {
-    return { shouldSupersede: false, reason: 'low_temporal_confidence', action: 'review' };
+    return { shouldSupersede: false, confidence: 0.5, reason: 'low_temporal_confidence', action: 'review' };
   }
 
   // Check provenance - historical imports don't auto-supersede
   const prov = incoming.provenance as Record<string, unknown> | undefined;
   if (prov && (prov.import_batch_id || prov.source === 'history_import')) {
-    return { shouldSupersede: false, reason: 'historical_import', action: 'review' };
+    return { shouldSupersede: false, confidence: 0.5, reason: 'historical_import', action: 'review' };
   }
 
-  return { shouldSupersede: true, reason: 'newer_fact_same_slot', action: 'supersede' };
+  return { shouldSupersede: true, confidence: incoming.temporal_confidence ?? 1, reason: 'newer_fact_same_slot', action: 'supersede' };
 }

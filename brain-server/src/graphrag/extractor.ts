@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Entity, Relationship, EntityType, RelationshipType } from '../shared-types.js';
+import { ENTITY_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
 import { LLMExtractorPipeline } from './llm-pipeline.js';
 import { OCRPipeline } from '../ocr/pipeline.js';
 import { sanitizeForExtraction } from './sanitize.js';
@@ -261,47 +262,9 @@ const PRINCIPLE_PATTERNS = [
   }
 ];
 
-const VALID_ENTITY_TYPES: Set<EntityType> = new Set([
-  'principle',
-  'evidence',
-  'concept',
-  'tool',
-  'person',
-  'project',
-  'code_snippet',
-  'architecture_pattern',
-  'bug_vulnerability',
-  'business_logic',
-  'critical_review',
-  'capture_snapshot',
-  'memory',
-  'decision',
-  'goal',
-  'question',
-  'preference',
-  'event',
-  'task',
-]);
-
-const VALID_RELATIONSHIP_TYPES: Set<RelationshipType> = new Set([
-  'derived_from',
-  'relates_to',
-  'depends_on',
-  'conflicts_with',
-  'extends',
-  'cites',
-  'belongs_to',
-  'supported_by',
-  'extracted_from',
-  'reviewed_by',
-  'references',
-  'decision_referenced',
-  'works_at',
-  'lives_in',
-  'studies_at',
-  'married_to',
-  'leads_to_conclusion',
-]);
+// Use central schema as single source of truth — no manual duplication
+const VALID_ENTITY_TYPES: Set<EntityType> = new Set(ENTITY_TYPES);
+const VALID_RELATIONSHIP_TYPES: Set<RelationshipType> = new Set(RELATIONSHIP_TYPES);
 
 const ENTITY_CACHE_LIMIT = 5_000;
 

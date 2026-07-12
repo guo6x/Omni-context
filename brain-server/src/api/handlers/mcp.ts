@@ -1,5 +1,6 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
+import { scopeForMcpTool, AuthPrincipal } from '../../security/auth.js';
 import { resolveEntities } from '../../graphrag/entity-resolver.js';
 import { resolveConflicts } from '../../graphrag/conflict-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -725,7 +726,7 @@ async function callToolViaLoopback(name: string, args: any): Promise<any> {
   return await resp.json();
 }
 
-async function handleMcpRpcMessage(msg: any): Promise<any | null> {
+async function handleMcpRpcMessage(msg: any, principal: AuthPrincipal): Promise<any | null> {
   const id = msg?.id;
   const method = msg?.method;
   const params = msg?.params || {};
@@ -752,6 +753,12 @@ async function handleMcpRpcMessage(msg: any): Promise<any | null> {
       if (!mcpToolDefs.some((t: any) => t.name === name)) {
         return rpcError(id, -32602, `Unknown tool: ${name}`);
       }
+      // Per-tool scope 检查：callToolViaLoopback 用 LOCAL_API_TOKEN（ALL_SCOPES）回环调用，
+      // 会绕过 scope 检查，所以必须在回环之前根据当前 principal 校验 scope。
+      const requiredScope = scopeForMcpTool(name);
+      if (requiredScope && !principal.scopes.has(requiredScope)) {
+        return rpcError(id, -32602, `Permission denied: missing scope ${requiredScope}`);
+      }
       try {
         const data = await callToolViaLoopback(name, params.arguments || {});
         return rpcResult(id, { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] });
@@ -770,14 +777,14 @@ export const handleMcpRoutes = [
   {
     method: 'POST' as const,
     path: '/mcp',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse) => {
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const body = await parseBody<any>(req);
       let payload: any;
       if (Array.isArray(body)) {
-        const results = (await Promise.all(body.map(handleMcpRpcMessage))).filter((r) => r !== null);
+        const results = (await Promise.all(body.map((m) => handleMcpRpcMessage(m, ctx.auth)))).filter((r) => r !== null);
         payload = results.length ? results : null;
       } else {
-        payload = await handleMcpRpcMessage(body);
+        payload = await handleMcpRpcMessage(body, ctx.auth);
       }
       if (payload === null) {
         res.statusCode = 202; // 仅通知，无响应体
