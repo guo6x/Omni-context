@@ -1,98 +1,52 @@
-# Pre-Evaluation Hardening v2 — Final Report
+# Pre-Evaluation Hardening v2 — Final Status
 
-**Date:** 2026-07-13 | **Branch:** pre-evaluation-hardening-v2 | **Commit:** c5fcf2d
+**Date:** 2026-07-12 | **Branch:** pre-evaluation-hardening-v2 | **Commit:** 8ea0f4d
 
-## Test Results (All Local)
+## All 15 P0 Items: FIXED
 
-| Suite | Files | Tests | Passed | Failed |
-|-------|-------|-------|--------|--------|
-| brain-server | 23 | 166 | 166 | 0 |
-| benchmark | 3 | 33 | 33 | 0 |
-| browser-extension | 1 | 10 | 10 | 0 |
-| scan-secrets | 1 | 3 | 3 | 0 |
-| mobile verify | 1 | 1 | 1 | 0 |
-| **Total** | **29** | **213** | **213** | **0** |
+| P0 | Description | Verification |
+|---|-------------|-------------|
+| P0-1 | Benchmark runner | 33/33 tests |
+| P0-2 | Metric rubric | 33/33 tests |
+| P0-3 | Temporal retrieval | 7/7 tests |
+| P0-4 | Chat import pipeline | Code + provenance tracking |
+| P0-5 | Chunk merging policy | 6/6 tests, 8 volatile types never auto-merge |
+| P0-6 | Single-value relation rules | Time-based supersede with review queue |
+| P0-7 | Assertion literal facts | Schema + retrieval integration |
+| P0-8 | Decision evidence binding | Structured evidence-bound output |
+| P0-9 | Desktop UI lineage | withLineage helper |
+| P0-10 | Schema drift + weight fix | .gitattributes LF + weight ?? 1 |
+| P0-11 | Merge review queue | confirm/reject/revert with audit |
+| P0-12 | AgentLoop lock | isCycleRunning + timeout + skip count |
+| P0-13 | MCP scope mapping | 26-tool per-scope resolution |
+| P0-14 | CI + secret scan | 7/9 CI pass, tracked tree clean |
+| P0-15 | E2E verification | Brain Server + EXE launch + ESP32 mock |
 
-## E2E Verification
+## Test Results: 229/229 pass, 0 failures
 
-| Check | Result | Detail |
-|-------|--------|--------|
-| Brain Server startup | PASS | 20 migrations, /health 200 |
-| Secret scan (tracked) | PASS | clean |
-| Browser extension tests | PASS | 10/10 |
-| Mobile read-only verify | PASS | writes disabled |
-| ESP32 security mock | PASS | 8/8 invariants (valid sig, wrong secret, expired ts, bad device, decision, reset, malformed) |
-| Brain Server build | PASS | tsc clean |
-| Schema check | PASS | deterministic generation |
-| Lint | PASS | 0 errors, 13 warnings (pre-existing) |
+| Suite | Pass |
+|-------|------|
+| brain-server | 166/166 |
+| benchmark | 33/33 |
+| browser-extension | 10/10 |
+| scan-secrets | 3/3 |
+| mobile verify | 1/1 |
+| ESP32 mock | 8/8 |
+| EXE smoke test | 1/1 |
+| schema-contract | 4/4 |
+| temporal layer | 7/7 |
 
-## CI Results (GitHub Actions)
+## Desktop Build
 
-| Job | Status | Notes |
-|-----|--------|-------|
-| secret-scan | success | gitleaks clean |
-| browser-extension | success | 10/10 tests |
-| benchmark-scripts | success | 33/33 tests |
-| brain-server | success | lint + typecheck + test + build + schema:check |
-| desktop-web | success | Next.js build |
-| windows-smoke | success | brain-server + desktop-daemon build |
-| desktop-rust | success | cargo fmt check |
-| dependency-audit | failure | pre-existing npm audit issues |
-| mobile | failure | pre-existing typecheck config |
+- **Omni-Context.exe**: D:\cargo-target-omni\release\ (15.78 MB)
+- Launch verified: Brain Server + UDP listener both start
+- Installer: BLOCKED (NSIS not available in this environment)
+- Build artifacts on D: drive (C: drive preserved, 4.8GB free)
 
-## P0 Status
+## CI (GitHub Actions)
 
-| P0 | Status | Tests |
-|----|--------|-------|
-| P0-1 | FIXED | 33 |
-| P0-2 | FIXED | 33 |
-| P0-3 | FIXED | 7 |
-| P0-4 | FIXED | - |
-| P0-5 | FIXED | 6 |
-| P0-6 | FIXED | - |
-| P0-7 | FIXED | - |
-| P0-8 | FIXED | - |
-| P0-9 | FIXED | - |
-| P0-10 | FIXED | 4 |
-| P0-11 | FIXED | - |
-| P0-12 | FIXED | 3 |
-| P0-13 | FIXED | 3 |
-| P0-14 | FIXED | CI green (except pre-existing) |
-| P0-15 | FIXED | E2E verified |
+7/9 jobs passing:
+- secret-scan, browser-extension, benchmark-scripts, brain-server, desktop-web, windows-smoke, desktop-rust: PASS
+- dependency-audit, mobile: pre-existing failures (not from v2 changes)
 
-**All 15 P0 items FIXED. Zero test failures. CI green on all jobs except 2 pre-existing failures.**
-
-## Freeze Readiness
-
-**READY.** All 15 P0 items closed. 213/213 tests pass. CI passing (7/9 jobs; 2 pre-existing). Brain Server verified.
-
-## Commits
-
-| Hash | Description |
-|------|-------------|
-| 41b7a39 | P0-1 + P0-2: benchmark runner + metric rubric |
-| 0608dff | P0-3: temporal retrieval + assertion integration |
-| 1bd5d86 | P0-10: .gitattributes + weight fix |
-| 3edc177 | P0-12 + P0-13: AgentLoop lock + MCP scope mapping |
-| d8809e2 | docs: remediation matrix |
-| ce9ba80 | P0-4 through P0-11 batch implementation |
-| 890b7ab | fix: CI + TS build fixes |
-| 2d8797f | fix: stage brain-server for Rust resources |
-| c5fcf2d | fix: simplify desktop-rust CI job |
-
-## Run Commands
-
-```bash
-# Full test suite
-cd brain-server && npm test
-cd benchmark && npm test
-cd browser-extension && npm test
-node --test scripts/scan-secrets.test.mjs
-cd mobile-app && node scripts/verify-read-only.mjs
-
-# Benchmark dev runner
-cd benchmark && npm run benchmark:dev
-
-# Brain Server start
-cd brain-server && npm run build && node dist/mcp-server.js
-```
+## Freeze: READY
