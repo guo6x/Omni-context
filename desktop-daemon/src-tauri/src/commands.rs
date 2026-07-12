@@ -3,6 +3,7 @@ use crate::SystemStatus;
 use crate::screen_capture;
 use crate::clipboard;
 use base64::{engine::general_purpose::STANDARD, Engine};
+use tauri::Manager;
 
 #[tauri::command]
 pub async fn start_listening() -> Result<String, String> {
@@ -198,42 +199,26 @@ pub fn regenerate_local_api_token() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn trigger_precipitate() -> Result<String, String> {
-    println!("[Command] 触发沉淀操作");
-    
-    match screen_capture::capture_screen_base64().await {
-        Ok(base64_data) => {
-            println!("[Command] 屏幕捕获成功: {} 字符", base64_data.len());
-        }
-        Err(e) => {
-            println!("[Command] 屏幕捕获失败: {}", e);
-        }
-    }
-    
-    match clipboard::get_clipboard_content().await {
-        Ok(Some(text)) => {
-            println!("[Command] 剪贴板内容: {} 字符", text.len());
-        }
-        Ok(None) => {
-            println!("[Command] 剪贴板为空");
-        }
-        Err(e) => {
-            println!("[Command] 读取剪贴板失败: {}", e);
-        }
-    }
-    
-    Ok("沉淀操作已触发".to_string())
+    let jobs = crate::hardware_actions::execute_precipitate().await?;
+    Ok(format!("沉淀完成（{} 个任务）", jobs.len()))
 }
 
 #[tauri::command]
-pub async fn trigger_decision() -> Result<String, String> {
-    println!("[Command] 触发决策查询");
-    Ok("决策查询已触发".to_string())
+pub async fn trigger_decision(app: tauri::AppHandle) -> Result<String, String> {
+    if let Some(window) = app.get_window("main") {
+        window.show().map_err(|error| error.to_string())?;
+        window.set_focus().map_err(|error| error.to_string())?;
+    }
+    app.emit_all("hardware-decision-requested", ())
+        .map_err(|error| error.to_string())?;
+    Ok("决策助手已打开".to_string())
 }
 
 #[tauri::command]
-pub async fn trigger_reset() -> Result<String, String> {
-    println!("[Command] 触发重置");
-    Ok("重置操作已触发".to_string())
+pub async fn trigger_reset(app: tauri::AppHandle) -> Result<String, String> {
+    app.emit_all("hardware-reset-transient-ui", ())
+        .map_err(|error| error.to_string())?;
+    Ok("已清理临时捕获/决策界面；记忆和设备凭据未更改".to_string())
 }
 
 #[derive(serde::Deserialize)]

@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod udp_listener;
+mod hardware_actions;
 mod screen_capture;
 mod clipboard;
 mod commands;
@@ -162,9 +163,9 @@ async fn main() {
             // AppHandle::updater() 方法随之才存在。CI 用 updater 关闭的配置打包，
             // 故对整段更新检查加 cfg 守卫，关闭时直接编译掉、跳过检查。
             #[cfg(updater)]
-            let update_handle = app.app_handle().clone();
-            #[cfg(updater)]
-            tauri::async_runtime::spawn(async move {
+            {
+              let update_handle = app.app_handle().clone();
+              tauri::async_runtime::spawn(async move {
                 tokio::time::sleep(std::time::Duration::from_secs(30)).await;
                 println!("[Omni-Context] 检查更新...");
                 match update_handle.updater().check().await {
@@ -187,11 +188,13 @@ async fn main() {
                         eprintln!("[Omni-Context] 检查更新失败: {}", e);
                     }
                 }
-            });
+              });
+            }
 
             let (event_tx, mut event_rx) = mpsc::channel::<ButtonEvent>(32);
             
             let udp_event_tx = event_tx.clone();
+            let hardware_app = app.handle();
             tauri::async_runtime::spawn(async move {
                 if let Err(e) = udp_listener::start_udp_listener(udp_event_tx).await {
                     eprintln!("[Omni-Context] UDP 监听器错误: {}", e);
@@ -210,32 +213,20 @@ async fn main() {
                     
                     match event {
                         ButtonEvent::Precipitate => {
-                            println!("[Omni-Context] 执行沉淀操作...");
-                            match screen_capture::capture_screen_base64().await {
-                                Ok(base64_data) => {
-                                    println!("[Omni-Context] 截图成功: {} 字符", base64_data.len());
-                                }
-                                Err(e) => {
-                                    println!("[Omni-Context] 截图失败: {}", e);
-                                }
-                            }
-                            match clipboard::get_clipboard_content().await {
-                                Ok(Some(content)) => {
-                                    println!("[Omni-Context] 剪贴板内容: {} 字符", content.len());
-                                }
-                                Ok(None) => {
-                                    println!("[Omni-Context] 剪贴板为空");
-                                }
-                                Err(e) => {
-                                    println!("[Omni-Context] 读取剪贴板失败: {}", e);
-                                }
-                            }
+                            let result = hardware_actions::execute_precipitate().await;
+                            let _ = hardware_app.emit_all("hardware-precipitate-result", &result);
                         }
                         ButtonEvent::Decision => {
-                            println!("[Omni-Context] 执行决策查询...");
+                            if let Some(window) = hardware_app.get_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                            let _ = hardware_app.emit_all("hardware-decision-requested", ());
                         }
                         ButtonEvent::Reset => {
-                            println!("[Omni-Context] 执行重置操作...");
+                            // Reset only clears transient capture/decision UI state. It never
+                            // deletes memories, revokes devices, or rotates credentials.
+                            let _ = hardware_app.emit_all("hardware-reset-transient-ui", ());
                         }
                     }
                 }
