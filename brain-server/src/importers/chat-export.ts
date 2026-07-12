@@ -249,6 +249,34 @@ export function parseChatExport(raw: string): ParsedChatExport {
 
 // P0-4: Import through entity resolution + conflict resolution pipeline.
 // Uses dynamic imports to avoid circular dependency issues at module load time.
+export interface ImportJobResult {
+  totalConversations: number;
+  processed: number;
+  failed: number;
+  coverage: number;
+  failureList: Array<{ id: string; error: string }>;
+  status: "success" | "partial" | "failed";
+}
+
+
+function withImportProvenance(
+  convId: string,
+  batchId: string,
+  source: string,
+  platform: string,
+  title: string,
+  originalTimestamp: string,
+): Record<string, unknown> {
+  return {
+    import_source: source,
+    import_platform: platform,
+    import_title: title,
+    import_original_timestamp: originalTimestamp,
+    import_batch_id: batchId,
+    import_conversation_id: convId,
+  };
+}
+
 export async function importWithResolution(
   db: any,
   extractor: any,
@@ -272,7 +300,7 @@ export async function importWithResolution(
     try {
       const sessions = conv.sessions || [];
       for (const session of sessions) {
-        const text = session.text || session.content || session.message || "";
+        const text = (session as any).text || (session as any).content || (session as any).message || "";
         if (!text) continue;
 
         const input = {

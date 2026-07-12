@@ -1000,7 +1000,8 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
   ): Promise<{
     ranked: RetrievalCandidate[];
     graphContext: { nodes: Entity[]; edges: any[] };
-    counts: { text: number; vector: number; temporal: number; graph: number };
+    assertions: RetrievalCandidate[];
+    counts: { text: number; vector: number; temporal: number; graph: number; assertion: number };
   }> {
     const pool = Math.max(
       limit * RETRIEVAL_CONFIG.candidatePoolMultiplier,
