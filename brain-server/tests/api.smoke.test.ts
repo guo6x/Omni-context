@@ -478,7 +478,9 @@ describe('API smoke: admin export', () => {
     const { status, body, headers } = await request('GET', '/api/admin/export');
     expect(status).toBe(200);
     expect(body).toMatchObject({
-      version: 1,
+      version: 2,
+      schemaVersion: 20,
+      appVersion: '1.0.0',
       exportedAt: expect.any(String),
       entities: expect.any(Array),
       relationships: expect.any(Array),
@@ -486,6 +488,11 @@ describe('API smoke: admin export', () => {
       coreMemory: expect.any(Array),
       archivalMemory: expect.any(Array),
       notifications: expect.any(Array),
+      discussions: expect.any(Array),
+      behaviorEvents: expect.any(Array),
+      proactiveInsights: expect.any(Array),
+      embeddingMetadata: expect.any(Object),
+      createdIndexesManifest: expect.any(Array),
     });
     expect(Array.isArray(body.entities)).toBe(true);
     expect(headers['content-disposition']).toContain('attachment');
@@ -558,6 +565,16 @@ describe('API smoke: admin seed demo', () => {
   });
 
   it('correctly builds search indexes (FTS5 and SQLite-Vec) after importing a backup', async () => {
+    await db.setMeta('portable_setting', 'enabled');
+    await db.upsertDiscussion({ title: 'Backup discussion', turns: [{ role: 'user', content: 'retain me' }] });
+    await db.recordBehaviorEvent({ eventType: 'searched', topic: 'backup roundtrip' });
+    const relationshipForDecay = await db.get<any>('SELECT id FROM relationships LIMIT 1');
+    await db.run(
+      `UPDATE relationships SET base_weight = 0.91, last_decay_at = '2026-07-01T00:00:00.000Z',
+       last_reinforced_at = '2026-07-02T00:00:00.000Z', reinforcement_reason = 'roundtrip-test'
+       WHERE id = ?`,
+      [relationshipForDecay.id],
+    );
     const { body: backup } = await request('GET', '/api/admin/export');
     expect(backup.entities.length).toBeGreaterThan(0);
 
@@ -566,6 +583,18 @@ describe('API smoke: admin seed demo', () => {
       mode: 'replace',
     });
     expect(importRes.status).toBe(200);
+    const { body: restoredBackup } = await request('GET', '/api/admin/export');
+    for (const key of ['entities', 'relationships', 'assertions', 'coreMemory', 'archivalMemory', 'notifications', 'discussions', 'behaviorEvents']) {
+      expect(restoredBackup[key].length, key).toBe(backup[key].length);
+    }
+    expect(restoredBackup.appMeta.some((row: any) => row.key === 'portable_setting' && row.value === 'enabled')).toBe(true);
+    const restoredDecay = restoredBackup.relationships.find((row: any) => row.id === relationshipForDecay.id);
+    expect(restoredDecay).toMatchObject({
+      base_weight: 0.91,
+      last_decay_at: '2026-07-01T00:00:00.000Z',
+      last_reinforced_at: '2026-07-02T00:00:00.000Z',
+      reinforcement_reason: 'roundtrip-test',
+    });
     const restoredAssertions = await db.get<{ count: number }>('SELECT COUNT(*) AS count FROM assertions');
     expect(restoredAssertions?.count).toBe(
       backup.assertions.length > 0 ? backup.assertions.length : backup.relationships.length

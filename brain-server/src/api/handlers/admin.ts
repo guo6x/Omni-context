@@ -10,7 +10,8 @@ import { URL } from 'url';
 // 注意：这里直接 SELECT 全表，绕过 Memory/Entity 上层的访问计数副作用，
 // 因为备份逻辑不应触发 last_accessed / access_count 写放大。
 
-const EXPORT_VERSION = 1;
+const EXPORT_VERSION = 2;
+const APP_VERSION = '1.0.0';
 
 function bufferToBase64(buf: any): string | null {
   if (buf === null || buf === undefined) return null;
@@ -31,6 +32,8 @@ function base64ToBuffer(b64: string | null | undefined): Buffer | null {
 
 interface DumpShape {
   version: number;
+  schemaVersion?: number;
+  appVersion?: string;
   exportedAt: string;
   entities: any[];
   relationships: any[];
@@ -38,6 +41,47 @@ interface DumpShape {
   coreMemory: any[];
   archivalMemory: any[];
   notifications: any[];
+  discussions?: any[];
+  appMeta?: any[];
+  ingestionDocuments?: any[];
+  ingestionChunks?: any[];
+  entityMergeCandidates?: any[];
+  entityMergeAudit?: any[];
+  assertionConflictAudit?: any[];
+  behaviorEvents?: any[];
+  proactiveInsights?: any[];
+  deviceConfigurations?: any[];
+  embeddingMetadata?: Record<string, unknown>;
+  createdIndexesManifest?: any[];
+}
+
+const SENSITIVE_META_KEY = /(?:api[_-]?key|token|secret|password|credential|private[_-]?key)/i;
+
+function quoteIdentifier(identifier: string): string {
+  return `"${identifier.replace(/"/g, '""')}"`;
+}
+
+async function insertPortableRows(
+  ctx: RequestContext,
+  table: string,
+  rows: any[],
+  mode: 'merge' | 'replace',
+): Promise<number> {
+  if (!rows.length) return 0;
+  const columns = await ctx.db.all<{ name: string }>(`PRAGMA table_info(${quoteIdentifier(table)})`);
+  const allowed = new Set(columns.map((column) => column.name));
+  let inserted = 0;
+  for (const row of rows) {
+    const keys = Object.keys(row).filter((key) => allowed.has(key));
+    if (!keys.length) continue;
+    const verb = mode === 'merge' ? 'INSERT OR IGNORE' : 'INSERT';
+    await ctx.db.run(
+      `${verb} INTO ${quoteIdentifier(table)} (${keys.map(quoteIdentifier).join(',')}) VALUES (${keys.map(() => '?').join(',')})`,
+      keys.map((key) => row[key] ?? null),
+    );
+    inserted++;
+  }
+  return inserted;
 }
 
 export const handleAdminRoutes = [
@@ -62,7 +106,6 @@ export const handleAdminRoutes = [
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const url = new URL(req.url || '', 'http://localhost');
       const format = url.searchParams.get('format');
-      const includeInvalidated = url.searchParams.get('include_invalidated') === 'true' || url.searchParams.get('includeInvalidated') === 'true';
 
       if (format === 'obsidian-vault') {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -84,20 +127,25 @@ export const handleAdminRoutes = [
       }
 
       const entities = await ctx.db.all<any>('SELECT * FROM entities');
-      let relQuery = 'SELECT * FROM relationships';
-      const relParams: any[] = [];
-      if (!includeInvalidated) {
-        relQuery += " WHERE (valid_until IS NULL OR valid_until > ?)";
-        relParams.push(new Date().toISOString());
-      }
-      const relationships = await ctx.db.all<any>(relQuery, relParams);
+      const relationships = await ctx.db.all<any>('SELECT * FROM relationships');
       const assertions = await ctx.db.all<any>('SELECT * FROM assertions');
       const coreMemory = await ctx.db.all<any>('SELECT * FROM core_memory');
       const archivalMemory = await ctx.db.all<any>('SELECT * FROM archival_memory');
       const notifications = await ctx.db.all<any>('SELECT * FROM notifications');
+      const schemaVersion = (await ctx.db.get<{ version: number }>('SELECT COUNT(*) AS version FROM migrations'))?.version || 0;
+      const appMeta = (await ctx.db.all<any>('SELECT * FROM app_meta'))
+        .filter((row) => !SENSITIVE_META_KEY.test(String(row.key || '')));
+      const deviceConfigurations = (await ctx.db.all<any>(
+        'SELECT device_id, device_type, scopes, issued_at, expires_at, revoked_at, last_used_at FROM device_tokens',
+      )).map((row) => ({ ...row, credentials_exported: false }));
+      const createdIndexesManifest = await ctx.db.all<any>(
+        `SELECT name, tbl_name, sql FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
+      );
 
       const dump: DumpShape = {
         version: EXPORT_VERSION,
+        schemaVersion,
+        appVersion: APP_VERSION,
         exportedAt: new Date().toISOString(),
         entities: entities.map((row) => ({
           ...row,
@@ -111,6 +159,18 @@ export const handleAdminRoutes = [
           embedding: bufferToBase64(row.embedding),
         })),
         notifications,
+        discussions: await ctx.db.all<any>('SELECT * FROM discussions'),
+        appMeta,
+        ingestionDocuments: await ctx.db.all<any>('SELECT * FROM ingestion_documents'),
+        ingestionChunks: await ctx.db.all<any>('SELECT * FROM ingestion_chunks'),
+        entityMergeCandidates: await ctx.db.all<any>('SELECT * FROM entity_merge_candidates'),
+        entityMergeAudit: await ctx.db.all<any>('SELECT * FROM entity_merge_audit'),
+        assertionConflictAudit: await ctx.db.all<any>('SELECT * FROM assertion_conflict_audit'),
+        behaviorEvents: await ctx.db.all<any>('SELECT * FROM behavior_events'),
+        proactiveInsights: await ctx.db.all<any>('SELECT * FROM proactive_insights'),
+        deviceConfigurations,
+        embeddingMetadata: ctx.embeddingService.getInfo(),
+        createdIndexesManifest,
       };
 
       const datePart = new Date().toISOString().slice(0, 10);
@@ -130,8 +190,8 @@ export const handleAdminRoutes = [
       const body = await parseBody<DumpShape & { mode?: 'merge' | 'replace' }>(req);
       const mode = body.mode === 'replace' ? 'replace' : 'merge';
 
-      if (!body || typeof body !== 'object' || body.version !== EXPORT_VERSION) {
-        return sendError(res, 400, `Unsupported backup version (expected ${EXPORT_VERSION})`);
+      if (!body || typeof body !== 'object' || ![1, EXPORT_VERSION].includes(body.version)) {
+        return sendError(res, 400, `Unsupported backup version (expected 1 or ${EXPORT_VERSION})`);
       }
 
       const counts = {
@@ -141,6 +201,7 @@ export const handleAdminRoutes = [
         coreMemory: 0,
         archivalMemory: 0,
         notifications: 0,
+        supplemental: 0,
       };
 
       // 收集已存在的 ID（merge 模式下用来跳过冲突）
@@ -158,6 +219,15 @@ export const handleAdminRoutes = [
           if (mode === 'replace') {
             // Assertion 同时引用关系两端实体，必须最先删除；FTS / vec 索引由后续插入时不再同步导致脱节，
             // 这里一并清掉以保证一致性
+            await ctx.db.run('DELETE FROM proactive_insights');
+            await ctx.db.run('DELETE FROM behavior_events');
+            await ctx.db.run('DELETE FROM assertion_conflict_audit');
+            await ctx.db.run('DELETE FROM entity_merge_audit');
+            await ctx.db.run('DELETE FROM entity_merge_candidates');
+            await ctx.db.run('DELETE FROM ingestion_chunks');
+            await ctx.db.run('DELETE FROM ingestion_documents');
+            await ctx.db.run('DELETE FROM discussions');
+            await ctx.db.run('DELETE FROM app_meta');
             await ctx.db.run('DELETE FROM assertions');
             await ctx.db.run('DELETE FROM relationships');
             await ctx.db.run('DELETE FROM entities');
@@ -216,8 +286,9 @@ export const handleAdminRoutes = [
             await ctx.db.run(
               `INSERT INTO relationships (
                  id, source_id, target_id, type, description, weight, created_at,
-                 last_activated, valid_from, valid_until, invalidated_at, invalidation_reason
-               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                 last_activated, valid_from, valid_until, invalidated_at, invalidation_reason,
+                 base_weight, last_decay_at, last_reinforced_at, reinforcement_reason, decay_version
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 r.id,
                 r.source_id,
@@ -231,6 +302,11 @@ export const handleAdminRoutes = [
                 r.valid_until ?? null,
                 r.invalidated_at ?? null,
                 r.invalidation_reason ?? null,
+                r.base_weight ?? r.weight ?? 1.0,
+                r.last_decay_at ?? r.last_activated ?? r.created_at ?? new Date().toISOString(),
+                r.last_reinforced_at ?? null,
+                r.reinforcement_reason ?? null,
+                r.decay_version ?? 1,
               ]
             );
             counts.relationships++;
@@ -347,13 +423,19 @@ export const handleAdminRoutes = [
             );
             counts.notifications++;
           }
+
+          counts.supplemental += await insertPortableRows(ctx, 'discussions', body.discussions || [], mode);
+          counts.supplemental += await insertPortableRows(ctx, 'app_meta', (body.appMeta || []).filter((row) => !SENSITIVE_META_KEY.test(String(row.key || ''))), mode);
+          counts.supplemental += await insertPortableRows(ctx, 'ingestion_documents', body.ingestionDocuments || [], mode);
+          counts.supplemental += await insertPortableRows(ctx, 'ingestion_chunks', body.ingestionChunks || [], mode);
+          counts.supplemental += await insertPortableRows(ctx, 'entity_merge_candidates', body.entityMergeCandidates || [], mode);
+          counts.supplemental += await insertPortableRows(ctx, 'entity_merge_audit', body.entityMergeAudit || [], mode);
+          counts.supplemental += await insertPortableRows(ctx, 'assertion_conflict_audit', body.assertionConflictAudit || [], mode);
+          counts.supplemental += await insertPortableRows(ctx, 'behavior_events', body.behaviorEvents || [], mode);
+          counts.supplemental += await insertPortableRows(ctx, 'proactive_insights', body.proactiveInsights || [], mode);
         });
 
-        try {
-          await ctx.db.reindexEntities();
-        } catch (reindexErr) {
-          console.error('[Import] Reindexing entities failed:', reindexErr);
-        }
+        await ctx.db.reindexEntities();
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         return sendError(res, 500, `Import failed: ${msg}`);
