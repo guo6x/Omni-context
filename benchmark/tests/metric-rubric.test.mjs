@@ -72,7 +72,7 @@ describe("metric rubric - validation", () => {
 
 describe("metric rubric - judge output validation", () => {
   const valid = {
-    binary_accuracy: 0.8, factual_score: 0.7, temporal_score: 0.9,
+    binary_accuracy: 1, factual_score: 0.7, temporal_score: 0.9,
     contextual_score: 0.6, abstention_accuracy: 1.0,
     evidence_precision: 0.5, stale_memory_leakage: 0.1,
     rationale: "Correct answer",
@@ -80,7 +80,7 @@ describe("metric rubric - judge output validation", () => {
 
   it("accepts valid judge output", () => {
     const result = validateJudgeOutput(valid);
-    assert.strictEqual(result.binary_accuracy, 0.8);
+    assert.strictEqual(result.binary_accuracy, 1);
   });
 
   it("rejects judge output with missing fields", () => {
@@ -107,7 +107,7 @@ describe("metric rubric - judge output validation", () => {
       binary_accuracy: 2, factual_score: 0, temporal_score: 0,
       contextual_score: 0, abstention_accuracy: 0,
       evidence_precision: 0, stale_memory_leakage: 0,
-    }), /out of/);
+    }), /must be exactly 0 or 1/);
   });
 });
 

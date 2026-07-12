@@ -201,6 +201,7 @@ describe("benchmark runner - recompute metrics", () => {
     const records = [
       {
         question_id: "q1", status: "completed", subset: "answerable",
+        category_name: "single_hop", conversation_id: 1,
         metrics: {
           binary_accuracy: 1, factual_score: 1, temporal_score: 1,
           contextual_score: 1, abstention_accuracy: 1,
@@ -209,6 +210,7 @@ describe("benchmark runner - recompute metrics", () => {
       },
       {
         question_id: "q2", status: "completed", subset: "adversarial",
+        category_name: "adversarial", conversation_id: 1,
         metrics: {
           binary_accuracy: 0, factual_score: 0, temporal_score: 0,
           contextual_score: 0, abstention_accuracy: 0,
@@ -219,9 +221,9 @@ describe("benchmark runner - recompute metrics", () => {
 
     const result = recomputeMetrics(records);
     assert.strictEqual(result.questions_completed, 2);
-    assert.strictEqual(result.omni_composite_score, 0.5);
-    assert.strictEqual(result.answerable_only, 1);
-    assert.strictEqual(result.adversarial_only, 0);
+    assert.strictEqual(result.composite, 0.5);
+    assert.strictEqual(result.subsets.answerable.binary_accuracy, 1);
+    assert.strictEqual(result.subsets.adversarial.binary_accuracy, 0);
   });
 
   it("empty records produce no composite", () => {

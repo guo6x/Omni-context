@@ -2,12 +2,14 @@ You are evaluating a candidate answer against a reference answer for a long-term
 
 ## Metric Definitions
 
-### binary_accuracy [0,1]
-0 = The answer is completely wrong, contradicted by the reference.
-0.5 = The answer is partially correct, or correct but missing some detail.
+### binary_accuracy [0 or 1 ONLY]
+0 = The answer is wrong, contradicted by the reference, or abstained when it should have answered.
 1 = The answer is fully correct according to the reference.
+MUST be exactly 0 or 1. Do NOT use 0.5 or any other fractional value.
+Partial correctness is expressed by factual_score, NOT binary_accuracy.
 If the reference says "unknown" and candidate abstains (says "unknown", "not stated", "I don't know"), score 1.
 If the reference has an answer but candidate abstains, score 0.
+If the reference has an answer and candidate gives a partially correct answer, score 0 (use factual_score for partial credit).
 
 ### factual_score [0,1]
 0 = Every specific claim in the candidate answer is false or unsupported by the reference.
@@ -16,23 +18,33 @@ If the reference has an answer but candidate abstains, score 0.
 Claims that the reference does not address should be treated as unsupported (penalize).
 
 ### temporal_score [0,1]
-0 = The answer uses complete wrong time context (wrong date, wrong event order).
-0.5 = The answer has approximately correct timing but with minor inaccuracies (e.g., within a week of the actual date, or correct season but wrong month).
-1 = The answer has exactly correct temporal information (correct date, time, or event ordering relative to reference events).
-If the question does not involve time at all, score 1.
+Distinguish the following cases:
+- Non-temporal question (no time aspect): score 1.
+- Time exactly correct (correct date, time, or event ordering): score 1.
+- Time approximately correct (within a week, correct season but wrong month): score 0.7-0.9.
+- Temporal ordering correct but date imprecise: score 0.5-0.6.
+- Uses outdated/superseded facts as if current: score 0.
+- Confuses current state with historical state: score 0.
+0 = Completely wrong time context (wrong date, wrong event order, stale facts used as current).
 
 ### contextual_score [0,1]
 0 = The answer's context is completely wrong or irrelevant.
 0.5 = The answer captures some relevant context but misses important aspects.
 1 = The answer fully captures the relevant conversational and situational context.
-If contextual accuracy cannot be assessed, score 0.5 (neutral/unknown).
+IMPORTANT: Do NOT default to 0.5 when contextual accuracy "cannot be assessed."
+If you genuinely cannot assess contextual accuracy from the reference and evidence,
+return a judge_error field instead of guessing. Every score must be grounded in evidence.
 
 ### abstention_accuracy [0,1]
-0 = Should have abstained (reference is "unknown"/unanswerable) but did not, OR should have answered but abstained.
-0.5 = Partial abstention (hedged correctly on uncertain parts but answered where evidence exists).
-1 = Correctly answered when answerable AND correctly abstained when unanswerable.
-- Adversarial/unanswerable question: candidate must say "unknown", "not stated", "I don't know", or equivalent to get 1.
-- Answerable question: candidate must provide an answer (non-abstain) to get 1.
+Distinguish the following cases:
+- Answerable question correctly answered: score 1.
+- Answerable question but candidate abstained: score 0.
+- Unanswerable/adversarial question and candidate correctly abstained: score 1.
+- Unanswerable/adversarial question but candidate hallucinated an answer: score 0.
+- Adversarial false premise question where candidate correctly identifies the false premise: score 1.
+- Evidence insufficient and candidate acknowledges uncertainty: score 0.7-0.8 (partial abstention).
+- Evidence insufficient but candidate guesses anyway: score 0.
+0 = Should have abstained but did not, OR should have answered but abstained.
 
 ### evidence_precision [0,1]
 Numerator: number of evidence items actually cited that are relevant to the answer.
@@ -41,26 +53,29 @@ Denominator: total number of evidence items cited.
 0.5 = Half of cited evidence is relevant.
 1 = All cited evidence is relevant.
 If NO evidence is cited at all: score 0. The answer must be grounded in evidence.
-If no evidence was available to cite: score 0 for this metric (evidence precision is about citing what exists, not about factual correctness).
+If no evidence was available to cite: score 0 for this metric.
 
 ### stale_memory_leakage [0,1]
 0 = No stale/invalidated facts leaked into the answer.
 0.5 = Some stale facts appear but are not the main basis of the answer.
 1 = The answer is fundamentally built on stale/invalidated memories.
 Higher is WORSE (inverted in composite). Think of this as "proportion of answer based on expired information."
+Consider whether the answer uses facts that have been superseded by newer information.
 
 ## Scoring Guidelines
 
-- When uncertain about partial correctness, prefer 0.5 as the neutral choice — do not default to extremes.
-- For time-approximate answers: if the answer says "last week" and the reference says "exactly 5 days ago", temporal_score can be 0.8-0.9 (minor imprecision, still within week).
+- binary_accuracy MUST be 0 or 1. Never use 0.5.
+- Do NOT default to 0.5 for any metric when uncertain. Either score based on evidence or return judge_error.
+- For time-approximate answers: if the answer says "last week" and the reference says "exactly 5 days ago", temporal_score can be 0.8-0.9.
 - Penalize specific claims not in the reference even if they seem plausible.
 - If the candidate answer is empty or purely generic, score all dimensions 0.
 - Never use "N/A" — every field must be a number in [0,1].
+- If you cannot legitimately score a dimension, set judge_error to true and explain why.
 
 ## JSON Output Format
 
 {
-  "binary_accuracy": 0.0,
+  "binary_accuracy": 0,
   "factual_score": 0.0,
   "temporal_score": 0.0,
   "contextual_score": 0.0,

@@ -42,14 +42,13 @@ test('metrics are independently recomputed with named subsets and retries', () =
   const metrics = recomputeMetrics([
     { status: 'retry' },
     { status: 'error' },
-    { status: 'completed', subset: 'answerable', metrics: { binary_accuracy: 1, factual_score: 0.8, temporal_score: 0.6, contextual_score: 1, abstention_accuracy: 1, evidence_precision: 0.5, stale_memory_leakage: 0, latency_ms: 20 } },
-    { status: 'completed', subset: 'adversarial', metrics: { binary_accuracy: 0, factual_score: 0.2, temporal_score: 0.4, contextual_score: 0, abstention_accuracy: 1, evidence_precision: 0.5, stale_memory_leakage: 0.5, latency_ms: 40 } },
+    { status: 'completed', subset: 'answerable', category_name: 'single_hop', conversation_id: 1, metrics: { binary_accuracy: 1, factual_score: 0.8, temporal_score: 0.6, contextual_score: 1, abstention_accuracy: 1, evidence_precision: 0.5, stale_memory_leakage: 0, latency_ms: 20 } },
+    { status: 'completed', subset: 'adversarial', category_name: 'adversarial', conversation_id: 1, metrics: { binary_accuracy: 0, factual_score: 0.2, temporal_score: 0.4, contextual_score: 0, abstention_accuracy: 1, evidence_precision: 0.5, stale_memory_leakage: 0.5, latency_ms: 40 } },
   ]);
   assert.equal(metrics.binary_accuracy, 0.5);
-  assert.equal(metrics.answerable_only, 1);
-  assert.equal(metrics.adversarial_only, 0);
-  assert.equal(metrics.failures, 1);
-  assert.equal(metrics.retries, 1);
+  assert.equal(metrics.subsets.answerable.binary_accuracy, 1);
+  assert.equal(metrics.subsets.adversarial.binary_accuracy, 0);
+  assert.equal(metrics.questions_error, 1);
   assert.equal(metrics.questions_completed, 2);
-  assert.ok(metrics.omni_composite_score > 0 && metrics.omni_composite_score < 1);
+  assert.ok(metrics.composite > 0 && metrics.composite < 1);
 });

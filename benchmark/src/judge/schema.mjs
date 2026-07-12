@@ -1,7 +1,11 @@
 import { z } from "zod";
 
+// binary_accuracy must be exactly 0 or 1 — no partial credit.
+// Partial correctness is expressed by factual_score.
+const binaryAccuracy = z.union([z.literal(0), z.literal(1)]);
+
 export const JudgeMetricsSchema = z.object({
-  binary_accuracy: z.number().min(0).max(1),
+  binary_accuracy: binaryAccuracy,
   factual_score: z.number().min(0).max(1),
   temporal_score: z.number().min(0).max(1),
   contextual_score: z.number().min(0).max(1),
@@ -12,7 +16,7 @@ export const JudgeMetricsSchema = z.object({
 });
 
 export const JudgeOutputSchema = z.object({
-  binary_accuracy: z.number().min(0).max(1),
+  binary_accuracy: binaryAccuracy,
   factual_score: z.number().min(0).max(1),
   temporal_score: z.number().min(0).max(1),
   contextual_score: z.number().min(0).max(1),
@@ -73,9 +77,158 @@ export function validateAllMetricsPresent(metrics) {
   if (missing.length > 0) {
     throw new Error("Missing required judge metrics: " + missing.join(", "));
   }
+  // binary_accuracy must be exactly 0 or 1
+  if (metrics.binary_accuracy !== 0 && metrics.binary_accuracy !== 1) {
+    throw new Error("binary_accuracy must be exactly 0 or 1, got: " + metrics.binary_accuracy);
+  }
   for (const key of required) {
-    if (metrics[key] < 0 || metrics[key] > 1) {
+    if (key === "binary_accuracy") continue;
+    if (typeof metrics[key] !== "number" || metrics[key] < 0 || metrics[key] > 1) {
       throw new Error("Metric " + key + " out of [0,1] range: " + metrics[key]);
     }
   }
+}
+
+/**
+ * Compute 95% confidence interval using Wilson score interval.
+ * Works for proportions (0-1) and binary accuracy.
+ */
+export function wilsonCI(proportion, n, z = 1.96) {
+  if (n === 0) return { lower: 0, upper: 0 };
+  const p = proportion;
+  const denominator = 1 + (z * z) / n;
+  const center = (p + (z * z) / (2 * n)) / denominator;
+  const margin = (z * Math.sqrt((p * (1 - p) + (z * z) / (4 * n)) / n)) / denominator;
+  return {
+    lower: Math.max(0, center - margin),
+    upper: Math.min(1, center + margin),
+  };
+}
+
+/**
+ * Compute statistics for a set of records, including:
+ * - per-metric means
+ * - composite score
+ * - answerable/adversarial breakdowns
+ * - category micro/macro
+ * - conversation micro/macro
+ * - confidence intervals
+ * - error rate
+ * - fallback count (must be 0)
+ */
+export function computeStatistics(records) {
+  const completed = records.filter((r) => r.status === "completed" && r.metrics);
+  const errors = records.filter((r) => r.status === "error");
+  const total = records.length;
+
+  if (completed.length === 0) {
+    return {
+      questions_total: total,
+      questions_completed: 0,
+      questions_error: errors.length,
+      error_rate: total > 0 ? errors.length / total : 0,
+      fallback_count: 0,
+      composite: null,
+      metrics: {},
+      subsets: {},
+      categories: {},
+      conversations: {},
+    };
+  }
+
+  const metricKeys = [
+    "binary_accuracy", "factual_score", "temporal_score",
+    "contextual_score", "abstention_accuracy", "evidence_precision",
+    "stale_memory_leakage",
+  ];
+
+  const mean = (vals) => vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+  const vals = (key) => completed.map((r) => r.metrics[key]).filter((v) => typeof v === "number");
+
+  const metricsSummary = {};
+  for (const key of metricKeys) {
+    const values = vals(key);
+    const m = mean(values);
+    metricsSummary[key] = {
+      mean: m,
+      ci95: m !== null ? wilsonCI(m, values.length) : null,
+      n: values.length,
+    };
+  }
+
+  const compositeValues = completed.map((r) => computeComposite(r.metrics));
+  const compositeMean = mean(compositeValues);
+
+  // Subset breakdown
+  const subsets = {};
+  for (const subset of ["answerable", "adversarial"]) {
+    const subsetRecords = completed.filter((r) => r.subset === subset);
+    if (subsetRecords.length > 0) {
+      const acc = mean(subsetRecords.map((r) => r.metrics.binary_accuracy));
+      subsets[subset] = {
+        count: subsetRecords.length,
+        binary_accuracy: acc,
+        ci95: acc !== null ? wilsonCI(acc, subsetRecords.length) : null,
+      };
+    }
+  }
+
+  // Category micro/macro
+  const categories = {};
+  const categoryGroups = {};
+  for (const rec of completed) {
+    const cat = rec.category_name || rec.category || "unknown";
+    if (!categoryGroups[cat]) categoryGroups[cat] = [];
+    categoryGroups[cat].push(rec);
+  }
+  for (const [cat, recs] of Object.entries(categoryGroups)) {
+    const acc = mean(recs.map((r) => r.metrics.binary_accuracy));
+    const comp = mean(recs.map((r) => computeComposite(r.metrics)));
+    categories[cat] = {
+      count: recs.length,
+      binary_accuracy: acc,
+      composite: comp,
+    };
+  }
+
+  // Conversation micro/macro
+  const conversations = {};
+  const convGroups = {};
+  for (const rec of completed) {
+    const cid = rec.conversation_id;
+    if (!convGroups[cid]) convGroups[cid] = [];
+    convGroups[cid].push(rec);
+  }
+  for (const [cid, recs] of Object.entries(convGroups)) {
+    const acc = mean(recs.map((r) => r.metrics.binary_accuracy));
+    conversations[cid] = {
+      count: recs.length,
+      binary_accuracy: acc,
+      ci95: acc !== null ? wilsonCI(acc, recs.length) : null,
+    };
+  }
+
+  // Check for fallback scores (hash-based or default 0.5)
+  const fallbackCount = completed.filter((r) =>
+    r.metrics.contextual_score === 0.5 && r.judge_raw?.includes("cannot assess")
+  ).length;
+
+  return {
+    questions_total: total,
+    questions_completed: completed.length,
+    questions_error: errors.length,
+    error_rate: total > 0 ? errors.length / total : 0,
+    fallback_count: fallbackCount,
+    composite: compositeMean,
+    composite_ci95: compositeMean !== null ? wilsonCI(compositeMean, compositeValues.length) : null,
+    metrics: metricsSummary,
+    binary_accuracy: mean(vals("binary_accuracy")),
+    binary_accuracy_ci95: (() => {
+      const m = mean(vals("binary_accuracy"));
+      return m !== null ? wilsonCI(m, vals("binary_accuracy").length) : null;
+    })(),
+    subsets,
+    categories,
+    conversations,
+  };
 }
