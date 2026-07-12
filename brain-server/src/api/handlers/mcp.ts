@@ -41,6 +41,7 @@ import {
 } from '../../mcp-retrieval.js';
 import { createAuditedAiFetch } from '../../security/audited-ai-fetch.js';
 import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from '../../retrieval/config.js';
+import { temporalOptsFromQuery, filterEntitiesByTemporal } from '../../retrieval/temporal-layer.js';
 
 const CORE_PRINCIPLE_CAP = 3;
 const mcpLlmFetch = createAuditedAiFetch({ purpose: 'api.decision-intelligence', kind: 'llm' });
@@ -424,8 +425,13 @@ async function retrieveDecisionContext(
     }
   }
 
+  // 时间感知过滤：根据 situation 中的时间词（"现在"/"当时"/"去年"等），
+  // 剔除已失效事实或按具体日期过滤，确保 reranker 只看到时间上有效的候选。
+  const decTemporalOpts = temporalOptsFromQuery(situation);
+  const decTemporallyFiltered = filterEntitiesByTemporal(candidates, decTemporalOpts);
+
   // 宽召回后用 LLM 重排挑出真正相关的 top-limit（救弱 embedding 的中文召回）
-  const relevantMemories = (await rerankByLlm(ctx, situation, candidates, limit, { decisionMode: true }))
+  const relevantMemories = (await rerankByLlm(ctx, situation, decTemporallyFiltered, limit, { decisionMode: true }))
     .filter((item) => memoryCandidateScore(situation, item, {
       decisionMode: true,
       config: RETRIEVAL_CONFIG,
@@ -1012,6 +1018,16 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               throw err;
             }
 
+            for (const a of extractResult.assertions || []) {
+              const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+              const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+              try {
+                await ctx.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+              } catch (err) {
+                console.warn('[MCP extract_from_capture] assertion write failed:', err);
+              }
+            }
+
             const principleNow = new Date().toISOString();
             const principleEntities = extractResult.principles.map((principle): Entity => ({
               id: uuidv4(),
@@ -1193,8 +1209,12 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               }
             }
 
+            // 时间感知过滤：根据查询中的时间词，剔除已失效事实（"现在"/"当时"/"去年"等）
+            const umsTemporalOpts = temporalOptsFromQuery(parsed.query);
+            const umsTemporallyFiltered = filterEntitiesByTemporal(unified, umsTemporalOpts);
+
             // 宽召回后 LLM 重排，挑出真正相关的（救弱 embedding 的中文召回）
-            const ranked = (await rerankByLlm(ctx, parsed.query, unified, limit * 2))
+            const ranked = (await rerankByLlm(ctx, parsed.query, umsTemporallyFiltered, limit * 2))
               .filter((item: any) => memoryCandidateScore(parsed.query, item, { config: RETRIEVAL_CONFIG }) > RETRIEVAL_CONFIG.minimumLexicalScore);
 
             let graphContext = resultsData.graphContext;
@@ -1531,6 +1551,10 @@ ${principleBlock}`;
             }
             const gaIds = new Set(gaCapped.map((s) => s.id));
 
+            // 时间感知：根据问题中的时间词决定是否剔除已失效关系
+            const gaTemporalOpts = temporalOptsFromQuery(gaQuestion);
+            const gaNowIso = new Date().toISOString();
+
             // 命中节点之间的关系（构成高亮子图的边 + 喂给 LLM 做图谱原生推理）
             const gaEdges: Array<{ source: string; target: string; type: string }> = [];
             const gaSeenEdge = new Set<string>();
@@ -1538,6 +1562,11 @@ ${principleBlock}`;
               const rels = await ctx.db.getRelationshipsForEntity(s.id);
               for (const r of rels) {
                 if (gaIds.has(r.source_id) && gaIds.has(r.target_id)) {
+                  // 时间感知过滤：current 模式下剔除已失效关系（valid_until 早于现在）
+                  if (!gaTemporalOpts.includeHistorical) {
+                    const ru = (r as any).valid_until;
+                    if (ru && ru <= gaNowIso) continue;
+                  }
                   const k = `${r.source_id}|${r.target_id}|${r.type}`;
                   if (!gaSeenEdge.has(k)) { gaSeenEdge.add(k); gaEdges.push({ source: r.source_id, target: r.target_id, type: r.type }); }
                 }
@@ -1677,6 +1706,16 @@ ${gaConnBlock}`;
             } catch (err) {
               console.error('[MCP save_conclusion] Conflict resolution failed:', err);
               throw err;
+            }
+
+            for (const a of extractResult.assertions || []) {
+              const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+              const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+              try {
+                await ctx.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+              } catch (err) {
+                console.warn('[MCP save_conclusion] assertion write failed:', err);
+              }
             }
 
             if (related_entity_ids && related_entity_ids.length > 0) {

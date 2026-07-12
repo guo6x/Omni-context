@@ -457,6 +457,17 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
     return FAIL('resolving', `Transactional conflict resolution failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 
+  // Assertions：用消解后的实体 ID 写入事实层（实体→实体 或 实体→字面值）
+  for (const a of extractResult.assertions || []) {
+    const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+    const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+    try {
+      await ctx.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+    } catch (err) {
+      console.warn('[Ingest] assertion write failed:', err);
+    }
+  }
+
   // Stage: storing
   if (CHECK_ABORT()) return CANCEL();
   updateJob(jobId, { stage: 'storing' });
@@ -571,6 +582,15 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
           await ctx.db.updateEntity(u.id, { description: u.description, tags: u.tags, embedding: u.embedding, metadata: u.metadata, created_at: u.created_at, access_count: u.access_count });
         }
         for (const r of resolution.relationshipsToCreate) { await ctx.db.addRelationship(r); }
+        for (const a of extractResult.assertions || []) {
+          const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+          const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+          try {
+            await ctx.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+          } catch (err) {
+            console.warn('[Import] assertion write failed:', err);
+          }
+        }
         const pnow = conv.time || new Date().toISOString();
         for (const p of extractResult.principles) {
           const pe: Entity = {
@@ -674,6 +694,15 @@ async function runFailedChunkRetry(jobId: string, documentId: string, ctx: Reque
         });
       }
       await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+      for (const a of result.assertions || []) {
+        const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+        const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+        try {
+          await ctx.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+        } catch (err) {
+          console.warn('[Retry] assertion write failed:', err);
+        }
+      }
 
       const principleNow = new Date().toISOString();
       const principles = result.principles.map((principle): Entity => ({

@@ -559,6 +559,16 @@ export const handleGraphRoutes = [
         await ctx.db.addRelationship(relationship);
       }
 
+      for (const a of result.assertions || []) {
+        const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+        const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+        try {
+          await ctx.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+        } catch (err) {
+          console.warn('[graph/extract] assertion write failed:', err);
+        }
+      }
+
       // 原则实体同样走消解，避免重复抽取产生重复原则
       const principleNow = new Date().toISOString();
       const principleEntities = result.principles.map((principle): Entity => ({

@@ -23,6 +23,7 @@ import type { EntityType, RelationshipType, Entity } from './shared-types.js';
 import { createAuditedAiFetch } from './security/audited-ai-fetch.js';
 import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from './retrieval/config.js';
 import { parseTimeWindow } from './utils/time-window.js';
+import { temporalOptsFromQuery, filterEntitiesByTemporal, filterAssertionsByTemporal } from './retrieval/temporal-layer.js';
 
 const mcpLlmFetch = createAuditedAiFetch({ purpose: 'mcp.decision-intelligence', kind: 'llm' });
 
@@ -365,6 +366,16 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
             throw err;
           }
 
+          for (const a of result.assertions || []) {
+            const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+            const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+            try {
+              await this.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+            } catch (err) {
+              console.warn('[MCP extract_from_capture] assertion write failed:', err);
+            }
+          }
+
           // 原则实体走消解，避免重复 capture 产生重复原则
           const principleNow = new Date().toISOString();
           const principleEntities = result.principles.map((principle): Entity => ({
@@ -540,6 +551,16 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
               await this.db.addRelationship(relationship);
             } catch {
               // 重复关系是预期的
+            }
+          }
+
+          for (const a of extractResult.assertions || []) {
+            const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+            const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+            try {
+              await this.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+            } catch (err) {
+              console.warn('[MCP save_conclusion] assertion write failed:', err);
             }
           }
 
@@ -727,8 +748,22 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
             throw new McpError(ErrorCode.InvalidRequest, 'LLM_NOT_CONFIGURED');
           }
 
+          // 检索相关记忆（含时间感知过滤：根据查询中的时间词剔除已失效事实）
+          const latestUserMessage = [...messages].reverse().find((m: any) => m.role === 'user');
+          const retrievalQuery = `${situation}\n${latestUserMessage?.content || ''}`.trim();
+          const discussionRetrieval = await this._retrieveMemoryCandidates(retrievalQuery, 6, true, true);
+          const discussionSources = discussionRetrieval.ranked
+            .slice(0, 10)
+            .map(toCompactEntity);
+          const evidenceBlock = discussionSources.length
+            ? discussionSources.map((source: any, index: number) => `[${index + 1}] (${source.type}) ${source.name}: ${source.description || ''}`).join('\n')
+            : '（本轮没有检索到相关记忆）';
+
           const systemPrompt = `你是一个决策讨论助手。用户正在讨论一个决策："""${situation}"""
-你在帮助用户深入思考、质疑假设、补充视角。回复要简洁、直接、有帮助。使用中文。`;
+每一轮都必须根据下面重新检索的当前记忆回答，而不是只依赖历史对话。重要事实需用 [编号] 标明依据；证据不足时明确说不知道并提出要补充的信息。帮助用户深入思考、质疑假设、补充视角。回复简洁、直接，使用中文。
+
+本轮证据：
+${evidenceBlock}`;
 
           try {
             const controller = new AbortController();
@@ -762,10 +797,13 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
               choices: Array<{ message: { content: string } }>;
             };
 
-            return this.formatResponse({ reply: data.choices?.[0]?.message?.content || '(no response)' });
+            return this.formatResponse({
+              reply: data.choices?.[0]?.message?.content || '(no response)',
+              sources: discussionSources,
+            });
           } catch (e: any) {
             console.error('[discuss_decision] Failed:', e);
-            return this.formatResponse({ reply: '抱歉，讨论服务暂时不可用。' });
+            return this.formatResponse({ reply: '抱歉，讨论服务暂时不可用。', sources: discussionSources });
           }
         }
 
@@ -1085,7 +1123,13 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
       for (const edge of graph.edges) graphEdges.set(edge.id, edge);
     }
 
-    const ranked = rankMemoryCandidates(query, [...candidateMap.values()], {
+    // 时间感知过滤：根据查询中的时间词（"现在"/"当时"/"去年"等），
+    // 剔除已失效事实或按具体日期过滤，确保 reranker 只看到时间上有效的候选。
+    const temporalOpts = temporalOptsFromQuery(query);
+    const temporallyFiltered = filterEntitiesByTemporal([...candidateMap.values()], temporalOpts);
+    const temporallyFilteredAssertions = filterAssertionsByTemporal(assertionCandidates, temporalOpts);
+
+    const ranked = rankMemoryCandidates(query, temporallyFiltered, {
       decisionMode,
       historicalMode: includeHistorical,
       config: RETRIEVAL_CONFIG,
@@ -1102,9 +1146,9 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
         vector: vectorResults.length,
         temporal: temporalCount,
         graph: graphNodes.size,
-        assertion: assertionCount,
+        assertion: temporallyFilteredAssertions.length,
       },
-      assertions: assertionCandidates.slice(0, limit),
+      assertions: temporallyFilteredAssertions.slice(0, limit),
     };
   }
 

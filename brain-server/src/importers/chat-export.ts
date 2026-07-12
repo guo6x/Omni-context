@@ -339,6 +339,16 @@ export async function importWithResolution(
         } catch (err: any) {
           console.error("[importWithResolution] conflict resolution failed:", err.message || err);
         }
+
+        for (const a of extractResult.assertions || []) {
+          const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+          const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+          try {
+            await db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+          } catch (err: any) {
+            console.warn("[importWithResolution] assertion write failed:", err?.message || err);
+          }
+        }
       }
       result.processed++;
     } catch (err: any) {

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Entity, Relationship, EntityType, RelationshipType } from '../shared-types.js';
+import { Entity, Relationship, EntityType, RelationshipType, AssertionInput } from '../shared-types.js';
 import { ENTITY_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
 import { LLMExtractorPipeline } from './llm-pipeline.js';
 import { OCRPipeline } from '../ocr/pipeline.js';
@@ -83,6 +83,7 @@ export interface GraphRAGOutput {
   entities: Entity[];
   relationships: Relationship[];
   principles: ExtractedPrinciple[];
+  assertions?: AssertionInput[];
   suspicious?: string[];
   chunking?: {
     document_id: string;
@@ -311,6 +312,7 @@ export class GraphRAGExtractor {
     const entities = await this.extractEntities(cleaned, input);
     const relationships = await this.extractRelationships(cleaned, entities);
     const principles = await this.extractPrinciples(cleaned, input);
+    const assertions: AssertionInput[] = [];
 
     // 第二层：LLM 语义提取（深度理解，补充正则的盲区）
     if (this.llmPipeline.isEnabled() && !this.config.useLocalExtraction) {
@@ -358,40 +360,81 @@ export class GraphRAGExtractor {
         trimMapToLimit(this.entityCache, ENTITY_CACHE_LIMIT);
 
         // [核心壁垒] 合并 LLM 提取的 Fact 事实（映射到 Relationships 表中，Confidence 对应 Weight，SourceSpan 对应 Description，且类型走白名单）
+        // 同时将每条 fact 写入 assertions 表（实体→实体 或 实体→字面值），保留无法映射到实体的 object 作为字面值事实
         const entityMap = new Map(entities.map(e => [e.name.toLowerCase(), e]));
         const seenRels = new Set(relationships.map(r => `${r.source_id}-${r.type}-${r.target_id}`));
+        const seenLiteralAssertions = new Set<string>();
         for (const fact of llmFacts) {
           const src = entityMap.get(fact.subject?.toLowerCase());
           const tgt = entityMap.get(fact.object?.toLowerCase());
-          if (!src || !tgt) continue;
           const candidateType = fact.predicate as RelationshipType;
           const safeType: RelationshipType = VALID_RELATIONSHIP_TYPES.has(candidateType)
             ? candidateType
             : 'relates_to';
-          const key = `${src.id}-${safeType}-${tgt.id}`;
-          if (seenRels.has(key)) continue;
-          seenRels.add(key);
-          relationships.push({
-            id: uuidv4(),
-            source_id: src.id,
-            target_id: tgt.id,
-            type: safeType,
-            description: fact.source_span || '',
-            weight: typeof fact.confidence === 'number' ? fact.confidence : 1.0,
-            created_at: now,
-            last_activated: now,
-            valid_from: fact.valid_from || fact.event_time || now,
-            valid_until: fact.valid_until,
-            observed_at: fact.observed_at,
-            event_time: fact.event_time,
-            temporal_confidence: fact.temporal_confidence,
-            temporal_source: fact.temporal_source,
-            timezone: fact.timezone,
+          const confidence = typeof fact.confidence === 'number' ? fact.confidence : 1.0;
+          const assertionBase = {
+            predicate: safeType,
+            confidence,
+            source_span: fact.source_span,
             provenance: {
               extractor: 'llm',
               model: this.config.llmModel,
-            },
-          });
+            } as Record<string, unknown>,
+            observed_at: fact.observed_at,
+            event_time: fact.event_time,
+            valid_from: fact.valid_from || fact.event_time || now,
+            valid_until: fact.valid_until,
+            temporal_confidence: fact.temporal_confidence,
+            temporal_source: fact.temporal_source,
+            timezone: fact.timezone,
+          };
+
+          if (src && tgt) {
+            // 两个都是实体 → 创建 relationship + entity→entity assertion
+            const key = `${src.id}-${safeType}-${tgt.id}`;
+            if (seenRels.has(key)) continue;
+            seenRels.add(key);
+            relationships.push({
+              id: uuidv4(),
+              source_id: src.id,
+              target_id: tgt.id,
+              type: safeType,
+              description: fact.source_span || '',
+              weight: confidence,
+              created_at: now,
+              last_activated: now,
+              valid_from: fact.valid_from || fact.event_time || now,
+              valid_until: fact.valid_until,
+              observed_at: fact.observed_at,
+              event_time: fact.event_time,
+              temporal_confidence: fact.temporal_confidence,
+              temporal_source: fact.temporal_source,
+              timezone: fact.timezone,
+              provenance: {
+                extractor: 'llm',
+                model: this.config.llmModel,
+              },
+            });
+            assertions.push({
+              ...assertionBase,
+              subject_id: src.id,
+              object_id: tgt.id,
+            });
+          } else if (src && !tgt) {
+            // subject 是实体但 object 不是 → 创建 literal assertion
+            const litKey = `${src.id}-${safeType}-${fact.object}`;
+            if (seenLiteralAssertions.has(litKey)) continue;
+            seenLiteralAssertions.add(litKey);
+            assertions.push({
+              ...assertionBase,
+              subject_id: src.id,
+              literal_value: fact.object,
+            });
+          } else if (!src) {
+            // subject 也不是实体 → 记录警告，跳过
+            console.warn(`[GraphRAG] fact subject "${fact.subject}" not found in entity map, skipping`);
+            continue;
+          }
         }
 
         // 合并 LLM 提取的原则
@@ -468,6 +511,7 @@ export class GraphRAGExtractor {
       entities,
       relationships,
       principles,
+      ...(assertions.length > 0 ? { assertions } : {}),
       ...(suspicious.length > 0 ? { suspicious } : {}),
     };
   }
@@ -486,6 +530,7 @@ export class GraphRAGExtractor {
     const entitiesByKey = new Map<string, Entity>();
     const relationshipsByKey = new Map<string, Relationship>();
     const principlesByKey = new Map<string, ExtractedPrinciple>();
+    const assertionsByKey = new Map<string, AssertionInput>();
     const successfulChunks: SourceChunk[] = [];
     const failedChunks: Array<{ chunk_id: string; ordinal: number; error: string }> = [];
 
@@ -564,6 +609,30 @@ export class GraphRAGExtractor {
           const existing = relationshipsByKey.get(key);
           if (!existing || candidate.weight > existing.weight) relationshipsByKey.set(key, candidate);
         }
+        for (const assertion of result.assertions || []) {
+          const subjectId = localToCanonical.get(assertion.subject_id);
+          if (!subjectId) continue;
+          const objectId = assertion.object_id
+            ? localToCanonical.get(assertion.object_id)
+            : undefined;
+          if (assertion.object_id && !objectId) continue;
+          const key = objectId
+            ? `e:${subjectId}:${assertion.predicate}:${objectId}`
+            : `l:${subjectId}:${assertion.predicate}:${assertion.literal_value ?? ''}`;
+          if (assertionsByKey.has(key)) continue;
+          assertionsByKey.set(key, {
+            ...assertion,
+            subject_id: subjectId,
+            object_id: objectId,
+            provenance: {
+              ...(assertion.provenance || {}),
+              document_id: documentId,
+              chunk_id: chunk.chunk_id,
+              source: chunk.source,
+              timestamp: chunk.timestamp,
+            },
+          });
+        }
         for (const principle of result.principles) {
           const key = `${principle.type}:${principle.content.trim().toLocaleLowerCase()}`;
           if (!principlesByKey.has(key)) principlesByKey.set(key, { ...principle });
@@ -581,6 +650,7 @@ export class GraphRAGExtractor {
       entities: [...entitiesByKey.values()],
       relationships: [...relationshipsByKey.values()],
       principles: [...principlesByKey.values()],
+      ...(assertionsByKey.size > 0 ? { assertions: [...assertionsByKey.values()] } : {}),
       ...(suspicious.length > 0 ? { suspicious } : {}),
       chunking: {
         document_id: documentId,
