@@ -140,6 +140,9 @@ export class AgentLoop {
   private decayScheduler: MemoryDecayScheduler | null = null;
   // 衰减洞见每 6 轮（约 6 分钟）触发一次
   private cycleCount = 0;
+  private isCycleRunning = false;
+  private skippedCycleCount = 0;
+  private cycleTimeoutMs = 4 * 60 * 1000;
   private static readonly DECAY_CHECK_INTERVAL = 6;
   private static readonly BLINDSPOT_CHECK_INTERVAL = 10;
 
@@ -158,7 +161,13 @@ export class AgentLoop {
       this.runCycle();
     }, 5000);
 
-    this.interval = setInterval(() => this.runCycle(), intervalMs);
+    this.interval = setInterval(() => {
+      if (this.isCycleRunning) {
+        this.skippedCycleCount++;
+        return;
+      }
+      this.runCycle()
+    }, intervalMs);
   }
 
   setLlmConfig(config: { apiUrl: string; apiKey?: string; model: string }) {
@@ -177,7 +186,19 @@ export class AgentLoop {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
-      console.log('[AgentLoop] 已停止主动智能引擎');
+      if (this.isCycleRunning) {
+      this.skippedCycleCount++;
+      return;
+    }
+    this.isCycleRunning = true;
+    const cycleTimeout = setTimeout(() => {
+      if (this.isCycleRunning) {
+        console.warn("[AgentLoop] Cycle timeout - forcing completion");
+        this.isCycleRunning = false;
+      }
+    }, this.cycleTimeoutMs);
+
+    console.log('[AgentLoop] 已停止主动智能引擎');
     }
   }
 

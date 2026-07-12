@@ -118,6 +118,40 @@ async function readJsonBody(req: http.IncomingMessage): Promise<unknown> {
   });
 }
 
+
+const MCP_TOOL_SCOPE_MAP: Record<string, AuthScope> = {
+  record_capture: "memory:write",
+  get_core_context: "memory:read",
+  search_entities: "memory:read",
+  add_entity: "memory:write",
+  get_entity: "memory:read",
+  add_relationship: "memory:write",
+  get_graph_neighborhood: "memory:read",
+  extract_from_capture: "memory:write",
+  update_entity: "memory:write",
+  vector_search: "memory:read",
+  unified_memory_search: "memory:read",
+  save_conclusion: "memory:write",
+  ask_memory: "memory:read",
+  graph_answer: "memory:read",
+  set_core_principle: "memory:write",
+  delete_entity: "admin:delete",
+  list_entities: "memory:read",
+  get_stats: "memory:read",
+  merge_entities: "admin:delete",
+  get_decay_report: "memory:read",
+  get_decision_context: "decision:read",
+  save_decision: "decision:write",
+  analyze_decision: "decision:read",
+  discuss_decision: "decision:read",
+  get_decision_lineage: "decision:read",
+  record_decision_outcome: "decision:write",
+};
+
+function scopeForMcpTool(toolName: string): AuthScope | null {
+  return MCP_TOOL_SCOPE_MAP[toolName] || null;
+}
+
 export function requiredScope(req: http.IncomingMessage): AuthScope {
   const pathname = new URL(req.url || '/', 'http://localhost').pathname;
   const method = req.method || 'GET';
@@ -125,7 +159,16 @@ export function requiredScope(req: http.IncomingMessage): AuthScope {
   if (pathname === '/api/admin/export') return 'admin:export';
   if (pathname === '/api/admin/import') return 'admin:import';
   if (pathname === '/api/mcp/tool/ask_memory') return 'memory:read';
-  if (pathname === '/mcp' || pathname.startsWith('/api/mcp/')) return 'admin:delete';
+    // Per-tool MCP scope resolution
+  if (pathname === '/mcp' || pathname.startsWith('/api/mcp/')) {
+    const url = new URL(req.url || '/', 'http://localhost');
+    const toolFromPath = pathname.split('/').pop();
+    const toolFromQuery = url.searchParams.get('tool');
+    const toolName = (toolFromQuery || toolFromPath || '').trim();
+    const scope = scopeForMcpTool(toolName);
+    if (scope) return scope;
+    return 'admin:delete';
+  }
   if (pathname.startsWith('/api/settings')) return 'admin:import';
   if (pathname.startsWith('/api/admin/') || pathname.startsWith('/api/auth/devices')) {
     return 'admin:delete';

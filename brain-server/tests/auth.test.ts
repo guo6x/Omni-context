@@ -20,7 +20,7 @@ describe('route scope classification', () => {
     expect(requiredScope({ method: 'POST', url: '/api/mcp/tool/ask_memory' } as http.IncomingMessage))
       .toBe('memory:read');
     expect(requiredScope({ method: 'POST', url: '/api/mcp/tool/add_entity' } as http.IncomingMessage))
-      .toBe('admin:delete');
+      .toBe('memory:write');
   });
 });
 
