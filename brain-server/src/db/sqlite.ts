@@ -7,6 +7,7 @@ import { Assertion, AssertionInput, Entity, Relationship, SINGLE_VALUED_REL_TYPE
 import { cosineSimilarity, encodeEmbedding, decodeEmbedding } from '../utils/math.js';
 import * as sqliteVec from 'sqlite-vec';
 import { ENTITY_TYPES, NOTIFICATION_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
+import type { BehaviorEventInput } from '../behavior/events.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -529,6 +530,54 @@ const MIGRATIONS: Migration[] = [
           decay_version = 1;
       CREATE INDEX IF NOT EXISTS idx_relationships_decay_due
         ON relationships(last_decay_at, weight);
+    `,
+  },
+  {
+    version: 20,
+    name: 'add_behavior_events_and_proactive_insights',
+    up: `
+      CREATE TABLE IF NOT EXISTS behavior_events (
+        id TEXT PRIMARY KEY,
+        event_type TEXT NOT NULL CHECK(event_type IN (
+          'captured','viewed','searched','retrieved','cited','edited','decided',
+          'task_created','task_completed','alert_shown','alert_clicked',
+          'alert_dismissed','alert_rejected'
+        )),
+        entity_id TEXT,
+        notification_id TEXT,
+        topic TEXT,
+        intent TEXT CHECK(intent IS NULL OR intent IN ('action','informational','deferred','none','unknown')),
+        metadata TEXT NOT NULL DEFAULT '{}',
+        occurred_at TEXT NOT NULL,
+        idempotency_key TEXT UNIQUE,
+        FOREIGN KEY(entity_id) REFERENCES entities(id) ON DELETE SET NULL,
+        FOREIGN KEY(notification_id) REFERENCES notifications(id) ON DELETE SET NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_behavior_events_entity_time
+        ON behavior_events(entity_id, occurred_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_behavior_events_type_time
+        ON behavior_events(event_type, occurred_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_behavior_events_topic_time
+        ON behavior_events(topic, occurred_at DESC);
+
+      CREATE TABLE IF NOT EXISTS proactive_insights (
+        id TEXT PRIMARY KEY,
+        notification_id TEXT,
+        insight_type TEXT NOT NULL,
+        trigger TEXT NOT NULL,
+        evidence_ids TEXT NOT NULL,
+        confidence REAL NOT NULL CHECK(confidence >= 0 AND confidence <= 1),
+        reason TEXT NOT NULL,
+        generated_at TEXT NOT NULL,
+        cooldown_until TEXT,
+        feedback TEXT CHECK(feedback IS NULL OR feedback IN (
+          'useful','not_useful','incorrect','remind_later','stop_this_type'
+        )),
+        feedback_at TEXT,
+        FOREIGN KEY(notification_id) REFERENCES notifications(id) ON DELETE SET NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_proactive_insights_cooldown
+        ON proactive_insights(insight_type, cooldown_until);
     `,
   },
 ];
@@ -1864,6 +1913,37 @@ export class Database {
   }
 
   // ===================== Notifications (Agent Insights) =====================
+
+  async recordBehaviorEvent(input: BehaviorEventInput): Promise<string> {
+    const id = uuidv4();
+    const occurredAt = input.occurredAt || new Date().toISOString();
+    await this.run(
+      `INSERT INTO behavior_events (
+         id, event_type, entity_id, notification_id, topic, intent, metadata,
+         occurred_at, idempotency_key
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(idempotency_key) DO NOTHING`,
+      [
+        id,
+        input.eventType,
+        input.entityId || null,
+        input.notificationId || null,
+        input.topic?.trim().slice(0, 500) || null,
+        input.intent || null,
+        JSON.stringify(input.metadata || {}),
+        occurredAt,
+        input.idempotencyKey || null,
+      ],
+    );
+    return id;
+  }
+
+  async recordBehaviorEvents(inputs: BehaviorEventInput[]): Promise<void> {
+    if (!inputs.length) return;
+    await this.withTransaction(async () => {
+      for (const input of inputs) await this.recordBehaviorEvent(input);
+    });
+  }
 
   async addNotification(notification: Omit<import('../shared-types.js').Notification, 'id' | 'created_at' | 'read_status'> & { id?: string }): Promise<import('../shared-types.js').Notification> {
     const id = notification.id || uuidv4();

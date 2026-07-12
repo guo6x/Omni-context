@@ -760,6 +760,12 @@ export const handleNotificationRoutes = [
     path: '/api/notifications',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const notifications = await ctx.db.getUnreadNotifications();
+      const date = new Date().toISOString().slice(0, 10);
+      await ctx.db.recordBehaviorEvents(notifications.map((notification) => ({
+        eventType: 'alert_shown',
+        notificationId: notification.id,
+        idempotencyKey: `alert_shown:${notification.id}:${date}`,
+      })));
       sendResponse(res, 200, notifications);
     }
   },
@@ -768,6 +774,7 @@ export const handleNotificationRoutes = [
     path: '/api/notifications/:id/read',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
       await ctx.db.markNotificationRead(params.id);
+      await ctx.db.recordBehaviorEvent({ eventType: 'alert_clicked', notificationId: params.id });
       sendResponse(res, 200, { success: true });
     }
   },
