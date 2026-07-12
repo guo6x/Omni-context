@@ -88,6 +88,11 @@ jobs:
         working-directory: brain-server
       - run: npm run build
         working-directory: brain-server
+      - name: Stage brain-server for Tauri resources
+        shell: bash
+        run: |
+          mkdir -p desktop-daemon/src-tauri/brain-server/dist
+          cp -r brain-server/dist/* desktop-daemon/src-tauri/brain-server/dist/
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
