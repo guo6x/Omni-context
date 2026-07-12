@@ -114,6 +114,25 @@ export function rankMemoryCandidates(
     .map(({ candidate }) => candidate);
 }
 
+export async function collectGraphCandidates(
+  db: Pick<import('./db/sqlite.js').Database, 'getGraphNeighborhood'>,
+  rankedSeeds: Array<{ id: string }>,
+  config: RetrievalConfig = DEFAULT_RETRIEVAL_CONFIG,
+  includeHistorical = false,
+): Promise<{
+  nodes: import('./shared-types.js').Entity[];
+  edges: import('./shared-types.js').Relationship[];
+}> {
+  const nodes = new Map<string, import('./shared-types.js').Entity>();
+  const edges = new Map<string, import('./shared-types.js').Relationship>();
+  for (const seed of rankedSeeds.slice(0, config.graphSeedCount)) {
+    const neighborhood = await db.getGraphNeighborhood(seed.id, config.graphDepth, includeHistorical);
+    for (const node of neighborhood.nodes) nodes.set(node.id, node);
+    for (const edge of neighborhood.edges) edges.set(edge.id, edge);
+  }
+  return { nodes: [...nodes.values()], edges: [...edges.values()] };
+}
+
 export function memoryCandidateScore(
   query: string,
   candidate: any,

@@ -1,8 +1,25 @@
-import { describe, expect, it } from 'vitest';
-import { memoryCandidateScore, rankMemoryCandidates } from '../src/mcp-retrieval.js';
-import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from '../src/retrieval/config.js';
+import { describe, expect, it, vi } from 'vitest';
+import { collectGraphCandidates, memoryCandidateScore, rankMemoryCandidates } from '../src/mcp-retrieval.js';
+import { assertEvaluationEmbeddingReady, DEFAULT_RETRIEVAL_CONFIG, loadRetrievalConfig } from '../src/retrieval/config.js';
 
 describe('retrieval policy', () => {
+  it('expands the configured graph seeds and fuses duplicate nodes', async () => {
+    const getGraphNeighborhood = vi.fn(async (id: string) => ({
+      nodes: [
+        { id, name: id, type: 'concept' as const, description: '', created_at: '', updated_at: '', last_accessed: '', access_count: 0 },
+        { id: 'shared', name: 'shared', type: 'concept' as const, description: '', created_at: '', updated_at: '', last_accessed: '', access_count: 0 },
+      ],
+      edges: [],
+    }));
+    const graph = await collectGraphCandidates(
+      { getGraphNeighborhood },
+      [{ id: 'seed-1' }, { id: 'seed-2' }, { id: 'seed-3' }, { id: 'seed-4' }],
+      { ...DEFAULT_RETRIEVAL_CONFIG, graphSeedCount: 3, graphDepth: 2 },
+    );
+    expect(getGraphNeighborhood).toHaveBeenCalledTimes(3);
+    expect(getGraphNeighborhood).toHaveBeenCalledWith('seed-1', 2, false);
+    expect(graph.nodes.map((node) => node.id)).toEqual(['seed-1', 'shared', 'seed-2', 'seed-3']);
+  });
   it('does not apply decision type boosts to general retrieval', () => {
     const candidates = [
       { id: 'decision', type: 'decision', name: 'unrelated', description: '' },

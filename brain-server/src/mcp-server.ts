@@ -21,10 +21,26 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import type { EntityType, RelationshipType, Entity } from './shared-types.js';
 import { createAuditedAiFetch } from './security/audited-ai-fetch.js';
+import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from './retrieval/config.js';
+import { parseTimeWindow } from './utils/time-window.js';
 
 const mcpLlmFetch = createAuditedAiFetch({ purpose: 'mcp.decision-intelligence', kind: 'llm' });
 
 const CORE_PRINCIPLE_CAP = 3;
+const RETRIEVAL_CONFIG = loadRetrievalConfig();
+
+interface RetrievalCandidate {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  similarity?: number;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+  valid_from?: string;
+  valid_until?: string;
+}
 
 /**
  * 精简实体，丢弃 embedding 和 metadata，保留关键字段，并截断 description。
@@ -82,6 +98,7 @@ import {
 import { buildDecisionMetadata, getRecursiveDecisionLineage, recordDecisionOutcome } from './decision/decision-store.js';
 import {
   capGraphContext,
+  collectGraphCandidates,
   rankMemoryCandidates,
   selectGeneralCorePrinciples,
   selectRelevantPrinciples,
@@ -454,67 +471,29 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
         }
 
         case 'unified_memory_search': {
-          const query = args.query as string;
-          const limit = (args.limit as number) || 5;
-          const includeRels = args.includeRelationships !== false;
-
-          // [核心壁垒] 三层记忆融合检索
-          const results: any = { textResults: [], vectorResults: [], graphContext: [] };
-
-          // 层1：文本搜索（FTS5 → LIKE 回退）
-          results.textResults = await this.db.searchEntities(query, limit);
-
-          // 层2：向量搜索（需要先将 query 转为 embedding）
-          try {
-            const embResult = await this.embeddingService.embed(query);
-            results.vectorResults = await this.db.vectorSearch(embResult.embedding, limit);
-          } catch (e) {
-            // embedding 或向量搜索失败不阻塞
-          }
-
-          // 层3：图谱遍历（从搜索命中的实体出发，获取关联上下文）
-          // 文本搜索为空时回退用向量搜索的 top 命中作为种子，避免完全丢图谱信号
-          if (includeRels) {
-            const seedId = results.textResults[0]?.id ?? results.vectorResults[0]?.id;
-            if (seedId) {
-              results.graphContext = await this.db.getGraphNeighborhood(seedId, 2);
-            }
-          }
-
-          // 融合去重
-          const seenIds = new Set<string>();
-          const unified = [];
-          for (const source of [results.textResults, results.vectorResults]) {
-            for (const item of source) {
-              if (!seenIds.has(item.id)) {
-                seenIds.add(item.id);
-                unified.push(item);
-              }
-            }
-          }
-
-          let graphContext = results.graphContext;
-          if (graphContext && graphContext.nodes) {
-            graphContext.nodes = graphContext.nodes.map(toCompactEntity);
-          }
+          const parsed = UnifiedMemorySearchSchema.parse(args);
+          const limit = parsed.limit || 5;
+          const retrieval = await this._retrieveMemoryCandidates(
+            parsed.query,
+            limit * 2,
+            false,
+            parsed.includeRelationships !== false,
+            parsed.include_invalidated === true,
+          );
 
           // 隐式 access tracking（仅 MCP 路径）
           const accIds = [
-            ...unified.map((e: any) => e.id),
-            ...(results.graphContext?.nodes || []).map((n: any) => n.id),
+            ...retrieval.ranked.map((entity) => entity.id),
+            ...retrieval.graphContext.nodes.map((node) => node.id),
           ].filter(Boolean);
           if (accIds.length > 0) {
             this.db.bumpAccessCounts(accIds).catch(() => {});
           }
 
           return this.formatResponse({
-            results: unified.slice(0, limit * 2).map(toCompactEntity),
-            graphContext,
-            searchMethods: {
-              text: results.textResults.length,
-              vector: results.vectorResults.length,
-              graph: results.graphContext?.nodes?.length || 0,
-            },
+            results: retrieval.ranked.map(toCompactEntity),
+            graphContext: { ...retrieval.graphContext, nodes: retrieval.graphContext.nodes.map(toCompactEntity) },
+            searchMethods: retrieval.counts,
           });
         }
 
@@ -592,18 +571,13 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
         case 'get_decision_context': {
           const parsed = GetDecisionContextSchema.parse(args);
           const { situation, limit } = parsed;
+          const retrieval = await this._retrieveMemoryCandidates(situation, limit, true, true);
 
           // 层1：文本搜索
-          const textResults = await this.db.searchEntities(situation, limit);
+          const textResults = retrieval.ranked;
 
           // 层2：向量搜索
-          let vectorResults: any[] = [];
-          try {
-            const embResult = await this.embeddingService.embed(situation);
-            vectorResults = await this.db.vectorSearch(embResult.embedding, limit);
-          } catch {
-            // embedding 失败不阻塞
-          }
+          const vectorResults: any[] = [];
 
           // 融合去重
           const seen = new Set<string>();
@@ -658,20 +632,8 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
             }
           }
 
-          // 图谱邻域：以检索 top 命中为种子
-          let graphContext: any = {};
-          const seed = relevantMemories[0];
-          if (seed) {
-            try {
-              graphContext = capGraphContext(
-                await this.db.getGraphNeighborhood(seed.id, 2),
-                Math.max(limit * 2, 8),
-                Math.max(limit * 3, 12),
-              );
-            } catch {
-              // 图谱查询失败不阻塞
-            }
-          }
+          // Multi-seed graph nodes were fused into the candidate pool before ranking.
+          const graphContext = retrieval.graphContext;
 
           const compactPrinciples = principles.map(toCompactEntity);
           const compactRelevantMemories = relevantMemories.map(toCompactEntity);
@@ -1028,18 +990,90 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
 
   // ── 决策助手共享逻辑（与 HTTP handler api/handlers/mcp.ts 保持一致） ──
 
+  private async _retrieveMemoryCandidates(
+    query: string,
+    limit: number,
+    decisionMode: boolean,
+    includeGraph: boolean,
+    includeHistorical = false,
+  ): Promise<{
+    ranked: RetrievalCandidate[];
+    graphContext: { nodes: Entity[]; edges: any[] };
+    counts: { text: number; vector: number; temporal: number; graph: number };
+  }> {
+    const pool = Math.max(
+      limit * RETRIEVAL_CONFIG.candidatePoolMultiplier,
+      RETRIEVAL_CONFIG.candidatePoolMinimum,
+    );
+    const textResults = await this.db.searchEntities(query, pool);
+    let vectorResults: RetrievalCandidate[] = [];
+    try {
+      const embedded = await this.embeddingService.embed(query);
+      assertEvaluationEmbeddingReady(this.embeddingService.getStatus());
+      vectorResults = await this.db.vectorSearch(embedded.embedding, pool);
+    } catch (error) {
+      if (process.env.OMNI_EVALUATION_MODE === '1') {
+        throw new McpError(
+          ErrorCode.InternalError,
+          `EVALUATION_EMBEDDING_UNAVAILABLE: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+      console.warn('[retrieval] semantic embedding unavailable; continuing outside evaluation mode');
+    }
+
+    const candidateMap = new Map<string, RetrievalCandidate>();
+    for (const entity of [...textResults, ...vectorResults]) candidateMap.set(entity.id, entity);
+    let temporalCount = 0;
+    const window = parseTimeWindow(query);
+    if (window) {
+      const temporal = await this.db.getEntitiesByTimeWindow(window.start, window.end, pool);
+      temporalCount = temporal.length;
+      for (const entity of temporal) candidateMap.set(entity.id, entity);
+    }
+
+    const graphNodes = new Map<string, Entity>();
+    const graphEdges = new Map<string, any>();
+    if (includeGraph) {
+      const seeds = rankMemoryCandidates(query, [...candidateMap.values()], {
+        decisionMode,
+        config: RETRIEVAL_CONFIG,
+      }).slice(0, RETRIEVAL_CONFIG.graphSeedCount);
+      const graph = await collectGraphCandidates(this.db, seeds, RETRIEVAL_CONFIG, includeHistorical);
+      for (const node of graph.nodes) {
+        graphNodes.set(node.id, node);
+        candidateMap.set(node.id, node);
+      }
+      for (const edge of graph.edges) graphEdges.set(edge.id, edge);
+    }
+
+    const ranked = rankMemoryCandidates(query, [...candidateMap.values()], {
+      decisionMode,
+      historicalMode: includeHistorical,
+      config: RETRIEVAL_CONFIG,
+    }).slice(0, limit);
+    return {
+      ranked,
+      graphContext: capGraphContext(
+        { nodes: [...graphNodes.values()], edges: [...graphEdges.values()] },
+        Math.max(limit * RETRIEVAL_CONFIG.graphNodeLimitMultiplier, 8),
+        Math.max(limit * RETRIEVAL_CONFIG.graphEdgeLimitMultiplier, 12),
+      ),
+      counts: {
+        text: textResults.length,
+        vector: vectorResults.length,
+        temporal: temporalCount,
+        graph: graphNodes.size,
+      },
+    };
+  }
+
   private async _retrieveDecisionContext(
     situation: string,
     limit: number,
   ): Promise<{ principles: any[]; relevantMemories: any[]; conflicts: any[] }> {
-    const textResults = await this.db.searchEntities(situation, limit);
-    let vectorResults: any[] = [];
-    try {
-      const embResult = await this.embeddingService.embed(situation);
-      vectorResults = await this.db.vectorSearch(embResult.embedding, limit);
-    } catch {
-      // embedding 失败不阻塞
-    }
+    const retrieval = await this._retrieveMemoryCandidates(situation, limit, true, true);
+    const textResults = retrieval.ranked;
+    const vectorResults: any[] = [];
 
     const seen = new Set<string>();
     const candidates: any[] = [];
