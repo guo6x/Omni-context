@@ -122,10 +122,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '22' }
-      - run: npm install
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: benchmark/package-lock.json
+      - run: npm ci
         working-directory: benchmark
-      - run: node --test benchmark/tests/*.test.mjs
+      - run: node --test tests/*.test.mjs
+        working-directory: benchmark
 
   windows-smoke:
     runs-on: windows-latest

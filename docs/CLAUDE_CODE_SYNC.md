@@ -29,7 +29,7 @@ The main risk is not lack of features. The main risk is that users do not unders
 
 Workspace:
 
-`D:\AI_code\Omni-context\omni-context-release`
+`omni-context-release` (repository root)
 
 Current git status when last checked:
 
@@ -86,9 +86,9 @@ Claude Desktop MCP config:
 {
   "mcpServers": {
     "omni-context": {
-      "command": "E:\\app_update\\omni-context\\brain-server/node.exe",
+      "command": "<install-path>/brain-server/node.exe",
       "args": [
-        "E:\\app_update\\omni-context\\brain-server/dist/mcp-proxy.js"
+        "<install-path>/brain-server/dist/mcp-proxy.js"
       ]
     }
   }
