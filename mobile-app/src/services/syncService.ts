@@ -3,7 +3,7 @@ import * as localDb from './localDb';
 import { Entity, Relationship, SyncStatus } from '@/types';
 
 type SyncCallback = (status: SyncStatus) => void;
-const SYNC_UPLOAD_CONCURRENCY = 5;
+const READ_ONLY_ERROR = 'Freeze v1 mobile is a read-mostly companion; write operations are disabled';
 
 class SyncService {
   private syncInterval: ReturnType<typeof setInterval> | null = null;
@@ -59,75 +59,7 @@ class SyncService {
   }
 
   async sync(): Promise<void> {
-    await this.ensureReady();
-    if (this.status.syncing) {
-      return;
-    }
-
-    if (!api.isConfigured()) {
-      this.updateStatus({ error: 'API not configured' });
-      return;
-    }
-
-    this.updateStatus({ syncing: true, error: null });
-
-    try {
-      const unsynced = await localDb.getUnsyncedEntities();
-
-      if (unsynced.length === 0) {
-        this.updateStatus({
-          syncing: false,
-          lastSync: Date.now(),
-          pending: 0,
-        });
-        return;
-      }
-
-      // 服务端当前没有批量写入接口；用有限并发降低等待时间，同时只标记真正成功的记录。
-      let successCount = 0;
-      let lastError: string | null = null;
-      let cursor = 0;
-
-      const uploadOne = async (entity: Entity) => {
-        const res = await api.addEntity(entity);
-        if (res.success && res.data) {
-          // 服务器会生成新 ID，用返回的实体替换本地记录，避免 ID 不一致导致重复
-          const serverEntity = res.data;
-          if (serverEntity.id !== entity.id) {
-            await localDb.deleteEntity(entity.id);
-            await localDb.addEntity(serverEntity, true);
-          } else {
-            await localDb.markEntitySynced(entity.id);
-          }
-          successCount++;
-        } else {
-          lastError = res.error ?? 'Sync failed';
-        }
-      };
-
-      const workerCount = Math.min(SYNC_UPLOAD_CONCURRENCY, unsynced.length);
-      const workers = Array.from({ length: workerCount }, async () => {
-        while (cursor < unsynced.length) {
-          const index = cursor++;
-          if (index >= unsynced.length) break;
-          await uploadOne(unsynced[index]);
-        }
-      });
-
-      await Promise.all(workers);
-
-      await this.updatePendingCount();
-      this.updateStatus({
-        syncing: false,
-        lastSync: successCount > 0 ? Date.now() : this.status.lastSync,
-        error: successCount === unsynced.length ? null : lastError,
-      });
-    } catch (error) {
-      this.updateStatus({
-        syncing: false,
-        error: (error as Error).message,
-      });
-    }
+    await this.pullFromServer();
   }
 
   async pullFromServer(): Promise<Entity[]> {
@@ -199,46 +131,19 @@ class SyncService {
   }
 
   async addEntity(entity: Entity): Promise<void> {
-    await this.ensureReady();
-    await localDb.addEntity(entity);
-    await this.updatePendingCount();
-
-    if (api.isConfigured() && entity.synced === false) {
-      // sync() 内部已捕获错误并写入 status.error；
-      // 这里仍包一层 catch，防止 unhandled rejection 出现在 RN 红屏
-      this.sync().catch((err) => {
-        console.warn('Background sync failed:', err);
-        this.updateStatus({ error: (err as Error).message });
-      });
-    }
+    void entity;
+    throw new Error(READ_ONLY_ERROR);
   }
 
   async updateEntity(id: string, updates: Partial<Entity>): Promise<void> {
-    await this.ensureReady();
-    await localDb.updateEntity(id, updates);
-    await this.updatePendingCount();
-    
-    if (api.isConfigured()) {
-      this.sync().catch((err) => {
-        console.warn('Background sync on update failed:', err);
-        this.updateStatus({ error: (err as Error).message });
-      });
-    }
+    void id;
+    void updates;
+    throw new Error(READ_ONLY_ERROR);
   }
 
   async deleteEntity(id: string): Promise<void> {
-    await this.ensureReady();
-
-    // 先删远程，成功后再删本地，避免远程失败导致数据不一致
-    if (api.isConfigured()) {
-      const res = await api.deleteEntity(id);
-      if (!res.success) {
-        throw new Error(res.error ?? '删除远程实体失败');
-      }
-    }
-
-    await localDb.deleteEntity(id);
-    await this.updatePendingCount();
+    void id;
+    throw new Error(READ_ONLY_ERROR);
   }
 
   async getEntities(limit?: number, offset?: number): Promise<Entity[]> {

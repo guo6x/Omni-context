@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
+    "test:product-mode": "node scripts/verify-read-only.mjs",
     "build:android": "cd android && gradlew.bat assembleRelease",
     "build:ios": "expo run:ios --configuration Release"
   },

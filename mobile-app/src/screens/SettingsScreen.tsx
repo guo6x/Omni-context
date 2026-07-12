@@ -18,6 +18,7 @@ import { useHUD } from '@/components/HUD';
 import { api } from '@/services/api';
 import * as localDb from '@/services/localDb';
 import { syncService } from '@/services/syncService';
+import { MOBILE_PRODUCT_MODE_LABEL } from '@/config/productMode';
 
 interface SettingItemProps {
   label: string;
@@ -151,6 +152,10 @@ export function SettingsScreen() {
         <View className="px-5 py-4">
           <Text className="text-[#f2f5f4] text-2xl font-bold">设置</Text>
           <Text className="text-[#77818b] text-sm mt-1">连接桌面端并管理本地数据</Text>
+        </View>
+        <View className="mx-5 mb-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3">
+          <Text className="text-cyan-300 text-sm font-semibold">{MOBILE_PRODUCT_MODE_LABEL}</Text>
+          <Text className="text-gray-400 text-xs mt-1">本版本只拉取实体和关系；创建、编辑、删除请在桌面端完成。</Text>
         </View>
 
         <SettingSection title="语言">

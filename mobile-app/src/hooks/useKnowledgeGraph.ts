@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import * as localDb from '@/services/localDb';
-import { KnowledgeGraph, KnowledgeNode, KnowledgeEdge } from '@/types';
+import { KnowledgeGraph, KnowledgeNode } from '@/types';
 
 interface UseKnowledgeGraphReturn {
   graph: KnowledgeGraph | null;
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  addNode: (node: KnowledgeNode) => Promise<void>;
-  addEdge: (edge: KnowledgeEdge) => Promise<void>;
   selectedNode: KnowledgeNode | null;
   setSelectedNode: (node: KnowledgeNode | null) => void;
 }
@@ -59,35 +57,11 @@ export function useKnowledgeGraph(): UseKnowledgeGraphReturn {
     loadGraph();
   }, [loadGraph]);
 
-  const addNode = useCallback(async (node: KnowledgeNode) => {
-    await localDb.addKnowledgeNode(node);
-    setGraph(prev => {
-      if (!prev) return { nodes: [node], edges: [] };
-      return {
-        ...prev,
-        nodes: [...prev.nodes.filter(n => n.id !== node.id), node],
-      };
-    });
-  }, []);
-
-  const addEdge = useCallback(async (edge: KnowledgeEdge) => {
-    await localDb.addKnowledgeEdge(edge);
-    setGraph(prev => {
-      if (!prev) return { nodes: [], edges: [edge] };
-      return {
-        ...prev,
-        edges: [...prev.edges.filter(e => e.id !== edge.id), edge],
-      };
-    });
-  }, []);
-
   return {
     graph,
     loading,
     error,
     refresh: loadGraph,
-    addNode,
-    addEdge,
     selectedNode,
     setSelectedNode,
   };

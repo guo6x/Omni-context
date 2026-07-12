@@ -1,6 +1,8 @@
 # Omni-Context Mobile App
 
-Omni-Context 移动端 —— 只读搜索 + 快速捕获客户端，通过 LAN 与桌面端 brain-server 配对使用。
+Omni-Context Freeze v1 移动端是 **read-mostly 只读伴侣**，通过 LAN 与桌面端 brain-server 配对使用。
+
+当前版本只从桌面端拉取实体和关系，支持搜索、浏览和图谱查看。移动端创建、编辑、删除、离线写队列和双向同步均未开放；数据写入请在桌面端完成。iOS 构建状态仍为 Not Verified。
 
 ## 前置条件
 
