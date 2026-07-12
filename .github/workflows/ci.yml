@@ -1,0 +1,147 @@
+name: Continuous Integration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+  NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan repository and reachable history for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Audit production dependencies for critical advisories
+        shell: bash
+        run: |
+          for project in brain-server desktop-daemon browser-extension mobile-app; do
+            (cd "$project" && npm audit --omit=dev --audit-level=critical)
+          done
+
+  brain-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: brain-server/package-lock.json
+      - run: npm ci
+        working-directory: brain-server
+      - run: npm run lint
+        working-directory: brain-server
+      - run: npm run typecheck
+        working-directory: brain-server
+      - name: Unit, migration, and backup round-trip tests
+        run: npm test
+        working-directory: brain-server
+      - run: npm run build
+        working-directory: brain-server
+      - name: Generated schema drift check
+        run: npm run schema:check
+        working-directory: brain-server
+
+  desktop-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: desktop-daemon/package-lock.json
+      - run: npm ci
+        working-directory: desktop-daemon
+      - run: npm run build
+        working-directory: desktop-daemon
+
+  desktop-rust:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt -- --check
+        working-directory: desktop-daemon/src-tauri
+      - run: cargo check --locked
+        working-directory: desktop-daemon/src-tauri
+      - run: cargo clippy --locked --all-targets
+        working-directory: desktop-daemon/src-tauri
+      - run: cargo test --locked
+        working-directory: desktop-daemon/src-tauri
+
+  browser-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: browser-extension/package-lock.json
+      - run: npm ci
+        working-directory: browser-extension
+      - run: npm test
+        working-directory: browser-extension
+      - run: npm run build
+        working-directory: browser-extension
+
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile-app/package-lock.json
+      - run: npm ci
+        working-directory: mobile-app
+      - run: npm run typecheck
+        working-directory: mobile-app
+      - run: npm run test:product-mode
+        working-directory: mobile-app
+
+  benchmark-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: node --test benchmark/tests/*.test.mjs
+
+  windows-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm ci
+        working-directory: brain-server
+      - run: npm run build
+        working-directory: brain-server
+      - run: npm ci
+        working-directory: desktop-daemon
+      - run: npm run build
+        working-directory: desktop-daemon
