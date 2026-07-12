@@ -14,20 +14,27 @@ import { loadLoCoMo, getConversation, getConversationQAs, getSessions } from "..
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 
 const FIXTURE_CONV = {
-  id: 1,
-  conversation_id: 1,
-  sessions: [
-    { id: "s1", text: "Hi, my name is Alice.", timestamp: "2024-01-01T10:00:00Z" },
-    { id: "s2", text: "I live in San Francisco.", timestamp: "2024-01-01T10:01:00Z" },
-    { id: "s3", text: "I work as a software engineer.", timestamp: "2024-01-01T10:02:00Z" },
+  sample_id: 1,
+  conversation: {
+    speaker_a: "Alice",
+    speaker_b: "Bob",
+    session_1: [
+      { speaker: "A", dia_id: "D1:1", text: "Hi, my name is Alice." },
+      { speaker: "B", dia_id: "D1:2", text: "Nice to meet you." },
+    ],
+    session_1_date_time: "2024-01-01 10:00:00",
+    session_2: [
+      { speaker: "A", dia_id: "D2:1", text: "I live in San Francisco." },
+      { speaker: "A", dia_id: "D2:2", text: "I work as a software engineer." },
+    ],
+    session_2_date_time: "2024-01-02 10:00:00",
+  },
+  qa: [
+    { question: "What is the user's name?", answer: "Alice", category: 1, evidence: ["D1:1"] },
+    { question: "Where does the user live?", answer: "San Francisco", category: 1, evidence: ["D2:1"] },
+    { question: "What is the user's job?", answer: "software engineer", category: 1, evidence: ["D2:2"] },
   ],
 };
-
-const FIXTURE_QA = [
-  { id: 1, question: "What is the user's name?", answer: "Alice", conversation_id: 1 },
-  { id: 2, question: "Where does the user live?", answer: "San Francisco", conversation_id: 1 },
-  { id: 3, question: "What is the user's job?", answer: "software engineer", conversation_id: 1 },
-];
 
 describe("benchmark runner - infrastructure", () => {
   let tmpDir;
@@ -153,14 +160,13 @@ describe("benchmark runner - infrastructure", () => {
 describe("benchmark runner - dataset loader", () => {
   it("loads conversation sessions in time order", () => {
     const sessions = getSessions(FIXTURE_CONV);
-    assert.strictEqual(sessions.length, 3);
+    assert.strictEqual(sessions.length, 2);
     assert.ok(new Date(sessions[0].timestamp) <= new Date(sessions[1].timestamp));
-    assert.ok(new Date(sessions[1].timestamp) <= new Date(sessions[2].timestamp));
   });
 
   it("finds QAs for a conversation", () => {
     const qas = getConversationQAs(
-      { qa_pairs: FIXTURE_QA, conversations: [FIXTURE_CONV] },
+      { conversations: [FIXTURE_CONV] },
       1
     );
     assert.strictEqual(qas.length, 3);
