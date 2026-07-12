@@ -40,3 +40,8 @@ node hardware/simulator/send-signed-packet.mjs --device-id esp32-001122aabbcc --
 ```
 
 Use a disposable development credential. The simulator never prints it or the resulting signature.
+
+The desktop replies to the packet source with a JSON acknowledgement. `heartbeat` is acknowledged
+after authentication; action packets are acknowledged only after the desktop action worker reports
+completion, failure, or the 75-second timeout. The simulator exits non-zero for rejection, action
+failure, timeout, malformed acknowledgement, or no acknowledgement.

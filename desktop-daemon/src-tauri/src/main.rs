@@ -207,7 +207,7 @@ async fn main() {
                 });
             }
 
-            let (event_tx, mut event_rx) = mpsc::channel::<ButtonEvent>(32);
+            let (event_tx, mut event_rx) = mpsc::channel::<udp_listener::HardwareRequest>(32);
 
             let udp_event_tx = event_tx.clone();
             let hardware_app = app.handle();
@@ -218,7 +218,8 @@ async fn main() {
             });
 
             tauri::async_runtime::spawn(async move {
-                while let Some(event) = event_rx.recv().await {
+                while let Some(request) = event_rx.recv().await {
+                    let event = request.event;
                     let event_name = match event {
                         ButtonEvent::Precipitate => "precipitate",
                         ButtonEvent::Decision => "decision",
@@ -231,6 +232,9 @@ async fn main() {
                         ButtonEvent::Precipitate => {
                             let result = hardware_actions::execute_precipitate().await;
                             let _ = hardware_app.emit_all("hardware-precipitate-result", &result);
+                            let completion = result
+                                .map(|jobs| format!("ingested {} capture job(s)", jobs.len()));
+                            let _ = request.reply.send(completion);
                         }
                         ButtonEvent::Decision => {
                             if let Some(window) = hardware_app.get_window("main") {
@@ -238,11 +242,17 @@ async fn main() {
                                 let _ = window.set_focus();
                             }
                             let _ = hardware_app.emit_all("hardware-decision-requested", ());
+                            let _ = request
+                                .reply
+                                .send(Ok("decision assistant opened".to_string()));
                         }
                         ButtonEvent::Reset => {
                             // Reset only clears transient capture/decision UI state. It never
                             // deletes memories, revokes devices, or rotates credentials.
                             let _ = hardware_app.emit_all("hardware-reset-transient-ui", ());
+                            let _ = request
+                                .reply
+                                .send(Ok("transient UI state reset".to_string()));
                         }
                     }
                 }

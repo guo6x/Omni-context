@@ -92,6 +92,8 @@ struct RegistryState {
 
 static REGISTRY: LazyLock<Mutex<RegistryState>> =
     LazyLock::new(|| Mutex::new(RegistryState::default()));
+#[cfg(test)]
+pub(crate) static HARDWARE_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 fn now_epoch_seconds() -> i64 {
     SystemTime::now()
@@ -335,7 +337,6 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     static TEST_ID: AtomicU64 = AtomicU64::new(1);
-    static TEST_LOCK: Mutex<()> = Mutex::new(());
 
     fn signed_message(secret: &[u8], timestamp: i64, nonce: &str) -> SignedHardwareMessage {
         let mut message = SignedHardwareMessage {
@@ -372,7 +373,7 @@ mod tests {
 
     #[test]
     fn accepts_signed_packet_and_rejects_replay() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = HARDWARE_TEST_LOCK.lock().unwrap();
         let secret = [7_u8; 32];
         let path = setup_registry(&secret);
         let now = now_epoch_seconds();
@@ -392,7 +393,7 @@ mod tests {
 
     #[test]
     fn rejects_unknown_bad_signature_expired_and_revoked_packets() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = HARDWARE_TEST_LOCK.lock().unwrap();
         let secret = [9_u8; 32];
         let path = setup_registry(&secret);
         let now = now_epoch_seconds();
@@ -435,7 +436,7 @@ mod tests {
 
     #[test]
     fn registry_survives_reload_without_exposing_credentials() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = HARDWARE_TEST_LOCK.lock().unwrap();
         let secret = [11_u8; 32];
         let path = setup_registry(&secret);
         initialize_registry(path.clone()).unwrap();

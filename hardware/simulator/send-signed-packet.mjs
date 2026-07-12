@@ -42,8 +42,27 @@ const packet = Buffer.from(JSON.stringify({
 }));
 
 const socket = dgram.createSocket('udp4');
-socket.send(packet, port, host, (error) => {
+const timeout = setTimeout(() => {
   socket.close();
-  if (error) throw error;
-  process.stdout.write(`Sent signed ${action} packet for ${deviceId} to ${host}:${port}\n`);
+  process.stderr.write('No desktop acknowledgement received within 80 seconds.\n');
+  process.exitCode = 1;
+}, 80_000);
+socket.on('message', (message) => {
+  clearTimeout(timeout);
+  socket.close();
+  let ack;
+  try {
+    ack = JSON.parse(message.toString('utf8'));
+  } catch {
+    throw new Error('Desktop returned a malformed acknowledgement.');
+  }
+  process.stdout.write(`${JSON.stringify(ack)}\n`);
+  if (!ack.accepted) process.exitCode = 1;
+});
+socket.send(packet, port, host, (error) => {
+  if (error) {
+    clearTimeout(timeout);
+    socket.close();
+    throw error;
+  }
 });

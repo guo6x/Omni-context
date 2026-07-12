@@ -116,6 +116,62 @@ pub async fn execute_precipitate() -> Result<Vec<String>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+
+    async fn read_request(stream: &mut tokio::net::TcpStream) -> String {
+        let mut bytes = Vec::new();
+        let mut buffer = [0_u8; 1024];
+        loop {
+            let count = stream.read(&mut buffer).await.unwrap();
+            if count == 0 {
+                break;
+            }
+            bytes.extend_from_slice(&buffer[..count]);
+            if bytes.windows(4).any(|window| window == b"\r\n\r\n") {
+                break;
+            }
+        }
+        String::from_utf8_lossy(&bytes).to_string()
+    }
+
+    #[tokio::test]
+    async fn submit_and_wait_runs_authenticated_ingest_business_chain() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut submit, _) = listener.accept().await.unwrap();
+            let request = read_request(&mut submit).await;
+            assert!(request.starts_with("POST /api/ingest/file HTTP/1.1"));
+            assert!(request
+                .to_ascii_lowercase()
+                .contains("authorization: bearer local-test-token"));
+            let body = r#"{"jobId":"hardware-job-1"}"#;
+            submit.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}", body.len(), body).as_bytes()).await.unwrap();
+
+            let (mut poll, _) = listener.accept().await.unwrap();
+            let request = read_request(&mut poll).await;
+            assert!(request.starts_with("GET /api/ingest/job/hardware-job-1 HTTP/1.1"));
+            assert!(request
+                .to_ascii_lowercase()
+                .contains("authorization: bearer local-test-token"));
+            let body = r#"{"status":"success","error":null}"#;
+            poll.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}", body.len(), body).as_bytes()).await.unwrap();
+        });
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let job = submit_and_wait(
+            &client,
+            &format!("http://{address}"),
+            "local-test-token",
+            "hardware-clipboard.txt",
+            "text/plain",
+            "dGVzdA==",
+        )
+        .await
+        .unwrap();
+        server.await.unwrap();
+        assert_eq!(job, "hardware-job-1");
+    }
 
     #[test]
     fn reset_contract_is_non_destructive_by_design() {
