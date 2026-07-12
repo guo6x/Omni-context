@@ -137,6 +137,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
+      - run: node --test scripts/*.test.mjs
       - run: npm ci
         working-directory: brain-server
       - run: npm run build

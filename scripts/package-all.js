@@ -1,11 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { assertPackagingSucceeded } = require('./package-guard');
 
 const ROOT_DIR = path.join(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
 
 console.log('🚀 开始打包 Omni-Context 所有组件...\n');
+const failures = [];
 
 // 创建输出目录
 if (!fs.existsSync(DIST_DIR)) {
@@ -14,20 +16,14 @@ if (!fs.existsSync(DIST_DIR)) {
 
 // 清理旧的输出
 console.log('🧹 清理旧的输出...');
-const cleanScripts = [
-  'cd desktop-daemon && rm -rf src-tauri/target/release/bundle',
-  'cd browser-extension && rm -rf build',
-  'cd brain-server && rm -rf dist',
-  'cd mobile-app && rm -rf .expo-shared dist'
+const cleanPaths = [
+  path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target', 'release', 'bundle'),
+  path.join(ROOT_DIR, 'browser-extension', 'build'),
+  path.join(ROOT_DIR, 'brain-server', 'dist'),
+  path.join(ROOT_DIR, 'mobile-app', '.expo-shared'),
+  path.join(ROOT_DIR, 'mobile-app', 'dist'),
 ];
-
-cleanScripts.forEach(script => {
-  try {
-    execSync(script, { stdio: 'ignore' });
-  } catch (e) {
-    // 忽略错误
-  }
-});
+cleanPaths.forEach((target) => fs.rmSync(target, { recursive: true, force: true }));
 
 // 步骤 1: 构建 Brain Server
 console.log('\n📦 1. 构建 Brain Server...');
@@ -42,6 +38,7 @@ try {
 } catch (e) {
   console.log('❌ Brain Server 构建失败');
   console.error(e);
+  failures.push('brain-server');
 }
 
 // 步骤 2: 打包桌面应用
@@ -124,6 +121,7 @@ try {
 } catch (e) {
   console.log('❌ 桌面应用打包失败');
   console.error(e);
+  failures.push('desktop-app');
 }
 
 // 步骤 3: 打包浏览器插件
@@ -170,6 +168,7 @@ try {
 } catch (e) {
   console.log('❌ 浏览器插件打包失败');
   console.error(e);
+  failures.push('browser-extension');
 }
 
 // 步骤 4: 构建移动端（EAS Build 预览模式）
@@ -185,6 +184,7 @@ try {
 } catch (e) {
   console.log('❌ 移动端构建失败');
   console.error(e);
+  failures.push('mobile-config');
 }
 
 // 步骤 5: 复制硬件文档
@@ -197,6 +197,7 @@ try {
 } catch (e) {
   console.log('❌ 硬件文档复制失败');
   console.error(e);
+  failures.push('hardware-docs');
 }
 
 // 生成 README
@@ -236,6 +237,8 @@ const readmeContent = `# Omni-Context 打包输出
 Omni-Context v${require('../package.json').version}
 `;
 fs.writeFileSync(path.join(DIST_DIR, 'README.md'), readmeContent);
+
+assertPackagingSucceeded(failures);
 
 console.log('\n🎉 所有组件打包完成！');
 console.log(`📂 输出目录: ${DIST_DIR}`);
