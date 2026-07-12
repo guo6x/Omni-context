@@ -32,4 +32,22 @@ describe('AgentLoop independent scheduling', () => {
     expect((agent as any).cycleCount).toBe(1);
     await db.close();
   });
+
+  it('creates one review reminder for a due decision without an outcome', async () => {
+    const db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+    const decision = await db.addEntity({
+      name: 'Adopt local-first storage',
+      type: 'decision',
+      metadata: { revisit_at: '2025-01-01T00:00:00.000Z', outcomes: [] },
+    });
+    const agent = new AgentLoop(db);
+    await (agent as any).runCycle();
+    await (agent as any).runCycle();
+    const notifications = await db.getUnreadNotifications();
+    const reviews = notifications.filter((notification) => notification.title === 'Decision review due');
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0].related_entities).toContain(decision.id);
+    await db.close();
+  });
 });

@@ -317,6 +317,33 @@ export class AgentLoop {
         console.warn('[AgentLoop] insight_generation 失败，继续其他周期任务:', e);
       }
 
+      // Decision review is an independent deterministic task. It does not call an LLM
+      // and never changes principles from a single observed result.
+      try {
+        const dueDecisions = await this.db.all<{ id: string; name: string }>(
+          `SELECT id, name FROM entities
+           WHERE type = 'decision'
+             AND json_extract(metadata, '$.revisit_at') IS NOT NULL
+             AND json_extract(metadata, '$.revisit_at') <= ?
+             AND json_array_length(COALESCE(json_extract(metadata, '$.outcomes'), '[]')) = 0
+           ORDER BY json_extract(metadata, '$.revisit_at') ASC
+           LIMIT 10`,
+          [new Date().toISOString()],
+        );
+        for (const decision of dueDecisions) {
+          const title = 'Decision review due';
+          if (await this.db.hasRecentNotification(title, 30, decision.id)) continue;
+          await this.db.addNotification({
+            title,
+            content: `Review the outcome, failed assumptions, unexpected factors, and lessons for decision ${decision.id}: ${decision.name}`,
+            type: 'reminder',
+            related_entities: [decision.id],
+          });
+        }
+      } catch (error) {
+        console.warn('[AgentLoop] decision_review_reminder failed, continuing:', error);
+      }
+
       // 4. 每 N 轮检查一次记忆衰减，生成 decay_warning 通知
       if (this.decayScheduler && cycle % AgentLoop.DECAY_CHECK_INTERVAL === 0) {
         try {

@@ -22,12 +22,14 @@ import {
   AnalyzeDecisionSchema,
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
+  RecordDecisionOutcomeSchema,
   GetCoreContextSchema,
   DeleteEntitySchema,
   SetCoreSchema,
   MergeEntitiesSchema,
   tools as mcpToolDefs,
 } from '../../mcp-tools.js';
+import { buildDecisionMetadata, getRecursiveDecisionLineage, recordDecisionOutcome } from '../../decision/decision-store.js';
 import { parseTimeWindow } from '../../utils/time-window.js';
 import {
   capGraphContext,
@@ -1698,7 +1700,7 @@ ${gaConnBlock}`;
           }
           case 'save_decision': {
             const parsed = SaveDecisionSchema.parse(args);
-            const { situation, conclusion, cited_entity_ids, confidence, alternatives, previous_decision_id } = parsed;
+            const { situation, conclusion, cited_entity_ids, confidence, alternatives, previous_decision_id, supersedes_decision_id, lineage_relation } = parsed;
 
             // Build full description: situation + decision
             const confidenceLabel = { high: '高', medium: '中', low: '低' }[confidence];
@@ -1723,24 +1725,26 @@ ${gaConnBlock}`;
               description: fullDescription,
               tags: ['decision', `confidence-${confidence}`],
               embedding,
-              metadata: {
-                situation,
-                conclusion,
-                confidence,
-                alternatives,
-                cited_entity_ids: cited_entity_ids || [],
-              },
+              metadata: buildDecisionMetadata(parsed),
+              valid_from: parsed.valid_from,
+              valid_until: parsed.valid_until,
             });
 
             // Create decision_referenced relationships to cited entities
-            if (cited_entity_ids && cited_entity_ids.length > 0) {
-              for (const citedId of cited_entity_ids) {
+            const evidenceLinks = [
+              ...(cited_entity_ids || []).map((id) => ({ id, type: 'decision_referenced' as const })),
+              ...parsed.supporting_evidence_ids.map((id) => ({ id, type: 'supported_by' as const })),
+              ...parsed.opposing_evidence_ids.map((id) => ({ id, type: 'opposed_by' as const })),
+              ...parsed.principle_ids.map((id) => ({ id, type: 'supported_by' as const })),
+            ];
+            if (evidenceLinks.length > 0) {
+              for (const link of evidenceLinks) {
                 try {
                   await ctx.db.addRelationship({
                     source_id: decisionEntity.id,
-                    target_id: citedId,
-                    type: 'decision_referenced',
-                    description: '决策引用了此实体',
+                    target_id: link.id,
+                    type: link.type,
+                    description: `Decision evidence: ${link.type}`,
                     weight: 1.0,
                   });
                 } catch (e) {
@@ -1749,7 +1753,7 @@ ${gaConnBlock}`;
               }
               // Bump importance of cited entities (反哺：被引用的实体获得权重提升)
               try {
-                ctx.db.bumpAccessCounts(cited_entity_ids).catch(() => {});
+                ctx.db.bumpAccessCounts([...new Set(evidenceLinks.map((link) => link.id))]).catch(() => {});
               } catch {
                 // best effort
               }
@@ -1761,8 +1765,8 @@ ${gaConnBlock}`;
                 await ctx.db.addRelationship({
                   source_id: decisionEntity.id,
                   target_id: previous_decision_id,
-                  type: 'relates_to',
-                  description: '决策链：承接上一个决策',
+                  type: lineage_relation,
+                  description: `Explicit decision lineage: ${lineage_relation}`,
                   weight: 1.0,
                 });
               } catch {
@@ -1770,24 +1774,27 @@ ${gaConnBlock}`;
               }
             }
 
-            // Link to previous related decisions (lineage)
+            if (supersedes_decision_id && supersedes_decision_id !== decisionEntity.id) {
+              await ctx.db.addRelationship({
+                source_id: decisionEntity.id,
+                target_id: supersedes_decision_id,
+                type: 'supersedes',
+                description: 'Explicitly supersedes previous decision',
+                weight: 1,
+              });
+            }
+
+            // Semantic similarity only creates review candidates; it never creates lineage edges.
             try {
               const prevDecisions = await ctx.db.searchEntities(situation, 3);
-              const prevDecisionIds = prevDecisions
+              const pendingLineageCandidates = prevDecisions
                 .filter((e: any) => e.type === 'decision' && e.id !== decisionEntity.id)
-                .map((e: any) => e.id);
-              for (const prevId of prevDecisionIds.slice(0, 3)) {
-                try {
-                  await ctx.db.addRelationship({
-                    source_id: decisionEntity.id,
-                    target_id: prevId,
-                    type: 'relates_to',
-                    description: '决策链：后续决策关联了此前的相关决策',
-                    weight: 0.8,
-                  });
-                } catch {
-                  // duplicate is fine
-                }
+                .slice(0, 3)
+                .map((entity: any) => ({ id: entity.id, name: entity.name, status: 'pending_confirmation' }));
+              if (pendingLineageCandidates.length > 0) {
+                await ctx.db.updateEntity(decisionEntity.id, {
+                  metadata: { ...decisionEntity.metadata, pending_lineage_candidates: pendingLineageCandidates },
+                });
               }
             } catch (e) {
               console.warn('[save_decision] lineage linking failed:', e);
@@ -1805,64 +1812,29 @@ ${gaConnBlock}`;
               console.warn('[save_decision] 写入 archival memory 失败:', e);
             }
 
-            result = decisionEntity;
+            result = await ctx.db.getEntity(decisionEntity.id);
             break;
           }
           case 'get_decision_lineage': {
             const parsed = GetDecisionLineageSchema.parse(args);
             const { decision_id } = parsed;
 
-            // Get the decision entity
-            const decision = await ctx.db.getEntity(decision_id);
-            if (!decision || decision.type !== 'decision') {
+            const lineage = await getRecursiveDecisionLineage(ctx.db, decision_id);
+            if (!lineage) {
               sendError(res, 404, 'Decision not found');
               return;
             }
-
-            const current: any = {
-              id: decision.id,
-              name: decision.name,
-              conclusion: decision.metadata?.conclusion || decision.description || '',
-              situation: decision.metadata?.situation || '',
-              timestamp: decision.created_at,
-              confidence: decision.metadata?.confidence || 'medium',
-            };
-
-            // Get relationships from this decision
-            const rels = await ctx.db.getRelationshipsForEntity(decision_id);
-
-            // Sources: entities referenced by this decision
-            const sources: any[] = [];
-            const chain: any[] = [];
-            const seenChainIds = new Set<string>();
-            seenChainIds.add(decision_id);
-
-            for (const rel of rels) {
-              const otherId = rel.source_id === decision_id ? rel.target_id : rel.source_id;
-              const other = await ctx.db.getEntity(otherId);
-              if (!other) continue;
-
-              if (rel.type === 'decision_referenced') {
-                sources.push({
-                  entityId: other.id,
-                  entityName: other.name,
-                  entityType: other.type,
-                  relationship: 'decision_referenced',
-                });
-              } else if (rel.type === 'relates_to' && other.type === 'decision' && !seenChainIds.has(other.id)) {
-                seenChainIds.add(other.id);
-                chain.push({
-                  id: other.id,
-                  name: other.name,
-                  conclusion: other.metadata?.conclusion || other.description || '',
-                  situation: other.metadata?.situation || '',
-                  timestamp: other.created_at,
-                  confidence: other.metadata?.confidence || 'medium',
-                });
-              }
+            result = lineage;
+            break;
+          }
+          case 'record_decision_outcome': {
+            const parsed = RecordDecisionOutcomeSchema.parse(args);
+            const outcome = await recordDecisionOutcome(ctx.db, parsed);
+            if (!outcome) {
+              sendError(res, 404, 'Decision not found');
+              return;
             }
-
-            result = { current, sources, chain };
+            result = outcome;
             break;
           }
           case 'get_decay_report': {
@@ -1892,7 +1864,7 @@ ${gaConnBlock}`;
         if (['record_capture', 'extract_from_capture', 'save_conclusion'].includes(toolName)) {
           behaviorEvents.push({ eventType: 'captured', topic: query, intent: 'action' });
         }
-        if (toolName === 'update_entity') {
+        if (toolName === 'update_entity' || toolName === 'record_decision_outcome') {
           behaviorEvents.push({ eventType: 'edited', entityId: typeof args.id === 'string' ? args.id : undefined, intent: 'action' });
         }
         if (toolName === 'save_decision') {

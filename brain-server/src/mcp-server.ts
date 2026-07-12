@@ -77,7 +77,9 @@ import {
   AnalyzeDecisionSchema,
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
+  RecordDecisionOutcomeSchema,
 } from './mcp-tools.js';
+import { buildDecisionMetadata, getRecursiveDecisionLineage, recordDecisionOutcome } from './decision/decision-store.js';
 import {
   capGraphContext,
   rankMemoryCandidates,
@@ -811,10 +813,11 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
 
         case 'save_decision': {
           const parsed = SaveDecisionSchema.parse(args);
-          const { situation, conclusion, cited_entity_ids, confidence } = parsed;
+          const { situation, conclusion, cited_entity_ids, confidence, previous_decision_id, supersedes_decision_id, lineage_relation } = parsed;
 
           const confidenceLabel = { high: '高', medium: '中', low: '低' }[confidence];
-          const fullDescription = `情境：${situation}\n\n决策：${conclusion}\n\n置信度：${confidenceLabel}`;
+          const alternatives = Array.isArray(parsed.alternatives) ? parsed.alternatives.join('；') : parsed.alternatives;
+          const fullDescription = `情境：${situation}\n\n决策：${conclusion}\n\n置信度：${confidenceLabel}${alternatives ? `\n\n替代方案：${alternatives}` : ''}`;
           const decisionName = conclusion.length > 60 ? conclusion.substring(0, 60) + '...' : conclusion;
 
           let embedding: number[] | undefined;
@@ -829,69 +832,85 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
             description: fullDescription,
             tags: ['decision', `confidence-${confidence}`],
             embedding,
-            metadata: { situation, conclusion, confidence, cited_entity_ids: cited_entity_ids || [] },
+            metadata: buildDecisionMetadata(parsed),
+            valid_from: parsed.valid_from,
+            valid_until: parsed.valid_until,
           });
 
-          if (cited_entity_ids && cited_entity_ids.length > 0) {
-            for (const citedId of cited_entity_ids) {
-              try {
-                await this.db.addRelationship({
-                  source_id: decisionEntity.id,
-                  target_id: citedId,
-                  type: 'decision_referenced',
-                  description: '决策引用了此实体',
-                  weight: 1.0,
-                });
-              } catch { /* duplicate */ }
-            }
+          const evidenceLinks = [
+            ...(cited_entity_ids || []).map((id) => ({ id, type: 'decision_referenced' as const })),
+            ...parsed.supporting_evidence_ids.map((id) => ({ id, type: 'supported_by' as const })),
+            ...parsed.opposing_evidence_ids.map((id) => ({ id, type: 'opposed_by' as const })),
+            ...parsed.principle_ids.map((id) => ({ id, type: 'supported_by' as const })),
+          ];
+          for (const link of evidenceLinks) {
+            try {
+              await this.db.addRelationship({
+                source_id: decisionEntity.id,
+                target_id: link.id,
+                type: link.type,
+                description: `Decision evidence: ${link.type}`,
+                weight: 1.0,
+              });
+            } catch { /* duplicate */ }
           }
 
-          return this.formatResponse(decisionEntity);
+          if (previous_decision_id && previous_decision_id !== decisionEntity.id) {
+            try {
+              await this.db.addRelationship({
+                source_id: decisionEntity.id,
+                target_id: previous_decision_id,
+                type: lineage_relation,
+                description: `Explicit decision lineage: ${lineage_relation}`,
+                weight: 1,
+              });
+            } catch { /* duplicate */ }
+          }
+          if (supersedes_decision_id && supersedes_decision_id !== decisionEntity.id) {
+            try {
+              await this.db.addRelationship({
+                source_id: decisionEntity.id,
+                target_id: supersedes_decision_id,
+                type: 'supersedes',
+                description: 'Explicitly supersedes previous decision',
+                weight: 1,
+              });
+            } catch { /* duplicate */ }
+          }
+
+          try {
+            const candidates = (await this.db.searchEntities(situation, 3))
+              .filter((entity) => entity.type === 'decision' && entity.id !== decisionEntity.id)
+              .slice(0, 3)
+              .map((entity) => ({ id: entity.id, name: entity.name, status: 'pending_confirmation' }));
+            if (candidates.length > 0) {
+              await this.db.updateEntity(decisionEntity.id, {
+                metadata: { ...decisionEntity.metadata, pending_lineage_candidates: candidates },
+              });
+            }
+          } catch (error) {
+            console.warn('[save_decision] candidate lineage search failed:', error);
+          }
+
+          return this.formatResponse(await this.db.getEntity(decisionEntity.id));
+        }
+
+        case 'record_decision_outcome': {
+          const parsed = RecordDecisionOutcomeSchema.parse(args);
+          const outcome = await recordDecisionOutcome(this.db, parsed);
+          if (!outcome) {
+            throw new McpError(ErrorCode.InvalidParams, 'Decision not found');
+          }
+          return this.formatResponse(outcome);
         }
 
         case 'get_decision_lineage': {
           const parsed = GetDecisionLineageSchema.parse(args);
-          const { decision_id } = parsed;
-
-          const decision = await this.db.getEntity(decision_id);
-          if (!decision || decision.type !== 'decision') {
+          const lineage = await getRecursiveDecisionLineage(this.db, parsed.decision_id);
+          if (!lineage) {
             throw new McpError(ErrorCode.InvalidParams, 'Decision not found');
           }
-
-          const current = {
-            id: decision.id,
-            name: decision.name,
-            conclusion: decision.metadata?.conclusion || decision.description || '',
-            situation: decision.metadata?.situation || '',
-            timestamp: decision.created_at,
-            confidence: decision.metadata?.confidence || 'medium',
-          };
-
-          const rels = await this.db.getRelationshipsForEntity(decision_id);
-          const sources: any[] = [];
-          const chain: any[] = [];
-          const seenChainIds = new Set<string>([decision_id]);
-
-          for (const rel of rels) {
-            const otherId = rel.source_id === decision_id ? rel.target_id : rel.source_id;
-            const other = await this.db.getEntity(otherId);
-            if (!other) continue;
-
-            if (rel.type === 'decision_referenced') {
-              sources.push({ entityId: other.id, entityName: other.name, entityType: other.type, relationship: 'decision_referenced' });
-            } else if (rel.type === 'relates_to' && other.type === 'decision' && !seenChainIds.has(other.id)) {
-              seenChainIds.add(other.id);
-              chain.push({
-                id: other.id, name: other.name,
-                conclusion: other.metadata?.conclusion || other.description || '',
-                situation: other.metadata?.situation || '',
-                timestamp: other.created_at,
-                confidence: other.metadata?.confidence || 'medium',
-              });
-            }
-          }
-
-          return this.formatResponse({ current, sources, chain });
+          return this.formatResponse(lineage);
         }
 
         default:

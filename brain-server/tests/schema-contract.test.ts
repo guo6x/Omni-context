@@ -56,7 +56,7 @@ describe('generated domain contract', () => {
     expect(capabilityMatrix).toBe(buildCapabilityMatrix());
     expect(sharedTypes).toBe(buildGeneratedTypeModule());
     expect(mobileTypes).toBe(buildGeneratedTypeModule());
-    expect(mcpManifest.toolCount).toBe(25);
+    expect(mcpManifest.toolCount).toBe(26);
   });
 });
 

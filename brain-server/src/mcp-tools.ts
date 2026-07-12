@@ -92,10 +92,30 @@ export const SaveConclusionSchema = z.object({
 export const SaveDecisionSchema = z.object({
   situation: z.string().min(1, 'situation 不能为空'),
   conclusion: z.string().min(1, 'conclusion 不能为空'),
+  decision_question: z.string().optional(),
+  goals: z.array(z.string()).optional().default([]),
+  selected_option: z.string().optional(),
   cited_entity_ids: z.array(z.string()).optional().default([]),
+  supporting_evidence_ids: z.array(z.string()).optional().default([]),
+  opposing_evidence_ids: z.array(z.string()).optional().default([]),
+  principle_ids: z.array(z.string()).optional().default([]),
   confidence: z.enum(['high', 'medium', 'low']).optional().default('medium'),
-  alternatives: z.string().optional().default(''),
+  alternatives: z.union([z.string(), z.array(z.string())]).optional().default(''),
+  hard_constraints: z.array(z.string()).optional().default([]),
+  soft_preferences: z.array(z.string()).optional().default([]),
+  evaluation_criteria: z.array(z.string()).optional().default([]),
+  assumptions: z.array(z.string()).optional().default([]),
+  uncertainties: z.array(z.string()).optional().default([]),
+  expected_outcomes: z.array(z.string()).optional().default([]),
+  risks: z.array(z.string()).optional().default([]),
+  valid_from: z.string().datetime({ offset: true }).optional(),
+  valid_until: z.string().datetime({ offset: true }).optional(),
+  revisit_at: z.string().datetime({ offset: true }).optional(),
   previous_decision_id: z.string().optional(),
+  supersedes_decision_id: z.string().optional(),
+  lineage_relation: z.enum(['continues', 'revises', 'supersedes', 'reverses', 'invalidates']).optional().default('continues'),
+  model_config_snapshot: z.record(z.unknown()).optional(),
+  provenance: z.record(z.unknown()).optional(),
 });
 
 export const AnalyzeDecisionSchema = z.object({
@@ -112,6 +132,19 @@ export const DiscussDecisionSchema = z.object({
 
 export const GetDecisionLineageSchema = z.object({
   decision_id: z.string().min(1, 'decision_id 不能为空'),
+});
+
+export const RecordDecisionOutcomeSchema = z.object({
+  decision_id: z.string().min(1, 'decision_id 不能为空'),
+  actual_outcome: z.string().min(1, 'actual_outcome 不能为空'),
+  outcome_timestamp: z.string().datetime({ offset: true }),
+  outcome_score: z.number().min(0).max(1),
+  assumption_failures: z.array(z.string()).optional().default([]),
+  unexpected_factors: z.array(z.string()).optional().default([]),
+  lessons_learned: z.array(z.string()).optional().default([]),
+  confidence_calibration: z.number().min(-1).max(1).optional(),
+  follow_up_actions: z.array(z.string()).optional().default([]),
+  provenance: z.record(z.unknown()).optional(),
 });
 
 export const GetCoreContextSchema = z.object({
@@ -373,6 +406,9 @@ export const tools: McpToolConfig[] = [
         confidence: { type: 'string', enum: ['high', 'medium', 'low'], default: 'medium' },
         alternatives: { type: 'string', description: 'Alternatives considered' },
         previous_decision_id: { type: 'string', description: 'Previous decision ID when this continues or revises a decision chain' },
+        supersedes_decision_id: { type: 'string', description: 'Decision ID explicitly superseded by this decision' },
+        lineage_relation: { type: 'string', enum: ['continues', 'revises', 'supersedes', 'reverses', 'invalidates'] },
+        revisit_at: { type: 'string', format: 'date-time', description: 'When to ask the user to review the result' },
       },
       required: ['situation', 'conclusion'],
     },
@@ -412,6 +448,27 @@ export const tools: McpToolConfig[] = [
         decision_id: { type: 'string', description: 'The decision entity ID to trace' },
       },
       required: ['decision_id'],
+    },
+  },
+  {
+    name: 'record_decision_outcome',
+    description: 'Record an observed result for a saved decision, including calibration, failed assumptions, lessons, and follow-up actions. This never changes core principles automatically.',
+    zodSchema: RecordDecisionOutcomeSchema,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        decision_id: { type: 'string' },
+        actual_outcome: { type: 'string' },
+        outcome_timestamp: { type: 'string', format: 'date-time' },
+        outcome_score: { type: 'number', minimum: 0, maximum: 1 },
+        assumption_failures: { type: 'array', items: { type: 'string' } },
+        unexpected_factors: { type: 'array', items: { type: 'string' } },
+        lessons_learned: { type: 'array', items: { type: 'string' } },
+        confidence_calibration: { type: 'number', minimum: -1, maximum: 1 },
+        follow_up_actions: { type: 'array', items: { type: 'string' } },
+        provenance: { type: 'object' },
+      },
+      required: ['decision_id', 'actual_outcome', 'outcome_timestamp', 'outcome_score'],
     },
   },
   {
