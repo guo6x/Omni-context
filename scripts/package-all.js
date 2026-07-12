@@ -141,6 +141,7 @@ try {
   const include = [
     'manifest.json',
     'background.js',
+    'privacy.js',
     'extractor.js',
     'content.js',
     'content.css',

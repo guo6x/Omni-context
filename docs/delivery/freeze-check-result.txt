@@ -1,0 +1,104 @@
+========== Omni-Context Evaluation Freeze v1 准入检查 ==========
+Date: 2026-07-12 | Branch: pre-evaluation-hardening-v1
+
+--- Section 1: Security ---
+[FIXED] 历史密钥已撤销 : 用户确认在提供方控制台撤销
+[FIXED] 当前分支无密钥 : scripts/scan-secrets.mjs 全路径+内容扫描通过
+[FIXED] Pre-commit secret scan : scripts/scan-secrets.mjs 4项测试通过
+[FIXED] CI secret scan : ci.yml 包含 gitleaks
+[FIXED] .env排除 : .gitignore + scan path rules
+[FIXED] 设备Token scope : device_id/scopes/issued_at/expires_at/revoked_at/last_used_at
+[FIXED] Admin接口保护 : 移动端Token不可调admin端点
+[FIXED] 配对码短期 : 仅用于交换Token,不直接访问API
+[FIXED] 浏览器隐私授权 : 默认关闭,显式授权,站点白名单,敏感遮盖
+[FIXED] ESP32 OTA密码 : 随机凭据替换硬编码密码
+[FIXED] ESP32 HMAC签名 : HMAC-SHA256 + nonce防重放
+
+--- Section 2: Data Model ---
+[FIXED] 统一Domain Schema : schema/domain.ts:19实体/30关系/9通知
+[FIXED] MCP工具数量正确 : 26工具,自动生成mcp_tool_manifest.json
+[FIXED] schema_manifest.json : 自动生成,CI检查漂移
+[FIXED] generated_capability_matrix.md : 自动生成,不再手工维护
+[FIXED] shared/mobile domain types : 自动生成,contract test通过
+
+--- Section 3: Temporal & Assertion ---
+[FIXED] Entity时间字段(8) : observed_at/recorded_at/event_time/valid_from/valid_until/temporal_confidence/temporal_source/timezone
+[FIXED] Relationship时间字段 : valid_from/valid_until/invalidated_at/invalidation_reason
+[FIXED] Assertion表 : 完整Assertion层,含invalidation
+[FIXED] 版本关系(11) : supersedes/superseded_by/revises/invalidates/historical_version_of/continues/reverses/opposed_by/outcome_of/learned_from/supported_by
+[FIXED] 当前/历史查询区分 : includeHistorical参数
+[FIXED] 相对时间解析 : temporal-parser.ts在brain-server内
+[FIXED] 时间推理单元测试 : temporal-parser.test.ts(5) + temporal-assertions.test.ts
+
+--- Section 4: Extraction ---
+[FIXED] 分块管线 : chunkDocument语义边界分块
+[FIXED] 60K输入不截断 : chunker处理全文本;失败块记录
+[FIXED] Zod验证 : EntityType/RelationshipType/ISO datetime/confidence范围
+[FIXED] 失败块不伪装成功 : status='failed'+error持久化
+[FIXED] 断点重试 : POST /api/ingest/document/:id/retry
+
+--- Section 5: Entity Resolution ---
+[FIXED] 类型专属策略 : 保守/积极分类
+[FIXED] 保守型不自动合并 : person/decision/preference/goal/event/task/question/project
+[FIXED] 向量只生成候选 : entity_merge_candidates表
+[FIXED] 合并可逆 : merged_into metadata
+[FIXED] 合并审计 : entity_merge_audit表
+[FIXED] 规模优化 : MAX_CANDIDATES=20
+
+--- Section 6: Conflict ---
+[FIXED] Assertion级冲突 : 非实体对比较
+[FIXED] 事务原子性 : resolveConflicts with BEGIN IMMEDIATE
+[FIXED] 回滚安全 : 冲突测试:插入失败则回滚
+[FIXED] 冲突审计 : assertion_conflict_audit表
+[FIXED] 低置信不自动失效 : confidence阈值检查
+
+--- Section 7: Retrieval ---
+[FIXED] HTTP/stdio统一 : _retrieveMemoryCandidates共享
+[FIXED] 多seed图融合 : graphSeedCount=3,graphDepth=2
+[FIXED] 图节点入候选池 : candidateMap融合
+[FIXED] 时效优先 : stalePenalty/invalidatedPenalty
+[FIXED] 可配置性 : 14个OMNI_RETRIEVAL_*环境变量
+[FIXED] Evaluation fail-fast : hash-fallback在评测模式抛异常
+[FIXED] 决策模式隔离 : decisionMode boost仅在请求时应用
+
+--- Section 8: Decision ---
+[FIXED] 决策结构(22字段) : SaveDecisionSchema扩展
+[FIXED] 逐条证据绑定 : supported_by/opposed_by/decision_referenced
+[FIXED] 递归谱系 : getRecursiveDecisionLineage:方向+深度+证据+结果
+[FIXED] 结果反馈(10字段) : RecordDecisionOutcomeSchema
+[FIXED] 复盘提醒 : AgentLoop revisit_at检查
+[FIXED] 不自动改原则 : 测试验证:单次结果不改核心原则
+[FIXED] 每轮重新检索 : _retrieveMemoryCandidates共享方法
+[FIXED] 低置信候选 : pending_lineage_candidates,不自动链
+
+--- Section 9: Proactive ---
+[FIXED] AgentLoop早退修复 : 6独立任务,cycleCount持续
+[FIXED] 衰减公式修复 : base_weight,增量衰减
+[FIXED] 行为事件(10) : captured/searched/retrieved/cited/edited/decided/alert_*
+[FIXED] 盲点检测(3类) : 消费不行动/来源同质化/搜索未沉淀
+[FIXED] 洞见质量(5门) : 图路径/语义一致/新颖性/证据/用户价值
+[FIXED] 用户反馈(5类) : useful/not_useful/incorrect/remind_later/stop_this_type
+
+--- Section 10: Platform ---
+[FIXED] 备份20表导出 : entities/relationships/assertions/memory/notifications/discussions/meta等
+[FIXED] Merge 5策略 : 同ID冲突/语义重映射/版本保留/墓碑/关系重映射
+[FIXED] Round-trip测试 : api.smoke.test.ts(29项)
+[FIXED] 浏览器隐私 : 默认关闭/白名单/遮盖/发送前展示
+[FIXED] ESP32 E2E : 9项Rust测试全通过,含UDP ACK回执
+[FIXED] 移动端定位 : read-mostly companion,写操作已禁用
+[FIXED] CI 13阶段 : ci.yml包含全部门禁
+[FIXED] Release修复 : Node22/cache/package-all路径/CHANGELOG
+[FIXED] Benchmark护栏 : SHA-256/splits隔离/断点续跑/hash-fallback fail-fast
+
+--- Section 11: Delivery ---
+[FIXED] 25份报告 : docs/delivery/全部就位
+[PARTIALLY_FIXED] Release dry-run : MSI+NSIS已生成;沙箱阻断安装验证
+[PARTIALLY_FIXED] Extension zip : unpacked已更新;zip在沙箱外重建
+[PARTIALLY_FIXED] 旧安装器清理 : 沙箱拒删;需手动rm 0.1.0产物
+[PARTIALLY_FIXED] CI网络执行 : 本地14项通过;GitHub Actions待push后触发
+
+============================================================
+总计: 74 项审计
+FIXED: 70 | PARTIALLY_FIXED: 4 | DEFERRED: 0
+结论: 未通过 - 仍有 4 项 PARTIALLY_FIXED 待处理
+============================================================
