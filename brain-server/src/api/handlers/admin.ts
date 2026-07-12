@@ -11,7 +11,7 @@ import { URL } from 'url';
 // 因为备份逻辑不应触发 last_accessed / access_count 写放大。
 
 const EXPORT_VERSION = 2;
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '0.1.1';
 
 function bufferToBase64(buf: any): string | null {
   if (buf === null || buf === undefined) return null;

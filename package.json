@@ -1,6 +1,6 @@
 {
   "name": "omni-context",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Omni-Context - 全域物理级 AI 记忆操作系统",
   "scripts": {
     "install:all": "npm install && cd desktop-daemon && npm install && cd ../brain-server && npm install && cd ../browser-extension && npm install && cd ../mobile-app && npm install",

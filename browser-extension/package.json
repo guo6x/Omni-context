@@ -1,6 +1,6 @@
 {
   "name": "omni-context-browser-extension",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Omni-Context Browser Extension (Tailwind)",
   "main": "popup.js",
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "omni-context-brain-server",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Omni-Context Brain Server - AI记忆中枢",
   "main": "dist/mcp-server.js",
   "type": "module",
