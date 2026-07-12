@@ -6,11 +6,28 @@ import { CompactEntity } from "@/hooks/useSearchMemory";
 
 // ── v2: structured analysis types ──
 
+export type ClaimClassification = "fact" | "inference" | "unknown";
+
+export interface AnalysisClaim {
+  text: string;
+  evidence_ids: string[];
+  classification: ClaimClassification;
+  confidence: number;
+}
+
+export interface AnalysisRecommendation {
+  text: string;
+  evidence_ids: string[];
+  classification: "inference" | "unknown";
+  confidence: number;
+}
+
 export interface AnalysisResult {
-  summary: string;
-  pros: string[];
-  cons: string[];
-  recommendation: string;
+  summary: AnalysisClaim;
+  pros: AnalysisClaim[];
+  cons: AnalysisClaim[];
+  risks: AnalysisClaim[];
+  recommendation: AnalysisRecommendation;
   questions?: string[];
   evidence: Array<{
     entityId: string;
@@ -62,6 +79,20 @@ export interface DecisionContextResult {
   }>;
 }
 
+// ── 决策谱系关系 ──
+export type LineageRelation =
+  | "continues"
+  | "revises"
+  | "supersedes"
+  | "reverses"
+  | "invalidates";
+
+export interface DecisionLineageInfo {
+  previous_decision_id?: string;
+  supersedes_decision_id?: string;
+  lineage_relation?: LineageRelation;
+}
+
 // ── v2: public API ──
 
 export function useDecisionContext() {
@@ -84,6 +115,10 @@ export function useDecisionContext() {
   // v2: lineage
   const [lineage, setLineage] = useState<DecisionLineage | null>(null);
   const [isLineageLoading, setIsLineageLoading] = useState(false);
+
+  // 决策链：当前会话里最近一次保存的决策 ID。下一次 saveDecision 默认承接它，
+  // 形成 A→B→C 的决策谱系。clearLineage() 可显式断链。
+  const [currentDecisionId, setCurrentDecisionId] = useState<string | null>(null);
 
   // ── legacy: retrieve context without LLM analysis ──
 
@@ -185,7 +220,12 @@ export function useDecisionContext() {
     }
   }, [chatHistory, result, decisionSituation]);
 
-  // ── v2: save with confidence + alternatives ──
+  // ── v2: save with confidence + alternatives + lineage ──
+  //
+  // lineage 显式参数优先；未传且 currentDecisionId 非空时，默认承接上一个决策
+  // （previous_decision_id = currentDecisionId, lineage_relation = 'continues'），
+  // 让同一会话内的连续 saveDecision 自动形成决策链。
+  // 传 `lineage: {}` 可显式跳过自动谱系。
 
   const saveDecision = async (
     situation: string,
@@ -193,19 +233,38 @@ export function useDecisionContext() {
     citedEntityIds: string[],
     confidence?: "high" | "medium" | "low",
     alternatives?: string,
+    lineage?: DecisionLineageInfo,
   ): Promise<string | null> => {
+    const resolvedLineage: DecisionLineageInfo | undefined =
+      lineage
+        ? lineage
+        : currentDecisionId
+          ? { previous_decision_id: currentDecisionId, lineage_relation: "continues" }
+          : undefined;
+
+    const args: Record<string, unknown> = {
+      situation,
+      conclusion,
+      cited_entity_ids: citedEntityIds,
+      confidence: confidence || "medium",
+      alternatives: alternatives || "",
+    };
+    if (resolvedLineage) {
+      if (resolvedLineage.previous_decision_id) {
+        args.previous_decision_id = resolvedLineage.previous_decision_id;
+      }
+      if (resolvedLineage.supersedes_decision_id) {
+        args.supersedes_decision_id = resolvedLineage.supersedes_decision_id;
+      }
+      if (resolvedLineage.lineage_relation) {
+        args.lineage_relation = resolvedLineage.lineage_relation;
+      }
+    }
+
     try {
       const response = await apiFetch('/api/mcp/tool/save_decision', {
         method: "POST",
-        body: JSON.stringify({
-          arguments: {
-            situation,
-            conclusion,
-            cited_entity_ids: citedEntityIds,
-            confidence: confidence || "medium",
-            alternatives: alternatives || "",
-          },
-        }),
+        body: JSON.stringify({ arguments: args }),
       });
 
       if (!response.ok) {
@@ -213,10 +272,35 @@ export function useDecisionContext() {
       }
 
       const entity = await response.json();
+      // Advance the chain head so the next saveDecision continues from here.
+      if (entity?.id) {
+        setCurrentDecisionId(entity.id);
+      }
       return entity.id;
     } catch (e) {
       throw e;
     }
+  };
+
+  // ── v2: save with explicit lineage relation to the current decision ──
+  //
+  // 显式指定与 currentDecisionId 的关系。'supersedes' 走 supersedes_decision_id，
+  // 其余关系（continues/revises/reverses/invalidates）走 previous_decision_id。
+  // currentDecisionId 为空时等价于普通 saveDecision（不挂谱系）。
+
+  const saveDecisionWithLineage = async (
+    situation: string,
+    conclusion: string,
+    citedEntityIds: string[],
+    relation: LineageRelation,
+    confidence?: "high" | "medium" | "low",
+    alternatives?: string,
+  ): Promise<string | null> => {
+    const lineage: DecisionLineageInfo =
+      relation === "supersedes"
+        ? { supersedes_decision_id: currentDecisionId || undefined, lineage_relation: relation }
+        : { previous_decision_id: currentDecisionId || undefined, lineage_relation: relation };
+    return saveDecision(situation, conclusion, citedEntityIds, confidence, alternatives, lineage);
   };
 
   // ── v2: decision lineage ──
@@ -244,6 +328,12 @@ export function useDecisionContext() {
     }
   }, []);
 
+  // ── 显式断开决策链：下一个 saveDecision 不再自动承接 currentDecisionId ──
+
+  const clearLineage = useCallback(() => {
+    setCurrentDecisionId(null);
+  }, []);
+
   // ── reset all state ──
 
   const reset = useCallback(() => {
@@ -255,6 +345,7 @@ export function useDecisionContext() {
     setAnalysisError(null);
     setChatHistory([]);
     setLineage(null);
+    setCurrentDecisionId(null);
   }, []);
 
   return {
@@ -275,32 +366,10 @@ export function useDecisionContext() {
     lineage,
     isLineageLoading,
     getDecisionLineage,
+    // 决策谱系
+    currentDecisionId,
+    saveDecisionWithLineage,
+    clearLineage,
     reset,
   };
-}
-
-
-// P0-9: Decision lineage tracking
-type LineageRelation = 'continues' | 'revises' | 'supersedes' | 'reverses' | 'invalidates';
-
-interface SaveDecisionPayload {
-  situation: string;
-  previous_decision_id?: string;
-  supersedes_decision_id?: string;
-  lineage_relation?: LineageRelation;
-  evidence_ids?: string[];
-  conclusion?: string;
-}
-
-function withLineage(payload: SaveDecisionPayload): Record<string, unknown> {
-  const result: Record<string, unknown> = { ...payload };
-  if (payload.previous_decision_id) {
-    result.previous_decision_id = payload.previous_decision_id;
-    result.lineage_relation = payload.lineage_relation || 'continues';
-  }
-  if (payload.supersedes_decision_id) {
-    result.supersedes_decision_id = payload.supersedes_decision_id;
-    result.lineage_relation = 'supersedes';
-  }
-  return result;
 }

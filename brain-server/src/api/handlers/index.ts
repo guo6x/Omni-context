@@ -1,6 +1,7 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
 import { resolveEntities } from '../../graphrag/entity-resolver.js';
+import { resolveConflicts } from '../../graphrag/conflict-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Entity } from '../../shared-types.js';
 import {
@@ -556,7 +557,12 @@ export const handleGraphRoutes = [
       }
 
       for (const relationship of resolution.relationshipsToCreate) {
-        await ctx.db.addRelationship(relationship);
+        relationship.provenance = { ...(relationship.provenance || {}), source: 'api:graph-extract' };
+      }
+      try {
+        await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+      } catch (err) {
+        console.warn('[graph/extract] conflict resolution failed:', err);
       }
 
       for (const a of result.assertions || []) {

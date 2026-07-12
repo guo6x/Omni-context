@@ -21,6 +21,7 @@ import {
   SaveConclusionSchema,
   SaveDecisionSchema,
   AnalyzeDecisionSchema,
+  AnalyzeDecisionResultSchema,
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
   RecordDecisionOutcomeSchema,
@@ -655,15 +656,23 @@ async function agenticEnrichMemories(
 // ── shared: build analysis prompt ──
 
 function buildAnalysisPrompt(situation: string, context: DecisionContextData): string {
-  const principles = context.principles.map((p: any) => `- [${p.type}] ${p.name}: ${p.description || ''}`).join('\n');
+  const principles = context.principles.map((p: any) => `- [${p.id}] [${p.type}] ${p.name}: ${p.description || ''}`).join('\n');
   const history = context.relevantMemories
     .filter((m: any) => m.type !== 'principle')
     .slice(0, 8)
-    .map((m: any) => `- [${m.type}] ${m.name}: ${m.description || ''}`)
+    .map((m: any) => `- [${m.id}] [${m.type}] ${m.name}: ${m.description || ''}`)
     .join('\n');
   const conflicts = context.conflicts
-    .map((c: any) => `- ${c.a.name} vs ${c.b.name}: ${c.description || ''}`)
+    .map((c: any) => `- ${c.a.name} (id=${c.a.id}) vs ${c.b.name} (id=${c.b.id}): ${c.description || ''}`)
     .join('\n');
+
+  // 可用证据 ID 清单：LLM 只能引用这些 id，不得编造
+  const evidenceRoster = [
+    ...context.principles.map((p: any) => `${p.id} | ${p.name} | ${p.type}`),
+    ...context.relevantMemories
+      .filter((m: any) => m.type !== 'principle')
+      .map((m: any) => `${m.id} | ${m.name} | ${m.type}`),
+  ].join('\n');
 
   return `用户正在做以下决策：
 "${situation}"
@@ -679,15 +688,56 @@ ${history || '(无)'}
 【潜在冲突】
 ${conflicts || '(无)'}
 
-请基于以上知识图谱数据，进行结构化分析。严格按以下 JSON 格式输出（不要添加任何其他文字）：
+【可用证据 ID 清单】（evidence_ids 只能引用以下 id，不得编造；无对应证据时使用空数组 []）
+${evidenceRoster || '(无)'}
+
+请基于以上知识图谱数据，进行结构化分析。严格按以下 JSON 格式输出（不要添加任何其他文字、不要包裹在 markdown 代码块中）：
 
 {
-  "summary": "对决策情境的简要分析（2-3句话）",
-  "pros": ["有利因素1", "有利因素2", ...],
-  "cons": ["风险/不利因素1", "风险/不利因素2", ...],
-  "recommendation": "基于证据的建议方向（不要替用户做决定，而是给出有依据的方向）",
+  "summary": {
+    "text": "对决策情境的简要分析（2-3句话）",
+    "evidence_ids": ["引用的证据 id，必须来自上方清单；无则空数组"],
+    "classification": "fact",
+    "confidence": 0.8
+  },
+  "pros": [
+    {
+      "text": "有利因素（带具体依据）",
+      "evidence_ids": ["对应证据 id"],
+      "classification": "fact",
+      "confidence": 0.8
+    }
+  ],
+  "cons": [
+    {
+      "text": "风险/不利因素（带具体依据）",
+      "evidence_ids": ["对应证据 id"],
+      "classification": "fact",
+      "confidence": 0.8
+    }
+  ],
+  "risks": [
+    {
+      "text": "潜在风险（推理或事实）",
+      "evidence_ids": ["对应证据 id"],
+      "classification": "inference",
+      "confidence": 0.5
+    }
+  ],
+  "recommendation": {
+    "text": "基于证据的建议方向（不要替用户做决定，而是给出有依据的方向）",
+    "evidence_ids": ["对应证据 id"],
+    "classification": "inference",
+    "confidence": 0.6
+  },
   "questions": ["当上述信息不足以给出可靠判断时，列出你需要用户补充的关键问题，最多3条；信息已充分则返回空数组 []"]
-}`;
+}
+
+字段说明：
+- evidence_ids：必须只引用上方"可用证据 ID 清单"中的 id，不得编造。无对应证据时使用空数组 []。
+- classification：fact=直接来自知识图谱的事实；inference=基于证据的推理；unknown=无明确依据。recommendation 只允许 inference 或 unknown。
+- confidence：0.0-1.0 之间的置信度。
+- pros/cons/risks 可为空数组 []，但字段必须存在。`;
 }
 
 // ── MCP streamable-HTTP 传输：让客户端直接连 http://localhost:3001/mcp(带 token)，
@@ -1288,43 +1338,89 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 .map((m: any) => ({ id: m.id, name: m.name, type: m.type, description: m.description })),
             ];
 
+            // Valid evidence ID set: every claim's evidence_ids must reference one of these.
+            const validEvidenceIds = new Set(rawCitations.map((c: any) => c.id));
+
             // Step 2: call LLM for structured analysis
-            let analysisJson: any;
+            let llmResponse: string;
             try {
               const promptText = buildAnalysisPrompt(situation, ctxData);
-              const llmResponse = await callLlmDecision(
+              llmResponse = await callLlmDecision(
                 ctx,
                 '你是一个决策分析助手。你基于用户的知识图谱数据，帮助分析决策情境。只输出有效的 JSON。使用中文回复。',
                 promptText,
               );
-              analysisJson = JSON.parse(llmResponse);
             } catch (e: any) {
               if (e.message === 'LLM_NOT_CONFIGURED') {
                 sendError(res, 400, 'LLM_NOT_CONFIGURED: LLM provider not configured');
                 return;
               }
               console.error('[analyze_decision] LLM analysis failed:', e);
-              // fallback: return structured empty result with citations only
-              analysisJson = {
-                summary: '',
-                pros: [],
-                cons: [],
-                recommendation: '',
-              };
+              sendError(res, 500, `LLM_ANALYSIS_FAILED: ${e?.message || 'LLM call failed'}`);
+              return;
             }
 
+            // Step 3: parse JSON — no fallback to plain string on failure
+            let rawJson: unknown;
+            try {
+              rawJson = JSON.parse(llmResponse);
+            } catch (e: any) {
+              console.error('[analyze_decision] LLM output JSON parse failed:', e);
+              sendError(res, 502, `LLM_OUTPUT_INVALID_JSON: ${e?.message || 'JSON parse failed'}`);
+              return;
+            }
+
+            // Step 4: validate against Zod schema — schema failure returns error, no string fallback
+            const parseResult = AnalyzeDecisionResultSchema.safeParse(rawJson);
+            if (!parseResult.success) {
+              console.error('[analyze_decision] LLM output schema validation failed:', parseResult.error);
+              sendError(res, 502, `LLM_OUTPUT_INVALID: schema validation failed — ${parseResult.error.message}`);
+              return;
+            }
+            const analysis = parseResult.data;
+
+            // Step 5: validate evidence_ids — strip IDs not in the retrieved set;
+            // if a claim cited non-existent IDs, downgrade its classification to 'unknown'.
+            const sanitizeClaim = <C extends { evidence_ids?: string[]; classification?: string }>(claim: C): C => {
+              const ids = claim.evidence_ids ?? [];
+              const validIds = ids.filter((id) => validEvidenceIds.has(id));
+              const hadInvalid = validIds.length < ids.length;
+              return {
+                ...claim,
+                evidence_ids: validIds,
+                classification: hadInvalid ? 'unknown' : (claim.classification ?? 'unknown'),
+              } as C;
+            };
+
+            const summary = sanitizeClaim(analysis.summary);
+            const pros = analysis.pros.map(sanitizeClaim);
+            const cons = analysis.cons.map(sanitizeClaim);
+            const risks = analysis.risks.map(sanitizeClaim);
+            const recommendation = sanitizeClaim(analysis.recommendation);
+
+            // Step 6: build evidence list with relevance derived from actual citations
+            const citedIds = new Set<string>([
+              ...(summary.evidence_ids ?? []),
+              ...pros.flatMap((c) => c.evidence_ids ?? []),
+              ...cons.flatMap((c) => c.evidence_ids ?? []),
+              ...risks.flatMap((c) => c.evidence_ids ?? []),
+              ...(recommendation.evidence_ids ?? []),
+            ]);
+            const evidence = rawCitations.slice(0, 8).map((c: any) => ({
+              entityId: c.id,
+              entityName: c.name,
+              entityType: c.type,
+              relevance: citedIds.has(c.id) ? 'cited' : 'relevant',
+            }));
+
             result = {
-              summary: analysisJson.summary || '',
-              pros: analysisJson.pros || [],
-              cons: analysisJson.cons || [],
-              recommendation: analysisJson.recommendation || '',
-              questions: Array.isArray(analysisJson.questions) ? analysisJson.questions.slice(0, 3) : [],
-              evidence: rawCitations.slice(0, 8).map((c: any) => ({
-                entityId: c.id,
-                entityName: c.name,
-                entityType: c.type,
-                relevance: 'relevant',
-              })),
+              summary,
+              pros,
+              cons,
+              risks,
+              recommendation,
+              questions: analysis.questions.slice(0, 3),
+              evidence,
               rawCitations: rawCitations.slice(0, 8),
             };
             break;

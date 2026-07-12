@@ -122,6 +122,37 @@ export const AnalyzeDecisionSchema = z.object({
   situation: z.string().min(1, 'situation 不能为空'),
 });
 
+// ── analyze_decision LLM 输出验证 ──
+// 每条 claim 必须带 evidence_ids（来自本轮检索到的实体/断言 ID 集合）、
+// classification（fact=直接事实 / inference=推理 / unknown=无明确依据）、confidence（0-1）。
+// recommendation 的 classification 只允许 inference 或 unknown（建议本质是推理，不是事实）。
+
+const AnalyzeClaimSchema = z.object({
+  text: z.string().min(1, 'claim text 不能为空'),
+  evidence_ids: z.array(z.string()).default([]),
+  classification: z.enum(['fact', 'inference', 'unknown']).default('unknown'),
+  confidence: z.number().min(0).max(1).default(0),
+});
+
+const AnalyzeRecommendationSchema = z.object({
+  text: z.string().min(1, 'recommendation text 不能为空'),
+  evidence_ids: z.array(z.string()).default([]),
+  classification: z.enum(['inference', 'unknown']).default('inference'),
+  confidence: z.number().min(0).max(1).default(0),
+});
+
+export const AnalyzeDecisionResultSchema = z.object({
+  summary: AnalyzeClaimSchema,
+  pros: z.array(AnalyzeClaimSchema).default([]),
+  cons: z.array(AnalyzeClaimSchema).default([]),
+  risks: z.array(AnalyzeClaimSchema).default([]),
+  recommendation: AnalyzeRecommendationSchema,
+  questions: z.array(z.string()).default([]),
+});
+
+export type AnalyzeDecisionResult = z.infer<typeof AnalyzeDecisionResultSchema>;
+export type AnalyzeClaim = z.infer<typeof AnalyzeClaimSchema>;
+
 export const DiscussDecisionSchema = z.object({
   situation: z.string().min(1, 'situation 不能为空'),
   messages: z.array(z.object({

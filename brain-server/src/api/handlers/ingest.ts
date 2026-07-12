@@ -553,7 +553,27 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
 
 // 导入：把解析好的对话逐段喂抽取管线。把会话原始时间写进 created_at（历史也能时间召回），
 // 打 provenance.source='import'。逐段容错，单段失败不影响其余。
+// 关系写入走 resolveConflicts（内部会 addRelationship + 冲突检测 + 审计），不直接 addRelationship。
 async function runImportPipeline(jobId: string, conversations: ParsedConversation[], platform: string, ctx: RequestContext): Promise<void> {
+  // 幂等键：jobId 本身是 UUID，复用为 import_batch_id。重试同一批次时若已写入则跳过。
+  const importBatchId = jobId;
+  try {
+    const existing = await ctx.db.get<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM entities WHERE metadata LIKE ?`,
+      [`%"import_batch_id":"${importBatchId}"%`]
+    );
+    if (existing && existing.count > 0) {
+      updateJob(jobId, {
+        status: 'success', stage: 'done', completedAt: Date.now(),
+        importProgress: { done: conversations.length, total: conversations.length, entities: 0 },
+        result: { entities: 0, relationships: 0, principles: 0, archivalId: '', summary: `Batch ${importBatchId} already imported (idempotent skip)` },
+      });
+      return;
+    }
+  } catch (err) {
+    console.warn('[Import] idempotency check failed, proceeding:', err);
+  }
+
   updateJob(jobId, { status: 'running', stage: 'extracting', importProgress: { done: 0, total: conversations.length, entities: 0 } });
   let done = 0;
   let entityCount = 0;
@@ -562,14 +582,24 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
     if (!job || job.aborted) { updateJob(jobId, { status: 'cancelled', completedAt: Date.now() }); return; }
     if (conv.text && conv.text.trim().length >= 10) {
       try {
+        const documentId = `${jobId}:${done}`;
         const extractResult = await ctx.extractor.extract({
           textContent: `对话标题：${conv.title}\n${conv.text}`,
           timestamp: conv.time || new Date().toISOString(),
           sourceType: 'manual',
-          documentId: `${jobId}:${done}`,
+          documentId,
           source: `import:${platform}:${conv.title}`,
         });
-        const prov = { source: 'import', platform, title: conv.title, at: new Date().toISOString() };
+        const prov = {
+          source: 'import',
+          platform,
+          title: conv.title,
+          at: new Date().toISOString(),
+          import_batch_id: importBatchId,
+          conversation_id: conv.title,
+          document_id: documentId,
+          original_timestamp: conv.time,
+        };
         const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
         for (const e of resolution.entitiesToCreate) {
           if (conv.time) e.created_at = conv.time;
@@ -581,7 +611,15 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
         for (const u of resolution.entitiesToUpdate) {
           await ctx.db.updateEntity(u.id, { description: u.description, tags: u.tags, embedding: u.embedding, metadata: u.metadata, created_at: u.created_at, access_count: u.access_count });
         }
-        for (const r of resolution.relationshipsToCreate) { await ctx.db.addRelationship(r); }
+        // 关系走冲突消解管线：resolveConflicts 内部会 addRelationship + 检测冲突 + 失效旧关系 + 审计
+        for (const r of resolution.relationshipsToCreate) {
+          r.provenance = { ...(r.provenance || {}), ...prov };
+        }
+        try {
+          await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+        } catch (err) {
+          console.warn('[Import] conflict resolution failed, continuing:', err);
+        }
         for (const a of extractResult.assertions || []) {
           const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
           const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
