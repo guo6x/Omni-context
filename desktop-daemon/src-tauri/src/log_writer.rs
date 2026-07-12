@@ -1,8 +1,8 @@
+use chrono::Utc;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use chrono::Utc;
 
 const MAX_LOG_SIZE: u64 = 5 * 1024 * 1024; // 5MB
 
@@ -10,10 +10,10 @@ static LOG_MUTEX: std::sync::LazyLock<Mutex<()>> = std::sync::LazyLock::new(|| M
 
 pub fn logs_dir() -> PathBuf {
     if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-        PathBuf::from(local_appdata).join("omni-context").join("logs")
-    } else if let Ok(home) = std::env::var("USERPROFILE")
-        .or_else(|_| std::env::var("HOME"))
-    {
+        PathBuf::from(local_appdata)
+            .join("omni-context")
+            .join("logs")
+    } else if let Ok(home) = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")) {
         PathBuf::from(home).join(".omni-context").join("logs")
     } else {
         PathBuf::from("./logs")
@@ -57,7 +57,10 @@ fn rotate_if_needed(log_path: &PathBuf, dir: &std::path::Path) {
     if let Ok(meta) = fs::metadata(log_path) {
         if meta.len() >= MAX_LOG_SIZE {
             let _ = fs::remove_file(dir.join("brain-server.log.2"));
-            let _ = fs::rename(dir.join("brain-server.log.1"), dir.join("brain-server.log.2"));
+            let _ = fs::rename(
+                dir.join("brain-server.log.1"),
+                dir.join("brain-server.log.2"),
+            );
             let _ = fs::rename(log_path, dir.join("brain-server.log.1"));
         }
     }

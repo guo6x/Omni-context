@@ -38,7 +38,10 @@ async fn submit_and_wait(
         .await
         .map_err(|error| format!("failed to submit {filename}: {error}"))?;
     if !response.status().is_success() {
-        return Err(format!("failed to submit {filename}: HTTP {}", response.status()));
+        return Err(format!(
+            "failed to submit {filename}: HTTP {}",
+            response.status()
+        ));
     }
     let submitted: SubmitResponse = response.json().await.map_err(|error| error.to_string())?;
 
@@ -51,7 +54,11 @@ async fn submit_and_wait(
             .await
             .map_err(|error| format!("failed to poll {}: {error}", submitted.job_id))?;
         if !response.status().is_success() {
-            return Err(format!("failed to poll {}: HTTP {}", submitted.job_id, response.status()));
+            return Err(format!(
+                "failed to poll {}: HTTP {}",
+                submitted.job_id,
+                response.status()
+            ));
         }
         let job: JobResponse = response.json().await.map_err(|error| error.to_string())?;
         match job.status.as_str() {
@@ -70,7 +77,8 @@ pub async fn execute_precipitate() -> Result<Vec<String>, String> {
     let clipboard = clipboard::get_clipboard_content()
         .await
         .map_err(|error| format!("clipboard read failed: {error}"))?;
-    let base_url = std::env::var("OMNI_BRAIN_URL").unwrap_or_else(|_| DEFAULT_BRAIN_URL.to_string());
+    let base_url =
+        std::env::var("OMNI_BRAIN_URL").unwrap_or_else(|_| DEFAULT_BRAIN_URL.to_string());
     let token = brain_server::ensure_local_token();
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(70))
@@ -78,18 +86,29 @@ pub async fn execute_precipitate() -> Result<Vec<String>, String> {
         .map_err(|error| error.to_string())?;
 
     let mut jobs = Vec::new();
-    jobs.push(submit_and_wait(
-        &client, &base_url, &token, "hardware-screen.png", "image/png", &screenshot,
-    ).await?);
-    if let Some(text) = clipboard.filter(|value| !value.trim().is_empty()) {
-        jobs.push(submit_and_wait(
+    jobs.push(
+        submit_and_wait(
             &client,
             &base_url,
             &token,
-            "hardware-clipboard.txt",
-            "text/plain",
-            &STANDARD.encode(text.as_bytes()),
-        ).await?);
+            "hardware-screen.png",
+            "image/png",
+            &screenshot,
+        )
+        .await?,
+    );
+    if let Some(text) = clipboard.filter(|value| !value.trim().is_empty()) {
+        jobs.push(
+            submit_and_wait(
+                &client,
+                &base_url,
+                &token,
+                "hardware-clipboard.txt",
+                "text/plain",
+                &STANDARD.encode(text.as_bytes()),
+            )
+            .await?,
+        );
     }
     Ok(jobs)
 }

@@ -1,20 +1,19 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod udp_listener;
-mod hardware_actions;
-mod screen_capture;
+mod brain_server;
 mod clipboard;
 mod commands;
-mod brain_server;
-mod log_writer;
 mod hardware;
+mod hardware_actions;
+mod log_writer;
 mod mcp_helper;
+mod screen_capture;
+mod udp_listener;
 
-
-use tauri::Manager;
-use tokio::sync::mpsc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tauri::{CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem, SystemTrayEvent};
+use tauri::Manager;
+use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
+use tokio::sync::mpsc;
 
 pub static CLOSE_TO_TRAY: AtomicBool = AtomicBool::new(true); // 默认最小化到托盘
 
@@ -66,7 +65,10 @@ async fn main() {
     let system_tray = SystemTray::new().with_menu(tray_menu);
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None::<Vec<&str>>))
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None::<Vec<&str>>,
+        ))
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::LeftClick { .. } => {
@@ -85,7 +87,10 @@ async fn main() {
                     }
                     "restart_server" => {
                         let app_handle = app.clone();
-                        let _ = app.tray_handle().get_item("server_status").set_title("Brain Server: 重启中");
+                        let _ = app
+                            .tray_handle()
+                            .get_item("server_status")
+                            .set_title("Brain Server: 重启中");
                         std::thread::spawn(move || {
                             let result = brain_server::restart();
                             let status_text = if result.is_ok() && brain_server::is_ready() {
@@ -93,7 +98,10 @@ async fn main() {
                             } else {
                                 "Brain Server: 离线"
                             };
-                            let _ = app_handle.tray_handle().get_item("server_status").set_title(status_text);
+                            let _ = app_handle
+                                .tray_handle()
+                                .get_item("server_status")
+                                .set_title(status_text);
                         });
                     }
                     "open_data" => {
@@ -131,8 +139,7 @@ async fn main() {
                 .app_data_dir()
                 .ok_or_else(|| anyhow::anyhow!("unable to resolve app data directory"))?
                 .join("hardware-devices.json");
-            hardware::initialize_registry(hardware_registry_path)
-                .map_err(anyhow::Error::msg)?;
+            hardware::initialize_registry(hardware_registry_path).map_err(anyhow::Error::msg)?;
 
             // Brain Server 冷启动可能需要几十秒加载数据库和索引，放到后台避免桌面窗口卡住。
             let startup_handle = app.app_handle().clone();
@@ -155,7 +162,10 @@ async fn main() {
                 } else {
                     "Brain Server: 离线"
                 };
-                let _ = startup_handle.tray_handle().get_item("server_status").set_title(status_text);
+                let _ = startup_handle
+                    .tray_handle()
+                    .get_item("server_status")
+                    .set_title(status_text);
             });
 
             // 启动 30 秒后检查更新（避免拖慢启动）。
@@ -164,35 +174,41 @@ async fn main() {
             // 故对整段更新检查加 cfg 守卫，关闭时直接编译掉、跳过检查。
             #[cfg(updater)]
             {
-              let update_handle = app.app_handle().clone();
-              tauri::async_runtime::spawn(async move {
-                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
-                println!("[Omni-Context] 检查更新...");
-                match update_handle.updater().check().await {
-                    Ok(response) => {
-                        if response.is_update_available() {
-                            println!("[Omni-Context] 发现新版本: {}", response.current_version());
-                            let body = response.body().map(|s| s.clone()).unwrap_or_default();
-                            let date = response.date()
-                                .map(|d| d.to_string()).unwrap_or_default();
-                            let _ = update_handle.emit_all("update-available", serde_json::json!({
-                                "version": response.current_version(),
-                                "body": body,
-                                "date": date,
-                            }));
-                        } else {
-                            println!("[Omni-Context] 已是最新版本");
+                let update_handle = app.app_handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                    println!("[Omni-Context] 检查更新...");
+                    match update_handle.updater().check().await {
+                        Ok(response) => {
+                            if response.is_update_available() {
+                                println!(
+                                    "[Omni-Context] 发现新版本: {}",
+                                    response.current_version()
+                                );
+                                let body = response.body().map(|s| s.clone()).unwrap_or_default();
+                                let date =
+                                    response.date().map(|d| d.to_string()).unwrap_or_default();
+                                let _ = update_handle.emit_all(
+                                    "update-available",
+                                    serde_json::json!({
+                                        "version": response.current_version(),
+                                        "body": body,
+                                        "date": date,
+                                    }),
+                                );
+                            } else {
+                                println!("[Omni-Context] 已是最新版本");
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("[Omni-Context] 检查更新失败: {}", e);
                         }
                     }
-                    Err(e) => {
-                        eprintln!("[Omni-Context] 检查更新失败: {}", e);
-                    }
-                }
-              });
+                });
             }
 
             let (event_tx, mut event_rx) = mpsc::channel::<ButtonEvent>(32);
-            
+
             let udp_event_tx = event_tx.clone();
             let hardware_app = app.handle();
             tauri::async_runtime::spawn(async move {
@@ -200,7 +216,7 @@ async fn main() {
                     eprintln!("[Omni-Context] UDP 监听器错误: {}", e);
                 }
             });
-            
+
             tauri::async_runtime::spawn(async move {
                 while let Some(event) = event_rx.recv().await {
                     let event_name = match event {
@@ -208,9 +224,9 @@ async fn main() {
                         ButtonEvent::Decision => "decision",
                         ButtonEvent::Reset => "reset",
                     };
-                    
+
                     println!("[Omni-Context] 收到事件: {}", event_name);
-                    
+
                     match event {
                         ButtonEvent::Precipitate => {
                             let result = hardware_actions::execute_precipitate().await;
@@ -231,34 +247,32 @@ async fn main() {
                     }
                 }
             });
-            
+
             println!("[Omni-Context] 桌面守护进程已启动");
             Ok(())
         })
-        .on_window_event(|event| {
-            match event.event() {
-                tauri::WindowEvent::CloseRequested { api, .. } => {
-                    if event.window().label() == "main" {
-                        if CLOSE_TO_TRAY.load(Ordering::SeqCst) {
-                            api.prevent_close();
-                            let _ = event.window().hide();
-                        } else {
-                            println!("[Omni-Context] 窗口关闭且配置为直接退出，正在清理...");
-                            let _ = brain_server::stop();
-                            std::process::exit(0);
-                        }
+        .on_window_event(|event| match event.event() {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                if event.window().label() == "main" {
+                    if CLOSE_TO_TRAY.load(Ordering::SeqCst) {
+                        api.prevent_close();
+                        let _ = event.window().hide();
+                    } else {
+                        println!("[Omni-Context] 窗口关闭且配置为直接退出，正在清理...");
+                        let _ = brain_server::stop();
+                        std::process::exit(0);
                     }
                 }
-                tauri::WindowEvent::Destroyed => {
-                    if event.window().label() == "main" {
-                        println!("[Omni-Context] 主窗口销毁，清理中...");
-                        if let Err(e) = brain_server::stop() {
-                            eprintln!("[Omni-Context] Brain Server 停止失败: {}", e);
-                        }
-                    }
-                }
-                _ => {}
             }
+            tauri::WindowEvent::Destroyed => {
+                if event.window().label() == "main" {
+                    println!("[Omni-Context] 主窗口销毁，清理中...");
+                    if let Err(e) = brain_server::stop() {
+                        eprintln!("[Omni-Context] Brain Server 停止失败: {}", e);
+                    }
+                }
+            }
+            _ => {}
         })
         .invoke_handler(tauri::generate_handler![
             commands::start_listening,

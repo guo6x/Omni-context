@@ -1,13 +1,12 @@
-use std::process::{Command, Child, Stdio};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
-use std::path::PathBuf;
 use std::io::{BufRead, Read, Write};
 use std::net::{SocketAddr, TcpStream};
-use std::time::{Duration, Instant};
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
-
+use std::path::PathBuf;
+use std::process::{Child, Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 
@@ -95,7 +94,10 @@ fn wait_for_health(child: &mut Child, timeout: Duration) -> Result<(), String> {
     Err(format!("{} 秒内 /health 未就绪", timeout.as_secs()))
 }
 
-fn pipe_output_to_log(stdout: Option<std::process::ChildStdout>, stderr: Option<std::process::ChildStderr>) {
+fn pipe_output_to_log(
+    stdout: Option<std::process::ChildStdout>,
+    stderr: Option<std::process::ChildStderr>,
+) {
     let log_path = log_writer::log_file_path();
     if let Some(stdout) = stdout {
         let lp = log_path.clone();
@@ -376,7 +378,7 @@ fn generate_pair_code() -> String {
 // ========== Local API Token ==========
 
 fn local_token_dir() -> PathBuf {
-    pair_code_dir()  // 复用同一个目录: %LOCALAPPDATA%/omni-context/
+    pair_code_dir() // 复用同一个目录: %LOCALAPPDATA%/omni-context/
 }
 
 fn local_token_file() -> PathBuf {
@@ -430,18 +432,30 @@ pub fn get_lan_ip() -> Option<String> {
         if let std::net::IpAddr::V4(v4) = ip {
             let octets = v4.octets();
             // 排除环回
-            if octets[0] == 127 { continue; }
+            if octets[0] == 127 {
+                continue;
+            }
             // 排除 198.18.0.0/15（VPN/TUN 虚拟网卡常用，如 Clash）
-            if octets[0] == 198 && (octets[1] == 18 || octets[1] == 19) { continue; }
+            if octets[0] == 198 && (octets[1] == 18 || octets[1] == 19) {
+                continue;
+            }
             // 排除 169.254.x.x（link-local）
-            if octets[0] == 169 && octets[1] == 254 { continue; }
+            if octets[0] == 169 && octets[1] == 254 {
+                continue;
+            }
             // 只保留私有地址段
             // 10.0.0.0/8
-            if octets[0] == 10 { return Some(ip.to_string()); }
+            if octets[0] == 10 {
+                return Some(ip.to_string());
+            }
             // 192.168.0.0/16
-            if octets[0] == 192 && octets[1] == 168 { return Some(ip.to_string()); }
+            if octets[0] == 192 && octets[1] == 168 {
+                return Some(ip.to_string());
+            }
             // 172.16.0.0/12
-            if octets[0] == 172 && (octets[1] >= 16 && octets[1] <= 31) { return Some(ip.to_string()); }
+            if octets[0] == 172 && (octets[1] >= 16 && octets[1] <= 31) {
+                return Some(ip.to_string());
+            }
         }
     }
 
@@ -449,9 +463,15 @@ pub fn get_lan_ip() -> Option<String> {
     for (_intf, ip) in ifaces.iter() {
         if let std::net::IpAddr::V4(v4) = ip {
             let octets = v4.octets();
-            if octets[0] == 127 { continue; }
-            if octets[0] == 198 && (octets[1] == 18 || octets[1] == 19) { continue; }
-            if octets[0] == 169 && octets[1] == 254 { continue; }
+            if octets[0] == 127 {
+                continue;
+            }
+            if octets[0] == 198 && (octets[1] == 18 || octets[1] == 19) {
+                continue;
+            }
+            if octets[0] == 169 && octets[1] == 254 {
+                continue;
+            }
             return Some(ip.to_string());
         }
     }
@@ -489,7 +509,9 @@ fn kill_zombie_by_pid_file() {
 
 pub fn user_data_dir() -> PathBuf {
     if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-        return PathBuf::from(local_appdata).join("omni-context").join("data");
+        return PathBuf::from(local_appdata)
+            .join("omni-context")
+            .join("data");
     }
     if let Some(home) = dirs_or_home() {
         return PathBuf::from(home).join(".omni-context").join("data");

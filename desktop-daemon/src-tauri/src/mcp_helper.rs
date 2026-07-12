@@ -1,8 +1,8 @@
-use std::path::PathBuf;
-use std::fs;
-use std::process::Command;
 use serde::Serialize;
 use serde_json::Value;
+use std::fs;
+use std::path::PathBuf;
+use std::process::Command;
 
 #[derive(Serialize)]
 pub struct ClientStatus {
@@ -24,7 +24,14 @@ fn resolve_home_path(path_str: &str) -> Option<PathBuf> {
         let home = std::env::var("USERPROFILE")
             .or_else(|_| std::env::var("HOME"))
             .ok()?;
-        Some(PathBuf::from(home).join(path_str.trim_start_matches('~').trim_start_matches('/').trim_start_matches('\\')))
+        Some(
+            PathBuf::from(home).join(
+                path_str
+                    .trim_start_matches('~')
+                    .trim_start_matches('/')
+                    .trim_start_matches('\\'),
+            ),
+        )
     } else if path_str.contains("%APPDATA%") {
         let appdata = std::env::var("APPDATA").ok()?;
         let resolved = path_str.replace("%APPDATA%", &appdata);
@@ -59,7 +66,9 @@ fn claude_desktop_config_path_windows() -> PathBuf {
     }
     // 回退：经典 .exe 安装
     let appdata = std::env::var("APPDATA").unwrap_or_default();
-    PathBuf::from(appdata).join("Claude").join("claude_desktop_config.json")
+    PathBuf::from(appdata)
+        .join("Claude")
+        .join("claude_desktop_config.json")
 }
 
 pub fn get_config_path(client_id: &str) -> Option<PathBuf> {
@@ -71,55 +80,87 @@ pub fn get_config_path(client_id: &str) -> Option<PathBuf> {
     let raw_path = match client_id {
         "claude" => {
             #[cfg(target_os = "windows")]
-            { "%APPDATA%\\Claude\\claude_desktop_config.json" }
+            {
+                "%APPDATA%\\Claude\\claude_desktop_config.json"
+            }
             #[cfg(not(target_os = "windows"))]
-            { "~/Library/Application Support/Claude/claude_desktop_config.json" }
+            {
+                "~/Library/Application Support/Claude/claude_desktop_config.json"
+            }
         }
         "cursor" => "~/.cursor/mcp.json",
         "cline" => {
             #[cfg(target_os = "windows")]
-            { "%APPDATA%\\Code\\User\\globalStorage\\saoudrizwan.claude-dev\\settings\\cline_mcp_settings.json" }
+            {
+                "%APPDATA%\\Code\\User\\globalStorage\\saoudrizwan.claude-dev\\settings\\cline_mcp_settings.json"
+            }
             #[cfg(not(target_os = "windows"))]
-            { "~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json" }
+            {
+                "~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"
+            }
         }
         "roo" => {
             #[cfg(target_os = "windows")]
-            { "%APPDATA%\\Code\\User\\globalStorage\\rooveterinaryinc.roo-cline\\settings\\cline_mcp_settings.json" }
+            {
+                "%APPDATA%\\Code\\User\\globalStorage\\rooveterinaryinc.roo-cline\\settings\\cline_mcp_settings.json"
+            }
             #[cfg(not(target_os = "windows"))]
-            { "~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json" }
+            {
+                "~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json"
+            }
         }
         "windsurf" => {
             #[cfg(target_os = "windows")]
-            { "%USERPROFILE%\\.codeium\\windsurf\\mcp_config.json" }
+            {
+                "%USERPROFILE%\\.codeium\\windsurf\\mcp_config.json"
+            }
             #[cfg(not(target_os = "windows"))]
-            { "~/.codeium/windsurf/mcp_config.json" }
+            {
+                "~/.codeium/windsurf/mcp_config.json"
+            }
         }
         "trae" => "~/.trae/mcp.json",
         "lmstudio" => {
             #[cfg(target_os = "windows")]
-            { "%USERPROFILE%\\.lmstudio\\mcp.json" }
+            {
+                "%USERPROFILE%\\.lmstudio\\mcp.json"
+            }
             #[cfg(not(target_os = "windows"))]
-            { "~/.lmstudio/mcp.json" }
+            {
+                "~/.lmstudio/mcp.json"
+            }
         }
         "continue" => {
             #[cfg(target_os = "windows")]
-            { "%USERPROFILE%\\.continue\\config.json" }
+            {
+                "%USERPROFILE%\\.continue\\config.json"
+            }
             #[cfg(not(target_os = "windows"))]
-            { "~/.continue/config.json" }
+            {
+                "~/.continue/config.json"
+            }
         }
         "zed" => "~/.config/zed/settings.json",
         "goose" => "~/.config/goose/config.yaml",
         "cherrystudio" => {
             #[cfg(target_os = "windows")]
-            { "%APPDATA%\\CherryStudio" }
+            {
+                "%APPDATA%\\CherryStudio"
+            }
             #[cfg(not(target_os = "windows"))]
-            { "~/Library/Application Support/CherryStudio" }
+            {
+                "~/Library/Application Support/CherryStudio"
+            }
         }
         "chatbox" => {
             #[cfg(target_os = "windows")]
-            { "%APPDATA%\\xyz.chatboxapp.app" }
+            {
+                "%APPDATA%\\xyz.chatboxapp.app"
+            }
             #[cfg(not(target_os = "windows"))]
-            { "~/Library/Application Support/xyz.chatboxapp.app" }
+            {
+                "~/Library/Application Support/xyz.chatboxapp.app"
+            }
         }
         _ => return None,
     };
@@ -158,11 +199,14 @@ fn find_proxy_js_path() -> String {
             paths.push(exe_dir.join("../../../brain-server/dist/mcp-proxy.js"));
         }
     }
-    
+
     paths.push(PathBuf::from("./brain-server/dist/mcp-proxy.js"));
     paths.push(PathBuf::from("../brain-server/dist/mcp-proxy.js"));
-    
-    if let Some(home) = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")).ok() {
+
+    if let Some(home) = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .ok()
+    {
         paths.push(PathBuf::from(format!(
             "{}/omni-context/brain-server/dist/mcp-proxy.js",
             home
@@ -205,15 +249,18 @@ pub fn get_mcp_clients_status() -> Vec<ClientStatus> {
 
     for (id, name) in clients {
         let config_path = get_config_path(id);
-        let path_str = config_path.as_ref().map(|p| p.to_string_lossy().into_owned()).unwrap_or_default();
-        
+        let path_str = config_path
+            .as_ref()
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or_default();
+
         let mut installed = false;
         let mut configured = false;
 
         if let Some(ref path) = config_path {
             if path.exists() {
                 installed = true;
-                
+
                 // 只有一键配置的文件才支持检测配置状态
                 if id != "zed" && id != "goose" && id != "cherrystudio" && id != "chatbox" {
                     if let Ok(content) = fs::read_to_string(path) {
@@ -270,8 +317,12 @@ pub fn get_mcp_clients_status() -> Vec<ClientStatus> {
 pub fn install_mcp_to(client_id: &str) -> Result<(), String> {
     let path = get_config_path(client_id)
         .ok_or_else(|| format!("未找到该客户端的配置路径: {}", client_id))?;
-    
-    if client_id == "zed" || client_id == "goose" || client_id == "cherrystudio" || client_id == "chatbox" {
+
+    if client_id == "zed"
+        || client_id == "goose"
+        || client_id == "cherrystudio"
+        || client_id == "chatbox"
+    {
         return Err("该客户端不支持一键写入，请按照接入步骤手动配置".to_string());
     }
 
@@ -281,8 +332,7 @@ pub fn install_mcp_to(client_id: &str) -> Result<(), String> {
     }
 
     let mut json_val: Value = if path.exists() {
-        let content = fs::read_to_string(&path)
-            .map_err(|e| format!("读取配置文件失败: {}", e))?;
+        let content = fs::read_to_string(&path).map_err(|e| format!("读取配置文件失败: {}", e))?;
         if content.trim().is_empty() {
             Value::Object(serde_json::Map::new())
         } else {
@@ -301,51 +351,74 @@ pub fn install_mcp_to(client_id: &str) -> Result<(), String> {
         if !json_val.is_object() {
             json_val = Value::Object(serde_json::Map::new());
         }
-        
+
         let obj = json_val.as_object_mut().unwrap();
         if !obj.contains_key("experimental") {
-            obj.insert("experimental".to_string(), Value::Object(serde_json::Map::new()));
+            obj.insert(
+                "experimental".to_string(),
+                Value::Object(serde_json::Map::new()),
+            );
         }
-        
-        let exp = obj.get_mut("experimental").unwrap().as_object_mut()
+
+        let exp = obj
+            .get_mut("experimental")
+            .unwrap()
+            .as_object_mut()
             .ok_or("experimental 字段类型错误，请检查配置文件")?;
-            
+
         if !exp.contains_key("modelContextProtocolServers") {
-            exp.insert("modelContextProtocolServers".to_string(), Value::Object(serde_json::Map::new()));
+            exp.insert(
+                "modelContextProtocolServers".to_string(),
+                Value::Object(serde_json::Map::new()),
+            );
         }
-        
-        let servers = exp.get_mut("modelContextProtocolServers").unwrap().as_object_mut()
+
+        let servers = exp
+            .get_mut("modelContextProtocolServers")
+            .unwrap()
+            .as_object_mut()
             .ok_or("modelContextProtocolServers 字段类型错误，请检查配置文件")?;
-            
-        servers.insert("omni-context".to_string(), serde_json::json!({
-            "command": node_path,
-            "args": [proxy_path]
-        }));
+
+        servers.insert(
+            "omni-context".to_string(),
+            serde_json::json!({
+                "command": node_path,
+                "args": [proxy_path]
+            }),
+        );
     } else {
         // 通用 mcpServers 结构
         if !json_val.is_object() {
             json_val = Value::Object(serde_json::Map::new());
         }
-        
+
         let obj = json_val.as_object_mut().unwrap();
         if !obj.contains_key("mcpServers") {
-            obj.insert("mcpServers".to_string(), Value::Object(serde_json::Map::new()));
+            obj.insert(
+                "mcpServers".to_string(),
+                Value::Object(serde_json::Map::new()),
+            );
         }
-        
-        let servers = obj.get_mut("mcpServers").unwrap().as_object_mut()
+
+        let servers = obj
+            .get_mut("mcpServers")
+            .unwrap()
+            .as_object_mut()
             .ok_or("mcpServers 字段类型错误，请检查配置文件")?;
-            
-        servers.insert("omni-context".to_string(), serde_json::json!({
-            "command": node_path,
-            "args": [proxy_path]
-        }));
+
+        servers.insert(
+            "omni-context".to_string(),
+            serde_json::json!({
+                "command": node_path,
+                "args": [proxy_path]
+            }),
+        );
     }
 
-    let pretty_content = serde_json::to_string_pretty(&json_val)
-        .map_err(|e| format!("序列化配置失败: {}", e))?;
+    let pretty_content =
+        serde_json::to_string_pretty(&json_val).map_err(|e| format!("序列化配置失败: {}", e))?;
 
-    fs::write(&path, pretty_content)
-        .map_err(|e| format!("写入配置文件失败: {}", e))?;
+    fs::write(&path, pretty_content).map_err(|e| format!("写入配置文件失败: {}", e))?;
 
     Ok(())
 }
@@ -353,7 +426,7 @@ pub fn install_mcp_to(client_id: &str) -> Result<(), String> {
 pub fn open_config_folder(client_id: &str) -> Result<(), String> {
     let path = get_config_path(client_id)
         .ok_or_else(|| format!("未找到该客户端的配置路径: {}", client_id))?;
-        
+
     let dir = if path.is_file() {
         path.parent().unwrap_or(&path)
     } else {
@@ -432,16 +505,19 @@ mod tests {
         // 验证状态是否变为 configured=true
         let statuses = get_mcp_clients_status();
         let claude_status = statuses.iter().find(|s| s.id == "claude").unwrap();
-        assert!(claude_status.configured, "Claude should be marked as configured");
+        assert!(
+            claude_status.configured,
+            "Claude should be marked as configured"
+        );
 
         // 验证文件内容
         let content = fs::read_to_string(&path).unwrap();
         println!("Generated Claude Config Content:\n{}", content);
-        
+
         let json: serde_json::Value = serde_json::from_str(&content).unwrap();
         let cmd = json.pointer("/mcpServers/omni-context/command").unwrap();
         let args = json.pointer("/mcpServers/omni-context/args").unwrap();
-        
+
         assert!(cmd.is_string());
         assert!(args.is_array());
         println!("Verified JSON format: command={}, args={:?}", cmd, args);
@@ -459,5 +535,3 @@ mod tests {
         }
     }
 }
-
-

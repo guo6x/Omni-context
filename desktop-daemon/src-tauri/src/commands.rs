@@ -1,7 +1,7 @@
 use crate::brain_server;
-use crate::SystemStatus;
-use crate::screen_capture;
 use crate::clipboard;
+use crate::screen_capture;
+use crate::SystemStatus;
 use base64::{engine::general_purpose::STANDARD, Engine};
 use tauri::Manager;
 
@@ -27,7 +27,12 @@ pub async fn capture_all_screens() -> Result<Vec<screen_capture::ScreenCaptureRe
 }
 
 #[tauri::command]
-pub async fn capture_screen_region(x: i32, y: i32, width: u32, height: u32) -> Result<String, String> {
+pub async fn capture_screen_region(
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+) -> Result<String, String> {
     match screen_capture::capture_screen_region(x, y, width, height).await {
         Ok(png_data) => Ok(STANDARD.encode(&png_data)),
         Err(e) => Err(format!("区域捕获失败: {}", e)),
@@ -83,52 +88,55 @@ pub fn get_system_status() -> SystemStatus {
 
 #[tauri::command]
 pub async fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        brain_server::start()
-    })
-    .await
-    .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
+    tauri::async_runtime::spawn_blocking(|| brain_server::start())
+        .await
+        .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
     let status_text = if brain_server::is_ready() {
         "Brain Server: 在线"
     } else {
         "Brain Server: 离线"
     };
-    let _ = app_handle.tray_handle().get_item("server_status").set_title(status_text);
+    let _ = app_handle
+        .tray_handle()
+        .get_item("server_status")
+        .set_title(status_text);
     Ok("Brain Server 已启动".to_string())
 }
 
 #[tauri::command]
 pub async fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        brain_server::stop()
-    })
-    .await
-    .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
+    tauri::async_runtime::spawn_blocking(|| brain_server::stop())
+        .await
+        .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
     let status_text = if brain_server::is_ready() {
         "Brain Server: 在线"
     } else {
         "Brain Server: 离线"
     };
-    let _ = app_handle.tray_handle().get_item("server_status").set_title(status_text);
+    let _ = app_handle
+        .tray_handle()
+        .get_item("server_status")
+        .set_title(status_text);
     Ok("Brain Server 已停止".to_string())
 }
 
 #[tauri::command]
 pub async fn restart_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        brain_server::restart()
-    })
-    .await
-    .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
+    tauri::async_runtime::spawn_blocking(|| brain_server::restart())
+        .await
+        .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
     let status_text = if brain_server::is_ready() {
         "Brain Server: 在线"
     } else {
         "Brain Server: 离线"
     };
-    let _ = app_handle.tray_handle().get_item("server_status").set_title(status_text);
+    let _ = app_handle
+        .tray_handle()
+        .get_item("server_status")
+        .set_title(status_text);
     Ok("Brain Server 已重启".to_string())
 }
 
@@ -230,7 +238,10 @@ pub struct ShortcutDef {
 // 注册系统级全局热键。触发时向前端发 `global-shortcut` 事件（带 id），
 // 由前端跑对应 handler（如沉淀捕获——这样在任何窗口前按都能抓当前屏幕）。
 #[tauri::command]
-pub fn register_global_shortcuts(app: tauri::AppHandle, shortcuts: Vec<ShortcutDef>) -> Result<(), String> {
+pub fn register_global_shortcuts(
+    app: tauri::AppHandle,
+    shortcuts: Vec<ShortcutDef>,
+) -> Result<(), String> {
     use tauri::{GlobalShortcutManager, Manager};
     let mut mgr = app.global_shortcut_manager();
     let _ = mgr.unregister_all();
@@ -375,9 +386,14 @@ pub fn get_foreground_window_info() -> Result<ForegroundWindowInfo, String> {
         // SAFETY: 调用 Windows API，所有 unsafe 调用都有对应的安全检查
         unsafe {
             use windows::core::PWSTR;
-            use windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowTextW, GetWindowThreadProcessId};
-            use windows::Win32::System::Threading::{OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_NATIVE, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ};
             use windows::Win32::Foundation::CloseHandle;
+            use windows::Win32::System::Threading::{
+                OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_NATIVE,
+                PROCESS_QUERY_INFORMATION, PROCESS_VM_READ,
+            };
+            use windows::Win32::UI::WindowsAndMessaging::{
+                GetForegroundWindow, GetWindowTextW, GetWindowThreadProcessId,
+            };
 
             let hwnd = GetForegroundWindow();
             if hwnd.0 == 0 {
@@ -412,7 +428,8 @@ pub fn get_foreground_window_info() -> Result<ForegroundWindowInfo, String> {
                         );
                         let _ = CloseHandle(handle);
                         if result.is_ok() {
-                            let full_path = String::from_utf16_lossy(&name_buf[..name_len as usize]);
+                            let full_path =
+                                String::from_utf16_lossy(&name_buf[..name_len as usize]);
                             // 只取文件名（去掉路径）
                             let name = std::path::Path::new(&full_path)
                                 .file_name()
