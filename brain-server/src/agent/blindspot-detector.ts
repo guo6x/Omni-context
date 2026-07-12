@@ -1,5 +1,4 @@
 import { Database } from '../db/sqlite.js';
-import { Entity } from '../shared-types.js';
 
 // ── 类型定义 ──
 
@@ -17,20 +16,30 @@ async function findConsumptionWithoutAction(db: Database): Promise<Blindspot[]> 
   const results: Blindspot[] = [];
   try {
     const rows = await db.all<{
-      id: string; name: string; type: string; access_count: number;
+      id: string; name: string; type: string; consumption_count: number;
     }>(
-      `SELECT e.id, e.name, e.type, e.access_count
+      `SELECT e.id, e.name, e.type, COUNT(*) AS consumption_count
        FROM entities e
-       WHERE e.access_count >= 5
-         AND e.created_at < datetime('now', '-7 days')
+       JOIN behavior_events consumed ON consumed.entity_id = e.id
+         AND consumed.event_type IN ('viewed', 'retrieved', 'cited')
+       WHERE consumed.occurred_at < datetime('now', '-7 days')
+         AND consumed.intent = 'action'
          AND json_extract(e.metadata, '$.merged_into') IS NULL
-         AND json_extract(e.metadata, '$.user_edited') IS NULL
-         AND e.id NOT IN (
-           SELECT r.target_id FROM relationships r
-           WHERE r.type = 'derived_from'
-             AND (r.valid_until IS NULL OR r.valid_until > datetime('now'))
+         AND NOT EXISTS (
+           SELECT 1 FROM behavior_events action
+           WHERE action.entity_id = e.id
+             AND action.event_type IN ('captured','edited','decided','task_created','task_completed')
+             AND action.occurred_at >= consumed.occurred_at
          )
-       ORDER BY e.access_count DESC
+         AND NOT EXISTS (
+           SELECT 1 FROM behavior_events deferred
+           WHERE deferred.entity_id = e.id
+             AND deferred.intent IN ('deferred','none')
+             AND deferred.occurred_at >= consumed.occurred_at
+         )
+       GROUP BY e.id, e.name, e.type
+       HAVING COUNT(*) >= 5
+       ORDER BY consumption_count DESC
        LIMIT 3`,
     );
 
@@ -38,9 +47,9 @@ async function findConsumptionWithoutAction(db: Database): Promise<Blindspot[]> 
       results.push({
         type: 'consumption_without_action',
         title: `你可能错过了 ${row.name} 的实践机会`,
-        content: `你已浏览/引用 "${row.name}"（${row.type}）${row.access_count} 次，但从未主动沉淀或做出相关决策。考虑将其转化为行动。`,
+        content: `你带着行动意图浏览/引用了 "${row.name}"（${row.type}）${row.consumption_count} 次，但之后没有捕获、编辑、决策或任务行为。考虑将其转化为行动。`,
         related_entities: [row.id],
-        confidence: Math.min(0.95, 0.5 + row.access_count * 0.05),
+        confidence: Math.min(0.95, 0.5 + row.consumption_count * 0.05),
       });
     }
   } catch (e) {
@@ -54,47 +63,34 @@ async function findConsumptionWithoutAction(db: Database): Promise<Blindspot[]> 
 async function findSourceHomogeneity(db: Database): Promise<Blindspot[]> {
   const results: Blindspot[] = [];
   try {
-    // 按 type 分组，取近 30 天内实体数 >= 5 的类型
-    const typeGroups = await db.all<{ type: string; cnt: number }>(
-      `SELECT type, COUNT(*) as cnt FROM entities
+    const entities = await db.all<{
+      id: string; name: string; tags: string | null; source_file: string | null; metadata: string | null;
+    }>(
+      `SELECT id, name, tags, source_file, metadata FROM entities
        WHERE created_at > datetime('now', '-30 days')
          AND json_extract(metadata, '$.merged_into') IS NULL
-         AND metadata IS NOT NULL
-       GROUP BY type
-       HAVING cnt >= 5
-       ORDER BY cnt DESC
-       LIMIT 5`,
+       ORDER BY created_at DESC
+       LIMIT 500`,
     );
+    const groups = new Map<string, typeof entities>();
+    for (const entity of entities) {
+      const topic = extractSemanticTopic(entity.tags, entity.name);
+      if (!topic) continue;
+      const group = groups.get(topic) || [];
+      group.push(entity);
+      groups.set(topic, group);
+    }
 
-    for (const group of typeGroups) {
-      // 获取该类型下的实体及其 source_file / metadata.source
-      const entities = await db.all<{
-        id: string; name: string; source_file: string | null; metadata: string | null;
-      }>(
-        `SELECT id, name, source_file, metadata FROM entities
-         WHERE type = ?
-           AND created_at > datetime('now', '-30 days')
-           AND json_extract(metadata, '$.merged_into') IS NULL
-         ORDER BY access_count DESC
-         LIMIT 20`,
-        [group.type],
-      );
-
-      // 提取域名
-      const domains = new Set<string>();
-      for (const e of entities) {
-        const domain = extractDomain(e.source_file, e.metadata);
-        if (domain) domains.add(domain);
-      }
-
-      // 如果 ≥5 个实体但 ≤2 个不同域名 → 同质化
-      if (entities.length >= 5 && domains.size <= 2 && domains.size > 0) {
-        const domainList = Array.from(domains).join('、');
+    for (const [topic, topicEntities] of groups) {
+      if (topicEntities.length < 5) continue;
+      const sources = new Set(topicEntities.map((entity) => extractSourceIdentity(entity.source_file, entity.metadata)).filter(Boolean));
+      if (sources.size <= 2 && sources.size > 0) {
+        const sourceList = [...sources].join('、');
         results.push({
           type: 'source_homogeneity',
-          title: `${group.type} 类信息来源单一`,
-          content: `你在 ${group.type} 主题上累积了 ${entities.length} 条信息，但所有来源都集中在 ${domainList}。建议拓宽信息渠道以获得更全面的视角。`,
-          related_entities: entities.slice(0, 5).map(e => e.id),
+          title: `${topic} 主题的信息来源较单一`,
+          content: `你在 ${topic} 主题上累积了 ${topicEntities.length} 条信息，但来源集中在 ${sourceList}。建议补充不同网站、文件或 AI 来源。`,
+          related_entities: topicEntities.slice(0, 5).map((entity) => entity.id),
           confidence: 0.7,
         });
       }
@@ -108,7 +104,21 @@ async function findSourceHomogeneity(db: Database): Promise<Blindspot[]> {
 /**
  * 从实体的 source_file 或 metadata.source 中提取域名
  */
-function extractDomain(sourceFile: string | null, metadataStr: string | null): string | null {
+const GENERIC_TOPIC_TAGS = new Set(['uploaded-file', 'imported', 'auto_extracted', 'llm-extracted', 'web', 'url']);
+
+function extractSemanticTopic(tagsStr: string | null, name: string): string | null {
+  try {
+    const tags = tagsStr ? JSON.parse(tagsStr) : [];
+    const topic = Array.isArray(tags)
+      ? tags.find((tag) => typeof tag === 'string' && tag.length >= 2 && !GENERIC_TOPIC_TAGS.has(tag))
+      : undefined;
+    if (topic) return String(topic).slice(0, 40);
+  } catch { /* malformed legacy tags have no reliable topic */ }
+  const words = name.match(/[A-Za-z][A-Za-z0-9_-]{2,}|[\u4e00-\u9fff]{2,8}/g);
+  return words?.[0]?.slice(0, 40) || null;
+}
+
+function extractSourceIdentity(sourceFile: string | null, metadataStr: string | null): string | null {
   // 尝试从 metadata.source 提取
   if (metadataStr) {
     try {
@@ -116,10 +126,10 @@ function extractDomain(sourceFile: string | null, metadataStr: string | null): s
       const source = meta?.source || meta?.provenance?.source || meta?.provenance?.url;
       if (source && typeof source === 'string') {
         try {
-          return new URL(source).hostname;
+          return `site:${new URL(source).hostname}`;
         } catch {
           // source 不是 URL，直接用作来源标识
-          if (source !== 'user' && source !== 'agent-loop') return source;
+          if (source !== 'user' && source !== 'agent-loop') return `ai:${source}`;
         }
       }
     } catch { /* 解析失败忽略 */ }
@@ -127,10 +137,11 @@ function extractDomain(sourceFile: string | null, metadataStr: string | null): s
   // 尝试从 source_file 提取
   if (sourceFile) {
     try {
-      return new URL(sourceFile).hostname;
+      return `site:${new URL(sourceFile).hostname}`;
     } catch {
       // 非 URL，可能是文件路径，提取目录或扩展名作为来源
-      return null;
+      const extension = sourceFile.match(/\.([A-Za-z0-9]{1,8})$/)?.[1]?.toLowerCase();
+      return extension ? `file:${extension}` : 'file:local';
     }
   }
   return null;
@@ -141,53 +152,33 @@ function extractDomain(sourceFile: string | null, metadataStr: string | null): s
 async function findSearchWithoutCapture(db: Database): Promise<Blindspot[]> {
   const results: Blindspot[] = [];
   try {
-    // 从 discussions 表中获取近 14 天的对话
-    const discussions = await db.all<{ id: string; title: string; turns: string }>(
-      `SELECT id, title, turns FROM discussions
-       WHERE updated_at > datetime('now', '-14 days')
-       ORDER BY updated_at DESC
+    const searches = await db.all<{ topic: string; search_count: number }>(
+      `SELECT LOWER(TRIM(topic)) AS topic, COUNT(*) AS search_count
+       FROM behavior_events
+       WHERE event_type = 'searched'
+         AND occurred_at > datetime('now', '-14 days')
+         AND topic IS NOT NULL
+       GROUP BY LOWER(TRIM(topic))
+       HAVING COUNT(*) >= 2
+       ORDER BY search_count DESC
        LIMIT 20`,
     );
-
-    if (discussions.length === 0) return results;
-
-    // 从讨论标题和内容中提取关键词（中文 bigram/trigram + 英文分词）
-    const searchTerms = new Set<string>();
-    for (const d of discussions) {
-      const titleKeywords = extractKeywords(d.title);
-      for (const token of titleKeywords.slice(0, 5)) {
-        searchTerms.add(token);
-      }
-
-      // 从 turns 中提取用户提问的关键词
-      try {
-        const turns: Array<{ role: string; content: string }> = JSON.parse(d.turns);
-        const userTurns = turns.filter(t => t.role === 'user');
-        for (const turn of userTurns.slice(0, 2)) {
-          const contentKeywords = extractKeywords(turn.content);
-          for (const token of contentKeywords.slice(0, 5)) {
-            searchTerms.add(token);
-          }
-        }
-      } catch { /* turns 解析失败忽略 */ }
-    }
-
-    // 检查每个搜索词是否在实体中出现
-    for (const term of Array.from(searchTerms).slice(0, 10)) {
+    for (const search of searches) {
+      const term = normalizeSearchTopic(search.topic);
+      if (!term) continue;
       try {
         const matches = await db.searchEntities(term, 2);
         if (matches.length < 2) {
           results.push({
             type: 'search_without_capture',
             title: `"${term}" 搜索未沉淀`,
-            content: `你在近期讨论中提到了 "${term}"，但知识图谱中几乎没有相关记录（仅 ${matches.length} 条）。考虑主动捕获和整理这方面的信息。`,
+            content: `你近期搜索了 "${term}" ${search.search_count} 次，但知识图谱中仅有 ${matches.length} 条相关记录。考虑主动捕获和整理这方面的信息。`,
             related_entities: matches.map(m => m.id),
             confidence: 0.55,
           });
         }
       } catch { /* 搜索失败跳过 */ }
 
-      // 最多产出 2 条此类盲区
       if (results.filter(r => r.type === 'search_without_capture').length >= 2) break;
     }
   } catch (e) {
@@ -196,43 +187,15 @@ async function findSearchWithoutCapture(db: Database): Promise<Blindspot[]> {
   return results;
 }
 
-// ── 中文/混合文本关键词提取 ──
+const SEARCH_STOPWORDS = new Set([
+  '什么', '怎么', '如何', '为什么', '这个', '那个', '可以', '是否', 'please', 'what', 'how', 'why',
+]);
 
-/**
- * 从混合中英文文本中提取有意义的搜索关键词。
- * 中文部分用字符 bigram + trigram 切分，
- * 英文部分按空格和标点切分。
- * 只保留长度 ≥ 2 的 token。
- */
-function extractKeywords(text: string): string[] {
-  if (!text) return [];
-  const results: string[] = [];
-
-  // 先用标点和空白把英文/数字段和中文字符串分开
-  const segments = text.split(/[\s,，。、！？：；""（）\(\)\[\]【】《》<>\/\\|@#$%^&*+=~`]+/).filter(Boolean);
-
-  for (const seg of segments) {
-    // 纯中文或中英混合段：提取连续中文字符的 bigram + trigram
-    const chineseOnly = seg.replace(/[^\u4e00-\u9fff]/g, '');
-    if (chineseOnly.length >= 2) {
-      // bigram: 每相邻 2 字
-      for (let i = 0; i <= chineseOnly.length - 2; i++) {
-        results.push(chineseOnly.slice(i, i + 2));
-      }
-      // trigram: 每相邻 3 字
-      for (let i = 0; i <= chineseOnly.length - 3; i++) {
-        results.push(chineseOnly.slice(i, i + 3));
-      }
-    } else if (chineseOnly.length === 0 && seg.length >= 2) {
-      // 纯英文/数字段，且长度 ≥ 2
-      results.push(seg.toLowerCase());
-    }
-  }
-
-  // 去重，按长度降序（更长的 token 更有意义）
-  const unique = [...new Set(results)];
-  unique.sort((a, b) => b.length - a.length);
-  return unique;
+function normalizeSearchTopic(topic: string): string | null {
+  const normalized = topic.replace(/\s+/g, ' ').trim().slice(0, 80);
+  if (normalized.length < 2 || SEARCH_STOPWORDS.has(normalized.toLowerCase())) return null;
+  if (/^[\u4e00-\u9fff]{2,3}$/.test(normalized) && SEARCH_STOPWORDS.has(normalized)) return null;
+  return normalized;
 }
 
 // ── 去重辅助 ──
