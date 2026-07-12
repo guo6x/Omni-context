@@ -1,0 +1,4 @@
+Evaluate the candidate answer only against the supplied reference and evidence.
+Return strict JSON with factual_score, temporal_score, contextual_score, binary_correct,
+abstention_correct, evidence_precision, stale_memory_leakage, and rationale.
+Do not reward unsupported specificity. Preserve uncertainty when evidence is insufficient.

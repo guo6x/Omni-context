@@ -1,0 +1,20 @@
+{
+  "retrieval": {
+    "top_k": 10,
+    "candidate_pool": 50,
+    "graph_seeds": 3,
+    "graph_depth": 2,
+    "reranker_candidates": 25,
+    "stale_penalty": 0.35,
+    "conflict_penalty": 0.25
+  },
+  "answering": {
+    "abstention_threshold": 0.45,
+    "evidence_threshold": 0.5
+  },
+  "evaluation": {
+    "embedding_mode": "semantic",
+    "fail_on_hash_fallback": true,
+    "max_retries": 2
+  }
+}

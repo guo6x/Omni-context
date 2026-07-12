@@ -1,0 +1,13 @@
+{
+  "name": "omni-context-benchmark-harness",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "recompute": "node src/recompute-metrics.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

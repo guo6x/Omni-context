@@ -1,0 +1,10 @@
+{
+  "name": "LoCoMo",
+  "official_repository": "https://github.com/snap-research/locomo",
+  "official_dataset_path": "data/locomo10.json",
+  "source_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+  "sha256": "553cd5a15e25f2ceccc6ed185221eba645080c93e5b91087560a91aa5961f365",
+  "development_conversations": [1],
+  "heldout_conversations": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "heldout_policy": "Never inspect, run, or tune on held-out before Evaluation Freeze v1 authorization."
+}
