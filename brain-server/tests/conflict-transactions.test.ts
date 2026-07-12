@@ -40,9 +40,9 @@ describe('assertion conflict transactions', () => {
     const [inserted] = await resolveConflicts([{
       id: 'new-job', source_id: person.id, target_id: newCompany.id, type: 'works_at',
       description: 'Avery now works at New Corp', weight: 0.95,
-      created_at: '2026-07-12T00:00:00.000Z',
-      last_activated: '2026-07-12T00:00:00.000Z',
-      valid_from: '2026-07-12T00:00:00.000Z',
+      created_at: new Date(Date.now() + 86400000).toISOString(),
+      last_activated: new Date(Date.now() + 86400000).toISOString(),
+      valid_from: new Date(Date.now() + 86400000).toISOString(),
       provenance: { document_id: 'doc-1', chunk_id: 'chunk-2' },
     }], db, new GraphRAGExtractor({ useLocalExtraction: true }));
 

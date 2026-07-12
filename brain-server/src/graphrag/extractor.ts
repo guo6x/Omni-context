@@ -6,6 +6,27 @@ import { OCRPipeline } from '../ocr/pipeline.js';
 import { sanitizeForExtraction } from './sanitize.js';
 import { chunkDocument, coveredCharacterCount, SourceChunk } from '../ingest/chunker.js';
 
+// Stateful entity types must NOT auto-collapse across chunks by name alone —
+// time/context distinctions must be preserved so that state changes
+// ("lived in Tokyo" → "lives in Berlin") survive as separate versions.
+const STATEFUL_ENTITY_TYPES = new Set<EntityType>([
+  'decision', 'preference', 'goal', 'event', 'task', 'question', 'person', 'project',
+]);
+
+function effectiveTime(entity: Entity): string {
+  return entity.event_time || entity.valid_from || entity.observed_at || entity.recorded_at || entity.created_at || '';
+}
+
+function chunkDedupKey(entity: Entity): string {
+  const base = `${entity.type}:${entity.name.trim().toLocaleLowerCase()}`;
+  if (STATEFUL_ENTITY_TYPES.has(entity.type)) {
+    // Stateful types include time in the key so different states are preserved.
+    const t = effectiveTime(entity);
+    return t ? `${base}@${t}` : `${base}#${entity.id}`;
+  }
+  return base;
+}
+
 const DEFAULT_IMPORTANCE_MAP: Record<EntityType, number> = {
   principle: 0.75,
   decision: 0.75,
@@ -548,7 +569,7 @@ export class GraphRAGExtractor {
         successfulChunks.push(chunk);
         const localToCanonical = new Map<string, string>();
         for (const entity of result.entities) {
-          const key = `${entity.type}:${entity.name.trim().toLocaleLowerCase()}`;
+          const key = chunkDedupKey(entity);
           const existing = entitiesByKey.get(key);
           const chunkProvenance = {
             document_id: documentId,

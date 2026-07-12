@@ -160,7 +160,7 @@ async function extractTextFromPdf(buffer: Buffer): Promise<string> {
 
 // --- Async Job Store ---
 
-type JobStatus = 'queued' | 'running' | 'success' | 'failed' | 'cancelled';
+type JobStatus = 'queued' | 'running' | 'success' | 'partial' | 'failed' | 'cancelled';
 type JobStage = 'parsing' | 'ocr' | 'extracting' | 'resolving' | 'storing' | 'done';
 
 interface JobState {
@@ -195,6 +195,8 @@ interface JobState {
         dropped: Array<{ reason: string; preview: string }>;
       };
     };
+    failed_conversations?: Array<{ title: string; error: string }>;
+    conflict_failures?: Array<{ title: string; error: string }>;
   };
   importProgress?: { done: number; total: number; entities: number };
   retryProgress?: {
@@ -577,6 +579,8 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
   updateJob(jobId, { status: 'running', stage: 'extracting', importProgress: { done: 0, total: conversations.length, entities: 0 } });
   let done = 0;
   let entityCount = 0;
+  const failedConversations: Array<{ title: string; error: string }> = [];
+  const conflictFailures: Array<{ title: string; error: string }> = [];
   for (const conv of conversations) {
     const job = jobStore.get(jobId);
     if (!job || job.aborted) { updateJob(jobId, { status: 'cancelled', completedAt: Date.now() }); return; }
@@ -618,7 +622,10 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
         try {
           await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
         } catch (err) {
-          console.warn('[Import] conflict resolution failed, continuing:', err);
+          // Conflict resolution failure is a real failure — record it, do not silently continue.
+          const errMsg = err instanceof Error ? err.message : String(err);
+          conflictFailures.push({ title: conv.title, error: errMsg });
+          console.error(`[Import] conflict resolution failed for "${conv.title}":`, errMsg);
         }
         for (const a of extractResult.assertions || []) {
           const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
@@ -641,13 +648,31 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
           for (const e of pr.entitiesToCreate) { await ctx.db.addEntity(e); entityCount++; }
         }
       } catch (err: any) {
-        console.warn('[Import] 跳过一段对话:', err?.message || err);
+        const errMsg = err?.message || String(err);
+        failedConversations.push({ title: conv.title, error: errMsg });
+        console.error(`[Import] 跳过一段对话 "${conv.title}":`, errMsg);
       }
     }
     done++;
     updateJob(jobId, { importProgress: { done, total: conversations.length, entities: entityCount } });
   }
-  updateJob(jobId, { status: 'success', stage: 'done', completedAt: Date.now(), importProgress: { done, total: conversations.length, entities: entityCount } });
+  // Job status accurately distinguishes success/partial/failed.
+  const totalFailures = failedConversations.length + conflictFailures.length;
+  const finalStatus = totalFailures === 0
+    ? 'success'
+    : totalFailures < conversations.length
+      ? 'partial'
+      : 'failed';
+  updateJob(jobId, {
+    status: finalStatus, stage: 'done', completedAt: Date.now(),
+    importProgress: { done, total: conversations.length, entities: entityCount },
+    result: {
+      entities: entityCount, relationships: 0, principles: 0, archivalId: '',
+      summary: `Imported ${done - totalFailures}/${conversations.length} conversations`,
+      failed_conversations: failedConversations,
+      conflict_failures: conflictFailures,
+    },
+  });
 }
 
 interface StoredChunk {

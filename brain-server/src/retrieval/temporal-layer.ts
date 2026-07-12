@@ -223,7 +223,10 @@ function formatEndDate(d: Date): string {
 }
 
 export function parseTemporalQuery(query: string): ParsedTemporalQuery {
-  if (!query || typeof query !== 'string') return { mode: 'current' };
+  if (!query || typeof query !== 'string') {
+    console.warn('[temporal] parseTemporalQuery: empty or non-string query, defaulting to current mode');
+    return { mode: 'current' };
+  }
   const q = query.toLowerCase();
   const now = new Date();
 
@@ -254,6 +257,8 @@ export function parseTemporalQuery(query: string): ParsedTemporalQuery {
     return { mode: 'historical' };
   }
 
+  // No temporal keyword found — log so silent defaults are visible.
+  console.warn(`[temporal] parseTemporalQuery: no temporal keyword in query "${query.slice(0, 80)}", defaulting to current mode`);
   return { mode: 'current' };
 }
 

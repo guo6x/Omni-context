@@ -219,7 +219,7 @@ export async function resolveConflicts(
             uuidv4(),
             newAssertionId,
             `relationship:${plan.old.id}`,
-            plan.status === 'superseded' ? 'supersede' : plan.status,
+            plan.status === 'superseded' ? 'supersede' : plan.status === 'needs_review' ? 'review' : plan.status,
             plan.confidence,
             plan.reason,
             JSON.stringify({
@@ -287,8 +287,12 @@ export function checkSingleValueSupersede(
     return { shouldSupersede: false, confidence: 0.5, reason: 'incoming_not_later', action: 'review' };
   }
 
-  // Check temporal confidence
-  const confidence = incoming.temporal_confidence ?? 0.5;
+  // Check temporal confidence — when the incoming fact has an explicit time
+  // (event_time or valid_from) and is later than the existing fact (or the
+  // existing fact has no time), default confidence to 0.85 so that clear
+  // state changes are auto-applied. Only require explicit temporal_confidence
+  // when there is no time signal at all.
+  const confidence = incoming.temporal_confidence ?? (incomingTime ? 0.85 : 0.5);
   if (confidence < 0.7) {
     return { shouldSupersede: false, confidence: 0.5, reason: 'low_temporal_confidence', action: 'review' };
   }
