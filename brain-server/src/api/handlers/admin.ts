@@ -84,6 +84,35 @@ async function insertPortableRows(
   return inserted;
 }
 
+function normalizedEntityKey(row: { type?: unknown; name?: unknown; description?: unknown }): string {
+  const normalize = (value: unknown) => String(value ?? '').normalize('NFKC').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+  return `${normalize(row.type)}|${normalize(row.name)}|${normalize(row.description)}`;
+}
+
+function normalizedEntityNameKey(row: { type?: unknown; name?: unknown }): string {
+  const normalize = (value: unknown) => String(value ?? '').normalize('NFKC').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+  return `${normalize(row.type)}|${normalize(row.name)}`;
+}
+
+function parsePortableMetadata(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, unknown>;
+  if (typeof value !== 'string' || !value.trim()) return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
+  } catch {
+    return {};
+  }
+}
+
+function tombstoneTimestamp(row: { metadata?: unknown; valid_until?: unknown }): string | null {
+  const metadata = parsePortableMetadata(row.metadata);
+  const marker = metadata.deleted_at ?? metadata.tombstoned_at;
+  if (typeof marker === 'string' && marker) return marker;
+  if (metadata.tombstone === true && typeof row.valid_until === 'string') return row.valid_until;
+  return null;
+}
+
 export const handleAdminRoutes = [
   {
     method: 'GET' as const,
@@ -203,6 +232,17 @@ export const handleAdminRoutes = [
         notifications: 0,
         supplemental: 0,
       };
+      const mergeReport = {
+        policy: 'local-id-wins; exact-semantic-remap; name-collision-preserve-version; tombstone-soft-close; relationship-endpoint-remap',
+        sameIdConflicts: 0,
+        semanticEntityRemaps: 0,
+        preservedVersions: 0,
+        tombstonesApplied: 0,
+        relationshipRemaps: 0,
+        semanticRelationshipDeduplications: 0,
+        semanticAssertionDeduplications: 0,
+      };
+      const entityIdRemap = new Map<string, string>();
 
       // 收集已存在的 ID（merge 模式下用来跳过冲突）
       const existing = {
@@ -245,8 +285,54 @@ export const handleAdminRoutes = [
             for (const r of await ctx.db.all<any>('SELECT id FROM notifications')) existing.notifications.add(r.id);
           }
 
+          const existingEntityRows = mode === 'merge'
+            ? await ctx.db.all<any>('SELECT id, type, name, description, valid_from, updated_at, metadata FROM entities')
+            : [];
+          const exactEntityIndex = new Map(existingEntityRows.map((row) => [normalizedEntityKey(row), row]));
+          const namedEntityIndex = new Map(existingEntityRows.map((row) => [normalizedEntityNameKey(row), row]));
+          const pendingVersionLinks: Array<{ importedId: string; existingId: string; importedIsNewer: boolean }> = [];
+
           for (const e of body.entities || []) {
-            if (mode === 'merge' && existing.entities.has(e.id)) continue;
+            if (mode === 'merge' && existing.entities.has(e.id)) {
+              entityIdRemap.set(e.id, e.id);
+              mergeReport.sameIdConflicts++;
+              const tombstoneAt = tombstoneTimestamp(e);
+              if (tombstoneAt) {
+                await ctx.db.run(
+                  `UPDATE entities SET valid_until = COALESCE(valid_until, ?),
+                   metadata = json_set(COALESCE(metadata, '{}'), '$.tombstone_imported_at', ?)
+                   WHERE id = ?`,
+                  [tombstoneAt, new Date().toISOString(), e.id],
+                );
+                mergeReport.tombstonesApplied++;
+              }
+              continue;
+            }
+            if (mode === 'merge') {
+              const exact = exactEntityIndex.get(normalizedEntityKey(e));
+              if (exact) {
+                entityIdRemap.set(e.id, exact.id);
+                mergeReport.semanticEntityRemaps++;
+                const tombstoneAt = tombstoneTimestamp(e);
+                if (tombstoneAt) {
+                  await ctx.db.run(
+                    `UPDATE entities SET valid_until = COALESCE(valid_until, ?),
+                     metadata = json_set(COALESCE(metadata, '{}'), '$.tombstone_imported_at', ?)
+                     WHERE id = ?`,
+                    [tombstoneAt, new Date().toISOString(), exact.id],
+                  );
+                  mergeReport.tombstonesApplied++;
+                }
+                continue;
+              }
+              const sameName = namedEntityIndex.get(normalizedEntityNameKey(e));
+              if (sameName) {
+                const importedTime = String(e.valid_from ?? e.updated_at ?? e.created_at ?? '');
+                const existingTime = String(sameName.valid_from ?? sameName.updated_at ?? '');
+                pendingVersionLinks.push({ importedId: e.id, existingId: sameName.id, importedIsNewer: importedTime >= existingTime });
+                mergeReport.preservedVersions++;
+              }
+            }
             const embeddingBlob = base64ToBuffer(e.embedding);
             await ctx.db.run(
               `INSERT INTO entities (
@@ -272,17 +358,44 @@ export const handleAdminRoutes = [
                 e.recorded_at ?? e.created_at ?? new Date().toISOString(),
                 e.event_time ?? null,
                 e.valid_from ?? e.created_at ?? new Date().toISOString(),
-                e.valid_until ?? null,
+                e.valid_until ?? tombstoneTimestamp(e),
                 e.temporal_confidence ?? null,
                 e.temporal_source ?? null,
                 e.timezone ?? null,
               ]
             );
+            if (tombstoneTimestamp(e)) mergeReport.tombstonesApplied++;
+            entityIdRemap.set(e.id, e.id);
             counts.entities++;
           }
 
+          for (const version of pendingVersionLinks) {
+            const sourceId = version.importedIsNewer ? version.importedId : version.existingId;
+            const targetId = version.importedIsNewer ? version.existingId : version.importedId;
+            await ctx.db.run(
+              `INSERT OR IGNORE INTO relationships
+               (id, source_id, target_id, type, description, weight, created_at, last_activated, valid_from,
+                base_weight, last_decay_at, decay_version)
+               VALUES (?, ?, ?, 'historical_version_of', 'Backup merge preserved a same-name content version', 1, ?, ?, ?, 1, ?, 1)`,
+              [uuidv4(), sourceId, targetId, new Date().toISOString(), new Date().toISOString(), new Date().toISOString(), new Date().toISOString()],
+            );
+          }
+
+          const existingRelationshipKeys = new Set(
+            (mode === 'merge' ? await ctx.db.all<any>('SELECT source_id, target_id, type, valid_from FROM relationships') : [])
+              .map((row) => `${row.source_id}|${row.target_id}|${row.type}|${row.valid_from ?? ''}`),
+          );
+
           for (const r of body.relationships || []) {
             if (mode === 'merge' && existing.relationships.has(r.id)) continue;
+            const sourceId = entityIdRemap.get(r.source_id) ?? r.source_id;
+            const targetId = entityIdRemap.get(r.target_id) ?? r.target_id;
+            if (sourceId !== r.source_id || targetId !== r.target_id) mergeReport.relationshipRemaps++;
+            const relationshipKey = `${sourceId}|${targetId}|${r.type}|${r.valid_from ?? r.created_at ?? ''}`;
+            if (mode === 'merge' && existingRelationshipKeys.has(relationshipKey)) {
+              mergeReport.semanticRelationshipDeduplications++;
+              continue;
+            }
             await ctx.db.run(
               `INSERT INTO relationships (
                  id, source_id, target_id, type, description, weight, created_at,
@@ -291,8 +404,8 @@ export const handleAdminRoutes = [
                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 r.id,
-                r.source_id,
-                r.target_id,
+                sourceId,
+                targetId,
                 r.type,
                 r.description ?? null,
                 r.weight ?? 1.0,
@@ -309,11 +422,24 @@ export const handleAdminRoutes = [
                 r.decay_version ?? 1,
               ]
             );
+            existingRelationshipKeys.add(relationshipKey);
             counts.relationships++;
           }
 
+          const existingAssertionKeys = new Set(
+            (mode === 'merge' ? await ctx.db.all<any>('SELECT subject_id, predicate, object_id, literal_value, valid_from FROM assertions') : [])
+              .map((row) => `${row.subject_id}|${row.predicate}|${row.object_id ?? ''}|${row.literal_value ?? ''}|${row.valid_from ?? ''}`),
+          );
+
           for (const a of body.assertions || []) {
             if (mode === 'merge' && existing.assertions.has(a.id)) continue;
+            const subjectId = entityIdRemap.get(a.subject_id) ?? a.subject_id;
+            const objectId = a.object_id ? (entityIdRemap.get(a.object_id) ?? a.object_id) : null;
+            const assertionKey = `${subjectId}|${a.predicate}|${objectId ?? ''}|${a.literal_value ?? ''}|${a.valid_from ?? a.created_at ?? ''}`;
+            if (mode === 'merge' && existingAssertionKeys.has(assertionKey)) {
+              mergeReport.semanticAssertionDeduplications++;
+              continue;
+            }
             const provenance = a.provenance && typeof a.provenance !== 'string'
               ? JSON.stringify(a.provenance)
               : a.provenance ?? null;
@@ -327,9 +453,9 @@ export const handleAdminRoutes = [
                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 a.id,
-                a.subject_id,
+                subjectId,
                 a.predicate,
-                a.object_id ?? null,
+                objectId,
                 a.literal_value ?? null,
                 a.confidence ?? 1,
                 a.source_span ?? null,
@@ -348,6 +474,7 @@ export const handleAdminRoutes = [
                 a.updated_at ?? createdAt,
               ]
             );
+            existingAssertionKeys.add(assertionKey);
             counts.assertions++;
           }
 
@@ -441,7 +568,7 @@ export const handleAdminRoutes = [
         return sendError(res, 500, `Import failed: ${msg}`);
       }
 
-      sendResponse(res, 200, { mode, imported: counts });
+      sendResponse(res, 200, { mode, imported: counts, ...(mode === 'merge' ? { mergeReport } : {}) });
     },
   },
   {

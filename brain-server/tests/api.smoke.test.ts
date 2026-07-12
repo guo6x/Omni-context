@@ -497,6 +497,53 @@ describe('API smoke: admin export', () => {
     expect(Array.isArray(body.entities)).toBe(true);
     expect(headers['content-disposition']).toContain('attachment');
   });
+
+  it('merges semantic IDs, preserves versions, applies tombstones, and remaps relationships', async () => {
+    const localSource = await db.addEntity({
+      id: 'merge-local-source', name: 'Portable Concept', type: 'concept', description: 'same content',
+    });
+    const localTarget = await db.addEntity({
+      id: 'merge-local-target', name: 'Portable Target', type: 'concept', description: 'target content',
+    });
+    const tombstoneTarget = await db.addEntity({
+      id: 'merge-tombstone-target', name: 'Delete Me Safely', type: 'concept', description: 'retained historically',
+    });
+    const result = await request('POST', '/api/admin/import', {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      mode: 'merge',
+      entities: [
+        { id: 'remote-source', name: localSource.name, type: localSource.type, description: localSource.description },
+        { id: 'remote-target', name: localTarget.name, type: localTarget.type, description: localTarget.description },
+        { id: 'remote-version', name: localSource.name, type: localSource.type, description: 'newer changed content', valid_from: '2027-01-01T00:00:00.000Z', metadata: '{}' },
+        { id: tombstoneTarget.id, name: tombstoneTarget.name, type: tombstoneTarget.type, description: tombstoneTarget.description, metadata: JSON.stringify({ tombstone: true, deleted_at: '2026-08-01T00:00:00.000Z' }) },
+      ],
+      relationships: [
+        { id: 'remote-remapped-relation', source_id: 'remote-source', target_id: 'remote-target', type: 'relates_to', weight: 1 },
+      ],
+      assertions: [
+        { id: 'remote-remapped-assertion', subject_id: 'remote-source', predicate: 'references', object_id: 'remote-target', confidence: 1 },
+      ],
+      coreMemory: [], archivalMemory: [], notifications: [],
+    });
+    expect(result.status).toBe(200);
+    expect(result.body.mergeReport).toMatchObject({
+      sameIdConflicts: 1,
+      semanticEntityRemaps: 2,
+      preservedVersions: 1,
+      tombstonesApplied: 1,
+      relationshipRemaps: 1,
+    });
+    expect(await db.get<any>('SELECT source_id, target_id FROM relationships WHERE id = ?', ['remote-remapped-relation']))
+      .toMatchObject({ source_id: localSource.id, target_id: localTarget.id });
+    expect(await db.get<any>('SELECT subject_id, object_id FROM assertions WHERE id = ?', ['remote-remapped-assertion']))
+      .toMatchObject({ subject_id: localSource.id, object_id: localTarget.id });
+    expect(await db.get<any>('SELECT valid_until FROM entities WHERE id = ?', [tombstoneTarget.id]))
+      .toMatchObject({ valid_until: '2026-08-01T00:00:00.000Z' });
+    expect(await db.get<any>(
+      "SELECT id FROM relationships WHERE type = 'historical_version_of' AND (source_id = 'remote-version' OR target_id = 'remote-version')",
+    )).toBeDefined();
+  });
 });
 
 describe('API smoke: admin seed demo', () => {
