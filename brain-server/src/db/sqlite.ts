@@ -946,11 +946,16 @@ export class Database {
     limit: number,
     field: 'created_at' | 'last_accessed' = 'created_at',
   ): Promise<any[]> {
-    const col = field === 'last_accessed' ? 'last_accessed' : 'created_at';
+    const effectiveTimeExpr = `COALESCE(event_time, valid_from, observed_at, recorded_at, created_at)`;
+    const col = field === 'last_accessed' ? 'last_accessed'
+      : field === 'created_at' ? 'created_at'
+      : effectiveTimeExpr;
     const rows = await this.all<any>(
       `SELECT id, name, type, description, tags, created_at, last_accessed, access_count
        FROM entities
-       WHERE ${col} >= ? AND ${col} < ? AND json_extract(metadata, '$.merged_into') IS NULL
+       WHERE ${col} >= ? AND ${col} < ?
+         AND (valid_until IS NULL OR valid_until > datetime('now'))
+         AND json_extract(metadata, '$.merged_into') IS NULL
        ORDER BY ${col} DESC LIMIT ?`,
       [startIso, endIso, limit],
     );

@@ -490,12 +490,13 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
             this.db.bumpAccessCounts(accIds).catch(() => {});
           }
 
-          return this.formatResponse({
-            results: retrieval.ranked.map(toCompactEntity),
-            graphContext: { ...retrieval.graphContext, nodes: retrieval.graphContext.nodes.map(toCompactEntity) },
-            searchMethods: retrieval.counts,
-          });
-        }
+    return this.formatResponse({
+      results: retrieval.ranked.map(toCompactEntity),
+      graphContext: { ...retrieval.graphContext, nodes: retrieval.graphContext.nodes.map(toCompactEntity) },
+      assertions: retrieval.assertions || [],
+      searchMethods: retrieval.counts,
+    });
+  }
 
         case 'save_conclusion': {
           const parsed = SaveConclusionSchema.parse(args);
@@ -1028,7 +1029,44 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
     if (window) {
       const temporal = await this.db.getEntitiesByTimeWindow(window.start, window.end, pool);
       temporalCount = temporal.length;
-      for (const entity of temporal) candidateMap.set(entity.id, entity);
+     for (const entity of temporal) candidateMap.set(entity.id, entity);
+    }
+
+    // Include assertions as temporal fact candidates
+    let assertionCount = 0;
+    const assertionCandidates: RetrievalCandidate[] = [];
+    try {
+      const assertions = await this.db.getAssertions({
+        includeHistorical,
+        limit: pool,
+      } as any);
+      assertionCount = assertions.length;
+      for (const a of assertions) {
+        assertionCandidates.push({
+          id: a.id,
+          name: `${a.predicate}: ${a.literal_value || a.object_id || ''}`,
+          type: 'assertion',
+          description: a.literal_value
+            ? `${a.predicate} = ${a.literal_value}`
+            : `${a.predicate} -> ${a.object_id}`,
+          similarity: a.confidence || 0.5,
+          metadata: {
+            subject_id: a.subject_id,
+            predicate: a.predicate,
+            object_id: a.object_id,
+            literal_value: a.literal_value,
+            confidence: a.confidence,
+            source_span: a.source_span,
+            valid_from: a.valid_from,
+            valid_until: a.valid_until,
+            is_historical: !!(a.valid_until && new Date(a.valid_until) < new Date()),
+          },
+          valid_from: a.valid_from,
+          valid_until: a.valid_until,
+        });
+      }
+    } catch (e) {
+      console.warn('[retrieval] assertion fetch failed:', e);
     }
 
     const graphNodes = new Map<string, Entity>();
@@ -1063,7 +1101,9 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
         vector: vectorResults.length,
         temporal: temporalCount,
         graph: graphNodes.size,
+        assertion: assertionCount,
       },
+      assertions: assertionCandidates.slice(0, limit),
     };
   }
 
