@@ -278,3 +278,29 @@ export function useDecisionContext() {
     reset,
   };
 }
+
+
+// P0-9: Decision lineage tracking
+type LineageRelation = 'continues' | 'revises' | 'supersedes' | 'reverses' | 'invalidates';
+
+interface SaveDecisionPayload {
+  situation: string;
+  previous_decision_id?: string;
+  supersedes_decision_id?: string;
+  lineage_relation?: LineageRelation;
+  evidence_ids?: string[];
+  conclusion?: string;
+}
+
+function withLineage(payload: SaveDecisionPayload): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...payload };
+  if (payload.previous_decision_id) {
+    result.previous_decision_id = payload.previous_decision_id;
+    result.lineage_relation = payload.lineage_relation || 'continues';
+  }
+  if (payload.supersedes_decision_id) {
+    result.supersedes_decision_id = payload.supersedes_decision_id;
+    result.lineage_relation = 'supersedes';
+  }
+  return result;
+}

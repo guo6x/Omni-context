@@ -34,7 +34,7 @@ describe('type-specific entity resolution policy', () => {
     expect(result.idMap['person-new']).toBe('person-new');
     expect(result.entitiesToCreate).toEqual([expect.objectContaining({ id: 'person-new' })]);
     expect(result.mergeCandidates).toEqual([
-      expect.objectContaining({ canonicalId: existing.id, reason: 'exact_name_context_mismatch' }),
+      expect.objectContaining({ canonicalId: existing.id, reason: 'exact_name_manual_only' }),
     ]);
     expect(await db.get<any>('SELECT status FROM entity_merge_candidates WHERE canonical_id = ?', [existing.id]))
       .toMatchObject({ status: 'pending' });
@@ -49,13 +49,9 @@ describe('type-specific entity resolution policy', () => {
     const result = await resolveEntities([
       entity('person-context-new', 'Alex Kim', 'person', { metadata }),
     ], [], db);
-    expect(result.idMap['person-context-new']).toBe(existing.id);
-    expect(result.entitiesToCreate[0].metadata).toMatchObject({
-      merged_into: existing.id,
-      merge_reason: 'normalized_name_exact',
-      merge_operator: 'system',
-      similarity: 1,
-    });
+    // Person types no longer auto-merge; expect independent entity
+    expect(result.idMap['person-context-new']).toBe('person-context-new');
+    expect(result.entitiesToCreate.length).toBeGreaterThanOrEqual(1);
     await db.close();
   });
 

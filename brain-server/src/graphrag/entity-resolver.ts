@@ -35,7 +35,7 @@ export interface ResolutionResult {
 }
 
 const AUTO_SEMANTIC_TYPES = new Set<EntityType>(['tool', 'architecture_pattern']);
-const NEVER_AUTO_MERGE_TYPES = new Set<EntityType>(['decision', 'preference', 'goal', 'event']);
+const NEVER_AUTO_MERGE_TYPES = new Set<EntityType>(['decision', 'preference', 'goal', 'event', 'task', 'question', 'person', 'project']);
 const CONTEXT_GATED_TYPES = new Set<EntityType>(['person', 'project', 'task', 'question']);
 const MAX_CANDIDATES = 20;
 const KNN_RECALL = 80;
@@ -411,4 +411,90 @@ export async function resolveEntities(
     idMap: resolvedIdMap,
     mergeCandidates,
   };
+}
+
+
+// P0-11: Merge review queue operations
+export interface MergeAction {
+  action: 'confirm' | 'reject' | 'revert';
+  mergeCandidateId: string;
+  operator?: string;
+}
+
+export async function confirmMerge(db: Database, mergeId: string): Promise<void> {
+  await db.withTransaction(async () => {
+    const row = await db.get<any>(
+      "SELECT * FROM entity_merge_candidates WHERE id = ? AND status = 'pending'",
+      [mergeId]
+    );
+    if (!row) throw new Error("Merge candidate not found or already processed");
+
+    const canonicalId = row.canonical_id;
+    const candidateId = row.candidate_entity_id;
+    const now = new Date().toISOString();
+
+    // Create alias with merged_into pointing to canonical
+    await db.run(
+      "UPDATE entities SET metadata = json_set(COALESCE(metadata, '{}'), '$.merged_into', ?, '$.merge_reason', 'manual_confirm', '$.merged_at', ?) WHERE id = ?",
+      [canonicalId, now, candidateId]
+    );
+
+    // Update merge candidate status
+    await db.run(
+      "UPDATE entity_merge_candidates SET status = 'confirmed', reviewed_at = ? WHERE id = ?",
+      [now, mergeId]
+    );
+
+    // Write audit log
+    await db.run(
+      "INSERT INTO entity_merge_audit (id, canonical_id, alias_id, action, operator, created_at) VALUES (?, ?, ?, 'confirm', 'system', ?)",
+      [candidateId + '_audit_' + Date.now(), canonicalId, candidateId, now]
+    );
+  });
+}
+
+export async function rejectMerge(db: Database, mergeId: string): Promise<void> {
+  await db.withTransaction(async () => {
+    const row = await db.get<any>(
+      "SELECT * FROM entity_merge_candidates WHERE id = ? AND status = 'pending'",
+      [mergeId]
+    );
+    if (!row) throw new Error("Merge candidate not found or already processed");
+
+    const now = new Date().toISOString();
+    await db.run(
+      "UPDATE entity_merge_candidates SET status = 'rejected', reviewed_at = ? WHERE id = ?",
+      [now, mergeId]
+    );
+  });
+}
+
+export async function revertMerge(db: Database, mergeId: string): Promise<void> {
+  await db.withTransaction(async () => {
+    const audit = await db.get<any>(
+      "SELECT * FROM entity_merge_audit WHERE id LIKE ? AND reverted_at IS NULL LIMIT 1",
+      [mergeId + '%']
+    );
+    if (!audit) throw new Error("Merge audit record not found");
+
+    const now = new Date().toISOString();
+
+    // Remove merged_into from alias entity
+    await db.run(
+      "UPDATE entities SET metadata = json_remove(COALESCE(metadata, '{}'), '$.merged_into', '$.merge_reason', '$.merged_at') WHERE id = ?",
+      [audit.alias_id]
+    );
+
+    // Mark merge candidate as reverted
+    await db.run(
+      "UPDATE entity_merge_candidates SET status = 'reverted', reviewed_at = ? WHERE canonical_id = ? AND status = 'confirmed'",
+      [now, audit.canonical_id]
+    );
+
+    // Mark audit as reverted
+    await db.run(
+      "UPDATE entity_merge_audit SET reverted_at = ? WHERE id = ?",
+      [now, audit.id]
+    );
+  });
 }

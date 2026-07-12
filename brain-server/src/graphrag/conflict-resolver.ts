@@ -232,3 +232,57 @@ export async function resolveConflicts(
   }
   return saved;
 }
+
+
+// P0-6: Time-based single-value relationship supersede rules.
+// Only auto-supersede when: same subject+predicate, new fact has clear later valid_from/event_time,
+// temporal confidence meets threshold, source is trusted, no ambiguity.
+const SINGLE_VALUED_PREDICATES = new Set(['works_at', 'lives_in', 'studies_at', 'married_to']);
+
+interface SupersedeCheck {
+  shouldSupersede: boolean;
+  reason: string;
+  action: 'supersede' | 'retain_both' | 'review';
+}
+
+export function checkSingleValueSupersede(
+  existing: { source_id: string; type: string; target_id: string; valid_from?: string; valid_until?: string; event_time?: string; temporal_confidence?: number; provenance?: Record<string, unknown> },
+  incoming: { source_id: string; type: string; target_id: string; valid_from?: string; valid_until?: string; event_time?: string; temporal_confidence?: number; provenance?: Record<string, unknown> },
+): SupersedeCheck {
+  // Only apply to single-valued predicates
+  if (!SINGLE_VALUED_PREDICATES.has(incoming.type)) {
+    return { shouldSupersede: false, reason: 'not_single_valued', action: 'retain_both' };
+  }
+
+  // Must be same subject and predicate
+  if (existing.source_id !== incoming.source_id || existing.type !== incoming.type) {
+    return { shouldSupersede: false, reason: 'different_subject_or_predicate', action: 'retain_both' };
+  }
+
+  const existingTime = existing.event_time || existing.valid_from;
+  const incomingTime = incoming.event_time || incoming.valid_from;
+
+  // New fact with no time cannot supersede old fact with time
+  if (!incomingTime && existingTime) {
+    return { shouldSupersede: false, reason: 'incoming_no_time_existing_has_time', action: 'review' };
+  }
+
+  // New fact earlier than old fact cannot supersede
+  if (existingTime && incomingTime && new Date(incomingTime) <= new Date(existingTime)) {
+    return { shouldSupersede: false, reason: 'incoming_not_later', action: 'review' };
+  }
+
+  // Check temporal confidence
+  const confidence = incoming.temporal_confidence ?? 0.5;
+  if (confidence < 0.7) {
+    return { shouldSupersede: false, reason: 'low_temporal_confidence', action: 'review' };
+  }
+
+  // Check provenance - historical imports don't auto-supersede
+  const prov = incoming.provenance as Record<string, unknown> | undefined;
+  if (prov && (prov.import_batch_id || prov.source === 'history_import')) {
+    return { shouldSupersede: false, reason: 'historical_import', action: 'review' };
+  }
+
+  return { shouldSupersede: true, reason: 'newer_fact_same_slot', action: 'supersede' };
+}

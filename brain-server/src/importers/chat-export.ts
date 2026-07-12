@@ -245,3 +245,89 @@ export function parseChatExport(raw: string): ParsedChatExport {
   }
   throw new Error('无法识别的导出格式（目前支持 ChatGPT / Claude / Gemini）');
 }
+
+
+// P0-4: Import through entity resolution + conflict resolution pipeline.
+// Uses dynamic imports to avoid circular dependency issues at module load time.
+export async function importWithResolution(
+  db: any,
+  extractor: any,
+  conversations: Array<{ id: string | number; title?: string; platform?: string; sessions: Array<{ text: string; timestamp?: string }> }>,
+): Promise<ImportJobResult> {
+  const { resolveEntities } = await import("../graphrag/entity-resolver.js");
+  const { resolveConflicts } = await import("../graphrag/conflict-resolver.js");
+
+  const result: ImportJobResult = {
+    totalConversations: conversations.length,
+    processed: 0,
+    failed: 0,
+    coverage: 0,
+    failureList: [],
+    status: "success",
+  };
+
+  const batchId = "import_" + Date.now();
+
+  for (const conv of conversations) {
+    try {
+      const sessions = conv.sessions || [];
+      for (const session of sessions) {
+        const text = session.text || session.content || session.message || "";
+        if (!text) continue;
+
+        const input = {
+          textContent: text,
+          timestamp: session.timestamp || new Date().toISOString(),
+        };
+        const extractResult = await extractor.extract(input);
+
+        const resolution = await resolveEntities(
+          extractResult.entities,
+          extractResult.relationships,
+          db,
+        );
+
+        for (const entity of resolution.entitiesToCreate) {
+          await db.addEntity({
+            ...entity,
+            metadata: {
+              ...(entity.metadata || {}),
+              ...withImportProvenance(
+                String(conv.id), batchId, "chat_import",
+                conv.platform || "unknown",
+                conv.title || "",
+                session.timestamp || "",
+              ),
+            },
+          });
+        }
+
+        try {
+          await resolveConflicts(
+            resolution.relationshipsToCreate,
+            db,
+            extractor,
+          );
+        } catch (err: any) {
+          console.error("[importWithResolution] conflict resolution failed:", err.message || err);
+        }
+      }
+      result.processed++;
+    } catch (err: any) {
+      result.failed++;
+      result.failureList.push({
+        id: String(conv.id),
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  result.coverage = result.totalConversations > 0
+    ? result.processed / result.totalConversations
+    : 0;
+
+  if (result.failed === result.totalConversations) result.status = "failed";
+  else if (result.failed > 0) result.status = "partial";
+
+  return result;
+}
