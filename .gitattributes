@@ -1,0 +1,32 @@
+# Auto-detect text files, normalize to LF in repo
+* text=auto
+
+# Generated schema artifacts - must be LF for deterministic hash comparison
+generated_capability_matrix.md text eol=lf
+schema_manifest.json text eol=lf
+mcp_tool_manifest.json text eol=lf
+shared/generated-domain-types.ts text eol=lf
+mobile-app/src/types/generated-domain.ts text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+
+# Windows batch
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.db binary
+*.sqlite binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.node binary
+*.onnx binary

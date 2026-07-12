@@ -1408,8 +1408,8 @@ export class Database {
          base_weight, last_decay_at, decay_version
        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
       [id, relationship.source_id, relationship.target_id, relationship.type,
-       relationship.description || null, relationship.weight || 1.0, now, now, validFrom, validUntil,
-       invalidatedAt, invalidationReason, relationship.weight || 1.0, now]
+      relationship.description || null, relationship.weight ?? 1.0, now, now, validFrom, validUntil,
+      invalidatedAt, invalidationReason, relationship.weight ?? 1.0, now]
     );
 
     // Relationships remain the graph compatibility view; every new edge also becomes
@@ -1437,7 +1437,7 @@ export class Database {
       target_id: relationship.target_id,
       type: relationship.type,
       description: relationship.description,
-      weight: relationship.weight || 1.0,
+     weight: relationship.weight ?? 1.0,
       created_at: now,
       last_activated: now,
       valid_from: validFrom,
