@@ -96,6 +96,8 @@ import {
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
   RecordDecisionOutcomeSchema,
+  AskMemorySchema,
+  GraphAnswerSchema,
 } from './mcp-tools.js';
 import { buildDecisionMetadata, getRecursiveDecisionLineage, recordDecisionOutcome } from './decision/decision-store.js';
 import {
@@ -967,6 +969,254 @@ ${evidenceBlock}`;
             throw new McpError(ErrorCode.InvalidParams, 'Decision not found');
           }
           return this.formatResponse(lineage);
+        }
+
+        case 'ask_memory': {
+          // stdio 版「问大脑」：与 HTTP 路径同构，复用 _retrieveMemoryCandidates 做时间感知检索
+          const parsed = AskMemorySchema.parse(args);
+          const messages: Array<{ role: string; content: string }> = Array.isArray(parsed.messages)
+            ? parsed.messages.filter((m: any) => m && typeof m.content === 'string')
+            : [];
+          const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+          const question = (lastUser?.content || parsed.query || '').trim();
+
+          const llmConfig = this.extractor.getLlmConfig();
+          if (!llmConfig.apiUrl) {
+            throw new McpError(ErrorCode.InvalidRequest, 'LLM_NOT_CONFIGURED');
+          }
+          if (!question) {
+            return this.formatResponse({ reply: '', sources: [] });
+          }
+
+          const retrieval = await this._retrieveMemoryCandidates(question, 6, true, true);
+          const seenSrc = new Set<string>();
+          const sources: any[] = [];
+          for (const m of [...retrieval.ranked, ...retrieval.graphContext.nodes]) {
+            if (m && m.id && !seenSrc.has(m.id)) {
+              seenSrc.add(m.id);
+              sources.push(toCompactEntity(m));
+            }
+          }
+          const cappedSources = sources.slice(0, 12);
+
+          const memoryItems = cappedSources
+            .map((m: any, i: number) => ({ item: m, index: i + 1 }))
+            .filter(({ item }) => item.type !== 'principle');
+          const principleItems = cappedSources
+            .map((m: any, i: number) => ({ item: m, index: i + 1 }))
+            .filter(({ item }) => item.type === 'principle');
+          const memoryBlock = memoryItems.length
+            ? memoryItems
+                .map(({ item, index }) => `[${index}] (${item.type}) ${item.name}: ${item.description || ''}`)
+                .join('\n')
+            : '（没有检索到相关记忆）';
+          const principleBlock = principleItems.length
+            ? principleItems
+                .map(({ item, index }) => `[${index}] (${item.type}) ${item.name}: ${item.description || ''}`)
+                .join('\n')
+            : '（没有相关核心原则）';
+
+          const systemPrompt = `你是用户的「第二大脑」。下面是从用户本地知识图谱中检索到的相关记忆和少量核心原则。
+请主要依据「相关记忆」回答用户的问题，并在每个重要事实后用 [编号] 标明对应 Entity 证据。
+「核心原则」只有在确实与本问题相关时才参考或引用；无关原则必须忽略，不能为了引用而引用。
+如果这些记忆里没有答案，就如实说"我的记忆里暂时没有这部分"，可顺带建议用户该捕获什么，不要编造。
+回答简洁、口语化，使用用户提问所用的语言。
+
+相关记忆：
+${memoryBlock}
+
+核心原则（仅在确与本问题相关时参考/引用，否则忽略）：
+${principleBlock}`;
+
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 60000);
+            const llmRes = await mcpLlmFetch(`${llmConfig.apiUrl}/chat/completions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(llmConfig.apiKey ? { Authorization: `Bearer ${llmConfig.apiKey}` } : {}),
+              },
+              body: JSON.stringify({
+                model: llmConfig.model,
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  ...(messages.length ? messages.slice(-8) : [{ role: 'user', content: question }]),
+                ],
+                max_tokens: 768,
+                temperature: 0.5,
+              }),
+              signal: controller.signal,
+            });
+            clearTimeout(timeout);
+            if (!llmRes.ok) throw new Error(`LLM API error: ${llmRes.status}`);
+            const data = (await llmRes.json()) as { choices: Array<{ message: { content: string } }> };
+            return this.formatResponse({
+              reply: data.choices?.[0]?.message?.content || '(no response)',
+              sources: cappedSources,
+              assertions: retrieval.assertions || [],
+            });
+          } catch (e) {
+            console.error('[ask_memory] Failed:', e);
+            return this.formatResponse({
+              reply: '抱歉，问答服务暂时不可用。',
+              sources: cappedSources,
+              assertions: retrieval.assertions || [],
+            });
+          }
+        }
+
+        case 'graph_answer': {
+          // stdio 版图谱原生回答：结构化输出 + 命中子图边 + 时间感知
+          const parsed = GraphAnswerSchema.parse(args);
+          const gaMessages: Array<{ role: string; content: string }> = Array.isArray(parsed.messages)
+            ? parsed.messages.filter((m: any) => m && typeof m.content === 'string')
+            : [];
+          const gaLastUser = [...gaMessages].reverse().find((m) => m.role === 'user');
+          const gaQuestion = (gaLastUser?.content || parsed.query || '').trim();
+
+          const gaLlm = this.extractor.getLlmConfig();
+          if (!gaLlm.apiUrl) {
+            throw new McpError(ErrorCode.InvalidRequest, 'LLM_NOT_CONFIGURED');
+          }
+          if (!gaQuestion) {
+            return this.formatResponse({
+              conclusion: '', reasons: [], sources: [], edges: [], citedEntityIds: [],
+            });
+          }
+
+          const gaRetrieval = await this._retrieveMemoryCandidates(gaQuestion, 6, true, true);
+          const gaSeen = new Set<string>();
+          const gaSources: any[] = [];
+          for (const m of [...gaRetrieval.ranked, ...gaRetrieval.graphContext.nodes]) {
+            if (m && m.id && !gaSeen.has(m.id)) {
+              gaSeen.add(m.id);
+              gaSources.push(toCompactEntity(m));
+            }
+          }
+          const gaCapped = gaSources.slice(0, 10);
+          const gaIds = new Set(gaCapped.map((s) => s.id));
+
+          // 时间感知：根据问题中的时间词决定是否剔除已失效关系
+          const gaTemporalOpts = temporalOptsFromQuery(gaQuestion);
+          const gaNowIso = new Date().toISOString();
+
+          // 命中节点之间的关系（构成高亮子图的边）
+          const gaEdges: Array<{ source: string; target: string; type: string }> = [];
+          const gaSeenEdge = new Set<string>();
+          for (const s of gaCapped) {
+            const rels = await this.db.getRelationshipsForEntity(s.id);
+            for (const r of rels) {
+              if (gaIds.has(r.source_id) && gaIds.has(r.target_id)) {
+                if (!gaTemporalOpts.includeHistorical) {
+                  const ru = (r as any).valid_until;
+                  if (ru && ru <= gaNowIso) continue;
+                }
+                const k = `${r.source_id}|${r.target_id}|${r.type}`;
+                if (!gaSeenEdge.has(k)) {
+                  gaSeenEdge.add(k);
+                  gaEdges.push({ source: r.source_id, target: r.target_id, type: r.type });
+                }
+              }
+            }
+          }
+
+          const gaMemoryItems = gaCapped
+            .map((m: any, i: number) => ({ item: m, index: i + 1 }))
+            .filter(({ item }) => item.type !== 'principle');
+          const gaCtxBlock = gaMemoryItems.length
+            ? gaMemoryItems
+                .map(({ item, index }) => `[${index}] (${item.type}) ${item.name}: ${item.description || ''}`)
+                .join('\n')
+            : '（没有检索到相关记忆）';
+          const gaConnBlock = gaEdges.length
+            ? gaEdges
+                .map((e) => {
+                  const sn = gaCapped.find((x) => x.id === e.source)?.name || '?';
+                  const tn = gaCapped.find((x) => x.id === e.target)?.name || '?';
+                  return `- ${sn} --[${e.type}]--> ${tn}`;
+                })
+                .join('\n')
+            : '（无已知关系）';
+
+          const gaSystem = `你是用户的「第二大脑」。基于下面从用户本地知识图谱检索到的记忆以及它们之间的关系来回答。
+要求：
+1. 先给一句话结论(conclusion)，直接、口语化；
+2. 给 2-4 条依据(reasons)，每条尽量用 refs 数组引用上面记忆的编号；
+3. 善用关系信息(冲突/取代/支持/源于)让推理有据，比如"X 和 Y 冲突过"；
+4. 若现有记忆不足以给出有深度的回答（尤其抉择类）：不要硬凑一个浅答案。conclusion 里如实说"要答好这个我得先了解一些情况"，并在 questions 里列出 3-6 个具体、全面的澄清问题；
+5. 判断用户是不是在做一个抉择(该不该/选哪个/要不要/选型)，是则 is_decision=true。
+只输出 JSON：{"conclusion":"...","reasons":[{"text":"...","refs":[1,2]}],"questions":["..."],"is_decision":false}
+使用用户提问所用的语言。
+
+相关记忆：
+${gaCtxBlock}
+
+它们之间的关系：
+${gaConnBlock}`;
+
+          try {
+            const gaController = new AbortController();
+            const gaTimeout = setTimeout(() => gaController.abort(), 60000);
+            let raw = '';
+            try {
+              const llmRes = await mcpLlmFetch(`${gaLlm.apiUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(gaLlm.apiKey ? { Authorization: `Bearer ${gaLlm.apiKey}` } : {}),
+                },
+                body: JSON.stringify({
+                  model: gaLlm.model,
+                  messages: [
+                    { role: 'system', content: gaSystem },
+                    ...(gaMessages.length ? gaMessages.slice(-8) : [{ role: 'user', content: gaQuestion }]),
+                  ],
+                  max_tokens: 1200,
+                  temperature: 0.4,
+                  response_format: { type: 'json_object' },
+                }),
+                signal: gaController.signal,
+              });
+              if (!llmRes.ok) throw new Error(`LLM API error: ${llmRes.status}`);
+              const d = (await llmRes.json()) as { choices: Array<{ message: { content: string } }> };
+              raw = d.choices?.[0]?.message?.content || '';
+            } finally {
+              clearTimeout(gaTimeout);
+            }
+            const jsonMatch = raw.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+            const parsedGa = JSON.parse(jsonMatch ? jsonMatch[1].trim() : raw.trim());
+            const reasons = Array.isArray(parsedGa.reasons) ? parsedGa.reasons.slice(0, 5) : [];
+            return this.formatResponse({
+              conclusion: typeof parsedGa.conclusion === 'string' ? parsedGa.conclusion : '',
+              reasons: reasons
+                .map((r: any) => ({
+                  text: String(r?.text || ''),
+                  entityIds: Array.isArray(r?.refs)
+                    ? r.refs.map((n: any) => gaCapped[Number(n) - 1]?.id).filter(Boolean)
+                    : [],
+                }))
+                .filter((r: any) => r.text),
+              questions: Array.isArray(parsedGa.questions)
+                ? parsedGa.questions.slice(0, 6).filter((q: any) => typeof q === 'string' && q.trim())
+                : [],
+              isDecision: !!parsedGa.is_decision,
+              sources: gaCapped,
+              edges: gaEdges,
+              citedEntityIds: gaCapped.map((s) => s.id),
+              assertions: gaRetrieval.assertions || [],
+            });
+          } catch (e) {
+            console.error('[graph_answer] Failed:', e);
+            return this.formatResponse({
+              conclusion: '抱歉，回答服务暂时不可用。',
+              reasons: [],
+              sources: gaCapped,
+              edges: gaEdges,
+              citedEntityIds: gaCapped.map((s) => s.id),
+              assertions: gaRetrieval.assertions || [],
+            });
+          }
         }
 
         default:

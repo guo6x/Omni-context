@@ -309,6 +309,39 @@ describe('API smoke: MCP retrieval precision', () => {
   }, 15000);
 });
 
+describe('API smoke: ask_memory and graph_answer reachability', () => {
+  it('ask_memory returns structured response (not 404 / MethodNotFound)', async () => {
+    const { status, body } = await request('POST', '/api/mcp/tool/ask_memory', {
+      arguments: { query: 'What do I know about Project Alpha?' },
+    });
+
+    // Either 200 with a reply, or 400 LLM_NOT_CONFIGURED — both prove the tool is wired.
+    expect([200, 400]).toContain(status);
+    if (status === 200) {
+      expect(body).toHaveProperty('reply');
+      expect(Array.isArray(body.sources)).toBe(true);
+    } else {
+      expect(body.error || body.message).toMatch(/LLM_NOT_CONFIGURED/i);
+    }
+  }, 30000);
+
+  it('graph_answer returns structured response (not 404 / MethodNotFound)', async () => {
+    const { status, body } = await request('POST', '/api/mcp/tool/graph_answer', {
+      arguments: { query: 'Should I use Project Alpha for the new feature?' },
+    });
+
+    expect([200, 400]).toContain(status);
+    if (status === 200) {
+      expect(body).toHaveProperty('conclusion');
+      expect(Array.isArray(body.reasons)).toBe(true);
+      expect(Array.isArray(body.sources)).toBe(true);
+      expect(Array.isArray(body.edges)).toBe(true);
+    } else {
+      expect(body.error || body.message).toMatch(/LLM_NOT_CONFIGURED/i);
+    }
+  }, 30000);
+});
+
 describe('API smoke: MCP resources', () => {
   async function readResource(uri: string): Promise<any> {
     const { status, body } = await request('POST', '/api/mcp/resources/read', { uri });
