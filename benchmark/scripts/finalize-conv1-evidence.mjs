@@ -33,7 +33,7 @@ function stable(value) {
 }
 
 async function writeJson(target, value) {
-  await writeFile(target, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+  await writeFile(target, `${JSON.stringify(value, null, 2)}\n`);
 }
 
 function countBy(values, selector) {
@@ -47,22 +47,25 @@ function countBy(values, selector) {
 
 async function databaseSummary(dbPath, brainServerRoot) {
   const require = createRequire(path.join(brainServerRoot, 'package.json'));
-  const Database = require('better-sqlite3');
-  const db = new Database(dbPath, { readonly: true, fileMustExist: true });
+  const sqlite3 = require('sqlite3');
+  const db = await new Promise((resolve, reject) => {
+    const handle = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY, (error) => error ? reject(error) : resolve(handle));
+  });
+  const get = (sql) => new Promise((resolve, reject) => db.get(sql, (error, row) => error ? reject(error) : resolve(row)));
+  const all = (sql) => new Promise((resolve, reject) => db.all(sql, (error, rows) => error ? reject(error) : resolve(rows)));
   try {
-    const count = (table) => db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count;
     return {
-      entities: count('entities'),
-      relationships: count('relationships'),
-      assertions: count('assertions'),
-      principles: db.prepare("SELECT COUNT(*) AS count FROM entities WHERE type = 'principle'").get().count,
+      entities: (await get('SELECT COUNT(*) AS count FROM entities')).count,
+      relationships: (await get('SELECT COUNT(*) AS count FROM relationships')).count,
+      assertions: (await get('SELECT COUNT(*) AS count FROM assertions')).count,
+      principles: (await get("SELECT COUNT(*) AS count FROM entities WHERE type = 'principle'")).count,
       entity_types: Object.fromEntries(
-        db.prepare('SELECT type, COUNT(*) AS count FROM entities GROUP BY type ORDER BY type')
-          .all().map((row) => [row.type, row.count]),
+        (await all('SELECT type, COUNT(*) AS count FROM entities GROUP BY type ORDER BY type'))
+          .map((row) => [row.type, row.count]),
       ),
     };
   } finally {
-    db.close();
+    await new Promise((resolve, reject) => db.close((error) => error ? reject(error) : resolve()));
   }
 }
 
