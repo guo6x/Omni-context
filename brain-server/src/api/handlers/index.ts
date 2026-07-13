@@ -1,6 +1,6 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
-import { resolveEntities } from '../../graphrag/entity-resolver.js';
+import { resolveEntities, confirmMerge, rejectMerge, revertMerge } from '../../graphrag/entity-resolver.js';
 import { resolveConflicts } from '../../graphrag/conflict-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Entity } from '../../shared-types.js';
@@ -334,6 +334,77 @@ export const handleEntityRoutes = [
         sendResponse(res, 200, { success: true, ...result, mergedInto: body.targetId });
       } catch (error: unknown) {
         sendError(res, 400, error instanceof Error ? error.message : 'merge failed');
+      }
+    }
+  },
+  // Task 11: Merge review queue — list pending candidates so the UI can surface
+  // them for human confirmation. Without this route the queue is write-only.
+  {
+    method: 'GET' as const,
+    path: '/api/entities/merge/candidates',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const url = new URL(req.url ?? '', 'http://localhost');
+      const status = url.searchParams.get('status') ?? 'pending';
+      const allowedStatus = ['pending', 'confirmed', 'rejected', 'reverted'].includes(status)
+        ? status
+        : 'pending';
+      const rows = await ctx.db.all<any>(
+        `SELECT c.*, e_canonical.name AS canonical_name, e_candidate.name AS candidate_name_live
+         FROM entity_merge_candidates c
+         LEFT JOIN entities e_canonical ON e_canonical.id = c.canonical_id
+         LEFT JOIN entities e_candidate ON e_candidate.id = c.candidate_entity_id
+         WHERE c.status = ?
+         ORDER BY c.created_at DESC
+         LIMIT 200`,
+        [allowedStatus]
+      );
+      sendResponse(res, 200, rows);
+    }
+  },
+  // Task 11: Confirm a pending merge candidate — redirects relationships,
+  // assertions, FTS, and vec rows from the alias onto the canonical entity.
+  {
+    method: 'POST' as const,
+    path: '/api/entities/merge/:mergeId/confirm',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      try {
+        const result = await confirmMerge(ctx.db, params.mergeId);
+        sendResponse(res, 200, { success: true, ...result });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'confirm failed';
+        const status = /not found|already processed/i.test(message) ? 404 : 400;
+        sendError(res, status, message);
+      }
+    }
+  },
+  // Task 11: Reject a pending merge candidate — no redirects, just status flip.
+  {
+    method: 'POST' as const,
+    path: '/api/entities/merge/:mergeId/reject',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      try {
+        await rejectMerge(ctx.db, params.mergeId);
+        sendResponse(res, 200, { success: true });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'reject failed';
+        const status = /not found|already processed/i.test(message) ? 404 : 400;
+        sendError(res, status, message);
+      }
+    }
+  },
+  // Task 11: Revert a confirmed merge — restores alias visibility but does NOT
+  // reverse relationship/assertion redirects (see revertMerge comment for why).
+  {
+    method: 'POST' as const,
+    path: '/api/entities/merge/:mergeId/revert',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      try {
+        await revertMerge(ctx.db, params.mergeId);
+        sendResponse(res, 200, { success: true });
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'revert failed';
+        const status = /not found|already reverted/i.test(message) ? 404 : 400;
+        sendError(res, status, message);
       }
     }
   },

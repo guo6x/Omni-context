@@ -428,13 +428,43 @@ export async function resolveEntities(
 
 
 // P0-11: Merge review queue operations
+//
+// confirmMerge redirects every reference to the alias entity onto the canonical
+// entity — relationships, assertions, FTS rows, and vector embeddings. Without
+// these redirects the previous implementation only flipped a metadata flag on
+// the alias row, leaving the alias fully reachable from the graph and invisible
+// to no one. revertMerge now uses a stable audit id (`${mergeId}_audit`) instead
+// of a LIKE fuzzy match on `${mergeId}_audit_${Date.now()}`, so an audit row can
+// be reverted unambiguously even if multiple candidates share a mergeId prefix.
 export interface MergeAction {
   action: 'confirm' | 'reject' | 'revert';
   mergeCandidateId: string;
   operator?: string;
 }
 
-export async function confirmMerge(db: Database, mergeId: string): Promise<void> {
+// Stable audit id derived from the candidate id. Used by confirmMerge when
+// inserting the audit row and by revertMerge when looking it up.
+function auditIdFor(mergeId: string): string {
+  return `${mergeId}_audit`;
+}
+
+export interface MergeConfirmResult {
+  redirectedRelationships: number;
+  redirectedAssertions: number;
+  redirectedFts: number;
+  redirectedVec: number;
+  auditId: string;
+}
+
+export async function confirmMerge(db: Database, mergeId: string): Promise<MergeConfirmResult> {
+  const result: MergeConfirmResult = {
+    redirectedRelationships: 0,
+    redirectedAssertions: 0,
+    redirectedFts: 0,
+    redirectedVec: 0,
+    auditId: auditIdFor(mergeId),
+  };
+
   await db.withTransaction(async () => {
     const row = await db.get<any>(
       "SELECT * FROM entity_merge_candidates WHERE id = ? AND status = 'pending'",
@@ -444,26 +474,146 @@ export async function confirmMerge(db: Database, mergeId: string): Promise<void>
 
     const canonicalId = row.canonical_id;
     const candidateId = row.candidate_entity_id;
+    if (!candidateId) throw new Error("Candidate entity id missing — cannot redirect");
+    if (canonicalId === candidateId) throw new Error("Cannot merge entity into itself");
     const now = new Date().toISOString();
 
-    // Create alias with merged_into pointing to canonical
+    // 1) Redirect relationships. UPDATE OR IGNORE skips rows that would collide
+    // with UNIQUE(source_id, target_id, type) — i.e. an edge that already exists
+    // between canonical and the same target with the same type. Those collisions
+    // are dropped in the cleanup step below.
     await db.run(
-      "UPDATE entities SET metadata = json_set(COALESCE(metadata, '{}'), '$.merged_into', ?, '$.merge_reason', 'manual_confirm', '$.merged_at', ?) WHERE id = ?",
-      [canonicalId, now, candidateId]
+      'UPDATE OR IGNORE relationships SET source_id = ? WHERE source_id = ?',
+      [canonicalId, candidateId]
+    );
+    await db.run(
+      'UPDATE OR IGNORE relationships SET target_id = ? WHERE target_id = ?',
+      [canonicalId, candidateId]
+    );
+    // Drop self-loops introduced on canonical (candidate was previously linked to canonical).
+    await db.run(
+      'DELETE FROM relationships WHERE source_id = ? AND target_id = ?',
+      [canonicalId, canonicalId]
+    );
+    // Drop every edge still referencing the alias — these are exactly the rows
+    // that UPDATE OR IGNORE skipped because a conflicting edge already exists
+    // on canonical. Counting them gives us the redirect summary.
+    const relCleanup = await db.run(
+      'DELETE FROM relationships WHERE source_id = ? OR target_id = ?',
+      [candidateId, candidateId]
+    );
+    result.redirectedRelationships = relCleanup.changes ?? 0;
+
+    // 2) Redirect assertions. subject_id is NOT NULL with ON DELETE CASCADE;
+    // object_id is nullable with ON DELETE RESTRICT. Neither restricts UPDATE,
+    // so we can repoint both columns directly. The mirror assertions created
+    // for relationships (id LIKE 'relationship:%') have their subject_id set
+    // to the relationship's source entity, so they are repointed here too.
+    const subjRes = await db.run(
+      'UPDATE assertions SET subject_id = ? WHERE subject_id = ?',
+      [canonicalId, candidateId]
+    );
+    const objRes = await db.run(
+      'UPDATE assertions SET object_id = ? WHERE object_id = ?',
+      [canonicalId, candidateId]
+    );
+    result.redirectedAssertions = (subjRes.changes ?? 0) + (objRes.changes ?? 0);
+
+    // 3) Drop the alias's FTS row. The canonical row will be refreshed below.
+    // fts_entities is a virtual table — wrap in try/catch in case FTS5 is not
+    // available in the current build.
+    try {
+      const ftsRes = await db.run(
+        'DELETE FROM fts_entities WHERE entity_id = ?',
+        [candidateId]
+      );
+      result.redirectedFts = ftsRes.changes ?? 0;
+    } catch {
+      result.redirectedFts = 0;
+    }
+
+    // 4) Drop the alias's vector row. vec_entities is a sqlite-vec virtual
+    // table and may not be loaded in every environment.
+    try {
+      const vecRes = await db.run(
+        'DELETE FROM vec_entities WHERE entity_id = ?',
+        [candidateId]
+      );
+      result.redirectedVec = vecRes.changes ?? 0;
+    } catch {
+      result.redirectedVec = 0;
+    }
+
+    // 5) Soft-hide the alias entity (preserve row for audit trail).
+    // loadCandidates and searchEntities both filter
+    // json_extract(metadata, '$.merged_into') IS NULL.
+    await db.run(
+      "UPDATE entities SET metadata = json_set(COALESCE(metadata, '{}'), '$.merged_into', ?, '$.merge_reason', 'manual_confirm', '$.merged_at', ?), updated_at = ? WHERE id = ?",
+      [canonicalId, now, now, candidateId]
     );
 
-    // Update merge candidate status
+    // 6) Refresh canonical's FTS row so that any future search picks up the
+    // merged-in description/tags. We re-read the canonical row to capture the
+    // post-merge name/description/tags.
+    const canon = await db.get<any>(
+      'SELECT name, description, tags FROM entities WHERE id = ?',
+      [canonicalId]
+    );
+    if (canon) {
+      try {
+        await db.run('DELETE FROM fts_entities WHERE entity_id = ?', [canonicalId]);
+        await db.run(
+          'INSERT INTO fts_entities (entity_id, name, description, tags) VALUES (?, ?, ?, ?)',
+          [canonicalId, canon.name ?? '', canon.description ?? '', canon.tags ?? '']
+        );
+      } catch {
+        // FTS5 unavailable — search will fall back to LIKE queries on entities.
+      }
+    }
+
+    // 7) Update candidate status. confirmed_at is recorded separately from
+    // reviewed_at so the queue can distinguish "confirmed then reverted"
+    // (reviewed_at set, confirmed_at set, reverted_at set) from "rejected"
+    // (reviewed_at set, confirmed_at NULL).
     await db.run(
-      "UPDATE entity_merge_candidates SET status = 'confirmed', reviewed_at = ? WHERE id = ?",
-      [now, mergeId]
+      "UPDATE entity_merge_candidates SET status = 'confirmed', reviewed_at = ?, confirmed_at = ? WHERE id = ?",
+      [now, now, mergeId]
     );
 
-    // Write audit log
+    // 8) Write audit log with stable id and redirect summary. The id is
+    // `${mergeId}_audit` (no timestamp suffix) so revertMerge can look it
+    // up by exact match instead of LIKE prefix matching.
+    const snapshot = {
+      canonical_id: canonicalId,
+      alias_id: candidateId,
+      merged_at: now,
+      redirected_relationships: result.redirectedRelationships,
+      redirected_assertions: result.redirectedAssertions,
+      redirected_fts: result.redirectedFts,
+      redirected_vec: result.redirectedVec,
+    };
     await db.run(
-      "INSERT INTO entity_merge_audit (id, canonical_id, alias_id, merge_reason, similarity, operator, snapshot, created_at) VALUES (?, ?, ?, ?, ?, 'system', ?, ?)",
-      [`${mergeId}_audit_${Date.now()}`, canonicalId, candidateId, row.reason ?? 'manual_confirm', row.similarity ?? null, JSON.stringify({ canonical_id: canonicalId, merged_at: now }), now]
+      `INSERT INTO entity_merge_audit
+        (id, canonical_id, alias_id, merge_reason, similarity, operator, snapshot, created_at,
+         redirected_relationships, redirected_assertions, redirected_fts, redirected_vec)
+       VALUES (?, ?, ?, ?, ?, 'system', ?, ?, ?, ?, ?, ?)`,
+      [
+        result.auditId,
+        canonicalId,
+        candidateId,
+        row.reason ?? 'manual_confirm',
+        row.similarity ?? null,
+        JSON.stringify(snapshot),
+        now,
+        result.redirectedRelationships,
+        result.redirectedAssertions,
+        result.redirectedFts,
+        result.redirectedVec,
+      ]
     );
   });
+
+  return result;
 }
 
 export async function rejectMerge(db: Database, mergeId: string): Promise<void> {
@@ -482,32 +632,48 @@ export async function rejectMerge(db: Database, mergeId: string): Promise<void> 
   });
 }
 
+// revertMerge restores the alias entity's visibility but does NOT reverse the
+// relationship/assertion/FTS/vec redirects. Once edges have been folded onto
+// the canonical entity, the canonical may have accumulated its own new edges
+// in the meantime, and undoing the redirect would require disambiguating
+// "edge came from alias" vs "edge was created on canonical after the merge".
+// That ambiguity is recorded in the audit snapshot; a true undo would need a
+// per-edge provenance trail which is out of scope for v3 hardening. The
+// restored alias is visible again and can accumulate new edges going forward.
 export async function revertMerge(db: Database, mergeId: string): Promise<void> {
   await db.withTransaction(async () => {
+    // Stable audit id — exact match instead of LIKE prefix fuzzy match.
+    const auditId = auditIdFor(mergeId);
     const audit = await db.get<any>(
-      "SELECT * FROM entity_merge_audit WHERE id LIKE ? AND reverted_at IS NULL LIMIT 1",
-      [mergeId + '%']
+      "SELECT * FROM entity_merge_audit WHERE id = ? AND reverted_at IS NULL",
+      [auditId]
     );
-    if (!audit) throw new Error("Merge audit record not found");
+    if (!audit) {
+      throw new Error(
+        "Merge audit record not found or already reverted — check mergeId and current status"
+      );
+    }
 
     const now = new Date().toISOString();
 
-    // Remove merged_into from alias entity
+    // Remove merged_into flag from alias entity (soft-restore).
     await db.run(
-      "UPDATE entities SET metadata = json_remove(COALESCE(metadata, '{}'), '$.merged_into', '$.merge_reason', '$.merged_at') WHERE id = ?",
-      [audit.alias_id]
+      "UPDATE entities SET metadata = json_remove(COALESCE(metadata, '{}'), '$.merged_into', '$.merge_reason', '$.merged_at'), updated_at = ? WHERE id = ?",
+      [now, audit.alias_id]
     );
 
-    // Restore merge candidate to pending so it can be re-reviewed
+    // Restore candidate to pending. confirmed_at and reverted_at together
+    // record the full lifecycle: confirmed_at set + reverted_at set means
+    // "this was confirmed and later reverted".
     await db.run(
-      "UPDATE entity_merge_candidates SET status = 'pending', reviewed_at = NULL WHERE id = ? AND status = 'confirmed'",
-      [mergeId]
+      "UPDATE entity_merge_candidates SET status = 'pending', reviewed_at = NULL, confirmed_at = NULL, reverted_at = ? WHERE id = ? AND status = 'confirmed'",
+      [now, mergeId]
     );
 
-    // Mark audit as reverted
+    // Mark audit as reverted.
     await db.run(
       "UPDATE entity_merge_audit SET reverted_at = ? WHERE id = ?",
-      [now, audit.id]
+      [now, auditId]
     );
   });
 }

@@ -612,6 +612,28 @@ const MIGRATIONS: Migration[] = [
       WHERE invalidated_at IS NULL;
     `,
   },
+  {
+    version: 22,
+    name: 'extend_entity_merge_audit_with_redirect_summary',
+    up: `
+      -- Task 11: Track confirm/revert timestamps separately on the candidate row.
+      -- reviewed_at was overloaded for both reject and confirm; reverted_at was missing.
+      ALTER TABLE entity_merge_candidates ADD COLUMN confirmed_at TEXT;
+      ALTER TABLE entity_merge_candidates ADD COLUMN reverted_at TEXT;
+
+      -- Task 11: Audit row must record what was redirected so revert/review
+      -- has a paper trail. Without these, confirmMerge was a metadata flag flip
+      -- with no observable effect on the graph.
+      ALTER TABLE entity_merge_audit ADD COLUMN redirected_relationships INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE entity_merge_audit ADD COLUMN redirected_assertions INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE entity_merge_audit ADD COLUMN redirected_fts INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE entity_merge_audit ADD COLUMN redirected_vec INTEGER NOT NULL DEFAULT 0;
+
+      -- Allow looking up audit history by canonical entity (previously only by alias).
+      CREATE INDEX IF NOT EXISTS idx_entity_merge_audit_canonical
+        ON entity_merge_audit(canonical_id, created_at DESC);
+    `,
+  },
 ];
 
 interface Migration {
