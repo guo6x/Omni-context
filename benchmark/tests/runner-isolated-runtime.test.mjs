@@ -100,6 +100,7 @@ describe('production runner owns an isolated conversation runtime', () => {
       path.join(conversationDir, 'extraction-diagnostics.jsonl'), 'utf8'
     )).trim());
     assert.strictEqual(manifest.status, 'completed');
+    assert.strictEqual(manifest.embedding_model, 'fake-semantic-v1');
     assert.match(manifest.conversation_databases['1'].sha256, /^[a-f0-9]{64}$/);
     assert.strictEqual(runtime.status, 'stopped');
     assert.strictEqual(ingestion.status, 'completed');
@@ -130,5 +131,39 @@ describe('production runner owns an isolated conversation runtime', () => {
     const persistedDb = JSON.parse(await readFile(path.join(conversationDir, 'brain.db'), 'utf8'));
     assert.strictEqual(resumed.stats.skipped, 1);
     assert.strictEqual(persistedDb.entities.length, 1, 'resume must not re-ingest completed conversation');
+  });
+
+  it('persists a failed manifest when the production runtime throws', async () => {
+    const datasetHash = await sha256File(datasetPath);
+    let failedRunDir;
+    const runtimeFactory = (options) => {
+      failedRunDir = options.runDir;
+      return {
+        async start() {
+          throw new Error('fixture runtime startup failure');
+        },
+      };
+    };
+
+    await assert.rejects(() => runBenchmark({
+      llmClient: { answer() {}, judge() {} },
+      datasetPath,
+      config: { benchmark_commit: 'fixture', brain_server_commit: 'fixture' },
+      answerPrompt: 'answer fixture',
+      judgePrompt: 'judge fixture',
+      datasetManifest: { sha256: datasetHash, source_commit: 'fixture' },
+      split: 'development',
+      conversationIds: [1],
+      runsRoot: root,
+      runtimeFactory,
+    }), /fixture runtime startup failure/);
+
+    const manifest = JSON.parse(await readFile(path.join(failedRunDir, 'manifest.json'), 'utf8'));
+    assert.strictEqual(manifest.status, 'failed');
+    assert.match(manifest.completed_at, /^\d{4}-\d{2}-\d{2}T/);
+    assert.deepStrictEqual(manifest.failure, {
+      type: 'Error',
+      message: 'fixture runtime startup failure',
+    });
   });
 });

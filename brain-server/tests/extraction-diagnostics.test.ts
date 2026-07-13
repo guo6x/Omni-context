@@ -96,6 +96,33 @@ describe('formal evaluation extraction diagnostics', () => {
     });
   });
 
+  it('keeps valid facts when optional provider time text is vague and records a hash-only diagnostic', async () => {
+    const content = JSON.stringify({
+      entities: [{ name: 'Caroline', type: 'person', description: 'A person' }],
+      facts: [{
+        subject: 'Caroline', predicate: 'likes', object: 'painting', confidence: 0.9,
+        source_span: 'Caroline: I enjoy painting.', event_time: 'whenever the stars align',
+      }],
+      principles: [],
+    });
+    const raw = JSON.stringify({ choices: [{ message: { content }, finish_reason: 'stop' }] });
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(raw, { status: 200 }));
+    const pipeline = new LLMExtractorPipeline({ apiUrl: 'http://127.0.0.1:11434/v1', model: 'fixture' });
+    const detailed = await pipeline.extractWithDiagnostics('Caroline: I enjoy painting.', {
+      referenceTime: '2023-05-21T19:48:00.000Z',
+    });
+    expect(detailed.diagnostics.status).toBe('parsed');
+    expect(detailed.result.facts).toHaveLength(1);
+    expect(detailed.result.facts[0].event_time).toBeUndefined();
+    expect(detailed.diagnostics.normalization.temporal_values).toEqual([{
+      fact_index: 0,
+      field: 'event_time',
+      value_sha256: createHash('sha256').update('whenever the stars align').digest('hex'),
+      action: 'dropped',
+      reason: 'unparseable_optional_temporal_value',
+    }]);
+  });
+
   it('fails formal evaluation instead of silently returning regex-only output', async () => {
     vi.spyOn(LLMExtractorPipeline.prototype, 'extractWithDiagnostics').mockResolvedValue({
       result: { entities: [], facts: [], principles: [] },

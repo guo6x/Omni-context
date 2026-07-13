@@ -372,12 +372,25 @@ export async function runBenchmark({
   validateManifest(manifest);
   await writeFile(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', { flag: 'wx' });
 
-  const stats = await runQuestions({
-    llmClient, datasetPath, config, answerPrompt, judgePrompt,
-    split, conversationIds, runDir, runtimeFactory, brainServerRoot,
-    resumeRuntime: false,
-    heldoutAuthorization: evaluationAuthorization?.authorization,
-  });
+  let stats;
+  try {
+    stats = await runQuestions({
+      llmClient, datasetPath, config, answerPrompt, judgePrompt,
+      split, conversationIds, runDir, runtimeFactory, brainServerRoot,
+      resumeRuntime: false,
+      heldoutAuthorization: evaluationAuthorization?.authorization,
+    });
+  } catch (error) {
+    await updateManifest(runDir, {
+      completed_at: new Date().toISOString(),
+      status: 'failed',
+      failure: {
+        type: error instanceof Error ? error.constructor.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+      },
+    });
+    throw error;
+  }
 
   // Update manifest with completion status
   const finalStatus = stats.errors > 0 || stats.done + stats.skipped < stats.total ? 'partial' : 'completed';
@@ -422,13 +435,27 @@ export async function resumeBenchmark({
   verifyResumeConfig(manifest, config, answerPrompt, judgePrompt);
 
   // Resume: skip completed, re-run errors and remaining
-  const stats = await runQuestions({
-    llmClient, datasetPath, config, answerPrompt, judgePrompt,
-    split: manifest.split,
-    conversationIds: manifest.conversation_ids,
-    runDir, runtimeFactory, brainServerRoot, resumeRuntime: true,
-    heldoutAuthorization: manifest.evaluation_authorization?.authorization,
-  });
+  let stats;
+  try {
+    stats = await runQuestions({
+      llmClient, datasetPath, config, answerPrompt, judgePrompt,
+      split: manifest.split,
+      conversationIds: manifest.conversation_ids,
+      runDir, runtimeFactory, brainServerRoot, resumeRuntime: true,
+      heldoutAuthorization: manifest.evaluation_authorization?.authorization,
+    });
+  } catch (error) {
+    await updateManifest(runDir, {
+      completed_at: new Date().toISOString(),
+      status: 'failed',
+      resumed_at: new Date().toISOString(),
+      failure: {
+        type: error instanceof Error ? error.constructor.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+      },
+    });
+    throw error;
+  }
 
   const finalStatus = stats.errors > 0 || stats.done + stats.skipped < stats.total ? 'partial' : 'completed';
   const resolvedStatus = isShutdownRequested() ? 'interrupted' : finalStatus;
@@ -714,6 +741,7 @@ async function assertRuntimePreflight(brainServerClient, runDir, conversationId)
   assertEvaluationEmbeddingMode(embeddingStatus);
   const { manifest } = await readRun(runDir);
   await updateManifest(runDir, {
+    embedding_model: manifest.embedding_model === 'pending' ? embeddingStatus.model : manifest.embedding_model,
     embedding_status: manifest.embedding_status?.status === 'pending' ? embeddingStatus : manifest.embedding_status,
     embedding_by_conversation: {
       ...(manifest.embedding_by_conversation || {}),

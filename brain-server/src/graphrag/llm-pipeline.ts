@@ -32,12 +32,23 @@ const DEFAULT_LLM_CONFIG: LLMExtractionConfig = {
   apiUrl: process.env.LLM_API_URL || 'http://localhost:11434/v1',
   apiKey: process.env.LLM_API_KEY || '',
   model: process.env.LLM_MODEL || 'qwen2.5:7b',
-  timeoutMs: 30_000,
+  timeoutMs: (() => {
+    const configured = Number(process.env.LLM_EXTRACTION_TIMEOUT_MS);
+    return Number.isFinite(configured) && configured >= 1_000 ? configured : 120_000;
+  })(),
   maxTokens: 16000,
 };
 
 /** LLM 输出的结构化提取结果 */
 const TemporalTextSchema = z.string().trim().min(1).max(200);
+const OptionalTemporalTextSchema = z.preprocess(
+  (value) => value === null || value === '' ? undefined : value,
+  TemporalTextSchema.optional(),
+);
+const OptionalTemporalConfidenceSchema = z.preprocess(
+  (value) => value === null ? undefined : value,
+  z.number().min(0).max(1).optional(),
+);
 const LLMExtractionResultSchema = z.object({
   entities: z.array(z.object({
     name: z.string().trim().min(1).max(500),
@@ -54,13 +65,19 @@ const LLMExtractionResultSchema = z.object({
     object: z.string().trim().min(1).max(2_000),
     confidence: z.number().min(0).max(1),
     source_span: z.string().trim().min(1).max(20_000),
-    observed_at: TemporalTextSchema.optional(),
-    event_time: TemporalTextSchema.optional(),
-    valid_from: TemporalTextSchema.optional(),
-    valid_until: TemporalTextSchema.optional(),
-    temporal_confidence: z.number().min(0).max(1).optional(),
-    temporal_source: z.string().trim().min(1).max(200).optional(),
-    timezone: z.string().trim().min(1).max(100).optional(),
+    observed_at: OptionalTemporalTextSchema,
+    event_time: OptionalTemporalTextSchema,
+    valid_from: OptionalTemporalTextSchema,
+    valid_until: OptionalTemporalTextSchema,
+    temporal_confidence: OptionalTemporalConfidenceSchema,
+    temporal_source: z.preprocess(
+      (value) => value === null || value === '' ? undefined : value,
+      z.string().trim().min(1).max(200).optional(),
+    ),
+    timezone: z.preprocess(
+      (value) => value === null || value === '' ? undefined : value,
+      z.string().trim().min(1).max(100).optional(),
+    ),
   }).strict()).max(1_000),
   principles: z.array(z.object({
     title: z.string().trim().min(1).max(500),
@@ -78,6 +95,13 @@ export type LLMExtractionResult = z.infer<typeof LLMExtractionResultSchema>;
 export interface LLMNormalizationDiagnostics {
   entity_types: Array<{ index: number; from: string; to: 'concept' }>;
   predicates: Array<{ index: number; from: string; to: 'relates_to' }>;
+  temporal_values?: Array<{
+    fact_index: number;
+    field: 'observed_at' | 'event_time' | 'valid_from' | 'valid_until';
+    value_sha256: string;
+    action: 'dropped';
+    reason: 'unparseable_optional_temporal_value';
+  }>;
 }
 
 export interface LLMCallDiagnostics {
@@ -143,6 +167,7 @@ function normalizeTemporalValue(
   value: string | undefined,
   reference: Date,
   timezone?: string,
+  onInvalid?: (value: string) => void,
 ): { value?: string; rangeEnd?: string; confidence?: number; source?: string } {
   if (!value) return {};
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
@@ -150,7 +175,13 @@ function normalizeTemporalValue(
     if (Number.isFinite(parsed.getTime())) return { value: parsed.toISOString(), confidence: 1, source: 'iso_timestamp' };
   }
   const parsed = parseTemporalExpression(value, { reference, timezone });
-  if (!parsed) throw new Error('INVALID_TEMPORAL_EXPRESSION');
+  if (!parsed) {
+    if (onInvalid) {
+      onInvalid(value);
+      return {};
+    }
+    throw new Error('INVALID_TEMPORAL_EXPRESSION');
+  }
   return {
     value: parsed.start,
     rangeEnd: parsed.end,
@@ -171,6 +202,7 @@ export function parseLlmExtractionResultDetailed(
   content: string,
   reference: Date = new Date(),
   defaultTimezone?: string,
+  tolerateInvalidTemporal: boolean = false,
 ): { result: LLMExtractionResult; normalization: LLMNormalizationDiagnostics } {
   const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
   const jsonStr = jsonMatch ? jsonMatch[1] : content;
@@ -178,12 +210,30 @@ export function parseLlmExtractionResultDetailed(
   const validated = LLMExtractionResultSchema.parse(normalized.value);
   const result = {
     ...validated,
-    facts: validated.facts.map((fact) => {
+    facts: validated.facts.map((fact, factIndex) => {
       const timezone = fact.timezone || defaultTimezone;
-      const event = normalizeTemporalValue(fact.event_time, reference, timezone);
-      const observed = normalizeTemporalValue(fact.observed_at, reference, timezone);
-      const validFrom = normalizeTemporalValue(fact.valid_from, reference, timezone);
-      const validUntil = normalizeTemporalValue(fact.valid_until, reference, timezone);
+      const normalize = (
+        field: 'observed_at' | 'event_time' | 'valid_from' | 'valid_until',
+        value: string | undefined,
+      ) => normalizeTemporalValue(
+        value,
+        reference,
+        timezone,
+        tolerateInvalidTemporal ? (invalidValue) => {
+          normalized.diagnostics.temporal_values ??= [];
+          normalized.diagnostics.temporal_values.push({
+            fact_index: factIndex,
+            field,
+            value_sha256: createHash('sha256').update(invalidValue).digest('hex'),
+            action: 'dropped',
+            reason: 'unparseable_optional_temporal_value',
+          });
+        } : undefined,
+      );
+      const event = normalize('event_time', fact.event_time);
+      const observed = normalize('observed_at', fact.observed_at);
+      const validFrom = normalize('valid_from', fact.valid_from);
+      const validUntil = normalize('valid_until', fact.valid_until);
       return {
         ...fact,
         event_time: event.value,
@@ -243,10 +293,18 @@ EXTRACTION SCHEMA:
 原则类型可选：code_principle, security_rule, performance_optimization, design_pattern, workflow_rule, personal_preference
 `;
 
-function buildExtractionPrompt(userText: string): string {
+function buildExtractionPrompt(
+  userText: string,
+  options: { referenceTime?: string; timezone?: string } = {},
+): string {
   // 阻止用户文本里出现 </USER_CONTENT> 闭合标签，从而劫持后续指令
   const sanitized = userText.replace(/<\/?USER_CONTENT>/gi, '［USER_CONTENT］');
-  return `Extract entities and relationships from the following content:
+  const temporalContext = options.referenceTime
+    ? `The conversation timestamp is ${options.referenceTime}${options.timezone ? ` (${options.timezone})` : ''}. `
+      + 'Resolve relative dates against this timestamp. Emit temporal fields only as ISO 8601 timestamps. '
+      + 'If a time cannot be resolved confidently, omit that optional field entirely; never emit null or vague temporal text.\n\n'
+    : 'Emit temporal fields only as ISO 8601 timestamps. If a time cannot be resolved confidently, omit that optional field entirely; never emit null or vague temporal text.\n\n';
+  return `${temporalContext}Extract entities and relationships from the following content:
 
 <USER_CONTENT>
 ${sanitized}
@@ -320,7 +378,7 @@ export class LLMExtractorPipeline {
             },
             {
               role: 'user',
-              content: buildExtractionPrompt(text),
+              content: buildExtractionPrompt(text, options),
             },
           ],
           max_tokens: this.config.maxTokens,
@@ -371,7 +429,9 @@ export class LLMExtractorPipeline {
       try {
         const reference = options.referenceTime ? new Date(options.referenceTime) : new Date();
         if (!Number.isFinite(reference.getTime())) throw new Error('INVALID_REFERENCE_TIME');
-        const parsed = parseLlmExtractionResultDetailed(content, reference, options.timezone);
+        // Optional temporal metadata must not discard otherwise valid entities
+        // and facts. Invalid values are dropped with hashed diagnostics.
+        const parsed = parseLlmExtractionResultDetailed(content, reference, options.timezone, true);
         return { result: parsed.result, diagnostics: {
           http_status: httpStatus, raw_response_sha256: rawResponseSha256, finish_reason: finishReason,
           status: finishReason === 'length' ? 'truncated' : 'parsed',

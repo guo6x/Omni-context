@@ -126,15 +126,25 @@ export function wilsonCI(proportion, n, z = 1.96) {
  * - fallback count (must be 0)
  */
 export function computeStatistics(records) {
-  const completed = records.filter((r) => r.status === "completed" && r.metrics);
-  const errors = records.filter((r) => r.status === "error");
-  const total = records.length;
+  const retryRecords = records.filter((r) => r.status === "retry").length;
+  const latestByQuestion = new Map();
+  records.forEach((record, index) => {
+    // Legacy/unit fixtures without question IDs remain distinct records. Real
+    // runs are reduced to the latest state for each stable question ID so a
+    // repaired error does not inflate the denominator or remain an error.
+    latestByQuestion.set(record.question_id ?? `__record_${index}`, record);
+  });
+  const latestRecords = [...latestByQuestion.values()].filter((record) => record.status !== "retry");
+  const completed = latestRecords.filter((r) => r.status === "completed" && r.metrics);
+  const errors = latestRecords.filter((r) => r.status === "error");
+  const total = latestRecords.length;
 
   if (completed.length === 0) {
     return {
       questions_total: total,
       questions_completed: 0,
       questions_error: errors.length,
+      retry_records: retryRecords,
       error_rate: total > 0 ? errors.length / total : 0,
       fallback_count: 0,
       composite: null,
@@ -226,6 +236,7 @@ export function computeStatistics(records) {
     questions_total: total,
     questions_completed: completed.length,
     questions_error: errors.length,
+    retry_records: retryRecords,
     error_rate: total > 0 ? errors.length / total : 0,
     fallback_count: fallbackCount,
     composite: compositeMean,

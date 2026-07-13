@@ -72,4 +72,23 @@ describe('strict LLM extraction validation', () => {
       event_time: 'whenever the stars align',
     }))).toThrow('INVALID_TEMPORAL_EXPRESSION');
   });
+
+  it('accepts null for optional temporal metadata without dropping the fact', () => {
+    const value = JSON.parse(payload({
+      subject: 'Alice',
+      predicate: 'lives_in',
+      object: 'Beijing',
+      confidence: 0.9,
+      source_span: 'Alice lives in Beijing.',
+      event_time: null,
+      valid_from: null,
+      valid_until: null,
+      temporal_confidence: null,
+      temporal_source: null,
+      timezone: null,
+    }));
+    const parsed = parseLlmExtractionResult(JSON.stringify(value));
+    expect(parsed.facts).toHaveLength(1);
+    expect(parsed.facts[0].event_time).toBeUndefined();
+  });
 });

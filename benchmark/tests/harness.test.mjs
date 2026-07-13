@@ -52,3 +52,20 @@ test('metrics are independently recomputed with named subsets and retries', () =
   assert.equal(metrics.questions_completed, 2);
   assert.ok(metrics.composite > 0 && metrics.composite < 1);
 });
+
+test('recomputed metrics use the latest question state after retry-errors repair', () => {
+  const completed = {
+    question_id: 'conv1-q0', status: 'completed', subset: 'answerable',
+    category_name: 'single_hop', conversation_id: 1,
+    metrics: { binary_accuracy: 1, factual_score: 1, temporal_score: 1, contextual_score: 1, abstention_accuracy: 1, evidence_precision: 1, stale_memory_leakage: 0 },
+  };
+  const metrics = recomputeMetrics([
+    { question_id: 'conv1-q0', status: 'retry' },
+    { question_id: 'conv1-q0', status: 'error' },
+    completed,
+  ]);
+  assert.equal(metrics.questions_total, 1);
+  assert.equal(metrics.questions_completed, 1);
+  assert.equal(metrics.questions_error, 0);
+  assert.equal(metrics.retry_records, 1);
+});
