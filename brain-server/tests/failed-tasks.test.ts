@@ -76,6 +76,22 @@ async function request(
   return { status: res.status, body: parsed };
 }
 
+async function waitForIngestJob(jobId: string, timeoutMs = 10_000): Promise<string> {
+  const deadline = Date.now() + timeoutMs;
+  let lastStatus: string | undefined;
+  let lastHttpStatus: number | undefined;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const response = await request('GET', `/api/ingest/job/${jobId}`);
+    lastHttpStatus = response.status;
+    lastStatus = response.body?.status;
+    if (lastStatus === 'success' || lastStatus === 'failed' || lastStatus === 'partial') {
+      return lastStatus;
+    }
+  }
+  throw new Error(`Ingest job ${jobId} did not finish; last HTTP=${lastHttpStatus}, status=${lastStatus}`);
+}
+
 describe('Task 5: failed_tasks Database methods', () => {
   beforeEach(async () => {
     // Clean slate between DB-level tests
@@ -316,21 +332,17 @@ describe('Task 5: POST /api/import/chat/failed/:batchId/retry', () => {
     expect(body.jobId).toBeDefined();
     expect(body.batchId).toBe('retry-test-batch');
     expect(body.retrying).toBeGreaterThanOrEqual(1);
-  });
+    // The endpoint starts a fire-and-forget job. Wait for it so this test cannot
+    // mutate the shared batch during the next test's beforeEach on slower CI hosts.
+    expect(await waitForIngestJob(body.jobId)).toBe('success');
+  }, 15000);
 
   it('retry job eventually resolves the failed task (mocked LLM)', async () => {
     const { body } = await request('POST', '/api/import/chat/failed/retry-test-batch/retry');
     const jobId = body.jobId;
 
-    // Poll for job completion (mocked LLM is instant, but the pipeline is async)
-    let jobStatus: string | undefined;
-    for (let i = 0; i < 60; i++) {
-      await new Promise((r) => setTimeout(r, 300));
-      const { body: jobBody } = await request('GET', `/api/ingest/job/${jobId}`);
-      jobStatus = jobBody.status;
-      if (jobStatus === 'success' || jobStatus === 'failed' || jobStatus === 'partial') break;
-    }
-    expect(['success', 'partial', 'failed']).toContain(jobStatus);
+    const jobStatus = await waitForIngestJob(jobId);
+    expect(jobStatus).toBe('success');
 
     // The task should be marked resolved (mocked LLM succeeds)
     const task = await db.getFailedTask('retry-task-1');

@@ -1,0 +1,871 @@
+iteration=1
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_app_meta
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 2162[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:02:07
+[2m   Duration [22m 12.03s[2m (transform 740ms, setup 0ms, collect 8.97s, tests 2.16s, environment 0ms, prepare 360ms)[22m
+
+iteration=2
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+Migration applied: add_app_meta
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 2027[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:02:22
+[2m   Duration [22m 10.83s[2m (transform 659ms, setup 0ms, collect 7.96s, tests 2.03s, environment 0ms, prepare 353ms)[22m
+
+iteration=3
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_app_meta
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 2136[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:02:37
+[2m   Duration [22m 10.71s[2m (transform 664ms, setup 0ms, collect 7.77s, tests 2.14s, environment 0ms, prepare 357ms)[22m
+
+iteration=4
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_app_meta
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 1977[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:02:51
+[2m   Duration [22m 10.88s[2m (transform 655ms, setup 0ms, collect 8.10s, tests 1.98s, environment 0ms, prepare 383ms)[22m
+
+iteration=5
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+Migration applied: add_app_meta
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 1994[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:03:06
+[2m   Duration [22m 11.24s[2m (transform 704ms, setup 0ms, collect 8.38s, tests 1.99s, environment 0ms, prepare 384ms)[22m
+
+iteration=6
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_app_meta
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 2037[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:03:21
+[2m   Duration [22m 10.84s[2m (transform 729ms, setup 0ms, collect 7.97s, tests 2.04s, environment 0ms, prepare 374ms)[22m
+
+iteration=7
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+Migration applied: add_notifications_table
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_app_meta
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 1961[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:03:35
+[2m   Duration [22m 10.66s[2m (transform 666ms, setup 0ms, collect 7.85s, tests 1.96s, environment 1ms, prepare 431ms)[22m
+
+iteration=8
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+Migration applied: add_fts5_fulltext_search
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+Migration applied: add_app_meta
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 2025[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:03:50
+[2m   Duration [22m 10.46s[2m (transform 668ms, setup 0ms, collect 7.62s, tests 2.02s, environment 0ms, prepare 354ms)[22m
+
+iteration=9
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+Migration applied: add_app_meta
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 1799[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:04:04
+[2m   Duration [22m 10.66s[2m (transform 642ms, setup 0ms, collect 8.05s, tests 1.80s, environment 0ms, prepare 361ms)[22m
+
+iteration=10
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context/omni-context-release/brain-server[39m
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_notifications_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_app_meta
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | tests/failed-tasks.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | tests/failed-tasks.test.ts[2m > [22m[2mTask 5: POST /api/import/chat/failed/:batchId/retry[2m > [22m[2mreturns 202 with jobId when there are pending failures[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+ [32m✓[39m tests/failed-tasks.test.ts [2m ([22m[2m19 tests[22m[2m)[22m[33m 2039[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:04:18
+[2m   Duration [22m 10.88s[2m (transform 657ms, setup 0ms, collect 7.98s, tests 2.04s, environment 0ms, prepare 355ms)[22m
