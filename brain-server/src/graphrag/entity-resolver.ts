@@ -481,8 +481,22 @@ interface ReversibleMergeSnapshot {
   alias_id: string;
   merged_at: string;
   alias_entity: { metadata: string | null; updated_at: string };
-  relationships: Record<string, unknown>[];
-  assertions: Record<string, unknown>[];
+  canonical_entity: { metadata: string | null; updated_at: string };
+  relationships: Array<{
+    row: Record<string, unknown>;
+    original_source_id: string;
+    original_target_id: string;
+    new_source_id: string;
+    new_target_id: string;
+    disposition: 'redirected' | 'collision_removed' | 'self_loop_removed';
+  }>;
+  assertions: Array<{
+    row: Record<string, unknown>;
+    original_subject_id: string;
+    original_object_id: string | null;
+    new_subject_id: string;
+    new_object_id: string | null;
+  }>;
   fts_entities: Record<string, unknown>[];
   vec_entities: Array<{ entity_id: string; embedding_base64: string }>;
 }
@@ -536,6 +550,11 @@ export async function confirmMerge(db: Database, mergeId: string): Promise<Merge
       [candidateId],
     );
     if (!aliasEntity) throw new Error('Candidate entity missing — cannot snapshot merge');
+    const canonicalEntity = await db.get<any>(
+      'SELECT metadata, updated_at FROM entities WHERE id = ?',
+      [canonicalId],
+    );
+    if (!canonicalEntity) throw new Error('Canonical entity missing — cannot snapshot merge');
     const relationshipSnapshot = await db.all<Record<string, unknown>>(
       'SELECT * FROM relationships WHERE source_id = ? OR target_id = ? ORDER BY id',
       [candidateId, candidateId],
@@ -563,14 +582,30 @@ export async function confirmMerge(db: Database, mergeId: string): Promise<Merge
       }));
     } catch { /* sqlite-vec is optional. */ }
 
+    const relationshipJournal = (relationshipSnapshot as any[]).map((relationship) => ({
+      row: relationship,
+      original_source_id: relationship.source_id,
+      original_target_id: relationship.target_id,
+      new_source_id: relationship.source_id === candidateId ? canonicalId : relationship.source_id,
+      new_target_id: relationship.target_id === candidateId ? canonicalId : relationship.target_id,
+      disposition: 'redirected' as ReversibleMergeSnapshot['relationships'][number]['disposition'],
+    }));
+    const assertionJournal = (assertionSnapshot as any[]).map((assertion) => ({
+      row: assertion,
+      original_subject_id: assertion.subject_id,
+      original_object_id: assertion.object_id ?? null,
+      new_subject_id: assertion.subject_id === candidateId ? canonicalId : assertion.subject_id,
+      new_object_id: assertion.object_id === candidateId ? canonicalId : (assertion.object_id ?? null),
+    }));
     const snapshot: ReversibleMergeSnapshot = {
       schema_version: 2,
       canonical_id: canonicalId,
       alias_id: candidateId,
       merged_at: now,
       alias_entity: { metadata: aliasEntity.metadata ?? null, updated_at: aliasEntity.updated_at },
-      relationships: relationshipSnapshot,
-      assertions: assertionSnapshot,
+      canonical_entity: { metadata: canonicalEntity.metadata ?? null, updated_at: canonicalEntity.updated_at },
+      relationships: relationshipJournal,
+      assertions: assertionJournal,
       fts_entities: ftsSnapshot,
       vec_entities: vecSnapshot,
     };
@@ -578,15 +613,17 @@ export async function confirmMerge(db: Database, mergeId: string): Promise<Merge
     // 1) Redirect each relationship by stable row id. Collisions and introduced
     // self-loops delete only the alias-origin row; unrelated canonical rows are
     // never touched. The full pre-merge rows remain in the audit snapshot.
-    for (const relationship of relationshipSnapshot as any[]) {
-      const sourceId = relationship.source_id === candidateId ? canonicalId : relationship.source_id;
-      const targetId = relationship.target_id === candidateId ? canonicalId : relationship.target_id;
+    for (const journal of relationshipJournal) {
+      const relationship = journal.row as any;
+      const sourceId = journal.new_source_id;
+      const targetId = journal.new_target_id;
       const collision = sourceId === targetId ? true : Boolean(await db.get(
         `SELECT id FROM relationships
          WHERE source_id = ? AND target_id = ? AND type = ? AND id <> ?`,
         [sourceId, targetId, relationship.type, relationship.id],
       ));
       if (collision) {
+        journal.disposition = sourceId === targetId ? 'self_loop_removed' : 'collision_removed';
         await db.run('DELETE FROM relationships WHERE id = ?', [relationship.id]);
       } else {
         await db.run(
@@ -680,7 +717,20 @@ export async function confirmMerge(db: Database, mergeId: string): Promise<Merge
       `INSERT INTO entity_merge_audit
         (id, canonical_id, alias_id, merge_reason, similarity, operator, snapshot, created_at,
          redirected_relationships, redirected_assertions, redirected_fts, redirected_vec)
-       VALUES (?, ?, ?, ?, ?, 'system', ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, 'system', ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         canonical_id = excluded.canonical_id,
+         alias_id = excluded.alias_id,
+         merge_reason = excluded.merge_reason,
+         similarity = excluded.similarity,
+         operator = excluded.operator,
+         snapshot = excluded.snapshot,
+         created_at = excluded.created_at,
+         reverted_at = NULL,
+         redirected_relationships = excluded.redirected_relationships,
+         redirected_assertions = excluded.redirected_assertions,
+         redirected_fts = excluded.redirected_fts,
+         redirected_vec = excluded.redirected_vec`,
       [
         result.auditId,
         canonicalId,
@@ -721,14 +771,13 @@ export async function revertMerge(db: Database, mergeId: string): Promise<void> 
     // Stable audit id — exact match instead of LIKE prefix fuzzy match.
     const auditId = auditIdFor(mergeId);
     const audit = await db.get<any>(
-      "SELECT * FROM entity_merge_audit WHERE id = ? AND reverted_at IS NULL",
+      'SELECT * FROM entity_merge_audit WHERE id = ?',
       [auditId]
     );
     if (!audit) {
-      throw new Error(
-        "Merge audit record not found or already reverted — check mergeId and current status"
-      );
+      throw new Error('Merge audit record not found — check mergeId and current status');
     }
+    if (audit.reverted_at) return;
 
     const now = new Date().toISOString();
     const snapshot = JSON.parse(audit.snapshot) as ReversibleMergeSnapshot;
@@ -738,13 +787,14 @@ export async function revertMerge(db: Database, mergeId: string): Promise<void> 
 
     // Restore every alias-origin relationship by stable id. A redirected row
     // is removed first; collision-deleted rows are simply reinserted.
-    for (const relationship of snapshot.relationships) {
-      await db.run('DELETE FROM relationships WHERE id = ?', [relationship.id]);
-      await insertSnapshotRow(db, 'relationships', relationship);
+    for (const journal of snapshot.relationships) {
+      await db.run('DELETE FROM relationships WHERE id = ?', [journal.row.id]);
+      await insertSnapshotRow(db, 'relationships', journal.row);
     }
 
     // Assertions were never deleted, so restore the exact pre-merge endpoints.
-    for (const assertion of snapshot.assertions as any[]) {
+    for (const journal of snapshot.assertions) {
+      const assertion = journal.row as any;
       const restored = await db.run(
         'UPDATE assertions SET subject_id = ?, object_id = ? WHERE id = ?',
         [assertion.subject_id, assertion.object_id, assertion.id],
@@ -781,6 +831,25 @@ export async function revertMerge(db: Database, mergeId: string): Promise<void> 
       'UPDATE entities SET metadata = ?, updated_at = ? WHERE id = ?',
       [snapshot.alias_entity.metadata, snapshot.alias_entity.updated_at, audit.alias_id]
     );
+    await db.run(
+      'UPDATE entities SET metadata = ?, updated_at = ? WHERE id = ?',
+      [snapshot.canonical_entity.metadata, snapshot.canonical_entity.updated_at, audit.canonical_id]
+    );
+
+    // Transactional consistency scan: every journaled endpoint must match the
+    // exact pre-merge row before the lifecycle is marked reverted.
+    for (const journal of snapshot.relationships) {
+      const restored = await db.get<any>('SELECT source_id, target_id FROM relationships WHERE id = ?', [journal.row.id]);
+      if (!restored || restored.source_id !== journal.original_source_id || restored.target_id !== journal.original_target_id) {
+        throw new Error(`Relationship restore consistency failure: ${String(journal.row.id)}`);
+      }
+    }
+    for (const journal of snapshot.assertions) {
+      const restored = await db.get<any>('SELECT subject_id, object_id FROM assertions WHERE id = ?', [journal.row.id]);
+      if (!restored || restored.subject_id !== journal.original_subject_id || (restored.object_id ?? null) !== journal.original_object_id) {
+        throw new Error(`Assertion restore consistency failure: ${String(journal.row.id)}`);
+      }
+    }
 
     // Restore candidate to pending. confirmed_at and reverted_at together
     // record the full lifecycle: confirmed_at set + reverted_at set means

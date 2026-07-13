@@ -301,12 +301,23 @@ describe('Task 11: revertMerge uses stable audit id (no LIKE fuzzy match)', () =
     await expect(revertMerge(db, 'merge-r')).rejects.toThrow(/not found|already reverted/i);
   });
 
-  it('throws on revert when audit row already reverted', async () => {
+  it('is idempotent when the same merge is reverted twice', async () => {
     await confirmMerge(db, 'merge-r');
     await revertMerge(db, 'merge-r');
-    // Second revert should fail — audit.reverted_at is set, so the
-    // reverted_at IS NULL filter excludes it.
-    await expect(revertMerge(db, 'merge-r')).rejects.toThrow(/not found|already reverted/i);
+    const once = await db.get<any>("SELECT metadata FROM entities WHERE id = 'alias-r'");
+    await expect(revertMerge(db, 'merge-r')).resolves.toBeUndefined();
+    const twice = await db.get<any>("SELECT metadata FROM entities WHERE id = 'alias-r'");
+    expect(twice).toEqual(once);
+  });
+
+  it('supports confirm then revert then confirm again', async () => {
+    await confirmMerge(db, 'merge-r');
+    await revertMerge(db, 'merge-r');
+    await expect(confirmMerge(db, 'merge-r')).resolves.toMatchObject({ auditId: 'merge-r_audit' });
+    const candidate = await db.get<any>("SELECT status FROM entity_merge_candidates WHERE id = 'merge-r'");
+    const audit = await db.get<any>("SELECT reverted_at FROM entity_merge_audit WHERE id = 'merge-r_audit'");
+    expect(candidate.status).toBe('confirmed');
+    expect(audit.reverted_at).toBeNull();
   });
 
   it('does not throw on revert of an audit with a non-numeric mergeId', async () => {
@@ -376,6 +387,9 @@ describe('Task 13: merge then revert restores every persisted surface', () => {
     const entityBefore = await db.get<any>(
       "SELECT metadata, updated_at FROM entities WHERE id = 'alias-full'",
     );
+    const canonicalBefore = await db.get<any>(
+      "SELECT metadata, updated_at FROM entities WHERE id = 'canon-full'",
+    );
     const relationshipsBefore = await db.all<any>(
       "SELECT * FROM relationships WHERE source_id = 'alias-full' OR target_id = 'alias-full' ORDER BY id",
     );
@@ -392,6 +406,24 @@ describe('Task 13: merge then revert restores every persisted surface', () => {
     expect(vecBefore).toHaveLength(1);
 
     await confirmMerge(db, 'merge-full');
+    const auditSnapshot = JSON.parse((await db.get<any>(
+      "SELECT snapshot FROM entity_merge_audit WHERE id = 'merge-full_audit'",
+    )).snapshot);
+    expect(auditSnapshot.schema_version).toBe(2);
+    expect(auditSnapshot.canonical_entity).toEqual(canonicalBefore);
+    expect(auditSnapshot.relationships.find((item: any) => item.row.id === 'rel-alias-collision')).toMatchObject({
+      original_source_id: 'alias-full',
+      original_target_id: 'target-full',
+      new_source_id: 'canon-full',
+      new_target_id: 'target-full',
+      disposition: 'collision_removed',
+    });
+    expect(auditSnapshot.assertions.find((item: any) => item.row.id === 'assert-alias-full')).toMatchObject({
+      original_subject_id: 'alias-full',
+      original_object_id: 'target-full',
+      new_subject_id: 'canon-full',
+      new_object_id: 'target-full',
+    });
     expect(await db.get<any>(
       "SELECT id FROM relationships WHERE id = 'rel-alias-collision'",
     )).toBeUndefined();
@@ -401,11 +433,17 @@ describe('Task 13: merge then revert restores every persisted surface', () => {
     expect(await db.all<any>(
       "SELECT * FROM vec_entities WHERE entity_id = 'alias-full'",
     )).toHaveLength(0);
+    await db.run(
+      "UPDATE entities SET metadata = json_set(COALESCE(metadata, '{}'), '$.merge_side_effect', 1) WHERE id = 'canon-full'",
+    );
 
     await revertMerge(db, 'merge-full');
 
     const entityAfter = await db.get<any>(
       "SELECT metadata, updated_at FROM entities WHERE id = 'alias-full'",
+    );
+    const canonicalAfter = await db.get<any>(
+      "SELECT metadata, updated_at FROM entities WHERE id = 'canon-full'",
     );
     const relationshipsAfter = await db.all<any>(
       "SELECT * FROM relationships WHERE source_id = 'alias-full' OR target_id = 'alias-full' ORDER BY id",
@@ -421,6 +459,7 @@ describe('Task 13: merge then revert restores every persisted surface', () => {
     );
 
     expect(entityAfter).toEqual(entityBefore);
+    expect(canonicalAfter).toEqual(canonicalBefore);
     expect(relationshipsAfter).toEqual(relationshipsBefore);
     expect(assertionsAfter).toEqual(assertionsBefore);
     expect(ftsAfter).toEqual(ftsBefore);
