@@ -1,0 +1,13 @@
+{
+  "implementation_commit": "469dea3e669cd28b5a3a4ece351c5c6b3e23a02e",
+  "benchmark_top_level_tests": 74,
+  "benchmark_total_tests_passed": 157,
+  "benchmark_tests_failed": 0,
+  "same_run_id_resume": "PASS_FIXTURE_INTEGRATION",
+  "same_database_resume": "PASS_FIXTURE_INTEGRATION",
+  "reingestion_prevented": "PASS_FIXTURE_INTEGRATION",
+  "duplicate_completed_records": 0,
+  "retry_record_counting": "PASS_FIXTURE_INTEGRATION",
+  "official_conversation_1_os_sigint": "BLOCKED_MISSING_ENVIRONMENT_CONFIGURATION",
+  "official_conversation_1_real_judge_outage": "BLOCKED_MISSING_ENVIRONMENT_CONFIGURATION"
+}
