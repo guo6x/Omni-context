@@ -213,6 +213,7 @@ export default function GraphViewer3D({
   // 会话历史（可续聊）：sessionIdRef = 当前会话；lastDecisionIdRef = 决策链上一个决策（用 ref 避免异步 state 读取）
   const sessionIdRef = useRef<string | null>(null);
   const lastDecisionIdRef = useRef<string | null>(null);
+  const [lineageRelation, setLineageRelation] = useState<'continues' | 'revises' | 'supersedes' | 'reverses' | 'invalidates' | 'none'>('continues');
   const [histOpen, setHistOpen] = useState(false);
   const [histItems, setHistItems] = useState<Array<{ id: string; title: string; updated_at: string; turns: number }>>([]);
   const [activeType, setActiveType] = useState<string>("all");
@@ -669,7 +670,7 @@ export default function GraphViewer3D({
   }, [t, saveSession]);
 
   // 决策：把当前答案存为决定。存完【不关闭】——决策常是连续多个，方便继续讨论/做下一个；
-  // 同一会话里的后续决策通过 previous_decision_id 自动挂成决策链。
+  // 同一会话里的后续决策通过 lineage fields 挂成决策链，关系由用户选择（非自动）。
   const saveDecision = useCallback(async () => {
     const turns = gAnswer?.turns ?? [];
     const idx = turns.length - 1;
@@ -677,18 +678,29 @@ export default function GraphViewer3D({
     if (!turn || gSaving) return;
     setGSaving(true);
     try {
+      const args: Record<string, unknown> = {
+        situation: turn.question,
+        conclusion: turn.conclusion,
+        cited_entity_ids: turn.citedEntityIds,
+        confidence: 'medium',
+        alternatives: '',
+      };
+      // Lineage: user-selected relation to the previous decision in this session.
+      // 'supersedes' goes through supersedes_decision_id; others through previous_decision_id.
+      // 'none' means no lineage link (standalone decision).
+      const prevId = lastDecisionIdRef.current;
+      if (prevId && lineageRelation !== 'none') {
+        if (lineageRelation === 'supersedes') {
+          args.supersedes_decision_id = prevId;
+          args.lineage_relation = 'supersedes';
+        } else {
+          args.previous_decision_id = prevId;
+          args.lineage_relation = lineageRelation;
+        }
+      }
       const r = await apiFetch('/api/mcp/tool/save_decision', {
         method: 'POST',
-        body: JSON.stringify({
-          arguments: {
-            situation: turn.question,
-            conclusion: turn.conclusion,
-            cited_entity_ids: turn.citedEntityIds,
-            confidence: 'medium',
-            alternatives: '',
-            previous_decision_id: lastDecisionIdRef.current || undefined,
-          },
-        }),
+        body: JSON.stringify({ arguments: args }),
       });
       if (!r.ok) throw new Error();
       const saved = await r.json().catch(() => null);
@@ -703,7 +715,7 @@ export default function GraphViewer3D({
     } finally {
       setGSaving(false);
     }
-  }, [gAnswer, gSaving, onDataChanged, saveSession, toast, t]);
+  }, [gAnswer, gSaving, onDataChanged, saveSession, toast, t, lineageRelation]);
 
   // 历史会话：打开列表 / 载入一条续聊 / 删除
   const openHistory = useCallback(async () => {
@@ -2297,14 +2309,31 @@ export default function GraphViewer3D({
                     </div>
                   )}
                   {isLast && turn.isDecision && !!turn.conclusion && turn.reasons.length > 0 && !turn.savedAsDecision && (
-                    <button
-                      onClick={saveDecision}
-                      disabled={gSaving}
-                      className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                      {gSaving ? t('cmd.saving') : t('cmd.save_decision')}
-                    </button>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {lastDecisionIdRef.current && (
+                        <select
+                          value={lineageRelation}
+                          onChange={(e) => setLineageRelation(e.target.value as typeof lineageRelation)}
+                          className="rounded-md border border-white/10 bg-gray-900 px-2 py-1.5 text-[11px] text-gray-300 outline-none focus:border-cyan-500/40"
+                          title={t('decision.lineage_relation') || 'Relation to previous decision'}
+                        >
+                          <option value="continues">{t('decision.rel_continues') || 'Continues'}</option>
+                          <option value="revises">{t('decision.rel_revises') || 'Revises'}</option>
+                          <option value="supersedes">{t('decision.rel_supersedes') || 'Supersedes'}</option>
+                          <option value="reverses">{t('decision.rel_reverses') || 'Reverses'}</option>
+                          <option value="invalidates">{t('decision.rel_invalidates') || 'Invalidates'}</option>
+                          <option value="none">{t('decision.rel_none') || 'Standalone'}</option>
+                        </select>
+                      )}
+                      <button
+                        onClick={saveDecision}
+                        disabled={gSaving}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        {gSaving ? t('cmd.saving') : t('cmd.save_decision')}
+                      </button>
+                    </div>
                   )}
                   {turn.savedAsDecision && (
                     <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-green-700/40 bg-green-950/20 px-3 py-2 text-[12.5px] font-medium text-green-300">

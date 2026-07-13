@@ -638,6 +638,13 @@ export default {
     lineage_self: '本次决策',
     lineage_source: '参考来源',
     lineage_chain: '相关决策链',
+    lineage_relation: '与上一个决策的关系',
+    rel_continues: '延续',
+    rel_revises: '修订',
+    rel_supersedes: '取代',
+    rel_reverses: '反转',
+    rel_invalidates: '作废',
+    rel_none: '独立决策',
   },
   drag_drop: {
     overlay_hint: '释放文件以上传并自动抽取',

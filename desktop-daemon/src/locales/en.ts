@@ -638,6 +638,13 @@ export default {
     lineage_self: 'This Decision',
     lineage_source: 'Reference',
     lineage_chain: 'Decision Chain',
+    lineage_relation: 'Relation to previous decision',
+    rel_continues: 'Continues',
+    rel_revises: 'Revises',
+    rel_supersedes: 'Supersedes',
+    rel_reverses: 'Reverses',
+    rel_invalidates: 'Invalidates',
+    rel_none: 'Standalone',
   },
   drag_drop: {
     overlay_hint: 'Release files to upload & extract',
