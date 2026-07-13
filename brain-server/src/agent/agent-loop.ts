@@ -156,6 +156,8 @@ export class AgentLoop {
   private skippedCycleCount = 0;
   private cycleTimeoutMs = 4 * 60 * 1000;
   private activeCycleToken: symbol | null = null;
+  private currentCyclePromise: Promise<void> | null = null;
+  private lastCycleTimedOut = false;
   private static readonly DECAY_CHECK_INTERVAL = 6;
   private static readonly BLINDSPOT_CHECK_INTERVAL = 10;
   // Task 12: Cycle-level AbortController. stop() aborts this to cancel any
@@ -185,7 +187,7 @@ export class AgentLoop {
 
     this.warmupTimer = setTimeout(() => {
       this.warmupTimer = null;
-      this.runCycle();
+      this.launchCycle();
     }, 5000);
 
     this.interval = setInterval(() => {
@@ -193,8 +195,17 @@ export class AgentLoop {
         this.skippedCycleCount++;
         return;
       }
-      this.runCycle()
+      this.launchCycle();
     }, intervalMs);
+  }
+
+  private launchCycle(): void {
+    if (this.currentCyclePromise) return;
+    const promise = this.runCycle();
+    this.currentCyclePromise = promise;
+    void promise.finally(() => {
+      if (this.currentCyclePromise === promise) this.currentCyclePromise = null;
+    });
   }
 
   setLlmConfig(config: { apiUrl: string; apiKey?: string; model: string }) {
@@ -205,7 +216,7 @@ export class AgentLoop {
     });
   }
 
-  stop() {
+  async stop(): Promise<void> {
     if (this.warmupTimer) {
       clearTimeout(this.warmupTimer);
       this.warmupTimer = null;
@@ -222,8 +233,8 @@ export class AgentLoop {
     if (this.cycleAbort) {
       console.log('[AgentLoop] 中止进行中的周期任务');
       this.cycleAbort.abort();
-      // Do NOT null cycleAbort here — the runCycle finally block owns that.
     }
+    if (this.currentCyclePromise) await this.currentCyclePromise;
     console.log('[AgentLoop] 已停止主动智能引擎');
   }
 
@@ -309,6 +320,7 @@ export class AgentLoop {
     const cycleToken = Symbol('agent-cycle');
     this.activeCycleToken = cycleToken;
     this.lastCycleStart = new Date();
+    this.lastCycleTimedOut = false;
     console.log('[AgentLoop] 唤醒，执行周期任务...');
     const cycle = this.cycleCount++;
 
@@ -320,28 +332,27 @@ export class AgentLoop {
     this.cycleAbort = cycleController;
     const cycleSignal = cycleController.signal;
 
-    // Timeout guard: force-release the lock if a cycle runs too long.
-    // Also abort the cycle controller so any pending LLM fetch is cancelled.
+    let timedOut = false;
+    // Timeout only aborts. The abort-aware await below makes even a hanging,
+    // non-abortable DB Promise stop blocking runCycle; the lock is released
+    // exclusively by finally.
     const cycleTimeout = setTimeout(() => {
       if (this.activeCycleToken === cycleToken) {
-        console.warn('[AgentLoop] Cycle timeout — force-releasing lock');
-        cycleController.abort();
-        this.activeCycleToken = null;
-        if (this.cycleAbort === cycleController) this.cycleAbort = null;
-        this.isCycleRunning = false;
+        console.warn('[AgentLoop] Cycle timeout — abort requested');
+        timedOut = true;
+        this.lastCycleTimedOut = true;
         this.lastError = new Error('Cycle timeout');
-        this.lastCycleEnd = new Date();
+        cycleController.abort();
       }
     }, this.cycleTimeoutMs);
 
     try {
       try {
         // insight_generation / consolidation 独立任务
-        const batch = await this.db.getEntitiesForConsolidation(5);
-        // A timed-out cycle may resume if a non-abortable DB promise settles
-        // later. The token prevents that stale continuation from mutating data
-        // or releasing the lock held by a newer cycle.
-        if (this.activeCycleToken !== cycleToken || cycleSignal.aborted) return;
+        const batch = await this.awaitCycle(
+          this.db.getEntitiesForConsolidation(5),
+          cycleSignal,
+        );
 
         if (batch.length < 2) {
           console.log('[AgentLoop] 洞见数据不足，本轮仅跳过 insight_generation');
@@ -353,7 +364,7 @@ export class AgentLoop {
       let selectedGraphInsight: GraphInsight | undefined;
 
       try {
-        const candidates = await generateGraphInsights(this.db, batch);
+        const candidates = await this.awaitCycle(generateGraphInsights(this.db, batch), cycleSignal);
 
         if (candidates.length > 0) {
           // 选取置信度最高的候选
@@ -365,7 +376,7 @@ export class AgentLoop {
             result = { ok: true, insight: { title: best.title, content: best.content } };
           } else {
             // latent_connection / anti_consensus 类型通过 LLM 润色
-            const polished = await this.polishInsightWithLLM(best, cycleSignal);
+            const polished = await this.awaitCycle(this.polishInsightWithLLM(best, cycleSignal), cycleSignal);
             result = { ok: true, insight: polished };
           }
 
@@ -383,11 +394,12 @@ export class AgentLoop {
       // 3. Fallback：当图分析未产出候选时，回退到旧的 LLM 直接生成逻辑
       if (!result.insight) {
         console.log('[AgentLoop] 图分析无候选，fallback 到 LLM 直接生成');
-        result = await this.generator.generateInsight(batch, cycleSignal);
+        result = await this.awaitCycle(this.generator.generateInsight(batch, cycleSignal), cycleSignal);
       }
 
       if (result.ok) {
-        await this.db.markEntitiesConsolidated(batch.map(e => e.id));
+        this.assertCycleActive(cycleSignal);
+        await this.awaitCycle(this.db.markEntitiesConsolidated(batch.map(e => e.id)), cycleSignal);
       }
 
           if (result.insight) {
@@ -395,18 +407,20 @@ export class AgentLoop {
         // already created in the last 24h. The 7-day cooldownUntil recorded in
         // proactive_insights was never queried before creating a new insight,
         // so the same insight could fire every cycle.
-        if (await this.db.hasRecentNotification(result.insight.title, 1)) {
+        if (await this.awaitCycle(this.db.hasRecentNotification(result.insight.title, 1), cycleSignal)) {
           console.log(`[AgentLoop] 跳过重复洞见通知: ${result.insight.title}`);
         } else {
-        const notification = await this.db.addNotification({
+        this.assertCycleActive(cycleSignal);
+        const notification = await this.awaitCycle(this.db.addNotification({
           title: result.insight.title,
           content: result.insight.content,
           type: 'insight',
           related_entities: insightRelatedEntities,
-        });
+        }), cycleSignal);
         const generatedAt = new Date();
         const cooldownUntil = new Date(generatedAt.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-        await this.db.recordProactiveInsight({
+        this.assertCycleActive(cycleSignal);
+        await this.awaitCycle(this.db.recordProactiveInsight({
           notificationId: notification.id,
           insightType: selectedGraphInsight?.category || 'llm_fallback',
           trigger: selectedGraphInsight ? 'graph_analysis' : 'consolidation_batch',
@@ -414,7 +428,7 @@ export class AgentLoop {
           confidence: selectedGraphInsight?.confidence ?? 0.5,
           reason: selectedGraphInsight?.content || 'LLM fallback over consolidation candidates',
           cooldownUntil,
-        });
+        }), cycleSignal);
         console.log(`[AgentLoop] 产生新洞见: ${result.insight.title}`);
         } // end of dedup else
           } else {
@@ -428,7 +442,7 @@ export class AgentLoop {
       // Decision review is an independent deterministic task. It does not call an LLM
       // and never changes principles from a single observed result.
       try {
-        const dueDecisions = await this.db.all<{ id: string; name: string }>(
+        const dueDecisions = await this.awaitCycle(this.db.all<{ id: string; name: string }>(
           `SELECT id, name FROM entities
            WHERE type = 'decision'
              AND json_extract(metadata, '$.revisit_at') IS NOT NULL
@@ -437,16 +451,18 @@ export class AgentLoop {
            ORDER BY json_extract(metadata, '$.revisit_at') ASC
            LIMIT 10`,
           [new Date().toISOString()],
-        );
+        ), cycleSignal);
         for (const decision of dueDecisions) {
+          this.assertCycleActive(cycleSignal);
           const title = 'Decision review due';
-          if (await this.db.hasRecentNotification(title, 30, decision.id)) continue;
-          await this.db.addNotification({
+          if (await this.awaitCycle(this.db.hasRecentNotification(title, 30, decision.id), cycleSignal)) continue;
+          this.assertCycleActive(cycleSignal);
+          await this.awaitCycle(this.db.addNotification({
             title,
             content: `Review the outcome, failed assumptions, unexpected factors, and lessons for decision ${decision.id}: ${decision.name}`,
             type: 'reminder',
             related_entities: [decision.id],
-          });
+          }), cycleSignal);
         }
       } catch (error) {
         console.warn('[AgentLoop] decision_review_reminder failed, continuing:', error);
@@ -455,25 +471,26 @@ export class AgentLoop {
       // 4. 每 N 轮检查一次记忆衰减，生成 decay_warning 通知
       if (this.decayScheduler && cycle % AgentLoop.DECAY_CHECK_INTERVAL === 0) {
         try {
-          const decayed = await this.decayScheduler.getMostDecayedItems(5);
+          const decayed = await this.awaitCycle(this.decayScheduler.getMostDecayedItems(5), cycleSignal);
           if (decayed.length > 0) {
             // Task 12: Dedup guard — skip if a decay_warning was already created
             // in the last 24h. Without this, a new notification fires every
             // DECAY_CHECK_INTERVAL cycles (~6 min) as long as the same items
             // remain decayed.
-            if (await this.db.hasRecentNotification('记忆衰减预警', 1)) {
+            if (await this.awaitCycle(this.db.hasRecentNotification('记忆衰减预警', 1), cycleSignal)) {
               console.log('[AgentLoop] 跳过重复衰减预警通知');
             } else {
               const names = decayed.map((d) => {
                 const daysAgo = Math.round((Date.now() - new Date(d.last_accessed).getTime()) / (1000 * 60 * 60 * 24));
                 return `- **${d.name}** (${d.type}) — ${daysAgo} 天未访问`;
               }).join('\n');
-              await this.db.addNotification({
+              this.assertCycleActive(cycleSignal);
+              await this.awaitCycle(this.db.addNotification({
                 title: '记忆衰减预警',
                 content: `以下记忆已超过 7 天未访问，可能值得回顾：\n\n${names}`,
                 type: 'decay_warning',
                 related_entities: decayed.map((d) => d.id),
-              });
+              }), cycleSignal);
               console.log(`[AgentLoop] 产生衰减预警: ${decayed.length} 条`);
             }
           }
@@ -485,23 +502,26 @@ export class AgentLoop {
       // 5. 每 N 轮检查一次认知盲区
       if (cycle % AgentLoop.BLINDSPOT_CHECK_INTERVAL === 0) {
         try {
-          const blindspots = await detectBlindspots(this.db);
+          const blindspots = await this.awaitCycle(detectBlindspots(this.db), cycleSignal);
           for (const bs of blindspots) {
+            this.assertCycleActive(cycleSignal);
             // Task 12: Belt-and-suspenders dedup — the detector has its own
             // 24h per-entity-set dedup, but if the detector's title-text
             // inference breaks or related_entities changes, this guard still
             // prevents duplicate notifications with the same title.
-            if (await this.db.hasRecentNotification(bs.title, 1)) {
+            if (await this.awaitCycle(this.db.hasRecentNotification(bs.title, 1), cycleSignal)) {
               console.log(`[AgentLoop] 跳过重复盲区通知: ${bs.title}`);
               continue;
             }
-            const notification = await this.db.addNotification({
+            this.assertCycleActive(cycleSignal);
+            const notification = await this.awaitCycle(this.db.addNotification({
               title: bs.title,
               content: bs.content,
               type: 'blindspot',
               related_entities: bs.related_entities,
-            });
-            await this.db.recordProactiveInsight({
+            }), cycleSignal);
+            this.assertCycleActive(cycleSignal);
+            await this.awaitCycle(this.db.recordProactiveInsight({
               notificationId: notification.id,
               insightType: bs.type,
               trigger: 'behavior_blindspot_detection',
@@ -509,7 +529,7 @@ export class AgentLoop {
               confidence: bs.confidence,
               reason: bs.content,
               cooldownUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            });
+            }), cycleSignal);
           }
           if (blindspots.length > 0) {
             console.log(`[AgentLoop] 发现 ${blindspots.length} 个认知盲区`);
@@ -519,8 +539,10 @@ export class AgentLoop {
         }
       }
     } catch (error) {
-      console.error('[AgentLoop] 执行周期异常:', error);
-      this.lastError = error instanceof Error ? error : new Error(String(error));
+      if (!timedOut && !cycleSignal.aborted) {
+        console.error('[AgentLoop] 执行周期异常:', error);
+        this.lastError = error instanceof Error ? error : new Error(String(error));
+      }
     } finally {
       clearTimeout(cycleTimeout);
       // Task 12: Clear the cycle AbortController. If stop() was called during
@@ -535,6 +557,33 @@ export class AgentLoop {
     }
   }
 
+  private assertCycleActive(signal: AbortSignal): void {
+    if (signal.aborted) throw new DOMException('Cycle aborted', 'AbortError');
+  }
+
+  private awaitCycle<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+    if (signal.aborted) return Promise.reject(new DOMException('Cycle aborted', 'AbortError'));
+    return new Promise<T>((resolve, reject) => {
+      const onAbort = () => {
+        cleanup();
+        reject(new DOMException('Cycle aborted', 'AbortError'));
+      };
+      const cleanup = () => signal.removeEventListener('abort', onAbort);
+      signal.addEventListener('abort', onAbort, { once: true });
+      promise.then(
+        (value) => {
+          cleanup();
+          if (signal.aborted) reject(new DOMException('Cycle aborted', 'AbortError'));
+          else resolve(value);
+        },
+        (error) => {
+          cleanup();
+          reject(error);
+        },
+      );
+    });
+  }
+
   /** Expose lifecycle status for monitoring */
   getStatus() {
     return {
@@ -544,6 +593,7 @@ export class AgentLoop {
       lastCycleStart: this.lastCycleStart,
       lastCycleEnd: this.lastCycleEnd,
       lastError: this.lastError,
+      timedOut: this.lastCycleTimedOut,
     };
   }
 

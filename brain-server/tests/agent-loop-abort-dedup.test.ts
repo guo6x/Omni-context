@@ -61,6 +61,7 @@ describe('Task 12: AgentLoop cycle-level AbortController', () => {
     await vi.waitFor(() => {
       expect(loop.getStatus().running).toBe(false);
       expect(loop.getStatus().lastError?.message).toBe('Cycle timeout');
+      expect(loop.getStatus().timedOut).toBe(true);
     }, { timeout: 450, interval: 5 });
     const elapsedMs = Date.now() - started;
     console.log(`[AgentLoop timeout proof] elapsed_ms=${elapsedMs} limit_ms=500`);
@@ -76,6 +77,47 @@ describe('Task 12: AgentLoop cycle-level AbortController', () => {
     releaseHungRead?.();
     await new Promise((resolve) => setTimeout(resolve, 5));
     expect(loop.getStatus().running).toBe(false);
+  });
+
+  it('an overlapping cycle is skipped until the timed-out cycle reaches finally', async () => {
+    let release: (() => void) | undefined;
+    db.getEntitiesForConsolidation = vi.fn(() => new Promise((resolve) => {
+      release = () => resolve([]);
+    })) as any;
+    const loop = new AgentLoop(db, undefined, { cycleTimeoutMs: 40 });
+    void (loop as any).runCycle();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await (loop as any).runCycle();
+    expect(loop.getStatus().skippedCount).toBe(1);
+    expect(loop.getStatus().running).toBe(true);
+    await vi.waitFor(() => expect(loop.getStatus().running).toBe(false), { timeout: 450, interval: 5 });
+    release?.();
+  });
+
+  it('stop returns an awaitable promise that settles an in-flight cycle', async () => {
+    db.getEntitiesForConsolidation = vi.fn(() => new Promise(() => {})) as any;
+    const loop = new AgentLoop(db, undefined, { cycleTimeoutMs: 5_000 });
+    const cycle = (loop as any).runCycle();
+    (loop as any).currentCyclePromise = cycle;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const started = Date.now();
+    await loop.stop();
+    expect(Date.now() - started).toBeLessThan(500);
+    expect(loop.getStatus().running).toBe(false);
+  });
+
+  it('a slow LLM-like promise is aborted and cannot create a notification', async () => {
+    const loop = new AgentLoop(db, undefined, { cycleTimeoutMs: 30 });
+    const controller = new AbortController();
+    let notificationWrites = 0;
+    const originalAdd = db.addNotification.bind(db);
+    db.addNotification = vi.fn(async (...args: Parameters<typeof originalAdd>) => {
+      notificationWrites++;
+      return originalAdd(...args);
+    }) as any;
+    setTimeout(() => controller.abort(), 20);
+    await expect((loop as any).awaitCycle(new Promise(() => {}), controller.signal)).rejects.toThrow(/aborted/i);
+    expect(notificationWrites).toBe(0);
   });
 });
 
