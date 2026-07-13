@@ -31,8 +31,10 @@ desktop-daemon/src-tauri/target/
 desktop-daemon/src-tauri/Cargo.lock
 **/Cargo.lock
 !desktop-daemon/src-tauri/Cargo.lock
-# staging dir 由 scripts/package-all.js 生成，仅供 Tauri 打包用
-desktop-daemon/src-tauri/brain-server/
+# staging dir 由 scripts/package-all.js 生成，仅供 Tauri 打包用。
+# 保留说明文件，让全新 checkout 中的 Tauri resource glob 也能被 cargo check 校验。
+desktop-daemon/src-tauri/brain-server/*
+!desktop-daemon/src-tauri/brain-server/README.md
 desktop-daemon/brain-server/
 desktop-daemon/brain-server-dist/
 
