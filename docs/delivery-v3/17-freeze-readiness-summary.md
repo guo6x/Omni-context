@@ -22,12 +22,12 @@
 | 11 | confirmMerge Redirects Graph Edges onto Canonical | `d0e5c41` | FIXED | 23 |
 | 12 | Cycle-Level AbortController + Notification Dedup | `5dc1e91` | FIXED | 12 |
 | 13 | stdio ask_memory and graph_answer into MCP Server | `ec52b74` | FIXED | 2 (smoke reachability) |
-| 14 | Repository Hygiene — Remove Temp Scripts, Fix CI | `5375070` | FIXED | 0 (no functional changes) |
-| 15 | End-to-End Verification | live (no code change) | **PARTIAL** (1/5 PASS, 4/5 BLOCKED on external resources) | 0 (verification only) |
+| 14 | Repository Hygiene — Remove Temp Scripts, Fix CI | `5375070`, `3785f99`, `6ad8265`, `de7d154`, `fe31fda` | FIXED | 0 (functional: 5 typecheck + 1 YAML + 1 shared-types + 2 CI config) |
+| 15 | End-to-End Verification | live (no code change) | **PARTIAL** (1/5 PASS, 4/5 BLOCKED; CI 8/9 PASS) | 0 (verification only) |
 
 ## Totals
 
-- **Total commits**: 16
+- **Total commits**: 20
 - **Total brain-server tests**: 231+ (177 baseline + 9 assertion + 23 merge-redirect + 12 abort-dedup + 19 failed-tasks = 240; 231+ as of latest run)
 - **Total benchmark tests**: 116 (17 dataset + 14 resume-retry + 50 judge-calibration + existing harness/metric-rubric/runner)
 - **Schema version**: 23 (v21: assertion literal types/FTS in `fc8b774`; v22: entity merge audit redirect summary in `d0e5c41`; v23: failed_tasks table in `bb5d429`)
@@ -63,4 +63,4 @@
 
 ## Conclusion
 
-The v3 branch fixes the systemic v2 problem: code is no longer written to pass tests but never called by production. All 14 implementation tasks are FIXED with 231+ brain-server tests and 116 benchmark tests passing. Task 15 E2E verification is PARTIAL: Brain Server startup + migration is verified PASS (all 23 migrations apply, `/health` returns 200, new Task 5 endpoints respond correctly, AgentLoop + MemoryDecayScheduler start cleanly, sqlite-vec + embedding model load successfully). 4 remaining E2E targets (benchmark, desktop app, browser extension, ESP32 mock) are BLOCKED on external resources that are not provisioned in the current verification environment — not on code defects. **The branch is NOT READY FOR FREEZE CANDIDATE** until at least the benchmark (Target 2) and desktop app (Target 3) E2E targets are verified against a live LLM and a built Tauri binary. See [16-task15-e2e-verification.md](16-task15-e2e-verification.md) for the full per-target evidence and unblock steps.
+The v3 branch fixes the systemic v2 problem: code is no longer written to pass tests but never called by production. All 14 implementation tasks are FIXED with 231+ brain-server tests and 116 benchmark tests passing. Task 15 E2E verification discovered and fixed 4 real CI bugs (YAML syntax error, 5 TypeScript errors, missing temporal fields on shared Entity type, missing lock files for benchmark/mobile CI jobs), bringing CI from 0/9 jobs to 8/9 jobs PASS. Brain Server startup + migration is verified PASS against a live instance (all 23 migrations apply, `/health` returns 200, new Task 5 endpoints respond correctly, AgentLoop + MemoryDecayScheduler start cleanly, sqlite-vec + embedding model load successfully). 4 remaining E2E targets (benchmark, desktop app, browser extension, ESP32 mock) are BLOCKED on external resources that are not provisioned in the current verification environment — not on code defects. **The branch is NOT READY FOR FREEZE CANDIDATE** until at least the benchmark (Target 2) and desktop app (Target 3) E2E targets are verified against a live LLM and a built Tauri binary, and the `dependency-audit` CI job is resolved (pre-existing critical advisories). See [16-task15-e2e-verification.md](16-task15-e2e-verification.md) for the full per-target evidence, CI run references, and unblock steps.

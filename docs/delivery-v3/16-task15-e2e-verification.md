@@ -1,11 +1,11 @@
 # 16 — Task 15: End-to-End Verification Status
 
-**Commit**: `ec35051` (delivery-v3 reports) + live verification on `pre-evaluation-hardening-v3`
-**Status**: PARTIAL — 1/5 targets PASS, 4/5 BLOCKED on missing external resources
+**Commit**: `fe31fda` (latest, includes CI fixes) + live verification on `pre-evaluation-hardening-v3`
+**Status**: PARTIAL — 1/5 E2E targets PASS, 4/5 BLOCKED on external resources; CI: 8/9 jobs PASS
 **Date**: 2026-07-13
 
 ## Root Cause
-All 14 preceding tasks have been implemented and unit/integration tested, but only one E2E target (Brain Server startup + migration) has been verified against a live instance. The remaining 4 targets require external resources (LLM credentials, Tauri+Rust toolchain, manual Chrome install, paired hardware credential) that are not provisioned in the current verification environment.
+All 14 preceding tasks have been implemented and unit/integration tested. Brain Server startup + migration is verified PASS against a live instance. 4 E2E targets remain blocked on external resources (LLM credentials, Tauri+Rust toolchain, manual Chrome install, paired hardware credential). During verification, 4 real CI bugs were discovered and fixed, bringing CI from 0/9 jobs (YAML syntax error) to 8/9 jobs PASS (only `dependency-audit` fails on pre-existing critical advisories).
 
 ## Production Entry Point
 N/A — this is a verification task, not a code change.
@@ -99,6 +99,42 @@ N/A — this is a verification task, not a code change.
   ```powershell
   node hardware/simulator/send-signed-packet.mjs --device-id <paired-id> --credential <paired-hex-key> --host 127.0.0.1 --port 9090 --action heartbeat
   ```
+
+## GitHub Actions CI Verification
+
+During E2E verification, the CI workflow was inspected and found to have a YAML syntax error that prevented **all** jobs from running. Four real bugs were discovered and fixed:
+
+### CI Bug Fixes (commits `3785f99`, `6ad8265`, `de7d154`, `fe31fda`)
+
+1. **YAML indentation in `desktop-rust` job** (`3785f99`): `components: rustfmt, clippy` was at the same indentation level as `with:` instead of nested under it. This caused the entire `ci.yml` workflow to fail to parse — GitHub Actions reported `conclusion: failure` with 0 jobs executed (run `29224630040`).
+2. **5 TypeScript errors in brain-server** (`6ad8265`): migration 21 added a required `version` field to the `Assertion` type, but 3 files were not updated:
+   - `extractor.ts`: `assertionBase` missing `version: 1` (affected 2 call sites)
+   - `temporal-layer.ts`: `getAssertionsByEffectiveTime` return mapping missing `version` and `previous_version_id`
+   - `mcp-server.ts`: `(m: any)` filter annotations in `ask_memory` and `graph_answer` handlers caused type widening — replaced with proper type guards
+3. **Missing temporal fields on shared `Entity` type** (`de7d154`): `shared/types.ts` `Entity` interface was missing `valid_from`, `valid_until`, and other temporal fields that exist on the brain-server's `Entity` type. This caused the desktop-daemon Next.js build to fail because `GraphViewer.tsx` (Task 9) references `entity.valid_until` for per-evidence `is_current` derivation.
+4. **Missing `package-lock.json` for benchmark and mobile** (`fe31fda`): CI used `npm ci` (requires lock file) and `cache: npm` with `cache-dependency-path` pointing to non-existent lock files. Switched to `npm install --no-fund --no-audit` and removed cache config.
+
+### Final CI Status (run `29225746817`, commit `fe31fda`)
+
+| Job | Status | Notes |
+|-----|--------|-------|
+| secret-scan | PASS | gitleaks action |
+| dependency-audit | FAIL | pre-existing critical npm advisories in production deps |
+| brain-server | PASS | typecheck + build + tests + schema:check all pass |
+| desktop-web | PASS | Next.js build passes |
+| desktop-rust | PASS | `cargo fmt --check` passes |
+| browser-extension | PASS | tests + build pass |
+| mobile | PASS | typecheck + test:product-mode pass |
+| benchmark-scripts | PASS | `node --test tests/*.test.mjs` passes |
+| windows-smoke | PASS | brain-server + desktop-daemon builds pass on Windows |
+
+**Result: 8/9 jobs PASS.** The sole remaining failure (`dependency-audit`) is a pre-existing issue requiring dependency upgrades, not a code defect.
+
+### CI Run References
+
+- **CI workflow runs**: https://github.com/guo6x/Omni-context/actions/runs/29225746817 (commit `fe31fda`, 8/9 pass)
+- **Security workflow runs**: https://github.com/guo6x/Omni-context/actions/runs/29225746703 (commit `fe31fda`, PASS)
+- **Prior failed CI run** (YAML error, 0 jobs): https://github.com/guo6x/Omni-context/actions/runs/29224630040 (commit `3f8d323`)
 
 ## Remaining Risk
 - **4 of 5 E2E targets are blocking for freeze.** The branch cannot be declared ready for freeze candidate until at least Targets 2 (benchmark) and 3 (desktop app) are verified against a live instance.
