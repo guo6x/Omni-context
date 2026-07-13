@@ -678,10 +678,42 @@ export default function GraphViewer3D({
     if (!turn || gSaving) return;
     setGSaving(true);
     try {
+      // Task 9: Build per-evidence metadata with source_span, role, is_current.
+      // Entities cited in turn.reasons → 'supporting' with source_span = reason text.
+      // Entities in citedEntityIds but not in any reason → 'neutral'.
+      const evidenceMap = new Map<string, { role: 'supporting' | 'opposing' | 'neutral'; source_span?: string; is_current?: boolean }>();
+      for (const r of turn.reasons) {
+        for (const eid of r.entityIds) {
+          // is_current: false if the entity has valid_until in the past
+          const ent = entities.find((e) => e.id === eid);
+          let isCurrent: boolean | undefined = undefined;
+          if (ent?.valid_until) {
+            isCurrent = new Date(ent.valid_until).getTime() > Date.now();
+          } else if (ent) {
+            isCurrent = true; // no valid_until = still current
+          }
+          evidenceMap.set(eid, { role: 'supporting', source_span: r.text, is_current: isCurrent });
+        }
+      }
+      for (const eid of turn.citedEntityIds) {
+        if (!evidenceMap.has(eid)) {
+          const ent = entities.find((e) => e.id === eid);
+          let isCurrent: boolean | undefined = undefined;
+          if (ent?.valid_until) {
+            isCurrent = new Date(ent.valid_until).getTime() > Date.now();
+          } else if (ent) {
+            isCurrent = true;
+          }
+          evidenceMap.set(eid, { role: 'neutral', is_current: isCurrent });
+        }
+      }
+      const evidence = Array.from(evidenceMap.entries()).map(([entity_id, meta]) => ({ entity_id, ...meta }));
+
       const args: Record<string, unknown> = {
         situation: turn.question,
         conclusion: turn.conclusion,
         cited_entity_ids: turn.citedEntityIds,
+        evidence,
         confidence: 'medium',
         alternatives: '',
       };
@@ -715,7 +747,7 @@ export default function GraphViewer3D({
     } finally {
       setGSaving(false);
     }
-  }, [gAnswer, gSaving, onDataChanged, saveSession, toast, t, lineageRelation]);
+  }, [gAnswer, gSaving, onDataChanged, saveSession, toast, t, lineageRelation, entities]);
 
   // 历史会话：打开列表 / 载入一条续聊 / 删除
   const openHistory = useCallback(async () => {

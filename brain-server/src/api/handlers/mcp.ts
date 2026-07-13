@@ -1873,10 +1873,27 @@ ${gaConnBlock}`;
             });
 
             // Create decision_referenced relationships to cited entities
+            // Task 9: If per-evidence metadata is provided, use the role from
+            // evidence[] to determine relationship type. Otherwise fall back
+            // to the flat supporting/opposing/cited arrays.
+            const evidenceRoleMap = new Map<string, 'supporting' | 'opposing' | 'neutral'>();
+            for (const ev of parsed.evidence) {
+              evidenceRoleMap.set(ev.entity_id, ev.role);
+            }
             const evidenceLinks = [
-              ...(cited_entity_ids || []).map((id) => ({ id, type: 'decision_referenced' as const })),
-              ...parsed.supporting_evidence_ids.map((id) => ({ id, type: 'supported_by' as const })),
-              ...parsed.opposing_evidence_ids.map((id) => ({ id, type: 'opposed_by' as const })),
+              ...(cited_entity_ids || []).map((id) => ({
+                id,
+                type: evidenceRoleMap.get(id) === 'supporting' ? 'supported_by' as const
+                  : evidenceRoleMap.get(id) === 'opposing' ? 'opposed_by' as const
+                  : 'decision_referenced' as const,
+              })),
+              // Only add from supporting/opposing arrays if not already covered by evidence[]
+              ...parsed.supporting_evidence_ids
+                .filter((id) => !evidenceRoleMap.has(id))
+                .map((id) => ({ id, type: 'supported_by' as const })),
+              ...parsed.opposing_evidence_ids
+                .filter((id) => !evidenceRoleMap.has(id))
+                .map((id) => ({ id, type: 'opposed_by' as const })),
               ...parsed.principle_ids.map((id) => ({ id, type: 'supported_by' as const })),
             ];
             if (evidenceLinks.length > 0) {

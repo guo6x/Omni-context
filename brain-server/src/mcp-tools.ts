@@ -99,6 +99,15 @@ export const SaveDecisionSchema = z.object({
   supporting_evidence_ids: z.array(z.string()).optional().default([]),
   opposing_evidence_ids: z.array(z.string()).optional().default([]),
   principle_ids: z.array(z.string()).optional().default([]),
+  // Task 9: Per-evidence metadata — source_span (where in the source text the
+  // evidence was cited), role (supporting/opposing/neutral), is_current (false
+  // if the entity has valid_until in the past = historical).
+  evidence: z.array(z.object({
+    entity_id: z.string(),
+    role: z.enum(['supporting', 'opposing', 'neutral']).default('neutral'),
+    source_span: z.string().optional(),
+    is_current: z.boolean().optional(),
+  })).optional().default([]),
   confidence: z.enum(['high', 'medium', 'low']).optional().default('medium'),
   alternatives: z.union([z.string(), z.array(z.string())]).optional().default(''),
   hard_constraints: z.array(z.string()).optional().default([]),

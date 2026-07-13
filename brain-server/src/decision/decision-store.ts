@@ -25,6 +25,8 @@ export function buildDecisionMetadata(input: SaveDecisionInput): Record<string, 
     opposing_evidence_ids: input.opposing_evidence_ids,
     principle_ids: input.principle_ids,
     cited_entity_ids: input.cited_entity_ids,
+    // Task 9: Per-evidence metadata with source_span, role, is_current.
+    evidence: input.evidence,
     assumptions: input.assumptions,
     uncertainties: input.uncertainties,
     expected_outcomes: input.expected_outcomes,
