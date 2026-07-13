@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
+import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { getConversationQAs, generateQuestionId, isAdversarial, loadLoCoMoConversation, mapCategory } from '../src/dataset.mjs';
 import { computeStatistics } from '../src/judge/schema.mjs';
 import { readRun } from '../src/run-store.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const BENCHMARK_ROOT = path.resolve(SCRIPT_DIR, '..');
+const REPOSITORY_ROOT = path.resolve(BENCHMARK_ROOT, '..');
+const execFileAsync = promisify(execFile);
 
 function flag(name) {
   const index = process.argv.indexOf(name);
@@ -71,10 +75,27 @@ async function main() {
   }
 
   const firstRead = await readRun(runDir);
-  const { manifest, records } = firstRead;
+  let { manifest } = firstRead;
+  const { records } = firstRead;
   if (manifest.split !== 'development' || JSON.stringify(manifest.conversation_ids?.map(Number)) !== '[1]') {
     throw new Error('This finalizer refuses any run other than development Conversation 1.');
   }
+  const [{ stdout: commitStdout }, { stdout: statusStdout }] = await Promise.all([
+    execFileAsync('git', ['-C', REPOSITORY_ROOT, 'rev-parse', 'HEAD']),
+    execFileAsync('git', ['-C', REPOSITORY_ROOT, 'status', '--porcelain']),
+  ]);
+  if (statusStdout.trim()) {
+    throw new Error('Refusing to seal run provenance from a dirty repository. Commit the exact implementation first.');
+  }
+  const implementationCommit = commitStdout.trim();
+  manifest = {
+    ...manifest,
+    benchmark_commit: implementationCommit,
+    brain_server_commit: implementationCommit,
+    desktop_commit: implementationCommit,
+    provenance_sealed_at: new Date().toISOString(),
+  };
+  await writeFile(path.join(runDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   const conversation = await loadLoCoMoConversation(datasetPath, 1);
   const qas = getConversationQAs(null, conversation);
   const expectedIds = qas.map((qa, index) => generateQuestionId(1, qa, index));
