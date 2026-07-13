@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-07-13T16:31:00+08:00",
+  "workspace": "D:\\AI_code\\Omni-context\\omni-context-release",
+  "values_recorded": false,
+  "environment": {
+    "LLM_API_URL": { "present": false, "length": 0 },
+    "LLM_API_KEY": { "present": false, "length": 0 },
+    "LLM_MODEL": { "present": false, "length": 0 },
+    "EMBEDDING_MODE": { "present": false, "length": 0 },
+    "EMBEDDING_API_URL": { "present": false, "length": 0 },
+    "EMBEDDING_API_KEY": { "present": false, "length": 0 },
+    "LOCAL_API_TOKEN": { "present": false, "length": 0 }
+  },
+  "workspace_env_file_found": false,
+  "note": "D-drive workspace was checked first. No usable env file was found in the limited fallback Codex paths on C. No values or secrets were printed or persisted."
+}
