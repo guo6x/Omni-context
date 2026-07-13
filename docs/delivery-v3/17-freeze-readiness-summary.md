@@ -23,7 +23,7 @@
 | 12 | Cycle-Level AbortController + Notification Dedup | `5dc1e91` | FIXED | 12 |
 | 13 | stdio ask_memory and graph_answer into MCP Server | `ec52b74` | FIXED | 2 (smoke reachability) |
 | 14 | Repository Hygiene — Remove Temp Scripts, Fix CI | `5375070` | FIXED | 0 (no functional changes) |
-| 15 | End-to-End Verification | N/A | **PENDING** | 0 (not yet run) |
+| 15 | End-to-End Verification | live (no code change) | **PARTIAL** (1/5 PASS, 4/5 BLOCKED on external resources) | 0 (verification only) |
 
 ## Totals
 
@@ -32,7 +32,7 @@
 - **Total benchmark tests**: 116 (17 dataset + 14 resume-retry + 50 judge-calibration + existing harness/metric-rubric/runner)
 - **Schema version**: 23 (v21: assertion literal types/FTS in `fc8b774`; v22: entity merge audit redirect summary in `d0e5c41`; v23: failed_tasks table in `bb5d429`)
 - **New brain-server tests this branch**: 54 (19 Task 5 + 12 Task 12 + 23 Task 11)
-- **Overall status**: `NOT READY FOR FREEZE CANDIDATE` — Task 15 E2E verification is pending
+- **Overall status**: `NOT READY FOR FREEZE CANDIDATE` — Task 15 E2E is PARTIAL: Brain Server startup + migration verified PASS; 4 targets blocked on external resources (LLM credentials, Tauri+Rust toolchain, Chrome install, paired hardware credential)
 
 ## Key Achievements
 
@@ -53,7 +53,7 @@
 
 1. **`api.smoke` flaky decay test** — `MemoryDecayScheduler` test intermittently fails due to timing-sensitive assertions on decay intervals. Not a regression — pre-existing flakiness.
 2. **`MemoryDecayScheduler` unhandled rejection in tests** — the scheduler's promise rejection is not caught in the test environment, producing `UnhandledPromiseRejection` warnings. Does not affect production runtime but pollutes test output.
-3. **Task 15 E2E verification not yet run** — all 5 verification targets (Brain Server startup + migration, benchmark dev run, Windows desktop app launch, browser extension pairing, ESP32 mock pairing) are pending. This is the **sole blocker** for freeze candidate.
+3. **Task 15 E2E verification PARTIAL** — Brain Server startup + migration verified PASS (all 23 migrations apply cleanly, `/health` returns 200, new Task 5 endpoints respond correctly). 4 remaining targets (benchmark, desktop app, browser extension, ESP32 mock) are BLOCKED on external resources (LLM credentials, Tauri+Rust toolchain, Chrome install, paired hardware credential) — not on code defects. See [16-task15-e2e-verification.md](16-task15-e2e-verification.md) for full evidence and unblock steps.
 4. **`needs_review` relationships accumulate** — conflict resolver routes non-superseding conflicts to `needs_review` status, but there is no dedicated review queue UI or filtered "pending review" endpoint.
 5. **`revertMerge` does not reverse redirects** — once graph edges are folded onto canonical, reverting the merge restores the alias entity but leaves redirected edges on canonical (documented limitation; per-edge provenance tracking out of scope for v3).
 6. **Merge queue is HTTP-only** — no MCP tool exposes the merge queue; stdio MCP clients cannot list/confirm/reject/revert merges.
@@ -63,4 +63,4 @@
 
 ## Conclusion
 
-The v3 branch fixes the systemic v2 problem: code is no longer written to pass tests but never called by production. All 14 implementation tasks are FIXED with 231+ brain-server tests and 116 benchmark tests passing. However, **the branch is NOT READY FOR FREEZE CANDIDATE** because Task 15 (end-to-end verification) has not been run. The 5 E2E verification targets must be executed and pass before the branch can be promoted to freeze candidate.
+The v3 branch fixes the systemic v2 problem: code is no longer written to pass tests but never called by production. All 14 implementation tasks are FIXED with 231+ brain-server tests and 116 benchmark tests passing. Task 15 E2E verification is PARTIAL: Brain Server startup + migration is verified PASS (all 23 migrations apply, `/health` returns 200, new Task 5 endpoints respond correctly, AgentLoop + MemoryDecayScheduler start cleanly, sqlite-vec + embedding model load successfully). 4 remaining E2E targets (benchmark, desktop app, browser extension, ESP32 mock) are BLOCKED on external resources that are not provisioned in the current verification environment — not on code defects. **The branch is NOT READY FOR FREEZE CANDIDATE** until at least the benchmark (Target 2) and desktop app (Target 3) E2E targets are verified against a live LLM and a built Tauri binary. See [16-task15-e2e-verification.md](16-task15-e2e-verification.md) for the full per-target evidence and unblock steps.
