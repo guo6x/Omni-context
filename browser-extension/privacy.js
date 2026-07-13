@@ -21,6 +21,7 @@
     'claude.ai',
     'gemini.google.com',
   ]);
+  const CAPTURE_CHUNK_CHARACTERS = 12000;
 
   const SENSITIVE_DOMAIN_PATTERNS = Object.freeze([
     /(^|\.)accounts\./i,
@@ -138,13 +139,14 @@
   function captureStats(text, redactedCount) {
     return {
       sentCharacters: typeof text === 'string' ? text.length : 0,
-      payloadChunks: text ? 1 : 0,
+      payloadChunks: text ? Math.ceil(text.length / CAPTURE_CHUNK_CHARACTERS) : 0,
       redactedCount: Number(redactedCount) || 0,
     };
   }
 
   return {
     AUTOMATIC_CAPTURE_DOMAINS,
+    CAPTURE_CHUNK_CHARACTERS,
     DEFAULT_SETTINGS,
     captureStats,
     evaluateCapturePolicy,

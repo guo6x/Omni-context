@@ -38,7 +38,12 @@ async function apiFetch(path, options = {}) {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  return fetch(`${API_BASE}${path}`, { ...options, headers });
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  if (response.status === 401 && token) {
+    cachedToken = null;
+    await chrome.storage.local.remove('localApiToken');
+  }
+  return response;
 }
 
 // --- Desktop health ---
@@ -259,16 +264,26 @@ function sanitizeFilename(name) {
     .substring(0, 100);
 }
 
+function splitCaptureText(text) {
+  const chunkSize = OmniPrivacy.CAPTURE_CHUNK_CHARACTERS || 12000;
+  const value = typeof text === 'string' ? text : '';
+  if (!value) return [];
+  const chunks = [];
+  for (let offset = 0; offset < value.length; offset += chunkSize) {
+    chunks.push(value.slice(offset, offset + chunkSize));
+  }
+  return chunks;
+}
+
 // --- Capture entry points ---
 
 async function capturePage(data) {
   const privacy = await prepareCapture(data);
   if (!privacy.ok) return privacy;
   const prefix = data.source ? data.source + '-' : '';
-  return submitAndPoll({
+  return submitChunksAndPoll({
     filename: sanitizeFilename(prefix + (data.title || data.url || 'webpage')) + '.txt',
-    contentType: 'text/plain',
-    base64: textToBase64(privacy.formatted),
+    text: privacy.formatted,
     auditId: privacy.auditId,
     stats: privacy.stats,
   });
@@ -285,10 +300,9 @@ async function captureSelection(data, tab) {
   });
   const stats = OmniPrivacy.captureStats(formatted, privacy.stats.redactedCount);
   await updateAudit(privacy.auditId, stats);
-  return submitAndPoll({
+  return submitChunksAndPoll({
     filename: sanitizeFilename(data.title || tab?.title || 'selection') + '.txt',
-    contentType: 'text/plain',
-    base64: textToBase64(formatted),
+    text: formatted,
     auditId: privacy.auditId,
     stats,
   });
@@ -296,24 +310,51 @@ async function captureSelection(data, tab) {
 
 // --- Async job: submit + fast polling with alarm fallback ---
 
-async function submitAndPoll({ filename, contentType, base64, auditId, stats }) {
+async function submitChunksAndPoll({ filename, text, auditId, stats }) {
+  const chunks = splitCaptureText(text);
+  const jobIds = [];
+  try {
+    for (let index = 0; index < chunks.length; index += 1) {
+      const suffix = chunks.length > 1
+        ? `-part-${String(index + 1).padStart(2, '0')}-of-${String(chunks.length).padStart(2, '0')}`
+        : '';
+      const dot = filename.lastIndexOf('.');
+      const chunkFilename = dot >= 0
+        ? `${filename.slice(0, dot)}${suffix}${filename.slice(dot)}`
+        : `${filename}${suffix}`;
+      const jobId = await submitChunk({
+        filename: chunkFilename,
+        base64: textToBase64(chunks[index]),
+        auditId,
+        chunkIndex: index + 1,
+        totalChunks: chunks.length,
+      });
+      jobIds.push(jobId);
+    }
+  } catch (error) {
+    return { ok: false, error: String(error), jobIds, ...stats };
+  }
+  await updateAudit(auditId, { status: 'queued', jobId: jobIds[0], jobIds });
+  return { ok: true, jobId: jobIds[0], jobIds, ...stats };
+}
+
+async function submitChunk({ filename, base64, auditId, chunkIndex, totalChunks }) {
   try {
     const res = await apiFetch('/api/ingest/file', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename, contentType, base64 }),
+      body: JSON.stringify({ filename, contentType: 'text/plain', base64 }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `Server returned ${res.status}`);
 
     const jobId = data.jobId;
-    await trackPendingJob(jobId, filename, auditId);
-    await updateAudit(auditId, { status: 'queued', jobId });
+    await trackPendingJob(jobId, filename, auditId, chunkIndex, totalChunks);
 
     chrome.alarms.create(`${POLL_ALARM_PREFIX}${jobId}`, { periodInMinutes: FALLBACK_ALARM_PERIOD_MINUTES });
     startFastPoll(jobId);
 
-    return { ok: true, jobId, ...stats };
+    return jobId;
   } catch (error) {
     console.error('[Omni-Context] Ingest submit failed:', error);
     await updateAudit(auditId, { status: 'failed', error: String(error) });
@@ -323,7 +364,7 @@ async function submitAndPoll({ filename, contentType, base64, auditId, stats }) 
       title: 'Omni-Context: 提交失败',
       message: error.message || String(error),
     });
-    return { ok: false, error: String(error) };
+    throw error;
   }
 }
 
@@ -425,9 +466,9 @@ async function getPendingJobs() {
   return result[PENDING_JOBS_KEY] || {};
 }
 
-async function trackPendingJob(jobId, filename, auditId) {
+async function trackPendingJob(jobId, filename, auditId, chunkIndex = 1, totalChunks = 1) {
   const jobs = await getPendingJobs();
-  jobs[jobId] = { filename, auditId, startedAt: Date.now() };
+  jobs[jobId] = { filename, auditId, chunkIndex, totalChunks, startedAt: Date.now() };
   await chrome.storage.local.set({ [PENDING_JOBS_KEY]: jobs });
 }
 

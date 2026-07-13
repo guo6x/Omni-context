@@ -68,3 +68,11 @@ test('redacts common secrets without returning the original values in metadata',
     redactedCount: 2,
   });
 });
+
+test('reports the real number of 12k transport chunks for long captures', () => {
+  assert.deepEqual(privacy.captureStats('x'.repeat(24001), 0), {
+    sentCharacters: 24001,
+    payloadChunks: 3,
+    redactedCount: 0,
+  });
+});
