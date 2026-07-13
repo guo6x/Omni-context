@@ -27,5 +27,10 @@ Implementation and evidence commits from the v3 baseline, oldest first:
 - `a45e993e4af64b52d173e5e64458c1606922a7aa` — lockfile/native CI gates and D-drive-aware packaging.
 - `c586866c19bade85c8fea49ceae7e2f072c6e528` — installed Windows application acceptance harness.
 - `4ea445a89410b33ad67e8e729d888128bbeb80af` — readable browser fixture evidence without machine-local paths.
+- `66d2bbae9c90a8eaa3723521e7dde4792ffbf177` — consolidated v3.1 delivery reports and raw client evidence.
+- `1a6f163cc5ab2bb1f401c8542f60a2828787c1f0` — official-registry benchmark cache configuration for CI.
+- `e78cb21f5a4ee3350a625d8da84fb1485d29ef7d` — tracked benchmark npm lockfile for reproducible CI installs.
+- `0432e10ee24004b2fc317303543ecd46d6dce72e` — valid Tauri resource glob in a clean checkout.
+- `12ed8b578153df538c31544cca85a41605f82acb` — frontend prerequisite before full Rust gates; implementation HEAD CI 9/9.
 
-The documentation/evidence commit and pushed CI result are appended by the final handoff. This manifest remains `PARTIAL` because no Freeze Candidate is permitted.
+This documentation/evidence handoff commit is the final child of the list above and receives its own current-HEAD CI run. This manifest remains `PARTIAL` because no Freeze Candidate is permitted.

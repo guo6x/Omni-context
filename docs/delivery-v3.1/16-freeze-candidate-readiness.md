@@ -18,8 +18,8 @@ Final decision: `NOT READY FOR FREEZE CANDIDATE`.
 | 10. Held-out guard | `FIXED` | Explicit final-freeze authorization and manifest validation pass with synthetic data only. |
 | 11. AgentLoop timeout | `FIXED` | Lock lifetime, abort guards, awaitable stop, and production callers pass. |
 | 12. Merge revert | `FIXED` | Full redirect journal and confirm/revert/confirm pass. |
-| 13. Current HEAD CI | `BLOCKED` | Awaiting pushed current-HEAD 9/9 result. |
+| 13. Current HEAD CI | `FIXED` | Implementation HEAD CI #21 completed all nine enforced jobs successfully; the final documentation-only child is re-run for the handoff. |
 | 14. Client/hardware E2E | `FIXED` | Installed Windows, paired browser, and accepted/rejected ESP32 paths pass. |
-| 15. Freeze Candidate | `BLOCKED` | Tasks 3, 4, 5, 9, and 13 are not all `FIXED`. |
+| 15. Freeze Candidate | `BLOCKED` | Tasks 3, 4, 5, and 9 are not all `FIXED`. |
 
 No Freeze Candidate manifest or tag was created. Conversation 2–10 were not run, viewed, analyzed, or counted.
