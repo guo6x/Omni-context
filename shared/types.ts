@@ -23,6 +23,14 @@ export interface Entity {
   metadata?: Record<string, any>;
   access_count?: number;
   last_accessed?: string;
+  observed_at?: string;
+  recorded_at?: string;
+  event_time?: string;
+  valid_from?: string;
+  valid_until?: string;
+  temporal_confidence?: number;
+  temporal_source?: string;
+  timezone?: string;
 }
 
 export interface Relationship {
