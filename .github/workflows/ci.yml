@@ -108,9 +108,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: mobile-app/package-lock.json
-      - run: npm ci
+      - run: npm install --no-fund --no-audit
         working-directory: mobile-app
       - run: npm run typecheck
         working-directory: mobile-app
@@ -124,9 +122,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: benchmark/package-lock.json
-      - run: npm ci
+      - run: npm install --no-fund --no-audit
         working-directory: benchmark
       - run: node --test tests/*.test.mjs
         working-directory: benchmark
