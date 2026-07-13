@@ -1,6 +1,6 @@
 # 06 — Resume and Retry Report
 
-Status: **PARTIALLY_FIXED**  
+Status: **PARTIAL**
 Implementation commit: `469dea3e669cd28b5a3a4ece351c5c6b3e23a02e`
 
 ## Fixed state-machine defects
@@ -34,4 +34,4 @@ Evidence: `evidence/resume-retry/benchmark-tests.log`.
 
 The task specification requires an actual OS `SIGINT` and a real recoverable Judge outage during the official Conversation 1 run. That run depends on the missing formal LLM/embedding configuration documented in report 04. The deterministic integration proves the state machine and disk invariants, but it is not presented as the official provider-backed interruption run.
 
-Task 5 remains `PARTIALLY_FIXED` until the official Conversation 1 run records the before/after JSONL diff, resume log, retry log, unchanged run ID, unchanged ingestion, complete final question count, and zero duplicate completions.
+Task 5 remains `PARTIAL` until the official Conversation 1 run records the before/after JSONL diff, resume log, retry log, unchanged run ID, unchanged ingestion, complete final question count, and zero duplicate completions.

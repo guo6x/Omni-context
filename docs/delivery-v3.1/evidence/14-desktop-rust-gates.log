@@ -1,0 +1,504 @@
+   Compiling cfg-if v1.0.4
+   Compiling siphasher v0.3.11
+    Checking windows-link v0.2.1
+    Checking smallvec v1.15.1
+   Compiling siphasher v1.0.3
+   Compiling stable_deref_trait v1.2.1
+   Compiling serde_core v1.0.228
+    Checking scopeguard v1.2.0
+   Compiling ppv-lite86 v0.2.21
+   Compiling memchr v2.8.0
+   Compiling zerofrom v0.1.7
+    Checking log v0.4.29
+   Compiling getrandom v0.2.17
+   Compiling getrandom v0.1.16
+    Checking windows-sys v0.61.2
+    Checking itoa v1.0.18
+   Compiling phf_shared v0.8.0
+   Compiling phf_shared v0.10.0
+   Compiling phf_shared v0.11.3
+    Checking parking_lot_core v0.9.12
+    Checking lock_api v0.4.14
+   Compiling yoke v0.8.2
+   Compiling zmij v1.0.21
+   Compiling rand_core v0.6.4
+   Compiling rand_core v0.5.1
+    Checking simd-adler32 v0.3.9
+   Compiling thiserror v1.0.69
+    Checking byteorder v1.5.0
+    Checking equivalent v1.0.2
+    Checking hashbrown v0.17.0
+    Checking crossbeam-utils v0.8.21
+   Compiling writeable v0.6.3
+   Compiling zerovec v0.11.6
+    Checking parking_lot v0.12.5
+    Checking adler2 v2.0.1
+    Checking fnv v1.0.7
+   Compiling litemap v0.8.2
+   Compiling rand_pcg v0.2.1
+   Compiling rand_chacha v0.3.1
+   Compiling rand_chacha v0.2.2
+   Compiling zerotrie v0.2.4
+    Checking crc32fast v1.5.0
+    Checking miniz_oxide v0.8.9
+   Compiling utf8_iter v1.0.4
+   Compiling rand v0.7.3
+    Checking pin-project-lite v0.2.17
+   Compiling new_debug_unreachable v1.0.6
+    Checking crossbeam-epoch v0.9.18
+   Compiling rand v0.8.6
+    Checking indexmap v2.14.0
+    Checking windows_x86_64_msvc v0.52.6
+   Compiling aho-corasick v1.1.4
+   Compiling regex-syntax v0.8.10
+   Compiling tinystr v0.8.3
+   Compiling potential_utf v0.1.5
+   Compiling mac v0.1.1
+   Compiling precomputed-hash v0.1.1
+    Checking serde v1.0.228
+    Checking crossbeam-deque v0.8.6
+   Compiling serde_json v1.0.149
+   Compiling icu_collections v2.2.0
+   Compiling futf v0.1.5
+   Compiling icu_locale_core v2.2.0
+    Checking windows-targets v0.52.6
+    Checking flate2 v1.1.9
+    Checking zerocopy v0.8.48
+   Compiling icu_normalizer_data v2.2.0
+   Compiling icu_properties_data v2.2.0
+    Checking bitflags v1.3.2
+    Checking bytes v1.11.1
+   Compiling dtoa v1.0.11
+   Compiling phf_generator v0.8.0
+   Compiling utf-8 v0.7.6
+    Checking once_cell v1.21.4
+   Compiling phf_generator v0.11.3
+   Compiling phf_generator v0.10.0
+   Compiling phf_codegen v0.8.0
+   Compiling dtoa-short v0.3.5
+   Compiling string_cache v0.8.9
+   Compiling phf_macros v0.8.0
+   Compiling tendril v0.4.3
+    Checking fdeflate v0.3.7
+   Compiling phf v0.10.1
+   Compiling phf_codegen v0.10.0
+   Compiling string_cache_codegen v0.5.4
+   Compiling phf_macros v0.11.3
+   Compiling selectors v0.22.0
+    Checking http v0.2.12
+   Compiling getrandom v0.4.2
+   Compiling itoa v0.4.8
+    Checking icu_provider v2.2.0
+   Compiling regex-automata v0.4.14
+   Compiling alloc-no-stdlib v2.0.4
+   Compiling markup5ever v0.11.0
+   Compiling matches v0.1.10
+   Compiling nodrop v0.1.14
+   Compiling winapi-util v0.1.11
+   Compiling alloc-stdlib v0.2.2
+   Compiling phf v0.8.0
+   Compiling icu_normalizer v2.2.0
+   Compiling uuid v1.23.1
+    Checking num-traits v0.2.19
+   Compiling servo_arc v0.1.1
+    Checking rayon-core v1.13.0
+   Compiling toml_datetime v0.6.11
+   Compiling serde_spanned v0.6.9
+   Compiling cssparser v0.27.2
+    Checking mio v1.2.0
+    Checking socket2 v0.6.3
+   Compiling fxhash v0.2.1
+   Compiling hashbrown v0.12.3
+    Checking futures-core v0.3.32
+   Compiling thin-slice v0.1.1
+    Checking percent-encoding v2.3.2
+   Compiling cfb v0.7.3
+   Compiling same-file v1.0.6
+   Compiling brotli-decompressor v4.0.3
+    Checking windows_x86_64_msvc v0.39.0
+   Compiling jsonptr v0.4.7
+    Checking form_urlencoded v1.2.2
+   Compiling indexmap v1.9.3
+    Checking bytemuck v1.25.0
+    Checking untrusted v0.9.0
+    Checking either v1.15.0
+   Compiling typenum v1.20.0
+    Checking tokio v1.52.2
+    Checking ring v0.17.14
+   Compiling infer v0.13.0
+    Checking rayon v1.12.0
+   Compiling json-patch v2.0.0
+   Compiling walkdir v2.5.0
+    Checking windows v0.39.0
+   Compiling icu_properties v2.2.0
+   Compiling regex v1.12.3
+   Compiling html5ever v0.26.0
+   Compiling brotli v7.0.0
+   Compiling generic-array v0.14.7
+   Compiling phf v0.11.3
+    Checking tracing-core v0.1.36
+   Compiling serde_with v3.19.0
+    Checking windows_x86_64_msvc v0.48.5
+   Compiling windows-version v0.1.7
+    Checking slab v0.4.12
+   Compiling glob v0.3.3
+    Checking futures-sink v0.3.32
+   Compiling dunce v1.0.5
+    Checking weezl v0.1.12
+    Checking futures-task v0.3.32
+   Compiling kuchikiki v0.8.2
+   Compiling webview2-com-sys v0.19.0
+    Checking tracing v0.1.44
+    Checking idna_adapter v1.2.2
+    Checking windows-targets v0.48.5
+    Checking futures-util v0.3.32
+    Checking half v2.7.1
+    Checking idna v1.1.0
+    Checking png v0.17.16
+    Checking windows-sys v0.52.0
+   Compiling libc v0.2.186
+    Checking url v2.5.8
+    Checking zune-inflate v0.2.54
+    Checking bit_field v0.10.3
+    Checking try-lock v0.2.5
+    Checking lebe v0.5.3
+    Checking raw-window-handle v0.5.2
+    Checking color_quant v1.1.0
+    Checking exr v1.74.0
+    Checking socket2 v0.5.10
+    Checking want v0.3.1
+   Compiling vswhom-sys v0.1.3
+    Checking gif v0.13.3
+   Compiling toml_edit v0.19.15
+   Compiling toml_edit v0.22.27
+    Checking sct v0.7.1
+    Checking rustls-webpki v0.101.7
+    Checking jpeg-decoder v0.3.2
+   Compiling windows-sys v0.48.0
+    Checking httparse v1.10.1
+    Checking windows_x86_64_msvc v0.53.1
+   Compiling tauri-utils v1.6.2
+    Checking winapi v0.3.9
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+    Checking qoi v0.4.1
+    Checking futures-channel v0.3.32
+    Checking schannel v0.1.29
+    Checking http-body v0.4.6
+    Checking pxfm v0.1.29
+    Checking tiff v0.9.1
+    Checking bitflags v2.11.1
+    Checking tower-service v0.3.3
+    Checking httpdate v1.0.3
+    Checking png v0.18.1
+    Checking native-tls v0.2.18
+    Checking rustls v0.21.12
+   Compiling digest v0.10.7
+    Checking windows-targets v0.53.5
+    Checking image v0.24.9
+   Compiling winreg v0.52.0
+   Compiling vswhom v0.1.0
+   Compiling toml v0.8.23
+   Compiling toml v0.7.8
+    Checking semver v1.0.28
+    Checking crossbeam-channel v0.5.15
+    Checking instant v0.1.13
+    Checking lazy_static v1.5.0
+    Checking byteorder-lite v0.1.0
+    Checking error-code v3.3.2
+    Checking unicode-segmentation v1.13.2
+   Compiling cpufeatures v0.2.17
+   Compiling embed-resource v2.5.2
+   Compiling dirs-sys-next v0.1.2
+    Checking clipboard-win v5.4.1
+   Compiling ico v0.4.0
+   Compiling sha2 v0.10.9
+    Checking windows-sys v0.60.2
+    Checking windows_x86_64_msvc v0.42.2
+    Checking windows_x86_64_msvc v0.37.0
+    Checking anyhow v1.0.102
+    Checking bstr v1.12.1
+    Checking ryu v1.0.23
+    Checking base64 v0.21.7
+    Checking http-range v0.1.5
+    Checking powerfmt v0.2.0
+    Checking windows v0.37.0
+    Checking serde_urlencoded v0.7.1
+    Checking windows-sys v0.42.0
+    Checking deranged v0.5.8
+   Compiling tauri-winres v0.1.1
+    Checking tokio-util v0.7.18
+    Checking tokio-rustls v0.24.1
+    Checking tokio-native-tls v0.3.1
+   Compiling tauri v1.8.3
+    Checking rustls-pemfile v1.0.4
+   Compiling tauri-codegen v1.4.6
+    Checking globset v0.4.18
+   Compiling dirs-next v2.0.0
+   Compiling cargo_toml v0.15.3
+    Checking windows-core v0.52.0
+    Checking encoding_rs v0.8.35
+    Checking filetime v0.2.27
+    Checking num-conv v0.2.1
+    Checking mime v0.3.17
+    Checking subtle v2.6.1
+    Checking h2 v0.3.27
+    Checking ipnet v2.12.0
+    Checking sync_wrapper v0.1.2
+    Checking time-core v0.1.8
+    Checking fastrand v2.4.1
+    Checking webpki-roots v0.25.4
+    Checking tar v0.4.45
+   Compiling tauri-build v1.5.6
+    Checking time v0.3.47
+    Checking tempfile v3.27.0
+    Checking ignore v0.4.25
+    Checking serialize-to-javascript v0.1.2
+    Checking windows v0.52.0
+    Checking winreg v0.50.0
+    Checking open v3.2.0
+    Checking winreg v0.10.1
+    Checking zip v0.6.6
+    Checking moxcms v0.8.1
+    Checking widestring v1.2.1
+    Checking minisign-verify v0.2.5
+    Checking base64 v0.22.1
+    Checking state v0.5.3
+    Checking auto-launch v0.5.0
+    Checking windows v0.48.0
+    Checking hmac v0.12.1
+    Checking chrono v0.4.44
+    Checking local-ip-address v0.6.13
+    Checking hex v0.4.3
+   Compiling tauri-macros v1.4.7
+    Checking hyper v0.14.32
+   Compiling omni-context-desktop v0.1.1 (<repo>\desktop-daemon\src-tauri)
+    Checking display-info v0.4.8
+    Checking screenshots v0.6.0
+    Checking image v0.25.10
+    Checking hyper-rustls v0.24.2
+    Checking hyper-tls v0.5.0
+    Checking reqwest v0.11.27
+    Checking rfd v0.10.0
+    Checking arboard v3.6.1
+    Checking tao v0.16.11
+    Checking webview2-com v0.19.1
+    Checking tauri-runtime v0.14.6
+    Checking wry v0.24.12
+    Checking tauri-runtime-wry v0.14.11
+    Checking tauri-plugin-autostart v0.0.0 (https://github.com/tauri-apps/plugins-workspace?branch=v1#1e407ed5)
+warning: function `has_clipboard_content` is never used
+  --> src\clipboard.rs:86:14
+   |
+86 | pub async fn has_clipboard_content() -> Result<bool> {
+   |              ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `omni-context-desktop` (bin "omni-context-desktop") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 46s
+   Compiling omni-context-desktop v0.1.1 (<repo>\desktop-daemon\src-tauri)
+warning: function `has_clipboard_content` is never used
+  --> src\clipboard.rs:86:14
+   |
+86 | pub async fn has_clipboard_content() -> Result<bool> {
+   |              ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: the borrowed expression implements the required traits
+   --> src\brain_server.rs:419:28
+    |
+419 |     URL_SAFE_NO_PAD.encode(&bytes)
+    |                            ^^^^^^ help: change this to: `bytes`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#needless_borrows_for_generic_args
+    = note: `#[warn(clippy::needless_borrows_for_generic_args)]` on by default
+
+warning: redundant closure
+  --> src\commands.rs:91:42
+   |
+91 |     tauri::async_runtime::spawn_blocking(|| brain_server::start())
+   |                                          ^^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the function itself: `brain_server::start`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#redundant_closure
+   = note: `#[warn(clippy::redundant_closure)]` on by default
+
+warning: redundant closure
+   --> src\commands.rs:109:42
+    |
+109 |     tauri::async_runtime::spawn_blocking(|| brain_server::stop())
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the function itself: `brain_server::stop`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#redundant_closure
+
+warning: redundant closure
+   --> src\commands.rs:127:42
+    |
+127 |     tauri::async_runtime::spawn_blocking(|| brain_server::restart())
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the function itself: `brain_server::restart`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#redundant_closure
+
+warning: this `if` statement can be collapsed
+   --> src\commands.rs:308:24
+    |
+308 |                   } else if path.is_file() {
+    |  ________________________^
+309 | |                     if is_supported(&path, extensions) {
+310 | |                         if let Ok(metadata) = entry.metadata() {
+311 | |                             if let Some(path_str) = path.to_str() {
+...   |
+322 | |                 }
+    | |_________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#collapsible_if
+    = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+    |
+308 ~                 } else if path.is_file()
+309 ~                     && is_supported(&path, extensions) {
+310 |                         if let Ok(metadata) = entry.metadata() {
+...
+320 |                         }
+321 ~                     }
+    |
+
+warning: this `if` statement can be collapsed
+   --> src\commands.rs:332:16
+    |
+332 |           } else if path.is_file() {
+    |  ________________^
+333 | |             if is_supported(path, &lower_extensions) {
+334 | |                 if let Ok(metadata) = fs::metadata(path) {
+335 | |                     if let Some(path_str) = path.to_str() {
+...   |
+346 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+332 ~         } else if path.is_file()
+333 ~             && is_supported(path, &lower_extensions) {
+334 |                 if let Ok(metadata) = fs::metadata(path) {
+...
+344 |                 }
+345 ~             }
+    |
+
+warning: matching on `Some` with `ok()` is redundant
+   --> src\mcp_helper.rs:206:5
+    |
+206 | /     if let Some(home) = std::env::var("USERPROFILE")
+207 | |         .or_else(|_| std::env::var("HOME"))
+208 | |         .ok()
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#match_result_ok
+    = note: `#[warn(clippy::match_result_ok)]` on by default
+help: consider matching on `Ok(home)` and removing the call to `ok` instead
+    |
+206 ~     if let Ok(home) = std::env::var("USERPROFILE")
+207 +         .or_else(|_| std::env::var("HOME"))
+    |
+
+warning: this `if` can be collapsed into the outer `match`
+   --> src\main.rs:266:17
+    |
+266 | /                 if event.window().label() == "main" {
+267 | |                     if CLOSE_TO_TRAY.load(Ordering::SeqCst) {
+268 | |                         api.prevent_close();
+269 | |                         let _ = event.window().hide();
+...   |
+275 | |                 }
+    | |_________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#collapsible_match
+    = note: `#[warn(clippy::collapsible_match)]` on by default
+help: collapse nested if block
+    |
+265 ~             tauri::WindowEvent::CloseRequested { api, .. }
+266 ~                 if event.window().label() == "main" => {
+267 |                     if CLOSE_TO_TRAY.load(Ordering::SeqCst) {
+...
+274 |                     }
+275 ~                 }
+    |
+
+warning: this `if` can be collapsed into the outer `match`
+   --> src\main.rs:278:17
+    |
+278 | /                 if event.window().label() == "main" {
+279 | |                     println!("[Omni-Context] 主窗口销毁，清理中...");
+280 | |                     if let Err(e) = brain_server::stop() {
+281 | |                         eprintln!("[Omni-Context] Brain Server 停止失败: {}", e);
+282 | |                     }
+283 | |                 }
+    | |_________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#collapsible_match
+help: collapse nested if block
+    |
+277 ~             tauri::WindowEvent::Destroyed
+278 ~                 if event.window().label() == "main" => {
+279 |                     println!("[Omni-Context] 主窗口销毁，清理中...");
+...
+282 |                     }
+283 ~                 }
+    |
+
+warning: this `MutexGuard` is held across an await point
+   --> src\udp_listener.rs:165:13
+    |
+165 |         let _guard = hardware::HARDWARE_TEST_LOCK.lock().unwrap();
+    |             ^^^^^^
+    |
+    = help: consider using an async-aware `Mutex` type or ensuring the `MutexGuard` is dropped before calling `await`
+note: these are all the await points this lock is held through
+   --> src\udp_listener.rs:199:62
+    |
+199 |         let ack = dispatch_packet(&tx, &packet, "127.0.0.1").await;
+    |                                                              ^^^^^
+200 |         worker.await.unwrap();
+    |                ^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#await_holding_lock
+    = note: `#[warn(clippy::await_holding_lock)]` on by default
+
+warning: this `MutexGuard` is held across an await point
+   --> src\udp_listener.rs:209:13
+    |
+209 |         let _guard = hardware::HARDWARE_TEST_LOCK.lock().unwrap();
+    |             ^^^^^^
+    |
+    = help: consider using an async-aware `Mutex` type or ensuring the `MutexGuard` is dropped before calling `await`
+note: these are all the await points this lock is held through
+   --> src\udp_listener.rs:243:56
+    |
+243 |         tokio::time::sleep(Duration::from_millis(100)).await;
+    |                                                        ^^^^^
+244 |         let client = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+    |                                                     ^^^^^
+...
+253 |             let ack = send_packet(&client, server_addr, &packet).await;
+    |                                                                  ^^^^^
+...
+276 |         let replay_ack = send_packet(&client, server_addr, &replay).await;
+    |                                                                     ^^^^^
+...
+294 |         .await;
+    |          ^^^^^
+...
+309 |         .await;
+    |          ^^^^^
+...
+324 |         .await;
+    |          ^^^^^
+...
+343 |         .await;
+    |          ^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.95.0/index.html#await_holding_lock
+
+warning: `omni-context-desktop` (bin "omni-context-desktop") generated 10 warnings (run `cargo clippy --fix --bin "omni-context-desktop" -p omni-context-desktop -- ` to apply 9 suggestions)
+warning: `omni-context-desktop` (bin "omni-context-desktop" test) generated 12 warnings (10 duplicates)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 53s

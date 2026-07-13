@@ -1,7 +1,7 @@
 # 04 — Extraction Collapse Diagnosis and Repair
 
-Status: **PARTIALLY_FIXED**  
-Implementation commit: `b0c061932d95a8c35611b9d5b0b8e358eb82a69f`  
+Status: **PARTIAL**
+Implementation commit: `b0c061932d95a8c35611b9d5b0b8e358eb82a69f`
 Scope inspected: production extraction path and Conversation 1 loader only. Conversations 2–10 were not loaded, run, counted, or analyzed.
 
 ## Freeze impact
@@ -60,4 +60,4 @@ Provide or inject the formal evaluation LLM and semantic embedding configuration
 - an explicit comparison against the prior 19-session → 1-entity symptom;
 - preservation of `extraction-diagnostics.jsonl`, `brain.db`, database hash, server log, and run manifest.
 
-Until that action passes, Task 3 and the Freeze Candidate remain blocked from a `FIXED` declaration.
+Until that action passes, Task 3 remains `PARTIAL` and the Freeze Candidate remains blocked.

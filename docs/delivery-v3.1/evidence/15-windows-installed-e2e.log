@@ -1,0 +1,11 @@
+installed-ui-local-llm-config=PASS
+installed-ui-launch-onboarding=PASS
+installed-ui-import=PASS
+installed-ui-search=PASS
+installed-ui-qa=PASS
+installed-ui-decision-a=PASS
+installed-ui-decision-b-lineage=PASS
+installed-ui-lineage-view=PASS
+installed-ui-restart-persistence=PASS
+installed-ui-export=PASS
+installed-ui-restore=PASS

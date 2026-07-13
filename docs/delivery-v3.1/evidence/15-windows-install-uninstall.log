@@ -1,0 +1,7 @@
+{"lineage":[{"name":"Decision B: revise the plan and choose Option B.","type":"supported_by","target":"Decision A: keep Option A for the initial release."},{"name":"Decision B: revise the plan and choose Option B.","type":"revises","target":"Decision A: keep Option A for the initial release."}],"counts":{"entities":35}}
+export-sha256=DAB80F1E8DCD624AECB062E842DD8F09E3A6E433C40CAE1E16C4BD1F1D7E7FF3
+export-bytes=341805
+pre-uninstall-processes=0
+uninstall-exit=0
+post-uninstall-processes=0
+install-dir-exists=False

@@ -1,0 +1,177 @@
+# npm audit report
+
+@xmldom/xmldom  <=0.8.12
+Severity: high
+xmldom: XML injection via unsafe CDATA serialization allows attacker-controlled markup insertion - https://github.com/advisories/GHSA-wh4c-j3r5-mjhp
+xmldom: Uncontrolled recursion in XML serialization leads to DoS - https://github.com/advisories/GHSA-2v35-w6hq-6mfw
+xmldom has XML injection through unvalidated DocumentType serialization - https://github.com/advisories/GHSA-f6ww-3ggp-fr8h
+xmldom has XML node injection through unvalidated processing instruction serialization - https://github.com/advisories/GHSA-x6wf-f3px-wcqx
+xmldom has XML node injection through unvalidated comment serialization - https://github.com/advisories/GHSA-j759-j44w-7fr8
+fix available via `npm audit fix --force`
+Will install expo@57.0.4, which is a breaking change
+node_modules/@xmldom/xmldom
+  @expo/plist  <=0.0.1-canary-20240418-8d74597 || 0.0.14 - 0.2.2
+  Depends on vulnerable versions of @xmldom/xmldom
+  node_modules/@expo/plist
+    @expo/config-plugins  *
+    Depends on vulnerable versions of @expo/plist
+    Depends on vulnerable versions of xcode
+    node_modules/@expo/config-plugins
+      @expo/cli  <=0.0.0-canary-20231123-1b19f96-4 || >=0.0.1-canary-20231125-d600e44
+      Depends on vulnerable versions of @expo/config
+      Depends on vulnerable versions of @expo/config-plugins
+      Depends on vulnerable versions of @expo/dev-server
+      Depends on vulnerable versions of @expo/metro-config
+      Depends on vulnerable versions of @expo/plist
+      Depends on vulnerable versions of @expo/prebuild-config
+      Depends on vulnerable versions of @expo/rudder-sdk-node
+      Depends on vulnerable versions of cacache
+      Depends on vulnerable versions of send
+      Depends on vulnerable versions of tar
+      node_modules/@expo/cli
+        expo  32.0.0-rc.0 - 32.0.6 || >=37.0.0
+        Depends on vulnerable versions of @expo/cli
+        Depends on vulnerable versions of @expo/config
+        Depends on vulnerable versions of @expo/config-plugins
+        Depends on vulnerable versions of expo-asset
+        Depends on vulnerable versions of expo-constants
+        Depends on vulnerable versions of expo-file-system
+        Depends on vulnerable versions of expo-modules-autolinking
+        Depends on vulnerable versions of uuid
+        node_modules/expo
+          expo-router  <=3.5.0 || 5.2.0-canary-20250611-f0afe80 - 5.2.0-canary-20250811-5c940c0 || 6.1.0-canary-20250930-9dc59d3 - 7.0.0-canary-20260113-4879b86 || 56.0.0-canary-20260212-4f61309 - 56.0.0-canary-20260504-8fccdbb
+          Depends on vulnerable versions of expo
+          Depends on vulnerable versions of expo-splash-screen
+          node_modules/expo-router
+      @expo/config  <=0.0.1-canary-20240418-8d74597 || >=3.3.23-alpha.0
+      Depends on vulnerable versions of @expo/config-plugins
+      node_modules/@expo/config
+        @expo/metro-config  <=0.0.1-canary-20240418-8d74597 || >=0.1.49-alpha.0
+        Depends on vulnerable versions of @expo/config
+        Depends on vulnerable versions of postcss
+        node_modules/@expo/metro-config
+          @expo/dev-server  *
+          Depends on vulnerable versions of @expo/bunyan
+          Depends on vulnerable versions of @expo/metro-config
+          node_modules/@expo/dev-server
+        expo-constants  <=0.0.1-canary-20240418-8d74597 || 2.0.0-rc.0 - 2.0.1 || 9.1.0 - 55.0.14 || 56.0.0-canary-20260212-4f61309 - 56.0.0-canary-20260506-964f25d
+        Depends on vulnerable versions of @expo/config
+        Depends on vulnerable versions of uuid
+        node_modules/expo-constants
+          expo-asset  <=0.0.1-canary-20240418-8d74597 || 2.0.0-rc.0 - 2.1.0-alpha.7 || 8.6.1 - 8.14.0
+          Depends on vulnerable versions of expo-constants
+          Depends on vulnerable versions of expo-file-system
+          node_modules/expo-asset
+          expo-linking  <=0.0.1-canary-20240418-8d74597 || 1.0.2 - 6.2.0 || 56.0.13-canary-20260526-6cd5e37 - 56.0.13-canary-20260701-9100865 || 57.0.0-canary-20260526-13e89ca - 57.0.0-canary-20260623-1c70a78
+          Depends on vulnerable versions of expo-constants
+          node_modules/expo-linking
+        expo-modules-autolinking  <=0.0.1-canary-20240418-8d74597 || 1.5.0 - 1.10.3
+        Depends on vulnerable versions of @expo/config
+        node_modules/expo-modules-autolinking
+      @expo/prebuild-config  *
+      Depends on vulnerable versions of @expo/config
+      Depends on vulnerable versions of @expo/config-plugins
+      Depends on vulnerable versions of @expo/image-utils
+      node_modules/@expo/prebuild-config
+        expo-splash-screen  <=0.0.1-canary-20240109-93608d8 || 0.11.0 - 0.27.0 || 0.30.11-canary-20250709-136b77f - 1.0.0-canary-20241018-f71b3e0 || 31.0.12-canary-20251118-4ca99d5 - 31.0.12-canary-20251127-587bc53 || 31.0.14-canary-20251223-b83b31e - 31.0.14-canary-20260113-4879b86
+        Depends on vulnerable versions of @expo/prebuild-config
+        node_modules/expo-splash-screen
+
+fast-xml-parser  <5.7.0
+Severity: moderate
+fast-xml-parser XMLBuilder: XML Comment and CDATA Injection via Unescaped Delimiters - https://github.com/advisories/GHSA-gh4j-gqv2-49f6
+fix available via `npm audit fix --force`
+Will install react-native@0.86.0, which is a breaking change
+node_modules/fast-xml-parser
+  @react-native-community/cli-platform-ios  10.2.0 - 13.1.0
+  Depends on vulnerable versions of fast-xml-parser
+  node_modules/@react-native-community/cli-platform-ios
+    @react-native-community/cli-doctor  <=13.5.2
+    Depends on vulnerable versions of @react-native-community/cli-platform-ios
+    Depends on vulnerable versions of ip
+    node_modules/@react-native-community/cli-doctor
+      @react-native-community/cli  4.13.0 - 9.3.5 || 11.0.2 - 11.4.0 || 12.0.0-alpha.0 - 12.3.5 || 13.0.0 - 13.5.2
+      Depends on vulnerable versions of @react-native-community/cli-doctor
+      Depends on vulnerable versions of @react-native-community/cli-hermes
+      node_modules/@react-native-community/cli
+        react-native  <=0.0.0-20221027-2059-ba5454c42 || 0.69.0-rc.0 - 0.70.15 || 0.71.4 - 0.74.0-rc.9 || >=0.87.0-nightly-20260507-ba204faa7
+        Depends on vulnerable versions of @react-native-community/cli
+        Depends on vulnerable versions of @react-native-community/cli-platform-ios
+        node_modules/react-native
+
+ip  *
+Severity: high
+ip SSRF improper categorization in isPublic - https://github.com/advisories/GHSA-2p57-rm9w-gvfp
+fix available via `npm audit fix --force`
+Will install react-native@0.86.0, which is a breaking change
+node_modules/ip
+  @react-native-community/cli-hermes  <=10.2.0 || 11.0.0-alpha.0 - 11.4.0 || 12.0.0-alpha.0 - 12.3.5 || 13.0.0 - 13.5.2
+  Depends on vulnerable versions of ip
+  node_modules/@react-native-community/cli-hermes
+
+postcss  <8.5.10
+Severity: moderate
+PostCSS has XSS via Unescaped </style> in its CSS Stringify Output - https://github.com/advisories/GHSA-qx2v-qp2m-jg93
+fix available via `npm audit fix --force`
+Will install expo@57.0.4, which is a breaking change
+node_modules/postcss
+
+semver  7.0.0 - 7.5.1
+Severity: high
+semver vulnerable to Regular Expression Denial of Service - https://github.com/advisories/GHSA-c2qf-rxjj-qqgw
+fix available via `npm audit fix --force`
+Will install expo-splash-screen@57.0.2, which is a breaking change
+node_modules/@expo/image-utils/node_modules/semver
+  @expo/image-utils  <=0.0.1-canary-20240109-93608d8 || 0.3.10-alpha.0 - 0.4.2
+  Depends on vulnerable versions of semver
+  node_modules/@expo/image-utils
+
+send  <0.19.0
+send vulnerable to template injection that can lead to XSS - https://github.com/advisories/GHSA-m6fv-jmcg-4jfg
+fix available via `npm audit fix --force`
+Will install expo@57.0.4, which is a breaking change
+node_modules/send
+
+tar  <=7.5.15
+Severity: high
+node-tar Vulnerable to Arbitrary File Creation/Overwrite via Hardlink Path Traversal - https://github.com/advisories/GHSA-34x7-hfp2-rc4v
+node-tar is Vulnerable to Arbitrary File Overwrite and Symlink Poisoning via Insufficient Path Sanitization - https://github.com/advisories/GHSA-8qq5-rm4j-mr97
+Arbitrary File Read/Write via Hardlink Target Escape Through Symlink Chain in node-tar Extraction - https://github.com/advisories/GHSA-83g3-92jg-28cx
+tar has Hardlink Path Traversal via Drive-Relative Linkpath - https://github.com/advisories/GHSA-qffp-2rhf-9h96
+node-tar Symlink Path Traversal via Drive-Relative Linkpath - https://github.com/advisories/GHSA-9ppj-qmqm-q256
+Race Condition in node-tar Path Reservations via Unicode Ligature Collisions on macOS APFS - https://github.com/advisories/GHSA-r6q2-hw4h-h46w
+node-tar applies PAX size override to intermediary GNU long-name/long-link headers, causing tar parser interpretation differential (file smuggling) - https://github.com/advisories/GHSA-vmf3-w455-68vh
+fix available via `npm audit fix --force`
+Will install expo@57.0.4, which is a breaking change
+node_modules/tar
+  cacache  14.0.0 - 18.0.4
+  Depends on vulnerable versions of tar
+  node_modules/cacache
+
+uuid  <11.1.1
+Severity: moderate
+uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided - https://github.com/advisories/GHSA-w5hq-g745-h8pq
+fix available via `npm audit fix --force`
+Will install expo-constants@57.0.3, which is a breaking change
+node_modules/@expo/bunyan/node_modules/uuid
+node_modules/@expo/rudder-sdk-node/node_modules/uuid
+node_modules/uuid
+node_modules/xcode/node_modules/uuid
+  @expo/bunyan  >=3.0.0
+  Depends on vulnerable versions of uuid
+  node_modules/@expo/bunyan
+    @expo/rudder-sdk-node  *
+    Depends on vulnerable versions of @expo/bunyan
+    Depends on vulnerable versions of uuid
+    node_modules/@expo/rudder-sdk-node
+  expo-file-system  <=0.0.1-canary-20240418-8d74597 || 8.1.0 - 16.0.0
+  Depends on vulnerable versions of uuid
+  node_modules/expo-file-system
+  xcode  >=0.9.2
+  Depends on vulnerable versions of uuid
+  node_modules/xcode
+
+33 vulnerabilities (1 low, 16 moderate, 16 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

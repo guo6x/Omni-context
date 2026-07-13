@@ -1,0 +1,1 @@
+Project Aurora currently uses Option A for its local-first architecture. Option B remains the revision candidate.

@@ -1,21 +1,17 @@
-# 12 — AgentLoop real timeout report
+# 12 — AgentLoop timeout report
 
 Status: **FIXED**
 
-## Implementation
+## Production lifecycle
 
-`AgentLoop` now accepts an injected positive `cycleTimeoutMs` for deterministic testing while retaining the four-minute production default. Each cycle owns:
+- Timeout only marks `timedOut` and aborts the cycle-local `AbortController`; it never releases the cycle lock.
+- `isCycleRunning` becomes false only in the cycle's `finally` block.
+- Entity mutation, notification creation, and proactive-insight persistence all recheck the abort signal before writing.
+- A later interval cannot start a new cycle while the timed-out cycle is still unwinding.
+- `stop()` is awaitable and waits for active-cycle finalization. Both API Server and MCP Server production shutdown paths await it before closing SQLite.
 
-- a local `AbortController`;
-- a unique lifecycle token;
-- a timeout that aborts the local controller, records `Cycle timeout`, releases the lock, and records the end time.
+## Verification
 
-If a non-abortable database Promise settles after timeout, the invalidated token stops that stale continuation before it mutates data. Its `finally` block cannot clear the controller or lock belonging to a newer cycle.
+Slow database, slow model, timeout/interval overlap, abort-before-write, duplicate-notification, and awaitable-stop cases pass. The focused AgentLoop suite passes 18/18. The final serialized Brain Server regression passes 28 files and 241/241 tests.
 
-## Strong timeout test
-
-The test injects a `getEntitiesForConsolidation()` Promise that never resolves, configures a 30ms cycle timeout, and asserts lock release and the `Cycle timeout` error in less than 500ms. The recorded full-suite run measured **53ms**. Before releasing the old Promise, it runs a second cycle successfully. It then releases the old Promise and verifies that the stale cycle does not corrupt the new lifecycle state.
-
-The full Brain Server suite passes 236/236.
-
-Evidence: `evidence/12-13-agentloop-merge-brain-tests.log`.
+Evidence: `evidence/12-13-agentloop-merge-brain-tests.log`, `evidence/16-brain-full-regression.log`.

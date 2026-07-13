@@ -24,6 +24,6 @@ Relationship redirects are performed by stable row ID. If redirecting would crea
 
 The test creates both canonical and alias edges that collide only after redirect, plus an inverse edge, explicit assertion, FTS content, nested metadata, and a 384-dimensional vector. It verifies merge removes the alias collision/indices, then verifies revert produces exact pre-merge equality for metadata, relationship rows, assertion rows, FTS rows, and vector bytes while preserving the original canonical collision row.
 
-The focused merge suite passes 24/24 and the full Brain Server suite passes 236/236.
+The focused merge suite passes 25/25 and the final serialized Brain Server suite passes 241/241.
 
-Evidence: `evidence/12-13-agentloop-merge-brain-tests.log`.
+Evidence: `evidence/12-13-agentloop-merge-brain-tests.log`, `evidence/16-brain-full-regression.log`.

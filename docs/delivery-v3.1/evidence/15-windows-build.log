@@ -1,0 +1,98 @@
+🚀 开始快速打包桌面应用（含 Brain Server 集成）...
+
+ROOT_DIR: <repo>
+
+📦 1. 检查并安装依赖...
+   同步桌面应用依赖...
+
+up to date, audited 205 packages in 4s
+
+28 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+   同步 Brain Server 依赖...
+
+up to date, audited 593 packages in 4s
+
+124 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+✅ 依赖检查完成
+
+📦 2. 构建 Brain Server...
+
+> omni-context-brain-server@0.1.1 build
+> tsc
+
+   安装 Brain Server 生产依赖（这一步比较慢，但只跑一次）...
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+npm warn deprecated gauge@4.0.4: This package is no longer supported.
+
+added 412 packages in 30s
+   已内嵌 node.exe: D:\我的开挂系统\Documents\node\node.exe
+✅ Brain Server 资源校验通过 (src-tauri/brain-server)
+✅ Brain Server 构建完成
+
+📦 3. 构建前端...
+
+> omni-context-desktop@0.1.1 build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/4) ...
+   Generating static pages (1/4)
+   Generating static pages (2/4)
+   Generating static pages (3/4)
+ ✓ Generating static pages (4/4)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    168 kB          288 kB
+└ ○ /_not-found                          873 B          88.6 kB
++ First Load JS shared by all            87.7 kB
+  ├ chunks/117-c4fc946c0d4e6391.js       31.8 kB
+  ├ chunks/fd9d1056-5d3d1eb05a1d610d.js  53.6 kB
+  └ other shared chunks (total)          2.22 kB
+
+
+○  (Static)  prerendered as static content
+
+✅ 前端构建完成
+
+📦 4. 打包 Tauri 桌面应用...
+   这可能需要几分钟...
+   ⚠️ 注意：首次打包可能需要下载系统依赖
+   ⚠️ Linux 用户需要安装系统依赖
+
+
+> omni-context-desktop@0.1.1 tauri:build
+> tauri build -c src-tauri/tauri.prod.conf.json --bundles nsis
+
+   Compiling omni-context-desktop v0.1.1 (<repo>\desktop-daemon\src-tauri)
+warning: function `has_clipboard_content` is never used
+  --> src\clipboard.rs:86:14
+   |
+86 | pub async fn has_clipboard_content() -> Result<bool> {
+   |              ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `omni-context-desktop` (bin "omni-context-desktop") generated 1 warning
+    Finished `release` profile [optimized] target(s) in 8m 14s
+        Warn The updater is enabled but the bundle target list does not contain `updater`, so the updater artifacts won't be generated.
+        Info Target: x64
+     Running makensis.exe to produce <cargo-target>\release\bundle\nsis\Omni-Context_0.1.1_x64-setup.exe

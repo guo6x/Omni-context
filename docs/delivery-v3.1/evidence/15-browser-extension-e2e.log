@@ -1,0 +1,10 @@
+brain-server health=PASS
+unpacked-loaded default-auto-capture-off=PASS
+pairing extension-token=PASS
+fixture capture response {"ok":true,"jobId":"51401e90-0b11-4d75-937d-49c15719a8bc","jobIds":["51401e90-0b11-4d75-937d-49c15719a8bc","9899cf43-df17-42f6-8098-57500bb65167"],"sentCharacters":12153,"payloadChunks":2,"redactedCount":1}
+fixture-capture brain-receipt chunks=2 redaction=PASS
+unauthorized-domain-no-capture=PASS
+revoked-token-request-fails=PASS
+repairing-restores-access=PASS
+browser-restart-settings-token-persist=PASS
+captured-content-delete=PASS

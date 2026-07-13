@@ -1,0 +1,26 @@
+   Compiling omni-context-desktop v0.1.1 (<repo>\desktop-daemon\src-tauri)
+warning: function `has_clipboard_content` is never used
+  --> src\clipboard.rs:86:14
+   |
+86 | pub async fn has_clipboard_content() -> Result<bool> {
+   |              ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `omni-context-desktop` (bin "omni-context-desktop" test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 31s
+     Running unittests src\main.rs (<cargo-target>\debug\deps\omni_context_desktop-39f80af83780dbd2.exe)
+
+running 10 tests
+test hardware_actions::tests::reset_contract_is_non_destructive_by_design ... ok
+test mcp_helper::tests::test_get_mcp_server_command ... ok
+test hardware::tests::accepts_signed_packet_and_rejects_replay ... ok
+test hardware::tests::registry_survives_reload_without_exposing_credentials ... ok
+test hardware::tests::rejects_unknown_bad_signature_expired_and_revoked_packets ... ok
+test udp_listener::tests::signed_packet_dispatches_action_and_returns_completion ... ok
+test mcp_helper::tests::test_get_mcp_clients_status ... ok
+test udp_listener::tests::simulator_roundtrip_covers_acceptance_actions_and_rejections ... ok
+test hardware_actions::tests::submit_and_wait_runs_authenticated_ingest_business_chain ... ok
+test mcp_helper::tests::test_install_mcp_to_claude ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.97s

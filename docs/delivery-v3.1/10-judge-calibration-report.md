@@ -1,6 +1,6 @@
 # 10 — Judge input and calibration report
 
-Status: **PARTIALLY_FIXED**
+Status: **PARTIAL**
 
 ## Fixed
 
