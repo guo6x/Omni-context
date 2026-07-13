@@ -580,6 +580,38 @@ const MIGRATIONS: Migration[] = [
         ON proactive_insights(insight_type, cooldown_until);
     `,
   },
+  {
+    version: 21,
+    name: 'add_assertion_literal_type_versioning_fts',
+    up: `
+      ALTER TABLE assertions ADD COLUMN literal_type TEXT
+        CHECK(literal_type IS NULL OR literal_type IN (
+          'string','number','date','datetime','boolean','currency',
+          'location_text','status','quantity','contact','conclusion'
+        ));
+      ALTER TABLE assertions ADD COLUMN version INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE assertions ADD COLUMN previous_version_id TEXT;
+
+      CREATE INDEX IF NOT EXISTS idx_assertions_version
+        ON assertions(subject_id, predicate, version DESC);
+
+      CREATE VIRTUAL TABLE IF NOT EXISTS fts_assertions USING fts5(
+        assertion_id UNINDEXED,
+        subject_id UNINDEXED,
+        predicate,
+        literal_value,
+        source_span,
+        tokenize = 'unicode61'
+      );
+
+      INSERT INTO fts_assertions (assertion_id, subject_id, predicate, literal_value, source_span)
+      SELECT id, subject_id, predicate,
+             COALESCE(literal_value, ''),
+             COALESCE(source_span, '')
+      FROM assertions
+      WHERE invalidated_at IS NULL;
+    `,
+  },
 ];
 
 interface Migration {
@@ -1456,11 +1488,16 @@ export class Database {
        WHERE id = ?`,
       [until, now, reason || null, id]
     );
+    // Sync the mirror assertion and remove from FTS (invalidated facts are not searchable)
     await this.run(
       `UPDATE assertions
        SET valid_until = ?, invalidated_at = ?, invalidation_reason = ?, updated_at = ?
        WHERE id = ?`,
       [until, now, reason || null, now, `relationship:${id}`],
+    );
+    await this.run(
+      `DELETE FROM fts_assertions WHERE assertion_id = ?`,
+      [`relationship:${id}`],
     );
   }
 
@@ -1470,7 +1507,7 @@ export class Database {
     const params = [entityId, entityId];
 
     if (!includeHistorical) {
-      query += ` AND (valid_until IS NULL OR valid_until > ?)`;
+      query += ` AND invalidated_at IS NULL AND (valid_until IS NULL OR valid_until > ?)`;
       params.push(now);
     }
 
@@ -1499,7 +1536,7 @@ export class Database {
     const params: any[] = [];
 
     if (!includeHistorical) {
-      query += ' WHERE (valid_until IS NULL OR valid_until > ?)';
+      query += ' WHERE invalidated_at IS NULL AND (valid_until IS NULL OR valid_until > ?)';
       params.push(now);
     }
 
@@ -1531,7 +1568,7 @@ export class Database {
     const params = [...entityIds, ...entityIds];
 
     if (!includeHistorical) {
-      query += ` AND (valid_until IS NULL OR valid_until > ?)`;
+      query += ` AND invalidated_at IS NULL AND (valid_until IS NULL OR valid_until > ?)`;
       params.push(now);
     }
 
@@ -1576,26 +1613,37 @@ export class Database {
     const now = new Date().toISOString();
     const recordedAt = input.recorded_at || now;
     const validFrom = input.valid_from || input.event_time || input.observed_at || recordedAt;
+    const version = input.version ?? 1;
     await this.run(
       `INSERT INTO assertions (
-        id, subject_id, predicate, object_id, literal_value, confidence, source_span, provenance,
+        id, subject_id, predicate, object_id, literal_value, literal_type, confidence, source_span, provenance,
         observed_at, recorded_at, event_time, valid_from, valid_until, temporal_confidence,
-        temporal_source, timezone, invalidated_at, invalidation_reason, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        temporal_source, timezone, invalidated_at, invalidation_reason, version, previous_version_id, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id, input.subject_id, input.predicate, input.object_id || null, input.literal_value || null,
-        confidence, input.source_span || null,
+        input.literal_type || null, confidence, input.source_span || null,
         input.provenance ? JSON.stringify(input.provenance) : null,
         input.observed_at || null, recordedAt, input.event_time || null, validFrom,
         input.valid_until || null, input.temporal_confidence ?? null, input.temporal_source || null,
         input.timezone || null, input.invalidated_at || null, input.invalidation_reason || null,
+        version, input.previous_version_id || null,
         now, now,
       ],
     );
+    // Maintain FTS index for current (non-invalidated) assertions
+    if (!input.invalidated_at) {
+      await this.run(
+        `INSERT INTO fts_assertions (assertion_id, subject_id, predicate, literal_value, source_span)
+         VALUES (?, ?, ?, ?, ?)`,
+        [id, input.subject_id, input.predicate, input.literal_value || '', input.source_span || ''],
+      );
+    }
     return {
       ...input,
       id,
       confidence,
+      version,
       recorded_at: recordedAt,
       valid_from: validFrom,
       created_at: now,
@@ -1622,6 +1670,7 @@ export class Database {
     }
     if (!options.includeHistorical) {
       const asOf = options.asOf || new Date().toISOString();
+      clauses.push('invalidated_at IS NULL');
       clauses.push('valid_from <= ?');
       clauses.push('(valid_until IS NULL OR valid_until > ?)');
       params.push(asOf, asOf);
@@ -1638,6 +1687,7 @@ export class Database {
       predicate: row.predicate,
       object_id: row.object_id || undefined,
       literal_value: row.literal_value || undefined,
+      literal_type: row.literal_type || undefined,
       confidence: row.confidence,
       source_span: row.source_span || undefined,
       provenance: row.provenance ? JSON.parse(row.provenance) : undefined,
@@ -1651,6 +1701,8 @@ export class Database {
       timezone: row.timezone || undefined,
       invalidated_at: row.invalidated_at || undefined,
       invalidation_reason: row.invalidation_reason || undefined,
+      version: row.version ?? 1,
+      previous_version_id: row.previous_version_id || undefined,
       created_at: row.created_at,
       updated_at: row.updated_at,
     }));
@@ -1666,6 +1718,88 @@ export class Database {
       [validUntil || null, now, now, reason, now, id],
     );
     if (result.changes === 0) throw new Error('assertion not found or already invalidated');
+    // Remove from FTS — invalidated facts are not searchable
+    await this.run(`DELETE FROM fts_assertions WHERE assertion_id = ?`, [id]);
+  }
+
+  /**
+   * Full-text search over current (non-invalidated) assertions using fts_assertions.
+   * Returns assertion rows matching the query, ranked by FTS relevance.
+   */
+  async searchAssertions(query: string, limit: number = 10): Promise<Assertion[]> {
+    const ftsQuery = query.replace(/"/g, '""');
+    const rows = await this.all<any>(
+      `SELECT a.* FROM assertions a
+       JOIN fts_assertions f ON f.assertion_id = a.id
+       WHERE fts_assertions MATCH ?
+       ORDER BY rank
+       LIMIT ?`,
+      [`"${ftsQuery}"`, Math.max(1, Math.min(limit, 100))],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      subject_id: row.subject_id,
+      predicate: row.predicate,
+      object_id: row.object_id || undefined,
+      literal_value: row.literal_value || undefined,
+      literal_type: row.literal_type || undefined,
+      confidence: row.confidence,
+      source_span: row.source_span || undefined,
+      provenance: row.provenance ? JSON.parse(row.provenance) : undefined,
+      observed_at: row.observed_at || undefined,
+      recorded_at: row.recorded_at,
+      event_time: row.event_time || undefined,
+      valid_from: row.valid_from,
+      valid_until: row.valid_until || undefined,
+      temporal_confidence: row.temporal_confidence ?? undefined,
+      temporal_source: row.temporal_source || undefined,
+      timezone: row.timezone || undefined,
+      invalidated_at: row.invalidated_at || undefined,
+      invalidation_reason: row.invalidation_reason || undefined,
+      version: row.version ?? 1,
+      previous_version_id: row.previous_version_id || undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
+  }
+
+  /**
+   * Database consistency scan: verifies that every non-deleted relationship has
+   * a mirror assertion, and that no orphaned FTS rows exist for invalidated assertions.
+   * Returns counts of detected inconsistencies. Zero = fully consistent.
+   */
+  async consistencyScan(): Promise<{
+    relationshipsWithoutAssertion: number;
+    assertionsWithoutRelationship: number;
+    ftsOrphans: number;
+    invalidatedInFts: number;
+  }> {
+    const [withoutAssertion] = await this.all<{ count: number }>(
+      `SELECT COUNT(*) as count FROM relationships r
+       WHERE NOT EXISTS (SELECT 1 FROM assertions a WHERE a.id = 'relationship:' || r.id)`,
+    );
+    const [withoutRelationship] = await this.all<{ count: number }>(
+      `SELECT COUNT(*) as count FROM assertions a
+       WHERE a.id LIKE 'relationship:%'
+         AND NOT EXISTS (
+           SELECT 1 FROM relationships r WHERE a.id = 'relationship:' || r.id
+         )`,
+    );
+    const [ftsOrphans] = await this.all<{ count: number }>(
+      `SELECT COUNT(*) as count FROM fts_assertions f
+       WHERE NOT EXISTS (SELECT 1 FROM assertions a WHERE a.id = f.assertion_id)`,
+    );
+    const [invalidatedInFts] = await this.all<{ count: number }>(
+      `SELECT COUNT(*) as count FROM fts_assertions f
+       JOIN assertions a ON a.id = f.assertion_id
+       WHERE a.invalidated_at IS NOT NULL`,
+    );
+    return {
+      relationshipsWithoutAssertion: withoutAssertion?.count || 0,
+      assertionsWithoutRelationship: withoutRelationship?.count || 0,
+      ftsOrphans: ftsOrphans?.count || 0,
+      invalidatedInFts: invalidatedInFts?.count || 0,
+    };
   }
 
   async peekEntities(ids: string[]): Promise<Entity[]> {
@@ -1767,10 +1901,31 @@ export class Database {
        WHERE id = ?`,
       [weightChange, now, relId]
     );
+    // Sync mirror assertion confidence (clamped to [0,1])
+    await this.run(
+      `UPDATE assertions
+       SET confidence = MIN(1, MAX(0, (
+         SELECT weight FROM relationships WHERE id = ?
+       ))), updated_at = ?
+       WHERE id = ?`,
+      [relId, now, `relationship:${relId}`],
+    );
   }
 
   async deleteRelationship(id: string): Promise<void> {
     await this.run('DELETE FROM relationships WHERE id = ?', [id]);
+    // Invalidate the mirror assertion (don't delete — preserve audit trail)
+    const now = new Date().toISOString();
+    await this.run(
+      `UPDATE assertions
+       SET valid_until = ?, invalidated_at = ?, invalidation_reason = ?, updated_at = ?
+       WHERE id = ?`,
+      [now, now, 'relationship_deleted', now, `relationship:${id}`],
+    );
+    await this.run(
+      `DELETE FROM fts_assertions WHERE assertion_id = ?`,
+      [`relationship:${id}`],
+    );
   }
 
   /**

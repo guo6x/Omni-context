@@ -6,6 +6,12 @@ export type PrincipleType =
   | 'security_rule'
   | 'performance_optimization';
 
+export const LITERAL_TYPES = [
+  'string', 'number', 'date', 'datetime', 'boolean', 'currency',
+  'location_text', 'status', 'quantity', 'contact', 'conclusion',
+] as const;
+export type LiteralType = typeof LITERAL_TYPES[number];
+
 import {
   SINGLE_VALUED_RELATIONSHIP_TYPES,
   type EntityType,
@@ -67,6 +73,7 @@ export interface Assertion {
   predicate: string;
   object_id?: string;
   literal_value?: string;
+  literal_type?: LiteralType;
   confidence: number;
   source_span?: string;
   provenance?: Record<string, unknown>;
@@ -80,6 +87,8 @@ export interface Assertion {
   timezone?: string;
   invalidated_at?: string;
   invalidation_reason?: string;
+  version: number;
+  previous_version_id?: string;
   created_at: string;
   updated_at: string;
 }

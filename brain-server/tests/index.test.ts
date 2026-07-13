@@ -870,16 +870,17 @@ describe('Bitemporal Edges & Single-Valued Relation Invalidation', () => {
     let activeRels = await db.getRelationshipsForEntity(user.id);
     expect(activeRels.some(r => r.id === rel1.id)).toBe(true);
 
-    // 2. 事实变更：张三现在在 Globex 工作
+    // 2. 事实变更：张三现在在 Globex 工作（valid_from 必须晚于 rel1 的 valid_from）
+    const laterTime = new Date(Date.now() + 86400000).toISOString();
     const [rel2] = await resolveConflicts([{
       id: 'works-at-globex',
       source_id: user.id,
       target_id: globex.id,
       type: 'works_at',
       weight: 1.0,
-      created_at: new Date().toISOString(),
-      last_activated: new Date().toISOString(),
-      valid_from: new Date().toISOString(),
+      created_at: laterTime,
+      last_activated: laterTime,
+      valid_from: laterTime,
     }], db, new GraphRAGExtractor({ useLocalExtraction: true }));
 
     // 验证 Acme 的关系被自动失效
