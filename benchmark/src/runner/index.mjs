@@ -16,6 +16,7 @@ import { createConversationRuntime, conversationDirectory } from '../conversatio
 let shutdownRequested = false;
 export function requestShutdown() { shutdownRequested = true; }
 export function isShutdownRequested() { return shutdownRequested; }
+export function clearShutdownRequest() { shutdownRequested = false; }
 
 const DEFAULT_MAX_RETRIES = 3;
 const DEFAULT_BASE_BACKOFF_MS = 1000;
@@ -157,14 +158,15 @@ export async function processQuestion({
 
   let answerRetryCount = 0;
   let judgeRetryCount = 0;
+  let retryRecordCount = 0;
   let lastError = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     if (isShutdownRequested()) {
-      const errorRecord = {
+      const interruptedRecord = {
         question_id: qid,
         conversation_id: convId,
-        status: 'error',
+        status: 'interrupted',
         subset,
         category: qa.category,
         category_name: categoryName,
@@ -174,9 +176,9 @@ export async function processQuestion({
         error_type: 'ShutdownRequested',
         answer_retry_count: answerRetryCount,
         judge_retry_count: judgeRetryCount,
+        retry_count: retryRecordCount,
       };
-      await appendQuestionRecord(runDir, errorRecord);
-      return { status: 'error', record: errorRecord };
+      return { status: 'interrupted', record: interruptedRecord };
     }
 
     try {
@@ -239,6 +241,7 @@ export async function processQuestion({
         total_latency_ms: retrievalLatency + answerLatency + judgeLatency,
         answer_retry_count: answerRetryCount,
         judge_retry_count: judgeRetryCount,
+        retry_count: retryRecordCount,
       };
 
       await appendQuestionRecord(runDir, record);
@@ -264,6 +267,7 @@ export async function processQuestion({
           answer_retry_count: answerRetryCount,
           judge_retry_count: judgeRetryCount,
         });
+        retryRecordCount++;
 
         await new Promise((r) => setTimeout(r, backoff));
       }
@@ -284,6 +288,7 @@ export async function processQuestion({
     error_type: lastError instanceof Error ? lastError.constructor.name : 'Unknown',
     answer_retry_count: answerRetryCount,
     judge_retry_count: judgeRetryCount,
+    retry_count: retryRecordCount,
   };
   await appendQuestionRecord(runDir, errorRecord);
   return { status: 'error', record: errorRecord };
@@ -306,6 +311,7 @@ export async function runBenchmark({
   runtimeFactory = createConversationRuntime,
   brainServerRoot,
 }) {
+  clearShutdownRequest();
   if (!llmClient) throw new Error('llmClient is required (LLMClient instance) — null is forbidden');
   await verifyDatasetHash(datasetPath, datasetManifest.sha256);
 
@@ -333,10 +339,11 @@ export async function runBenchmark({
   });
 
   // Update manifest with completion status
-  const finalStatus = (stats.errors > 0 || stats.skipped > 0) && stats.done < stats.total ? 'partial' : 'completed';
+  const finalStatus = stats.errors > 0 || stats.done + stats.skipped < stats.total ? 'partial' : 'completed';
   await updateManifest(runDir, {
     completed_at: new Date().toISOString(),
     status: isShutdownRequested() ? 'interrupted' : finalStatus,
+    statistics: manifestStatistics(stats),
   });
 
   return {
@@ -363,6 +370,7 @@ export async function resumeBenchmark({
   runtimeFactory = createConversationRuntime,
   brainServerRoot,
 }) {
+  clearShutdownRequest();
   if (!llmClient) throw new Error('llmClient is required');
 
   const runDir = await findRunDir(runsRoot, runId);
@@ -379,14 +387,16 @@ export async function resumeBenchmark({
     runDir, runtimeFactory, brainServerRoot, resumeRuntime: true,
   });
 
-  const finalStatus = (stats.errors > 0 || stats.skipped > 0) && stats.done < stats.total ? 'partial' : 'completed';
+  const finalStatus = stats.errors > 0 || stats.done + stats.skipped < stats.total ? 'partial' : 'completed';
+  const resolvedStatus = isShutdownRequested() ? 'interrupted' : finalStatus;
   await updateManifest(runDir, {
     completed_at: new Date().toISOString(),
-    status: isShutdownRequested() ? 'interrupted' : finalStatus,
+    status: resolvedStatus,
     resumed_at: new Date().toISOString(),
+    statistics: manifestStatistics(stats),
   });
 
-  return { runDir, manifest: { ...manifest, status: finalStatus }, stats };
+  return { runDir, manifest: { ...manifest, status: resolvedStatus }, stats };
 }
 
 /**
@@ -405,6 +415,7 @@ export async function retryErrors({
   runtimeFactory = createConversationRuntime,
   brainServerRoot,
 }) {
+  clearShutdownRequest();
   if (!llmClient) throw new Error('llmClient is required');
 
   const runDir = await findRunDir(runsRoot, runId);
@@ -447,11 +458,12 @@ export async function retryErrors({
         const result = await processQuestion({
           brainServerClient, llmClient, qa, qid, convId,
           config, answerPrompt, judgePrompt, runDir,
+          ...retryOptions(config),
         });
 
         if (result.status === 'completed') done++;
         else errors++;
-        retries += result.record.answer_retry_count + result.record.judge_retry_count;
+        retries += result.record.retry_count || 0;
       }
     } finally {
       const stopped = await runtime.stop();
@@ -459,15 +471,20 @@ export async function retryErrors({
     }
   }
 
+  const runSummary = await summarizeRunRecords(runDir, manifest.statistics?.expected_questions);
+  const retryStatus = runSummary.expected_questions !== null
+    && runSummary.completed_questions === runSummary.expected_questions
+    && runSummary.errors === 0 ? 'completed' : 'partial';
   await updateManifest(runDir, {
     completed_at: new Date().toISOString(),
-    status: errors > 0 ? 'partial' : 'completed',
+    status: retryStatus,
     retried_at: new Date().toISOString(),
+    statistics: runSummary,
   });
 
   return {
     runDir,
-    manifest: { ...manifest, status: errors > 0 ? 'partial' : 'completed' },
+    manifest: { ...manifest, status: retryStatus },
     stats: { total: errorIds.size, done, errors, retries, skipped: 0 },
   };
 }
@@ -497,6 +514,7 @@ async function runQuestions({
   let errors = 0;
   let retries = 0;
   let skipped = 0;
+  let interrupted = false;
 
   for (const convId of conversationIds) {
     assertConversationAllowed({ split, conversationId: convId });
@@ -563,15 +581,19 @@ async function runQuestions({
         const result = await processQuestion({
           brainServerClient, llmClient, qa, qid, convId,
           config, answerPrompt, judgePrompt, runDir,
+          ...retryOptions(config),
         });
 
-        retries += result.record.answer_retry_count + result.record.judge_retry_count;
+        retries += result.record.retry_count || 0;
         if (result.status === 'completed') {
           done++;
           const acc = result.record.metrics?.binary_accuracy === 1;
           if (done % 10 === 0 || qi === qas.length - 1) {
             console.log(`[benchmark] ${qid} [${done}/${total}] ${acc ? 'PASS' : 'FAIL'} (retrieval: ${result.record.retrieval_count}, ${result.record.retrieval_latency_ms}ms)`);
           }
+        } else if (result.status === 'interrupted') {
+          interrupted = true;
+          break;
         } else {
           errors++;
         }
@@ -581,10 +603,54 @@ async function runQuestions({
       await recordRuntimeResult(runDir, convId, stopped);
     }
 
-    if (isShutdownRequested()) break;
+    if (isShutdownRequested() || interrupted) break;
   }
 
-  return { total, done, errors, retries, skipped };
+  return { total, done, errors, retries, skipped, interrupted };
+}
+
+function manifestStatistics(stats) {
+  return {
+    expected_questions: stats.total,
+    completed_questions: stats.done + stats.skipped,
+    completed_this_invocation: stats.done,
+    errors: stats.errors,
+    retry_records_this_invocation: stats.retries,
+    skipped_completed: stats.skipped,
+    interrupted: stats.interrupted === true,
+  };
+}
+
+function retryOptions(config) {
+  return {
+    maxRetries: Number.isInteger(config.retry?.max_retries)
+      ? Math.max(0, config.retry.max_retries)
+      : DEFAULT_MAX_RETRIES,
+    baseBackoffMs: Number.isFinite(config.retry?.base_backoff_ms)
+      ? Math.max(0, config.retry.base_backoff_ms)
+      : DEFAULT_BASE_BACKOFF_MS,
+  };
+}
+
+async function summarizeRunRecords(runDir, expectedQuestions) {
+  const { records } = await readRun(runDir);
+  const latest = new Map();
+  const completedCounts = new Map();
+  let retryRecords = 0;
+  for (const record of records) {
+    latest.set(record.question_id, record);
+    if (record.status === 'retry') retryRecords++;
+    if (record.status === 'completed') {
+      completedCounts.set(record.question_id, (completedCounts.get(record.question_id) || 0) + 1);
+    }
+  }
+  return {
+    expected_questions: Number.isInteger(expectedQuestions) ? expectedQuestions : null,
+    completed_questions: [...latest.values()].filter((record) => record.status === 'completed').length,
+    errors: [...latest.values()].filter((record) => record.status === 'error').length,
+    retry_records: retryRecords,
+    duplicate_completed_records: [...completedCounts.values()].filter((count) => count > 1).length,
+  };
 }
 
 async function assertRuntimePreflight(brainServerClient, runDir, conversationId) {
