@@ -117,6 +117,9 @@ async function main() {
     loadPrompt(path.join(ROOT, "prompts", "answer-v1.txt")),
     loadPrompt(path.join(ROOT, "prompts", "judge-v2.txt")),
   ]);
+  if (config.evaluation?.thinking_mode && !process.env.LLM_THINKING_MODE) {
+    process.env.LLM_THINKING_MODE = config.evaluation.thinking_mode;
+  }
   let evaluationAuthorization;
   if (mode === 'heldout') {
     const { stdout } = await execFileAsync('git', ['-C', ROOT, 'rev-parse', 'HEAD']);
@@ -131,7 +134,11 @@ async function main() {
   }
 
   // Create real LLM client (never null)
-  const llmClient = new LLMClient();
+  const llmClient = new LLMClient({
+    thinkingMode: config.evaluation?.thinking_mode,
+    answerMaxTokens: config.evaluation?.answer_max_tokens,
+    judgeMaxTokens: config.evaluation?.judge_max_tokens,
+  });
 
   console.log(`[benchmark] Mode: ${mode}`);
   console.log(`[benchmark] Dataset: ${datasetPath}`);

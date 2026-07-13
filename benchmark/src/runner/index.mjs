@@ -28,6 +28,7 @@ const MANIFEST_REQUIRED_FIELDS = [
   'answer_model', 'judge_model', 'embedding_model', 'embedding_status',
   'prompt_hash', 'judge_prompt_hash', 'config_hash', 'node_version', 'os', 'split',
   'datetime_parser_version', 'datetime_timezone_assumption',
+  'thinking_mode', 'answer_max_tokens', 'judge_max_tokens',
   'conversation_ids', 'run_id', 'started_at',
 ];
 
@@ -50,6 +51,9 @@ export async function buildManifest({
     config_hash: configHash(config),
     datetime_parser_version: LOCOMO_DATETIME_PARSER_VERSION,
     datetime_timezone_assumption: LOCOMO_TIMEZONE_ASSUMPTION,
+    thinking_mode: config.evaluation?.thinking_mode || process.env.LLM_THINKING_MODE || 'provider_default',
+    answer_max_tokens: config.evaluation?.answer_max_tokens || 2048,
+    judge_max_tokens: config.evaluation?.judge_max_tokens || 2048,
     node_version: process.version,
     os: process.platform + ' ' + (process.arch || ''),
     split,

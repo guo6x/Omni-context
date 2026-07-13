@@ -39,6 +39,11 @@ const DEFAULT_LLM_CONFIG: LLMExtractionConfig = {
   maxTokens: 16000,
 };
 
+function configuredThinkingMode(): { thinking?: { type: 'enabled' | 'disabled' } } {
+  const mode = process.env.LLM_THINKING_MODE;
+  return mode === 'enabled' || mode === 'disabled' ? { thinking: { type: mode } } : {};
+}
+
 /** LLM 输出的结构化提取结果 */
 const TemporalTextSchema = z.string().trim().min(1).max(200);
 const OptionalTemporalTextSchema = z.preprocess(
@@ -383,6 +388,7 @@ export class LLMExtractorPipeline {
           ],
           max_tokens: this.config.maxTokens,
           temperature: 0.1, // 低温度确保输出稳定
+          ...configuredThinkingMode(),
           response_format: { type: 'json_object' },
         }),
         signal: controller.signal,
@@ -506,6 +512,7 @@ export class LLMExtractorPipeline {
           model: this.config.model || 'qwen2.5:7b',
           messages: [{ role: 'user', content: 'ping' }],
           max_tokens: 3,
+          ...configuredThinkingMode(),
         }),
         signal: controller.signal,
       }, { purpose: 'llm.healthcheck.chat', kind: 'llm' });

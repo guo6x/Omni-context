@@ -30,9 +30,12 @@ export class LLMClient {
       apiKey: options.judgeApiKey || process.env.JUDGE_API_KEY || answerApiKey,
       model: options.judgeModel || process.env.JUDGE_MODEL || answerModel,
     };
+    this.thinkingMode = options.thinkingMode || process.env.LLM_THINKING_MODE;
+    this.answerMaxTokens = Number.isInteger(options.answerMaxTokens) ? options.answerMaxTokens : 2048;
+    this.judgeMaxTokens = Number.isInteger(options.judgeMaxTokens) ? options.judgeMaxTokens : 2048;
   }
 
-  async chat({ apiUrl, apiKey, model, messages, temperature, maxTokens, responseFormat, timeoutMs = 60_000 }) {
+  async chat({ apiUrl, apiKey, model, messages, temperature, maxTokens, responseFormat, thinkingMode = this.thinkingMode, timeoutMs = 60_000 }) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -47,6 +50,9 @@ export class LLMClient {
           messages,
           temperature: temperature ?? 0.3,
           max_tokens: maxTokens ?? 1024,
+          ...(thinkingMode === 'enabled' || thinkingMode === 'disabled'
+            ? { thinking: { type: thinkingMode } }
+            : {}),
           ...(responseFormat ? { response_format: responseFormat } : {}),
         }),
         signal: controller.signal,
@@ -90,7 +96,7 @@ export class LLMClient {
       ...this.answerConfig,
       messages,
       temperature: 0.3,
-      maxTokens: 1024,
+      maxTokens: this.answerMaxTokens,
       responseFormat: { type: 'json_object' },
     });
     const latencyMs = Date.now() - start;
@@ -134,7 +140,7 @@ export class LLMClient {
       ...this.judgeConfig,
       messages,
       temperature: 0.0,
-      maxTokens: 1024,
+      maxTokens: this.judgeMaxTokens,
       responseFormat: { type: 'json_object' },
     });
     const latencyMs = Date.now() - start;

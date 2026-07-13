@@ -15,6 +15,9 @@
   "evaluation": {
     "embedding_mode": "semantic",
     "fail_on_hash_fallback": true,
-    "max_retries": 2
+    "max_retries": 2,
+    "thinking_mode": "disabled",
+    "answer_max_tokens": 2048,
+    "judge_max_tokens": 2048
   }
 }
