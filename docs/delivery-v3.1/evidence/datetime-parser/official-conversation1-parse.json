@@ -1,0 +1,144 @@
+{
+  "conversation_id": 1,
+  "sessions": 19,
+  "expected_questions": 199,
+  "parser_version": "locomo-datetime-v2",
+  "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone",
+  "parse_failures": 0,
+  "order_warnings": [],
+  "session_parse_metadata": [
+    {
+      "session_id": 1,
+      "raw_date_time": "1:56 pm on 8 May, 2023",
+      "parsed_timestamp": "2023-05-08T13:56:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 2,
+      "raw_date_time": "1:14 pm on 25 May, 2023",
+      "parsed_timestamp": "2023-05-25T13:14:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 3,
+      "raw_date_time": "7:55 pm on 9 June, 2023",
+      "parsed_timestamp": "2023-06-09T19:55:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 4,
+      "raw_date_time": "10:37 am on 27 June, 2023",
+      "parsed_timestamp": "2023-06-27T10:37:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 5,
+      "raw_date_time": "1:36 pm on 3 July, 2023",
+      "parsed_timestamp": "2023-07-03T13:36:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 6,
+      "raw_date_time": "8:18 pm on 6 July, 2023",
+      "parsed_timestamp": "2023-07-06T20:18:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 7,
+      "raw_date_time": "4:33 pm on 12 July, 2023",
+      "parsed_timestamp": "2023-07-12T16:33:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 8,
+      "raw_date_time": "1:51 pm on 15 July, 2023",
+      "parsed_timestamp": "2023-07-15T13:51:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 9,
+      "raw_date_time": "2:31 pm on 17 July, 2023",
+      "parsed_timestamp": "2023-07-17T14:31:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 10,
+      "raw_date_time": "8:56 pm on 20 July, 2023",
+      "parsed_timestamp": "2023-07-20T20:56:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 11,
+      "raw_date_time": "2:24 pm on 14 August, 2023",
+      "parsed_timestamp": "2023-08-14T14:24:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 12,
+      "raw_date_time": "1:50 pm on 17 August, 2023",
+      "parsed_timestamp": "2023-08-17T13:50:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 13,
+      "raw_date_time": "3:31 pm on 23 August, 2023",
+      "parsed_timestamp": "2023-08-23T15:31:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 14,
+      "raw_date_time": "1:33 pm on 25 August, 2023",
+      "parsed_timestamp": "2023-08-25T13:33:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 15,
+      "raw_date_time": "3:19 pm on 28 August, 2023",
+      "parsed_timestamp": "2023-08-28T15:19:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 16,
+      "raw_date_time": "12:09 am on 13 September, 2023",
+      "parsed_timestamp": "2023-09-13T00:09:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 17,
+      "raw_date_time": "10:31 am on 13 October, 2023",
+      "parsed_timestamp": "2023-10-13T10:31:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 18,
+      "raw_date_time": "6:55 pm on 20 October, 2023",
+      "parsed_timestamp": "2023-10-20T18:55:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    },
+    {
+      "session_id": 19,
+      "raw_date_time": "9:55 am on 22 October, 2023",
+      "parsed_timestamp": "2023-10-22T09:55:00.000Z",
+      "parser_version": "locomo-datetime-v2",
+      "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+    }
+  ]
+}

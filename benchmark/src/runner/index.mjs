@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { sha256, sha256File, configHash, stableStringify, assertEvaluationEmbeddingMode } from '../integrity.mjs';
-import { loadLoCoMo, verifyDatasetHash, getConversation, getConversationQAs, getSessions, formatSessionText, generateQuestionId, mapCategory, isAdversarial, isUnanswerable } from '../dataset.mjs';
+import { loadLoCoMo, verifyDatasetHash, getConversation, getConversationQAs, getSessions, formatSessionText, generateQuestionId, mapCategory, isAdversarial, isUnanswerable, LOCOMO_DATETIME_PARSER_VERSION, LOCOMO_TIMEZONE_ASSUMPTION } from '../dataset.mjs';
 import { assertConversationAllowed } from '../splits.mjs';
 import {
   createRun, completedQuestionIds, appendQuestionRecord,
@@ -22,6 +22,7 @@ const MANIFEST_REQUIRED_FIELDS = [
   'dataset_hash', 'dataset_source_commit', 'benchmark_commit', 'brain_server_commit',
   'answer_model', 'judge_model', 'embedding_model', 'embedding_status',
   'prompt_hash', 'config_hash', 'node_version', 'os', 'split',
+  'datetime_parser_version', 'datetime_timezone_assumption',
   'conversation_ids', 'run_id', 'started_at',
 ];
 
@@ -41,6 +42,8 @@ export async function buildManifest({
     embedding_status: embeddingStatus,
     prompt_hash: sha256(answerPrompt),
     config_hash: configHash(config),
+    datetime_parser_version: LOCOMO_DATETIME_PARSER_VERSION,
+    datetime_timezone_assumption: LOCOMO_TIMEZONE_ASSUMPTION,
     node_version: process.version,
     os: process.platform + ' ' + (process.arch || ''),
     split,
@@ -67,7 +70,7 @@ export function validateManifest(manifest) {
  * directly with type='capture_snapshot', bypassing GraphRAG entirely.
  */
 export async function ingestConversation(brainServerClient, conv, convId) {
-  const sessions = getSessions(conv);
+  const sessions = getSessions(conv, { conversationId: convId, evaluationMode: true });
   const result = { total_sessions: sessions.length, ingested: 0, failed: 0, errors: [], total_entities: 0, total_relationships: 0 };
 
   for (const session of sessions) {

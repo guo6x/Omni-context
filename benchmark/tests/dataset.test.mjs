@@ -16,6 +16,9 @@ import {
   isUnanswerable,
   CATEGORY_MAP,
   getConversationCount,
+  parseLoCoMoDateTime,
+  LOCOMO_DATETIME_PARSER_VERSION,
+  LOCOMO_TIMEZONE_ASSUMPTION,
 } from '../src/dataset.mjs';
 
 /**
@@ -116,6 +119,98 @@ test('getSessions parses date_time into ISO timestamp', () => {
   const sessions = getSessions(conv);
   assert.ok(sessions[0].timestamp);
   assert.strictEqual(sessions[0].timestamp, '2023-04-06T16:05:00.000Z');
+});
+
+const DATE_CASES = [
+  ['SQL timestamp', '2023-04-06 16:05:00', '2023-04-06T16:05:00.000Z'],
+  ['ISO local timestamp', '2023-04-06T16:05:00', '2023-04-06T16:05:00.000Z'],
+  ['ISO Z timestamp', '2023-04-06T16:05:00Z', '2023-04-06T16:05:00.000Z'],
+  ['ISO milliseconds', '2023-04-06T16:05:00.125Z', '2023-04-06T16:05:00.125Z'],
+  ['ISO positive offset', '2023-04-06T16:05:00+08:00', '2023-04-06T08:05:00.000Z'],
+  ['ISO compact offset', '2023-04-06T16:05:00-0530', '2023-04-06T21:35:00.000Z'],
+  ['date only ISO', '2023-04-06', '2023-04-06T00:00:00.000Z'],
+  ['official pm format', '7:48 pm on 21 May, 2023', '2023-05-21T19:48:00.000Z'],
+  ['official am format', '7:48 am on 21 May, 2023', '2023-05-21T07:48:00.000Z'],
+  ['midnight 12 am', '12:00 am on 1 January, 2024', '2024-01-01T00:00:00.000Z'],
+  ['noon 12 pm', '12:00 pm on 1 January, 2024', '2024-01-01T12:00:00.000Z'],
+  ['January abbreviation', '1:02 pm on 2 Jan, 2023', '2023-01-02T13:02:00.000Z'],
+  ['February full', '1:02 pm on 2 February, 2023', '2023-02-02T13:02:00.000Z'],
+  ['March abbreviation with period', '1:02 pm on 2 Mar., 2023', '2023-03-02T13:02:00.000Z'],
+  ['April full', '1:02 pm on 2 April, 2023', '2023-04-02T13:02:00.000Z'],
+  ['June abbreviation', '1:02 pm on 2 Jun, 2023', '2023-06-02T13:02:00.000Z'],
+  ['July full', '1:02 pm on 2 July, 2023', '2023-07-02T13:02:00.000Z'],
+  ['August abbreviation', '1:02 pm on 2 Aug, 2023', '2023-08-02T13:02:00.000Z'],
+  ['September sept abbreviation', '1:02 pm on 2 Sept, 2023', '2023-09-02T13:02:00.000Z'],
+  ['October full', '1:02 pm on 2 October, 2023', '2023-10-02T13:02:00.000Z'],
+  ['November abbreviation', '1:02 pm on 2 Nov, 2023', '2023-11-02T13:02:00.000Z'],
+  ['December full', '1:02 pm on 2 December, 2023', '2023-12-02T13:02:00.000Z'],
+  ['day-first date only', '21 May, 2023', '2023-05-21T00:00:00.000Z'],
+  ['month-first date only', 'May 21, 2023', '2023-05-21T00:00:00.000Z'],
+  ['leap day', '2024-02-29 23:59:59', '2024-02-29T23:59:59.000Z'],
+];
+
+for (const [name, input, expected] of DATE_CASES) {
+  test(`parseLoCoMoDateTime: ${name}`, () => {
+    const result = parseLoCoMoDateTime(input, { sessionId: 'conv1/session1' });
+    assert.strictEqual(result.parsed_timestamp, expected);
+    assert.strictEqual(result.raw_date_time, input);
+    assert.strictEqual(result.parser_version, LOCOMO_DATETIME_PARSER_VERSION);
+    assert.ok(result.timezone_assumption);
+  });
+}
+
+test('parseLoCoMoDateTime documents UTC for timezone-less timestamps', () => {
+  const result = parseLoCoMoDateTime('2023-04-06 16:05:00', { sessionId: 'conv1/session1' });
+  assert.strictEqual(result.timezone_assumption, LOCOMO_TIMEZONE_ASSUMPTION);
+});
+
+test('parseLoCoMoDateTime reports session and raw value on invalid input', () => {
+  const warnings = [];
+  const result = parseLoCoMoDateTime('31 February, 2023', {
+    sessionId: 'conv1/session9',
+    onWarning: (message) => warnings.push(message),
+  });
+  assert.strictEqual(result.parsed_timestamp, null);
+  assert.strictEqual(warnings.length, 1);
+  assert.match(warnings[0], /conv1\/session9/);
+  assert.match(warnings[0], /31 February, 2023/);
+});
+
+test('parseLoCoMoDateTime fails fast in evaluation mode', () => {
+  const warnings = [];
+  assert.throws(() => parseLoCoMoDateTime('not a date', {
+    sessionId: 'conv1/session3',
+    evaluationMode: true,
+    onWarning: (message) => warnings.push(message),
+  }), /session_id=conv1\/session3.*not a date/);
+  assert.strictEqual(warnings.length, 1);
+});
+
+test('getSessions sorts by parsed time and warns when it conflicts with numbering', () => {
+  const warnings = [];
+  const conv = {
+    sample_id: 1,
+    conversation: {
+      session_1: [{ speaker: 'A', text: 'later' }],
+      session_1_date_time: '2:00 pm on 2 May, 2023',
+      session_2: [{ speaker: 'B', text: 'earlier' }],
+      session_2_date_time: '1:00 pm on 1 May, 2023',
+    },
+  };
+  const sessions = getSessions(conv, { conversationId: 1, evaluationMode: true, onWarning: (m) => warnings.push(m) });
+  assert.deepStrictEqual(sessions.map((session) => session.session_id), [2, 1]);
+  assert.ok(warnings.some((warning) => warning.includes('session_number_order=1,2')));
+  assert.ok(warnings.some((warning) => warning.includes('parsed_time_order=2,1')));
+});
+
+test('getSessions persists parser metadata on every session', () => {
+  const sessions = getSessions(OFFICIAL_FIXTURE[0], { conversationId: 1, evaluationMode: true });
+  for (const session of sessions) {
+    assert.strictEqual(session.raw_date_time, session.date_time);
+    assert.ok(session.parsed_timestamp);
+    assert.strictEqual(session.parser_version, LOCOMO_DATETIME_PARSER_VERSION);
+    assert.strictEqual(session.timezone_assumption, LOCOMO_TIMEZONE_ASSUMPTION);
+  }
 });
 
 test('getSessions handles conversation without sessions', () => {
