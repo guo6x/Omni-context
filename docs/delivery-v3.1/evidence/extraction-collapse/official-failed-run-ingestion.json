@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "conversation_id": 1,
+  "status": "failed",
+  "completed_at": "2026-07-13T16:22:18.130Z",
+  "total_sessions": 19,
+  "ingested": 3,
+  "failed": 16,
+  "errors": [
+    {
+      "session_id": 1,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"session_id\":\"1\",\"extraction\":{\"input_characters\":2257,\"chunks\":1,\"llm_calls\":[{\"http_status\":200,\"raw_response_sha256\":\"4759afa6f4c5bf30cb0c642d6992e476d804a31ce1767567ce54a7b47dbe39fc\",\"finish_reason\":\"stop\",\"status\":\"invalid_response\",\"error\":\"LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":{\"entity_types\":[],\"predicates\":[]}}],\"parsed_counts\":{\"entities\":0,\"facts\""
+    },
+    {
+      "session_id": 2,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"LLM_TIMEOUT_30000MS\",\"session_id\":\"2\",\"extraction\":{\"input_characters\":3166,\"chunks\":1,\"llm_calls\":[{\"http_status\":null,\"raw_response_sha256\":null,\"finish_reason\":null,\"status\":\"timeout\",\"error\":\"LLM_TIMEOUT_30000MS\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":{\"entity_types\":[],\"predicates\":[]}}],\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"produced_counts\":{\"entities\":0,\"relationships\":0,\"assertions\":0,\"principles\":5},\"skipped_facts_missing_sub"
+    },
+    {
+      "session_id": 3,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:0:LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION|1:LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"session_id\":\"3\",\"extraction\":{\"input_characters\":5221,\"chunks\":2,\"llm_calls\":[{\"http_status\":200,\"raw_response_sha256\":\"cc82f14c9e36d8de17df659f9125939ef63087ecdc32956575718173652de695\",\"finish_reason\":\"stop\",\"status\":\"invalid_response\",\"error\":\"LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":"
+    },
+    {
+      "session_id": 4,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:0:LLM_TIMEOUT_30000MS|1:LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"session_id\":\"4\",\"extraction\":{\"input_characters\":3719,\"chunks\":2,\"llm_calls\":[{\"http_status\":null,\"raw_response_sha256\":null,\"finish_reason\":null,\"status\":\"timeout\",\"error\":\"LLM_TIMEOUT_30000MS\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":{\"entity_types\":[],\"predicates\":[]}},{\"http_status\":200,\"raw_response_sha256\":\"3521c8e5fdbc0f03791d34d882baaf870ed44363ef9e622"
+    },
+    {
+      "session_id": 5,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"LLM_TIMEOUT_30000MS\",\"session_id\":\"5\",\"extraction\":{\"input_characters\":2698,\"chunks\":1,\"llm_calls\":[{\"http_status\":null,\"raw_response_sha256\":null,\"finish_reason\":null,\"status\":\"timeout\",\"error\":\"LLM_TIMEOUT_30000MS\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":{\"entity_types\":[],\"predicates\":[]}}],\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"produced_counts\":{\"entities\":0,\"relationships\":0,\"assertions\":0,\"principles\":4},\"skipped_facts_missing_sub"
+    },
+    {
+      "session_id": 6,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"LLM_OUTPUT_INVALID:facts.0.event_time:invalid_type, facts.0.valid_from:invalid_type, facts.0.valid_until:invalid_type, facts.0.timezone:invalid_type, facts.1.event_time:invalid_type, facts.1.valid_from:invalid_type, facts.1.valid_until:invalid_type, facts.1.timezone:invalid_type, facts.2.event_time:invalid_type, facts.2.valid_from:invalid_type, facts.2.valid_until:invalid_type, facts.2.timezone:invalid_type, facts.3.event_time:invalid_type, facts.3.valid_from:invalid_type, facts.3.vali"
+    },
+    {
+      "session_id": 7,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:1:LLM_TIMEOUT_30000MS\",\"session_id\":\"7\",\"extraction\":{\"input_characters\":4681,\"chunks\":2,\"llm_calls\":[{\"http_status\":200,\"raw_response_sha256\":\"a6c721d5d8ae83fc01f2ce0ddb726b1ee81d1f02f691fbae5c5b2fc0b5b523c3\",\"finish_reason\":\"stop\",\"status\":\"parsed\",\"parsed_counts\":{\"entities\":10,\"facts\":7,\"principles\":3},\"normalization\":{\"entity_types\":[],\"predicates\":[]}},{\"http_status\":null,\"raw_response_sha256\":null,\"finish_reason\":null,\"status\":\"timeout\",\"error\":\"LLM_TIMEO"
+    },
+    {
+      "session_id": 8,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:0:LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION|1:LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"session_id\":\"8\",\"extraction\":{\"input_characters\":5958,\"chunks\":2,\"llm_calls\":[{\"http_status\":200,\"raw_response_sha256\":\"52e8c9d681a6e419f9afd5ee5d36243964ac20e7e83a0804f53b6d287878f260\",\"finish_reason\":\"stop\",\"status\":\"invalid_response\",\"error\":\"LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":"
+    },
+    {
+      "session_id": 9,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"LLM_OUTPUT_INVALID:facts.2.event_time:invalid_type, facts.6.event_time:invalid_type, facts.7.event_time:invalid_type, facts.8.event_time:invalid_type\",\"session_id\":\"9\",\"extraction\":{\"input_characters\":2730,\"chunks\":1,\"llm_calls\":[{\"http_status\":200,\"raw_response_sha256\":\"82f5f09c214d4d46fbc632a84f5c8ac351974bcce9d380d992f263b900d1de73\",\"finish_reason\":\"stop\",\"status\":\"invalid_response\",\"error\":\"LLM_OUTPUT_INVALID:facts.2.event_time:invalid_type, facts.6.event_time:invalid_type, facts.7"
+    },
+    {
+      "session_id": 10,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:0:LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION|1:LLM_TIMEOUT_30000MS\",\"session_id\":\"10\",\"extraction\":{\"input_characters\":4399,\"chunks\":2,\"llm_calls\":[{\"http_status\":200,\"raw_response_sha256\":\"06cf6d6ed27e1529bb0568b6f1be79ffa157ae585d54d2e9fca1471250b07998\",\"finish_reason\":\"stop\",\"status\":\"invalid_response\",\"error\":\"LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":{\"entity_types\":[],\"predic"
+    },
+    {
+      "session_id": 11,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"LLM_OUTPUT_INVALID:facts.0.timezone:invalid_type, facts.1.event_time:invalid_type, facts.4.event_time:invalid_type, facts.5.event_time:invalid_type, facts.6.event_time:invalid_type, facts.7.event_time:invalid_type, facts.8.event_time:invalid_type, facts.9.event_time:invalid_type, facts.10.event_time:invalid_type, facts.11.event_time:invalid_type\",\"session_id\":\"11\",\"extraction\":{\"input_characters\":3431,\"chunks\":1,\"llm_calls\":[{\"http_status\":200,\"raw_response_sha256\":\"242e88da49b57e25401"
+    },
+    {
+      "session_id": 12,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:0:LLM_OUTPUT_INVALID:facts.0.event_time:invalid_type, facts.0.valid_from:invalid_type, facts.0.valid_until:invalid_type, facts.0.timezone:invalid_type, facts.1.event_time:invalid_type, facts.1.valid_from:invalid_type, facts.1.valid_until:invalid_type, facts.1.timezone:invalid_type, facts.2.valid_from:invalid_type, facts.2.valid_until:invalid_type, facts.2.timezone:invalid_type, facts.3.valid_from:invalid_type, facts.3.valid_until:invalid_type, facts.3.timezone:i"
+    },
+    {
+      "session_id": 13,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"LLM_TIMEOUT_30000MS\",\"session_id\":\"13\",\"extraction\":{\"input_characters\":3261,\"chunks\":1,\"llm_calls\":[{\"http_status\":null,\"raw_response_sha256\":null,\"finish_reason\":null,\"status\":\"timeout\",\"error\":\"LLM_TIMEOUT_30000MS\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":{\"entity_types\":[],\"predicates\":[]}}],\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"produced_counts\":{\"entities\":0,\"relationships\":0,\"assertions\":0,\"principles\":8},\"skipped_facts_missing_su"
+    },
+    {
+      "session_id": 14,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:0:LLM_TIMEOUT_30000MS|1:LLM_TIMEOUT_30000MS\",\"session_id\":\"14\",\"extraction\":{\"input_characters\":6081,\"chunks\":2,\"llm_calls\":[{\"http_status\":null,\"raw_response_sha256\":null,\"finish_reason\":null,\"status\":\"timeout\",\"error\":\"LLM_TIMEOUT_30000MS\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":{\"entity_types\":[],\"predicates\":[]}},{\"http_status\":null,\"raw_response_sha256\":null,\"finish_reason\":null,\"status\":\"timeout\",\"error\":\"LLM_TIMEOUT_30000MS"
+    },
+    {
+      "session_id": 17,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:0:LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"session_id\":\"17\",\"extraction\":{\"input_characters\":4942,\"chunks\":2,\"llm_calls\":[{\"http_status\":200,\"raw_response_sha256\":\"457f3f2d8cd1108401c4ee0b40bb056dc4cb3d19555313e9e8615178a92cf8c3\",\"finish_reason\":\"stop\",\"status\":\"invalid_response\",\"error\":\"LLM_OUTPUT_INVALID:INVALID_TEMPORAL_EXPRESSION\",\"parsed_counts\":{\"entities\":0,\"facts\":0,\"principles\":0},\"normalization\":{\"entity_types\":[],\"predicates\":[]}},{\"http_stat"
+    },
+    {
+      "session_id": 18,
+      "error": "Brain Server POST /api/graph/extract -> 422: {\"error\":\"CHUNK_EXTRACTION_FAILED:0:LLM_OUTPUT_INVALID:facts.4.event_time:invalid_type, facts.4.temporal_source:invalid_type, facts.5.event_time:invalid_type, facts.5.temporal_source:invalid_type, facts.6.event_time:invalid_type, facts.6.temporal_source:invalid_type, facts.7.event_time:invalid_type, facts.7.temporal_source:invalid_type|1:LLM_OUTPUT_INVALID:facts.0.event_time:invalid_type, facts.0.valid_from:invalid_type, facts.0.valid_until:invalid_type, facts.0.timezone:invalid_type, facts.1.ev"
+    }
+  ],
+  "total_entities": 72,
+  "total_relationships": 36
+}

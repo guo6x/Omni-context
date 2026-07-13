@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "extraction_prompt_sha256": "ead5eeb9e3ba259475020f1ebd53d3007e1fa507727fdf859ddb2870767f0729",
+  "extraction_prompt_scope": "Runtime system message EXTRACTION_PROMPT_HEADER after relationship-type interpolation.",
+  "windows_artifact": {
+    "filename": "Omni-Context_0.1.1_x64-setup.exe",
+    "bytes": 201167666,
+    "sha256": "25e460d576e1768ef97e87cbe3d881df654707c4f1d72e90207920789fe0504b",
+    "authenticode": "NotSigned"
+  },
+  "browser_extension_artifact": {
+    "filename": "browser-extension-v3.1.zip",
+    "bytes": 43928,
+    "sha256": "7b2de4e507595b2dc7d7fcf5264257fbd6abb9d895d0dc03c578e532d2fb6d24"
+  },
+  "dependency_lock_hashes": {
+    "benchmark/package-lock.json": "892f433cfd4e0de5b4a56421647f27586eb5f28c421a38b289d012fbcf4703f9",
+    "brain-server/package-lock.json": "fcc53c0a264bf6da04584906d4bf15287884bc070252eda6cb4875916bca12da",
+    "browser-extension/package-lock.json": "b9de57d9d0fb3043d20ee0aa106f3805a6f31872e02f6f11386c6e0615dec89c",
+    "desktop-daemon/package-lock.json": "dc5a0f079a7e0219a87f0b24fb397a00e9b6b2ed7b7369140caec3eea33b7f93",
+    "desktop-daemon/src-tauri/Cargo.lock": "393b50aa4463b8dffb79b56d23b0f44988f7fddb3aa24d3ece3f3605c5e946e8",
+    "mobile-app/package-lock.json": "a96cca7ec672c6449aafe0cf29e402cdbe932c46c322df3ecde8abda6683c39f"
+  }
+}

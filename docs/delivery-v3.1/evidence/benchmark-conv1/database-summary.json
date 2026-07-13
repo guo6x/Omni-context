@@ -1,0 +1,16 @@
+{
+  "entities": 396,
+  "relationships": 181,
+  "assertions": 423,
+  "principles": 182,
+  "entity_types": {
+    "concept": 82,
+    "event": 55,
+    "goal": 7,
+    "memory": 1,
+    "person": 59,
+    "principle": 182,
+    "project": 5,
+    "tool": 5
+  }
+}

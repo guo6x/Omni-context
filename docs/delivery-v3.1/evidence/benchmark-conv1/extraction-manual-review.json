@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-07-13T16-54-49-815Z-1b9d6c9a",
+  "method": "Three assertions sampled from each of sessions 1, 5, 10, 15, and 19 using the persisted per-session assertion deltas and database insertion order.",
+  "sessions_reviewed": 5,
+  "assertions_reviewed": 15,
+  "traceable_to_source_span": 15,
+  "empty_or_hallucinated": 0,
+  "verdict": "PASS_WITH_NON_BLOCKING_QUALITY_RISK",
+  "risk": "Most provider predicates were safely normalized to relates_to. The facts remain source-grounded, but predicate specificity is lower than desirable.",
+  "samples": [
+    {"session_id": 1, "subject": "Caroline", "predicate": "relates_to", "object": "LGBTQ support group", "source_span": "I went to a LGBTQ support group yesterday"},
+    {"session_id": 1, "subject": "Caroline", "predicate": "relates_to", "object": "transgender stories", "source_span": "The transgender stories were so inspiring!"},
+    {"session_id": 1, "subject": "Caroline", "predicate": "relates_to", "object": "counseling", "source_span": "I'm keen on counseling or working in mental health"},
+    {"session_id": 5, "subject": "Caroline", "predicate": "relates_to", "object": "LGBTQ+ pride parade", "source_span": "Last week I went to an LGBTQ+ pride parade."},
+    {"session_id": 5, "subject": "Caroline", "predicate": "relates_to", "object": "counseling and mental health", "source_span": "I'm still thinking that counseling and mental health is the way to go."},
+    {"session_id": 5, "subject": "Melanie", "predicate": "relates_to", "object": "pottery class", "source_span": "I just signed up for a pottery class yesterday."},
+    {"session_id": 10, "subject": "Caroline", "predicate": "relates_to", "object": "Connected LGBTQ Activists", "source_span": "I just joined a new LGBTQ activist group last Tues."},
+    {"session_id": 10, "subject": "Caroline", "predicate": "relates_to", "object": "Pride parade", "source_span": "I missed it"},
+    {"session_id": 10, "subject": "Melanie", "predicate": "relates_to", "object": "Beach trip", "source_span": "we went to the beach recently"},
+    {"session_id": 15, "subject": "Caroline", "predicate": "relates_to", "object": "LGBTQ+ youth center", "source_span": "had the chance to volunteer at an LGBTQ+ youth center"},
+    {"session_id": 15, "subject": "Caroline", "predicate": "relates_to", "object": "talent show", "source_span": "We're putting together a talent show for the kids next month"},
+    {"session_id": 15, "subject": "Caroline", "predicate": "relates_to", "object": "guitar", "source_span": "Guitar's mostly my thing"},
+    {"session_id": 19, "subject": "Caroline", "predicate": "relates_to", "object": "adoption agency interviews", "source_span": "I passed the adoption agency interviews last Friday!"},
+    {"session_id": 19, "subject": "Caroline", "predicate": "relates_to", "object": "goal of having a family", "source_span": "This is a big move towards my goal of having a family."},
+    {"session_id": 19, "subject": "Caroline", "predicate": "relates_to", "object": "transitioning", "source_span": "Transitioning wasn't easy and acceptance wasn't either"}
+  ]
+}

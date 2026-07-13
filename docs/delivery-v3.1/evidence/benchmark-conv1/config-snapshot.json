@@ -1,0 +1,33 @@
+{
+  "config": {
+    "retrieval": {
+      "top_k": 10,
+      "candidate_pool": 50,
+      "graph_seeds": 3,
+      "graph_depth": 2,
+      "reranker_candidates": 25,
+      "stale_penalty": 0.35,
+      "conflict_penalty": 0.25
+    },
+    "answering": {
+      "abstention_threshold": 0.45,
+      "evidence_threshold": 0.5
+    },
+    "evaluation": {
+      "embedding_mode": "semantic",
+      "fail_on_hash_fallback": true,
+      "max_retries": 2,
+      "thinking_mode": "disabled",
+      "answer_max_tokens": 2048,
+      "judge_max_tokens": 2048
+    }
+  },
+  "config_hash": "f7000280922b2c5b9824ec39e25244b0fe124441b893b21239c4490fd753e059",
+  "answer_model": "deepseek-v4-flash",
+  "judge_model": "deepseek-v4-flash",
+  "embedding_model": "Xenova/multilingual-e5-small",
+  "answer_prompt_hash": "bb6a25b93f55859ea245de7cacb287ae6bc67dfa4b1df8cb0588b33afcd21f91",
+  "judge_prompt_hash": "fec01733c586b2ac33e73d95261da53de19172c83e8d9a1b949c5f53a43298c4",
+  "datetime_parser_version": "locomo-datetime-v2",
+  "datetime_timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone"
+}

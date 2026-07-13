@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "conversation_id": 1,
+  "expected_questions": 199,
+  "completed_questions": 199,
+  "error_questions": 0,
+  "retry_records": 6,
+  "unique_completed_question_ids": 199,
+  "duplicate_question_ids": [],
+  "missing_question_ids": [],
+  "unexpected_question_ids": [],
+  "category_counts": {
+    "temporal": 37,
+    "multi_hop": 13,
+    "single_hop": 32,
+    "open_domain": 70,
+    "adversarial": 47
+  },
+  "answerable_count": 152,
+  "adversarial_count": 47,
+  "started_at": "2026-07-13T16:54:49.825Z",
+  "completed_at": "2026-07-13T17:30:15.836Z",
+  "duration_ms": 2126011,
+  "manifest_status": "completed",
+  "metrics_recompute_exact_match": true
+}

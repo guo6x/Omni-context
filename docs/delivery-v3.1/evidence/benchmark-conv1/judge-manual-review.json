@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "run_id": "2026-07-13T16-54-49-815Z-1b9d6c9a",
+  "method": "Stratified review of the first three final question states in each of five official Conversation 1 categories.",
+  "reviewed": 15,
+  "binary_agreements": 12,
+  "binary_disagreements": 3,
+  "agreement_rate": 0.8,
+  "structured_flag_inconsistencies": 1,
+  "cases": [
+    {"question_id":"conv1-q0","category":"temporal","judge_binary":1,"human_binary":1,"outcome":"agree"},
+    {"question_id":"conv1-q1","category":"temporal","judge_binary":1,"human_binary":1,"outcome":"agree"},
+    {"question_id":"conv1-q5","category":"temporal","judge_binary":0,"human_binary":0,"outcome":"agree"},
+    {"question_id":"conv1-q2","category":"multi_hop","judge_binary":1,"human_binary":0,"outcome":"disagree","note":"Reference is answerable and the corpus contains Caroline's counseling interest; abstention should not receive binary credit."},
+    {"question_id":"conv1-q14","category":"multi_hop","judge_binary":1,"human_binary":0,"outcome":"disagree","note":"Judge overrode the supplied answerable reference by treating the counterfactual as unanswerable."},
+    {"question_id":"conv1-q22","category":"multi_hop","judge_binary":1,"human_binary":0,"outcome":"disagree","note":"Creating a future library does not by itself support the specific Dr. Seuss inference, and the cited claim omits that inference."},
+    {"question_id":"conv1-q3","category":"single_hop","judge_binary":1,"human_binary":1,"outcome":"agree"},
+    {"question_id":"conv1-q4","category":"single_hop","judge_binary":0,"human_binary":0,"outcome":"agree"},
+    {"question_id":"conv1-q7","category":"single_hop","judge_binary":0,"human_binary":0,"outcome":"agree"},
+    {"question_id":"conv1-q82","category":"open_domain","judge_binary":1,"human_binary":1,"outcome":"agree"},
+    {"question_id":"conv1-q83","category":"open_domain","judge_binary":1,"human_binary":1,"outcome":"agree"},
+    {"question_id":"conv1-q84","category":"open_domain","judge_binary":1,"human_binary":1,"outcome":"agree"},
+    {"question_id":"conv1-q152","category":"adversarial","judge_binary":1,"human_binary":1,"outcome":"agree"},
+    {"question_id":"conv1-q153","category":"adversarial","judge_binary":1,"human_binary":1,"outcome":"agree","note":"Outcome agrees, but structured abstained=false conflicts with the judge rationale that calls the response an abstention."},
+    {"question_id":"conv1-q154","category":"adversarial","judge_binary":1,"human_binary":1,"outcome":"agree"}
+  ]
+}

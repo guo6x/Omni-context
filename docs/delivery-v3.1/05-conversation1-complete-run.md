@@ -1,42 +1,46 @@
 # 05 — Conversation 1 complete run report
 
-Status: **BLOCKED**
+Status: **FIXED**
 
-## Required formal run
+Run ID: `2026-07-13T16-54-49-815Z-1b9d6c9a`
 
-The required target is a fresh, uninterrupted, official LoCoMo Conversation 1 run containing all 19 sessions and every QA item, using the real extraction model, semantic embeddings, answer model, and judge model.
+Only official LoCoMo Conversation 1 was accessed. The run used real `deepseek-v4-flash` extraction, answer, and judge requests plus local semantic embeddings (`Xenova/multilingual-e5-small`). Answer and Judge used the same model and that limitation is disclosed rather than treated as independent validation.
 
-No such run is claimed. The environment audit found no usable `LLM_API_URL`, `LLM_API_KEY`, `LLM_MODEL`/`ANSWER_MODEL`, judge configuration, or semantic embedding provider configuration. The harness fails closed when those prerequisites are absent or when hash fallback is detected.
-
-## Exact official-run accounting
+## Exact run accounting
 
 | Field | Value |
 |---|---:|
-| official expected questions | 199 |
-| provider-backed completed questions | 0 |
-| provider-backed error records | 0 |
-| provider-backed retry records | 0 |
-| missing official questions | 199 |
+| expected questions | 199 |
+| completed questions | 199 |
+| error questions | 0 |
+| retry records | 6 |
+| unique completed question IDs | 199 |
 | duplicate completed question IDs | 0 |
-| run ID | not created |
-| entity / relationship / assertion totals | not produced |
-| extraction failures | not produced |
-| metrics / recomputed metrics | not produced |
+| missing question IDs | 0 |
+| answerable | 152 |
+| adversarial | 47 |
+| started at | `2026-07-13T16:54:49.825Z` |
+| completed at | `2026-07-13T17:30:15.836Z` |
+| duration | 2,126,011 ms |
+| manifest status | `completed` |
 
-The zero error count does not mean a successful run: no formal run exists, all 199 questions are missing, and manifest status is therefore unavailable rather than completed.
+Category counts are temporal 37, multi-hop 13, single-hop 32, open-domain 70, and adversarial 47. The isolated final database contains 396 entities, 181 relationships, and 423 assertions; extraction failures are zero.
 
-## What is verified
+## Metrics
 
-- The official Conversation 1 streaming audit reports 19 sessions and 199 questions without reading later conversations.
-- Per-conversation runtime, ingestion diagnostics, checkpointing, structured answers, citation validation, and deterministic metrics are implemented and tested.
-- Synthetic integration tests are not reported as formal LoCoMo quality results.
+| Metric | Value |
+|---|---:|
+| composite | 0.672375767727526 |
+| binary accuracy | 0.4824120603015075 |
+| factual | 0.6007035175879397 |
+| temporal | 0.7169346733668343 |
+| contextual | 0.5863819095477387 |
+| abstention | 0.678391959798995 |
+| evidence precision | 0.45184254606365154 |
+| stale memory leakage | 0 |
 
-## Missing acceptance evidence
+The metrics and independent recomputation files are byte-for-byte equivalent after stable JSON serialization and share SHA-256 `34fe5c47ecb4b841dae2860249adb4bec579d5ba74635c6949513d9242bf10e3`. Low scores are preserved without tuning or exclusion.
 
-- complete run directory and manifest;
-- 19/19 real extraction diagnostics with entity/assertion/relationship deltas;
-- 199/199 result records with no missing or duplicate question IDs;
-- real metric summary and category breakdown;
-- provider/model identifiers and semantic embedding health from that run.
+Dataset SHA-256: `553cd5a15e25f2ceccc6ed185221eba645080c93e5b91087560a91aa5961f365`. Database SHA-256: `13766bb6afba62a272ff4a5f61753a4b78e73e48fc4b06c2ac596adf317b08d7`.
 
-This blocker also prevents manual review of 10–20 official judge outputs. See `04-extraction-quality-root-cause.md` and `10-judge-calibration-report.md`.
+Evidence: `evidence/benchmark-conv1/manifest.json`, `results.jsonl`, `metrics.json`, `recomputed-metrics.json`, `question-integrity.json`, `database-summary.json`, and `database-hash.txt`.

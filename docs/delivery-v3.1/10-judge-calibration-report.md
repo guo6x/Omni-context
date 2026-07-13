@@ -1,24 +1,19 @@
 # 10 — Judge input and calibration report
 
-Status: **PARTIAL**
+Status: **FIXED**
 
-## Fixed
+The production Judge receives the question, reference answer, structured candidate answer, claims, concrete evidence and source spans, evidence validity fields, reference evidence IDs when present, temporal mode/as-of time, and answerable/adversarial labels. Deterministic fields cannot be overwritten by Judge output.
 
-The judge now receives the complete scoring material instead of only an evidence count:
+The frozen 50-sample schema/rubric calibration set passes all expected accept/reject outcomes. The current full Benchmark suite passes 227/227 tests, including the deterministic citation and stale-memory cases.
 
-- question and reference answer;
-- structured candidate answer and claim citations;
-- concrete evidence objects and source spans;
-- LoCoMo reference evidence identifiers when present;
-- validity fields and parsed temporal mode / as-of time;
-- answerable, adversarial, and subset flags.
+## Official manual calibration
 
-Judge responsibility is limited to semantic quality scores and pair-level support/adoption classification. `evidence_precision` and `stale_memory_leakage` are rejected as extra judge output fields and are computed downstream.
+A stratified sample of 15 final Conversation 1 states covers three temporal, multi-hop, single-hop, open-domain, and adversarial questions each.
 
-A frozen 50-sample schema/rubric calibration set covers valid and invalid binary scores, missing fields, extra deterministic metrics, invalid verdicts, claim indexes, partial semantic scores, temporal scores, abstention scores, and support/adoption classifications. All cases pass their expected accept/reject outcome.
+- Binary agreement: 12/15 (80%).
+- Binary disagreement: 3/15, all disclosed: `conv1-q2`, `conv1-q14`, and `conv1-q22`.
+- One additional structured/rationale inconsistency: `conv1-q153` has `abstained=false`, while the rationale describes it as an abstention; the human and Judge binary outcome still agree.
 
-## Remaining blocker
+The three disagreements show that the same-model Judge can over-credit abstentions or unsupported multi-hop inferences. They are retained as a P1 calibration risk; no result was edited and no held-out data was accessed. Answer and Judge both used `deepseek-v4-flash` with thinking disabled, which is explicitly not independent model validation.
 
-The task also requires manual review of 10–20 official Conversation 1 results. That cannot be performed because the provider-backed complete run is blocked by missing model and embedding configuration. Synthetic fixtures are not substituted for manual official-result calibration.
-
-Evidence: `evidence/07-11-benchmark-contract-tests.log`.
+Evidence: `evidence/benchmark-conv1/judge-manual-review.json`, `evidence/benchmark-conv1/results.jsonl`, and `evidence/07-11-benchmark-contract-tests.log`.

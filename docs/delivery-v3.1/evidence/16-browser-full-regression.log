@@ -7,13 +7,13 @@ TAP version 13
 # Subtest: invalidates the cached token when storage rotates it
 ok 1 - invalidates the cached token when storage rotates it
   ---
-  duration_ms: 8.0983
+  duration_ms: 6.5997
   type: 'test'
   ...
 # Subtest: clears a revoked token after an authenticated request returns 401
 ok 2 - clears a revoked token after an authenticated request returns 401
   ---
-  duration_ms: 1.4475
+  duration_ms: 1.3221
   type: 'test'
   ...
 # [Omni-Context] Ingest submit failed: Error: Server returned 404
@@ -25,73 +25,73 @@ ok 2 - clears a revoked token after an authenticated request returns 401
 # Subtest: restores persisted job polling after service-worker restart
 ok 3 - restores persisted job polling after service-worker restart
   ---
-  duration_ms: 27.6044
+  duration_ms: 22.5843
   type: 'test'
   ...
 # Subtest: splits long captures into bounded transport chunks without dropping text
 ok 4 - splits long captures into bounded transport chunks without dropping text
   ---
-  duration_ms: 2.1375
+  duration_ms: 2.2209
   type: 'test'
   ...
 # Subtest: returns a failure response when a revoked token makes chunk submission fail
 ok 5 - returns a failure response when a revoked token makes chunk submission fail
   ---
-  duration_ms: 2.5322
+  duration_ms: 2.2502
   type: 'test'
   ...
 # Subtest: extracts ordered user and assistant turns from ChatGPT fixture
 ok 6 - extracts ordered user and assistant turns from ChatGPT fixture
   ---
-  duration_ms: 182.8528
+  duration_ms: 138.7138
   type: 'test'
   ...
 # Subtest: extracts ordered user and assistant turns from Claude fixture
 ok 7 - extracts ordered user and assistant turns from Claude fixture
   ---
-  duration_ms: 22.9302
+  duration_ms: 13.4133
   type: 'test'
   ...
 # Subtest: extracts ordered user and assistant turns from Gemini fixture
 ok 8 - extracts ordered user and assistant turns from Gemini fixture
   ---
-  duration_ms: 16.8958
+  duration_ms: 15.2356
   type: 'test'
   ...
 # Subtest: uses a stable SHA-256 conversation signature
 ok 9 - uses a stable SHA-256 conversation signature
   ---
-  duration_ms: 30.4266
+  duration_ms: 18.4517
   type: 'test'
   ...
 # Subtest: automatic capture is off and requires an explicitly enabled supported domain
 ok 10 - automatic capture is off and requires an explicitly enabled supported domain
   ---
-  duration_ms: 5.0008
+  duration_ms: 3.7513
   type: 'test'
   ...
 # Subtest: migrates legacy default-on users back to explicit consent
 ok 11 - migrates legacy default-on users back to explicit consent
   ---
-  duration_ms: 0.3533
+  duration_ms: 0.3134
   type: 'test'
   ...
 # Subtest: blocklist and pause override capture while allowlist can opt into a sensitive domain
 ok 12 - blocklist and pause override capture while allowlist can opt into a sensitive domain
   ---
-  duration_ms: 0.309
+  duration_ms: 0.3761
   type: 'test'
   ...
 # Subtest: redacts common secrets without returning the original values in metadata
 ok 13 - redacts common secrets without returning the original values in metadata
   ---
-  duration_ms: 1.094
+  duration_ms: 1.2006
   type: 'test'
   ...
 # Subtest: reports the real number of 12k transport chunks for long captures
 ok 14 - reports the real number of 12k transport chunks for long captures
   ---
-  duration_ms: 0.2255
+  duration_ms: 0.3615
   type: 'test'
   ...
 1..14
@@ -102,4 +102,4 @@ ok 14 - reports the real number of 12k transport chunks for long captures
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 37280.756
+# duration_ms 32048.0379

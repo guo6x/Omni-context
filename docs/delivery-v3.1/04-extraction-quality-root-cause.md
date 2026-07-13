@@ -1,63 +1,40 @@
 # 04 — Extraction Collapse Diagnosis and Repair
 
-Status: **PARTIAL**
-Implementation commit: `b0c061932d95a8c35611b9d5b0b8e358eb82a69f`
-Scope inspected: production extraction path and Conversation 1 loader only. Conversations 2–10 were not loaded, run, counted, or analyzed.
+Status: **FIXED**
 
-## Freeze impact
+Implementation commits: `b0c061932d95a8c35611b9d5b0b8e358eb82a69f`, `98eaa780e0800e7040bd6e42d5108571cebf1445`, `ae72a1a72ef1b46dd770a2fea5d25ab3cc88dbd4`
 
-The code-level collapse causes and observability gaps are fixed and fully covered by local tests. This task cannot be marked `FIXED` until the official Conversation 1 dataset is ingested through a configured real LLM/embedding environment and the resulting 19 per-session diagnostics plus final database distribution are inspected. The current process and the D-drive workspace contain no non-empty LLM/API environment configuration, so that real run has not been fabricated or replaced with a mock claim.
+Scope: production extraction path and official LoCoMo Conversation 1 only. Conversations 2–10 were not loaded, run, viewed, analyzed, or counted.
 
-## Confirmed root causes
+## Root-cause proof
 
-1. `/api/graph/extract` discarded the parsed LoCoMo session time and assigned `new Date().toISOString()` to every extraction. Temporal provenance therefore reflected ingestion time rather than event time.
-2. Evaluation requests did not set `requireLlmSuccess`. HTTP failures, empty responses, schema failures, and timeouts silently returned the regex fallback.
-3. The regex fallback is primarily code-oriented (`class`, `function`, `project`, `tool`) and is not a valid semantic fallback for natural dialogue. A failed dialogue LLM call can consequently produce zero or one incidental entity.
-4. One unknown entity type or predicate caused strict Zod validation to reject the entire otherwise valid provider response, even though the downstream extractor already had safe `concept` / `relates_to` fallbacks.
-5. Facts whose subject did not exactly match an extracted entity were skipped, but that skip count was only a console warning.
-6. The API returned the model's pre-resolution array lengths, not the number of entities, relationships, or assertions actually persisted. This made a response such as `entities: 1` ambiguous and prevented localization of the collapse.
-7. The resolver itself is not configured to blindly merge all people, preferences, goals, events, tasks, questions, or projects. Those types are manual/context gated. Before this repair, however, there was no response-level record of create/update/auto-merge/candidate-merge decisions or final active/total database deltas.
+The original code defects were incorrect ingestion timestamps, silent regex fallback, whole-response schema rejection, subject mismatch skips, misleading pre-write counts, and missing resolver/database diagnostics. After those were repaired, a real provider run exposed three additional causes that mocks could not reveal:
 
-## Repair
+1. DeepSeek legitimately emitted `null` for optional temporal fields, while the strict schema rejected the whole response.
+2. The model emitted vague optional time text such as `recently`; rejecting the complete response discarded otherwise grounded entities and facts.
+3. A 30-second extraction timeout was too short for several real dialogue responses.
 
-- The benchmark sends `timestamp`, `session_id`, and `evaluation_mode: true` for every session.
-- Dialogue-specific prompt rules require named participants, exact fact-subject/entity matching, durable personal facts, and verbatim source spans.
-- Each LLM call now records HTTP status, full raw HTTP response SHA-256 (never raw secret-bearing content), finish reason, parse status, failure reason, parsed counts, and safe domain-label normalizations.
-- A single unknown entity type is normalized to `concept`; a single unknown predicate is normalized to `relates_to`. Structural, confidence, source-span, and temporal validation remains strict.
-- `finish_reason=length` is a formal failure even when the partial JSON parses.
-- Evaluation mode returns structured HTTP 422 diagnostics on extraction failure instead of silently reporting regex-only output as success.
-- Entity/assertion timestamps use the dataset session timestamp.
-- Missing fact subjects are counted.
-- Resolver diagnostics report input/batch/create/update/auto-merge/candidate-merge/reject decisions and rejected relationships.
-- The endpoint returns actual database deltas and successful relationship/assertion writes.
-- The production runner persists one line per session to `conversation-1/extraction-diagnostics.jsonl`, including both raw/parsed dataset timestamp metadata and the full extraction/resolution/write/database diagnostic chain.
+The first real diagnostic run, `2026-07-13T16-11-13-331Z-fb26be1f`, completed only 3/19 sessions and failed 16 explicitly. Its partial successes already produced 72 entities and 36 relationships, proving that the old 19-session → 1-entity symptom was caused by the failure path rather than legitimate sparse content. Raw failed-run diagnostics are retained in `evidence/extraction-collapse/official-failed-run-diagnostics.jsonl`.
 
-## Verification
+## Production repair
 
-- Brain Server TypeScript build: PASS.
-- Brain Server full suite: **28 files, 235 tests passed**.
-- Benchmark full suite: **73 top-level tests / 154 total tests passed**.
-- Focused tests prove raw-response hashing, HTTP diagnostics, safe invalid-label normalization, multi-participant preservation, dataset timestamp propagation, formal schema failure, token truncation failure, structured 422 responses, runner JSONL persistence, and resume reuse.
-- Secret scan over the implementation diff: PASS.
+- Evaluation requests fail closed on disabled, HTTP, parse, truncation, timeout, and transport failures.
+- Optional nullable temporal fields are accepted, then omitted; resolvable time fields must be ISO 8601.
+- Vague optional time fields are dropped with hashed diagnostics instead of discarding all structured output.
+- The extraction timeout defaults to 120 seconds and remains explicitly configurable.
+- The prompt is dialogue-specific, carries the parsed session reference time, requires named speakers and source spans, and uses strict JSON output.
+- Unknown domain labels are safely normalized to `concept` / `relates_to`; structural and evidence validation remains strict.
+- Each session persists provider status, response hash, parsed/produced counts, resolver decisions, write counts, and database deltas.
 
-Evidence:
+## Formal Conversation 1 acceptance
 
-- `evidence/extraction-collapse/brain-server-build.log`
-- `evidence/extraction-collapse/brain-server-tests.log`
-- `evidence/extraction-collapse/benchmark-tests.log`
-- `evidence/extraction-collapse/environment-audit.json`
-- `evidence/extraction-collapse/verification-summary.json`
+- Run ID: `2026-07-13T16-54-49-815Z-1b9d6c9a`.
+- Sessions: 19/19 completed; extraction failures: 0.
+- Provider extraction calls: 30 HTTP 200, 30 parsed, 0 timeout, 0 invalid response, 0 temporal-field drop.
+- Final database: 396 entities, 181 relationships, 423 assertions, 182 principles.
+- Entity types: concept 82, event 55, goal 7, memory 1, person 59, principle 182, project 5, tool 5.
+- Manual review: sessions 1, 5, 10, 15, and 19; 15/15 sampled assertions trace to a verbatim source span; 0 empty or hallucinated samples.
 
-`brain-server-tests.failed-before-mock-update.log` is retained only as an iteration record: two legacy tests mocked the old `extract()` method / `.json()` response contract. The mocks were updated to the production `extractWithDiagnostics()` / raw-response contract, and the subsequent full suite passed 235/235.
+The review records one non-blocking quality risk: many provider predicates normalize to `relates_to`, and 182 principles indicate that extraction remains semantically coarse. These results are not hidden or used as a target for threshold tuning.
 
-## Remaining acceptance action
-
-Provide or inject the formal evaluation LLM and semantic embedding configuration without committing secrets. Then run official Conversation 1 only and require:
-
-- exactly 19 completed session diagnostics and zero failed sessions;
-- no `disabled`, `http_error`, `invalid_response`, `truncated`, `timeout`, or `transport_error` calls;
-- final active entity, relationship, assertion, principle, and type distributions backed by the isolated `brain.db`;
-- an explicit comparison against the prior 19-session → 1-entity symptom;
-- preservation of `extraction-diagnostics.jsonl`, `brain.db`, database hash, server log, and run manifest.
-
-Until that action passes, Task 3 remains `PARTIAL` and the Freeze Candidate remains blocked.
+Evidence: `evidence/benchmark-conv1/extraction-diagnostics.jsonl`, `evidence/benchmark-conv1/extraction-manual-review.json`, `evidence/benchmark-conv1/database-summary.json`, `evidence/benchmark-conv1/server.log`.
