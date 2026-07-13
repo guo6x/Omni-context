@@ -42,6 +42,22 @@ export interface MigrationRecord {
   applied_at: string;
 }
 
+export interface FailedTaskRow {
+  task_id: string;
+  batch_id: string;
+  task_type: 'chat_import' | 'chunk_extract' | 'conflict_resolution' | 'other';
+  conversation_title: string | null;
+  session_id: string | null;
+  turn_id: string | null;
+  stage: string | null;
+  error: string;
+  payload_snapshot: string | null;
+  attempts: number;
+  status: 'pending' | 'retrying' | 'resolved' | 'permanent_failure';
+  created_at: string;
+  updated_at: string;
+}
+
 const MIGRATIONS: Migration[] = [
   {
     version: 1,
@@ -632,6 +648,50 @@ const MIGRATIONS: Migration[] = [
       -- Allow looking up audit history by canonical entity (previously only by alias).
       CREATE INDEX IF NOT EXISTS idx_entity_merge_audit_canonical
         ON entity_merge_audit(canonical_id, created_at DESC);
+    `,
+  },
+  {
+    version: 23,
+    name: 'add_failed_tasks_and_ingestion_provenance',
+    up: `
+      -- Task 5: Persist import (and other pipeline) failures so they survive
+      -- the 5-minute jobStore TTL and can be retried. Mirrors the shape of
+      -- JobState.result.failed_conversations / conflict_failures but persisted.
+      CREATE TABLE IF NOT EXISTS failed_tasks (
+        task_id TEXT PRIMARY KEY,
+        batch_id TEXT NOT NULL,
+        task_type TEXT NOT NULL CHECK(task_type IN (
+          'chat_import', 'chunk_extract', 'conflict_resolution', 'other'
+        )),
+        conversation_title TEXT,
+        session_id TEXT,
+        turn_id TEXT,
+        stage TEXT,
+        error TEXT NOT NULL,
+        payload_snapshot TEXT,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN (
+          'pending', 'retrying', 'resolved', 'permanent_failure'
+        )),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_failed_tasks_batch
+        ON failed_tasks(batch_id, status);
+      CREATE INDEX IF NOT EXISTS idx_failed_tasks_status
+        ON failed_tasks(status, created_at DESC);
+
+      -- Task 5: Forward-compatible provenance columns for ingestion tables.
+      -- Chat imports don't currently route through these tables, but adding
+      -- the columns now means a future refactor can persist per-turn
+      -- provenance without another schema bump. All nullable so existing
+      -- file-ingestion rows are unaffected.
+      ALTER TABLE ingestion_documents ADD COLUMN session_id TEXT;
+      ALTER TABLE ingestion_documents ADD COLUMN idempotency_key TEXT;
+      ALTER TABLE ingestion_chunks ADD COLUMN session_id TEXT;
+      ALTER TABLE ingestion_chunks ADD COLUMN turn_id TEXT;
+      ALTER TABLE ingestion_chunks ADD COLUMN role TEXT;
+      ALTER TABLE ingestion_chunks ADD COLUMN idempotency_key TEXT;
     `,
   },
 ];
@@ -2186,6 +2246,81 @@ export class Database {
       params,
     );
     return (row?.c ?? 0) > 0;
+  }
+
+  // ── failed_tasks (Task 5): persisted import/pipeline failures ──
+
+  async recordFailedTask(input: {
+    task_id: string;
+    batch_id: string;
+    task_type: 'chat_import' | 'chunk_extract' | 'conflict_resolution' | 'other';
+    conversation_title?: string;
+    session_id?: string;
+    turn_id?: string;
+    stage?: string;
+    error: string;
+    payload_snapshot?: string;
+  }): Promise<void> {
+    const now = new Date().toISOString();
+    await this.run(
+      `INSERT OR REPLACE INTO failed_tasks (
+        task_id, batch_id, task_type, conversation_title, session_id, turn_id,
+        stage, error, payload_snapshot, attempts, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'pending', ?, ?)`,
+      [
+        input.task_id,
+        input.batch_id,
+        input.task_type,
+        input.conversation_title ?? null,
+        input.session_id ?? null,
+        input.turn_id ?? null,
+        input.stage ?? null,
+        input.error,
+        input.payload_snapshot ?? null,
+        now,
+        now,
+      ],
+    );
+  }
+
+  async getFailedTasks(batchId: string, status?: string): Promise<FailedTaskRow[]> {
+    const sql = status
+      ? 'SELECT * FROM failed_tasks WHERE batch_id = ? AND status = ? ORDER BY created_at ASC'
+      : 'SELECT * FROM failed_tasks WHERE batch_id = ? ORDER BY created_at ASC';
+    const params = status ? [batchId, status] : [batchId];
+    return this.all<FailedTaskRow>(sql, params);
+  }
+
+  async getFailedTask(taskId: string): Promise<FailedTaskRow | null> {
+    const row = await this.get<FailedTaskRow>(
+      'SELECT * FROM failed_tasks WHERE task_id = ?',
+      [taskId],
+    );
+    return row ?? null;
+  }
+
+  async updateFailedTaskStatus(
+    taskId: string,
+    status: 'pending' | 'retrying' | 'resolved' | 'permanent_failure',
+    extraError?: string,
+  ): Promise<void> {
+    const now = new Date().toISOString();
+    if (status === 'retrying') {
+      await this.run(
+        `UPDATE failed_tasks SET status = ?, attempts = attempts + 1, updated_at = ? WHERE task_id = ?`,
+        [status, now, taskId],
+      );
+    } else if (status === 'resolved') {
+      await this.run(
+        `UPDATE failed_tasks SET status = ?, updated_at = ? WHERE task_id = ?`,
+        [status, now, taskId],
+      );
+    } else {
+      await this.run(
+        `UPDATE failed_tasks SET status = ?, error = COALESCE(?, error), updated_at = ? WHERE task_id = ?`,
+        [status, extraError ?? null, now, taskId],
+      );
+    }
   }
 
   async getUnreadNotifications(): Promise<import('../shared-types.js').Notification[]> {

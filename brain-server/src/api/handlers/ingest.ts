@@ -626,6 +626,26 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
           const errMsg = err instanceof Error ? err.message : String(err);
           conflictFailures.push({ title: conv.title, error: errMsg });
           console.error(`[Import] conflict resolution failed for "${conv.title}":`, errMsg);
+          // Task 5: Persist to failed_tasks so it survives jobStore TTL and can be retried.
+          try {
+            await ctx.db.recordFailedTask({
+              task_id: uuidv4(),
+              batch_id: importBatchId,
+              task_type: 'conflict_resolution',
+              conversation_title: conv.title,
+              stage: 'resolving',
+              error: errMsg,
+              payload_snapshot: JSON.stringify({
+                title: conv.title,
+                text: conv.text,
+                time: conv.time,
+                platform,
+                documentId,
+              }),
+            });
+          } catch (persistErr) {
+            console.warn('[Import] failed to persist conflict_resolution failure:', persistErr);
+          }
         }
         for (const a of extractResult.assertions || []) {
           const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
@@ -651,6 +671,25 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
         const errMsg = err?.message || String(err);
         failedConversations.push({ title: conv.title, error: errMsg });
         console.error(`[Import] 跳过一段对话 "${conv.title}":`, errMsg);
+        // Task 5: Persist to failed_tasks so it survives jobStore TTL and can be retried.
+        try {
+          await ctx.db.recordFailedTask({
+            task_id: uuidv4(),
+            batch_id: importBatchId,
+            task_type: 'chat_import',
+            conversation_title: conv.title,
+            stage: 'extracting',
+            error: errMsg,
+            payload_snapshot: JSON.stringify({
+              title: conv.title,
+              text: conv.text,
+              time: conv.time,
+              platform,
+            }),
+          });
+        } catch (persistErr) {
+          console.warn('[Import] failed to persist chat_import failure:', persistErr);
+        }
       }
     }
     done++;
@@ -671,6 +710,131 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
       summary: `Imported ${done - totalFailures}/${conversations.length} conversations`,
       failed_conversations: failedConversations,
       conflict_failures: conflictFailures,
+    },
+  });
+}
+
+// Task 5: Retry persisted chat-import failures from the failed_tasks table.
+// Reads pending tasks for a batch, reconstructs the conversation from
+// payload_snapshot, re-runs extraction + resolution, and updates task status.
+async function runFailedImportRetry(jobId: string, batchId: string, ctx: RequestContext): Promise<void> {
+  const tasks = await ctx.db.getFailedTasks(batchId, 'pending');
+  const total = tasks.length;
+  let recovered = 0;
+  let stillFailing = 0;
+
+  updateJob(jobId, {
+    status: 'running',
+    stage: 'extracting',
+    importProgress: { done: 0, total, entities: 0 },
+  });
+
+  for (const [index, task] of tasks.entries()) {
+    const job = jobStore.get(jobId);
+    if (!job || job.aborted) {
+      updateJob(jobId, { status: 'cancelled', completedAt: Date.now() });
+      return;
+    }
+
+    let payload: { title?: string; text?: string; time?: string; platform?: string; documentId?: string };
+    try {
+      payload = JSON.parse(task.payload_snapshot || '{}');
+    } catch {
+      payload = {};
+    }
+
+    await ctx.db.updateFailedTaskStatus(task.task_id, 'retrying');
+
+    try {
+      const convTitle = payload.title || task.conversation_title || 'unknown';
+      const convText = payload.text || '';
+      const convTime = payload.time;
+      const platform = payload.platform || 'unknown';
+      const documentId = payload.documentId || `${batchId}:retry:${task.task_id}`;
+
+      const extractResult = await ctx.extractor.extract({
+        textContent: `对话标题：${convTitle}\n${convText}`,
+        timestamp: convTime || new Date().toISOString(),
+        sourceType: 'manual',
+        documentId,
+        source: `import-retry:${platform}:${convTitle}`,
+      });
+
+      const prov = {
+        source: 'import-retry',
+        platform,
+        title: convTitle,
+        at: new Date().toISOString(),
+        import_batch_id: batchId,
+        conversation_id: convTitle,
+        document_id: documentId,
+        original_timestamp: convTime,
+        retry_of: task.task_id,
+      };
+
+      const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
+      for (const e of resolution.entitiesToCreate) {
+        if (convTime) e.created_at = convTime;
+        e.tags = Array.from(new Set([...(e.tags || []), 'imported', `import:${platform}`, 'retry']));
+        e.metadata = { ...(e.metadata || {}), provenance: prov };
+        await ctx.db.addEntity(e);
+      }
+      for (const u of resolution.entitiesToUpdate) {
+        await ctx.db.updateEntity(u.id, { description: u.description, tags: u.tags, embedding: u.embedding, metadata: u.metadata, created_at: u.created_at, access_count: u.access_count });
+      }
+
+      if (task.task_type === 'conflict_resolution' || resolution.relationshipsToCreate.length > 0) {
+        for (const r of resolution.relationshipsToCreate) {
+          r.provenance = { ...(r.provenance || {}), ...prov };
+        }
+        try {
+          await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+        } catch (err) {
+          // Conflict resolution still failing — keep the task as pending for another attempt.
+          const errMsg = err instanceof Error ? err.message : String(err);
+          await ctx.db.updateFailedTaskStatus(task.task_id, 'pending', `retry ${task.attempts + 1}: ${errMsg}`);
+          stillFailing++;
+          updateJob(jobId, { importProgress: { done: index + 1, total, entities: 0 } });
+          continue;
+        }
+      }
+
+      for (const a of extractResult.assertions || []) {
+        const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
+        const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
+        try {
+          await ctx.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+        } catch (err) {
+          console.warn('[Import-Retry] assertion write failed:', err);
+        }
+      }
+
+      await ctx.db.updateFailedTaskStatus(task.task_id, 'resolved');
+      recovered++;
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      // Mark as permanent_failure after 3 attempts to avoid infinite retry loops.
+      const newStatus = task.attempts + 1 >= 3 ? 'permanent_failure' : 'pending';
+      await ctx.db.updateFailedTaskStatus(task.task_id, newStatus, `retry ${task.attempts + 1}: ${errMsg}`);
+      stillFailing++;
+      console.error(`[Import-Retry] task ${task.task_id} still failing:`, errMsg);
+    }
+
+    updateJob(jobId, { importProgress: { done: index + 1, total, entities: 0 } });
+  }
+
+  const finalStatus = stillFailing === 0 ? 'success' : stillFailing < total ? 'partial' : 'failed';
+  updateJob(jobId, {
+    status: finalStatus,
+    stage: 'done',
+    completedAt: Date.now(),
+    importProgress: { done: total, total, entities: 0 },
+    result: {
+      entities: 0,
+      relationships: 0,
+      principles: 0,
+      archivalId: '',
+      summary: `Retry: ${recovered}/${total} recovered, ${stillFailing} still failing`,
     },
   });
 }
@@ -968,6 +1132,49 @@ export const handleIngestRoutes = [
       const job = createJob(`import:${parsed.platform}`);
       setImmediate(() => runImportPipeline(job.jobId, capped, parsed.platform, ctx));
       sendResponse(res, 200, { jobId: job.jobId, platform: parsed.platform, parsed: convs.length, importing: capped.length });
+    },
+  },
+  // Task 5: List persisted chat-import failures for a batch (survives jobStore TTL).
+  {
+    method: 'GET' as const,
+    path: '/api/import/chat/failed',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const url = new URL(req.url ?? '', 'http://localhost');
+      const batchId = url.searchParams.get('batchId');
+      if (!batchId) return sendError(res, 400, 'batchId query parameter is required');
+      const status = url.searchParams.get('status') ?? undefined;
+      const tasks = await ctx.db.getFailedTasks(batchId, status || undefined);
+      sendResponse(res, 200, {
+        batchId,
+        count: tasks.length,
+        tasks: tasks.map(t => ({
+          task_id: t.task_id,
+          task_type: t.task_type,
+          conversation_title: t.conversation_title,
+          stage: t.stage,
+          error: t.error,
+          attempts: t.attempts,
+          status: t.status,
+          created_at: t.created_at,
+          updated_at: t.updated_at,
+        })),
+      });
+    },
+  },
+  // Task 5: Retry all pending failures for a batch.
+  {
+    method: 'POST' as const,
+    path: '/api/import/chat/failed/:batchId/retry',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      const batchId = params.batchId;
+      if (!batchId) return sendError(res, 400, 'batchId is required');
+      const pending = await ctx.db.getFailedTasks(batchId, 'pending');
+      if (pending.length === 0) {
+        return sendResponse(res, 200, { batchId, retried: 0, status: 'no_pending_failures' });
+      }
+      const job = createJob(`import-retry:${batchId}`);
+      setImmediate(() => runFailedImportRetry(job.jobId, batchId, ctx));
+      sendResponse(res, 202, { jobId: job.jobId, batchId, retrying: pending.length });
     },
   },
 ];
