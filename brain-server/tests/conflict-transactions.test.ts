@@ -12,6 +12,35 @@ afterEach(async () => {
 });
 
 describe('assertion conflict transactions', () => {
+  it('serializes concurrent transaction scopes on the shared sqlite connection', async () => {
+    const db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+    await db.run('CREATE TABLE transaction_probe (id TEXT PRIMARY KEY, value INTEGER NOT NULL)');
+
+    let releaseFirst!: () => void;
+    const firstCanFinish = new Promise<void>((resolve) => { releaseFirst = resolve; });
+    let firstStarted!: () => void;
+    const firstHasStarted = new Promise<void>((resolve) => { firstStarted = resolve; });
+
+    const first = db.withTransaction(async () => {
+      await db.run('INSERT INTO transaction_probe (id, value) VALUES (?, ?)', ['first', 1]);
+      firstStarted();
+      await firstCanFinish;
+    });
+    await firstHasStarted;
+    const second = db.withTransaction(async () => {
+      await db.run('INSERT INTO transaction_probe (id, value) VALUES (?, ?)', ['second', 2]);
+    });
+
+    releaseFirst();
+    await expect(Promise.all([first, second])).resolves.toEqual([undefined, undefined]);
+    expect(await db.all('SELECT id, value FROM transaction_probe ORDER BY id')).toEqual([
+      { id: 'first', value: 1 },
+      { id: 'second', value: 2 },
+    ]);
+    await db.close();
+  });
+
   it('strictly validates model output and referenced relationship IDs', () => {
     const allowed = new Set(['old-1']);
     expect(() => parseConflictResolution(JSON.stringify({

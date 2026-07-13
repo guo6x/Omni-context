@@ -710,6 +710,11 @@ export class Database {
   private db: sqlite3.Database;
   private dbPath: string;
   private vecEnabled: boolean = false;
+  // sqlite3 serializes individual statements, but it does not keep statement
+  // groups from different async callers inside a single transaction. Queue
+  // transaction scopes so concurrent ingestion/background work cannot issue a
+  // second BEGIN on the same connection or commit another caller's work.
+  private transactionTail: Promise<void> = Promise.resolve();
   // vec_entities 当前维度。migration v4 建表时为 384，但实际维度可能因
   // embedding 模型不同而变（如 OpenAI 1536、bge 768/1024）。首次同步时
   // 从 sqlite_master 读取真实维度，写入维度不符则按需重建表。
@@ -2549,14 +2554,31 @@ export class Database {
   }
 
   async withTransaction<T>(fn: () => Promise<T>): Promise<T> {
-    await this.beginTransaction();
+    const previous = this.transactionTail;
+    let release!: () => void;
+    this.transactionTail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+
+    await previous;
+    let began = false;
     try {
+      await this.beginTransaction();
+      began = true;
       const result = await fn();
       await this.commit();
       return result;
     } catch (error) {
-      await this.rollback();
+      if (began) {
+        try {
+          await this.rollback();
+        } catch (rollbackError) {
+          console.error('[Database] transaction rollback failed:', rollbackError);
+        }
+      }
       throw error;
+    } finally {
+      release();
     }
   }
 
