@@ -49,16 +49,33 @@ describe('Task 12: AgentLoop cycle-level AbortController', () => {
   });
 
   it('cycle timeout aborts the controller and releases the lock', async () => {
-    // Use a very short cycle timeout to trigger the timeout path.
-    const loop = new AgentLoop(db);
-    // We can't easily inject a short timeout without subclassing, but we
-    // can verify the loop doesn't hang on stop() even if a cycle is mid-flight.
-    loop.start(60000);
-    // Give the warmup timer a moment to fire (5s warmup — too long for a test).
-    // Instead, just call stop() immediately — it should handle the case where
-    // no cycle has started yet (cycleAbort is null).
-    loop.stop();
-    expect(loop.isRunning()).toBe(false);
+    let releaseHungRead: (() => void) | undefined;
+    const original = db.getEntitiesForConsolidation.bind(db);
+    db.getEntitiesForConsolidation = vi.fn(() => new Promise((resolve) => {
+      releaseHungRead = () => resolve([]);
+    })) as any;
+    const loop = new AgentLoop(db, undefined, { cycleTimeoutMs: 30 });
+
+    const started = Date.now();
+    void (loop as any).runCycle();
+    await vi.waitFor(() => {
+      expect(loop.getStatus().running).toBe(false);
+      expect(loop.getStatus().lastError?.message).toBe('Cycle timeout');
+    }, { timeout: 450, interval: 5 });
+    const elapsedMs = Date.now() - started;
+    console.log(`[AgentLoop timeout proof] elapsed_ms=${elapsedMs} limit_ms=500`);
+    expect(elapsedMs).toBeLessThan(500);
+
+    // A fresh cycle must acquire the lock even though the first DB promise is
+    // still unresolved. Releasing the old promise afterwards must not clobber
+    // the newer cycle's lifecycle state.
+    db.getEntitiesForConsolidation = original;
+    await (loop as any).runCycle();
+    expect(loop.getStatus().cycleCount).toBe(2);
+    expect(loop.getStatus().running).toBe(false);
+    releaseHungRead?.();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(loop.getStatus().running).toBe(false);
   });
 });
 

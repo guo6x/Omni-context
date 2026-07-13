@@ -334,6 +334,107 @@ describe('Task 11: revertMerge uses stable audit id (no LIKE fuzzy match)', () =
   });
 });
 
+describe('Task 13: merge then revert restores every persisted surface', () => {
+  let db: Database;
+
+  beforeEach(async () => {
+    db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+  });
+
+  it('round-trips metadata, relationships, assertions, FTS and vectors through a collision', async () => {
+    await db.addEntity({ id: 'canon-full', name: 'Canonical', type: 'concept', description: 'canonical' });
+    await db.addEntity({
+      id: 'alias-full', name: 'Alias', type: 'concept', description: 'alias searchable text',
+      metadata: { owner: 'alice', nested: { retained: true } },
+      embedding: Array.from({ length: 384 }, (_, index) => index / 384),
+    });
+    await db.addEntity({ id: 'target-full', name: 'Target', type: 'concept', description: 'target' });
+
+    // Same target/type creates a UNIQUE collision only after alias redirects to canonical.
+    await db.addRelationship({
+      id: 'rel-canonical-collision', source_id: 'canon-full', target_id: 'target-full', type: 'depends_on',
+    });
+    await db.addRelationship({
+      id: 'rel-alias-collision', source_id: 'alias-full', target_id: 'target-full', type: 'depends_on',
+      description: 'must return after revert', weight: 0.75,
+    });
+    await db.addRelationship({
+      id: 'rel-target-alias', source_id: 'target-full', target_id: 'alias-full', type: 'cites',
+    });
+    await db.addAssertion({
+      id: 'assert-alias-full', subject_id: 'alias-full', predicate: 'owns',
+      object_id: 'target-full', source_span: 'Alice owns Target', provenance: { session_id: 's1' },
+    });
+    await db.run(
+      `INSERT INTO entity_merge_candidates
+        (id, canonical_id, candidate_entity_id, candidate_name, candidate_type, reason, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      ['merge-full', 'canon-full', 'alias-full', 'Alias', 'concept', 'collision roundtrip', new Date().toISOString()],
+    );
+
+    const entityBefore = await db.get<any>(
+      "SELECT metadata, updated_at FROM entities WHERE id = 'alias-full'",
+    );
+    const relationshipsBefore = await db.all<any>(
+      "SELECT * FROM relationships WHERE source_id = 'alias-full' OR target_id = 'alias-full' ORDER BY id",
+    );
+    const assertionsBefore = await db.all<any>(
+      "SELECT * FROM assertions WHERE subject_id = 'alias-full' OR object_id = 'alias-full' ORDER BY id",
+    );
+    const ftsBefore = await db.all<any>(
+      "SELECT entity_id, name, description, tags FROM fts_entities WHERE entity_id = 'alias-full'",
+    );
+    const vecBefore = await db.all<any>(
+      "SELECT entity_id, embedding FROM vec_entities WHERE entity_id = 'alias-full'",
+    );
+    expect(ftsBefore).toHaveLength(1);
+    expect(vecBefore).toHaveLength(1);
+
+    await confirmMerge(db, 'merge-full');
+    expect(await db.get<any>(
+      "SELECT id FROM relationships WHERE id = 'rel-alias-collision'",
+    )).toBeUndefined();
+    expect(await db.all<any>(
+      "SELECT * FROM fts_entities WHERE entity_id = 'alias-full'",
+    )).toHaveLength(0);
+    expect(await db.all<any>(
+      "SELECT * FROM vec_entities WHERE entity_id = 'alias-full'",
+    )).toHaveLength(0);
+
+    await revertMerge(db, 'merge-full');
+
+    const entityAfter = await db.get<any>(
+      "SELECT metadata, updated_at FROM entities WHERE id = 'alias-full'",
+    );
+    const relationshipsAfter = await db.all<any>(
+      "SELECT * FROM relationships WHERE source_id = 'alias-full' OR target_id = 'alias-full' ORDER BY id",
+    );
+    const assertionsAfter = await db.all<any>(
+      "SELECT * FROM assertions WHERE subject_id = 'alias-full' OR object_id = 'alias-full' ORDER BY id",
+    );
+    const ftsAfter = await db.all<any>(
+      "SELECT entity_id, name, description, tags FROM fts_entities WHERE entity_id = 'alias-full'",
+    );
+    const vecAfter = await db.all<any>(
+      "SELECT entity_id, embedding FROM vec_entities WHERE entity_id = 'alias-full'",
+    );
+
+    expect(entityAfter).toEqual(entityBefore);
+    expect(relationshipsAfter).toEqual(relationshipsBefore);
+    expect(assertionsAfter).toEqual(assertionsBefore);
+    expect(ftsAfter).toEqual(ftsBefore);
+    expect(vecAfter).toHaveLength(1);
+    expect(vecAfter[0].entity_id).toBe(vecBefore[0].entity_id);
+    expect(Buffer.from(vecAfter[0].embedding)).toEqual(Buffer.from(vecBefore[0].embedding));
+
+    // The pre-existing canonical collision row must survive both operations.
+    expect(await db.get<any>(
+      "SELECT id FROM relationships WHERE id = 'rel-canonical-collision'",
+    )).toBeTruthy();
+  });
+});
+
 describe('Task 11: rejectMerge flips status without redirects', () => {
   let db: Database;
 

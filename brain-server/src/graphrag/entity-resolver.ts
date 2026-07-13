@@ -475,6 +475,32 @@ function auditIdFor(mergeId: string): string {
   return `${mergeId}_audit`;
 }
 
+interface ReversibleMergeSnapshot {
+  schema_version: 2;
+  canonical_id: string;
+  alias_id: string;
+  merged_at: string;
+  alias_entity: { metadata: string | null; updated_at: string };
+  relationships: Record<string, unknown>[];
+  assertions: Record<string, unknown>[];
+  fts_entities: Record<string, unknown>[];
+  vec_entities: Array<{ entity_id: string; embedding_base64: string }>;
+}
+
+async function insertSnapshotRow(
+  db: Database,
+  table: 'relationships' | 'assertions',
+  row: Record<string, unknown>,
+): Promise<void> {
+  const columns = Object.keys(row);
+  const quoted = columns.map((column) => `"${column.replaceAll('"', '""')}"`).join(', ');
+  const placeholders = columns.map(() => '?').join(', ');
+  await db.run(
+    `INSERT INTO ${table} (${quoted}) VALUES (${placeholders})`,
+    columns.map((column) => row[column]),
+  );
+}
+
 export interface MergeConfirmResult {
   redirectedRelationships: number;
   redirectedAssertions: number;
@@ -505,31 +531,71 @@ export async function confirmMerge(db: Database, mergeId: string): Promise<Merge
     if (canonicalId === candidateId) throw new Error("Cannot merge entity into itself");
     const now = new Date().toISOString();
 
-    // 1) Redirect relationships. UPDATE OR IGNORE skips rows that would collide
-    // with UNIQUE(source_id, target_id, type) — i.e. an edge that already exists
-    // between canonical and the same target with the same type. Those collisions
-    // are dropped in the cleanup step below.
-    await db.run(
-      'UPDATE OR IGNORE relationships SET source_id = ? WHERE source_id = ?',
-      [canonicalId, candidateId]
+    const aliasEntity = await db.get<any>(
+      'SELECT metadata, updated_at FROM entities WHERE id = ?',
+      [candidateId],
     );
-    await db.run(
-      'UPDATE OR IGNORE relationships SET target_id = ? WHERE target_id = ?',
-      [canonicalId, candidateId]
+    if (!aliasEntity) throw new Error('Candidate entity missing — cannot snapshot merge');
+    const relationshipSnapshot = await db.all<Record<string, unknown>>(
+      'SELECT * FROM relationships WHERE source_id = ? OR target_id = ? ORDER BY id',
+      [candidateId, candidateId],
     );
-    // Drop self-loops introduced on canonical (candidate was previously linked to canonical).
-    await db.run(
-      'DELETE FROM relationships WHERE source_id = ? AND target_id = ?',
-      [canonicalId, canonicalId]
+    const assertionSnapshot = await db.all<Record<string, unknown>>(
+      'SELECT * FROM assertions WHERE subject_id = ? OR object_id = ? ORDER BY id',
+      [candidateId, candidateId],
     );
-    // Drop every edge still referencing the alias — these are exactly the rows
-    // that UPDATE OR IGNORE skipped because a conflicting edge already exists
-    // on canonical. Counting them gives us the redirect summary.
-    const relCleanup = await db.run(
-      'DELETE FROM relationships WHERE source_id = ? OR target_id = ?',
-      [candidateId, candidateId]
-    );
-    result.redirectedRelationships = relCleanup.changes ?? 0;
+    let ftsSnapshot: Record<string, unknown>[] = [];
+    try {
+      ftsSnapshot = await db.all<Record<string, unknown>>(
+        'SELECT entity_id, name, description, tags FROM fts_entities WHERE entity_id = ?',
+        [candidateId],
+      );
+    } catch { /* FTS5 is optional. */ }
+    let vecSnapshot: Array<{ entity_id: string; embedding_base64: string }> = [];
+    try {
+      const rows = await db.all<any>(
+        'SELECT entity_id, embedding FROM vec_entities WHERE entity_id = ?',
+        [candidateId],
+      );
+      vecSnapshot = rows.map((item) => ({
+        entity_id: item.entity_id,
+        embedding_base64: Buffer.from(item.embedding).toString('base64'),
+      }));
+    } catch { /* sqlite-vec is optional. */ }
+
+    const snapshot: ReversibleMergeSnapshot = {
+      schema_version: 2,
+      canonical_id: canonicalId,
+      alias_id: candidateId,
+      merged_at: now,
+      alias_entity: { metadata: aliasEntity.metadata ?? null, updated_at: aliasEntity.updated_at },
+      relationships: relationshipSnapshot,
+      assertions: assertionSnapshot,
+      fts_entities: ftsSnapshot,
+      vec_entities: vecSnapshot,
+    };
+
+    // 1) Redirect each relationship by stable row id. Collisions and introduced
+    // self-loops delete only the alias-origin row; unrelated canonical rows are
+    // never touched. The full pre-merge rows remain in the audit snapshot.
+    for (const relationship of relationshipSnapshot as any[]) {
+      const sourceId = relationship.source_id === candidateId ? canonicalId : relationship.source_id;
+      const targetId = relationship.target_id === candidateId ? canonicalId : relationship.target_id;
+      const collision = sourceId === targetId ? true : Boolean(await db.get(
+        `SELECT id FROM relationships
+         WHERE source_id = ? AND target_id = ? AND type = ? AND id <> ?`,
+        [sourceId, targetId, relationship.type, relationship.id],
+      ));
+      if (collision) {
+        await db.run('DELETE FROM relationships WHERE id = ?', [relationship.id]);
+      } else {
+        await db.run(
+          'UPDATE relationships SET source_id = ?, target_id = ? WHERE id = ?',
+          [sourceId, targetId, relationship.id],
+        );
+      }
+    }
+    result.redirectedRelationships = relationshipSnapshot.length;
 
     // 2) Redirect assertions. subject_id is NOT NULL with ON DELETE CASCADE;
     // object_id is nullable with ON DELETE RESTRICT. Neither restricts UPDATE,
@@ -610,15 +676,6 @@ export async function confirmMerge(db: Database, mergeId: string): Promise<Merge
     // 8) Write audit log with stable id and redirect summary. The id is
     // `${mergeId}_audit` (no timestamp suffix) so revertMerge can look it
     // up by exact match instead of LIKE prefix matching.
-    const snapshot = {
-      canonical_id: canonicalId,
-      alias_id: candidateId,
-      merged_at: now,
-      redirected_relationships: result.redirectedRelationships,
-      redirected_assertions: result.redirectedAssertions,
-      redirected_fts: result.redirectedFts,
-      redirected_vec: result.redirectedVec,
-    };
     await db.run(
       `INSERT INTO entity_merge_audit
         (id, canonical_id, alias_id, merge_reason, similarity, operator, snapshot, created_at,
@@ -659,14 +716,6 @@ export async function rejectMerge(db: Database, mergeId: string): Promise<void> 
   });
 }
 
-// revertMerge restores the alias entity's visibility but does NOT reverse the
-// relationship/assertion/FTS/vec redirects. Once edges have been folded onto
-// the canonical entity, the canonical may have accumulated its own new edges
-// in the meantime, and undoing the redirect would require disambiguating
-// "edge came from alias" vs "edge was created on canonical after the merge".
-// That ambiguity is recorded in the audit snapshot; a true undo would need a
-// per-edge provenance trail which is out of scope for v3 hardening. The
-// restored alias is visible again and can accumulate new edges going forward.
 export async function revertMerge(db: Database, mergeId: string): Promise<void> {
   await db.withTransaction(async () => {
     // Stable audit id — exact match instead of LIKE prefix fuzzy match.
@@ -682,11 +731,55 @@ export async function revertMerge(db: Database, mergeId: string): Promise<void> 
     }
 
     const now = new Date().toISOString();
+    const snapshot = JSON.parse(audit.snapshot) as ReversibleMergeSnapshot;
+    if (snapshot.schema_version !== 2 || snapshot.alias_id !== audit.alias_id || snapshot.canonical_id !== audit.canonical_id) {
+      throw new Error('Merge audit snapshot is not reversibly restorable');
+    }
 
-    // Remove merged_into flag from alias entity (soft-restore).
+    // Restore every alias-origin relationship by stable id. A redirected row
+    // is removed first; collision-deleted rows are simply reinserted.
+    for (const relationship of snapshot.relationships) {
+      await db.run('DELETE FROM relationships WHERE id = ?', [relationship.id]);
+      await insertSnapshotRow(db, 'relationships', relationship);
+    }
+
+    // Assertions were never deleted, so restore the exact pre-merge endpoints.
+    for (const assertion of snapshot.assertions as any[]) {
+      const restored = await db.run(
+        'UPDATE assertions SET subject_id = ?, object_id = ? WHERE id = ?',
+        [assertion.subject_id, assertion.object_id, assertion.id],
+      );
+      if ((restored.changes ?? 0) !== 1) throw new Error(`Assertion missing during merge revert: ${assertion.id}`);
+    }
+
+    try {
+      await db.run('DELETE FROM fts_entities WHERE entity_id = ?', [audit.alias_id]);
+      for (const row of snapshot.fts_entities as any[]) {
+        await db.run(
+          'INSERT INTO fts_entities (entity_id, name, description, tags) VALUES (?, ?, ?, ?)',
+          [row.entity_id, row.name, row.description, row.tags],
+        );
+      }
+    } catch {
+      if (snapshot.fts_entities.length > 0) throw new Error('FTS index unavailable during reversible merge restore');
+    }
+
+    try {
+      await db.run('DELETE FROM vec_entities WHERE entity_id = ?', [audit.alias_id]);
+      for (const row of snapshot.vec_entities) {
+        await db.run(
+          'INSERT INTO vec_entities (entity_id, embedding) VALUES (?, ?)',
+          [row.entity_id, Buffer.from(row.embedding_base64, 'base64')],
+        );
+      }
+    } catch {
+      if (snapshot.vec_entities.length > 0) throw new Error('Vector index unavailable during reversible merge restore');
+    }
+
+    // Restore metadata and update timestamp byte-for-byte from before merge.
     await db.run(
-      "UPDATE entities SET metadata = json_remove(COALESCE(metadata, '{}'), '$.merged_into', '$.merge_reason', '$.merged_at'), updated_at = ? WHERE id = ?",
-      [now, audit.alias_id]
+      'UPDATE entities SET metadata = ?, updated_at = ? WHERE id = ?',
+      [snapshot.alias_entity.metadata, snapshot.alias_entity.updated_at, audit.alias_id]
     );
 
     // Restore candidate to pending. confirmed_at and reverted_at together

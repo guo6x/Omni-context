@@ -155,6 +155,7 @@ export class AgentLoop {
   private isCycleRunning = false;
   private skippedCycleCount = 0;
   private cycleTimeoutMs = 4 * 60 * 1000;
+  private activeCycleToken: symbol | null = null;
   private static readonly DECAY_CHECK_INTERVAL = 6;
   private static readonly BLINDSPOT_CHECK_INTERVAL = 10;
   // Task 12: Cycle-level AbortController. stop() aborts this to cancel any
@@ -162,10 +163,20 @@ export class AgentLoop {
   // the engine has been "stopped". Cleared in runCycle's finally block.
   private cycleAbort: AbortController | null = null;
 
-  constructor(db: Database, decayScheduler?: MemoryDecayScheduler) {
+  constructor(
+    db: Database,
+    decayScheduler?: MemoryDecayScheduler,
+    options: { cycleTimeoutMs?: number } = {},
+  ) {
     this.db = db;
     this.generator = new InsightGenerator();
     this.decayScheduler = decayScheduler || null;
+    if (options.cycleTimeoutMs !== undefined) {
+      if (!Number.isFinite(options.cycleTimeoutMs) || options.cycleTimeoutMs <= 0) {
+        throw new Error('cycleTimeoutMs must be a positive finite number');
+      }
+      this.cycleTimeoutMs = options.cycleTimeoutMs;
+    }
   }
 
   start(intervalMs: number = 60000) {
@@ -295,6 +306,8 @@ export class AgentLoop {
       return;
     }
     this.isCycleRunning = true;
+    const cycleToken = Symbol('agent-cycle');
+    this.activeCycleToken = cycleToken;
     this.lastCycleStart = new Date();
     console.log('[AgentLoop] 唤醒，执行周期任务...');
     const cycle = this.cycleCount++;
@@ -303,17 +316,21 @@ export class AgentLoop {
     // any in-flight LLM calls. The signal is passed down to polishInsightWithLLM
     // and InsightGenerator.generateInsight, which chain it to their own timeout
     // controllers.
-    this.cycleAbort = new AbortController();
-    const cycleSignal = this.cycleAbort.signal;
+    const cycleController = new AbortController();
+    this.cycleAbort = cycleController;
+    const cycleSignal = cycleController.signal;
 
     // Timeout guard: force-release the lock if a cycle runs too long.
     // Also abort the cycle controller so any pending LLM fetch is cancelled.
     const cycleTimeout = setTimeout(() => {
-      if (this.isCycleRunning) {
+      if (this.activeCycleToken === cycleToken) {
         console.warn('[AgentLoop] Cycle timeout — force-releasing lock');
-        this.cycleAbort?.abort();
+        cycleController.abort();
+        this.activeCycleToken = null;
+        if (this.cycleAbort === cycleController) this.cycleAbort = null;
         this.isCycleRunning = false;
         this.lastError = new Error('Cycle timeout');
+        this.lastCycleEnd = new Date();
       }
     }, this.cycleTimeoutMs);
 
@@ -321,6 +338,10 @@ export class AgentLoop {
       try {
         // insight_generation / consolidation 独立任务
         const batch = await this.db.getEntitiesForConsolidation(5);
+        // A timed-out cycle may resume if a non-abortable DB promise settles
+        // later. The token prevents that stale continuation from mutating data
+        // or releasing the lock held by a newer cycle.
+        if (this.activeCycleToken !== cycleToken || cycleSignal.aborted) return;
 
         if (batch.length < 2) {
           console.log('[AgentLoop] 洞见数据不足，本轮仅跳过 insight_generation');
@@ -505,9 +526,12 @@ export class AgentLoop {
       // Task 12: Clear the cycle AbortController. If stop() was called during
       // this cycle, the controller was already aborted — we just drop the
       // reference so the next cycle gets a fresh one.
-      this.cycleAbort = null;
-      this.isCycleRunning = false;
-      this.lastCycleEnd = new Date();
+      if (this.activeCycleToken === cycleToken) {
+        this.activeCycleToken = null;
+        if (this.cycleAbort === cycleController) this.cycleAbort = null;
+        this.isCycleRunning = false;
+        this.lastCycleEnd = new Date();
+      }
     }
   }
 
