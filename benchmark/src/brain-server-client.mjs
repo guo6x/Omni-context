@@ -22,7 +22,10 @@ export class BrainServerClient {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new Error(`Brain Server ${method} ${path} -> ${res.status}: ${text.slice(0, 500)}`);
+      const error = new Error(`Brain Server ${method} ${path} -> ${res.status}: ${text.slice(0, 500)}`);
+      error.status = res.status;
+      try { error.responseBody = JSON.parse(text); } catch { error.responseBody = text; }
+      throw error;
     }
     const text = await res.text();
     if (!text) return null;
@@ -53,8 +56,14 @@ export class BrainServerClient {
    * This triggers: LLM extraction -> entity resolution -> assertion/relationship write -> embedding.
    * Returns { entities: number, relationships: number, principles: number, summary: string }.
    */
-  async extract(text, source) {
-    return this.request('POST', '/api/graph/extract', { text, source });
+  async extract(text, source, { timestamp, sessionId, evaluationMode = false } = {}) {
+    return this.request('POST', '/api/graph/extract', {
+      text,
+      source,
+      timestamp,
+      session_id: sessionId,
+      evaluation_mode: evaluationMode,
+    });
   }
 
   /**

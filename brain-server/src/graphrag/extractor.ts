@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Entity, Relationship, EntityType, RelationshipType, AssertionInput } from '../shared-types.js';
 import { ENTITY_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
-import { LLMExtractorPipeline } from './llm-pipeline.js';
+import { LLMCallDiagnostics, LLMExtractorPipeline } from './llm-pipeline.js';
 import { OCRPipeline } from '../ocr/pipeline.js';
 import { sanitizeForExtraction } from './sanitize.js';
 import { chunkDocument, coveredCharacterCount, SourceChunk } from '../ingest/chunker.js';
@@ -106,15 +106,33 @@ export interface GraphRAGOutput {
   principles: ExtractedPrinciple[];
   assertions?: AssertionInput[];
   suspicious?: string[];
+  diagnostics: ExtractionDiagnostics;
   chunking?: {
     document_id: string;
     chunks: SourceChunk[];
     total_chunks: number;
     processed_chunks: number;
-    failed_chunks: Array<{ chunk_id: string; ordinal: number; error: string }>;
+    failed_chunks: Array<{ chunk_id: string; ordinal: number; error: string; llm_calls?: LLMCallDiagnostics[] }>;
     coverage: number;
     truncated: false;
   };
+}
+
+export interface ExtractionDiagnostics {
+  input_characters: number;
+  chunks: number;
+  llm_calls: LLMCallDiagnostics[];
+  parsed_counts: { entities: number; facts: number; principles: number };
+  produced_counts: { entities: number; relationships: number; assertions: number; principles: number };
+  skipped_facts_missing_subject: number;
+  failure_reason?: string;
+}
+
+export class GraphRAGExtractionError extends Error {
+  constructor(message: string, public readonly diagnostics: ExtractionDiagnostics) {
+    super(message);
+    this.name = 'GraphRAGExtractionError';
+  }
 }
 
 const ENTITY_PATTERNS: EntityPattern[] = [
@@ -334,17 +352,36 @@ export class GraphRAGExtractor {
     const relationships = await this.extractRelationships(cleaned, entities);
     const principles = await this.extractPrinciples(cleaned, input);
     const assertions: AssertionInput[] = [];
+    const llmCalls: LLMCallDiagnostics[] = [];
+    let skippedFactsMissingSubject = 0;
 
     // 第二层：LLM 语义提取（深度理解，补充正则的盲区）
     if (this.llmPipeline.isEnabled() && !this.config.useLocalExtraction) {
       try {
-        const llmResult = await this.llmPipeline.extract(cleaned, {
-          throwOnError: input.requireLlmSuccess,
+        const llmExtraction = await this.llmPipeline.extractWithDiagnostics(cleaned, {
+          referenceTime: input.timestamp,
         });
+        llmCalls.push(llmExtraction.diagnostics);
+        if (llmExtraction.diagnostics.status !== 'parsed' && input.requireLlmSuccess) {
+          const diagnostics: ExtractionDiagnostics = {
+            input_characters: textContent.length,
+            chunks: 1,
+            llm_calls: llmCalls,
+            parsed_counts: llmExtraction.diagnostics.parsed_counts,
+            produced_counts: {
+              entities: entities.length, relationships: relationships.length,
+              assertions: assertions.length, principles: principles.length,
+            },
+            skipped_facts_missing_subject: skippedFactsMissingSubject,
+            failure_reason: llmExtraction.diagnostics.error || llmExtraction.diagnostics.status,
+          };
+          throw new GraphRAGExtractionError(diagnostics.failure_reason!, diagnostics);
+        }
+        const llmResult = llmExtraction.result;
         const llmEntities = Array.isArray(llmResult.entities) ? llmResult.entities : [];
         const llmFacts = Array.isArray(llmResult.facts) ? llmResult.facts : [];
         const llmPrinciples = Array.isArray(llmResult.principles) ? llmResult.principles : [];
-        const now = new Date().toISOString();
+        const now = input.timestamp;
         const seenNames = new Set(entities.map(e => e.name.toLowerCase()));
 
         // 合并 LLM 提取的实体（去重 + 类型白名单）
@@ -455,6 +492,7 @@ export class GraphRAGExtractor {
           } else if (!src) {
             // subject 也不是实体 → 记录警告，跳过
             console.warn(`[GraphRAG] fact subject "${fact.subject}" not found in entity map, skipping`);
+            skippedFactsMissingSubject++;
             continue;
           }
         }
@@ -529,12 +567,33 @@ export class GraphRAGExtractor {
       }
     }
 
+    const diagnostics: ExtractionDiagnostics = {
+      input_characters: textContent.length,
+      chunks: 1,
+      llm_calls: llmCalls,
+      parsed_counts: llmCalls.reduce((total, call) => ({
+        entities: total.entities + call.parsed_counts.entities,
+        facts: total.facts + call.parsed_counts.facts,
+        principles: total.principles + call.parsed_counts.principles,
+      }), { entities: 0, facts: 0, principles: 0 }),
+      produced_counts: {
+        entities: entities.length,
+        relationships: relationships.length,
+        assertions: assertions.length,
+        principles: principles.length,
+      },
+      skipped_facts_missing_subject: skippedFactsMissingSubject,
+      ...(llmCalls.some((call) => call.status !== 'parsed')
+        ? { failure_reason: llmCalls.find((call) => call.status !== 'parsed')?.error || 'LLM_EXTRACTION_FAILED' }
+        : {}),
+    };
     return {
       entities,
       relationships,
       principles,
       ...(assertions.length > 0 ? { assertions } : {}),
       ...(suspicious.length > 0 ? { suspicious } : {}),
+      diagnostics,
     };
   }
 
@@ -554,7 +613,9 @@ export class GraphRAGExtractor {
     const principlesByKey = new Map<string, ExtractedPrinciple>();
     const assertionsByKey = new Map<string, AssertionInput>();
     const successfulChunks: SourceChunk[] = [];
-    const failedChunks: Array<{ chunk_id: string; ordinal: number; error: string }> = [];
+    const failedChunks: Array<{ chunk_id: string; ordinal: number; error: string; llm_calls?: LLMCallDiagnostics[] }> = [];
+    const llmCalls: LLMCallDiagnostics[] = [];
+    let skippedFactsMissingSubject = 0;
 
     for (const chunk of chunks) {
       try {
@@ -568,6 +629,8 @@ export class GraphRAGExtractor {
           requireLlmSuccess: this.llmPipeline.isEnabled() && !this.config.useLocalExtraction,
         });
         successfulChunks.push(chunk);
+        llmCalls.push(...result.diagnostics.llm_calls);
+        skippedFactsMissingSubject += result.diagnostics.skipped_facts_missing_subject;
         const localToCanonical = new Map<string, string>();
         for (const entity of result.entities) {
           const key = chunkDedupKey(entity);
@@ -660,20 +723,48 @@ export class GraphRAGExtractor {
           if (!principlesByKey.has(key)) principlesByKey.set(key, { ...principle });
         }
       } catch (error) {
+        const errorDiagnostics = error instanceof GraphRAGExtractionError ? error.diagnostics : undefined;
+        if (errorDiagnostics) {
+          llmCalls.push(...errorDiagnostics.llm_calls);
+          skippedFactsMissingSubject += errorDiagnostics.skipped_facts_missing_subject;
+        }
         failedChunks.push({
           chunk_id: chunk.chunk_id,
           ordinal: chunk.ordinal,
           error: error instanceof Error ? error.message : String(error),
+          ...(errorDiagnostics ? { llm_calls: errorDiagnostics.llm_calls } : {}),
         });
       }
     }
 
+    const diagnostics: ExtractionDiagnostics = {
+      input_characters: text.length,
+      chunks: chunks.length,
+      llm_calls: llmCalls,
+      parsed_counts: llmCalls.reduce((total, call) => ({
+        entities: total.entities + call.parsed_counts.entities,
+        facts: total.facts + call.parsed_counts.facts,
+        principles: total.principles + call.parsed_counts.principles,
+      }), { entities: 0, facts: 0, principles: 0 }),
+      produced_counts: {
+        entities: entitiesByKey.size,
+        relationships: relationshipsByKey.size,
+        assertions: assertionsByKey.size,
+        principles: principlesByKey.size,
+      },
+      skipped_facts_missing_subject: skippedFactsMissingSubject,
+      ...(failedChunks.length > 0 ? { failure_reason: `CHUNK_EXTRACTION_FAILED:${failedChunks.map((chunk) => `${chunk.ordinal}:${chunk.error}`).join('|')}` } : {}),
+    };
+    if (input.requireLlmSuccess && failedChunks.length > 0) {
+      throw new GraphRAGExtractionError(diagnostics.failure_reason!, diagnostics);
+    }
     return {
       entities: [...entitiesByKey.values()],
       relationships: [...relationshipsByKey.values()],
       principles: [...principlesByKey.values()],
       ...(assertionsByKey.size > 0 ? { assertions: [...assertionsByKey.values()] } : {}),
       ...(suspicious.length > 0 ? { suspicious } : {}),
+      diagnostics,
       chunking: {
         document_id: documentId,
         chunks,

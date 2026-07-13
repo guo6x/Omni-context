@@ -82,6 +82,7 @@ describe('production runner owns an isolated conversation runtime', () => {
       access(path.join(conversationDir, 'server.log')),
       access(path.join(conversationDir, 'server.pid')),
       access(path.join(conversationDir, 'ingestion.json')),
+      access(path.join(conversationDir, 'extraction-diagnostics.jsonl')),
       access(path.join(conversationDir, 'results.jsonl')),
       access(path.join(conversationDir, 'database-hash.txt')),
     ]);
@@ -90,10 +91,23 @@ describe('production runner owns an isolated conversation runtime', () => {
     const manifest = JSON.parse(await readFile(path.join(result.runDir, 'manifest.json'), 'utf8'));
     const runtime = JSON.parse(await readFile(path.join(conversationDir, 'runtime.json'), 'utf8'));
     const ingestion = JSON.parse(await readFile(path.join(conversationDir, 'ingestion.json'), 'utf8'));
+    const extractionDiagnostics = JSON.parse((await readFile(
+      path.join(conversationDir, 'extraction-diagnostics.jsonl'), 'utf8'
+    )).trim());
     assert.strictEqual(manifest.status, 'completed');
     assert.match(manifest.conversation_databases['1'].sha256, /^[a-f0-9]{64}$/);
     assert.strictEqual(runtime.status, 'stopped');
     assert.strictEqual(ingestion.status, 'completed');
+    assert.deepStrictEqual(extractionDiagnostics.dataset_timestamp, {
+      raw_timestamp: '7:48 pm on 21 May, 2023',
+      parsed_timestamp: '2023-05-21T19:48:00.000Z',
+      parser_version: 'locomo-datetime-v2',
+      timezone_assumption: 'UTC for LoCoMo timestamps without an explicit timezone',
+    });
+    assert.strictEqual(extractionDiagnostics.timestamp, '2023-05-21T19:48:00.000Z');
+    assert.strictEqual(extractionDiagnostics.evaluation_mode, true);
+    assert.strictEqual(extractionDiagnostics.extraction.llm_calls[0].http_status, 200);
+    assert.match(extractionDiagnostics.extraction.llm_calls[0].raw_response_sha256, /^[a-f0-9]{64}$/);
     assert.strictEqual(result.stats.total, 1);
     assert.strictEqual(result.stats.done, 1);
 

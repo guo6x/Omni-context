@@ -40,7 +40,22 @@ const server = createServer(async (req, res) => {
     const parsed = JSON.parse(body);
     entities.push({ id: `extracted-${entities.length + 1}`, name: parsed.source, text: parsed.text });
     await persist();
-    res.end(JSON.stringify({ entities: 1, relationships: 0, principles: 0 }));
+    res.end(JSON.stringify({
+      entities: 1,
+      relationships: 0,
+      principles: 0,
+      diagnostics: {
+        session_id: parsed.session_id,
+        timestamp: parsed.timestamp,
+        evaluation_mode: parsed.evaluation_mode,
+        extraction: {
+          input_characters: parsed.text.length,
+          chunks: 1,
+          llm_calls: [{ http_status: 200, raw_response_sha256: 'f'.repeat(64) }],
+        },
+        database_delta: { entities: 1, relationships: 0 },
+      },
+    }));
     return;
   }
   if (req.method === 'POST' && req.url === '/api/mcp/tool/unified_memory_search') {

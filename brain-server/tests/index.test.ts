@@ -1021,21 +1021,23 @@ describe('GraphRAG Fact Mapping (Task 44)', () => {
     const extractor = new GraphRAGExtractor();
     
     // Mock LLM Pipeline response
-    vi.spyOn((extractor as any).llmPipeline, 'extract').mockResolvedValue({
-      entities: [
-        { name: 'Alice', type: 'person', description: 'A person' },
-        { name: 'Bob', type: 'person', description: 'Another person' }
-      ],
-      facts: [
-        {
-          subject: 'Alice',
-          predicate: 'married_to',
-          object: 'Bob',
-          confidence: 0.98,
+    vi.spyOn((extractor as any).llmPipeline, 'extractWithDiagnostics').mockResolvedValue({
+      result: {
+        entities: [
+          { name: 'Alice', type: 'person', description: 'A person' },
+          { name: 'Bob', type: 'person', description: 'Another person' }
+        ],
+        facts: [{
+          subject: 'Alice', predicate: 'married_to', object: 'Bob', confidence: 0.98,
           source_span: 'Alice is happily married to Bob.'
-        }
-      ],
-      principles: []
+        }],
+        principles: []
+      },
+      diagnostics: {
+        http_status: 200, raw_response_sha256: '1'.repeat(64), finish_reason: 'stop', status: 'parsed',
+        parsed_counts: { entities: 2, facts: 1, principles: 0 },
+        normalization: { entity_types: [], predicates: [] },
+      },
     });
 
     const output = await extractor.extract({
@@ -1224,9 +1226,7 @@ describe('Entity Importance Scoring Operations', () => {
     
     // Mock fetch 返回带 importance 的 JSON 字符串
     vi.stubGlobal('fetch', async () => {
-      return {
-        ok: true,
-        json: async () => ({
+      return new Response(JSON.stringify({
           choices: [
             {
               message: {
@@ -1242,8 +1242,7 @@ describe('Entity Importance Scoring Operations', () => {
               },
             },
           ],
-        }),
-      } as any;
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     });
 
     const result = await pipeline.extract('mock text');
@@ -1258,14 +1257,21 @@ describe('Entity Importance Scoring Operations', () => {
     const { GraphRAGExtractor } = await import('../src/graphrag/extractor.js');
     const extractor = new GraphRAGExtractor();
     
-    vi.spyOn((extractor as any).llmPipeline, 'extract').mockResolvedValue({
-      entities: [
-        { name: 'CoreService', type: 'decision', description: 'Core design decision', importance: 0.85 },
-        { name: 'random term', type: 'concept', description: 'Just a term', importance: 0.15 },
-        { name: 'invalid importance term', type: 'concept', description: 'Invalid value', importance: undefined }
-      ],
-      facts: [],
-      principles: []
+    vi.spyOn((extractor as any).llmPipeline, 'extractWithDiagnostics').mockResolvedValue({
+      result: {
+        entities: [
+          { name: 'CoreService', type: 'decision', description: 'Core design decision', importance: 0.85 },
+          { name: 'random term', type: 'concept', description: 'Just a term', importance: 0.15 },
+          { name: 'invalid importance term', type: 'concept', description: 'Invalid value', importance: undefined }
+        ],
+        facts: [],
+        principles: []
+      },
+      diagnostics: {
+        http_status: 200, raw_response_sha256: '2'.repeat(64), finish_reason: 'stop', status: 'parsed',
+        parsed_counts: { entities: 3, facts: 0, principles: 0 },
+        normalization: { entity_types: [], predicates: [] },
+      },
     });
 
     const out = await extractor.extract({
@@ -1377,4 +1383,3 @@ describe('Entity Importance Scoring Operations', () => {
     await testDb.close();
   });
 });
-

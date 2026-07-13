@@ -4,11 +4,40 @@ import { resolveEntities, confirmMerge, rejectMerge, revertMerge } from '../../g
 import { resolveConflicts } from '../../graphrag/conflict-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Entity } from '../../shared-types.js';
+import { GraphRAGExtractionError } from '../../graphrag/extractor.js';
 import {
   EntityCreateSchema,
   EntityUpdateSchema,
   RelationshipCreateSchema,
 } from '../../schema/domain.js';
+
+interface GraphDatabaseCounts {
+  entities: number;
+  active_entities: number;
+  relationships: number;
+  assertions: number;
+  principles: number;
+  merge_candidates: number;
+}
+
+async function graphDatabaseCounts(db: RequestContext['db']): Promise<GraphDatabaseCounts> {
+  const row = await db.get<GraphDatabaseCounts>(`
+    SELECT
+      (SELECT COUNT(*) FROM entities) AS entities,
+      (SELECT COUNT(*) FROM entities WHERE json_extract(metadata, '$.merged_into') IS NULL) AS active_entities,
+      (SELECT COUNT(*) FROM relationships) AS relationships,
+      (SELECT COUNT(*) FROM assertions) AS assertions,
+      (SELECT COUNT(*) FROM entities WHERE type = 'principle') AS principles,
+      (SELECT COUNT(*) FROM entity_merge_candidates) AS merge_candidates
+  `);
+  return row || { entities: 0, active_entities: 0, relationships: 0, assertions: 0, principles: 0, merge_candidates: 0 };
+}
+
+function countDelta(before: GraphDatabaseCounts, after: GraphDatabaseCounts): GraphDatabaseCounts {
+  return Object.fromEntries(
+    Object.keys(before).map((key) => [key, after[key as keyof GraphDatabaseCounts] - before[key as keyof GraphDatabaseCounts]])
+  ) as unknown as GraphDatabaseCounts;
+}
 
 export const handleMemoryRoutes = [
   {
@@ -593,6 +622,9 @@ export const handleGraphRoutes = [
         clipboard?: string;
         screenshot?: string;
         source?: string;
+        timestamp?: string;
+        session_id?: string;
+        evaluation_mode?: boolean;
       }>(req);
 
       const textContent = body.text || body.content;
@@ -600,15 +632,34 @@ export const handleGraphRoutes = [
         return sendError(res, 400, 'Text, clipboard, or screenshot content is required');
       }
       
-      const result = await ctx.extractor.extract({
-        textContent: body.source && textContent
-          ? `Source: ${body.source}\n${textContent}`
-          : textContent,
-        clipboard: body.clipboard,
-        screenshot: body.screenshot,
-        timestamp: new Date().toISOString(),
-        source: body.source || 'api:graph-extract',
-      });
+      const timestamp = body.timestamp || new Date().toISOString();
+      if (!Number.isFinite(Date.parse(timestamp))) {
+        return sendError(res, 400, 'timestamp must be a valid ISO 8601 timestamp');
+      }
+      const before = await graphDatabaseCounts(ctx.db);
+      let result;
+      try {
+        result = await ctx.extractor.extract({
+          textContent,
+          clipboard: body.clipboard,
+          screenshot: body.screenshot,
+          timestamp,
+          source: body.source || 'api:graph-extract',
+          documentId: body.session_id,
+          requireLlmSuccess: body.evaluation_mode === true,
+        });
+      } catch (error) {
+        if (error instanceof GraphRAGExtractionError) {
+          return sendResponse(res, 422, {
+            error: error.message,
+            session_id: body.session_id,
+            extraction: error.diagnostics,
+            database_before: before,
+            database_after: await graphDatabaseCounts(ctx.db),
+          });
+        }
+        throw error;
+      }
 
       const resolution = await resolveEntities(result.entities, result.relationships, ctx.db, ctx.embeddingService);
 
@@ -630,24 +681,32 @@ export const handleGraphRoutes = [
       for (const relationship of resolution.relationshipsToCreate) {
         relationship.provenance = { ...(relationship.provenance || {}), source: 'api:graph-extract' };
       }
+      let savedRelationships = 0;
       try {
-        await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+        savedRelationships = (await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor)).length;
       } catch (err) {
+        if (body.evaluation_mode) throw err;
         console.warn('[graph/extract] conflict resolution failed:', err);
       }
 
+      let savedAssertions = 0;
+      const assertionErrors: string[] = [];
       for (const a of result.assertions || []) {
         const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
         const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
         try {
           await ctx.db.addAssertion({ ...a, subject_id: subjectId, object_id: objectId });
+          savedAssertions++;
         } catch (err) {
+          const detail = err instanceof Error ? err.message : String(err);
+          assertionErrors.push(detail);
+          if (body.evaluation_mode) throw err;
           console.warn('[graph/extract] assertion write failed:', err);
         }
       }
 
       // 原则实体同样走消解，避免重复抽取产生重复原则
-      const principleNow = new Date().toISOString();
+      const principleNow = timestamp;
       const principleEntities = result.principles.map((principle): Entity => ({
         id: uuidv4(),
         name: principle.title,
@@ -679,11 +738,30 @@ export const handleGraphRoutes = [
         });
       }
 
+      const after = await graphDatabaseCounts(ctx.db);
+      const databaseDelta = countDelta(before, after);
       sendResponse(res, 200, {
-        entities: result.entities.length,
-        relationships: result.relationships.length,
-        principles: result.principles.length,
+        entities: databaseDelta.entities,
+        relationships: databaseDelta.relationships,
+        assertions: databaseDelta.assertions,
+        principles: databaseDelta.principles,
         summary: await ctx.extractor.summarizeEntities(result.entities),
+        diagnostics: {
+          session_id: body.session_id,
+          source: body.source || 'api:graph-extract',
+          timestamp,
+          extraction: result.diagnostics,
+          resolver: resolution.diagnostics,
+          principle_resolver: principleResolution.diagnostics,
+          writes: {
+            relationships: savedRelationships,
+            assertions: savedAssertions,
+            assertion_errors: assertionErrors,
+          },
+          database_before: before,
+          database_after: after,
+          database_delta: databaseDelta,
+        },
       });
     }
   },

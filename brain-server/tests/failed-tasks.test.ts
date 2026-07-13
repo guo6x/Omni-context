@@ -23,12 +23,17 @@ beforeAll(async () => {
   process.env.LOCAL_API_TOKEN = 'test-token-123';
 
   // Mock LLM extractor so retry path can succeed without a real LLM
-  vi.spyOn(LLMExtractorPipeline.prototype, 'extract').mockResolvedValue({
-    entities: [
-      { name: 'RetryEntity', type: 'concept', description: 'from retry', tags: ['retry'] },
-    ],
-    facts: [],
-    principles: [],
+  vi.spyOn(LLMExtractorPipeline.prototype, 'extractWithDiagnostics').mockResolvedValue({
+    result: {
+      entities: [{ name: 'RetryEntity', type: 'concept', description: 'from retry' }],
+      facts: [],
+      principles: [],
+    },
+    diagnostics: {
+      http_status: 200, raw_response_sha256: 'c'.repeat(64), finish_reason: 'stop', status: 'parsed',
+      parsed_counts: { entities: 1, facts: 0, principles: 0 },
+      normalization: { entity_types: [], predicates: [] },
+    },
   });
 
   db = initDatabase({ dbPath: ':memory:' });

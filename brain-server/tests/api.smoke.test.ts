@@ -16,12 +16,20 @@ beforeAll(async () => {
   process.env.LOCAL_API_TOKEN = 'test-token-123';
 
   // Mock LLM 提取，防止测试环境因没有 Ollama/LLM 导致网络连接 ECONNREFUSED 超时
-  vi.spyOn(LLMExtractorPipeline.prototype, 'extract').mockResolvedValue({
-    entities: [
-      { name: 'UserService', type: 'concept', description: 'mock user service', tags: ['code'] }
-    ],
-    facts: [],
-    principles: []
+  vi.spyOn(LLMExtractorPipeline.prototype, 'extractWithDiagnostics').mockResolvedValue({
+    result: {
+      entities: [{ name: 'UserService', type: 'concept', description: 'mock user service' }],
+      facts: [],
+      principles: [],
+    },
+    diagnostics: {
+      http_status: 200,
+      raw_response_sha256: 'a'.repeat(64),
+      finish_reason: 'stop',
+      status: 'parsed',
+      parsed_counts: { entities: 1, facts: 0, principles: 0 },
+      normalization: { entity_types: [], predicates: [] },
+    },
   });
 
   db = initDatabase({ dbPath: ':memory:' });
@@ -199,12 +207,62 @@ describe('API smoke: graph extract', () => {
     // 响应是计数 + summary（非完整数组），因此只断言形状
     const { status, body } = await request('POST', '/api/graph/extract', {
       text: 'class UserService { } function processData() { }',
+      timestamp: '2023-05-21T19:48:00.000Z',
+      session_id: 'session-1',
+      evaluation_mode: true,
     });
     expect(status).toBe(200);
     expect(typeof body.entities).toBe('number');
     expect(typeof body.relationships).toBe('number');
     expect(typeof body.principles).toBe('number');
+    expect(body.diagnostics).toMatchObject({
+      session_id: 'session-1',
+      timestamp: '2023-05-21T19:48:00.000Z',
+      extraction: {
+        input_characters: 48,
+        llm_calls: [{ http_status: 200, status: 'parsed' }],
+      },
+      resolver: {
+        input_entities: expect.any(Number),
+        created: expect.any(Number),
+        updated: expect.any(Number),
+        candidate_merge: expect.any(Number),
+        rejected: expect.any(Number),
+      },
+      database_delta: {
+        entities: expect.any(Number),
+        relationships: expect.any(Number),
+        assertions: expect.any(Number),
+      },
+    });
   }, 15000);
+
+  it('returns structured 422 diagnostics when formal LLM extraction fails', async () => {
+    vi.mocked(LLMExtractorPipeline.prototype.extractWithDiagnostics).mockResolvedValueOnce({
+      result: { entities: [], facts: [], principles: [] },
+      diagnostics: {
+        http_status: 200, raw_response_sha256: 'd'.repeat(64), finish_reason: 'stop',
+        status: 'invalid_response', error: 'LLM_OUTPUT_INVALID:fixture',
+        parsed_counts: { entities: 0, facts: 0, principles: 0 },
+        normalization: { entity_types: [], predicates: [] },
+      },
+    });
+    const { status, body } = await request('POST', '/api/graph/extract', {
+      text: 'Caroline: I like painting.',
+      timestamp: '2023-05-21T19:48:00.000Z',
+      session_id: 'session-failed',
+      evaluation_mode: true,
+    });
+    expect(status).toBe(422);
+    expect(body).toMatchObject({
+      error: 'LLM_OUTPUT_INVALID:fixture',
+      session_id: 'session-failed',
+      extraction: {
+        failure_reason: 'LLM_OUTPUT_INVALID:fixture',
+        llm_calls: [{ http_status: 200, raw_response_sha256: 'd'.repeat(64), status: 'invalid_response' }],
+      },
+    });
+  });
 
   it('rejects non-JSON content-type', async () => {
     const url = `${baseUrl}/api/graph/extract`;

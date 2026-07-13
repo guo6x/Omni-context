@@ -1,0 +1,116 @@
+import { createHash } from 'crypto';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { GraphRAGExtractionError, GraphRAGExtractor } from '../src/graphrag/extractor.js';
+import { LLMExtractorPipeline } from '../src/graphrag/llm-pipeline.js';
+
+afterEach(() => vi.restoreAllMocks());
+
+describe('formal evaluation extraction diagnostics', () => {
+  it('records HTTP status and the hash of the raw provider response while safely normalizing labels', async () => {
+    const content = JSON.stringify({
+      entities: [{ name: 'Caroline', type: 'human', description: 'A conversation participant' }],
+      facts: [{
+        subject: 'Caroline', predicate: 'enjoys', object: 'painting', confidence: 0.9,
+        source_span: 'Caroline: I enjoy painting.',
+      }],
+      principles: [],
+    });
+    const raw = JSON.stringify({ choices: [{ message: { content }, finish_reason: 'stop' }] });
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(raw, {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+
+    const pipeline = new LLMExtractorPipeline({ apiUrl: 'http://127.0.0.1:11434/v1', model: 'fixture' });
+    const detailed = await pipeline.extractWithDiagnostics('Caroline: I enjoy painting.', {
+      referenceTime: '2023-05-21T19:48:00.000Z',
+    });
+
+    expect(detailed.diagnostics).toMatchObject({
+      http_status: 200,
+      raw_response_sha256: createHash('sha256').update(raw).digest('hex'),
+      finish_reason: 'stop',
+      status: 'parsed',
+      parsed_counts: { entities: 1, facts: 1, principles: 0 },
+      normalization: {
+        entity_types: [{ index: 0, from: 'human', to: 'concept' }],
+        predicates: [{ index: 0, from: 'enjoys', to: 'relates_to' }],
+      },
+    });
+  });
+
+  it('uses the dataset session timestamp and preserves multiple dialogue participants', async () => {
+    vi.spyOn(LLMExtractorPipeline.prototype, 'extractWithDiagnostics').mockResolvedValue({
+      result: {
+        entities: [
+          { name: 'Caroline', type: 'person', description: 'Speaker one' },
+          { name: 'Melanie', type: 'person', description: 'Speaker two' },
+        ],
+        facts: [{
+          subject: 'Caroline', predicate: 'likes', object: 'painting', confidence: 0.9,
+          source_span: 'Caroline: I like painting.',
+        }],
+        principles: [],
+      },
+      diagnostics: {
+        http_status: 200, raw_response_sha256: 'd'.repeat(64), finish_reason: 'stop', status: 'parsed',
+        parsed_counts: { entities: 2, facts: 1, principles: 0 },
+        normalization: { entity_types: [], predicates: [] },
+      },
+    });
+    const extractor = new GraphRAGExtractor();
+    const timestamp = '2023-05-21T19:48:00.000Z';
+    const result = await extractor.extract({
+      textContent: 'Caroline: I like painting.\nMelanie: That is wonderful.',
+      timestamp,
+      source: 'LoCoMo conv1 session1',
+      documentId: '1',
+      requireLlmSuccess: true,
+    });
+
+    expect(result.entities.filter((entity) => entity.type === 'person').map((entity) => entity.name)).toEqual([
+      'Caroline', 'Melanie',
+    ]);
+    expect(result.entities.every((entity) => entity.created_at === timestamp)).toBe(true);
+    expect(result.assertions).toHaveLength(1);
+    expect(result.assertions?.[0].valid_from).toBe(timestamp);
+    expect(result.diagnostics).toMatchObject({
+      input_characters: 54,
+      chunks: 1,
+      parsed_counts: { entities: 2, facts: 1, principles: 0 },
+      produced_counts: { entities: 2, assertions: 1 },
+      skipped_facts_missing_subject: 0,
+    });
+  });
+
+  it('marks max-token truncation as a formal failure even when the partial JSON parses', async () => {
+    const content = JSON.stringify({ entities: [], facts: [], principles: [] });
+    const raw = JSON.stringify({ choices: [{ message: { content }, finish_reason: 'length' }] });
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(raw, { status: 200 }));
+    const pipeline = new LLMExtractorPipeline({ apiUrl: 'http://127.0.0.1:11434/v1', model: 'fixture' });
+    const detailed = await pipeline.extractWithDiagnostics('input');
+    expect(detailed.diagnostics).toMatchObject({
+      status: 'truncated',
+      error: 'LLM_OUTPUT_TRUNCATED',
+      finish_reason: 'length',
+    });
+  });
+
+  it('fails formal evaluation instead of silently returning regex-only output', async () => {
+    vi.spyOn(LLMExtractorPipeline.prototype, 'extractWithDiagnostics').mockResolvedValue({
+      result: { entities: [], facts: [], principles: [] },
+      diagnostics: {
+        http_status: 200, raw_response_sha256: 'e'.repeat(64), finish_reason: 'stop',
+        status: 'invalid_response', error: 'LLM_OUTPUT_INVALID:entities:invalid_type',
+        parsed_counts: { entities: 0, facts: 0, principles: 0 },
+        normalization: { entity_types: [], predicates: [] },
+      },
+    });
+    const extractor = new GraphRAGExtractor();
+    await expect(extractor.extract({
+      textContent: 'class RegexWouldOtherwiseHideTheFailure {}',
+      timestamp: '2023-05-21T19:48:00.000Z',
+      requireLlmSuccess: true,
+    })).rejects.toBeInstanceOf(GraphRAGExtractionError);
+  });
+});

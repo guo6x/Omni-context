@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseLlmExtractionResult } from '../src/graphrag/llm-pipeline.js';
+import { parseLlmExtractionResult, parseLlmExtractionResultDetailed } from '../src/graphrag/llm-pipeline.js';
 
 function payload(fact: Record<string, unknown>) {
   return JSON.stringify({
@@ -34,23 +34,32 @@ describe('strict LLM extraction validation', () => {
   });
 
   it.each([
-    ['unknown entity type', { name: 'Alice', type: 'invented', description: '' }],
     ['confidence outside range', {
       subject: 'Alice', predicate: 'lives_in', object: 'Beijing', confidence: 2, source_span: 'evidence',
     }],
     ['missing source span', {
       subject: 'Alice', predicate: 'lives_in', object: 'Beijing', confidence: 0.8,
     }],
-    ['unknown predicate', {
-      subject: 'Alice', predicate: 'invented', object: 'Beijing', confidence: 0.8, source_span: 'evidence',
-    }],
   ])('rejects %s', (scenario, invalid) => {
     const value = JSON.parse(payload({
       subject: 'Alice', predicate: 'lives_in', object: 'Beijing', confidence: 0.8, source_span: 'evidence',
     }));
-    if (scenario === 'unknown entity type') value.entities[0] = invalid;
-    else value.facts[0] = invalid;
+    value.facts[0] = invalid;
     expect(() => parseLlmExtractionResult(JSON.stringify(value))).toThrow();
+  });
+
+  it('normalizes isolated unknown domain labels without discarding the full response', () => {
+    const value = JSON.parse(payload({
+      subject: 'Alice', predicate: 'invented_predicate', object: 'Beijing', confidence: 0.8, source_span: 'evidence',
+    }));
+    value.entities[0].type = 'invented_entity_type';
+    const parsed = parseLlmExtractionResultDetailed(JSON.stringify(value));
+    expect(parsed.result.entities[0].type).toBe('concept');
+    expect(parsed.result.facts[0].predicate).toBe('relates_to');
+    expect(parsed.normalization).toEqual({
+      entity_types: [{ index: 0, from: 'invented_entity_type', to: 'concept' }],
+      predicates: [{ index: 0, from: 'invented_predicate', to: 'relates_to' }],
+    });
   });
 
   it('rejects temporal text that cannot be normalized', () => {

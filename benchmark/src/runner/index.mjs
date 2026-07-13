@@ -73,7 +73,7 @@ export function validateManifest(manifest) {
  */
 export async function ingestConversation(brainServerClient, conv, convId) {
   const sessions = getSessions(conv, { conversationId: convId, evaluationMode: true });
-  const result = { total_sessions: sessions.length, ingested: 0, failed: 0, errors: [], total_entities: 0, total_relationships: 0 };
+  const result = { total_sessions: sessions.length, ingested: 0, failed: 0, errors: [], total_entities: 0, total_relationships: 0, session_diagnostics: [] };
 
   for (const session of sessions) {
     try {
@@ -84,15 +84,43 @@ export async function ingestConversation(brainServerClient, conv, convId) {
         continue;
       }
       const source = `LoCoMo conv${convId} session${session.session_id}`;
-      const extractResult = await brainServerClient.extract(text, source);
+      const extractResult = await brainServerClient.extract(text, source, {
+        timestamp: session.parsed_timestamp,
+        sessionId: String(session.session_id),
+        evaluationMode: true,
+      });
       result.ingested++;
       result.total_entities += extractResult?.entities || 0;
       result.total_relationships += extractResult?.relationships || 0;
+      result.session_diagnostics.push({
+        session_id: session.session_id,
+        dataset_timestamp: {
+          raw_timestamp: session.raw_date_time,
+          parsed_timestamp: session.parsed_timestamp,
+          parser_version: session.parser_version,
+          timezone_assumption: session.timezone_assumption,
+        },
+        input_characters: text.length,
+        status: 'completed',
+        ...extractResult?.diagnostics,
+      });
     } catch (err) {
       result.failed++;
       result.errors.push({
         session_id: session.session_id,
         error: err instanceof Error ? err.message : String(err),
+      });
+      result.session_diagnostics.push({
+        session_id: session.session_id,
+        dataset_timestamp: {
+          raw_timestamp: session.raw_date_time,
+          parsed_timestamp: session.parsed_timestamp,
+          parser_version: session.parser_version,
+          timezone_assumption: session.timezone_assumption,
+        },
+        status: 'failed',
+        error: err instanceof Error ? err.message : String(err),
+        response: err?.responseBody,
       });
     }
     // Small delay to avoid overwhelming the Brain Server
@@ -493,12 +521,18 @@ async function runQuestions({
       if (ingestion?.status !== 'completed') {
         console.log(`[benchmark] Ingesting conversation ${convId}...`);
         const ingestResult = await ingestConversation(brainServerClient, conv, convId);
+        const diagnosticsPath = path.join(conversationDirectory(runDir, convId), 'extraction-diagnostics.jsonl');
+        await writeFile(
+          diagnosticsPath,
+          ingestResult.session_diagnostics.map((entry) => JSON.stringify(entry)).join('\n') + '\n',
+        );
         const ingestionRecord = {
           schema_version: 1,
           conversation_id: Number(convId),
           status: ingestResult.failed === 0 ? 'completed' : 'failed',
           completed_at: new Date().toISOString(),
           ...ingestResult,
+          session_diagnostics: undefined,
         };
         await writeFile(ingestionPath, `${JSON.stringify(ingestionRecord, null, 2)}\n`);
         console.log(`[benchmark] Ingestion complete: ${ingestResult.ingested}/${ingestResult.total_sessions} sessions, ` +

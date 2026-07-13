@@ -32,6 +32,16 @@ export interface ResolutionResult {
   relationshipsToCreate: Relationship[];
   idMap: Record<string, string>;
   mergeCandidates: MergeCandidate[];
+  diagnostics: {
+    input_entities: number;
+    batch_entities: number;
+    created: number;
+    updated: number;
+    auto_merged: number;
+    candidate_merge: number;
+    rejected: number;
+    rejected_relationships: number;
+  };
 }
 
 const AUTO_SEMANTIC_TYPES = new Set<EntityType>(['tool', 'architecture_pattern']);
@@ -407,12 +417,19 @@ export async function resolveEntities(
   }
   const relationshipsToCreate: Relationship[] = [];
   const seenRelationships = new Set<string>();
+  let rejectedRelationships = 0;
   for (const relationship of relationships) {
     const sourceId = resolvedIdMap[relationship.source_id] || relationship.source_id;
     const targetId = resolvedIdMap[relationship.target_id] || relationship.target_id;
-    if (sourceId === targetId) continue;
+    if (sourceId === targetId) {
+      rejectedRelationships++;
+      continue;
+    }
     const key = `${sourceId}:${relationship.type}:${targetId}`;
-    if (seenRelationships.has(key)) continue;
+    if (seenRelationships.has(key)) {
+      rejectedRelationships++;
+      continue;
+    }
     seenRelationships.add(key);
     relationshipsToCreate.push({ ...relationship, source_id: sourceId, target_id: targetId });
   }
@@ -423,6 +440,16 @@ export async function resolveEntities(
     relationshipsToCreate,
     idMap: resolvedIdMap,
     mergeCandidates,
+    diagnostics: {
+      input_entities: entities.length,
+      batch_entities: batch.length,
+      created: newEntities.length + queuedEntityIds.size,
+      updated: updates.size,
+      auto_merged: aliases.length,
+      candidate_merge: mergeCandidates.length,
+      rejected: 0,
+      rejected_relationships: rejectedRelationships,
+    },
   };
 }
 

@@ -48,9 +48,16 @@ describe('chunked GraphRAG extraction', () => {
   });
 
   it('reports a failed LLM chunk instead of presenting partial extraction as complete', async () => {
-    const spy = vi.spyOn(LLMExtractorPipeline.prototype, 'extract').mockImplementation(async (text) => {
+    const spy = vi.spyOn(LLMExtractorPipeline.prototype, 'extractWithDiagnostics').mockImplementation(async (text) => {
       if (text.includes('FAIL_CHUNK')) throw new Error('fixture provider failure');
-      return { entities: [], facts: [], principles: [] };
+      return {
+        result: { entities: [], facts: [], principles: [] },
+        diagnostics: {
+          http_status: 200, raw_response_sha256: 'b'.repeat(64), finish_reason: 'stop', status: 'parsed' as const,
+          parsed_counts: { entities: 0, facts: 0, principles: 0 },
+          normalization: { entity_types: [], predicates: [] },
+        },
+      };
     });
     try {
       const extractor = new GraphRAGExtractor();
