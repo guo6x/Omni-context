@@ -84,6 +84,12 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt -- --check
         working-directory: desktop-daemon/src-tauri
+      - run: cargo check
+        working-directory: desktop-daemon/src-tauri
+      - run: cargo clippy --all-targets
+        working-directory: desktop-daemon/src-tauri
+      - run: cargo test
+        working-directory: desktop-daemon/src-tauri
 
   browser-extension:
     runs-on: ubuntu-latest
@@ -124,7 +130,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-fund --no-audit
+      - run: npm ci --no-fund --no-audit
         working-directory: benchmark
       - run: node --test tests/*.test.mjs
         working-directory: benchmark
@@ -144,3 +150,5 @@ jobs:
         working-directory: desktop-daemon
       - run: npm run build
         working-directory: desktop-daemon
+      - name: Check the native Tauri application
+        run: cargo check --manifest-path desktop-daemon/src-tauri/Cargo.toml

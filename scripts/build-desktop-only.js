@@ -4,6 +4,9 @@ const { execSync } = require('child_process');
 
 const ROOT_DIR = path.join(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist', 'desktop-only');
+const CARGO_TARGET_DIR = process.env.CARGO_TARGET_DIR
+  ? path.resolve(process.env.CARGO_TARGET_DIR)
+  : path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target');
 
 console.log('🚀 开始快速打包桌面应用（含 Brain Server 集成）...\n');
 console.log('ROOT_DIR:', ROOT_DIR);
@@ -104,14 +107,14 @@ try {
   console.log('   ⚠️ Linux 用户需要安装系统依赖');
   console.log('');
 
-  const releaseBrainServer = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target', 'release', 'brain-server');
-  const releaseBundle = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target', 'release', 'bundle');
+  const releaseBrainServer = path.join(CARGO_TARGET_DIR, 'release', 'brain-server');
+  const releaseBundle = path.join(CARGO_TARGET_DIR, 'release', 'bundle');
   fs.rmSync(releaseBrainServer, { recursive: true, force: true });
   fs.rmSync(releaseBundle, { recursive: true, force: true });
   
   execSync('npm run tauri:build -- --bundles nsis', { cwd: path.join(ROOT_DIR, 'desktop-daemon'), stdio: 'inherit' });
   
-  const tauriBundle = path.join(ROOT_DIR, 'desktop-daemon', 'src-tauri', 'target', 'release', 'bundle');
+  const tauriBundle = path.join(CARGO_TARGET_DIR, 'release', 'bundle');
   validateBrainServerBundle(releaseBrainServer, 'target/release/brain-server');
   if (fs.existsSync(tauriBundle)) {
     copyDir(tauriBundle, DIST_DIR);
