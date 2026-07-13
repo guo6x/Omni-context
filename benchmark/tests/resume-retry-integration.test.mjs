@@ -101,6 +101,7 @@ describe('real runner resume and retry state machine', () => {
     const beforeRecords = await recordsFor(initial.runDir);
     const beforeDb = JSON.parse(await readFile(path.join(initial.runDir, 'conversation-1', 'brain.db'), 'utf8'));
     assert.strictEqual(initialManifest.status, 'interrupted');
+    assert.strictEqual(initialManifest.statistics.interrupted, true);
     assert.strictEqual(initialManifest.statistics.completed_questions, 2);
     assert.strictEqual(beforeRecords.filter((record) => record.status === 'completed').length, 2);
 

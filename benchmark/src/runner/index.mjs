@@ -693,7 +693,7 @@ function manifestStatistics(stats) {
     errors: stats.errors,
     retry_records_this_invocation: stats.retries,
     skipped_completed: stats.skipped,
-    interrupted: stats.interrupted === true,
+    interrupted: stats.interrupted === true || isShutdownRequested(),
   };
 }
 
