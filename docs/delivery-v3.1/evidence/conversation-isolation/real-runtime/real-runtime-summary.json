@@ -1,0 +1,23 @@
+{
+  "command": "ConversationRuntime.start -> migrations -> /health -> /api/stats -> IPC shutdown",
+  "conversation_id": 1,
+  "health_ok": true,
+  "initial_database_stats": {
+    "entities": 0,
+    "relationships": 0,
+    "principles": 0,
+    "corePrinciples": 0,
+    "evidence": 0
+  },
+  "database_hash": "587223a82f5e041c3c2abe4ca4d7ae387f16e0c19c61cc1a3458b47a7a078f91",
+  "exit_code": 0,
+  "wal_present_after_shutdown": false,
+  "shm_present_after_shutdown": false,
+  "run_layout": [
+    "conversation-1/brain.db",
+    "conversation-1/server.log",
+    "conversation-1/server.pid",
+    "conversation-1/runtime.json",
+    "conversation-1/database-hash.txt"
+  ]
+}

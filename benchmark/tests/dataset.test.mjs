@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import {
   loadLoCoMo,
+  loadLoCoMoConversation,
   getConversation,
   getConversationQAs,
   getSessions,
@@ -89,6 +90,16 @@ test('loadLoCoMo rejects invalid format', async () => {
     () => loadLoCoMo(filePath),
     /must be a top-level array/
   );
+});
+
+test('loadLoCoMoConversation stops after Conversation 1 without parsing later content', async () => {
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'locomo-first-only-'));
+  const filePath = path.join(tmpDir, 'locomo10.json');
+  const first = JSON.stringify(OFFICIAL_FIXTURE[0]);
+  await writeFile(filePath, `[${first},THIS_HELDOUT_CONTENT_MUST_NOT_BE_PARSED`);
+  const conv1 = await loadLoCoMoConversation(filePath, 1);
+  assert.strictEqual(conv1.sample_id, 1);
+  assert.strictEqual(conv1.qa.length, 4);
 });
 
 test('getConversation returns conversation by 1-based index', () => {

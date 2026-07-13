@@ -14,8 +14,7 @@
  *   JUDGE_MODEL   — Model name for judge (optional, defaults to LLM_MODEL)
  *
  * Optional env vars:
- *   BRAIN_SERVER_URL   — Brain Server URL (default: http://127.0.0.1:3001)
- *   LOCAL_API_TOKEN    — Brain Server auth token
+ *   LOCAL_API_TOKEN    — Token inherited by each isolated Brain Server
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -26,7 +25,6 @@ import {
   retryErrors,
   requestShutdown,
 } from "./runner/index.mjs";
-import { BrainServerClient } from "./brain-server-client.mjs";
 import { LLMClient } from "./llm-client.mjs";
 
 const ROOT = path.resolve(
@@ -36,7 +34,7 @@ const ROOT = path.resolve(
 
 function usage() {
   console.error("Usage:");
-  console.error("  node src/cli.mjs dev [--dataset <path>] [--brain-server-url <url>]");
+  console.error("  node src/cli.mjs dev [--dataset <path>] [--brain-server-root <dir>]");
   console.error("  node src/cli.mjs resume --run-id <run_id> [--dataset <path>]");
   console.error("  node src/cli.mjs retry-errors --run-id <run_id> [--dataset <path>]");
   console.error("");
@@ -44,13 +42,13 @@ function usage() {
   console.error("  resume                    Resume an existing run by run-id.");
   console.error("  retry-errors              Retry only error questions from an existing run.");
   console.error("  --dataset <path>          Path to official locomo10.json (default: data/locomo10.json).");
-  console.error("  --brain-server-url <url>  Brain Server URL (default: http://127.0.0.1:3001).");
+  console.error("  --brain-server-root <dir> Root containing dist/api-server.js (default: ../brain-server).");
   console.error("  --runs <dir>              Directory for run results (default: runs/).");
   console.error("  --config <path>           Benchmark config file (default: config/default.json).");
   console.error("  --run-id <id>             Run ID to resume or retry (required for resume/retry-errors).");
   console.error("");
   console.error("Required env vars: LLM_API_URL, LLM_API_KEY, LLM_MODEL");
-  console.error("Optional env vars: JUDGE_MODEL, BRAIN_SERVER_URL, LOCAL_API_TOKEN");
+  console.error("Optional env vars: JUDGE_MODEL, LOCAL_API_TOKEN");
   process.exit(1);
 }
 
@@ -79,7 +77,7 @@ async function main() {
   };
 
   const datasetPath = getFlag("--dataset") || path.join(ROOT, "data", "locomo10.json");
-  const brainServerUrl = getFlag("--brain-server-url") || process.env.BRAIN_SERVER_URL || "http://127.0.0.1:3001";
+  const brainServerRoot = path.resolve(getFlag("--brain-server-root") || path.join(ROOT, "..", "brain-server"));
   const runsRoot = getFlag("--runs") || path.join(ROOT, "runs");
   const configPath = getFlag("--config") || path.join(ROOT, "config", "default.json");
   const runId = getFlag("--run-id");
@@ -113,18 +111,13 @@ async function main() {
     loadPrompt(path.join(ROOT, "prompts", "judge-v2.txt")),
   ]);
 
-  // Create real Brain Server client
-  const brainServerClient = new BrainServerClient({
-    baseUrl: brainServerUrl,
-    token: process.env.LOCAL_API_TOKEN || "",
-  });
-
   // Create real LLM client (never null)
   const llmClient = new LLMClient();
 
   console.log(`[benchmark] Mode: ${mode}`);
   console.log(`[benchmark] Dataset: ${datasetPath}`);
-  console.log(`[benchmark] Brain Server: ${brainServerUrl}`);
+  console.log(`[benchmark] Brain Server root: ${brainServerRoot}`);
+  console.log("[benchmark] Runtime: isolated process and database per conversation");
   console.log(`[benchmark] Answer model: ${llmClient.answerConfig.model}`);
   console.log(`[benchmark] Judge model: ${llmClient.judgeConfig.model}`);
 
@@ -140,7 +133,6 @@ async function main() {
     console.log("");
 
     result = await runBenchmark({
-      brainServerClient,
       llmClient,
       datasetPath,
       config,
@@ -150,13 +142,13 @@ async function main() {
       split,
       conversationIds,
       runsRoot,
+      brainServerRoot,
     });
   } else if (mode === "resume") {
     console.log(`[benchmark] Resuming run: ${runId}`);
     console.log("");
 
     result = await resumeBenchmark({
-      brainServerClient,
       llmClient,
       datasetPath,
       config,
@@ -165,13 +157,13 @@ async function main() {
       datasetManifest,
       runsRoot,
       runId,
+      brainServerRoot,
     });
   } else if (mode === "retry-errors") {
     console.log(`[benchmark] Retrying errors from run: ${runId}`);
     console.log("");
 
     result = await retryErrors({
-      brainServerClient,
       llmClient,
       datasetPath,
       config,
@@ -180,6 +172,7 @@ async function main() {
       datasetManifest,
       runsRoot,
       runId,
+      brainServerRoot,
     });
   }
 

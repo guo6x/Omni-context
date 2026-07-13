@@ -4,6 +4,7 @@ import initDatabase from './db/sqlite.js';
 import { createServer } from './api/routes.js';
 import { AgentLoop } from './agent/agent-loop.js';
 import { MemoryDecayScheduler } from './memory/decay-scheduler.js';
+import path from 'node:path';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -48,21 +49,31 @@ async function main() {
 
   server.listen(PORT, HOST, () => {
     console.log(`Omni-Context API Server running on http://${HOST}:${PORT}`);
-    console.log(`Database: ${DB_PATH}`);
+    const displayedDbPath = process.env.OMNI_EVALUATION_MODE === '1' ? path.basename(DB_PATH) : DB_PATH;
+    console.log(`Database: ${displayedDbPath}`);
   });
 
-  process.on('SIGINT', async () => {
-    console.log('\nShutting down...');
+  let shuttingDown = false;
+  const shutdown = async (reason: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`\nShutting down (${reason})...`);
     agentLoop.stop();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
     await db.close();
     process.exit(0);
-  });
+  };
 
-  process.on('SIGTERM', async () => {
-    console.log('\nShutting down...');
-    agentLoop.stop();
-    await db.close();
-    process.exit(0);
+  process.on('SIGINT', () => { void shutdown('SIGINT'); });
+  process.on('SIGTERM', () => { void shutdown('SIGTERM'); });
+  process.on('message', (message: unknown) => {
+    if (
+      process.env.OMNI_EVALUATION_MODE === '1' &&
+      message && typeof message === 'object' &&
+      (message as { type?: string }).type === 'omni-evaluation-shutdown'
+    ) {
+      void shutdown('evaluation IPC');
+    }
   });
 }
 

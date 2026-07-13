@@ -1,7 +1,7 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { computeComposite, validateJudgeOutput } from "../src/judge/schema.mjs";
@@ -62,6 +62,8 @@ describe("benchmark runner - infrastructure", () => {
     assert.ok(runDir);
     assert.strictEqual(manifest.split, "development");
     assert.strictEqual(manifest.status, "running");
+    await access(path.join(runDir, 'conversation-1', 'results.jsonl'));
+    await access(path.join(runDir, 'conversation-1', 'ingestion.json'));
   });
 
   it("prevents overwriting completed questions", async () => {

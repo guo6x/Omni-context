@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { open, readFile } from 'node:fs/promises';
 import { sha256File } from './integrity.mjs';
 
 /**
@@ -75,6 +75,86 @@ export async function loadLoCoMo(datasetPath) {
     'LoCoMo dataset must be a top-level array (official format) or an object with a conversations array. ' +
     `Got: ${typeof data} ${Array.isArray(data) ? `array[${data.length}]` : `keys=${Object.keys(data || {}).slice(0, 5).join(',')}`}`
   );
+}
+
+/**
+ * Load exactly one conversation from the official top-level array and stop reading
+ * as soon as that object closes. This keeps the development runner from materializing
+ * held-out conversations before the split guard authorizes them.
+ */
+export async function loadLoCoMoConversation(datasetPath, conversationId) {
+  const target = Number(conversationId);
+  if (!Number.isInteger(target) || target < 1) {
+    throw new Error(`Conversation ID must be a positive integer, got ${conversationId}`);
+  }
+
+  const handle = await open(datasetPath, 'r');
+  const buffer = Buffer.alloc(64 * 1024);
+  let sawArray = false;
+  let objectStarted = false;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let arrayIndex = 0;
+  let objectBytes = [];
+
+  try {
+    while (true) {
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, null);
+      if (!bytesRead) break;
+      for (let index = 0; index < bytesRead; index++) {
+        const byte = buffer[index];
+        if (!sawArray) {
+          if (byte === 0xef || byte === 0xbb || byte === 0xbf || isWhitespaceByte(byte)) continue;
+          if (byte !== 0x5b) {
+            // Legacy object format is development-only compatibility; it cannot
+            // provide the same early-stop guarantee as the official array.
+            await handle.close();
+            const dataset = await loadLoCoMo(datasetPath);
+            return getConversation(dataset, target);
+          }
+          sawArray = true;
+          continue;
+        }
+
+        if (!objectStarted) {
+          if (isWhitespaceByte(byte) || byte === 0x2c) continue;
+          if (byte === 0x5d) break;
+          if (byte !== 0x7b) throw new Error(`Invalid LoCoMo array item at conversation ${arrayIndex + 1}`);
+          objectStarted = true;
+          depth = 1;
+          objectBytes = [byte];
+          continue;
+        }
+
+        objectBytes.push(byte);
+        if (inString) {
+          if (escaped) escaped = false;
+          else if (byte === 0x5c) escaped = true;
+          else if (byte === 0x22) inString = false;
+        } else if (byte === 0x22) inString = true;
+        else if (byte === 0x7b || byte === 0x5b) depth++;
+        else if (byte === 0x7d || byte === 0x5d) {
+          depth--;
+          if (depth === 0) {
+            arrayIndex++;
+            if (arrayIndex === target) {
+              return JSON.parse(Buffer.from(objectBytes).toString('utf8'));
+            }
+            objectStarted = false;
+            objectBytes = [];
+          }
+        }
+      }
+    }
+  } finally {
+    await handle.close().catch(() => {});
+  }
+  throw new Error(`Conversation ${target} not found before end of official LoCoMo array`);
+}
+
+function isWhitespaceByte(byte) {
+  return byte === 0x20 || byte === 0x09 || byte === 0x0a || byte === 0x0d;
 }
 
 export async function verifyDatasetHash(datasetPath, expectedHash) {

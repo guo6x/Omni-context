@@ -2,13 +2,15 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { sha256, sha256File, configHash, stableStringify, assertEvaluationEmbeddingMode } from '../integrity.mjs';
-import { loadLoCoMo, verifyDatasetHash, getConversation, getConversationQAs, getSessions, formatSessionText, generateQuestionId, mapCategory, isAdversarial, isUnanswerable, LOCOMO_DATETIME_PARSER_VERSION, LOCOMO_TIMEZONE_ASSUMPTION } from '../dataset.mjs';
+import { loadLoCoMoConversation, verifyDatasetHash, getConversationQAs, getSessions, formatSessionText, generateQuestionId, mapCategory, isAdversarial, isUnanswerable, LOCOMO_DATETIME_PARSER_VERSION, LOCOMO_TIMEZONE_ASSUMPTION } from '../dataset.mjs';
 import { assertConversationAllowed } from '../splits.mjs';
 import {
   createRun, completedQuestionIds, appendQuestionRecord,
   errorQuestionIds, findRunDir, verifyResumeConfig, updateManifest, readRun,
+  initializeConversationRun,
 } from '../run-store.mjs';
 import { validateJudgeOutput, computeComposite, validateAllMetricsPresent } from '../judge/schema.mjs';
+import { createConversationRuntime, conversationDirectory } from '../conversation-runtime.mjs';
 
 // Global flag for SIGINT/SIGTERM safe shutdown
 let shutdownRequested = false;
@@ -264,7 +266,6 @@ export async function processQuestion({
  * Creates a NEW run directory. Use resumeBenchmark() to continue an existing run.
  */
 export async function runBenchmark({
-  brainServerClient,
   llmClient,
   datasetPath,
   config,
@@ -274,41 +275,33 @@ export async function runBenchmark({
   split,
   conversationIds,
   runsRoot,
+  runtimeFactory = createConversationRuntime,
+  brainServerRoot,
 }) {
-  if (!brainServerClient) throw new Error('brainServerClient is required (BrainServerClient instance)');
   if (!llmClient) throw new Error('llmClient is required (LLMClient instance) — null is forbidden');
-
-  // Pre-flight checks: Brain Server health, embedding status, DB writability
-  const preflight = await brainServerClient.preflight();
-  const embeddingStatus = {
-    mode: preflight.embeddingStatus.mode,
-    model: preflight.embeddingStatus.model,
-    available: preflight.embeddingStatus.healthy,
-    status: preflight.embeddingStatus.status,
-  };
-  assertEvaluationEmbeddingMode(embeddingStatus);
-
-  // Load dataset
-  const dataset = await loadLoCoMo(datasetPath);
   await verifyDatasetHash(datasetPath, datasetManifest.sha256);
 
   // Create run directory
   const runId = `${new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-')}-${randomUUID().slice(0, 8)}`;
   const runDir = path.join(runsRoot, runId);
   await mkdir(runDir, { recursive: true });
+  for (const conversationId of conversationIds) {
+    await initializeConversationRun(runDir, conversationId);
+  }
 
   // Write manifest
   const manifest = await buildManifest({
     datasetPath, config, answerPrompt, judgePrompt,
-    datasetManifest, split, conversationIds, runId, embeddingStatus,
+    datasetManifest, split, conversationIds, runId,
+    embeddingStatus: { mode: 'pending', model: 'pending', available: false, status: 'pending' },
   });
   validateManifest(manifest);
   await writeFile(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', { flag: 'wx' });
-  await writeFile(path.join(runDir, 'results.jsonl'), '', { flag: 'wx' });
 
   const stats = await runQuestions({
-    brainServerClient, llmClient, dataset, config, answerPrompt, judgePrompt,
-    split, conversationIds, runDir,
+    llmClient, datasetPath, config, answerPrompt, judgePrompt,
+    split, conversationIds, runDir, runtimeFactory, brainServerRoot,
+    resumeRuntime: false,
   });
 
   // Update manifest with completion status
@@ -331,7 +324,6 @@ export async function runBenchmark({
  * Does NOT re-ingest conversations (they're already in the Brain Server DB).
  */
 export async function resumeBenchmark({
-  brainServerClient,
   llmClient,
   datasetPath,
   config,
@@ -340,8 +332,9 @@ export async function resumeBenchmark({
   datasetManifest,
   runsRoot,
   runId,
+  runtimeFactory = createConversationRuntime,
+  brainServerRoot,
 }) {
-  if (!brainServerClient) throw new Error('brainServerClient is required');
   if (!llmClient) throw new Error('llmClient is required');
 
   const runDir = await findRunDir(runsRoot, runId);
@@ -350,25 +343,12 @@ export async function resumeBenchmark({
   // Verify config and prompt match the existing run
   verifyResumeConfig(manifest, config, answerPrompt);
 
-  // Pre-flight checks
-  const preflight = await brainServerClient.preflight();
-  const embeddingStatus = {
-    mode: preflight.embeddingStatus.mode,
-    model: preflight.embeddingStatus.model,
-    available: preflight.embeddingStatus.healthy,
-    status: preflight.embeddingStatus.status,
-  };
-  assertEvaluationEmbeddingMode(embeddingStatus);
-
-  // Load dataset
-  const dataset = await loadLoCoMo(datasetPath);
-
   // Resume: skip completed, re-run errors and remaining
   const stats = await runQuestions({
-    brainServerClient, llmClient, dataset, config, answerPrompt, judgePrompt,
+    llmClient, datasetPath, config, answerPrompt, judgePrompt,
     split: manifest.split,
     conversationIds: manifest.conversation_ids,
-    runDir,
+    runDir, runtimeFactory, brainServerRoot, resumeRuntime: true,
   });
 
   const finalStatus = (stats.errors > 0 || stats.skipped > 0) && stats.done < stats.total ? 'partial' : 'completed';
@@ -386,7 +366,6 @@ export async function resumeBenchmark({
  * Re-runs each error question with full retry/backoff logic.
  */
 export async function retryErrors({
-  brainServerClient,
   llmClient,
   datasetPath,
   config,
@@ -395,8 +374,9 @@ export async function retryErrors({
   datasetManifest,
   runsRoot,
   runId,
+  runtimeFactory = createConversationRuntime,
+  brainServerRoot,
 }) {
-  if (!brainServerClient) throw new Error('brainServerClient is required');
   if (!llmClient) throw new Error('llmClient is required');
 
   const runDir = await findRunDir(runsRoot, runId);
@@ -405,15 +385,6 @@ export async function retryErrors({
   // Verify config and prompt match
   verifyResumeConfig(manifest, config, answerPrompt);
 
-  // Pre-flight checks
-  const preflight = await brainServerClient.preflight();
-  assertEvaluationEmbeddingMode({
-    mode: preflight.embeddingStatus.mode,
-    model: preflight.embeddingStatus.model,
-    available: preflight.embeddingStatus.healthy,
-  });
-
-  const dataset = await loadLoCoMo(datasetPath);
   const errorIds = await errorQuestionIds(runDir);
 
   if (errorIds.size === 0) {
@@ -428,22 +399,35 @@ export async function retryErrors({
   let retries = 0;
 
   for (const convId of manifest.conversation_ids) {
-    const conv = getConversation(dataset, convId);
-    const qas = getConversationQAs(dataset, convId);
+    assertConversationAllowed({ split: manifest.split, conversationId: convId });
+    const conv = await loadLoCoMoConversation(datasetPath, convId);
+    const qas = getConversationQAs(null, conv);
+    const targetQuestions = qas.filter((qa, qi) => errorIds.has(generateQuestionId(convId, qa, qi)));
+    if (targetQuestions.length === 0) continue;
 
-    for (let qi = 0; qi < qas.length; qi++) {
-      const qa = qas[qi];
-      const qid = generateQuestionId(convId, qa, qi);
+    const runtime = await runtimeFactory({ runDir, conversationId: convId, resume: true, brainServerRoot });
+    await runtime.start();
+    try {
+      const brainServerClient = runtime.client;
+      await assertRuntimePreflight(brainServerClient, runDir, convId);
+      for (let qi = 0; qi < qas.length; qi++) {
+        const qa = qas[qi];
+        const qid = generateQuestionId(convId, qa, qi);
 
-      if (!errorIds.has(qid)) continue;
+        if (!errorIds.has(qid)) continue;
 
-      const result = await processQuestion({
-        brainServerClient, llmClient, qa, qid, convId,
-        config, answerPrompt, judgePrompt, runDir,
-      });
+        const result = await processQuestion({
+          brainServerClient, llmClient, qa, qid, convId,
+          config, answerPrompt, judgePrompt, runDir,
+        });
 
-      if (result.status === 'completed') done++;
-      else errors++;
+        if (result.status === 'completed') done++;
+        else errors++;
+        retries += result.record.answer_retry_count + result.record.judge_retry_count;
+      }
+    } finally {
+      const stopped = await runtime.stop();
+      await recordRuntimeResult(runDir, convId, stopped);
     }
   }
 
@@ -466,15 +450,17 @@ export async function retryErrors({
  * Skips already-completed questions (resume support).
  */
 async function runQuestions({
-  brainServerClient,
   llmClient,
-  dataset,
+  datasetPath,
   config,
   answerPrompt,
   judgePrompt,
   split,
   conversationIds,
   runDir,
+  runtimeFactory,
+  brainServerRoot,
+  resumeRuntime,
 }) {
   const completed = await completedQuestionIds(runDir);
 
@@ -487,56 +473,121 @@ async function runQuestions({
   for (const convId of conversationIds) {
     assertConversationAllowed({ split, conversationId: convId });
 
-    const conv = getConversation(dataset, convId);
-    const qas = getConversationQAs(dataset, convId);
+    const conv = await loadLoCoMoConversation(datasetPath, convId);
+    const qas = getConversationQAs(null, conv);
     total += qas.length;
 
-    // Only ingest if this conversation has no completed questions yet
-    // (on resume, already-ingested conversations are skipped)
-    const convHasCompleted = qas.some((qa, qi) => completed.has(generateQuestionId(convId, qa, qi)));
-    if (!convHasCompleted) {
-      console.log(`[benchmark] Ingesting conversation ${convId}...`);
-      const ingestResult = await ingestConversation(brainServerClient, conv, convId);
-      console.log(`[benchmark] Ingestion complete: ${ingestResult.ingested}/${ingestResult.total_sessions} sessions, ` +
-        `${ingestResult.total_entities} entities, ${ingestResult.total_relationships} relationships, ` +
-        `${ingestResult.failed} failed`);
-    } else {
-      console.log(`[benchmark] Conversation ${convId} already ingested, skipping ingestion.`);
-    }
+    const runtime = await runtimeFactory({
+      runDir,
+      conversationId: convId,
+      resume: resumeRuntime,
+      brainServerRoot,
+    });
+    await runtime.start();
 
-    for (let qi = 0; qi < qas.length; qi++) {
-      const qa = qas[qi];
-      const qid = generateQuestionId(convId, qa, qi);
-
-      // Skip already-completed questions (resume support)
-      if (completed.has(qid)) {
-        skipped++;
-        continue;
-      }
-
-      if (isShutdownRequested()) {
-        console.log('[benchmark] Shutdown requested, stopping safely...');
-        break;
-      }
-
-      const result = await processQuestion({
-        brainServerClient, llmClient, qa, qid, convId,
-        config, answerPrompt, judgePrompt, runDir,
-      });
-
-      if (result.status === 'completed') {
-        done++;
-        const acc = result.record.metrics?.binary_accuracy === 1;
-        if (done % 10 === 0 || qi === qas.length - 1) {
-          console.log(`[benchmark] ${qid} [${done}/${total}] ${acc ? 'PASS' : 'FAIL'} (retrieval: ${result.record.retrieval_count}, ${result.record.retrieval_latency_ms}ms)`);
+    try {
+      const brainServerClient = runtime.client;
+      await assertRuntimePreflight(brainServerClient, runDir, convId);
+      const ingestionPath = path.join(conversationDirectory(runDir, convId), 'ingestion.json');
+      const ingestion = await readJson(ingestionPath);
+      if (ingestion?.status !== 'completed') {
+        console.log(`[benchmark] Ingesting conversation ${convId}...`);
+        const ingestResult = await ingestConversation(brainServerClient, conv, convId);
+        const ingestionRecord = {
+          schema_version: 1,
+          conversation_id: Number(convId),
+          status: ingestResult.failed === 0 ? 'completed' : 'failed',
+          completed_at: new Date().toISOString(),
+          ...ingestResult,
+        };
+        await writeFile(ingestionPath, `${JSON.stringify(ingestionRecord, null, 2)}\n`);
+        console.log(`[benchmark] Ingestion complete: ${ingestResult.ingested}/${ingestResult.total_sessions} sessions, ` +
+          `${ingestResult.total_entities} entities, ${ingestResult.total_relationships} relationships, ` +
+          `${ingestResult.failed} failed`);
+        if (ingestResult.failed > 0) {
+          throw new Error(`Conversation ${convId} ingestion failed for ${ingestResult.failed} sessions`);
         }
       } else {
-        errors++;
+        console.log(`[benchmark] Conversation ${convId} already ingested, reusing its isolated database.`);
       }
+
+      for (let qi = 0; qi < qas.length; qi++) {
+        const qa = qas[qi];
+        const qid = generateQuestionId(convId, qa, qi);
+
+        // Skip already-completed questions (resume support)
+        if (completed.has(qid)) {
+          skipped++;
+          continue;
+        }
+
+        if (isShutdownRequested()) {
+          console.log('[benchmark] Shutdown requested, stopping safely...');
+          break;
+        }
+
+        const result = await processQuestion({
+          brainServerClient, llmClient, qa, qid, convId,
+          config, answerPrompt, judgePrompt, runDir,
+        });
+
+        retries += result.record.answer_retry_count + result.record.judge_retry_count;
+        if (result.status === 'completed') {
+          done++;
+          const acc = result.record.metrics?.binary_accuracy === 1;
+          if (done % 10 === 0 || qi === qas.length - 1) {
+            console.log(`[benchmark] ${qid} [${done}/${total}] ${acc ? 'PASS' : 'FAIL'} (retrieval: ${result.record.retrieval_count}, ${result.record.retrieval_latency_ms}ms)`);
+          }
+        } else {
+          errors++;
+        }
+      }
+    } finally {
+      const stopped = await runtime.stop();
+      await recordRuntimeResult(runDir, convId, stopped);
     }
 
     if (isShutdownRequested()) break;
   }
 
   return { total, done, errors, retries, skipped };
+}
+
+async function assertRuntimePreflight(brainServerClient, runDir, conversationId) {
+  if (!brainServerClient) throw new Error(`Conversation ${conversationId} runtime did not expose a BrainServerClient`);
+  const preflight = await brainServerClient.preflight();
+  const embeddingStatus = {
+    mode: preflight.embeddingStatus.mode,
+    model: preflight.embeddingStatus.model,
+    available: preflight.embeddingStatus.healthy,
+    status: preflight.embeddingStatus.status,
+  };
+  assertEvaluationEmbeddingMode(embeddingStatus);
+  const { manifest } = await readRun(runDir);
+  await updateManifest(runDir, {
+    embedding_status: manifest.embedding_status?.status === 'pending' ? embeddingStatus : manifest.embedding_status,
+    embedding_by_conversation: {
+      ...(manifest.embedding_by_conversation || {}),
+      [conversationId]: embeddingStatus,
+    },
+  });
+  return preflight;
+}
+
+async function recordRuntimeResult(runDir, conversationId, stopped) {
+  const { manifest } = await readRun(runDir);
+  await updateManifest(runDir, {
+    conversation_databases: {
+      ...(manifest.conversation_databases || {}),
+      [conversationId]: {
+        relative_path: `conversation-${conversationId}/brain.db`,
+        sha256: stopped.databaseHash,
+        stopped_cleanly: stopped.exitCode === 0 || stopped.exitCode === 'SIGTERM',
+      },
+    },
+  });
+}
+
+async function readJson(filePath) {
+  try { return JSON.parse(await readFile(filePath, 'utf8')); } catch { return null; }
 }

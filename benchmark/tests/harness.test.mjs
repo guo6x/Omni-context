@@ -34,7 +34,7 @@ test('run store checkpoints, resumes, and refuses completed overwrite', async ()
   });
   assert.deepEqual([...await completedQuestionIds(runDir)], ['c1-q1']);
   await assert.rejects(() => appendQuestionRecord(runDir, { question_id: 'c1-q1', status: 'completed' }), /overwrite/);
-  const lines = (await readFile(path.join(runDir, 'results.jsonl'), 'utf8')).trim().split('\n');
+  const lines = (await readFile(path.join(runDir, 'conversation-1', 'results.jsonl'), 'utf8')).trim().split('\n');
   assert.equal(lines.length, 2);
 });
 

@@ -1,7 +1,8 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { computeStatistics, computeComposite } from './judge/schema.mjs';
+import { readRun } from './run-store.mjs';
 
 /**
  * Recompute all metrics from JSONL records.
@@ -12,8 +13,7 @@ export function recomputeMetrics(records) {
 }
 
 export async function recomputeRun(runDir) {
-  const raw = await readFile(path.join(runDir, 'results.jsonl'), 'utf8');
-  const records = raw.split(/\r?\n/).filter(Boolean).map(JSON.parse);
+  const { records } = await readRun(runDir);
   const metrics = {
     recomputed_at: new Date().toISOString(),
     ...recomputeMetrics(records),
