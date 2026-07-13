@@ -2,6 +2,8 @@
 
 Status: `FIXED`
 
+Implementation commit: `568c9a1acb596e2110d1f8b11e899bc89e35c7a6`
+
 ## Production entry change
 
 The benchmark CLI no longer accepts `--brain-server-url` or `BRAIN_SERVER_URL`. A formal run cannot silently connect to a desktop/shared Brain Server. The production runner creates and owns one `ConversationRuntime` per authorized conversation.
