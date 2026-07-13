@@ -146,7 +146,7 @@ export async function allRecordedQuestionIds(runDir) {
  * Verify that the config and prompt hashes match the existing manifest.
  * Rejects resume if commit, prompt, or config differ.
  */
-export function verifyResumeConfig(manifest, config, answerPrompt) {
+export function verifyResumeConfig(manifest, config, answerPrompt, judgePrompt) {
   const expectedConfigHash = configHash(config);
   const expectedPromptHash = sha256(answerPrompt);
   if (manifest.config_hash !== expectedConfigHash) {
@@ -159,6 +159,13 @@ export function verifyResumeConfig(manifest, config, answerPrompt) {
     throw new Error(
       `Prompt mismatch: manifest has ${manifest.prompt_hash} but current prompt is ${expectedPromptHash}. ` +
       'Resume requires the same answer prompt.'
+    );
+  }
+  const expectedJudgePromptHash = sha256(judgePrompt);
+  if (manifest.judge_prompt_hash !== expectedJudgePromptHash) {
+    throw new Error(
+      `Judge prompt mismatch: manifest has ${manifest.judge_prompt_hash} but current prompt is ${expectedJudgePromptHash}. ` +
+      'Resume requires the same judge prompt.'
     );
   }
 }

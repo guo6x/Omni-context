@@ -26,6 +26,11 @@ import {
   requestShutdown,
 } from "./runner/index.mjs";
 import { LLMClient } from "./llm-client.mjs";
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { loadAndVerifyEvaluationAuthorization } from './evaluation-authorization.mjs';
+
+const execFileAsync = promisify(execFile);
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -46,6 +51,7 @@ function usage() {
   console.error("  --runs <dir>              Directory for run results (default: runs/).");
   console.error("  --config <path>           Benchmark config file (default: config/default.json).");
   console.error("  --run-id <id>             Run ID to resume or retry (required for resume/retry-errors).");
+  console.error("  --authorization-manifest  Freeze authorization manifest required for heldout mode.");
   console.error("");
   console.error("Required env vars: LLM_API_URL, LLM_API_KEY, LLM_MODEL");
   console.error("Optional env vars: JUDGE_MODEL, LOCAL_API_TOKEN");
@@ -81,6 +87,7 @@ async function main() {
   const runsRoot = getFlag("--runs") || path.join(ROOT, "runs");
   const configPath = getFlag("--config") || path.join(ROOT, "config", "default.json");
   const runId = getFlag("--run-id");
+  const authorizationManifestPath = getFlag('--authorization-manifest');
 
   // Validate env vars
   if (!process.env.LLM_API_URL && !process.env.LLM_API_KEY && !process.env.LLM_MODEL) {
@@ -110,6 +117,18 @@ async function main() {
     loadPrompt(path.join(ROOT, "prompts", "answer-v1.txt")),
     loadPrompt(path.join(ROOT, "prompts", "judge-v2.txt")),
   ]);
+  let evaluationAuthorization;
+  if (mode === 'heldout') {
+    const { stdout } = await execFileAsync('git', ['-C', ROOT, 'rev-parse', 'HEAD']);
+    evaluationAuthorization = await loadAndVerifyEvaluationAuthorization({
+      manifestPath: authorizationManifestPath,
+      currentCommit: stdout.trim(),
+      config,
+      answerPrompt,
+      judgePrompt,
+      datasetPath,
+    });
+  }
 
   // Create real LLM client (never null)
   const llmClient = new LLMClient();
@@ -143,6 +162,7 @@ async function main() {
       conversationIds,
       runsRoot,
       brainServerRoot,
+      evaluationAuthorization,
     });
   } else if (mode === "resume") {
     console.log(`[benchmark] Resuming run: ${runId}`);

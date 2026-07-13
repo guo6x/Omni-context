@@ -74,7 +74,7 @@ describe("metric rubric - judge output validation", () => {
   const valid = {
     binary_accuracy: 1, factual_score: 0.7, temporal_score: 0.9,
     contextual_score: 0.6, abstention_accuracy: 1.0,
-    evidence_precision: 0.5, stale_memory_leakage: 0.1,
+    claim_evaluations: [{ claim_index: 0, evidence_id: 'a1', verdict: 'supports', used_in_answer: true }],
     rationale: "Correct answer",
   };
 
@@ -101,7 +101,9 @@ describe("metric rubric - judge output validation", () => {
   });
 
   it("validateAllMetricsPresent catches all issues", () => {
-    assert.doesNotThrow(() => validateAllMetricsPresent(valid));
+    assert.doesNotThrow(() => validateAllMetricsPresent({
+      ...valid, evidence_precision: 0.5, stale_memory_leakage: 0.1,
+    }));
     assert.throws(() => validateAllMetricsPresent({}), /Missing/);
     assert.throws(() => validateAllMetricsPresent({
       binary_accuracy: 2, factual_score: 0, temporal_score: 0,

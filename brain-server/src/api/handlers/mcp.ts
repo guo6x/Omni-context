@@ -42,7 +42,7 @@ import {
 } from '../../mcp-retrieval.js';
 import { createAuditedAiFetch } from '../../security/audited-ai-fetch.js';
 import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from '../../retrieval/config.js';
-import { temporalOptsFromQuery, filterEntitiesByTemporal } from '../../retrieval/temporal-layer.js';
+import { parseTemporalQuery, temporalOptsFromQuery, filterEntitiesByTemporal } from '../../retrieval/temporal-layer.js';
 
 const CORE_PRINCIPLE_CAP = 3;
 const mcpLlmFetch = createAuditedAiFetch({ purpose: 'api.decision-intelligence', kind: 'llm' });
@@ -262,12 +262,18 @@ async function retrieveGraphContext(
 
 interface GroundingEvidence {
   id: string;
-  kind: 'entity' | 'assertion';
+  type: 'entity' | 'assertion';
   subjectId?: string;
   predicate?: string;
   objectId?: string;
   literalValue?: string;
   confidence: number;
+  source_span: string | null;
+  temporal_status: 'current' | 'historical';
+  valid_from: string | null;
+  valid_until: string | null;
+  invalidated_at: string | null;
+  provenance: Record<string, unknown> | null;
 }
 
 interface GroundingEnvelope {
@@ -297,21 +303,37 @@ async function buildGroundingEnvelope(
     entitySources.slice(0, 10).map((source) => ctx.db.getAssertions({ subjectId: source.id, limit: 8 })),
   );
   const assertions = assertionGroups.flat().slice(0, 30);
+  const now = Date.now();
+  const isPast = (value?: string) => value ? Date.parse(value) <= now : false;
   const entityEvidence: GroundingEvidence[] = entitySources.slice(0, 12).map((source) => ({
     id: source.id!,
-    kind: 'entity',
+    type: 'entity',
     confidence: Number.isFinite(source.similarity) ? Math.max(0, Math.min(1, Number(source.similarity))) : 0.6,
+    source_span: null,
+    temporal_status: 'current',
+    valid_from: null,
+    valid_until: null,
+    invalidated_at: null,
+    provenance: null,
   }));
   const assertionEvidence: GroundingEvidence[] = assertions.map((assertion: Assertion) => ({
     id: assertion.id,
-    kind: 'assertion',
+    type: 'assertion',
     subjectId: assertion.subject_id,
     predicate: assertion.predicate,
     objectId: assertion.object_id,
     literalValue: assertion.literal_value,
     confidence: assertion.confidence,
+    source_span: assertion.source_span ?? null,
+    temporal_status: isPast(assertion.invalidated_at) || isPast(assertion.valid_until) ? 'historical' : 'current',
+    valid_from: assertion.valid_from ?? null,
+    valid_until: assertion.valid_until ?? null,
+    invalidated_at: assertion.invalidated_at ?? null,
+    provenance: assertion.provenance ?? null,
   }));
-  const evidence = [...assertionEvidence, ...entityEvidence];
+  // Assertions carry claim-level provenance and are the formal evidence unit.
+  // Entity fallback is permitted only when the retrieved entities have no assertions.
+  const evidence = assertionEvidence.length > 0 ? assertionEvidence : entityEvidence;
   const confidence = evidence.reduce((sum, item) => sum + item.confidence, 0) / evidence.length;
 
   return {
@@ -1261,6 +1283,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
 
             // 时间感知过滤：根据查询中的时间词，剔除已失效事实（"现在"/"当时"/"去年"等）
             const umsTemporalOpts = temporalOptsFromQuery(parsed.query);
+            const umsTemporalQuery = parseTemporalQuery(parsed.query);
             const umsTemporallyFiltered = filterEntitiesByTemporal(unified, umsTemporalOpts);
 
             // 宽召回后 LLM 重排，挑出真正相关的（救弱 embedding 的中文召回）
@@ -1283,6 +1306,11 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
 
             result = {
               results: ranked.map(toCompactEntity),
+              evidence: (await buildGroundingEnvelope(ctx, ranked)).evidence,
+              temporalQuery: {
+                mode: umsTemporalQuery.mode,
+                as_of: umsTemporalQuery.asOf || null,
+              },
               graphContext,
               searchMethods: {
                 text: resultsData.textResults.length,

@@ -15,14 +15,23 @@ export const JudgeMetricsSchema = z.object({
   rationale: z.string().min(1),
 });
 
+export const ClaimEvaluationSchema = z.object({
+  claim_index: z.number().int().min(0),
+  evidence_id: z.string().min(1),
+  verdict: z.enum(['supports', 'irrelevant', 'contradicts']),
+  used_in_answer: z.boolean(),
+}).strict();
+
+// The LLM judge scores semantic answer quality and classifies cited support.
+// evidence_precision and stale_memory_leakage are intentionally absent: the
+// runner computes them deterministically from citations, validity and adoption.
 export const JudgeOutputSchema = z.object({
   binary_accuracy: binaryAccuracy,
   factual_score: z.number().min(0).max(1),
   temporal_score: z.number().min(0).max(1),
   contextual_score: z.number().min(0).max(1),
   abstention_accuracy: z.number().min(0).max(1),
-  evidence_precision: z.number().min(0).max(1),
-  stale_memory_leakage: z.number().min(0).max(1),
+  claim_evaluations: z.array(ClaimEvaluationSchema),
   rationale: z.string().min(1),
 }).strict();
 

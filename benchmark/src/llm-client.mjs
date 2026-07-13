@@ -74,28 +74,34 @@ export class LLMClient {
    * @returns {Promise<{answer: string, latencyMs: number}>}
    */
   async answer(question, retrieval, prompt) {
-    const results = retrieval?.results || [];
-    const context = results.length > 0
-      ? results.map((r, i) => `[${i + 1}] ${r.name || 'Unknown'} (${r.type || 'entity'}): ${r.description || ''}`).join('\n')
-      : '(No relevant memories retrieved)';
+    const evidence = retrieval?.evidence || [];
+    const context = evidence.length > 0 ? JSON.stringify(evidence, null, 2) : '[]';
 
     const messages = [
       { role: 'system', content: prompt },
       {
         role: 'user',
-        content: `## Retrieved Memories\n${context}\n\n## Question\n${question}\n\n## Instructions\nAnswer the question using ONLY the retrieved memories above. If the memories do not contain enough information, say "I don't know". Be concise.`,
+        content: `## Evidence\n${context}\n\n## Temporal Query\n${JSON.stringify(retrieval?.temporalQuery || { mode: 'current', as_of: null })}\n\n## Question\n${question}\n\n## Instructions\nReturn only the strict JSON object required by the system prompt. Every evidence_ids entry must be copied exactly from the Evidence list.`,
       },
     ];
 
     const start = Date.now();
-    const answerText = await this.chat({
+    const rawAnswerResponse = await this.chat({
       ...this.answerConfig,
       messages,
       temperature: 0.3,
-      maxTokens: 512,
+      maxTokens: 1024,
+      responseFormat: { type: 'json_object' },
     });
     const latencyMs = Date.now() - start;
-    return { answer: answerText, latencyMs };
+    const cleaned = rawAnswerResponse.replace(/```(?:json)?\s*\n?([\s\S]*?)\n?```/g, '$1').trim();
+    let structuredAnswer;
+    try {
+      structuredAnswer = JSON.parse(cleaned);
+    } catch (parseErr) {
+      throw new Error(`Answer output is not valid JSON: ${parseErr.message}\nRaw: ${cleaned.slice(0, 300)}`);
+    }
+    return { answer: structuredAnswer.answer, structuredAnswer, rawAnswerResponse, latencyMs };
   }
 
   /**
@@ -112,9 +118,13 @@ export class LLMClient {
         content: JSON.stringify({
           question: input.question,
           reference_answer: input.reference_answer,
-          candidate_answer: input.candidate_answer,
-          evidence_count: input.evidence?.length || 0,
+          structured_answer: input.structured_answer,
+          evidence: input.evidence,
+          reference_evidence: input.reference_evidence,
+          temporal_query: input.temporal_query,
           subset: input.subset,
+          answerable: input.answerable,
+          adversarial: input.adversarial,
         }, null, 2),
       },
     ];

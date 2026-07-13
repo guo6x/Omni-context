@@ -15,10 +15,17 @@ const METRICS = {
   temporal_score: 1,
   contextual_score: 1,
   abstention_accuracy: 1,
-  evidence_precision: 1,
-  stale_memory_leakage: 0,
+  claim_evaluations: [{ claim_index: 0, evidence_id: 'extracted-1', verdict: 'supports', used_in_answer: true }],
   rationale: 'deterministic integration fixture',
 };
+
+function healthyAnswer(answer = 'fixture') {
+  const structuredAnswer = {
+    answer, claims: [{ text: answer, evidence_ids: ['extracted-1'] }],
+    abstained: false, abstention_reason: null,
+  };
+  return { answer, structuredAnswer, rawAnswerResponse: JSON.stringify(structuredAnswer), latencyMs: 1 };
+}
 
 function runtimeFactory(options) {
   return new ConversationRuntime({
@@ -81,7 +88,7 @@ describe('real runner resume and retry state machine', () => {
       async answer(_question) {
         answerCalls++;
         if (answerCalls === 2) requestShutdown();
-        return { answer: 'fixture', latencyMs: 1 };
+        return healthyAnswer();
       },
       async judge() { return healthyJudge(); },
     };
@@ -100,7 +107,7 @@ describe('real runner resume and retry state machine', () => {
     let resumedAnswers = 0;
     const resumed = await resumeBenchmark({
       llmClient: {
-        async answer() { resumedAnswers++; return { answer: 'fixture', latencyMs: 1 }; },
+        async answer() { resumedAnswers++; return healthyAnswer(); },
         async judge() { return healthyJudge(); },
       },
       datasetPath, config, answerPrompt: 'answer fixture', judgePrompt: 'judge fixture', datasetManifest,
@@ -125,7 +132,7 @@ describe('real runner resume and retry state machine', () => {
   it('retry-errors repairs only latest error questions and derives final status from all records', async () => {
     const failing = await runBenchmark({
       llmClient: {
-        async answer(question) { return { answer: question, latencyMs: 1 }; },
+        async answer(question) { return healthyAnswer(question); },
         async judge(input) {
           if (input.question === 'Question one?') throw new Error('injected judge outage');
           return healthyJudge();
@@ -142,7 +149,7 @@ describe('real runner resume and retry state machine', () => {
     let retriedAnswers = 0;
     const repaired = await retryErrors({
       llmClient: {
-        async answer(question) { retriedAnswers++; return { answer: question, latencyMs: 1 }; },
+        async answer(question) { retriedAnswers++; return healthyAnswer(question); },
         async judge() { return healthyJudge(); },
       },
       datasetPath, config, answerPrompt: 'answer fixture', judgePrompt: 'judge fixture', datasetManifest,
@@ -166,7 +173,7 @@ describe('real runner resume and retry state machine', () => {
     const retryConfig = { ...config, retry: { max_retries: 1, base_backoff_ms: 0 } };
     const result = await runBenchmark({
       llmClient: {
-        async answer(question) { return { answer: question, latencyMs: 1 }; },
+        async answer(question) { return healthyAnswer(question); },
         async judge() {
           judgeCalls++;
           if (judgeCalls === 1) throw new Error('single injected judge failure');

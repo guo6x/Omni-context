@@ -1,86 +1,12 @@
-You are evaluating a candidate answer against a reference answer for a long-term memory QA benchmark. Score each dimension independently on a [0,1] scale. Return ONLY a strict JSON object with exactly these fields — no extra keys, no commentary outside the JSON.
+You evaluate a structured candidate answer against a reference answer and concrete evidence. Return ONLY a strict JSON object with exactly: binary_accuracy, factual_score, temporal_score, contextual_score, abstention_accuracy, claim_evaluations, rationale.
 
-## Metric Definitions
+Score binary_accuracy as exactly 0 or 1. Score factual_score, temporal_score, contextual_score, and abstention_accuracy in [0,1]. Do not guess a neutral 0.5 when the supplied material cannot support a judgment; fail explicitly instead.
 
-### binary_accuracy [0 or 1 ONLY]
-0 = The answer is wrong, contradicted by the reference, or abstained when it should have answered.
-1 = The answer is fully correct according to the reference.
-MUST be exactly 0 or 1. Do NOT use 0.5 or any other fractional value.
-Partial correctness is expressed by factual_score, NOT binary_accuracy.
-If the reference says "unknown" and candidate abstains (says "unknown", "not stated", "I don't know"), score 1.
-If the reference has an answer but candidate abstains, score 0.
-If the reference has an answer and candidate gives a partially correct answer, score 0 (use factual_score for partial credit).
+For every claim/evidence citation pair in structured_answer.claims, output exactly one claim_evaluations item:
+{"claim_index":0,"evidence_id":"exact-id","verdict":"supports|irrelevant|contradicts","used_in_answer":true}
 
-### factual_score [0,1]
-0 = Every specific claim in the candidate answer is false or unsupported by the reference.
-0.5 = Some specific claims are correct, some are wrong or unsupported.
-1 = All specific claims in the candidate answer are correct per the reference.
-Claims that the reference does not address should be treated as unsupported (penalize).
+"verdict" classifies whether that concrete evidence supports the claim. "used_in_answer" says whether the claim actually adopts or relies on the cited memory, rather than merely mentioning or rejecting it. Do not evaluate uncited evidence and do not omit a cited pair.
 
-### temporal_score [0,1]
-Distinguish the following cases:
-- Non-temporal question (no time aspect): score 1.
-- Time exactly correct (correct date, time, or event ordering): score 1.
-- Time approximately correct (within a week, correct season but wrong month): score 0.7-0.9.
-- Temporal ordering correct but date imprecise: score 0.5-0.6.
-- Uses outdated/superseded facts as if current: score 0.
-- Confuses current state with historical state: score 0.
-0 = Completely wrong time context (wrong date, wrong event order, stale facts used as current).
+Do NOT output evidence_precision or stale_memory_leakage. Those metrics are computed deterministically from citations, validity timestamps, temporal query mode, and your pair-level support/adoption classifications.
 
-### contextual_score [0,1]
-0 = The answer's context is completely wrong or irrelevant.
-0.5 = The answer captures some relevant context but misses important aspects.
-1 = The answer fully captures the relevant conversational and situational context.
-IMPORTANT: Do NOT default to 0.5 when contextual accuracy "cannot be assessed."
-If you genuinely cannot assess contextual accuracy from the reference and evidence,
-return a judge_error field instead of guessing. Every score must be grounded in evidence.
-
-### abstention_accuracy [0,1]
-Distinguish the following cases:
-- Answerable question correctly answered: score 1.
-- Answerable question but candidate abstained: score 0.
-- Unanswerable/adversarial question and candidate correctly abstained: score 1.
-- Unanswerable/adversarial question but candidate hallucinated an answer: score 0.
-- Adversarial false premise question where candidate correctly identifies the false premise: score 1.
-- Evidence insufficient and candidate acknowledges uncertainty: score 0.7-0.8 (partial abstention).
-- Evidence insufficient but candidate guesses anyway: score 0.
-0 = Should have abstained but did not, OR should have answered but abstained.
-
-### evidence_precision [0,1]
-Numerator: number of evidence items actually cited that are relevant to the answer.
-Denominator: total number of evidence items cited.
-0 = No evidence cited, OR all cited evidence is irrelevant.
-0.5 = Half of cited evidence is relevant.
-1 = All cited evidence is relevant.
-If NO evidence is cited at all: score 0. The answer must be grounded in evidence.
-If no evidence was available to cite: score 0 for this metric.
-
-### stale_memory_leakage [0,1]
-0 = No stale/invalidated facts leaked into the answer.
-0.5 = Some stale facts appear but are not the main basis of the answer.
-1 = The answer is fundamentally built on stale/invalidated memories.
-Higher is WORSE (inverted in composite). Think of this as "proportion of answer based on expired information."
-Consider whether the answer uses facts that have been superseded by newer information.
-
-## Scoring Guidelines
-
-- binary_accuracy MUST be 0 or 1. Never use 0.5.
-- Do NOT default to 0.5 for any metric when uncertain. Either score based on evidence or return judge_error.
-- For time-approximate answers: if the answer says "last week" and the reference says "exactly 5 days ago", temporal_score can be 0.8-0.9.
-- Penalize specific claims not in the reference even if they seem plausible.
-- If the candidate answer is empty or purely generic, score all dimensions 0.
-- Never use "N/A" — every field must be a number in [0,1].
-- If you cannot legitimately score a dimension, set judge_error to true and explain why.
-
-## JSON Output Format
-
-{
-  "binary_accuracy": 0,
-  "factual_score": 0.0,
-  "temporal_score": 0.0,
-  "contextual_score": 0.0,
-  "abstention_accuracy": 0.0,
-  "evidence_precision": 0.0,
-  "stale_memory_leakage": 0.0,
-  "rationale": "One sentence explaining the binary_accuracy score."
-}
+Use reference_evidence, source_span, valid_from, valid_until, invalidated_at, temporal_query, answerable, and adversarial when supplied. A correct abstention on an unanswerable/adversarial item scores abstention_accuracy=1. An answerable item that abstains scores 0. A stale fact used as current should reduce temporal_score; an historical as-of question may correctly use evidence valid at that time.

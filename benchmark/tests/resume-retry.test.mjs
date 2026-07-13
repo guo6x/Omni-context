@@ -33,7 +33,7 @@ describe("resume and retry - run-store functions", () => {
   });
 
   async function makeRun(config = {}, prompt = "test prompt") {
-    return createRun({
+    const created = await createRun({
       runsRoot: tmpDir,
       split: "development",
       dataset: { name: "LoCoMo", sha256: "test" },
@@ -43,6 +43,8 @@ describe("resume and retry - run-store functions", () => {
       prompt,
       embeddingStatus: { mode: "local", model: "test", available: true },
     });
+    created.manifest.judge_prompt_hash = sha256(prompt);
+    return created;
   }
 
   it("errorQuestionIds returns only questions whose latest record is error", async () => {
@@ -126,7 +128,7 @@ describe("resume and retry - run-store functions", () => {
     const { runDir, manifest } = await makeRun(config, prompt);
 
     // Should not throw
-    verifyResumeConfig(manifest, config, prompt);
+    verifyResumeConfig(manifest, config, prompt, prompt);
   });
 
   it("verifyResumeConfig rejects mismatched config", async () => {
@@ -136,7 +138,7 @@ describe("resume and retry - run-store functions", () => {
 
     const changedConfig = { retrieval: { top_k: 20 } };
     assert.throws(
-      () => verifyResumeConfig(manifest, changedConfig, prompt),
+      () => verifyResumeConfig(manifest, changedConfig, prompt, prompt),
       /Config mismatch/
     );
   });
@@ -148,8 +150,18 @@ describe("resume and retry - run-store functions", () => {
 
     const changedPrompt = "answer differently";
     assert.throws(
-      () => verifyResumeConfig(manifest, config, changedPrompt),
+      () => verifyResumeConfig(manifest, config, changedPrompt, originalPrompt),
       /Prompt mismatch/
+    );
+  });
+
+  it("verifyResumeConfig rejects mismatched judge prompt", async () => {
+    const config = { retrieval: { top_k: 10 } };
+    const prompt = "answer the question";
+    const { manifest } = await makeRun(config, prompt);
+    assert.throws(
+      () => verifyResumeConfig(manifest, config, prompt, "different judge"),
+      /Judge prompt mismatch/
     );
   });
 

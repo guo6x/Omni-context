@@ -59,7 +59,14 @@ const server = createServer(async (req, res) => {
     return;
   }
   if (req.method === 'POST' && req.url === '/api/mcp/tool/unified_memory_search') {
-    res.end(JSON.stringify({ results: entities.map(({ id, name }) => ({ id, name, type: 'entity', description: name })) }));
+    res.end(JSON.stringify({
+      results: entities.map(({ id, name }) => ({ id, name, type: 'entity', description: name })),
+      evidence: entities.map(({ id }) => ({
+        id, type: 'entity', source_span: null, temporal_status: 'current',
+        valid_from: null, valid_until: null, invalidated_at: null, provenance: null,
+      })),
+      temporalQuery: { mode: 'current', as_of: null },
+    }));
     return;
   }
   if (req.method === 'POST' && req.url === '/entities') {

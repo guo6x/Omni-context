@@ -10,6 +10,8 @@ import {
   initializeConversationRun,
 } from '../run-store.mjs';
 import { validateJudgeOutput, computeComposite, validateAllMetricsPresent } from '../judge/schema.mjs';
+import { normalizeEvidence, validateStructuredAnswer } from '../answer/schema.mjs';
+import { computeGroundingMetrics } from '../metrics/grounding.mjs';
 import { createConversationRuntime, conversationDirectory } from '../conversation-runtime.mjs';
 
 // Global flag for SIGINT/SIGTERM safe shutdown
@@ -24,7 +26,7 @@ const DEFAULT_BASE_BACKOFF_MS = 1000;
 const MANIFEST_REQUIRED_FIELDS = [
   'dataset_hash', 'dataset_source_commit', 'benchmark_commit', 'brain_server_commit',
   'answer_model', 'judge_model', 'embedding_model', 'embedding_status',
-  'prompt_hash', 'config_hash', 'node_version', 'os', 'split',
+  'prompt_hash', 'judge_prompt_hash', 'config_hash', 'node_version', 'os', 'split',
   'datetime_parser_version', 'datetime_timezone_assumption',
   'conversation_ids', 'run_id', 'started_at',
 ];
@@ -44,6 +46,7 @@ export async function buildManifest({
     embedding_model: embeddingStatus.model || 'unknown',
     embedding_status: embeddingStatus,
     prompt_hash: sha256(answerPrompt),
+    judge_prompt_hash: sha256(judgePrompt),
     config_hash: configHash(config),
     datetime_parser_version: LOCOMO_DATETIME_PARSER_VERSION,
     datetime_timezone_assumption: LOCOMO_TIMEZONE_ASSUMPTION,
@@ -188,10 +191,13 @@ export async function processQuestion({
       const retrievalLatency = Date.now() - retrievalStart;
 
       // 2. Generate answer via LLM
-      let candidateAnswer, answerLatency;
+      const evidence = normalizeEvidence(retrieval);
+      let candidateAnswer, structuredAnswer, rawAnswerResponse, answerLatency;
       try {
         const answerResult = await llmClient.answer(qa.question, retrieval, answerPrompt);
-        candidateAnswer = answerResult.answer;
+        structuredAnswer = validateStructuredAnswer(answerResult.structuredAnswer, evidence);
+        candidateAnswer = structuredAnswer.answer;
+        rawAnswerResponse = answerResult.rawAnswerResponse;
         answerLatency = answerResult.latencyMs;
       } catch (answerErr) {
         answerRetryCount++;
@@ -204,9 +210,13 @@ export async function processQuestion({
         const judgeInput = {
           question: qa.question,
           reference_answer: String(qa.answer || ''),
-          candidate_answer: candidateAnswer,
-          evidence: retrieval?.results || [],
+          structured_answer: structuredAnswer,
+          evidence,
+          reference_evidence: qa.evidence || qa.supporting_evidence || [],
+          temporal_query: retrieval?.temporalQuery || { mode: 'current', as_of: null },
           subset,
+          answerable: !isUnanswerable(qa),
+          adversarial,
         };
         const judgeOutput = await llmClient.judge(judgeInput, judgePrompt);
         judgeResult = validateJudgeOutput(judgeOutput.metrics);
@@ -217,8 +227,24 @@ export async function processQuestion({
         throw new Error(`Judge failed: ${judgeErr.message}`);
       }
 
-      // 4. Validate all metrics present (missing metric → error)
-      validateAllMetricsPresent(judgeResult);
+      // 4. Compute citation validity/precision and stale adoption deterministically.
+      const groundingMetrics = computeGroundingMetrics({
+        answer: structuredAnswer,
+        evidence,
+        claimEvaluations: judgeResult.claim_evaluations,
+        temporalQuery: retrieval?.temporalQuery || { mode: 'current', as_of: null },
+        evaluatedAt: new Date().toISOString(),
+      });
+      const metrics = {
+        binary_accuracy: judgeResult.binary_accuracy,
+        factual_score: judgeResult.factual_score,
+        temporal_score: judgeResult.temporal_score,
+        contextual_score: judgeResult.contextual_score,
+        abstention_accuracy: judgeResult.abstention_accuracy,
+        evidence_precision: groundingMetrics.evidence_precision,
+        stale_memory_leakage: groundingMetrics.stale_memory_leakage,
+      };
+      validateAllMetricsPresent(metrics);
 
       // Success — save completed record
       const record = {
@@ -231,10 +257,17 @@ export async function processQuestion({
         question: qa.question,
         reference_answer: qa.answer,
         candidate_answer: candidateAnswer,
+        structured_answer: structuredAnswer,
+        raw_answer_response: rawAnswerResponse,
         retrieval_count: retrieval?.results?.length || 0,
-        evidence_ids: retrieval?.results?.map((e) => e.id).filter(Boolean) || [],
+        evidence,
+        evidence_ids: evidence.map((item) => item.id),
+        temporal_query: retrieval?.temporalQuery || { mode: 'current', as_of: null },
         judge_raw: judgeRawResponse,
-        metrics: judgeResult,
+        judge_semantic_scores: judgeResult,
+        evidence_counts: groundingMetrics.evidence_counts,
+        stale_counts: groundingMetrics.stale_counts,
+        metrics,
         retrieval_latency_ms: retrievalLatency,
         answer_latency_ms: answerLatency,
         judge_latency_ms: judgeLatency,
@@ -310,9 +343,13 @@ export async function runBenchmark({
   runsRoot,
   runtimeFactory = createConversationRuntime,
   brainServerRoot,
+  evaluationAuthorization,
 }) {
   clearShutdownRequest();
   if (!llmClient) throw new Error('llmClient is required (LLMClient instance) — null is forbidden');
+  if (split === 'heldout' && !evaluationAuthorization) {
+    throw new Error('Held-out run requires a verified evaluation authorization manifest.');
+  }
   await verifyDatasetHash(datasetPath, datasetManifest.sha256);
 
   // Create run directory
@@ -329,6 +366,9 @@ export async function runBenchmark({
     datasetManifest, split, conversationIds, runId,
     embeddingStatus: { mode: 'pending', model: 'pending', available: false, status: 'pending' },
   });
+  if (split === 'heldout') {
+    manifest.evaluation_authorization = evaluationAuthorization;
+  }
   validateManifest(manifest);
   await writeFile(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', { flag: 'wx' });
 
@@ -336,6 +376,7 @@ export async function runBenchmark({
     llmClient, datasetPath, config, answerPrompt, judgePrompt,
     split, conversationIds, runDir, runtimeFactory, brainServerRoot,
     resumeRuntime: false,
+    heldoutAuthorization: evaluationAuthorization?.authorization,
   });
 
   // Update manifest with completion status
@@ -375,9 +416,10 @@ export async function resumeBenchmark({
 
   const runDir = await findRunDir(runsRoot, runId);
   const { manifest } = await readRun(runDir);
+  await verifyDatasetHash(datasetPath, manifest.dataset_hash);
 
   // Verify config and prompt match the existing run
-  verifyResumeConfig(manifest, config, answerPrompt);
+  verifyResumeConfig(manifest, config, answerPrompt, judgePrompt);
 
   // Resume: skip completed, re-run errors and remaining
   const stats = await runQuestions({
@@ -385,6 +427,7 @@ export async function resumeBenchmark({
     split: manifest.split,
     conversationIds: manifest.conversation_ids,
     runDir, runtimeFactory, brainServerRoot, resumeRuntime: true,
+    heldoutAuthorization: manifest.evaluation_authorization?.authorization,
   });
 
   const finalStatus = stats.errors > 0 || stats.done + stats.skipped < stats.total ? 'partial' : 'completed';
@@ -420,9 +463,10 @@ export async function retryErrors({
 
   const runDir = await findRunDir(runsRoot, runId);
   const { manifest } = await readRun(runDir);
+  await verifyDatasetHash(datasetPath, manifest.dataset_hash);
 
   // Verify config and prompt match
-  verifyResumeConfig(manifest, config, answerPrompt);
+  verifyResumeConfig(manifest, config, answerPrompt, judgePrompt);
 
   const errorIds = await errorQuestionIds(runDir);
 
@@ -438,7 +482,11 @@ export async function retryErrors({
   let retries = 0;
 
   for (const convId of manifest.conversation_ids) {
-    assertConversationAllowed({ split: manifest.split, conversationId: convId });
+    assertConversationAllowed({
+      split: manifest.split,
+      conversationId: convId,
+      heldoutAuthorization: manifest.evaluation_authorization?.authorization,
+    });
     const conv = await loadLoCoMoConversation(datasetPath, convId);
     const qas = getConversationQAs(null, conv);
     const targetQuestions = qas.filter((qa, qi) => errorIds.has(generateQuestionId(convId, qa, qi)));
@@ -506,6 +554,7 @@ async function runQuestions({
   runtimeFactory,
   brainServerRoot,
   resumeRuntime,
+  heldoutAuthorization,
 }) {
   const completed = await completedQuestionIds(runDir);
 
@@ -517,7 +566,7 @@ async function runQuestions({
   let interrupted = false;
 
   for (const convId of conversationIds) {
-    assertConversationAllowed({ split, conversationId: convId });
+    assertConversationAllowed({ split, conversationId: convId, heldoutAuthorization });
 
     const conv = await loadLoCoMoConversation(datasetPath, convId);
     const qas = getConversationQAs(null, conv);

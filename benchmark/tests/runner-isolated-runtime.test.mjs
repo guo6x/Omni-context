@@ -37,7 +37,13 @@ describe('production runner owns an isolated conversation runtime', () => {
   it('creates the required run layout, closes the process, and hashes the DB', async () => {
     const datasetHash = await sha256File(datasetPath);
     const llmClient = {
-      async answer() { return { answer: 'Shanghai', latencyMs: 1 }; },
+      async answer() {
+        const structuredAnswer = {
+          answer: 'Shanghai', claims: [{ text: 'Alice lives in Shanghai.', evidence_ids: ['extracted-1'] }],
+          abstained: false, abstention_reason: null,
+        };
+        return { answer: 'Shanghai', structuredAnswer, rawAnswerResponse: JSON.stringify(structuredAnswer), latencyMs: 1 };
+      },
       async judge() {
         return {
           metrics: {
@@ -46,8 +52,7 @@ describe('production runner owns an isolated conversation runtime', () => {
             temporal_score: 1,
             contextual_score: 1,
             abstention_accuracy: 1,
-            evidence_precision: 1,
-            stale_memory_leakage: 0,
+            claim_evaluations: [{ claim_index: 0, evidence_id: 'extracted-1', verdict: 'supports', used_in_answer: true }],
             rationale: 'fixture answer is exact',
           },
           latencyMs: 1,
