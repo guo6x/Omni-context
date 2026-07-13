@@ -1,0 +1,1508 @@
+
+> omni-context-benchmark-harness@0.1.1 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: per-conversation isolated Brain Server runtime
+    # Subtest: gives Conversation A and B different ports, DBs, logs, and PID files
+    ok 1 - gives Conversation A and B different ports, DBs, logs, and PID files
+      ---
+      duration_ms: 725.6911
+      type: 'test'
+      ...
+    # Subtest: does not expose Conversation A entity or count in Conversation B
+    ok 2 - does not expose Conversation A entity or count in Conversation B
+      ---
+      duration_ms: 15.1636
+      type: 'test'
+      ...
+    # Subtest: stops safely, records database hashes, and resumes the original DB
+    ok 3 - stops safely, records database hashes, and resumes the original DB
+      ---
+      duration_ms: 367.6672
+      type: 'test'
+      ...
+    # Subtest: refuses a new run over an existing conversation database
+    ok 4 - refuses a new run over an existing conversation database
+      ---
+      duration_ms: 14.2428
+      type: 'test'
+      ...
+    # Subtest: cleans a recorded orphan before reconnecting the original database
+    ok 5 - cleans a recorded orphan before reconnecting the original database
+      ---
+      duration_ms: 546.4289
+      type: 'test'
+      ...
+    # Subtest: refuses resume when the original conversation database is absent
+    ok 6 - refuses resume when the original conversation database is absent
+      ---
+      duration_ms: 2.4837
+      type: 'test'
+      ...
+    1..6
+ok 1 - per-conversation isolated Brain Server runtime
+  ---
+  duration_ms: 1742.8045
+  type: 'suite'
+  ...
+# Subtest: loadLoCoMo parses official top-level array format
+ok 2 - loadLoCoMo parses official top-level array format
+  ---
+  duration_ms: 11.9999
+  type: 'test'
+  ...
+# Subtest: loadLoCoMo rejects invalid format
+ok 3 - loadLoCoMo rejects invalid format
+  ---
+  duration_ms: 7.169
+  type: 'test'
+  ...
+# Subtest: loadLoCoMoConversation stops after Conversation 1 without parsing later content
+ok 4 - loadLoCoMoConversation stops after Conversation 1 without parsing later content
+  ---
+  duration_ms: 6.9383
+  type: 'test'
+  ...
+# Subtest: getConversation returns conversation by 1-based index
+ok 5 - getConversation returns conversation by 1-based index
+  ---
+  duration_ms: 0.2964
+  type: 'test'
+  ...
+# Subtest: getConversation throws for out-of-range index
+ok 6 - getConversation throws for out-of-range index
+  ---
+  duration_ms: 0.2137
+  type: 'test'
+  ...
+# Subtest: getSessions extracts sessions in chronological order
+ok 7 - getSessions extracts sessions in chronological order
+  ---
+  duration_ms: 11.7544
+  type: 'test'
+  ...
+# Subtest: getSessions parses date_time into ISO timestamp
+ok 8 - getSessions parses date_time into ISO timestamp
+  ---
+  duration_ms: 0.4928
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: SQL timestamp
+ok 9 - parseLoCoMoDateTime: SQL timestamp
+  ---
+  duration_ms: 0.147
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: ISO local timestamp
+ok 10 - parseLoCoMoDateTime: ISO local timestamp
+  ---
+  duration_ms: 0.3588
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: ISO Z timestamp
+ok 11 - parseLoCoMoDateTime: ISO Z timestamp
+  ---
+  duration_ms: 0.4792
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: ISO milliseconds
+ok 12 - parseLoCoMoDateTime: ISO milliseconds
+  ---
+  duration_ms: 0.1442
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: ISO positive offset
+ok 13 - parseLoCoMoDateTime: ISO positive offset
+  ---
+  duration_ms: 0.2413
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: ISO compact offset
+ok 14 - parseLoCoMoDateTime: ISO compact offset
+  ---
+  duration_ms: 0.0866
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: date only ISO
+ok 15 - parseLoCoMoDateTime: date only ISO
+  ---
+  duration_ms: 0.0537
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: official pm format
+ok 16 - parseLoCoMoDateTime: official pm format
+  ---
+  duration_ms: 0.3841
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: official am format
+ok 17 - parseLoCoMoDateTime: official am format
+  ---
+  duration_ms: 0.1759
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: midnight 12 am
+ok 18 - parseLoCoMoDateTime: midnight 12 am
+  ---
+  duration_ms: 0.0611
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: noon 12 pm
+ok 19 - parseLoCoMoDateTime: noon 12 pm
+  ---
+  duration_ms: 0.062
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: January abbreviation
+ok 20 - parseLoCoMoDateTime: January abbreviation
+  ---
+  duration_ms: 0.0639
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: February full
+ok 21 - parseLoCoMoDateTime: February full
+  ---
+  duration_ms: 0.0512
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: March abbreviation with period
+ok 22 - parseLoCoMoDateTime: March abbreviation with period
+  ---
+  duration_ms: 0.0518
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: April full
+ok 23 - parseLoCoMoDateTime: April full
+  ---
+  duration_ms: 0.0456
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: June abbreviation
+ok 24 - parseLoCoMoDateTime: June abbreviation
+  ---
+  duration_ms: 0.0759
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: July full
+ok 25 - parseLoCoMoDateTime: July full
+  ---
+  duration_ms: 0.045
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: August abbreviation
+ok 26 - parseLoCoMoDateTime: August abbreviation
+  ---
+  duration_ms: 0.0405
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: September sept abbreviation
+ok 27 - parseLoCoMoDateTime: September sept abbreviation
+  ---
+  duration_ms: 0.0385
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: October full
+ok 28 - parseLoCoMoDateTime: October full
+  ---
+  duration_ms: 0.0426
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: November abbreviation
+ok 29 - parseLoCoMoDateTime: November abbreviation
+  ---
+  duration_ms: 0.0396
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: December full
+ok 30 - parseLoCoMoDateTime: December full
+  ---
+  duration_ms: 0.0348
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: day-first date only
+ok 31 - parseLoCoMoDateTime: day-first date only
+  ---
+  duration_ms: 0.2144
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: month-first date only
+ok 32 - parseLoCoMoDateTime: month-first date only
+  ---
+  duration_ms: 0.1389
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime: leap day
+ok 33 - parseLoCoMoDateTime: leap day
+  ---
+  duration_ms: 0.0535
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime documents UTC for timezone-less timestamps
+ok 34 - parseLoCoMoDateTime documents UTC for timezone-less timestamps
+  ---
+  duration_ms: 0.0885
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime reports session and raw value on invalid input
+ok 35 - parseLoCoMoDateTime reports session and raw value on invalid input
+  ---
+  duration_ms: 0.3844
+  type: 'test'
+  ...
+# Subtest: parseLoCoMoDateTime fails fast in evaluation mode
+ok 36 - parseLoCoMoDateTime fails fast in evaluation mode
+  ---
+  duration_ms: 0.2383
+  type: 'test'
+  ...
+# Subtest: getSessions sorts by parsed time and warns when it conflicts with numbering
+ok 37 - getSessions sorts by parsed time and warns when it conflicts with numbering
+  ---
+  duration_ms: 0.8302
+  type: 'test'
+  ...
+# Subtest: getSessions persists parser metadata on every session
+ok 38 - getSessions persists parser metadata on every session
+  ---
+  duration_ms: 0.1484
+  type: 'test'
+  ...
+# Subtest: getSessions handles conversation without sessions
+ok 39 - getSessions handles conversation without sessions
+  ---
+  duration_ms: 0.1381
+  type: 'test'
+  ...
+# Subtest: getConversationQAs returns qa array from conversation
+ok 40 - getConversationQAs returns qa array from conversation
+  ---
+  duration_ms: 0.1106
+  type: 'test'
+  ...
+# Subtest: getConversationQAs accepts conversation object directly
+ok 41 - getConversationQAs accepts conversation object directly
+  ---
+  duration_ms: 0.0688
+  type: 'test'
+  ...
+# Subtest: getSpeakers returns speaker names
+ok 42 - getSpeakers returns speaker names
+  ---
+  duration_ms: 0.3305
+  type: 'test'
+  ...
+# Subtest: formatSessionText formats turns with speaker names and date anchors
+ok 43 - formatSessionText formats turns with speaker names and date anchors
+  ---
+  duration_ms: 0.2066
+  type: 'test'
+  ...
+# Subtest: formatSessionText handles speaker B correctly
+ok 44 - formatSessionText handles speaker B correctly
+  ---
+  duration_ms: 0.1105
+  type: 'test'
+  ...
+# Subtest: mapCategory maps category numbers to names
+ok 45 - mapCategory maps category numbers to names
+  ---
+  duration_ms: 0.0882
+  type: 'test'
+  ...
+# Subtest: isAdversarial identifies category 5
+ok 46 - isAdversarial identifies category 5
+  ---
+  duration_ms: 0.0978
+  type: 'test'
+  ...
+# Subtest: isUnanswerable identifies questions with no evidence and unknown answer
+ok 47 - isUnanswerable identifies questions with no evidence and unknown answer
+  ---
+  duration_ms: 0.1053
+  type: 'test'
+  ...
+# Subtest: generateQuestionId produces stable IDs
+ok 48 - generateQuestionId produces stable IDs
+  ---
+  duration_ms: 0.101
+  type: 'test'
+  ...
+# Subtest: getConversationCount returns array length
+ok 49 - getConversationCount returns array length
+  ---
+  duration_ms: 0.1551
+  type: 'test'
+  ...
+# Subtest: CATEGORY_MAP has all 5 categories
+ok 50 - CATEGORY_MAP has all 5 categories
+  ---
+  duration_ms: 0.0756
+  type: 'test'
+  ...
+# Subtest: full pipeline: load fixture -> parse sessions -> format text
+ok 51 - full pipeline: load fixture -> parse sessions -> format text
+  ---
+  duration_ms: 29.9489
+  type: 'test'
+  ...
+# Subtest: held-out Evaluation Freeze v1 authorization wiring
+    # Subtest: accepts the exact authorization string and all frozen hashes
+    ok 1 - accepts the exact authorization string and all frozen hashes
+      ---
+      duration_ms: 4.0887
+      type: 'test'
+      ...
+    # Subtest: rejects changed freeze commit
+    ok 2 - rejects changed freeze commit
+      ---
+      duration_ms: 2.4666
+      type: 'test'
+      ...
+    # Subtest: rejects changed config
+    ok 3 - rejects changed config
+      ---
+      duration_ms: 1.2457
+      type: 'test'
+      ...
+    # Subtest: rejects changed answer prompt
+    ok 4 - rejects changed answer prompt
+      ---
+      duration_ms: 2.5097
+      type: 'test'
+      ...
+    # Subtest: rejects changed judge prompt
+    ok 5 - rejects changed judge prompt
+      ---
+      duration_ms: 1.4083
+      type: 'test'
+      ...
+    # Subtest: denies a held-out conversation without the verified authorization string
+    ok 6 - denies a held-out conversation without the verified authorization string
+      ---
+      duration_ms: 0.2888
+      type: 'test'
+      ...
+    1..6
+ok 52 - held-out Evaluation Freeze v1 authorization wiring
+  ---
+  duration_ms: 22.9652
+  type: 'suite'
+  ...
+# Subtest: development split is isolated and held-out is denied before freeze
+ok 53 - development split is isolated and held-out is denied before freeze
+  ---
+  duration_ms: 0.9568
+  type: 'test'
+  ...
+# Subtest: formal evaluation fails fast on hash fallback
+ok 54 - formal evaluation fails fast on hash fallback
+  ---
+  duration_ms: 0.2043
+  type: 'test'
+  ...
+# Subtest: run store checkpoints, resumes, and refuses completed overwrite
+ok 55 - run store checkpoints, resumes, and refuses completed overwrite
+  ---
+  duration_ms: 93.7771
+  type: 'test'
+  ...
+# Subtest: metrics are independently recomputed with named subsets and retries
+ok 56 - metrics are independently recomputed with named subsets and retries
+  ---
+  duration_ms: 1.0639
+  type: 'test'
+  ...
+# Subtest: judge calibration contract — 50 frozen cases
+    # Subtest: contains at least 50 calibration samples
+    ok 1 - contains at least 50 calibration samples
+      ---
+      duration_ms: 1.5203
+      type: 'test'
+      ...
+    # Subtest: fractional binary 0
+    ok 2 - fractional binary 0
+      ---
+      duration_ms: 2.0871
+      type: 'test'
+      ...
+    # Subtest: missing rationale 1
+    ok 3 - missing rationale 1
+      ---
+      duration_ms: 0.3122
+      type: 'test'
+      ...
+    # Subtest: extra deterministic metric 2
+    ok 4 - extra deterministic metric 2
+      ---
+      duration_ms: 0.474
+      type: 'test'
+      ...
+    # Subtest: invalid verdict 3
+    ok 5 - invalid verdict 3
+      ---
+      duration_ms: 0.3102
+      type: 'test'
+      ...
+    # Subtest: negative claim index 4
+    ok 6 - negative claim index 4
+      ---
+      duration_ms: 0.2062
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 5
+    ok 7 - valid semantic calibration 5
+      ---
+      duration_ms: 0.8831
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 6
+    ok 8 - valid semantic calibration 6
+      ---
+      duration_ms: 0.3129
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 7
+    ok 9 - valid semantic calibration 7
+      ---
+      duration_ms: 0.2986
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 8
+    ok 10 - valid semantic calibration 8
+      ---
+      duration_ms: 0.3397
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 9
+    ok 11 - valid semantic calibration 9
+      ---
+      duration_ms: 0.1454
+      type: 'test'
+      ...
+    # Subtest: fractional binary 10
+    ok 12 - fractional binary 10
+      ---
+      duration_ms: 0.1356
+      type: 'test'
+      ...
+    # Subtest: missing rationale 11
+    ok 13 - missing rationale 11
+      ---
+      duration_ms: 0.1047
+      type: 'test'
+      ...
+    # Subtest: extra deterministic metric 12
+    ok 14 - extra deterministic metric 12
+      ---
+      duration_ms: 0.092
+      type: 'test'
+      ...
+    # Subtest: invalid verdict 13
+    ok 15 - invalid verdict 13
+      ---
+      duration_ms: 0.1289
+      type: 'test'
+      ...
+    # Subtest: negative claim index 14
+    ok 16 - negative claim index 14
+      ---
+      duration_ms: 0.1065
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 15
+    ok 17 - valid semantic calibration 15
+      ---
+      duration_ms: 0.0887
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 16
+    ok 18 - valid semantic calibration 16
+      ---
+      duration_ms: 0.0691
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 17
+    ok 19 - valid semantic calibration 17
+      ---
+      duration_ms: 0.1418
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 18
+    ok 20 - valid semantic calibration 18
+      ---
+      duration_ms: 0.0771
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 19
+    ok 21 - valid semantic calibration 19
+      ---
+      duration_ms: 0.0795
+      type: 'test'
+      ...
+    # Subtest: fractional binary 20
+    ok 22 - fractional binary 20
+      ---
+      duration_ms: 0.1012
+      type: 'test'
+      ...
+    # Subtest: missing rationale 21
+    ok 23 - missing rationale 21
+      ---
+      duration_ms: 0.0625
+      type: 'test'
+      ...
+    # Subtest: extra deterministic metric 22
+    ok 24 - extra deterministic metric 22
+      ---
+      duration_ms: 0.0716
+      type: 'test'
+      ...
+    # Subtest: invalid verdict 23
+    ok 25 - invalid verdict 23
+      ---
+      duration_ms: 0.0641
+      type: 'test'
+      ...
+    # Subtest: negative claim index 24
+    ok 26 - negative claim index 24
+      ---
+      duration_ms: 0.0671
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 25
+    ok 27 - valid semantic calibration 25
+      ---
+      duration_ms: 0.0813
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 26
+    ok 28 - valid semantic calibration 26
+      ---
+      duration_ms: 0.0726
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 27
+    ok 29 - valid semantic calibration 27
+      ---
+      duration_ms: 0.0721
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 28
+    ok 30 - valid semantic calibration 28
+      ---
+      duration_ms: 0.1075
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 29
+    ok 31 - valid semantic calibration 29
+      ---
+      duration_ms: 0.0909
+      type: 'test'
+      ...
+    # Subtest: fractional binary 30
+    ok 32 - fractional binary 30
+      ---
+      duration_ms: 0.0927
+      type: 'test'
+      ...
+    # Subtest: missing rationale 31
+    ok 33 - missing rationale 31
+      ---
+      duration_ms: 0.0588
+      type: 'test'
+      ...
+    # Subtest: extra deterministic metric 32
+    ok 34 - extra deterministic metric 32
+      ---
+      duration_ms: 0.0674
+      type: 'test'
+      ...
+    # Subtest: invalid verdict 33
+    ok 35 - invalid verdict 33
+      ---
+      duration_ms: 0.0679
+      type: 'test'
+      ...
+    # Subtest: negative claim index 34
+    ok 36 - negative claim index 34
+      ---
+      duration_ms: 0.0591
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 35
+    ok 37 - valid semantic calibration 35
+      ---
+      duration_ms: 0.0692
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 36
+    ok 38 - valid semantic calibration 36
+      ---
+      duration_ms: 0.0615
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 37
+    ok 39 - valid semantic calibration 37
+      ---
+      duration_ms: 0.0605
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 38
+    ok 40 - valid semantic calibration 38
+      ---
+      duration_ms: 0.1151
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 39
+    ok 41 - valid semantic calibration 39
+      ---
+      duration_ms: 0.082
+      type: 'test'
+      ...
+    # Subtest: fractional binary 40
+    ok 42 - fractional binary 40
+      ---
+      duration_ms: 0.0892
+      type: 'test'
+      ...
+    # Subtest: missing rationale 41
+    ok 43 - missing rationale 41
+      ---
+      duration_ms: 0.0616
+      type: 'test'
+      ...
+    # Subtest: extra deterministic metric 42
+    ok 44 - extra deterministic metric 42
+      ---
+      duration_ms: 0.0639
+      type: 'test'
+      ...
+    # Subtest: invalid verdict 43
+    ok 45 - invalid verdict 43
+      ---
+      duration_ms: 0.064
+      type: 'test'
+      ...
+    # Subtest: negative claim index 44
+    ok 46 - negative claim index 44
+      ---
+      duration_ms: 0.0573
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 45
+    ok 47 - valid semantic calibration 45
+      ---
+      duration_ms: 0.064
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 46
+    ok 48 - valid semantic calibration 46
+      ---
+      duration_ms: 0.0544
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 47
+    ok 49 - valid semantic calibration 47
+      ---
+      duration_ms: 0.0999
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 48
+    ok 50 - valid semantic calibration 48
+      ---
+      duration_ms: 0.5474
+      type: 'test'
+      ...
+    # Subtest: valid semantic calibration 49
+    ok 51 - valid semantic calibration 49
+      ---
+      duration_ms: 0.2223
+      type: 'test'
+      ...
+    # Subtest: requires one strict pair-level classification shape
+    ok 52 - requires one strict pair-level classification shape
+      ---
+      duration_ms: 0.5236
+      type: 'test'
+      ...
+    1..52
+ok 57 - judge calibration contract — 50 frozen cases
+  ---
+  duration_ms: 13.6048
+  type: 'suite'
+  ...
+# Subtest: metric rubric - composite score
+    # Subtest: all 1 -> composite 1
+    ok 1 - all 1 -> composite 1
+      ---
+      duration_ms: 0.6838
+      type: 'test'
+      ...
+    # Subtest: all 0 and stale=1 -> composite 0
+    ok 2 - all 0 and stale=1 -> composite 0
+      ---
+      duration_ms: 0.1022
+      type: 'test'
+      ...
+    # Subtest: mixed values produce correct composite
+    ok 3 - mixed values produce correct composite
+      ---
+      duration_ms: 0.2037
+      type: 'test'
+      ...
+    # Subtest: stale leakage reduces composite correctly
+    ok 4 - stale leakage reduces composite correctly
+      ---
+      duration_ms: 0.1616
+      type: 'test'
+      ...
+    1..4
+ok 58 - metric rubric - composite score
+  ---
+  duration_ms: 1.9069
+  type: 'suite'
+  ...
+# Subtest: metric rubric - validation
+    # Subtest: rejects metrics out of [0,1] range
+    ok 1 - rejects metrics out of [0,1] range
+      ---
+      duration_ms: 0.4353
+      type: 'test'
+      ...
+    # Subtest: rejects missing metrics
+    ok 2 - rejects missing metrics
+      ---
+      duration_ms: 0.1231
+      type: 'test'
+      ...
+    # Subtest: rejects negative metrics
+    ok 3 - rejects negative metrics
+      ---
+      duration_ms: 0.1691
+      type: 'test'
+      ...
+    # Subtest: rejects stale_leakage > 1
+    ok 4 - rejects stale_leakage > 1
+      ---
+      duration_ms: 0.2929
+      type: 'test'
+      ...
+    1..4
+ok 59 - metric rubric - validation
+  ---
+  duration_ms: 1.3197
+  type: 'suite'
+  ...
+# Subtest: metric rubric - judge output validation
+    # Subtest: accepts valid judge output
+    ok 1 - accepts valid judge output
+      ---
+      duration_ms: 1.851
+      type: 'test'
+      ...
+    # Subtest: rejects judge output with missing fields
+    ok 2 - rejects judge output with missing fields
+      ---
+      duration_ms: 0.9351
+      type: 'test'
+      ...
+    # Subtest: rejects judge output with extra fields
+    ok 3 - rejects judge output with extra fields
+      ---
+      duration_ms: 0.4984
+      type: 'test'
+      ...
+    # Subtest: rejects non-numeric metric
+    ok 4 - rejects non-numeric metric
+      ---
+      duration_ms: 0.1815
+      type: 'test'
+      ...
+    # Subtest: validateAllMetricsPresent catches all issues
+    ok 5 - validateAllMetricsPresent catches all issues
+      ---
+      duration_ms: 0.3122
+      type: 'test'
+      ...
+    1..5
+ok 60 - metric rubric - judge output validation
+  ---
+  duration_ms: 3.9928
+  type: 'suite'
+  ...
+# Subtest: metric rubric - subset independence
+    # Subtest: answerable and adversarial can be independently computed
+    ok 1 - answerable and adversarial can be independently computed
+      ---
+      duration_ms: 0.14
+      type: 'test'
+      ...
+    1..1
+ok 61 - metric rubric - subset independence
+  ---
+  duration_ms: 0.2075
+  type: 'suite'
+  ...
+# [benchmark] Ingesting conversation 1...
+# [benchmark] Ingestion complete: 1/1 sessions, 1 entities, 0 relationships, 0 failed
+# [benchmark] Shutdown requested, stopping safely...
+# [benchmark] Conversation 1 already ingested, reusing its isolated database.
+# [benchmark] conv1-q2 [1/3] PASS (retrieval: 1, 3ms)
+# Subtest: real runner resume and retry state machine
+    # Subtest: resumes the same run/database without re-ingestion or duplicate completed records
+    ok 1 - resumes the same run/database without re-ingestion or duplicate completed records
+      ---
+      duration_ms: 1029.3341
+      type: 'test'
+      ...
+# [benchmark] Ingesting conversation 1...
+# [benchmark] Ingestion complete: 1/1 sessions, 1 entities, 0 relationships, 0 failed
+# [benchmark] conv1-q2 [2/3] PASS (retrieval: 1, 3ms)
+# [benchmark] Retrying 1 error questions...
+    # Subtest: retry-errors repairs only latest error questions and derives final status from all records
+    ok 2 - retry-errors repairs only latest error questions and derives final status from all records
+      ---
+      duration_ms: 907.8242
+      type: 'test'
+      ...
+# [benchmark] Ingesting conversation 1...
+# [benchmark] Ingestion complete: 1/1 sessions, 1 entities, 0 relationships, 0 failed
+# [benchmark] conv1-q0 attempt 1 failed: Judge failed: single injected judge failure, retrying in 0ms...
+# [benchmark] conv1-q2 [3/3] PASS (retrieval: 1, 3ms)
+    # Subtest: counts persisted retry records, including a transient judge failure
+    ok 3 - counts persisted retry records, including a transient judge failure
+      ---
+      duration_ms: 1334.4109
+      type: 'test'
+      ...
+    1..3
+ok 62 - real runner resume and retry state machine
+  ---
+  duration_ms: 3356.5556
+  type: 'suite'
+  ...
+# Subtest: resume and retry - run-store functions
+    # Subtest: errorQuestionIds returns only questions whose latest record is error
+    ok 1 - errorQuestionIds returns only questions whose latest record is error
+      ---
+      duration_ms: 226.6175
+      type: 'test'
+      ...
+    # Subtest: allRecordedQuestionIds returns every question ID ever recorded
+    ok 2 - allRecordedQuestionIds returns every question ID ever recorded
+      ---
+      duration_ms: 68.1115
+      type: 'test'
+      ...
+    # Subtest: verifyResumeConfig accepts matching config and prompt
+    ok 3 - verifyResumeConfig accepts matching config and prompt
+      ---
+      duration_ms: 4.8026
+      type: 'test'
+      ...
+    # Subtest: verifyResumeConfig rejects mismatched config
+    ok 4 - verifyResumeConfig rejects mismatched config
+      ---
+      duration_ms: 6.4737
+      type: 'test'
+      ...
+    # Subtest: verifyResumeConfig rejects mismatched prompt
+    ok 5 - verifyResumeConfig rejects mismatched prompt
+      ---
+      duration_ms: 10.1708
+      type: 'test'
+      ...
+    # Subtest: verifyResumeConfig rejects mismatched judge prompt
+    ok 6 - verifyResumeConfig rejects mismatched judge prompt
+      ---
+      duration_ms: 5.0191
+      type: 'test'
+      ...
+    # Subtest: findRunDir finds existing run by run-id
+    ok 7 - findRunDir finds existing run by run-id
+      ---
+      duration_ms: 20.949
+      type: 'test'
+      ...
+    # Subtest: findRunDir throws for non-existent run-id
+    ok 8 - findRunDir throws for non-existent run-id
+      ---
+      duration_ms: 3.0161
+      type: 'test'
+      ...
+    # Subtest: updateManifest updates status and completed_at
+    ok 9 - updateManifest updates status and completed_at
+      ---
+      duration_ms: 31.8909
+      type: 'test'
+      ...
+    # Subtest: resume does not re-run completed questions
+    ok 10 - resume does not re-run completed questions
+      ---
+      duration_ms: 83.5668
+      type: 'test'
+      ...
+    # Subtest: retry records are persisted and don't count as completed
+    ok 11 - retry records are persisted and don't count as completed
+      ---
+      duration_ms: 63.4709
+      type: 'test'
+      ...
+    # Subtest: manifest status can be set to partial
+    ok 12 - manifest status can be set to partial
+      ---
+      duration_ms: 19.3309
+      type: 'test'
+      ...
+    # Subtest: manifest status can be set to interrupted
+    ok 13 - manifest status can be set to interrupted
+      ---
+      duration_ms: 18.3515
+      type: 'test'
+      ...
+    1..13
+ok 63 - resume and retry - run-store functions
+  ---
+  duration_ms: 588.3553
+  type: 'suite'
+  ...
+# Subtest: resume and retry - config hash stability
+    # Subtest: same config produces same hash across runs
+    ok 1 - same config produces same hash across runs
+      ---
+      duration_ms: 0.262
+      type: 'test'
+      ...
+    # Subtest: different key order produces same hash (stable stringify)
+    ok 2 - different key order produces same hash (stable stringify)
+      ---
+      duration_ms: 0.0863
+      type: 'test'
+      ...
+    1..2
+ok 64 - resume and retry - config hash stability
+  ---
+  duration_ms: 0.4854
+  type: 'suite'
+  ...
+# [benchmark] Ingesting conversation 1...
+# [benchmark] Ingestion complete: 1/1 sessions, 1 entities, 0 relationships, 0 failed
+# [benchmark] conv1-q0 [1/1] PASS (retrieval: 1, 3ms)
+# [benchmark] Conversation 1 already ingested, reusing its isolated database.
+# Subtest: production runner owns an isolated conversation runtime
+    # Subtest: creates the required run layout, closes the process, and hashes the DB
+    ok 1 - creates the required run layout, closes the process, and hashes the DB
+      ---
+      duration_ms: 1000.0169
+      type: 'test'
+      ...
+    1..1
+ok 65 - production runner owns an isolated conversation runtime
+  ---
+  duration_ms: 1016.5012
+  type: 'suite'
+  ...
+# Subtest: benchmark runner - infrastructure
+    # Subtest: creates a run with valid manifest
+    ok 1 - creates a run with valid manifest
+      ---
+      duration_ms: 12.7168
+      type: 'test'
+      ...
+    # Subtest: prevents overwriting completed questions
+    ok 2 - prevents overwriting completed questions
+      ---
+      duration_ms: 55.9244
+      type: 'test'
+      ...
+    # Subtest: supports resume via completed question check
+    ok 3 - supports resume via completed question check
+      ---
+      duration_ms: 84.1531
+      type: 'test'
+      ...
+    # Subtest: retry records are persisted
+    ok 4 - retry records are persisted
+      ---
+      duration_ms: 43.9193
+      type: 'test'
+      ...
+    # Subtest: hash-fallback fails in evaluation mode
+    ok 5 - hash-fallback fails in evaluation mode
+      ---
+      duration_ms: 0.6554
+      type: 'test'
+      ...
+    1..5
+ok 66 - benchmark runner - infrastructure
+  ---
+  duration_ms: 227.1602
+  type: 'suite'
+  ...
+# Subtest: benchmark runner - dataset loader
+    # Subtest: loads conversation sessions in time order
+    ok 1 - loads conversation sessions in time order
+      ---
+      duration_ms: 10.2195
+      type: 'test'
+      ...
+    # Subtest: finds QAs for a conversation
+    ok 2 - finds QAs for a conversation
+      ---
+      duration_ms: 0.2707
+      type: 'test'
+      ...
+    1..2
+ok 67 - benchmark runner - dataset loader
+  ---
+  duration_ms: 11.0049
+  type: 'suite'
+  ...
+# Subtest: benchmark runner - split guard
+    # Subtest: allows development conversation 1
+    ok 1 - allows development conversation 1
+      ---
+      duration_ms: 0.348
+      type: 'test'
+      ...
+    # Subtest: blocks held-out conversation without authorization
+    ok 2 - blocks held-out conversation without authorization
+      ---
+      duration_ms: 0.3019
+      type: 'test'
+      ...
+    # Subtest: blocks conversation 2 in development mode
+    ok 3 - blocks conversation 2 in development mode
+      ---
+      duration_ms: 0.1572
+      type: 'test'
+      ...
+    1..3
+ok 68 - benchmark runner - split guard
+  ---
+  duration_ms: 1.0182
+  type: 'suite'
+  ...
+# Subtest: benchmark runner - recompute metrics
+    # Subtest: recomputes metrics from records
+    ok 1 - recomputes metrics from records
+      ---
+      duration_ms: 1.1623
+      type: 'test'
+      ...
+    # Subtest: empty records produce no composite
+    ok 2 - empty records produce no composite
+      ---
+      duration_ms: 0.0948
+      type: 'test'
+      ...
+    1..2
+ok 69 - benchmark runner - recompute metrics
+  ---
+  duration_ms: 1.3256
+  type: 'suite'
+  ...
+# Subtest: benchmark runner - config hash stability
+    # Subtest: produces stable config hash
+    ok 1 - produces stable config hash
+      ---
+      duration_ms: 0.2499
+      type: 'test'
+      ...
+    # Subtest: different configs produce different hashes
+    ok 2 - different configs produce different hashes
+      ---
+      duration_ms: 0.1268
+      type: 'test'
+      ...
+    # Subtest: sha256 is deterministic
+    ok 3 - sha256 is deterministic
+      ---
+      duration_ms: 0.0895
+      type: 'test'
+      ...
+    1..3
+ok 70 - benchmark runner - config hash stability
+  ---
+  duration_ms: 0.5505
+  type: 'suite'
+  ...
+# Subtest: structured answer validation
+    # Subtest: accepts a grounded strict answer
+    ok 1 - accepts a grounded strict answer
+      ---
+      duration_ms: 2.2223
+      type: 'test'
+      ...
+    # Subtest: rejects unknown evidence IDs
+    ok 2 - rejects unknown evidence IDs
+      ---
+      duration_ms: 0.7116
+      type: 'test'
+      ...
+    # Subtest: rejects ungrounded factual claims
+    ok 3 - rejects ungrounded factual claims
+      ---
+      duration_ms: 0.3434
+      type: 'test'
+      ...
+    # Subtest: rejects extra answer keys
+    ok 4 - rejects extra answer keys
+      ---
+      duration_ms: 0.6287
+      type: 'test'
+      ...
+    # Subtest: requires abstention reason
+    ok 5 - requires abstention reason
+      ---
+      duration_ms: 0.3777
+      type: 'test'
+      ...
+    # Subtest: accepts a legal abstention
+    ok 6 - accepts a legal abstention
+      ---
+      duration_ms: 0.1286
+      type: 'test'
+      ...
+    # Subtest: requires null reason when answering
+    ok 7 - requires null reason when answering
+      ---
+      duration_ms: 0.2424
+      type: 'test'
+      ...
+    # Subtest: validates the retrieval evidence envelope
+    ok 8 - validates the retrieval evidence envelope
+      ---
+      duration_ms: 0.4101
+      type: 'test'
+      ...
+    # Subtest: rejects absent retrieval evidence as a citation target
+    ok 9 - rejects absent retrieval evidence as a citation target
+      ---
+      duration_ms: 0.3083
+      type: 'test'
+      ...
+    # Subtest: rejects malformed evidence validity fields
+    ok 10 - rejects malformed evidence validity fields
+      ---
+      duration_ms: 0.5654
+      type: 'test'
+      ...
+    1..10
+ok 71 - structured answer validation
+  ---
+  duration_ms: 7.032
+  type: 'suite'
+  ...
+# Subtest: deterministic evidence precision — 20 cases
+    # Subtest: one support pass 1
+    ok 1 - one support pass 1
+      ---
+      duration_ms: 0.5798
+      type: 'test'
+      ...
+    # Subtest: one irrelevant pass 1
+    ok 2 - one irrelevant pass 1
+      ---
+      duration_ms: 0.0804
+      type: 'test'
+      ...
+    # Subtest: one contradiction pass 1
+    ok 3 - one contradiction pass 1
+      ---
+      duration_ms: 0.0618
+      type: 'test'
+      ...
+    # Subtest: support plus irrelevant pass 1
+    ok 4 - support plus irrelevant pass 1
+      ---
+      duration_ms: 0.0907
+      type: 'test'
+      ...
+    # Subtest: support plus contradiction pass 1
+    ok 5 - support plus contradiction pass 1
+      ---
+      duration_ms: 0.1492
+      type: 'test'
+      ...
+    # Subtest: two supports pass 1
+    ok 6 - two supports pass 1
+      ---
+      duration_ms: 0.7262
+      type: 'test'
+      ...
+    # Subtest: one of three supports pass 1
+    ok 7 - one of three supports pass 1
+      ---
+      duration_ms: 0.0862
+      type: 'test'
+      ...
+    # Subtest: two of three support pass 1
+    ok 8 - two of three support pass 1
+      ---
+      duration_ms: 0.0461
+      type: 'test'
+      ...
+    # Subtest: all three irrelevant pass 1
+    ok 9 - all three irrelevant pass 1
+      ---
+      duration_ms: 0.0965
+      type: 'test'
+      ...
+    # Subtest: all three support pass 1
+    ok 10 - all three support pass 1
+      ---
+      duration_ms: 0.0511
+      type: 'test'
+      ...
+    # Subtest: one support pass 2
+    ok 11 - one support pass 2
+      ---
+      duration_ms: 0.0352
+      type: 'test'
+      ...
+    # Subtest: one irrelevant pass 2
+    ok 12 - one irrelevant pass 2
+      ---
+      duration_ms: 0.0329
+      type: 'test'
+      ...
+    # Subtest: one contradiction pass 2
+    ok 13 - one contradiction pass 2
+      ---
+      duration_ms: 0.0313
+      type: 'test'
+      ...
+    # Subtest: support plus irrelevant pass 2
+    ok 14 - support plus irrelevant pass 2
+      ---
+      duration_ms: 0.0345
+      type: 'test'
+      ...
+    # Subtest: support plus contradiction pass 2
+    ok 15 - support plus contradiction pass 2
+      ---
+      duration_ms: 0.0327
+      type: 'test'
+      ...
+    # Subtest: two supports pass 2
+    ok 16 - two supports pass 2
+      ---
+      duration_ms: 0.0335
+      type: 'test'
+      ...
+    # Subtest: one of three supports pass 2
+    ok 17 - one of three supports pass 2
+      ---
+      duration_ms: 0.0347
+      type: 'test'
+      ...
+    # Subtest: two of three support pass 2
+    ok 18 - two of three support pass 2
+      ---
+      duration_ms: 0.0334
+      type: 'test'
+      ...
+    # Subtest: all three irrelevant pass 2
+    ok 19 - all three irrelevant pass 2
+      ---
+      duration_ms: 0.036
+      type: 'test'
+      ...
+    # Subtest: all three support pass 2
+    ok 20 - all three support pass 2
+      ---
+      duration_ms: 0.0359
+      type: 'test'
+      ...
+    # Subtest: legal abstention with no citations scores precision zero
+    ok 21 - legal abstention with no citations scores precision zero
+      ---
+      duration_ms: 0.1558
+      type: 'test'
+      ...
+    # Subtest: rejects an omitted cited pair
+    ok 22 - rejects an omitted cited pair
+      ---
+      duration_ms: 0.1433
+      type: 'test'
+      ...
+    # Subtest: rejects an uncited evaluated pair
+    ok 23 - rejects an uncited evaluated pair
+      ---
+      duration_ms: 0.1569
+      type: 'test'
+      ...
+    # Subtest: rejects a duplicate pair
+    ok 24 - rejects a duplicate pair
+      ---
+      duration_ms: 0.099
+      type: 'test'
+      ...
+    1..24
+ok 72 - deterministic evidence precision — 20 cases
+  ---
+  duration_ms: 3.2809
+  type: 'suite'
+  ...
+# Subtest: deterministic stale-memory leakage — 20 cases
+    # Subtest: current open assertion pass 1
+    ok 1 - current open assertion pass 1
+      ---
+      duration_ms: 0.1718
+      type: 'test'
+      ...
+    # Subtest: expired before current pass 1
+    ok 2 - expired before current pass 1
+      ---
+      duration_ms: 0.0409
+      type: 'test'
+      ...
+    # Subtest: expires after current pass 1
+    ok 3 - expires after current pass 1
+      ---
+      duration_ms: 0.0385
+      type: 'test'
+      ...
+    # Subtest: invalidated before current pass 1
+    ok 4 - invalidated before current pass 1
+      ---
+      duration_ms: 0.033
+      type: 'test'
+      ...
+    # Subtest: invalidated after current pass 1
+    ok 5 - invalidated after current pass 1
+      ---
+      duration_ms: 0.0293
+      type: 'test'
+      ...
+    # Subtest: not yet valid current pass 1
+    ok 6 - not yet valid current pass 1
+      ---
+      duration_ms: 0.0295
+      type: 'test'
+      ...
+    # Subtest: valid at as-of point pass 1
+    ok 7 - valid at as-of point pass 1
+      ---
+      duration_ms: 0.0336
+      type: 'test'
+      ...
+    # Subtest: expired at as-of point pass 1
+    ok 8 - expired at as-of point pass 1
+      ---
+      duration_ms: 0.0291
+      type: 'test'
+      ...
+    # Subtest: invalidated at as-of point pass 1
+    ok 9 - invalidated at as-of point pass 1
+      ---
+      duration_ms: 0.0307
+      type: 'test'
+      ...
+    # Subtest: future at as-of point pass 1
+    ok 10 - future at as-of point pass 1
+      ---
+      duration_ms: 0.036
+      type: 'test'
+      ...
+    # Subtest: current open assertion pass 2
+    ok 11 - current open assertion pass 2
+      ---
+      duration_ms: 0.0764
+      type: 'test'
+      ...
+    # Subtest: expired before current pass 2
+    ok 12 - expired before current pass 2
+      ---
+      duration_ms: 0.0375
+      type: 'test'
+      ...
+    # Subtest: expires after current pass 2
+    ok 13 - expires after current pass 2
+      ---
+      duration_ms: 0.0415
+      type: 'test'
+      ...
+    # Subtest: invalidated before current pass 2
+    ok 14 - invalidated before current pass 2
+      ---
+      duration_ms: 0.0395
+      type: 'test'
+      ...
+    # Subtest: invalidated after current pass 2
+    ok 15 - invalidated after current pass 2
+      ---
+      duration_ms: 0.0389
+      type: 'test'
+      ...
+    # Subtest: not yet valid current pass 2
+    ok 16 - not yet valid current pass 2
+      ---
+      duration_ms: 0.0508
+      type: 'test'
+      ...
+    # Subtest: valid at as-of point pass 2
+    ok 17 - valid at as-of point pass 2
+      ---
+      duration_ms: 0.0364
+      type: 'test'
+      ...
+    # Subtest: expired at as-of point pass 2
+    ok 18 - expired at as-of point pass 2
+      ---
+      duration_ms: 0.0363
+      type: 'test'
+      ...
+    # Subtest: invalidated at as-of point pass 2
+    ok 19 - invalidated at as-of point pass 2
+      ---
+      duration_ms: 0.0387
+      type: 'test'
+      ...
+    # Subtest: future at as-of point pass 2
+    ok 20 - future at as-of point pass 2
+      ---
+      duration_ms: 0.0719
+      type: 'test'
+      ...
+    # Subtest: retrieved stale but uncited does not leak
+    ok 21 - retrieved stale but uncited does not leak
+      ---
+      duration_ms: 0.1056
+      type: 'test'
+      ...
+    # Subtest: cited stale but explicitly rejected does not leak
+    ok 22 - cited stale but explicitly rejected does not leak
+      ---
+      duration_ms: 0.2568
+      type: 'test'
+      ...
+    # Subtest: cited and adopted stale evidence leaks
+    ok 23 - cited and adopted stale evidence leaks
+      ---
+      duration_ms: 0.2002
+      type: 'test'
+      ...
+    # Subtest: one stale adopted claim out of two yields one half
+    ok 24 - one stale adopted claim out of two yields one half
+      ---
+      duration_ms: 0.1335
+      type: 'test'
+      ...
+    1..24
+ok 73 - deterministic stale-memory leakage — 20 cases
+  ---
+  duration_ms: 2.0226
+  type: 'suite'
+  ...
+1..73
+# tests 224
+# suites 19
+# pass 224
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4375.0078

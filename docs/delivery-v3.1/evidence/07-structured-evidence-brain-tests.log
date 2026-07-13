@@ -1,0 +1,163 @@
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mD:/AI_code/Omni-context[39m
+
+[90mstderr[2m | omni-context-release/brain-server/tests/extraction-diagnostics.test.ts[2m > [22m[2mformal evaluation extraction diagnostics[2m > [22m[2mmarks max-token truncation as a formal failure even when the partial JSON parses[22m[39m
+[LLMExtractor] LLM 输出被 max_tokens 截断，抽取结果可能不完整
+
+ [32m✓[39m omni-context-release/brain-server/tests/extraction-diagnostics.test.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 28[2mms[22m[39m
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+[Database] sqlite-vec 扩展加载成功 ✓
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: unified_graph_schema_v2
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_performance_indexes_v2
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_memory_tables
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_vec0_virtual_table
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_fts5_fulltext_search
+Migration applied: add_notifications_table
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_core_memory_summary
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_temporal_graph_fields
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_invalidation_reason_to_relationships
+Migration applied: add_app_meta
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_discussions_table
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_mcp_usage_log
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_scoped_device_tokens
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: enforce_domain_type_constraints
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_temporal_assertions
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_ingestion_documents_and_chunks
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_entity_resolution_review_queue
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_assertion_conflict_audit
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_incremental_relationship_decay
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_behavior_events_and_proactive_insights
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_assertion_literal_type_versioning_fts
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[22m[39m
+Migration applied: add_failed_tasks_and_ingestion_provenance
+[MemoryDecay] 启动调度器 (间隔: 3600s)
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: graph extract[2m > [22m[2mextracts entities from inline text[22m[39m
+[EmbeddingService] 正在加载本地模型: Xenova/multilingual-e5-small...
+
+[90mstdout[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: graph extract[2m > [22m[2mextracts entities from inline text[22m[39m
+[EmbeddingService] 本地模型加载完成
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: graph extract[2m > [22m[2mrejects non-JSON content-type[22m[39m
+API Error: HttpError: Content-Type must be application/json
+    at IncomingMessage.<anonymous> [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\routes.ts:196:18[90m)[39m
+[90m    at IncomingMessage.emit (node:events:518:28)[39m
+[90m    at endReadableNT (node:internal/streams/readable:1698:12)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:90:21)[39m {
+  statusCode: [33m415[39m
+}
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: MCP retrieval precision[2m > [22m[2mcaps unrelated core principles while preserving searched principles[22m[39m
+[temporal] parseTemporalQuery: no temporal keyword in query "Project Alpha retrieval precision decision", defaulting to current mode
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: MCP retrieval precision[2m > [22m[2mdoes not force core principles into unified memory search results[22m[39m
+[temporal] parseTemporalQuery: no temporal keyword in query "Project Alpha retrieval precision decision", defaulting to current mode
+[temporal] parseTemporalQuery: no temporal keyword in query "Project Alpha retrieval precision decision", defaulting to current mode
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: ask_memory and graph_answer reachability[2m > [22m[2mask_memory returns structured response (not 404 / MethodNotFound)[22m[39m
+[temporal] parseTemporalQuery: no temporal keyword in query "What do I know about Project Alpha?", defaulting to current mode
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: ask_memory and graph_answer reachability[2m > [22m[2mask_memory returns structured response (not 404 / MethodNotFound)[22m[39m
+[ask_memory] Failed: TypeError: fetch failed
+[90m    at node:internal/deps/undici/undici:13510:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at auditedAiFetch [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\security\audited-ai-fetch.ts:114:22[90m)[39m
+    at Object.handler [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\handlers\mcp.ts:1604:30[90m)[39m
+    at ApiRouter.handle [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\routes.ts:133:11[90m)[39m
+    at Server.<anonymous> [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\routes.ts:366:5[90m)[39m {
+  [cause]: AggregateError: 
+  [90m    at internalConnectMultiple (node:net:1139:18)[39m
+  [90m    at afterConnectMultiple (node:net:1714:7)[39m {
+    code: [32m'ECONNREFUSED'[39m,
+    [errors]: [ [36m[Error][39m, [36m[Error][39m ]
+  }
+}
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: ask_memory and graph_answer reachability[2m > [22m[2mgraph_answer returns structured response (not 404 / MethodNotFound)[22m[39m
+[temporal] parseTemporalQuery: no temporal keyword in query "Should I use Project Alpha for the new feature?", defaulting to current mode
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: ask_memory and graph_answer reachability[2m > [22m[2mgraph_answer returns structured response (not 404 / MethodNotFound)[22m[39m
+[analyze_decision] agentic enrich skipped (model may not support tools): TypeError: fetch failed
+[90m    at node:internal/deps/undici/undici:13510:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at auditedAiFetch [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\security\audited-ai-fetch.ts:114:22[90m)[39m
+    at agenticEnrichMemories [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\handlers\mcp.ts:631:22[90m)[39m
+    at Object.handler [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\handlers\mcp.ts:1650:29[90m)[39m
+    at ApiRouter.handle [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\routes.ts:133:11[90m)[39m
+    at Server.<anonymous> [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\routes.ts:366:5[90m)[39m {
+  [cause]: AggregateError: 
+  [90m    at internalConnectMultiple (node:net:1139:18)[39m
+  [90m    at afterConnectMultiple (node:net:1714:7)[39m {
+    code: [32m'ECONNREFUSED'[39m,
+    [errors]: [ [36m[Error][39m, [36m[Error][39m ]
+  }
+}
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: ask_memory and graph_answer reachability[2m > [22m[2mgraph_answer returns structured response (not 404 / MethodNotFound)[22m[39m
+[temporal] parseTemporalQuery: no temporal keyword in query "Should I use Project Alpha for the new feature?", defaulting to current mode
+
+[90mstderr[2m | omni-context-release/brain-server/tests/api.smoke.test.ts[2m > [22m[2mAPI smoke: ask_memory and graph_answer reachability[2m > [22m[2mgraph_answer returns structured response (not 404 / MethodNotFound)[22m[39m
+[graph_answer] Failed: TypeError: fetch failed
+[90m    at node:internal/deps/undici/undici:13510:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at auditedAiFetch [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\security\audited-ai-fetch.ts:114:22[90m)[39m
+    at Object.handler [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\handlers\mcp.ts:1748:32[90m)[39m
+    at ApiRouter.handle [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\routes.ts:133:11[90m)[39m
+    at Server.<anonymous> [90m(D:\AI_code\Omni-context\[39momni-context-release\brain-server\src\api\routes.ts:366:5[90m)[39m {
+  [cause]: AggregateError: 
+  [90m    at internalConnectMultiple (node:net:1139:18)[39m
+  [90m    at afterConnectMultiple (node:net:1714:7)[39m {
+    code: [32m'ECONNREFUSED'[39m,
+    [errors]: [ [36m[Error][39m, [36m[Error][39m ]
+  }
+}
+
+ [32m✓[39m omni-context-release/brain-server/tests/api.smoke.test.ts [2m ([22m[2m32 tests[22m[2m)[22m[33m 2995[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m36 passed[39m[22m[90m (36)[39m
+[2m   Start at [22m 17:08:39
+[2m   Duration [22m 28.27s[2m (transform 911ms, setup 0ms, collect 7.79s, tests 3.02s, environment 0ms, prepare 1.30s)[22m
+
