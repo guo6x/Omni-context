@@ -2,6 +2,8 @@
 
 Status: `FIXED`
 
+Implementation commit: `89857b5b971dd9cffaa96d08a89574161bd337a1`
+
 ## Production change
 
 `benchmark/src/dataset.mjs` now uses parser version `locomo-datetime-v2`. It parses explicit fields with regular expressions and numeric validation; it does not pass input strings to `new Date(string)`.
@@ -51,4 +53,3 @@ Sessions are sorted by parsed timestamp. If parsed time order differs from sessi
 ## Remaining risk
 
 This closes the datetime-parser P0. End-to-end benchmark readiness still depends on the isolated runtime, extraction, structured citation/metric, resume/retry, and external E2E tasks tracked separately.
-
