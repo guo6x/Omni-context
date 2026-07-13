@@ -8,7 +8,7 @@ import {
   createRun, completedQuestionIds, appendQuestionRecord,
   errorQuestionIds, findRunDir, verifyResumeConfig, updateManifest, readRun,
 } from '../run-store.mjs';
-import { validateJudgeOutput, computeComposite, validateAllMetricsPresent } from './judge/schema.mjs';
+import { validateJudgeOutput, computeComposite, validateAllMetricsPresent } from '../judge/schema.mjs';
 
 // Global flag for SIGINT/SIGTERM safe shutdown
 let shutdownRequested = false;
@@ -22,7 +22,7 @@ const MANIFEST_REQUIRED_FIELDS = [
   'dataset_hash', 'dataset_source_commit', 'benchmark_commit', 'brain_server_commit',
   'answer_model', 'judge_model', 'embedding_model', 'embedding_status',
   'prompt_hash', 'config_hash', 'node_version', 'os', 'split',
-  'conversation_ids', 'run_id', 'started_at', 'completed_at',
+  'conversation_ids', 'run_id', 'started_at',
 ];
 
 export async function buildManifest({
