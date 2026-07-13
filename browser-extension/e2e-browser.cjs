@@ -198,6 +198,7 @@ async function main() {
       status: 200,
       contentType: 'text/html',
       body: `<!doctype html><title>Omni E2E Fixture</title>
+        <style>body{max-width:960px;margin:32px auto;font:16px sans-serif}article{overflow-wrap:anywhere;margin:16px 0;padding:16px;border:1px solid #ccc}</style>
         <main>
           <article data-message-author-role="user"><div class="whitespace-pre-wrap">Remember Project Aurora uses option A.</div></article>
           <article data-message-author-role="assistant"><div class="markdown">${longText}</div></article>
