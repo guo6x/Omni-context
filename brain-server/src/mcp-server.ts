@@ -975,7 +975,7 @@ ${evidenceBlock}`;
           // stdio 版「问大脑」：与 HTTP 路径同构，复用 _retrieveMemoryCandidates 做时间感知检索
           const parsed = AskMemorySchema.parse(args);
           const messages: Array<{ role: string; content: string }> = Array.isArray(parsed.messages)
-            ? parsed.messages.filter((m: any) => m && typeof m.content === 'string')
+            ? parsed.messages.filter((m): m is { role: string; content: string } => Boolean(m && typeof m.content === 'string'))
             : [];
           const lastUser = [...messages].reverse().find((m) => m.role === 'user');
           const question = (lastUser?.content || parsed.query || '').trim();
@@ -1070,7 +1070,7 @@ ${principleBlock}`;
           // stdio 版图谱原生回答：结构化输出 + 命中子图边 + 时间感知
           const parsed = GraphAnswerSchema.parse(args);
           const gaMessages: Array<{ role: string; content: string }> = Array.isArray(parsed.messages)
-            ? parsed.messages.filter((m: any) => m && typeof m.content === 'string')
+            ? parsed.messages.filter((m): m is { role: string; content: string } => Boolean(m && typeof m.content === 'string'))
             : [];
           const gaLastUser = [...gaMessages].reverse().find((m) => m.role === 'user');
           const gaQuestion = (gaLastUser?.content || parsed.query || '').trim();

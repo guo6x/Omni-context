@@ -152,6 +152,8 @@ export async function getAssertionsByEffectiveTime(
     timezone: r.timezone || undefined,
     invalidated_at: r.invalidated_at || undefined,
     invalidation_reason: r.invalidation_reason || undefined,
+    version: r.version ?? 1,
+    previous_version_id: r.previous_version_id || undefined,
     created_at: r.created_at,
     updated_at: r.updated_at,
   }));

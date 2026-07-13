@@ -396,6 +396,7 @@ export class GraphRAGExtractor {
           const assertionBase = {
             predicate: safeType,
             confidence,
+            version: 1,
             source_span: fact.source_span,
             provenance: {
               extractor: 'llm',
