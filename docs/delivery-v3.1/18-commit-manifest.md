@@ -1,6 +1,6 @@
 # 18 — Commit manifest
 
-Status: `PARTIAL`
+Status: `FIXED`
 
 Branch: `pre-evaluation-hardening-v3.1`
 
@@ -32,5 +32,13 @@ Implementation and evidence commits from the v3 baseline, oldest first:
 - `e78cb21f5a4ee3350a625d8da84fb1485d29ef7d` — tracked benchmark npm lockfile for reproducible CI installs.
 - `0432e10ee24004b2fc317303543ecd46d6dce72e` — valid Tauri resource glob in a clean checkout.
 - `12ed8b578153df538c31544cca85a41605f82acb` — frontend prerequisite before full Rust gates; implementation HEAD CI 9/9.
+- `1dd8cac0205d0f5a7869e3090582bc58d22c2a71` — records the first green v3.1 documentation handoff CI.
+- `98eaa780e56c723e049c92a55334f285600028f7` — hardens real provider-backed extraction and acceptance control.
+- `960fa91c8f938e104f79ed37c305a4592bc309a4` — seals formal run provenance only from a clean repository.
+- `c5d43c121cd5b7550fc33ea6c11febbacadab9f1` — persists interrupted statistics.
+- `ae72a1a08c711ca003996c3e8819dc3ce7f5c3c8` — freezes non-thinking strict-JSON inference and token budgets.
+- `2337a3bb75beac32adfa2198869d23a5f5ed1c05` — makes evidence finalization portable on Windows SQLite.
+- `cb82745a74c254e7fe93614d0a9da6703aecb92e` — preserves the complete official Conversation 1 run and manual review evidence.
+- `d5a667a318bb39446b472dd885a73e497334ab02` — fixes the CI-only fire-and-forget retry test race; current qualification CI 9/9.
 
-This documentation/evidence handoff commit is the final child of the list above and receives its own current-HEAD CI run. This manifest remains `PARTIAL` because no Freeze Candidate is permitted.
+The final candidate manifest/report commit is the child containing this file. Its exact SHA and current-HEAD CI URL are recorded in the annotated `evaluation-freeze-candidate-v1` tag after its nine jobs succeed, avoiding a self-referential commit field.

@@ -2,7 +2,7 @@
 
 Status: **FIXED**
 
-Implementation commits: `b0c061932d95a8c35611b9d5b0b8e358eb82a69f`, `98eaa780e0800e7040bd6e42d5108571cebf1445`, `ae72a1a72ef1b46dd770a2fea5d25ab3cc88dbd4`
+Implementation commits: `b0c061932d95a8c35611b9d5b0b8e358eb82a69f`, `98eaa780e56c723e049c92a55334f285600028f7`, `ae72a1a08c711ca003996c3e8819dc3ce7f5c3c8`
 
 Scope: production extraction path and official LoCoMo Conversation 1 only. Conversations 2–10 were not loaded, run, viewed, analyzed, or counted.
 

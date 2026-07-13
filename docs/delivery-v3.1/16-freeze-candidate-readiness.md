@@ -1,25 +1,27 @@
 # 16 — Freeze Candidate readiness
 
-Status: `BLOCKED`
+Status: `FIXED`
 
-Final decision: `NOT READY FOR FREEZE CANDIDATE`.
+Final decision: `READY FOR OMNI-CONTEXT EVALUATION FREEZE CANDIDATE V1`.
 
-| Task | Status | Reason |
+| Task | Status | Evidence summary |
 |---|---|---|
-| 1. Official datetime parser | `FIXED` | Deterministic parser and official Conversation 1 audit pass. |
+| 1. Official datetime parser | `FIXED` | Explicit parser, fail-fast audit, and 20+ cases pass. |
 | 2. Per-conversation runtime | `FIXED` | Isolated DB/process/port/log/PID and resume path pass. |
-| 3. Extraction collapse | `PARTIAL` | Production diagnostics and strict failure handling pass; official 19-session provider run is absent. |
-| 4. Complete Conversation 1 | `BLOCKED` | Official total is 199; provider-backed completed count is 0. |
-| 5. Resume/retry | `PARTIAL` | Production state machine passes synthetic process integration; official SIGINT/provider-outage run is absent. |
+| 3. Extraction collapse | `FIXED` | 19/19 sessions, 396 entities, 423 assertions, 0 failures; five-session manual review passes. |
+| 4. Complete Conversation 1 | `FIXED` | 199/199 completed, 0 errors, 0 missing, 0 duplicate completed IDs. |
+| 5. Resume/retry | `FIXED` | Real SIGINT, same-run resume, four forced Judge 503s, and retry-errors pass. |
 | 6. Structured citations | `FIXED` | Strict answer/citation contract passes. |
-| 7. Evidence precision | `FIXED` | Deterministic claim/citation assembly passes. |
+| 7. Evidence precision | `FIXED` | Deterministic citation assembly plus claim support classification pass. |
 | 8. Stale leakage | `FIXED` | Deterministic validity/adoption calculation passes. |
-| 9. Judge calibration | `PARTIAL` | Frozen 50-sample contract passes; official 10–20 result manual review is absent. |
-| 10. Held-out guard | `FIXED` | Explicit final-freeze authorization and manifest validation pass with synthetic data only. |
+| 9. Judge calibration | `FIXED` | 50 frozen cases plus 15 official manual reviews; all discrepancies recorded. |
+| 10. Held-out guard | `FIXED` | Candidate remains denied; only exact final Freeze authorization can enable held-out. |
 | 11. AgentLoop timeout | `FIXED` | Lock lifetime, abort guards, awaitable stop, and production callers pass. |
 | 12. Merge revert | `FIXED` | Full redirect journal and confirm/revert/confirm pass. |
-| 13. Current HEAD CI | `FIXED` | Implementation HEAD CI #21 completed all nine enforced jobs successfully; the final documentation-only child is re-run for the handoff. |
+| 13. Current HEAD CI | `FIXED` | Qualification commit completed all nine CI jobs successfully. |
 | 14. Client/hardware E2E | `FIXED` | Installed Windows, paired browser, and accepted/rejected ESP32 paths pass. |
-| 15. Freeze Candidate | `BLOCKED` | Tasks 3, 4, 5, and 9 are not all `FIXED`. |
+| 15. Freeze Candidate | `FIXED` | Complete manifest created; annotated tag is created only after the manifest commit's own CI succeeds. |
 
-No Freeze Candidate manifest or tag was created. Conversation 2–10 were not run, viewed, analyzed, or counted.
+Unresolved P0: 0. Conversation 2–10 were not run, viewed, analyzed, or counted. This is a candidate only, not the final `Omni-Context Evaluation Freeze v1`.
+
+Candidate manifest: `omni-context-evaluation-freeze-candidate-v1.json`.

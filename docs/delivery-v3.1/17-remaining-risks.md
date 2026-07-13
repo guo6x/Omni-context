@@ -1,16 +1,16 @@
 # 17 — Remaining risks
 
-Status: `BLOCKED`
+Status: `FIXED`
 
 ## P0 freeze blockers
 
-1. Formal extraction/answer/judge model credentials and semantic embedding configuration are unavailable, so official Conversation 1 has no provider-backed run.
-2. Consequently there are no official 19/19 extraction diagnostics, no 199/199 result set, no real metrics/recompute hash, no official OS-SIGINT resume proof, no provider outage/retry proof, and no 10–20 item manual judge comparison.
+None. Unresolved P0 count: 0.
 
-## Release risks outside the freeze decision
+## P1 risks retained in the candidate
 
+- Manual binary review agreed with the same-model Judge on 12/15 stratified official cases. The three disagreements show over-crediting of abstention or unsupported multi-hop inference; Answer and Judge are both `deepseek-v4-flash`.
+- Extraction is source-grounded in the five-session manual sample, but provider predicates frequently normalize to `relates_to` and 182 extracted principles show coarse semantic granularity.
 - The Windows NSIS installer is not Authenticode signed.
-- Production dependency audits have zero critical advisories, but high-severity advisories remain: `xlsx` has no published fix in the current dependency line; the Desktop Next.js fix requires a breaking major upgrade; Mobile retains 16 high advisories in its current Expo dependency graph.
-- The local default-parallel Brain test run was resource-sensitive once on this low-free-space machine; the two affected suites passed individually, the full 241-test suite passed with one worker, and GitHub's default-parallel Brain job passed on implementation HEAD CI #21.
+- Production audits report zero critical advisories, but high-severity advisories remain: `xlsx` has no fixed release in the current line; the Desktop Next.js and Mobile Expo graphs require breaking upgrades for full remediation.
 
-No risk above is hidden by a synthetic metric or a report-authored PASS.
+These risks do not alter, suppress, or exclude any Conversation 1 result. They remain explicit inputs to the later final Freeze decision.

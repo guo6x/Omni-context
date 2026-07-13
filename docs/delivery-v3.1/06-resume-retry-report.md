@@ -2,7 +2,7 @@
 
 Status: **FIXED**
 
-Implementation commits: `469dea3e669cd28b5a3a4ece351c5c6b3e23a02e`, `98eaa780e0800e7040bd6e42d5108571cebf1445`, `c5d43c197fc09d5eb01e586d063f05e0e0b40c59`
+Implementation commits: `469dea3e669cd28b5a3a4ece351c5c6b3e23a02e`, `98eaa780e56c723e049c92a55334f285600028f7`, `c5d43c121cd5b7550fc33ea6c11febbacadab9f1`
 
 The production runner was exercised with the real official Conversation 1 run and provider-backed inference.
 

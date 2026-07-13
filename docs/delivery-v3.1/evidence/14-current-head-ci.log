@@ -1,21 +1,21 @@
-Omni-Context v3.1 implementation HEAD CI evidence
-Captured: 2026-07-13 Asia/Shanghai
-Branch: pre-evaluation-hardening-v3.1
-Implementation HEAD: 12ed8b578153df538c31544cca85a41605f82acb
-Workflow: Continuous Integration #21
-Run URL: https://github.com/guo6x/Omni-context/actions/runs/29254745472
-Conclusion: success
-Duration: 7m29s
+qualification_commit=d5a667a318bb39446b472dd885a73e497334ab02
+ci_run_id=29273086507
+ci_run_url=https://github.com/guo6x/Omni-context/actions/runs/29273086507
+workflow_status=completed
+workflow_conclusion=success
+brain-server=success
+desktop-web=success
+benchmark-scripts=success
+browser-extension=success
+desktop-rust=success
+secret-scan=success
+mobile=success
+dependency-audit=success
+windows-smoke=success
+jobs_success=9
+jobs_total=9
 
-Jobs (9/9 success):
-- secret-scan: success (11s)
-- dependency-audit: success (22s)
-- brain-server: success (42s)
-- desktop-web: success (51s)
-- desktop-rust: success (7m25s)
-- browser-extension: success (16s)
-- mobile: success (26s)
-- benchmark-scripts: success (16s)
-- windows-smoke: success (5m59s)
-
-Public run page was inspected after completion. No failed job or error annotation remained.
+preceding_failed_run=29272485633
+preceding_failed_job=brain-server
+preceding_failure=fire-and-forget retry test crossed test boundary on slower CI host
+fix_commit=d5a667a318bb39446b472dd885a73e497334ab02
