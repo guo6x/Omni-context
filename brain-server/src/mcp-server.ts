@@ -1826,7 +1826,7 @@ ${evidenceRoster || '(无)'}
   }
 
   async stop(): Promise<void> {
-    this.agentLoop?.stop();
+    await this.agentLoop?.stop();
     this.decayScheduler.stop();
     await this.db.close();
   }

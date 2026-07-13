@@ -58,7 +58,7 @@ async function main() {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(`\nShutting down (${reason})...`);
-    agentLoop.stop();
+    await agentLoop.stop();
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await db.close();
     process.exit(0);
