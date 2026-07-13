@@ -81,7 +81,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-        components: rustfmt, clippy
+          components: rustfmt, clippy
       - run: cargo fmt -- --check
         working-directory: desktop-daemon/src-tauri
 
