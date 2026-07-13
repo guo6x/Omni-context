@@ -38,7 +38,10 @@ class InsightGenerator {
     return { ...this.config };
   }
 
-  async generateInsight(nodes: Entity[]): Promise<{ ok: boolean; insight: { title: string; content: string } | null }> {
+  async generateInsight(
+    nodes: Entity[],
+    cycleSignal?: AbortSignal,
+  ): Promise<{ ok: boolean; insight: { title: string; content: string } | null }> {
     if (!this.config.apiUrl) return { ok: false, insight: null };
     if (nodes.length < 2) return { ok: true, insight: null };
 
@@ -54,77 +57,86 @@ class InsightGenerator {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
-
-      const response = await agentLlmFetch(`${this.config.apiUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.config.apiKey ? { 'Authorization': `Bearer ${this.config.apiKey}` } : {}),
-        },
-        body: JSON.stringify({
-          model: this.config.model,
-          messages: [
-            {
-              role: 'system',
-              content: '你是一个知识发现助理。只输出有效的 JSON。',
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          max_tokens: this.config.maxTokens,
-          temperature: 0.7,
-          response_format: { type: 'json_object' },
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-
-      if (!response.ok) return { ok: false, insight: null };
-
-      const data = await response.json() as {
-        choices: Array<{ message: { content: string } }>;
-      };
-
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) {
-        throw new Error('LLM response content is empty');
+      // Task 12: Chain the cycle signal so stop() cancels this fetch.
+      const onCycleAbort = () => controller.abort();
+      if (cycleSignal) {
+        if (cycleSignal.aborted) controller.abort();
+        else cycleSignal.addEventListener('abort', onCycleAbort, { once: true });
       }
 
-      const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-      const jsonStr = jsonMatch ? jsonMatch[1] : content;
-      
-      let parsed: any;
       try {
-        parsed = JSON.parse(jsonStr.trim());
-      } catch (e) {
-        const balanced = (() => {
-          const start = jsonStr.indexOf('{');
-          if (start === -1) return null;
-          let count = 0;
-          for (let i = start; i < jsonStr.length; i++) {
-            if (jsonStr[i] === '{') {
-              count++;
-            } else if (jsonStr[i] === '}') {
-              count--;
-              if (count === 0) return jsonStr.substring(start, i + 1);
-            }
-          }
-          return null;
-        })();
-        if (balanced) {
-          parsed = JSON.parse(balanced);
-        } else {
-          throw e;
-        }
-      }
+        const response = await agentLlmFetch(`${this.config.apiUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(this.config.apiKey ? { 'Authorization': `Bearer ${this.config.apiKey}` } : {}),
+          },
+          body: JSON.stringify({
+            model: this.config.model,
+            messages: [
+              {
+                role: 'system',
+                content: '你是一个知识发现助理。只输出有效的 JSON。',
+              },
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+            max_tokens: this.config.maxTokens,
+            temperature: 0.7,
+            response_format: { type: 'json_object' },
+          }),
+          signal: controller.signal,
+        });
 
-      if (parsed.title && parsed.content) {
-        return { ok: true, insight: { title: parsed.title, content: parsed.content } };
+        if (!response.ok) return { ok: false, insight: null };
+
+        const data = await response.json() as {
+          choices: Array<{ message: { content: string } }>;
+        };
+
+        const content = data.choices?.[0]?.message?.content;
+        if (!content) {
+          throw new Error('LLM response content is empty');
+        }
+
+        const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+        const jsonStr = jsonMatch ? jsonMatch[1] : content;
+
+        let parsed: any;
+        try {
+          parsed = JSON.parse(jsonStr.trim());
+        } catch (e) {
+          const balanced = (() => {
+            const start = jsonStr.indexOf('{');
+            if (start === -1) return null;
+            let count = 0;
+            for (let i = start; i < jsonStr.length; i++) {
+              if (jsonStr[i] === '{') {
+                count++;
+              } else if (jsonStr[i] === '}') {
+                count--;
+                if (count === 0) return jsonStr.substring(start, i + 1);
+              }
+            }
+            return null;
+          })();
+          if (balanced) {
+            parsed = JSON.parse(balanced);
+          } else {
+            throw e;
+          }
+        }
+
+        if (parsed.title && parsed.content) {
+          return { ok: true, insight: { title: parsed.title, content: parsed.content } };
+        }
+        return { ok: true, insight: null };
+      } finally {
+        clearTimeout(timeout);
+        if (cycleSignal) cycleSignal.removeEventListener('abort', onCycleAbort);
       }
-      return { ok: true, insight: null };
     } catch (e) {
       console.warn('[AgentLoop] 洞见生成失败:', e);
       return { ok: false, insight: null };
@@ -145,6 +157,10 @@ export class AgentLoop {
   private cycleTimeoutMs = 4 * 60 * 1000;
   private static readonly DECAY_CHECK_INTERVAL = 6;
   private static readonly BLINDSPOT_CHECK_INTERVAL = 10;
+  // Task 12: Cycle-level AbortController. stop() aborts this to cancel any
+  // in-flight LLM calls instead of letting them run for up to 4 minutes after
+  // the engine has been "stopped". Cleared in runCycle's finally block.
+  private cycleAbort: AbortController | null = null;
 
   constructor(db: Database, decayScheduler?: MemoryDecayScheduler) {
     this.db = db;
@@ -187,8 +203,16 @@ export class AgentLoop {
       clearInterval(this.interval);
       this.interval = null;
     }
-    // If a cycle is running, let it finish naturally (it has its own timeout guard).
-    // Do NOT set isCycleRunning here — that was the old bug.
+    // Task 12: Abort any in-flight cycle. This cancels pending LLM fetches
+    // (polishInsightWithLLM and InsightGenerator.generateInsight) via the
+    // signal they consume. DB queries are not abortable but are fast; the
+    // LLM calls are the long pole. The cycle's finally block will still run
+    // to release isCycleRunning and clear cycleAbort.
+    if (this.cycleAbort) {
+      console.log('[AgentLoop] 中止进行中的周期任务');
+      this.cycleAbort.abort();
+      // Do NOT null cycleAbort here — the runCycle finally block owns that.
+    }
     console.log('[AgentLoop] 已停止主动智能引擎');
   }
 
@@ -199,46 +223,64 @@ export class AgentLoop {
   /**
    * 对非 statistical 类型的图分析候选洞见，用 LLM 润色标题和内容。
    * LLM 失败时降级到模板原文。
+   *
+   * Task 12: Now accepts an optional cycleSignal so that stop() can cancel
+   * the in-flight LLM call via the cycle-level AbortController. The local
+   * timeout AbortController is chained to the cycle signal so that aborting
+   * either one cancels the fetch.
    */
-  private async polishInsightWithLLM(insight: GraphInsight): Promise<{ title: string; content: string }> {
+  private async polishInsightWithLLM(
+    insight: GraphInsight,
+    cycleSignal?: AbortSignal,
+  ): Promise<{ title: string; content: string }> {
     try {
       const config = this.generator.getConfig();
       if (!config.apiUrl) throw new Error('LLM not configured');
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
-
-      const response = await agentLlmFetch(`${config.apiUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(config.apiKey ? { 'Authorization': `Bearer ${config.apiKey}` } : {}),
-        },
-        body: JSON.stringify({
-          model: config.model,
-          messages: [
-            { role: 'system', content: '你是一个知识发现助理。将数据发现改写成简洁优雅的洞见陈述。只输出有效的 JSON。' },
-            { role: 'user', content: `将以下数据发现改写成一条简洁的洞见，保留关键信息但用更自然的语言表达：\n标题: ${insight.title}\n内容: ${insight.content}\n类别: ${insight.category}\n\n请严格按照以下 JSON 格式输出：\n{"title": "润色后的标题", "content": "润色后的内容"}` },
-          ],
-          max_tokens: config.maxTokens,
-          temperature: 0.5,
-          response_format: { type: 'json_object' },
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-      if (!response.ok) throw new Error(`LLM HTTP ${response.status}`);
-
-      const data = await response.json() as { choices: Array<{ message: { content: string } }> };
-      const text = data.choices?.[0]?.message?.content;
-      if (!text) throw new Error('Empty LLM response');
-
-      const parsed = JSON.parse(text.trim());
-      if (parsed.title && parsed.content) {
-        return { title: parsed.title, content: parsed.content };
+      // Task 12: Chain the cycle signal so stop() cancels this fetch.
+      const onCycleAbort = () => controller.abort();
+      if (cycleSignal) {
+        if (cycleSignal.aborted) controller.abort();
+        else cycleSignal.addEventListener('abort', onCycleAbort, { once: true });
       }
-      throw new Error('Invalid LLM JSON shape');
+
+      try {
+        const response = await agentLlmFetch(`${config.apiUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(config.apiKey ? { 'Authorization': `Bearer ${config.apiKey}` } : {}),
+          },
+          body: JSON.stringify({
+            model: config.model,
+            messages: [
+              { role: 'system', content: '你是一个知识发现助理。将数据发现改写成简洁优雅的洞见陈述。只输出有效的 JSON。' },
+              { role: 'user', content: `将以下数据发现改写成一条简洁的洞见，保留关键信息但用更自然的语言表达：\n标题: ${insight.title}\n内容: ${insight.content}\n类别: ${insight.category}\n\n请严格按照以下 JSON 格式输出：\n{"title": "润色后的标题", "content": "润色后的内容"}` },
+            ],
+            max_tokens: config.maxTokens,
+            temperature: 0.5,
+            response_format: { type: 'json_object' },
+          }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) throw new Error(`LLM HTTP ${response.status}`);
+
+        const data = await response.json() as { choices: Array<{ message: { content: string } }> };
+        const text = data.choices?.[0]?.message?.content;
+        if (!text) throw new Error('Empty LLM response');
+
+        const parsed = JSON.parse(text.trim());
+        if (parsed.title && parsed.content) {
+          return { title: parsed.title, content: parsed.content };
+        }
+        throw new Error('Invalid LLM JSON shape');
+      } finally {
+        clearTimeout(timeout);
+        if (cycleSignal) cycleSignal.removeEventListener('abort', onCycleAbort);
+      }
     } catch (e) {
       console.warn('[AgentLoop] LLM 润色失败，降级到模板输出:', e);
       // 降级：直接使用图分析的原始模板文本
@@ -257,10 +299,19 @@ export class AgentLoop {
     console.log('[AgentLoop] 唤醒，执行周期任务...');
     const cycle = this.cycleCount++;
 
-    // Timeout guard: force-release the lock if a cycle runs too long
+    // Task 12: Create a cycle-level AbortController so stop() can cancel
+    // any in-flight LLM calls. The signal is passed down to polishInsightWithLLM
+    // and InsightGenerator.generateInsight, which chain it to their own timeout
+    // controllers.
+    this.cycleAbort = new AbortController();
+    const cycleSignal = this.cycleAbort.signal;
+
+    // Timeout guard: force-release the lock if a cycle runs too long.
+    // Also abort the cycle controller so any pending LLM fetch is cancelled.
     const cycleTimeout = setTimeout(() => {
       if (this.isCycleRunning) {
         console.warn('[AgentLoop] Cycle timeout — force-releasing lock');
+        this.cycleAbort?.abort();
         this.isCycleRunning = false;
         this.lastError = new Error('Cycle timeout');
       }
@@ -293,7 +344,7 @@ export class AgentLoop {
             result = { ok: true, insight: { title: best.title, content: best.content } };
           } else {
             // latent_connection / anti_consensus 类型通过 LLM 润色
-            const polished = await this.polishInsightWithLLM(best);
+            const polished = await this.polishInsightWithLLM(best, cycleSignal);
             result = { ok: true, insight: polished };
           }
 
@@ -311,7 +362,7 @@ export class AgentLoop {
       // 3. Fallback：当图分析未产出候选时，回退到旧的 LLM 直接生成逻辑
       if (!result.insight) {
         console.log('[AgentLoop] 图分析无候选，fallback 到 LLM 直接生成');
-        result = await this.generator.generateInsight(batch);
+        result = await this.generator.generateInsight(batch, cycleSignal);
       }
 
       if (result.ok) {
@@ -319,6 +370,13 @@ export class AgentLoop {
       }
 
           if (result.insight) {
+        // Task 12: Dedup guard — skip if an insight with the same title was
+        // already created in the last 24h. The 7-day cooldownUntil recorded in
+        // proactive_insights was never queried before creating a new insight,
+        // so the same insight could fire every cycle.
+        if (await this.db.hasRecentNotification(result.insight.title, 1)) {
+          console.log(`[AgentLoop] 跳过重复洞见通知: ${result.insight.title}`);
+        } else {
         const notification = await this.db.addNotification({
           title: result.insight.title,
           content: result.insight.content,
@@ -337,6 +395,7 @@ export class AgentLoop {
           cooldownUntil,
         });
         console.log(`[AgentLoop] 产生新洞见: ${result.insight.title}`);
+        } // end of dedup else
           } else {
             console.log('[AgentLoop] 本轮未产生有效洞见');
           }
@@ -377,17 +436,25 @@ export class AgentLoop {
         try {
           const decayed = await this.decayScheduler.getMostDecayedItems(5);
           if (decayed.length > 0) {
-            const names = decayed.map((d) => {
-              const daysAgo = Math.round((Date.now() - new Date(d.last_accessed).getTime()) / (1000 * 60 * 60 * 24));
-              return `- **${d.name}** (${d.type}) — ${daysAgo} 天未访问`;
-            }).join('\n');
-            await this.db.addNotification({
-              title: '记忆衰减预警',
-              content: `以下记忆已超过 7 天未访问，可能值得回顾：\n\n${names}`,
-              type: 'decay_warning',
-              related_entities: decayed.map((d) => d.id),
-            });
-            console.log(`[AgentLoop] 产生衰减预警: ${decayed.length} 条`);
+            // Task 12: Dedup guard — skip if a decay_warning was already created
+            // in the last 24h. Without this, a new notification fires every
+            // DECAY_CHECK_INTERVAL cycles (~6 min) as long as the same items
+            // remain decayed.
+            if (await this.db.hasRecentNotification('记忆衰减预警', 1)) {
+              console.log('[AgentLoop] 跳过重复衰减预警通知');
+            } else {
+              const names = decayed.map((d) => {
+                const daysAgo = Math.round((Date.now() - new Date(d.last_accessed).getTime()) / (1000 * 60 * 60 * 24));
+                return `- **${d.name}** (${d.type}) — ${daysAgo} 天未访问`;
+              }).join('\n');
+              await this.db.addNotification({
+                title: '记忆衰减预警',
+                content: `以下记忆已超过 7 天未访问，可能值得回顾：\n\n${names}`,
+                type: 'decay_warning',
+                related_entities: decayed.map((d) => d.id),
+              });
+              console.log(`[AgentLoop] 产生衰减预警: ${decayed.length} 条`);
+            }
           }
         } catch (e) {
           console.warn('[AgentLoop] 衰减分析失败，跳过:', e);
@@ -399,6 +466,14 @@ export class AgentLoop {
         try {
           const blindspots = await detectBlindspots(this.db);
           for (const bs of blindspots) {
+            // Task 12: Belt-and-suspenders dedup — the detector has its own
+            // 24h per-entity-set dedup, but if the detector's title-text
+            // inference breaks or related_entities changes, this guard still
+            // prevents duplicate notifications with the same title.
+            if (await this.db.hasRecentNotification(bs.title, 1)) {
+              console.log(`[AgentLoop] 跳过重复盲区通知: ${bs.title}`);
+              continue;
+            }
             const notification = await this.db.addNotification({
               title: bs.title,
               content: bs.content,
@@ -427,6 +502,10 @@ export class AgentLoop {
       this.lastError = error instanceof Error ? error : new Error(String(error));
     } finally {
       clearTimeout(cycleTimeout);
+      // Task 12: Clear the cycle AbortController. If stop() was called during
+      // this cycle, the controller was already aborted — we just drop the
+      // reference so the next cycle gets a fresh one.
+      this.cycleAbort = null;
       this.isCycleRunning = false;
       this.lastCycleEnd = new Date();
     }
