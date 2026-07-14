@@ -1,12 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
   E5_LARGE_USAGE_PROFILE,
+  E5_SMALL_USAGE_PROFILE,
   embeddingProfileFingerprint,
   prepareEmbeddingText,
   resolveEmbeddingUsageProfile,
 } from '../src/embedding/profiles.js';
 
 describe('EmbeddingUsageProfile', () => {
+  it('pins rollback to the Candidate v1 local artifact with current serialization', () => {
+    expect(E5_SMALL_USAGE_PROFILE).toMatchObject({
+      dimension: 384,
+      usageProfileVersion: 'e5-small-prefixed-v2',
+      serializationVersion: 'entity-passage-v2+assertion-passage-v1',
+      modelSha256: 'f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193',
+    });
+  });
+
   it('pins the Candidate v2 E5-Large artifact and dimensions', () => {
     const profile = resolveEmbeddingUsageProfile('Xenova/multilingual-e5-large');
     expect(profile).toMatchObject({

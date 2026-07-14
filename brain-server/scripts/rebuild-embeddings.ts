@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import initDatabase from '../src/db/sqlite.js';
 import { EmbeddingService } from '../src/embedding/service.js';
-import { E5_LARGE_USAGE_PROFILE } from '../src/embedding/profiles.js';
+import { E5_LARGE_USAGE_PROFILE, E5_SMALL_USAGE_PROFILE } from '../src/embedding/profiles.js';
 import { ASSERTION_SERIALIZATION_VERSION, ENTITY_SERIALIZATION_VERSION } from '../src/embedding/serialization.js';
 
 function argsFrom(argv: string[]): Record<string, string | boolean> {
@@ -27,11 +27,19 @@ async function main(): Promise<void> {
   const args = argsFrom(process.argv.slice(2));
   const dbPath = String(args.db || process.env.DB_PATH || '').trim();
   const modelPath = String(args['model-path'] || process.env.EMBEDDING_LOCAL_MODEL_PATH || '').trim();
+  const reportPath = String(args.report || process.env.EMBEDDING_REBUILD_REPORT || '').trim();
   if (!dbPath) throw new Error('--db or DB_PATH is required');
   if (!modelPath) throw new Error('--model-path or EMBEDDING_LOCAL_MODEL_PATH is required; downloads are disabled');
   const modelArg = String(args.model || 'multilingual-e5-large');
-  if (!['multilingual-e5-large', E5_LARGE_USAGE_PROFILE.modelId].includes(modelArg)) throw new Error(`Unsupported pinned model: ${modelArg}`);
-  if (Number(args.dimension || 1024) !== E5_LARGE_USAGE_PROFILE.dimension) throw new Error('Expected dimension 1024');
+  const profile = ['multilingual-e5-large', E5_LARGE_USAGE_PROFILE.modelId].includes(modelArg)
+    ? E5_LARGE_USAGE_PROFILE
+    : ['multilingual-e5-small', E5_SMALL_USAGE_PROFILE.modelId].includes(modelArg)
+      ? E5_SMALL_USAGE_PROFILE
+      : null;
+  if (!profile) throw new Error(`Unsupported pinned model: ${modelArg}`);
+  if (Number(args.dimension || profile.dimension) !== profile.dimension) {
+    throw new Error(`Expected dimension ${profile.dimension}`);
+  }
   if (String(args['entity-serialization'] || ENTITY_SERIALIZATION_VERSION) !== ENTITY_SERIALIZATION_VERSION) throw new Error(`Entity serialization must be ${ENTITY_SERIALIZATION_VERSION}`);
   if (String(args['assertion-serialization'] || ASSERTION_SERIALIZATION_VERSION) !== ASSERTION_SERIALIZATION_VERSION) throw new Error(`Assertion serialization must be ${ASSERTION_SERIALIZATION_VERSION}`);
 
@@ -39,8 +47,8 @@ async function main(): Promise<void> {
   const db = initDatabase({ dbPath });
   await db.runMigrations();
   const service = new EmbeddingService({
-    mode: 'local', localModel: E5_LARGE_USAGE_PROFILE.modelId,
-    localModelPath: modelPath, dimensions: 1024, failOnUnavailable: true,
+    mode: 'local', localModel: profile.modelId,
+    localModelPath: modelPath, dimensions: profile.dimension, failOnUnavailable: true,
   });
   const started = Date.now();
   const preflightText = 'Omni-Context embedding preflight';
@@ -48,9 +56,9 @@ async function main(): Promise<void> {
   const passagePreflight = await service.embedPassage(preflightText);
   const info = service.getInfo();
   const queryPassageDiffer = preflight.embedding.some((value, index) => value !== passagePreflight.embedding[index]);
-  if (preflight.dimensions !== 1024 || passagePreflight.dimensions !== 1024
-    || info.actualDimension !== 1024 || !info.modelSha256Verified || !queryPassageDiffer) {
-    throw new Error(`Embedding preflight unhealthy: expected=1024 actual=${info.actualDimension}`);
+  if (preflight.dimensions !== profile.dimension || passagePreflight.dimensions !== profile.dimension
+    || info.actualDimension !== profile.dimension || !info.modelSha256Verified || !queryPassageDiffer) {
+    throw new Error(`Embedding preflight unhealthy: expected=${profile.dimension} actual=${info.actualDimension}`);
   }
 
   const backupPath = `${dbPath}.embedding-manifests.${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
@@ -65,16 +73,23 @@ async function main(): Promise<void> {
   const healthy = integrity.assertion.coverage === 1 && integrity.entity.coverage === 1
     && integrity.zeroVectors === 0 && integrity.nanVectors === 0
     && integrity.wrongDimensions === 0 && integrity.orphanVectors === 0 && integrity.staleVectors === 0;
-  process.stdout.write(`${JSON.stringify({
+  const report = {
     event: 'embedding_rebuild_complete', status: healthy ? 'healthy' : 'unhealthy',
-    expected_dimension: 1024, actual_dimension: info.actualDimension,
-    usage_profile: service.getUsageProfile().usageProfileVersion,
+    expected_dimension: profile.dimension, actual_dimension: info.actualDimension,
+    usage_profile_version: service.getUsageProfile().usageProfileVersion,
+    usage_profile: service.getUsageProfile(),
+    model_info: info,
     query_prefix: service.getUsageProfile().queryPrefix,
     passage_prefix: service.getUsageProfile().passagePrefix,
     query_passage_vectors_differ: queryPassageDiffer,
     rss_bytes: process.memoryUsage().rss,
     duration_ms: Date.now() - started, backup_path: backupPath, counts, integrity,
-  })}\n`);
+  };
+  if (reportPath) {
+    await mkdir(path.dirname(reportPath), { recursive: true });
+    await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+  }
+  process.stdout.write(`${JSON.stringify(report)}\n`);
   await db.close();
   if (!healthy) process.exitCode = 2;
 }

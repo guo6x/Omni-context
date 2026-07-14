@@ -38,21 +38,22 @@ export const E5_LARGE_USAGE_PROFILE: Readonly<EmbeddingUsageProfile> = Object.fr
   usageProfileVersion: 'e5-large-v1',
 });
 
-const E5_SMALL_LEGACY_PROFILE: Readonly<EmbeddingUsageProfile> = Object.freeze({
+export const E5_SMALL_USAGE_PROFILE: Readonly<EmbeddingUsageProfile> = Object.freeze({
   family: 'e5',
   modelId: 'Xenova/multilingual-e5-small',
-  modelRevision: 'bundled-legacy',
+  modelRevision: 'local-bundle-candidate-v1',
   onnxFile: 'onnx/model_quantized.onnx',
   quantization: 'QInt8',
   tokenizerVersion: '@xenova/transformers@2.17.2:XLMRobertaTokenizer',
+  modelSha256: 'f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193',
   dimension: 384,
   maxTokens: 512,
   queryPrefix: 'query: ',
   passagePrefix: 'passage: ',
   pooling: 'mean',
   normalize: true,
-  serializationVersion: 'entity-passage-v1',
-  usageProfileVersion: 'e5-small-prefixed-v1',
+  serializationVersion: 'entity-passage-v2+assertion-passage-v1',
+  usageProfileVersion: 'e5-small-prefixed-v2',
 });
 
 export function resolveEmbeddingUsageProfile(
@@ -66,7 +67,7 @@ export function resolveEmbeddingUsageProfile(
     return { ...override };
   }
   if (modelId === E5_LARGE_USAGE_PROFILE.modelId) return { ...E5_LARGE_USAGE_PROFILE };
-  if (modelId === E5_SMALL_LEGACY_PROFILE.modelId) return { ...E5_SMALL_LEGACY_PROFILE };
+  if (modelId === E5_SMALL_USAGE_PROFILE.modelId) return { ...E5_SMALL_USAGE_PROFILE };
   throw new Error(`No pinned EmbeddingUsageProfile for model: ${modelId}`);
 }
 
