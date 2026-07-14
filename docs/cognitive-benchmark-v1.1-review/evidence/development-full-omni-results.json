@@ -1,7 +1,10 @@
 {
   "schema_version": 1,
   "mode": "full_omni",
-  "status": "not_run",
-  "completed": 0,
-  "reason": "Kimi preflight blocked Development"
+  "status": "completed",
+  "completed": 35,
+  "expected": 35,
+  "errors": 0,
+  "overall_cognitive_score": 0.5043187830687831,
+  "results_file": "development-full-omni-results.jsonl"
 }

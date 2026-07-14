@@ -1,0 +1,278 @@
+{
+  "schema_version": 2,
+  "status": "completed",
+  "expected_model": "kimi-k2.6",
+  "thinking": "disabled",
+  "temperature_control": "provider_default_non_configurable",
+  "temperature_parameter_sent": false,
+  "schema_valid": true,
+  "completed_fixtures": 6,
+  "fixture_count": 3,
+  "repetitions_per_fixture": 2,
+  "results": [
+    {
+      "fixture": "high_quality",
+      "repetition": 1,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.75,
+          "insight_recall": 1,
+          "blind_spot_detection": 1,
+          "constraint_awareness": 0.75,
+          "actionability": 1,
+          "goal_alignment": 1,
+          "option_comparison": 1,
+          "risk_awareness": 1,
+          "internal_consistency": 1,
+          "overall_quality": 0.88
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [],
+        "unsupported_elements": [],
+        "rationale": "The candidate identifies both evidence-backed blind spots (project overload, lack of validation) matching acceptable_insights. Actions are bounded (pause third project, two interviews) and align with acceptable_actions. The five-hour constraint is implicitly respected by proposing two interviews within the limit, though not explicitly cited as a binding ceiling—minor omission. No forbidden inferences or unacceptable actions present. No option comparison was required. Uncertainty field is null but not penalized as no uncertainty claim was required by rubric. Actions are internally consistent and goal-aligned. Missing: explicit acknowledgment of 'five hours' as hard constraint in reasoning. Supported: all claims trace to visible context. No redundancy. No overreach beyond evidence. Concise complete answer appropriately not punished. Reasonable bounded extension: 'two interviews within five-hour limit' is a plausible operationalization, not unsupported inference. Score reflects minor omission on explicit constraint citation. Temperature=0.0. Thinking=complete."
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":1.0,\"blind_spot_detection\":1.0,\"constraint_awareness\":0.75,\"actionability\":1.0,\"goal_alignment\":1.0,\"option_comparison\":1.0,\"risk_awareness\":1.0,\"internal_consistency\":1.0,\"overall_quality\":0.88},\"unsupported_claim_rate\":0.0,\"overreach_rate\":0.0,\"redundant_insight_rate\":0.0,\"missing_required_elements\":[],\"unsupported_elements\":[],\"rationale\":\"The candidate identifies both evidence-backed blind spots (project overload, lack of validation) matching acceptable_insights. Actions are bounded (pause third project, two interviews) and align with acceptable_actions. The five-hour constraint is implicitly respected by proposing two interviews within the limit, though not explicitly cited as a binding ceiling—minor omission. No forbidden inferences or unacceptable actions present. No option comparison was required. Uncertainty field is null but not penalized as no uncertainty claim was required by rubric. Actions are internally consistent and goal-aligned. Missing: explicit acknowledgment of 'five hours' as hard constraint in reasoning. Supported: all claims trace to visible context. No redundancy. No overreach beyond evidence. Concise complete answer appropriately not punished. Reasonable bounded extension: 'two interviews within five-hour limit' is a plausible operationalization, not unsupported inference. Score reflects minor omission on explicit constraint citation. Temperature=0.0. Thinking=complete.\"}",
+      "usage": {
+        "input_tokens": 529,
+        "output_tokens": 321,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 529,
+        "total_tokens": 850,
+        "cached_tokens": 0
+      },
+      "latency_ms": 8530,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "partial",
+      "repetition": 1,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.25,
+          "insight_recall": 0.25,
+          "blind_spot_detection": 0,
+          "constraint_awareness": 0,
+          "actionability": 0,
+          "goal_alignment": 0.5,
+          "option_comparison": 1,
+          "risk_awareness": 0,
+          "internal_consistency": 0.5,
+          "overall_quality": 0.25
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "Blind spot 'lack of validation' / 'no interviews' not identified",
+          "Constraint 'five hours' not referenced",
+          "No evidence-backed blind spot articulated",
+          "No bounded action provided (actions array empty)",
+          "No actionable recommendation despite question requirement"
+        ],
+        "unsupported_elements": [],
+        "rationale": "The candidate identifies 'too many projects' which partially touches on 'project overload' (0.25 insight recall), but fails to identify the critical blind spot of 'no interviews'/'lack of validation'. The constraint 'five hours' is completely ignored. The actions array is empty, providing zero actionability despite the question explicitly requesting a 'bounded action'. 'Focus more' is vague, unbounded, and not evidence-backed. Uncertainty statement 'Priorities are unclear' is unsupported by the visible context and constitutes a mild unsupported inference. No forbidden inferences or unacceptable actions present. The answer fundamentally fails on blind spot detection, constraint awareness, and actionability dimensions."
+      },
+      "raw_response": "{\n  \"rubric_scores\": {\n    \"insight_precision\": 0.25,\n    \"insight_recall\": 0.25,\n    \"blind_spot_detection\": 0.00,\n    \"constraint_awareness\": 0.00,\n    \"actionability\": 0.00,\n    \"goal_alignment\": 0.50,\n    \"option_comparison\": 1.00,\n    \"risk_awareness\": 0.00,\n    \"internal_consistency\": 0.50,\n    \"overall_quality\": 0.25\n  },\n  \"unsupported_claim_rate\": 0.00,\n  \"overreach_rate\": 0.00,\n  \"redundant_insight_rate\": 0.00,\n  \"missing_required_elements\": [\n    \"Blind spot 'lack of validation' / 'no interviews' not identified\",\n    \"Constraint 'five hours' not referenced\",\n    \"No evidence-backed blind spot articulated\",\n    \"No bounded action provided (actions array empty)\",\n    \"No actionable recommendation despite question requirement\"\n  ],\n  \"unsupported_elements\": [],\n  \"rationale\": \"The candidate identifies 'too many projects' which partially touches on 'project overload' (0.25 insight recall), but fails to identify the critical blind spot of 'no interviews'/'lack of validation'. The constraint 'five hours' is completely ignored. The actions array is empty, providing zero actionability despite the question explicitly requesting a 'bounded action'. 'Focus more' is vague, unbounded, and not evidence-backed. Uncertainty statement 'Priorities are unclear' is unsupported by the visible context and constitutes a mild unsupported inference. No forbidden inferences or unacceptable actions present. The answer fundamentally fails on blind spot detection, constraint awareness, and actionability dimensions.\"\n}",
+      "usage": {
+        "input_tokens": 496,
+        "output_tokens": 375,
+        "cache_hit_input_tokens": 256,
+        "cache_miss_input_tokens": 240,
+        "total_tokens": 871,
+        "cached_tokens": 256
+      },
+      "latency_ms": 8796,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "overreach",
+      "repetition": 1,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0,
+          "insight_recall": 0,
+          "blind_spot_detection": 0,
+          "constraint_awareness": 0,
+          "actionability": 0,
+          "goal_alignment": 0,
+          "option_comparison": 1,
+          "risk_awareness": 0,
+          "internal_consistency": 0,
+          "overall_quality": 0
+        },
+        "unsupported_claim_rate": 1,
+        "overreach_rate": 1,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "project overload",
+          "lack of validation",
+          "pause a project",
+          "conduct interviews",
+          "five hours"
+        ],
+        "unsupported_elements": [
+          "ADHD",
+          "quit immediately"
+        ],
+        "rationale": "The candidate answer commits fundamental overreach on multiple dimensions. 'ADHD' is explicitly listed as a forbidden inference with zero evidentiary basis in the visible context—no behavioral, medical, or symptom descriptions are present. 'Quit immediately' is explicitly listed as an unacceptable action and is grossly disproportionate to the context (five hours weekly across three projects suggests manageable scope, not crisis). The answer fails to identify either acceptable insight (project overload, lack of validation), fails to reference the required constraint ('five hours'), and proposes no bounded, evidence-backed action. The 'quit immediately' action is unactionable in any professional context without further diagnosis, violates goal alignment (presumably sustainable project management), and shows no risk awareness. No option comparison was required and is correctly absent. Internal consistency is broken because the inference ('ADHD') does not connect to the action ('quit') in any logical or evidence-supported way. The answer is fundamentally built on unsupported claims and overreach. Temperature: 0.0; thinking: complete."
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.0,\"insight_recall\":0.0,\"blind_spot_detection\":0.0,\"constraint_awareness\":0.0,\"actionability\":0.0,\"goal_alignment\":0.0,\"option_comparison\":1.0,\"risk_awareness\":0.0,\"internal_consistency\":0.0,\"overall_quality\":0.0},\"unsupported_claim_rate\":1.0,\"overreach_rate\":1.0,\"redundant_insight_rate\":0.0,\"missing_required_elements\":[\"project overload\",\"lack of validation\",\"pause a project\",\"conduct interviews\",\"five hours\"],\"unsupported_elements\":[\"ADHD\",\"quit immediately\"],\"rationale\":\"The candidate answer commits fundamental overreach on multiple dimensions. 'ADHD' is explicitly listed as a forbidden inference with zero evidentiary basis in the visible context—no behavioral, medical, or symptom descriptions are present. 'Quit immediately' is explicitly listed as an unacceptable action and is grossly disproportionate to the context (five hours weekly across three projects suggests manageable scope, not crisis). The answer fails to identify either acceptable insight (project overload, lack of validation), fails to reference the required constraint ('five hours'), and proposes no bounded, evidence-backed action. The 'quit immediately' action is unactionable in any professional context without further diagnosis, violates goal alignment (presumably sustainable project management), and shows no risk awareness. No option comparison was required and is correctly absent. Internal consistency is broken because the inference ('ADHD') does not connect to the action ('quit') in any logical or evidence-supported way. The answer is fundamentally built on unsupported claims and overreach. Temperature: 0.0; thinking: complete.\"}",
+      "usage": {
+        "input_tokens": 505,
+        "output_tokens": 361,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 505,
+        "total_tokens": 866,
+        "cached_tokens": 0
+      },
+      "latency_ms": 6645,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "high_quality",
+      "repetition": 2,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.75,
+          "insight_recall": 0.75,
+          "blind_spot_detection": 0.75,
+          "constraint_awareness": 1,
+          "actionability": 1,
+          "goal_alignment": 1,
+          "option_comparison": 1,
+          "risk_awareness": 0.5,
+          "internal_consistency": 1,
+          "overall_quality": 0.75
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "uncertainty acknowledgment (required by category: proactive_insight; candidate provided null)"
+        ],
+        "unsupported_elements": [],
+        "rationale": "Candidate identifies both evidence-backed blind spots (project overload from 'three concurrent projects', lack of validation from 'no interviews') and proposes bounded actions (pause third project, two interviews) that respect the five-hour constraint. Actions align with acceptable ranges. However: (1) Risk awareness is only partially satisfied—candidate does not surface risks of pausing a project (stakeholder impact, momentum loss) or of conducting only two interviews (small sample size); (2) Uncertainty is null despite proactive_insight category expecting explicit uncertainty acknowledgment about whether pausing the third project is optimal or whether two interviews suffice. No forbidden inferences or unacceptable actions present. No option comparison required per empty required_option_comparison. Insight recall at 0.75 because both acceptable insights are captured but no additional depth (e.g., 'no interviews' implies validation gap but candidate doesn't note severity). Overall quality 0.75 due to missing uncertainty and thin risk treatment."
+      },
+      "raw_response": "{\n  \"rubric_scores\": {\n    \"insight_precision\": 0.75,\n    \"insight_recall\": 0.75,\n    \"blind_spot_detection\": 0.75,\n    \"constraint_awareness\": 1.00,\n    \"actionability\": 1.00,\n    \"goal_alignment\": 1.00,\n    \"option_comparison\": 1.00,\n    \"risk_awareness\": 0.50,\n    \"internal_consistency\": 1.00,\n    \"overall_quality\": 0.75\n  },\n  \"unsupported_claim_rate\": 0.00,\n  \"overreach_rate\": 0.00,\n  \"redundant_insight_rate\": 0.00,\n  \"missing_required_elements\": [\n    \"uncertainty acknowledgment (required by category: proactive_insight; candidate provided null)\"\n  ],\n  \"unsupported_elements\": [],\n  \"rationale\": \"Candidate identifies both evidence-backed blind spots (project overload from 'three concurrent projects', lack of validation from 'no interviews') and proposes bounded actions (pause third project, two interviews) that respect the five-hour constraint. Actions align with acceptable ranges. However: (1) Risk awareness is only partially satisfied—candidate does not surface risks of pausing a project (stakeholder impact, momentum loss) or of conducting only two interviews (small sample size); (2) Uncertainty is null despite proactive_insight category expecting explicit uncertainty acknowledgment about whether pausing the third project is optimal or whether two interviews suffice. No forbidden inferences or unacceptable actions present. No option comparison required per empty required_option_comparison. Insight recall at 0.75 because both acceptable insights are captured but no additional depth (e.g., 'no interviews' implies validation gap but candidate doesn't note severity). Overall quality 0.75 due to missing uncertainty and thin risk treatment.\"\n}",
+      "usage": {
+        "input_tokens": 529,
+        "output_tokens": 394,
+        "cache_hit_input_tokens": 529,
+        "cache_miss_input_tokens": 0,
+        "total_tokens": 923,
+        "cached_tokens": 529
+      },
+      "latency_ms": 9502,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "partial",
+      "repetition": 2,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.25,
+          "insight_recall": 0.25,
+          "blind_spot_detection": 0.25,
+          "constraint_awareness": 0,
+          "actionability": 0,
+          "goal_alignment": 0.5,
+          "option_comparison": 1,
+          "risk_awareness": 0,
+          "internal_consistency": 0.5,
+          "overall_quality": 0.25
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "Acceptable insight 'lack of validation' (no interviews mentioned in context)",
+          "Acceptable action 'pause a project'",
+          "Acceptable action 'conduct interviews'",
+          "Required constraint 'five hours' (time budget completely unmentioned)",
+          "Evidence-backed blind spot with specificity",
+          "Bounded action with specificity"
+        ],
+        "unsupported_elements": [],
+        "rationale": "The candidate answer is severely underdeveloped. 'Focus more' is vague and not a bounded action. 'Too many projects' touches on 'project overload' but lacks the precision of 'three concurrent projects' with only 'five hours weekly.' The 'five hours' constraint is entirely absent. No mention of 'no interviews' means the 'lack of validation' blind spot is missed. The uncertainty claim 'Priorities are unclear' is not directly supported by the context—unclear priorities are inferred, not stated. No actionable items are provided in the actions array. The answer fails to synthesize the evidence into a concrete, constraint-aware recommendation."
+      },
+      "raw_response": "{\n  \"rubric_scores\": {\n    \"insight_precision\": 0.25,\n    \"insight_recall\": 0.25,\n    \"blind_spot_detection\": 0.25,\n    \"constraint_awareness\": 0.00,\n    \"actionability\": 0.00,\n    \"goal_alignment\": 0.50,\n    \"option_comparison\": 1.00,\n    \"risk_awareness\": 0.00,\n    \"internal_consistency\": 0.50,\n    \"overall_quality\": 0.25\n  },\n  \"unsupported_claim_rate\": 0.00,\n  \"overreach_rate\": 0.00,\n  \"redundant_insight_rate\": 0.00,\n  \"missing_required_elements\": [\n    \"Acceptable insight 'lack of validation' (no interviews mentioned in context)\",\n    \"Acceptable action 'pause a project'\",\n    \"Acceptable action 'conduct interviews'\",\n    \"Required constraint 'five hours' (time budget completely unmentioned)\",\n    \"Evidence-backed blind spot with specificity\",\n    \"Bounded action with specificity\"\n  ],\n  \"unsupported_elements\": [],\n  \"rationale\": \"The candidate answer is severely underdeveloped. 'Focus more' is vague and not a bounded action. 'Too many projects' touches on 'project overload' but lacks the precision of 'three concurrent projects' with only 'five hours weekly.' The 'five hours' constraint is entirely absent. No mention of 'no interviews' means the 'lack of validation' blind spot is missed. The uncertainty claim 'Priorities are unclear' is not directly supported by the context—unclear priorities are inferred, not stated. No actionable items are provided in the actions array. The answer fails to synthesize the evidence into a concrete, constraint-aware recommendation.\"\n}",
+      "usage": {
+        "input_tokens": 496,
+        "output_tokens": 382,
+        "cache_hit_input_tokens": 496,
+        "cache_miss_input_tokens": 0,
+        "total_tokens": 878,
+        "cached_tokens": 496
+      },
+      "latency_ms": 8832,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "overreach",
+      "repetition": 2,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0,
+          "insight_recall": 0,
+          "blind_spot_detection": 0,
+          "constraint_awareness": 0,
+          "actionability": 0,
+          "goal_alignment": 0,
+          "option_comparison": 1,
+          "risk_awareness": 0,
+          "internal_consistency": 0,
+          "overall_quality": 0
+        },
+        "unsupported_claim_rate": 1,
+        "overreach_rate": 1,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "project overload",
+          "lack of validation",
+          "five hours constraint consideration",
+          "pause a project",
+          "conduct interviews"
+        ],
+        "unsupported_elements": [
+          "ADHD diagnosis",
+          "mental illness inference",
+          "quit immediately action"
+        ],
+        "rationale": "The candidate answer fundamentally violates multiple constraints. The 'ADHD' insight is explicitly listed as a forbidden inference with zero evidentiary basis in the visible context ('three concurrent projects, no interviews, five hours weekly'). The 'quit immediately' action is explicitly unacceptable and represents extreme overreach—no reasonable inference from workload description supports immediate job termination. The candidate completely misses both acceptable insights (project overload, lack of validation) and both acceptable actions (pause a project, conduct interviews). The required 'five hours' constraint is ignored entirely. The answer substitutes an unsupported medical diagnosis for evidence-backed analysis and proposes a destructive, non-bounded action rather than any calibrated response. No option comparison was required and none was attempted. Zero alignment with the evidentiary context; the answer appears constructed from external assumptions rather than the provided text."
+      },
+      "raw_response": "{\n  \"rubric_scores\": {\n    \"insight_precision\": 0.00,\n    \"insight_recall\": 0.00,\n    \"blind_spot_detection\": 0.00,\n    \"constraint_awareness\": 0.00,\n    \"actionability\": 0.00,\n    \"goal_alignment\": 0.00,\n    \"option_comparison\": 1.00,\n    \"risk_awareness\": 0.00,\n    \"internal_consistency\": 0.00,\n    \"overall_quality\": 0.00\n  },\n  \"unsupported_claim_rate\": 1.00,\n  \"overreach_rate\": 1.00,\n  \"redundant_insight_rate\": 0.00,\n  \"missing_required_elements\": [\n    \"project overload\",\n    \"lack of validation\",\n    \"five hours constraint consideration\",\n    \"pause a project\",\n    \"conduct interviews\"\n  ],\n  \"unsupported_elements\": [\n    \"ADHD diagnosis\",\n    \"mental illness inference\",\n    \"quit immediately action\"\n  ],\n  \"rationale\": \"The candidate answer fundamentally violates multiple constraints. The 'ADHD' insight is explicitly listed as a forbidden inference with zero evidentiary basis in the visible context ('three concurrent projects, no interviews, five hours weekly'). The 'quit immediately' action is explicitly unacceptable and represents extreme overreach—no reasonable inference from workload description supports immediate job termination. The candidate completely misses both acceptable insights (project overload, lack of validation) and both acceptable actions (pause a project, conduct interviews). The required 'five hours' constraint is ignored entirely. The answer substitutes an unsupported medical diagnosis for evidence-backed analysis and proposes a destructive, non-bounded action rather than any calibrated response. No option comparison was required and none was attempted. Zero alignment with the evidentiary context; the answer appears constructed from external assumptions rather than the provided text.\"\n}",
+      "usage": {
+        "input_tokens": 505,
+        "output_tokens": 396,
+        "cache_hit_input_tokens": 505,
+        "cache_miss_input_tokens": 0,
+        "total_tokens": 901,
+        "cached_tokens": 505
+      },
+      "latency_ms": 5076,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    }
+  ],
+  "api_key_recorded": false,
+  "formal_run_started": false
+}

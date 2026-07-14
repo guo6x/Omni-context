@@ -1,10 +1,17 @@
 {
   "schema_version": 1,
-  "status": "actual_preflight_only",
-  "kimi_calls": 3,
-  "prompt_tokens": 0,
-  "completion_tokens": 0,
-  "cached_tokens": 0,
+  "status": "partial_development_actuals",
+  "kimi_calls": 26,
+  "kimi_call_limit": 40,
+  "prompt_tokens": 56007,
+  "completion_tokens": 13285,
+  "total_tokens": 69292,
+  "cached_tokens": 18366,
+  "provider_errors": 0,
+  "schema_failures": 9,
+  "structured_output_fallbacks": 0,
   "development_cost_estimate_available": false,
-  "reason": "No successful Kimi response and Development was not started"
+  "formal_cost_estimate_available": false,
+  "formal_duration_estimate_available": false,
+  "reason": "Development stopped before completing all three modes, so a final cost and runtime extrapolation would be unreliable"
 }

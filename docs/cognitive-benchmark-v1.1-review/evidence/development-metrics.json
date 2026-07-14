@@ -1,9 +1,314 @@
 {
   "schema_version": 2,
-  "status": "not_available",
+  "status": "DEVELOPMENT_PARTIAL_NOT_FORMAL",
+  "completion": {
+    "full_omni": "35/35",
+    "no_memory": "16/21",
+    "retrieval_only": "0/21"
+  },
+  "blocker": "Three consecutive Kimi schema failures triggered the required hard stop",
+  "answer_schema_version": "answer-schema-v2",
   "scoring_version": "deterministic-scoring-v3",
-  "no_memory": null,
-  "retrieval_only": null,
-  "full_omni": null,
-  "reason": "Development was not started"
+  "primary_judge": "kimi-k2.6",
+  "primary_judge_independent": true,
+  "by_mode": {
+    "no_memory": {
+      "scoring_version": "deterministic-scoring-v3",
+      "overall_cognitive_score": 0.3703703703703704,
+      "category_macro_scores": {
+        "cognitive_continuity": 0.5,
+        "memory_evolution": 0.20833333333333334,
+        "conflict_resolution": 0.2222222222222222,
+        "cross_agent_transfer": 0.5,
+        "human_like_forgetting": 0.4166666666666667,
+        "proactive_insight": 0.375,
+        "decision_quality": null
+      },
+      "deterministic_score": 0.3694444444444445,
+      "agent_judged_score": 0.375,
+      "memory_reliability_score": 0.3368055555555556,
+      "personalization_score": 0.5,
+      "temporal_and_conflict_score": 0.2152777777777778,
+      "insight_and_decision_score": 0.375,
+      "by_category": {
+        "cognitive_continuity": {
+          "count": 3,
+          "macro_score": 0.5,
+          "metrics": {
+            "profile_recall": 0,
+            "profile_consistency": 1,
+            "constraint_utilization": 0,
+            "personalization_accuracy": 0,
+            "contradiction_rate": 0,
+            "unsupported_personalization_rate": 0
+          },
+          "status": "completed"
+        },
+        "memory_evolution": {
+          "count": 3,
+          "macro_score": 0.20833333333333334,
+          "metrics": {
+            "current_state_accuracy": 0,
+            "historical_state_preservation": 0,
+            "temporal_ordering_accuracy": 0,
+            "evolution_interpretation_accuracy": 0,
+            "stale_memory_leakage": 0,
+            "state_transition_accuracy": 0.25
+          },
+          "status": "completed"
+        },
+        "conflict_resolution": {
+          "count": 3,
+          "macro_score": 0.2222222222222222,
+          "metrics": {
+            "conflict_resolution_accuracy": 0.3333333333333333,
+            "latest_valid_fact_accuracy": 0,
+            "historical_query_accuracy": 0,
+            "invalidated_fact_rejection": 0,
+            "conflict_disclosure_accuracy": 0,
+            "unsupported_resolution_rate": 0
+          },
+          "status": "completed"
+        },
+        "cross_agent_transfer": {
+          "count": 3,
+          "macro_score": 0.5,
+          "metrics": {
+            "cross_agent_recall": 0,
+            "cross_agent_consistency": 1,
+            "update_propagation_accuracy": 0,
+            "provenance_preservation": 0,
+            "agent_isolation_error_rate": 0,
+            "stale_transfer_rate": 0
+          },
+          "status": "completed"
+        },
+        "human_like_forgetting": {
+          "count": 3,
+          "macro_score": 0.4166666666666667,
+          "metrics": {
+            "salient_memory_retention": 0,
+            "noise_suppression": 1,
+            "false_forgetting_rate": 1,
+            "stale_retention_rate": 0,
+            "memory_precision": 0.5,
+            "memory_compression_ratio": null,
+            "invalidation_accuracy": 0
+          },
+          "status": "completed"
+        },
+        "proactive_insight": {
+          "count": 1,
+          "macro_score": 0.375,
+          "metrics": {
+            "insight_precision": 0,
+            "insight_recall": 0,
+            "blind_spot_detection_rate": 0,
+            "constraint_awareness": 0,
+            "actionability": 0,
+            "unsupported_claim_rate": 0,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0
+          },
+          "status": "completed"
+        },
+        "decision_quality": {
+          "count": 0,
+          "macro_score": null,
+          "metrics": {},
+          "status": "blocked"
+        }
+      },
+      "completed": 16,
+      "errors": 1,
+      "primary_judge_independent": true
+    },
+    "retrieval_only": {
+      "scoring_version": "deterministic-scoring-v3",
+      "overall_cognitive_score": null,
+      "category_macro_scores": {
+        "cognitive_continuity": null,
+        "memory_evolution": null,
+        "conflict_resolution": null,
+        "cross_agent_transfer": null,
+        "human_like_forgetting": null,
+        "proactive_insight": null,
+        "decision_quality": null
+      },
+      "deterministic_score": null,
+      "agent_judged_score": null,
+      "memory_reliability_score": null,
+      "personalization_score": null,
+      "temporal_and_conflict_score": null,
+      "insight_and_decision_score": null,
+      "by_category": {
+        "cognitive_continuity": {
+          "count": 0,
+          "macro_score": null,
+          "metrics": {},
+          "status": "blocked"
+        },
+        "memory_evolution": {
+          "count": 0,
+          "macro_score": null,
+          "metrics": {},
+          "status": "blocked"
+        },
+        "conflict_resolution": {
+          "count": 0,
+          "macro_score": null,
+          "metrics": {},
+          "status": "blocked"
+        },
+        "cross_agent_transfer": {
+          "count": 0,
+          "macro_score": null,
+          "metrics": {},
+          "status": "blocked"
+        },
+        "human_like_forgetting": {
+          "count": 0,
+          "macro_score": null,
+          "metrics": {},
+          "status": "blocked"
+        },
+        "proactive_insight": {
+          "count": 0,
+          "macro_score": null,
+          "metrics": {},
+          "status": "blocked"
+        },
+        "decision_quality": {
+          "count": 0,
+          "macro_score": null,
+          "metrics": {},
+          "status": "blocked"
+        }
+      },
+      "completed": 0,
+      "errors": 0,
+      "primary_judge_independent": true
+    },
+    "full_omni": {
+      "scoring_version": "deterministic-scoring-v3",
+      "overall_cognitive_score": 0.5043187830687831,
+      "category_macro_scores": {
+        "cognitive_continuity": 0.6666666666666666,
+        "memory_evolution": 0.31388888888888883,
+        "conflict_resolution": 0.22222222222222224,
+        "cross_agent_transfer": 0.47777777777777775,
+        "human_like_forgetting": 0.7277777777777779,
+        "proactive_insight": 0.59375,
+        "decision_quality": 0.5281481481481481
+      },
+      "deterministic_score": 0.48166666666666663,
+      "agent_judged_score": 0.560949074074074,
+      "memory_reliability_score": 0.4354166666666667,
+      "personalization_score": 0.6666666666666666,
+      "temporal_and_conflict_score": 0.26805555555555555,
+      "insight_and_decision_score": 0.5609490740740741,
+      "by_category": {
+        "cognitive_continuity": {
+          "count": 5,
+          "macro_score": 0.6666666666666666,
+          "metrics": {
+            "profile_recall": 0.4,
+            "profile_consistency": 1,
+            "constraint_utilization": 0.26666666666666666,
+            "personalization_accuracy": 0.3333333333333333,
+            "contradiction_rate": 0,
+            "unsupported_personalization_rate": 0
+          },
+          "status": "completed"
+        },
+        "memory_evolution": {
+          "count": 5,
+          "macro_score": 0.31388888888888883,
+          "metrics": {
+            "current_state_accuracy": 0.2,
+            "historical_state_preservation": 0.2,
+            "temporal_ordering_accuracy": 0,
+            "evolution_interpretation_accuracy": 0.13333333333333333,
+            "stale_memory_leakage": 0,
+            "state_transition_accuracy": 0.35
+          },
+          "status": "completed"
+        },
+        "conflict_resolution": {
+          "count": 5,
+          "macro_score": 0.22222222222222224,
+          "metrics": {
+            "conflict_resolution_accuracy": 0.3333333333333333,
+            "latest_valid_fact_accuracy": 0,
+            "historical_query_accuracy": 0,
+            "invalidated_fact_rejection": 0,
+            "conflict_disclosure_accuracy": 0,
+            "unsupported_resolution_rate": 0
+          },
+          "status": "completed"
+        },
+        "cross_agent_transfer": {
+          "count": 5,
+          "macro_score": 0.47777777777777775,
+          "metrics": {
+            "cross_agent_recall": 0.26666666666666666,
+            "cross_agent_consistency": 0.8,
+            "update_propagation_accuracy": 0.2,
+            "provenance_preservation": 0,
+            "agent_isolation_error_rate": 0.2,
+            "stale_transfer_rate": 0.2
+          },
+          "status": "completed"
+        },
+        "human_like_forgetting": {
+          "count": 5,
+          "macro_score": 0.7277777777777779,
+          "metrics": {
+            "salient_memory_retention": 0.8,
+            "noise_suppression": 0.8666666666666668,
+            "false_forgetting_rate": 0.2,
+            "stale_retention_rate": 0.13333333333333333,
+            "memory_precision": 0.8333333333333334,
+            "memory_compression_ratio": null,
+            "invalidation_accuracy": 0.2
+          },
+          "status": "completed"
+        },
+        "proactive_insight": {
+          "count": 5,
+          "macro_score": 0.59375,
+          "metrics": {
+            "insight_precision": 0.65,
+            "insight_recall": 0.55,
+            "blind_spot_detection_rate": 0.7,
+            "constraint_awareness": 0,
+            "actionability": 0.3,
+            "unsupported_claim_rate": 0.2,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "status": "completed"
+        },
+        "decision_quality": {
+          "count": 5,
+          "macro_score": 0.5281481481481481,
+          "metrics": {
+            "constraint_coverage": 0.5,
+            "goal_alignment": 0.5,
+            "personalization": 0.6333333333333333,
+            "option_comparison_quality": 0.45,
+            "risk_awareness": 0.3,
+            "actionability": 0.45,
+            "internal_consistency": 0.75,
+            "unsupported_assumption_rate": 0.25,
+            "overall_decision_quality": 0.42000000000000004
+          },
+          "status": "completed"
+        }
+      },
+      "completed": 35,
+      "errors": 0,
+      "primary_judge_independent": true
+    }
+  }
 }

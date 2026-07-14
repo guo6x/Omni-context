@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { validateAgentReview } from '../src/provider.mjs';
+import { evidenceSourceAgents, validateAgentReview } from '../src/provider.mjs';
 import { validateAnswerV2, validateKimiJudgeV2 } from '../src/schemas.mjs';
 
 const answer = () => ({
@@ -43,4 +43,13 @@ test('validates Kimi Judge v2 schema including redundancy and diagnostic arrays'
 test('validates Secondary Agent Review as non-human evidence', () => {
   assert.doesNotThrow(() => validateAgentReview({ scenario_id: 'd-1', verdict: 'agree', score_issue: false, gold_ambiguity: false, baseline_fairness_issue: false, memory_leakage_issue: false, notes: 'No issue.' }));
   assert.throws(() => validateAgentReview({ scenario_id: 'd-1', verdict: 'human approved' }), /keys/);
+});
+
+test('recovers only visible speaker and Agent labels from evidence passages', () => {
+  const agents = evidenceSourceAgents(
+    { source_agents: ['Agent-A'], provenance: { agent: 'Agent-B' } },
+    'Fact text\nSpeaker: Gray\nSource: Agent-C confirmed the update.',
+  );
+  assert.deepEqual(agents.sort(), ['Agent-A', 'Agent-B', 'Agent-C', 'Gray']);
+  assert.deepEqual(evidenceSourceAgents({}, 'Fact text\nSpeaker: not provided'), []);
 });

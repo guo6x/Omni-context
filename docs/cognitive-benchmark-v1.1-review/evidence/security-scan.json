@@ -2,7 +2,7 @@
   "schema_version": 1,
   "status": "pass",
   "scope": ["benchmark/cognitive", "docs/cognitive-benchmark-v1.1-review"],
-  "files_scanned": 77,
+  "files_scanned": 95,
   "openai_like_secret_literals": 0,
   "bearer_token_literals": 0,
   "moonshot_key_assignments": 4,

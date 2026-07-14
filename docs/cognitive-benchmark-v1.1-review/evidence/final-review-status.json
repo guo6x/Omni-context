@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "COGNITIVE BENCHMARK V1.1 NOT READY",
+  "corrected_kimi_preflight": "pass_6_of_6",
+  "development_full_omni": "completed_35_of_35",
+  "development_no_memory": "blocked_16_of_21",
+  "development_retrieval_only": "not_run_0_of_21",
+  "secondary_agent_review": "not_run_0_of_20",
+  "unresolved_p0": [
+    "Three consecutive Kimi structured-output schema failures during No Memory"
+  ],
+  "unresolved_p1": [
+    "Kimi produced 9 schema failures in 26 corrected calls",
+    "Full Omni Cross-Agent Provenance and Invalidated Fact Rejection both scored 0"
+  ],
+  "formal_draft": "DRAFT_NOT_FROZEN",
+  "formal_250_started": false,
+  "comparison_70_started": false,
+  "locomo_conversations_2_to_10_accessed": false,
+  "final_freeze_modified": false
+}

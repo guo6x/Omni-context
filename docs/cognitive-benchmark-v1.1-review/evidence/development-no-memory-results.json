@@ -1,7 +1,11 @@
 {
   "schema_version": 1,
   "mode": "no_memory",
-  "status": "not_run",
-  "completed": 0,
-  "reason": "Kimi preflight blocked Development"
+  "status": "blocked_partial",
+  "completed": 16,
+  "expected": 21,
+  "errors": 1,
+  "partial_overall_cognitive_score": 0.3703703703703704,
+  "reason": "Three consecutive Kimi schema failures triggered the required hard stop",
+  "results_file": "development-no-memory-results.jsonl"
 }

@@ -83,8 +83,9 @@ if (command === 'generate') {
   });
   console.log(JSON.stringify({ smoke: smoke.length, development: development.length, formal_draft_v2: formal.length, comparison_draft_v2: comparison.length, audits: { duplicate: duplicate.status, family: family.status, difficulty: difficulty.status, leakage: leakage.status, diversity: diversity.status } }));
 } else if (command === 'preflight-kimi') {
-  const output = path.resolve(flag('--output', path.join(DEFAULT_EVIDENCE, 'kimi-preflight-results.json')));
-  const usage = path.resolve(flag('--kimi-usage', path.join(DEFAULT_EVIDENCE, 'kimi-usage.json')));
+  const output = path.resolve(flag('--output', path.join(DEFAULT_EVIDENCE, 'kimi-preflight-corrected.json')));
+  const stabilityOutput = path.resolve(flag('--stability-output', path.join(DEFAULT_EVIDENCE, 'kimi-stability-analysis.json')));
+  const usage = path.resolve(flag('--kimi-usage', path.join(DEFAULT_EVIDENCE, 'kimi-usage-corrected.json')));
   const config = await loadConfig();
   const provider = await loadProvider(config, path.resolve(flag('--run-root', 'D:/OmniContext-cognitive-v1.1/kimi-preflight')), usage);
   const fixtures = [
@@ -95,19 +96,55 @@ if (command === 'generate') {
   const scenario = { scenario_id: 'kimi-preflight', category: 'proactive_insight', question: 'Identify an evidence-backed blind spot and bounded action.', gold: { acceptable_insights: ['project overload', 'lack of validation'], acceptable_actions: ['pause a project', 'conduct interviews'], forbidden_inferences: ['ADHD', 'mental illness'], unacceptable_actions: ['quit immediately'], required_constraints: ['five hours'] } };
   const results = [];
   let preflightError = null;
-  for (const fixture of fixtures) {
-    try {
-      const result = await provider.judge({ scenario: { ...scenario, scenario_id: `kimi-preflight-${fixture.id}` }, answer: fixture.answer, context: [{ source_id: 'p1', text: 'Three concurrent projects, no interviews, five hours weekly.', source_agents: ['Agent-A'] }] });
-      results.push({ fixture: fixture.id, status: 'completed', model: result.model, structured: result.structured, raw_response: result.raw, usage: result.usage, latency_ms: result.latency_ms, structured_output_fallback: result.structured_output_fallback, fallback_reason: result.fallback_reason });
-    } catch (error) {
-      preflightError = error;
-      results.push({ fixture: fixture.id, status: 'blocked', error: error.message });
-      break;
+  for (let repetition = 1; repetition <= 2 && !preflightError; repetition++) {
+    for (const fixture of fixtures) {
+      try {
+        const result = await provider.judge({ scenario: { ...scenario, scenario_id: `kimi-preflight-${fixture.id}` }, answer: fixture.answer, context: [{ source_id: 'p1', text: 'Three concurrent projects, no interviews, five hours weekly.', source_agents: ['Agent-A'] }], phase: 'preflight' });
+        results.push({ fixture: fixture.id, repetition, status: 'completed', model: result.model, structured: result.structured, raw_response: result.raw, usage: result.usage, latency_ms: result.latency_ms, structured_output_fallback: result.structured_output_fallback, fallback_reason: result.fallback_reason });
+      } catch (error) {
+        preflightError = error;
+        results.push({ fixture: fixture.id, repetition, status: 'blocked', error: error.message });
+        break;
+      }
     }
   }
-  const status = preflightError ? 'blocked' : results.length === 3 ? 'completed' : 'partial';
-  await writeJson(output, { schema_version: 1, status, expected_model: 'kimi-k2.6', thinking: 'disabled', temperature: config.primary_judge.temperature, schema_valid: !preflightError, completed_fixtures: results.filter((result) => result.status === 'completed').length, results, api_key_recorded: false, formal_run_started: false });
-  console.log(JSON.stringify({ status, completed: results.filter((result) => result.status === 'completed').length, model: results.find((result) => result.model)?.model || null, fallbacks: results.filter((result) => result.structured_output_fallback).length, error: preflightError?.message || null }));
+  const completed = results.filter((result) => result.status === 'completed');
+  const positiveDimensions = ['insight_precision', 'insight_recall', 'blind_spot_detection', 'constraint_awareness', 'actionability', 'goal_alignment', 'option_comparison', 'risk_awareness', 'internal_consistency', 'overall_quality'];
+  const negativeDimensions = ['unsupported_claim_rate', 'overreach_rate', 'redundant_insight_rate'];
+  const dimensions = [...positiveDimensions, ...negativeDimensions];
+  const valueFor = (record, dimension) => dimension in record.structured.rubric_scores ? record.structured.rubric_scores[dimension] : record.structured[dimension];
+  const perDimension = {};
+  const deltas = [];
+  for (const fixture of fixtures) {
+    const pair = completed.filter((result) => result.fixture === fixture.id).sort((a, b) => a.repetition - b.repetition);
+    perDimension[fixture.id] = Object.fromEntries(dimensions.map((dimension) => {
+      const delta = pair.length === 2 ? Math.abs(valueFor(pair[0], dimension) - valueFor(pair[1], dimension)) : null;
+      if (delta !== null) deltas.push(delta);
+      return [dimension, delta];
+    }));
+  }
+  const meanAbsoluteDelta = deltas.length ? deltas.reduce((sum, value) => sum + value, 0) / deltas.length : null;
+  const maxAbsoluteDelta = deltas.length ? Math.max(...deltas) : null;
+  const rankByRun = [1, 2].map((repetition) => {
+    const scores = Object.fromEntries(fixtures.map((fixture) => [fixture.id, completed.find((result) => result.fixture === fixture.id && result.repetition === repetition)?.structured.rubric_scores.overall_quality ?? null]));
+    return { repetition, scores, consistent: scores.high_quality !== null && scores.high_quality > scores.partial && scores.partial > scores.overreach };
+  });
+  const rankOrderConsistency = rankByRun.every((entry) => entry.consistent);
+  const overreachSignal = [1, 2].every((repetition) => {
+    const high = completed.find((result) => result.fixture === 'high_quality' && result.repetition === repetition)?.structured;
+    const overreach = completed.find((result) => result.fixture === 'overreach' && result.repetition === repetition)?.structured;
+    return high && overreach && Math.max(overreach.unsupported_claim_rate, overreach.overreach_rate) > Math.max(high.unsupported_claim_rate, high.overreach_rate);
+  });
+  const schemaSuccessRate = completed.length / 6;
+  const p0 = Boolean(preflightError) || schemaSuccessRate !== 1 || !rankOrderConsistency || !overreachSignal;
+  const p1 = !p0 && meanAbsoluteDelta > 0.20;
+  const status = p0 ? 'blocked' : p1 ? 'completed_with_p1' : 'completed';
+  const stability = { schema_version: 1, status: p0 ? 'fail' : p1 ? 'pass_with_p1' : 'pass', per_dimension_absolute_delta: perDimension, mean_absolute_delta: meanAbsoluteDelta, max_absolute_delta: maxAbsoluteDelta, rank_order_consistency: rankOrderConsistency, rank_by_repetition: rankByRun, overreach_signal_consistent: overreachSignal, schema_success_rate: schemaSuccessRate, p0, p1 };
+  await Promise.all([
+    writeJson(output, { schema_version: 2, status, expected_model: 'kimi-k2.6', thinking: 'disabled', temperature_control: config.primary_judge.temperature_control, temperature_parameter_sent: false, schema_valid: schemaSuccessRate === 1, completed_fixtures: completed.length, fixture_count: 3, repetitions_per_fixture: 2, results, api_key_recorded: false, formal_run_started: false }),
+    writeJson(stabilityOutput, stability),
+  ]);
+  console.log(JSON.stringify({ status, completed: completed.length, model: completed[0]?.model || null, fallbacks: completed.filter((result) => result.structured_output_fallback).length, mean_absolute_delta: meanAbsoluteDelta, max_absolute_delta: maxAbsoluteDelta, rank_order_consistency: rankOrderConsistency, error: preflightError?.message || null }));
 } else if (['run', 'resume', 'retry-errors'].includes(command)) {
   const datasetPath = path.resolve(flag('--dataset'));
   const resultsPath = path.resolve(flag('--results'));
@@ -169,7 +206,10 @@ if (command === 'generate') {
   await writeJsonl(output, rescored);
   console.log(JSON.stringify({ rescored: rescored.filter((record) => record.status === 'completed').length }));
 } else if (command === 'aggregate') {
-  const rows = (await Promise.all(flag('--results').split(',').map((file) => readJsonl(path.resolve(file))))).flat();
+  const rawRows = (await Promise.all(flag('--results').split(',').map((file) => readJsonl(path.resolve(file))))).flat();
+  const latest = new Map();
+  for (const record of rawRows) if (record.status !== 'retry') latest.set(`${record.scenario_id}:${record.mode}`, record);
+  const rows = [...latest.values()];
   const byMode = Object.fromEntries(['no_memory', 'retrieval_only', 'full_omni'].map((mode) => [mode, aggregateResults(rows.filter((record) => record.mode === mode))]));
   await writeJson(path.resolve(flag('--output')), { schema_version: 2, status: 'DEVELOPMENT_RESULTS_NOT_FORMAL', answer_schema_version: 'answer-schema-v2', scoring_version: 'deterministic-scoring-v3', primary_judge: 'kimi-k2.6', primary_judge_independent: true, by_mode: byMode });
   console.log(JSON.stringify(Object.fromEntries(Object.entries(byMode).map(([mode, metrics]) => [mode, metrics.overall_cognitive_score]))));

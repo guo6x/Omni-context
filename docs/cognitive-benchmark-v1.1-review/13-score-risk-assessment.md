@@ -1,7 +1,7 @@
 # Score Risk Assessment
 
-No Development scores exist, so score risk cannot be numerically calibrated.
+Full Omni provides complete Development evidence, but the two baselines are incomplete; final comparative score risk cannot be calibrated.
 
-Remaining risks include semantic matching tolerance in deterministic fields, source-Agent recovery from Full Omni evidence, model compliance with the strict Answer Schema, and Kimi rubric stability. The new tests close known structural false-credit paths but cannot substitute for the blocked real preflight and Development run.
+Full Omni scored Cross-Agent Provenance 0 and Invalidated Fact Rejection 0. Kimi also produced 9 schema failures in 26 corrected calls. These are explicit P1 score/reliability risks beneath the P0 incomplete-Development blocker.
 
 Retrieval-Only is not assumed to score below Full Omni. Any future result must be reported as observed.

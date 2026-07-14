@@ -14,7 +14,8 @@
   },
   "primary_judge": {
     "model": "kimi-k2.6",
-    "temperature": 0,
+    "temperature_control": "provider_default_non_configurable",
+    "temperature_parameter_sent": false,
     "max_completion_tokens": 600,
     "thinking": "disabled",
     "independent": true,

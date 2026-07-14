@@ -13,7 +13,7 @@ const rubric = () => ({
   unsupported_elements: [],
   rationale: 'Structured calibration.',
 });
-const config = { max_retries: 0, retry_base_ms: 0, request_timeout_ms: 5000, primary_judge: { model: 'kimi-k2.6', temperature: 0, max_completion_tokens: 600, call_limit: 40 }, answer: { model: 'deepseek-v4-flash', max_tokens: 100 }, secondary_review: { model: 'deepseek-v4-flash' } };
+const config = { max_retries: 0, retry_base_ms: 0, request_timeout_ms: 5000, primary_judge: { model: 'kimi-k2.6', temperature_control: 'provider_default_non_configurable', temperature_parameter_sent: false, max_completion_tokens: 600, call_limit: 40 }, answer: { model: 'deepseek-v4-flash', max_tokens: 100 }, secondary_review: { model: 'deepseek-v4-flash' } };
 const scenario = { scenario_id: 'k1', category: 'proactive_insight', question: 'q', gold: {} };
 
 test('Kimi uses JSON Schema first and normalizes cached-token usage', async () => {
@@ -25,21 +25,25 @@ test('Kimi uses JSON Schema first and normalizes cached-token usage', async () =
     let request;
     global.fetch = async (_url, options) => {
       request = JSON.parse(options.body);
-      return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(rubric()) } }], usage: { prompt_tokens: 100, completion_tokens: 20, total_tokens: 120, cached_tokens: 40 } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ model: 'kimi-k2.6', choices: [{ message: { content: JSON.stringify(rubric()) } }], usage: { prompt_tokens: 100, completion_tokens: 20, total_tokens: 120, cached_tokens: 40 } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     };
     const ledger = path.join(tmp, 'usage.json');
     const provider = new CognitiveProvider({ config, answerPrompt: '', judgePrompt: 'judge', reviewPrompt: '', runRoot: tmp, brainServerRoot: tmp, kimiUsagePath: ledger });
-    const result = await provider.judge({ scenario, answer: {}, context: [] });
+    const result = await provider.judge({ scenario, answer: {}, context: [], phase: 'preflight' });
     assert.equal(request.model, 'kimi-k2.6');
+    assert.equal(Object.hasOwn(request, 'temperature'), false);
     assert.equal(request.thinking.type, 'disabled');
     assert.equal(request.stream, false);
     assert.equal(request.max_completion_tokens, 600);
     assert.equal(request.response_format.type, 'json_schema');
     assert.equal(result.usage.cache_hit_input_tokens, 40);
+    assert.equal(result.model, 'kimi-k2.6');
     const usage = JSON.parse(await readFile(ledger, 'utf8'));
     assert.equal(usage.calls, 1);
     assert.equal(usage.cached_tokens, 40);
     assert.equal(usage.attempts[0].status, 'completed');
+    assert.equal(usage.attempts[0].phase, 'preflight');
+    assert.equal(usage.attempts[0].temperature_parameter_sent, false);
   } finally {
     global.fetch = originalFetch;
     if (oldKey === undefined) delete process.env.MOONSHOT_API_KEY; else process.env.MOONSHOT_API_KEY = oldKey;
@@ -118,7 +122,35 @@ test('Kimi counts malformed JSON as schema failures and stops after three', asyn
   }
 });
 
-test('Kimi does not retry a provider-declared invalid temperature', async () => {
+test('Kimi omits temperature and does not retry a provider-declared temperature constraint', async () => {
+  const tmp = await mkdtemp(path.join(process.cwd(), 'kimi-test-'));
+  const originalFetch = global.fetch;
+  const oldKey = process.env.MOONSHOT_API_KEY;
+  process.env.MOONSHOT_API_KEY = 'unit-test-placeholder';
+  try {
+    let calls = 0;
+    let request;
+    global.fetch = async (_url, options) => {
+      calls++;
+      request = JSON.parse(options.body);
+      return new Response(JSON.stringify({ error: { message: 'invalid temperature: only 0.6 is allowed for this model', type: 'invalid_request_error' } }), { status: 400 });
+    };
+    const ledger = path.join(tmp, 'usage.json');
+    const provider = new CognitiveProvider({ config: { ...config, max_retries: 2 }, answerPrompt: '', judgePrompt: 'judge', reviewPrompt: '', runRoot: tmp, brainServerRoot: tmp, kimiUsagePath: ledger });
+    await assert.rejects(() => provider.judge({ scenario, answer: {}, context: [] }), /invalid temperature/);
+    assert.equal(calls, 1);
+    assert.equal(Object.hasOwn(request, 'temperature'), false);
+    const usage = JSON.parse(await readFile(ledger, 'utf8'));
+    assert.equal(usage.calls, 1);
+    assert.equal(usage.errors, 1);
+  } finally {
+    global.fetch = originalFetch;
+    if (oldKey === undefined) delete process.env.MOONSHOT_API_KEY; else process.env.MOONSHOT_API_KEY = oldKey;
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
+test('Kimi stops safely after three consecutive generic provider errors', async () => {
   const tmp = await mkdtemp(path.join(process.cwd(), 'kimi-test-'));
   const originalFetch = global.fetch;
   const oldKey = process.env.MOONSHOT_API_KEY;
@@ -127,15 +159,17 @@ test('Kimi does not retry a provider-declared invalid temperature', async () => 
     let calls = 0;
     global.fetch = async () => {
       calls++;
-      return new Response(JSON.stringify({ error: { message: 'invalid temperature: only 0.6 is allowed for this model', type: 'invalid_request_error' } }), { status: 400 });
+      return new Response('temporary upstream failure', { status: 503 });
     };
     const ledger = path.join(tmp, 'usage.json');
     const provider = new CognitiveProvider({ config: { ...config, max_retries: 2 }, answerPrompt: '', judgePrompt: 'judge', reviewPrompt: '', runRoot: tmp, brainServerRoot: tmp, kimiUsagePath: ledger });
-    await assert.rejects(() => provider.judge({ scenario, answer: {}, context: [] }), /invalid temperature/);
-    assert.equal(calls, 1);
+    await assert.rejects(() => provider.judge({ scenario, answer: {}, context: [] }), /Kimi 503/);
+    assert.equal(calls, 3);
     const usage = JSON.parse(await readFile(ledger, 'utf8'));
-    assert.equal(usage.calls, 1);
-    assert.equal(usage.errors, 1);
+    assert.equal(usage.errors, 3);
+    assert.equal(usage.consecutive_provider_errors, 3);
+    await assert.rejects(() => provider.judge({ scenario, answer: {}, context: [] }), /three consecutive provider errors/);
+    assert.equal(calls, 3);
   } finally {
     global.fetch = originalFetch;
     if (oldKey === undefined) delete process.env.MOONSHOT_API_KEY; else process.env.MOONSHOT_API_KEY = oldKey;

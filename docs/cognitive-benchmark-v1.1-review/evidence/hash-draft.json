@@ -11,7 +11,13 @@
     "kimi-judge-schema-v2.json": "382394b8ce003a29c205fada4b14ed57146dffb0184c818cbd903164bd72e555",
     "answer-v2.txt": "4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21",
     "judge-v2-kimi.txt": "9bfd2bf0daaae5e217ac29d8836facbd158275e496c99706e98ac8da1699ef6e",
-    "default.json": "6286a023bb64d206ce3baaa8f3987b46edf690cf0942a73bce72e2d3c7ef5456"
+    "default.json": "9daa79552f647eb4c54d1083d3f0ae51916e8e0404e18ecbacd09308d8ff955b",
+    "kimi-usage-corrected.json": "e942443be4aff8a4da4c5ba8465abd1d9f3ae6edb5639e933cafe46226ecb6a9",
+    "kimi-preflight-corrected.json": "cd8307621aa184f5d4e40a34711de26c72f272becff07caf9982138bbf13914f",
+    "kimi-stability-analysis.json": "2e86e3fe35c910436382c93fd2a6e397b1974d25b3f7f09e7f4c2549efdbb473",
+    "development-full-omni-results.jsonl": "e5b63b7df2bafbbf377b6df7106c271ae85f2b40ec920b0a1e0258dad171f81c",
+    "development-no-memory-results.jsonl": "2a133f759f8f450fb4072bd839b7c904557363bc2d672a871bef8e972f4c9cde",
+    "development-metrics.json": "e6f703a0b6f1dface119e13cfe2938b5706711b0d6d3040da95c008b06872271"
   },
   "formal_results_included": false
 }

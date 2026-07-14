@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "per_dimension_absolute_delta": {
+    "high_quality": {
+      "insight_precision": 0,
+      "insight_recall": 0.25,
+      "blind_spot_detection": 0.25,
+      "constraint_awareness": 0.25,
+      "actionability": 0,
+      "goal_alignment": 0,
+      "option_comparison": 0,
+      "risk_awareness": 0.5,
+      "internal_consistency": 0,
+      "overall_quality": 0.13,
+      "unsupported_claim_rate": 0,
+      "overreach_rate": 0,
+      "redundant_insight_rate": 0
+    },
+    "partial": {
+      "insight_precision": 0,
+      "insight_recall": 0,
+      "blind_spot_detection": 0.25,
+      "constraint_awareness": 0,
+      "actionability": 0,
+      "goal_alignment": 0,
+      "option_comparison": 0,
+      "risk_awareness": 0,
+      "internal_consistency": 0,
+      "overall_quality": 0,
+      "unsupported_claim_rate": 0,
+      "overreach_rate": 0,
+      "redundant_insight_rate": 0
+    },
+    "overreach": {
+      "insight_precision": 0,
+      "insight_recall": 0,
+      "blind_spot_detection": 0,
+      "constraint_awareness": 0,
+      "actionability": 0,
+      "goal_alignment": 0,
+      "option_comparison": 0,
+      "risk_awareness": 0,
+      "internal_consistency": 0,
+      "overall_quality": 0,
+      "unsupported_claim_rate": 0,
+      "overreach_rate": 0,
+      "redundant_insight_rate": 0
+    }
+  },
+  "mean_absolute_delta": 0.04179487179487179,
+  "max_absolute_delta": 0.5,
+  "rank_order_consistency": true,
+  "rank_by_repetition": [
+    {
+      "repetition": 1,
+      "scores": {
+        "high_quality": 0.88,
+        "partial": 0.25,
+        "overreach": 0
+      },
+      "consistent": true
+    },
+    {
+      "repetition": 2,
+      "scores": {
+        "high_quality": 0.75,
+        "partial": 0.25,
+        "overreach": 0
+      },
+      "consistent": true
+    }
+  ],
+  "overreach_signal_consistent": true,
+  "schema_success_rate": 1,
+  "p0": false,
+  "p1": false
+}

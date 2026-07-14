@@ -19,10 +19,28 @@ export function validateAgentReview(value) {
   return value;
 }
 
+export function evidenceSourceAgents(item, passage) {
+  const direct = [
+    ...(Array.isArray(item?.source_agents) ? item.source_agents : []),
+    item?.source_agent,
+    item?.agent,
+    item?.speaker,
+    item?.provenance?.agent,
+  ];
+  const visibleText = String(passage || '');
+  const speakers = [...visibleText.matchAll(/(?:^|\n)Speaker:\s*([^\n]+)/g)].map((match) => match[1].trim());
+  const agentLabels = visibleText.match(/\bAgent[- ][A-Za-z0-9_]+\b/g) || [];
+  return [...new Set([...direct, ...speakers, ...agentLabels]
+    .filter((value) => value && !/^(?:not provided|unknown|none|null)$/i.test(String(value).trim()))
+    .map((value) => String(value).trim()))];
+}
+
 const emptyLedger = () => ({
   schema_version: 1,
   provider: 'Moonshot',
   model: process.env.KIMI_JUDGE_MODEL || 'kimi-k2.6',
+  temperature_control: 'provider_default_non_configurable',
+  temperature_parameter_sent: false,
   call_limit: 40,
   calls: 0,
   prompt_tokens: 0,
@@ -106,14 +124,14 @@ export class CognitiveProvider {
     throw lastError;
   }
 
-  async reserveKimiAttempt({ responseFormat, fallbackReason = null }) {
+  async reserveKimiAttempt({ responseFormat, fallbackReason = null, phase = 'development' }) {
     const ledger = await readLedger(this.kimiUsagePath);
     ledger.call_limit = this.config.primary_judge.call_limit;
     ledger.model = process.env.KIMI_JUDGE_MODEL || this.config.primary_judge.model;
     if (ledger.calls >= ledger.call_limit) throw new Error(`KIMI_CALL_LIMIT_REACHED:${ledger.calls}/${ledger.call_limit}`);
     if (ledger.consecutive_provider_errors >= 3) throw new Error('KIMI_STOP_CONDITION:three consecutive provider errors');
     if (ledger.consecutive_schema_failures >= 3) throw new Error('KIMI_STOP_CONDITION:three consecutive schema failures');
-    const entry = { call_number: ledger.calls + 1, started_at: new Date().toISOString(), response_format: responseFormat, structured_output_fallback: responseFormat === 'json_object', fallback_reason: fallbackReason, status: 'started' };
+    const entry = { call_number: ledger.calls + 1, phase, started_at: new Date().toISOString(), response_format: responseFormat, structured_output_fallback: responseFormat === 'json_object', fallback_reason: fallbackReason, temperature_parameter_sent: false, status: 'started' };
     ledger.calls++;
     ledger.attempts.push(entry);
     await saveLedger(this.kimiUsagePath, ledger);
@@ -138,12 +156,12 @@ export class CognitiveProvider {
     await saveLedger(this.kimiUsagePath, ledger);
   }
 
-  async kimiRequest({ payload, responseFormat = 'json_schema', fallbackReason = null }) {
+  async kimiRequest({ payload, responseFormat = 'json_schema', fallbackReason = null, phase = 'development' }) {
     const apiUrl = process.env.KIMI_API_URL || 'https://api.moonshot.cn/v1';
     const apiKey = process.env.MOONSHOT_API_KEY;
     const model = process.env.KIMI_JUDGE_MODEL || this.config.primary_judge.model;
     if (!apiKey) throw new Error('KIMI_CREDENTIALS_MISSING:MOONSHOT_API_KEY');
-    const callNumber = await this.reserveKimiAttempt({ responseFormat, fallbackReason });
+    const callNumber = await this.reserveKimiAttempt({ responseFormat, fallbackReason, phase });
     const start = Date.now();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.request_timeout_ms);
@@ -154,7 +172,6 @@ export class CognitiveProvider {
         body: JSON.stringify({
           model,
           messages: [{ role: 'system', content: this.judgePrompt }, { role: 'user', content: JSON.stringify(payload, null, 2) }],
-          temperature: this.config.primary_judge.temperature,
           thinking: { type: 'disabled' },
           stream: false,
           max_completion_tokens: this.config.primary_judge.max_completion_tokens,
@@ -177,7 +194,7 @@ export class CognitiveProvider {
       const usage = kimiUsage(body);
       // Defer parsing until judge() so malformed structured output is accounted
       // as a schema failure, not as a transport/provider failure.
-      return { callNumber, raw, model, latency_ms: Date.now() - start, usage, attempts: 1, structured_output_fallback: responseFormat === 'json_object', fallback_reason: fallbackReason };
+      return { callNumber, raw, model: body.model || model, latency_ms: Date.now() - start, usage, attempts: 1, structured_output_fallback: responseFormat === 'json_object', fallback_reason: fallbackReason };
     } catch (error) {
       if (!error.schemaUnsupported) {
         const ledger = await readLedger(this.kimiUsagePath);
@@ -198,7 +215,7 @@ export class CognitiveProvider {
     return result;
   }
 
-  async judge({ scenario, answer, context }) {
+  async judge({ scenario, answer, context, phase = 'development' }) {
     const payload = {
       scenario_id: scenario.scenario_id,
       category: scenario.category,
@@ -216,7 +233,7 @@ export class CognitiveProvider {
     for (let schemaAttempt = 0; schemaAttempt <= this.config.max_retries; schemaAttempt++) {
       let result;
       try {
-        result = await this.kimiRequest({ payload, responseFormat: 'json_schema' });
+        result = await this.kimiRequest({ payload, responseFormat: 'json_schema', phase });
       } catch (error) {
         if (!error.schemaUnsupported) {
           if (error.nonRetryableConfiguration) throw error;
@@ -224,7 +241,7 @@ export class CognitiveProvider {
           throw error;
         }
         fallbackReason = error.message;
-        result = await this.kimiRequest({ payload, responseFormat: 'json_object', fallbackReason });
+        result = await this.kimiRequest({ payload, responseFormat: 'json_object', fallbackReason, phase });
       }
       try {
         result.structured = validateKimiJudgeV2(cleanJson(result.raw));
@@ -275,12 +292,15 @@ export class CognitiveProvider {
       const retrievalStart = Date.now();
       const retrieval = await runtime.client.unifiedMemorySearch(scenario.question, this.config.full_omni.top_k);
       const retrievalLatency = Date.now() - retrievalStart;
-      const contextItems = (retrieval.finalContext || retrieval.evidence || retrieval.results || []).slice(0, this.config.full_omni.top_k).map((item, index) => ({
-        source_id: item.evidence_id || item.id || `omni-${index + 1}`,
-        text: item.passage || item.fact || item.description || JSON.stringify(item),
-        source: 'full_omni',
-        source_agents: [...new Set([...(Array.isArray(item.source_agents) ? item.source_agents : []), item.source_agent, item.agent, item.speaker, item.provenance?.agent].filter(Boolean))],
-      }));
+      const contextItems = (retrieval.finalContext || retrieval.evidence || retrieval.results || []).slice(0, this.config.full_omni.top_k).map((item, index) => {
+        const text = item.passage || item.fact || item.description || JSON.stringify(item);
+        return {
+          source_id: item.evidence_id || item.id || `omni-${index + 1}`,
+          text,
+          source: 'full_omni',
+          source_agents: evidenceSourceAgents(item, text),
+        };
+      });
       return { contextItems, diagnostics: { extraction_calls: extractionCalls, extraction_input_characters: extractionCharacters, retrieval_calls: 1, reranker_calls: 1, retrieval_latency_ms: retrievalLatency, runtime_startup_and_ingestion_ms: Date.now() - started, search_methods: retrieval.searchMethods || {} }, runtime };
     } catch (error) {
       await runtime.stop().catch(() => {});

@@ -1,7 +1,10 @@
 {
   "schema_version": 2,
   "status": "not_run",
-  "reason": "Final Development scores do not exist; stratified selection must occur after scoring",
+  "reason": "Final three-mode Development scores do not exist after the required Kimi schema-failure hard stop; stratified selection must occur after final scoring",
+  "primary_judge_model": "kimi-k2.6",
+  "primary_judge_independent": true,
+  "secondary_review_model": "deepseek-v4-flash",
   "secondary_review_independent": false,
   "human_review_completed": false,
   "count": 0,

@@ -3,5 +3,6 @@
   "mode": "retrieval_only",
   "status": "not_run",
   "completed": 0,
-  "reason": "Kimi preflight blocked Development"
+  "expected": 21,
+  "reason": "Required Kimi hard stop occurred during No Memory before Retrieval-Only could start"
 }

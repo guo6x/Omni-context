@@ -1,11 +1,15 @@
 {
   "schema_version": 1,
-  "status": "blocked_not_started",
-  "blocker": "Kimi preflight rejected task-required temperature=0 and reached the three-consecutive-provider-error stop condition",
-  "full_omni_completed": 0,
-  "no_memory_completed": 0,
+  "status": "blocked_partial",
+  "blocker": "Three consecutive Kimi schema failures triggered the required hard stop during No Memory scenario development-v2-proactive_insight-002",
+  "full_omni_completed": 35,
+  "no_memory_completed": 16,
   "retrieval_only_completed": 0,
-  "metrics_available": false,
+  "metrics_available": "partial_only",
+  "corrected_kimi_calls": 26,
+  "corrected_kimi_call_limit": 40,
+  "consecutive_schema_failures": 3,
+  "secondary_review_completed": 0,
   "formal_run_started": false,
   "comparison_run_started": false
 }

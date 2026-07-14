@@ -1,5 +1,5 @@
 # Cost and Latency
 
-The Kimi ledger records 3 calls and zero billable token fields because all requests failed at request validation. There were 3 provider errors, 0 schema failures, and 0 structured-output fallbacks.
+The corrected Kimi ledger records 26 calls, 56,007 prompt tokens, 13,285 completion tokens, 69,292 total tokens, and 18,366 cached tokens. It records zero provider errors, nine schema failures, and zero structured-output fallbacks.
 
-No successful Kimi latency distribution or Development Answer latency exists. Synthetic Smoke timing is not used as provider latency evidence. The call cap remains 40 and is persisted across processes.
+For the 35 completed Full Omni records, Answer latency P50/P95 was 5.023/6.456 seconds, Judge latency P50/P95 was 0/12.804 seconds, and end-to-end record latency P50/P95 was 113.232/201.994 seconds. Because No Memory and Retrieval-Only are incomplete, final Development cost and Formal cost/runtime projections remain unavailable rather than being extrapolated from a biased partial run.
