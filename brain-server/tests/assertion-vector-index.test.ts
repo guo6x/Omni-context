@@ -131,4 +131,20 @@ describe('assertion vector index', () => {
     expect(await db.getMeta('embedding_rebuild_state')).toBeNull();
     expect((await db.getEmbeddingIndexManifest('vec_entities'))?.content_count).toBe(2);
   });
+
+  it('excludes merged aliases from a full entity index rebuild', async () => {
+    const canonical = await db.addEntity({ name: 'Canonical', type: 'concept', description: 'active' });
+    const alias = await db.addEntity({ name: 'Alias', type: 'concept', description: 'merged duplicate' });
+    await db.run('UPDATE entities SET metadata = ? WHERE id = ?', [
+      JSON.stringify({ merged_into: canonical.id }), alias.id,
+    ]);
+
+    const counts = await db.rebuildAllEmbeddings(embeddingService as any);
+    const integrity = await db.scanEmbeddingIntegrity();
+    const indexedAlias = await db.get('SELECT entity_id FROM vec_entities WHERE entity_id = ?', [alias.id]);
+
+    expect(counts.entities).toBe(1);
+    expect(integrity.entity).toMatchObject({ active: 1, vectors: 1, metadata: 1, coverage: 1 });
+    expect(indexedAlias).toBeUndefined();
+  });
 });

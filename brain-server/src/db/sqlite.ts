@@ -3137,7 +3137,11 @@ export class Database {
       await this.setMeta(stateKey, JSON.stringify({ ...expectedState, status: 'building', startedAt: new Date().toISOString() }));
     }
 
-    const entityRows = await this.all<any>('SELECT * FROM entities ORDER BY created_at, id');
+    const entityRows = await this.all<any>(
+      `SELECT * FROM entities
+       WHERE COALESCE(json_extract(metadata, '$.merged_into'), '') = ''
+       ORDER BY created_at, id`,
+    );
     const assertionRows = await this.all<{ id: string }>(
       'SELECT id FROM assertions WHERE invalidated_at IS NULL ORDER BY created_at, id',
     );
