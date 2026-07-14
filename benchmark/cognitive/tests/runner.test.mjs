@@ -8,7 +8,7 @@ import { CognitiveProvider } from '../src/provider.mjs';
 import { readJsonl, runCalibration } from '../src/runner.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const config = { max_retries: 1, retry_base_ms: 0, retrieval_only: { top_k: 4 }, answer: { max_tokens: 100 }, judge: { max_tokens: 100 } };
+const config = { max_retries: 1, retry_base_ms: 0, retrieval_only: { top_k: 4 }, answer: { max_tokens: 100 }, primary_judge: { max_completion_tokens: 100, call_limit: 40 }, secondary_review: { model: 'deepseek-v4-flash' } };
 
 test('checkpoints, resumes, and preserves a retry record with isolated synthetic fixtures', async () => {
   const tmp = await mkdtemp(path.join(root, 'runs-test-'));

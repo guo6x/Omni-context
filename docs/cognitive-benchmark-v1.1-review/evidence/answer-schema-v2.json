@@ -1,0 +1,154 @@
+{
+  "name": "omni_cognitive_answer_v2",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "answer",
+      "facts",
+      "transitions",
+      "constraints_used",
+      "rejected_facts",
+      "insights",
+      "actions",
+      "uncertainty"
+    ],
+    "properties": {
+      "answer": {
+        "type": "string"
+      },
+      "facts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "value",
+            "state",
+            "source_ids",
+            "source_agents"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "current",
+                "historical",
+                "supported",
+                "uncertain"
+              ]
+            },
+            "source_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "source_agents": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "transitions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "from_value",
+            "to_value",
+            "source_ids"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "from_value": {
+              "type": "string"
+            },
+            "to_value": {
+              "type": "string"
+            },
+            "source_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "constraints_used": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "rejected_facts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "reason",
+            "source_ids"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string",
+              "enum": [
+                "stale",
+                "invalidated",
+                "low_confidence",
+                "contradicted",
+                "noise",
+                "unsupported"
+              ]
+            },
+            "source_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "insights": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "actions": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "uncertainty": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}

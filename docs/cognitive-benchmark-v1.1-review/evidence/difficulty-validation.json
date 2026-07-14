@@ -1,0 +1,3012 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "scenario_count": 250,
+  "by_difficulty": {
+    "easy": 75,
+    "medium": 125,
+    "hard": 50
+  },
+  "validations": [
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-001",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-002",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-003",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-004",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-005",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-006",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-007",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-008",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-009",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-010",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-011",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-012",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-013",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-014",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-015",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-016",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-017",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-018",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-019",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-020",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-021",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-022",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-023",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-024",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-025",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-026",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-027",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-028",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-029",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-030",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-031",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-032",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-033",
+      "status": "pass",
+      "actual": {
+        "events": 30,
+        "distractors": 14,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.4666666666666667
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-034",
+      "status": "pass",
+      "actual": {
+        "events": 31,
+        "distractors": 12,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3870967741935484
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-035",
+      "status": "pass",
+      "actual": {
+        "events": 32,
+        "distractors": 14,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.4375
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-036",
+      "status": "pass",
+      "actual": {
+        "events": 33,
+        "distractors": 16,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.48484848484848486
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-037",
+      "status": "pass",
+      "actual": {
+        "events": 34,
+        "distractors": 13,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.38235294117647056
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-038",
+      "status": "pass",
+      "actual": {
+        "events": 35,
+        "distractors": 15,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.42857142857142855
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-039",
+      "status": "pass",
+      "actual": {
+        "events": 36,
+        "distractors": 17,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.4722222222222222
+    },
+    {
+      "scenario_id": "formal-v2-cognitive_continuity-040",
+      "status": "pass",
+      "actual": {
+        "events": 37,
+        "distractors": 15,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.40540540540540543
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-001",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-002",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-003",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-004",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-005",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-006",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-007",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-008",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-009",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-010",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-011",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-012",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-013",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-014",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-015",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-016",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-017",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-018",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-019",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-020",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-021",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-022",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-023",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-024",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-025",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-026",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-027",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-028",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-029",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-030",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-031",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-032",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-033",
+      "status": "pass",
+      "actual": {
+        "events": 30,
+        "distractors": 14,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.4666666666666667
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-034",
+      "status": "pass",
+      "actual": {
+        "events": 31,
+        "distractors": 12,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3870967741935484
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-035",
+      "status": "pass",
+      "actual": {
+        "events": 32,
+        "distractors": 14,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.4375
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-036",
+      "status": "pass",
+      "actual": {
+        "events": 33,
+        "distractors": 16,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.48484848484848486
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-037",
+      "status": "pass",
+      "actual": {
+        "events": 34,
+        "distractors": 13,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.38235294117647056
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-038",
+      "status": "pass",
+      "actual": {
+        "events": 35,
+        "distractors": 15,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.42857142857142855
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-039",
+      "status": "pass",
+      "actual": {
+        "events": 36,
+        "distractors": 17,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.4722222222222222
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-040",
+      "status": "pass",
+      "actual": {
+        "events": 37,
+        "distractors": 15,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.40540540540540543
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-001",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-002",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-003",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-004",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-005",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-006",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-007",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-008",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-009",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-010",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-011",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-012",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-013",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-014",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-015",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-016",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-017",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-018",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-019",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-020",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-021",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-022",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-023",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-024",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-025",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-026",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-027",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-028",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-029",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-030",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-031",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-032",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-033",
+      "status": "pass",
+      "actual": {
+        "events": 30,
+        "distractors": 14,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.4666666666666667
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-034",
+      "status": "pass",
+      "actual": {
+        "events": 31,
+        "distractors": 12,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3870967741935484
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-035",
+      "status": "pass",
+      "actual": {
+        "events": 32,
+        "distractors": 14,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.4375
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-036",
+      "status": "pass",
+      "actual": {
+        "events": 33,
+        "distractors": 16,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.48484848484848486
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-037",
+      "status": "pass",
+      "actual": {
+        "events": 34,
+        "distractors": 13,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.38235294117647056
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-038",
+      "status": "pass",
+      "actual": {
+        "events": 35,
+        "distractors": 15,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.42857142857142855
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-039",
+      "status": "pass",
+      "actual": {
+        "events": 36,
+        "distractors": 17,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.4722222222222222
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-040",
+      "status": "pass",
+      "actual": {
+        "events": 37,
+        "distractors": 15,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.40540540540540543
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-001",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-002",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-003",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-004",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-005",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-006",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-007",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-008",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-009",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-010",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-011",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-012",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-013",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-014",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-015",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-016",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-017",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-018",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-019",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-020",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-021",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-022",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-023",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-024",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-025",
+      "status": "pass",
+      "actual": {
+        "events": 32,
+        "distractors": 13,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.40625
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-026",
+      "status": "pass",
+      "actual": {
+        "events": 33,
+        "distractors": 14,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.42424242424242425
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-027",
+      "status": "pass",
+      "actual": {
+        "events": 34,
+        "distractors": 16,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.47058823529411764
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-028",
+      "status": "pass",
+      "actual": {
+        "events": 35,
+        "distractors": 14,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.4
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-029",
+      "status": "pass",
+      "actual": {
+        "events": 36,
+        "distractors": 16,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.4444444444444444
+    },
+    {
+      "scenario_id": "formal-v2-cross_agent_transfer-030",
+      "status": "pass",
+      "actual": {
+        "events": 37,
+        "distractors": 18,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.4864864864864865
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-001",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-002",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-003",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-004",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-005",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-006",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-007",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-008",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-009",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-010",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-011",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-012",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-013",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-014",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-015",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-016",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-017",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-018",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-019",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-020",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-021",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-022",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-023",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-024",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-025",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-026",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-027",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-028",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-029",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-030",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-031",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-032",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-033",
+      "status": "pass",
+      "actual": {
+        "events": 30,
+        "distractors": 14,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.4666666666666667
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-034",
+      "status": "pass",
+      "actual": {
+        "events": 31,
+        "distractors": 12,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3870967741935484
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-035",
+      "status": "pass",
+      "actual": {
+        "events": 32,
+        "distractors": 14,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.4375
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-036",
+      "status": "pass",
+      "actual": {
+        "events": 33,
+        "distractors": 16,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.48484848484848486
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-037",
+      "status": "pass",
+      "actual": {
+        "events": 34,
+        "distractors": 13,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.38235294117647056
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-038",
+      "status": "pass",
+      "actual": {
+        "events": 35,
+        "distractors": 15,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.42857142857142855
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-039",
+      "status": "pass",
+      "actual": {
+        "events": 36,
+        "distractors": 17,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.4722222222222222
+    },
+    {
+      "scenario_id": "formal-v2-human_like_forgetting-040",
+      "status": "pass",
+      "actual": {
+        "events": 37,
+        "distractors": 15,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.40540540540540543
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-001",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-002",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-003",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-004",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-005",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-006",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-007",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-008",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-009",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-010",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-011",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-012",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-013",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-014",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-015",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-016",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-017",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-018",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-019",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-020",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-021",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-022",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-023",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-024",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-025",
+      "status": "pass",
+      "actual": {
+        "events": 32,
+        "distractors": 13,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.40625
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-026",
+      "status": "pass",
+      "actual": {
+        "events": 33,
+        "distractors": 14,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.42424242424242425
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-027",
+      "status": "pass",
+      "actual": {
+        "events": 34,
+        "distractors": 16,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.47058823529411764
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-028",
+      "status": "pass",
+      "actual": {
+        "events": 35,
+        "distractors": 14,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.4
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-029",
+      "status": "pass",
+      "actual": {
+        "events": 36,
+        "distractors": 16,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.4444444444444444
+    },
+    {
+      "scenario_id": "formal-v2-proactive_insight-030",
+      "status": "pass",
+      "actual": {
+        "events": 37,
+        "distractors": 18,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.4864864864864865
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-001",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-002",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-003",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-004",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-005",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-006",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-007",
+      "status": "pass",
+      "actual": {
+        "events": 8,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.25
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-008",
+      "status": "pass",
+      "actual": {
+        "events": 9,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2222222222222222
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-009",
+      "status": "pass",
+      "actual": {
+        "events": 10,
+        "distractors": 2,
+        "conflicts": 1,
+        "agents": 2,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-010",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-011",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-012",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-013",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-014",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-015",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-016",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-017",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-018",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-019",
+      "status": "pass",
+      "actual": {
+        "events": 14,
+        "distractors": 4,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.2857142857142857
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-020",
+      "status": "pass",
+      "actual": {
+        "events": 15,
+        "distractors": 5,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-021",
+      "status": "pass",
+      "actual": {
+        "events": 16,
+        "distractors": 5,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3125
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-022",
+      "status": "pass",
+      "actual": {
+        "events": 17,
+        "distractors": 6,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 1
+      },
+      "distractor_ratio": 0.35294117647058826
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-023",
+      "status": "pass",
+      "actual": {
+        "events": 18,
+        "distractors": 6,
+        "conflicts": 1,
+        "agents": 3,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.3333333333333333
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-024",
+      "status": "pass",
+      "actual": {
+        "events": 19,
+        "distractors": 7,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.3684210526315789
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-025",
+      "status": "pass",
+      "actual": {
+        "events": 32,
+        "distractors": 13,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.40625
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-026",
+      "status": "pass",
+      "actual": {
+        "events": 33,
+        "distractors": 14,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.42424242424242425
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-027",
+      "status": "pass",
+      "actual": {
+        "events": 34,
+        "distractors": 16,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 4
+      },
+      "distractor_ratio": 0.47058823529411764
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-028",
+      "status": "pass",
+      "actual": {
+        "events": 35,
+        "distractors": 14,
+        "conflicts": 2,
+        "agents": 4,
+        "transitions": 5
+      },
+      "distractor_ratio": 0.4
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-029",
+      "status": "pass",
+      "actual": {
+        "events": 36,
+        "distractors": 16,
+        "conflicts": 3,
+        "agents": 5,
+        "transitions": 2
+      },
+      "distractor_ratio": 0.4444444444444444
+    },
+    {
+      "scenario_id": "formal-v2-decision_quality-030",
+      "status": "pass",
+      "actual": {
+        "events": 37,
+        "distractors": 18,
+        "conflicts": 4,
+        "agents": 6,
+        "transitions": 3
+      },
+      "distractor_ratio": 0.4864864864864865
+    }
+  ]
+}

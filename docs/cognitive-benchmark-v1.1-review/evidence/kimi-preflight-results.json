@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "status": "blocked",
+  "expected_model": "kimi-k2.6",
+  "thinking": "disabled",
+  "temperature": 0,
+  "schema_valid": false,
+  "completed_fixtures": 0,
+  "results": [
+    {
+      "fixture": "high_quality",
+      "status": "blocked",
+      "error": "KIMI_STOP_CONDITION:three consecutive provider errors"
+    }
+  ],
+  "api_key_recorded": false,
+  "formal_run_started": false
+}

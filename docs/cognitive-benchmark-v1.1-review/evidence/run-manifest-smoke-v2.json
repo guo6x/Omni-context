@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "benchmark": "Omni-Context Cognitive Benchmark v1.1",
+  "split": "smoke",
+  "backend": "synthetic_calibration",
+  "modes": [
+    "full_omni"
+  ],
+  "status": "completed",
+  "interrupted": false,
+  "dataset_hash": "f833c2d709afa2f2484396ec4c723f9f31d0ec8a9f5d016cd8498dfb530741a9",
+  "config_hash": "10a411fe90d21444aa65052d5a35e6f5d51ebe9b19dec6b0df91f0a93670de65",
+  "prompt_hashes": {
+    "answer": "4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21",
+    "judge": "9bfd2bf0daaae5e217ac29d8836facbd158275e496c99706e98ac8da1699ef6e",
+    "agent_review": "3254e2ae1b0ba9a6e8469b47a45ffe515aaf56313fa8ae985ad49ee91009ffd6"
+  },
+  "answer_schema_version": "answer-schema-v2",
+  "scoring_version": "deterministic-scoring-v3",
+  "answer_judge_independent": true,
+  "primary_judge_independent": true,
+  "secondary_review_independent": false,
+  "human_review_completed": false,
+  "started_at": "2026-07-14T17:25:27.706Z",
+  "updated_at": "2026-07-14T17:25:27.954Z",
+  "expected": 21,
+  "completed": 21,
+  "errors": 0,
+  "retry_records": 0,
+  "completed_this_invocation": 14,
+  "official_locomo": false,
+  "conversation_2_to_10_accessed": false,
+  "formal_dataset_run": false,
+  "comparison_subset_run": false
+}

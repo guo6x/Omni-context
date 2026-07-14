@@ -19,7 +19,10 @@
     "thinking": "disabled",
     "independent": true,
     "call_limit": 40,
-    "categories": ["proactive_insight", "decision_quality"]
+    "categories": [
+      "proactive_insight",
+      "decision_quality"
+    ]
   },
   "secondary_review": {
     "model": "deepseek-v4-flash",

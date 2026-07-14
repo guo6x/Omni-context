@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "actual_preflight_only",
+  "kimi_calls": 3,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "cached_tokens": 0,
+  "development_cost_estimate_available": false,
+  "reason": "No successful Kimi response and Development was not started"
+}

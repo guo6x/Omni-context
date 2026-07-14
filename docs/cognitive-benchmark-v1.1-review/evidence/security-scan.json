@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "scope": ["benchmark/cognitive", "docs/cognitive-benchmark-v1.1-review"],
+  "files_scanned": 77,
+  "openai_like_secret_literals": 0,
+  "bearer_token_literals": 0,
+  "moonshot_key_assignments": 4,
+  "moonshot_assignments_all_unit_test_placeholders": true,
+  "api_key_recorded_in_kimi_evidence": false,
+  "repository_scanner_command": "npm run security:secrets",
+  "repository_scanner_status": "pass",
+  "scanner_unit_tests": { "passed": 3, "failed": 0 }
+}

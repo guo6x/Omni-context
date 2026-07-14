@@ -1,0 +1,117 @@
+{
+  "name": "omni_cognitive_kimi_judge_v2",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "rubric_scores",
+      "unsupported_claim_rate",
+      "overreach_rate",
+      "redundant_insight_rate",
+      "missing_required_elements",
+      "unsupported_elements",
+      "rationale"
+    ],
+    "properties": {
+      "rubric_scores": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "insight_precision",
+          "insight_recall",
+          "blind_spot_detection",
+          "constraint_awareness",
+          "actionability",
+          "goal_alignment",
+          "option_comparison",
+          "risk_awareness",
+          "internal_consistency",
+          "overall_quality"
+        ],
+        "properties": {
+          "insight_precision": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "insight_recall": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "blind_spot_detection": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "constraint_awareness": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "actionability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "goal_alignment": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "option_comparison": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "risk_awareness": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "internal_consistency": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "overall_quality": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "unsupported_claim_rate": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "overreach_rate": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "redundant_insight_rate": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "missing_required_elements": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "unsupported_elements": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "rationale": {
+        "type": "string"
+      }
+    }
+  }
+}

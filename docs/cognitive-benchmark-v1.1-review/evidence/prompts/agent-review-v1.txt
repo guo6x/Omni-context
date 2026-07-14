@@ -1,0 +1,1 @@
+Review one Development benchmark scoring record for rubric or data ambiguity. Return only JSON with exactly: scenario_id, verdict, score_issue, gold_ambiguity, baseline_fairness_issue, memory_leakage_issue, notes. verdict must be agree or flag. All issue fields are booleans. This is Agent Review, not human review.

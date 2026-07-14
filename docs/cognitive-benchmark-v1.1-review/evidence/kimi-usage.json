@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "provider": "Moonshot",
+  "model": "kimi-k2.6",
+  "call_limit": 40,
+  "calls": 3,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "total_tokens": 0,
+  "cached_tokens": 0,
+  "errors": 3,
+  "schema_failures": 0,
+  "structured_output_fallbacks": 0,
+  "consecutive_provider_errors": 3,
+  "consecutive_schema_failures": 0,
+  "attempts": [
+    {
+      "call_number": 1,
+      "started_at": "2026-07-14T17:26:02.816Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "status": "provider_error",
+      "http_status": 400,
+      "error": "{\"error\":{\"message\":\"invalid temperature: only 0.6 is allowed for this model\",\"type\":\"invalid_request_error\"}}",
+      "completed_at": "2026-07-14T17:26:03.453Z"
+    },
+    {
+      "call_number": 2,
+      "started_at": "2026-07-14T17:26:03.483Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "status": "provider_error",
+      "http_status": 400,
+      "error": "{\"error\":{\"message\":\"invalid temperature: only 0.6 is allowed for this model\",\"type\":\"invalid_request_error\"}}",
+      "completed_at": "2026-07-14T17:26:03.571Z"
+    },
+    {
+      "call_number": 3,
+      "started_at": "2026-07-14T17:26:03.593Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "status": "provider_error",
+      "http_status": 400,
+      "error": "{\"error\":{\"message\":\"invalid temperature: only 0.6 is allowed for this model\",\"type\":\"invalid_request_error\"}}",
+      "completed_at": "2026-07-14T17:26:03.687Z"
+    }
+  ]
+}

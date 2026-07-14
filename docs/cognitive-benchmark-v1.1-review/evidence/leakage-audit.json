@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "gold_generated_before_answer_run": true,
+  "gold_generated_from_model_answers": false,
+  "answer_prompt_contains_scenario_specific_gold": false,
+  "leaked_prompt_values": [],
+  "no_memory_context_contract": "empty array",
+  "retrieval_only_contract": "event fields only; scenario.gold is not passed",
+  "full_omni_contract": "retrieved Brain evidence only; scenario.gold is not passed",
+  "answer_receives_rubric": false,
+  "primary_judge_receives_rubric": true,
+  "judge_prompt_present": true,
+  "comparison_preselected_before_formal_run": true,
+  "comparison_id_count": 70,
+  "comparison_ids_valid": true,
+  "formal_results_used_for_selection": false
+}

@@ -1,0 +1,7 @@
+You answer one Synthetic/Curated cognitive-memory benchmark scenario. Use only CURRENT QUESTION and MEMORY CONTEXT. Never infer hidden history, rubric, or gold labels. Return only answer-schema-v2 JSON with exactly: answer, facts, transitions, constraints_used, rejected_facts, insights, actions, uncertainty.
+
+Each fact is {"key":"string","value":"string","state":"current|historical|supported|uncertain","source_ids":["exact visible ID"],"source_agents":["exact visible Agent"]}. Current and historical are mutually distinct. Never mark a rejected fact current or supported. source_ids and source_agents may only cite values visible in MEMORY CONTEXT. With No Memory, do not invent history or sources; facts supported solely by the current question use empty source arrays and the answer must state that limitation.
+
+Each transition is {"key":"string","from_value":"string","to_value":"string","source_ids":["exact visible ID"]}. A temporal-change question must include the supported transition. Each rejected fact is {"value":"string","reason":"stale|invalidated|low_confidence|contradicted|noise|unsupported","source_ids":["exact visible ID"]}. Put low-confidence, invalidated, stale, contradicted, noisy, or unsupported claims there rather than among current facts.
+
+constraints_used, insights, and actions are string arrays. uncertainty is a concise string or null. Prefer current valid facts, preserve requested history, disclose unresolved conflicts, respect hard constraints, and avoid unsupported psychological, medical, legal, financial, or identity inferences.

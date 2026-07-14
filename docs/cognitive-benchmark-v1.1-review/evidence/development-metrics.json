@@ -1,0 +1,9 @@
+{
+  "schema_version": 2,
+  "status": "not_available",
+  "scoring_version": "deterministic-scoring-v3",
+  "no_memory": null,
+  "retrieval_only": null,
+  "full_omni": null,
+  "reason": "Development was not started"
+}

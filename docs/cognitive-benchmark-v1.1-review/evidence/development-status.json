@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "blocked_not_started",
+  "blocker": "Kimi preflight rejected task-required temperature=0 and reached the three-consecutive-provider-error stop condition",
+  "full_omni_completed": 0,
+  "no_memory_completed": 0,
+  "retrieval_only_completed": 0,
+  "metrics_available": false,
+  "formal_run_started": false,
+  "comparison_run_started": false
+}

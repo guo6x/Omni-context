@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "backend": "synthetic_calibration",
+  "first_invocation_completed": 7,
+  "resume_invocation_completed": 14,
+  "final_completed": 21,
+  "final_errors": 0,
+  "duplicate_completed_keys": 0,
+  "first_completion_at": "2026-07-14T17:25:26.516Z",
+  "seventh_completion_at": "2026-07-14T17:25:26.573Z",
+  "first_resumed_completion_at": "2026-07-14T17:25:27.708Z",
+  "final_completion_at": "2026-07-14T17:25:27.911Z",
+  "manifest_completed_this_resume_invocation": 14
+}

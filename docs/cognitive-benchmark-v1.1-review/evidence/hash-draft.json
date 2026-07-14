@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "DRAFT_NOT_FROZEN",
+  "algorithm": "sha256",
+  "files": {
+    "smoke-dataset-v2.jsonl": "f833c2d709afa2f2484396ec4c723f9f31d0ec8a9f5d016cd8498dfb530741a9",
+    "development-dataset-v2.jsonl": "c3a13da7abad6b1dffb1bedde5ed24907b9e4cf65eea280108d93a6b3098ea67",
+    "formal-dataset-draft-v2.jsonl": "0021bf0599f43689d617577a6804db4241943dea971e0ad6ed22cf92c25dc357",
+    "comparison-subset-draft-v2.json": "94790844634a271f251f8399234f4ab90948e00226c676bf4b6e1b6f9c343164",
+    "answer-schema-v2.json": "81e857393ecafea314625b0d8cd94c02ec2696c1cf3c07f6b0d6ac0f06efb21f",
+    "kimi-judge-schema-v2.json": "382394b8ce003a29c205fada4b14ed57146dffb0184c818cbd903164bd72e555",
+    "answer-v2.txt": "4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21",
+    "judge-v2-kimi.txt": "9bfd2bf0daaae5e217ac29d8836facbd158275e496c99706e98ac8da1699ef6e",
+    "default.json": "6286a023bb64d206ce3baaa8f3987b46edf690cf0942a73bce72e2d3c7ef5456"
+  },
+  "formal_results_included": false
+}

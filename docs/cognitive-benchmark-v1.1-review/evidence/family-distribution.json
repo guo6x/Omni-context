@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "formal": {
+    "cognitive_continuity": {
+      "scenario_count": 40,
+      "family_count": 7,
+      "max_family_share": 0.15,
+      "families": {
+        "budget_constraint": 5,
+        "career_planning": 6,
+        "communication_preference": 6,
+        "goal_action_alignment": 5,
+        "learning_plan": 6,
+        "project_priority": 6,
+        "wellbeing_boundary_schedule": 6
+      }
+    },
+    "memory_evolution": {
+      "scenario_count": 40,
+      "family_count": 8,
+      "max_family_share": 0.125,
+      "families": {
+        "location_change": 5,
+        "multi_step_update": 5,
+        "preference_change": 5,
+        "project_phase": 5,
+        "resource_status": 5,
+        "technology_stack": 5,
+        "temporary_recovery": 5,
+        "work_arrangement": 5
+      }
+    },
+    "conflict_resolution": {
+      "scenario_count": 40,
+      "family_count": 7,
+      "max_family_share": 0.15,
+      "families": {
+        "confidence_conflict": 6,
+        "current_history_conflict": 6,
+        "explicit_user_correction": 6,
+        "multi_agent_conflict": 6,
+        "same_time_sources": 6,
+        "successive_corrections": 5,
+        "temporary_exception": 5
+      }
+    },
+    "cross_agent_transfer": {
+      "scenario_count": 30,
+      "family_count": 8,
+      "max_family_share": 0.13333333333333333,
+      "families": {
+        "agent_retraction": 3,
+        "bad_agent_isolation": 4,
+        "goal_propagation": 4,
+        "ordered_updates": 4,
+        "preference_propagation": 4,
+        "project_update": 4,
+        "similar_user_isolation": 3,
+        "source_fidelity": 4
+      }
+    },
+    "human_like_forgetting": {
+      "scenario_count": 40,
+      "family_count": 9,
+      "max_family_share": 0.125,
+      "families": {
+        "expired_plan": 4,
+        "explicit_withdrawal": 4,
+        "irrelevant_truth": 4,
+        "low_frequency_long_term": 4,
+        "low_value_repetition": 4,
+        "one_time_noise": 5,
+        "repeated_reinforcement": 5,
+        "salient_retention": 5,
+        "temporary_expiry": 5
+      }
+    },
+    "proactive_insight": {
+      "scenario_count": 30,
+      "family_count": 10,
+      "max_family_share": 0.1,
+      "families": {
+        "budget_risk": 3,
+        "direction_switching": 3,
+        "goal_action_mismatch": 3,
+        "missed_opportunity": 3,
+        "missing_validation": 3,
+        "project_overload": 3,
+        "repeated_failure": 3,
+        "resource_mismatch": 3,
+        "stalled_plan": 3,
+        "time_conflict": 3
+      }
+    },
+    "decision_quality": {
+      "scenario_count": 30,
+      "family_count": 10,
+      "max_family_share": 0.1,
+      "families": {
+        "budget_allocation": 3,
+        "insufficient_information": 3,
+        "job_vs_startup": 3,
+        "learning_route": 3,
+        "multi_option_tradeoff": 3,
+        "partner_selection": 3,
+        "project_ranking": 3,
+        "risk_reversibility": 3,
+        "short_long_tradeoff": 3,
+        "time_allocation": 3
+      }
+    }
+  },
+  "development": {
+    "cognitive_continuity": {
+      "scenario_count": 5,
+      "family_count": 5,
+      "max_family_share": 0.2,
+      "families": {
+        "career_planning": 1,
+        "communication_preference": 1,
+        "learning_plan": 1,
+        "project_priority": 1,
+        "wellbeing_boundary_schedule": 1
+      }
+    },
+    "memory_evolution": {
+      "scenario_count": 5,
+      "family_count": 5,
+      "max_family_share": 0.2,
+      "families": {
+        "location_change": 1,
+        "preference_change": 1,
+        "project_phase": 1,
+        "technology_stack": 1,
+        "work_arrangement": 1
+      }
+    },
+    "conflict_resolution": {
+      "scenario_count": 5,
+      "family_count": 5,
+      "max_family_share": 0.2,
+      "families": {
+        "confidence_conflict": 1,
+        "current_history_conflict": 1,
+        "explicit_user_correction": 1,
+        "multi_agent_conflict": 1,
+        "same_time_sources": 1
+      }
+    },
+    "cross_agent_transfer": {
+      "scenario_count": 5,
+      "family_count": 5,
+      "max_family_share": 0.2,
+      "families": {
+        "bad_agent_isolation": 1,
+        "goal_propagation": 1,
+        "preference_propagation": 1,
+        "project_update": 1,
+        "source_fidelity": 1
+      }
+    },
+    "human_like_forgetting": {
+      "scenario_count": 5,
+      "family_count": 5,
+      "max_family_share": 0.2,
+      "families": {
+        "low_value_repetition": 1,
+        "one_time_noise": 1,
+        "repeated_reinforcement": 1,
+        "salient_retention": 1,
+        "temporary_expiry": 1
+      }
+    },
+    "proactive_insight": {
+      "scenario_count": 5,
+      "family_count": 5,
+      "max_family_share": 0.2,
+      "families": {
+        "direction_switching": 1,
+        "goal_action_mismatch": 1,
+        "missing_validation": 1,
+        "repeated_failure": 1,
+        "time_conflict": 1
+      }
+    },
+    "decision_quality": {
+      "scenario_count": 5,
+      "family_count": 5,
+      "max_family_share": 0.2,
+      "families": {
+        "budget_allocation": 1,
+        "job_vs_startup": 1,
+        "learning_route": 1,
+        "partner_selection": 1,
+        "project_ranking": 1
+      }
+    }
+  }
+}

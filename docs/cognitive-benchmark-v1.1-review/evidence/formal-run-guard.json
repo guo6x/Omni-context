@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "formal_draft_frozen": false,
+  "formal_250_run": false,
+  "comparison_70_run": false,
+  "conversation_2_to_10_accessed": false,
+  "final_freeze_commit": "872723b10ec4ae99b8272606a183155837104332",
+  "final_freeze_tag_object": "2fb2d137b08102710ffdd8360f97d94b4d874971",
+  "candidate_v1_tag_object": "58188929d473b513ba5ad36b9cbdcbe0c52ffab0",
+  "candidate_v2_tag_object": "a481d588acede7c25747701dac40ac133f0e6707"
+}

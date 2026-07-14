@@ -29,7 +29,7 @@ export async function writeJsonl(file, rows) {
 }
 
 function contextForFixed(items) {
-  return items.map((item) => ({ source_id: item.id, text: item.text, source: 'fixed_lexical_retrieval' }));
+  return items.map((item) => ({ source_id: item.id, text: item.text, source: 'fixed_lexical_retrieval', source_agents: [item.agent] }));
 }
 
 function emptyUsage() {
@@ -104,6 +104,9 @@ export async function runCalibration({
               rubric_scores: { insight_precision: 1, insight_recall: 1, blind_spot_detection: 1, constraint_awareness: 1, actionability: 1, goal_alignment: 1, option_comparison: 1, risk_awareness: 1, internal_consistency: 1, overall_quality: 1 },
               unsupported_claim_rate: 0,
               overreach_rate: 0,
+              redundant_insight_rate: 0,
+              missing_required_elements: [],
+              unsupported_elements: [],
               rationale: 'Synthetic scorer calibration only.',
             }, raw: null, model: 'synthetic-calibration-oracle', latency_ms: 0, usage: emptyUsage(), attempts: 1 };
           }
@@ -113,7 +116,7 @@ export async function runCalibration({
             judgeResult = await provider.judge({ scenario, answer: answerResult.structured, context });
           }
         }
-        const score = scoreScenario({ scenario, answer: answerResult.structured, visibleSourceIds: context.map((item) => item.source_id), judge: judgeResult?.structured });
+        const score = scoreScenario({ scenario, answer: answerResult.structured, visibleSourceIds: context.map((item) => item.source_id), visibleAgents: [...new Set(context.flatMap((item) => item.source_agents || []))], judge: judgeResult?.structured, mode });
         const record = {
           schema_version: 1,
           scenario_id: scenario.scenario_id,
@@ -125,12 +128,21 @@ export async function runCalibration({
           backend,
           official_locomo: false,
           synthetic_curated: true,
+          answer_schema_version: 'answer-schema-v2',
+          scoring_version: 'deterministic-scoring-v3',
+          answer_judge_independent: true,
+          primary_judge_independent: true,
+          secondary_review_independent: false,
+          human_review_completed: false,
           question: scenario.question,
           visible_context: context,
           raw_answer_response: answerResult.raw,
           structured_answer: answerResult.structured,
           raw_judge_response: judgeResult?.raw || null,
           structured_judge: judgeResult?.structured || null,
+          judge_model: judgeResult?.model || null,
+          structured_output_fallback: judgeResult?.structured_output_fallback || false,
+          fallback_reason: judgeResult?.fallback_reason || null,
           score,
           diagnostics,
           usage: {
@@ -167,6 +179,10 @@ export async function runCalibration({
           const record = { schema_version: 1, scenario_id: scenario.scenario_id, split, category: scenario.category, difficulty: scenario.difficulty, mode, status: 'error', backend, error: lastError.message, attempts: attempt + 1, completed_at: new Date().toISOString() };
           await appendFile(resultsPath, `${JSON.stringify(record)}\n`);
           latest.set(key, record);
+          if (/^KIMI_(?:CALL_LIMIT_REACHED|STOP_CONDITION|CREDENTIALS_MISSING)/.test(lastError.message)) {
+            requestShutdown();
+            stopRequested = true;
+          }
         }
       }
     }
@@ -177,7 +193,7 @@ export async function runCalibration({
   const errors = finalRecords.filter((record) => record.status === 'error').length;
   const manifest = {
     schema_version: 1,
-    benchmark: 'Omni-Context Cognitive Benchmark v1',
+    benchmark: 'Omni-Context Cognitive Benchmark v1.1',
     split,
     backend,
     modes,
@@ -190,6 +206,12 @@ export async function runCalibration({
       judge: sha256(provider.judgePrompt),
       agent_review: sha256(provider.reviewPrompt),
     },
+    answer_schema_version: 'answer-schema-v2',
+    scoring_version: 'deterministic-scoring-v3',
+    answer_judge_independent: true,
+    primary_judge_independent: true,
+    secondary_review_independent: false,
+    human_review_completed: false,
     started_at: startedAt,
     updated_at: new Date().toISOString(),
     expected,

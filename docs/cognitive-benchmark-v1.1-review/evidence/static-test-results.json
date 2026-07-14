@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "command": "npm test",
+  "tests": 22,
+  "passed": 22,
+  "failed": 0,
+  "cancelled": 0,
+  "skipped": 0,
+  "includes_schema_tests": true,
+  "includes_scoring_regressions": true,
+  "includes_kimi_adapter_tests": true,
+  "includes_dataset_audits": true
+}

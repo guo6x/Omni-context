@@ -6,13 +6,15 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "generate": "node src/cli.mjs generate",
+    "preflight-kimi": "node src/cli.mjs preflight-kimi",
     "run": "node src/cli.mjs run",
     "resume": "node src/cli.mjs resume",
     "retry-errors": "node src/cli.mjs retry-errors",
     "metrics": "node src/cli.mjs metrics",
     "review": "node src/cli.mjs review",
     "rescore": "node src/cli.mjs rescore",
-    "analyze": "node src/analyze.mjs"
+    "analyze": "node src/analyze.mjs",
+    "aggregate": "node src/cli.mjs aggregate"
   },
   "engines": {
     "node": ">=22"
