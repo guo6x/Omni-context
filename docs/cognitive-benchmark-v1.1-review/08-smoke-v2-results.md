@@ -1,7 +1,5 @@
-# Smoke v2 Results
+# Adapter v2.1 Reliability Results
 
-Synthetic Smoke v2 completed 21/21 framework calibrations with zero final errors. A real interrupt was injected after 7 completions and resume finished the remaining 14 without duplicate completion. A separate one-item run recorded an injected terminal error; `retry-errors` then reran only that item and restored the manifest to 1/1 completed.
+The fixed short fixtures ran twice and the three long Medium/Hard-style fixtures ran once: 9/9 logical calls succeeded. Quality ordering remained High > Partial > Overreach in both repetitions. Mean absolute repeat delta was 0.04692; no serious rank reversal occurred.
 
-This validates orchestration, checkpoint, resume, and retry behavior only. It is not an Answer-quality or official LoCoMo result.
-
-The corrected real Kimi preflight separately completed 6/6 calls. Its mean absolute repeat delta was 0.04179, maximum per-dimension delta was 0.5, rank ordering was consistent, and schema success was 1.0.
+The run used 10 physical attempts. One response used the wrong schema keys and recovered on the second attempt. Truncation, Markdown, malformed JSON, provider errors, and structured-output fallback were all zero. Every corrected request omitted `temperature` and used `max_completion_tokens=1200`.

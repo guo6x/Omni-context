@@ -14,6 +14,7 @@
     "review": "node src/cli.mjs review",
     "rescore": "node src/cli.mjs rescore",
     "analyze": "node src/analyze.mjs",
+    "finalize:v1.1": "node src/finalize-v1.1.mjs",
     "aggregate": "node src/cli.mjs aggregate"
   },
   "engines": {

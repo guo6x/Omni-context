@@ -1,7 +1,9 @@
 # Independent Judge Analysis
 
-Configuration establishes `answer_judge_independent=true` and `primary_judge_independent=true`: DeepSeek v4 Flash answers while Kimi K2.6 judges only Proactive Insight and Decision Quality.
+`primary_judge_model=kimi-k2.6`, `primary_judge_independent=true`, `judge_adapter_version=kimi-judge-adapter-v2.1`, and `judge_rubric_version=kimi-judge-rubric-v2`.
 
-Kimi K2.6 does not permit client-controlled temperature. The temperature field was omitted from every corrected Kimi request. Judge reproducibility therefore relies on fixed model, prompt, schema and inputs, not on temperature=0 determinism. The original three HTTP 400 failures remain preserved in separate blocker evidence.
+Kimi K2.6 does not permit client-controlled temperature. The temperature field was omitted from every Adapter v2.1 request. Reproducibility relies on fixed model, prompt, schema, rubric, and inputs, not temperature-zero determinism.
 
-The corrected preflight validated 6/6 schemas and stable rank ordering. Across preflight and partial Development the corrected ledger records 26 calls, 69,292 total tokens, 18,366 cached tokens, zero provider errors, nine schema failures, and zero fallbacks. The final three schema failures were consecutive and triggered the required stop.
+The final Ledger contains 31 logical calls, 33 physical attempts, 31 successful logical calls, zero truncations, zero malformed responses, two schema-validation failures, two recovered retries, zero provider errors, and zero fallbacks. Schema recovery was 100%.
+
+The original temperature blocker Ledger and the earlier corrected 600-token Ledger remain unchanged as historical evidence.

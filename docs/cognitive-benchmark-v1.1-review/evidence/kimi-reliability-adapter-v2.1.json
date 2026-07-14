@@ -1,0 +1,472 @@
+{
+  "schema_version": 3,
+  "status": "completed",
+  "judge_adapter_version": "kimi-judge-adapter-v2.1",
+  "judge_rubric_version": "kimi-judge-rubric-v2",
+  "expected_model": "kimi-k2.6",
+  "thinking": "disabled",
+  "max_completion_tokens": 1200,
+  "temperature_control": "provider_default_non_configurable",
+  "temperature_parameter_sent": false,
+  "schema_valid": true,
+  "completed_fixtures": 9,
+  "fixture_count": 9,
+  "short_fixture_calls": 6,
+  "long_fixture_calls": 3,
+  "no_truncation": true,
+  "no_markdown": true,
+  "results": [
+    {
+      "fixture": "high_quality-r1",
+      "quality": "high_quality",
+      "repetition": 1,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.75,
+          "insight_recall": 1,
+          "blind_spot_detection": 1,
+          "constraint_awareness": 0.75,
+          "actionability": 0.75,
+          "goal_alignment": 1,
+          "option_comparison": 1,
+          "risk_awareness": 1,
+          "internal_consistency": 1,
+          "overall_quality": 0.83
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [],
+        "unsupported_elements": [],
+        "rationale": "Candidate correctly identifies both blind spots (overload, no validation) and proposes bounded actions fitting the five-hour constraint; minor omission is not explicitly acknowledging 'five hours' as the binding limit in reasoning. Unclear:"
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":1.00,\"blind_spot_detection\":1.00,\"constraint_awareness\":0.75,\"actionability\":0.75,\"goal_alignment\":1.00,\"option_comparison\":1.00,\"risk_awareness\":1.00,\"internal_consistency\":1.00,\"overall_quality\":0.83},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[],\"unsupported_elements\":[],\"rationale\":\"Candidate correctly identifies both blind spots (overload, no validation) and proposes bounded actions fitting the five-hour constraint; minor omission is not explicitly acknowledging 'five hours' as the binding limit in reasoning. Unclear:\"}",
+      "finish_reason": "stop",
+      "raw_character_count": 657,
+      "logical_judge_call": 1,
+      "physical_attempts": 1,
+      "retries_recovered": false,
+      "usage": {
+        "input_tokens": 579,
+        "output_tokens": 173,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 579,
+        "total_tokens": 752,
+        "cached_tokens": 0
+      },
+      "latency_ms": 3455,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "partial-r1",
+      "quality": "partial",
+      "repetition": 1,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.25,
+          "insight_recall": 0.5,
+          "blind_spot_detection": 0.5,
+          "constraint_awareness": 0,
+          "actionability": 0,
+          "goal_alignment": 0.25,
+          "option_comparison": 0,
+          "risk_awareness": 0,
+          "internal_consistency": 0.5,
+          "overall_quality": 0.25
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "five hours constraint",
+          "bounded action",
+          "action items list",
+          "lack of validation blind spot"
+        ],
+        "unsupported_elements": [],
+        "rationale": "Candidate identifies 'too many projects' but misses 'lack of validation' blind spot, ignores 'five hours' constraint entirely, and provides no actionable bounded action despite explicit requirement. 'Focus more' is vague and unactionable."
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.25,\"insight_recall\":0.50,\"blind_spot_detection\":0.50,\"constraint_awareness\":0.00,\"actionability\":0.00,\"goal_alignment\":0.25,\"option_comparison\":0.00,\"risk_awareness\":0.00,\"internal_consistency\":0.50,\"overall_quality\":0.25},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"five hours constraint\",\"bounded action\",\"action items list\",\"lack of validation blind spot\"],\"unsupported_elements\":[],\"rationale\":\"Candidate identifies 'too many projects' but misses 'lack of validation' blind spot, ignores 'five hours' constraint entirely, and provides no actionable bounded action despite explicit requirement. 'Focus more' is vague and unactionable.\"}",
+      "finish_reason": "stop",
+      "raw_character_count": 747,
+      "logical_judge_call": 2,
+      "physical_attempts": 1,
+      "retries_recovered": false,
+      "usage": {
+        "input_tokens": 546,
+        "output_tokens": 195,
+        "cache_hit_input_tokens": 256,
+        "cache_miss_input_tokens": 290,
+        "total_tokens": 741,
+        "cached_tokens": 256
+      },
+      "latency_ms": 3997,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "overreach-r1",
+      "quality": "overreach",
+      "repetition": 1,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0,
+          "insight_recall": 0,
+          "blind_spot_detection": 0,
+          "constraint_awareness": 0,
+          "actionability": 0,
+          "goal_alignment": 0,
+          "option_comparison": 1,
+          "risk_awareness": 0,
+          "internal_consistency": 0,
+          "overall_quality": 0
+        },
+        "unsupported_claim_rate": 1,
+        "overreach_rate": 1,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "project overload",
+          "lack of validation",
+          "five hours"
+        ],
+        "unsupported_elements": [
+          "ADHD diagnosis"
+        ],
+        "rationale": "Candidate invents ADHD diagnosis and extreme action with zero evidence, violating all forbidden inferences and unacceptable actions while ignoring all required constraints and acceptable insights. No bounded reasoning present. (240 chars)"
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.0,\"insight_recall\":0.0,\"blind_spot_detection\":0.0,\"constraint_awareness\":0.0,\"actionability\":0.0,\"goal_alignment\":0.0,\"option_comparison\":1.0,\"risk_awareness\":0.0,\"internal_consistency\":0.0,\"overall_quality\":0.0},\"unsupported_claim_rate\":1.0,\"overreach_rate\":1.0,\"redundant_insight_rate\":0.0,\"missing_required_elements\":[\"project overload\",\"lack of validation\",\"five hours\"],\"unsupported_elements\":[\"ADHD diagnosis\"],\"rationale\":\"Candidate invents ADHD diagnosis and extreme action with zero evidence, violating all forbidden inferences and unacceptable actions while ignoring all required constraints and acceptable insights. No bounded reasoning present. (240 chars)\"}",
+      "finish_reason": "stop",
+      "raw_character_count": 710,
+      "logical_judge_call": 3,
+      "physical_attempts": 1,
+      "retries_recovered": false,
+      "usage": {
+        "input_tokens": 555,
+        "output_tokens": 181,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 555,
+        "total_tokens": 736,
+        "cached_tokens": 0
+      },
+      "latency_ms": 2335,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "high_quality-r2",
+      "quality": "high_quality",
+      "repetition": 2,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.75,
+          "insight_recall": 0.75,
+          "blind_spot_detection": 0.75,
+          "constraint_awareness": 0.75,
+          "actionability": 0.75,
+          "goal_alignment": 1,
+          "option_comparison": 1,
+          "risk_awareness": 1,
+          "internal_consistency": 1,
+          "overall_quality": 0.75
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [],
+        "unsupported_elements": [],
+        "rationale": "Evidence-backed blind spots identified; actions bounded by five-hour limit; minor omission: no explicit uncertainty acknowledgment. Lists limited to 3. Concise. JSON compact. No markdown. Done. Wait—must check: uncertainty is null, but not?"
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.75,\"blind_spot_detection\":0.75,\"constraint_awareness\":0.75,\"actionability\":0.75,\"goal_alignment\":1.0,\"option_comparison\":1.0,\"risk_awareness\":1.0,\"internal_consistency\":1.0,\"overall_quality\":0.75},\"unsupported_claim_rate\":0.0,\"overreach_rate\":0.0,\"redundant_insight_rate\":0.0,\"missing_required_elements\":[],\"unsupported_elements\":[],\"rationale\":\"Evidence-backed blind spots identified; actions bounded by five-hour limit; minor omission: no explicit uncertainty acknowledgment. Lists limited to 3. Concise. JSON compact. No markdown. Done. Wait—must check: uncertainty is null, but not?\"}",
+      "finish_reason": "stop",
+      "raw_character_count": 650,
+      "logical_judge_call": 4,
+      "physical_attempts": 2,
+      "retries_recovered": true,
+      "usage": {
+        "input_tokens": 1193,
+        "output_tokens": 328,
+        "cache_hit_input_tokens": 512,
+        "cache_miss_input_tokens": 681,
+        "total_tokens": 1521,
+        "cached_tokens": 512
+      },
+      "latency_ms": 7720,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "partial-r2",
+      "quality": "partial",
+      "repetition": 2,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.25,
+          "insight_recall": 0.5,
+          "blind_spot_detection": 0.25,
+          "constraint_awareness": 0,
+          "actionability": 0,
+          "goal_alignment": 0.25,
+          "option_comparison": 1,
+          "risk_awareness": 0,
+          "internal_consistency": 0.5,
+          "overall_quality": 0.25
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "five hours constraint",
+          "bounded action",
+          "evidence-backed blind spot"
+        ],
+        "unsupported_elements": [],
+        "rationale": "Candidate vaguely notes overload but misses 'lack of validation' blind spot, ignores 'five hours' constraint entirely, and provides no actionable bounded action—only a generic 'focus more' platitude."
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.25,\"insight_recall\":0.50,\"blind_spot_detection\":0.25,\"constraint_awareness\":0.00,\"actionability\":0.00,\"goal_alignment\":0.25,\"option_comparison\":1.00,\"risk_awareness\":0.00,\"internal_consistency\":0.50,\"overall_quality\":0.25},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"five hours constraint\",\"bounded action\",\"evidence-backed blind spot\"],\"unsupported_elements\":[],\"rationale\":\"Candidate vaguely notes overload but misses 'lack of validation' blind spot, ignores 'five hours' constraint entirely, and provides no actionable bounded action—only a generic 'focus more' platitude.\"}",
+      "finish_reason": "stop",
+      "raw_character_count": 685,
+      "logical_judge_call": 5,
+      "physical_attempts": 1,
+      "retries_recovered": false,
+      "usage": {
+        "input_tokens": 546,
+        "output_tokens": 184,
+        "cache_hit_input_tokens": 256,
+        "cache_miss_input_tokens": 290,
+        "total_tokens": 730,
+        "cached_tokens": 256
+      },
+      "latency_ms": 3633,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "overreach-r2",
+      "quality": "overreach",
+      "repetition": 2,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0,
+          "insight_recall": 0,
+          "blind_spot_detection": 0,
+          "constraint_awareness": 0,
+          "actionability": 0,
+          "goal_alignment": 0,
+          "option_comparison": 1,
+          "risk_awareness": 0,
+          "internal_consistency": 0,
+          "overall_quality": 0
+        },
+        "unsupported_claim_rate": 1,
+        "overreach_rate": 1,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "project overload",
+          "lack of validation",
+          "pause a project",
+          "conduct interviews",
+          "five hours"
+        ],
+        "unsupported_elements": [
+          "ADHD diagnosis",
+          "quit immediately"
+        ],
+        "rationale": "Candidate invents ADHD diagnosis and extreme action with zero evidence, violates all forbidden inferences and unacceptable actions, misses both acceptable insights and actions entirely, and ignores the five-hour constraint. Maximum overrech"
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.0,\"insight_recall\":0.0,\"blind_spot_detection\":0.0,\"constraint_awareness\":0.0,\"actionability\":0.0,\"goal_alignment\":0.0,\"option_comparison\":1.0,\"risk_awareness\":0.0,\"internal_consistency\":0.0,\"overall_quality\":0.0},\"unsupported_claim_rate\":1.0,\"overreach_rate\":1.0,\"redundant_insight_rate\":0.0,\"missing_required_elements\":[\"project overload\",\"lack of validation\",\"pause a project\",\"conduct interviews\",\"five hours\"],\"unsupported_elements\":[\"ADHD diagnosis\",\"quit immediately\"],\"rationale\":\"Candidate invents ADHD diagnosis and extreme action with zero evidence, violates all forbidden inferences and unacceptable actions, misses both acceptable insights and actions entirely, and ignores the five-hour constraint. Maximum overrech\" }",
+      "finish_reason": "stop",
+      "raw_character_count": 771,
+      "logical_judge_call": 6,
+      "physical_attempts": 1,
+      "retries_recovered": false,
+      "usage": {
+        "input_tokens": 555,
+        "output_tokens": 193,
+        "cache_hit_input_tokens": 256,
+        "cache_miss_input_tokens": 299,
+        "total_tokens": 748,
+        "cached_tokens": 256
+      },
+      "latency_ms": 3924,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "long-proactive-insight",
+      "quality": null,
+      "repetition": null,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.75,
+          "insight_recall": 0.5,
+          "blind_spot_detection": 0.75,
+          "constraint_awareness": 0.5,
+          "actionability": 0.75,
+          "goal_alignment": 0.75,
+          "option_comparison": 1,
+          "risk_awareness": 0.5,
+          "internal_consistency": 0.75,
+          "overall_quality": 0.63
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "explicit five-hour constraint mention in answer text",
+          "option tradeoff comparison (none required per rubric)"
+        ],
+        "unsupported_elements": [],
+        "rationale": "Candidate identifies acceptable blind spot and action but omits explicit five-hour constraint reference and provides no uncertainty acknowledgment despite null field; action is bounded and aligned, yet recall suffers from missing validation"
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.50,\"blind_spot_detection\":0.75,\"constraint_awareness\":0.50,\"actionability\":0.75,\"goal_alignment\":0.75,\"option_comparison\":1.00,\"risk_awareness\":0.50,\"internal_consistency\":0.75,\"overall_quality\":0.63},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"explicit five-hour constraint mention in answer text\",\"option tradeoff comparison (none required per rubric)\"],\"unsupported_elements\":[],\"rationale\":\"Candidate identifies acceptable blind spot and action but omits explicit five-hour constraint reference and provides no uncertainty acknowledgment despite null field; action is bounded and aligned, yet recall suffers from missing validation\"}\n\n\n",
+      "finish_reason": "stop",
+      "raw_character_count": 770,
+      "logical_judge_call": 7,
+      "physical_attempts": 1,
+      "retries_recovered": false,
+      "usage": {
+        "input_tokens": 1678,
+        "output_tokens": 190,
+        "cache_hit_input_tokens": 256,
+        "cache_miss_input_tokens": 1422,
+        "total_tokens": 1868,
+        "cached_tokens": 256
+      },
+      "latency_ms": 2680,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "long-decision-quality",
+      "quality": null,
+      "repetition": null,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0,
+          "insight_recall": 0,
+          "blind_spot_detection": 0,
+          "constraint_awareness": 0,
+          "actionability": 0.75,
+          "goal_alignment": 0.75,
+          "option_comparison": 0.25,
+          "risk_awareness": 0.75,
+          "internal_consistency": 0.75,
+          "overall_quality": 0.5
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "budget 500",
+          "Option A stable but constrained",
+          "Option B flexible but uncertain"
+        ],
+        "unsupported_elements": [],
+        "rationale": "Candidate recommends reversible pilot of Option B but fails to mention budget 500 constraint and provides only partial option comparison (stable income noted but not Option A's constraints or Option B's flexibility); no insights listed."
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.00,\"insight_recall\":0.00,\"blind_spot_detection\":0.00,\"constraint_awareness\":0.00,\"actionability\":0.75,\"goal_alignment\":0.75,\"option_comparison\":0.25,\"risk_awareness\":0.75,\"internal_consistency\":0.75,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"budget 500\",\"Option A stable but constrained\",\"Option B flexible but uncertain\"],\"unsupported_elements\":[],\"rationale\":\"Candidate recommends reversible pilot of Option B but fails to mention budget 500 constraint and provides only partial option comparison (stable income noted but not Option A's constraints or Option B's flexibility); no insights listed.\"}",
+      "finish_reason": "stop",
+      "raw_character_count": 733,
+      "logical_judge_call": 8,
+      "physical_attempts": 1,
+      "retries_recovered": false,
+      "usage": {
+        "input_tokens": 1657,
+        "output_tokens": 187,
+        "cache_hit_input_tokens": 256,
+        "cache_miss_input_tokens": 1401,
+        "total_tokens": 1844,
+        "cached_tokens": 256
+      },
+      "latency_ms": 4191,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    },
+    {
+      "fixture": "long-boundary-case",
+      "quality": null,
+      "repetition": null,
+      "status": "completed",
+      "model": "kimi-k2.6",
+      "structured": {
+        "rubric_scores": {
+          "insight_precision": 0.25,
+          "insight_recall": 0.5,
+          "blind_spot_detection": 0.25,
+          "constraint_awareness": 0,
+          "actionability": 0.5,
+          "goal_alignment": 0.75,
+          "option_comparison": 1,
+          "risk_awareness": 0.5,
+          "internal_consistency": 0.75,
+          "overall_quality": 0.5
+        },
+        "unsupported_claim_rate": 0,
+        "overreach_rate": 0,
+        "redundant_insight_rate": 0,
+        "missing_required_elements": [
+          "five hours constraint",
+          "option tradeoff comparison",
+          "evidence status acknowledgment",
+          "bounded project constraint"
+        ],
+        "unsupported_elements": [],
+        "rationale": "Candidate captures validation gap and proposes bounded interview action, but misses all 18 checkpoints' repeated structure of bounded constraints, evidence status, option tradeoffs, and the explicit five-hour required constraint; undersells"
+      },
+      "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.25,\"insight_recall\":0.50,\"blind_spot_detection\":0.25,\"constraint_awareness\":0.00,\"actionability\":0.50,\"goal_alignment\":0.75,\"option_comparison\":1.00,\"risk_awareness\":0.50,\"internal_consistency\":0.75,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"five hours constraint\",\"option tradeoff comparison\",\"evidence status acknowledgment\",\"bounded project constraint\"],\"unsupported_elements\":[],\"rationale\":\"Candidate captures validation gap and proposes bounded interview action, but misses all 18 checkpoints' repeated structure of bounded constraints, evidence status, option tradeoffs, and the explicit five-hour required constraint; undersells\"\n}",
+      "finish_reason": "stop",
+      "raw_character_count": 772,
+      "logical_judge_call": 9,
+      "physical_attempts": 1,
+      "retries_recovered": false,
+      "usage": {
+        "input_tokens": 1666,
+        "output_tokens": 191,
+        "cache_hit_input_tokens": 256,
+        "cache_miss_input_tokens": 1410,
+        "total_tokens": 1857,
+        "cached_tokens": 256
+      },
+      "latency_ms": 2713,
+      "markdown_detected": false,
+      "temperature_parameter_sent": false,
+      "structured_output_fallback": false,
+      "fallback_reason": null
+    }
+  ],
+  "api_key_recorded": false,
+  "formal_run_started": false
+}

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "split": "development",
-  "updated_at": "2026-07-14T20:34:49.648Z",
+  "updated_at": "2026-07-14T22:09:31.041Z",
   "completed_keys": [
     "development-v2-cognitive_continuity-001:no_memory",
     "development-v2-cognitive_continuity-002:no_memory",
@@ -18,7 +18,12 @@
     "development-v2-human_like_forgetting-001:no_memory",
     "development-v2-human_like_forgetting-002:no_memory",
     "development-v2-human_like_forgetting-003:no_memory",
-    "development-v2-proactive_insight-001:no_memory"
+    "development-v2-proactive_insight-001:no_memory",
+    "development-v2-proactive_insight-002:no_memory",
+    "development-v2-proactive_insight-003:no_memory",
+    "development-v2-decision_quality-001:no_memory",
+    "development-v2-decision_quality-002:no_memory",
+    "development-v2-decision_quality-003:no_memory"
   ],
   "error_keys": []
 }

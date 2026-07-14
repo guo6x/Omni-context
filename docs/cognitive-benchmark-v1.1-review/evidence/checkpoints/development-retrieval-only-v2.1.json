@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "split": "development",
+  "updated_at": "2026-07-14T22:19:19.073Z",
+  "completed_keys": [
+    "development-v2-cognitive_continuity-001:retrieval_only",
+    "development-v2-cognitive_continuity-002:retrieval_only",
+    "development-v2-cognitive_continuity-003:retrieval_only",
+    "development-v2-memory_evolution-001:retrieval_only",
+    "development-v2-memory_evolution-002:retrieval_only",
+    "development-v2-memory_evolution-003:retrieval_only",
+    "development-v2-conflict_resolution-001:retrieval_only",
+    "development-v2-conflict_resolution-002:retrieval_only",
+    "development-v2-conflict_resolution-003:retrieval_only",
+    "development-v2-cross_agent_transfer-001:retrieval_only",
+    "development-v2-cross_agent_transfer-002:retrieval_only",
+    "development-v2-cross_agent_transfer-003:retrieval_only",
+    "development-v2-human_like_forgetting-001:retrieval_only",
+    "development-v2-human_like_forgetting-002:retrieval_only",
+    "development-v2-human_like_forgetting-003:retrieval_only",
+    "development-v2-proactive_insight-001:retrieval_only",
+    "development-v2-proactive_insight-002:retrieval_only",
+    "development-v2-proactive_insight-003:retrieval_only",
+    "development-v2-decision_quality-001:retrieval_only",
+    "development-v2-decision_quality-002:retrieval_only",
+    "development-v2-decision_quality-003:retrieval_only"
+  ],
+  "error_keys": []
+}

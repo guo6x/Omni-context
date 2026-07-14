@@ -1,6 +1,7 @@
 {
-  "schema_version": 1,
-  "status": "not_run",
-  "reason": "No Memory is incomplete and Retrieval-Only was not run; final pairwise comparison would be invalid",
-  "comparisons": []
+  "schema_version": 2,
+  "status": "completed",
+  "canonical_file": "pairwise-results-v2.1.json",
+  "full_omni_vs_no_memory": { "compared": 21, "wins": 14, "losses": 0, "ties": 7, "win_rate": 0.666667, "win_rate_with_ties_half": 0.833333 },
+  "full_omni_vs_retrieval_only": { "compared": 21, "wins": 9, "losses": 10, "ties": 2, "win_rate": 0.428571, "win_rate_with_ties_half": 0.47619 }
 }

@@ -1,7 +1,11 @@
-# Development v2 Results
+# Development v2 Final Results
 
-Status: **PARTIAL — REQUIRED HARD STOP**.
+All required modes completed with zero final errors:
 
-Full Omni completed 35/35 with overall score 0.5043187831 and zero final errors. No Memory completed 16/21 with a partial-only score of 0.3703703704. The run stopped during `development-v2-proactive_insight-002` after three consecutive Kimi schema failures. Retrieval-Only remained 0/21.
+- Full Omni: 35/35, overall 0.509601.
+- No Memory: 21/21, overall 0.348688.
+- Retrieval-Only: 21/21, overall 0.588250.
 
-Full Omni category scores are Cognitive Continuity 0.6667, Memory Evolution 0.3139, Conflict Resolution 0.2222, Cross-Agent Transfer 0.4778, Human-like Forgetting 0.7278, Proactive Insight 0.5938, and Decision Quality 0.5281. Difficulty scores are Easy 0.5719, Medium 0.4437, and Hard 0.4904. No Memory is explicitly partial; Retrieval-Only and pairwise results are `N/A`, never zero.
+Full Omni category scores are Cognitive Continuity 0.666667, Memory Evolution 0.313889, Conflict Resolution 0.222222, Cross-Agent Transfer 0.477778, Human-like Forgetting 0.727778, Proactive Insight 0.612500, and Decision Quality 0.546370.
+
+Full Omni difficulty scores are Easy 0.573456, Medium 0.447966, and Hard 0.505159. Retrieval-Only scored above Full Omni; this observed result is preserved without data, Gold, answer, or scoring adjustment.

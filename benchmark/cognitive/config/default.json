@@ -16,10 +16,12 @@
     "model": "kimi-k2.6",
     "temperature_control": "provider_default_non_configurable",
     "temperature_parameter_sent": false,
-    "max_completion_tokens": 600,
+    "max_completion_tokens": 1200,
     "thinking": "disabled",
     "independent": true,
-    "call_limit": 40,
+    "call_limit": 60,
+    "adapter_version": "kimi-judge-adapter-v2.1",
+    "rubric_version": "kimi-judge-rubric-v2",
     "categories": ["proactive_insight", "decision_quality"]
   },
   "secondary_review": {

@@ -1,11 +1,10 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "mode": "no_memory",
-  "status": "blocked_partial",
-  "completed": 16,
+  "status": "completed",
+  "completed": 21,
   "expected": 21,
-  "errors": 1,
-  "partial_overall_cognitive_score": 0.3703703703703704,
-  "reason": "Three consecutive Kimi schema failures triggered the required hard stop",
-  "results_file": "development-no-memory-results.jsonl"
+  "errors": 0,
+  "overall_cognitive_score": 0.3486882716049383,
+  "results_file": "development-no-memory-results-v2.1.jsonl"
 }

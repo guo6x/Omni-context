@@ -1,0 +1,1318 @@
+{
+  "schema_version": 1,
+  "judge_adapter_version": "kimi-judge-adapter-v2.1",
+  "judge_rubric_version": "kimi-judge-rubric-v2",
+  "rejudged": 10,
+  "source_results_unchanged": true,
+  "records": [
+    {
+      "scenario_id": "development-v2-proactive_insight-001",
+      "mode": "full_omni",
+      "category": "proactive_insight",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.50,\"blind_spot_detection\":0.75,\"constraint_awareness\":0.00,\"actionability\":0.50,\"goal_alignment\":0.75,\"option_comparison\":1.00,\"risk_awareness\":0.25,\"internal_consistency\":0.75,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.25,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"required constraint: 5 hours per week\",\"required constraint: no user interviews\",\"acceptable action: checkpoint-1 (not explicitly referenced in recommended action)\",\"Finley's considering another unrelated initiative before checkpoint-1 is not incorporated into blind spot or action\"],\"unsupported_elements\":[],\"rationale\":\"The candidate correctly identifies a direction switching blind spot (starting Beta before validating Alpha) and grounds it in evidence. However, it misses critical required constraints: the action does not bound itself to '5 hours per week' or 'no user interviews,' which are hard requirements. The acceptable action 'checkpoint-1' is not explicitly referenced in the bounded action. The candidate also fails to incorporate the evidence that Finley is 'considering another unrelated initiative before checkpoint-1' into either the blind spot characterization or the action, weakening insight recall. The risk awareness is minimal—no acknowledgment of what happens if Finley continues this pattern. The overreach is minor: 'any new work' is slightly broader than evidence supports (evidence mentions Beta and an unrelated initiative, not a universal pattern), but not severe. No forbidden inferences or unacceptable actions are present. The rejection of low-confidence notes is correct per constraints. Overall, a partially complete answer with clear omissions on required constraints and missed integration of key evidence. Temperature: 0.0\"}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.5,
+            "goal_alignment": 0.75,
+            "option_comparison": 1,
+            "risk_awareness": 0.25,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "required constraint: 5 hours per week",
+            "required constraint: no user interviews",
+            "acceptable action: checkpoint-1 (not explicitly referenced in recommended action)",
+            "Finley's considering another unrelated initiative before checkpoint-1 is not incorporated into blind spot or action"
+          ],
+          "unsupported_elements": [],
+          "rationale": "The candidate correctly identifies a direction switching blind spot (starting Beta before validating Alpha) and grounds it in evidence. However, it misses critical required constraints: the action does not bound itself to '5 hours per week' or 'no user interviews,' which are hard requirements. The acceptable action 'checkpoint-1' is not explicitly referenced in the bounded action. The candidate also fails to incorporate the evidence that Finley is 'considering another unrelated initiative before checkpoint-1' into either the blind spot characterization or the action, weakening insight recall. The risk awareness is minimal—no acknowledgment of what happens if Finley continues this pattern. The overreach is minor: 'any new work' is slightly broader than evidence supports (evidence mentions Beta and an unrelated initiative, not a universal pattern), but not severe. No forbidden inferences or unacceptable actions are present. The rejection of low-confidence notes is correct per constraints. Overall, a partially complete answer with clear omissions on required constraints and missed integration of key evidence. Temperature: 0.0"
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection_rate": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.5,
+            "unsupported_claim_rate": 0,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.65625,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 2961,
+          "output_tokens": 388,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2705,
+          "total_tokens": 3349,
+          "cached_tokens": 256
+        },
+        "latency_ms": 16471
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.50,\"blind_spot_detection\":0.75,\"constraint_awareness\":0.00,\"actionability\":0.50,\"goal_alignment\":0.75,\"option_comparison\":1.00,\"risk_awareness\":0.50,\"internal_consistency\":1.00,\"overall_quality\":0.58},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"required_constraints: 5 hours per week\",\"required_constraints: no user interviews\",\"acceptable_actions: checkpoint-1\",\"acceptable_insights: goal action mismatch\"],\"unsupported_elements\":[],\"rationale\":\"Candidate identifies valid blind spot of starting Beta before validating Alpha but fails to incorporate both hard constraints (5 hours/week, no user interviews) and misses actionable tie to checkpoint-1; action is bounded but lacks required\"}\n\n\n",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.5,
+            "goal_alignment": 0.75,
+            "option_comparison": 1,
+            "risk_awareness": 0.5,
+            "internal_consistency": 1,
+            "overall_quality": 0.58
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "required_constraints: 5 hours per week",
+            "required_constraints: no user interviews",
+            "acceptable_actions: checkpoint-1",
+            "acceptable_insights: goal action mismatch"
+          ],
+          "unsupported_elements": [],
+          "rationale": "Candidate identifies valid blind spot of starting Beta before validating Alpha but fails to incorporate both hard constraints (5 hours/week, no user interviews) and misses actionable tie to checkpoint-1; action is bounded but lacks required"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 822,
+        "logical_judge_call": 10,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3008,
+          "output_tokens": 206,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2752,
+          "total_tokens": 3214,
+          "cached_tokens": 256
+        },
+        "latency_ms": 3992,
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection_rate": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.5,
+            "unsupported_claim_rate": 0,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0
+          },
+          "core_score": 0.6875,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-002",
+      "mode": "full_omni",
+      "category": "proactive_insight",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\n  \"rubric_scores\": {\n    \"insight_precision\": 0.50,\n    \"insight_recall\": 0.75,\n    \"blind_spot_detection\": 0.75,\n    \"constraint_awareness\": 0.00,\n    \"actionability\": 0.25,\n    \"goal_alignment\": 0.25,\n    \"option_comparison\": 1.00,\n    \"risk_awareness\": 0.50,\n    \"internal_consistency\": 0.75,\n    \"overall_quality\": 0.50\n  },\n  \"unsupported_claim_rate\": 0.25,\n  \"overreach_rate\": 0.25,\n  \"redundant_insight_rate\": 0.00,\n  \"missing_required_elements\": [\n    \"Failed to identify that ALL notes (2-8, 2-9, 2-10) share the identical blind spot: Indigo's self-confirmation of 'missing validation support' is tautological and constitutes the core validation gap, not just note 2-10's recency\",\n    \"No acknowledgment of 'no user interviews' hard constraint in action recommendation\",\n    \"No acknowledgment of '6 hours per week' hard constraint in action recommendation\",\n    \"Action 'independent cross-check against external data sources' is vague and unbounded; does not specify what external sources, method, or time bound\",\n    \"Failed to leverage acceptable_action 'checkpoint-2' in recommendation\",\n    \"Did not identify that 'missing validation support' being confirmed by Indigo itself is the meta-blind spot across all three notes\"\n  ],\n  \"unsupported_elements\": [\n    \"Claim that note 2-10 'lacks any external corroboration' while others have it—false, all three notes have identical evidentiary structure (only Indigo's self-confirmation)\",\n    \"Implication that recency makes 2-10 uniquely problematic—no evidence that recency increases validation risk; this is an unsupported inference\",\n    \"Action specifies 'external data sources or different validation method' without defining what these are or how they fit constraints\"\n  ],\n  \"rationale\": \"The candidate identifies a real pattern (self-referential confirmation) but incorrectly isolates note 2-10 as the blind spot when the identical structural flaw applies to all three notes. The deeper blind spot is that Indigo's confirmation of 'missing validation support' for checkpoint-2 notes is itself the validation gap—there is no actual validation content, only labels of missing validation. The action violates 'no user interviews' constraint by not explicitly excluding them, and ignores '6 hours per week' entirely. The action is unbounded and not specific to checkpoint-2. The candidate partially satisfies insight detection but misses the systemic nature of the blind spot and fails hard constraints.\"\n}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.75,
+            "blind_spot_detection": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "goal_alignment": 0.25,
+            "option_comparison": 1,
+            "risk_awareness": 0.5,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "Failed to identify that ALL notes (2-8, 2-9, 2-10) share the identical blind spot: Indigo's self-confirmation of 'missing validation support' is tautological and constitutes the core validation gap, not just note 2-10's recency",
+            "No acknowledgment of 'no user interviews' hard constraint in action recommendation",
+            "No acknowledgment of '6 hours per week' hard constraint in action recommendation",
+            "Action 'independent cross-check against external data sources' is vague and unbounded; does not specify what external sources, method, or time bound",
+            "Failed to leverage acceptable_action 'checkpoint-2' in recommendation",
+            "Did not identify that 'missing validation support' being confirmed by Indigo itself is the meta-blind spot across all three notes"
+          ],
+          "unsupported_elements": [
+            "Claim that note 2-10 'lacks any external corroboration' while others have it—false, all three notes have identical evidentiary structure (only Indigo's self-confirmation)",
+            "Implication that recency makes 2-10 uniquely problematic—no evidence that recency increases validation risk; this is an unsupported inference",
+            "Action specifies 'external data sources or different validation method' without defining what these are or how they fit constraints"
+          ],
+          "rationale": "The candidate identifies a real pattern (self-referential confirmation) but incorrectly isolates note 2-10 as the blind spot when the identical structural flaw applies to all three notes. The deeper blind spot is that Indigo's confirmation of 'missing validation support' for checkpoint-2 notes is itself the validation gap—there is no actual validation content, only labels of missing validation. The action violates 'no user interviews' constraint by not explicitly excluding them, and ignores '6 hours per week' entirely. The action is unbounded and not specific to checkpoint-2. The candidate partially satisfies insight detection but misses the systemic nature of the blind spot and fails hard constraints."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.75,
+            "blind_spot_detection_rate": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "unsupported_claim_rate": 0.25,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.59375,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 3043,
+          "output_tokens": 587,
+          "cache_hit_input_tokens": 0,
+          "cache_miss_input_tokens": 3043,
+          "total_tokens": 3630,
+          "cached_tokens": 0
+        },
+        "latency_ms": 8056
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.50,\"blind_spot_detection\":0.75,\"constraint_awareness\":0.25,\"actionability\":0.50,\"goal_alignment\":0.50,\"option_comparison\":1.00,\"risk_awareness\":0.50,\"internal_consistency\":0.75,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.25,\"overreach_rate\":0.25,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"No acknowledgment of 'no user interviews' constraint in action design\",\"Action does not incorporate 6 hours per week bound\",\"Fails to leverage acceptable action 'checkpoint-2' for bounded scope\",\"Does not address 'goal action mismatch' as acceptable insight dimension\"],\"unsupported_elements\":[\"Claim that note 2-10 'has no supporting evidence beyond Indigo's own confirmation' is unsupported—all notes have identi‌\",\"Claim that note 2-10 is 'most defensible' blind spot due to recency is a weak inference without evidence that recency\"],\"rationale\":\"Candidate correctly identifies self-referential validation gap but overreaches by privileging note 2-10 via recency without evidence that recency increases risk; action violates 'no user interviews' constraint by suggesting external data-se\" }",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.75,
+            "constraint_awareness": 0.25,
+            "actionability": 0.5,
+            "goal_alignment": 0.5,
+            "option_comparison": 1,
+            "risk_awareness": 0.5,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "No acknowledgment of 'no user interviews' constraint in action design",
+            "Action does not incorporate 6 hours per week bound",
+            "Fails to leverage acceptable action 'checkpoint-2' for bounded scope",
+            "Does not address 'goal action mismatch' as acceptable insight dimension"
+          ],
+          "unsupported_elements": [
+            "Claim that note 2-10 'has no supporting evidence beyond Indigo's own confirmation' is unsupported—all notes have identi‌",
+            "Claim that note 2-10 is 'most defensible' blind spot due to recency is a weak inference without evidence that recency"
+          ],
+          "rationale": "Candidate correctly identifies self-referential validation gap but overreaches by privileging note 2-10 via recency without evidence that recency increases risk; action violates 'no user interviews' constraint by suggesting external data-se"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 1169,
+        "logical_judge_call": 11,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3090,
+          "output_tokens": 285,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2834,
+          "total_tokens": 3375,
+          "cached_tokens": 256
+        },
+        "latency_ms": 4987,
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection_rate": 0.75,
+            "constraint_awareness": 0.25,
+            "actionability": 0.5,
+            "unsupported_claim_rate": 0.25,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.65625,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "mode": "full_omni",
+      "category": "proactive_insight",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\n  \"rubric_scores\": {\n    \"insight_precision\": 0.75,\n    \"insight_recall\": 0.50,\n    \"blind_spot_detection\": 0.75,\n    \"constraint_awareness\": 0.00,\n    \"actionability\": 0.25,\n    \"goal_alignment\": 0.25,\n    \"option_comparison\": 1.00,\n    \"risk_awareness\": 0.00,\n    \"internal_consistency\": 0.75,\n    \"overall_quality\": 0.50\n  },\n  \"unsupported_claim_rate\": 0.25,\n  \"overreach_rate\": 0.25,\n  \"redundant_insight_rate\": 0.00,\n  \"missing_required_elements\": [\n    \"Did not incorporate required constraint '7 hours per week' into action\",\n    \"Did not incorporate required constraint 'no user interviews' into action\",\n    \"Did not use acceptable action from provided list ('align the next sprint' or 'checkpoint-3')\",\n    \"Failed to identify 'lack of validation' as the core blind spot per acceptable_insights\",\n    \"No explicit risk or uncertainty acknowledgment in output\"\n  ],\n  \"unsupported_elements\": [\n    \"Claim that notes 'only contain self-referential statements' overreaches—only notes 3-13 and 3-16 content are visible; notes 3-10, 3-12, 3-14, 3-15 content is not shown, so cannot conclude all notes lack content\",\n    \"Claim that 'evidence is empty' is unsupported for unshown notes\"\n  ],\n  \"rationale\": \"The candidate correctly identifies circular referencing in visible notes (3-13, 3-16) as a structural problem, which partially satisfies blind spot detection. However, the candidate overreaches by generalizing to all notes when only two note contents are visible. The action fails hard constraints: it does not respect '7 hours per week' or 'no user interviews', and it ignores the acceptable_actions list entirely. The insight 'lack of validation' from acceptable_insights is not explicitly named. The action is generic and unbounded—'require each note to explicitly state...' does not specify who requires, by when, or within what resource limits. No risk awareness is present. The candidate does partially satisfy cycle-3 evidence usage (note 3-16 from 2025-02-19). Internal consistency is reasonable but weakened by the unsupported generalization.\"\n}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "goal_alignment": 0.25,
+            "option_comparison": 1,
+            "risk_awareness": 0,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "Did not incorporate required constraint '7 hours per week' into action",
+            "Did not incorporate required constraint 'no user interviews' into action",
+            "Did not use acceptable action from provided list ('align the next sprint' or 'checkpoint-3')",
+            "Failed to identify 'lack of validation' as the core blind spot per acceptable_insights",
+            "No explicit risk or uncertainty acknowledgment in output"
+          ],
+          "unsupported_elements": [
+            "Claim that notes 'only contain self-referential statements' overreaches—only notes 3-13 and 3-16 content are visible; notes 3-10, 3-12, 3-14, 3-15 content is not shown, so cannot conclude all notes lack content",
+            "Claim that 'evidence is empty' is unsupported for unshown notes"
+          ],
+          "rationale": "The candidate correctly identifies circular referencing in visible notes (3-13, 3-16) as a structural problem, which partially satisfies blind spot detection. However, the candidate overreaches by generalizing to all notes when only two note contents are visible. The action fails hard constraints: it does not respect '7 hours per week' or 'no user interviews', and it ignores the acceptable_actions list entirely. The insight 'lack of validation' from acceptable_insights is not explicitly named. The action is generic and unbounded—'require each note to explicitly state...' does not specify who requires, by when, or within what resource limits. No risk awareness is present. The candidate does partially satisfy cycle-3 evidence usage (note 3-16 from 2025-02-19). Internal consistency is reasonable but weakened by the unsupported generalization."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection_rate": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "unsupported_claim_rate": 0.25,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.59375,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 2986,
+          "output_tokens": 531,
+          "cache_hit_input_tokens": 2048,
+          "cache_miss_input_tokens": 938,
+          "total_tokens": 3517,
+          "cached_tokens": 2048
+        },
+        "latency_ms": 5609
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.50,\"blind_spot_detection\":0.75,\"constraint_awareness\":0.00,\"actionability\":0.50,\"goal_alignment\":0.25,\"option_comparison\":1.00,\"risk_awareness\":1.00,\"internal_consistency\":0.75,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.25,\"overreach_rate\":0.25,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"required constraint: 7 hours per week\",\"required constraint: no user interviews\",\"acceptable action: align the next sprint or checkpoint-3 reference\"],\"unsupported_elements\":[\"assumption that all notes are empty (only 3-13 and 3-16 content shown)\",\"unbounded action lacks time/resource bounds\"],\"rationale\":\"Candidate correctly identifies circular self-reference blind spot using available note content but fails to incorporate required constraints (7 hours/week, no user interviews) and recommends unbounded structural fix rather than acceptable '\"\n}",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.5,
+            "goal_alignment": 0.25,
+            "option_comparison": 1,
+            "risk_awareness": 1,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "required constraint: 7 hours per week",
+            "required constraint: no user interviews",
+            "acceptable action: align the next sprint or checkpoint-3 reference"
+          ],
+          "unsupported_elements": [
+            "assumption that all notes are empty (only 3-13 and 3-16 content shown)",
+            "unbounded action lacks time/resource bounds"
+          ],
+          "rationale": "Candidate correctly identifies circular self-reference blind spot using available note content but fails to incorporate required constraints (7 hours/week, no user interviews) and recommends unbounded structural fix rather than acceptable '"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 926,
+        "logical_judge_call": 12,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3033,
+          "output_tokens": 227,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2777,
+          "total_tokens": 3260,
+          "cached_tokens": 256
+        },
+        "latency_ms": 4848,
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection_rate": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.5,
+            "unsupported_claim_rate": 0.25,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.625,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-004",
+      "mode": "full_omni",
+      "category": "proactive_insight",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\n  \"rubric_scores\": {\n    \"insight_precision\": 0.75,\n    \"insight_recall\": 0.50,\n    \"blind_spot_detection\": 0.75,\n    \"constraint_awareness\": 0.00,\n    \"actionability\": 0.25,\n    \"goal_alignment\": 0.50,\n    \"option_comparison\": 1.00,\n    \"risk_awareness\": 0.00,\n    \"internal_consistency\": 0.75,\n    \"overall_quality\": 0.50\n  },\n  \"unsupported_claim_rate\": 0.25,\n  \"overreach_rate\": 0.25,\n  \"redundant_insight_rate\": 0.00,\n  \"missing_required_elements\": [\n    \"Missing: 8 hours per week constraint in action\",\n    \"Missing: no user interviews constraint in action\",\n    \"Missing: explicit connection to 'repeated failure pattern' as the core blind spot (candidate frames it as verification failure rather than repeated failure pattern itself)\",\n    \"Missing: bounded scope in action recommendation (no time/resource boundary specified)\",\n    \"Missing: checkpoint-4 tie-in for action (acceptable action anchor)\",\n    \"Missing: 'run a bounded retrospective' as acceptable action option\",\n    \"Missing: uncertainty acknowledgment about what the support notes actually contain\"\n  ],\n  \"unsupported_elements\": [\n    \"Unsupported: 'without verifying their content or relevance' - evidence shows Quinn 'confirms relevant' notes; no evidence that Quinn failed to verify, only that the pattern of confirming exists\",\n    \"Unsupported: 'without evidence of content verification' - the evidence does not show absence of verification, only presence of confirmation statements\"\n  ],\n  \"rationale\": \"The candidate identifies a plausible pattern (repeated confirmations) but overreaches by inferring lack of verification without direct evidence. The blind spot is partially correct but misframed: the evidence shows Quinn repeatedly confirming support notes for checkpoint-4, not necessarily failing to verify them. The action fails all required constraints: no 8-hour/week limit, no 'no user interviews' exclusion, no bounded retrospective, no checkpoint-4 integration. The action is vague ('implement a verification step') rather than bounded. Constraint awareness score is 0.00 because both required constraints are completely ignored. Risk awareness is 0.00 as no risks of the action or inaction are mentioned. The candidate does avoid forbidden inferences and unacceptable actions. Insight precision is decent (0.75) but recall suffers from missing the 'repeated failure pattern' framing and acceptable action anchors. Overall quality is pulled down by constraint violation and unsupported inference about verification failure.\"\n}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "goal_alignment": 0.5,
+            "option_comparison": 1,
+            "risk_awareness": 0,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "Missing: 8 hours per week constraint in action",
+            "Missing: no user interviews constraint in action",
+            "Missing: explicit connection to 'repeated failure pattern' as the core blind spot (candidate frames it as verification failure rather than repeated failure pattern itself)",
+            "Missing: bounded scope in action recommendation (no time/resource boundary specified)",
+            "Missing: checkpoint-4 tie-in for action (acceptable action anchor)",
+            "Missing: 'run a bounded retrospective' as acceptable action option",
+            "Missing: uncertainty acknowledgment about what the support notes actually contain"
+          ],
+          "unsupported_elements": [
+            "Unsupported: 'without verifying their content or relevance' - evidence shows Quinn 'confirms relevant' notes; no evidence that Quinn failed to verify, only that the pattern of confirming exists",
+            "Unsupported: 'without evidence of content verification' - the evidence does not show absence of verification, only presence of confirmation statements"
+          ],
+          "rationale": "The candidate identifies a plausible pattern (repeated confirmations) but overreaches by inferring lack of verification without direct evidence. The blind spot is partially correct but misframed: the evidence shows Quinn repeatedly confirming support notes for checkpoint-4, not necessarily failing to verify them. The action fails all required constraints: no 8-hour/week limit, no 'no user interviews' exclusion, no bounded retrospective, no checkpoint-4 integration. The action is vague ('implement a verification step') rather than bounded. Constraint awareness score is 0.00 because both required constraints are completely ignored. Risk awareness is 0.00 as no risks of the action or inaction are mentioned. The candidate does avoid forbidden inferences and unacceptable actions. Insight precision is decent (0.75) but recall suffers from missing the 'repeated failure pattern' framing and acceptable action anchors. Overall quality is pulled down by constraint violation and unsupported inference about verification failure."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection_rate": 0.75,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "unsupported_claim_rate": 0.25,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.59375,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 3017,
+          "output_tokens": 564,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2761,
+          "total_tokens": 3581,
+          "cached_tokens": 256
+        },
+        "latency_ms": 10786
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.50,\"insight_recall\":0.75,\"blind_spot_detection\":0.50,\"constraint_awareness\":0.00,\"actionability\":0.50,\"goal_alignment\":0.25,\"option_comparison\":1.00,\"risk_awareness\":1.00,\"internal_consistency\":0.75,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.50,\"overreach_rate\":0.25,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"required constraints not addressed in action (8 hours per week, no user interviews)\",\"no explicit comparison to acceptable actions (run a bounded retrospective, checkpoint-4)\",\"blind spot not framed as repeated failure pattern per acceptable insights\"],\"unsupported_elements\":[\"claim that Quinn fails to verify 'content or relevance' is unsupported—evidence only shows confirmations exist, not that\"\n,\"verification was absent\",\"'independent verification' as action lacks boundedness and violates constraint awareness\"],\"rationale\":\"Candidate identifies a plausible pattern but overreaches by inferring lack of verification without evidence, misses required constraints entirely, and recommends a generic unbounded action instead of the acceptable bounded retrospective or\"\n}",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.75,
+            "blind_spot_detection": 0.5,
+            "constraint_awareness": 0,
+            "actionability": 0.5,
+            "goal_alignment": 0.25,
+            "option_comparison": 1,
+            "risk_awareness": 1,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.5,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "required constraints not addressed in action (8 hours per week, no user interviews)",
+            "no explicit comparison to acceptable actions (run a bounded retrospective, checkpoint-4)",
+            "blind spot not framed as repeated failure pattern per acceptable insights"
+          ],
+          "unsupported_elements": [
+            "claim that Quinn fails to verify 'content or relevance' is unsupported—evidence only shows confirmations exist, not that",
+            "verification was absent",
+            "'independent verification' as action lacks boundedness and violates constraint awareness"
+          ],
+          "rationale": "Candidate identifies a plausible pattern but overreaches by inferring lack of verification without evidence, misses required constraints entirely, and recommends a generic unbounded action instead of the acceptable bounded retrospective or"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 1149,
+        "logical_judge_call": 13,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3064,
+          "output_tokens": 259,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2808,
+          "total_tokens": 3323,
+          "cached_tokens": 256
+        },
+        "latency_ms": 5756,
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.75,
+            "blind_spot_detection_rate": 0.5,
+            "constraint_awareness": 0,
+            "actionability": 0.5,
+            "unsupported_claim_rate": 0.5,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.5625,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-005",
+      "mode": "full_omni",
+      "category": "proactive_insight",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\"rubric_scores\":{\"insight_precision\":0.50,\"insight_recall\":0.50,\"blind_spot_detection\":0.50,\"constraint_awareness\":0.00,\"actionability\":0.25,\"goal_alignment\":0.50,\"option_comparison\":1.00,\"risk_awareness\":0.00,\"internal_consistency\":0.75,\"overall_quality\":0.35},\"unsupported_claim_rate\":0.25,\"overreach_rate\":0.25,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"5 hours per week constraint\",\"no user interviews constraint\",\"real blind spot identification (the candidate misidentifies a document conflict as a time conflict blind spot)\",\"bounded action with explicit resource/time bound\"],\"unsupported_elements\":[\"Claim that note 5-6 vs note 5-7 is a 'time conflict blind spot' — this is a documentation/evidence conflict, not a time conflict blind spot\",\"Implication that reconciling notes is a bounded action without specifying how, when, or within what limits\"],\"rationale\":\"The candidate fundamentally misidentifies the blind spot. The evidence shows: (1) Blair has a stated goal to complete time conflict outcome 5, (2) Blair started and paused initiative Alpha, (3) Blair is considering another unrelated initiative before checkpoint-5, and (4) Blair confirmed support note 5-7 for checkpoint-5. The actual time conflict blind spot is that Blair has competing commitments (paused Alpha, new unrelated initiative) before checkpoint-5 while needing to complete outcome 5 — a goal-action mismatch with lack of validation that priorities are feasible. Instead, the candidate identifies a metadata conflict between note 5-6 and 5-7 as the 'blind spot,' which is an evidence-quality issue, not a time conflict blind spot about Blair's scheduling. The action 'reconcile notes' is not actionable for a time conflict and ignores the required constraints (5 hours/week, no user interviews). The action is unbounded — no time allocation, no specific method, no fallback. The candidate mentions competing priorities in insights but fails to elevate this to the identified blind spot or action. The constraints_used list includes the prompt language but the actual answer violates both required constraints. No risk or uncertainty is acknowledged. Internal consistency is partial because the facts cited don't support the conclusion drawn. Overreach is present in reframing an evidence conflict as a time conflict. Minor unsupported claim in suggesting note reconciliation addresses a time conflict. No redundancy issues.\"}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.5,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "goal_alignment": 0.5,
+            "option_comparison": 1,
+            "risk_awareness": 0,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.35
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "5 hours per week constraint",
+            "no user interviews constraint",
+            "real blind spot identification (the candidate misidentifies a document conflict as a time conflict blind spot)",
+            "bounded action with explicit resource/time bound"
+          ],
+          "unsupported_elements": [
+            "Claim that note 5-6 vs note 5-7 is a 'time conflict blind spot' — this is a documentation/evidence conflict, not a time conflict blind spot",
+            "Implication that reconciling notes is a bounded action without specifying how, when, or within what limits"
+          ],
+          "rationale": "The candidate fundamentally misidentifies the blind spot. The evidence shows: (1) Blair has a stated goal to complete time conflict outcome 5, (2) Blair started and paused initiative Alpha, (3) Blair is considering another unrelated initiative before checkpoint-5, and (4) Blair confirmed support note 5-7 for checkpoint-5. The actual time conflict blind spot is that Blair has competing commitments (paused Alpha, new unrelated initiative) before checkpoint-5 while needing to complete outcome 5 — a goal-action mismatch with lack of validation that priorities are feasible. Instead, the candidate identifies a metadata conflict between note 5-6 and 5-7 as the 'blind spot,' which is an evidence-quality issue, not a time conflict blind spot about Blair's scheduling. The action 'reconcile notes' is not actionable for a time conflict and ignores the required constraints (5 hours/week, no user interviews). The action is unbounded — no time allocation, no specific method, no fallback. The candidate mentions competing priorities in insights but fails to elevate this to the identified blind spot or action. The constraints_used list includes the prompt language but the actual answer violates both required constraints. No risk or uncertainty is acknowledged. Internal consistency is partial because the facts cited don't support the conclusion drawn. Overreach is present in reframing an evidence conflict as a time conflict. Minor unsupported claim in suggesting note reconciliation addresses a time conflict. No redundancy issues."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.5,
+            "blind_spot_detection_rate": 0.5,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "unsupported_claim_rate": 0.25,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.53125,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 3201,
+          "output_tokens": 523,
+          "cache_hit_input_tokens": 2048,
+          "cache_miss_input_tokens": 1153,
+          "total_tokens": 3724,
+          "cached_tokens": 2048
+        },
+        "latency_ms": 12141
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.50,\"insight_recall\":0.50,\"blind_spot_detection\":0.50,\"constraint_awareness\":0.00,\"actionability\":0.25,\"goal_alignment\":0.50,\"option_comparison\":1.00,\"risk_awareness\":0.00,\"internal_consistency\":0.75,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.25,\"overreach_rate\":0.25,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"5 hours per week constraint\",\"no user interviews constraint\",\"real blind spot: Blair's competing commitment (unrelated initiative before checkpoint-5) vs confirmed support note 5-7\"],\"unsupported_elements\":[\"claim that note 5-6 creates unresolved tension with note 5-7 when evidence states note 5-6 'must not override confirmed'\",\"reconciliation action not bounded by 5 hours/week or no-interview constraints\"],\"rationale\":\"The answer misidentifies the blind spot: note 5-6 explicitly must not override confirmed evidence, so the real blind spot is Blair's competing unrelated initiative before checkpoint-5 conflicting with goal completion; action ignores both 5h\"\n}\n",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.5,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "goal_alignment": 0.5,
+            "option_comparison": 1,
+            "risk_awareness": 0,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "5 hours per week constraint",
+            "no user interviews constraint",
+            "real blind spot: Blair's competing commitment (unrelated initiative before checkpoint-5) vs confirmed support note 5-7"
+          ],
+          "unsupported_elements": [
+            "claim that note 5-6 creates unresolved tension with note 5-7 when evidence states note 5-6 'must not override confirmed'",
+            "reconciliation action not bounded by 5 hours/week or no-interview constraints"
+          ],
+          "rationale": "The answer misidentifies the blind spot: note 5-6 explicitly must not override confirmed evidence, so the real blind spot is Blair's competing unrelated initiative before checkpoint-5 conflicting with goal completion; action ignores both 5h"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 1043,
+        "logical_judge_call": 14,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3248,
+          "output_tokens": 265,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2992,
+          "total_tokens": 3513,
+          "cached_tokens": 256
+        },
+        "latency_ms": 4675,
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.5,
+            "blind_spot_detection_rate": 0.5,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "unsupported_claim_rate": 0.25,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0.25
+          },
+          "core_score": 0.53125,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-001",
+      "mode": "full_omni",
+      "category": "decision_quality",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.75,\"blind_spot_detection\":0.50,\"constraint_awareness\":1.00,\"actionability\":0.75,\"goal_alignment\":0.75,\"option_comparison\":0.75,\"risk_awareness\":0.75,\"internal_consistency\":0.50,\"overall_quality\":0.75},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.25,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"explicit acknowledgment that Gray's long-term goal ('job versus startup objective 1') is undefined and cannot be evaluated for alignment\",\"clarification that 'Option B violates stable-income constraint' is too absolute—the constraint is a need, not necessarily a hard veto if the test is reversible and bounded\",\"explicit check that the four-week test cost is feasible within $500 (candidate notes uncertainty but does not verify this is actionable)\"],\"unsupported_elements\":[],\"rationale\":\"The candidate correctly compares Option A and Option B, respects both required constraints (stable income and $500 budget), and recommends a risk-aware next step combining Option A with a bounded test of Option B. However, several issues reduce scores: (1) The candidate states Option B 'violates' the stable-income constraint, which overreaches—the constraint is a need, not an absolute prohibition, especially given the reversible test mechanism exists; this is a clear overreach (0.25). (2) The candidate never addresses that 'job versus startup objective 1' is completely undefined in the evidence, so goal alignment cannot be properly assessed; this is a blind spot (0.50). (3) The action proposes using 'part of the risk budget' without any evidence about test cost feasibility, and notes this uncertainty without resolving it, slightly weakening actionability. (4) Internal consistency is weakened by simultaneously claiming Option B 'violates' the constraint while proposing to test it—these are reconcilable but not explicitly reconciled. No forbidden inferences or unsupported claims are present. No redundancy detected. The core comparison, constraint respect, and risk-aware recommendation are all present and mostly well-executed. Acceptable action 'four-week reversible test' is used; 'checkpoint-1' is mentioned but not used as an action anchor.\"}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.75,
+            "blind_spot_detection": 0.5,
+            "constraint_awareness": 1,
+            "actionability": 0.75,
+            "goal_alignment": 0.75,
+            "option_comparison": 0.75,
+            "risk_awareness": 0.75,
+            "internal_consistency": 0.5,
+            "overall_quality": 0.75
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "explicit acknowledgment that Gray's long-term goal ('job versus startup objective 1') is undefined and cannot be evaluated for alignment",
+            "clarification that 'Option B violates stable-income constraint' is too absolute—the constraint is a need, not necessarily a hard veto if the test is reversible and bounded",
+            "explicit check that the four-week test cost is feasible within $500 (candidate notes uncertainty but does not verify this is actionable)"
+          ],
+          "unsupported_elements": [],
+          "rationale": "The candidate correctly compares Option A and Option B, respects both required constraints (stable income and $500 budget), and recommends a risk-aware next step combining Option A with a bounded test of Option B. However, several issues reduce scores: (1) The candidate states Option B 'violates' the stable-income constraint, which overreaches—the constraint is a need, not an absolute prohibition, especially given the reversible test mechanism exists; this is a clear overreach (0.25). (2) The candidate never addresses that 'job versus startup objective 1' is completely undefined in the evidence, so goal alignment cannot be properly assessed; this is a blind spot (0.50). (3) The action proposes using 'part of the risk budget' without any evidence about test cost feasibility, and notes this uncertainty without resolving it, slightly weakening actionability. (4) Internal consistency is weakened by simultaneously claiming Option B 'violates' the constraint while proposing to test it—these are reconcilable but not explicitly reconciled. No forbidden inferences or unsupported claims are present. No redundancy detected. The core comparison, constraint respect, and risk-aware recommendation are all present and mostly well-executed. Acceptable action 'four-week reversible test' is used; 'checkpoint-1' is mentioned but not used as an action anchor."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 0.5,
+            "goal_alignment": 0.75,
+            "personalization": 1,
+            "option_comparison_quality": 0.75,
+            "risk_awareness": 0.75,
+            "actionability": 0.75,
+            "internal_consistency": 0.5,
+            "unsupported_assumption_rate": 0,
+            "overall_decision_quality": 0.75
+          },
+          "core_score": 0.75,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 2955,
+          "output_tokens": 488,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2699,
+          "total_tokens": 3443,
+          "cached_tokens": 256
+        },
+        "latency_ms": 11073
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.75,\"blind_spot_detection\":0.50,\"constraint_awareness\":0.75,\"actionability\":0.75,\"goal_alignment\":0.50,\"option_comparison\":0.75,\"risk_awareness\":0.75,\"internal_consistency\":0.50,\"overall_quality\":0.67},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.25,\"missing_required_elements\":[\"explicit mention of 'job versus startup objective 1' as goal in recommendation logic\",\"budget ceiling check for test cost\"],\"unsupported_elements\":[],\"rationale\":\"Candidate correctly compares options against constraints and proposes risk-aware phased approach, but fails to explicitly link recommendation to Gray's stated long-term goal (objective 1) and does not verify the four-week test fits within $\" }",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.75,
+            "blind_spot_detection": 0.5,
+            "constraint_awareness": 0.75,
+            "actionability": 0.75,
+            "goal_alignment": 0.5,
+            "option_comparison": 0.75,
+            "risk_awareness": 0.75,
+            "internal_consistency": 0.5,
+            "overall_quality": 0.67
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0,
+          "redundant_insight_rate": 0.25,
+          "missing_required_elements": [
+            "explicit mention of 'job versus startup objective 1' as goal in recommendation logic",
+            "budget ceiling check for test cost"
+          ],
+          "unsupported_elements": [],
+          "rationale": "Candidate correctly compares options against constraints and proposes risk-aware phased approach, but fails to explicitly link recommendation to Gray's stated long-term goal (objective 1) and does not verify the four-week test fits within $"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 781,
+        "logical_judge_call": 15,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3002,
+          "output_tokens": 200,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2746,
+          "total_tokens": 3202,
+          "cached_tokens": 256
+        },
+        "latency_ms": 4538,
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 0.5,
+            "goal_alignment": 0.5,
+            "personalization": 1,
+            "option_comparison_quality": 0.75,
+            "risk_awareness": 0.75,
+            "actionability": 0.75,
+            "internal_consistency": 0.5,
+            "unsupported_assumption_rate": 0,
+            "overall_decision_quality": 0.67
+          },
+          "core_score": 0.7133333333333334,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-002",
+      "mode": "full_omni",
+      "category": "decision_quality",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\"rubric_scores\":{\"insight_precision\":0.50,\"insight_recall\":0.25,\"blind_spot_detection\":0.00,\"constraint_awareness\":0.50,\"actionability\":0.50,\"goal_alignment\":0.75,\"option_comparison\":0.50,\"risk_awareness\":0.25,\"internal_consistency\":1.00,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.25,\"overreach_rate\":0.50,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"budget constraint '537 dollars' not mentioned or used in analysis\",\"no specific risk-aware next step with concrete mechanism (e.g., four-week reversible test, checkpoint-2 timing)\",\"no comparison of learning value/autonomy trade-off beyond constraint filtering\",\"no acknowledgment of what Jordan's support notes 2-8, 2-9, 2-10 contain or imply for decision timing\"],\"unsupported_elements\":[\"claim that Option B 'violates' stable-income constraint — evidence says 'uncertain income' not that it violates a hard constraint; this is an unsupported inference that treats uncertainty as automatic disqualification rather than risk to manage\",\"'risk-aware next step' is asserted but the action is merely 'Recommend Option A' with no risk mitigation or monitoring plan attached\"],\"rationale\":\"The candidate correctly identifies Option A's stability and Option B's income uncertainty, and references the correct facts. However, it fails on multiple required dimensions: (1) the $537 budget constraint is completely absent from the answer despite being a required constraint; (2) the 'risk-aware next step' is hollow — stating 'Recommend Option A' is not a risk-aware action, it is a conclusion without process, and lacks any concrete step like a four-week reversible test or checkpoint-2 milestone; (3) the candidate overreaches by declaring Option B 'violates' the stable-income constraint when the evidence only says 'uncertain income' — this conflates risk with violation and ignores that risk-aware decision-making could involve hedging, staging, or conditional commitment rather than outright rejection; (4) Jordan's support notes 2-8, 2-9, and 2-10 are referenced as facts but their content is never unpacked to inform timing or sequencing of the decision; (5) the option comparison is one-dimensional (constraint filtering only) rather than a genuine trade-off analysis. The insight 'Option A aligns with stable-income constraint; Option B does not' is partially correct but oversimplified and redundant with the conclusion. No blind spots are identified (e.g., opportunity cost of limited autonomy, whether stable income is sufficient vs. necessary, what checkpoint-2 specifically requires).\"}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.25,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0.5,
+            "actionability": 0.5,
+            "goal_alignment": 0.75,
+            "option_comparison": 0.5,
+            "risk_awareness": 0.25,
+            "internal_consistency": 1,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.5,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "budget constraint '537 dollars' not mentioned or used in analysis",
+            "no specific risk-aware next step with concrete mechanism (e.g., four-week reversible test, checkpoint-2 timing)",
+            "no comparison of learning value/autonomy trade-off beyond constraint filtering",
+            "no acknowledgment of what Jordan's support notes 2-8, 2-9, 2-10 contain or imply for decision timing"
+          ],
+          "unsupported_elements": [
+            "claim that Option B 'violates' stable-income constraint — evidence says 'uncertain income' not that it violates a hard constraint; this is an unsupported inference that treats uncertainty as automatic disqualification rather than risk to manage",
+            "'risk-aware next step' is asserted but the action is merely 'Recommend Option A' with no risk mitigation or monitoring plan attached"
+          ],
+          "rationale": "The candidate correctly identifies Option A's stability and Option B's income uncertainty, and references the correct facts. However, it fails on multiple required dimensions: (1) the $537 budget constraint is completely absent from the answer despite being a required constraint; (2) the 'risk-aware next step' is hollow — stating 'Recommend Option A' is not a risk-aware action, it is a conclusion without process, and lacks any concrete step like a four-week reversible test or checkpoint-2 milestone; (3) the candidate overreaches by declaring Option B 'violates' the stable-income constraint when the evidence only says 'uncertain income' — this conflates risk with violation and ignores that risk-aware decision-making could involve hedging, staging, or conditional commitment rather than outright rejection; (4) Jordan's support notes 2-8, 2-9, and 2-10 are referenced as facts but their content is never unpacked to inform timing or sequencing of the decision; (5) the option comparison is one-dimensional (constraint filtering only) rather than a genuine trade-off analysis. The insight 'Option A aligns with stable-income constraint; Option B does not' is partially correct but oversimplified and redundant with the conclusion. No blind spots are identified (e.g., opportunity cost of limited autonomy, whether stable income is sufficient vs. necessary, what checkpoint-2 specifically requires)."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 0.5,
+            "goal_alignment": 0.75,
+            "personalization": 0.5,
+            "option_comparison_quality": 0.5,
+            "risk_awareness": 0.25,
+            "actionability": 0.5,
+            "internal_consistency": 1,
+            "unsupported_assumption_rate": 0.25,
+            "overall_decision_quality": 0.5
+          },
+          "core_score": 0.5833333333333334,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 2870,
+          "output_tokens": 564,
+          "cache_hit_input_tokens": 2048,
+          "cache_miss_input_tokens": 822,
+          "total_tokens": 3434,
+          "cached_tokens": 2048
+        },
+        "latency_ms": 12707
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.50,\"insight_recall\":0.25,\"blind_spot_detection\":0.00,\"constraint_awareness\":0.50,\"actionability\":0.50,\"goal_alignment\":0.50,\"option_comparison\":0.50,\"risk_awareness\":0.25,\"internal_consistency\":1.00,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.25,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"budget amount (537 dollars) not mentioned\",\"no real Option A vs Option B comparison with trade-offs\",\"no risk-aware next step with contingency or reversibility\",\"no use of checkpoint-2 or support notes 2-8/2-9/2-10 for decision timing\"],\"unsupported_elements\":[],\"rationale\":\"Candidate correctly identifies Option A satisfies stable-income but fails to mention the specific 537 dollar budget, performs no substantive comparison of trade-offs, and offers a static recommendation lacking risk-aware contingency or use \"}",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.5,
+            "insight_recall": 0.25,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0.5,
+            "actionability": 0.5,
+            "goal_alignment": 0.5,
+            "option_comparison": 0.5,
+            "risk_awareness": 0.25,
+            "internal_consistency": 1,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "budget amount (537 dollars) not mentioned",
+            "no real Option A vs Option B comparison with trade-offs",
+            "no risk-aware next step with contingency or reversibility",
+            "no use of checkpoint-2 or support notes 2-8/2-9/2-10 for decision timing"
+          ],
+          "unsupported_elements": [],
+          "rationale": "Candidate correctly identifies Option A satisfies stable-income but fails to mention the specific 537 dollar budget, performs no substantive comparison of trade-offs, and offers a static recommendation lacking risk-aware contingency or use "
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 893,
+        "logical_judge_call": 16,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 2917,
+          "output_tokens": 228,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2661,
+          "total_tokens": 3145,
+          "cached_tokens": 256
+        },
+        "latency_ms": 3076,
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 0.5,
+            "goal_alignment": 0.5,
+            "personalization": 0.5,
+            "option_comparison_quality": 0.5,
+            "risk_awareness": 0.25,
+            "actionability": 0.5,
+            "internal_consistency": 1,
+            "unsupported_assumption_rate": 0,
+            "overall_decision_quality": 0.5
+          },
+          "core_score": 0.5833333333333334,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-003",
+      "mode": "full_omni",
+      "category": "decision_quality",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\"rubric_scores\":{\"insight_precision\":0.00,\"insight_recall\":0.00,\"blind_spot_detection\":0.00,\"constraint_awareness\":0.00,\"actionability\":0.25,\"goal_alignment\":0.00,\"option_comparison\":0.00,\"risk_awareness\":0.00,\"internal_consistency\":1.00,\"overall_quality\":0.10},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.25,\"missing_required_elements\":[\"Option A comparison\",\"Option B comparison\",\"574 dollars budget constraint\",\"stable income constraint\",\"risk-aware recommendation (not just deferral)\",\"any analysis of option trade-offs\",\"goal alignment assessment\",\"reversibility consideration\",\"rank by goal fit and reversibility\",\"four-week reversible test\",\"checkpoint-3\"],\"unsupported_elements\":[],\"rationale\":\"The candidate answer correctly identifies that the visible_context contains only metadata about support notes (3-13 through 3-16) without their actual content. However, the question explicitly requires comparing Option A and Option B, respecting budget ($574) and stable-income constraints, and recommending a risk-aware next step. The candidate provides zero comparison of options, zero constraint analysis, and substitutes a genuine risk-aware recommendation with a deferral ('review the notes first'). While factually accurate about missing information, this fails all core decision-quality requirements: no option comparison (0.00), no constraint awareness (0.00), no actionable recommendation aligned to goals (0.00), no risk analysis of options (0.00). The 'next step' is purely information-gathering, not a decision recommendation. The single partially redeeming element is actionability at 0.25 because the deferral action is at least concrete. Redundant insight rate is 0.25 because two insights essentially restate the same observation about missing details. No unsupported claims or overreach detected. The answer is internally consistent but completely misses the decision structure required by the rubric. Acceptable actions like 'rank by goal fit and reversibility', 'four-week reversible test', and 'checkpoint-3' are all absent. Required constraints '$574' and 'stable income' are not used in any analysis. Required option comparison of Option A and Option B is entirely absent. The answer treats this as an information-retrieval failure rather than constructing the required decision framework from available evidence or clearly stating what would be needed to complete it. Given the benchmark's focus on decision quality under uncertainty, complete deferral without structured framing of the decision problem scores minimally.\"}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0,
+            "insight_recall": 0,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0,
+            "actionability": 0.25,
+            "goal_alignment": 0,
+            "option_comparison": 0,
+            "risk_awareness": 0,
+            "internal_consistency": 1,
+            "overall_quality": 0.1
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0,
+          "redundant_insight_rate": 0.25,
+          "missing_required_elements": [
+            "Option A comparison",
+            "Option B comparison",
+            "574 dollars budget constraint",
+            "stable income constraint",
+            "risk-aware recommendation (not just deferral)",
+            "any analysis of option trade-offs",
+            "goal alignment assessment",
+            "reversibility consideration",
+            "rank by goal fit and reversibility",
+            "four-week reversible test",
+            "checkpoint-3"
+          ],
+          "unsupported_elements": [],
+          "rationale": "The candidate answer correctly identifies that the visible_context contains only metadata about support notes (3-13 through 3-16) without their actual content. However, the question explicitly requires comparing Option A and Option B, respecting budget ($574) and stable-income constraints, and recommending a risk-aware next step. The candidate provides zero comparison of options, zero constraint analysis, and substitutes a genuine risk-aware recommendation with a deferral ('review the notes first'). While factually accurate about missing information, this fails all core decision-quality requirements: no option comparison (0.00), no constraint awareness (0.00), no actionable recommendation aligned to goals (0.00), no risk analysis of options (0.00). The 'next step' is purely information-gathering, not a decision recommendation. The single partially redeeming element is actionability at 0.25 because the deferral action is at least concrete. Redundant insight rate is 0.25 because two insights essentially restate the same observation about missing details. No unsupported claims or overreach detected. The answer is internally consistent but completely misses the decision structure required by the rubric. Acceptable actions like 'rank by goal fit and reversibility', 'four-week reversible test', and 'checkpoint-3' are all absent. Required constraints '$574' and 'stable income' are not used in any analysis. Required option comparison of Option A and Option B is entirely absent. The answer treats this as an information-retrieval failure rather than constructing the required decision framework from available evidence or clearly stating what would be needed to complete it. Given the benchmark's focus on decision quality under uncertainty, complete deferral without structured framing of the decision problem scores minimally."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 0,
+            "goal_alignment": 0,
+            "personalization": 0.5,
+            "option_comparison_quality": 0,
+            "risk_awareness": 0,
+            "actionability": 0.25,
+            "internal_consistency": 1,
+            "unsupported_assumption_rate": 0,
+            "overall_decision_quality": 0.1
+          },
+          "core_score": 0.31666666666666665,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 3934,
+          "output_tokens": 536,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 3678,
+          "total_tokens": 4470,
+          "cached_tokens": 256
+        },
+        "latency_ms": 10658
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.25,\"insight_recall\":0.25,\"blind_spot_detection\":0.00,\"constraint_awareness\":0.25,\"actionability\":0.50,\"goal_alignment\":0.25,\"option_comparison\":0.00,\"risk_awareness\":0.25,\"internal_consistency\":0.75,\"overall_quality\":0.25},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"Option A vs Option B comparison\",\"budget constraint (574 dollars)\",\"stable-income constraint\",\"risk-aware next step with specific risk treatment\",\"rank by goal fit and reversibility or four-week reversible test\"],\"unsupported_elements\":[],\"rationale\":\"Candidate correctly identifies missing context but fails to use available evidence to infer or reconstruct any option details, constraints, or actionable risk-aware steps; the recommended action is generic and does not satisfy the required \"}",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.25,
+            "insight_recall": 0.25,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0.25,
+            "actionability": 0.5,
+            "goal_alignment": 0.25,
+            "option_comparison": 0,
+            "risk_awareness": 0.25,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.25
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "Option A vs Option B comparison",
+            "budget constraint (574 dollars)",
+            "stable-income constraint",
+            "risk-aware next step with specific risk treatment",
+            "rank by goal fit and reversibility or four-week reversible test"
+          ],
+          "unsupported_elements": [],
+          "rationale": "Candidate correctly identifies missing context but fails to use available evidence to infer or reconstruct any option details, constraints, or actionable risk-aware steps; the recommended action is generic and does not satisfy the required "
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 869,
+        "logical_judge_call": 17,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3981,
+          "output_tokens": 210,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 3725,
+          "total_tokens": 4191,
+          "cached_tokens": 256
+        },
+        "latency_ms": 3011,
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 0,
+            "goal_alignment": 0.25,
+            "personalization": 0.5,
+            "option_comparison_quality": 0,
+            "risk_awareness": 0.25,
+            "actionability": 0.5,
+            "internal_consistency": 0.75,
+            "unsupported_assumption_rate": 0,
+            "overall_decision_quality": 0.25
+          },
+          "core_score": 0.3888888888888889,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-004",
+      "mode": "full_omni",
+      "category": "decision_quality",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\"rubric_scores\":{\"insight_precision\":0.25,\"insight_recall\":0.25,\"blind_spot_detection\":0.00,\"constraint_awareness\":0.25,\"actionability\":0.25,\"goal_alignment\":0.25,\"option_comparison\":0.25,\"risk_awareness\":0.25,\"internal_consistency\":0.50,\"overall_quality\":0.25},\"unsupported_claim_rate\":0.75,\"overreach_rate\":0.75,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"611 dollars budget constraint\",\"Option A properties/definition\",\"real Option A vs Option B comparison with evidence for both\",\"risk-aware next step referencing checkpoint-4 or reversible experiment\",\"four-week reversible test or checkpoint-based monitoring\"],\"unsupported_elements\":[\"claim that Option A respects stable-income constraint (no evidence for Option A's properties)\",\"claim that Option A respects budget constraint (no evidence for Option A's properties)\",\"implication that Option A is known to be viable (no evidence)\"],\"rationale\":\"The candidate answer fundamentally fails on multiple dimensions. First, the visible context contains NO information about Option A's properties whatsoever—no evidence about Option A's income stability, budget fit, or any other characteristic. The candidate invents Option A's compliance with constraints entirely. Second, the required '$611' budget constraint is never mentioned. Third, the acceptable actions include 'fund the reversible experiment,' 'four-week reversible test,' and 'checkpoint-4'—none of which appear in the candidate's actions; instead generic 'monitor for changes' is provided. Fourth, the candidate fails to use any of the support notes (4-8 through 4-11) substantively—they are merely listed as facts without extracting what they contain about the budget allocation decision. Fifth, the comparison is entirely one-sided (only Option B's properties are evidenced) with Option A's properties fabricated. The candidate commits severe overreach by asserting Option A satisfies constraints without evidence, and makes unsupported claims about Option A's viability. The 'risk-aware next step' is generic monitoring rather than the checkpoint-4 or reversible experiment structure indicated in acceptable actions. The insight is essentially one unsupported claim repeated. Constraint awareness is minimal—'budget' and 'stable-income' are named but the specific '$611' hard constraint is ignored, and Option A's constraint compliance is invented. Goal alignment fails because the answer doesn't actually advance toward checkpoint-4 with a concrete risk-mitigation structure. Internal consistency is partial only because the logic 'Option B has uncertain income, therefore Option A' is internally coherent as a logical form, but built on entirely unsupported premises about Option A. Overall quality is very low due to fundamental evidence gaps and unsupported inference dominating the answer. Temperature: 0.0\"}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.25,
+            "insight_recall": 0.25,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0.25,
+            "actionability": 0.25,
+            "goal_alignment": 0.25,
+            "option_comparison": 0.25,
+            "risk_awareness": 0.25,
+            "internal_consistency": 0.5,
+            "overall_quality": 0.25
+          },
+          "unsupported_claim_rate": 0.75,
+          "overreach_rate": 0.75,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "611 dollars budget constraint",
+            "Option A properties/definition",
+            "real Option A vs Option B comparison with evidence for both",
+            "risk-aware next step referencing checkpoint-4 or reversible experiment",
+            "four-week reversible test or checkpoint-based monitoring"
+          ],
+          "unsupported_elements": [
+            "claim that Option A respects stable-income constraint (no evidence for Option A's properties)",
+            "claim that Option A respects budget constraint (no evidence for Option A's properties)",
+            "implication that Option A is known to be viable (no evidence)"
+          ],
+          "rationale": "The candidate answer fundamentally fails on multiple dimensions. First, the visible context contains NO information about Option A's properties whatsoever—no evidence about Option A's income stability, budget fit, or any other characteristic. The candidate invents Option A's compliance with constraints entirely. Second, the required '$611' budget constraint is never mentioned. Third, the acceptable actions include 'fund the reversible experiment,' 'four-week reversible test,' and 'checkpoint-4'—none of which appear in the candidate's actions; instead generic 'monitor for changes' is provided. Fourth, the candidate fails to use any of the support notes (4-8 through 4-11) substantively—they are merely listed as facts without extracting what they contain about the budget allocation decision. Fifth, the comparison is entirely one-sided (only Option B's properties are evidenced) with Option A's properties fabricated. The candidate commits severe overreach by asserting Option A satisfies constraints without evidence, and makes unsupported claims about Option A's viability. The 'risk-aware next step' is generic monitoring rather than the checkpoint-4 or reversible experiment structure indicated in acceptable actions. The insight is essentially one unsupported claim repeated. Constraint awareness is minimal—'budget' and 'stable-income' are named but the specific '$611' hard constraint is ignored, and Option A's constraint compliance is invented. Goal alignment fails because the answer doesn't actually advance toward checkpoint-4 with a concrete risk-mitigation structure. Internal consistency is partial only because the logic 'Option B has uncertain income, therefore Option A' is internally coherent as a logical form, but built on entirely unsupported premises about Option A. Overall quality is very low due to fundamental evidence gaps and unsupported inference dominating the answer. Temperature: 0.0"
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 0.5,
+            "goal_alignment": 0.25,
+            "personalization": 0.5,
+            "option_comparison_quality": 0.25,
+            "risk_awareness": 0.25,
+            "actionability": 0.25,
+            "internal_consistency": 0.5,
+            "unsupported_assumption_rate": 0.75,
+            "overall_decision_quality": 0.25
+          },
+          "core_score": 0.3333333333333333,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 3053,
+          "output_tokens": 576,
+          "cache_hit_input_tokens": 2048,
+          "cache_miss_input_tokens": 1005,
+          "total_tokens": 3629,
+          "cached_tokens": 2048
+        },
+        "latency_ms": 13029
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.25,\"insight_recall\":0.25,\"blind_spot_detection\":0.00,\"constraint_awareness\":0.25,\"actionability\":0.25,\"goal_alignment\":0.25,\"option_comparison\":0.50,\"risk_awareness\":0.25,\"internal_consistency\":0.50,\"overall_quality\":0.25},\"unsupported_claim_rate\":0.75,\"overreach_rate\":0.50,\"redundant_insight_rate\":0.00,\"missing_required_elements\":[\"Option A never defined in context\",\"611 dollars budget amount never mentioned\",\"stable income not explicitly tied to Option A evidence\",\"no reversible experiment or four-week test mentioned\",\"checkpoint-4 not used as action step\"],\"unsupported_elements\":[\"Option A respects budget and stable-income constraint (no evidence for Option A properties)\",\"Option A is recommended (no basis since Option A undefined)\",\"Option B 'violates' stable-income constraint (stronger claim than evidence supports; evidence only says 'uncertain' not \"],\"rationale\":\"Candidate invents Option A properties absent from context, fails to use required 611-dollar figure, omits reversible experiment/four-week test actions, and overstates Option B as 'violating' rather than merely conflicting with constraint; 4\" }",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.25,
+            "insight_recall": 0.25,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0.25,
+            "actionability": 0.25,
+            "goal_alignment": 0.25,
+            "option_comparison": 0.5,
+            "risk_awareness": 0.25,
+            "internal_consistency": 0.5,
+            "overall_quality": 0.25
+          },
+          "unsupported_claim_rate": 0.75,
+          "overreach_rate": 0.5,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "Option A never defined in context",
+            "611 dollars budget amount never mentioned",
+            "stable income not explicitly tied to Option A evidence",
+            "no reversible experiment or four-week test mentioned",
+            "checkpoint-4 not used as action step"
+          ],
+          "unsupported_elements": [
+            "Option A respects budget and stable-income constraint (no evidence for Option A properties)",
+            "Option A is recommended (no basis since Option A undefined)",
+            "Option B 'violates' stable-income constraint (stronger claim than evidence supports; evidence only says 'uncertain' not "
+          ],
+          "rationale": "Candidate invents Option A properties absent from context, fails to use required 611-dollar figure, omits reversible experiment/four-week test actions, and overstates Option B as 'violating' rather than merely conflicting with constraint; 4"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 1166,
+        "logical_judge_call": 18,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3100,
+          "output_tokens": 278,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 2844,
+          "total_tokens": 3378,
+          "cached_tokens": 256
+        },
+        "latency_ms": 4912,
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 0.5,
+            "goal_alignment": 0.25,
+            "personalization": 0.5,
+            "option_comparison_quality": 0.5,
+            "risk_awareness": 0.25,
+            "actionability": 0.25,
+            "internal_consistency": 0.5,
+            "unsupported_assumption_rate": 0.75,
+            "overall_decision_quality": 0.25
+          },
+          "core_score": 0.3611111111111111,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-005",
+      "mode": "full_omni",
+      "category": "decision_quality",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\n  \"rubric_scores\": {\n    \"insight_precision\": 0.75,\n    \"insight_recall\": 0.50,\n    \"blind_spot_detection\": 0.50,\n    \"constraint_awareness\": 0.75,\n    \"actionability\": 0.50,\n    \"goal_alignment\": 0.75,\n    \"option_comparison\": 0.75,\n    \"risk_awareness\": 0.25,\n    \"internal_consistency\": 0.75,\n    \"overall_quality\": 0.50\n  },\n  \"unsupported_claim_rate\": 0.25,\n  \"overreach_rate\": 0.25,\n  \"redundant_insight_rate\": 0.00,\n  \"missing_required_elements\": [\n    \"No explicit mention of checkpoint-5 in actions (required by acceptable_actions)\",\n    \"No reversible or pilot-based next step (required by acceptable_actions: 'run a reference-backed pilot', 'four-week reversible test')\",\n    \"No explicit budget impact analysis or cost comparison between options\",\n    \"No acknowledgment that Option A's 'limited autonomy' is a trade-off to monitor\"\n  ],\n  \"unsupported_elements\": [\n    \"Rejected_facts claims Option B is 'contradicted' but it is not contradicted—it's validly characterized as uncertain income, which violates a constraint; mislabeling as 'contradicted' is a reasoning error\",\n    \"Monitoring is vague and not tied to any specific trigger or checkpoint mechanism\"\n  ],\n  \"rationale\": \"The answer correctly identifies Option A as aligned with stable income and Option B as violating that constraint, with proper fact sourcing. However, critical gaps exist: (1) the 'risk-aware next step' fails to use checkpoint-5 or any reversible/pilot structure as required by acceptable_actions; (2) the rejected_facts section erroneously labels Option B as 'contradicted' when it is actually a valid option that fails a constraint—this misrepresents the evidence structure; (3) risk awareness is minimal ('monitor for changes' is generic, not risk-aware); (4) no explicit budget impact analysis despite $648 being cited; (5) the autonomy trade-off in Option A is noted but not integrated as a risk to monitor. The overreach rate reflects the unsupported 'contradicted' label and the implication that monitoring suffices for risk management.\"\n}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0.5,
+            "constraint_awareness": 0.75,
+            "actionability": 0.5,
+            "goal_alignment": 0.75,
+            "option_comparison": 0.75,
+            "risk_awareness": 0.25,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0.25,
+          "overreach_rate": 0.25,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "No explicit mention of checkpoint-5 in actions (required by acceptable_actions)",
+            "No reversible or pilot-based next step (required by acceptable_actions: 'run a reference-backed pilot', 'four-week reversible test')",
+            "No explicit budget impact analysis or cost comparison between options",
+            "No acknowledgment that Option A's 'limited autonomy' is a trade-off to monitor"
+          ],
+          "unsupported_elements": [
+            "Rejected_facts claims Option B is 'contradicted' but it is not contradicted—it's validly characterized as uncertain income, which violates a constraint; mislabeling as 'contradicted' is a reasoning error",
+            "Monitoring is vague and not tied to any specific trigger or checkpoint mechanism"
+          ],
+          "rationale": "The answer correctly identifies Option A as aligned with stable income and Option B as violating that constraint, with proper fact sourcing. However, critical gaps exist: (1) the 'risk-aware next step' fails to use checkpoint-5 or any reversible/pilot structure as required by acceptable_actions; (2) the rejected_facts section erroneously labels Option B as 'contradicted' when it is actually a valid option that fails a constraint—this misrepresents the evidence structure; (3) risk awareness is minimal ('monitor for changes' is generic, not risk-aware); (4) no explicit budget impact analysis despite $648 being cited; (5) the autonomy trade-off in Option A is noted but not integrated as a risk to monitor. The overreach rate reflects the unsupported 'contradicted' label and the implication that monitoring suffices for risk management."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 1,
+            "goal_alignment": 0.75,
+            "personalization": 0.6666666666666666,
+            "option_comparison_quality": 0.75,
+            "risk_awareness": 0.25,
+            "actionability": 0.5,
+            "internal_consistency": 0.75,
+            "unsupported_assumption_rate": 0.25,
+            "overall_decision_quality": 0.5
+          },
+          "core_score": 0.6574074074074073,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 3741,
+          "output_tokens": 501,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 3485,
+          "total_tokens": 4242,
+          "cached_tokens": 256
+        },
+        "latency_ms": 6122
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.75,\"insight_recall\":0.50,\"blind_spot_detection\":0.00,\"constraint_awareness\":0.75,\"actionability\":0.50,\"goal_alignment\":0.75,\"option_comparison\":0.75,\"risk_awareness\":0.25,\"internal_consistency\":0.75,\"overall_quality\":0.50},\"unsupported_claim_rate\":0.00,\"overreach_rate\":0.00,\"redundant_insight_rate\":0.25,\"missing_required_elements\":[\"real Option A/B comparison with explicit budget impact analysis\",\"risk-aware next step tied to checkpoint-5 or reversible test\",\"uncertainty acknowledgment\"],\"unsupported_elements\":[],\"rationale\":\"Candidate correctly identifies Option A aligns with stable-income constraint and cites budget, but fails to explicitly compare how each option affects the $648 budget, omits checkpoint-5 as the required risk-aware next step, and provides no\" }",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0.75,
+            "insight_recall": 0.5,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0.75,
+            "actionability": 0.5,
+            "goal_alignment": 0.75,
+            "option_comparison": 0.75,
+            "risk_awareness": 0.25,
+            "internal_consistency": 0.75,
+            "overall_quality": 0.5
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0,
+          "redundant_insight_rate": 0.25,
+          "missing_required_elements": [
+            "real Option A/B comparison with explicit budget impact analysis",
+            "risk-aware next step tied to checkpoint-5 or reversible test",
+            "uncertainty acknowledgment"
+          ],
+          "unsupported_elements": [],
+          "rationale": "Candidate correctly identifies Option A aligns with stable-income constraint and cites budget, but fails to explicitly compare how each option affects the $648 budget, omits checkpoint-5 as the required risk-aware next step, and provides no"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 815,
+        "logical_judge_call": 19,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 3788,
+          "output_tokens": 205,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 3532,
+          "total_tokens": 3993,
+          "cached_tokens": 256
+        },
+        "latency_ms": 3842,
+        "score": {
+          "status": "completed",
+          "category": "decision_quality",
+          "metrics": {
+            "constraint_coverage": 1,
+            "goal_alignment": 0.75,
+            "personalization": 0.6666666666666666,
+            "option_comparison_quality": 0.75,
+            "risk_awareness": 0.25,
+            "actionability": 0.5,
+            "internal_consistency": 0.75,
+            "unsupported_assumption_rate": 0,
+            "overall_decision_quality": 0.5
+          },
+          "core_score": 0.6851851851851851,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    }
+  ]
+}

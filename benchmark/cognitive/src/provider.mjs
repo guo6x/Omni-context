@@ -7,15 +7,83 @@ function cleanJson(text) {
   return JSON.parse(String(text).replace(/```(?:json)?\s*\n?([\s\S]*?)\n?```/g, '$1').trim());
 }
 
+function balancedJsonObjects(text) {
+  const objects = [];
+  for (let start = 0; start < text.length; start++) {
+    if (text[start] !== '{') continue;
+    let depth = 0;
+    let quoted = false;
+    let escaped = false;
+    for (let index = start; index < text.length; index++) {
+      const character = text[index];
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (character === '\\') escaped = true;
+        else if (character === '"') quoted = false;
+        continue;
+      }
+      if (character === '"') quoted = true;
+      else if (character === '{') depth++;
+      else if (character === '}' && --depth === 0) {
+        objects.push(text.slice(start, index + 1));
+        start = index;
+        break;
+      }
+    }
+  }
+  return objects;
+}
+
+export function parseStructuredJudgeResponse(raw) {
+  const text = String(raw || '').trim();
+  try { return JSON.parse(text); } catch {}
+  for (const match of text.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)) {
+    try { return JSON.parse(match[1].trim()); } catch {}
+  }
+  for (const object of balancedJsonObjects(text)) {
+    try { return JSON.parse(object); } catch {}
+  }
+  const error = new Error('Kimi response does not contain a complete JSON object');
+  error.failureType = 'malformed_json';
+  throw error;
+}
+
+export function normalizeAnswerV2Shape(value) {
+  if (!value || typeof value !== 'object' || !Array.isArray(value.rejected_facts)) return { value, normalizations: [] };
+  const normalizations = [];
+  const normalized = { ...value, rejected_facts: value.rejected_facts.map((item, index) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+    const extras = Object.keys(item).filter((key) => !['value', 'reason', 'source_ids'].includes(key));
+    if (extras.length === 1 && extras[0] === 'source_agents' && Array.isArray(item.source_agents)) {
+      const { source_agents: _redundant, ...strictItem } = item;
+      normalizations.push({ path: `rejected_facts[${index}].source_agents`, action: 'removed_redundant_non_schema_field' });
+      return strictItem;
+    }
+    return item;
+  }) };
+  return { value: normalized, normalizations };
+}
+
+const emptyUsage = () => ({ input_tokens: 0, output_tokens: 0, cache_hit_input_tokens: 0, cache_miss_input_tokens: 0, total_tokens: 0, cached_tokens: 0 });
+function addUsage(target, usage) {
+  for (const key of Object.keys(target)) target[key] += usage?.[key] || 0;
+  return target;
+}
+function safeRawSummary(raw, finishReason) {
+  const text = String(raw || '');
+  return { raw_character_count: [...text].length, finish_reason: finishReason || null, first_200: [...text].slice(0, 200).join(''), last_200: [...text].slice(-200).join('') };
+}
+
 function exactKeys(value, expected, label) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be an object`);
   if (JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...expected].sort())) throw new Error(`${label} keys do not match schema`);
 }
 
 export function validateAgentReview(value) {
-  exactKeys(value, ['scenario_id', 'verdict', 'score_issue', 'gold_ambiguity', 'baseline_fairness_issue', 'memory_leakage_issue', 'notes'], 'agent review');
+  const issueKeys = ['score_issue', 'gold_ambiguity', 'baseline_fairness_issue', 'memory_leakage_issue', 'judge_reliability_issue', 'provenance_issue', 'invalidated_fact_rejection_issue', 'temporal_transition_issue'];
+  exactKeys(value, ['scenario_id', 'verdict', ...issueKeys, 'notes'], 'agent review');
   if (typeof value.scenario_id !== 'string' || !['agree', 'flag'].includes(value.verdict) || typeof value.notes !== 'string') throw new Error('agent review identity/verdict invalid');
-  for (const key of ['score_issue', 'gold_ambiguity', 'baseline_fairness_issue', 'memory_leakage_issue']) if (typeof value[key] !== 'boolean') throw new Error(`${key} must be boolean`);
+  for (const key of issueKeys) if (typeof value[key] !== 'boolean') throw new Error(`${key} must be boolean`);
   return value;
 }
 
@@ -36,13 +104,22 @@ export function evidenceSourceAgents(item, passage) {
 }
 
 const emptyLedger = () => ({
-  schema_version: 1,
+  schema_version: 2,
   provider: 'Moonshot',
   model: process.env.KIMI_JUDGE_MODEL || 'kimi-k2.6',
+  judge_adapter_version: 'kimi-judge-adapter-v2.1',
+  judge_rubric_version: 'kimi-judge-rubric-v2',
   temperature_control: 'provider_default_non_configurable',
   temperature_parameter_sent: false,
-  call_limit: 40,
+  call_limit: 60,
   calls: 0,
+  physical_attempts: 0,
+  logical_judge_calls: 0,
+  successful_logical_calls: 0,
+  truncated_attempts: 0,
+  malformed_attempts: 0,
+  schema_validation_failures: 0,
+  retries_recovered: 0,
   prompt_tokens: 0,
   completion_tokens: 0,
   total_tokens: 0,
@@ -52,6 +129,7 @@ const emptyLedger = () => ({
   structured_output_fallbacks: 0,
   consecutive_provider_errors: 0,
   consecutive_schema_failures: 0,
+  logical_calls: [],
   attempts: [],
 });
 
@@ -124,16 +202,40 @@ export class CognitiveProvider {
     throw lastError;
   }
 
-  async reserveKimiAttempt({ responseFormat, fallbackReason = null, phase = 'development' }) {
+  async reserveKimiLogicalCall({ phase, scenarioId }) {
+    const ledger = await readLedger(this.kimiUsagePath);
+    const entry = { logical_call_number: ledger.logical_judge_calls + 1, phase, scenario_id: scenarioId, started_at: new Date().toISOString(), status: 'started', physical_attempts: [] };
+    ledger.logical_judge_calls++;
+    ledger.logical_calls.push(entry);
+    await saveLedger(this.kimiUsagePath, ledger);
+    return entry.logical_call_number;
+  }
+
+  async completeKimiLogicalCall(logicalCallNumber, { status, physicalAttempts, error = null }) {
+    const ledger = await readLedger(this.kimiUsagePath);
+    const entry = ledger.logical_calls.find((item) => item.logical_call_number === logicalCallNumber);
+    Object.assign(entry, { status, physical_attempt_count: physicalAttempts, error, completed_at: new Date().toISOString() });
+    if (status === 'completed') {
+      ledger.successful_logical_calls++;
+      if (physicalAttempts > 1) ledger.retries_recovered++;
+    }
+    await saveLedger(this.kimiUsagePath, ledger);
+  }
+
+  async reserveKimiAttempt({ responseFormat, fallbackReason = null, phase = 'development', logicalCallNumber, physicalAttempt }) {
     const ledger = await readLedger(this.kimiUsagePath);
     ledger.call_limit = this.config.primary_judge.call_limit;
     ledger.model = process.env.KIMI_JUDGE_MODEL || this.config.primary_judge.model;
+    ledger.judge_adapter_version = this.config.primary_judge.adapter_version;
+    ledger.judge_rubric_version = this.config.primary_judge.rubric_version;
     if (ledger.calls >= ledger.call_limit) throw new Error(`KIMI_CALL_LIMIT_REACHED:${ledger.calls}/${ledger.call_limit}`);
     if (ledger.consecutive_provider_errors >= 3) throw new Error('KIMI_STOP_CONDITION:three consecutive provider errors');
-    if (ledger.consecutive_schema_failures >= 3) throw new Error('KIMI_STOP_CONDITION:three consecutive schema failures');
-    const entry = { call_number: ledger.calls + 1, phase, started_at: new Date().toISOString(), response_format: responseFormat, structured_output_fallback: responseFormat === 'json_object', fallback_reason: fallbackReason, temperature_parameter_sent: false, status: 'started' };
+    const entry = { call_number: ledger.calls + 1, logical_call_number: logicalCallNumber, physical_attempt: physicalAttempt, phase, started_at: new Date().toISOString(), response_format: responseFormat, structured_output_fallback: responseFormat === 'json_object', fallback_reason: fallbackReason, temperature_parameter_sent: false, status: 'started' };
     ledger.calls++;
+    ledger.physical_attempts++;
     ledger.attempts.push(entry);
+    const logical = ledger.logical_calls.find((item) => item.logical_call_number === logicalCallNumber);
+    if (logical) logical.physical_attempts.push(entry.call_number);
     await saveLedger(this.kimiUsagePath, ledger);
     return entry.call_number;
   }
@@ -149,19 +251,26 @@ export class CognitiveProvider {
       ledger.cached_tokens += usage.cached_tokens;
     }
     if (update.status === 'provider_error') { ledger.errors++; ledger.consecutive_provider_errors++; }
-    else if (update.status === 'schema_failure') { ledger.schema_failures++; ledger.consecutive_schema_failures++; ledger.consecutive_provider_errors = 0; }
+    else if (update.status === 'schema_failure') {
+      ledger.schema_failures++;
+      ledger.consecutive_schema_failures++;
+      ledger.consecutive_provider_errors = 0;
+      if (update.failure_type === 'output_truncated') ledger.truncated_attempts++;
+      else if (update.failure_type === 'malformed_json') ledger.malformed_attempts++;
+      else if (update.failure_type === 'schema_validation_failure') ledger.schema_validation_failures++;
+    }
     else if (update.status === 'completed') { ledger.consecutive_provider_errors = 0; ledger.consecutive_schema_failures = 0; }
     else if (update.status === 'response_format_unsupported') { ledger.consecutive_provider_errors = 0; }
     if (update.structured_output_fallback) ledger.structured_output_fallbacks++;
     await saveLedger(this.kimiUsagePath, ledger);
   }
 
-  async kimiRequest({ payload, responseFormat = 'json_schema', fallbackReason = null, phase = 'development' }) {
+  async kimiRequest({ payload, responseFormat = 'json_schema', fallbackReason = null, phase = 'development', logicalCallNumber, physicalAttempt, retryDirective = null }) {
     const apiUrl = process.env.KIMI_API_URL || 'https://api.moonshot.cn/v1';
     const apiKey = process.env.MOONSHOT_API_KEY;
     const model = process.env.KIMI_JUDGE_MODEL || this.config.primary_judge.model;
     if (!apiKey) throw new Error('KIMI_CREDENTIALS_MISSING:MOONSHOT_API_KEY');
-    const callNumber = await this.reserveKimiAttempt({ responseFormat, fallbackReason, phase });
+    const callNumber = await this.reserveKimiAttempt({ responseFormat, fallbackReason, phase, logicalCallNumber, physicalAttempt });
     const start = Date.now();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.request_timeout_ms);
@@ -171,7 +280,7 @@ export class CognitiveProvider {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify({
           model,
-          messages: [{ role: 'system', content: this.judgePrompt }, { role: 'user', content: JSON.stringify(payload, null, 2) }],
+          messages: [{ role: 'system', content: retryDirective ? `${this.judgePrompt}\n\n${retryDirective}` : this.judgePrompt }, { role: 'user', content: JSON.stringify(payload, null, 2) }],
           thinking: { type: 'disabled' },
           stream: false,
           max_completion_tokens: this.config.primary_judge.max_completion_tokens,
@@ -189,12 +298,13 @@ export class CognitiveProvider {
         throw error;
       }
       const body = await response.json();
-      const raw = body.choices?.[0]?.message?.content;
+      const choice = body.choices?.[0];
+      const raw = choice?.message?.content;
       if (!raw) throw new Error('Kimi returned empty content');
       const usage = kimiUsage(body);
       // Defer parsing until judge() so malformed structured output is accounted
       // as a schema failure, not as a transport/provider failure.
-      return { callNumber, raw, model: body.model || model, latency_ms: Date.now() - start, usage, attempts: 1, structured_output_fallback: responseFormat === 'json_object', fallback_reason: fallbackReason };
+      return { callNumber, raw, finish_reason: choice.finish_reason || null, raw_character_count: [...String(raw)].length, model: body.model || model, latency_ms: Date.now() - start, usage, attempts: 1, structured_output_fallback: responseFormat === 'json_object', fallback_reason: fallbackReason };
     } catch (error) {
       if (!error.schemaUnsupported) {
         const ledger = await readLedger(this.kimiUsagePath);
@@ -208,11 +318,24 @@ export class CognitiveProvider {
   }
 
   async answer({ scenario, mode, context }) {
-    const result = await this.deepSeekChat({ role: 'answer', system: this.answerPrompt, maxTokens: this.config.answer.max_tokens, payload: { benchmark: 'Synthetic/Curated Development Evaluation', answer_schema: 'answer-schema-v2', mode, current_question: scenario.question, memory_context: context } });
     const visibleSourceIds = context.map((item) => item.source_id);
     const visibleAgents = [...new Set(context.flatMap((item) => item.source_agents || []))];
-    result.structured = validateAnswerV2(result.structured, { visibleSourceIds, visibleAgents, allowEmptySources: mode === 'no_memory' });
-    return result;
+    const payload = { benchmark: 'Synthetic/Curated Development Evaluation', answer_schema: 'answer-schema-v2', mode, current_question: scenario.question, memory_context: context };
+    let lastError;
+    for (let validationAttempt = 1; validationAttempt <= 3; validationAttempt++) {
+      const correction = validationAttempt > 1 ? '\n\nYour previous JSON failed answer-schema-v2 validation. Return only the exact keys and shapes stated above. Do not add fields to facts, transitions, or rejected_facts. Every memory-backed source_ids array must contain exact visible IDs.' : '';
+      const result = await this.deepSeekChat({ role: 'answer', system: `${this.answerPrompt}${correction}`, maxTokens: this.config.answer.max_tokens, payload });
+      try {
+        const normalized = normalizeAnswerV2Shape(result.structured);
+        result.structured = validateAnswerV2(normalized.value, { visibleSourceIds, visibleAgents, allowEmptySources: mode === 'no_memory' });
+        result.schema_normalizations = normalized.normalizations;
+        result.schema_validation_attempts = validationAttempt;
+        return result;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError;
   }
 
   async judge({ scenario, answer, context, phase = 'development' }) {
@@ -229,36 +352,66 @@ export class CognitiveProvider {
       required_constraints: scenario.gold.required_constraints || [],
       required_option_comparison: scenario.gold.required_option_comparison || [],
     };
+    const logicalCallNumber = await this.reserveKimiLogicalCall({ phase, scenarioId: scenario.scenario_id });
+    const totalUsage = emptyUsage();
+    let totalLatency = 0;
     let fallbackReason = null;
-    for (let schemaAttempt = 0; schemaAttempt <= this.config.max_retries; schemaAttempt++) {
+    const retryDirective = 'Your previous response was invalid or truncated. Return only compact JSON matching the exact schema. Do not use Markdown. Rationale <= 160 characters. Lists <= 3 items.';
+    for (let physicalAttempt = 1; physicalAttempt <= 3; physicalAttempt++) {
       let result;
       try {
-        result = await this.kimiRequest({ payload, responseFormat: 'json_schema', phase });
+        result = await this.kimiRequest({ payload, responseFormat: 'json_schema', phase, logicalCallNumber, physicalAttempt, retryDirective: physicalAttempt > 1 ? retryDirective : null });
       } catch (error) {
         if (!error.schemaUnsupported) {
-          if (error.nonRetryableConfiguration) throw error;
-          if (schemaAttempt < this.config.max_retries) continue;
+          if (error.nonRetryableConfiguration) {
+            await this.completeKimiLogicalCall(logicalCallNumber, { status: 'error', physicalAttempts: physicalAttempt, error: error.message });
+            throw error;
+          }
+          if (physicalAttempt < 3) continue;
+          await this.completeKimiLogicalCall(logicalCallNumber, { status: 'error', physicalAttempts: physicalAttempt, error: error.message });
           throw error;
         }
         fallbackReason = error.message;
-        result = await this.kimiRequest({ payload, responseFormat: 'json_object', fallbackReason, phase });
+        result = await this.kimiRequest({ payload, responseFormat: 'json_object', fallbackReason, phase, logicalCallNumber, physicalAttempt, retryDirective: physicalAttempt > 1 ? retryDirective : null });
       }
+      addUsage(totalUsage, result.usage);
+      totalLatency += result.latency_ms;
       try {
-        result.structured = validateKimiJudgeV2(cleanJson(result.raw));
-        await this.updateKimiAttempt(result.callNumber, { status: 'completed', structured_output_fallback: result.structured_output_fallback, fallback_reason: result.fallback_reason }, result.usage);
-        return result;
+        if (result.finish_reason === 'length') {
+          const error = new Error('Kimi structured output was truncated by completion length');
+          error.failureType = 'output_truncated';
+          throw error;
+        }
+        const parsed = parseStructuredJudgeResponse(result.raw);
+        try { result.structured = validateKimiJudgeV2(parsed); }
+        catch (error) { error.failureType = 'schema_validation_failure'; throw error; }
+        await this.updateKimiAttempt(result.callNumber, { status: 'completed', finish_reason: result.finish_reason, completion_tokens: result.usage.output_tokens, raw_character_count: result.raw_character_count, structured_output_fallback: result.structured_output_fallback, fallback_reason: result.fallback_reason }, result.usage);
+        await this.completeKimiLogicalCall(logicalCallNumber, { status: 'completed', physicalAttempts: physicalAttempt });
+        return { ...result, usage: totalUsage, latency_ms: totalLatency, logical_judge_call: logicalCallNumber, physical_attempts: physicalAttempt, retries_recovered: physicalAttempt > 1, judge_adapter_version: this.config.primary_judge.adapter_version, judge_rubric_version: this.config.primary_judge.rubric_version };
       } catch (error) {
-        await this.updateKimiAttempt(result.callNumber, { status: 'schema_failure', structured_output_fallback: result.structured_output_fallback, fallback_reason: result.fallback_reason, error: error.message }, result.usage);
-        if (schemaAttempt >= this.config.max_retries) throw error;
+        const failureType = error.failureType || 'malformed_json';
+        await this.updateKimiAttempt(result.callNumber, { status: 'schema_failure', failure_type: failureType, finish_reason: result.finish_reason, completion_tokens: result.usage.output_tokens, raw_character_count: result.raw_character_count, raw_summary: safeRawSummary(result.raw, result.finish_reason), structured_output_fallback: result.structured_output_fallback, fallback_reason: result.fallback_reason, error: error.message }, result.usage);
+        if (physicalAttempt >= 3) {
+          await this.completeKimiLogicalCall(logicalCallNumber, { status: 'error', physicalAttempts: physicalAttempt, error: `${failureType}:${error.message}` });
+          throw error;
+        }
       }
     }
     throw new Error('Kimi judge exhausted schema retries');
   }
 
   async agentReview(record) {
-    const result = await this.deepSeekChat({ role: 'secondary_review', system: this.reviewPrompt, maxTokens: 500, payload: record });
-    result.structured = validateAgentReview(result.structured);
-    return result;
+    let lastError;
+    for (let validationAttempt = 1; validationAttempt <= 3; validationAttempt++) {
+      const correction = validationAttempt > 1 ? '\n\nYour previous JSON failed validation. Return only the exact requested keys; every issue field must be boolean.' : '';
+      const result = await this.deepSeekChat({ role: 'secondary_review', system: `${this.reviewPrompt}${correction}`, maxTokens: 500, payload: record });
+      try {
+        result.structured = validateAgentReview(result.structured);
+        result.schema_validation_attempts = validationAttempt;
+        return result;
+      } catch (error) { lastError = error; }
+    }
+    throw lastError;
   }
 
   fixedRetrieval(scenario) {

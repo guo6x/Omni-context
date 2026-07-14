@@ -1,0 +1,82 @@
+{
+  "schema_version": 2,
+  "judge_adapter_version": "kimi-judge-adapter-v2.1",
+  "judge_rubric_version": "kimi-judge-rubric-v2",
+  "status": "pass",
+  "per_dimension_absolute_delta": {
+    "high_quality": {
+      "insight_precision": 0,
+      "insight_recall": 0.25,
+      "blind_spot_detection": 0.25,
+      "constraint_awareness": 0,
+      "actionability": 0,
+      "goal_alignment": 0,
+      "option_comparison": 0,
+      "risk_awareness": 0,
+      "internal_consistency": 0,
+      "overall_quality": 0.07999999999999996,
+      "unsupported_claim_rate": 0,
+      "overreach_rate": 0,
+      "redundant_insight_rate": 0
+    },
+    "partial": {
+      "insight_precision": 0,
+      "insight_recall": 0,
+      "blind_spot_detection": 0.25,
+      "constraint_awareness": 0,
+      "actionability": 0,
+      "goal_alignment": 0,
+      "option_comparison": 1,
+      "risk_awareness": 0,
+      "internal_consistency": 0,
+      "overall_quality": 0,
+      "unsupported_claim_rate": 0,
+      "overreach_rate": 0,
+      "redundant_insight_rate": 0
+    },
+    "overreach": {
+      "insight_precision": 0,
+      "insight_recall": 0,
+      "blind_spot_detection": 0,
+      "constraint_awareness": 0,
+      "actionability": 0,
+      "goal_alignment": 0,
+      "option_comparison": 0,
+      "risk_awareness": 0,
+      "internal_consistency": 0,
+      "overall_quality": 0,
+      "unsupported_claim_rate": 0,
+      "overreach_rate": 0,
+      "redundant_insight_rate": 0
+    }
+  },
+  "mean_absolute_delta": 0.04692307692307692,
+  "max_absolute_delta": 1,
+  "rank_order_consistency": true,
+  "rank_by_repetition": [
+    {
+      "repetition": 1,
+      "scores": {
+        "high_quality": 0.83,
+        "partial": 0.25,
+        "overreach": 0
+      },
+      "consistent": true
+    },
+    {
+      "repetition": 2,
+      "scores": {
+        "high_quality": 0.75,
+        "partial": 0.25,
+        "overreach": 0
+      },
+      "consistent": true
+    }
+  ],
+  "overreach_signal_consistent": true,
+  "schema_success_rate": 1,
+  "no_truncation": true,
+  "no_markdown": true,
+  "p0": false,
+  "p1": false
+}

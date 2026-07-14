@@ -38,10 +38,12 @@ test('validates Kimi Judge v2 schema including redundancy and diagnostic arrays'
   const rubric = Object.fromEntries(['insight_precision', 'insight_recall', 'blind_spot_detection', 'constraint_awareness', 'actionability', 'goal_alignment', 'option_comparison', 'risk_awareness', 'internal_consistency', 'overall_quality'].map((key) => [key, 0.5]));
   assert.doesNotThrow(() => validateKimiJudgeV2({ rubric_scores: rubric, unsupported_claim_rate: 0, overreach_rate: 0, redundant_insight_rate: 0.25, missing_required_elements: [], unsupported_elements: [], rationale: 'calibrated' }));
   assert.throws(() => validateKimiJudgeV2({ rubric_scores: rubric, unsupported_claim_rate: 0, overreach_rate: 0, redundant_insight_rate: 2, missing_required_elements: [], unsupported_elements: [], rationale: 'bad' }), /negative metric/);
+  assert.throws(() => validateKimiJudgeV2({ rubric_scores: rubric, unsupported_claim_rate: 0, overreach_rate: 0, redundant_insight_rate: 0, missing_required_elements: Array(6).fill('x'), unsupported_elements: [], rationale: 'bad' }), /at most 5/);
+  assert.throws(() => validateKimiJudgeV2({ rubric_scores: rubric, unsupported_claim_rate: 0, overreach_rate: 0, redundant_insight_rate: 0, missing_required_elements: [], unsupported_elements: [], rationale: 'x'.repeat(241) }), /at most 240/);
 });
 
 test('validates Secondary Agent Review as non-human evidence', () => {
-  assert.doesNotThrow(() => validateAgentReview({ scenario_id: 'd-1', verdict: 'agree', score_issue: false, gold_ambiguity: false, baseline_fairness_issue: false, memory_leakage_issue: false, notes: 'No issue.' }));
+  assert.doesNotThrow(() => validateAgentReview({ scenario_id: 'd-1', verdict: 'agree', score_issue: false, gold_ambiguity: false, baseline_fairness_issue: false, memory_leakage_issue: false, judge_reliability_issue: false, provenance_issue: false, invalidated_fact_rejection_issue: false, temporal_transition_issue: false, notes: 'No issue.' }));
   assert.throws(() => validateAgentReview({ scenario_id: 'd-1', verdict: 'human approved' }), /keys/);
 });
 

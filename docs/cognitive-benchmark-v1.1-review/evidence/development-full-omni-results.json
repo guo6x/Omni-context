@@ -1,10 +1,12 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "mode": "full_omni",
   "status": "completed",
   "completed": 35,
   "expected": 35,
   "errors": 0,
-  "overall_cognitive_score": 0.5043187830687831,
-  "results_file": "development-full-omni-results.jsonl"
+  "overall_cognitive_score": 0.5096005291005291,
+  "results_file": "development-full-omni-results-v2.1.jsonl",
+  "full_omni_pipeline_rerun": false,
+  "saved_subjective_answers_rejudged": 10
 }

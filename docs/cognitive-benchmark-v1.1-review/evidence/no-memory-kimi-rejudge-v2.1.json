@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "judge_adapter_version": "kimi-judge-adapter-v2.1",
+  "judge_rubric_version": "kimi-judge-rubric-v2",
+  "rejudged": 1,
+  "source_results_unchanged": true,
+  "records": [
+    {
+      "scenario_id": "development-v2-proactive_insight-001",
+      "mode": "no_memory",
+      "category": "proactive_insight",
+      "before": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.0",
+        "raw_judge_response": "{\"rubric_scores\":{\"insight_precision\":0.0,\"insight_recall\":0.0,\"blind_spot_detection\":0.0,\"constraint_awareness\":0.0,\"actionability\":0.0,\"goal_alignment\":0.0,\"option_comparison\":0.0,\"risk_awareness\":0.0,\"internal_consistency\":1.0,\"overall_quality\":0.0},\"unsupported_claim_rate\":0.0,\"overreach_rate\":0.0,\"redundant_insight_rate\":0.0,\"missing_required_elements\":[\"direction switching blind spot identification\",\"validation gap analysis\",\"goal-action mismatch detection\",\"bounded action recommendation\",\"5 hours per week constraint application\",\"no user interviews constraint application\",\"any insight from acceptable_insights list\",\"any action from acceptable_actions list\"],\"unsupported_elements\":[],\"rationale\":\"The candidate answer explicitly declines to engage with the task, citing absence of memory context. However, the scenario_id ('development-v2-proactive_insight-001') and the structured fields (acceptable_insights, acceptable_actions, required_constraints) constitute the evidence context for evaluation. The candidate failed to recognize that: (1) 'cycle 1 evidence' refers to the provided structured context, not external memory; (2) the acceptable_insights and acceptable_actions fields contain the semantic targets to be analyzed; (3) the required_constraints are explicit parameters to apply. The candidate produced zero insight recall, zero blind spot detection, zero constraint awareness, and zero actionability. While internally consistent in its own logic, the answer is completely non-responsive to the actual task. The 'request more information' action violates the benchmark's implicit requirement to work with supplied evidence. No forbidden inferences were made. No unsupported claims or overreach. No redundancy. The answer is a null response where a proactive insight was required. Score: 0.0 overall quality. Temperature: 0.0. Thinking: complete.\"}",
+        "structured_judge": {
+          "rubric_scores": {
+            "insight_precision": 0,
+            "insight_recall": 0,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0,
+            "actionability": 0,
+            "goal_alignment": 0,
+            "option_comparison": 0,
+            "risk_awareness": 0,
+            "internal_consistency": 1,
+            "overall_quality": 0
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "direction switching blind spot identification",
+            "validation gap analysis",
+            "goal-action mismatch detection",
+            "bounded action recommendation",
+            "5 hours per week constraint application",
+            "no user interviews constraint application",
+            "any insight from acceptable_insights list",
+            "any action from acceptable_actions list"
+          ],
+          "unsupported_elements": [],
+          "rationale": "The candidate answer explicitly declines to engage with the task, citing absence of memory context. However, the scenario_id ('development-v2-proactive_insight-001') and the structured fields (acceptable_insights, acceptable_actions, required_constraints) constitute the evidence context for evaluation. The candidate failed to recognize that: (1) 'cycle 1 evidence' refers to the provided structured context, not external memory; (2) the acceptable_insights and acceptable_actions fields contain the semantic targets to be analyzed; (3) the required_constraints are explicit parameters to apply. The candidate produced zero insight recall, zero blind spot detection, zero constraint awareness, and zero actionability. While internally consistent in its own logic, the answer is completely non-responsive to the actual task. The 'request more information' action violates the benchmark's implicit requirement to work with supplied evidence. No forbidden inferences were made. No unsupported claims or overreach. No redundancy. The answer is a null response where a proactive insight was required. Score: 0.0 overall quality. Temperature: 0.0. Thinking: complete."
+        },
+        "judge_model": "kimi-k2.6",
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0,
+            "insight_recall": 0,
+            "blind_spot_detection_rate": 0,
+            "constraint_awareness": 0,
+            "actionability": 0,
+            "unsupported_claim_rate": 0,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0
+          },
+          "core_score": 0.375,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        },
+        "usage": {
+          "input_tokens": 608,
+          "output_tokens": 398,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 352,
+          "total_tokens": 1006,
+          "cached_tokens": 256
+        },
+        "latency_ms": 7603
+      },
+      "adapter_v2_1": {
+        "judge_adapter_version": "kimi-judge-adapter-v2.1",
+        "judge_rubric_version": "kimi-judge-rubric-v2",
+        "raw_response": "{\"rubric_scores\":{\"insight_precision\":0.0,\"insight_recall\":0.0,\"blind_spot_detection\":0.0,\"constraint_awareness\":0.0,\"actionability\":0.0,\"goal_alignment\":0.0,\"option_comparison\":1.0,\"risk_awareness\":0.0,\"internal_consistency\":1.0,\"overall_quality\":0.0},\"unsupported_claim_rate\":0.0,\"overreach_rate\":0.0,\"redundant_insight_rate\":0.0,\"missing_required_elements\":[\"direction switching blind spot identification\",\"bounded action recommendation\",\"5 hours per week constraint\",\"no user interviews constraint\"],\"unsupported_elements\":[],\"rationale\":\"Candidate correctly notes absent context but fails to use any acceptable insight or action from rubric; answer is non-responsive rather than proactively applying benchmark's intended reasoning framework. Acceptable insights and actions were\"  }",
+        "structured": {
+          "rubric_scores": {
+            "insight_precision": 0,
+            "insight_recall": 0,
+            "blind_spot_detection": 0,
+            "constraint_awareness": 0,
+            "actionability": 0,
+            "goal_alignment": 0,
+            "option_comparison": 1,
+            "risk_awareness": 0,
+            "internal_consistency": 1,
+            "overall_quality": 0
+          },
+          "unsupported_claim_rate": 0,
+          "overreach_rate": 0,
+          "redundant_insight_rate": 0,
+          "missing_required_elements": [
+            "direction switching blind spot identification",
+            "bounded action recommendation",
+            "5 hours per week constraint",
+            "no user interviews constraint"
+          ],
+          "unsupported_elements": [],
+          "rationale": "Candidate correctly notes absent context but fails to use any acceptable insight or action from rubric; answer is non-responsive rather than proactively applying benchmark's intended reasoning framework. Acceptable insights and actions were"
+        },
+        "model": "kimi-k2.6",
+        "finish_reason": "stop",
+        "raw_character_count": 787,
+        "logical_judge_call": 25,
+        "physical_attempts": 1,
+        "retries_recovered": false,
+        "usage": {
+          "input_tokens": 655,
+          "output_tokens": 190,
+          "cache_hit_input_tokens": 256,
+          "cache_miss_input_tokens": 399,
+          "total_tokens": 845,
+          "cached_tokens": 256
+        },
+        "latency_ms": 4663,
+        "score": {
+          "status": "completed",
+          "category": "proactive_insight",
+          "metrics": {
+            "insight_precision": 0,
+            "insight_recall": 0,
+            "blind_spot_detection_rate": 0,
+            "constraint_awareness": 0,
+            "actionability": 0,
+            "unsupported_claim_rate": 0,
+            "redundant_insight_rate": 0,
+            "overreach_rate": 0
+          },
+          "core_score": 0.375,
+          "deterministic": false,
+          "judge_independent": true,
+          "scoring_version": "deterministic-scoring-v3"
+        }
+      }
+    }
+  ]
+}

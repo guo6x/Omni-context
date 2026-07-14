@@ -3,6 +3,7 @@ const REJECTION_REASONS = ['stale', 'invalidated', 'low_confidence', 'contradict
 const RUBRIC_KEYS = ['insight_precision', 'insight_recall', 'blind_spot_detection', 'constraint_awareness', 'actionability', 'goal_alignment', 'option_comparison', 'risk_awareness', 'internal_consistency', 'overall_quality'];
 
 const stringArray = { type: 'array', items: { type: 'string' } };
+const compactJudgeList = { type: 'array', maxItems: 5, items: { type: 'string', maxLength: 120 } };
 export const ANSWER_SCHEMA_V2 = Object.freeze({
   name: 'omni_cognitive_answer_v2',
   strict: true,
@@ -33,16 +34,18 @@ export const KIMI_JUDGE_SCHEMA_V2 = Object.freeze({
       unsupported_claim_rate: { type: 'number', minimum: 0, maximum: 1 },
       overreach_rate: { type: 'number', minimum: 0, maximum: 1 },
       redundant_insight_rate: { type: 'number', minimum: 0, maximum: 1 },
-      missing_required_elements: stringArray,
-      unsupported_elements: stringArray,
-      rationale: { type: 'string' },
+      missing_required_elements: compactJudgeList,
+      unsupported_elements: compactJudgeList,
+      rationale: { type: 'string', maxLength: 240 },
     },
   },
 });
 
 function exactKeys(value, expected, label) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be an object`);
-  if (JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...expected].sort())) throw new Error(`${label} keys do not match schema`);
+  const actual = Object.keys(value).sort();
+  const required = [...expected].sort();
+  if (JSON.stringify(actual) !== JSON.stringify(required)) throw new Error(`${label} keys do not match schema; expected=${required.join(',')} actual=${actual.join(',')}`);
 }
 function strings(value, label) { if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) throw new Error(`${label} must be a string array`); }
 function norm(value) { return String(value || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
@@ -93,7 +96,12 @@ export function validateKimiJudgeV2(value) {
   for (const key of ['unsupported_claim_rate', 'overreach_rate', 'redundant_insight_rate']) if (typeof value[key] !== 'number' || value[key] < 0 || value[key] > 1) throw new Error(`invalid negative metric ${key}`);
   strings(value.missing_required_elements, 'missing_required_elements');
   strings(value.unsupported_elements, 'unsupported_elements');
+  for (const key of ['missing_required_elements', 'unsupported_elements']) {
+    if (value[key].length > 5) throw new Error(`${key} must contain at most 5 items`);
+    if (value[key].some((item) => [...item].length > 120)) throw new Error(`${key} items must contain at most 120 Unicode characters`);
+  }
   if (typeof value.rationale !== 'string') throw new Error('rationale must be string');
+  if ([...value.rationale].length > 240) throw new Error('rationale must contain at most 240 Unicode characters');
   return value;
 }
 

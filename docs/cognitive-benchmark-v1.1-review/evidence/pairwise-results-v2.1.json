@@ -1,0 +1,318 @@
+{
+  "schema_version": 2,
+  "status": "completed",
+  "full_omni_vs_no_memory": {
+    "compared": 21,
+    "wins": 14,
+    "losses": 0,
+    "ties": 7,
+    "win_rate": 0.666667,
+    "win_rate_with_ties_half": 0.833333,
+    "pairs": [
+      {
+        "scenario_id": "development-v2-cognitive_continuity-001",
+        "category": "cognitive_continuity",
+        "full_omni": 0.65,
+        "baseline": 0.5,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-cognitive_continuity-002",
+        "category": "cognitive_continuity",
+        "full_omni": 0.6833333333333332,
+        "baseline": 0.5,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-cognitive_continuity-003",
+        "category": "cognitive_continuity",
+        "full_omni": 0.6333333333333333,
+        "baseline": 0.5,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-memory_evolution-001",
+        "category": "memory_evolution",
+        "full_omni": 0.20833333333333334,
+        "baseline": 0.20833333333333334,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-memory_evolution-002",
+        "category": "memory_evolution",
+        "full_omni": 0.47222222222222215,
+        "baseline": 0.20833333333333334,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-memory_evolution-003",
+        "category": "memory_evolution",
+        "full_omni": 0.47222222222222215,
+        "baseline": 0.20833333333333334,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-conflict_resolution-001",
+        "category": "conflict_resolution",
+        "full_omni": 0.2222222222222222,
+        "baseline": 0.2222222222222222,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-conflict_resolution-002",
+        "category": "conflict_resolution",
+        "full_omni": 0.2222222222222222,
+        "baseline": 0.2222222222222222,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-conflict_resolution-003",
+        "category": "conflict_resolution",
+        "full_omni": 0.2222222222222222,
+        "baseline": 0.2222222222222222,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-cross_agent_transfer-001",
+        "category": "cross_agent_transfer",
+        "full_omni": 0.7777777777777777,
+        "baseline": 0.5,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-cross_agent_transfer-002",
+        "category": "cross_agent_transfer",
+        "full_omni": 0.5,
+        "baseline": 0.5,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-cross_agent_transfer-003",
+        "category": "cross_agent_transfer",
+        "full_omni": 0.5,
+        "baseline": 0.5,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-human_like_forgetting-001",
+        "category": "human_like_forgetting",
+        "full_omni": 1,
+        "baseline": 0.4166666666666667,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-human_like_forgetting-002",
+        "category": "human_like_forgetting",
+        "full_omni": 0.4166666666666667,
+        "baseline": 0.4166666666666667,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-human_like_forgetting-003",
+        "category": "human_like_forgetting",
+        "full_omni": 0.6944444444444445,
+        "baseline": 0.4166666666666667,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-proactive_insight-001",
+        "category": "proactive_insight",
+        "full_omni": 0.6875,
+        "baseline": 0.375,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-proactive_insight-002",
+        "category": "proactive_insight",
+        "full_omni": 0.65625,
+        "baseline": 0.34375,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-proactive_insight-003",
+        "category": "proactive_insight",
+        "full_omni": 0.625,
+        "baseline": 0.375,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-decision_quality-001",
+        "category": "decision_quality",
+        "full_omni": 0.7133333333333334,
+        "baseline": 0.2222222222222222,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-decision_quality-002",
+        "category": "decision_quality",
+        "full_omni": 0.5833333333333334,
+        "baseline": 0.31666666666666665,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-decision_quality-003",
+        "category": "decision_quality",
+        "full_omni": 0.3888888888888889,
+        "baseline": 0.14814814814814814,
+        "outcome": "win"
+      }
+    ]
+  },
+  "full_omni_vs_retrieval_only": {
+    "compared": 21,
+    "wins": 9,
+    "losses": 10,
+    "ties": 2,
+    "win_rate": 0.428571,
+    "win_rate_with_ties_half": 0.47619,
+    "pairs": [
+      {
+        "scenario_id": "development-v2-cognitive_continuity-001",
+        "category": "cognitive_continuity",
+        "full_omni": 0.65,
+        "baseline": 0.7333333333333334,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-cognitive_continuity-002",
+        "category": "cognitive_continuity",
+        "full_omni": 0.6833333333333332,
+        "baseline": 0.6333333333333333,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-cognitive_continuity-003",
+        "category": "cognitive_continuity",
+        "full_omni": 0.6333333333333333,
+        "baseline": 0.6,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-memory_evolution-001",
+        "category": "memory_evolution",
+        "full_omni": 0.20833333333333334,
+        "baseline": 0.47222222222222215,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-memory_evolution-002",
+        "category": "memory_evolution",
+        "full_omni": 0.47222222222222215,
+        "baseline": 0.20833333333333334,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-memory_evolution-003",
+        "category": "memory_evolution",
+        "full_omni": 0.47222222222222215,
+        "baseline": 0.20833333333333334,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-conflict_resolution-001",
+        "category": "conflict_resolution",
+        "full_omni": 0.2222222222222222,
+        "baseline": 0.611111111111111,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-conflict_resolution-002",
+        "category": "conflict_resolution",
+        "full_omni": 0.2222222222222222,
+        "baseline": 0.7777777777777777,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-conflict_resolution-003",
+        "category": "conflict_resolution",
+        "full_omni": 0.2222222222222222,
+        "baseline": 0.2222222222222222,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-cross_agent_transfer-001",
+        "category": "cross_agent_transfer",
+        "full_omni": 0.7777777777777777,
+        "baseline": 0.6666666666666666,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-cross_agent_transfer-002",
+        "category": "cross_agent_transfer",
+        "full_omni": 0.5,
+        "baseline": 0.7222222222222222,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-cross_agent_transfer-003",
+        "category": "cross_agent_transfer",
+        "full_omni": 0.5,
+        "baseline": 0.8888888888888888,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-human_like_forgetting-001",
+        "category": "human_like_forgetting",
+        "full_omni": 1,
+        "baseline": 1,
+        "outcome": "tie"
+      },
+      {
+        "scenario_id": "development-v2-human_like_forgetting-002",
+        "category": "human_like_forgetting",
+        "full_omni": 0.4166666666666667,
+        "baseline": 0.8333333333333334,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-human_like_forgetting-003",
+        "category": "human_like_forgetting",
+        "full_omni": 0.6944444444444445,
+        "baseline": 0.4166666666666667,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-proactive_insight-001",
+        "category": "proactive_insight",
+        "full_omni": 0.6875,
+        "baseline": 0.71875,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-proactive_insight-002",
+        "category": "proactive_insight",
+        "full_omni": 0.65625,
+        "baseline": 0.59375,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-proactive_insight-003",
+        "category": "proactive_insight",
+        "full_omni": 0.625,
+        "baseline": 0.25,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-decision_quality-001",
+        "category": "decision_quality",
+        "full_omni": 0.7133333333333334,
+        "baseline": 0.7592592592592593,
+        "outcome": "loss"
+      },
+      {
+        "scenario_id": "development-v2-decision_quality-002",
+        "category": "decision_quality",
+        "full_omni": 0.5833333333333334,
+        "baseline": 0.574074074074074,
+        "outcome": "win"
+      },
+      {
+        "scenario_id": "development-v2-decision_quality-003",
+        "category": "decision_quality",
+        "full_omni": 0.3888888888888889,
+        "baseline": 0.4629629629629629,
+        "outcome": "loss"
+      }
+    ]
+  }
+}

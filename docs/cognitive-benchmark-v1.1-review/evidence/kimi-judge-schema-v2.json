@@ -99,18 +99,23 @@
       },
       "missing_required_elements": {
         "type": "array",
+        "maxItems": 5,
         "items": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 120
         }
       },
       "unsupported_elements": {
         "type": "array",
+        "maxItems": 5,
         "items": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 120
         }
       },
       "rationale": {
-        "type": "string"
+        "type": "string",
+        "maxLength": 240
       }
     }
   }

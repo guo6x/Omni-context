@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "status": "PRE_FORMAL_PARTIAL_COST_ESTIMATE_FROM_FINAL_DEVELOPMENT",
+  "actual_development": {
+    "deepseek_answer_tokens": {
+      "input_tokens": 109641,
+      "output_tokens": 35651,
+      "cache_hit_input_tokens": 33792,
+      "cache_miss_input_tokens": 75849,
+      "total_tokens": 145292,
+      "cached_tokens": 33792
+    },
+    "deepseek_secondary_review_tokens": {
+      "input_tokens": 55151,
+      "output_tokens": 4097,
+      "cache_hit_input_tokens": 0,
+      "cache_miss_input_tokens": 55151,
+      "total_tokens": 59248,
+      "cached_tokens": 0
+    },
+    "kimi_judge_tokens": {
+      "prompt_tokens": 53495,
+      "completion_tokens": 6993,
+      "total_tokens": 60488,
+      "cached_tokens": 7936
+    },
+    "deepseek_observable_cost_usd": 0.0296,
+    "kimi_cost_usd": null,
+    "kimi_cost_reason": "No verified kimi-k2.6 per-token price is pinned in benchmark configuration."
+  },
+  "formal_250_estimate": {
+    "answer_calls": 250,
+    "kimi_logical_judge_calls": 60,
+    "projected_deepseek_answer_tokens": {
+      "input_tokens": 355977,
+      "output_tokens": 115750
+    },
+    "projected_kimi_tokens": {
+      "prompt_tokens": 103539,
+      "completion_tokens": 13535
+    },
+    "projected_deepseek_answer_cost_usd": 0.0672,
+    "projected_kimi_cost_usd": null,
+    "extraction_cost_excluded": true,
+    "estimated_runtime_hours": 8.24
+  },
+  "latency_ms": {
+    "full_omni_p50": 112536,
+    "full_omni_p95": 200540.7,
+    "full_omni_mean": 118645.9,
+    "kimi_attempt_p50": 3948,
+    "kimi_attempt_p95": 5182
+  },
+  "caveats": [
+    "Kimi K2.6 dollar cost is not estimated without a pinned verified price.",
+    "Frozen Brain Server extraction does not expose complete provider token usage, so extraction cost is excluded.",
+    "Runtime is a linear Development-based estimate, not a Formal observation."
+  ]
+}

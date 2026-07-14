@@ -1,17 +1,10 @@
 {
-  "schema_version": 1,
-  "status": "partial_development_actuals",
-  "kimi_calls": 26,
-  "kimi_call_limit": 40,
-  "prompt_tokens": 56007,
-  "completion_tokens": 13285,
-  "total_tokens": 69292,
-  "cached_tokens": 18366,
-  "provider_errors": 0,
-  "schema_failures": 9,
-  "structured_output_fallbacks": 0,
-  "development_cost_estimate_available": false,
-  "formal_cost_estimate_available": false,
-  "formal_duration_estimate_available": false,
-  "reason": "Development stopped before completing all three modes, so a final cost and runtime extrapolation would be unreliable"
+  "schema_version": 2,
+  "status": "PRE_FORMAL_PARTIAL_COST_ESTIMATE_FROM_FINAL_DEVELOPMENT",
+  "canonical_file": "cost-estimate-v2.1.json",
+  "deepseek_observable_development_cost_usd": 0.0296,
+  "formal_projected_deepseek_answer_cost_usd": 0.0672,
+  "formal_projected_kimi_cost_usd": null,
+  "formal_projected_extraction_cost_usd": null,
+  "formal_estimated_runtime_hours": 8.24
 }

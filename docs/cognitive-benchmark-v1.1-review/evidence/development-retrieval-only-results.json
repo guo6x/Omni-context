@@ -1,8 +1,10 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "mode": "retrieval_only",
-  "status": "not_run",
-  "completed": 0,
+  "status": "completed",
+  "completed": 21,
   "expected": 21,
-  "reason": "Required Kimi hard stop occurred during No Memory before Retrieval-Only could start"
+  "errors": 0,
+  "overall_cognitive_score": 0.5882495590828923,
+  "results_file": "development-retrieval-only-results-v2.1.jsonl"
 }
