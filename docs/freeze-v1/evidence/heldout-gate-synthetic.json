@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "suite": "Omni-Context Evaluation Freeze v1 held-out gate synthetic tests",
+  "generated_at": "2026-07-14T13:13:57.040Z",
+  "fixture": "synthetic-only",
+  "conversation_2_to_10_loaded": false,
+  "answer_called": false,
+  "judge_called": false,
+  "total": 13,
+  "passed": 13,
+  "failed": 0,
+  "status": "SYNTHETIC_GATE_PASS",
+  "results": [
+    {
+      "name": "rejects missing authorization",
+      "expected": "rejected",
+      "id": "missing_authorization",
+      "status": "rejected",
+      "reason": "Held-out access denied: authorization mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects Candidate v2 as authorization",
+      "expected": "rejected",
+      "id": "candidate_v2_authorization",
+      "status": "rejected",
+      "reason": "Held-out access denied: authorization mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects the wrong freeze authorization",
+      "expected": "rejected",
+      "id": "wrong_freeze_authorization",
+      "status": "rejected",
+      "reason": "Held-out access denied: authorization mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects a missing freeze tag",
+      "expected": "rejected",
+      "id": "missing_freeze_tag",
+      "status": "rejected",
+      "reason": "Held-out access denied: freeze tag omni-context-evaluation-freeze-v1 does not exist.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects a commit that does not match the tag",
+      "expected": "rejected",
+      "id": "commit_mismatch",
+      "status": "rejected",
+      "reason": "Held-out access denied: current commit does not match tagged freeze commit.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects a manifest hash mismatch",
+      "expected": "rejected",
+      "id": "manifest_hash_mismatch",
+      "status": "rejected",
+      "reason": "Held-out access denied: manifest hash mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects a config hash mismatch",
+      "expected": "rejected",
+      "id": "config_hash_mismatch",
+      "status": "rejected",
+      "reason": "Held-out access denied: benchmark config hash mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects an Answer Prompt hash mismatch",
+      "expected": "rejected",
+      "id": "answer_prompt_mismatch",
+      "status": "rejected",
+      "reason": "Held-out access denied: Answer Prompt hash mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects a Judge Prompt hash mismatch",
+      "expected": "rejected",
+      "id": "judge_prompt_mismatch",
+      "status": "rejected",
+      "reason": "Held-out access denied: Judge Prompt hash mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects an Embedding Profile hash mismatch",
+      "expected": "rejected",
+      "id": "embedding_profile_mismatch",
+      "status": "rejected",
+      "reason": "Held-out access denied: Embedding Profile hash mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects a dirty working tree",
+      "expected": "rejected",
+      "id": "dirty_worktree",
+      "status": "rejected",
+      "reason": "Held-out access denied: working tree is not clean.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "rejects changed model configuration",
+      "expected": "rejected",
+      "id": "model_configuration_mismatch",
+      "status": "rejected",
+      "reason": "Held-out access denied: model configuration judge mismatch.",
+      "heldout_dataset_created": false
+    },
+    {
+      "name": "allows the synthetic gate when every frozen value matches",
+      "expected": "allowed",
+      "id": "all_match",
+      "status": "allowed",
+      "authorization": "Omni-Context Evaluation Freeze v1",
+      "heldout_dataset_created": false
+    }
+  ]
+}

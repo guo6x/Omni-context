@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "status": "BOUND_BY_ANNOTATED_TAG_AFTER_EXACT_COMMIT_CI",
+  "workflow": "Continuous Integration",
+  "required_jobs": [
+    "secret-scan",
+    "dependency-audit",
+    "brain-server",
+    "desktop-web",
+    "desktop-rust",
+    "browser-extension",
+    "mobile",
+    "benchmark-scripts",
+    "windows-smoke"
+  ],
+  "required_result": "9/9 success",
+  "freeze_commit_source": "refs/tags/omni-context-evaluation-freeze-v1:Freeze Commit",
+  "run_url_source": "refs/tags/omni-context-evaluation-freeze-v1:Final Freeze CI URL",
+  "result_source": "refs/tags/omni-context-evaluation-freeze-v1:Final Freeze CI Result",
+  "self_reference_resolution": "A GitHub Actions run ID is allocated only after the immutable commit is pushed. The exact commit, run URL, result, and this file's containing Manifest hash are therefore atomically bound by the annotated freeze tag after CI succeeds.",
+  "candidate_v2_ci_is_not_substituted": true
+}

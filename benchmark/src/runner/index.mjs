@@ -444,12 +444,16 @@ export async function resumeBenchmark({
   runId,
   runtimeFactory = createConversationRuntime,
   brainServerRoot,
+  evaluationAuthorization,
 }) {
   clearShutdownRequest();
   if (!llmClient) throw new Error('llmClient is required');
 
   const runDir = await findRunDir(runsRoot, runId);
   const { manifest } = await readRun(runDir);
+  if (manifest.split === 'heldout' && !evaluationAuthorization) {
+    throw new Error('Held-out access denied: a currently verified Final Freeze authorization is required.');
+  }
   if (manifest.split === 'heldout') await verifyDatasetHash(datasetPath, manifest.dataset_hash);
 
   // Verify config and prompt match the existing run
@@ -463,7 +467,7 @@ export async function resumeBenchmark({
       split: manifest.split,
       conversationIds: manifest.conversation_ids,
       runDir, runtimeFactory, brainServerRoot, resumeRuntime: true,
-      heldoutAuthorization: manifest.evaluation_authorization?.authorization,
+      heldoutAuthorization: evaluationAuthorization?.authorization,
     });
   } catch (error) {
     await updateManifest(runDir, {
@@ -505,12 +509,16 @@ export async function retryErrors({
   runId,
   runtimeFactory = createConversationRuntime,
   brainServerRoot,
+  evaluationAuthorization,
 }) {
   clearShutdownRequest();
   if (!llmClient) throw new Error('llmClient is required');
 
   const runDir = await findRunDir(runsRoot, runId);
   const { manifest } = await readRun(runDir);
+  if (manifest.split === 'heldout' && !evaluationAuthorization) {
+    throw new Error('Held-out access denied: a currently verified Final Freeze authorization is required.');
+  }
   if (manifest.split === 'heldout') await verifyDatasetHash(datasetPath, manifest.dataset_hash);
 
   // Verify config and prompt match
@@ -533,7 +541,7 @@ export async function retryErrors({
     assertConversationAllowed({
       split: manifest.split,
       conversationId: convId,
-      heldoutAuthorization: manifest.evaluation_authorization?.authorization,
+      heldoutAuthorization: evaluationAuthorization?.authorization,
     });
     const conv = await loadLoCoMoConversation(datasetPath, convId);
     const qas = getConversationQAs(null, conv);

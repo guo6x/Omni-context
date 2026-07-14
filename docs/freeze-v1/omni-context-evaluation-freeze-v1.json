@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "freeze_name": "Omni-Context Evaluation Freeze v1",
+  "status": "frozen",
+  "freeze_authorization": "Omni-Context Evaluation Freeze v1",
+  "freeze_branch": "codex/omni-context-evaluation-freeze-v1",
+  "freeze_commit_pending": true,
+  "freeze_commit_binding": "annotated-tag:omni-context-evaluation-freeze-v1",
+  "freeze_tag": "omni-context-evaluation-freeze-v1",
+  "candidate": {
+    "tag": "evaluation-freeze-candidate-v2",
+    "commit": "be20db60bef32a886fddde4986013cf40a1e8ec5",
+    "sealed_manifest_path": "docs/delivery-v3.2.1/candidate-v2-sealed-manifest.json",
+    "sealed_manifest_sha256": "bc8a38edb1a725f41aedaedee4e82e83ce4a7bd621ec63b910f60f612f2eb905"
+  },
+  "formal_run": {
+    "run_id": "2026-07-14T07-34-44-390Z-daef50a5",
+    "provenance_status": "PROVEN_SOURCE_TREE_HASH",
+    "benchmark_commit": "0936839f31a1b5c2254d798dd03223f8ab7a9300",
+    "brain_server_commit": "7456b5e06b21ab5eda66ca8582465d43ee844ede",
+    "source_tree_sha256": "c904f0f28d2363e28f1200dd78666383ddba1d7b2fc28a668d19c880f4d1b971",
+    "working_tree_clean_at_original_launch": false,
+    "phase_composite": true
+  },
+  "models": {
+    "extraction": "deepseek-v4-flash",
+    "answer": "deepseek-v4-flash",
+    "judge": "deepseek-v4-flash",
+    "judge_independent": false,
+    "embedding": "Xenova/multilingual-e5-large",
+    "embedding_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "embedding_dimension": 1024,
+    "embedding_mode": "local",
+    "thinking_mode": "disabled",
+    "extraction_max_attempts": 3,
+    "transformers_offline": true
+  },
+  "hashes": {
+    "dataset": "553cd5a15e25f2ceccc6ed185221eba645080c93e5b91087560a91aa5961f365",
+    "database": "898b4ce0d10c0c7972c3518371a9ca4358a7306bb70f29b2a479d3745cf8331e",
+    "results": "42e21caea53aed39df2ad3c89cd0ede1e92a1244171792a8900433d8ceeca605",
+    "metrics": "b42fc252cc2a59372b7061bb7703dac1f128e0c3d5eabd9cb5579aa4f3dd893d",
+    "recomputed_metrics": "3c5604c74b03e90e7dec46f04bf723c7ec2224771b46dd87d677e26caf838c94",
+    "config": "1247f36d330bf5b172aa1db208ca492417f820a187b896057b834b5bcba6331e",
+    "answer_prompt": "0d952927c6781461e4432e5a43e398ae166d1a2ec05097db7dcf1361930d1232",
+    "judge_prompt": "fec01733c586b2ac33e73d95261da53de19172c83e8d9a1b949c5f53a43298c4",
+    "embedding_profile": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853",
+    "entity_serialization": "685267ed4338626fbe9855f043a9a09d9e555f61d87b21fe08257b3cb0bbb4e7",
+    "assertion_serialization": "195310ea32cd4e3bc0cb9b1f4b56ab9a6821d5866b5dfad44f41ac0f47e41b91",
+    "heldout_gate_synthetic": "cf4a1d4e3c56228777fb710e8abe7f1ca11ac2e406dd70faf9e9e6708af73cb0"
+  },
+  "run_integrity": {
+    "sessions": 19,
+    "completed_questions": 199,
+    "errors": 0,
+    "missing": 0,
+    "duplicate_completed": 0,
+    "retry_records": 14,
+    "historical_resolved_errors": 2,
+    "fallback_count": 0
+  },
+  "vector_integrity": {
+    "entity_active": 375,
+    "entity_vectors": 375,
+    "assertion_active": 396,
+    "assertion_vectors": 396,
+    "zero_vectors": 0,
+    "nan_vectors": 0,
+    "wrong_dimensions": 0,
+    "orphan_vectors": 0,
+    "stale_vectors": 0
+  },
+  "ci": {
+    "candidate_v2_run_url": "https://github.com/guo6x/Omni-context/actions/runs/29327931980",
+    "candidate_v2_passed_jobs": 9,
+    "final_freeze_commit_binding": "annotated-tag:Freeze Commit",
+    "final_freeze_run_url_binding": "annotated-tag:Final Freeze CI URL",
+    "final_freeze_result_binding": "annotated-tag:Final Freeze CI Result",
+    "required_passed_jobs": 9
+  },
+  "review": {
+    "type": "agent-based",
+    "reviewed": 15,
+    "agreements": 15,
+    "disagreements": 0,
+    "human_review_completed": false
+  },
+  "held_out": {
+    "conversations": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "accessed_before_freeze": false,
+    "authorization_required": "Omni-Context Evaluation Freeze v1",
+    "allowed_after_tag": true
+  },
+  "unresolved_p0": [],
+  "unresolved_p1": [
+    "The formal run is phase-composite.",
+    "Run code provenance is PROVEN_SOURCE_TREE_HASH rather than a single exact commit.",
+    "The global working tree was not completely clean at the original run launch.",
+    "Exact historical dist bytes were not archived; reproducible-build hashes are retained.",
+    "Answer and Judge both used deepseek-v4-flash, so the Judge is not model-independent.",
+    "The 15-item review is agent-based, not human review or independent human annotation.",
+    "The append-only results retain two resolved historical error records.",
+    "Conversations 2-10 had not been accessed before this freeze."
+  ]
+}
