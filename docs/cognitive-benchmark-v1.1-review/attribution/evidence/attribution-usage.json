@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "status": "stopped_by_physical_call_budget_projection",
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "review_type": "secondary_attribution_review_not_human",
+  "logical_call_limit": 20,
+  "physical_attempt_limit": 24,
+  "logical_calls": 2,
+  "physical_attempts": 7,
+  "completed": 1,
+  "retries_recovered": 0,
+  "failures": 3,
+  "input_tokens": 8458,
+  "output_tokens": 556,
+  "total_tokens": 9014,
+  "cached_tokens": 512,
+  "attempts": [
+    {
+      "physical_attempt": 1,
+      "logical_call": 1,
+      "local_attempt": 1,
+      "started_at": "2026-07-14T23:12:03.151Z",
+      "status": "failed",
+      "completed_at": "2026-07-14T23:12:08.083Z",
+      "error_type": "Error",
+      "error_summary": "old_review_was_correct must be boolean"
+    },
+    {
+      "physical_attempt": 2,
+      "logical_call": 1,
+      "local_attempt": 2,
+      "started_at": "2026-07-14T23:12:08.091Z",
+      "status": "failed",
+      "completed_at": "2026-07-14T23:12:12.565Z",
+      "error_type": "Error",
+      "error_summary": "old_review_was_correct must be boolean"
+    },
+    {
+      "physical_attempt": 3,
+      "logical_call": 1,
+      "local_attempt": 1,
+      "started_at": "2026-07-14T23:13:26.132Z",
+      "status": "completed",
+      "completed_at": "2026-07-14T23:13:30.976Z",
+      "usage": {
+        "input_tokens": 8458,
+        "output_tokens": 556,
+        "total_tokens": 9014,
+        "cached_tokens": 512
+      }
+    },
+    {
+      "physical_attempt": 4,
+      "logical_call": 2,
+      "local_attempt": 1,
+      "started_at": "2026-07-14T23:13:31.009Z",
+      "status": "failed",
+      "completed_at": "2026-07-14T23:13:35.067Z",
+      "error_type": "Error",
+      "error_summary": "first_loss_stage invalid"
+    },
+    {
+      "physical_attempt": 5,
+      "logical_call": 2,
+      "local_attempt": 2,
+      "started_at": "2026-07-14T23:13:35.072Z",
+      "status": "failed",
+      "completed_at": "2026-07-14T23:13:39.727Z",
+      "error_type": "Error",
+      "error_summary": "first_loss_stage invalid"
+    },
+    {
+      "physical_attempt": 6,
+      "logical_call": 2,
+      "local_attempt": 1,
+      "started_at": "2026-07-14T23:14:57.084Z",
+      "status": "failed",
+      "completed_at": "2026-07-14T23:15:01.926Z",
+      "error_type": "Error",
+      "error_summary": "benchmark_validity_impact invalid"
+    },
+    {
+      "physical_attempt": 7,
+      "logical_call": 2,
+      "local_attempt": 2,
+      "started_at": "2026-07-14T23:15:01.928Z",
+      "status": "failed",
+      "completed_at": "2026-07-14T23:15:07.464Z",
+      "error_type": "Error",
+      "error_summary": "benchmark_validity_impact invalid"
+    }
+  ],
+  "stop_reason": "17 physical attempts remain for 19 incomplete samples; completion would exceed the 24-attempt cap."
+}

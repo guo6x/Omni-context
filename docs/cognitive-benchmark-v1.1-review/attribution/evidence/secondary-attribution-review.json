@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "status": "partial_stopped_by_physical_call_budget_projection",
+  "review_type": "secondary_attribution_review_not_human",
+  "model": "deepseek-v4-flash",
+  "human_review_completed": false,
+  "count": 1,
+  "reviews": [
+    {
+      "schema_version": 1,
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-cross_agent_transfer-004",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [],
+        "first_loss_stage": "unknown",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "benchmark_validity_impact": "none",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold fact 'written weekly summaries' is supported by original event e02 but absent from final visible context.",
+            "supporting_ids": [
+              "development-v2-cross_agent_transfer-004-e02"
+            ]
+          },
+          {
+            "claim": "Gold fact 'implementation' is supported by original event e03 but absent from final visible context.",
+            "supporting_ids": [
+              "development-v2-cross_agent_transfer-004-e03"
+            ]
+          },
+          {
+            "claim": "Both facts were extracted and indexed (present in archive) but missing from final context; retrieval log shows no assertion candidates, only entity candidates.",
+            "supporting_ids": [
+              "817862a9-b865-4cbe-b32a-1c38f59a6d12",
+              "4ece7ff8-d256-4a32-99eb-1de6a59eddcd"
+            ]
+          },
+          {
+            "claim": "No standalone reranker snapshot exists to determine if loss occurred at retrieval or reranking stage.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Gold fact '800 dollars' is present in final visible context and correctly used in structured answer.",
+            "supporting_ids": [
+              "b370f2e3-794f-4bf3-ad95-27e9192972a8"
+            ]
+          },
+          {
+            "claim": "Deterministic score is correctly computed as 0.0556 based on missing facts.",
+            "supporting_ids": []
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. Two required facts (written weekly summaries, implementation) were extracted and indexed but missing from final visible context. The archive lacks a reranker snapshot, so the exact loss stage (retrieval vs. reranking) cannot be determined. Score accurately reflects missing facts; no scoring defect."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-cross_agent_transfer-004\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [],\n  \"first_loss_stage\": \"unknown\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"old_review_was_correct\": false,\n  \"old_review_error_types\": [\"pending_local_comparison\"],\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold fact 'written weekly summaries' is supported by original event e02 but absent from final visible context.\",\n      \"supporting_ids\": [\"development-v2-cross_agent_transfer-004-e02\"]\n    },\n    {\n      \"claim\": \"Gold fact 'implementation' is supported by original event e03 but absent from final visible context.\",\n      \"supporting_ids\": [\"development-v2-cross_agent_transfer-004-e03\"]\n    },\n    {\n      \"claim\": \"Both facts were extracted and indexed (present in archive) but missing from final context; retrieval log shows no assertion candidates, only entity candidates.\",\n      \"supporting_ids\": [\"817862a9-b865-4cbe-b32a-1c38f59a6d12\", \"4ece7ff8-d256-4a32-99eb-1de6a59eddcd\"]\n    },\n    {\n      \"claim\": \"No standalone reranker snapshot exists to determine if loss occurred at retrieval or reranking stage.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Gold fact '800 dollars' is present in final visible context and correctly used in structured answer.\",\n      \"supporting_ids\": [\"b370f2e3-794f-4bf3-ad95-27e9192972a8\"]\n    },\n    {\n      \"claim\": \"Deterministic score is correctly computed as 0.0556 based on missing facts.\",\n      \"supporting_ids\": []\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. Two required facts (written weekly summaries, implementation) were extracted and indexed but missing from final visible context. The archive lacks a reranker snapshot, so the exact loss stage (retrieval vs. reranking) cannot be determined. Score accurately reflects missing facts; no scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 8458,
+        "output_tokens": 556,
+        "total_tokens": 9014,
+        "cached_tokens": 512
+      },
+      "physical_attempts": 1,
+      "human_review": false,
+      "reviewed_at": "2026-07-14T23:13:30.981Z"
+    }
+  ]
+}

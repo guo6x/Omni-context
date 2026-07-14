@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "algorithm": "sha256",
+  "file_count": 22,
+  "files": {
+    "01-attribution-method.md": "20fd6c2d7dcf88484b8531227a004b8886030208d4fe44c1c9995520e8876b54",
+    "02-source-gold-support-audit.md": "35fa9657de728038782ddeb5a6776280ab228693f50ca3069efab4b4d25d7c79",
+    "03-memory-pipeline-audit.md": "d79303c64d39168dce13a2fcb67cfed2867f485c79cbf703efc64bdedaa16eec",
+    "04-secondary-attribution-review.md": "b4831dd6d45d92cd2d7fb584a0e5b194e82c79200974f4cbc3d6887492207560",
+    "05-baseline-interpretation.md": "af71c623902c331def15e31fc714546c5011093c651305bfa8d025ca3301f23f",
+    "06-score-validity-assessment.md": "e74e2ceeb48e837b38e51e543facb29690c18b33e1079f8ebef909f5c4601370",
+    "07-formal-freeze-recommendation.md": "3c544f0374f45850461a9143cfb064d581d4b9544ad9bf383965b4211a6e0b7b",
+    "08-known-product-limitations.md": "adcbdf13d92bece42b21322654e9f6cd788a4403fe7d001bedcd2b2dfb2864ee",
+    "09-final-attribution-checklist.md": "2b91f052954f0dd065fd5b1410e6102a0f0942c25a4e01d302d7dd45153f0f4a",
+    "evidence/answer-evidence-coverage.json": "fd30562a058aa540ea75550c2af0c2d4f4e2d2a2c20959141cb76d9645ebf58f",
+    "evidence/attribution-run-manifest.json": "64a79092bf26403c291a7be037b029729c0a40fd0f3b53398bf8576d1d20ce2f",
+    "evidence/attribution-usage.json": "92b4e646bfc539776f38c0c48e954a7a00d7a3597080489f83e3eca002b37e16",
+    "evidence/baseline-interpretation.json": "2baa0a5091b57dacc3c56b25b4223e00e735185c8dd8deabd7680187765d6909",
+    "evidence/benchmark-validity-assessment.json": "3e000085f31e76e751525bf53c2f7815db78495f53337e5978d4e777fc58faa6",
+    "evidence/first-loss-stage-summary.json": "4a48aaedb8fbc32ae1f1d0b3a8b8141cbd3a335a15c9fd41d9f6e0cc3478f5a5",
+    "evidence/formal-freeze-recommendation.json": "4117c00a6348ec3db6a165a850ac1fa5d75131d11ef38609535654d3c080ccf7",
+    "evidence/gold-visibility-audit.json": "b55403c847b8fbceb02a0015cd49adc35690999dda028dd482ae03e89a2f679c",
+    "evidence/memory-pipeline-trace.json": "0fcc803e1d245c53097aed4fbcb81220671326bf43b7316e15f637877aba1fbc",
+    "evidence/secondary-attribution-inputs.json": "e7154a0b7ec2f59162c64808caa370e0664e43ef701cb8a199ab0fa0812ed375",
+    "evidence/secondary-attribution-review.json": "a45ad448aeb16c4e65cf10474962e642483f7790292e64f1b584ee09f6d10318",
+    "evidence/secondary-review-comparison.json": "39d50179c2814aa1f6fcfdce3a8d89b479536aec93b8d94a3781b21bf0e8487e",
+    "evidence/source-gold-support-audit.json": "7790ca25553254fc9efc663cbf1c53be82555a4b3b9ecbb272a129ad306eb88f"
+  }
+}

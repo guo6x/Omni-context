@@ -15,6 +15,7 @@
     "rescore": "node src/cli.mjs rescore",
     "analyze": "node src/analyze.mjs",
     "finalize:v1.1": "node src/finalize-v1.1.mjs",
+    "attribution:v1.1": "node src/attribution-v1.1.mjs",
     "aggregate": "node src/cli.mjs aggregate"
   },
   "engines": {

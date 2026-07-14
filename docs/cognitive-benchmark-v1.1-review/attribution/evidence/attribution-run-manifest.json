@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "partial_stopped_by_call_budget_projection",
+  "benchmark": "Omni-Context Cognitive Benchmark v1.1",
+  "review_type": "final_attribution_review_before_formal_freeze",
+  "branch": "codex/omni-cognitive-benchmark-v1.1-pre-run-hardening",
+  "starting_head": "9ade18f47018846110d573b00a34eea56e33cefa",
+  "source_dataset_sha256": "c3a13da7abad6b1dffb1bedde5ed24907b9e4cf65eea280108d93a6b3098ea67",
+  "source_full_results_sha256": "bde46a8f09c5f5a3019378ea5f333443a8789c69931f79c7c01ffffa2dcd5166",
+  "source_secondary_review_sha256": "2262faeaa1d63abf82821bee01d9a7d35eb88d48ff959caa7debd2bc1621b4dc",
+  "full_omni_static_audits": 35,
+  "old_secondary_review_samples": 20,
+  "new_attribution_reviews": 1,
+  "attribution_model": "deepseek-v4-flash",
+  "review_independent": false,
+  "human_review_completed": false,
+  "calls": {
+    "kimi": 0,
+    "deepseek_answer": 0,
+    "deepseek_extraction": 0,
+    "deepseek_attribution_logical": 2,
+    "deepseek_attribution_physical": 7
+  },
+  "call_budget_stop_reason": "17 physical attempts remain for 19 incomplete samples; completion would exceed the 24-attempt cap.",
+  "archive_root": "D:/OmniContext-cognitive-v1.1",
+  "formal_dataset_frozen": false,
+  "formal_250_run": false,
+  "comparison_70_run": false,
+  "locomo_conversations_2_to_10_accessed": false
+}

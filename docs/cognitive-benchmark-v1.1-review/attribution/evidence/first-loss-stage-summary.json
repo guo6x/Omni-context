@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "fact_count": 110,
+  "by_first_loss_stage": {
+    "source": 0,
+    "extraction": 5,
+    "indexing": 0,
+    "retrieval_candidate": 0,
+    "reranking": 0,
+    "final_context": 21,
+    "answer": 0,
+    "scoring": 0,
+    "judge": 0,
+    "none": 36,
+    "unknown": 48
+  },
+  "by_attribution_candidate": {
+    "dataset_defect": 0,
+    "extraction_failure": 5,
+    "retrieval_failure": 21,
+    "memory_pipeline_unresolved": 48,
+    "answer_generation_failure": 0,
+    "answer_schema_failure": 0,
+    "scoring_defect": 0,
+    "primary_judge_defect": 0,
+    "secondary_review_defect": 0,
+    "baseline_design_effect": 0,
+    "product_limitation": 0,
+    "no_material_issue": 36
+  },
+  "scenarios_by_initial_attribution": {
+    "dataset_defect": [
+      "development-v2-cross_agent_transfer-001",
+      "development-v2-cross_agent_transfer-002",
+      "development-v2-cross_agent_transfer-003",
+      "development-v2-cross_agent_transfer-004",
+      "development-v2-cross_agent_transfer-005"
+    ],
+    "extraction_failure": [
+      "development-v2-proactive_insight-001",
+      "development-v2-proactive_insight-002",
+      "development-v2-proactive_insight-003",
+      "development-v2-proactive_insight-004",
+      "development-v2-proactive_insight-005"
+    ],
+    "retrieval_failure": [
+      "development-v2-cognitive_continuity-001",
+      "development-v2-cognitive_continuity-002",
+      "development-v2-cognitive_continuity-003",
+      "development-v2-cognitive_continuity-005",
+      "development-v2-memory_evolution-003",
+      "development-v2-conflict_resolution-001",
+      "development-v2-conflict_resolution-004",
+      "development-v2-conflict_resolution-005",
+      "development-v2-human_like_forgetting-002",
+      "development-v2-decision_quality-004",
+      "development-v2-decision_quality-005"
+    ],
+    "memory_pipeline_unresolved": [
+      "development-v2-cognitive_continuity-004",
+      "development-v2-memory_evolution-001",
+      "development-v2-memory_evolution-002",
+      "development-v2-memory_evolution-004",
+      "development-v2-memory_evolution-005",
+      "development-v2-conflict_resolution-002",
+      "development-v2-conflict_resolution-003",
+      "development-v2-decision_quality-002",
+      "development-v2-decision_quality-003"
+    ],
+    "answer_generation_failure": [],
+    "answer_schema_failure": [],
+    "scoring_defect": [],
+    "primary_judge_defect": [],
+    "secondary_review_defect": [],
+    "baseline_design_effect": [],
+    "product_limitation": [],
+    "no_material_issue": [
+      "development-v2-human_like_forgetting-001",
+      "development-v2-human_like_forgetting-003",
+      "development-v2-human_like_forgetting-004",
+      "development-v2-human_like_forgetting-005",
+      "development-v2-decision_quality-001"
+    ]
+  }
+}

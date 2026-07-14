@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "count": 1,
+  "old_flags": {
+    "score_issue": 19,
+    "gold_ambiguity": 2,
+    "baseline_fairness_issue": 3,
+    "memory_leakage_issue": 0,
+    "judge_reliability_issue": 2,
+    "provenance_issue": 4,
+    "invalidated_fact_rejection_issue": 3,
+    "temporal_transition_issue": 4
+  },
+  "new_primary_attributions": {
+    "dataset_defect": 0,
+    "extraction_failure": 0,
+    "retrieval_failure": 0,
+    "memory_pipeline_unresolved": 1,
+    "answer_generation_failure": 0,
+    "answer_schema_failure": 0,
+    "scoring_defect": 0,
+    "primary_judge_defect": 0,
+    "secondary_review_defect": 0,
+    "baseline_design_effect": 0,
+    "product_limitation": 0,
+    "no_material_issue": 0
+  },
+  "old_gold_ambiguity_reclassified": [],
+  "old_score_issue_final_attribution": {
+    "dataset_defect": 0,
+    "extraction_failure": 0,
+    "retrieval_failure": 0,
+    "memory_pipeline_unresolved": 1,
+    "answer_generation_failure": 0,
+    "answer_schema_failure": 0,
+    "scoring_defect": 0,
+    "primary_judge_defect": 0,
+    "secondary_review_defect": 0,
+    "baseline_design_effect": 0,
+    "product_limitation": 0,
+    "no_material_issue": 0
+  },
+  "secondary_review_defect_count": 1,
+  "reviewer_agreement_rate": 0,
+  "low_confidence_count": 0,
+  "rows": [
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "mode": "full_omni",
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": true,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    }
+  ]
+}

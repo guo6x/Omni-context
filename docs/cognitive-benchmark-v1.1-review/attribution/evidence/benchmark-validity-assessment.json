@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "gold_supported_scenarios": 35,
+  "dataset_defects": 5,
+  "deterministic_scoring_exact": 35,
+  "scoring_defects": 0,
+  "primary_judge_defects_in_review": 0,
+  "baseline_leakage": false,
+  "gold_leakage": false,
+  "development_modified_from_results": false,
+  "score_changes_recommended": 0,
+  "new_attribution_reviews_completed": 1,
+  "new_primary_attributions": {
+    "dataset_defect": 0,
+    "extraction_failure": 0,
+    "retrieval_failure": 0,
+    "memory_pipeline_unresolved": 1,
+    "answer_generation_failure": 0,
+    "answer_schema_failure": 0,
+    "scoring_defect": 0,
+    "primary_judge_defect": 0,
+    "secondary_review_defect": 0,
+    "baseline_design_effect": 0,
+    "product_limitation": 0,
+    "no_material_issue": 0
+  },
+  "unresolved_p0": [
+    "Secondary Attribution Review incomplete: 1/20; stopped before exceeding physical call limit (7/24 used).",
+    "Systemic dataset defects: 5/35 scenarios."
+  ],
+  "unresolved_p1": [
+    "memory_pipeline_unresolved: 1/1 completed reviewed samples.",
+    "Full Assertion/Reranker candidate rankings were not archived for 35/35 Development scenarios; attribution uses database, mcp_usage_log entity candidates, final context, and conservative unknown states.",
+    "Retrieval-Only scored above Full Omni in Development."
+  ]
+}

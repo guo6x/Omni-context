@@ -1,0 +1,2849 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "count": 35,
+  "audits": [
+    {
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "category": "cognitive_continuity",
+      "difficulty": "easy",
+      "scenario_family": "career_planning",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "move into accessibility engineering",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-001-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "500 dollars",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-001-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "4 focused hours per week",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-001-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "small practical experiments",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-001-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no overnight travel",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-001-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.6,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.6,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "category": "cognitive_continuity",
+      "difficulty": "medium",
+      "scenario_family": "learning_plan",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "become productive in distributed systems",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-002-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "537 dollars",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-002-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "5 focused hours per week",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-002-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "small practical experiments",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-002-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no overnight travel",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-002-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.4,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.4,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "category": "cognitive_continuity",
+      "difficulty": "hard",
+      "scenario_family": "project_priority",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "ship the community scheduling tool",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-003-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "574 dollars",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-003-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "6 focused hours per week",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-003-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "small practical experiments",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-003-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no overnight travel",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-003-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.2,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.2,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "category": "cognitive_continuity",
+      "difficulty": "medium",
+      "scenario_family": "communication_preference",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "lead an asynchronous research group",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-004-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "611 dollars",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-004-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "7 focused hours per week",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-004-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "written asynchronous updates",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-004-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no overnight travel",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-004-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.2,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.2,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "category": "cognitive_continuity",
+      "difficulty": "easy",
+      "scenario_family": "wellbeing_boundary_schedule",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "finish a sustainable four-week sprint",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-005-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "648 dollars",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-005-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "8 focused hours per week",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-005-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "small practical experiments",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-005-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no work after 20:00",
+          "supporting_event_ids": [
+            "development-v2-cognitive_continuity-005-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.6,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.6,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-001",
+      "category": "memory_evolution",
+      "difficulty": "easy",
+      "scenario_family": "technology_stack",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "Rust",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-001-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "Python",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-001-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "technology stack",
+          "from_value": "Python",
+          "to_value": "Rust",
+          "from_event_ids": [
+            "development-v2-memory_evolution-001-e01"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-001-e02"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-002",
+      "category": "memory_evolution",
+      "difficulty": "medium",
+      "scenario_family": "location_change",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "Chengdu",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-002-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "Nanjing",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-002-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "work location",
+          "from_value": "Nanjing",
+          "to_value": "Chengdu",
+          "from_event_ids": [
+            "development-v2-memory_evolution-002-e01"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-002-e02"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        },
+        {
+          "key": "work location_1",
+          "from_value": "work location intermediate 1-1",
+          "to_value": "work location revised 1-1",
+          "from_event_ids": [
+            "development-v2-memory_evolution-002-e01",
+            "development-v2-memory_evolution-002-e02",
+            "development-v2-memory_evolution-002-e03"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-002-e01",
+            "development-v2-memory_evolution-002-e02",
+            "development-v2-memory_evolution-002-e04"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.5,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 0,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.5,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "category": "memory_evolution",
+      "difficulty": "hard",
+      "scenario_family": "project_phase",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "implementation",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-003-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "prototype",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-003-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "project phase",
+          "from_value": "prototype",
+          "to_value": "implementation",
+          "from_event_ids": [
+            "development-v2-memory_evolution-003-e01"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-003-e02"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        },
+        {
+          "key": "project phase_1",
+          "from_value": "project phase intermediate 2-1",
+          "to_value": "project phase revised 2-1",
+          "from_event_ids": [
+            "development-v2-memory_evolution-003-e01",
+            "development-v2-memory_evolution-003-e02",
+            "development-v2-memory_evolution-003-e03",
+            "development-v2-memory_evolution-003-e05",
+            "development-v2-memory_evolution-003-e07"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-003-e01",
+            "development-v2-memory_evolution-003-e02",
+            "development-v2-memory_evolution-003-e04",
+            "development-v2-memory_evolution-003-e06",
+            "development-v2-memory_evolution-003-e08"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        },
+        {
+          "key": "project phase_2",
+          "from_value": "project phase intermediate 2-2",
+          "to_value": "project phase revised 2-2",
+          "from_event_ids": [
+            "development-v2-memory_evolution-003-e01",
+            "development-v2-memory_evolution-003-e02",
+            "development-v2-memory_evolution-003-e03",
+            "development-v2-memory_evolution-003-e05",
+            "development-v2-memory_evolution-003-e07"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-003-e01",
+            "development-v2-memory_evolution-003-e02",
+            "development-v2-memory_evolution-003-e04",
+            "development-v2-memory_evolution-003-e06",
+            "development-v2-memory_evolution-003-e08"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        },
+        {
+          "key": "project phase_3",
+          "from_value": "project phase intermediate 2-3",
+          "to_value": "project phase revised 2-3",
+          "from_event_ids": [
+            "development-v2-memory_evolution-003-e01",
+            "development-v2-memory_evolution-003-e02",
+            "development-v2-memory_evolution-003-e03",
+            "development-v2-memory_evolution-003-e05",
+            "development-v2-memory_evolution-003-e07"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-003-e01",
+            "development-v2-memory_evolution-003-e02",
+            "development-v2-memory_evolution-003-e04",
+            "development-v2-memory_evolution-003-e06",
+            "development-v2-memory_evolution-003-e08"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.5,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0.75,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.5,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0.75,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-004",
+      "category": "memory_evolution",
+      "difficulty": "medium",
+      "scenario_family": "work_arrangement",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "hybrid two days onsite",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-004-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "fully remote",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-004-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "work arrangement",
+          "from_value": "fully remote",
+          "to_value": "hybrid two days onsite",
+          "from_event_ids": [
+            "development-v2-memory_evolution-004-e01"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-004-e02"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-005",
+      "category": "memory_evolution",
+      "difficulty": "easy",
+      "scenario_family": "preference_change",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "written summaries",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-005-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "live meetings",
+          "supporting_event_ids": [
+            "development-v2-memory_evolution-005-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "communication preference",
+          "from_value": "live meetings",
+          "to_value": "written summaries",
+          "from_event_ids": [
+            "development-v2-memory_evolution-005-e01"
+          ],
+          "to_event_ids": [
+            "development-v2-memory_evolution-005-e02"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "category": "conflict_resolution",
+      "difficulty": "easy",
+      "scenario_family": "explicit_user_correction",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "hybrid two days onsite",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-001-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "onsite every day",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-001-e01",
+            "development-v2-conflict_resolution-001-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "work arrangement",
+          "from_value": "onsite every day",
+          "to_value": "hybrid two days onsite",
+          "from_event_ids": [
+            "development-v2-conflict_resolution-001-e01",
+            "development-v2-conflict_resolution-001-e02"
+          ],
+          "to_event_ids": [
+            "development-v2-conflict_resolution-001-e03"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [
+        {
+          "value": "onsite every day",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-001-e01",
+            "development-v2-conflict_resolution-001-e02"
+          ],
+          "historical_event_ids": [
+            "development-v2-conflict_resolution-001-e01"
+          ],
+          "correction_event_ids": [
+            "development-v2-conflict_resolution-001-e03"
+          ],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "category": "conflict_resolution",
+      "difficulty": "medium",
+      "scenario_family": "confidence_conflict",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "April 18",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-002-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "April 2",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-002-e01",
+            "development-v2-conflict_resolution-002-e02",
+            "development-v2-conflict_resolution-002-e03",
+            "development-v2-conflict_resolution-002-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 4 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "project deadline",
+          "from_value": "April 2",
+          "to_value": "April 18",
+          "from_event_ids": [
+            "development-v2-conflict_resolution-002-e01",
+            "development-v2-conflict_resolution-002-e02",
+            "development-v2-conflict_resolution-002-e03",
+            "development-v2-conflict_resolution-002-e04"
+          ],
+          "to_event_ids": [
+            "development-v2-conflict_resolution-002-e03"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [
+        {
+          "value": "April 2",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-002-e01",
+            "development-v2-conflict_resolution-002-e02",
+            "development-v2-conflict_resolution-002-e03",
+            "development-v2-conflict_resolution-002-e04"
+          ],
+          "historical_event_ids": [
+            "development-v2-conflict_resolution-002-e01"
+          ],
+          "correction_event_ids": [
+            "development-v2-conflict_resolution-002-e03"
+          ],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "category": "conflict_resolution",
+      "difficulty": "hard",
+      "scenario_family": "multi_agent_conflict",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "implementation",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-003-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "cancelled",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-003-e01",
+            "development-v2-conflict_resolution-003-e02",
+            "development-v2-conflict_resolution-003-e04",
+            "development-v2-conflict_resolution-003-e05",
+            "development-v2-conflict_resolution-003-e06"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 5 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "project status",
+          "from_value": "cancelled",
+          "to_value": "implementation",
+          "from_event_ids": [
+            "development-v2-conflict_resolution-003-e01",
+            "development-v2-conflict_resolution-003-e02",
+            "development-v2-conflict_resolution-003-e04",
+            "development-v2-conflict_resolution-003-e05",
+            "development-v2-conflict_resolution-003-e06"
+          ],
+          "to_event_ids": [
+            "development-v2-conflict_resolution-003-e03"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [
+        {
+          "value": "cancelled",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-003-e01",
+            "development-v2-conflict_resolution-003-e02",
+            "development-v2-conflict_resolution-003-e04",
+            "development-v2-conflict_resolution-003-e05",
+            "development-v2-conflict_resolution-003-e06"
+          ],
+          "historical_event_ids": [
+            "development-v2-conflict_resolution-003-e01"
+          ],
+          "correction_event_ids": [
+            "development-v2-conflict_resolution-003-e03"
+          ],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "category": "conflict_resolution",
+      "difficulty": "medium",
+      "scenario_family": "same_time_sources",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "900 dollars",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-004-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "500 dollars",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-004-e01",
+            "development-v2-conflict_resolution-004-e02",
+            "development-v2-conflict_resolution-004-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 3 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "available budget",
+          "from_value": "500 dollars",
+          "to_value": "900 dollars",
+          "from_event_ids": [
+            "development-v2-conflict_resolution-004-e01",
+            "development-v2-conflict_resolution-004-e02",
+            "development-v2-conflict_resolution-004-e04"
+          ],
+          "to_event_ids": [
+            "development-v2-conflict_resolution-004-e03"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [
+        {
+          "value": "500 dollars",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-004-e01",
+            "development-v2-conflict_resolution-004-e02",
+            "development-v2-conflict_resolution-004-e04"
+          ],
+          "historical_event_ids": [
+            "development-v2-conflict_resolution-004-e01"
+          ],
+          "correction_event_ids": [
+            "development-v2-conflict_resolution-004-e03"
+          ],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-005",
+      "category": "conflict_resolution",
+      "difficulty": "easy",
+      "scenario_family": "current_history_conflict",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "Go",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-005-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "Python",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-005-e01",
+            "development-v2-conflict_resolution-005-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        }
+      ],
+      "transition_support": [
+        {
+          "key": "primary stack",
+          "from_value": "Python",
+          "to_value": "Go",
+          "from_event_ids": [
+            "development-v2-conflict_resolution-005-e01",
+            "development-v2-conflict_resolution-005-e02"
+          ],
+          "to_event_ids": [
+            "development-v2-conflict_resolution-005-e03"
+          ],
+          "supported": true,
+          "audit_note": "From/to values share a structured transition_id."
+        }
+      ],
+      "invalidation_support": [
+        {
+          "value": "Python",
+          "supporting_event_ids": [
+            "development-v2-conflict_resolution-005-e01",
+            "development-v2-conflict_resolution-005-e02"
+          ],
+          "historical_event_ids": [
+            "development-v2-conflict_resolution-005-e01"
+          ],
+          "correction_event_ids": [
+            "development-v2-conflict_resolution-005-e03"
+          ],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 0,
+        "transition_ratio": 0,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "category": "cross_agent_transfer",
+      "difficulty": "easy",
+      "scenario_family": "goal_propagation",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "launch a community workshop",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-001-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "written weekly summaries",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-001-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "implementation",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-001-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "cancelled",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-001-e05"
+          ],
+          "historical_event_ids": [],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [
+        {
+          "agent": "Agent-A",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-001-e01",
+            "development-v2-cross_agent_transfer-001-e03",
+            "development-v2-cross_agent_transfer-001-e04",
+            "development-v2-cross_agent_transfer-001-e07"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-001-e01",
+            "development-v2-cross_agent_transfer-001-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-001-e01",
+            "development-v2-cross_agent_transfer-001-e03",
+            "development-v2-cross_agent_transfer-001-e04",
+            "development-v2-cross_agent_transfer-001-e07"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-B",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-001-e02",
+            "development-v2-cross_agent_transfer-001-e05",
+            "development-v2-cross_agent_transfer-001-e06",
+            "development-v2-cross_agent_transfer-001-e08"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-001-e02",
+            "development-v2-cross_agent_transfer-001-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-001-e02",
+            "development-v2-cross_agent_transfer-001-e05",
+            "development-v2-cross_agent_transfer-001-e06",
+            "development-v2-cross_agent_transfer-001-e08",
+            "development-v2-cross_agent_transfer-001-e04"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-C",
+          "structured_event_ids": [],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-001-e03",
+            "development-v2-cross_agent_transfer-001-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-001-e03",
+            "development-v2-cross_agent_transfer-001-e04"
+          ],
+          "supported": true,
+          "structured_support": false,
+          "textual_support": true
+        }
+      ],
+      "dataset_field_text_inconsistencies": [
+        {
+          "event_id": "development-v2-cross_agent_transfer-001-e03",
+          "field_agent": "Agent-A",
+          "text_agent": "Agent-C",
+          "issue": "structured_agent_field_conflicts_with_leading_text_agent"
+        },
+        {
+          "event_id": "development-v2-cross_agent_transfer-001-e05",
+          "field_agent": "Agent-B",
+          "text_agent": "Agent-X",
+          "issue": "structured_agent_field_conflicts_with_leading_text_agent"
+        }
+      ],
+      "dataset_defect": true,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.666667,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 0.333333
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.666667,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "dataset_defect",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "category": "cross_agent_transfer",
+      "difficulty": "medium",
+      "scenario_family": "preference_propagation",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "written weekly summaries",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-002-e01",
+            "development-v2-cross_agent_transfer-002-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "written weekly summaries",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-002-e01",
+            "development-v2-cross_agent_transfer-002-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "implementation",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-002-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "cancelled",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-002-e05"
+          ],
+          "historical_event_ids": [],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [
+        {
+          "agent": "Agent-A",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-002-e01",
+            "development-v2-cross_agent_transfer-002-e04",
+            "development-v2-cross_agent_transfer-002-e09",
+            "development-v2-cross_agent_transfer-002-e13"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-002-e01",
+            "development-v2-cross_agent_transfer-002-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-002-e01",
+            "development-v2-cross_agent_transfer-002-e04",
+            "development-v2-cross_agent_transfer-002-e09",
+            "development-v2-cross_agent_transfer-002-e13"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-B",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-002-e02",
+            "development-v2-cross_agent_transfer-002-e06",
+            "development-v2-cross_agent_transfer-002-e10",
+            "development-v2-cross_agent_transfer-002-e14"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-002-e02",
+            "development-v2-cross_agent_transfer-002-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-002-e02",
+            "development-v2-cross_agent_transfer-002-e06",
+            "development-v2-cross_agent_transfer-002-e10",
+            "development-v2-cross_agent_transfer-002-e14",
+            "development-v2-cross_agent_transfer-002-e04"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-C",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-002-e03",
+            "development-v2-cross_agent_transfer-002-e07",
+            "development-v2-cross_agent_transfer-002-e11",
+            "development-v2-cross_agent_transfer-002-e15"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-002-e03",
+            "development-v2-cross_agent_transfer-002-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-002-e03",
+            "development-v2-cross_agent_transfer-002-e07",
+            "development-v2-cross_agent_transfer-002-e11",
+            "development-v2-cross_agent_transfer-002-e15",
+            "development-v2-cross_agent_transfer-002-e04"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        }
+      ],
+      "dataset_field_text_inconsistencies": [
+        {
+          "event_id": "development-v2-cross_agent_transfer-002-e05",
+          "field_agent": "Agent-D",
+          "text_agent": "Agent-X",
+          "issue": "structured_agent_field_conflicts_with_leading_text_agent"
+        }
+      ],
+      "dataset_defect": true,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 0
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "dataset_defect",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "category": "cross_agent_transfer",
+      "difficulty": "hard",
+      "scenario_family": "project_update",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "implementation",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-003-e01",
+            "development-v2-cross_agent_transfer-003-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "written weekly summaries",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-003-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "implementation",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-003-e01",
+            "development-v2-cross_agent_transfer-003-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "cancelled",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-003-e05"
+          ],
+          "historical_event_ids": [],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [
+        {
+          "agent": "Agent-A",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-003-e01",
+            "development-v2-cross_agent_transfer-003-e04",
+            "development-v2-cross_agent_transfer-003-e07",
+            "development-v2-cross_agent_transfer-003-e13",
+            "development-v2-cross_agent_transfer-003-e19",
+            "development-v2-cross_agent_transfer-003-e25"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-003-e01",
+            "development-v2-cross_agent_transfer-003-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-003-e01",
+            "development-v2-cross_agent_transfer-003-e04",
+            "development-v2-cross_agent_transfer-003-e07",
+            "development-v2-cross_agent_transfer-003-e13",
+            "development-v2-cross_agent_transfer-003-e19",
+            "development-v2-cross_agent_transfer-003-e25"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-B",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-003-e02",
+            "development-v2-cross_agent_transfer-003-e08",
+            "development-v2-cross_agent_transfer-003-e14",
+            "development-v2-cross_agent_transfer-003-e20",
+            "development-v2-cross_agent_transfer-003-e26"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-003-e02",
+            "development-v2-cross_agent_transfer-003-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-003-e02",
+            "development-v2-cross_agent_transfer-003-e08",
+            "development-v2-cross_agent_transfer-003-e14",
+            "development-v2-cross_agent_transfer-003-e20",
+            "development-v2-cross_agent_transfer-003-e26",
+            "development-v2-cross_agent_transfer-003-e04"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-C",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-003-e03",
+            "development-v2-cross_agent_transfer-003-e09",
+            "development-v2-cross_agent_transfer-003-e15",
+            "development-v2-cross_agent_transfer-003-e21",
+            "development-v2-cross_agent_transfer-003-e27"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-003-e03",
+            "development-v2-cross_agent_transfer-003-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-003-e03",
+            "development-v2-cross_agent_transfer-003-e09",
+            "development-v2-cross_agent_transfer-003-e15",
+            "development-v2-cross_agent_transfer-003-e21",
+            "development-v2-cross_agent_transfer-003-e27",
+            "development-v2-cross_agent_transfer-003-e04"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        }
+      ],
+      "dataset_field_text_inconsistencies": [
+        {
+          "event_id": "development-v2-cross_agent_transfer-003-e05",
+          "field_agent": "Agent-D",
+          "text_agent": "Agent-X",
+          "issue": "structured_agent_field_conflicts_with_leading_text_agent"
+        }
+      ],
+      "dataset_defect": true,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 0
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "dataset_defect",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "category": "cross_agent_transfer",
+      "difficulty": "medium",
+      "scenario_family": "source_fidelity",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "800 dollars",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-004-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "written weekly summaries",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-004-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "implementation",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-004-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "cancelled",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-004-e05"
+          ],
+          "historical_event_ids": [],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [
+        {
+          "agent": "Agent-A",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-004-e01",
+            "development-v2-cross_agent_transfer-004-e04",
+            "development-v2-cross_agent_transfer-004-e09",
+            "development-v2-cross_agent_transfer-004-e13",
+            "development-v2-cross_agent_transfer-004-e17"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-004-e01",
+            "development-v2-cross_agent_transfer-004-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-004-e01",
+            "development-v2-cross_agent_transfer-004-e04",
+            "development-v2-cross_agent_transfer-004-e09",
+            "development-v2-cross_agent_transfer-004-e13",
+            "development-v2-cross_agent_transfer-004-e17"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-B",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-004-e02",
+            "development-v2-cross_agent_transfer-004-e06",
+            "development-v2-cross_agent_transfer-004-e10",
+            "development-v2-cross_agent_transfer-004-e14"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-004-e02",
+            "development-v2-cross_agent_transfer-004-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-004-e02",
+            "development-v2-cross_agent_transfer-004-e06",
+            "development-v2-cross_agent_transfer-004-e10",
+            "development-v2-cross_agent_transfer-004-e14",
+            "development-v2-cross_agent_transfer-004-e04"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-C",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-004-e03",
+            "development-v2-cross_agent_transfer-004-e07",
+            "development-v2-cross_agent_transfer-004-e11",
+            "development-v2-cross_agent_transfer-004-e15"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-004-e03",
+            "development-v2-cross_agent_transfer-004-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-004-e03",
+            "development-v2-cross_agent_transfer-004-e07",
+            "development-v2-cross_agent_transfer-004-e11",
+            "development-v2-cross_agent_transfer-004-e15",
+            "development-v2-cross_agent_transfer-004-e04"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        }
+      ],
+      "dataset_field_text_inconsistencies": [
+        {
+          "event_id": "development-v2-cross_agent_transfer-004-e05",
+          "field_agent": "Agent-D",
+          "text_agent": "Agent-X",
+          "issue": "structured_agent_field_conflicts_with_leading_text_agent"
+        }
+      ],
+      "dataset_defect": true,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "dataset_defect",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "category": "cross_agent_transfer",
+      "difficulty": "easy",
+      "scenario_family": "bad_agent_isolation",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "ready for review",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-005-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "written weekly summaries",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-005-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "implementation",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-005-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "cancelled",
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-005-e05"
+          ],
+          "historical_event_ids": [],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [
+        {
+          "agent": "Agent-A",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-005-e01",
+            "development-v2-cross_agent_transfer-005-e03",
+            "development-v2-cross_agent_transfer-005-e04",
+            "development-v2-cross_agent_transfer-005-e07",
+            "development-v2-cross_agent_transfer-005-e09"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-005-e01",
+            "development-v2-cross_agent_transfer-005-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-005-e01",
+            "development-v2-cross_agent_transfer-005-e03",
+            "development-v2-cross_agent_transfer-005-e04",
+            "development-v2-cross_agent_transfer-005-e07",
+            "development-v2-cross_agent_transfer-005-e09"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-B",
+          "structured_event_ids": [
+            "development-v2-cross_agent_transfer-005-e02",
+            "development-v2-cross_agent_transfer-005-e05",
+            "development-v2-cross_agent_transfer-005-e06",
+            "development-v2-cross_agent_transfer-005-e08"
+          ],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-005-e02",
+            "development-v2-cross_agent_transfer-005-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-005-e02",
+            "development-v2-cross_agent_transfer-005-e05",
+            "development-v2-cross_agent_transfer-005-e06",
+            "development-v2-cross_agent_transfer-005-e08",
+            "development-v2-cross_agent_transfer-005-e04"
+          ],
+          "supported": true,
+          "structured_support": true,
+          "textual_support": true
+        },
+        {
+          "agent": "Agent-C",
+          "structured_event_ids": [],
+          "textual_event_ids": [
+            "development-v2-cross_agent_transfer-005-e03",
+            "development-v2-cross_agent_transfer-005-e04"
+          ],
+          "supporting_event_ids": [
+            "development-v2-cross_agent_transfer-005-e03",
+            "development-v2-cross_agent_transfer-005-e04"
+          ],
+          "supported": true,
+          "structured_support": false,
+          "textual_support": true
+        }
+      ],
+      "dataset_field_text_inconsistencies": [
+        {
+          "event_id": "development-v2-cross_agent_transfer-005-e03",
+          "field_agent": "Agent-A",
+          "text_agent": "Agent-C",
+          "issue": "structured_agent_field_conflicts_with_leading_text_agent"
+        },
+        {
+          "event_id": "development-v2-cross_agent_transfer-005-e05",
+          "field_agent": "Agent-B",
+          "text_agent": "Agent-X",
+          "issue": "structured_agent_field_conflicts_with_leading_text_agent"
+        }
+      ],
+      "dataset_defect": true,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 0.333333
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 0,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "dataset_defect",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "category": "human_like_forgetting",
+      "difficulty": "easy",
+      "scenario_family": "salient_retention",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "launch a community workshop for cycle 1",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-001-e01",
+            "development-v2-human_like_forgetting-001-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "buy a drone",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-001-e05"
+          ],
+          "historical_event_ids": [
+            "development-v2-human_like_forgetting-001-e05"
+          ],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "no_material_issue",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "category": "human_like_forgetting",
+      "difficulty": "medium",
+      "scenario_family": "repeated_reinforcement",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "small practical projects for cycle 2",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-002-e01",
+            "development-v2-human_like_forgetting-002-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "buy a drone",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-002-e05"
+          ],
+          "historical_event_ids": [
+            "development-v2-human_like_forgetting-002-e05"
+          ],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "category": "human_like_forgetting",
+      "difficulty": "hard",
+      "scenario_family": "temporary_expiry",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "headache for cycle 3",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-003-e01",
+            "development-v2-human_like_forgetting-003-e02",
+            "development-v2-human_like_forgetting-003-e03"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 3 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "buy a drone",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-003-e05"
+          ],
+          "historical_event_ids": [
+            "development-v2-human_like_forgetting-003-e05"
+          ],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "no_material_issue",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-004",
+      "category": "human_like_forgetting",
+      "difficulty": "medium",
+      "scenario_family": "one_time_noise",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "clicked a blue button for cycle 4",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-004-e01",
+            "development-v2-human_like_forgetting-004-e02",
+            "development-v2-human_like_forgetting-004-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 3 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "buy a drone",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-004-e05"
+          ],
+          "historical_event_ids": [
+            "development-v2-human_like_forgetting-004-e05"
+          ],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "no_material_issue",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "category": "human_like_forgetting",
+      "difficulty": "easy",
+      "scenario_family": "low_value_repetition",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "opened the settings page for cycle 5",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-005-e01",
+            "development-v2-human_like_forgetting-005-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [
+        {
+          "value": "buy a drone",
+          "supporting_event_ids": [
+            "development-v2-human_like_forgetting-005-e05"
+          ],
+          "historical_event_ids": [
+            "development-v2-human_like_forgetting-005-e05"
+          ],
+          "correction_event_ids": [],
+          "supported": true
+        }
+      ],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 0,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 0,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "no_material_issue",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-001",
+      "category": "proactive_insight",
+      "difficulty": "easy",
+      "scenario_family": "direction_switching",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "complete direction switching outcome 1",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-001-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "5 hours per week",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-001-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no user interviews",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-001-e04"
+          ],
+          "support_type": "semantic",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "extraction_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-002",
+      "category": "proactive_insight",
+      "difficulty": "medium",
+      "scenario_family": "missing_validation",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "complete missing validation outcome 2",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-002-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "6 hours per week",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-002-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no user interviews",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-002-e04"
+          ],
+          "support_type": "semantic",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "extraction_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "category": "proactive_insight",
+      "difficulty": "hard",
+      "scenario_family": "goal_action_mismatch",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "complete goal-action mismatch outcome 3",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-003-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "7 hours per week",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-003-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no user interviews",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-003-e04"
+          ],
+          "support_type": "semantic",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "extraction_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-004",
+      "category": "proactive_insight",
+      "difficulty": "medium",
+      "scenario_family": "repeated_failure",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "complete repeated failure pattern outcome 4",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-004-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "8 hours per week",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-004-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no user interviews",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-004-e04"
+          ],
+          "support_type": "semantic",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "extraction_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-005",
+      "category": "proactive_insight",
+      "difficulty": "easy",
+      "scenario_family": "time_conflict",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "complete time conflict outcome 5",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-005-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "5 hours per week",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-005-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "no user interviews",
+          "supporting_event_ids": [
+            "development-v2-proactive_insight-005-e04"
+          ],
+          "support_type": "semantic",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "extraction_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-001",
+      "category": "decision_quality",
+      "difficulty": "easy",
+      "scenario_family": "job_vs_startup",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "achieve job versus startup objective 1",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-001-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "500 dollars",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-001-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "stable income",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-001-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "Option A",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-001-e03",
+            "development-v2-decision_quality-001-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "Option B",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-001-e03",
+            "development-v2-decision_quality-001-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "four-week reversible test",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-001-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 1,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "no_material_issue",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-002",
+      "category": "decision_quality",
+      "difficulty": "medium",
+      "scenario_family": "learning_route",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "achieve learning route objective 2",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-002-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "537 dollars",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-002-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "stable income",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-002-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "Option A",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-002-e03",
+            "development-v2-decision_quality-002-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "Option B",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-002-e03",
+            "development-v2-decision_quality-002-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "four-week reversible test",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-002-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.5,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-003",
+      "category": "decision_quality",
+      "difficulty": "hard",
+      "scenario_family": "project_ranking",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "achieve project prioritization objective 3",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-003-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "574 dollars",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-003-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "stable income",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-003-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "Option A",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-003-e03",
+            "development-v2-decision_quality-003-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "Option B",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-003-e03",
+            "development-v2-decision_quality-003-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "four-week reversible test",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-003-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.5,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "memory_pipeline_unresolved",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-004",
+      "category": "decision_quality",
+      "difficulty": "medium",
+      "scenario_family": "budget_allocation",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "achieve budget allocation objective 4",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-004-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "611 dollars",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-004-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "stable income",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-004-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "Option A",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-004-e03",
+            "development-v2-decision_quality-004-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "Option B",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-004-e03",
+            "development-v2-decision_quality-004-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "four-week reversible test",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-004-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.333333,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.5,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-005",
+      "category": "decision_quality",
+      "difficulty": "easy",
+      "scenario_family": "partner_selection",
+      "gold_supported_by_original_events": true,
+      "required_fact_support": [
+        {
+          "gold_value": "achieve partner selection objective 5",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-005-e01"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "648 dollars",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-005-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "stable income",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-005-e02"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        },
+        {
+          "gold_value": "Option A",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-005-e03",
+            "development-v2-decision_quality-005-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "Option B",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-005-e03",
+            "development-v2-decision_quality-005-e04"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 2 event(s)."
+        },
+        {
+          "gold_value": "four-week reversible test",
+          "supporting_event_ids": [
+            "development-v2-decision_quality-005-e05"
+          ],
+          "support_type": "explicit",
+          "audit_note": "Matched structured value/text/state fields in 1 event(s)."
+        }
+      ],
+      "transition_support": [],
+      "invalidation_support": [],
+      "source_agent_support": [],
+      "dataset_field_text_inconsistencies": [],
+      "dataset_defect": false,
+      "gold_visible_in_final_context": {
+        "required_fact_ratio": 0.666667,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidation_ratio": 1,
+        "source_agent_ratio": 1
+      },
+      "answer_coverage_given_visible_context": {
+        "required_fact_ratio": 0.666667,
+        "current_fact_ratio": 1,
+        "historical_fact_ratio": 1,
+        "transition_ratio": 1,
+        "invalidated_rejection_ratio": 1,
+        "citation_validity_ratio": 1
+      },
+      "initial_attribution": "retrieval_failure",
+      "evidence_confidence": 1
+    }
+  ]
+}
