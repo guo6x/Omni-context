@@ -111,6 +111,7 @@ export interface LLMNormalizationDiagnostics {
 }
 
 export interface LLMCallDiagnostics {
+  attempt?: number;
   http_status: number | null;
   raw_response_sha256: string | null;
   finish_reason: string | null;

@@ -140,4 +140,42 @@ describe('formal evaluation extraction diagnostics', () => {
       requireLlmSuccess: true,
     })).rejects.toBeInstanceOf(GraphRAGExtractionError);
   });
+
+  it('retries a truncated provider response and preserves every attempt diagnostic', async () => {
+    const parsed = {
+      result: {
+        entities: [{ name: 'Caroline', type: 'person' as const, description: 'Speaker' }],
+        facts: [], principles: [],
+      },
+      diagnostics: {
+        http_status: 200, raw_response_sha256: 'a'.repeat(64), finish_reason: 'stop',
+        status: 'parsed' as const, parsed_counts: { entities: 1, facts: 0, principles: 0 },
+        normalization: { entity_types: [], predicates: [] },
+      },
+    };
+    const truncated = {
+      result: { entities: [], facts: [], principles: [] },
+      diagnostics: {
+        http_status: 200, raw_response_sha256: 'b'.repeat(64), finish_reason: 'length',
+        status: 'truncated' as const, error: 'LLM_OUTPUT_TRUNCATED',
+        parsed_counts: { entities: 0, facts: 0, principles: 0 },
+        normalization: { entity_types: [], predicates: [] },
+      },
+    };
+    const spy = vi.spyOn(LLMExtractorPipeline.prototype, 'extractWithDiagnostics')
+      .mockResolvedValueOnce(truncated)
+      .mockResolvedValueOnce(parsed);
+    const extractor = new GraphRAGExtractor();
+    const result = await extractor.extract({
+      textContent: 'Caroline joined the conversation.',
+      timestamp: '2023-05-21T19:48:00.000Z',
+      requireLlmSuccess: true,
+    });
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(result.diagnostics.llm_calls).toEqual([
+      expect.objectContaining({ attempt: 1, status: 'truncated' }),
+      expect.objectContaining({ attempt: 2, status: 'parsed' }),
+    ]);
+    expect(result.diagnostics.failure_reason).toBeUndefined();
+  });
 });

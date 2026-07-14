@@ -322,15 +322,19 @@ describe('API smoke: graph extract', () => {
   }, 15000);
 
   it('returns structured 422 diagnostics when formal LLM extraction fails', async () => {
-    vi.mocked(LLMExtractorPipeline.prototype.extractWithDiagnostics).mockResolvedValueOnce({
+    const persistentFailure = {
       result: { entities: [], facts: [], principles: [] },
       diagnostics: {
         http_status: 200, raw_response_sha256: 'd'.repeat(64), finish_reason: 'stop',
-        status: 'invalid_response', error: 'LLM_OUTPUT_INVALID:fixture',
+        status: 'invalid_response' as const, error: 'LLM_OUTPUT_INVALID:fixture',
         parsed_counts: { entities: 0, facts: 0, principles: 0 },
         normalization: { entity_types: [], predicates: [] },
       },
-    });
+    };
+    vi.mocked(LLMExtractorPipeline.prototype.extractWithDiagnostics)
+      .mockResolvedValueOnce(persistentFailure)
+      .mockResolvedValueOnce(persistentFailure)
+      .mockResolvedValueOnce(persistentFailure);
     const { status, body } = await request('POST', '/api/graph/extract', {
       text: 'Caroline: I like painting.',
       timestamp: '2023-05-21T19:48:00.000Z',
@@ -343,8 +347,11 @@ describe('API smoke: graph extract', () => {
       session_id: 'session-failed',
       extraction: {
         failure_reason: 'LLM_OUTPUT_INVALID:fixture',
-        llm_calls: [{ http_status: 200, raw_response_sha256: 'd'.repeat(64), status: 'invalid_response' }],
       },
+    });
+    expect(body.extraction.llm_calls).toHaveLength(3);
+    expect(body.extraction.llm_calls[2]).toMatchObject({
+      attempt: 3, http_status: 200, raw_response_sha256: 'd'.repeat(64), status: 'invalid_response',
     });
   });
 

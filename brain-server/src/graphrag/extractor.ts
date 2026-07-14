@@ -358,10 +358,22 @@ export class GraphRAGExtractor {
     // 第二层：LLM 语义提取（深度理解，补充正则的盲区）
     if (this.llmPipeline.isEnabled() && !this.config.useLocalExtraction) {
       try {
-        const llmExtraction = await this.llmPipeline.extractWithDiagnostics(cleaned, {
-          referenceTime: input.timestamp,
-        });
-        llmCalls.push(llmExtraction.diagnostics);
+        const configuredAttempts = Number(process.env.LLM_EXTRACTION_MAX_ATTEMPTS);
+        const maxAttempts = Number.isInteger(configuredAttempts) && configuredAttempts > 0
+          ? Math.min(configuredAttempts, 5)
+          : 3;
+        let llmExtraction: Awaited<ReturnType<LLMExtractorPipeline['extractWithDiagnostics']>> | undefined;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          llmExtraction = await this.llmPipeline.extractWithDiagnostics(cleaned, {
+            referenceTime: input.timestamp,
+          });
+          llmCalls.push({ ...llmExtraction.diagnostics, attempt });
+          if (llmExtraction.diagnostics.status === 'parsed') break;
+          if (attempt < maxAttempts) {
+            console.warn(`[GraphRAGExtractor] LLM extraction attempt ${attempt}/${maxAttempts} failed (${llmExtraction.diagnostics.error || llmExtraction.diagnostics.status}); retrying`);
+          }
+        }
+        if (!llmExtraction) throw new Error('LLM_EXTRACTION_NO_ATTEMPT');
         if (llmExtraction.diagnostics.status !== 'parsed' && input.requireLlmSuccess) {
           const diagnostics: ExtractionDiagnostics = {
             input_characters: textContent.length,
@@ -585,8 +597,8 @@ export class GraphRAGExtractor {
         principles: principles.length,
       },
       skipped_facts_missing_subject: skippedFactsMissingSubject,
-      ...(llmCalls.some((call) => call.status !== 'parsed')
-        ? { failure_reason: llmCalls.find((call) => call.status !== 'parsed')?.error || 'LLM_EXTRACTION_FAILED' }
+      ...(llmCalls.length > 0 && llmCalls.at(-1)?.status !== 'parsed'
+        ? { failure_reason: llmCalls.at(-1)?.error || 'LLM_EXTRACTION_FAILED' }
         : {}),
     };
     return {
