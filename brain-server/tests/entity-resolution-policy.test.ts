@@ -6,6 +6,8 @@ import initDatabase from '../src/db/sqlite.js';
 import { resolveEntities } from '../src/graphrag/entity-resolver.js';
 import { Entity, EntityType } from '../src/shared-types.js';
 
+const unitVector384 = () => Array.from({ length: 384 }, (_, index) => index === 0 ? 1 : 0);
+
 const directories: string[] = [];
 afterEach(async () => {
   await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
@@ -78,12 +80,12 @@ describe('type-specific entity resolution policy', () => {
       id: 'tool-existing',
       name: 'Postgres',
       type: 'tool',
-      embedding: [1, 0, 0],
+      embedding: unitVector384(),
       metadata: { provenance: { source: 'official-docs', document_id: 'old-doc' } },
     });
     const result = await resolveEntities([
       entity('tool-new', 'PostgreSQL DB', 'tool', {
-        embedding: [1, 0, 0],
+        embedding: unitVector384(),
         metadata: { provenance: { source: 'captured-page', document_id: 'new-doc' } },
       }),
     ], [], db);
@@ -115,7 +117,7 @@ describe('type-specific entity resolution policy', () => {
         peak = Math.max(peak, active);
         await new Promise((resolve) => setTimeout(resolve, 5));
         active--;
-        return { embedding: [0.1, 0.2, 0.3] };
+        return { embedding: unitVector384() };
       },
     };
     const inputs = Array.from({ length: 12 }, (_, index) => entity(`concept-${index}`, `Concept ${index}`, 'concept'));

@@ -1,7 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import initDatabase from '../src/db/sqlite.js';
 import { confirmMerge, rejectMerge, revertMerge } from '../src/graphrag/entity-resolver.js';
 import type { Database } from '../src/db/sqlite.js';
+import { testEmbeddingService } from './helpers/test-embedding-service.js';
+import { createServer } from '../src/api/routes.js';
 
 // Task 11 — entity merge redirect.
 //
@@ -546,14 +548,20 @@ describe('Task 11: HTTP merge review endpoints', () => {
 
   beforeEach(async () => {
     process.env.LOCAL_API_TOKEN = 'test-token-merge';
-    const http = await import('http');
-    const { createServer } = await import('../src/api/routes.js');
     db = initDatabase({ dbPath: ':memory:' });
     await db.runMigrations();
-    server = createServer(db);
+    await db.rebuildAllEmbeddings(testEmbeddingService as any);
+    server = createServer(db, undefined, testEmbeddingService as any);
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const port = (server.address() as import('net').AddressInfo).port;
     baseUrl = `http://127.0.0.1:${port}`;
+  });
+
+  afterEach(async () => {
+    if (server?.listening) {
+      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    }
+    await db?.close();
   });
 
   async function request(method: string, path: string, body?: unknown) {

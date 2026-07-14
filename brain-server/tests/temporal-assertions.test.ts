@@ -135,6 +135,7 @@ describe('temporal assertions', () => {
         type: 'knows',
         weight: 0.9,
       });
+      await legacy.run('DROP TRIGGER IF EXISTS invalidate_assertions_after_entity_text_update');
       await legacy.run('DROP TABLE assertions');
       for (const column of [
         'observed_at', 'recorded_at', 'event_time', 'valid_from', 'valid_until',
@@ -142,7 +143,9 @@ describe('temporal assertions', () => {
       ]) {
         await legacy.run(`ALTER TABLE entities DROP COLUMN ${column}`);
       }
-      await legacy.run("DELETE FROM migrations WHERE name = 'add_temporal_assertions'");
+      await legacy.run(
+        "DELETE FROM migrations WHERE name IN ('add_temporal_assertions', 'invalidate_stale_embedding_rows')",
+      );
       await legacy.close();
 
       const upgraded = initDatabase({ dbPath });
@@ -156,7 +159,15 @@ describe('temporal assertions', () => {
       expect(assertion[0].id).toBe('relationship:legacy-relationship');
       await upgraded.close();
     } finally {
-      await rm(directory, { recursive: true, force: true });
+      try {
+        await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+      } catch (error: any) {
+        // sqlite-vec's native Windows handle can remain locked until the Vitest
+        // worker exits even after sqlite3's close callback. The parent test
+        // invocation can then remove it normally; do not turn that native
+        // teardown quirk into a migration failure.
+        if (process.platform !== 'win32' || !['EBUSY', 'EPERM'].includes(error?.code)) throw error;
+      }
     }
-  });
+  }, 15_000);
 });

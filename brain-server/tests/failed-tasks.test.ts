@@ -4,6 +4,7 @@ import { AddressInfo } from 'net';
 import initDatabase, { Database } from '../src/db/sqlite.js';
 import { createServer } from '../src/api/routes.js';
 import { LLMExtractorPipeline } from '../src/graphrag/llm-pipeline.js';
+import { testEmbeddingService } from './helpers/test-embedding-service.js';
 
 // Task 5 — failed_tasks persistence + chat import retry.
 //
@@ -38,7 +39,8 @@ beforeAll(async () => {
 
   db = initDatabase({ dbPath: ':memory:' });
   await db.runMigrations();
-  server = createServer(db);
+  await db.rebuildAllEmbeddings(testEmbeddingService as any);
+  server = createServer(db, undefined, testEmbeddingService as any);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const port = (server.address() as AddressInfo).port;
   baseUrl = `http://127.0.0.1:${port}`;
@@ -351,7 +353,7 @@ describe('Task 5: POST /api/import/chat/failed/:batchId/retry', () => {
   }, 30000);
 });
 
-describe('Task 5: migration 23 schema verification', () => {
+describe('Task 5: current schema verification', () => {
   it('failed_tasks table exists with correct columns', async () => {
     const cols = await db.all<{ name: string; type: string }>(
       "PRAGMA table_info(failed_tasks)",
@@ -388,10 +390,10 @@ describe('Task 5: migration 23 schema verification', () => {
     expect(colNames).toContain('idempotency_key');
   });
 
-  it('schema version is 23', async () => {
+  it('schema version includes embedding index migrations', async () => {
     const row = await db.get<{ version: number }>(
       "SELECT MAX(id) AS version FROM migrations",
     );
-    expect(row?.version).toBe(23);
+    expect(row?.version).toBe(27);
   });
 });
