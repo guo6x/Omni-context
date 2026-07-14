@@ -35,6 +35,18 @@ export class LLMClient {
     this.thinkingMode = options.thinkingMode || process.env.LLM_THINKING_MODE;
     this.answerMaxTokens = Number.isInteger(options.answerMaxTokens) ? options.answerMaxTokens : 2048;
     this.judgeMaxTokens = Number.isInteger(options.judgeMaxTokens) ? options.judgeMaxTokens : 2048;
+    this.providerFailureInjection = options.providerFailureInjection
+      || process.env.BENCHMARK_INJECT_PROVIDER_FAILURE_ONCE
+      || null;
+    this.injectedProviderFailures = new Set();
+  }
+
+  injectProviderFailureOnce(role) {
+    if (this.providerFailureInjection !== role || this.injectedProviderFailures.has(role)) return;
+    this.injectedProviderFailures.add(role);
+    const error = new Error(`Injected one-time ${role} provider failure for retry acceptance`);
+    error.code = 'INJECTED_PROVIDER_FAILURE';
+    throw error;
   }
 
   async chat({ apiUrl, apiKey, model, messages, temperature, maxTokens, responseFormat, thinkingMode = this.thinkingMode, timeoutMs = 60_000 }) {
@@ -82,6 +94,7 @@ export class LLMClient {
    * @returns {Promise<{answer: string, latencyMs: number}>}
    */
   async answer(question, retrieval, prompt) {
+    this.injectProviderFailureOnce('answer');
     const evidence = retrieval?.evidence || [];
     const context = formatEvidenceContext(evidence);
 
@@ -119,6 +132,7 @@ export class LLMClient {
    * @returns {Promise<{metrics: object, latencyMs: number}>}
    */
   async judge(input, prompt) {
+    this.injectProviderFailureOnce('judge');
     const messages = [
       { role: 'system', content: prompt },
       {

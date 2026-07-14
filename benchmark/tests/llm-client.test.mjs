@@ -75,3 +75,24 @@ test('answer request uses labeled evidence blocks and preserves strict JSON mode
   assert.deepStrictEqual(requestBody.response_format, { type: 'json_object' });
   assert.deepStrictEqual(requestBody.thinking, { type: 'disabled' });
 });
+
+test('injects one auditable provider failure and then uses the real request path', async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({
+      answer: 'Recovered.', claims: [], abstained: false, abstention_reason: null,
+    }) } }] }), { status: 200 });
+  };
+  const client = new LLMClient({
+    answerApiUrl: 'https://provider.invalid', answerModel: 'fixture-model',
+    providerFailureInjection: 'answer', thinkingMode: 'disabled',
+  });
+  await assert.rejects(
+    client.answer('Question?', { evidence: [] }, 'strict prompt'),
+    (error) => error.code === 'INJECTED_PROVIDER_FAILURE',
+  );
+  const recovered = await client.answer('Question?', { evidence: [] }, 'strict prompt');
+  assert.strictEqual(recovered.answer, 'Recovered.');
+  assert.strictEqual(calls, 1);
+});

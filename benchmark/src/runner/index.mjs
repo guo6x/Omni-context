@@ -46,6 +46,10 @@ export async function buildManifest({
   return {
     dataset_hash: datasetHash,
     dataset_hash_verification: split === 'heldout' ? 'verified-full-file' : 'declared-manifest-only',
+    acceptance_injections: {
+      provider_failure_once: process.env.BENCHMARK_INJECT_PROVIDER_FAILURE_ONCE || null,
+      sigint_after_completed: Number(process.env.BENCHMARK_INJECT_SIGINT_AFTER_COMPLETED) || null,
+    },
     dataset_source_commit: datasetManifest.source_commit,
     benchmark_commit: config.benchmark_commit || 'unknown',
     brain_server_commit: config.brain_server_commit || 'unknown',
@@ -600,6 +604,8 @@ async function runQuestions({
   resumeRuntime,
   heldoutAuthorization,
 }) {
+  const sigintAfterCompleted = Number(process.env.BENCHMARK_INJECT_SIGINT_AFTER_COMPLETED);
+  let sigintInjected = false;
   const completed = await completedQuestionIds(runDir);
 
   let total = 0;
@@ -694,6 +700,14 @@ async function runQuestions({
           if (done % 10 === 0 || qi === qas.length - 1) {
             console.log(`[benchmark] ${qid} [${done}/${total}] ${acc ? 'PASS' : 'FAIL'} (retrieval: ${result.record.retrieval_count}, ${result.record.retrieval_latency_ms}ms)`);
           }
+          if (!sigintInjected && Number.isInteger(sigintAfterCompleted)
+              && sigintAfterCompleted > 0 && done >= sigintAfterCompleted) {
+            sigintInjected = true;
+            console.error(`[benchmark] Injecting SIGINT acceptance event after ${done} completed questions.`);
+            // Emitting the process signal event exercises the installed CLI
+            // handler without Windows process.kill's uncatchable termination.
+            process.emit('SIGINT');
+          }
         } else if (result.status === 'interrupted') {
           interrupted = true;
           break;
@@ -773,8 +787,8 @@ async function assertRuntimePreflight(brainServerClient, runDir, conversationId)
   assertEvaluationEmbeddingMode(embeddingStatus);
   const { manifest } = await readRun(runDir);
   await updateManifest(runDir, {
-    embedding_model: manifest.embedding_model === 'pending' ? embeddingStatus.model : manifest.embedding_model,
-    embedding_status: manifest.embedding_status?.status === 'pending' ? embeddingStatus : manifest.embedding_status,
+    embedding_model: embeddingStatus.model,
+    embedding_status: embeddingStatus,
     embedding_by_conversation: {
       ...(manifest.embedding_by_conversation || {}),
       [conversationId]: embeddingStatus,
