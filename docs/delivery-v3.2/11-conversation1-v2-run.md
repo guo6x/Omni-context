@@ -26,4 +26,4 @@ fallback_count=0
 
 Formal metrics: Binary Accuracy 0.5025, Answerable Accuracy 0.4079, Evidence Precision 0.6868. Retrieval/Answer/total latency P50 was 2635/1571/7850 ms; P95 was 4115/3443/12265 ms.
 
-Fifteen manually reviewed Judge decisions (three per category) produced 15 agreements and 0 disagreements. Evidence: `evidence/run/human-judge-review-15.json`.
+An Agent-based independent review of fifteen Judge decisions (three per category) produced 15 agreements and 0 disagreements. This was performed by Codex, not a human reviewer, and is not independent human annotation. Evidence: `evidence/run/agent-judge-review-15.json`.

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "RELEASE_ASSETS_VERIFIED",
+  "tag": "evaluation-freeze-candidate-v2",
+  "release_url": "https://github.com/guo6x/Omni-context/releases/tag/evaluation-freeze-candidate-v2",
+  "published_at": "2026-07-14T11:24:50Z",
+  "draft": false,
+  "prerelease": false,
+  "installer_manifest": {
+    "path": "docs/delivery-v3.2/evidence/installer-manifest.json",
+    "sha256": "eefec278a9637e4bd3698acd8ccba8012909f9f7b4715d2bacb6a1a4bccca4a0"
+  },
+  "assets": [
+    {
+      "name": "Omni-Context_0.1.1_x64_en-US.msi",
+      "bytes": 605786932,
+      "sha256": "f4cf40f2481d2ebca403cf5a58d5c2baab218e3e665b411e27cfe7d7ba1c106b",
+      "download_url": "https://github.com/guo6x/Omni-context/releases/download/evaluation-freeze-candidate-v2/Omni-Context_0.1.1_x64_en-US.msi",
+      "matches_local": true,
+      "matches_manifest": true
+    },
+    {
+      "name": "Omni-Context_0.1.1_x64-setup.exe",
+      "bytes": 530217243,
+      "sha256": "20477496b9758cb5ef7424661e04ec78981b9f83dcba31b7bae8c4ff5f9c9284",
+      "download_url": "https://github.com/guo6x/Omni-context/releases/download/evaluation-freeze-candidate-v2/Omni-Context_0.1.1_x64-setup.exe",
+      "matches_local": true,
+      "matches_manifest": true
+    }
+  ]
+}

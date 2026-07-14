@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "formal_run_id": "2026-07-14T07-34-44-390Z-daef50a5",
+  "status": "PROVEN_SOURCE_TREE_HASH",
+  "rerun_decision": "DO_NOT_RERUN",
+  "working_tree_clean": false,
+  "working_tree_detail": "At initial launch, tracked runtime changes had just been committed as 09bb7e0, but docs/embedding-audit-v1 was untracked. Runtime fixes were then committed and rebuilt between resume phases.",
+  "evidence_source": {
+    "git_reflog": true,
+    "git_commit_timestamps": true,
+    "run_timestamps": true,
+    "server_log": true,
+    "local_rollout_path": "C:/Users/我的开挂系统/.codex/sessions/2026/07/13/rollout-2026-07-13T15-55-08-019f5a79-0685-7472-87ce-641c261c9a9e.jsonl",
+    "relevant_lines": [
+      9084,
+      9090,
+      9203,
+      9208,
+      9212,
+      9221,
+      9230,
+      9252,
+      9261,
+      9265,
+      9304
+    ],
+    "raw_rollout_copied": false,
+    "raw_rollout_copy_reason": "It contains command context for a secret env file and is not needed in Git; only redacted facts are sealed."
+  },
+  "timeline": [
+    {
+      "at": "2026-07-14T07:34:28Z",
+      "event": "commit",
+      "commit": "09bb7e0241607b3c7af8b5946cc802fc4350faf4",
+      "detail": "Extraction retry production source committed; git status showed only unrelated untracked audit docs."
+    },
+    {
+      "at": "2026-07-14T07:34:42.970Z",
+      "event": "formal_run_launch",
+      "commit": "09bb7e0241607b3c7af8b5946cc802fc4350faf4",
+      "detail": "Conversation 1 dev command launched with pinned local model and injections."
+    },
+    {
+      "at": "2026-07-14T07:42:18.709Z",
+      "event": "ingestion_completed",
+      "detail": "19/19 sessions; 386 entities and 173 relationships."
+    },
+    {
+      "at": "2026-07-14T07:48:13Z",
+      "event": "brain_fix_committed",
+      "commit": "7456b5e06b21ab5eda66ca8582465d43ee844ede",
+      "detail": "Merged aliases excluded; Brain Server rebuilt before resume."
+    },
+    {
+      "at": "2026-07-14T07:50:39Z",
+      "event": "benchmark_resume_fix_committed",
+      "commit": "0936839f31a1b5c2254d798dd03223f8ab7a9300",
+      "detail": "Explicit unhealthy-index repair on resume."
+    },
+    {
+      "at": "2026-07-14T07:52:56.574Z",
+      "event": "accepted_question_phase_launch",
+      "benchmark_commit": "0936839f31a1b5c2254d798dd03223f8ab7a9300",
+      "brain_server_commit": "7456b5e06b21ab5eda66ca8582465d43ee844ede"
+    },
+    {
+      "at": "2026-07-14T08:29:20.401Z",
+      "event": "formal_run_completed",
+      "detail": "199 final completed; unresolved errors 0."
+    }
+  ],
+  "phases": {
+    "initial_extraction": {
+      "benchmark_commit": "09bb7e0241607b3c7af8b5946cc802fc4350faf4",
+      "benchmark_tree": "52481c15ac868f1d311110321b9ea83d7b87e805",
+      "benchmark_runtime_scope_sha256": "78723362ffba746c5fc7731f9796193525e7278c8a6f3244892d2728490e790b",
+      "brain_server_commit": "09bb7e0241607b3c7af8b5946cc802fc4350faf4",
+      "brain_server_tree": "e338b628a309db6da861b0e5d695e48e16db2927",
+      "reproducible_dist_tree_sha256": "f94d408f8af8a1ac022ccb0373f4cc92c58a19ebb4f2b9859f94202ce45034a2",
+      "reproducible_api_server_sha256": "af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668"
+    },
+    "accepted_question_phase": {
+      "benchmark_commit": "0936839f31a1b5c2254d798dd03223f8ab7a9300",
+      "benchmark_tree": "ffa1fbdac54d08dda8a6352d2caf92f34c304d8d",
+      "benchmark_runtime_scope_sha256": "c34d07ecf891249fa09bcc73f3e3d2483e2aa61408253a79f50c2cfe88fbc48c",
+      "brain_server_commit": "7456b5e06b21ab5eda66ca8582465d43ee844ede",
+      "brain_server_tree": "e35863aa7488bdca44fb5ec28d55d2df60efcf3c",
+      "reproducible_dist_tree_sha256": "782724dc4599591f1776682dd0a675d9492987871b22750031c07f96c864e5ff",
+      "reproducible_api_server_sha256": "af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668",
+      "combined_source_tree_sha256": "c904f0f28d2363e28f1200dd78666383ddba1d7b2fc28a668d19c880f4d1b971"
+    }
+  },
+  "candidate_v2": {
+    "commit": "be20db60bef32a886fddde4986013cf40a1e8ec5",
+    "benchmark_runtime_scope_sha256": "c34d07ecf891249fa09bcc73f3e3d2483e2aa61408253a79f50c2cfe88fbc48c",
+    "brain_server_tree": "e35863aa7488bdca44fb5ec28d55d2df60efcf3c",
+    "relationship": "Runtime-equivalent to the accepted question phase. Later benchmark changes only add archive/analysis commands and package scripts."
+  },
+  "limitations": [
+    "The exact historical dist bytes were not archived; current dist was overwritten by later builds.",
+    "Reproducible dist hashes were rebuilt from the phase commits using the same dependency tree and Node toolchain.",
+    "The run is phase-composite, so no single exact commit is claimed."
+  ]
+}

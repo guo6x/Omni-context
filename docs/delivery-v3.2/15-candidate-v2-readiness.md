@@ -13,7 +13,7 @@ Candidate v2 is eligible for tagging only after the pushed HEAD has remote CI 9/
 7. Answer evidence is readable and strict Evidence ID validation remains enforced.
 8. Offline Final Context Recall is 0.6800, +0.1970 against the task's Candidate v1 proxy, exceeding the +0.08 admission threshold.
 9. The fixed 53-question answer sample improved binary accuracy, answerable accuracy, Evidence Precision, Final Context Recall, and gold-evidence-present accuracy.
-10. The clean formal run completed 199/199 with errors=0, missing=0, duplicate completed=0; retry, interruption/resume, recomputation, archival, and 15-question manual review passed.
+10. The formal run completed 199/199 with errors=0, missing=0, duplicate completed=0; retry, interruption/resume, recomputation, archival, and the 15-question Agent-based independent review passed. The run-time worktree was not globally clean because unrelated audit documentation was untracked.
 11. Formal Binary Accuracy, Answerable Accuracy, Single-hop, Temporal, Evidence Precision, conservative Final Context Recall, and same-method gold-evidence-present accuracy improved. Multi-hop was unchanged; open-domain regressed and remains P1.
 12. The accepted `brain.db`, candidate pools, final contexts, raw results, and manifests are preserved, and the verified installers have immutable hashes.
 

@@ -7,7 +7,7 @@ brain.db SHA-256:
 898b4ce0d10c0c7972c3518371a9ca4358a7306bb70f29b2a479d3745cf8331e
 ```
 
-Archived items include `brain.db`, its hash, Entity/Assertion manifests, vector coverage, 199 Candidate Pool snapshots, 199 Final Context snapshots, extraction diagnostics, redacted server log, raw results, formal metrics, recomputed metrics, formal retrieval analysis, and manual Judge review.
+Archived items include `brain.db`, its hash, Entity/Assertion manifests, vector coverage, 199 Candidate Pool snapshots, 199 Final Context snapshots, extraction diagnostics, redacted server log, raw results, formal metrics, recomputed metrics, formal retrieval analysis, and the Agent-based independent Judge review.
 
 Archive validation reports 199 completed, 0 errors, 14 retries, 0 duplicate completed, 100% vector coverage, metric consistency, and passed secret scan. The database, JSONL, manifest, and log were also scanned for key-like material before repository copy.
 

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-07-14T12:00:00Z",
+  "remote": "https://github.com/guo6x/Omni-context",
+  "candidate_v1": {
+    "tag": "evaluation-freeze-candidate-v1",
+    "tag_object": "58188929d473b513ba5ad36b9cbdcbe0c52ffab0",
+    "commit": "3bdb6e106832854a9bc94672fc74fafa8f7e221f",
+    "moved": false
+  },
+  "candidate_v2": {
+    "tag": "evaluation-freeze-candidate-v2",
+    "tag_object": "a481d588acede7c25747701dac40ac133f0e6707",
+    "commit": "be20db60bef32a886fddde4986013cf40a1e8ec5",
+    "force_updated": false
+  },
+  "candidate_branch": {
+    "name": "pre-evaluation-hardening-v3.2",
+    "remote_head": "be20db60bef32a886fddde4986013cf40a1e8ec5",
+    "matches_candidate_v2": true
+  },
+  "sealing_branch": {
+    "name": "codex/pre-evaluation-hardening-v3.2.1",
+    "base_commit": "be20db60bef32a886fddde4986013cf40a1e8ec5"
+  },
+  "run_relation": "PROVEN_SOURCE_TREE_HASH; runtime-equivalent source is an ancestor and matches Candidate v2 runtime scope, but the run did not execute the later archive/packaging/report commit itself."
+}

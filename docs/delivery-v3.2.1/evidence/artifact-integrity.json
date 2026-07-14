@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "formal_run_id": "2026-07-14T07-34-44-390Z-daef50a5",
+  "original_run_root": "D:/OmniContext-evaluation-v3.2/runs/2026-07-14T07-34-44-390Z-daef50a5",
+  "all_original_and_candidate_v2_tag_copies_identical": true,
+  "files": [
+    {
+      "path": "manifest.json",
+      "sha256": "b714e82c6827b0f3f552bdb2ddd96781ee57303229415d88c0ca43a9d6005457",
+      "bytes": 8947
+    },
+    {
+      "path": "metrics.json",
+      "sha256": "b42fc252cc2a59372b7061bb7703dac1f128e0c3d5eabd9cb5579aa4f3dd893d",
+      "bytes": 2963
+    },
+    {
+      "path": "recomputed-metrics.json",
+      "sha256": "3c5604c74b03e90e7dec46f04bf723c7ec2224771b46dd87d677e26caf838c94",
+      "bytes": 2964
+    },
+    {
+      "path": "archive-validation.json",
+      "sha256": "3a478cf44d700265f10b3bc873c27d9729d70ad98198cc79596ba9d557a0811c",
+      "bytes": 596
+    },
+    {
+      "path": "conversation1-analysis.json",
+      "sha256": "fa594f9abadcc3d2bdd1054a32b3c090d31a54bb65777e2f49cd8f741878813b",
+      "bytes": 46345
+    },
+    {
+      "path": "human-judge-review-15.json",
+      "sha256": "73a5207474da83dc4406d6f8ed4c895da0eb0edb45158d7908b489fae5c4a7f9",
+      "bytes": 2856
+    },
+    {
+      "path": "conversation-1/brain.db",
+      "sha256": "898b4ce0d10c0c7972c3518371a9ca4358a7306bb70f29b2a479d3745cf8331e",
+      "bytes": 26140672
+    },
+    {
+      "path": "conversation-1/brain.db.sha256",
+      "sha256": "6c9ccbc3959bc2a1f2f51dbf58a54db940ecbcbb784a3cdeb375a0d8e53e881e",
+      "bytes": 75
+    },
+    {
+      "path": "conversation-1/results.jsonl",
+      "sha256": "42e21caea53aed39df2ad3c89cd0ede1e92a1244171792a8900433d8ceeca605",
+      "bytes": 13398109
+    },
+    {
+      "path": "conversation-1/candidate-snapshots.jsonl",
+      "sha256": "babc4060f036d85c58816ef6e3793cff893f30608a236aaaac7bc870d8a77ff3",
+      "bytes": 4683638
+    },
+    {
+      "path": "conversation-1/final-context-snapshots.jsonl",
+      "sha256": "b42258bbf55cdfe48f11b6028a94e6a399e9f22a4ba64fe44040d511079227d3",
+      "bytes": 2570626
+    },
+    {
+      "path": "conversation-1/extraction-diagnostics.jsonl",
+      "sha256": "2cdf02ae6b43b46cf91997cbd0f815ed0c731acea6e27a3e3835a3f4a20797af",
+      "bytes": 43491
+    },
+    {
+      "path": "conversation-1/server.log",
+      "sha256": "05cf520f19ca1cbda525fd772ea3d4146af09a7549a0e0a1692efeec4213ff3b",
+      "bytes": 64441
+    },
+    {
+      "path": "conversation-1/entity-index-manifest.json",
+      "sha256": "7a6707a239f6333f3f3c0517aeeab6404f78e8060edbad02bd0af7fa71c583d9",
+      "bytes": 392
+    },
+    {
+      "path": "conversation-1/assertion-index-manifest.json",
+      "sha256": "9852e0d062c79629538447f23c768968ad8325546f281c08ca086d1aedf8df9e",
+      "bytes": 397
+    },
+    {
+      "path": "conversation-1/vector-coverage.json",
+      "sha256": "52680b83123c2872d47766117bf603eedd811762db08ede787c59eeabf8ea214",
+      "bytes": 306
+    },
+    {
+      "path": "conversation-1/runtime.json",
+      "sha256": "ec244006007134070691c2099b582f38424144e4b3b343b790aae6ee65646460",
+      "bytes": 433
+    },
+    {
+      "path": "conversation-1/ingestion.json",
+      "sha256": "561cc37a4d7538cab7a77dd8ef6ac01a81f81c6d5c6a31e59d7b0439924d8113",
+      "bytes": 249
+    }
+  ],
+  "manifest_reconciliation": {
+    "original_sha256": "b714e82c6827b0f3f552bdb2ddd96781ee57303229415d88c0ca43a9d6005457",
+    "sealed_sha256": "a5275d5df71e0c00d071a817b2028c45d7220c3cb87f0234bbb0c8d873ded46f",
+    "results_database_metrics_modified": false
+  },
+  "run_integrity": {
+    "raw_records": 215,
+    "completed_records": 199,
+    "retry_records": 14,
+    "historical_error_records": 2,
+    "final_completed_questions": 199,
+    "final_unresolved_errors": 0,
+    "missing": 0,
+    "duplicate_completed": 0,
+    "candidate_snapshots": 199,
+    "final_context_snapshots": 199,
+    "sessions": 19
+  },
+  "vector_integrity": {
+    "entity_active": 375,
+    "entity_vectors": 375,
+    "assertion_active": 396,
+    "assertion_vectors": 396,
+    "zero_vectors": 0,
+    "nan_vectors": 0,
+    "wrong_dimensions": 0,
+    "orphan_vectors": 0,
+    "stale_vectors": 0,
+    "fallback_count": 0
+  },
+  "metrics_consistency": {
+    "consistent": true,
+    "difference_only": [
+      "metrics.json.generated_at",
+      "recomputed-metrics.json.recomputed_at"
+    ]
+  },
+  "secret_scan": {
+    "files_scanned": 20,
+    "openai_key_matches": 0,
+    "authorization_header_matches": 0,
+    "api_key_assignment_matches": 0,
+    "device_token_assignment_matches": 0,
+    "github_token_matches": 0,
+    "database_device_token_rows": 0,
+    "repository_scanner": "passed"
+  }
+}

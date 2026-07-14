@@ -6,8 +6,8 @@
     "sigint_after_completed": 15
   },
   "dataset_source_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
-  "benchmark_commit": "0936839f31a1b5c2254d798dd03223f8ab7a9300",
-  "brain_server_commit": "7456b5e06b21ab5eda66ca8582465d43ee844ede",
+  "benchmark_commit": "unknown",
+  "brain_server_commit": "unknown",
   "answer_model": "deepseek-v4-flash",
   "judge_model": "deepseek-v4-flash",
   "embedding_model": "Xenova/multilingual-e5-large",
@@ -86,7 +86,7 @@
   "answer_prompt_version": "answer-v2",
   "answer_evidence_context_version": "answer-evidence-context-v2",
   "judge_prompt_hash": "fec01733c586b2ac33e73d95261da53de19172c83e8d9a1b949c5f53a43298c4",
-  "config_hash": "1247f36d330bf5b172aa1db208ca492417f820a187b896057b834b5bcba6331e",
+  "config_hash": "f7000280922b2c5b9824ec39e25244b0fe124441b893b21239c4490fd753e059",
   "datetime_parser_version": "locomo-datetime-v2",
   "datetime_timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone",
   "thinking_mode": "disabled",
@@ -182,7 +182,10 @@
     }
   },
   "status": "completed",
-  "failure": null,
+  "failure": {
+    "type": "Error",
+    "message": "Embedding is not healthy: {\"mode\":\"local\",\"status\":\"local\",\"model\":\"Xenova/multilingual-e5-large\",\"modelRevision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimensions\":1024,\"actualDimension\":1024,\"usageProfile\":{\"family\":\"e5\",\"modelId\":\"Xenova/multilingual-e5-large\",\"modelRevision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"onnxFile\":\"onnx/model_quantized.onnx\",\"quantization\":\"QInt8\",\"tokenizerVersion\":\"@xenova/transformers@2.17.2:XLMRobertaTokenizer\",\"modelSha256\":\"0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca\",\"dimension\":1024,\"maxTokens\":512,\"queryPrefix\":\"query: \",\"passagePrefix\":\"passage: \",\"pooling\":\"mean\",\"normalize\":true,\"serializationVersion\":\"entity-passage-v2+assertion-passage-v1\",\"usageProfileVersion\":\"e5-large-v1\",\"fingerprint\":\"369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853\"},\"indexManifests\":[{\"index_name\":\"vec_assertions\",\"model_id\":\"Xenova/multilingual-e5-large\",\"model_revision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimension\":1024,\"usage_profile_version\":\"e5-large-v1\",\"serialization_version\":\"assertion-passage-v1\",\"status\":\"active\",\"created_at\":\"2026-07-14T07:34:50.145Z\",\"activated_at\":\"2026-07-14T07:34:50.145Z\",\"content_count\":396},{\"index_name\":\"vec_entities\",\"model_id\":\"Xenova/multilingual-e5-large\",\"model_revision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimension\":1024,\"usage_profile_version\":\"e5-large-v1\",\"serialization_version\":\"entity-passage-v2\",\"status\":\"active\",\"created_at\":\"2026-07-14T07:34:50.145Z\",\"activated_at\":\"2026-07-14T07:34:50.145Z\",\"content_count\":386}],\"integrity\":{\"entity\":{\"active\":375,\"vectors\":386,\"metadata\":386,\"coverage\":1.0293333333333334},\"assertion\":{\"active\":396,\"vectors\":396,\"metadata\":396,\"coverage\":1},\"zeroVectors\":0,\"nanVectors\":0,\"wrongDimensions\":0,\"orphanVectors\":0,\"staleVectors\":0},\"indexHealthy\":false,\"modelSha256Verified\":true,\"available\":false,\"healthy\":false,\"error\":null}"
+  },
   "resumed_at": "2026-07-14T08:27:17.279Z",
   "statistics": {
     "expected_questions": 199,
@@ -191,60 +194,5 @@
     "retry_records": 14,
     "duplicate_completed_records": 0
   },
-  "retried_at": "2026-07-14T08:29:20.401Z",
-  "candidate_v2_commit": "be20db60bef32a886fddde4986013cf40a1e8ec5",
-  "run_code_provenance": {
-    "status": "PROVEN_SOURCE_TREE_HASH",
-    "working_tree_clean": false,
-    "working_tree_note": "The tracked runtime source was committed at each executed phase, but docs/embedding-audit-v1 was untracked at initial launch and development continued between resume phases.",
-    "initial_extraction_phase": {
-      "benchmark_commit": "09bb7e0241607b3c7af8b5946cc802fc4350faf4",
-      "benchmark_runtime_scope_sha256": "78723362ffba746c5fc7731f9796193525e7278c8a6f3244892d2728490e790b",
-      "brain_server_commit": "09bb7e0241607b3c7af8b5946cc802fc4350faf4",
-      "brain_server_tree": "e338b628a309db6da861b0e5d695e48e16db2927",
-      "reproducible_dist_tree_sha256": "f94d408f8af8a1ac022ccb0373f4cc92c58a19ebb4f2b9859f94202ce45034a2"
-    },
-    "final_rebuild_and_question_phase": {
-      "benchmark_commit": "0936839f31a1b5c2254d798dd03223f8ab7a9300",
-      "benchmark_runtime_scope_sha256": "c34d07ecf891249fa09bcc73f3e3d2483e2aa61408253a79f50c2cfe88fbc48c",
-      "brain_server_commit": "7456b5e06b21ab5eda66ca8582465d43ee844ede",
-      "brain_server_tree": "e35863aa7488bdca44fb5ec28d55d2df60efcf3c",
-      "reproducible_dist_tree_sha256": "782724dc4599591f1776682dd0a675d9492987871b22750031c07f96c864e5ff",
-      "combined_source_tree_sha256": "c904f0f28d2363e28f1200dd78666383ddba1d7b2fc28a668d19c880f4d1b971"
-    },
-    "candidate_v2_relation": "The Candidate v2 tag has the same 21-file benchmark runtime scope hash as 0936839 and the same complete Brain Server tree as 7456b5e; later commits add only archive, analysis, packaging, and delivery files."
-  },
-  "benchmark_config_hash": "f7000280922b2c5b9824ec39e25244b0fe124441b893b21239c4490fd753e059",
-  "answer_prompt_hash": "0d952927c6781461e4432e5a43e398ae166d1a2ec05097db7dcf1361930d1232",
-  "embedding_usage_profile_hash": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853",
-  "entity_serialization_version": "entity-passage-v2",
-  "entity_serialization_hash": "685267ed4338626fbe9855f043a9a09d9e555f61d87b21fe08257b3cb0bbb4e7",
-  "assertion_serialization_version": "assertion-passage-v1",
-  "assertion_serialization_hash": "195310ea32cd4e3bc0cb9b1f4b56ab9a6821d5866b5dfad44f41ac0f47e41b91",
-  "retrieval_fusion": {
-    "method": "weighted_rrf",
-    "rrfK": 60,
-    "weights": {
-      "entity_vector": 0.8,
-      "assertion_vector": 1.4,
-      "entity_fts": 0.7,
-      "assertion_fts": 1.1,
-      "graph": 0.4,
-      "subject_attachment": 0.2
-    }
-  },
-  "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
-  "model_file_sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
-  "historical_failures": [
-    {
-      "stage": "embedding_preflight",
-      "resolved": true,
-      "description": "The first preflight in this run directory found 386 entity vectors for 375 active entities because auto-merged aliases were still indexed. The explicit resume rebuild repaired the index to 375/375 before any accepted question result.",
-      "evidence": "Original manifest SHA-256 b714e82c6827b0f3f552bdb2ddd96781ee57303229415d88c0ca43a9d6005457; final vector-coverage.json SHA-256 52680b83123c2872d47766117bf603eedd811762db08ede787c59eeabf8ea214.",
-      "original_failure": {
-        "type": "Error",
-        "message": "Embedding is not healthy: {\"mode\":\"local\",\"status\":\"local\",\"model\":\"Xenova/multilingual-e5-large\",\"modelRevision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimensions\":1024,\"actualDimension\":1024,\"usageProfile\":{\"family\":\"e5\",\"modelId\":\"Xenova/multilingual-e5-large\",\"modelRevision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"onnxFile\":\"onnx/model_quantized.onnx\",\"quantization\":\"QInt8\",\"tokenizerVersion\":\"@xenova/transformers@2.17.2:XLMRobertaTokenizer\",\"modelSha256\":\"0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca\",\"dimension\":1024,\"maxTokens\":512,\"queryPrefix\":\"query: \",\"passagePrefix\":\"passage: \",\"pooling\":\"mean\",\"normalize\":true,\"serializationVersion\":\"entity-passage-v2+assertion-passage-v1\",\"usageProfileVersion\":\"e5-large-v1\",\"fingerprint\":\"369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853\"},\"indexManifests\":[{\"index_name\":\"vec_assertions\",\"model_id\":\"Xenova/multilingual-e5-large\",\"model_revision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimension\":1024,\"usage_profile_version\":\"e5-large-v1\",\"serialization_version\":\"assertion-passage-v1\",\"status\":\"active\",\"created_at\":\"2026-07-14T07:34:50.145Z\",\"activated_at\":\"2026-07-14T07:34:50.145Z\",\"content_count\":396},{\"index_name\":\"vec_entities\",\"model_id\":\"Xenova/multilingual-e5-large\",\"model_revision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimension\":1024,\"usage_profile_version\":\"e5-large-v1\",\"serialization_version\":\"entity-passage-v2\",\"status\":\"active\",\"created_at\":\"2026-07-14T07:34:50.145Z\",\"activated_at\":\"2026-07-14T07:34:50.145Z\",\"content_count\":386}],\"integrity\":{\"entity\":{\"active\":375,\"vectors\":386,\"metadata\":386,\"coverage\":1.0293333333333334},\"assertion\":{\"active\":396,\"vectors\":396,\"metadata\":396,\"coverage\":1},\"zeroVectors\":0,\"nanVectors\":0,\"wrongDimensions\":0,\"orphanVectors\":0,\"staleVectors\":0},\"indexHealthy\":false,\"modelSha256Verified\":true,\"available\":false,\"healthy\":false,\"error\":null}"
-      }
-    }
-  ]
+  "retried_at": "2026-07-14T08:29:20.401Z"
 }

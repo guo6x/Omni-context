@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "formal_run_id": "2026-07-14T07-34-44-390Z-daef50a5",
+  "hash_basis": "stable JSON of this document with unified_config_sha256 omitted",
+  "benchmark": {
+    "config_path": "benchmark/config/default.json",
+    "config_file_sha256": "7454d147bbb2b9f54778315b9e75f7fd3e5e15c129217d0269966669b8d8571e",
+    "benchmark_config_hash": "f7000280922b2c5b9824ec39e25244b0fe124441b893b21239c4490fd753e059",
+    "retrieval": {
+      "top_k": 10,
+      "candidate_pool_declared": 50,
+      "graph_seeds": 3,
+      "graph_depth": 2,
+      "reranker_candidates_declared": 25,
+      "stale_penalty_declared": 0.35,
+      "conflict_penalty_declared": 0.25
+    },
+    "answering": {
+      "abstention_threshold": 0.45,
+      "evidence_threshold": 0.5
+    },
+    "evaluation": {
+      "embedding_mode": "semantic",
+      "fail_on_hash_fallback": true,
+      "max_retries": 2,
+      "runner_attempts_total": 3,
+      "thinking_mode": "disabled",
+      "answer_max_tokens": 2048,
+      "judge_max_tokens": 2048
+    }
+  },
+  "brain_server_retrieval": {
+    "top_k": 10,
+    "candidate_pool": {
+      "multiplier": 4,
+      "minimum": 16,
+      "effective": 40
+    },
+    "graph": {
+      "seed_count": 3,
+      "depth": 2,
+      "node_limit_multiplier": 3,
+      "node_limit_effective": 30,
+      "edge_limit_multiplier": 5,
+      "edge_limit_effective": 50
+    },
+    "minimum_lexical_score": 0,
+    "temporal_penalties": {
+      "stale": 6,
+      "invalidated": 20,
+      "pending_conflict": 4
+    },
+    "abstention_threshold": 0.2,
+    "fusion": {
+      "method": "weighted_rrf",
+      "rrfK": 60,
+      "weights": {
+        "entity_vector": 0.8,
+        "assertion_vector": 1.4,
+        "entity_fts": 0.7,
+        "assertion_fts": 1.1,
+        "graph": 0.4,
+        "subject_attachment": 0.2
+      }
+    },
+    "subject_attachment": {
+      "entity_count": 4,
+      "assertions_per_entity": 2
+    },
+    "reranker": {
+      "model": "deepseek-v4-flash",
+      "timeout_ms": 2500,
+      "max_tokens": 200,
+      "temperature": 0,
+      "response_format": "json_object",
+      "input_description_max_chars": 120,
+      "entity_stage_top_n": 20,
+      "mixed_stage_top_n": 40,
+      "fallback": "deterministic_rank"
+    },
+    "final_caps": {
+      "assertions": 20,
+      "entities": 20
+    }
+  },
+  "temporal": {
+    "parser_version": "locomo-datetime-v2",
+    "timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone",
+    "current": "exclude expired and invalidated assertions",
+    "historical": "include historical",
+    "as_of": "valid_from <= as_of and valid_until > as_of; invalidated excluded"
+  },
+  "answer": {
+    "model": "deepseek-v4-flash",
+    "prompt_version": "answer-v2",
+    "evidence_context_version": "answer-evidence-context-v2",
+    "prompt_sha256": "0d952927c6781461e4432e5a43e398ae166d1a2ec05097db7dcf1361930d1232",
+    "temperature": 0.3,
+    "max_tokens": 2048,
+    "response_format": "json_object",
+    "thinking": "disabled"
+  },
+  "judge": {
+    "model": "deepseek-v4-flash",
+    "prompt_version": "judge-v2",
+    "prompt_sha256": "fec01733c586b2ac33e73d95261da53de19172c83e8d9a1b949c5f53a43298c4",
+    "temperature": 0,
+    "max_tokens": 2048,
+    "response_format": "json_object",
+    "thinking": "disabled"
+  },
+  "extraction": {
+    "model": "deepseek-v4-flash",
+    "max_attempts": 3,
+    "thinking": "disabled"
+  },
+  "embedding": {
+    "model_id": "Xenova/multilingual-e5-large",
+    "revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "onnx_file": "onnx/model_quantized.onnx",
+    "quantization": "QInt8",
+    "dimension": 1024,
+    "max_tokens": 512,
+    "model_sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+    "usage_profile_version": "e5-large-v1",
+    "usage_profile_sha256": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853",
+    "query_prefix": "query: ",
+    "passage_prefix": "passage: ",
+    "pooling": "mean",
+    "normalize": true,
+    "entity_serialization": "entity-passage-v2",
+    "assertion_serialization": "assertion-passage-v1",
+    "fallback": "forbidden"
+  },
+  "environment": {
+    "LLM_API_URL": {
+      "state": "set",
+      "value": "<redacted>"
+    },
+    "LLM_API_KEY": {
+      "state": "set",
+      "value": "<redacted>"
+    },
+    "LLM_MODEL": {
+      "state": "effective",
+      "value": "deepseek-v4-flash"
+    },
+    "ANSWER_MODEL": {
+      "state": "effective",
+      "value": "deepseek-v4-flash"
+    },
+    "JUDGE_MODEL": {
+      "state": "effective",
+      "value": "deepseek-v4-flash"
+    },
+    "JUDGE_API_URL": {
+      "state": "inherited_or_set",
+      "value": "<redacted>"
+    },
+    "JUDGE_API_KEY": {
+      "state": "inherited_or_set",
+      "value": "<redacted>"
+    },
+    "LLM_THINKING_MODE": {
+      "state": "set",
+      "value": "disabled"
+    },
+    "LLM_EXTRACTION_MAX_ATTEMPTS": {
+      "state": "set",
+      "value": "3"
+    },
+    "TRANSFORMERS_OFFLINE": {
+      "state": "set",
+      "value": "1"
+    },
+    "HF_HOME": {
+      "state": "set",
+      "value": "D:/OmniContext-model-cache-v3.2"
+    },
+    "TRANSFORMERS_CACHE": {
+      "state": "set",
+      "value": "D:/OmniContext-model-cache-v3.2"
+    },
+    "npm_config_cache": {
+      "state": "set",
+      "value": "D:/npm-cache-omni"
+    },
+    "EMBEDDING_MODE": {
+      "state": "set",
+      "value": "local"
+    },
+    "EMBEDDING_LOCAL_MODEL": {
+      "state": "set",
+      "value": "Xenova/multilingual-e5-large"
+    },
+    "EMBEDDING_LOCAL_MODEL_PATH": {
+      "state": "set",
+      "value": "D:/OmniContext-models-v3.2"
+    },
+    "BENCHMARK_INJECT_PROVIDER_FAILURE_ONCE": {
+      "state": "set_then_removed",
+      "value": "answer"
+    },
+    "BENCHMARK_INJECT_SIGINT_AFTER_COMPLETED": {
+      "state": "set_then_removed",
+      "value": "15"
+    },
+    "OMNI_EVALUATION_MODE": {
+      "state": "set_by_runtime",
+      "value": "1"
+    },
+    "LOCAL_API_TOKEN": {
+      "state": "generated_per_process",
+      "value": "<redacted-not-persisted>"
+    },
+    "INSIGHT_INTERVAL_MS": {
+      "state": "runtime_default",
+      "value": "3600000"
+    },
+    "MCP_RERANK_TIMEOUT_MS": {
+      "state": "not_set_in_recorded_commands",
+      "effective_default": "2500"
+    },
+    "MCP_EMBEDDING_TIMEOUT_MS": {
+      "state": "not_set_in_recorded_commands",
+      "effective_default": "2500"
+    },
+    "OMNI_RETRIEVAL_OVERRIDES": {
+      "state": "not_set_in_recorded_commands",
+      "effective": "defaults proven by all 199 candidate snapshots"
+    }
+  },
+  "unified_config_sha256": "1247f36d330bf5b172aa1db208ca492417f820a187b896057b834b5bcba6331e"
+}
