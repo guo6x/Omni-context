@@ -99,4 +99,36 @@ describe('assertion vector index', () => {
       asOf: '2023-03-01T00:00:00.000Z',
     })).toHaveLength(1);
   });
+
+  it('keeps the active index queryable after interruption and resumes the shadow build', async () => {
+    const first = await db.addEntity({ name: 'Resume One', type: 'person', description: 'first', embedding: vectorFor('one') });
+    await db.addEntity({ name: 'Resume Two', type: 'person', description: 'second', embedding: vectorFor('two') });
+    let failingCalls = 0;
+    const interruptedService = {
+      ...embeddingService,
+      embedPassage: async (text: string) => {
+        failingCalls++;
+        if (failingCalls === 2) throw new Error('simulated interruption');
+        return embeddingService.embedPassage(text);
+      },
+    };
+
+    await expect(db.rebuildAllEmbeddings(interruptedService as any)).rejects.toThrow('simulated interruption');
+    expect((await db.getEmbeddingIndexManifest('vec_entities'))?.status).toBe('active');
+    expect(await db.vectorSearch(vectorFor('one'), 10)).toEqual(expect.arrayContaining([expect.objectContaining({ id: first.id })]));
+    expect(JSON.parse((await db.getMeta('embedding_rebuild_state'))!).status).toBe('interrupted');
+
+    let resumedCalls = 0;
+    const resumedService = {
+      ...embeddingService,
+      embedPassage: async (text: string) => {
+        resumedCalls++;
+        return embeddingService.embedPassage(text);
+      },
+    };
+    await db.rebuildAllEmbeddings(resumedService as any);
+    expect(resumedCalls).toBe(1);
+    expect(await db.getMeta('embedding_rebuild_state')).toBeNull();
+    expect((await db.getEmbeddingIndexManifest('vec_entities'))?.content_count).toBe(2);
+  });
 });

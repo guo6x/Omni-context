@@ -116,6 +116,37 @@ function tombstoneTimestamp(row: { metadata?: unknown; valid_until?: unknown }):
 export const handleAdminRoutes = [
   {
     method: 'GET' as const,
+    path: '/api/admin/embedding/manifests',
+    handler: async (_req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      sendResponse(res, 200, {
+        manifests: await ctx.db.getEmbeddingIndexManifests(),
+        rebuildState: await ctx.db.getMeta('embedding_rebuild_state'),
+      });
+    },
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/admin/embedding/integrity',
+    handler: async (_req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      sendResponse(res, 200, await ctx.db.scanEmbeddingIntegrity());
+    },
+  },
+  {
+    method: 'POST' as const,
+    path: '/api/admin/embedding/rebuild',
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      const body = await parseBody<{ confirm?: boolean }>(req);
+      if (body.confirm !== true) return sendError(res, 400, 'confirm=true is required for explicit rebuild');
+      try {
+        const counts = await ctx.db.rebuildAllEmbeddings(ctx.embeddingService);
+        sendResponse(res, 200, { counts, integrity: await ctx.db.scanEmbeddingIntegrity() });
+      } catch (error) {
+        sendError(res, 500, error instanceof Error ? error.message : String(error));
+      }
+    },
+  },
+  {
+    method: 'GET' as const,
     path: '/api/admin/embedding/status',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const info = ctx.embeddingService.getInfo();
@@ -170,6 +201,8 @@ export const handleAdminRoutes = [
       const createdIndexesManifest = await ctx.db.all<any>(
         `SELECT name, tbl_name, sql FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
       );
+      const indexManifests = await ctx.db.getEmbeddingIndexManifests();
+      const rebuildState = await ctx.db.getMeta('embedding_rebuild_state');
 
       const dump: DumpShape = {
         version: EXPORT_VERSION,
@@ -198,7 +231,12 @@ export const handleAdminRoutes = [
         behaviorEvents: await ctx.db.all<any>('SELECT * FROM behavior_events'),
         proactiveInsights: await ctx.db.all<any>('SELECT * FROM proactive_insights'),
         deviceConfigurations,
-        embeddingMetadata: ctx.embeddingService.getInfo(),
+        embeddingMetadata: {
+          service: ctx.embeddingService.getInfo(),
+          indexManifests,
+          rebuildRequired: Boolean(rebuildState) || indexManifests.length !== 2,
+          rebuildState: rebuildState ? JSON.parse(rebuildState) : null,
+        },
         createdIndexesManifest,
       };
 
@@ -446,15 +484,16 @@ export const handleAdminRoutes = [
             const createdAt = a.created_at ?? new Date().toISOString();
             await ctx.db.run(
               `INSERT INTO assertions (
-                 id, subject_id, predicate, object_id, literal_value, confidence,
+                 id, subject_id, predicate, original_predicate, object_id, literal_value, confidence,
                  source_span, provenance, observed_at, recorded_at, event_time,
                  valid_from, valid_until, temporal_confidence, temporal_source,
                  timezone, invalidated_at, invalidation_reason, created_at, updated_at
-               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 a.id,
                 subjectId,
                 a.predicate,
+                a.original_predicate ?? a.predicate,
                 objectId,
                 a.literal_value ?? null,
                 a.confidence ?? 1,
@@ -563,6 +602,12 @@ export const handleAdminRoutes = [
         });
 
         await ctx.db.reindexEntities();
+        await ctx.db.setMeta('embedding_rebuild_required', JSON.stringify({
+          required: true,
+          reason: 'portable_import_requires_profile_and_serialization_verification',
+          source: body.embeddingMetadata || null,
+          marked_at: new Date().toISOString(),
+        }));
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         return sendError(res, 500, `Import failed: ${msg}`);

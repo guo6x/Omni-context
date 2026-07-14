@@ -3096,36 +3096,203 @@ export class Database {
         serializationVersion: ASSERTION_SERIALIZATION_VERSION,
       },
     ];
-    await this.prepareEmbeddingIndexes(specs, { force: true });
+    const stateKey = 'embedding_rebuild_state';
+    const expectedState = {
+      fingerprint: profile.fingerprint,
+      dimension: profile.dimension,
+      entitySerialization: ENTITY_SERIALIZATION_VERSION,
+      assertionSerialization: ASSERTION_SERIALIZATION_VERSION,
+    };
+    const previousStateRaw = await this.getMeta(stateKey);
+    let resumable = false;
+    if (previousStateRaw) {
+      try {
+        const previous = JSON.parse(previousStateRaw);
+        const shadowTables = await this.all<{ name: string }>(
+          "SELECT name FROM sqlite_master WHERE name IN ('vec_entities_build','vec_assertions_build','entity_embedding_metadata_build','assertion_embedding_metadata_build','entity_embedding_values_build')",
+        );
+        resumable = shadowTables.length === 5
+          && previous.fingerprint === expectedState.fingerprint
+          && Number(previous.dimension) === expectedState.dimension
+          && previous.entitySerialization === expectedState.entitySerialization
+          && previous.assertionSerialization === expectedState.assertionSerialization;
+      } catch { resumable = false; }
+    }
+
+    if (!resumable) {
+      await this.run('DROP TABLE IF EXISTS vec_entities_build');
+      await this.run('DROP TABLE IF EXISTS vec_assertions_build');
+      await this.run('DROP TABLE IF EXISTS entity_embedding_metadata_build');
+      await this.run('DROP TABLE IF EXISTS assertion_embedding_metadata_build');
+      await this.run('DROP TABLE IF EXISTS entity_embedding_values_build');
+      await this.run(`CREATE VIRTUAL TABLE vec_entities_build USING vec0(
+        entity_id TEXT PRIMARY KEY, embedding FLOAT[${profile.dimension}]
+      )`);
+      await this.run(`CREATE VIRTUAL TABLE vec_assertions_build USING vec0(
+        assertion_id TEXT PRIMARY KEY, embedding FLOAT[${profile.dimension}]
+      )`);
+      await this.run('CREATE TABLE entity_embedding_metadata_build AS SELECT * FROM entity_embedding_metadata WHERE 0');
+      await this.run('CREATE TABLE assertion_embedding_metadata_build AS SELECT * FROM assertion_embedding_metadata WHERE 0');
+      await this.run('CREATE TABLE entity_embedding_values_build(entity_id TEXT PRIMARY KEY, embedding BLOB NOT NULL)');
+      await this.setMeta(stateKey, JSON.stringify({ ...expectedState, status: 'building', startedAt: new Date().toISOString() }));
+    }
+
+    const entityRows = await this.all<any>('SELECT * FROM entities ORDER BY created_at, id');
+    const assertionRows = await this.all<{ id: string }>(
+      'SELECT id FROM assertions WHERE invalidated_at IS NULL ORDER BY created_at, id',
+    );
+    let entityDone = 0;
+    let assertionDone = 0;
     try {
-      const entityRows = await this.all<any>('SELECT * FROM entities ORDER BY created_at, id');
-      let entityDone = 0;
       for (const row of entityRows) {
         const entity = this.rowToEntity(row);
         const passage = serializeEntityPassage(entity);
-        const result = await service.embedPassage(passage);
-        await this.run('UPDATE entities SET embedding = ? WHERE id = ?', [encodeEmbedding(result.embedding), entity.id]);
-        await this._syncVecEmbedding(entity.id, result.embedding, this.contentSha256(passage));
+        const contentHash = this.contentSha256(passage);
+        const existing = await this.get<{ content_sha256: string }>(
+          'SELECT content_sha256 FROM entity_embedding_metadata_build WHERE entity_id = ?', [entity.id],
+        );
+        if (!existing || existing.content_sha256 !== contentHash) {
+          if (existing) {
+            await this.run('DELETE FROM vec_entities_build WHERE entity_id = ?', [entity.id]);
+            await this.run('DELETE FROM entity_embedding_metadata_build WHERE entity_id = ?', [entity.id]);
+            await this.run('DELETE FROM entity_embedding_values_build WHERE entity_id = ?', [entity.id]);
+          }
+          const result = await service.embedPassage(passage);
+          if (result.dimensions !== profile.dimension || result.embedding.length !== profile.dimension) {
+            throw new Error(`EMBEDDING_PREFLIGHT_DIMENSION_MISMATCH: expected=${profile.dimension} actual=${result.embedding.length}`);
+          }
+          await this.run('INSERT INTO vec_entities_build(entity_id, embedding) VALUES (?, ?)', [
+            entity.id, Buffer.from(new Float32Array(result.embedding).buffer),
+          ]);
+          await this.run('INSERT INTO entity_embedding_values_build(entity_id, embedding) VALUES (?, ?)', [
+            entity.id, encodeEmbedding(result.embedding),
+          ]);
+          await this.run(
+            `INSERT INTO entity_embedding_metadata_build(
+               entity_id, embedding_model, model_revision, dimension, usage_profile_version,
+               serialization_version, embedded_at, content_sha256
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [entity.id, profile.modelId, profile.modelRevision, profile.dimension,
+              profile.usageProfileVersion, ENTITY_SERIALIZATION_VERSION, new Date().toISOString(), contentHash],
+          );
+        }
         entityDone++;
         onProgress?.({ phase: 'entities', done: entityDone, total: entityRows.length });
       }
 
-      const assertionRows = await this.all<{ id: string }>(
-        'SELECT id FROM assertions WHERE invalidated_at IS NULL ORDER BY created_at, id',
-      );
-      let assertionDone = 0;
       for (const row of assertionRows) {
-        await this.indexAssertion(row.id);
+        const resolved = await this.getResolvedAssertion(row.id);
+        if (!resolved) throw new Error(`Assertion not found during rebuild: ${row.id}`);
+        const contentHash = this.contentSha256(resolved.passage);
+        const existing = await this.get<{ content_sha256: string }>(
+          'SELECT content_sha256 FROM assertion_embedding_metadata_build WHERE assertion_id = ?', [row.id],
+        );
+        if (!existing || existing.content_sha256 !== contentHash) {
+          if (existing) {
+            await this.run('DELETE FROM vec_assertions_build WHERE assertion_id = ?', [row.id]);
+            await this.run('DELETE FROM assertion_embedding_metadata_build WHERE assertion_id = ?', [row.id]);
+          }
+          const result = await service.embedPassage(resolved.passage);
+          if (result.dimensions !== profile.dimension || result.embedding.length !== profile.dimension) {
+            throw new Error(`EMBEDDING_PREFLIGHT_DIMENSION_MISMATCH: expected=${profile.dimension} actual=${result.embedding.length}`);
+          }
+          await this.run('INSERT INTO vec_assertions_build(assertion_id, embedding) VALUES (?, ?)', [
+            row.id, Buffer.from(new Float32Array(result.embedding).buffer),
+          ]);
+          await this.run(
+            `INSERT INTO assertion_embedding_metadata_build(
+               assertion_id, embedding_model, model_revision, dimension, usage_profile_version,
+               serialization_version, embedded_at, content_sha256, valid_from, valid_until, invalidated_at
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [row.id, profile.modelId, profile.modelRevision, profile.dimension,
+              profile.usageProfileVersion, ASSERTION_SERIALIZATION_VERSION, new Date().toISOString(), contentHash,
+              resolved.assertion.valid_from, resolved.assertion.valid_until || null, null],
+          );
+        }
         assertionDone++;
         onProgress?.({ phase: 'assertions', done: assertionDone, total: assertionRows.length });
       }
-      await this.activateEmbeddingIndex('vec_entities', entityDone);
-      await this.activateEmbeddingIndex('vec_assertions', assertionDone);
+
+      const switchedAt = new Date().toISOString();
+      const previousManifests = await this.getEmbeddingIndexManifests();
+      await this.withTransaction(async () => {
+        for (const manifest of previousManifests) {
+          await this.run(
+            'INSERT INTO embedding_index_manifest_history(index_name, manifest_json, archived_at) VALUES (?, ?, ?)',
+            [manifest.index_name, JSON.stringify(manifest), switchedAt],
+          );
+        }
+        await this.run('DROP TRIGGER IF EXISTS invalidate_assertion_vector_after_update');
+        await this.run('DROP TRIGGER IF EXISTS invalidate_assertions_after_entity_text_update');
+        await this.run('DROP TABLE IF EXISTS vec_entities');
+        await this.run('DROP TABLE IF EXISTS vec_assertions');
+        await this.run(`CREATE VIRTUAL TABLE vec_entities USING vec0(
+          entity_id TEXT PRIMARY KEY, embedding FLOAT[${profile.dimension}]
+        )`);
+        await this.run(`CREATE VIRTUAL TABLE vec_assertions USING vec0(
+          assertion_id TEXT PRIMARY KEY, embedding FLOAT[${profile.dimension}]
+        )`);
+        await this.run('INSERT INTO vec_entities(entity_id, embedding) SELECT entity_id, embedding FROM vec_entities_build');
+        await this.run('INSERT INTO vec_assertions(assertion_id, embedding) SELECT assertion_id, embedding FROM vec_assertions_build');
+        await this.run('DELETE FROM entity_embedding_metadata');
+        await this.run('INSERT INTO entity_embedding_metadata SELECT * FROM entity_embedding_metadata_build');
+        await this.run('DELETE FROM assertion_embedding_metadata');
+        await this.run('INSERT INTO assertion_embedding_metadata SELECT * FROM assertion_embedding_metadata_build');
+        await this.run('UPDATE entities SET embedding = (SELECT embedding FROM entity_embedding_values_build b WHERE b.entity_id=entities.id)');
+        await this.run('DELETE FROM embedding_index_manifests');
+        for (const spec of specs) {
+          await this.run(
+            `INSERT INTO embedding_index_manifests(
+              index_name, model_id, model_revision, dimension, usage_profile_version,
+              serialization_version, status, created_at, activated_at, content_count
+            ) VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)`,
+            [spec.indexName, spec.modelId, spec.modelRevision, spec.dimension,
+              spec.usageProfileVersion, spec.serializationVersion, switchedAt, switchedAt,
+              spec.indexName === 'vec_entities' ? entityDone : assertionDone],
+          );
+        }
+        await this.run('DROP TABLE entity_embedding_metadata_build');
+        await this.run('DROP TABLE assertion_embedding_metadata_build');
+        await this.run('DROP TABLE entity_embedding_values_build');
+        await this.run('DROP TABLE vec_entities_build');
+        await this.run('DROP TABLE vec_assertions_build');
+        await this.run('DELETE FROM app_meta WHERE key = ?', [stateKey]);
+        await this.exec(`
+          CREATE TRIGGER invalidate_assertion_vector_after_update
+          AFTER UPDATE OF subject_id, predicate, original_predicate, object_id, literal_value,
+            literal_type, confidence, source_span, provenance, observed_at, event_time,
+            valid_from, valid_until, invalidated_at ON assertions
+          BEGIN
+            DELETE FROM vec_assertions WHERE assertion_id = NEW.id;
+            DELETE FROM assertion_embedding_metadata WHERE assertion_id = NEW.id;
+          END;
+          CREATE TRIGGER invalidate_assertions_after_entity_text_update
+          AFTER UPDATE OF name, description, metadata ON entities
+          BEGIN
+            DELETE FROM vec_assertions
+              WHERE assertion_id IN (
+                SELECT id FROM assertions WHERE subject_id = NEW.id OR object_id = NEW.id
+              );
+            DELETE FROM assertion_embedding_metadata
+              WHERE assertion_id IN (
+                SELECT id FROM assertions WHERE subject_id = NEW.id OR object_id = NEW.id
+              );
+          END;
+        `);
+      });
+      this.vecDimension = profile.dimension;
+      this.assertionVecDimension = profile.dimension;
+      this.vecDimensionResolved = true;
+      this.assertionVecDimensionResolved = true;
       await this.setMeta('embedding_model', profile.modelId);
       await this.setMeta('embedding_usage_profile', profile.fingerprint);
+      await this.run("DELETE FROM app_meta WHERE key='embedding_rebuild_required'");
       return { entities: entityDone, assertions: assertionDone };
     } catch (error) {
-      await this.run("UPDATE embedding_index_manifests SET status='failed' WHERE status='building'");
+      await this.setMeta(stateKey, JSON.stringify({
+        ...expectedState, status: 'interrupted', entityDone, assertionDone,
+        updatedAt: new Date().toISOString(), error: error instanceof Error ? error.message : String(error),
+      }));
       throw error;
     }
   }

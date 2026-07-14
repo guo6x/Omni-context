@@ -14,7 +14,8 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
     "schema:generate": "tsx scripts/generate-schema-artifacts.ts",
-    "schema:check": "tsx scripts/generate-schema-artifacts.ts && git diff --exit-code -- ../schema_manifest.json ../mcp_tool_manifest.json ../generated_capability_matrix.md ../shared/generated-domain-types.ts ../mobile-app/src/types/generated-domain.ts"
+    "schema:check": "tsx scripts/generate-schema-artifacts.ts && git diff --exit-code -- ../schema_manifest.json ../mcp_tool_manifest.json ../generated_capability_matrix.md ../shared/generated-domain-types.ts ../mobile-app/src/types/generated-domain.ts",
+    "embeddings:rebuild": "tsx scripts/rebuild-embeddings.ts"
   },
   "keywords": [
     "ai",

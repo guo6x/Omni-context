@@ -215,6 +215,17 @@ describe('API smoke: hybrid assertion retrieval', () => {
     expect(response.body.candidatePool.some((item: any) => item.id === assertion.id)).toBe(true);
     expect(response.body.finalContext[0].evidence_id).toBe(assertion.id);
   });
+
+  it('exposes manifests and integrity but requires explicit rebuild confirmation', async () => {
+    const manifests = await request('GET', '/api/admin/embedding/manifests');
+    expect(manifests.status).toBe(200);
+    expect(manifests.body.manifests).toHaveLength(2);
+    const integrity = await request('GET', '/api/admin/embedding/integrity');
+    expect(integrity.status).toBe(200);
+    expect(integrity.body.wrongDimensions).toBe(0);
+    const denied = await request('POST', '/api/admin/embedding/rebuild', { confirm: false });
+    expect(denied.status).toBe(400);
+  });
 });
 
 describe('API smoke: archival memory', () => {

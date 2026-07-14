@@ -290,22 +290,22 @@ export function createDefaultEmbeddingService(): EmbeddingService {
   });
 }
 
-// 换 embedding 模型后，后台重算存量向量（旧模型的向量与新模型不可比，否则检索失准）。
-// 用 app_meta 记录上次的模型；不一致才重算，跑完更新标记。不阻塞启动。
-async function maybeReembedOnModelChange(db: Database, emb: EmbeddingService): Promise<void> {
+// Read-only startup audit. Rebuilds are explicit management operations and
+// are never triggered by startup or query traffic.
+async function auditEmbeddingIndexCompatibility(db: Database, emb: EmbeddingService): Promise<void> {
   try {
     if (db.isInMemory() || process.env.VITEST || process.env.NODE_ENV === 'test') return;
-    const info = emb.getInfo();
-    const current = `${info.model}@${info.modelRevision}:${info.usageProfile.fingerprint}`;
-    const stored = await db.getMeta('embedding_usage_profile');
-    if (stored === current) return;
-    console.log('[reembed] embedding usage profile changed; rebuilding stored entity vectors...');
-    const n = await db.reembedAllEntities(async (t) => (await emb.embedPassage(t)).embedding);
-    await db.setMeta('embedding_model', info.model);
-    await db.setMeta('embedding_usage_profile', current);
-    console.log(`[reembed] 完成，重算 ${n} 条向量`);
+    const profile = emb.getUsageProfile();
+    const manifests = await db.getEmbeddingIndexManifests();
+    const mismatch = manifests.length !== 2 || manifests.some((manifest) =>
+      manifest.model_id !== profile.modelId
+      || manifest.model_revision !== profile.modelRevision
+      || Number(manifest.dimension) !== profile.dimension
+      || manifest.usage_profile_version !== profile.usageProfileVersion
+      || manifest.status !== 'active');
+    if (mismatch) console.warn('[embedding-index] explicit rebuild required; run npm run embeddings:rebuild');
   } catch (e) {
-    console.warn('[reembed] 跳过:', e);
+    console.warn('[embedding-index] compatibility audit failed:', e);
   }
 }
 
@@ -314,7 +314,7 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
   db.attachEmbeddingService(finalEmbeddingService);
   const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, decayScheduler);
 
-  void maybeReembedOnModelChange(db, finalEmbeddingService);
+  void auditEmbeddingIndexCompatibility(db, finalEmbeddingService);
 
   const localApiToken = (process.env.LOCAL_API_TOKEN || '').trim();
   const authService = new AuthService(db, {
