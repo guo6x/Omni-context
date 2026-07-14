@@ -1,0 +1,119 @@
+{
+  "overall_cognitive_score": 0.6169973544973545,
+  "category_macro_scores": {
+    "cognitive_continuity": 0.5819444444444444,
+    "memory_evolution": 0.6944444444444445,
+    "conflict_resolution": 0.6805555555555555,
+    "cross_agent_transfer": 0.5185185185185185,
+    "human_like_forgetting": 0.6527777777777778,
+    "proactive_insight": 0.6,
+    "decision_quality": 0.5907407407407407
+  },
+  "deterministic_score": 0.6256481481481481,
+  "agent_judged_score": 0.5953703703703704,
+  "memory_reliability_score": 0.6365740740740741,
+  "personalization_score": 0.5819444444444444,
+  "temporal_and_conflict_score": 0.6875,
+  "insight_and_decision_score": 0.5953703703703703,
+  "by_category": {
+    "cognitive_continuity": {
+      "count": 6,
+      "macro_score": 0.5819444444444444,
+      "metrics": {
+        "profile_recall": 0.3,
+        "profile_consistency": 1,
+        "constraint_utilization": 0.25,
+        "personalization_accuracy": 0.275,
+        "contradiction_rate": 0,
+        "unsupported_personalization_rate": 0.3333333333333333
+      },
+      "status": "completed"
+    },
+    "memory_evolution": {
+      "count": 6,
+      "macro_score": 0.6944444444444445,
+      "metrics": {
+        "current_state_accuracy": 0.5,
+        "historical_state_preservation": 0.5,
+        "temporal_ordering_accuracy": 1,
+        "evolution_interpretation_accuracy": 0.5,
+        "stale_memory_leakage": 0,
+        "state_transition_accuracy": 0.6666666666666666
+      },
+      "status": "completed"
+    },
+    "conflict_resolution": {
+      "count": 6,
+      "macro_score": 0.6805555555555555,
+      "metrics": {
+        "conflict_resolution_accuracy": 0.75,
+        "latest_valid_fact_accuracy": 0.5,
+        "historical_query_accuracy": 0.5,
+        "invalidated_fact_rejection": 0.3333333333333333,
+        "conflict_disclosure_accuracy": 1,
+        "unsupported_resolution_rate": 0
+      },
+      "status": "completed"
+    },
+    "cross_agent_transfer": {
+      "count": 6,
+      "macro_score": 0.5185185185185185,
+      "metrics": {
+        "cross_agent_recall": 0.38888888888888884,
+        "cross_agent_consistency": 0.6666666666666666,
+        "update_propagation_accuracy": 0.5,
+        "provenance_preservation": 0.2222222222222222,
+        "agent_isolation_error_rate": 0.3333333333333333,
+        "stale_transfer_rate": 0.3333333333333333
+      },
+      "status": "completed"
+    },
+    "human_like_forgetting": {
+      "count": 6,
+      "macro_score": 0.6527777777777778,
+      "metrics": {
+        "salient_memory_retention": 0.5,
+        "noise_suppression": 0.6666666666666666,
+        "false_forgetting_rate": 0.5,
+        "stale_retention_rate": 0.3333333333333333,
+        "memory_precision": 0.5833333333333335,
+        "memory_compression_ratio": null,
+        "invalidation_accuracy": 1
+      },
+      "status": "completed"
+    },
+    "proactive_insight": {
+      "count": 6,
+      "macro_score": 0.6,
+      "metrics": {
+        "insight_precision": 0.48333333333333334,
+        "insight_recall": 0.5,
+        "blind_spot_detection_rate": 0.5,
+        "constraint_awareness": 0.5,
+        "actionability": 0.48333333333333334,
+        "unsupported_claim_rate": 0.3333333333333333,
+        "redundant_insight_rate": 0,
+        "overreach_rate": 0.3333333333333333
+      },
+      "status": "completed"
+    },
+    "decision_quality": {
+      "count": 6,
+      "macro_score": 0.5907407407407407,
+      "metrics": {
+        "constraint_coverage": 0.5,
+        "goal_alignment": 0.5,
+        "personalization": 0.3333333333333333,
+        "option_comparison_quality": 0.5,
+        "risk_awareness": 0.5,
+        "actionability": 0.5,
+        "internal_consistency": 1,
+        "unsupported_assumption_rate": 0,
+        "overall_decision_quality": 0.48333333333333334
+      },
+      "status": "completed"
+    }
+  },
+  "completed": 42,
+  "errors": 0
+}

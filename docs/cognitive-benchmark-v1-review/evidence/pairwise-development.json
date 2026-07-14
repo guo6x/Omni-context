@@ -1,0 +1,22 @@
+{
+  "proactive_insight": {
+    "vs_no_memory": {
+      "compared": 3,
+      "full_omni_win_rate_with_ties_half": 1
+    },
+    "vs_retrieval_only": {
+      "compared": 3,
+      "full_omni_win_rate_with_ties_half": 0.166667
+    }
+  },
+  "decision_quality": {
+    "vs_no_memory": {
+      "compared": 3,
+      "full_omni_win_rate_with_ties_half": 1
+    },
+    "vs_retrieval_only": {
+      "compared": 3,
+      "full_omni_win_rate_with_ties_half": 0
+    }
+  }
+}

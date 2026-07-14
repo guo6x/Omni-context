@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "status": "PRE_FORMAL_ESTIMATE_FROM_DEVELOPMENT",
+  "pricing": {
+    "source": "https://api-docs.deepseek.com/quick_start/pricing/",
+    "checked_at": "2026-07-14",
+    "cache_hit_input": 0.0028,
+    "cache_miss_input": 0.14,
+    "output": 0.28
+  },
+  "actual_development": {
+    "answer_calls": 77,
+    "judge_calls": 22,
+    "extraction_calls": 45,
+    "reranker_operations": 35,
+    "input_tokens": 98981,
+    "output_tokens": 35579,
+    "cache_hit_input_tokens": 7168,
+    "cache_miss_input_tokens": 91813,
+    "extraction_input_characters": 22042,
+    "agent_review_calls": 20,
+    "agent_review_input_tokens": 43883,
+    "agent_review_output_tokens": 2012,
+    "observable_answer_and_judge_cost_usd": 0.0295,
+    "retries": 0,
+    "latency_ms": {
+      "p50_full_omni": 25963,
+      "p95_full_omni": 51820,
+      "mean_full_omni": 32475.9
+    }
+  },
+  "observed_averages": {
+    "answer_input_tokens": 873.4,
+    "answer_output_tokens": 388.9,
+    "judge_input_tokens": 1442.4,
+    "judge_output_tokens": 255.9,
+    "extraction_input_tokens_proxy_from_characters": 122.5,
+    "extraction_output_tokens_unobservable_proxy": 700
+  },
+  "planned_calls": {
+    "formal_250_full_omni": {
+      "scenarios": 250,
+      "answer_calls": 250,
+      "judge_calls": 60,
+      "extraction_calls": 330,
+      "reranker_operations": 250
+    },
+    "comparison_70_three_modes": {
+      "scenario_mode_runs": 210,
+      "answer_calls": 210,
+      "judge_calls": 60,
+      "extraction_calls": 90,
+      "reranker_operations": 70
+    },
+    "combined": {
+      "answer_calls": 460,
+      "judge_calls": 120,
+      "extraction_calls": 420,
+      "reranker_operations": 320
+    }
+  },
+  "projected_tokens": {
+    "formal_250_full_omni": {
+      "answer_input_tokens": 218341,
+      "answer_output_tokens": 97237,
+      "judge_input_tokens": 86542,
+      "judge_output_tokens": 15355,
+      "extraction_input_tokens_proxy": 40410,
+      "extraction_output_tokens_proxy": 231000,
+      "total_input_tokens": 345293,
+      "total_output_tokens": 343592
+    },
+    "comparison_70_three_modes": {
+      "answer_input_tokens": 183406,
+      "answer_output_tokens": 81679,
+      "judge_input_tokens": 86542,
+      "judge_output_tokens": 15355,
+      "extraction_input_tokens_proxy": 11021,
+      "extraction_output_tokens_proxy": 63000,
+      "total_input_tokens": 280969,
+      "total_output_tokens": 160034
+    },
+    "combined": {
+      "answer_input_tokens": 401747,
+      "answer_output_tokens": 178916,
+      "judge_input_tokens": 173084,
+      "judge_output_tokens": 30709,
+      "extraction_input_tokens_proxy": 51431,
+      "extraction_output_tokens_proxy": 294000,
+      "total_input_tokens": 626262,
+      "total_output_tokens": 503625
+    }
+  },
+  "projected_cost_usd": {
+    "formal_250_full_omni": 0.1445,
+    "comparison_70_three_modes": 0.0841,
+    "combined": 0.2287
+  },
+  "combined_with_20_percent_retry_buffer_usd": 0.2744,
+  "estimated_runtime_hours": {
+    "formal_250_full_omni": 2.26,
+    "comparison_70_three_modes": 0.78,
+    "combined_with_20_percent_buffer": 3.64
+  },
+  "caveats": [
+    "Brain Server extraction does not expose provider token usage in the frozen API; extraction input uses actual characters/4 and output uses a conservative 700-token proxy.",
+    "Reranker count is the logical unified-retrieval fusion operation; it is not recorded as a separately billed LLM call.",
+    "All projections are estimates, not formal-run observations."
+  ]
+}

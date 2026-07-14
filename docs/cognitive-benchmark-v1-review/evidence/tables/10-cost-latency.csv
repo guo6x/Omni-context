@@ -1,0 +1,4 @@
+"scope","answer_calls","judge_calls","extraction_calls","reranker_operations","estimated_cost_usd"
+"formal_250_full_omni","250","60","330","250","0.1445"
+"comparison_70_three_modes","210","60","90","70","0.0841"
+"combined","460","120","420","320","0.2287"

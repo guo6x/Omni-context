@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "split": "smoke",
+  "updated_at": "2026-07-14T15:41:48.336Z",
+  "completed_keys": [
+    "smoke-cognitive_continuity-001:full_omni",
+    "smoke-cognitive_continuity-002:full_omni",
+    "smoke-cognitive_continuity-003:full_omni",
+    "smoke-memory_evolution-001:full_omni",
+    "smoke-memory_evolution-002:full_omni",
+    "smoke-memory_evolution-003:full_omni",
+    "smoke-conflict_resolution-001:full_omni",
+    "smoke-conflict_resolution-002:full_omni",
+    "smoke-conflict_resolution-003:full_omni",
+    "smoke-cross_agent_transfer-001:full_omni",
+    "smoke-cross_agent_transfer-002:full_omni",
+    "smoke-cross_agent_transfer-003:full_omni",
+    "smoke-human_like_forgetting-001:full_omni",
+    "smoke-human_like_forgetting-002:full_omni",
+    "smoke-human_like_forgetting-003:full_omni",
+    "smoke-proactive_insight-001:full_omni",
+    "smoke-proactive_insight-002:full_omni",
+    "smoke-proactive_insight-003:full_omni",
+    "smoke-decision_quality-001:full_omni",
+    "smoke-decision_quality-002:full_omni",
+    "smoke-decision_quality-003:full_omni"
+  ],
+  "error_keys": []
+}

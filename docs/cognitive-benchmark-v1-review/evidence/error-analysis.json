@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "status": "DEVELOPMENT_ANALYSIS",
+  "full_omni_errors": 0,
+  "baseline_errors": 0,
+  "agent_reviewed": 20,
+  "agent_review_flags_pre_calibration": 11,
+  "resolved_general_scoring_defect": "deterministic-scoring-v1 included negated/rejected facts in affirmative matching and required contiguous phrases; v2 uses structured polarity plus token coverage",
+  "score_issue_flags": [
+    "development-cognitive_continuity-001",
+    "development-cognitive_continuity-002",
+    "development-conflict_resolution-001",
+    "development-conflict_resolution-002",
+    "development-conflict_resolution-003",
+    "development-cross_agent_transfer-001",
+    "development-cross_agent_transfer-002",
+    "development-cross_agent_transfer-003",
+    "development-human_like_forgetting-001",
+    "development-human_like_forgetting-002",
+    "development-human_like_forgetting-003"
+  ],
+  "gold_ambiguity_flags": [],
+  "baseline_fairness_flags": [],
+  "memory_leakage_flags": [],
+  "remaining_low_score_rows": [],
+  "attribution": {
+    "system": [
+      "Cross-Agent provenance labels are only partially preserved through extraction/retrieval.",
+      "Explicit invalidated-fact rejection is inconsistent even when the conflict is disclosed."
+    ],
+    "scoring": [
+      "LLM-judged categories use the same model family and are not independent.",
+      "Deterministic token coverage remains a calibration heuristic, not semantic equivalence proof."
+    ],
+    "data": [
+      "Formal draft has limited template diversity and must be externally reviewed before freeze."
+    ]
+  }
+}

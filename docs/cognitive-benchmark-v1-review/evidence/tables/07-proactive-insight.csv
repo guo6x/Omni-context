@@ -1,0 +1,4 @@
+"mode","score","agent_judged"
+"no_memory","0.20833333333333334","true"
+"retrieval_only","0.9916666666666667","true"
+"full_omni","0.9800000000000001","true"

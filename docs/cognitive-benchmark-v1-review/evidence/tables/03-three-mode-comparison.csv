@@ -1,0 +1,4 @@
+"mode","development_scenarios","macro_score","label"
+"no_memory","21","0.387963","Development Results - Not Formal Results"
+"retrieval_only","21","0.975088","Development Results - Not Formal Results"
+"full_omni","35","0.95672","Development Results - Not Formal Results"

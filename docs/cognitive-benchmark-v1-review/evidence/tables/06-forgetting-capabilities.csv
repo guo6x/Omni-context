@@ -1,0 +1,6 @@
+"capability","status","full_omni_observed_metric"
+"physical_deletion","not_implemented",""
+"logical_invalidation","implemented","see category metrics"
+"retrieval_suppression","implemented","see category metrics"
+"noise_filtering","implemented","see category metrics"
+"memory_compression","not_implemented",""

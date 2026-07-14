@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "split": "smoke",
+  "updated_at": "2026-07-14T16:19:05.039Z",
+  "completed_keys": [
+    "smoke-cognitive_continuity-001:full_omni"
+  ],
+  "error_keys": []
+}

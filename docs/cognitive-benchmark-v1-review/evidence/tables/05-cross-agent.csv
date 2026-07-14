@@ -1,0 +1,4 @@
+"mode","cross_agent_recall","cross_agent_consistency","update_propagation_accuracy","provenance_preservation","agent_isolation_error_rate","stale_transfer_rate"
+"no_memory","0","1","0","0","0","0"
+"retrieval_only","0.7777777777777777","1","1","0.7777777777777777","0","0"
+"full_omni","1","1","1","0.5333333333333334","0","0"

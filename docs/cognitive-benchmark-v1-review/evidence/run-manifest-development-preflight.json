@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "benchmark": "Omni-Context Cognitive Benchmark v1",
+  "split": "development",
+  "backend": "provider",
+  "modes": [
+    "full_omni"
+  ],
+  "status": "completed",
+  "interrupted": false,
+  "dataset_hash": "5c57a6139220779cdf749bfb383e9ca093433b0f3e96b5f53dfea50ca242fc23",
+  "config_hash": "d9580dbb7a043c29a6c2fa5a60f801ac7af7a8a3b9bf75861677b4fda10c98b8",
+  "prompt_hashes": {
+    "answer": "2d941fa7c7a72dd0c7cb94b87001e5982961901fa293902a95aa2c4c0227c32e",
+    "judge": "889a32af2ee836df57c658aabfc8dce4902d9fa5b119d0600832dfa91bebf297",
+    "agent_review": "3254e2ae1b0ba9a6e8469b47a45ffe515aaf56313fa8ae985ad49ee91009ffd6"
+  },
+  "started_at": "2026-07-14T15:44:08.755Z",
+  "updated_at": "2026-07-14T15:46:47.671Z",
+  "expected": 1,
+  "completed": 1,
+  "errors": 0,
+  "retry_records": 0,
+  "completed_this_invocation": 1,
+  "official_locomo": false,
+  "conversation_2_to_10_accessed": false,
+  "formal_dataset_run": false,
+  "comparison_subset_run": false
+}

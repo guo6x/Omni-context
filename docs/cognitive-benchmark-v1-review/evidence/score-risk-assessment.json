@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "status": "PRE_FORMAL_HEURISTIC_NOT_A_FORMAL_RESULT",
+  "by_category": {
+    "cognitive_continuity": {
+      "development_score": 1,
+      "heuristic_formal_interval": [
+        0.88,
+        1
+      ],
+      "interval_is_not_statistical_confidence": true,
+      "risk": "Low",
+      "recommend_formal_run": "after external dataset and scorer review"
+    },
+    "memory_evolution": {
+      "development_score": 1,
+      "heuristic_formal_interval": [
+        0.88,
+        1
+      ],
+      "interval_is_not_statistical_confidence": true,
+      "risk": "Low",
+      "recommend_formal_run": "after external dataset and scorer review"
+    },
+    "conflict_resolution": {
+      "development_score": 0.9,
+      "heuristic_formal_interval": [
+        0.78,
+        0.92
+      ],
+      "interval_is_not_statistical_confidence": true,
+      "risk": "Medium",
+      "recommend_formal_run": "after external dataset and scorer review"
+    },
+    "cross_agent_transfer": {
+      "development_score": 0.922222,
+      "heuristic_formal_interval": [
+        0.742222,
+        0.942222
+      ],
+      "interval_is_not_statistical_confidence": true,
+      "risk": "High",
+      "recommend_formal_run": "after provenance and dataset review"
+    },
+    "human_like_forgetting": {
+      "development_score": 0.972222,
+      "heuristic_formal_interval": [
+        0.792222,
+        0.992222
+      ],
+      "interval_is_not_statistical_confidence": true,
+      "risk": "High",
+      "recommend_formal_run": "after external dataset and scorer review"
+    },
+    "proactive_insight": {
+      "development_score": 0.98,
+      "heuristic_formal_interval": [
+        0.8,
+        1
+      ],
+      "interval_is_not_statistical_confidence": true,
+      "risk": "High",
+      "recommend_formal_run": "after external dataset and scorer review"
+    },
+    "decision_quality": {
+      "development_score": 0.922593,
+      "heuristic_formal_interval": [
+        0.742593,
+        0.942593
+      ],
+      "interval_is_not_statistical_confidence": true,
+      "risk": "High",
+      "recommend_formal_run": "after external dataset and scorer review"
+    }
+  },
+  "p0": [],
+  "p1": [
+    "Expand and independently review Formal Draft diversity before freeze.",
+    "Calibrate deterministic scoring on additional paraphrases and negations.",
+    "Use an independent model or human review for a future publication-grade Judge.",
+    "Preserve explicit Agent provenance through Full Omni evidence serialization."
+  ]
+}

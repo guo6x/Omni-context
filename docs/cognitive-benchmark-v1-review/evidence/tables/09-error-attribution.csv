@@ -1,0 +1,5 @@
+"class","count_or_status","notes"
+"runtime_errors","0","35 Full + 42 baseline completed"
+"agent_review_flags_pre_calibration","11","Agent Review, not human"
+"scoring_bug","fixed","structured polarity and token coverage v2"
+"formal_diversity","open P1","external review required"

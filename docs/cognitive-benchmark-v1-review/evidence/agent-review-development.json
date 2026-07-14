@@ -1,0 +1,508 @@
+{
+  "schema_version": 1,
+  "review_type": "agent_review_not_human",
+  "judge_independent": false,
+  "count": 20,
+  "reviews": [
+    {
+      "schema_version": 1,
+      "scenario_id": "development-cognitive_continuity-001",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-cognitive_continuity-001",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "Profile_recall is 0.8 but gold requires 5 facts; only 5 facts are present, so recall should be 1.0. Constraint_utilization is 0.5 but all 4 constraints are used; should be 1.0. Personalization_accuracy is 0.65 but answer aligns with all preferences; should be 1.0. Core_score calculation appears inconsistent with metrics."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-cognitive_continuity-001\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"Profile_recall is 0.8 but gold requires 5 facts; only 5 facts are present, so recall should be 1.0. Constraint_utilization is 0.5 but all 4 constraints are used; should be 1.0. Personalization_accuracy is 0.65 but answer aligns with all preferences; should be 1.0. Core_score calculation appears inconsistent with metrics.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 1769,
+        "output_tokens": 158,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 1769
+      },
+      "latency_ms": 2237,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:06.904Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-cognitive_continuity-002",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-cognitive_continuity-002",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "Profile_recall is 0.8 but gold requires 5 facts; only 5 facts are present, so recall should be 1.0. Constraint_utilization is 0.5 but all 5 constraints are used; should be 1.0. Personalization_accuracy is 0.65 but answer aligns well with all constraints; likely should be higher. Score appears miscalculated."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-cognitive_continuity-002\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"Profile_recall is 0.8 but gold requires 5 facts; only 5 facts are present, so recall should be 1.0. Constraint_utilization is 0.5 but all 5 constraints are used; should be 1.0. Personalization_accuracy is 0.65 but answer aligns well with all constraints; likely should be higher. Score appears miscalculated.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2740,
+        "output_tokens": 156,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2740
+      },
+      "latency_ms": 2032,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:08.940Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-cognitive_continuity-003",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-cognitive_continuity-003",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "The computed score aligns with the gold rubric; no issues detected."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-cognitive_continuity-003\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"The computed score aligns with the gold rubric; no issues detected.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2808,
+        "output_tokens": 84,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2808
+      },
+      "latency_ms": 1480,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:10.420Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-memory_evolution-001",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-memory_evolution-001",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": ""
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-memory_evolution-001\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2069,
+        "output_tokens": 70,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2069
+      },
+      "latency_ms": 1125,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:11.545Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-memory_evolution-002",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-memory_evolution-002",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": ""
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-memory_evolution-002\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2415,
+        "output_tokens": 70,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2415
+      },
+      "latency_ms": 1331,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:12.876Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-memory_evolution-003",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-memory_evolution-003",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": ""
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-memory_evolution-003\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2463,
+        "output_tokens": 70,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2463
+      },
+      "latency_ms": 1327,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:14.204Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-conflict_resolution-001",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-conflict_resolution-001",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "invalidated_fact_rejection metric is 0, but gold expects invalidated_fact 'onsite every day' to be rejected. The answer does not explicitly reject it, only mentions conflict. Also, forbidden_fact 'onsite every day is current' is not addressed."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-conflict_resolution-001\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"invalidated_fact_rejection metric is 0, but gold expects invalidated_fact 'onsite every day' to be rejected. The answer does not explicitly reject it, only mentions conflict. Also, forbidden_fact 'onsite every day is current' is not addressed.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 1940,
+        "output_tokens": 127,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 1940
+      },
+      "latency_ms": 1741,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:15.945Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-conflict_resolution-002",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-conflict_resolution-002",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "invalidated_fact_rejection is 0 but gold expects rejection of 'onsite every day' as current fact; answer correctly rejects it, so metric may be mis-scored."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-conflict_resolution-002\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"invalidated_fact_rejection is 0 but gold expects rejection of 'onsite every day' as current fact; answer correctly rejects it, so metric may be mis-scored.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 1832,
+        "output_tokens": 107,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 1832
+      },
+      "latency_ms": 1709,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:17.654Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-conflict_resolution-003",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-conflict_resolution-003",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "The computed_score shows invalidated_fact_rejection=0, but the gold expects rejection of 'onsite every day' as current. The answer preserves 'onsite' as historical, which is correct, but the metric suggests the invalidated fact was not rejected. This may indicate a scoring rubric ambiguity or misalignment between gold and computed metrics."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-conflict_resolution-003\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"The computed_score shows invalidated_fact_rejection=0, but the gold expects rejection of 'onsite every day' as current. The answer preserves 'onsite' as historical, which is correct, but the metric suggests the invalidated fact was not rejected. This may indicate a scoring rubric ambiguity or misalignment between gold and computed metrics.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 1409,
+        "output_tokens": 140,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 1409
+      },
+      "latency_ms": 1938,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:19.592Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-cross_agent_transfer-001",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-cross_agent_transfer-001",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "Agent isolation error rate is 1, indicating the answer included information from Agent X which should have been isolated. Also, cross_agent_consistency is 0, suggesting inconsistency in handling conflicting information."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-cross_agent_transfer-001\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"Agent isolation error rate is 1, indicating the answer included information from Agent X which should have been isolated. Also, cross_agent_consistency is 0, suggesting inconsistency in handling conflicting information.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 1718,
+        "output_tokens": 112,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 1718
+      },
+      "latency_ms": 1793,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:21.385Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-cross_agent_transfer-002",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-cross_agent_transfer-002",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "cross_agent_consistency is 0 but structured_answer includes Agent-X's incorrect report which is consistent with visible context; stale_transfer_rate is 1 but no stale facts present; metrics may be miscalculated."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-cross_agent_transfer-002\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"cross_agent_consistency is 0 but structured_answer includes Agent-X's incorrect report which is consistent with visible context; stale_transfer_rate is 1 but no stale facts present; metrics may be miscalculated.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 1963,
+        "output_tokens": 117,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 1963
+      },
+      "latency_ms": 1648,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:23.033Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-cross_agent_transfer-003",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-cross_agent_transfer-003",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "Agent isolation error rate is 1, indicating the model incorrectly used Agent X's cancelled report as a valid source, violating forbidden facts. Also, stale_transfer_rate is 1, suggesting the model may have used outdated information. The computed core score seems low due to these issues."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-cross_agent_transfer-003\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"Agent isolation error rate is 1, indicating the model incorrectly used Agent X's cancelled report as a valid source, violating forbidden facts. Also, stale_transfer_rate is 1, suggesting the model may have used outdated information. The computed core score seems low due to these issues.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 1642,
+        "output_tokens": 128,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 1642
+      },
+      "latency_ms": 1956,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:24.989Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-human_like_forgetting-001",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-human_like_forgetting-001",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "Noise suppression metric is 0 but gold expects suppression of headache, blue button, and drone plan. The structured answer correctly suppresses these, but computed score shows noise_suppression=0, indicating a scoring inconsistency."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-human_like_forgetting-001\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"Noise suppression metric is 0 but gold expects suppression of headache, blue button, and drone plan. The structured answer correctly suppresses these, but computed score shows noise_suppression=0, indicating a scoring inconsistency.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2392,
+        "output_tokens": 115,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2392
+      },
+      "latency_ms": 1529,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:26.519Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-human_like_forgetting-002",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-human_like_forgetting-002",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "noise_suppression is 0 but structured answer correctly suppresses all three forbidden facts; metric may be mis-scored."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-human_like_forgetting-002\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"noise_suppression is 0 but structured answer correctly suppresses all three forbidden facts; metric may be mis-scored.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2433,
+        "output_tokens": 96,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2433
+      },
+      "latency_ms": 1442,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:27.961Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-human_like_forgetting-003",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-human_like_forgetting-003",
+        "verdict": "flag",
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "Noise suppression metric is 0 but answer correctly suppresses noise; likely scoring bug."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-human_like_forgetting-003\",\n  \"verdict\": \"flag\",\n  \"score_issue\": true,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"Noise suppression metric is 0 but answer correctly suppresses noise; likely scoring bug.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2426,
+        "output_tokens": 88,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2426
+      },
+      "latency_ms": 1389,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:29.350Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-proactive_insight-001",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-proactive_insight-001",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": ""
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-proactive_insight-001\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2437,
+        "output_tokens": 71,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2437
+      },
+      "latency_ms": 835,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:30.185Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-proactive_insight-002",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-proactive_insight-002",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": ""
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-proactive_insight-002\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2615,
+        "output_tokens": 71,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2615
+      },
+      "latency_ms": 1089,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:31.275Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-proactive_insight-003",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-proactive_insight-003",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "All metrics align with gold; no issues detected."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-proactive_insight-003\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"All metrics align with gold; no issues detected.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2398,
+        "output_tokens": 81,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2398
+      },
+      "latency_ms": 1441,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:32.716Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-decision_quality-001",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-decision_quality-001",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": "Scoring appears consistent with rubric; no issues detected."
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-decision_quality-001\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"Scoring appears consistent with rubric; no issues detected.\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2258,
+        "output_tokens": 81,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2258
+      },
+      "latency_ms": 1128,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:33.844Z"
+    },
+    {
+      "schema_version": 1,
+      "scenario_id": "development-decision_quality-002",
+      "mode": "full_omni",
+      "agent_review": {
+        "scenario_id": "development-decision_quality-002",
+        "verdict": "agree",
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "notes": ""
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-decision_quality-002\",\n  \"verdict\": \"agree\",\n  \"score_issue\": false,\n  \"gold_ambiguity\": false,\n  \"baseline_fairness_issue\": false,\n  \"memory_leakage_issue\": false,\n  \"notes\": \"\"\n}",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "input_tokens": 2156,
+        "output_tokens": 70,
+        "cache_hit_input_tokens": 0,
+        "cache_miss_input_tokens": 2156
+      },
+      "latency_ms": 1082,
+      "judge_independent": false,
+      "reviewed_at": "2026-07-14T16:09:34.926Z"
+    }
+  ]
+}
