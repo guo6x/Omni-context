@@ -34,6 +34,13 @@ const server = createServer(async (req, res) => {
     res.end(JSON.stringify({ mode: 'semantic', model: 'fake-semantic-v1', healthy: true, status: 'ready' }));
     return;
   }
+  if (req.method === 'POST' && req.url === '/api/admin/embedding/rebuild') {
+    res.end(JSON.stringify({
+      counts: { entities: entities.length, assertions: 0 },
+      integrity: { entity: { coverage: 1 }, assertion: { coverage: 1 } },
+    }));
+    return;
+  }
   if (req.method === 'POST' && req.url === '/api/graph/extract') {
     let body = '';
     for await (const chunk of req) body += chunk;

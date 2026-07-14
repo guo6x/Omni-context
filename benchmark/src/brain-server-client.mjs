@@ -46,6 +46,11 @@ export class BrainServerClient {
     return this.request('GET', '/api/admin/embedding/status');
   }
 
+  /** Explicitly build shadow indexes and atomically activate them. */
+  async rebuildEmbeddings() {
+    return this.request('POST', '/api/admin/embedding/rebuild', { confirm: true });
+  }
+
   /** GET /api/stats — verify DB is writable and get entity/relationship counts. */
   async getStats() {
     return this.request('GET', '/api/stats');

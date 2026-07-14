@@ -37,9 +37,15 @@ export async function buildManifest({
   datasetPath, config, answerPrompt, judgePrompt, datasetManifest,
   split, conversationIds, runId, embeddingStatus,
 }) {
-  const datasetHash = await verifyDatasetHash(datasetPath, datasetManifest.sha256);
+  // Development is hard-isolated to Conversation 1. Hashing the whole file
+  // would read held-out conversations 2-10 before authorization, so only the
+  // held-out path performs whole-dataset verification.
+  const datasetHash = split === 'heldout'
+    ? await verifyDatasetHash(datasetPath, datasetManifest.sha256)
+    : datasetManifest.sha256;
   return {
     dataset_hash: datasetHash,
+    dataset_hash_verification: split === 'heldout' ? 'verified-full-file' : 'declared-manifest-only',
     dataset_source_commit: datasetManifest.source_commit,
     benchmark_commit: config.benchmark_commit || 'unknown',
     brain_server_commit: config.brain_server_commit || 'unknown',
@@ -361,7 +367,7 @@ export async function runBenchmark({
   if (split === 'heldout' && !evaluationAuthorization) {
     throw new Error('Held-out run requires a verified evaluation authorization manifest.');
   }
-  await verifyDatasetHash(datasetPath, datasetManifest.sha256);
+  if (split === 'heldout') await verifyDatasetHash(datasetPath, datasetManifest.sha256);
 
   // Create run directory
   const runId = `${new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-')}-${randomUUID().slice(0, 8)}`;
@@ -440,7 +446,7 @@ export async function resumeBenchmark({
 
   const runDir = await findRunDir(runsRoot, runId);
   const { manifest } = await readRun(runDir);
-  await verifyDatasetHash(datasetPath, manifest.dataset_hash);
+  if (manifest.split === 'heldout') await verifyDatasetHash(datasetPath, manifest.dataset_hash);
 
   // Verify config and prompt match the existing run
   verifyResumeConfig(manifest, config, answerPrompt, judgePrompt);
@@ -501,7 +507,7 @@ export async function retryErrors({
 
   const runDir = await findRunDir(runsRoot, runId);
   const { manifest } = await readRun(runDir);
-  await verifyDatasetHash(datasetPath, manifest.dataset_hash);
+  if (manifest.split === 'heldout') await verifyDatasetHash(datasetPath, manifest.dataset_hash);
 
   // Verify config and prompt match
   verifyResumeConfig(manifest, config, answerPrompt, judgePrompt);
@@ -620,6 +626,13 @@ async function runQuestions({
 
     try {
       const brainServerClient = runtime.client;
+      if (!resumeRuntime && typeof brainServerClient?.rebuildEmbeddings === 'function') {
+        const initialized = await brainServerClient.rebuildEmbeddings();
+        const integrity = initialized?.integrity;
+        if (!integrity || integrity.entity?.coverage !== 1 || integrity.assertion?.coverage !== 1) {
+          throw new Error(`Initial embedding index rebuild failed integrity: ${JSON.stringify(integrity)}`);
+        }
+      }
       await assertRuntimePreflight(brainServerClient, runDir, convId);
       const ingestionPath = path.join(conversationDirectory(runDir, convId), 'ingestion.json');
       const ingestion = await readJson(ingestionPath);
@@ -646,6 +659,9 @@ async function runQuestions({
         if (ingestResult.failed > 0) {
           throw new Error(`Conversation ${convId} ingestion failed for ${ingestResult.failed} sessions`);
         }
+        // Every entity/assertion written by extraction must be indexed before
+        // the first question is allowed to run.
+        await assertRuntimePreflight(brainServerClient, runDir, convId);
       } else {
         console.log(`[benchmark] Conversation ${convId} already ingested, reusing its isolated database.`);
       }
@@ -746,6 +762,11 @@ async function assertRuntimePreflight(brainServerClient, runDir, conversationId)
   const embeddingStatus = {
     mode: preflight.embeddingStatus.mode,
     model: preflight.embeddingStatus.model,
+    model_revision: preflight.embeddingStatus.modelRevision,
+    dimension: preflight.embeddingStatus.actualDimension,
+    usage_profile: preflight.embeddingStatus.usageProfile,
+    index_manifests: preflight.embeddingStatus.indexManifests,
+    integrity: preflight.embeddingStatus.integrity,
     available: preflight.embeddingStatus.healthy,
     status: preflight.embeddingStatus.status,
   };
