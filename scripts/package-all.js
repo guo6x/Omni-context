@@ -75,6 +75,10 @@ try {
     fs.rmSync(brainServerInTauri, { recursive: true });
   }
   fs.mkdirSync(brainServerInTauri, { recursive: true });
+  fs.writeFileSync(
+    path.join(brainServerInTauri, 'README.md'),
+    '# Generated Brain Server staging directory\n\nThe desktop packaging scripts replace this directory with the built Brain Server,\nits production dependencies, and the embedded Node runtime. This tracked file keeps\nthe Tauri resource glob valid in a clean source checkout so `cargo check`, Clippy,\nand Rust tests do not depend on untracked packaging output.\n'
+  );
   copyDir(
     path.join(ROOT_DIR, 'brain-server', 'dist'),
     path.join(brainServerInTauri, 'dist')
