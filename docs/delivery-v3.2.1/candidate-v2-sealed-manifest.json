@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "sealing_status": "CANDIDATE V2 EVIDENCE SEALED",
+  "candidate": "evaluation-freeze-candidate-v2",
+  "candidate_commit": "be20db60bef32a886fddde4986013cf40a1e8ec5",
+  "formal_run_id": "2026-07-14T07-34-44-390Z-daef50a5",
+  "run_code_provenance": {
+    "status": "PROVEN_SOURCE_TREE_HASH",
+    "benchmark_commit": "0936839f31a1b5c2254d798dd03223f8ab7a9300",
+    "brain_server_commit": "7456b5e06b21ab5eda66ca8582465d43ee844ede",
+    "source_tree_hash": "c904f0f28d2363e28f1200dd78666383ddba1d7b2fc28a668d19c880f4d1b971",
+    "working_tree_clean": false,
+    "rerun_decision": "DO_NOT_RERUN"
+  },
+  "models": {
+    "extraction": "deepseek-v4-flash",
+    "answer": "deepseek-v4-flash",
+    "judge": "deepseek-v4-flash",
+    "embedding": "Xenova/multilingual-e5-large",
+    "embedding_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "embedding_dimension": 1024,
+    "embedding_model_file_sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca"
+  },
+  "hashes": {
+    "dataset": "553cd5a15e25f2ceccc6ed185221eba645080c93e5b91087560a91aa5961f365",
+    "database": "898b4ce0d10c0c7972c3518371a9ca4358a7306bb70f29b2a479d3745cf8331e",
+    "results": "42e21caea53aed39df2ad3c89cd0ede1e92a1244171792a8900433d8ceeca605",
+    "metrics": "b42fc252cc2a59372b7061bb7703dac1f128e0c3d5eabd9cb5579aa4f3dd893d",
+    "recomputed_metrics": "3c5604c74b03e90e7dec46f04bf723c7ec2224771b46dd87d677e26caf838c94",
+    "config": "1247f36d330bf5b172aa1db208ca492417f820a187b896057b834b5bcba6331e",
+    "answer_prompt": "0d952927c6781461e4432e5a43e398ae166d1a2ec05097db7dcf1361930d1232",
+    "judge_prompt": "fec01733c586b2ac33e73d95261da53de19172c83e8d9a1b949c5f53a43298c4",
+    "embedding_profile": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853",
+    "entity_serialization": "685267ed4338626fbe9855f043a9a09d9e555f61d87b21fe08257b3cb0bbb4e7",
+    "assertion_serialization": "195310ea32cd4e3bc0cb9b1f4b56ab9a6821d5866b5dfad44f41ac0f47e41b91"
+  },
+  "serialization_versions": {
+    "entity": "entity-passage-v2",
+    "assertion": "assertion-passage-v1"
+  },
+  "run_integrity": {
+    "sessions": 19,
+    "completed_questions": 199,
+    "errors": 0,
+    "missing": 0,
+    "duplicate_completed": 0,
+    "retry_records": 14,
+    "historical_error_records": 2,
+    "candidate_snapshots": 199,
+    "final_context_snapshots": 199,
+    "fallback_count": 0
+  },
+  "vector_integrity": {
+    "entity_active": 375,
+    "entity_vectors": 375,
+    "assertion_active": 396,
+    "assertion_vectors": 396,
+    "zero_vectors": 0,
+    "nan_vectors": 0,
+    "wrong_dimensions": 0,
+    "orphan_vectors": 0,
+    "stale_vectors": 0
+  },
+  "metrics_recomputation": {
+    "consistent": true,
+    "difference_only": [
+      "metrics.json.generated_at",
+      "recomputed-metrics.json.recomputed_at"
+    ]
+  },
+  "ci": {
+    "status": "REMOTE_CI_PASS",
+    "commit": "be20db60bef32a886fddde4986013cf40a1e8ec5",
+    "run_url": "https://github.com/guo6x/Omni-context/actions/runs/29327931980",
+    "passed_jobs": 9,
+    "failed_jobs": 0
+  },
+  "review": {
+    "type": "agent-based",
+    "label": "Agent-based independent review",
+    "artifact_sha256": "e501b95db6f1fd80474f35355800ff5b0ac679297ccd143986ffcdc882c27b94",
+    "reviewed": 15,
+    "agreements": 15,
+    "disagreements": 0,
+    "human_review_completed": false
+  },
+  "release": {
+    "status": "RELEASE_ASSETS_VERIFIED",
+    "url": "https://github.com/guo6x/Omni-context/releases/tag/evaluation-freeze-candidate-v2",
+    "verified_assets": 2
+  },
+  "conversation_2_to_10_accessed": false,
+  "unresolved_p0": [],
+  "unresolved_p1": [
+    "The formal run is phase-composite and the global worktree was not clean, so provenance is source-tree based rather than a single exact commit.",
+    "The exact historical dist bytes were not archived; dist hashes were reproduced from the proven phase commits with the same dependency tree and toolchain.",
+    "Independent human review has not been completed; the archived 15-item review is agent-based and retains the same-model Judge limitation.",
+    "The raw append-only results retain two resolved historical error records; final latest-per-question state has zero unresolved errors."
+  ]
+}
