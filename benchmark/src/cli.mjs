@@ -114,7 +114,7 @@ async function main() {
   const [config, datasetManifest, answerPrompt, judgePrompt] = await Promise.all([
     loadConfig(configPath),
     loadConfig(path.join(ROOT, "dataset_manifest.json")),
-    loadPrompt(path.join(ROOT, "prompts", "answer-v1.txt")),
+    loadPrompt(path.join(ROOT, "prompts", "answer-v2.txt")),
     loadPrompt(path.join(ROOT, "prompts", "judge-v2.txt")),
   ]);
   if (config.evaluation?.thinking_mode && !process.env.LLM_THINKING_MODE) {

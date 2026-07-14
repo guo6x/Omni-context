@@ -28,6 +28,7 @@ const MANIFEST_REQUIRED_FIELDS = [
   'answer_model', 'judge_model', 'embedding_model', 'embedding_status',
   'prompt_hash', 'judge_prompt_hash', 'config_hash', 'node_version', 'os', 'split',
   'datetime_parser_version', 'datetime_timezone_assumption',
+  'answer_prompt_version', 'answer_evidence_context_version',
   'thinking_mode', 'answer_max_tokens', 'judge_max_tokens',
   'conversation_ids', 'run_id', 'started_at',
 ];
@@ -47,6 +48,8 @@ export async function buildManifest({
     embedding_model: embeddingStatus.model || 'unknown',
     embedding_status: embeddingStatus,
     prompt_hash: sha256(answerPrompt),
+    answer_prompt_version: 'answer-v2',
+    answer_evidence_context_version: 'answer-evidence-context-v2',
     judge_prompt_hash: sha256(judgePrompt),
     config_hash: configHash(config),
     datetime_parser_version: LOCOMO_DATETIME_PARSER_VERSION,

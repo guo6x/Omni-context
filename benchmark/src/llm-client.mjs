@@ -1,3 +1,5 @@
+import { formatEvidenceContext } from './answer/evidence-context.mjs';
+
 /**
  * Real LLM client for the benchmark runner.
  * Handles answer generation and judge evaluation via OpenAI-compatible API.
@@ -81,13 +83,13 @@ export class LLMClient {
    */
   async answer(question, retrieval, prompt) {
     const evidence = retrieval?.evidence || [];
-    const context = evidence.length > 0 ? JSON.stringify(evidence, null, 2) : '[]';
+    const context = formatEvidenceContext(evidence);
 
     const messages = [
       { role: 'system', content: prompt },
       {
         role: 'user',
-        content: `## Evidence\n${context}\n\n## Temporal Query\n${JSON.stringify(retrieval?.temporalQuery || { mode: 'current', as_of: null })}\n\n## Question\n${question}\n\n## Instructions\nReturn only the strict JSON object required by the system prompt. Every evidence_ids entry must be copied exactly from the Evidence list.`,
+        content: `## Evidence (human-readable, citation-safe)\n${context}\n\n## Temporal Query\n${JSON.stringify(retrieval?.temporalQuery || { mode: 'current', as_of: null })}\n\n## Question\n${question}\n\n## Instructions\nReturn only the strict JSON object required by the system prompt. Every evidence_ids entry must be copied exactly from an Evidence ID line.`,
       },
     ];
 

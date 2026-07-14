@@ -273,6 +273,7 @@ interface GroundingEvidence {
   passage?: string;
   subjectName?: string;
   objectName?: string;
+  eventTime?: string;
   confidence: number;
   source_span: string | null;
   temporal_status: 'current' | 'historical' | 'invalidated';
@@ -373,6 +374,7 @@ async function buildGroundingEnvelope(
       passage,
       subjectName,
       objectName,
+      eventTime: assertion.event_time,
       confidence: assertion.confidence,
       source_span: assertion.source_span ?? null,
       temporal_status: temporalStatus,
