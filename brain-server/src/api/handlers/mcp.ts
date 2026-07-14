@@ -42,7 +42,8 @@ import {
 } from '../../mcp-retrieval.js';
 import { createAuditedAiFetch } from '../../security/audited-ai-fetch.js';
 import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from '../../retrieval/config.js';
-import { parseTemporalQuery, temporalOptsFromQuery, filterEntitiesByTemporal } from '../../retrieval/temporal-layer.js';
+import { parseTemporalQuery, temporalOptsFromQuery, filterAssertionsByTemporal, filterEntitiesByTemporal } from '../../retrieval/temporal-layer.js';
+import { reciprocalRankFuse, type FusedRetrievalCandidate, type RetrievalSourceTrace } from '../../retrieval/fusion.js';
 
 const CORE_PRINCIPLE_CAP = 3;
 const mcpLlmFetch = createAuditedAiFetch({ purpose: 'api.decision-intelligence', kind: 'llm' });
@@ -265,15 +266,33 @@ interface GroundingEvidence {
   type: 'entity' | 'assertion';
   subjectId?: string;
   predicate?: string;
+  originalPredicate?: string;
   objectId?: string;
   literalValue?: string;
+  fact?: string;
+  passage?: string;
+  subjectName?: string;
+  objectName?: string;
   confidence: number;
   source_span: string | null;
-  temporal_status: 'current' | 'historical';
+  temporal_status: 'current' | 'historical' | 'invalidated';
   valid_from: string | null;
   valid_until: string | null;
   invalidated_at: string | null;
   provenance: Record<string, unknown> | null;
+  retrieval_sources?: RetrievalSourceTrace[];
+  fused_rank?: number;
+  fused_score?: number;
+}
+
+interface ReadableAssertionCandidate {
+  id: string;
+  assertion: Assertion;
+  subjectName: string;
+  objectName?: string;
+  passage: string;
+  distance?: number;
+  similarity?: number;
 }
 
 interface GroundingEnvelope {
@@ -287,9 +306,10 @@ interface GroundingEnvelope {
 async function buildGroundingEnvelope(
   ctx: RequestContext,
   sources: Array<{ id?: string; similarity?: number }>,
+  semanticAssertions: Array<FusedRetrievalCandidate<ReadableAssertionCandidate>> = [],
 ): Promise<GroundingEnvelope> {
   const entitySources = sources.filter((source) => typeof source?.id === 'string');
-  if (!entitySources.length) {
+  if (!entitySources.length && !semanticAssertions.length) {
     return {
       status: 'insufficient_evidence',
       answerClassification: 'unknown',
@@ -299,10 +319,12 @@ async function buildGroundingEnvelope(
     };
   }
 
-  const assertionGroups = await Promise.all(
-    entitySources.slice(0, 10).map((source) => ctx.db.getAssertions({ subjectId: source.id, limit: 8 })),
+  // Subject attachment remains a bounded compatibility fallback. The primary
+  // path is assertion-level semantic/FTS retrieval supplied above.
+  const assertionGroups = semanticAssertions.length ? [] : await Promise.all(
+    entitySources.slice(0, 4).map((source) => ctx.db.getAssertions({ subjectId: source.id, limit: 2 })),
   );
-  const assertions = assertionGroups.flat().slice(0, 30);
+  const assertions = assertionGroups.flat().slice(0, 8);
   const now = Date.now();
   const isPast = (value?: string) => value ? Date.parse(value) <= now : false;
   const entityEvidence: GroundingEvidence[] = entitySources.slice(0, 12).map((source) => ({
@@ -316,11 +338,12 @@ async function buildGroundingEnvelope(
     invalidated_at: null,
     provenance: null,
   }));
-  const assertionEvidence: GroundingEvidence[] = assertions.map((assertion: Assertion) => ({
+  const fallbackAssertionEvidence: GroundingEvidence[] = assertions.map((assertion: Assertion) => ({
     id: assertion.id,
     type: 'assertion',
     subjectId: assertion.subject_id,
     predicate: assertion.predicate,
+    originalPredicate: assertion.original_predicate || assertion.predicate,
     objectId: assertion.object_id,
     literalValue: assertion.literal_value,
     confidence: assertion.confidence,
@@ -330,10 +353,43 @@ async function buildGroundingEnvelope(
     valid_until: assertion.valid_until ?? null,
     invalidated_at: assertion.invalidated_at ?? null,
     provenance: assertion.provenance ?? null,
+    retrieval_sources: [{ source: 'subject_attachment', rawRank: 1, rawDistance: null, normalizedScore: assertion.confidence, weight: RETRIEVAL_CONFIG.subjectAttachmentWeight }],
   }));
+  const assertionEvidence: GroundingEvidence[] = semanticAssertions.slice(0, 30).map((candidate) => {
+    const { assertion, subjectName, objectName, passage } = candidate.value;
+    const temporalStatus = assertion.invalidated_at
+      ? 'invalidated'
+      : (isPast(assertion.valid_until) ? 'historical' : 'current');
+    const fact = passage.split(/\r?\n/, 1)[0].replace(/^passage:\s*/i, '');
+    return {
+      id: assertion.id,
+      type: 'assertion',
+      subjectId: assertion.subject_id,
+      predicate: assertion.predicate,
+      originalPredicate: assertion.original_predicate || assertion.predicate,
+      objectId: assertion.object_id,
+      literalValue: assertion.literal_value,
+      fact,
+      passage,
+      subjectName,
+      objectName,
+      confidence: assertion.confidence,
+      source_span: assertion.source_span ?? null,
+      temporal_status: temporalStatus,
+      valid_from: assertion.valid_from ?? null,
+      valid_until: assertion.valid_until ?? null,
+      invalidated_at: assertion.invalidated_at ?? null,
+      provenance: assertion.provenance ?? null,
+      retrieval_sources: candidate.sources,
+      fused_rank: candidate.fusedRank,
+      fused_score: Number(candidate.fusedScore.toFixed(8)),
+    };
+  });
   // Assertions carry claim-level provenance and are the formal evidence unit.
   // Entity fallback is permitted only when the retrieved entities have no assertions.
-  const evidence = assertionEvidence.length > 0 ? assertionEvidence : entityEvidence;
+  const evidence = assertionEvidence.length > 0
+    ? assertionEvidence
+    : (fallbackAssertionEvidence.length > 0 ? fallbackAssertionEvidence : entityEvidence);
   const confidence = evidence.reduce((sum, item) => sum + item.confidence, 0) / evidence.length;
 
   return {
@@ -1230,8 +1286,14 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               limit * RETRIEVAL_CONFIG.candidatePoolMultiplier,
               RETRIEVAL_CONFIG.candidatePoolMinimum,
             );
-            const resultsData: any = { textResults: [], vectorResults: [], graphContext: [] };
+            const umsTemporalOpts = temporalOptsFromQuery(parsed.query);
+            const umsTemporalQuery = parseTemporalQuery(parsed.query);
+            const resultsData: any = {
+              textResults: [], vectorResults: [], assertionTextResults: [],
+              assertionVectorResults: [], graphContext: [], subjectAttachments: [],
+            };
             resultsData.textResults = await ctx.db.searchEntities(parsed.query, umsPool);
+            resultsData.assertionTextResults = await ctx.db.searchResolvedAssertions(parsed.query, umsPool);
 
             try {
               const embResult = await withTimeout(
@@ -1240,7 +1302,10 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 'embedding timeout',
               );
               assertEvaluationEmbeddingReady(ctx.embeddingService.getStatus());
-              resultsData.vectorResults = await ctx.db.vectorSearch(embResult.embedding, umsPool);
+              [resultsData.vectorResults, resultsData.assertionVectorResults] = await Promise.all([
+                ctx.db.vectorSearch(embResult.embedding, umsPool),
+                ctx.db.assertionVectorSearch(embResult.embedding, umsPool, umsTemporalOpts),
+              ]);
             } catch (error) {
               rethrowEvaluationEmbeddingFailure(error);
             }
@@ -1282,13 +1347,73 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             }
 
             // 时间感知过滤：根据查询中的时间词，剔除已失效事实（"现在"/"当时"/"去年"等）
-            const umsTemporalOpts = temporalOptsFromQuery(parsed.query);
-            const umsTemporalQuery = parseTemporalQuery(parsed.query);
             const umsTemporallyFiltered = filterEntitiesByTemporal(unified, umsTemporalOpts);
 
-            // 宽召回后 LLM 重排，挑出真正相关的（救弱 embedding 的中文召回）
-            const ranked = (await rerankByLlm(ctx, parsed.query, umsTemporallyFiltered, limit * 2))
+            // Existing reranker still ranks entity navigation candidates. The
+            // mixed assertion/entity pool below is also shown to it before the
+            // final context is selected.
+            const rankedEntities = (await rerankByLlm(ctx, parsed.query, umsTemporallyFiltered, limit * 2))
               .filter((item: any) => memoryCandidateScore(parsed.query, item, { config: RETRIEVAL_CONFIG }) > RETRIEVAL_CONFIG.minimumLexicalScore);
+
+            const assertionTextResults = filterAssertionsByTemporal(
+              resultsData.assertionTextResults.map((item: ReadableAssertionCandidate) => item.assertion),
+              umsTemporalOpts,
+            ).map((assertion: any) => resultsData.assertionTextResults.find((item: ReadableAssertionCandidate) => item.id === assertion.id));
+            const attachmentGroups = await Promise.all(rankedEntities.slice(0, 4).map(async (entity: any) => {
+              const attached = filterAssertionsByTemporal(
+                await ctx.db.getAssertions({ subjectId: entity.id, includeHistorical: umsTemporalOpts.includeHistorical, limit: 2 }),
+                umsTemporalOpts,
+              );
+              return Promise.all(attached.map((assertion) => ctx.db.getResolvedAssertion(assertion.id)));
+            }));
+            resultsData.subjectAttachments = attachmentGroups.flat().filter(Boolean);
+
+            const fused = reciprocalRankFuse<ReadableAssertionCandidate | any>([
+              {
+                source: 'entity_vector', weight: RETRIEVAL_CONFIG.entityVectorWeight,
+                items: resultsData.vectorResults.map((item: any) => ({ id: item.id, kind: 'entity' as const, value: item, score: item.similarity })),
+              },
+              {
+                source: 'assertion_vector', weight: RETRIEVAL_CONFIG.assertionVectorWeight,
+                items: resultsData.assertionVectorResults.map((item: ReadableAssertionCandidate) => ({ id: item.id, kind: 'assertion' as const, value: item, distance: item.distance, score: item.similarity })),
+              },
+              {
+                source: 'FTS', weight: RETRIEVAL_CONFIG.entityFtsWeight,
+                items: resultsData.textResults.map((item: any) => ({ id: item.id, kind: 'entity' as const, value: item })),
+              },
+              {
+                source: 'FTS', weight: RETRIEVAL_CONFIG.assertionFtsWeight,
+                items: assertionTextResults.map((item: ReadableAssertionCandidate) => ({ id: item.id, kind: 'assertion' as const, value: item })),
+              },
+              {
+                source: 'graph', weight: RETRIEVAL_CONFIG.graphWeight,
+                items: (resultsData.graphContext?.nodes || []).map((item: any) => ({ id: item.id, kind: 'entity' as const, value: item })),
+              },
+              {
+                source: 'subject_attachment', weight: RETRIEVAL_CONFIG.subjectAttachmentWeight,
+                items: resultsData.subjectAttachments.map((item: ReadableAssertionCandidate) => ({ id: item.id, kind: 'assertion' as const, value: item })),
+              },
+            ], { rrfK: RETRIEVAL_CONFIG.rrfK });
+
+            const mixedForReranker = fused.slice(0, umsPool).map((candidate) => candidate.kind === 'assertion'
+              ? {
+                  id: candidate.id, name: candidate.value.fact || candidate.value.passage.split(/\r?\n/, 1)[0],
+                  type: 'assertion', description: candidate.value.passage,
+                  similarity: candidate.sources[0]?.normalizedScore,
+                }
+              : candidate.value);
+            const rerankedMixed = await rerankByLlm(ctx, parsed.query, mixedForReranker, Math.min(umsPool, limit * 4));
+            const rerankOrder = new Map(rerankedMixed.map((item: any, index: number) => [
+              `${item.type === 'assertion' ? 'assertion' : 'entity'}:${item.id}`, index,
+            ]));
+            const finalFused = [...fused].sort((a, b) => {
+              const aOrder = rerankOrder.get(`${a.kind}:${a.id}`);
+              const bOrder = rerankOrder.get(`${b.kind}:${b.id}`);
+              if (aOrder !== undefined || bOrder !== undefined) return (aOrder ?? Number.MAX_SAFE_INTEGER) - (bOrder ?? Number.MAX_SAFE_INTEGER);
+              return a.fusedRank - b.fusedRank;
+            });
+            const finalAssertions = finalFused.filter((item): item is FusedRetrievalCandidate<ReadableAssertionCandidate> => item.kind === 'assertion').slice(0, limit * 2);
+            const ranked = finalFused.filter((item) => item.kind === 'entity').slice(0, limit * 2).map((item) => item.value);
 
             let graphContext = resultsData.graphContext;
             if (graphContext && graphContext.nodes) {
@@ -1306,7 +1431,23 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
 
             result = {
               results: ranked.map(toCompactEntity),
-              evidence: (await buildGroundingEnvelope(ctx, ranked)).evidence,
+              evidence: (await buildGroundingEnvelope(ctx, ranked, finalAssertions)).evidence,
+              candidatePool: finalFused.slice(0, umsPool).map((candidate, index) => ({
+                id: candidate.id,
+                type: candidate.kind,
+                passage: candidate.kind === 'assertion' ? candidate.value.passage : undefined,
+                sources: candidate.sources,
+                fused_score: Number(candidate.fusedScore.toFixed(8)),
+                fused_rank: candidate.fusedRank,
+                final_rank: index + 1,
+              })),
+              finalContext: finalAssertions.map((candidate, index) => ({
+                evidence_id: candidate.id,
+                passage: candidate.value.passage,
+                sources: candidate.sources,
+                fused_rank: candidate.fusedRank,
+                final_rank: index + 1,
+              })),
               temporalQuery: {
                 mode: umsTemporalQuery.mode,
                 as_of: umsTemporalQuery.asOf || null,
@@ -1315,7 +1456,22 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               searchMethods: {
                 text: resultsData.textResults.length,
                 vector: resultsData.vectorResults.length,
+                assertion_text: assertionTextResults.length,
+                assertion_vector: resultsData.assertionVectorResults.length,
                 graph: resultsData.graphContext?.nodes?.length || 0,
+                subject_attachment: resultsData.subjectAttachments.length,
+              },
+              fusionConfig: {
+                method: 'weighted_rrf',
+                rrfK: RETRIEVAL_CONFIG.rrfK,
+                weights: {
+                  entity_vector: RETRIEVAL_CONFIG.entityVectorWeight,
+                  assertion_vector: RETRIEVAL_CONFIG.assertionVectorWeight,
+                  entity_fts: RETRIEVAL_CONFIG.entityFtsWeight,
+                  assertion_fts: RETRIEVAL_CONFIG.assertionFtsWeight,
+                  graph: RETRIEVAL_CONFIG.graphWeight,
+                  subject_attachment: RETRIEVAL_CONFIG.subjectAttachmentWeight,
+                },
               },
             };
             break;

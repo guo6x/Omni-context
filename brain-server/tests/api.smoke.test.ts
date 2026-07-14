@@ -5,6 +5,24 @@ import initDatabase, { Database } from '../src/db/sqlite.js';
 import { createServer } from '../src/api/routes.js';
 import { decodeEmbedding } from '../src/utils/math.js';
 import { LLMExtractorPipeline } from '../src/graphrag/llm-pipeline.js';
+import { E5_LARGE_USAGE_PROFILE, embeddingProfileFingerprint } from '../src/embedding/profiles.js';
+
+function testVector(text: string): number[] {
+  const vector = new Array(1024).fill(0);
+  let slot = 0;
+  for (let i = 0; i < text.length; i++) slot = (slot + text.charCodeAt(i) * (i + 1)) % vector.length;
+  vector[slot] = 1;
+  return vector;
+}
+
+const testEmbeddingService = {
+  getUsageProfile: () => ({ ...E5_LARGE_USAGE_PROFILE, fingerprint: embeddingProfileFingerprint(E5_LARGE_USAGE_PROFILE) }),
+  getStatus: () => 'local' as const,
+  getInfo: () => ({ status: 'local', dimensions: 1024, model: E5_LARGE_USAGE_PROFILE.modelId }),
+  embedPassage: async (text: string) => ({ embedding: testVector(text), dimensions: 1024, model: E5_LARGE_USAGE_PROFILE.modelId }),
+  embedQuery: async (text: string) => ({ embedding: testVector(text), dimensions: 1024, model: E5_LARGE_USAGE_PROFILE.modelId }),
+  embed: async (text: string) => ({ embedding: testVector(text), dimensions: 1024, model: E5_LARGE_USAGE_PROFILE.modelId }),
+};
 
 // 端到端 smoke：启动真实 HTTP 服务，验证关键路由不再因路由顺序、
 // CORS 头、参数 404 等问题而被静默打断。
@@ -34,7 +52,8 @@ beforeAll(async () => {
 
   db = initDatabase({ dbPath: ':memory:' });
   await db.runMigrations();
-  server = createServer(db);
+  await db.rebuildAllEmbeddings(testEmbeddingService as any);
+  server = createServer(db, undefined, testEmbeddingService as any);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const port = (server.address() as AddressInfo).port;
   baseUrl = `http://127.0.0.1:${port}`;
@@ -162,6 +181,39 @@ describe('API smoke: MCP usage log', () => {
     expect(latest.query).toContain('MCP Usage Trace Entity');
     expect(latest.success).toBe(true);
     expect(latest.matchedEntities.some((e: any) => e.name === 'MCP Usage Trace Entity')).toBe(true);
+  });
+});
+
+describe('API smoke: hybrid assertion retrieval', () => {
+  it('returns assertion-semantic evidence with an auditable fusion trace', async () => {
+    const subject = await db.addEntity({
+      name: 'Caroline Hybrid Test', type: 'person', description: 'Interested in counseling',
+      embedding: testVector('Caroline Hybrid Test'),
+    });
+    const assertion = await db.addAssertion({
+      subject_id: subject.id,
+      predicate: 'relates_to',
+      original_predicate: 'has_goal',
+      literal_value: 'counseling certification',
+      confidence: 0.96,
+      source_span: 'I want to earn a counseling certification.',
+      version: 1,
+    });
+
+    const response = await request('POST', '/api/mcp/tool/unified_memory_search', {
+      arguments: { query: 'counseling certification', limit: 5, includeRelationships: true },
+    });
+    expect(response.status).toBe(200);
+    expect(response.body.evidence[0]).toMatchObject({
+      id: assertion.id,
+      type: 'assertion',
+      subjectName: 'Caroline Hybrid Test',
+      originalPredicate: 'has_goal',
+    });
+    expect(response.body.evidence[0].fact).not.toContain(subject.id);
+    expect(response.body.evidence[0].retrieval_sources.some((item: any) => item.source === 'assertion_vector')).toBe(true);
+    expect(response.body.candidatePool.some((item: any) => item.id === assertion.id)).toBe(true);
+    expect(response.body.finalContext[0].evidence_id).toBe(assertion.id);
   });
 });
 
@@ -570,7 +622,7 @@ describe('API smoke: admin export', () => {
     expect(status).toBe(200);
     expect(body).toMatchObject({
       version: 2,
-      schemaVersion: 23,
+      schemaVersion: 27,
       appVersion: '0.1.1',
       exportedAt: expect.any(String),
       entities: expect.any(Array),

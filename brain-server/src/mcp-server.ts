@@ -24,6 +24,7 @@ import { createAuditedAiFetch } from './security/audited-ai-fetch.js';
 import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from './retrieval/config.js';
 import { parseTimeWindow } from './utils/time-window.js';
 import { temporalOptsFromQuery, filterEntitiesByTemporal, filterAssertionsByTemporal } from './retrieval/temporal-layer.js';
+import { reciprocalRankFuse } from './retrieval/fusion.js';
 
 const mcpLlmFetch = createAuditedAiFetch({ purpose: 'mcp.decision-intelligence', kind: 'llm' });
 
@@ -1354,10 +1355,16 @@ ${gaConnBlock}`;
     );
     const textResults = await this.db.searchEntities(query, pool);
     let vectorResults: RetrievalCandidate[] = [];
+    let assertionVectorResults: any[] = [];
+    let assertionTextResults: any[] = [];
     try {
       const embedded = await this.embeddingService.embedQuery(query);
       assertEvaluationEmbeddingReady(this.embeddingService.getStatus());
-      vectorResults = await this.db.vectorSearch(embedded.embedding, pool);
+      [vectorResults, assertionVectorResults, assertionTextResults] = await Promise.all([
+        this.db.vectorSearch(embedded.embedding, pool),
+        this.db.assertionVectorSearch(embedded.embedding, pool, temporalOptsFromQuery(query)),
+        this.db.searchResolvedAssertions(query, pool),
+      ]);
     } catch (error) {
       if (process.env.OMNI_EVALUATION_MODE === '1') {
         throw new McpError(
@@ -1376,43 +1383,6 @@ ${gaConnBlock}`;
       const temporal = await this.db.getEntitiesByTimeWindow(window.start, window.end, pool);
       temporalCount = temporal.length;
      for (const entity of temporal) candidateMap.set(entity.id, entity);
-    }
-
-    // Include assertions as temporal fact candidates
-    let assertionCount = 0;
-    const assertionCandidates: RetrievalCandidate[] = [];
-    try {
-      const assertions = await this.db.getAssertions({
-        includeHistorical,
-        limit: pool,
-      } as any);
-      assertionCount = assertions.length;
-      for (const a of assertions) {
-        assertionCandidates.push({
-          id: a.id,
-          name: `${a.predicate}: ${a.literal_value || a.object_id || ''}`,
-          type: 'assertion',
-          description: a.literal_value
-            ? `${a.predicate} = ${a.literal_value}`
-            : `${a.predicate} -> ${a.object_id}`,
-          similarity: a.confidence || 0.5,
-          metadata: {
-            subject_id: a.subject_id,
-            predicate: a.predicate,
-            object_id: a.object_id,
-            literal_value: a.literal_value,
-            confidence: a.confidence,
-            source_span: a.source_span,
-            valid_from: a.valid_from,
-            valid_until: a.valid_until,
-            is_historical: !!(a.valid_until && new Date(a.valid_until) < new Date()),
-          },
-          valid_from: a.valid_from,
-          valid_until: a.valid_until,
-        });
-      }
-    } catch (e) {
-      console.warn('[retrieval] assertion fetch failed:', e);
     }
 
     const graphNodes = new Map<string, Entity>();
@@ -1434,7 +1404,42 @@ ${gaConnBlock}`;
     // 剔除已失效事实或按具体日期过滤，确保 reranker 只看到时间上有效的候选。
     const temporalOpts = temporalOptsFromQuery(query);
     const temporallyFiltered = filterEntitiesByTemporal([...candidateMap.values()], temporalOpts);
-    const temporallyFilteredAssertions = filterAssertionsByTemporal(assertionCandidates, temporalOpts);
+    const textAssertionIds = new Set(filterAssertionsByTemporal(
+      assertionTextResults.map((item: any) => item.assertion), temporalOpts,
+    ).map((item: any) => item.id));
+    assertionTextResults = assertionTextResults.filter((item: any) => textAssertionIds.has(item.id));
+    const fused = reciprocalRankFuse<any>([
+      { source: 'entity_vector', weight: RETRIEVAL_CONFIG.entityVectorWeight, items: vectorResults.map((item) => ({ id: item.id, kind: 'entity', value: item, score: item.similarity })) },
+      { source: 'assertion_vector', weight: RETRIEVAL_CONFIG.assertionVectorWeight, items: assertionVectorResults.map((item: any) => ({ id: item.id, kind: 'assertion', value: item, distance: item.distance, score: item.similarity })) },
+      { source: 'FTS', weight: RETRIEVAL_CONFIG.entityFtsWeight, items: textResults.map((item) => ({ id: item.id, kind: 'entity', value: item })) },
+      { source: 'FTS', weight: RETRIEVAL_CONFIG.assertionFtsWeight, items: assertionTextResults.map((item: any) => ({ id: item.id, kind: 'assertion', value: item })) },
+      { source: 'graph', weight: RETRIEVAL_CONFIG.graphWeight, items: [...graphNodes.values()].map((item) => ({ id: item.id, kind: 'entity', value: item })) },
+    ], { rrfK: RETRIEVAL_CONFIG.rrfK });
+    const fusedAssertions: RetrievalCandidate[] = fused.filter((item) => item.kind === 'assertion').map((item) => {
+      const resolved = item.value;
+      const assertion = resolved.assertion;
+      return {
+        id: assertion.id,
+        name: resolved.passage.split(/\r?\n/, 1)[0].replace(/^passage:\s*/i, ''),
+        type: 'assertion',
+        description: resolved.passage,
+        similarity: item.sources[0]?.normalizedScore,
+        metadata: {
+          subject_id: assertion.subject_id,
+          subject_name: resolved.subjectName,
+          predicate: assertion.predicate,
+          original_predicate: assertion.original_predicate,
+          object_id: assertion.object_id,
+          object_name: resolved.objectName,
+          literal_value: assertion.literal_value,
+          source_span: assertion.source_span,
+          retrieval_sources: item.sources,
+          fused_rank: item.fusedRank,
+        },
+        valid_from: assertion.valid_from,
+        valid_until: assertion.valid_until,
+      };
+    });
 
     const ranked = rankMemoryCandidates(query, temporallyFiltered, {
       decisionMode,
@@ -1453,9 +1458,9 @@ ${gaConnBlock}`;
         vector: vectorResults.length,
         temporal: temporalCount,
         graph: graphNodes.size,
-        assertion: temporallyFilteredAssertions.length,
+        assertion: fusedAssertions.length,
       },
-      assertions: temporallyFilteredAssertions.slice(0, limit),
+      assertions: fusedAssertions.slice(0, limit),
     };
   }
 

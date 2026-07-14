@@ -2038,6 +2038,17 @@ export class Database {
     }));
   }
 
+  async searchResolvedAssertions(query: string, limit: number = 10): Promise<Array<{
+    assertion: Assertion;
+    subjectName: string;
+    objectName?: string;
+    passage: string;
+  }>> {
+    const assertions = await this.searchAssertions(query, limit);
+    const resolved = await Promise.all(assertions.map((assertion) => this.getResolvedAssertion(assertion.id)));
+    return resolved.filter((item): item is NonNullable<typeof item> => item !== null);
+  }
+
   /**
    * Database consistency scan: verifies that every non-deleted relationship has
    * a mirror assertion, and that no orphaned FTS rows exist for invalidated assertions.
@@ -2972,6 +2983,7 @@ export class Database {
   }
 
   async getResolvedAssertion(assertionId: string): Promise<{
+    id: string;
     assertion: Assertion;
     subjectName: string;
     objectName?: string;
@@ -2992,7 +3004,7 @@ export class Database {
       subjectName: row.subject_name,
       objectName: row.object_name || undefined,
     });
-    return { assertion, subjectName: row.subject_name, objectName: row.object_name || undefined, passage };
+    return { id: assertion.id, assertion, subjectName: row.subject_name, objectName: row.object_name || undefined, passage };
   }
 
   async indexAssertion(assertionId: string): Promise<void> {

@@ -10,6 +10,13 @@ export interface RetrievalConfig {
   invalidatedPenalty: number;
   pendingConflictPenalty: number;
   abstentionThreshold: number;
+  rrfK: number;
+  entityVectorWeight: number;
+  assertionVectorWeight: number;
+  entityFtsWeight: number;
+  assertionFtsWeight: number;
+  graphWeight: number;
+  subjectAttachmentWeight: number;
 }
 
 export const DEFAULT_RETRIEVAL_CONFIG: Readonly<RetrievalConfig> = Object.freeze({
@@ -24,6 +31,13 @@ export const DEFAULT_RETRIEVAL_CONFIG: Readonly<RetrievalConfig> = Object.freeze
   invalidatedPenalty: 20,
   pendingConflictPenalty: 4,
   abstentionThreshold: 0.2,
+  rrfK: 60,
+  entityVectorWeight: 0.8,
+  assertionVectorWeight: 1.4,
+  entityFtsWeight: 0.7,
+  assertionFtsWeight: 1.1,
+  graphWeight: 0.4,
+  subjectAttachmentWeight: 0.2,
 });
 
 function boundedNumber(
@@ -53,6 +67,13 @@ export function loadRetrievalConfig(
     invalidatedPenalty: boundedNumber(env.OMNI_RETRIEVAL_INVALIDATED_PENALTY, 20, 0, 100),
     pendingConflictPenalty: boundedNumber(env.OMNI_RETRIEVAL_CONFLICT_PENALTY, 4, 0, 50),
     abstentionThreshold: boundedNumber(env.OMNI_RETRIEVAL_ABSTENTION_THRESHOLD, 0.2, 0, 1),
+    rrfK: boundedNumber(env.OMNI_RETRIEVAL_RRF_K, 60, 1, 1000),
+    entityVectorWeight: boundedNumber(env.OMNI_RETRIEVAL_ENTITY_VECTOR_WEIGHT, 0.8, 0, 10),
+    assertionVectorWeight: boundedNumber(env.OMNI_RETRIEVAL_ASSERTION_VECTOR_WEIGHT, 1.4, 0, 10),
+    entityFtsWeight: boundedNumber(env.OMNI_RETRIEVAL_ENTITY_FTS_WEIGHT, 0.7, 0, 10),
+    assertionFtsWeight: boundedNumber(env.OMNI_RETRIEVAL_ASSERTION_FTS_WEIGHT, 1.1, 0, 10),
+    graphWeight: boundedNumber(env.OMNI_RETRIEVAL_GRAPH_WEIGHT, 0.4, 0, 10),
+    subjectAttachmentWeight: boundedNumber(env.OMNI_RETRIEVAL_SUBJECT_ATTACHMENT_WEIGHT, 0.2, 0, 10),
   };
 }
 
