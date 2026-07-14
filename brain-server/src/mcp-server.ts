@@ -128,7 +128,8 @@ class OmniContextServer {
     // [核心壁垒] Embedding 服务 — 支持本地/API 模式切换
     this.embeddingService = new EmbeddingService({
       mode: (process.env.EMBEDDING_MODE as 'local' | 'api') || 'local',
-      localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/multilingual-e5-small',
+      localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/multilingual-e5-large',
+      localModelPath: process.env.EMBEDDING_LOCAL_MODEL_PATH,
       apiUrl: process.env.EMBEDDING_API_URL,
       apiKey: process.env.EMBEDDING_API_KEY,
       apiModel: process.env.EMBEDDING_API_MODEL,
@@ -475,7 +476,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**
             throw new McpError(ErrorCode.InvalidParams, '缺少必需参数: query');
           }
           try {
-            const embResult = await this.embeddingService.embed(query);
+            const embResult = await this.embeddingService.embedQuery(query);
             const results = await this.db.vectorSearch(embResult.embedding, args.limit as number || 10);
             return this.formatResponse(results.map(toCompactEntity));
           } catch (e) {
@@ -1353,7 +1354,7 @@ ${gaConnBlock}`;
     const textResults = await this.db.searchEntities(query, pool);
     let vectorResults: RetrievalCandidate[] = [];
     try {
-      const embedded = await this.embeddingService.embed(query);
+      const embedded = await this.embeddingService.embedQuery(query);
       assertEvaluationEmbeddingReady(this.embeddingService.getStatus());
       vectorResults = await this.db.vectorSearch(embedded.embedding, pool);
     } catch (error) {
@@ -1676,7 +1677,7 @@ ${evidenceRoster || '(无)'}
       const text = await this.db.searchEntities(query, limit);
       let vec: any[] = [];
       try {
-        const emb = await this.embeddingService.embed(query);
+        const emb = await this.embeddingService.embedQuery(query);
         vec = await this.db.vectorSearch(emb.embedding, limit);
       } catch {
         // vector optional

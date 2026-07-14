@@ -282,7 +282,8 @@ function checkRateLimit(req: http.IncomingMessage, res: http.ServerResponse): bo
 export function createDefaultEmbeddingService(): EmbeddingService {
   return new EmbeddingService({
     mode: (process.env.EMBEDDING_MODE as 'local' | 'api') || 'local',
-    localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/multilingual-e5-small',
+    localModel: process.env.EMBEDDING_LOCAL_MODEL || 'Xenova/multilingual-e5-large',
+    localModelPath: process.env.EMBEDDING_LOCAL_MODEL_PATH,
     apiUrl: process.env.EMBEDDING_API_URL,
     apiKey: process.env.EMBEDDING_API_KEY,
     apiModel: process.env.EMBEDDING_API_MODEL,
@@ -294,13 +295,14 @@ export function createDefaultEmbeddingService(): EmbeddingService {
 async function maybeReembedOnModelChange(db: Database, emb: EmbeddingService): Promise<void> {
   try {
     if (db.isInMemory() || process.env.VITEST || process.env.NODE_ENV === 'test') return;
-    const current = emb.getInfo().model;
-    if (!current || current === 'unknown') return;
-    const stored = await db.getMeta('embedding_model');
+    const info = emb.getInfo();
+    const current = `${info.model}@${info.modelRevision}:${info.usageProfile.fingerprint}`;
+    const stored = await db.getMeta('embedding_usage_profile');
     if (stored === current) return;
-    console.log(`[reembed] embedding 模型: ${stored || '(无标记)'} -> ${current}，后台重算存量向量...`);
-    const n = await db.reembedAllEntities(async (t) => (await emb.embed(t)).embedding);
-    await db.setMeta('embedding_model', current);
+    console.log('[reembed] embedding usage profile changed; rebuilding stored entity vectors...');
+    const n = await db.reembedAllEntities(async (t) => (await emb.embedPassage(t)).embedding);
+    await db.setMeta('embedding_model', info.model);
+    await db.setMeta('embedding_usage_profile', current);
     console.log(`[reembed] 完成，重算 ${n} 条向量`);
   } catch (e) {
     console.warn('[reembed] 跳过:', e);

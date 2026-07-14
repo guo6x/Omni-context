@@ -5,6 +5,7 @@ import { cosineSimilarity, decodeEmbedding } from '../utils/math.js';
 
 export interface EmbeddingService {
   embed(text: string): Promise<{ embedding: number[] }>;
+  embedPassage?(text: string): Promise<{ embedding: number[] }>;
 }
 
 export interface MergeCandidate {
@@ -173,7 +174,9 @@ async function embedBounded(entities: Entity[], embeddingService?: EmbeddingServ
       const entity = entities[index];
       if (entity.embedding) continue;
       try {
-        entity.embedding = (await embeddingService.embed(`${entity.name}: ${entity.description || ''}`)).embedding;
+        const embedPassage = embeddingService.embedPassage?.bind(embeddingService)
+          || embeddingService.embed.bind(embeddingService);
+        entity.embedding = (await embedPassage(`${entity.name}: ${entity.description || ''}`)).embedding;
       } catch (error) {
         console.warn(`[resolveEntities] Generating embedding failed for entity "${entity.name}":`, error);
       }

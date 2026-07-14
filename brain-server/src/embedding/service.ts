@@ -1,258 +1,256 @@
-/**
- * [核心壁垒] Embedding 生成服务
- *
- * 支持两种模式：
- * 1. 本地模式（默认）: 使用 @xenova/transformers 在本地生成 embedding
- * 2. API 模式: 调用 OpenAI / 其他兼容 API
- *
- * 设计原则：本地优先，可插拔切换
- */
+/** Local-first embedding service with centrally enforced usage profiles. */
 
+import { createHash } from 'crypto';
+import { createReadStream } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createAuditedAiFetch } from '../security/audited-ai-fetch.js';
+import {
+  E5_LARGE_USAGE_PROFILE,
+  EmbeddingUsage,
+  EmbeddingUsageProfile,
+  embeddingProfileFingerprint,
+  prepareEmbeddingText,
+  resolveEmbeddingUsageProfile,
+} from './profiles.js';
 
 const embeddingFetch = createAuditedAiFetch({ purpose: 'embedding.remote', kind: 'embedding' });
 
 export interface EmbeddingConfig {
-  /** 模式: 'local' 使用 transformers.js, 'api' 使用远程 API */
   mode: 'local' | 'api';
-  /** 本地模型名称（默认 all-MiniLM-L6-v2，384 维，轻量高效） */
   localModel?: string;
-  /** API 端点 URL */
+  localModelPath?: string;
   apiUrl?: string;
-  /** API Key */
   apiKey?: string;
-  /** API 模型名称 */
   apiModel?: string;
-  /** 向量维度（由模型决定，用于验证） */
   dimensions?: number;
+  usageProfile?: EmbeddingUsageProfile;
+  failOnUnavailable?: boolean;
 }
 
 export interface EmbeddingResult {
   embedding: number[];
   dimensions: number;
   model: string;
+  usage: EmbeddingUsage;
+  usageProfileVersion: string;
   latencyMs: number;
 }
 
 const DEFAULT_CONFIG: EmbeddingConfig = {
   mode: 'local',
-  localModel: 'Xenova/multilingual-e5-small', // 384 维，多语强中文检索（替换英文向的 MiniLM）
-  dimensions: 384,
+  localModel: E5_LARGE_USAGE_PROFILE.modelId,
+  dimensions: E5_LARGE_USAGE_PROFILE.dimension,
 };
+
+async function sha256File(path: string): Promise<string> {
+  const hash = createHash('sha256');
+  await new Promise<void>((resolve, reject) => {
+    const input = createReadStream(path);
+    input.on('data', (chunk) => hash.update(chunk));
+    input.on('error', reject);
+    input.on('end', resolve);
+  });
+  return hash.digest('hex');
+}
 
 export class EmbeddingService {
   private config: EmbeddingConfig;
+  private profile: EmbeddingUsageProfile;
   private pipeline: any = null;
   private initialized = false;
   private initPromise: Promise<void> | null = null;
+  private actualDimension: number | null = null;
+  private verifiedModelSha256: string | null = null;
 
   constructor(config: Partial<EmbeddingConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    const model = (this.config.mode === 'local' ? this.config.localModel : this.config.apiModel)
+      || E5_LARGE_USAGE_PROFILE.modelId;
+    this.profile = resolveEmbeddingUsageProfile(model, this.config.usageProfile);
+    if (this.config.dimensions != null && this.config.dimensions !== this.profile.dimension) {
+      throw new Error(`Embedding dimension config ${this.config.dimensions} does not match profile ${this.profile.dimension}`);
+    }
   }
 
-  /**
-   * 延迟初始化 — 首次使用时才加载模型
-   */
   private async ensureInitialized(): Promise<void> {
     if (this.initialized) return;
     if (this.initPromise) return this.initPromise;
-
     this.initPromise = this._initialize();
-    await this.initPromise;
+    try {
+      await this.initPromise;
+    } catch (error) {
+      this.initPromise = null;
+      throw error;
+    }
+  }
+
+  private mustFailClosed(): boolean {
+    return this.config.failOnUnavailable === true || process.env.OMNI_EVALUATION_MODE === '1';
+  }
+
+  private async verifyLocalArtifact(root: string): Promise<void> {
+    if (!this.profile.modelSha256) return;
+    const modelPath = join(root, this.profile.modelId, this.profile.onnxFile);
+    const actual = await sha256File(modelPath);
+    if (actual !== this.profile.modelSha256) {
+      throw new Error(`Embedding model SHA-256 mismatch for ${this.profile.modelId}`);
+    }
+    this.verifiedModelSha256 = actual;
   }
 
   private async _initialize(): Promise<void> {
     if (this.config.mode === 'local') {
       try {
-        // 动态导入 @xenova/transformers（避免在不使用本地模式时也要求安装）
         const transformers = await import('@xenova/transformers');
-        const pipeline = transformers.pipeline;
-        // @xenova/transformers 的类型声明不完整，env 在运行时确实存在
         const env = (transformers as any).env;
+        const localModelPath = this.config.localModelPath
+          || process.env.EMBEDDING_LOCAL_MODEL_PATH
+          || join(dirname(fileURLToPath(import.meta.url)), '../../models');
         env.allowRemoteModels = false;
-        env.localModelPath = join(dirname(fileURLToPath(import.meta.url)), '../../models');
-        console.log(`[EmbeddingService] 正在加载本地模型: ${this.config.localModel}...`);
-        this.pipeline = await pipeline('feature-extraction', this.config.localModel, {
-          quantized: true, // 使用量化版本，更小更快
+        env.localModelPath = localModelPath;
+        await this.verifyLocalArtifact(localModelPath);
+        console.log(`[EmbeddingService] Loading pinned local model ${this.profile.modelId}@${this.profile.modelRevision}`);
+        this.pipeline = await transformers.pipeline('feature-extraction', this.profile.modelId, {
+          quantized: this.profile.quantization !== 'none',
         });
-        console.log(`[EmbeddingService] 本地模型加载完成`);
+        console.log('[EmbeddingService] Pinned local model loaded');
       } catch (error) {
-        console.warn(`[EmbeddingService] 本地模型加载失败，回退到简单哈希 embedding:`, error);
-        // 回退到简单的哈希 embedding（用于无法安装 transformers.js 的环境）
         this.pipeline = null;
+        if (this.mustFailClosed()) {
+          throw new Error(`EMBEDDING_PREFLIGHT_FAILED: ${error instanceof Error ? error.message : String(error)}`);
+        }
+        console.warn('[EmbeddingService] Local model unavailable; non-evaluation hash fallback enabled:', error);
       }
     }
     this.initialized = true;
   }
 
-  /**
-   * 为文本生成 embedding 向量
-   */
-  async embed(text: string): Promise<EmbeddingResult> {
-    await this.ensureInitialized();
-    const start = Date.now();
-
-    if (this.config.mode === 'api' && this.config.apiUrl) {
-      return this.embedViaApi(text, start);
-    }
-
-    if (this.pipeline) {
-      return this.embedLocal(text, start);
-    }
-
-    // 回退：简单的文本哈希 embedding（比没有好）
-    return this.embedFallback(text, start);
+  async embedQuery(text: string): Promise<EmbeddingResult> {
+    return this.embedWithUsage(text, 'query');
   }
 
-  /**
-   * 批量生成 embedding
-   */
-  async embedBatch(texts: string[]): Promise<EmbeddingResult[]> {
-    // 串行执行，避免内存压力（本地模型占用较大）
+  async embedPassage(text: string): Promise<EmbeddingResult> {
+    return this.embedWithUsage(text, 'passage');
+  }
+
+  /** Backward-compatible write-path default. New query callers must use embedQuery(). */
+  async embed(text: string): Promise<EmbeddingResult> {
+    return this.embedPassage(text);
+  }
+
+  async embedBatch(texts: string[], usage: EmbeddingUsage = 'passage'): Promise<EmbeddingResult[]> {
     const results: EmbeddingResult[] = [];
-    for (const text of texts) {
-      results.push(await this.embed(text));
-    }
+    for (const text of texts) results.push(await this.embedWithUsage(text, usage));
     return results;
   }
 
-  /**
-   * 本地 transformers.js embedding
-   */
-  private async embedLocal(text: string, startTime: number): Promise<EmbeddingResult> {
-    const output = await this.pipeline(text, {
-      pooling: 'mean',
-      normalize: true,
-    });
-
-    // output.data 是 Float32Array
-    const embedding = Array.from(output.data as Float32Array);
-
-    return {
-      embedding,
-      dimensions: embedding.length,
-      model: this.config.localModel || 'unknown',
-      latencyMs: Date.now() - startTime,
-    };
+  private async embedWithUsage(text: string, usage: EmbeddingUsage): Promise<EmbeddingResult> {
+    const prepared = prepareEmbeddingText(text, usage, this.profile);
+    await this.ensureInitialized();
+    const start = Date.now();
+    let result: EmbeddingResult;
+    if (this.config.mode === 'api' && this.config.apiUrl) {
+      result = await this.embedViaApi(prepared, usage, start);
+    } else if (this.pipeline) {
+      result = await this.embedLocal(prepared, usage, start);
+    } else {
+      result = this.embedFallback(prepared, usage, start);
+    }
+    if (result.dimensions !== this.profile.dimension) {
+      throw new Error(`Embedding dimension mismatch: expected ${this.profile.dimension}, actual ${result.dimensions}`);
+    }
+    if (result.embedding.some((value) => !Number.isFinite(value))) {
+      throw new Error('Embedding contains NaN or non-finite values');
+    }
+    const norm = Math.sqrt(result.embedding.reduce((sum, value) => sum + value * value, 0));
+    if (!Number.isFinite(norm) || norm === 0) throw new Error('Embedding is a zero vector');
+    this.actualDimension = result.dimensions;
+    return result;
   }
 
-  /**
-   * 远程 API embedding（兼容 OpenAI 格式）
-   */
-  private async embedViaApi(text: string, startTime: number): Promise<EmbeddingResult> {
+  private async embedLocal(text: string, usage: EmbeddingUsage, startTime: number): Promise<EmbeddingResult> {
+    const output = await this.pipeline(text, {
+      pooling: this.profile.pooling,
+      normalize: this.profile.normalize,
+      truncation: true,
+      padding: true,
+    });
+    const embedding = Array.from(output.data as Float32Array);
+    return this.result(embedding, usage, startTime, this.profile.modelId);
+  }
+
+  private async embedViaApi(text: string, usage: EmbeddingUsage, startTime: number): Promise<EmbeddingResult> {
     const response = await embeddingFetch(`${this.config.apiUrl}/embeddings`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.config.apiKey}`,
       },
-      body: JSON.stringify({
-        model: this.config.apiModel || 'text-embedding-3-small',
-        input: text,
-      }),
+      body: JSON.stringify({ model: this.config.apiModel, input: text }),
     });
-
-    if (!response.ok) {
-      throw new Error(`Embedding API 错误: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json() as {
-      data: Array<{ embedding: number[] }>;
-    };
-    const embedding = data.data[0].embedding;
-
-    return {
-      embedding,
-      dimensions: embedding.length,
-      model: this.config.apiModel || 'api',
-      latencyMs: Date.now() - startTime,
-    };
+    if (!response.ok) throw new Error(`Embedding API error: ${response.status} ${response.statusText}`);
+    const data = await response.json() as { data: Array<{ embedding: number[] }> };
+    return this.result(data.data[0].embedding, usage, startTime, this.config.apiModel || 'api');
   }
 
-  /**
-   * 回退方案：基于字符频率的简单哈希 embedding
-   * 质量远不如真实模型，但至少提供基本的相似度比较能力
-   */
-  private embedFallback(text: string, startTime: number): EmbeddingResult {
-    const dims = this.config.dimensions || 384;
-    const embedding = new Array(dims).fill(0);
-
-    // 基于字符 n-gram 的简单哈希散列
+  private embedFallback(text: string, usage: EmbeddingUsage, startTime: number): EmbeddingResult {
+    if (this.mustFailClosed()) throw new Error('EVALUATION_EMBEDDING_UNAVAILABLE: hash fallback is forbidden');
+    const embedding = new Array(this.profile.dimension).fill(0);
     const normalized = text.toLowerCase().trim();
     for (let i = 0; i < normalized.length; i++) {
       const charCode = normalized.charCodeAt(i);
-      // 使用多个哈希函数分散到不同维度
       for (let j = 0; j < 3; j++) {
-        const idx = ((charCode * (j + 1) * 31 + i * 17) % dims + dims) % dims;
-        embedding[idx] += 1.0 / (normalized.length + 1);
-      }
-
-      // 考虑 bigram
-      if (i < normalized.length - 1) {
-        const nextCode = normalized.charCodeAt(i + 1);
-        const bigramIdx = ((charCode * 37 + nextCode * 41) % dims + dims) % dims;
-        embedding[bigramIdx] += 0.5 / (normalized.length + 1);
+        const idx = ((charCode * (j + 1) * 31 + i * 17) % embedding.length + embedding.length) % embedding.length;
+        embedding[idx] += 1 / (normalized.length + 1);
       }
     }
+    const norm = Math.sqrt(embedding.reduce((sum: number, value: number) => sum + value * value, 0));
+    for (let i = 0; i < embedding.length; i++) embedding[i] /= norm || 1;
+    return this.result(embedding, usage, startTime, 'fallback-hash');
+  }
 
-    // L2 归一化
-    const norm = Math.sqrt(embedding.reduce((sum: number, val: number) => sum + val * val, 0));
-    if (norm > 0) {
-      for (let i = 0; i < dims; i++) {
-        embedding[i] /= norm;
-      }
-    }
-
+  private result(embedding: number[], usage: EmbeddingUsage, startTime: number, model: string): EmbeddingResult {
     return {
       embedding,
-      dimensions: dims,
-      model: 'fallback-hash',
+      dimensions: embedding.length,
+      model,
+      usage,
+      usageProfileVersion: this.profile.usageProfileVersion,
       latencyMs: Date.now() - startTime,
     };
   }
 
-  /**
-   * 获取当前真实运行状态
-   */
   getStatus(): 'local' | 'api' | 'hash-fallback' | 'pending' {
-    if (!this.initialized) {
-      return 'pending';
-    }
-    if (this.config.mode === 'api') {
-      return 'api';
-    }
-    if (this.pipeline) {
-      return 'local';
-    }
-    return 'hash-fallback';
+    if (!this.initialized) return 'pending';
+    if (this.config.mode === 'api') return 'api';
+    return this.pipeline ? 'local' : 'hash-fallback';
   }
 
-  /**
-   * 重新加载模型：销毁当前 pipeline 并重新初始化。
-   * 用于 hash-fallback 降级后尝试恢复，或模型文件更新后热重载。
-   */
   async reload(): Promise<void> {
-    // 清理旧状态
     this.pipeline = null;
     this.initialized = false;
     this.initPromise = null;
-    // 重新初始化
+    this.actualDimension = null;
     await this._initialize();
   }
 
-  /**
-   * 获取当前配置信息
-   */
-  getInfo(): { mode: string; model: string; dimensions: number; initialized: boolean; status: 'local' | 'api' | 'hash-fallback' | 'pending'; apiUrl?: string } {
+  getUsageProfile(): EmbeddingUsageProfile & { fingerprint: string } {
+    return { ...this.profile, fingerprint: embeddingProfileFingerprint(this.profile) };
+  }
+
+  getInfo() {
     return {
       mode: this.config.mode,
-      model: (this.config.mode === 'local' ? this.config.localModel : this.config.apiModel) || 'unknown',
-      dimensions: this.config.dimensions || 384,
+      model: this.profile.modelId,
+      modelRevision: this.profile.modelRevision,
+      dimensions: this.profile.dimension,
+      actualDimension: this.actualDimension,
       initialized: this.initialized,
       status: this.getStatus(),
       apiUrl: this.config.apiUrl,
+      usageProfile: this.getUsageProfile(),
+      modelSha256Verified: this.verifiedModelSha256 === this.profile.modelSha256,
     };
   }
 }

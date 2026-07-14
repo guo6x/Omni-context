@@ -405,7 +405,7 @@ async function retrieveDecisionContext(
   let vectorResults: any[] = [];
   try {
     const embResult = await withTimeout(
-      ctx.embeddingService.embed(situation),
+      ctx.embeddingService.embedQuery(situation),
       MCP_EMBEDDING_TIMEOUT_MS,
       'embedding timeout',
     );
@@ -582,7 +582,7 @@ async function agenticEnrichMemories(
     let vec: any[] = [];
     try {
       const emb = await withTimeout(
-        ctx.embeddingService.embed(query),
+        ctx.embeddingService.embedQuery(query),
         MCP_EMBEDDING_TIMEOUT_MS,
         'embedding timeout',
       );
@@ -1208,7 +1208,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             const parsed = VectorSearchSchema.parse(args);
             try {
               const embResult = await withTimeout(
-                ctx.embeddingService.embed(parsed.query),
+                ctx.embeddingService.embedQuery(parsed.query),
                 MCP_EMBEDDING_TIMEOUT_MS,
                 'embedding timeout',
               );
@@ -1235,7 +1235,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
 
             try {
               const embResult = await withTimeout(
-                ctx.embeddingService.embed(parsed.query),
+                ctx.embeddingService.embedQuery(parsed.query),
                 MCP_EMBEDDING_TIMEOUT_MS,
                 'embedding timeout',
               );

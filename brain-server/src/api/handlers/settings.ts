@@ -67,7 +67,7 @@ export const handleSettingsRoutes = [
       let embeddingStatus = ctx.embeddingService.getStatus();
       if (embeddingStatus === 'pending') {
         try {
-          await ctx.embeddingService.embed('healthcheck');
+          await ctx.embeddingService.embedPassage('healthcheck');
         } catch (err) {
           console.warn('[StatusHandler] 触发冷启动探测失败:', err);
         }
@@ -103,6 +103,11 @@ export const handleSettingsRoutes = [
           status: embeddingStatus,
           mode: embeddingInfo.mode,
           model: embeddingInfo.model,
+          modelRevision: embeddingInfo.modelRevision,
+          dimensions: embeddingInfo.dimensions,
+          actualDimension: embeddingInfo.actualDimension,
+          usageProfile: embeddingInfo.usageProfile,
+          modelSha256Verified: embeddingInfo.modelSha256Verified,
           apiUrl: embeddingInfo.apiUrl,
         },
         llm: {
