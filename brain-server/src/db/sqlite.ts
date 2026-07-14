@@ -975,6 +975,8 @@ export class Database {
     const tagsStr = entity.tags ? JSON.stringify(entity.tags) : null;
     const metadataStr = entity.metadata ? JSON.stringify(entity.metadata) : null;
     const embeddingBlob = entity.embedding ? encodeEmbedding(entity.embedding) : null;
+    const isMergedAlias = typeof entity.metadata?.merged_into === 'string'
+      && entity.metadata.merged_into.length > 0;
 
     await this.run(
       `INSERT INTO entities (
@@ -1012,13 +1014,15 @@ export class Database {
       timezone: entity.timezone,
     };
 
-    if (entity.embedding) {
+    if (entity.embedding && !isMergedAlias) {
       const passage = serializeEntityPassage(persisted);
       await this._syncVecEmbedding(id, entity.embedding, this.contentSha256(passage));
     }
 
     // 同步到 FTS5 全文检索
-    await this._syncFtsEntity(id, entity.name, entity.description || '', entity.tags);
+    if (!isMergedAlias) {
+      await this._syncFtsEntity(id, entity.name, entity.description || '', entity.tags);
+    }
 
     return persisted;
   }

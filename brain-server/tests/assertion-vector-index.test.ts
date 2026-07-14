@@ -147,4 +147,19 @@ describe('assertion vector index', () => {
     expect(integrity.entity).toMatchObject({ active: 1, vectors: 1, metadata: 1, coverage: 1 });
     expect(indexedAlias).toBeUndefined();
   });
+
+  it('never inserts an auto-merged alias into the active vector index', async () => {
+    const canonical = await db.addEntity({
+      name: 'Postgres', type: 'tool', description: 'canonical', embedding: vectorFor('Postgres'),
+    });
+    const alias = await db.addEntity({
+      name: 'PostgreSQL DB', type: 'tool', description: 'merged alias',
+      embedding: vectorFor('PostgreSQL DB'),
+      metadata: { merged_into: canonical.id, merge_reason: 'type_specific_semantic_match' },
+    });
+    const integrity = await db.scanEmbeddingIntegrity();
+    expect(integrity.entity).toMatchObject({ active: 1, vectors: 1, metadata: 1, coverage: 1 });
+    expect(await db.get('SELECT entity_id FROM vec_entities WHERE entity_id = ?', [alias.id])).toBeUndefined();
+    expect(await db.get('SELECT entity_id FROM fts_entities WHERE entity_id = ?', [alias.id])).toBeUndefined();
+  });
 });
