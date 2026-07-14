@@ -638,6 +638,16 @@ async function runQuestions({
         if (!integrity || integrity.entity?.coverage !== 1 || integrity.assertion?.coverage !== 1) {
           throw new Error(`Initial embedding index rebuild failed integrity: ${JSON.stringify(integrity)}`);
         }
+      } else if (resumeRuntime && typeof brainServerClient?.getEmbeddingStatus === 'function'
+          && typeof brainServerClient?.rebuildEmbeddings === 'function') {
+        const current = await brainServerClient.getEmbeddingStatus();
+        if (current?.healthy !== true) {
+          console.log('[benchmark] Resume found an unhealthy index; running the explicit shadow rebuild before queries.');
+          const repaired = await brainServerClient.rebuildEmbeddings();
+          if (repaired?.integrity?.entity?.coverage !== 1 || repaired?.integrity?.assertion?.coverage !== 1) {
+            throw new Error(`Resume embedding rebuild failed integrity: ${JSON.stringify(repaired?.integrity)}`);
+          }
+        }
       }
       await assertRuntimePreflight(brainServerClient, runDir, convId);
       const ingestionPath = path.join(conversationDirectory(runDir, convId), 'ingestion.json');
