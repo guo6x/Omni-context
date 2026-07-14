@@ -157,10 +157,27 @@ export const handleAdminRoutes = [
       }
       const info = ctx.embeddingService.getInfo();
       const profile = ctx.embeddingService.getUsageProfile();
+      const manifests = await ctx.db.getEmbeddingIndexManifests();
+      const integrity = await ctx.db.scanEmbeddingIntegrity();
+      const indexHealthy = manifests.length === 2 && manifests.every((manifest) =>
+        manifest.status === 'active'
+        && manifest.model_id === profile.modelId
+        && manifest.model_revision === profile.modelRevision
+        && manifest.dimension === profile.dimension
+        && manifest.usage_profile_version === profile.usageProfileVersion,
+      )
+        && integrity.entity.coverage === 1
+        && integrity.assertion.coverage === 1
+        && integrity.zeroVectors === 0
+        && integrity.nanVectors === 0
+        && integrity.wrongDimensions === 0
+        && integrity.orphanVectors === 0
+        && integrity.staleVectors === 0;
       const healthy = !error
         && info.status !== 'hash-fallback'
         && info.actualDimension === profile.dimension
-        && (info.mode !== 'local' || info.modelSha256Verified);
+        && (info.mode !== 'local' || info.modelSha256Verified)
+        && indexHealthy;
       sendResponse(res, 200, {
         mode: info.mode,
         status: info.status,
@@ -169,6 +186,9 @@ export const handleAdminRoutes = [
         dimensions: profile.dimension,
         actualDimension: info.actualDimension,
         usageProfile: profile,
+        indexManifests: manifests,
+        integrity,
+        indexHealthy,
         modelSha256Verified: info.modelSha256Verified,
         available: healthy,
         healthy,

@@ -233,6 +233,12 @@ describe('API smoke: hybrid assertion retrieval', () => {
   });
 
   it('runs a real embedding preflight before reporting healthy', async () => {
+    // Earlier smoke cases intentionally mutate and merge rows. Health is only
+    // expected after the explicit, atomic rebuild used by evaluation runs.
+    const rebuilt = await request('POST', '/api/admin/embedding/rebuild', { confirm: true });
+    expect(rebuilt.status).toBe(200);
+    expect(rebuilt.body.integrity.entity.coverage).toBe(1);
+    expect(rebuilt.body.integrity.assertion.coverage).toBe(1);
     const status = await request('GET', '/api/admin/embedding/status');
     expect(status.status).toBe(200);
     expect(status.body).toMatchObject({
