@@ -11,6 +11,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 const DB_PATH = process.env.DB_PATH || './data/omni-context.db';
 
 async function main() {
+  const evaluationMode = process.env.OMNI_EVALUATION_MODE === '1';
   const db = initDatabase({
     dbPath: DB_PATH,
     enableWAL: true,
@@ -23,7 +24,9 @@ async function main() {
     decayFactor: 0.95,
     staleDays: 90,
     intervalMs: 60 * 60 * 1000,
-    autoStart: true,
+    // Evaluation databases are immutable evidence inputs while questions run.
+    // Background decay would change the graph between question 1 and 199.
+    autoStart: !evaluationMode,
   });
 
   const agentLoop = new AgentLoop(db, decayScheduler);
@@ -31,7 +34,9 @@ async function main() {
   const insightIntervalMs = process.env.INSIGHT_INTERVAL_MS
     ? Number(process.env.INSIGHT_INTERVAL_MS)
     : 10 * 60 * 1000;
-  agentLoop.start(insightIntervalMs);
+  // The agent loop executes immediately before scheduling its next interval,
+  // so a long interval alone does not prevent evaluation contamination.
+  if (!evaluationMode) agentLoop.start(insightIntervalMs);
 
   const server = createServer(db, agentLoop, undefined, decayScheduler);
 
