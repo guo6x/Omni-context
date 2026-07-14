@@ -312,7 +312,14 @@ async function auditEmbeddingIndexCompatibility(db: Database, emb: EmbeddingServ
 export function createServer(db: Database, agentLoop?: AgentLoop, embeddingService?: EmbeddingService, decayScheduler?: MemoryDecayScheduler): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
   db.attachEmbeddingService(finalEmbeddingService);
-  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, decayScheduler);
+  const ownsDecayScheduler = !decayScheduler;
+  const finalDecayScheduler = decayScheduler ?? new MemoryDecayScheduler(db, {
+    decayFactor: 0.95,
+    staleDays: 90,
+    intervalMs: 60 * 60 * 1000,
+    autoStart: true,
+  });
+  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, finalDecayScheduler);
 
   void auditEmbeddingIndexCompatibility(db, finalEmbeddingService);
 
@@ -324,7 +331,7 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
     pairCodeTtlMs: Number(process.env.PAIR_CODE_TTL_MS || 10 * 60 * 1000),
   });
 
-  return http.createServer(async (req, res) => {
+  const server = http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);
 
     if (req.method === 'OPTIONS') {
@@ -368,6 +375,11 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
 
     await router.handle(req, res, principal);
   });
+
+  if (ownsDecayScheduler) {
+    server.once('close', () => finalDecayScheduler.stop());
+  }
+  return server;
 }
 
 export default ApiRouter;
