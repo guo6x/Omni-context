@@ -1,0 +1,1151 @@
+{
+  "question_set_sha256": "485512bb49f2753e0230e83045ed21fd1b32bc095f0f1d0a5e60113bf03d2d4a",
+  "v1": {
+    "completed": 53,
+    "metrics": {
+      "questions_total": 53,
+      "questions_completed": 53,
+      "questions_error": 0,
+      "retry_records": 0,
+      "error_rate": 0,
+      "fallback_count": 0,
+      "composite": 0.7214360587002101,
+      "composite_ci95": {
+        "lower": 0.5889710037913253,
+        "upper": 0.8239699095929259
+      },
+      "metrics": {
+        "binary_accuracy": {
+          "mean": 0.5283018867924528,
+          "ci95": {
+            "lower": 0.3965985230075645,
+            "upper": 0.6561797239101858
+          },
+          "n": 53
+        },
+        "factual_score": {
+          "mean": 0.6556603773584906,
+          "ci95": {
+            "lower": 0.52116771174334,
+            "upper": 0.7691126463042872
+          },
+          "n": 53
+        },
+        "temporal_score": {
+          "mean": 0.7924528301886793,
+          "ci95": {
+            "lower": 0.6654199754433079,
+            "upper": 0.8799552427067794
+          },
+          "n": 53
+        },
+        "contextual_score": {
+          "mean": 0.6462264150943396,
+          "ci95": {
+            "lower": 0.5116496050285232,
+            "upper": 0.7610380040465202
+          },
+          "n": 53
+        },
+        "abstention_accuracy": {
+          "mean": 0.7169811320754716,
+          "ci95": {
+            "lower": 0.5842945799989226,
+            "upper": 0.8203386463704966
+          },
+          "n": 53
+        },
+        "evidence_precision": {
+          "mean": 0.5172955974842768,
+          "ci95": {
+            "lower": 0.3862143104997603,
+            "upper": 0.6460390626166429
+          },
+          "n": 53
+        },
+        "stale_memory_leakage": {
+          "mean": 0,
+          "ci95": {
+            "lower": 0,
+            "upper": 0.06758430445307662
+          },
+          "n": 53
+        }
+      },
+      "binary_accuracy": 0.5283018867924528,
+      "binary_accuracy_ci95": {
+        "lower": 0.3965985230075645,
+        "upper": 0.6561797239101858
+      },
+      "subsets": {
+        "answerable": {
+          "count": 43,
+          "binary_accuracy": 0.46511627906976744,
+          "ci95": {
+            "lower": 0.32510826263918563,
+            "upper": 0.6108461027112722
+          }
+        },
+        "adversarial": {
+          "count": 10,
+          "binary_accuracy": 0.8,
+          "ci95": {
+            "lower": 0.49015684672072335,
+            "upper": 0.9433190520193067
+          }
+        }
+      },
+      "categories": {
+        "single_hop": {
+          "count": 10,
+          "binary_accuracy": 0.4,
+          "composite": 0.7583333333333333
+        },
+        "temporal": {
+          "count": 10,
+          "binary_accuracy": 0.5,
+          "composite": 0.6666666666666667
+        },
+        "multi_hop": {
+          "count": 13,
+          "binary_accuracy": 0.38461538461538464,
+          "composite": 0.6111111111111112
+        },
+        "open_domain": {
+          "count": 10,
+          "binary_accuracy": 0.6,
+          "composite": 0.8083333333333332
+        },
+        "adversarial": {
+          "count": 10,
+          "binary_accuracy": 0.8,
+          "composite": 0.7958333333333332
+        }
+      },
+      "conversations": {
+        "1": {
+          "count": 53,
+          "binary_accuracy": 0.5283018867924528,
+          "ci95": {
+            "lower": 0.3965985230075645,
+            "upper": 0.6561797239101858
+          }
+        }
+      }
+    },
+    "gold_evidence_present": {
+      "total": 53,
+      "present_count": 23,
+      "recall": 0.434,
+      "accuracy_when_present": 0.4783,
+      "rows": [
+        {
+          "question_id": "conv1-q3",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D2:8"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q4",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q7",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q11",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D3:13",
+            "D4:3"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q13",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D1:11"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q15",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q18",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D6:16"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q19",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D6:6"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q23",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q24",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q0",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D1:3"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q1",
+          "category": "temporal",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q5",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D2:1"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q6",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D2:7"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q8",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D3:1"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q9",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D3:11"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q10",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D3:13"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q12",
+          "category": "temporal",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q16",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D5:4"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q17",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D5:13"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q2",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q14",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q22",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q27",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q30",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q42",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q46",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q50",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q59",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D12:1"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q64",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D15:28"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q69",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q77",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D18:3"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q81",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q82",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q83",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:3"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q84",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:5"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q85",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q86",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q87",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:12"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q88",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:14"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q89",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q90",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q91",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D4:3"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q152",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q153",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q154",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q155",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q156",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q157",
+          "category": "adversarial",
+          "present": true,
+          "covered_gold": [
+            "D4:3"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q158",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q159",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q160",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q161",
+          "category": "adversarial",
+          "present": true,
+          "covered_gold": [
+            "D4:5"
+          ],
+          "correct": 0
+        }
+      ]
+    }
+  },
+  "v2": {
+    "completed": 53,
+    "errors": 0,
+    "metrics": {
+      "questions_total": 53,
+      "questions_completed": 53,
+      "questions_error": 0,
+      "retry_records": 0,
+      "error_rate": 0,
+      "fallback_count": 0,
+      "composite": 0.8349056603773588,
+      "composite_ci95": {
+        "lower": 0.7131349572722259,
+        "upper": 0.9114076312544874
+      },
+      "metrics": {
+        "binary_accuracy": {
+          "mean": 0.5660377358490566,
+          "ci95": {
+            "lower": 0.4326511497976876,
+            "upper": 0.6904980930103964
+          },
+          "n": 53
+        },
+        "factual_score": {
+          "mean": 0.7641509433962265,
+          "ci95": {
+            "lower": 0.6344993675627854,
+            "upper": 0.8580976036695515
+          },
+          "n": 53
+        },
+        "temporal_score": {
+          "mean": 0.8679245283018868,
+          "ci95": {
+            "lower": 0.7515949119376506,
+            "upper": 0.9345222979931043
+          },
+          "n": 53
+        },
+        "contextual_score": {
+          "mean": 0.6886792452830188,
+          "ci95": {
+            "lower": 0.5548791862742939,
+            "upper": 0.7969757931773751
+          },
+          "n": 53
+        },
+        "abstention_accuracy": {
+          "mean": 0.8301886792452831,
+          "ci95": {
+            "lower": 0.7077446317626587,
+            "upper": 0.9080015822777624
+          },
+          "n": 53
+        },
+        "evidence_precision": {
+          "mean": 0.8584905660377359,
+          "ci95": {
+            "lower": 0.7404674618155881,
+            "upper": 0.9280569991425832
+          },
+          "n": 53
+        },
+        "stale_memory_leakage": {
+          "mean": 0,
+          "ci95": {
+            "lower": 0,
+            "upper": 0.06758430445307662
+          },
+          "n": 53
+        }
+      },
+      "binary_accuracy": 0.5660377358490566,
+      "binary_accuracy_ci95": {
+        "lower": 0.4326511497976876,
+        "upper": 0.6904980930103964
+      },
+      "subsets": {
+        "answerable": {
+          "count": 43,
+          "binary_accuracy": 0.5348837209302325,
+          "ci95": {
+            "lower": 0.3891538972887278,
+            "upper": 0.6748917373608143
+          }
+        },
+        "adversarial": {
+          "count": 10,
+          "binary_accuracy": 0.7,
+          "ci95": {
+            "lower": 0.39677321997956516,
+            "upper": 0.892210712513788
+          }
+        }
+      },
+      "categories": {
+        "single_hop": {
+          "count": 10,
+          "binary_accuracy": 0.4,
+          "composite": 0.9166666666666666
+        },
+        "temporal": {
+          "count": 10,
+          "binary_accuracy": 0.7,
+          "composite": 0.8666666666666668
+        },
+        "multi_hop": {
+          "count": 13,
+          "binary_accuracy": 0.46153846153846156,
+          "composite": 0.7692307692307693
+        },
+        "open_domain": {
+          "count": 10,
+          "binary_accuracy": 0.6,
+          "composite": 0.8416666666666668
+        },
+        "adversarial": {
+          "count": 10,
+          "binary_accuracy": 0.7,
+          "composite": 0.7999999999999999
+        }
+      },
+      "conversations": {
+        "1": {
+          "count": 53,
+          "binary_accuracy": 0.5660377358490566,
+          "ci95": {
+            "lower": 0.4326511497976876,
+            "upper": 0.6904980930103964
+          }
+        }
+      }
+    },
+    "gold_evidence_present": {
+      "total": 53,
+      "present_count": 32,
+      "recall": 0.6038,
+      "accuracy_when_present": 0.5938,
+      "rows": [
+        {
+          "question_id": "conv1-q3",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D2:8"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q4",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q7",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q11",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D3:13",
+            "D4:3"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q13",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q15",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q18",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D6:16"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q19",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D6:6"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q23",
+          "category": "single_hop",
+          "present": true,
+          "covered_gold": [
+            "D6:10"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q24",
+          "category": "single_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q0",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D1:3"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q1",
+          "category": "temporal",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q5",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D2:1"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q6",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D2:7"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q8",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D3:1"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q9",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D3:11"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q10",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D3:13"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q12",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D4:5"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q16",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D5:4"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q17",
+          "category": "temporal",
+          "present": true,
+          "covered_gold": [
+            "D5:13"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q2",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q14",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q22",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q27",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D7:5"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q30",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q42",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D10:12"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q46",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q50",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D12:1"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q59",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D14:19",
+            "D12:1"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q64",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D15:28"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q69",
+          "category": "multi_hop",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q77",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D18:1"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q81",
+          "category": "multi_hop",
+          "present": true,
+          "covered_gold": [
+            "D19:1"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q82",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q83",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:3"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q84",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:5"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q85",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q86",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:12"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q87",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:12"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q88",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D2:14"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q89",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q90",
+          "category": "open_domain",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q91",
+          "category": "open_domain",
+          "present": true,
+          "covered_gold": [
+            "D4:3"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q152",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q153",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q154",
+          "category": "adversarial",
+          "present": true,
+          "covered_gold": [
+            "D2:12"
+          ],
+          "correct": 0
+        },
+        {
+          "question_id": "conv1-q155",
+          "category": "adversarial",
+          "present": true,
+          "covered_gold": [
+            "D2:12"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q156",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q157",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q158",
+          "category": "adversarial",
+          "present": true,
+          "covered_gold": [
+            "D4:3"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q159",
+          "category": "adversarial",
+          "present": false,
+          "covered_gold": [],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q160",
+          "category": "adversarial",
+          "present": true,
+          "covered_gold": [
+            "D4:3"
+          ],
+          "correct": 1
+        },
+        {
+          "question_id": "conv1-q161",
+          "category": "adversarial",
+          "present": true,
+          "covered_gold": [
+            "D4:5"
+          ],
+          "correct": 0
+        }
+      ]
+    }
+  },
+  "latency_ms": {
+    "retrieval_p50": 2604,
+    "retrieval_p95": 2687,
+    "answer_p50": 1680,
+    "answer_p95": 3016,
+    "total_p50": 7306,
+    "total_p95": 10568
+  }
+}

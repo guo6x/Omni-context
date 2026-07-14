@@ -1,0 +1,12 @@
+{
+  "index_name": "vec_assertions",
+  "model_id": "Xenova/multilingual-e5-large",
+  "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+  "dimension": 1024,
+  "usage_profile_version": "e5-large-v1",
+  "serialization_version": "assertion-passage-v1",
+  "status": "active",
+  "created_at": "2026-07-14T07:54:37.958Z",
+  "activated_at": "2026-07-14T07:54:37.958Z",
+  "content_count": 396
+}

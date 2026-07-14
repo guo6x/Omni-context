@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "candidate": "Omni-Context Candidate v2",
+  "source_commit": "0f7d0be",
+  "embedding_model": "Xenova/multilingual-e5-large",
+  "embedding_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+  "embedding_dimension": 1024,
+  "embedding_onnx_sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+  "embedding_content_bytes": 578852632,
+  "artifacts": [
+    {
+      "name": "Omni-Context_0.1.1_x64_en-US.msi",
+      "bytes": 605786932,
+      "sha256": "f4cf40f2481d2ebca403cf5a58d5c2baab218e3e665b411e27cfe7d7ba1c106b",
+      "release_url": "https://github.com/guo6x/Omni-context/releases/download/evaluation-freeze-candidate-v2/Omni-Context_0.1.1_x64_en-US.msi"
+    },
+    {
+      "name": "Omni-Context_0.1.1_x64-setup.exe",
+      "bytes": 530217243,
+      "sha256": "20477496b9758cb5ef7424661e04ec78981b9f83dcba31b7bae8c4ff5f9c9284",
+      "release_url": "https://github.com/guo6x/Omni-context/releases/download/evaluation-freeze-candidate-v2/Omni-Context_0.1.1_x64-setup.exe"
+    }
+  ],
+  "storage": "E:\\OmniContext-artifacts-v3.2\\installers",
+  "notes": "Both installers were built from a staging tree whose pinned ONNX hash was verified before Tauri packaging. The older dist/desktop-app files are not Candidate v2 artifacts."
+}

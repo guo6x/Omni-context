@@ -1,0 +1,132 @@
+{
+  "generated_at": "2026-07-14T08:31:04.928Z",
+  "questions_total": 199,
+  "questions_completed": 199,
+  "questions_error": 0,
+  "retry_records": 14,
+  "error_rate": 0,
+  "fallback_count": 0,
+  "composite": 0.7570100502512572,
+  "composite_ci95": {
+    "lower": 0.6929190230533051,
+    "upper": 0.811366094003553
+  },
+  "metrics": {
+    "binary_accuracy": {
+      "mean": 0.5025125628140703,
+      "ci95": {
+        "lower": 0.43365646305035727,
+        "upper": 0.5712734921462099
+      },
+      "n": 199
+    },
+    "factual_score": {
+      "mean": 0.666180904522613,
+      "ci95": {
+        "lower": 0.5980596580420939,
+        "upper": 0.7280075786588588
+      },
+      "n": 199
+    },
+    "temporal_score": {
+      "mean": 0.795644891122278,
+      "ci95": {
+        "lower": 0.734271985649861,
+        "upper": 0.8458194091462097
+      },
+      "n": 199
+    },
+    "contextual_score": {
+      "mean": 0.6045226130653266,
+      "ci95": {
+        "lower": 0.535224865829105,
+        "upper": 0.6698612703480895
+      },
+      "n": 199
+    },
+    "abstention_accuracy": {
+      "mean": 0.7889447236180904,
+      "ci95": {
+        "lower": 0.7270500622930569,
+        "upper": 0.8398947853121681
+      },
+      "n": 199
+    },
+    "evidence_precision": {
+      "mean": 0.6867671691792295,
+      "ci95": {
+        "lower": 0.619303373791493,
+        "upper": 0.7471566291533336
+      },
+      "n": 199
+    },
+    "stale_memory_leakage": {
+      "mean": 0,
+      "ci95": {
+        "lower": 0,
+        "upper": 0.018938915883132457
+      },
+      "n": 199
+    }
+  },
+  "binary_accuracy": 0.5025125628140703,
+  "binary_accuracy_ci95": {
+    "lower": 0.43365646305035727,
+    "upper": 0.5712734921462099
+  },
+  "subsets": {
+    "answerable": {
+      "count": 152,
+      "binary_accuracy": 0.40789473684210525,
+      "ci95": {
+        "lower": 0.33297256606751885,
+        "upper": 0.4873578206841572
+      }
+    },
+    "adversarial": {
+      "count": 47,
+      "binary_accuracy": 0.8085106382978723,
+      "ci95": {
+        "lower": 0.674557199356223,
+        "upper": 0.8958418439468988
+      }
+    }
+  },
+  "categories": {
+    "temporal": {
+      "count": 37,
+      "binary_accuracy": 0.5135135135135135,
+      "composite": 0.7665165165165165
+    },
+    "multi_hop": {
+      "count": 13,
+      "binary_accuracy": 0.38461538461538464,
+      "composite": 0.7564102564102563
+    },
+    "single_hop": {
+      "count": 32,
+      "binary_accuracy": 0.25,
+      "composite": 0.803576388888889
+    },
+    "open_domain": {
+      "count": 70,
+      "binary_accuracy": 0.42857142857142855,
+      "composite": 0.7128968253968253
+    },
+    "adversarial": {
+      "count": 47,
+      "binary_accuracy": 0.8085106382978723,
+      "composite": 0.7836879432624112
+    }
+  },
+  "conversations": {
+    "1": {
+      "count": 199,
+      "binary_accuracy": 0.5025125628140703,
+      "ci95": {
+        "lower": 0.43365646305035727,
+        "upper": 0.5712734921462099
+      }
+    }
+  }
+}

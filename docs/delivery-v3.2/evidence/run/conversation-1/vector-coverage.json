@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "active": 375,
+    "vectors": 375,
+    "metadata": 375,
+    "coverage": 1
+  },
+  "assertion": {
+    "active": 396,
+    "vectors": 396,
+    "metadata": 396,
+    "coverage": 1
+  },
+  "zeroVectors": 0,
+  "nanVectors": 0,
+  "wrongDimensions": 0,
+  "orphanVectors": 0,
+  "staleVectors": 0
+}

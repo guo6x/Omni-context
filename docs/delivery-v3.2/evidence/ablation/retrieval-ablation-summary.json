@@ -1,0 +1,976 @@
+{
+  "status": "complete",
+  "createdAt": "2026-07-14T06:26:30.242Z",
+  "input": {
+    "dbPath": "D:\\OmniContext-evaluation-v3.2\\ablation\\fixed-v1-extraction.db",
+    "dbSha256": "d0c03292a7f58b817a0afe5c3f58b9331aaa9754276efc083357ec7bd7b17cd4",
+    "dbBytes": 6909952,
+    "candidateV1SourceDbPath": "D:\\OmniContext-evaluation-v3.1\\runs\\2026-07-13T16-54-49-815Z-1b9d6c9a\\conversation-1\\brain.db",
+    "candidateV1SourceDbSha256": "13766bb6afba62a272ff4a5f61753a4b78e73e48fc4b06c2ac596adf317b08d7",
+    "datasetPath": "D:\\AI_code\\Omni-context\\locomo\\data\\locomo10.json",
+    "conversation1ContentSha256": "6cb7b394714bddbd6ea6cf1b71cff0ec6ea3a52a29b65dc12edde45c80ee2faf",
+    "v1ResultsPath": "D:\\OmniContext-evaluation-v3.1\\runs\\2026-07-13T16-54-49-815Z-1b9d6c9a\\conversation-1\\results.jsonl",
+    "v1ResultRows": 206,
+    "conversationIds": [
+      1
+    ],
+    "entities": 382,
+    "assertions": 423,
+    "questions": 150
+  },
+  "profiles": {
+    "candidateV1": {
+      "family": "e5",
+      "modelId": "Xenova/multilingual-e5-small",
+      "modelRevision": "local-bundle-candidate-v1",
+      "onnxFile": "onnx/model_quantized.onnx",
+      "quantization": "QInt8",
+      "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+      "modelSha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193",
+      "dimension": 384,
+      "maxTokens": 512,
+      "queryPrefix": "",
+      "passagePrefix": "",
+      "pooling": "mean",
+      "normalize": true,
+      "serializationVersion": "candidate-v1-entity-name-description",
+      "usageProfileVersion": "candidate-v1-no-prefix",
+      "fingerprint": "c55eceada20db346442dad73872f5dc56ce8db173507d3a4166b46dda0e98a57"
+    },
+    "smallPrefixed": {
+      "family": "e5",
+      "modelId": "Xenova/multilingual-e5-small",
+      "modelRevision": "local-bundle-candidate-v1",
+      "onnxFile": "onnx/model_quantized.onnx",
+      "quantization": "QInt8",
+      "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+      "modelSha256": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193",
+      "dimension": 384,
+      "maxTokens": 512,
+      "queryPrefix": "query: ",
+      "passagePrefix": "passage: ",
+      "pooling": "mean",
+      "normalize": true,
+      "serializationVersion": "entity-passage-v2+assertion-passage-v1",
+      "usageProfileVersion": "e5-small-prefixed-v2",
+      "fingerprint": "5652cc50c7200e46cab39d414062754029e9890a3424582050a9afae41eeb2e0"
+    },
+    "large": {
+      "family": "e5",
+      "modelId": "Xenova/multilingual-e5-large",
+      "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+      "onnxFile": "onnx/model_quantized.onnx",
+      "quantization": "QInt8",
+      "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+      "modelSha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+      "dimension": 1024,
+      "maxTokens": 512,
+      "queryPrefix": "query: ",
+      "passagePrefix": "passage: ",
+      "pooling": "mean",
+      "normalize": true,
+      "serializationVersion": "entity-passage-v2+assertion-passage-v1",
+      "usageProfileVersion": "e5-large-v1",
+      "fingerprint": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853"
+    }
+  },
+  "modelLoadMs": {
+    "a": 1747,
+    "b": 1592,
+    "large": 3529
+  },
+  "peakRssBytes": 2983583744,
+  "config": {
+    "conversationIds": [
+      1
+    ],
+    "topK": 20,
+    "perSourcePool": 40,
+    "fusion": {
+      "method": "weighted_rrf",
+      "rrfK": 60,
+      "entityVectorWeight": 0.8,
+      "assertionVectorWeight": 1.4
+    },
+    "matching": "normalized-substring-or-token-jaccard-0.5",
+    "entitySerialization": "entity-passage-v2",
+    "assertionSerialization": "assertion-passage-v1"
+  },
+  "configHash": "e4083a1edcce46d484d8c2819802525823787aa5fd7387b8f07001568c5c9213",
+  "candidateV1FormalProxy": {
+    "all": {
+      "n": 150,
+      "finalContextRecall": 0.46,
+      "goldEvidencePresentCount": 69,
+      "goldEvidencePresentAccuracy": 0.4928
+    },
+    "categories": {
+      "temporal": {
+        "n": 37,
+        "finalContextRecall": 0.4865,
+        "goldEvidencePresentCount": 18,
+        "goldEvidencePresentAccuracy": 0.6111
+      },
+      "multi_hop": {
+        "n": 11,
+        "finalContextRecall": 0.2727,
+        "goldEvidencePresentCount": 3,
+        "goldEvidencePresentAccuracy": 0.3333
+      },
+      "single_hop": {
+        "n": 32,
+        "finalContextRecall": 0.5313,
+        "goldEvidencePresentCount": 17,
+        "goldEvidencePresentAccuracy": 0.2941
+      },
+      "open_domain": {
+        "n": 70,
+        "finalContextRecall": 0.4429,
+        "goldEvidencePresentCount": 31,
+        "goldEvidencePresentAccuracy": 0.5484
+      }
+    }
+  },
+  "summary": {
+    "A": {
+      "label": "candidate-v1-small-no-prefix-entity-only",
+      "all": {
+        "n": 150,
+        "recallAny": {
+          "1": 0.3867,
+          "3": 0.5133,
+          "5": 0.58,
+          "10": 0.6333,
+          "20": 0.6867
+        },
+        "recallFull": {
+          "1": 0.3333,
+          "3": 0.4133,
+          "5": 0.4467,
+          "10": 0.5,
+          "20": 0.5533
+        },
+        "mrr10": 0.4639,
+        "ndcg10": 0.5111,
+        "candidateRecall": 0.74,
+        "finalContextRecall": 0.3933,
+        "assertionRecall": 0,
+        "entityRecall": 0.6333,
+        "retrievalLatencyMs": {
+          "p50": 5.22,
+          "p95": 8.75
+        }
+      },
+      "categories": {
+        "temporal": {
+          "n": 37,
+          "recallAny": {
+            "1": 0.6486,
+            "3": 0.7568,
+            "5": 0.7838,
+            "10": 0.8108,
+            "20": 0.8108
+          },
+          "recallFull": {
+            "1": 0.6486,
+            "3": 0.7568,
+            "5": 0.7838,
+            "10": 0.8108,
+            "20": 0.8108
+          },
+          "mrr10": 0.7095,
+          "ndcg10": 0.7676,
+          "candidateRecall": 0.8649,
+          "finalContextRecall": 0.4324,
+          "assertionRecall": 0,
+          "entityRecall": 0.8108,
+          "retrievalLatencyMs": {
+            "p50": 5.09,
+            "p95": 11.94
+          }
+        },
+        "multi_hop": {
+          "n": 11,
+          "recallAny": {
+            "1": 0.0909,
+            "3": 0.2727,
+            "5": 0.4545,
+            "10": 0.7273,
+            "20": 0.8182
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0.0909,
+            "5": 0.0909,
+            "10": 0.2727,
+            "20": 0.2727
+          },
+          "mrr10": 0.2561,
+          "ndcg10": 0.3687,
+          "candidateRecall": 0.8182,
+          "finalContextRecall": 0.2727,
+          "assertionRecall": 0,
+          "entityRecall": 0.7273,
+          "retrievalLatencyMs": {
+            "p50": 5.78,
+            "p95": 8.31
+          }
+        },
+        "single_hop": {
+          "n": 32,
+          "recallAny": {
+            "1": 0.1875,
+            "3": 0.375,
+            "5": 0.5313,
+            "10": 0.625,
+            "20": 0.7188
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0,
+            "5": 0.0625,
+            "10": 0.1875,
+            "20": 0.3125
+          },
+          "mrr10": 0.3122,
+          "ndcg10": 0.3419,
+          "candidateRecall": 0.7813,
+          "finalContextRecall": 0.375,
+          "assertionRecall": 0,
+          "entityRecall": 0.625,
+          "retrievalLatencyMs": {
+            "p50": 5.11,
+            "p95": 7.79
+          }
+        },
+        "open_domain": {
+          "n": 70,
+          "recallAny": {
+            "1": 0.3857,
+            "3": 0.4857,
+            "5": 0.5143,
+            "10": 0.5286,
+            "20": 0.5857
+          },
+          "recallFull": {
+            "1": 0.3714,
+            "3": 0.4714,
+            "5": 0.5,
+            "10": 0.5143,
+            "20": 0.5714
+          },
+          "mrr10": 0.4361,
+          "ndcg10": 0.4752,
+          "candidateRecall": 0.6429,
+          "finalContextRecall": 0.4,
+          "assertionRecall": 0,
+          "entityRecall": 0.5286,
+          "retrievalLatencyMs": {
+            "p50": 5.24,
+            "p95": 8.53
+          }
+        }
+      }
+    },
+    "B": {
+      "label": "small-prefix-entity-only",
+      "all": {
+        "n": 150,
+        "recallAny": {
+          "1": 0.4,
+          "3": 0.5467,
+          "5": 0.5867,
+          "10": 0.66,
+          "20": 0.7133
+        },
+        "recallFull": {
+          "1": 0.3333,
+          "3": 0.44,
+          "5": 0.46,
+          "10": 0.5467,
+          "20": 0.6133
+        },
+        "mrr10": 0.4816,
+        "ndcg10": 0.5442,
+        "candidateRecall": 0.78,
+        "finalContextRecall": 0.44,
+        "assertionRecall": 0,
+        "entityRecall": 0.66,
+        "retrievalLatencyMs": {
+          "p50": 5.89,
+          "p95": 9.58
+        }
+      },
+      "categories": {
+        "temporal": {
+          "n": 37,
+          "recallAny": {
+            "1": 0.6486,
+            "3": 0.7838,
+            "5": 0.8108,
+            "10": 0.8108,
+            "20": 0.8649
+          },
+          "recallFull": {
+            "1": 0.6486,
+            "3": 0.7838,
+            "5": 0.8108,
+            "10": 0.8108,
+            "20": 0.8649
+          },
+          "mrr10": 0.7126,
+          "ndcg10": 0.7724,
+          "candidateRecall": 0.8649,
+          "finalContextRecall": 0.4595,
+          "assertionRecall": 0,
+          "entityRecall": 0.8108,
+          "retrievalLatencyMs": {
+            "p50": 5.8,
+            "p95": 13.21
+          }
+        },
+        "multi_hop": {
+          "n": 11,
+          "recallAny": {
+            "1": 0.2727,
+            "3": 0.4545,
+            "5": 0.4545,
+            "10": 0.6364,
+            "20": 0.7273
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0.2727,
+            "5": 0.2727,
+            "10": 0.3636,
+            "20": 0.4545
+          },
+          "mrr10": 0.3706,
+          "ndcg10": 0.4438,
+          "candidateRecall": 0.8182,
+          "finalContextRecall": 0.2727,
+          "assertionRecall": 0,
+          "entityRecall": 0.6364,
+          "retrievalLatencyMs": {
+            "p50": 6.4,
+            "p95": 9.39
+          }
+        },
+        "single_hop": {
+          "n": 32,
+          "recallAny": {
+            "1": 0.2188,
+            "3": 0.4375,
+            "5": 0.5313,
+            "10": 0.6875,
+            "20": 0.6875
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0,
+            "5": 0.0313,
+            "10": 0.2813,
+            "20": 0.3438
+          },
+          "mrr10": 0.364,
+          "ndcg10": 0.4277,
+          "candidateRecall": 0.8125,
+          "finalContextRecall": 0.4688,
+          "assertionRecall": 0,
+          "entityRecall": 0.6875,
+          "retrievalLatencyMs": {
+            "p50": 5.5,
+            "p95": 7.99
+          }
+        },
+        "open_domain": {
+          "n": 70,
+          "recallAny": {
+            "1": 0.3714,
+            "3": 0.4857,
+            "5": 0.5143,
+            "10": 0.5714,
+            "20": 0.6429
+          },
+          "recallFull": {
+            "1": 0.3714,
+            "3": 0.4857,
+            "5": 0.5,
+            "10": 0.5571,
+            "20": 0.6286
+          },
+          "mrr10": 0.4307,
+          "ndcg10": 0.4925,
+          "candidateRecall": 0.7143,
+          "finalContextRecall": 0.4429,
+          "assertionRecall": 0,
+          "entityRecall": 0.5714,
+          "retrievalLatencyMs": {
+            "p50": 6.04,
+            "p95": 9.58
+          }
+        }
+      }
+    },
+    "C": {
+      "label": "large-prefix-entity-only",
+      "all": {
+        "n": 150,
+        "recallAny": {
+          "1": 0.4133,
+          "3": 0.5267,
+          "5": 0.5867,
+          "10": 0.68,
+          "20": 0.7333
+        },
+        "recallFull": {
+          "1": 0.36,
+          "3": 0.4467,
+          "5": 0.4867,
+          "10": 0.58,
+          "20": 0.62
+        },
+        "mrr10": 0.4917,
+        "ndcg10": 0.5493,
+        "candidateRecall": 0.7867,
+        "finalContextRecall": 0.4667,
+        "assertionRecall": 0,
+        "entityRecall": 0.68,
+        "retrievalLatencyMs": {
+          "p50": 27.24,
+          "p95": 44.87
+        }
+      },
+      "categories": {
+        "temporal": {
+          "n": 37,
+          "recallAny": {
+            "1": 0.6486,
+            "3": 0.7568,
+            "5": 0.7568,
+            "10": 0.8378,
+            "20": 0.8378
+          },
+          "recallFull": {
+            "1": 0.6486,
+            "3": 0.7568,
+            "5": 0.7568,
+            "10": 0.8378,
+            "20": 0.8378
+          },
+          "mrr10": 0.7051,
+          "ndcg10": 0.772,
+          "candidateRecall": 0.8649,
+          "finalContextRecall": 0.4324,
+          "assertionRecall": 0,
+          "entityRecall": 0.8378,
+          "retrievalLatencyMs": {
+            "p50": 27.54,
+            "p95": 46.13
+          }
+        },
+        "multi_hop": {
+          "n": 11,
+          "recallAny": {
+            "1": 0.2727,
+            "3": 0.3636,
+            "5": 0.4545,
+            "10": 0.6364,
+            "20": 0.8182
+          },
+          "recallFull": {
+            "1": 0.1818,
+            "3": 0.1818,
+            "5": 0.3636,
+            "10": 0.4545,
+            "20": 0.4545
+          },
+          "mrr10": 0.3478,
+          "ndcg10": 0.4272,
+          "candidateRecall": 0.8182,
+          "finalContextRecall": 0.3636,
+          "assertionRecall": 0,
+          "entityRecall": 0.6364,
+          "retrievalLatencyMs": {
+            "p50": 31.63,
+            "p95": 53.93
+          }
+        },
+        "single_hop": {
+          "n": 32,
+          "recallAny": {
+            "1": 0.25,
+            "3": 0.4063,
+            "5": 0.5313,
+            "10": 0.6875,
+            "20": 0.7188
+          },
+          "recallFull": {
+            "1": 0.0313,
+            "3": 0.0938,
+            "5": 0.125,
+            "10": 0.3125,
+            "20": 0.3438
+          },
+          "mrr10": 0.378,
+          "ndcg10": 0.4269,
+          "candidateRecall": 0.8125,
+          "finalContextRecall": 0.4688,
+          "assertionRecall": 0,
+          "entityRecall": 0.6875,
+          "retrievalLatencyMs": {
+            "p50": 26.49,
+            "p95": 39
+          }
+        },
+        "open_domain": {
+          "n": 70,
+          "recallAny": {
+            "1": 0.3857,
+            "3": 0.4857,
+            "5": 0.5429,
+            "10": 0.6,
+            "20": 0.6714
+          },
+          "recallFull": {
+            "1": 0.3857,
+            "3": 0.4857,
+            "5": 0.5286,
+            "10": 0.5857,
+            "20": 0.6571
+          },
+          "mrr10": 0.4535,
+          "ndcg10": 0.5068,
+          "candidateRecall": 0.7286,
+          "finalContextRecall": 0.5,
+          "assertionRecall": 0,
+          "entityRecall": 0.6,
+          "retrievalLatencyMs": {
+            "p50": 27.05,
+            "p95": 41.3
+          }
+        }
+      }
+    },
+    "D": {
+      "label": "large-prefix-assertion-only",
+      "all": {
+        "n": 150,
+        "recallAny": {
+          "1": 0.0333,
+          "3": 0.0667,
+          "5": 0.08,
+          "10": 0.0933,
+          "20": 0.12
+        },
+        "recallFull": {
+          "1": 0.0333,
+          "3": 0.06,
+          "5": 0.0733,
+          "10": 0.0867,
+          "20": 0.1
+        },
+        "mrr10": 0.0513,
+        "ndcg10": 0.063,
+        "candidateRecall": 0.1733,
+        "finalContextRecall": 0.12,
+        "assertionRecall": 0.0933,
+        "entityRecall": 0,
+        "retrievalLatencyMs": {
+          "p50": 25.9,
+          "p95": 32.65
+        }
+      },
+      "categories": {
+        "temporal": {
+          "n": 37,
+          "recallAny": {
+            "1": 0,
+            "3": 0.027,
+            "5": 0.0541,
+            "10": 0.0541,
+            "20": 0.0541
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0.027,
+            "5": 0.0541,
+            "10": 0.0541,
+            "20": 0.0541
+          },
+          "mrr10": 0.0189,
+          "ndcg10": 0.0275,
+          "candidateRecall": 0.0541,
+          "finalContextRecall": 0.0541,
+          "assertionRecall": 0.0541,
+          "entityRecall": 0,
+          "retrievalLatencyMs": {
+            "p50": 25.58,
+            "p95": 34.2
+          }
+        },
+        "multi_hop": {
+          "n": 11,
+          "recallAny": {
+            "1": 0,
+            "3": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "mrr10": 0,
+          "ndcg10": 0,
+          "candidateRecall": 0,
+          "finalContextRecall": 0,
+          "assertionRecall": 0,
+          "entityRecall": 0,
+          "retrievalLatencyMs": {
+            "p50": 27.57,
+            "p95": 33.84
+          }
+        },
+        "single_hop": {
+          "n": 32,
+          "recallAny": {
+            "1": 0,
+            "3": 0.0313,
+            "5": 0.0313,
+            "10": 0.0313,
+            "20": 0.0938
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "mrr10": 0.0104,
+          "ndcg10": 0.0096,
+          "candidateRecall": 0.1563,
+          "finalContextRecall": 0.0938,
+          "assertionRecall": 0.0313,
+          "entityRecall": 0,
+          "retrievalLatencyMs": {
+            "p50": 24.99,
+            "p95": 30.41
+          }
+        },
+        "open_domain": {
+          "n": 70,
+          "recallAny": {
+            "1": 0.0714,
+            "3": 0.1143,
+            "5": 0.1286,
+            "10": 0.1571,
+            "20": 0.1857
+          },
+          "recallFull": {
+            "1": 0.0714,
+            "3": 0.1143,
+            "5": 0.1286,
+            "10": 0.1571,
+            "20": 0.1857
+          },
+          "mrr10": 0.0951,
+          "ndcg10": 0.116,
+          "candidateRecall": 0.2714,
+          "finalContextRecall": 0.1857,
+          "assertionRecall": 0.1571,
+          "entityRecall": 0,
+          "retrievalLatencyMs": {
+            "p50": 26.56,
+            "p95": 32.53
+          }
+        }
+      }
+    },
+    "E": {
+      "label": "large-prefix-parallel-legacy-serialization",
+      "all": {
+        "n": 150,
+        "recallAny": {
+          "1": 0.0333,
+          "3": 0.0667,
+          "5": 0.08,
+          "10": 0.0933,
+          "20": 0.12
+        },
+        "recallFull": {
+          "1": 0.0333,
+          "3": 0.06,
+          "5": 0.0733,
+          "10": 0.0867,
+          "20": 0.1
+        },
+        "mrr10": 0.0513,
+        "ndcg10": 0.063,
+        "candidateRecall": 0.1733,
+        "finalContextRecall": 0.12,
+        "assertionRecall": 0.0933,
+        "entityRecall": 0.68,
+        "retrievalLatencyMs": {
+          "p50": 27.17,
+          "p95": 35.34
+        }
+      },
+      "categories": {
+        "temporal": {
+          "n": 37,
+          "recallAny": {
+            "1": 0,
+            "3": 0.027,
+            "5": 0.0541,
+            "10": 0.0541,
+            "20": 0.0541
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0.027,
+            "5": 0.0541,
+            "10": 0.0541,
+            "20": 0.0541
+          },
+          "mrr10": 0.0189,
+          "ndcg10": 0.0275,
+          "candidateRecall": 0.0541,
+          "finalContextRecall": 0.0541,
+          "assertionRecall": 0.0541,
+          "entityRecall": 0.8378,
+          "retrievalLatencyMs": {
+            "p50": 27.02,
+            "p95": 33.79
+          }
+        },
+        "multi_hop": {
+          "n": 11,
+          "recallAny": {
+            "1": 0,
+            "3": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "mrr10": 0,
+          "ndcg10": 0,
+          "candidateRecall": 0,
+          "finalContextRecall": 0,
+          "assertionRecall": 0,
+          "entityRecall": 0.6364,
+          "retrievalLatencyMs": {
+            "p50": 27.88,
+            "p95": 59.85
+          }
+        },
+        "single_hop": {
+          "n": 32,
+          "recallAny": {
+            "1": 0,
+            "3": 0.0313,
+            "5": 0.0313,
+            "10": 0.0313,
+            "20": 0.0938
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0,
+            "5": 0,
+            "10": 0,
+            "20": 0
+          },
+          "mrr10": 0.0104,
+          "ndcg10": 0.0096,
+          "candidateRecall": 0.1563,
+          "finalContextRecall": 0.0938,
+          "assertionRecall": 0.0313,
+          "entityRecall": 0.6875,
+          "retrievalLatencyMs": {
+            "p50": 25.72,
+            "p95": 35.34
+          }
+        },
+        "open_domain": {
+          "n": 70,
+          "recallAny": {
+            "1": 0.0714,
+            "3": 0.1143,
+            "5": 0.1286,
+            "10": 0.1571,
+            "20": 0.1857
+          },
+          "recallFull": {
+            "1": 0.0714,
+            "3": 0.1143,
+            "5": 0.1286,
+            "10": 0.1571,
+            "20": 0.1857
+          },
+          "mrr10": 0.0951,
+          "ndcg10": 0.116,
+          "candidateRecall": 0.2714,
+          "finalContextRecall": 0.1857,
+          "assertionRecall": 0.1571,
+          "entityRecall": 0.6,
+          "retrievalLatencyMs": {
+            "p50": 27.58,
+            "p95": 36.14
+          }
+        }
+      }
+    },
+    "F": {
+      "label": "large-prefix-parallel-readable-serialization",
+      "all": {
+        "n": 150,
+        "recallAny": {
+          "1": 0.3867,
+          "3": 0.4867,
+          "5": 0.5067,
+          "10": 0.6267,
+          "20": 0.68
+        },
+        "recallFull": {
+          "1": 0.3267,
+          "3": 0.4067,
+          "5": 0.4267,
+          "10": 0.4933,
+          "20": 0.54
+        },
+        "mrr10": 0.4454,
+        "ndcg10": 0.5198,
+        "candidateRecall": 0.7267,
+        "finalContextRecall": 0.68,
+        "assertionRecall": 0.6267,
+        "entityRecall": 0.7267,
+        "retrievalLatencyMs": {
+          "p50": 27.86,
+          "p95": 37.21
+        }
+      },
+      "categories": {
+        "temporal": {
+          "n": 37,
+          "recallAny": {
+            "1": 0.5676,
+            "3": 0.6757,
+            "5": 0.6757,
+            "10": 0.8108,
+            "20": 0.8378
+          },
+          "recallFull": {
+            "1": 0.5676,
+            "3": 0.6757,
+            "5": 0.6757,
+            "10": 0.8108,
+            "20": 0.8378
+          },
+          "mrr10": 0.6254,
+          "ndcg10": 0.7231,
+          "candidateRecall": 0.8649,
+          "finalContextRecall": 0.8378,
+          "assertionRecall": 0.8108,
+          "entityRecall": 0.8649,
+          "retrievalLatencyMs": {
+            "p50": 27.34,
+            "p95": 35.65
+          }
+        },
+        "multi_hop": {
+          "n": 11,
+          "recallAny": {
+            "1": 0.1818,
+            "3": 0.3636,
+            "5": 0.3636,
+            "10": 0.6364,
+            "20": 0.6364
+          },
+          "recallFull": {
+            "1": 0,
+            "3": 0.0909,
+            "5": 0.0909,
+            "10": 0.2727,
+            "20": 0.2727
+          },
+          "mrr10": 0.2971,
+          "ndcg10": 0.493,
+          "candidateRecall": 0.7273,
+          "finalContextRecall": 0.6364,
+          "assertionRecall": 0.6364,
+          "entityRecall": 0.6364,
+          "retrievalLatencyMs": {
+            "p50": 31.54,
+            "p95": 35.88
+          }
+        },
+        "single_hop": {
+          "n": 32,
+          "recallAny": {
+            "1": 0.25,
+            "3": 0.3438,
+            "5": 0.375,
+            "10": 0.5938,
+            "20": 0.6563
+          },
+          "recallFull": {
+            "1": 0.0313,
+            "3": 0.0625,
+            "5": 0.125,
+            "10": 0.125,
+            "20": 0.1563
+          },
+          "mrr10": 0.3247,
+          "ndcg10": 0.3622,
+          "candidateRecall": 0.7188,
+          "finalContextRecall": 0.6563,
+          "assertionRecall": 0.5938,
+          "entityRecall": 0.7188,
+          "retrievalLatencyMs": {
+            "p50": 27.1,
+            "p95": 67.51
+          }
+        },
+        "open_domain": {
+          "n": 70,
+          "recallAny": {
+            "1": 0.3857,
+            "3": 0.4714,
+            "5": 0.5,
+            "10": 0.5429,
+            "20": 0.6143
+          },
+          "recallFull": {
+            "1": 0.3857,
+            "3": 0.4714,
+            "5": 0.4857,
+            "10": 0.5286,
+            "20": 0.6
+          },
+          "mrr10": 0.4288,
+          "ndcg10": 0.4887,
+          "candidateRecall": 0.6571,
+          "finalContextRecall": 0.6143,
+          "assertionRecall": 0.5429,
+          "entityRecall": 0.6714,
+          "retrievalLatencyMs": {
+            "p50": 27.91,
+            "p95": 37.72
+          }
+        }
+      }
+    }
+  }
+}

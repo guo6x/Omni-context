@@ -1,0 +1,82 @@
+{
+  "event": "embedding_rebuild_complete",
+  "status": "healthy",
+  "expected_dimension": 1024,
+  "actual_dimension": 1024,
+  "usage_profile_version": "e5-large-v1",
+  "usage_profile": {
+    "family": "e5",
+    "modelId": "Xenova/multilingual-e5-large",
+    "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "onnxFile": "onnx/model_quantized.onnx",
+    "quantization": "QInt8",
+    "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+    "modelSha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+    "dimension": 1024,
+    "maxTokens": 512,
+    "queryPrefix": "query: ",
+    "passagePrefix": "passage: ",
+    "pooling": "mean",
+    "normalize": true,
+    "serializationVersion": "entity-passage-v2+assertion-passage-v1",
+    "usageProfileVersion": "e5-large-v1",
+    "fingerprint": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853"
+  },
+  "model_info": {
+    "mode": "local",
+    "model": "Xenova/multilingual-e5-large",
+    "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "dimensions": 1024,
+    "actualDimension": 1024,
+    "initialized": true,
+    "status": "local",
+    "usageProfile": {
+      "family": "e5",
+      "modelId": "Xenova/multilingual-e5-large",
+      "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+      "onnxFile": "onnx/model_quantized.onnx",
+      "quantization": "QInt8",
+      "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+      "modelSha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+      "dimension": 1024,
+      "maxTokens": 512,
+      "queryPrefix": "query: ",
+      "passagePrefix": "passage: ",
+      "pooling": "mean",
+      "normalize": true,
+      "serializationVersion": "entity-passage-v2+assertion-passage-v1",
+      "usageProfileVersion": "e5-large-v1",
+      "fingerprint": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853"
+    },
+    "modelSha256Verified": true
+  },
+  "query_prefix": "query: ",
+  "passage_prefix": "passage: ",
+  "query_passage_vectors_differ": true,
+  "rss_bytes": 1090375680,
+  "duration_ms": 184912,
+  "backup_path": "D:\\OmniContext-evaluation-v3.2\\ablation\\fixed-v1-extraction.db.embedding-manifests.2026-07-14T06-33-05-775Z.json",
+  "counts": {
+    "entities": 382,
+    "assertions": 423
+  },
+  "integrity": {
+    "entity": {
+      "active": 382,
+      "vectors": 382,
+      "metadata": 382,
+      "coverage": 1
+    },
+    "assertion": {
+      "active": 423,
+      "vectors": 423,
+      "metadata": 423,
+      "coverage": 1
+    },
+    "zeroVectors": 0,
+    "nanVectors": 0,
+    "wrongDimensions": 0,
+    "orphanVectors": 0,
+    "staleVectors": 0
+  }
+}

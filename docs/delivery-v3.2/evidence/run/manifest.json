@@ -1,0 +1,198 @@
+{
+  "dataset_hash": "553cd5a15e25f2ceccc6ed185221eba645080c93e5b91087560a91aa5961f365",
+  "dataset_hash_verification": "declared-manifest-only",
+  "acceptance_injections": {
+    "provider_failure_once": "answer",
+    "sigint_after_completed": 15
+  },
+  "dataset_source_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+  "benchmark_commit": "unknown",
+  "brain_server_commit": "unknown",
+  "answer_model": "deepseek-v4-flash",
+  "judge_model": "deepseek-v4-flash",
+  "embedding_model": "Xenova/multilingual-e5-large",
+  "embedding_status": {
+    "mode": "local",
+    "model": "Xenova/multilingual-e5-large",
+    "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "dimension": 1024,
+    "usage_profile": {
+      "family": "e5",
+      "modelId": "Xenova/multilingual-e5-large",
+      "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+      "onnxFile": "onnx/model_quantized.onnx",
+      "quantization": "QInt8",
+      "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+      "modelSha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+      "dimension": 1024,
+      "maxTokens": 512,
+      "queryPrefix": "query: ",
+      "passagePrefix": "passage: ",
+      "pooling": "mean",
+      "normalize": true,
+      "serializationVersion": "entity-passage-v2+assertion-passage-v1",
+      "usageProfileVersion": "e5-large-v1",
+      "fingerprint": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853"
+    },
+    "index_manifests": [
+      {
+        "index_name": "vec_assertions",
+        "model_id": "Xenova/multilingual-e5-large",
+        "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+        "dimension": 1024,
+        "usage_profile_version": "e5-large-v1",
+        "serialization_version": "assertion-passage-v1",
+        "status": "active",
+        "created_at": "2026-07-14T07:54:37.958Z",
+        "activated_at": "2026-07-14T07:54:37.958Z",
+        "content_count": 396
+      },
+      {
+        "index_name": "vec_entities",
+        "model_id": "Xenova/multilingual-e5-large",
+        "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+        "dimension": 1024,
+        "usage_profile_version": "e5-large-v1",
+        "serialization_version": "entity-passage-v2",
+        "status": "active",
+        "created_at": "2026-07-14T07:54:37.958Z",
+        "activated_at": "2026-07-14T07:54:37.958Z",
+        "content_count": 375
+      }
+    ],
+    "integrity": {
+      "entity": {
+        "active": 375,
+        "vectors": 375,
+        "metadata": 375,
+        "coverage": 1
+      },
+      "assertion": {
+        "active": 396,
+        "vectors": 396,
+        "metadata": 396,
+        "coverage": 1
+      },
+      "zeroVectors": 0,
+      "nanVectors": 0,
+      "wrongDimensions": 0,
+      "orphanVectors": 0,
+      "staleVectors": 0
+    },
+    "available": true,
+    "status": "local"
+  },
+  "prompt_hash": "0d952927c6781461e4432e5a43e398ae166d1a2ec05097db7dcf1361930d1232",
+  "answer_prompt_version": "answer-v2",
+  "answer_evidence_context_version": "answer-evidence-context-v2",
+  "judge_prompt_hash": "fec01733c586b2ac33e73d95261da53de19172c83e8d9a1b949c5f53a43298c4",
+  "config_hash": "f7000280922b2c5b9824ec39e25244b0fe124441b893b21239c4490fd753e059",
+  "datetime_parser_version": "locomo-datetime-v2",
+  "datetime_timezone_assumption": "UTC for LoCoMo timestamps without an explicit timezone",
+  "thinking_mode": "disabled",
+  "answer_max_tokens": 2048,
+  "judge_max_tokens": 2048,
+  "node_version": "v22.15.1",
+  "os": "win32 x64",
+  "split": "development",
+  "conversation_ids": [
+    1
+  ],
+  "run_id": "2026-07-14T07-34-44-390Z-daef50a5",
+  "started_at": "2026-07-14T07:34:44.397Z",
+  "completed_at": "2026-07-14T08:29:20.401Z",
+  "embedding_by_conversation": {
+    "1": {
+      "mode": "local",
+      "model": "Xenova/multilingual-e5-large",
+      "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+      "dimension": 1024,
+      "usage_profile": {
+        "family": "e5",
+        "modelId": "Xenova/multilingual-e5-large",
+        "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+        "onnxFile": "onnx/model_quantized.onnx",
+        "quantization": "QInt8",
+        "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+        "modelSha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+        "dimension": 1024,
+        "maxTokens": 512,
+        "queryPrefix": "query: ",
+        "passagePrefix": "passage: ",
+        "pooling": "mean",
+        "normalize": true,
+        "serializationVersion": "entity-passage-v2+assertion-passage-v1",
+        "usageProfileVersion": "e5-large-v1",
+        "fingerprint": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853"
+      },
+      "index_manifests": [
+        {
+          "index_name": "vec_assertions",
+          "model_id": "Xenova/multilingual-e5-large",
+          "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+          "dimension": 1024,
+          "usage_profile_version": "e5-large-v1",
+          "serialization_version": "assertion-passage-v1",
+          "status": "active",
+          "created_at": "2026-07-14T07:54:37.958Z",
+          "activated_at": "2026-07-14T07:54:37.958Z",
+          "content_count": 396
+        },
+        {
+          "index_name": "vec_entities",
+          "model_id": "Xenova/multilingual-e5-large",
+          "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+          "dimension": 1024,
+          "usage_profile_version": "e5-large-v1",
+          "serialization_version": "entity-passage-v2",
+          "status": "active",
+          "created_at": "2026-07-14T07:54:37.958Z",
+          "activated_at": "2026-07-14T07:54:37.958Z",
+          "content_count": 375
+        }
+      ],
+      "integrity": {
+        "entity": {
+          "active": 375,
+          "vectors": 375,
+          "metadata": 375,
+          "coverage": 1
+        },
+        "assertion": {
+          "active": 396,
+          "vectors": 396,
+          "metadata": 396,
+          "coverage": 1
+        },
+        "zeroVectors": 0,
+        "nanVectors": 0,
+        "wrongDimensions": 0,
+        "orphanVectors": 0,
+        "staleVectors": 0
+      },
+      "available": true,
+      "status": "local"
+    }
+  },
+  "conversation_databases": {
+    "1": {
+      "relative_path": "conversation-1/brain.db",
+      "sha256": "898b4ce0d10c0c7972c3518371a9ca4358a7306bb70f29b2a479d3745cf8331e",
+      "stopped_cleanly": true
+    }
+  },
+  "status": "completed",
+  "failure": {
+    "type": "Error",
+    "message": "Embedding is not healthy: {\"mode\":\"local\",\"status\":\"local\",\"model\":\"Xenova/multilingual-e5-large\",\"modelRevision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimensions\":1024,\"actualDimension\":1024,\"usageProfile\":{\"family\":\"e5\",\"modelId\":\"Xenova/multilingual-e5-large\",\"modelRevision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"onnxFile\":\"onnx/model_quantized.onnx\",\"quantization\":\"QInt8\",\"tokenizerVersion\":\"@xenova/transformers@2.17.2:XLMRobertaTokenizer\",\"modelSha256\":\"0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca\",\"dimension\":1024,\"maxTokens\":512,\"queryPrefix\":\"query: \",\"passagePrefix\":\"passage: \",\"pooling\":\"mean\",\"normalize\":true,\"serializationVersion\":\"entity-passage-v2+assertion-passage-v1\",\"usageProfileVersion\":\"e5-large-v1\",\"fingerprint\":\"369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853\"},\"indexManifests\":[{\"index_name\":\"vec_assertions\",\"model_id\":\"Xenova/multilingual-e5-large\",\"model_revision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimension\":1024,\"usage_profile_version\":\"e5-large-v1\",\"serialization_version\":\"assertion-passage-v1\",\"status\":\"active\",\"created_at\":\"2026-07-14T07:34:50.145Z\",\"activated_at\":\"2026-07-14T07:34:50.145Z\",\"content_count\":396},{\"index_name\":\"vec_entities\",\"model_id\":\"Xenova/multilingual-e5-large\",\"model_revision\":\"a19b072cb4f0cc8bf98b4e46f90a787a61380979\",\"dimension\":1024,\"usage_profile_version\":\"e5-large-v1\",\"serialization_version\":\"entity-passage-v2\",\"status\":\"active\",\"created_at\":\"2026-07-14T07:34:50.145Z\",\"activated_at\":\"2026-07-14T07:34:50.145Z\",\"content_count\":386}],\"integrity\":{\"entity\":{\"active\":375,\"vectors\":386,\"metadata\":386,\"coverage\":1.0293333333333334},\"assertion\":{\"active\":396,\"vectors\":396,\"metadata\":396,\"coverage\":1},\"zeroVectors\":0,\"nanVectors\":0,\"wrongDimensions\":0,\"orphanVectors\":0,\"staleVectors\":0},\"indexHealthy\":false,\"modelSha256Verified\":true,\"available\":false,\"healthy\":false,\"error\":null}"
+  },
+  "resumed_at": "2026-07-14T08:27:17.279Z",
+  "statistics": {
+    "expected_questions": 199,
+    "completed_questions": 199,
+    "errors": 0,
+    "retry_records": 14,
+    "duplicate_completed_records": 0
+  },
+  "retried_at": "2026-07-14T08:29:20.401Z"
+}
