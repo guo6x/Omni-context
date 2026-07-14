@@ -149,13 +149,30 @@ export const handleAdminRoutes = [
     method: 'GET' as const,
     path: '/api/admin/embedding/status',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
+      let error: string | null = null;
+      try {
+        await ctx.embeddingService.embedQuery('Omni-Context embedding health preflight');
+      } catch (embeddingError) {
+        error = embeddingError instanceof Error ? embeddingError.message : String(embeddingError);
+      }
       const info = ctx.embeddingService.getInfo();
-      const healthy = info.status !== 'hash-fallback';
+      const profile = ctx.embeddingService.getUsageProfile();
+      const healthy = !error
+        && info.status !== 'hash-fallback'
+        && info.actualDimension === profile.dimension
+        && (info.mode !== 'local' || info.modelSha256Verified);
       sendResponse(res, 200, {
         mode: info.mode,
         status: info.status,
         model: info.model,
+        modelRevision: info.modelRevision,
+        dimensions: profile.dimension,
+        actualDimension: info.actualDimension,
+        usageProfile: profile,
+        modelSha256Verified: info.modelSha256Verified,
+        available: healthy,
         healthy,
+        error,
         apiUrl: info.apiUrl,
       });
     },

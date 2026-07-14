@@ -18,7 +18,12 @@ function testVector(text: string): number[] {
 const testEmbeddingService = {
   getUsageProfile: () => ({ ...E5_LARGE_USAGE_PROFILE, fingerprint: embeddingProfileFingerprint(E5_LARGE_USAGE_PROFILE) }),
   getStatus: () => 'local' as const,
-  getInfo: () => ({ status: 'local', dimensions: 1024, model: E5_LARGE_USAGE_PROFILE.modelId }),
+  getInfo: () => ({
+    mode: 'local', status: 'local', dimensions: 1024, actualDimension: 1024,
+    model: E5_LARGE_USAGE_PROFILE.modelId,
+    modelRevision: E5_LARGE_USAGE_PROFILE.modelRevision,
+    modelSha256Verified: true,
+  }),
   embedPassage: async (text: string) => ({ embedding: testVector(text), dimensions: 1024, model: E5_LARGE_USAGE_PROFILE.modelId }),
   embedQuery: async (text: string) => ({ embedding: testVector(text), dimensions: 1024, model: E5_LARGE_USAGE_PROFILE.modelId }),
   embed: async (text: string) => ({ embedding: testVector(text), dimensions: 1024, model: E5_LARGE_USAGE_PROFILE.modelId }),
@@ -225,6 +230,16 @@ describe('API smoke: hybrid assertion retrieval', () => {
     expect(integrity.body.wrongDimensions).toBe(0);
     const denied = await request('POST', '/api/admin/embedding/rebuild', { confirm: false });
     expect(denied.status).toBe(400);
+  });
+
+  it('runs a real embedding preflight before reporting healthy', async () => {
+    const status = await request('GET', '/api/admin/embedding/status');
+    expect(status.status).toBe(200);
+    expect(status.body).toMatchObject({
+      mode: 'local', status: 'local', healthy: true, available: true,
+      dimensions: 1024, actualDimension: 1024, modelSha256Verified: true,
+    });
+    expect(status.body.usageProfile.usageProfileVersion).toBe('e5-large-v1');
   });
 });
 
