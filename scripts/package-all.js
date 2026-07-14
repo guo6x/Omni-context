@@ -1,10 +1,31 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { execSync } = require('child_process');
 const { assertPackagingSucceeded } = require('./package-guard');
 
 const ROOT_DIR = path.join(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
+const EMBEDDING_MODEL_ID = 'Xenova/multilingual-e5-large';
+const EMBEDDING_MODEL_SHA256 = '0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca';
+const EMBEDDING_MODEL_ROOT = path.resolve(
+  process.env.OMNI_EMBEDDING_MODEL_ROOT || path.join(ROOT_DIR, 'brain-server', 'models')
+);
+
+function stagePinnedEmbeddingModel(destinationModelsRoot) {
+  const source = path.join(EMBEDDING_MODEL_ROOT, ...EMBEDDING_MODEL_ID.split('/'));
+  const onnx = path.join(source, 'onnx', 'model_quantized.onnx');
+  if (!fs.existsSync(onnx)) {
+    throw new Error(`Pinned ${EMBEDDING_MODEL_ID} is missing at ${onnx}. Set OMNI_EMBEDDING_MODEL_ROOT to the D-drive model root.`);
+  }
+  const actual = crypto.createHash('sha256').update(fs.readFileSync(onnx)).digest('hex');
+  if (actual !== EMBEDDING_MODEL_SHA256) {
+    throw new Error(`Pinned model SHA-256 mismatch: expected ${EMBEDDING_MODEL_SHA256}, got ${actual}`);
+  }
+  const destination = path.join(destinationModelsRoot, ...EMBEDDING_MODEL_ID.split('/'));
+  copyDir(source, destination);
+  console.log(`   ✅ 已固定 ${EMBEDDING_MODEL_ID} (${actual})`);
+}
 
 console.log('🚀 开始打包 Omni-Context 所有组件...\n');
 const failures = [];
@@ -32,7 +53,7 @@ try {
   const brainServerDir = path.join(DIST_DIR, 'brain-server');
   if (!fs.existsSync(brainServerDir)) fs.mkdirSync(brainServerDir, { recursive: true });
   copyDir(path.join(ROOT_DIR, 'brain-server', 'dist'), brainServerDir);
-  copyDir(path.join(ROOT_DIR, 'brain-server', 'models'), path.join(brainServerDir, 'models'));
+  stagePinnedEmbeddingModel(path.join(brainServerDir, 'models'));
   copyFile(path.join(ROOT_DIR, 'brain-server', 'package.json'), path.join(brainServerDir, 'package.json'));
   console.log('✅ Brain Server 构建完成');
 } catch (e) {
@@ -58,10 +79,7 @@ try {
     path.join(ROOT_DIR, 'brain-server', 'dist'),
     path.join(brainServerInTauri, 'dist')
   );
-  copyDir(
-    path.join(ROOT_DIR, 'brain-server', 'models'),
-    path.join(brainServerInTauri, 'models')
-  );
+  stagePinnedEmbeddingModel(path.join(brainServerInTauri, 'models'));
   copyFile(
     path.join(ROOT_DIR, 'brain-server', 'package.json'),
     path.join(brainServerInTauri, 'package.json')

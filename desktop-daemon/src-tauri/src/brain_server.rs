@@ -208,6 +208,14 @@ fn start_inner() -> Result<(), String> {
         let data_dir = user_data_dir();
         let _ = std::fs::create_dir_all(&data_dir);
         let db_path = data_dir.join("omni-context.db");
+        let script_parent = path.parent().unwrap_or_else(|| std::path::Path::new("."));
+        let brain_server_root =
+            if script_parent.file_name().and_then(|name| name.to_str()) == Some("dist") {
+                script_parent.parent().unwrap_or(script_parent)
+            } else {
+                script_parent
+            };
+        let embedding_model_root = brain_server_root.join("models");
 
         // 每次 Brain Server 启动都轮换配对码。运行中再次生成时，服务端
         // 通过 PAIR_CODE_FILE 的修改时间读取新码并重新开始短期有效窗口。
@@ -222,6 +230,9 @@ fn start_inner() -> Result<(), String> {
             .env("HOST", "0.0.0.0")
             .env("PORT", "3001")
             .env("DB_PATH", &db_path)
+            .env("EMBEDDING_MODE", "local")
+            .env("EMBEDDING_LOCAL_MODEL", "Xenova/multilingual-e5-large")
+            .env("EMBEDDING_LOCAL_MODEL_PATH", &embedding_model_root)
             .env("PAIR_CODE", &pair_code)
             .env("PAIR_CODE_FILE", &pair_code_path)
             .env("LAN_IP", &lan_ip)
