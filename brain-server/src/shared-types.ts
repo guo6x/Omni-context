@@ -71,6 +71,7 @@ export interface Assertion {
   id: string;
   subject_id: string;
   predicate: string;
+  original_predicate?: string;
   object_id?: string;
   literal_value?: string;
   literal_type?: LiteralType;

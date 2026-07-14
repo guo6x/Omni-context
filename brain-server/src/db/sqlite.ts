@@ -1795,12 +1795,13 @@ export class Database {
     const version = input.version ?? 1;
     await this.run(
       `INSERT INTO assertions (
-        id, subject_id, predicate, object_id, literal_value, literal_type, confidence, source_span, provenance,
+        id, subject_id, predicate, original_predicate, object_id, literal_value, literal_type, confidence, source_span, provenance,
         observed_at, recorded_at, event_time, valid_from, valid_until, temporal_confidence,
         temporal_source, timezone, invalidated_at, invalidation_reason, version, previous_version_id, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        id, input.subject_id, input.predicate, input.object_id || null, input.literal_value || null,
+        id, input.subject_id, input.predicate, input.original_predicate || input.predicate,
+        input.object_id || null, input.literal_value || null,
         input.literal_type || null, confidence, input.source_span || null,
         input.provenance ? JSON.stringify(input.provenance) : null,
         input.observed_at || null, recordedAt, input.event_time || null, validFrom,
@@ -1864,6 +1865,7 @@ export class Database {
       id: row.id,
       subject_id: row.subject_id,
       predicate: row.predicate,
+      original_predicate: row.original_predicate || row.predicate,
       object_id: row.object_id || undefined,
       literal_value: row.literal_value || undefined,
       literal_type: row.literal_type || undefined,
@@ -1919,6 +1921,7 @@ export class Database {
       id: row.id,
       subject_id: row.subject_id,
       predicate: row.predicate,
+      original_predicate: row.original_predicate || row.predicate,
       object_id: row.object_id || undefined,
       literal_value: row.literal_value || undefined,
       literal_type: row.literal_type || undefined,

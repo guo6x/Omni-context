@@ -56,6 +56,7 @@ describe('strict LLM extraction validation', () => {
     const parsed = parseLlmExtractionResultDetailed(JSON.stringify(value));
     expect(parsed.result.entities[0].type).toBe('concept');
     expect(parsed.result.facts[0].predicate).toBe('relates_to');
+    expect(parsed.result.facts[0].original_predicate).toBe('invented_predicate');
     expect(parsed.normalization).toEqual({
       entity_types: [{ index: 0, from: 'invented_entity_type', to: 'concept' }],
       predicates: [{ index: 0, from: 'invented_predicate', to: 'relates_to' }],

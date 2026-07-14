@@ -432,6 +432,7 @@ export class GraphRAGExtractor {
           const confidence = typeof fact.confidence === 'number' ? fact.confidence : 1.0;
           const assertionBase = {
             predicate: safeType,
+            original_predicate: fact.original_predicate || candidateType,
             confidence,
             version: 1,
             source_span: fact.source_span,
@@ -472,6 +473,7 @@ export class GraphRAGExtractor {
               provenance: {
                 extractor: 'llm',
                 model: this.config.llmModel,
+                original_predicate: fact.original_predicate || candidateType,
               },
             });
             assertions.push({

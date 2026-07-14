@@ -67,6 +67,7 @@ const LLMExtractionResultSchema = z.object({
   facts: z.array(z.object({
     subject: z.string().trim().min(1).max(500),
     predicate: z.enum(RELATIONSHIP_TYPES),
+    original_predicate: z.string().trim().min(1).max(200).optional(),
     object: z.string().trim().min(1).max(2_000),
     confidence: z.number().min(0).max(1),
     source_span: z.string().trim().min(1).max(20_000),
@@ -158,6 +159,9 @@ function normalizeDomainValues(raw: unknown): { value: unknown; diagnostics: LLM
     value.facts = value.facts.map((item, index) => {
       if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
       const fact = { ...(item as Record<string, unknown>) };
+      if (typeof fact.predicate === 'string' && !fact.original_predicate) {
+        fact.original_predicate = fact.predicate;
+      }
       if (typeof fact.predicate === 'string' && !RELATIONSHIP_TYPES.includes(fact.predicate as typeof RELATIONSHIP_TYPES[number])) {
         diagnostics.predicates.push({ index, from: fact.predicate, to: 'relates_to' });
         fact.predicate = 'relates_to';
