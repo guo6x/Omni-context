@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Cognitive benchmark fact keys mistaken for generic API keys"
+regexTarget = "match"
+regexes = [
+  '''key":"(?:current_project_phase|historical_phase_[1-6]|cycle_3_transition)"''',
+]
