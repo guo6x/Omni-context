@@ -31,6 +31,28 @@ export interface VectorSearchResult {
   similarity: number;
 }
 
+export interface EmbeddingIndexSpec {
+  indexName: 'vec_entities' | 'vec_assertions';
+  modelId: string;
+  modelRevision: string;
+  dimension: number;
+  usageProfileVersion: string;
+  serializationVersion: string;
+}
+
+export interface EmbeddingIndexManifestRow {
+  index_name: string;
+  model_id: string;
+  model_revision: string;
+  dimension: number;
+  usage_profile_version: string;
+  serialization_version: string;
+  status: 'building' | 'active' | 'failed' | 'superseded';
+  created_at: string;
+  activated_at: string | null;
+  content_count: number;
+}
+
 export interface GraphNeighborhood {
   nodes: Entity[];
   edges: Relationship[];
@@ -694,6 +716,74 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE ingestion_chunks ADD COLUMN idempotency_key TEXT;
     `,
   },
+  {
+    version: 24,
+    name: 'add_embedding_index_manifests',
+    up: `
+      CREATE TABLE IF NOT EXISTS embedding_index_manifests (
+        index_name TEXT PRIMARY KEY,
+        model_id TEXT NOT NULL,
+        model_revision TEXT NOT NULL,
+        dimension INTEGER NOT NULL CHECK(dimension > 0),
+        usage_profile_version TEXT NOT NULL,
+        serialization_version TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('building','active','failed','superseded')),
+        created_at TEXT NOT NULL,
+        activated_at TEXT,
+        content_count INTEGER NOT NULL DEFAULT 0 CHECK(content_count >= 0)
+      );
+      CREATE TABLE IF NOT EXISTS embedding_index_manifest_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        index_name TEXT NOT NULL,
+        manifest_json TEXT NOT NULL,
+        archived_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS entity_embedding_metadata (
+        entity_id TEXT PRIMARY KEY,
+        embedding_model TEXT NOT NULL,
+        model_revision TEXT NOT NULL,
+        dimension INTEGER NOT NULL,
+        usage_profile_version TEXT NOT NULL,
+        serialization_version TEXT NOT NULL,
+        embedded_at TEXT NOT NULL,
+        content_sha256 TEXT NOT NULL,
+        FOREIGN KEY(entity_id) REFERENCES entities(id) ON DELETE CASCADE
+      );
+      CREATE TABLE IF NOT EXISTS assertion_embedding_metadata (
+        assertion_id TEXT PRIMARY KEY,
+        embedding_model TEXT NOT NULL,
+        model_revision TEXT NOT NULL,
+        dimension INTEGER NOT NULL,
+        usage_profile_version TEXT NOT NULL,
+        serialization_version TEXT NOT NULL,
+        embedded_at TEXT NOT NULL,
+        content_sha256 TEXT NOT NULL,
+        valid_from TEXT,
+        valid_until TEXT,
+        invalidated_at TEXT,
+        FOREIGN KEY(assertion_id) REFERENCES assertions(id) ON DELETE CASCADE
+      );
+    `,
+  },
+  {
+    version: 25,
+    name: 'add_assertion_original_predicate',
+    up: `
+      ALTER TABLE assertions ADD COLUMN original_predicate TEXT;
+      UPDATE assertions SET original_predicate = predicate WHERE original_predicate IS NULL;
+    `,
+  },
+  {
+    version: 26,
+    name: 'add_vec_assertions_1024',
+    requiresVec: true,
+    up: `
+      CREATE VIRTUAL TABLE IF NOT EXISTS vec_assertions USING vec0(
+        assertion_id TEXT PRIMARY KEY,
+        embedding FLOAT[1024]
+      );
+    `,
+  },
 ];
 
 interface Migration {
@@ -720,6 +810,8 @@ export class Database {
   // 从 sqlite_master 读取真实维度，写入维度不符则按需重建表。
   private vecDimension: number = 384;
   private vecDimensionResolved: boolean = false;
+  private assertionVecDimension: number = 1024;
+  private assertionVecDimensionResolved: boolean = false;
 
   constructor(db: sqlite3.Database, dbPath: string, vecEnabled: boolean = false) {
     this.db = db;
@@ -2022,12 +2114,12 @@ export class Database {
    * @returns 搜索结果（带相似度/距离）
    */
   async vectorSearch(queryEmbedding: number[], limit: number = 10): Promise<VectorSearchResult[]> {
-    // 优先使用 sqlite-vec 原生搜索
     if (this.vecEnabled) {
       await this._resolveVecDimension();
       if (queryEmbedding.length !== this.vecDimension) {
-        await this._recreateVecTable(queryEmbedding.length);
+        throw new Error(`ENTITY_VECTOR_DIMENSION_MISMATCH: index=${this.vecDimension} query=${queryEmbedding.length}`);
       }
+      await this.assertEmbeddingIndexReady('vec_entities', queryEmbedding.length);
       return this._vectorSearchNative(queryEmbedding, limit);
     }
     // 回退到 JS 内存计算（兼容 sqlite-vec 不可用的环境）
@@ -2113,10 +2205,8 @@ export class Database {
     if (!this.vecEnabled) return;
     try {
       await this._resolveVecDimension();
-      // embedding 维度与 vec 表声明维度不符（用户切换了模型）：按实际维度重建，
-      // 否则 vec0 会拒绝写入，导致整列向量静默丢失、KNN 失效。
       if (embedding.length !== this.vecDimension) {
-        await this._recreateVecTable(embedding.length);
+        throw new Error(`ENTITY_VECTOR_DIMENSION_MISMATCH: index=${this.vecDimension} value=${embedding.length}`);
       }
       const vecBlob = Buffer.from(new Float32Array(embedding).buffer);
       // 先尝试删除旧记录（vec0 不支持 UPSERT）
@@ -2126,6 +2216,7 @@ export class Database {
         [entityId, vecBlob]
       );
     } catch (e) {
+      if (process.env.OMNI_EVALUATION_MODE === '1') throw e;
       console.warn(`[sqlite-vec] 向量同步失败 (${entityId}):`, e);
     }
   }
@@ -2143,20 +2234,6 @@ export class Database {
     } catch {
       /* 读不到则保留默认 384 */
     }
-  }
-
-  /**
-   * 按指定维度重建 vec_entities。切换 embedding 模型会改变向量空间，
-   * 旧向量与新向量本就不可比较，因此重建为空表是可接受的（实体表里的
-   * 旧 embedding BLOB 仍在，如需可调用 reindexEntities 重灌当前维度的向量）。
-   */
-  private async _recreateVecTable(dim: number): Promise<void> {
-    await this.run('DROP TABLE IF EXISTS vec_entities');
-    await this.run(
-      `CREATE VIRTUAL TABLE vec_entities USING vec0(entity_id TEXT PRIMARY KEY, embedding FLOAT[${dim}])`
-    );
-    this.vecDimension = dim;
-    console.warn(`[sqlite-vec] vec_entities 维度已调整为 ${dim}（embedding 模型变更），向量索引已重建`);
   }
 
   // ===================== Notifications (Agent Insights) =====================
@@ -2579,6 +2656,97 @@ export class Database {
       throw error;
     } finally {
       release();
+    }
+  }
+
+  async getEmbeddingIndexManifest(indexName: EmbeddingIndexSpec['indexName']): Promise<EmbeddingIndexManifestRow | undefined> {
+    return this.get<EmbeddingIndexManifestRow>(
+      'SELECT * FROM embedding_index_manifests WHERE index_name = ?',
+      [indexName],
+    );
+  }
+
+  async getEmbeddingIndexManifests(): Promise<EmbeddingIndexManifestRow[]> {
+    return this.all<EmbeddingIndexManifestRow>(
+      'SELECT * FROM embedding_index_manifests ORDER BY index_name',
+    );
+  }
+
+  /** Explicit management operation. Query/write paths never call this method. */
+  async prepareEmbeddingIndexes(specs: EmbeddingIndexSpec[], options: { force?: boolean } = {}): Promise<void> {
+    if (!this.vecEnabled) throw new Error('EMBEDDING_INDEX_REBUILD_REQUIRES_SQLITE_VEC');
+    const expected = new Map(specs.map((spec) => [spec.indexName, spec]));
+    for (const name of ['vec_entities', 'vec_assertions'] as const) {
+      if (!expected.has(name)) throw new Error(`Missing embedding index spec: ${name}`);
+    }
+    const [{ count: entityCount }] = await this.all<{ count: number }>('SELECT COUNT(*) AS count FROM entities');
+    const [{ count: assertionCount }] = await this.all<{ count: number }>('SELECT COUNT(*) AS count FROM assertions');
+    if (!options.force && entityCount + assertionCount > 0) {
+      throw new Error('EMBEDDING_INDEX_REBUILD_REQUIRES_FORCE_FOR_NONEMPTY_DATABASE');
+    }
+
+    const now = new Date().toISOString();
+    for (const spec of specs) {
+      const previous = await this.getEmbeddingIndexManifest(spec.indexName);
+      if (previous) {
+        await this.run(
+          'INSERT INTO embedding_index_manifest_history(index_name, manifest_json, archived_at) VALUES (?, ?, ?)',
+          [spec.indexName, JSON.stringify(previous), now],
+        );
+      }
+      await this.run(
+        `INSERT INTO embedding_index_manifests(
+           index_name, model_id, model_revision, dimension, usage_profile_version,
+           serialization_version, status, created_at, activated_at, content_count
+         ) VALUES (?, ?, ?, ?, ?, ?, 'building', ?, NULL, 0)
+         ON CONFLICT(index_name) DO UPDATE SET
+           model_id=excluded.model_id, model_revision=excluded.model_revision,
+           dimension=excluded.dimension, usage_profile_version=excluded.usage_profile_version,
+           serialization_version=excluded.serialization_version, status='building',
+           created_at=excluded.created_at, activated_at=NULL, content_count=0`,
+        [spec.indexName, spec.modelId, spec.modelRevision, spec.dimension,
+          spec.usageProfileVersion, spec.serializationVersion, now],
+      );
+    }
+
+    await this.run('DELETE FROM entity_embedding_metadata');
+    await this.run('DELETE FROM assertion_embedding_metadata');
+    await this.run('UPDATE entities SET embedding = NULL');
+    await this.run('DROP TABLE IF EXISTS vec_entities');
+    await this.run('DROP TABLE IF EXISTS vec_assertions');
+    await this.run(`CREATE VIRTUAL TABLE vec_entities USING vec0(
+      entity_id TEXT PRIMARY KEY, embedding FLOAT[${expected.get('vec_entities')!.dimension}]
+    )`);
+    await this.run(`CREATE VIRTUAL TABLE vec_assertions USING vec0(
+      assertion_id TEXT PRIMARY KEY, embedding FLOAT[${expected.get('vec_assertions')!.dimension}]
+    )`);
+    this.vecDimension = expected.get('vec_entities')!.dimension;
+    this.assertionVecDimension = expected.get('vec_assertions')!.dimension;
+    this.vecDimensionResolved = true;
+    this.assertionVecDimensionResolved = true;
+  }
+
+  async activateEmbeddingIndex(indexName: EmbeddingIndexSpec['indexName'], contentCount: number): Promise<void> {
+    const result = await this.run(
+      `UPDATE embedding_index_manifests
+       SET status='active', activated_at=?, content_count=?
+       WHERE index_name=? AND status='building'`,
+      [new Date().toISOString(), contentCount, indexName],
+    );
+    if (result.changes !== 1) throw new Error(`Embedding index is not building: ${indexName}`);
+  }
+
+  private async assertEmbeddingIndexReady(indexName: EmbeddingIndexSpec['indexName'], dimension: number): Promise<void> {
+    const manifest = await this.getEmbeddingIndexManifest(indexName);
+    if (!manifest) {
+      if (process.env.OMNI_EVALUATION_MODE === '1') {
+        throw new Error(`EMBEDDING_INDEX_MANIFEST_MISSING: ${indexName}`);
+      }
+      return;
+    }
+    if (manifest.status !== 'active') throw new Error(`EMBEDDING_INDEX_NOT_ACTIVE: ${indexName}:${manifest.status}`);
+    if (manifest.dimension !== dimension) {
+      throw new Error(`EMBEDDING_INDEX_DIMENSION_MISMATCH: ${indexName} expected=${manifest.dimension} actual=${dimension}`);
     }
   }
 
