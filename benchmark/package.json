@@ -11,6 +11,7 @@
     "benchmark:retry-errors": "node src/cli.mjs retry-errors",
     "benchmark:fixed-sample-v2": "node scripts/fixed-answer-sample-v2.mjs",
     "archive:candidate-v2": "node scripts/archive-candidate-v2.mjs",
+    "analyze:candidate-v2": "node scripts/analyze-conversation1-v2.mjs",
     "recompute": "node src/recompute-metrics.mjs"
   },
   "engines": {
