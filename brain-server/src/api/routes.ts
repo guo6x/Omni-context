@@ -311,6 +311,7 @@ async function maybeReembedOnModelChange(db: Database, emb: EmbeddingService): P
 
 export function createServer(db: Database, agentLoop?: AgentLoop, embeddingService?: EmbeddingService, decayScheduler?: MemoryDecayScheduler): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
+  db.attachEmbeddingService(finalEmbeddingService);
   const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, decayScheduler);
 
   void maybeReembedOnModelChange(db, finalEmbeddingService);

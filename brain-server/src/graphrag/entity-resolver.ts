@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Database } from '../db/sqlite.js';
 import { Entity, Relationship, EntityType } from '../shared-types.js';
 import { cosineSimilarity, decodeEmbedding } from '../utils/math.js';
+import { serializeEntityPassage } from '../embedding/serialization.js';
 
 export interface EmbeddingService {
   embed(text: string): Promise<{ embedding: number[] }>;
@@ -176,7 +177,7 @@ async function embedBounded(entities: Entity[], embeddingService?: EmbeddingServ
       try {
         const embedPassage = embeddingService.embedPassage?.bind(embeddingService)
           || embeddingService.embed.bind(embeddingService);
-        entity.embedding = (await embedPassage(`${entity.name}: ${entity.description || ''}`)).embedding;
+        entity.embedding = (await embedPassage(serializeEntityPassage(entity))).embedding;
       } catch (error) {
         console.warn(`[resolveEntities] Generating embedding failed for entity "${entity.name}":`, error);
       }

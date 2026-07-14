@@ -134,6 +134,7 @@ class OmniContextServer {
       apiKey: process.env.EMBEDDING_API_KEY,
       apiModel: process.env.EMBEDDING_API_MODEL,
     });
+    this.db.attachEmbeddingService(this.embeddingService);
 
     // [核心壁垒] 记忆衰减调度器 — 模拟艾宾浩斯遗忘曲线
     this.decayScheduler = new MemoryDecayScheduler(this.db, {

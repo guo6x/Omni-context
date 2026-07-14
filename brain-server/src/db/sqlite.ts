@@ -1,13 +1,21 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { createHash } from 'crypto';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import { Assertion, AssertionInput, Entity, Relationship, SINGLE_VALUED_REL_TYPES } from '../shared-types.js';
-import { cosineSimilarity, encodeEmbedding, decodeEmbedding } from '../utils/math.js';
+import { cosineSimilarity, encodeEmbedding, decodeEmbedding, decodeEmbeddingF32 } from '../utils/math.js';
 import * as sqliteVec from 'sqlite-vec';
 import { ENTITY_TYPES, NOTIFICATION_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
 import type { BehaviorEventInput } from '../behavior/events.js';
+import type { EmbeddingService } from '../embedding/service.js';
+import {
+  ASSERTION_SERIALIZATION_VERSION,
+  ENTITY_SERIALIZATION_VERSION,
+  serializeAssertionPassage,
+  serializeEntityPassage,
+} from '../embedding/serialization.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,6 +36,16 @@ export interface VectorSearchResult {
   name: string;
   type: string;
   description: string;
+  similarity: number;
+}
+
+export interface AssertionVectorSearchResult {
+  id: string;
+  assertion: Assertion;
+  subjectName: string;
+  objectName?: string;
+  passage: string;
+  distance: number;
   similarity: number;
 }
 
@@ -784,6 +802,34 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 27,
+    name: 'invalidate_stale_embedding_rows',
+    requiresVec: true,
+    up: `
+      CREATE TRIGGER IF NOT EXISTS invalidate_assertion_vector_after_update
+      AFTER UPDATE OF subject_id, predicate, original_predicate, object_id, literal_value,
+        source_span, provenance, observed_at, event_time, valid_from, valid_until,
+        invalidated_at, invalidation_reason ON assertions
+      BEGIN
+        DELETE FROM vec_assertions WHERE assertion_id = NEW.id;
+        DELETE FROM assertion_embedding_metadata WHERE assertion_id = NEW.id;
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS invalidate_assertions_after_entity_text_update
+      AFTER UPDATE OF name, description, metadata ON entities
+      BEGIN
+        DELETE FROM vec_assertions
+          WHERE assertion_id IN (
+            SELECT id FROM assertions WHERE subject_id = NEW.id OR object_id = NEW.id
+          );
+        DELETE FROM assertion_embedding_metadata
+          WHERE assertion_id IN (
+            SELECT id FROM assertions WHERE subject_id = NEW.id OR object_id = NEW.id
+          );
+      END;
+    `,
+  },
 ];
 
 interface Migration {
@@ -812,6 +858,7 @@ export class Database {
   private vecDimensionResolved: boolean = false;
   private assertionVecDimension: number = 1024;
   private assertionVecDimensionResolved: boolean = false;
+  private embeddingService: EmbeddingService | null = null;
 
   constructor(db: sqlite3.Database, dbPath: string, vecEnabled: boolean = false) {
     this.db = db;
@@ -942,15 +989,7 @@ export class Database {
        entity.temporal_confidence ?? null, entity.temporal_source || null, entity.timezone || null]
     );
 
-    // 同步向量到 sqlite-vec 虚拟表
-    if (entity.embedding) {
-      await this._syncVecEmbedding(id, entity.embedding);
-    }
-
-    // 同步到 FTS5 全文检索
-    await this._syncFtsEntity(id, entity.name, entity.description || '', entity.tags);
-
-    return {
+    const persisted: Entity = {
       id,
       name: entity.name,
       type: entity.type,
@@ -972,6 +1011,16 @@ export class Database {
       temporal_source: entity.temporal_source,
       timezone: entity.timezone,
     };
+
+    if (entity.embedding) {
+      const passage = serializeEntityPassage(persisted);
+      await this._syncVecEmbedding(id, entity.embedding, this.contentSha256(passage));
+    }
+
+    // 同步到 FTS5 全文检索
+    await this._syncFtsEntity(id, entity.name, entity.description || '', entity.tags);
+
+    return persisted;
   }
 
   async getEntity(id: string): Promise<Entity | null> {
@@ -1516,6 +1565,27 @@ export class Database {
         await this._syncFtsEntity(id, current.name, current.description || '', tags);
       }
     }
+    if (updates.name !== undefined || updates.description !== undefined || updates.metadata !== undefined) {
+      if (this.embeddingService) {
+        const current = await this.get<any>('SELECT * FROM entities WHERE id = ?', [id]);
+        if (current) {
+          const entity = this.rowToEntity(current);
+          const passage = serializeEntityPassage(entity);
+          const result = await this.embeddingService.embedPassage(passage);
+          await this.run('UPDATE entities SET embedding = ? WHERE id = ?', [encodeEmbedding(result.embedding), id]);
+          await this._syncVecEmbedding(id, result.embedding, this.contentSha256(passage));
+          const affected = await this.all<{ id: string }>(
+            'SELECT id FROM assertions WHERE subject_id = ? OR object_id = ?',
+            [id, id],
+          );
+          for (const assertion of affected) await this.indexAssertion(assertion.id);
+        }
+      } else {
+        await this.run('UPDATE entities SET embedding = NULL WHERE id = ?', [id]);
+        await this.run('DELETE FROM vec_entities WHERE entity_id = ?', [id]);
+        await this.run('DELETE FROM entity_embedding_metadata WHERE entity_id = ?', [id]);
+      }
+    }
   }
 
   async deleteEntity(id: string): Promise<void> {
@@ -1627,13 +1697,14 @@ export class Database {
     // a provenance-aware Assertion so temporal retrieval has a single factual layer.
     await this.run(
       `INSERT OR IGNORE INTO assertions (
-        id, subject_id, predicate, object_id, confidence, source_span, provenance,
+        id, subject_id, predicate, original_predicate, object_id, confidence, source_span, provenance,
         observed_at, recorded_at, event_time, valid_from, valid_until,
         temporal_confidence, temporal_source, timezone, invalidated_at,
         invalidation_reason, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        `relationship:${id}`, relationship.source_id, relationship.type, relationship.target_id,
+        `relationship:${id}`, relationship.source_id, relationship.type,
+        String(relationship.provenance?.original_predicate || relationship.type), relationship.target_id,
         Math.max(0, Math.min(1, relationship.weight ?? 1)), relationship.description || null,
         JSON.stringify({ relationship_id: id, ...(relationship.provenance || {}) }),
         relationship.observed_at || null, now, relationship.event_time || null, validFrom,
@@ -1641,6 +1712,14 @@ export class Database {
         relationship.timezone || null, invalidatedAt, invalidationReason, now, now,
       ],
     );
+    if (!invalidatedAt) {
+      await this.run(
+        `INSERT OR REPLACE INTO fts_assertions(assertion_id, subject_id, predicate, literal_value, source_span)
+         VALUES (?, ?, ?, '', ?)`,
+        [`relationship:${id}`, relationship.source_id, relationship.type, relationship.description || ''],
+      );
+      if (this.embeddingService) await this.indexAssertion(`relationship:${id}`);
+    }
 
     return {
       id,
@@ -1678,6 +1757,8 @@ export class Database {
       `DELETE FROM fts_assertions WHERE assertion_id = ?`,
       [`relationship:${id}`],
     );
+    await this.run('DELETE FROM vec_assertions WHERE assertion_id = ?', [`relationship:${id}`]);
+    await this.run('DELETE FROM assertion_embedding_metadata WHERE assertion_id = ?', [`relationship:${id}`]);
   }
 
   async getRelationshipsForEntity(entityId: string, includeHistorical: boolean = false): Promise<Relationship[]> {
@@ -1819,7 +1900,7 @@ export class Database {
         [id, input.subject_id, input.predicate, input.literal_value || '', input.source_span || ''],
       );
     }
-    return {
+    const assertion: Assertion = {
       ...input,
       id,
       confidence,
@@ -1829,6 +1910,15 @@ export class Database {
       created_at: now,
       updated_at: now,
     };
+    if (this.embeddingService && !assertion.invalidated_at) {
+      try {
+        await this.indexAssertion(id);
+      } catch (error) {
+        if (process.env.OMNI_EVALUATION_MODE === '1') throw error;
+        console.warn(`[assertion-index] indexing failed (${id}):`, error);
+      }
+    }
+    return assertion;
   }
 
   async getAssertions(options: {
@@ -1901,6 +1991,9 @@ export class Database {
     if (result.changes === 0) throw new Error('assertion not found or already invalidated');
     // Remove from FTS — invalidated facts are not searchable
     await this.run(`DELETE FROM fts_assertions WHERE assertion_id = ?`, [id]);
+    await this.run('DELETE FROM vec_assertions WHERE assertion_id = ?', [id]);
+    await this.run('DELETE FROM assertion_embedding_metadata WHERE assertion_id = ?', [id]);
+    await this.refreshEmbeddingIndexContentCount('vec_assertions');
   }
 
   /**
@@ -2204,7 +2297,7 @@ export class Database {
   /**
    * 将实体的 embedding 同步到 vec_entities 虚拟表
    */
-  private async _syncVecEmbedding(entityId: string, embedding: number[]): Promise<void> {
+  private async _syncVecEmbedding(entityId: string, embedding: number[], contentSha256?: string): Promise<void> {
     if (!this.vecEnabled) return;
     try {
       await this._resolveVecDimension();
@@ -2218,6 +2311,24 @@ export class Database {
         'INSERT INTO vec_entities (entity_id, embedding) VALUES (?, ?)',
         [entityId, vecBlob]
       );
+      const manifest = await this.getEmbeddingIndexManifest('vec_entities');
+      if (manifest && contentSha256) {
+        await this.run(
+          `INSERT INTO entity_embedding_metadata(
+             entity_id, embedding_model, model_revision, dimension, usage_profile_version,
+             serialization_version, embedded_at, content_sha256
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(entity_id) DO UPDATE SET
+             embedding_model=excluded.embedding_model, model_revision=excluded.model_revision,
+             dimension=excluded.dimension, usage_profile_version=excluded.usage_profile_version,
+             serialization_version=excluded.serialization_version, embedded_at=excluded.embedded_at,
+             content_sha256=excluded.content_sha256`,
+          [entityId, manifest.model_id, manifest.model_revision, manifest.dimension,
+            manifest.usage_profile_version, manifest.serialization_version,
+            new Date().toISOString(), contentSha256],
+        );
+      }
+      await this.refreshEmbeddingIndexContentCount('vec_entities');
     } catch (e) {
       if (process.env.OMNI_EVALUATION_MODE === '1') throw e;
       console.warn(`[sqlite-vec] 向量同步失败 (${entityId}):`, e);
@@ -2662,6 +2773,55 @@ export class Database {
     }
   }
 
+  async updateAssertion(
+    id: string,
+    updates: Partial<Pick<Assertion,
+      'subject_id' | 'predicate' | 'original_predicate' | 'object_id' | 'literal_value' |
+      'source_span' | 'provenance' | 'observed_at' | 'event_time' | 'valid_from' |
+      'valid_until' | 'invalidated_at' | 'invalidation_reason'>>,
+  ): Promise<Assertion> {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    const scalarFields = [
+      'subject_id', 'predicate', 'original_predicate', 'object_id', 'literal_value',
+      'source_span', 'observed_at', 'event_time', 'valid_from', 'valid_until',
+      'invalidated_at', 'invalidation_reason',
+    ] as const;
+    for (const field of scalarFields) {
+      if (Object.prototype.hasOwnProperty.call(updates, field)) {
+        fields.push(`${field} = ?`);
+        values.push(updates[field] ?? null);
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(updates, 'provenance')) {
+      fields.push('provenance = ?');
+      values.push(updates.provenance ? JSON.stringify(updates.provenance) : null);
+    }
+    if (!fields.length) {
+      const existing = await this.getResolvedAssertion(id);
+      if (!existing) throw new Error('assertion not found');
+      return existing.assertion;
+    }
+    fields.push('updated_at = ?');
+    values.push(new Date().toISOString(), id);
+    const result = await this.run(`UPDATE assertions SET ${fields.join(', ')} WHERE id = ?`, values);
+    if (result.changes !== 1) throw new Error('assertion not found');
+    const resolved = await this.getResolvedAssertion(id);
+    if (!resolved) throw new Error('assertion not found after update');
+    if (resolved.assertion.invalidated_at) {
+      await this.run('DELETE FROM vec_assertions WHERE assertion_id = ?', [id]);
+      await this.run('DELETE FROM assertion_embedding_metadata WHERE assertion_id = ?', [id]);
+      await this.refreshEmbeddingIndexContentCount('vec_assertions');
+    } else if (this.embeddingService) {
+      await this.indexAssertion(id);
+    }
+    return resolved.assertion;
+  }
+
+  attachEmbeddingService(service: EmbeddingService): void {
+    this.embeddingService = service;
+  }
+
   async getEmbeddingIndexManifest(indexName: EmbeddingIndexSpec['indexName']): Promise<EmbeddingIndexManifestRow | undefined> {
     return this.get<EmbeddingIndexManifestRow>(
       'SELECT * FROM embedding_index_manifests WHERE index_name = ?',
@@ -2751,6 +2911,280 @@ export class Database {
     if (manifest.dimension !== dimension) {
       throw new Error(`EMBEDDING_INDEX_DIMENSION_MISMATCH: ${indexName} expected=${manifest.dimension} actual=${dimension}`);
     }
+  }
+
+  private async getWritableEmbeddingManifest(
+    indexName: EmbeddingIndexSpec['indexName'],
+    dimension: number,
+  ): Promise<EmbeddingIndexManifestRow> {
+    const manifest = await this.getEmbeddingIndexManifest(indexName);
+    if (!manifest) throw new Error(`EMBEDDING_INDEX_MANIFEST_MISSING: ${indexName}`);
+    if (manifest.status !== 'building' && manifest.status !== 'active') {
+      throw new Error(`EMBEDDING_INDEX_NOT_WRITABLE: ${indexName}:${manifest.status}`);
+    }
+    if (manifest.dimension !== dimension) {
+      throw new Error(`EMBEDDING_INDEX_DIMENSION_MISMATCH: ${indexName} expected=${manifest.dimension} actual=${dimension}`);
+    }
+    return manifest;
+  }
+
+  private contentSha256(text: string): string {
+    return createHash('sha256').update(text).digest('hex');
+  }
+
+  private async refreshEmbeddingIndexContentCount(indexName: EmbeddingIndexSpec['indexName']): Promise<void> {
+    const table = indexName === 'vec_entities' ? 'vec_entities' : 'vec_assertions';
+    await this.run(
+      `UPDATE embedding_index_manifests
+       SET content_count=(SELECT COUNT(*) FROM ${table})
+       WHERE index_name=?`,
+      [indexName],
+    );
+  }
+
+  private assertionFromRow(row: any): Assertion {
+    return {
+      id: row.id,
+      subject_id: row.subject_id,
+      predicate: row.predicate,
+      original_predicate: row.original_predicate || row.predicate,
+      object_id: row.object_id || undefined,
+      literal_value: row.literal_value || undefined,
+      literal_type: row.literal_type || undefined,
+      confidence: row.confidence,
+      source_span: row.source_span || undefined,
+      provenance: row.provenance ? JSON.parse(row.provenance) : undefined,
+      observed_at: row.observed_at || undefined,
+      recorded_at: row.recorded_at,
+      event_time: row.event_time || undefined,
+      valid_from: row.valid_from,
+      valid_until: row.valid_until || undefined,
+      temporal_confidence: row.temporal_confidence ?? undefined,
+      temporal_source: row.temporal_source || undefined,
+      timezone: row.timezone || undefined,
+      invalidated_at: row.invalidated_at || undefined,
+      invalidation_reason: row.invalidation_reason || undefined,
+      version: row.version ?? 1,
+      previous_version_id: row.previous_version_id || undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+  }
+
+  async getResolvedAssertion(assertionId: string): Promise<{
+    assertion: Assertion;
+    subjectName: string;
+    objectName?: string;
+    passage: string;
+  } | null> {
+    const row = await this.get<any>(
+      `SELECT a.*, s.name AS subject_name, o.name AS object_name
+       FROM assertions a
+       JOIN entities s ON s.id = a.subject_id
+       LEFT JOIN entities o ON o.id = a.object_id
+       WHERE a.id = ?`,
+      [assertionId],
+    );
+    if (!row) return null;
+    const assertion = this.assertionFromRow(row);
+    const passage = serializeAssertionPassage({
+      assertion,
+      subjectName: row.subject_name,
+      objectName: row.object_name || undefined,
+    });
+    return { assertion, subjectName: row.subject_name, objectName: row.object_name || undefined, passage };
+  }
+
+  async indexAssertion(assertionId: string): Promise<void> {
+    if (!this.embeddingService) {
+      if (process.env.OMNI_EVALUATION_MODE === '1') throw new Error('ASSERTION_EMBEDDING_SERVICE_NOT_ATTACHED');
+      return;
+    }
+    const resolved = await this.getResolvedAssertion(assertionId);
+    if (!resolved) throw new Error(`Assertion not found for embedding: ${assertionId}`);
+    const result = await this.embeddingService.embedPassage(resolved.passage);
+    const manifest = await this.getWritableEmbeddingManifest('vec_assertions', result.dimensions);
+    const blob = Buffer.from(new Float32Array(result.embedding).buffer);
+    await this.run('DELETE FROM vec_assertions WHERE assertion_id = ?', [assertionId]);
+    await this.run('INSERT INTO vec_assertions(assertion_id, embedding) VALUES (?, ?)', [assertionId, blob]);
+    await this.run(
+      `INSERT INTO assertion_embedding_metadata(
+         assertion_id, embedding_model, model_revision, dimension, usage_profile_version,
+         serialization_version, embedded_at, content_sha256, valid_from, valid_until, invalidated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(assertion_id) DO UPDATE SET
+         embedding_model=excluded.embedding_model, model_revision=excluded.model_revision,
+         dimension=excluded.dimension, usage_profile_version=excluded.usage_profile_version,
+         serialization_version=excluded.serialization_version, embedded_at=excluded.embedded_at,
+         content_sha256=excluded.content_sha256, valid_from=excluded.valid_from,
+         valid_until=excluded.valid_until, invalidated_at=excluded.invalidated_at`,
+      [assertionId, manifest.model_id, manifest.model_revision, manifest.dimension,
+        manifest.usage_profile_version, manifest.serialization_version, new Date().toISOString(),
+        this.contentSha256(resolved.passage), resolved.assertion.valid_from,
+        resolved.assertion.valid_until || null, resolved.assertion.invalidated_at || null],
+    );
+    await this.refreshEmbeddingIndexContentCount('vec_assertions');
+  }
+
+  async assertionVectorSearch(
+    queryEmbedding: number[],
+    limit = 10,
+    options: { asOf?: string; includeHistorical?: boolean } = {},
+  ): Promise<AssertionVectorSearchResult[]> {
+    if (!this.vecEnabled) throw new Error('ASSERTION_VECTOR_SEARCH_REQUIRES_SQLITE_VEC');
+    await this._resolveAssertionVecDimension();
+    if (queryEmbedding.length !== this.assertionVecDimension) {
+      throw new Error(`ASSERTION_VECTOR_DIMENSION_MISMATCH: index=${this.assertionVecDimension} query=${queryEmbedding.length}`);
+    }
+    await this.assertEmbeddingIndexReady('vec_assertions', queryEmbedding.length);
+    const asOf = options.asOf || new Date().toISOString();
+    const validity = options.includeHistorical
+      ? 'a.valid_from <= ? AND (a.valid_until IS NULL OR a.valid_until > ?)'
+      : 'a.invalidated_at IS NULL AND a.valid_from <= ? AND (a.valid_until IS NULL OR a.valid_until > ?)';
+    const queryBlob = Buffer.from(new Float32Array(queryEmbedding).buffer);
+    const rows = await this.all<any>(
+      `SELECT a.*, s.name AS subject_name, o.name AS object_name, v.distance
+       FROM vec_assertions v
+       JOIN assertions a ON a.id = v.assertion_id
+       JOIN entities s ON s.id = a.subject_id
+       LEFT JOIN entities o ON o.id = a.object_id
+       WHERE v.embedding MATCH ? AND k = ? AND ${validity}
+       ORDER BY v.distance`,
+      [queryBlob, Math.max(1, Math.min(limit, 500)), asOf, asOf],
+    );
+    return rows.map((row) => {
+      const assertion = this.assertionFromRow(row);
+      return {
+        id: assertion.id,
+        assertion,
+        subjectName: row.subject_name,
+        objectName: row.object_name || undefined,
+        passage: serializeAssertionPassage({ assertion, subjectName: row.subject_name, objectName: row.object_name || undefined }),
+        distance: row.distance,
+        similarity: 1 / (1 + row.distance),
+      };
+    });
+  }
+
+  async rebuildAllEmbeddings(
+    service: EmbeddingService,
+    onProgress?: (progress: { phase: 'entities' | 'assertions'; done: number; total: number }) => void,
+  ): Promise<{ entities: number; assertions: number }> {
+    this.attachEmbeddingService(service);
+    const profile = service.getUsageProfile();
+    const specs: EmbeddingIndexSpec[] = [
+      {
+        indexName: 'vec_entities', modelId: profile.modelId, modelRevision: profile.modelRevision,
+        dimension: profile.dimension, usageProfileVersion: profile.usageProfileVersion,
+        serializationVersion: ENTITY_SERIALIZATION_VERSION,
+      },
+      {
+        indexName: 'vec_assertions', modelId: profile.modelId, modelRevision: profile.modelRevision,
+        dimension: profile.dimension, usageProfileVersion: profile.usageProfileVersion,
+        serializationVersion: ASSERTION_SERIALIZATION_VERSION,
+      },
+    ];
+    await this.prepareEmbeddingIndexes(specs, { force: true });
+    try {
+      const entityRows = await this.all<any>('SELECT * FROM entities ORDER BY created_at, id');
+      let entityDone = 0;
+      for (const row of entityRows) {
+        const entity = this.rowToEntity(row);
+        const passage = serializeEntityPassage(entity);
+        const result = await service.embedPassage(passage);
+        await this.run('UPDATE entities SET embedding = ? WHERE id = ?', [encodeEmbedding(result.embedding), entity.id]);
+        await this._syncVecEmbedding(entity.id, result.embedding, this.contentSha256(passage));
+        entityDone++;
+        onProgress?.({ phase: 'entities', done: entityDone, total: entityRows.length });
+      }
+
+      const assertionRows = await this.all<{ id: string }>(
+        'SELECT id FROM assertions WHERE invalidated_at IS NULL ORDER BY created_at, id',
+      );
+      let assertionDone = 0;
+      for (const row of assertionRows) {
+        await this.indexAssertion(row.id);
+        assertionDone++;
+        onProgress?.({ phase: 'assertions', done: assertionDone, total: assertionRows.length });
+      }
+      await this.activateEmbeddingIndex('vec_entities', entityDone);
+      await this.activateEmbeddingIndex('vec_assertions', assertionDone);
+      await this.setMeta('embedding_model', profile.modelId);
+      await this.setMeta('embedding_usage_profile', profile.fingerprint);
+      return { entities: entityDone, assertions: assertionDone };
+    } catch (error) {
+      await this.run("UPDATE embedding_index_manifests SET status='failed' WHERE status='building'");
+      throw error;
+    }
+  }
+
+  async scanEmbeddingIntegrity(): Promise<{
+    entity: { active: number; vectors: number; metadata: number; coverage: number };
+    assertion: { active: number; vectors: number; metadata: number; coverage: number };
+    zeroVectors: number;
+    nanVectors: number;
+    wrongDimensions: number;
+    orphanVectors: number;
+    staleVectors: number;
+  }> {
+    const entityActive = (await this.get<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM entities WHERE json_extract(metadata, '$.merged_into') IS NULL",
+    ))?.count || 0;
+    const assertionActive = (await this.get<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM assertions WHERE invalidated_at IS NULL',
+    ))?.count || 0;
+    const entityVectors = (await this.get<{ count: number }>('SELECT COUNT(*) AS count FROM vec_entities'))?.count || 0;
+    const assertionVectors = (await this.get<{ count: number }>('SELECT COUNT(*) AS count FROM vec_assertions'))?.count || 0;
+    const entityMetadata = (await this.get<{ count: number }>('SELECT COUNT(*) AS count FROM entity_embedding_metadata'))?.count || 0;
+    const assertionMetadata = (await this.get<{ count: number }>('SELECT COUNT(*) AS count FROM assertion_embedding_metadata'))?.count || 0;
+    const manifests = await this.getEmbeddingIndexManifests();
+    // SQLite can surface INTEGER columns as numeric strings depending on the
+    // driver/build. Normalize here so the integrity scan reports the vector
+    // payload shape, rather than a JS representation mismatch.
+    const dimensions = new Map(manifests.map((item) => [item.index_name, Number(item.dimension)]));
+    let zeroVectors = 0;
+    let nanVectors = 0;
+    let wrongDimensions = 0;
+    for (const [table, idColumn] of [['vec_entities', 'entity_id'], ['vec_assertions', 'assertion_id']] as const) {
+      const rows = await this.all<any>(`SELECT ${idColumn} AS id, embedding FROM ${table}`);
+      for (const row of rows) {
+        const vector = decodeEmbeddingF32(row.embedding);
+        if (vector.length !== dimensions.get(table)) wrongDimensions++;
+        if (vector.some((value) => !Number.isFinite(value))) nanVectors++;
+        if (vector.every((value) => value === 0)) zeroVectors++;
+      }
+    }
+    const entityOrphans = (await this.get<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM vec_entities v LEFT JOIN entities e ON e.id=v.entity_id WHERE e.id IS NULL',
+    ))?.count || 0;
+    const assertionOrphans = (await this.get<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM vec_assertions v LEFT JOIN assertions a ON a.id=v.assertion_id WHERE a.id IS NULL',
+    ))?.count || 0;
+    let staleVectors = 0;
+    const indexedAssertions = await this.all<{ id: string; content_sha256: string }>(
+      'SELECT assertion_id AS id, content_sha256 FROM assertion_embedding_metadata',
+    );
+    for (const row of indexedAssertions) {
+      const resolved = await this.getResolvedAssertion(row.id);
+      if (!resolved || this.contentSha256(resolved.passage) !== row.content_sha256) staleVectors++;
+    }
+    return {
+      entity: { active: entityActive, vectors: entityVectors, metadata: entityMetadata, coverage: entityActive ? entityVectors / entityActive : 1 },
+      assertion: { active: assertionActive, vectors: assertionVectors, metadata: assertionMetadata, coverage: assertionActive ? assertionVectors / assertionActive : 1 },
+      zeroVectors, nanVectors, wrongDimensions,
+      orphanVectors: entityOrphans + assertionOrphans,
+      staleVectors,
+    };
+  }
+
+  private async _resolveAssertionVecDimension(): Promise<void> {
+    if (this.assertionVecDimensionResolved) return;
+    this.assertionVecDimensionResolved = true;
+    const row = await this.get<{ sql: string }>(
+      "SELECT sql FROM sqlite_master WHERE type='table' AND name='vec_assertions'",
+    );
+    const match = row?.sql?.match(/\[\s*(\d+)\s*\]/);
+    if (match) this.assertionVecDimension = Number(match[1]);
   }
 
   // ── 图分析洞见查询 ──
