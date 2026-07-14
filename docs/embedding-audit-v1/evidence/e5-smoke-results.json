@@ -1,0 +1,123 @@
+{
+  "model": "Xenova/multilingual-e5-small",
+  "pairs": 24,
+  "variants": {
+    "A-current-noprefix": {
+      "meanPositive": 0.8928,
+      "meanNegative": 0.7745,
+      "margin": 0.1183,
+      "meanHardNegative": 0.8758,
+      "top1Accuracy": 0.75,
+      "perTag": {
+        "en": {
+          "n": 8,
+          "top1": 8,
+          "top1Rate": 1,
+          "meanPos": 0.8856
+        },
+        "zh": {
+          "n": 6,
+          "top1": 6,
+          "top1Rate": 1,
+          "meanPos": 0.932
+        },
+        "xling": {
+          "n": 4,
+          "top1": 0,
+          "top1Rate": 0,
+          "meanPos": 0.8343
+        },
+        "temporal": {
+          "n": 4,
+          "top1": 3,
+          "top1Rate": 0.75,
+          "meanPos": 0.9098
+        },
+        "person-event": {
+          "n": 2,
+          "top1": 1,
+          "top1Rate": 0.5,
+          "meanPos": 0.8871
+        }
+      }
+    },
+    "B-e5-prefixed": {
+      "meanPositive": 0.867,
+      "meanNegative": 0.7471,
+      "margin": 0.1199,
+      "meanHardNegative": 0.8454,
+      "top1Accuracy": 0.8333,
+      "perTag": {
+        "en": {
+          "n": 8,
+          "top1": 8,
+          "top1Rate": 1,
+          "meanPos": 0.8554
+        },
+        "zh": {
+          "n": 6,
+          "top1": 6,
+          "top1Rate": 1,
+          "meanPos": 0.9221
+        },
+        "xling": {
+          "n": 4,
+          "top1": 0,
+          "top1Rate": 0,
+          "meanPos": 0.8014
+        },
+        "temporal": {
+          "n": 4,
+          "top1": 4,
+          "top1Rate": 1,
+          "meanPos": 0.8821
+        },
+        "person-event": {
+          "n": 2,
+          "top1": 2,
+          "top1Rate": 1,
+          "meanPos": 0.8487
+        }
+      }
+    },
+    "C-cls-nonorm": {
+      "meanPositive": 0.9525,
+      "meanNegative": 0.8885,
+      "margin": 0.064,
+      "meanHardNegative": 0.9476,
+      "top1Accuracy": 0.75,
+      "perTag": {
+        "en": {
+          "n": 8,
+          "top1": 7,
+          "top1Rate": 0.875,
+          "meanPos": 0.9537
+        },
+        "zh": {
+          "n": 6,
+          "top1": 6,
+          "top1Rate": 1,
+          "meanPos": 0.9687
+        },
+        "xling": {
+          "n": 4,
+          "top1": 1,
+          "top1Rate": 0.25,
+          "meanPos": 0.9164
+        },
+        "temporal": {
+          "n": 4,
+          "top1": 3,
+          "top1Rate": 0.75,
+          "meanPos": 0.9605
+        },
+        "person-event": {
+          "n": 2,
+          "top1": 1,
+          "top1Rate": 0.5,
+          "meanPos": 0.9549
+        }
+      }
+    }
+  }
+}

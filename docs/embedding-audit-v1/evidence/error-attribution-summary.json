@@ -1,0 +1,86 @@
+{
+  "records": 199,
+  "uniqueAssertionsSeen": 295,
+  "wrongAnswerableCount": 88,
+  "errorClassCounts": {
+    "F": 24,
+    "CDE": 33,
+    "CDE-partial": 13,
+    "A": 17,
+    "G?": 1
+  },
+  "errorClassByCategory": {
+    "temporal": {
+      "F": 7,
+      "CDE": 11,
+      "A": 2
+    },
+    "single_hop": {
+      "CDE": 7,
+      "CDE-partial": 10,
+      "G?": 1,
+      "A": 5,
+      "F": 1
+    },
+    "multi_hop": {
+      "CDE": 2,
+      "A": 2,
+      "CDE-partial": 2
+    },
+    "open_domain": {
+      "CDE": 13,
+      "F": 16,
+      "A": 8,
+      "CDE-partial": 1
+    }
+  },
+  "finalContextRecall": {
+    "n": 149,
+    "any": 0.4832,
+    "full": 0.3893,
+    "extractionCoverageAnyProxy": 0.7852,
+    "byCategory": {
+      "temporal": {
+        "n": 37,
+        "any": 0.486,
+        "full": 0.486,
+        "storeAny": 0.865
+      },
+      "multi_hop": {
+        "n": 11,
+        "any": 0.273,
+        "full": 0.091,
+        "storeAny": 0.727
+      },
+      "single_hop": {
+        "n": 31,
+        "any": 0.548,
+        "full": 0.194,
+        "storeAny": 0.806
+      },
+      "open_domain": {
+        "n": 70,
+        "any": 0.486,
+        "full": 0.471,
+        "storeAny": 0.743
+      }
+    }
+  },
+  "answerConditionalAccuracy": {
+    "goldFullyInContext": {
+      "n": 58,
+      "correct": 33,
+      "acc": 0.569
+    },
+    "goldPartiallyInContext": {
+      "n": 72,
+      "correct": 34,
+      "acc": 0.4722
+    },
+    "goldNotInContext": {
+      "n": 77,
+      "correct": 27,
+      "acc": 0.3506
+    }
+  }
+}

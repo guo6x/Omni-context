@@ -1,0 +1,3702 @@
+[
+ {
+  "question_id": "conv1-q0",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Caroline go to the LGBTQ support group?",
+  "reference": "7 May 2023",
+  "candidate": "Caroline went to an LGBTQ support group on May 7, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D1:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q1",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie paint a sunrise?",
+  "reference": 2022,
+  "candidate": "Melanie painted a lake sunrise last year (2022).",
+  "perTurn": [
+   {
+    "dia_id": "D1:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q2",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What fields would Caroline be likely to pursue in her educaton?",
+  "reference": "Psychology, counseling certification",
+  "candidate": "The evidence does not mention Caroline's educational pursuits or fields of study.",
+  "perTurn": [
+   {
+    "dia_id": "D1:9",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D1:11",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q3",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What did Caroline research?",
+  "reference": "Adoption agencies",
+  "candidate": "Caroline researched adoption agencies.",
+  "perTurn": [
+   {
+    "dia_id": "D2:8",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q5",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "When did Melanie run a charity race?",
+  "reference": "The sunday before 25 May 2023",
+  "candidate": "Melanie ran a charity race for mental health on May 20, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D2:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q6",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "When is Melanie planning on going camping?",
+  "reference": "June 2023",
+  "candidate": "Unknown. The evidence mentions a camping trip two weekends ago and a plan to go camping next month, but it is not clear if Melanie is the one planning it.",
+  "perTurn": [
+   {
+    "dia_id": "D2:7",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q7",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What is Caroline's relationship status?",
+  "reference": "Single",
+  "candidate": "unknown",
+  "perTurn": [
+   {
+    "dia_id": "D3:13",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D2:14",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q8",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "When did Caroline give a speech at a school?",
+  "reference": "The week before 9 June 2023",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D3:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q9",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "When did Caroline meet up with her friends, family, and mentors?",
+  "reference": "The week before 9 June 2023",
+  "candidate": "The evidence does not specify when Caroline met up with her friends, family, and mentors. It only mentions that they are her support system and have been instrumental in her transition.",
+  "perTurn": [
+   {
+    "dia_id": "D3:11",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q10",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How long has Caroline had her current group of friends for?",
+  "reference": "4 years",
+  "candidate": "The evidence does not specify how long Caroline has had her current group of friends.",
+  "perTurn": [
+   {
+    "dia_id": "D3:13",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q11",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Where did Caroline move from 4 years ago?",
+  "reference": "Sweden",
+  "candidate": "Sweden",
+  "perTurn": [
+   {
+    "dia_id": "D3:13",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D4:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q12",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "How long ago was Caroline's 18th birthday?",
+  "reference": "10 years ago",
+  "candidate": "unknown",
+  "perTurn": [
+   {
+    "dia_id": "D4:5",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q13",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What career path has Caroline decided to persue?",
+  "reference": "counseling or mental health for Transgender people",
+  "candidate": "Caroline has decided to pursue a career in counseling and mental health.",
+  "perTurn": [
+   {
+    "dia_id": "D4:13",
+    "inFinal": true,
+    "finalConf": "medium",
+    "inStore": true,
+    "storeConf": "medium"
+   },
+   {
+    "dia_id": "D1:11",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q14",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Would Caroline still want to pursue counseling as a career if she hadn't received support growing up?",
+  "reference": "Likely no",
+  "candidate": "The evidence does not contain information about Caroline's career aspirations in relation to receiving support growing up, so it is unknown.",
+  "perTurn": [
+   {
+    "dia_id": "D4:15",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D3:5",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q15",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What activities does Melanie partake in?",
+  "reference": "pottery, camping, painting, swimming",
+  "candidate": "Melanie engages in painting (especially nature-inspired and abstract), pottery, and spending time with family. She also values creativity and flowers.",
+  "perTurn": [
+   {
+    "dia_id": "D5:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D9:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D1:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D1:18",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q16",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie sign up for a pottery class?",
+  "reference": "2 July 2023",
+  "candidate": "Melanie signed up for a pottery class on 2023-07-02.",
+  "perTurn": [
+   {
+    "dia_id": "D5:4",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q17",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When is Caroline going to the transgender conference?",
+  "reference": "July 2023",
+  "candidate": "Caroline is going to a transgender conference in July 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D5:13",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q18",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "Where has Melanie camped?",
+  "reference": "beach, mountains, forest",
+  "candidate": "Melanie went camping with her family two weekends ago (around July 3, 2023).",
+  "perTurn": [
+   {
+    "dia_id": "D6:16",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D4:6",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D8:32",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q19",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "What do Melanie's kids like?",
+  "reference": "dinosaurs, nature",
+  "candidate": "Melanie's kids are excited about the dinosaur exhibit at the museum.",
+  "perTurn": [
+   {
+    "dia_id": "D6:6",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D4:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q20",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie go to the museum?",
+  "reference": "5 July 2023",
+  "candidate": "Melanie went to the museum yesterday (2023-07-05).",
+  "perTurn": [
+   {
+    "dia_id": "D6:4",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q21",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When did Caroline have a picnic?",
+  "reference": "The week before 6 July 2023",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D6:11",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q22",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Would Caroline likely have Dr. Seuss books on her bookshelf?",
+  "reference": "Yes, since she collects classic children's books",
+  "candidate": "Yes, Caroline is creating a library for when she has kids, which would likely include Dr. Seuss books.",
+  "perTurn": [
+   {
+    "dia_id": "D6:9",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q23",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What books has Melanie read?",
+  "reference": "\"Nothing is Impossible\", \"Charlotte's Web\"",
+  "candidate": "The evidence does not mention any books read by Melanie.",
+  "perTurn": [
+   {
+    "dia_id": "D7:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D6:10",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q24",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What does Melanie do to destress?",
+  "reference": "Running, pottery",
+  "candidate": "Melanie runs to destress and clear her mind.",
+  "perTurn": [
+   {
+    "dia_id": "D7:22",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D5:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q25",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Caroline go to the LGBTQ conference?",
+  "reference": "10 July 2023",
+  "candidate": "Caroline went to an LGBTQ conference on July 10, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D7:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q26",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie read the book \"nothing is impossible\"?",
+  "reference": 2022,
+  "candidate": "I don't know",
+  "perTurn": [
+   {
+    "dia_id": "D7:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q27",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "Would Caroline pursue writing as a career option?",
+  "reference": "LIkely no; though she likes reading, she wants to be a counselor",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D7:5",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D7:9",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q28",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "When did Caroline go to the adoption meeting?",
+  "reference": "The friday before 15 July 2023",
+  "candidate": "Caroline attended an adoption advice/assistance group meeting, but the exact date is not specified in the evidence.",
+  "perTurn": [
+   {
+    "dia_id": "D8:9",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q29",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie go to the pottery workshop?",
+  "reference": "The Friday before 15 July 2023",
+  "candidate": "The evidence does not mention a pottery workshop attended by Melanie. It mentions a pottery class that someone signed up for on 2023-07-02 and a bowl made in a class on 2023-07-03, but the subject of those assertions is not identified as Melanie.",
+  "perTurn": [
+   {
+    "dia_id": "D8:2",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q30",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "H",
+  "question": "Would Melanie be considered a member of the LGBTQ community?",
+  "reference": "Likely no, she does not refer to herself as part of it",
+  "candidate": "I don't know",
+  "note": "no mappable gold evidence"
+ },
+ {
+  "question_id": "conv1-q31",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When did Melanie go camping in June?",
+  "reference": "The week before 27 June 2023",
+  "candidate": "The evidence does not mention Melanie going camping in June. It mentions camping with family 'two weekends ago' from July 17, 2023, which would be around July 3, 2023, not June.",
+  "perTurn": [
+   {
+    "dia_id": "D4:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q32",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "What LGBTQ+ events has Caroline participated in?",
+  "reference": "Pride parade, school speech, support group",
+  "candidate": "Caroline joined a new LGBTQ activist group last Tuesday (around July 18, 2023). She also joined a mentorship program for LGBTQ youth last weekend (around July 10, 2023). Additionally, she is having an LGBTQ art show with her paintings next month (around August 2023).",
+  "perTurn": [
+   {
+    "dia_id": "D5:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D8:17",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D3:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D1:3",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q33",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Caroline go to a pride parade during the summer?",
+  "reference": "The week before 3 July 2023",
+  "candidate": "Caroline went to an LGBTQ+ pride parade last week from June 26, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D5:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q34",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "What events has Caroline participated in to help children?",
+  "reference": "Mentoring program, school speech",
+  "candidate": "Caroline has joined a mentorship program for LGBTQ youth and mentors a transgender teen. She is also creating a library for when she has kids, and her goal is to give kids a loving home. She chose an adoption agency that helps LGBTQ+ folks with adoption.",
+  "perTurn": [
+   {
+    "dia_id": "D9:2",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D3:3",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q35",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie go camping in July?",
+  "reference": "two weekends before 17 July 2023",
+  "candidate": "Melanie went camping with her family two weekends before July 17, 2023, which would be around July 3, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D9:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q36",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Caroline join a mentorship program?",
+  "reference": "The weekend before 17 July 2023",
+  "candidate": "Caroline joined a mentorship program for LGBTQ youth last weekend (around July 10, 2023).",
+  "perTurn": [
+   {
+    "dia_id": "D9:2",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q37",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "H",
+  "question": "What did Melanie paint recently?",
+  "reference": "sunset",
+  "candidate": "Melanie recently painted a horse painting.",
+  "note": "no mappable gold evidence"
+ },
+ {
+  "question_id": "conv1-q38",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "What activities has Melanie done with her family?",
+  "reference": "Pottery, painting, camping, museum, swimming, hiking",
+  "candidate": "Melanie has engaged in several activities with her family, including painting together, camping, and visiting the Grand Canyon.",
+  "perTurn": [
+   {
+    "dia_id": "D8:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D8:6",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D9:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D6:4",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D1:18",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D3:14",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q39",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "In what ways is Caroline participating in the LGBTQ community?",
+  "reference": "Joining activist group, going to pride parades, participating in an art show, mentoring program",
+  "candidate": "Caroline has attended an LGBTQ conference, joined a new LGBTQ activist group, and is looking into counseling and mental health jobs. She also loved the book 'Becoming Nicole' which taught her self-acceptance and how to find support.",
+  "perTurn": [
+   {
+    "dia_id": "D10:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D5:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D9:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D9:2",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q40",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How many times has Melanie gone to the beach in 2023?",
+  "reference": 2,
+  "candidate": "The evidence does not contain any information about Melanie going to the beach in 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D10:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D6:16",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q41",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Caroline join a new activist group?",
+  "reference": "The Tuesday before 20 July 2023",
+  "candidate": "Caroline joined a new LGBTQ activist group on Tuesday, July 18, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D10:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q42",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "Would Melanie be more interested in going to a national park or a theme park?",
+  "reference": "National park; she likes the outdoors",
+  "candidate": "Melanie enjoyed a good time at the park, but there is no evidence about her interest in national parks versus theme parks.",
+  "perTurn": [
+   {
+    "dia_id": "D10:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D10:14",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q43",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "G?",
+  "question": "What kind of art does Caroline make?",
+  "reference": "abstract art",
+  "candidate": "Caroline makes paintings, drawings (especially flowers), stained glass windows, and abstract art. She also creates art for LGBTQ themes and shows her paintings at LGBTQ art shows.",
+  "perTurn": [
+   {
+    "dia_id": "D11:12",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D11:8",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D9:14",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q44",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "When is Melanie's daughter's birthday?",
+  "reference": "13 August",
+  "candidate": "The evidence does not specify the date of Melanie's daughter's birthday, only that it was celebrated with a concert on 2023-08-13.",
+  "perTurn": [
+   {
+    "dia_id": "D11:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q45",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When did Caroline attend a pride parade in August?",
+  "reference": "The Friday before 14 August 2023",
+  "candidate": "The evidence does not mention Caroline attending a pride parade in August. It mentions attending an LGBTQ+ pride parade last week as of July 3, 2023, but no specific date in August.",
+  "perTurn": [
+   {
+    "dia_id": "D11:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q46",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "H",
+  "question": "Would Melanie be considered an ally to the transgender community?",
+  "reference": "Yes, she is supportive",
+  "candidate": "The evidence does not contain any information about Melanie's stance or actions regarding the transgender community.",
+  "note": "no mappable gold evidence"
+ },
+ {
+  "question_id": "conv1-q47",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "Who supports Caroline when she has a negative experience?",
+  "reference": "Her mentors, family, and friends",
+  "candidate": "The evidence does not mention anyone supporting Caroline when she has a negative experience.",
+  "perTurn": [
+   {
+    "dia_id": "D12:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D3:11",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q48",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What types of pottery have Melanie and her kids made?",
+  "reference": "bowls, cup",
+  "candidate": "The evidence does not specify the types of pottery Melanie and her kids have made.",
+  "perTurn": [
+   {
+    "dia_id": "D12:14",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D8:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D5:6",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q49",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "When did Caroline and Melanie go to a pride fesetival together?",
+  "reference": 2022,
+  "candidate": "The evidence does not indicate that Caroline and Melanie went to a pride festival together. It mentions that one person went to an LGBTQ+ pride parade last week (around June 26, 2023) and another person attended a transgender conference in July 2023, but there is no mention of them attending together.",
+  "perTurn": [
+   {
+    "dia_id": "D12:15",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q50",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What would Caroline's political leaning likely be?",
+  "reference": "Liberal",
+  "candidate": "Caroline's political leaning is likely progressive or left-leaning, given her involvement in LGBTQ+ activism, support for transgender rights, and interest in counseling and mental health.",
+  "perTurn": [
+   {
+    "dia_id": "D12:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q51",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "What has Melanie painted?",
+  "reference": "Horse, sunset, sunrise",
+  "candidate": "Melanie has painted a horse, a lake sunrise, and landscapes and still life. She also plans to paint autumn-inspired works.",
+  "perTurn": [
+   {
+    "dia_id": "D13:8",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D8:6",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D1:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q52",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "What are Melanie's pets' names?",
+  "reference": "Oliver, Luna, Bailey",
+  "candidate": "Melanie has a cat named Oliver and another cat named Bailey.",
+  "perTurn": [
+   {
+    "dia_id": "D13:4",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D7:18",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q53",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "When did Caroline apply to adoption agencies?",
+  "reference": "The week of 23 August 2023",
+  "candidate": "Caroline applied to adoption agencies on August 23, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D13:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q54",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When did Caroline draw a self-portrait?",
+  "reference": "The week before 23 August 2023",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D13:11",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q55",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What subject have Caroline and Melanie both painted?",
+  "reference": "Sunsets",
+  "candidate": "Both Caroline and Melanie have painted a horse.",
+  "perTurn": [
+   {
+    "dia_id": "D14:5",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D8:6",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q56",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "What symbols are important to Caroline?",
+  "reference": "Rainbow flag, transgender symbol",
+  "candidate": "Caroline values symbols of inclusivity and diversity in her art, such as the rainbow flag mural and the LGBTQ art show she is organizing.",
+  "perTurn": [
+   {
+    "dia_id": "D14:15",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D4:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q57",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When did Caroline encounter people on a hike and have a negative experience?",
+  "reference": "The week before 25 August 2023",
+  "candidate": "I don't know",
+  "perTurn": [
+   {
+    "dia_id": "D14:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q58",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie make a plate in pottery class?",
+  "reference": "24 August 2023",
+  "candidate": "The evidence does not mention Melanie making a plate in pottery class. It mentions making a bowl, but not a plate.",
+  "perTurn": [
+   {
+    "dia_id": "D14:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q59",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "Would Caroline be considered religious?",
+  "reference": "Somewhat, but not extremely religious",
+  "candidate": "No, the evidence does not indicate that Caroline is religious.",
+  "perTurn": [
+   {
+    "dia_id": "D14:19",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D12:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q60",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What instruments does Melanie play?",
+  "reference": "clarinet and violin",
+  "candidate": "Melanie plays clarinet.",
+  "perTurn": [
+   {
+    "dia_id": "D15:26",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D2:5",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q61",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What musical artists/bands has Melanie seen?",
+  "reference": "Summer Sounds, Matt Patterson",
+  "candidate": "Melanie has seen Ed Sheeran (or modern music like Ed Sheeran's \"Perfect\") and attended a Summer Sounds concert.",
+  "perTurn": [
+   {
+    "dia_id": "D15:16",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D11:3",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q62",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When did Melanie go to the park?",
+  "reference": "27 August 2023",
+  "candidate": "The evidence does not specify when Melanie went to the park.",
+  "perTurn": [
+   {
+    "dia_id": "D15:2",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q63",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When is Caroline's youth center putting on a talent show?",
+  "reference": "September 2023",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D15:11",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q64",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Would Melanie likely enjoy the song \"The Four Seasons\" by Vivaldi?",
+  "reference": "Yes; it's classical music",
+  "candidate": "Yes, Melanie would likely enjoy \"The Four Seasons\" by Vivaldi, as she appreciates classical music and finds peace in creativity and nature.",
+  "perTurn": [
+   {
+    "dia_id": "D15:28",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q65",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "What are some changes Caroline has faced during her transition journey?",
+  "reference": "Changes to her body, losing unsupportive friends",
+  "candidate": "Caroline has faced a tough breakup and moved from her home country. She has also experienced her relationships becoming more genuine as she embraced her identity as a trans woman.",
+  "perTurn": [
+   {
+    "dia_id": "D16:15",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D11:14",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q66",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What does Melanie do with her family on hikes?",
+  "reference": "Roast marshmallows, tell stories",
+  "candidate": "The evidence does not mention Melanie doing anything specific with her family on hikes. It states that she loves camping trips with her family and that they enjoyed the Grand Canyon, but no details about hiking activities are provided.",
+  "perTurn": [
+   {
+    "dia_id": "D16:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D10:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q67",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "When did Caroline go biking with friends?",
+  "reference": "The weekend before 13 September 2023",
+  "candidate": "I don't know",
+  "perTurn": [
+   {
+    "dia_id": "D16:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q68",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "How long has Melanie been practicing art?",
+  "reference": "Since 2016",
+  "candidate": "The evidence does not specify how long Melanie has been practicing art.",
+  "perTurn": [
+   {
+    "dia_id": "D16:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q69",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What personality traits might Melanie say Caroline has?",
+  "reference": "Thoughtful, authentic, driven",
+  "candidate": "Based on the evidence, Melanie might say Caroline is courageous, family-oriented, and supportive.",
+  "perTurn": [
+   {
+    "dia_id": "D16:18",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D13:16",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D7:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q70",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What transgender-specific events has Caroline attended?",
+  "reference": "Poetry reading, conference",
+  "candidate": "Caroline attended a transgender conference in July 2023 and an LGBTQ conference on July 10, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D17:19",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D15:13",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q71",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What book did Melanie read from Caroline's suggestion?",
+  "reference": "\"Becoming Nicole\"",
+  "candidate": "The evidence does not mention Melanie reading a book from Caroline's suggestion.",
+  "perTurn": [
+   {
+    "dia_id": "D7:11",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D17:10",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q72",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie's friend adopt a child?",
+  "reference": 2022,
+  "candidate": "The evidence does not mention Melanie's friend adopting a child.",
+  "perTurn": [
+   {
+    "dia_id": "D17:3",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q73",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When did Melanie get hurt?",
+  "reference": "September 2023",
+  "candidate": "I don't know",
+  "perTurn": [
+   {
+    "dia_id": "D17:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q74",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "When did Melanie's family go on a roadtrip?",
+  "reference": "The weekend before 20 October 2023",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D18:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q75",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "How many children does Melanie have?",
+  "reference": 3,
+  "candidate": "The evidence does not specify the number of children Melanie has.",
+  "perTurn": [
+   {
+    "dia_id": "D18:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D18:7",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q76",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie go on a hike after the roadtrip?",
+  "reference": "19 October 2023",
+  "candidate": "The evidence does not mention Melanie going on a hike after a roadtrip.",
+  "perTurn": [
+   {
+    "dia_id": "D18:17",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q77",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "Would Melanie go on another roadtrip soon?",
+  "reference": "Likely no; since this one went badly",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D18:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D18:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q78",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What items has Melanie bought?",
+  "reference": "Figurines, shoes",
+  "candidate": "There is no evidence that Melanie has bought any items.",
+  "perTurn": [
+   {
+    "dia_id": "D19:2",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D7:18",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q79",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Caroline pass the adoption interview?",
+  "reference": "The Friday before 22 October 2023",
+  "candidate": "Caroline passed the adoption agency interviews on October 20, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D19:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q80",
+  "category": "temporal",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "When did Melanie buy the figurines?",
+  "reference": "21 October 2023",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D19:2",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q81",
+  "category": "multi_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "Would Caroline want to move back to her home country soon?",
+  "reference": "No; she's in the process of adopting children.",
+  "candidate": "The evidence does not indicate whether Caroline wants to move back to her home country soon.",
+  "perTurn": [
+   {
+    "dia_id": "D19:1",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   },
+   {
+    "dia_id": "D19:3",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q82",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What did the charity race raise awareness for?",
+  "reference": "mental health",
+  "candidate": "The charity race raised awareness for mental health.",
+  "perTurn": [
+   {
+    "dia_id": "D2:2",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q83",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What did Melanie realize after the charity race?",
+  "reference": "self-care is important",
+  "candidate": "Melanie realized that self-care is really important.",
+  "perTurn": [
+   {
+    "dia_id": "D2:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q84",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How does Melanie prioritize self-care?",
+  "reference": "by carving out some me-time each day for activities like running, reading, or playing the violin",
+  "candidate": "Melanie prioritizes self-care by carving out me-time each day for activities like running, reading, or playing her violin, and she recognizes that self-care is really important.",
+  "perTurn": [
+   {
+    "dia_id": "D2:5",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q85",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What are Caroline's plans for the summer?",
+  "reference": "researching adoption agencies",
+  "candidate": "Caroline wants to plan something special for the summer with just the two of them.",
+  "perTurn": [
+   {
+    "dia_id": "D2:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q86",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What type of individuals does the adoption agency Caroline is considering support?",
+  "reference": "LGBTQ+ individuals",
+  "candidate": "The evidence does not specify what type of individuals the adoption agency supports.",
+  "perTurn": [
+   {
+    "dia_id": "D2:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q87",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Why did Caroline choose the adoption agency?",
+  "reference": "because of their inclusivity and support for LGBTQ+ individuals",
+  "candidate": "Caroline chose the adoption agency because they help LGBTQ+ folks with adoption.",
+  "perTurn": [
+   {
+    "dia_id": "D2:12",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q88",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What is Caroline excited about in the adoption process?",
+  "reference": "creating a family for kids who need one",
+  "candidate": "Caroline is excited about passing the adoption agency interviews and taking a big step towards her goal of having a family.",
+  "perTurn": [
+   {
+    "dia_id": "D2:14",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q89",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What does Melanie think about Caroline's decision to adopt?",
+  "reference": "she thinks Caroline is doing something amazing and will be an awesome mom",
+  "candidate": "Melanie is supportive of Caroline's adoption journey.",
+  "perTurn": [
+   {
+    "dia_id": "D2:15",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q90",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How long have Mel and her husband been married?",
+  "reference": "Mel and her husband have been married for 5 years.",
+  "candidate": "Unknown",
+  "perTurn": [
+   {
+    "dia_id": "D3:16",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q91",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What does Caroline's necklace symbolize?",
+  "reference": "love, faith, and strength",
+  "candidate": "Caroline's necklace is a gift from her grandma.",
+  "perTurn": [
+   {
+    "dia_id": "D4:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q92",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What country is Caroline's grandma from?",
+  "reference": "Sweden",
+  "candidate": "unknown",
+  "perTurn": [
+   {
+    "dia_id": "D4:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q93",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What was grandma's gift to Caroline?",
+  "reference": "necklace",
+  "candidate": "The evidence does not specify what grandma's gift to Caroline was.",
+  "perTurn": [
+   {
+    "dia_id": "D4:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q94",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What is Melanie's hand-painted bowl a reminder of?",
+  "reference": "art and self-expression",
+  "candidate": "Melanie's hand-painted bowl is a reminder of her 18th birthday, made by a friend ten years ago.",
+  "perTurn": [
+   {
+    "dia_id": "D4:5",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q95",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What did Melanie and her family do while camping?",
+  "reference": "explored nature, roasted marshmallows, and went on a hike",
+  "candidate": "Melanie and her family went camping in the forest and enjoyed hiking in the mountains and exploring forests.",
+  "perTurn": [
+   {
+    "dia_id": "D4:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q96",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What kind of counseling and mental health services is Caroline interested in pursuing?",
+  "reference": "working with trans people, helping them accept themselves and supporting their mental health",
+  "candidate": "Caroline is interested in pursuing counseling and mental health jobs, specifically looking into counseling and mental health as a career.",
+  "perTurn": [
+   {
+    "dia_id": "D4:13",
+    "inFinal": true,
+    "finalConf": "medium",
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q97",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What workshop did Caroline attend recently?",
+  "reference": "LGBTQ+ counseling workshop",
+  "candidate": "The evidence does not mention any workshop attended by Caroline.",
+  "perTurn": [
+   {
+    "dia_id": "D4:13",
+    "inFinal": true,
+    "finalConf": "medium",
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q98",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What was discussed in the LGBTQ+ counseling workshop?",
+  "reference": "therapeutic methods and how to best work with trans people",
+  "candidate": "The evidence does not mention an LGBTQ+ counseling workshop. It discusses an LGBTQ conference, a support group, and the book 'Becoming Nicole', but not a counseling workshop.",
+  "perTurn": [
+   {
+    "dia_id": "D4:13",
+    "inFinal": true,
+    "finalConf": "medium",
+    "inStore": true,
+    "storeConf": "medium"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q99",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What motivated Caroline to pursue counseling?",
+  "reference": "her own journey and the support she received, and how counseling improved her life",
+  "candidate": "Caroline is motivated to pursue counseling by a desire to help others and make a positive impact, and she has gained insight from her own experience.",
+  "perTurn": [
+   {
+    "dia_id": "D4:15",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q100",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What kind of place does Caroline want to create for people?",
+  "reference": "a safe and inviting place for people to grow",
+  "candidate": "Caroline wants to create a loving home for kids and a library for when she has kids.",
+  "perTurn": [
+   {
+    "dia_id": "D4:15",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q101",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "Did Melanie make the black and white bowl in the photo?",
+  "reference": "Yes",
+  "candidate": "Unknown. The evidence does not mention a black and white bowl or a photo.",
+  "perTurn": [
+   {
+    "dia_id": "D5:8",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q102",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What kind of books does Caroline have in her library?",
+  "reference": "kids' books - classics, stories from different cultures, educational books",
+  "candidate": "The evidence does not mention what kind of books Caroline has in her library; it only states she is creating a library for when she has kids.",
+  "perTurn": [
+   {
+    "dia_id": "D6:9",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q103",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What was Melanie's favorite book from her childhood?",
+  "reference": "\"Charlotte's Web\"",
+  "candidate": "Charlotte's Web",
+  "perTurn": [
+   {
+    "dia_id": "D6:10",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q104",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What book did Caroline recommend to Melanie?",
+  "reference": "\"Becoming Nicole\"",
+  "candidate": "unknown",
+  "perTurn": [
+   {
+    "dia_id": "D7:11",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q105",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What did Caroline take away from the book \"Becoming Nicole\"?",
+  "reference": "Lessons on self-acceptance and finding support",
+  "candidate": "Caroline learned self-acceptance and how to find support from the book 'Becoming Nicole'.",
+  "perTurn": [
+   {
+    "dia_id": "D7:13",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q106",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What are the new shoes that Melanie got used for?",
+  "reference": "Running",
+  "candidate": "The evidence does not mention any new shoes that Melanie got or what they were used for.",
+  "perTurn": [
+   {
+    "dia_id": "D7:19",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q107",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What is Melanie's reason for getting into running?",
+  "reference": "To de-stress and clear her mind",
+  "candidate": "The evidence does not mention Melanie's reason for getting into running.",
+  "perTurn": [
+   {
+    "dia_id": "D7:21",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q108",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What does Melanie say running has been great for?",
+  "reference": "Her mental health",
+  "candidate": "Running has been a great way to destress and clear her mind.",
+  "perTurn": [
+   {
+    "dia_id": "D7:24",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q109",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What did Mel and her kids make during the pottery workshop?",
+  "reference": "pots",
+  "candidate": "The evidence does not specify what Mel and her kids made during the pottery workshop.",
+  "perTurn": [
+   {
+    "dia_id": "D8:2",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q110",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What kind of pot did Mel and her kids make with clay?",
+  "reference": "a cup with a dog face on it",
+  "candidate": "The evidence does not specify what kind of pot Mel and her kids made with clay.",
+  "perTurn": [
+   {
+    "dia_id": "D8:4",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q111",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What creative project do Mel and her kids do together besides pottery?",
+  "reference": "painting",
+  "candidate": "They love painting together, especially nature-inspired ones.",
+  "perTurn": [
+   {
+    "dia_id": "D8:5",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q112",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What did Mel and her kids paint in their latest project in July 2023?",
+  "reference": "a sunset with a palm tree",
+  "candidate": "Mel and her kids painted nature-inspired paintings together in July 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D8:6",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q113",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What did Caroline see at the council meeting for adoption?",
+  "reference": "many people wanting to create loving homes for children in need",
+  "candidate": "The evidence does not mention Caroline seeing anything at a council meeting for adoption.",
+  "perTurn": [
+   {
+    "dia_id": "D8:9",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q114",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What do sunflowers represent according to Caroline?",
+  "reference": "warmth and happiness",
+  "candidate": "I don't know.",
+  "perTurn": [
+   {
+    "dia_id": "D8:11",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q115",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "Why are flowers important to Melanie?",
+  "reference": "They remind her to appreciate the small moments and were a part of her wedding decor",
+  "candidate": "The evidence does not mention flowers or their importance to Melanie.",
+  "perTurn": [
+   {
+    "dia_id": "D8:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q116",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What inspired Caroline's painting for the art show?",
+  "reference": "visiting an LGBTQ center and wanting to capture unity and strength",
+  "candidate": "Caroline's painting for the art show was inspired by her visit to an LGBTQ center.",
+  "perTurn": [
+   {
+    "dia_id": "D9:16",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q117",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "How often does Melanie go to the beach with her kids?",
+  "reference": "once or twice a year",
+  "candidate": "The evidence does not mention Melanie going to the beach with her kids.",
+  "perTurn": [
+   {
+    "dia_id": "D10:10",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q118",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What did Melanie and her family see during their camping trip last year?",
+  "reference": "Perseid meteor shower",
+  "candidate": "The evidence does not specify what Melanie and her family saw during their camping trip last year.",
+  "perTurn": [
+   {
+    "dia_id": "D10:14",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q119",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How did Melanie feel while watching the meteor shower?",
+  "reference": "in awe of the universe",
+  "candidate": "Melanie felt tiny and in awe of the universe while watching the meteor shower.",
+  "perTurn": [
+   {
+    "dia_id": "D10:18",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q120",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Whose birthday did Melanie celebrate recently?",
+  "reference": "Melanie's daughter",
+  "candidate": "Melanie celebrated her daughter's birthday.",
+  "perTurn": [
+   {
+    "dia_id": "D11:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q121",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Who performed at the concert at Melanie's daughter's birthday?",
+  "reference": "Matt Patterson",
+  "candidate": "The evidence does not specify who performed at the concert.",
+  "perTurn": [
+   {
+    "dia_id": "D11:3",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q122",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "Why did Melanie choose to use colors and patterns in her pottery project?",
+  "reference": "She wanted to catch the eye and make people smile.",
+  "candidate": "The evidence does not mention Melanie or explain why she chose to use colors and patterns in her pottery project.",
+  "perTurn": [
+   {
+    "dia_id": "D12:6",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q123",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What pet does Caroline have?",
+  "reference": "guinea pig",
+  "candidate": "Caroline has a guinea pig named Oscar.",
+  "perTurn": [
+   {
+    "dia_id": "D13:3",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q124",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What pets does Melanie have?",
+  "reference": "Two cats and a dog",
+  "candidate": "Melanie has a dog and a cat named Oliver, and also another cat named Bailey.",
+  "perTurn": [
+   {
+    "dia_id": "D13:4",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q125",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "Where did Oliver hide his bone once?",
+  "reference": "In Melanie's slipper",
+  "candidate": "I don't know",
+  "perTurn": [
+   {
+    "dia_id": "D13:6",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q126",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What activity did Caroline used to do with her dad?",
+  "reference": "Horseback riding",
+  "candidate": "I don't know",
+  "perTurn": [
+   {
+    "dia_id": "D13:7",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q127",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What did Caroline make for a local church?",
+  "reference": "a stained glass window",
+  "candidate": "I don't know",
+  "perTurn": [
+   {
+    "dia_id": "D14:17",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q128",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What did Caroline find in her neighborhood during her walk?",
+  "reference": "a rainbow sidewalk",
+  "candidate": "The evidence does not contain any information about Caroline finding something in her neighborhood during a walk.",
+  "perTurn": [
+   {
+    "dia_id": "D14:23",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q129",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Which song motivates Caroline to be courageous?",
+  "reference": "Brave by Sara Bareilles",
+  "candidate": "The song \"Brave\" by Sara Bareilles motivates Caroline to be courageous.",
+  "perTurn": [
+   {
+    "dia_id": "D15:23",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q130",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Which  classical musicians does Melanie enjoy listening to?",
+  "reference": "Bach and Mozart",
+  "candidate": "Melanie enjoys listening to classical musicians like Bach and Mozart.",
+  "perTurn": [
+   {
+    "dia_id": "D15:28",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q131",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "Who is Melanie a fan of in terms of modern music?",
+  "reference": "Ed Sheeran",
+  "candidate": "Melanie is a fan of Ed Sheeran.",
+  "perTurn": [
+   {
+    "dia_id": "D15:28",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q132",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How long has Melanie been creating art?",
+  "reference": "7 years",
+  "candidate": "The evidence does not specify when Melanie started creating art, so the duration is unknown.",
+  "perTurn": [
+   {
+    "dia_id": "D16:7",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q133",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What precautionary sign did Melanie see at the café?",
+  "reference": "A sign stating that someone is not being able to leave",
+  "candidate": "The evidence does not mention any precautionary sign at the café.",
+  "perTurn": [
+   {
+    "dia_id": "D16:16",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q134",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What advice does Caroline give for getting started with adoption?",
+  "reference": "Do research, find an adoption agency or lawyer, gather necessary documents, and prepare emotionally.",
+  "candidate": "The evidence does not contain any advice from Caroline about getting started with adoption. It mentions her own actions and feelings, but no advice given.",
+  "perTurn": [
+   {
+    "dia_id": "D17:7",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q135",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What setback did Melanie face in October 2023?",
+  "reference": "She got hurt and had to take a break from pottery.",
+  "candidate": "The evidence does not mention any setback faced by Melanie in October 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D17:8",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q136",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What does Melanie do to keep herself busy during her pottery break?",
+  "reference": "Read a book and paint.",
+  "candidate": "Melanie does not mention a pottery break or what she does during it. The evidence shows she signed up for a pottery class and made a bowl, but no break is discussed.",
+  "perTurn": [
+   {
+    "dia_id": "D17:10",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q137",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What painting did Melanie show to Caroline on October 13, 2023?",
+  "reference": "A painting inspired by sunsets with a pink sky.",
+  "candidate": "The evidence does not contain any information about a painting shown by Melanie to Caroline on October 13, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D17:12",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q138",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What kind of painting did Caroline share with Melanie on October 13, 2023?",
+  "reference": "An abstract painting with blue streaks on a wall.",
+  "candidate": "Caroline shared an abstract painting with Melanie on October 13, 2023.",
+  "perTurn": [
+   {
+    "dia_id": "D17:14",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q139",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What was the poetry reading that Caroline attended about?",
+  "reference": "It was a transgender poetry reading where transgender people shared their stories.",
+  "candidate": "The evidence does not mention Caroline attending a poetry reading.",
+  "perTurn": [
+   {
+    "dia_id": "D17:18",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q140",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What did the posters at the poetry reading say?",
+  "reference": "\"Trans Lives Matter\"",
+  "candidate": "The evidence does not contain any information about posters at a poetry reading.",
+  "perTurn": [
+   {
+    "dia_id": "D17:19",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q141",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What does Caroline's drawing symbolize for her?",
+  "reference": "Freedom and being true to herself.",
+  "candidate": "Caroline's drawing symbolizes inclusivity and diversity, and she uses it to speak up for the LGBTQ+ community and push for acceptance.",
+  "perTurn": [
+   {
+    "dia_id": "D17:23",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q142",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "How do Melanie and Caroline describe their journey through life together?",
+  "reference": "An ongoing adventure of learning and growing.",
+  "candidate": "Melanie and Caroline describe their journey through life together as one of learning, exploring, and showing their true selves. They value being together on trips and sharing creative pursuits like painting and pottery.",
+  "perTurn": [
+   {
+    "dia_id": "D17:25",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q143",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "What happened to Melanie's son on their road trip?",
+  "reference": "He got into an accident",
+  "candidate": "Melanie's son got into an accident on their road trip, but he was okay.",
+  "perTurn": [
+   {
+    "dia_id": "D18:1",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q144",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE-partial",
+  "question": "How did Melanie's son handle the accident?",
+  "reference": "He was scared but reassured by his family",
+  "candidate": "Melanie's son was okay after the accident.",
+  "perTurn": [
+   {
+    "dia_id": "D18:6",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   },
+   {
+    "dia_id": "D18:7",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q145",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "How did Melanie feel about her family after the accident?",
+  "reference": "They are important and mean the world to her",
+  "candidate": "The evidence does not mention an accident, so it is unknown how Melanie felt about her family after an accident.",
+  "perTurn": [
+   {
+    "dia_id": "D18:5",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q146",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How did Melanie's children handle the accident?",
+  "reference": "They were scared but resilient",
+  "candidate": "The evidence does not mention any accident involving Melanie's children, so it is unknown how they handled it.",
+  "perTurn": [
+   {
+    "dia_id": "D18:7",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q147",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How did Melanie feel after the accident?",
+  "reference": "Grateful and thankful for her family",
+  "candidate": "The evidence does not mention an accident or how Melanie felt after one.",
+  "perTurn": [
+   {
+    "dia_id": "D18:5",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q148",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What was Melanie's reaction to her children enjoying the Grand Canyon?",
+  "reference": "She was happy and thankful",
+  "candidate": "The evidence does not contain any information about Melanie's reaction to her children enjoying the Grand Canyon.",
+  "perTurn": [
+   {
+    "dia_id": "D18:5",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q149",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "F",
+  "question": "What do Melanie's family give her?",
+  "reference": "Strength and motivation",
+  "candidate": "Melanie's family give her motivation, love, and support.",
+  "perTurn": [
+   {
+    "dia_id": "D18:9",
+    "inFinal": true,
+    "finalConf": "high",
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q150",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": false,
+  "class": "OK",
+  "question": "How did Melanie feel about her family supporting her?",
+  "reference": "She appreciated them a lot",
+  "candidate": "Melanie felt lucky and grateful for her family's support, describing them as her biggest motivation and support.",
+  "perTurn": [
+   {
+    "dia_id": "D18:13",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q151",
+  "category": "open_domain",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "A",
+  "question": "What did Melanie do after the road trip to relax?",
+  "reference": "Went on a nature walk or hike",
+  "candidate": "The evidence does not mention any specific activity Melanie did after a road trip to relax.",
+  "perTurn": [
+   {
+    "dia_id": "D18:17",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": false,
+    "storeConf": null
+   }
+  ]
+ },
+ {
+  "question_id": "conv1-q152",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What did Caroline realize after her charity race?",
+  "candidate": "I don't know",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q153",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What are Melanie's plans for the summer with respect to adoption?",
+  "candidate": "The evidence does not mention any plans for adoption. Melanie's summer plans include camping and hiking with her family, but adoption is not discussed.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q154",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What type of individuals does the adoption agency Melanie is considering support?",
+  "candidate": "The evidence does not mention an adoption agency or the types of individuals it supports.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q155",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "Why did Melanie choose the adoption agency?",
+  "candidate": "The evidence does not mention why Melanie chose an adoption agency.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q156",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What is Melanie excited about in her adoption process?",
+  "candidate": "The evidence does not mention Melanie's adoption process or anything she is excited about in that context.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q157",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What does Melanie's necklace symbolize?",
+  "candidate": "Melanie's necklace is a gift from her grandma.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q158",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What country is Melanie's grandma from?",
+  "candidate": "unknown",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q159",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What was grandma's gift to Melanie?",
+  "candidate": "unknown",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q160",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What was grandpa's gift to Caroline?",
+  "candidate": "The evidence does not mention any gift from grandpa to Caroline.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q161",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What is Caroline's hand-painted bowl a reminder of?",
+  "candidate": "The hand-painted bowl is a reminder of a friend who made it for her 18th birthday ten years ago.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q162",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What did Caroline and her family do while camping?",
+  "candidate": "The evidence does not mention any camping trip or activities with Caroline's family.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q163",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What kind of counseling and mental health services is Melanie interested in pursuing?",
+  "candidate": "The evidence does not mention any interest in counseling or mental health services.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q164",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What kind of counseling workshop did Melanie attend recently?",
+  "candidate": "The evidence does not mention any counseling workshop attended by Melanie.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q165",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What motivated Melanie to pursue counseling?",
+  "candidate": "The evidence does not mention what motivated Melanie to pursue counseling.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q166",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What kind of place does Melanie want to create for people?",
+  "candidate": "Melanie wants to create a place where people can find peace and joy through creativity and family.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q167",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "Did Caroline make the black and white bowl in the photo?",
+  "reference": "No",
+  "candidate": "No, Caroline did not make the bowl. A friend made it for her 18th birthday ten years ago.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q168",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What are the new shoes that Caroline got used for?",
+  "candidate": "I don't know",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q169",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What is Caroline's reason for getting into running?",
+  "candidate": "The evidence does not mention Caroline's reason for getting into running.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q170",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What does Caroline say running has been great for?",
+  "candidate": "Caroline says running has been great for her mental health and clearing her mind.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q171",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What did Melanie see at the council meeting for adoption?",
+  "candidate": "unknown",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q172",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What inspired Melanie's painting for the art show?",
+  "candidate": "Melanie's painting for the art show was inspired by her visit to an LGBTQ center.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q173",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What inspired Caroline's sculpture for the art show?",
+  "candidate": "The evidence does not mention a sculpture by Caroline or any inspiration for a sculpture. It mentions Caroline painting after visiting an LGBTQ center and organizing an LGBTQ art show, but no sculpture.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q174",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "How often does Caroline go to the beach with her kids?",
+  "candidate": "I don't know.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q175",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What did Caroline and her family see during their camping trip last year?",
+  "candidate": "The evidence does not contain any information about a camping trip or what Caroline and her family saw.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q176",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "How did Caroline feel while watching the meteor shower?",
+  "candidate": "The evidence does not mention Caroline watching a meteor shower, so her feelings during that event are unknown.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q177",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "Why did Caroline choose to use colors and patterns in her pottery project?",
+  "candidate": "The evidence does not contain information about Caroline's pottery project or her reasons for using colors and patterns in it.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q178",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "Is Oscar Melanie's pet?",
+  "reference": "No",
+  "candidate": "Yes, Oscar is Melanie's pet cat.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q179",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "Where did Oscar hide his bone once?",
+  "candidate": "I don't know.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q180",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What activity did Melanie used to do with her dad?",
+  "candidate": "The evidence does not mention any activity Melanie did with her dad.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q181",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What did Melanie make for a local church?",
+  "candidate": "I don't know",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q182",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What did Melanie find in her neighborhood during her walk?",
+  "candidate": "I don't know",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q183",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "Which song motivates Melanie to be courageous?",
+  "candidate": "The evidence does not mention a specific song that motivates Melanie to be courageous.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q184",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What type of instrument does Caroline play?",
+  "candidate": "Caroline plays guitar.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q185",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "Which classical musicians does Caroline enjoy listening to?",
+  "candidate": "I don't know",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q186",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "Who is Caroline a fan of in terms of modern music?",
+  "candidate": "The evidence does not mention who Caroline is a fan of in modern music.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q187",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What precautionary sign did Caroline see at the café?",
+  "candidate": "I don't know",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q188",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What setback did Caroline face recently?",
+  "candidate": "Caroline missed an event (likely the transgender conference she planned to attend).",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q189",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What does Caroline do to keep herself busy during her pottery break?",
+  "candidate": "Caroline draws flowers and makes stained glass windows.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q190",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What was the poetry reading that Melanie attended about?",
+  "candidate": "I don't know",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q191",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "What happened to Caroline's son on their road trip?",
+  "candidate": "Caroline's son got into an accident but was okay.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q192",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "How did Caroline's son handle the accident?",
+  "candidate": "Caroline's son was okay after the accident.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q193",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "How did Caroline feel about her family after the accident?",
+  "candidate": "The evidence does not mention an accident or Caroline's feelings about her family after an accident.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q194",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": true,
+  "class": "H",
+  "question": "How did Caroline's children handle the accident?",
+  "candidate": "Caroline's children were resilient and her son was okay after the accident.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q195",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "How did Caroline feel after the accident?",
+  "candidate": "The evidence does not mention any accident involving Caroline, so I cannot answer how she felt after it.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q196",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What was Caroline's reaction to her children enjoying the Grand Canyon?",
+  "candidate": "The evidence does not contain any information about Caroline's children or the Grand Canyon.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q197",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What did Caroline do after the road trip to relax?",
+  "candidate": "The evidence does not mention Caroline doing anything after a road trip to relax.",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q198",
+  "category": "adversarial",
+  "subset": "adversarial",
+  "wrong": false,
+  "class": "H",
+  "question": "What does Caroline love most about camping with her family?",
+  "candidate": "I don't know",
+  "note": "adversarial (no gold evidence)"
+ },
+ {
+  "question_id": "conv1-q4",
+  "category": "single_hop",
+  "subset": "answerable",
+  "wrong": true,
+  "class": "CDE",
+  "question": "What is Caroline's identity?",
+  "reference": "Transgender woman",
+  "candidate": "unknown",
+  "perTurn": [
+   {
+    "dia_id": "D1:5",
+    "inFinal": false,
+    "finalConf": null,
+    "inStore": true,
+    "storeConf": "high"
+   }
+  ]
+ }
+]

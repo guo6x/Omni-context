@@ -100,3 +100,6 @@ pair-code.txt
 
 .antigravitycli/
 .codegraph/
+
+# Local audit model cache is multi-gigabyte; pinned runtime models live on D:.
+docs/embedding-audit-v1/evidence/model-cache/

@@ -1,0 +1,23 @@
+{
+  "Xenova/multilingual-e5-small": {
+    "dim": 384,
+    "quantized_onnx_bytes": 118308185,
+    "source": "local brain-server/models"
+  },
+  "Xenova/multilingual-e5-base": {
+    "dim": 768,
+    "quantized_onnx_bytes": 278647662,
+    "sha_checked": "size-verified"
+  },
+  "Xenova/multilingual-e5-large": {
+    "dim": 1024,
+    "quantized_onnx_bytes": 561768762,
+    "sha_checked": "size-verified"
+  },
+  "Xenova/bge-m3": {
+    "dim": 1024,
+    "quantized_onnx_bytes": 569694530,
+    "sha_checked": "size-verified",
+    "pooling": "cls"
+  }
+}

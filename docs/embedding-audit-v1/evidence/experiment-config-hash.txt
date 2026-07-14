@@ -1,0 +1,2 @@
+scripts_sha256: fdba8a942c9eec51371884897bcbe04a3bae34b9945c383e8b2a6a330a55cb40
+dataset_sha256: 553cd5a15e25f2ceccc6ed185221eba645080c93e5b91087560a91aa5961f365 (conv1 only, split-guarded loader)
