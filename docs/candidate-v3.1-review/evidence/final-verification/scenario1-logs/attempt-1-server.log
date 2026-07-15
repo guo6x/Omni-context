@@ -1,0 +1,40 @@
+[Database] sqlite-vec 扩展加载成功 ✓
+Migration applied: unified_graph_schema_v2
+Migration applied: add_performance_indexes_v2
+Migration applied: add_memory_tables
+Migration applied: add_vec0_virtual_table
+Migration applied: add_fts5_fulltext_search
+Migration applied: add_notifications_table
+Migration applied: add_core_memory_summary
+Migration applied: add_temporal_graph_fields
+Migration applied: add_invalidation_reason_to_relationships
+Migration applied: add_app_meta
+Migration applied: add_discussions_table
+Migration applied: add_mcp_usage_log
+Migration applied: add_scoped_device_tokens
+Migration applied: enforce_domain_type_constraints
+Migration applied: add_temporal_assertions
+Migration applied: add_ingestion_documents_and_chunks
+Migration applied: add_entity_resolution_review_queue
+Migration applied: add_assertion_conflict_audit
+Migration applied: add_incremental_relationship_decay
+Migration applied: add_behavior_events_and_proactive_insights
+Migration applied: add_assertion_literal_type_versioning_fts
+Migration applied: extend_entity_merge_audit_with_redirect_summary
+Migration applied: add_failed_tasks_and_ingestion_provenance
+Migration applied: add_embedding_index_manifests
+Migration applied: add_assertion_original_predicate
+Migration applied: add_vec_assertions_1024
+Migration applied: invalidate_stale_embedding_rows
+Omni-Context API Server running on http://127.0.0.1:50991
+Database: brain.db
+[embedding-index] explicit rebuild required; run npm run embeddings:rebuild
+[EmbeddingService] Loading pinned local model Xenova/multilingual-e5-large@a19b072cb4f0cc8bf98b4e46f90a787a61380979
+[EmbeddingService] Pinned local model loaded
+[LLMExtractor] 严格结构验证失败: facts.0.confidence:invalid_type, facts.1.confidence:invalid_type, facts.2.confidence:invalid_type, facts.3.confidence:invalid_type, facts.4.confidence:invalid_type, facts.5.confidence:invalid_type, facts.6.confidence:invalid_type, facts.7.confidence:invalid_type, facts.8.confidence:invalid_type
+[GraphRAGExtractor] LLM extraction attempt 1/3 failed (LLM_OUTPUT_INVALID:facts.0.confidence:invalid_type, facts.1.confidence:invalid_type, facts.2.confidence:invalid_type, facts.3.confidence:invalid_type, facts.4.confidence:invalid_type, facts.5.confidence:invalid_type, facts.6.confidence:invalid_type, facts.7.confidence:invalid_type, facts.8.confidence:invalid_type); retrying
+[temporal] parseTemporalQuery: no temporal keyword in query "For Jordan's collaboration plan planning cycle 4, recommend the next bounded ste", defaulting to current mode
+[temporal] parseTemporalQuery: no temporal keyword in query "For Jordan's collaboration plan planning cycle 4, recommend the next bounded ste", defaulting to current mode
+
+Shutting down (evaluation IPC)...
+[AgentLoop] 已停止主动智能引擎

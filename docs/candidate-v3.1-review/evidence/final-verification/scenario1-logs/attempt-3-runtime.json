@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "conversation_id": 1,
+  "status": "stopped",
+  "pid": 47064,
+  "host": "127.0.0.1",
+  "port": 54360,
+  "db_file": "brain.db",
+  "log_file": "server.log",
+  "server_entry": "dist/api-server.js",
+  "started_at": "2026-07-15T11:04:15.563Z",
+  "updated_at": "2026-07-15T11:05:53.221Z",
+  "resume": false,
+  "exit_code": 0,
+  "database_hash": "4983ac4940366c53eceabc24177301dfb3fe2dd9a26fc8d2d5a622da3264467b"
+}
