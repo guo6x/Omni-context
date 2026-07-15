@@ -1,9 +1,9 @@
 [extend]
 useDefault = true
 
-[[allowlists]]
+[allowlist]
 description = "Cognitive benchmark fact keys mistaken for generic API keys"
-regexTarget = "match"
+regexTarget = "secret"
 regexes = [
-  '''key":"(?:current_project_phase|historical_phase_[1-6]|cycle_3_transition)"''',
+  '''^(current_project_phase|historical_phase_[1-6]|cycle_3_transition)$''',
 ]
