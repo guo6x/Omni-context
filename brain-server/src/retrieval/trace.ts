@@ -8,6 +8,11 @@ export interface RetrievalTraceStageItem {
   distance?: number | null;
   score?: number;
   drop_reason?: string;
+  evidence_kind?: string;
+  eligible_channels?: string[];
+  excluded_channels?: string[];
+  selected?: boolean;
+  final_rank?: number | null;
 }
 
 export interface RetrievalTraceInput {
@@ -36,11 +41,20 @@ function sanitizeStageItem(item: RetrievalTraceStageItem): Record<string, unknow
     ...(finiteNumber(item.distance) !== undefined ? { distance: finiteNumber(item.distance) } : {}),
     ...(finiteNumber(item.score) !== undefined ? { score: finiteNumber(item.score) } : {}),
     ...(item.drop_reason ? { drop_reason: String(item.drop_reason).slice(0, 200) } : {}),
+    ...(item.evidence_kind ? { evidence_kind: String(item.evidence_kind).slice(0, 60) } : {}),
+    ...(Array.isArray(item.eligible_channels) ? { eligible_channels: item.eligible_channels.slice(0, 20).map(String) } : {}),
+    ...(Array.isArray(item.excluded_channels) ? { excluded_channels: item.excluded_channels.slice(0, 20).map(String) } : {}),
+    ...(typeof item.selected === 'boolean' ? { selected: item.selected } : {}),
+    ...(finiteNumber(item.final_rank) !== undefined ? { final_rank: finiteNumber(item.final_rank) } : {}),
   };
 }
 
 function sanitizeCandidate(item: Record<string, unknown>): Record<string, unknown> {
-  const allowed = ['id', 'type', 'fused_score', 'fused_rank', 'final_rank', 'evidence_id', 'sources'];
+  const allowed = [
+    'id', 'group_id', 'type', 'evidence_kind', 'fused_score', 'fused_rank', 'reranker_rank', 'final_rank',
+    'evidence_id', 'sources', 'source_event_ids', 'source_agents', 'states', 'state_keys', 'reranker_summary',
+    'selected_for_answer', 'selection_reason',
+  ];
   return Object.fromEntries(allowed.filter((key) => key in item).map((key) => [key, item[key]]));
 }
 
@@ -57,7 +71,7 @@ export async function writeRetrievalTrace(input: RetrievalTraceInput): Promise<R
       items.slice(0, 500).map(sanitizeStageItem),
     ]));
     const payload = {
-      trace_version: 'retrieval-trace-v1',
+      trace_version: 'retrieval-trace-v2',
       trace_id: traceId,
       created_at: new Date().toISOString(),
       query_sha256: createHash('sha256').update(input.query).digest('hex'),

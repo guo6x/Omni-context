@@ -20,9 +20,17 @@ describe('evaluation retrieval trace', () => {
       stages: {
         assertion_vector: [{ id: 'a1', rank: 1, distance: 0.2, score: 0.83 }],
         raw_event_fallback: [{ id: 'a1', rank: 1, score: 0.75 }],
+        raw_event_channel_eligibility: [{
+          id: 'a1', rank: 1, evidence_kind: 'raw_event', selected: true, final_rank: 1,
+          eligible_channels: ['raw_event_fallback'],
+          excluded_channels: ['assertion_vector', 'assertion_fts', 'subject_attachment'],
+        }],
       },
-      candidatePool: [{ id: 'a1', type: 'assertion', fused_rank: 1, final_rank: 1 }],
-      finalContext: [{ evidence_id: 'a1', fused_rank: 1, final_rank: 1 }],
+      candidatePool: [{
+        id: 'a1', group_id: 'group-1', type: 'evidence_group', fused_rank: 1, reranker_rank: 1,
+        final_rank: 1, reranker_summary: 'STATE: current\nSOURCE_AGENTS: Agent-A',
+      }],
+      finalContext: [{ evidence_id: 'a1', group_id: 'group-1', fused_rank: 1, final_rank: 1, selection_reason: 'core' }],
     });
 
     expect(result.status).toBe('written');
@@ -30,6 +38,14 @@ describe('evaluation retrieval trace', () => {
     const trace = JSON.parse(raw.trim());
     expect(trace.query_sha256).toMatch(/^[a-f0-9]{64}$/);
     expect(trace.stages.raw_event_fallback[0]).toEqual({ id: 'a1', rank: 1, score: 0.75 });
+    expect(trace.stages.raw_event_channel_eligibility[0]).toMatchObject({
+      evidence_kind: 'raw_event',
+      eligible_channels: ['raw_event_fallback'],
+      excluded_channels: ['assertion_vector', 'assertion_fts', 'subject_attachment'],
+    });
+    expect(trace.candidate_pool[0]).toMatchObject({
+      group_id: 'group-1', reranker_rank: 1, reranker_summary: 'STATE: current\nSOURCE_AGENTS: Agent-A',
+    });
     expect(raw).not.toContain('Which setting');
     expect(raw).not.toContain('secret-token-must-not-appear');
     expect(raw.toLocaleLowerCase()).not.toContain('api_key');

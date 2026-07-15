@@ -44,6 +44,19 @@ import { createAuditedAiFetch } from '../../security/audited-ai-fetch.js';
 import { assertEvaluationEmbeddingReady, loadRetrievalConfig, retrievalConfigHash } from '../../retrieval/config.js';
 import { parseTemporalQuery, temporalOptsFromQuery, filterAssertionsByTemporal, filterEntitiesByTemporal } from '../../retrieval/temporal-layer.js';
 import { reciprocalRankFuse, type FusedRetrievalCandidate, type RetrievalSourceTrace } from '../../retrieval/fusion.js';
+import {
+  buildEvidenceGroupPassage,
+  buildRerankerEvidenceSummary,
+  detectEvidenceIntent,
+  EVIDENCE_GROUP_VERSION,
+  EVIDENCE_SELECTOR_VERSION,
+  groupFusedEvidence,
+  isolateRawEventChannels,
+  queryAwareTemporalOptions,
+  RERANKER_SUMMARY_VERSION,
+  selectEvidenceSet,
+  type EvidenceGroup,
+} from '../../retrieval/evidence-selector.js';
 import { writeRetrievalTrace } from '../../retrieval/trace.js';
 
 const CORE_PRINCIPLE_CAP = 3;
@@ -163,7 +176,12 @@ async function rerankByLlm(
   if (!llm.apiUrl) return deterministic.slice(0, topN);
 
   const list = deterministic
-    .map((c, i) => `[${i}] (${c.type}) ${c.name}: ${(c.description || '').slice(0, 120)}`)
+    .map((c, i) => {
+      const structured = typeof c.rerankerSummary === 'string' ? c.rerankerSummary : '';
+      return structured
+        ? `[${i}] ${structured.slice(0, 600)}`
+        : `[${i}] (${c.type}) ${c.name}: ${(c.description || '').slice(0, 120)}`;
+    })
     .join('\n');
   const sys = `你是知识图谱检索的重排器。根据用户查询，从候选记忆里挑出真正相关的，按相关度从高到低给出编号；不相关的不要选。只输出 JSON：{"ranking":[编号,...]}，最多 ${topN} 个。`;
   const user = `查询：${query}\n\n候选：\n${list}`;
@@ -1289,8 +1307,12 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               limit * RETRIEVAL_CONFIG.candidatePoolMultiplier,
               RETRIEVAL_CONFIG.candidatePoolMinimum,
             );
-            const umsTemporalOpts = temporalOptsFromQuery(parsed.query);
+            const umsTemporalOpts = queryAwareTemporalOptions(parsed.query, temporalOptsFromQuery(parsed.query));
             const umsTemporalQuery = parseTemporalQuery(parsed.query);
+            const umsEvidenceIntent = detectEvidenceIntent(parsed.query);
+            const umsTemporalMode = umsTemporalOpts.includeHistorical && !umsTemporalOpts.asOf
+              ? 'historical'
+              : umsTemporalQuery.mode;
             const resultsData: any = {
               textResults: [], vectorResults: [], assertionTextResults: [],
               assertionVectorResults: [], rawEventResults: [], graphContext: [], subjectAttachments: [],
@@ -1365,14 +1387,19 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             ).map((assertion: any) => resultsData.assertionTextResults.find((item: ReadableAssertionCandidate) => item.id === assertion.id));
             const attachmentGroups = await Promise.all(rankedEntities.slice(0, 4).map(async (entity: any) => {
               const attached = filterAssertionsByTemporal(
-                await ctx.db.getAssertions({ subjectId: entity.id, includeHistorical: umsTemporalOpts.includeHistorical, limit: 2 }),
+                await ctx.db.getAssertions({
+                  subjectId: entity.id,
+                  includeHistorical: umsTemporalOpts.includeHistorical,
+                  limit: umsTemporalOpts.includeHistorical ? 8 : 2,
+                }),
                 umsTemporalOpts,
-              );
+              ).filter((assertion) => assertion.provenance?.evidence_kind !== 'raw_event')
+                .slice(0, umsTemporalOpts.includeHistorical ? 6 : 2);
               return Promise.all(attached.map((assertion) => ctx.db.getResolvedAssertion(assertion.id)));
             }));
             resultsData.subjectAttachments = attachmentGroups.flat().filter(Boolean);
 
-            const fused = reciprocalRankFuse<ReadableAssertionCandidate | any>([
+            const channelIsolation = isolateRawEventChannels<ReadableAssertionCandidate | any>([
               {
                 source: 'entity_vector', weight: RETRIEVAL_CONFIG.entityVectorWeight,
                 items: resultsData.vectorResults.map((item: any) => ({ id: item.id, kind: 'entity' as const, value: item, score: item.similarity })),
@@ -1382,11 +1409,11 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 items: resultsData.assertionVectorResults.map((item: ReadableAssertionCandidate) => ({ id: item.id, kind: 'assertion' as const, value: item, distance: item.distance, score: item.similarity })),
               },
               {
-                source: 'FTS', weight: RETRIEVAL_CONFIG.entityFtsWeight,
+                source: 'entity_fts', weight: RETRIEVAL_CONFIG.entityFtsWeight,
                 items: resultsData.textResults.map((item: any) => ({ id: item.id, kind: 'entity' as const, value: item })),
               },
               {
-                source: 'FTS', weight: RETRIEVAL_CONFIG.assertionFtsWeight,
+                source: 'assertion_fts', weight: RETRIEVAL_CONFIG.assertionFtsWeight,
                 items: assertionTextResults.map((item: ReadableAssertionCandidate) => ({ id: item.id, kind: 'assertion' as const, value: item })),
               },
               {
@@ -1406,27 +1433,78 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                     : 1 - index / resultsData.rawEventResults.length,
                 })),
               },
-            ], { rrfK: RETRIEVAL_CONFIG.rrfK });
-
-            const mixedForReranker = fused.slice(0, umsPool).map((candidate) => candidate.kind === 'assertion'
-              ? {
-                  id: candidate.id, name: candidate.value.fact || candidate.value.passage.split(/\r?\n/, 1)[0],
-                  type: 'assertion', description: candidate.value.passage,
-                  similarity: candidate.sources[0]?.normalizedScore,
-                }
-              : candidate.value);
+            ]);
+            const isolatedItems = (source: string) => channelIsolation.lists.find((list) => list.source === source)?.items || [];
+            const fused = reciprocalRankFuse<ReadableAssertionCandidate | any>(
+              channelIsolation.lists,
+              { rrfK: RETRIEVAL_CONFIG.rrfK },
+            );
+            const evidenceGroups = groupFusedEvidence(fused, { rrfK: RETRIEVAL_CONFIG.rrfK });
+            const mixedForReranker = evidenceGroups.slice(0, umsPool).map((group) => {
+              const rerankerSummary = buildRerankerEvidenceSummary(group);
+              return {
+                id: group.groupId,
+                name: rerankerSummary.split(/\r?\n/, 1)[0],
+                type: 'evidence_group',
+                description: rerankerSummary,
+                rerankerSummary,
+                similarity: group.retrievalSources[0]?.normalizedScore,
+              };
+            });
             const rerankedMixed = await rerankByLlm(ctx, parsed.query, mixedForReranker, Math.min(umsPool, limit * 4));
             const rerankOrder = new Map(rerankedMixed.map((item: any, index: number) => [
-              `${item.type === 'assertion' ? 'assertion' : 'entity'}:${item.id}`, index,
+              item.id, index,
             ]));
-            const finalFused = [...fused].sort((a, b) => {
-              const aOrder = rerankOrder.get(`${a.kind}:${a.id}`);
-              const bOrder = rerankOrder.get(`${b.kind}:${b.id}`);
+            const rankedGroups = [...evidenceGroups].sort((a, b) => {
+              const aOrder = rerankOrder.get(a.groupId);
+              const bOrder = rerankOrder.get(b.groupId);
               if (aOrder !== undefined || bOrder !== undefined) return (aOrder ?? Number.MAX_SAFE_INTEGER) - (bOrder ?? Number.MAX_SAFE_INTEGER);
-              return a.fusedRank - b.fusedRank;
+              return a.rrfRank - b.rrfRank;
+            }).map((group, index) => ({ ...group, rerankerRank: index + 1 }));
+            const assertionGroups = rankedGroups.filter((group) => group.normalizedAssertions.length > 0 || group.rawEvents.length > 0);
+            const selection = selectEvidenceSet({
+              query: parsed.query,
+              rankedGroups: assertionGroups,
+              limit,
+              temporalMode: umsTemporalMode,
+              includeInvalidated: includeInvalidated || umsEvidenceIntent.conflict,
             });
-            const finalAssertions = finalFused.filter((item): item is FusedRetrievalCandidate<ReadableAssertionCandidate> => item.kind === 'assertion').slice(0, limit * 2);
-            const ranked = finalFused.filter((item) => item.kind === 'entity').slice(0, limit * 2).map((item) => item.value);
+            const selectedIds = new Set(selection.selected.map((group) => group.groupId));
+            const finalContextGroups = [
+              ...selection.selected,
+              ...assertionGroups.filter((group) => !selectedIds.has(group.groupId)),
+            ].slice(0, limit * 2);
+            const selectionReasons = new Map(selection.trace.map((item) => [item.groupId, item]));
+            const toAssertionCandidate = (
+              group: EvidenceGroup<ReadableAssertionCandidate | any>,
+            ): FusedRetrievalCandidate<ReadableAssertionCandidate> => {
+              const primary = (group.normalizedAssertions[0] || group.rawEvents[0]) as FusedRetrievalCandidate<ReadableAssertionCandidate>;
+              const assertionMembers = [...group.normalizedAssertions, ...group.rawEvents];
+              const evidenceId = assertionMembers.length > 1 ? group.groupId : primary.id;
+              return {
+                id: evidenceId,
+                kind: 'assertion',
+                value: {
+                  ...primary.value,
+                  assertion: {
+                    ...primary.value.assertion,
+                    id: evidenceId,
+                    provenance: {
+                      ...(primary.value.assertion.provenance || {}),
+                      evidence_group_id: group.groupId,
+                      evidence_group_member_ids: assertionMembers.map((member) => member.id),
+                    },
+                  },
+                  passage: buildEvidenceGroupPassage(group),
+                },
+                sources: group.retrievalSources,
+                fusedScore: group.combinedFusedScore,
+                fusedRank: group.rrfRank,
+              };
+            };
+            const finalAssertions = selection.selected.map(toAssertionCandidate);
+            const finalContextAssertions = finalContextGroups.map(toAssertionCandidate);
+            const ranked = rankedEntities.slice(0, limit * 2);
 
             let graphContext = resultsData.graphContext;
             if (graphContext && graphContext.nodes) {
@@ -1442,35 +1520,73 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               ctx.db.bumpAccessCounts(umsAccIds).catch(() => {});
             }
 
-            const candidatePoolSnapshot = finalFused.slice(0, umsPool).map((candidate, index) => ({
-              id: candidate.id,
-              type: candidate.kind,
-              passage: candidate.kind === 'assertion' ? candidate.value.passage : undefined,
-              sources: candidate.sources,
-              fused_score: Number(candidate.fusedScore.toFixed(8)),
-              fused_rank: candidate.fusedRank,
+            const candidatePoolSnapshot = rankedGroups.slice(0, umsPool).map((group, index) => ({
+              id: group.normalizedAssertions.length + group.rawEvents.length > 1 ? group.groupId : group.primaryId,
+              group_id: group.groupId,
+              type: 'evidence_group',
+              evidence_kind: group.normalizedAssertions.length && group.rawEvents.length
+                ? 'hybrid'
+                : (group.rawEvents.length ? 'raw_event' : (group.normalizedAssertions.length ? 'normalized_assertion' : 'entity')),
+              passage: buildEvidenceGroupPassage(group),
+              sources: group.retrievalSources,
+              source_event_ids: group.sourceEventIds,
+              source_agents: group.sourceAgents,
+              states: group.states,
+              state_keys: group.stateKeys,
+              reranker_summary: buildRerankerEvidenceSummary(group),
+              fused_score: Number(group.combinedFusedScore.toFixed(8)),
+              fused_rank: group.rrfRank,
+              reranker_rank: group.rerankerRank,
               final_rank: index + 1,
             }));
-            const finalContextSnapshot = finalAssertions.map((candidate, index) => ({
+            const finalContextSnapshot = finalContextAssertions.map((candidate, index) => {
+              const group = finalContextGroups[index];
+              const selectionEntry = selectionReasons.get(group.groupId);
+              return {
               evidence_id: candidate.id,
+              group_id: group.groupId,
               passage: candidate.value.passage,
               sources: candidate.sources,
               fused_rank: candidate.fusedRank,
+              reranker_rank: group.rerankerRank,
               final_rank: index + 1,
-            }));
+              selected_for_answer: index < limit,
+              selection_reason: selectionEntry?.reason || 'final20_rank_fill',
+              };
+            });
             const traceResult = await writeRetrievalTrace({
               query: parsed.query,
-              temporalMode: umsTemporalQuery.mode,
+              temporalMode: umsTemporalMode,
               stages: {
                 entity_fts: resultsData.textResults.map((item: any, index: number) => ({ id: item.id, rank: index + 1 })),
                 entity_vector: resultsData.vectorResults.map((item: any, index: number) => ({ id: item.id, rank: index + 1, score: item.similarity })),
-                assertion_fts: assertionTextResults.map((item: ReadableAssertionCandidate, index: number) => ({ id: item.id, rank: index + 1 })),
-                assertion_vector: resultsData.assertionVectorResults.map((item: ReadableAssertionCandidate, index: number) => ({
-                  id: item.id, rank: index + 1, distance: item.distance, score: item.similarity,
+                assertion_fts: isolatedItems('assertion_fts').map((item, index) => ({ id: item.id, rank: index + 1 })),
+                assertion_vector: isolatedItems('assertion_vector').map((item, index) => ({
+                  id: item.id, rank: index + 1, distance: item.distance, score: item.score,
                 })),
-                raw_event_fallback: resultsData.rawEventResults.map((item: ReadableAssertionCandidate, index: number) => ({ id: item.id, rank: index + 1 })),
+                raw_event_fallback: isolatedItems('raw_event_fallback').map((item, index) => ({ id: item.id, rank: index + 1 })),
+                raw_event_channel_eligibility: channelIsolation.audit.map((item, index) => ({
+                  id: item.candidateId,
+                  rank: index + 1,
+                  evidence_kind: item.evidenceKind,
+                  eligible_channels: item.eligibleChannels,
+                  excluded_channels: item.excludedChannels,
+                })),
                 graph: (resultsData.graphContext?.nodes || []).map((item: any, index: number) => ({ id: item.id, rank: index + 1 })),
-                subject_attachment: resultsData.subjectAttachments.map((item: ReadableAssertionCandidate, index: number) => ({ id: item.id, rank: index + 1 })),
+                subject_attachment: isolatedItems('subject_attachment').map((item, index) => ({ id: item.id, rank: index + 1 })),
+                evidence_group_rrf: evidenceGroups.map((group) => ({
+                  id: group.groupId, rank: group.rrfRank, score: group.combinedFusedScore,
+                })),
+                reranker: rankedGroups.map((group) => ({
+                  id: group.groupId, rank: group.rerankerRank || group.rrfRank, score: group.combinedFusedScore,
+                })),
+                evidence_selector: selection.trace.map((item) => ({
+                  id: item.groupId,
+                  rank: item.finalRank || item.rerankerRank || item.rrfRank,
+                  drop_reason: item.reason,
+                  selected: item.selected,
+                  final_rank: item.finalRank,
+                })),
               },
               candidatePool: candidatePoolSnapshot,
               finalContext: finalContextSnapshot,
@@ -1483,21 +1599,26 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               finalContext: finalContextSnapshot,
               trace: traceResult,
               temporalQuery: {
-                mode: umsTemporalQuery.mode,
+                mode: umsTemporalMode,
                 as_of: umsTemporalQuery.asOf || null,
               },
               graphContext,
               searchMethods: {
                 text: resultsData.textResults.length,
                 vector: resultsData.vectorResults.length,
-                assertion_text: assertionTextResults.length,
-                assertion_vector: resultsData.assertionVectorResults.length,
+                assertion_text: isolatedItems('assertion_fts').length,
+                assertion_vector: isolatedItems('assertion_vector').length,
                 graph: resultsData.graphContext?.nodes?.length || 0,
-                subject_attachment: resultsData.subjectAttachments.length,
-                raw_event_fallback: resultsData.rawEventResults.length,
+                subject_attachment: isolatedItems('subject_attachment').length,
+                raw_event_fallback: isolatedItems('raw_event_fallback').length,
               },
               fusionConfig: {
-                method: 'weighted_rrf',
+                method: 'evidence_group_weighted_rrf_with_coverage_selector',
+                evidence_group_version: EVIDENCE_GROUP_VERSION,
+                reranker_summary_version: RERANKER_SUMMARY_VERSION,
+                evidence_selector_version: EVIDENCE_SELECTOR_VERSION,
+                answer_context_limit: limit,
+                trace_context_limit: limit * 2,
                 config_hash: retrievalConfigHash(RETRIEVAL_CONFIG),
                 rrfK: RETRIEVAL_CONFIG.rrfK,
                 weights: {

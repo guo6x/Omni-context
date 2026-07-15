@@ -221,6 +221,51 @@ describe('API smoke: hybrid assertion retrieval', () => {
     expect(response.body.finalContext[0].evidence_id).toBe(assertion.id);
   });
 
+  it('isolates a raw event to its fallback lane and returns one hybrid evidence group', async () => {
+    const subject = await db.addEntity({
+      name: 'Channel Isolation Subject', type: 'person', description: 'Channel isolation fixture',
+      embedding: testVector('Channel Isolation Subject'),
+    });
+    const provenance = {
+      fidelity_version: 'memory-fidelity-v1',
+      source_event_ids: ['smoke-event-isolation'],
+      source_agent: 'Agent-Smoke',
+      document_id: 'smoke-document-isolation',
+      state: 'current',
+      state_key: 'channel isolation setting',
+      raw_event_references: [{
+        event_id: 'smoke-event-isolation', agent: 'Agent-Smoke',
+        timestamp: '2026-01-01T00:00:00.000Z', text: 'The channel isolation setting is blue.',
+      }],
+    };
+    const normalized = await db.addAssertion({
+      subject_id: subject.id, predicate: 'relates_to', original_predicate: 'active_setting',
+      literal_value: 'channel isolation blue', confidence: 0.96,
+      source_span: 'The channel isolation setting is blue.',
+      provenance: { ...provenance, evidence_kind: 'normalized_assertion', exact_value: 'blue' },
+    });
+    const raw = await db.addAssertion({
+      subject_id: subject.id, predicate: 'relates_to', original_predicate: 'reported',
+      literal_value: 'The channel isolation setting is blue.', confidence: 1,
+      source_span: 'The channel isolation setting is blue.',
+      provenance: { ...provenance, evidence_kind: 'raw_event', exact_value: 'The channel isolation setting is blue.' },
+    });
+
+    const response = await request('POST', '/api/mcp/tool/unified_memory_search', {
+      arguments: { query: 'channel isolation blue', limit: 10, includeRelationships: false },
+    });
+
+    expect(response.status).toBe(200);
+    const group = response.body.candidatePool.find((item: any) =>
+      item.source_event_ids?.includes('smoke-event-isolation'));
+    expect(group).toMatchObject({ id: group.group_id, type: 'evidence_group', evidence_kind: 'hybrid' });
+    expect(group.id).not.toBe(normalized.id);
+    expect(response.body.candidatePool.some((item: any) => item.id === raw.id)).toBe(false);
+    expect(group.sources.filter((source: any) => source.source === 'assertion_vector')).toHaveLength(1);
+    expect(group.sources.filter((source: any) => source.source === 'assertion_fts')).toHaveLength(1);
+    expect(group.sources.filter((source: any) => source.source === 'raw_event_fallback')).toHaveLength(1);
+  });
+
   it('exposes manifests and integrity but requires explicit rebuild confirmation', async () => {
     const manifests = await request('GET', '/api/admin/embedding/manifests');
     expect(manifests.status).toBe(200);
