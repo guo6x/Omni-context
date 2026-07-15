@@ -168,7 +168,7 @@ export class CognitiveProvider {
     this.kimiUsagePath = kimiUsagePath || path.join(runRoot, 'kimi-usage.json');
   }
 
-  async deepSeekChat({ system, payload, maxTokens, role }) {
+  async deepSeekChat({ system, payload, maxTokens, role, diagnosticContext = null }) {
     const apiUrl = process.env.LLM_API_URL;
     const apiKey = process.env.LLM_API_KEY;
     const model = role === 'secondary_review'
@@ -191,7 +191,20 @@ export class CognitiveProvider {
         const body = await response.json();
         const raw = body.choices?.[0]?.message?.content;
         if (!raw) throw new Error('DeepSeek returned empty content');
-        return { structured: cleanJson(raw), raw, model, latency_ms: Date.now() - start, usage: kimiUsage(body), attempts: attempt + 1 };
+        const finishReason = body.choices?.[0]?.finish_reason ?? null;
+        const rawUsage = body.usage || null;
+        let structured;
+        let parseError = null;
+        try {
+          structured = cleanJson(raw);
+        } catch (e) {
+          parseError = e;
+        }
+        if (diagnosticContext) {
+          await this._recordAnswerDiagnostic({ ...diagnosticContext, finishReason, rawUsage, raw, model, maxTokens, physicalAttempt: attempt + 1, parseError });
+        }
+        if (parseError) throw parseError;
+        return { structured, raw, model, latency_ms: Date.now() - start, usage: kimiUsage(body), attempts: attempt + 1 };
       } catch (error) {
         lastError = error;
         if (attempt < this.config.max_retries) await new Promise((resolve) => setTimeout(resolve, this.config.retry_base_ms * (2 ** attempt)));
@@ -200,6 +213,60 @@ export class CognitiveProvider {
       }
     }
     throw lastError;
+  }
+
+  async _recordAnswerDiagnostic({ scenario_id, validation_attempt, run_root, finishReason, rawUsage, raw, model, maxTokens, physicalAttempt, parseError }) {
+    const responseText = String(raw || '');
+    let jsonParseSucceeded = false;
+    let jsonParseError = null;
+    let jsonParseErrorPosition = null;
+    if (parseError) {
+      jsonParseError = parseError.message || String(parseError);
+      const posMatch = jsonParseError.match(/position\s+(\d+)/i);
+      if (posMatch) jsonParseErrorPosition = Number(posMatch[1]);
+    } else {
+      jsonParseSucceeded = true;
+    }
+    let responseEndedMidString = false;
+    try {
+      JSON.parse(responseText);
+    } catch (e) {
+      const trimmed = responseText.trimEnd();
+      const lastChar = trimmed[trimmed.length - 1];
+      if (lastChar !== '}' && lastChar !== ']') responseEndedMidString = true;
+    }
+    let responseEndedWithCompleteJsonShape = false;
+    try {
+      JSON.parse(responseText);
+      responseEndedWithCompleteJsonShape = true;
+    } catch {}
+    const diagnostic = {
+      scenario_id: scenario_id || null,
+      attempt: physicalAttempt || 1,
+      validation_attempt: validation_attempt || null,
+      provider: 'DeepSeek',
+      model: model || null,
+      requested_max_tokens: maxTokens ?? null,
+      finish_reason: finishReason,
+      prompt_tokens: rawUsage?.prompt_tokens ?? null,
+      completion_tokens: rawUsage?.completion_tokens ?? null,
+      total_tokens: rawUsage?.total_tokens ?? null,
+      response_content_characters: [...responseText].length,
+      raw_response_content: responseText,
+      json_parse_succeeded: jsonParseSucceeded,
+      json_parse_error: jsonParseError,
+      json_parse_error_position: jsonParseErrorPosition,
+      response_ended_mid_string: responseEndedMidString,
+      response_ended_with_complete_json_shape: responseEndedWithCompleteJsonShape,
+      recorded_at: new Date().toISOString(),
+    };
+    try {
+      const dir = path.join(run_root || this.runRoot || '.', 'answer-diagnostics');
+      await mkdir(dir, { recursive: true });
+      const file = path.join(dir, (scenario_id || 'unknown') + '-v' + (validation_attempt || 0) + '-p' + (physicalAttempt || 1) + '.json');
+      await writeFile(file, JSON.stringify(diagnostic, null, 2) + '\n');
+    } catch {}
+    return diagnostic;
   }
 
   async reserveKimiLogicalCall({ phase, scenarioId }) {
@@ -324,7 +391,7 @@ export class CognitiveProvider {
     let lastError;
     for (let validationAttempt = 1; validationAttempt <= 3; validationAttempt++) {
       const correction = validationAttempt > 1 ? '\n\nYour previous JSON failed answer-schema-v2 validation. Return only the exact keys and shapes stated above. Do not add fields to facts, transitions, or rejected_facts. Every memory-backed source_ids array must contain exact visible IDs.' : '';
-      const result = await this.deepSeekChat({ role: 'answer', system: `${this.answerPrompt}${correction}`, maxTokens: this.config.answer.max_tokens, payload });
+      const result = await this.deepSeekChat({ role: 'answer', system: `${this.answerPrompt}${correction}`, maxTokens: this.config.answer.max_tokens, payload, diagnosticContext: { scenario_id: scenario.scenario_id, validation_attempt: validationAttempt, run_root: this.runRoot } });
       try {
         const normalized = normalizeAnswerV2Shape(result.structured);
         result.structured = validateAnswerV2(normalized.value, { visibleSourceIds, visibleAgents, allowEmptySources: mode === 'no_memory' });
