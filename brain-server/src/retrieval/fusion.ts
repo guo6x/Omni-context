@@ -2,6 +2,8 @@ export type RetrievalSource =
   | 'entity_vector'
   | 'assertion_vector'
   | 'FTS'
+  | 'entity_fts'
+  | 'assertion_fts'
   | 'graph'
   | 'subject_attachment'
   | 'raw_event_fallback';
