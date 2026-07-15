@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "status": "BLOCKED_BEFORE_PIPELINE",
+  "evaluation_infrastructure_failure": 7,
+  "extraction_failure": null,
+  "retrieval_failure": null,
+  "evidence_selection_failure": null,
+  "answer_generation_failure": null,
+  "memory_pipeline_unresolved": null,
+  "scoring_defect": 0,
+  "reason": "embedding preflight failed before scenario processing"
+}

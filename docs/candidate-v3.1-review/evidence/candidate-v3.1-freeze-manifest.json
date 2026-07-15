@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "NOT_FROZEN",
+  "branch": "codex/omni-evaluation-candidate-v3",
+  "implementation_head": "94d0dd7af3a2e0429a92f9648b11acbc33b3c3c2",
+  "targeted_completed": 0,
+  "targeted_errors": 7,
+  "targeted_retries": 14,
+  "targeted_overall": null,
+  "targeted_gate_passed": false,
+  "development_35_run": false,
+  "ablation_run": false,
+  "unresolved_p0": 1,
+  "unresolved_p1": 1,
+  "tag": null,
+  "final_status": "OMNI-CONTEXT CANDIDATE V3.1 NOT FROZEN"
+}

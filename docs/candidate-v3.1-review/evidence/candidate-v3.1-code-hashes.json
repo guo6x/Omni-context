@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "algorithm": "sha256",
+  "files": [
+    {"path":"brain-server/src/api/handlers/mcp.ts","sha256":"289e49033dfeda0cbcd3365c997ade86a47cca2a0a58d2f908ea0195e734b5ba","bytes":114950},
+    {"path":"brain-server/src/retrieval/evidence-selector.ts","sha256":"47a5e9156af7d53eff79a85b31bf5418461824afa8efea238ab406df55a608f8","bytes":20905},
+    {"path":"brain-server/src/retrieval/fusion.ts","sha256":"27926f0f5ce9bb0398738ff47aaaac21592896e1bd17d3e6d5fb0780e01ef637","bytes":2952},
+    {"path":"brain-server/src/retrieval/trace.ts","sha256":"777eb7288ab919db5bd8ef1119afccfb8d3c8d42752e193e797db83283dd5d6b","bytes":4016},
+    {"path":"brain-server/tests/api.smoke.test.ts","sha256":"f1079ff567d5e833de1985e748bb35748216268ad8f1af9bec2267a17377a6e6","bytes":38925},
+    {"path":"brain-server/tests/evidence-selector.test.ts","sha256":"268cefe6af9b71b8ccbd4d4f324a5919bde139fe398eeac08a87e7da964427f5","bytes":14837},
+    {"path":"brain-server/tests/retrieval-trace.test.ts","sha256":"9acc34173cfc61b85314517a317c018d5b12e6d1a08163b989b2b2b2e7ea9121","bytes":2919}
+  ]
+}

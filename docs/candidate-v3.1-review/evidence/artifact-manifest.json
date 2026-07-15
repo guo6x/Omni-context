@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "status": "PREFLIGHT_FAILED_ARTIFACTS_PRESERVED",
+  "root": "D:\\OmniContext-candidate-v3.1\\targeted-7",
+  "dataset": {
+    "path": "targeted-7-dataset.jsonl",
+    "sha256": "7d1846ae93dde0109cbdd70c7ef4a2704a8620a1254de32e39f5bbf6d5f4c590",
+    "bytes": 63209
+  },
+  "results": {
+    "path": "targeted-7-results.jsonl",
+    "sha256": "4a65f566adeb64840570e0d476ed44a3e1863d5eec25e9e6901d76f102062df7",
+    "bytes": 53018
+  },
+  "metrics": {
+    "path": "targeted-7-metrics.json",
+    "sha256": "cdce6e564b7be295f4be25ee4d27f0f6295b34d65e8e9e94750deca1066d1213",
+    "bytes": 1539
+  },
+  "run_manifest": {
+    "path": "targeted-7-run-manifest.json",
+    "sha256": "ed7bc7394399e2278bd5be661e6217258d6367ba9780c19b76bbdcdf8d24f880",
+    "bytes": 1469
+  },
+  "brain_databases": [
+    {
+      "path": "runs/development-v2-cognitive_continuity-004/attempt-1-1/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "7e61c85a89e647dd5f77060e2cbd962a832ce90bbfa9f8ac4815669d9532e7f0"
+    },
+    {
+      "path": "runs/development-v2-cognitive_continuity-004/attempt-1-2/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "64d8a7af07945b2464f95beb174e2258f3a3c835aa14678dc73e6c71d72c8de6"
+    },
+    {
+      "path": "runs/development-v2-cognitive_continuity-004/attempt-1-3/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "8739ab2422581fcacaa4ce4eb711af5d0c087322d1a7b89d9566d04e6e7895f9"
+    },
+    {
+      "path": "runs/development-v2-conflict_resolution-004/attempt-3-1/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "7f1bc0a4bbdbdec609758e04d842a74674222bed973b86bdf0af138b194405df"
+    },
+    {
+      "path": "runs/development-v2-conflict_resolution-004/attempt-3-2/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "743ccba6bc2e1cab7efa18072debac7f8d5df977e8562ccd11b4f40c46204577"
+    },
+    {
+      "path": "runs/development-v2-conflict_resolution-004/attempt-3-3/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "1571106c1814421fb2e013edcc192332bb6581d159de4f4ec1c907758889fea6"
+    },
+    {
+      "path": "runs/development-v2-cross_agent_transfer-004/attempt-4-1/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "4528b5fdc3f5de404bd630464512ac558110aaf8040342f910fe82fc990b5508"
+    },
+    {
+      "path": "runs/development-v2-cross_agent_transfer-004/attempt-4-2/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "54fe8b4347e5b71574bb3e9e99c8a9de282485dbb813b029343dcd1bf2373068"
+    },
+    {
+      "path": "runs/development-v2-cross_agent_transfer-004/attempt-4-3/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "f71a7b0fab5ca7de3c43442f20f16acf86f5c48afe0cae2b89e7213ac859b3a5"
+    },
+    {
+      "path": "runs/development-v2-decision_quality-004/attempt-7-1/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "2994f00b986377b851017b1c776ce2de0e5f7c48ce0089c5420600db48e9a493"
+    },
+    {
+      "path": "runs/development-v2-decision_quality-004/attempt-7-2/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "e920e2edd3011c84642bb972950bc3f82ba78ce39242ace93c5d20726698dad8"
+    },
+    {
+      "path": "runs/development-v2-decision_quality-004/attempt-7-3/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "a422a3ce1f466f7537aac8211638905e695026696cd74bd7914f741011319efc"
+    },
+    {
+      "path": "runs/development-v2-human_like_forgetting-002/attempt-5-1/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "60b33e330546c14a63d6efa101e033741e03e965daa44b7766e786879e07626d"
+    },
+    {
+      "path": "runs/development-v2-human_like_forgetting-002/attempt-5-2/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "3a7ab637997b39e30d5d91a7de5f70bf8aece3677ad4c0e85a55c85f3244654c"
+    },
+    {
+      "path": "runs/development-v2-human_like_forgetting-002/attempt-5-3/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "14008afae1c6c61286f622bf26588ff335c2e840cec25455ef594f35eabf2169"
+    },
+    {
+      "path": "runs/development-v2-memory_evolution-003/attempt-2-1/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "9eeb8ed57192d7b220c279a8bebbcc515f82c2849f9e4924bc5f81471595daad"
+    },
+    {
+      "path": "runs/development-v2-memory_evolution-003/attempt-2-2/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "bae6d972889013c4d136f54290b89a13630f42d54725e5b20031de9ec804bf49"
+    },
+    {
+      "path": "runs/development-v2-memory_evolution-003/attempt-2-3/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "f0e91b099192326fef1282dea5e053075027834265a3bb72cc3fa04deb169fa9"
+    },
+    {
+      "path": "runs/development-v2-proactive_insight-003/attempt-6-1/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "4cbfd52222eb25b4f5a0612f6e6fee85607949cba84b621d015b38c3edf86829"
+    },
+    {
+      "path": "runs/development-v2-proactive_insight-003/attempt-6-2/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "4f7be9ccff4c9e7f9cb9029cb7b1c46eccf49e0c335a7e02298bd849b3df328b"
+    },
+    {
+      "path": "runs/development-v2-proactive_insight-003/attempt-6-3/conversation-1/brain.db",
+      "bytes": 593920,
+      "sha256": "bdd5cc284a2ab77e8f852831824bce8f7df62062d1da9525f626759e9899c546"
+    }
+  ],
+  "brain_database_count": 21,
+  "brain_database_total_bytes": 12472320.0,
+  "large_artifacts_location": "D:\\OmniContext-candidate-v3.1\\targeted-7"
+}

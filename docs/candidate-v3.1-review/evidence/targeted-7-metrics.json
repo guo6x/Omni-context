@@ -1,0 +1,66 @@
+{
+  "scoring_version": "deterministic-scoring-v3",
+  "overall_cognitive_score": null,
+  "category_macro_scores": {
+    "cognitive_continuity": null,
+    "memory_evolution": null,
+    "conflict_resolution": null,
+    "cross_agent_transfer": null,
+    "human_like_forgetting": null,
+    "proactive_insight": null,
+    "decision_quality": null
+  },
+  "deterministic_score": null,
+  "agent_judged_score": null,
+  "memory_reliability_score": null,
+  "personalization_score": null,
+  "temporal_and_conflict_score": null,
+  "insight_and_decision_score": null,
+  "by_category": {
+    "cognitive_continuity": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    },
+    "memory_evolution": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    },
+    "conflict_resolution": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    },
+    "cross_agent_transfer": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    },
+    "human_like_forgetting": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    },
+    "proactive_insight": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    },
+    "decision_quality": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    }
+  },
+  "completed": 0,
+  "errors": 7,
+  "primary_judge_independent": true
+}

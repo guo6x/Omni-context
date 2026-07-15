@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "status": "IMPLEMENTED_NOT_FROZEN",
+  "branch": "codex/omni-evaluation-candidate-v3",
+  "v3_baseline_head": "0b4b231e4b4e83c15826dc50025996c278cff58f",
+  "implementation_head": "94d0dd7af3a2e0429a92f9648b11acbc33b3c3c2",
+  "benchmark_commit": "1f4c7c4b77ce6ea5f80e41de3c4a1e07373bce08",
+  "changed_product_files": [
+    "brain-server/src/api/handlers/mcp.ts",
+    "brain-server/src/retrieval/evidence-selector.ts",
+    "brain-server/src/retrieval/fusion.ts",
+    "brain-server/src/retrieval/trace.ts"
+  ],
+  "changed_test_files": [
+    "brain-server/tests/api.smoke.test.ts",
+    "brain-server/tests/evidence-selector.test.ts",
+    "brain-server/tests/retrieval-trace.test.ts"
+  ],
+  "extraction_modified": false,
+  "database_schema_modified": false,
+  "embedding_modified": false,
+  "answer_or_judge_modified": false,
+  "benchmark_modified": false,
+  "formal_read_or_run": false,
+  "locomo_run": false,
+  "candidate_v3_1_tag_created": false
+}

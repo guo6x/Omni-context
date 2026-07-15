@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "status": "PREFLIGHT_FAILED",
+  "kimi_logical_calls": 0,
+  "kimi_physical_calls": 0,
+  "deepseek_answer_calls": 0,
+  "provider_cost": 0,
+  "latency_p50_ms": null,
+  "latency_p95_ms": null,
+  "retry_records": 14,
+  "terminal_errors": 7
+}

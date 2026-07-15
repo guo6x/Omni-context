@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "NOT_EVALUATED",
+  "reason": "all scenarios failed embedding preflight before retrieval",
+  "expected_gold_values": 30,
+  "candidate_pool_gold_presence": null,
+  "final20_gold_presence": null,
+  "answer_top10_gold_presence": null,
+  "context_limit": 10
+}
