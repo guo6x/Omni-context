@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.1.1",
+  "status": "completed",
+  "smoke": {
+    "expected": 3,
+    "completed": 3,
+    "errors": 0
+  },
+  "development": {
+    "full_omni": 5,
+    "no_memory": 3,
+    "retrieval_only": 3
+  },
+  "new_cross_agent_score": 0.6555555555555554,
+  "provenance_preservation": 0.4666666666666666,
+  "agent_isolation_error_rate": 0,
+  "kimi_calls": 0,
+  "formal_run": false,
+  "comparison_run": false,
+  "locomo_2_to_10_accessed": false
+}

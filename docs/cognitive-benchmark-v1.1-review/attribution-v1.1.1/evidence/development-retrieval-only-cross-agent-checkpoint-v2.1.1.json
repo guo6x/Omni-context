@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "split": "development",
+  "updated_at": "2026-07-15T01:56:09.304Z",
+  "completed_keys": [
+    "development-v2-cross_agent_transfer-001:retrieval_only",
+    "development-v2-cross_agent_transfer-002:retrieval_only",
+    "development-v2-cross_agent_transfer-003:retrieval_only"
+  ],
+  "error_keys": []
+}

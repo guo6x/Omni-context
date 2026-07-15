@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "split": "smoke",
+  "updated_at": "2026-07-15T01:42:59.951Z",
+  "completed_keys": [
+    "smoke-v2-cross_agent_transfer-001:full_omni",
+    "smoke-v2-cross_agent_transfer-002:full_omni",
+    "smoke-v2-cross_agent_transfer-003:full_omni"
+  ],
+  "error_keys": []
+}

@@ -1,0 +1,693 @@
+{
+  "schema_version": "1.1.1",
+  "status": "pass",
+  "scenario_hash_verified_before_reuse": true,
+  "changed_scenarios_require_new_results": true,
+  "reused_only_unchanged_hashes": true,
+  "smoke_failed_preflight_preserved_in": "smoke-cross-agent-results-v2.1.1.jsonl",
+  "smoke_successful_rerun": "smoke-cross-agent-results-v2.1.1-rerun.jsonl",
+  "rows": [
+    {
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "6f73f58baf7be92a41c47a5af64348160c7898f6bdac71dd0d443d48a0d22cda",
+      "scenario_sha256": "6f73f58baf7be92a41c47a5af64348160c7898f6bdac71dd0d443d48a0d22cda",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "ee017d10d0304922ad9c123a759e462c6242946a1c04610b0b9e11055db16d91",
+      "scenario_sha256": "ee017d10d0304922ad9c123a759e462c6242946a1c04610b0b9e11055db16d91",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "9adcc3cced3d575694e810f77905b8815ae6ea03b3e7b478631708f63a1a72f4",
+      "scenario_sha256": "9adcc3cced3d575694e810f77905b8815ae6ea03b3e7b478631708f63a1a72f4",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "78be52c779aa890a08cb016606cbcec63709e2271fa5a90105afa731cb8013a8",
+      "scenario_sha256": "78be52c779aa890a08cb016606cbcec63709e2271fa5a90105afa731cb8013a8",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "bf04a337aed54ade3ed37f99eeedf7707535039ff0268495405e93e98116c3fe",
+      "scenario_sha256": "bf04a337aed54ade3ed37f99eeedf7707535039ff0268495405e93e98116c3fe",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-001",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "1c88f368379b265830a54bb54638a20aad72494df3b5eda1cfc14b0b10d84fd8",
+      "scenario_sha256": "1c88f368379b265830a54bb54638a20aad72494df3b5eda1cfc14b0b10d84fd8",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-002",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "053d72c19cdf4543f239c9517d07a7c4d27aec848fe66b6ada5e6ee8e6209b47",
+      "scenario_sha256": "053d72c19cdf4543f239c9517d07a7c4d27aec848fe66b6ada5e6ee8e6209b47",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "8a0592402cd91d3c88726619881104164eb30bca2c73498871817b9a59a39bb9",
+      "scenario_sha256": "8a0592402cd91d3c88726619881104164eb30bca2c73498871817b9a59a39bb9",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-004",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "65636a9b3d03428f76f41f77db5cdacce88c8acacb673de722714cf1a6c5c9da",
+      "scenario_sha256": "65636a9b3d03428f76f41f77db5cdacce88c8acacb673de722714cf1a6c5c9da",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-005",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "fb629044d51b9e346940c8d1e7f723275015e8667fa6a1ea0e9f93fb11e85cc6",
+      "scenario_sha256": "fb629044d51b9e346940c8d1e7f723275015e8667fa6a1ea0e9f93fb11e85cc6",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "6e4fa9bfda5d8a758e433d70492e5b9a761b608a9e46ba40fb2cd60e96d31fc3",
+      "scenario_sha256": "6e4fa9bfda5d8a758e433d70492e5b9a761b608a9e46ba40fb2cd60e96d31fc3",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "27047d07ba4004c19090e50ba925f1707d50ed8d8fc123c5e412f167586ee636",
+      "scenario_sha256": "27047d07ba4004c19090e50ba925f1707d50ed8d8fc123c5e412f167586ee636",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "5cc9e7f48a7ca4a6898ccf704be525589aa20e4d78ea898fff47e302ecd0bc92",
+      "scenario_sha256": "5cc9e7f48a7ca4a6898ccf704be525589aa20e4d78ea898fff47e302ecd0bc92",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "9887158db77d6a3ab1d19871346338e825a73eb69fa0581e1f7bb110adb6062d",
+      "scenario_sha256": "9887158db77d6a3ab1d19871346338e825a73eb69fa0581e1f7bb110adb6062d",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-005",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "ed1e4dbf7430a0395122423448353a216095cee0c3c4476accd99e3d00ed85af",
+      "scenario_sha256": "ed1e4dbf7430a0395122423448353a216095cee0c3c4476accd99e3d00ed85af",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "mode": "full_omni",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-full-omni-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "fcf47673d9c670460ae198275b26510e254e2a0d618df160c2b272b7d14503c9",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "mode": "full_omni",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-full-omni-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "7a2e2878b7fe51dc2757c7a8f62cdadedd1925d1664352a1651c911ad741e3b1",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "mode": "full_omni",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-full-omni-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "6dc73ed869696c026491e4d467555350081f7ec09d93064f6cc61f51680ebc30",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "mode": "full_omni",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-full-omni-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "a7ef41eb9fcfbbac4cfa5173d71ee3b792f8095384614229856c2801312190d3",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "mode": "full_omni",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-full-omni-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "aaedb806178fef5885b71cec167ddf4b163f35bb7a01f0711721d57c73d6555a",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "4cee47d9725d025c3205ff51d6ff17f8361eae3dd0d1dc6b42742cf8cb42866b",
+      "scenario_sha256": "4cee47d9725d025c3205ff51d6ff17f8361eae3dd0d1dc6b42742cf8cb42866b",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "6888c1354d633bce318e970e3c3bcf34fa4fe30e191f9ab504330322aee0d675",
+      "scenario_sha256": "6888c1354d633bce318e970e3c3bcf34fa4fe30e191f9ab504330322aee0d675",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "c568e7832a952411068f138a1cd2726719c5e63d0f04efd20c86ca0698adb928",
+      "scenario_sha256": "c568e7832a952411068f138a1cd2726719c5e63d0f04efd20c86ca0698adb928",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-004",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "9eb9d47e8c8748f2f8e772a82093e25c439a5d761fb33dd1b2c3f01a3da95d62",
+      "scenario_sha256": "9eb9d47e8c8748f2f8e772a82093e25c439a5d761fb33dd1b2c3f01a3da95d62",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "c338b654d8e0709e863a056442b89890d589fb480dbdbb34055f88f8a5e9bfbc",
+      "scenario_sha256": "c338b654d8e0709e863a056442b89890d589fb480dbdbb34055f88f8a5e9bfbc",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-001",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "96001e6189ac6f0ea90f7d16879be2f82e4f5f6a09558d466f3cd547c893eb67",
+      "scenario_sha256": "96001e6189ac6f0ea90f7d16879be2f82e4f5f6a09558d466f3cd547c893eb67",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-002",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "97efffaaf79b8b54ddfbc62d2d637595191ef33964eda3012375f3b60357dc9b",
+      "scenario_sha256": "97efffaaf79b8b54ddfbc62d2d637595191ef33964eda3012375f3b60357dc9b",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "bbb3aedcbd58d9f52be6c3164fb62b3e0a410a99eddbca3cc485785652c6515e",
+      "scenario_sha256": "bbb3aedcbd58d9f52be6c3164fb62b3e0a410a99eddbca3cc485785652c6515e",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-004",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "991e8846ca0ab15c570fa52531f6add0bd507d812a40892ff025ad6d3b42cd98",
+      "scenario_sha256": "991e8846ca0ab15c570fa52531f6add0bd507d812a40892ff025ad6d3b42cd98",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-005",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "95e09e0e7c4797ab4cc518a7ec54f41444c02499f89ed56dce4a267cd3b0cbba",
+      "scenario_sha256": "95e09e0e7c4797ab4cc518a7ec54f41444c02499f89ed56dce4a267cd3b0cbba",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-001",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "9f064aca0500525965d1af2aa06fedf71d330a66f88bca8993996f353a3ff8df",
+      "scenario_sha256": "9f064aca0500525965d1af2aa06fedf71d330a66f88bca8993996f353a3ff8df",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-002",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "492ce12eabeb55b1d961081ab182892ceb2ec73d20b826f4c1d1643676c2a0f0",
+      "scenario_sha256": "492ce12eabeb55b1d961081ab182892ceb2ec73d20b826f4c1d1643676c2a0f0",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-003",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "b19a99688f6197608f0e9a0b79304651060ca2a96e72157205b37cf495a34497",
+      "scenario_sha256": "b19a99688f6197608f0e9a0b79304651060ca2a96e72157205b37cf495a34497",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-004",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "0177812499ba8e54a9bfc7786ac4292c4240038ba2d3257157aac531b16a8ac6",
+      "scenario_sha256": "0177812499ba8e54a9bfc7786ac4292c4240038ba2d3257157aac531b16a8ac6",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-005",
+      "mode": "full_omni",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-full-omni-results-v2.1.jsonl",
+      "old_scenario_sha256": "e6ab937b7ad4f319804f1a08a7c7f1948b79aae2b05e2c013f9703778a53104f",
+      "scenario_sha256": "e6ab937b7ad4f319804f1a08a7c7f1948b79aae2b05e2c013f9703778a53104f",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "6f73f58baf7be92a41c47a5af64348160c7898f6bdac71dd0d443d48a0d22cda",
+      "scenario_sha256": "6f73f58baf7be92a41c47a5af64348160c7898f6bdac71dd0d443d48a0d22cda",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "ee017d10d0304922ad9c123a759e462c6242946a1c04610b0b9e11055db16d91",
+      "scenario_sha256": "ee017d10d0304922ad9c123a759e462c6242946a1c04610b0b9e11055db16d91",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "9adcc3cced3d575694e810f77905b8815ae6ea03b3e7b478631708f63a1a72f4",
+      "scenario_sha256": "9adcc3cced3d575694e810f77905b8815ae6ea03b3e7b478631708f63a1a72f4",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-001",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "1c88f368379b265830a54bb54638a20aad72494df3b5eda1cfc14b0b10d84fd8",
+      "scenario_sha256": "1c88f368379b265830a54bb54638a20aad72494df3b5eda1cfc14b0b10d84fd8",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-002",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "053d72c19cdf4543f239c9517d07a7c4d27aec848fe66b6ada5e6ee8e6209b47",
+      "scenario_sha256": "053d72c19cdf4543f239c9517d07a7c4d27aec848fe66b6ada5e6ee8e6209b47",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "8a0592402cd91d3c88726619881104164eb30bca2c73498871817b9a59a39bb9",
+      "scenario_sha256": "8a0592402cd91d3c88726619881104164eb30bca2c73498871817b9a59a39bb9",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "6e4fa9bfda5d8a758e433d70492e5b9a761b608a9e46ba40fb2cd60e96d31fc3",
+      "scenario_sha256": "6e4fa9bfda5d8a758e433d70492e5b9a761b608a9e46ba40fb2cd60e96d31fc3",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "27047d07ba4004c19090e50ba925f1707d50ed8d8fc123c5e412f167586ee636",
+      "scenario_sha256": "27047d07ba4004c19090e50ba925f1707d50ed8d8fc123c5e412f167586ee636",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "5cc9e7f48a7ca4a6898ccf704be525589aa20e4d78ea898fff47e302ecd0bc92",
+      "scenario_sha256": "5cc9e7f48a7ca4a6898ccf704be525589aa20e4d78ea898fff47e302ecd0bc92",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "mode": "no_memory",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-no-memory-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "fcf47673d9c670460ae198275b26510e254e2a0d618df160c2b272b7d14503c9",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "mode": "no_memory",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-no-memory-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "7a2e2878b7fe51dc2757c7a8f62cdadedd1925d1664352a1651c911ad741e3b1",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "mode": "no_memory",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-no-memory-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "6dc73ed869696c026491e4d467555350081f7ec09d93064f6cc61f51680ebc30",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "4cee47d9725d025c3205ff51d6ff17f8361eae3dd0d1dc6b42742cf8cb42866b",
+      "scenario_sha256": "4cee47d9725d025c3205ff51d6ff17f8361eae3dd0d1dc6b42742cf8cb42866b",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "6888c1354d633bce318e970e3c3bcf34fa4fe30e191f9ab504330322aee0d675",
+      "scenario_sha256": "6888c1354d633bce318e970e3c3bcf34fa4fe30e191f9ab504330322aee0d675",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "c568e7832a952411068f138a1cd2726719c5e63d0f04efd20c86ca0698adb928",
+      "scenario_sha256": "c568e7832a952411068f138a1cd2726719c5e63d0f04efd20c86ca0698adb928",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-001",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "96001e6189ac6f0ea90f7d16879be2f82e4f5f6a09558d466f3cd547c893eb67",
+      "scenario_sha256": "96001e6189ac6f0ea90f7d16879be2f82e4f5f6a09558d466f3cd547c893eb67",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-002",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "97efffaaf79b8b54ddfbc62d2d637595191ef33964eda3012375f3b60357dc9b",
+      "scenario_sha256": "97efffaaf79b8b54ddfbc62d2d637595191ef33964eda3012375f3b60357dc9b",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "bbb3aedcbd58d9f52be6c3164fb62b3e0a410a99eddbca3cc485785652c6515e",
+      "scenario_sha256": "bbb3aedcbd58d9f52be6c3164fb62b3e0a410a99eddbca3cc485785652c6515e",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-001",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "9f064aca0500525965d1af2aa06fedf71d330a66f88bca8993996f353a3ff8df",
+      "scenario_sha256": "9f064aca0500525965d1af2aa06fedf71d330a66f88bca8993996f353a3ff8df",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-002",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "492ce12eabeb55b1d961081ab182892ceb2ec73d20b826f4c1d1643676c2a0f0",
+      "scenario_sha256": "492ce12eabeb55b1d961081ab182892ceb2ec73d20b826f4c1d1643676c2a0f0",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-003",
+      "mode": "no_memory",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-no-memory-results-v2.1.jsonl",
+      "old_scenario_sha256": "b19a99688f6197608f0e9a0b79304651060ca2a96e72157205b37cf495a34497",
+      "scenario_sha256": "b19a99688f6197608f0e9a0b79304651060ca2a96e72157205b37cf495a34497",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "6f73f58baf7be92a41c47a5af64348160c7898f6bdac71dd0d443d48a0d22cda",
+      "scenario_sha256": "6f73f58baf7be92a41c47a5af64348160c7898f6bdac71dd0d443d48a0d22cda",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "ee017d10d0304922ad9c123a759e462c6242946a1c04610b0b9e11055db16d91",
+      "scenario_sha256": "ee017d10d0304922ad9c123a759e462c6242946a1c04610b0b9e11055db16d91",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "9adcc3cced3d575694e810f77905b8815ae6ea03b3e7b478631708f63a1a72f4",
+      "scenario_sha256": "9adcc3cced3d575694e810f77905b8815ae6ea03b3e7b478631708f63a1a72f4",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-001",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "1c88f368379b265830a54bb54638a20aad72494df3b5eda1cfc14b0b10d84fd8",
+      "scenario_sha256": "1c88f368379b265830a54bb54638a20aad72494df3b5eda1cfc14b0b10d84fd8",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-002",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "053d72c19cdf4543f239c9517d07a7c4d27aec848fe66b6ada5e6ee8e6209b47",
+      "scenario_sha256": "053d72c19cdf4543f239c9517d07a7c4d27aec848fe66b6ada5e6ee8e6209b47",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "8a0592402cd91d3c88726619881104164eb30bca2c73498871817b9a59a39bb9",
+      "scenario_sha256": "8a0592402cd91d3c88726619881104164eb30bca2c73498871817b9a59a39bb9",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "6e4fa9bfda5d8a758e433d70492e5b9a761b608a9e46ba40fb2cd60e96d31fc3",
+      "scenario_sha256": "6e4fa9bfda5d8a758e433d70492e5b9a761b608a9e46ba40fb2cd60e96d31fc3",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "27047d07ba4004c19090e50ba925f1707d50ed8d8fc123c5e412f167586ee636",
+      "scenario_sha256": "27047d07ba4004c19090e50ba925f1707d50ed8d8fc123c5e412f167586ee636",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "mode": "retrieval_only",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-retrieval-only-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "7a2e2878b7fe51dc2757c7a8f62cdadedd1925d1664352a1651c911ad741e3b1",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "mode": "retrieval_only",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-retrieval-only-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "6dc73ed869696c026491e4d467555350081f7ec09d93064f6cc61f51680ebc30",
+      "content_changed": true
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "4cee47d9725d025c3205ff51d6ff17f8361eae3dd0d1dc6b42742cf8cb42866b",
+      "scenario_sha256": "4cee47d9725d025c3205ff51d6ff17f8361eae3dd0d1dc6b42742cf8cb42866b",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "6888c1354d633bce318e970e3c3bcf34fa4fe30e191f9ab504330322aee0d675",
+      "scenario_sha256": "6888c1354d633bce318e970e3c3bcf34fa4fe30e191f9ab504330322aee0d675",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "c568e7832a952411068f138a1cd2726719c5e63d0f04efd20c86ca0698adb928",
+      "scenario_sha256": "c568e7832a952411068f138a1cd2726719c5e63d0f04efd20c86ca0698adb928",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-002",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "97efffaaf79b8b54ddfbc62d2d637595191ef33964eda3012375f3b60357dc9b",
+      "scenario_sha256": "97efffaaf79b8b54ddfbc62d2d637595191ef33964eda3012375f3b60357dc9b",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "bbb3aedcbd58d9f52be6c3164fb62b3e0a410a99eddbca3cc485785652c6515e",
+      "scenario_sha256": "bbb3aedcbd58d9f52be6c3164fb62b3e0a410a99eddbca3cc485785652c6515e",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-001",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "9f064aca0500525965d1af2aa06fedf71d330a66f88bca8993996f353a3ff8df",
+      "scenario_sha256": "9f064aca0500525965d1af2aa06fedf71d330a66f88bca8993996f353a3ff8df",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-002",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "492ce12eabeb55b1d961081ab182892ceb2ec73d20b826f4c1d1643676c2a0f0",
+      "scenario_sha256": "492ce12eabeb55b1d961081ab182892ceb2ec73d20b826f4c1d1643676c2a0f0",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-003",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "b19a99688f6197608f0e9a0b79304651060ca2a96e72157205b37cf495a34497",
+      "scenario_sha256": "b19a99688f6197608f0e9a0b79304651060ca2a96e72157205b37cf495a34497",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "5cc9e7f48a7ca4a6898ccf704be525589aa20e4d78ea898fff47e302ecd0bc92",
+      "scenario_sha256": "5cc9e7f48a7ca4a6898ccf704be525589aa20e4d78ea898fff47e302ecd0bc92",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-001",
+      "mode": "retrieval_only",
+      "source": "v2.1_unchanged_reuse",
+      "source_file": "development-retrieval-only-results-v2.1.jsonl",
+      "old_scenario_sha256": "96001e6189ac6f0ea90f7d16879be2f82e4f5f6a09558d466f3cd547c893eb67",
+      "scenario_sha256": "96001e6189ac6f0ea90f7d16879be2f82e4f5f6a09558d466f3cd547c893eb67",
+      "content_changed": false
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "mode": "retrieval_only",
+      "source": "v2.1.1_cross_agent_rerun",
+      "source_file": "development-retrieval-only-cross-agent-results-v2.1.1.jsonl",
+      "scenario_sha256": "fcf47673d9c670460ae198275b26510e254e2a0d618df160c2b272b7d14503c9",
+      "content_changed": true
+    }
+  ]
+}

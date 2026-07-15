@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "full_omni_score": 0.534997354497,
+  "retrieval_only_score": 0.590895061728,
+  "delta_retrieval_minus_full": 0.055897707231,
+  "score_by_difficulty": {
+    "full_omni": {
+      "easy": 0.589329,
+      "medium": 0.483681,
+      "hard": 0.528968
+    },
+    "retrieval_only": {
+      "easy": 0.7167,
+      "medium": 0.620403,
+      "hard": 0.435582
+    }
+  },
+  "retrieval_only_completed": 21,
+  "full_omni_completed": 35,
+  "retrieval_only_source_integrity": {
+    "violations": [],
+    "all_sources_are_original_event_ids": true
+  },
+  "no_memory_context_leakage": {
+    "violations": [],
+    "empty_context_for_all_completed": true
+  },
+  "baseline_leakage": false,
+  "main_explanation": "Retrieval-Only exposes up to four original event texts directly, while Full Omni can lose exact values or provenance during extraction, graph representation, retrieval, and answer generation. This is a fair mechanism-level baseline effect, not evidence leakage.",
+  "hard_case_observation": "Full Omni is stronger on the fixed Hard subset.",
+  "benchmark_validity_impact": "none"
+}

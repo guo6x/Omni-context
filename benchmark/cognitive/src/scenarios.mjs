@@ -3,6 +3,11 @@ import { CATEGORY_KEYS, CATEGORY_SPECS } from './constants.mjs';
 const NAMES = ['Avery', 'Blair', 'Casey', 'Devon', 'Emery', 'Finley', 'Gray', 'Harper', 'Indigo', 'Jordan', 'Kai', 'Lane', 'Morgan', 'Nova', 'Quinn', 'Riley'];
 const AGENTS = ['Agent-A', 'Agent-B', 'Agent-C', 'Agent-D', 'Agent-E', 'Agent-F'];
 
+export function displayAgent(agent) {
+  if (!AGENTS.includes(agent)) throw new Error(`Unknown Agent identifier: ${agent}`);
+  return agent;
+}
+
 export const SCENARIO_FAMILIES = Object.freeze({
   cognitive_continuity: [
     ['career_planning', 'career transition', 'move into accessibility engineering'],
@@ -138,7 +143,11 @@ function semanticCore(category, ctx) {
   const e = [];
   let gold;
   let question;
-  const add = (agent, text, key, value, options) => e.push(makeEvent(ctx.id, e.length, agent, text, key, value, options));
+  const add = (agent, text, key, value, options) => {
+    const event = makeEvent(ctx.id, e.length, agent, text, key, value, options);
+    e.push(event);
+    return event;
+  };
 
   if (category === 'cognitive_continuity') {
     const goal = detail;
@@ -176,13 +185,19 @@ function semanticCore(category, ctx) {
     gold = { required_facts: [currentValue, invalidValue], current_facts: [currentValue], historical_facts: [invalidValue], invalidated_facts: [invalidValue], conflict_disclosure: ['low confidence', 'correction'], forbidden_facts: [`${invalidValue} is current`], transitions: [{ key: label, from_value: invalidValue, to_value: currentValue }] };
   } else if (category === 'cross_agent_transfer') {
     const currentValue = detail;
-    add(A(0), `Agent A records ${ctx.persona}'s ${label}: ${currentValue}.`, label, currentValue, { importance: 'high' });
-    add(A(1), `Agent B confirms ${ctx.persona} prefers written weekly summaries.`, 'preference', 'written weekly summaries');
-    add(A(2), `Agent C updates ${ctx.checkpoint} to implementation.`, 'project_status', 'implementation', { transition_id: ctx.structure.transitionCount ? 'agent-update' : null });
-    add(A(0), `Agent A requests that the latest answer preserve Agent A, Agent B, and Agent C provenance.`, 'provenance_rule', 'preserve source agents');
-    if (ctx.structure.conflictCount) add(A(Math.min(3, ctx.structure.agentCount - 1)), `Agent X incorrectly reports ${ctx.checkpoint} is cancelled.`, 'project_status', 'cancelled', { confidence: 0.2, conflict: true });
+    const factAgents = [A(0), A(1), A(2)];
+    add(factAgents[0], `${displayAgent(factAgents[0])} records ${ctx.persona}'s ${label}: ${currentValue}.`, label, currentValue, { importance: 'high' });
+    add(factAgents[1], `${displayAgent(factAgents[1])} confirms ${ctx.persona} prefers written weekly summaries.`, 'preference', 'written weekly summaries');
+    add(factAgents[2], `${displayAgent(factAgents[2])} updates ${ctx.checkpoint} to implementation.`, 'project_status', 'implementation', { transition_id: ctx.structure.transitionCount ? 'agent-update' : null });
+    const requiredSources = [...new Set(factAgents)];
+    const provenanceAgent = A(0);
+    add(provenanceAgent, `${displayAgent(provenanceAgent)} requests that the latest answer preserve ${requiredSources.join(', ')} provenance.`, 'provenance_rule', 'preserve source agents');
+    if (ctx.structure.conflictCount) {
+      const reportAgent = A(Math.min(3, ctx.structure.agentCount - 1));
+      add(reportAgent, `${displayAgent(reportAgent)} submits a low-confidence incorrect report that ${ctx.checkpoint} is cancelled.`, 'project_status', 'cancelled', { confidence: 0.2, conflict: true, source_type: 'low_confidence_agent_report' });
+    }
     question = `As a shared-memory agent in cycle ${ctx.cycle + 1}, summarize ${ctx.persona}'s ${label}, preference, and latest ${ctx.checkpoint} status with exact source Agents, isolating incorrect reports.`;
-    gold = { required_facts: [currentValue, 'written weekly summaries', 'implementation'], current_facts: ['implementation'], required_sources: ['Agent-A', 'Agent-B', 'Agent-C'], forbidden_facts: ['cancelled'], invalidated_facts: ctx.structure.conflictCount ? ['cancelled'] : [] };
+    gold = { required_facts: [currentValue, 'written weekly summaries', 'implementation'], current_facts: ['implementation'], required_sources: requiredSources, forbidden_facts: ['cancelled'], invalidated_facts: ctx.structure.conflictCount ? ['cancelled'] : [] };
   } else if (category === 'human_like_forgetting') {
     const salient = `${detail} for cycle ${ctx.cycle + 1}`;
     add(A(0), `${ctx.persona}'s high-value long-term ${label} is ${salient}.`, 'salient', salient, { importance: 'high' });
@@ -270,8 +285,46 @@ function buildScenario(split, category, index, count, level) {
     question: semantic.question,
     gold: semantic.gold,
   };
+  if (scenario.category === 'cross_agent_transfer') validateCrossAgentProvenance(scenario);
   validateDifficulty(scenario);
   return scenario;
+}
+
+export function validateCrossAgentProvenance(scenario) {
+  if (scenario.category !== 'cross_agent_transfer') throw new Error(`${scenario.scenario_id}: not a Cross-Agent scenario`);
+  const uniqueAgents = [...new Set(scenario.events.map((event) => event.agent))];
+  const agentSet = new Set(uniqueAgents);
+  const agentTextFieldMismatches = [];
+  const unknownTextAgents = [];
+  for (const event of scenario.events) {
+    const leading = event.text.match(/^(Agent-[A-Z])\b/);
+    if (leading && leading[1] !== event.agent) agentTextFieldMismatches.push({ event_id: event.id, field_agent: event.agent, text_agent: leading[1] });
+    for (const textualAgent of event.text.match(/\bAgent-[A-Z]\b/g) || []) {
+      if (!agentSet.has(textualAgent)) unknownTextAgents.push({ event_id: event.id, text_agent: textualAgent });
+    }
+  }
+  const requiredFactAgents = [...new Set((scenario.gold.required_facts || []).flatMap((fact) => scenario.events.filter((event) => event.value === fact).map((event) => event.agent)))];
+  const missingRequiredSources = (scenario.gold.required_sources || []).filter((agent) => !requiredFactAgents.includes(agent));
+  const uncreditedFactSources = requiredFactAgents.filter((agent) => !(scenario.gold.required_sources || []).includes(agent));
+  const failures = [];
+  if (uniqueAgents.length < 2) failures.push('requires_at_least_two_agents');
+  if (scenario.agent_count !== uniqueAgents.length) failures.push('agent_count_mismatch');
+  if (agentTextFieldMismatches.length) failures.push('agent_text_field_mismatch');
+  if (unknownTextAgents.length) failures.push('unknown_text_agent');
+  if (missingRequiredSources.length) failures.push('gold_source_not_backed_by_required_fact');
+  if (uncreditedFactSources.length) failures.push('required_fact_source_missing_from_gold');
+  if (failures.length) throw new Error(`${scenario.scenario_id}: Cross-Agent provenance validation failed: ${failures.join(', ')}`);
+  return {
+    scenario_id: scenario.scenario_id,
+    status: 'pass',
+    unique_agents: uniqueAgents,
+    required_fact_agents: requiredFactAgents,
+    required_sources: scenario.gold.required_sources || [],
+    agent_text_field_mismatches: agentTextFieldMismatches,
+    unknown_text_agents: unknownTextAgents,
+    missing_required_sources: missingRequiredSources,
+    uncredited_fact_sources: uncreditedFactSources,
+  };
 }
 
 export function validateDifficulty(scenario) {

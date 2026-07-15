@@ -1,0 +1,3050 @@
+{
+  "schema_version": "1.1.1",
+  "status": "pass",
+  "old_version": "v2",
+  "new_version": "v2.1.1",
+  "scenario_counts": {
+    "smoke": 21,
+    "development": 35,
+    "formal": 250,
+    "comparison": 70
+  },
+  "changed_scenarios": 38,
+  "changed_cross_agent_scenarios": 38,
+  "changed_non_cross_agent_scenarios": 0,
+  "non_cross_agent_hash_consistent": true,
+  "rows": [
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cognitive_continuity-001",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "9aacf19e3b403743aa7ac60b03d940a6fccbfbbbb0e837a5764384b81feab487",
+      "new_sha256": "9aacf19e3b403743aa7ac60b03d940a6fccbfbbbb0e837a5764384b81feab487",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cognitive_continuity-002",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "ce86b52535ae171d102886b1e593fdc3afef06abf16fb54017db8c2f13153902",
+      "new_sha256": "ce86b52535ae171d102886b1e593fdc3afef06abf16fb54017db8c2f13153902",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cognitive_continuity-003",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "3c85c6915ba9548505f7f025976be61d8aa6dabf6eb9d88441803cd0cdc89f50",
+      "new_sha256": "3c85c6915ba9548505f7f025976be61d8aa6dabf6eb9d88441803cd0cdc89f50",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-memory_evolution-001",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "7e857057540d20727288563502c8530b0f9e74ece9679f8e84810ef07b6d58a2",
+      "new_sha256": "7e857057540d20727288563502c8530b0f9e74ece9679f8e84810ef07b6d58a2",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-memory_evolution-002",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "fa89096736b8f78bff4b51c0a2d2a8caa7cdba6b4db29955fb9be6bcbcfee3a6",
+      "new_sha256": "fa89096736b8f78bff4b51c0a2d2a8caa7cdba6b4db29955fb9be6bcbcfee3a6",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-memory_evolution-003",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "248e22df9717e4e3e4833c513bc69c85acb29589cc6fe75bf8e94be5481c17c0",
+      "new_sha256": "248e22df9717e4e3e4833c513bc69c85acb29589cc6fe75bf8e94be5481c17c0",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-conflict_resolution-001",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "68eb4b1b83007a133922db3d7366e97d2780c32afdf70112d9cd8f9ce41f74bf",
+      "new_sha256": "68eb4b1b83007a133922db3d7366e97d2780c32afdf70112d9cd8f9ce41f74bf",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-conflict_resolution-002",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "92df6a3a1a98204b48153c7af0b3b2ecf52914e9180a5fb2567a1bb86622eb45",
+      "new_sha256": "92df6a3a1a98204b48153c7af0b3b2ecf52914e9180a5fb2567a1bb86622eb45",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-conflict_resolution-003",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "7d910a3f987e8db8e9efae19df32a48927276be9f0d652c204ee128612ff592e",
+      "new_sha256": "7d910a3f987e8db8e9efae19df32a48927276be9f0d652c204ee128612ff592e",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cross_agent_transfer-001",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "324142a212ec9f2adb8ed57043f898165679ce889adc8915967e368241a9bd82",
+      "new_sha256": "48e7a6f20eab5fd8a5a9119341d62e1a36e26b989bbbf8e28239a2018ad70b89",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cross_agent_transfer-002",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "26f174d0587ab3617f77b4a7fe5ed1a22eb82de68b4dd0cacd9b0425a98c2a97",
+      "new_sha256": "bb1cc0e82b45e8ff525ecb4efdb2307ca3652eec8c8f643aefb30970334b8a1e",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cross_agent_transfer-003",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "274332db82b7a19273131e8e32ebdd381cd9603002276d9af5fd14d771e83399",
+      "new_sha256": "6723d1729968d312907732c7428d82d334bfe512410cc06aeae980a64ae544fc",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-human_like_forgetting-001",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "fdb96a29f2d1d049b344179d1953f05dc7bd6e1c4255f23d31f8a4f9a4568b4f",
+      "new_sha256": "fdb96a29f2d1d049b344179d1953f05dc7bd6e1c4255f23d31f8a4f9a4568b4f",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-human_like_forgetting-002",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "5dc78b12a6edfcfb758b7aaa7cd4b86117540c6ffb54ba978cc1ca75116e6764",
+      "new_sha256": "5dc78b12a6edfcfb758b7aaa7cd4b86117540c6ffb54ba978cc1ca75116e6764",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-human_like_forgetting-003",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "76374d4eaa444f20ad130c4c6298ebdbf3f7b608979bc6d17072f7d02568f20a",
+      "new_sha256": "76374d4eaa444f20ad130c4c6298ebdbf3f7b608979bc6d17072f7d02568f20a",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-proactive_insight-001",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "d9d364cebdb5aba10f0315d5a9a93267f914aaaa7de4b88e4c07e3d4342e1aee",
+      "new_sha256": "d9d364cebdb5aba10f0315d5a9a93267f914aaaa7de4b88e4c07e3d4342e1aee",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-proactive_insight-002",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "cd2d2bf2ef2927c96fedbf852ab9b4359f07ee8916bd4bd182815f6c5e5e333f",
+      "new_sha256": "cd2d2bf2ef2927c96fedbf852ab9b4359f07ee8916bd4bd182815f6c5e5e333f",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-proactive_insight-003",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "f2dd9c5ea192c27ffb2bdae91af5d58a81c06ee8c4a7c1aaf9e59d781ab3fe15",
+      "new_sha256": "f2dd9c5ea192c27ffb2bdae91af5d58a81c06ee8c4a7c1aaf9e59d781ab3fe15",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-decision_quality-001",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "34821bd5357937767692e0cd51616db672d5af7298377038b51e1f44acf3bbb0",
+      "new_sha256": "34821bd5357937767692e0cd51616db672d5af7298377038b51e1f44acf3bbb0",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-decision_quality-002",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "7cfac7f7858fd4d538edf0eaa0191aa8f95c872d6dc6d9f814dfb4634f8baa15",
+      "new_sha256": "7cfac7f7858fd4d538edf0eaa0191aa8f95c872d6dc6d9f814dfb4634f8baa15",
+      "changed_paths": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-decision_quality-003",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "6a32cac2a6d5bc5c61dbaa6fd94616d77e6084bfe075952230059e1c17d7199c",
+      "new_sha256": "6a32cac2a6d5bc5c61dbaa6fd94616d77e6084bfe075952230059e1c17d7199c",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "6f73f58baf7be92a41c47a5af64348160c7898f6bdac71dd0d443d48a0d22cda",
+      "new_sha256": "6f73f58baf7be92a41c47a5af64348160c7898f6bdac71dd0d443d48a0d22cda",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "ee017d10d0304922ad9c123a759e462c6242946a1c04610b0b9e11055db16d91",
+      "new_sha256": "ee017d10d0304922ad9c123a759e462c6242946a1c04610b0b9e11055db16d91",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "9adcc3cced3d575694e810f77905b8815ae6ea03b3e7b478631708f63a1a72f4",
+      "new_sha256": "9adcc3cced3d575694e810f77905b8815ae6ea03b3e7b478631708f63a1a72f4",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "78be52c779aa890a08cb016606cbcec63709e2271fa5a90105afa731cb8013a8",
+      "new_sha256": "78be52c779aa890a08cb016606cbcec63709e2271fa5a90105afa731cb8013a8",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "bf04a337aed54ade3ed37f99eeedf7707535039ff0268495405e93e98116c3fe",
+      "new_sha256": "bf04a337aed54ade3ed37f99eeedf7707535039ff0268495405e93e98116c3fe",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-memory_evolution-001",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "1c88f368379b265830a54bb54638a20aad72494df3b5eda1cfc14b0b10d84fd8",
+      "new_sha256": "1c88f368379b265830a54bb54638a20aad72494df3b5eda1cfc14b0b10d84fd8",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-memory_evolution-002",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "053d72c19cdf4543f239c9517d07a7c4d27aec848fe66b6ada5e6ee8e6209b47",
+      "new_sha256": "053d72c19cdf4543f239c9517d07a7c4d27aec848fe66b6ada5e6ee8e6209b47",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-memory_evolution-003",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "8a0592402cd91d3c88726619881104164eb30bca2c73498871817b9a59a39bb9",
+      "new_sha256": "8a0592402cd91d3c88726619881104164eb30bca2c73498871817b9a59a39bb9",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-memory_evolution-004",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "65636a9b3d03428f76f41f77db5cdacce88c8acacb673de722714cf1a6c5c9da",
+      "new_sha256": "65636a9b3d03428f76f41f77db5cdacce88c8acacb673de722714cf1a6c5c9da",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-memory_evolution-005",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "fb629044d51b9e346940c8d1e7f723275015e8667fa6a1ea0e9f93fb11e85cc6",
+      "new_sha256": "fb629044d51b9e346940c8d1e7f723275015e8667fa6a1ea0e9f93fb11e85cc6",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "6e4fa9bfda5d8a758e433d70492e5b9a761b608a9e46ba40fb2cd60e96d31fc3",
+      "new_sha256": "6e4fa9bfda5d8a758e433d70492e5b9a761b608a9e46ba40fb2cd60e96d31fc3",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "27047d07ba4004c19090e50ba925f1707d50ed8d8fc123c5e412f167586ee636",
+      "new_sha256": "27047d07ba4004c19090e50ba925f1707d50ed8d8fc123c5e412f167586ee636",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "5cc9e7f48a7ca4a6898ccf704be525589aa20e4d78ea898fff47e302ecd0bc92",
+      "new_sha256": "5cc9e7f48a7ca4a6898ccf704be525589aa20e4d78ea898fff47e302ecd0bc92",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "9887158db77d6a3ab1d19871346338e825a73eb69fa0581e1f7bb110adb6062d",
+      "new_sha256": "9887158db77d6a3ab1d19871346338e825a73eb69fa0581e1f7bb110adb6062d",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-conflict_resolution-005",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "ed1e4dbf7430a0395122423448353a216095cee0c3c4476accd99e3d00ed85af",
+      "new_sha256": "ed1e4dbf7430a0395122423448353a216095cee0c3c4476accd99e3d00ed85af",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "433003b2c6dcfc7a543ce8dca332f47346aaa42f48bbec1617956e3b0f76fd49",
+      "new_sha256": "fcf47673d9c670460ae198275b26510e254e2a0d618df160c2b272b7d14503c9",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "252b29fca7db44f889274d108197bc78df159a432c91d14649b35b825bcd083b",
+      "new_sha256": "7a2e2878b7fe51dc2757c7a8f62cdadedd1925d1664352a1651c911ad741e3b1",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "50ff9ddb220bd6a82c4321f6cdea82f847baa229a76d5aa9f23f6f0a07d40e63",
+      "new_sha256": "6dc73ed869696c026491e4d467555350081f7ec09d93064f6cc61f51680ebc30",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "5a755ebf3762593b8c20d80ed517e11c2f6f0cb2d0740e34d7aed7af237077da",
+      "new_sha256": "a7ef41eb9fcfbbac4cfa5173d71ee3b792f8095384614229856c2801312190d3",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "c6d595480644fd9cadb6221406b0e9447209fbb5c75b19395654ccc6281ded1a",
+      "new_sha256": "aaedb806178fef5885b71cec167ddf4b163f35bb7a01f0711721d57c73d6555a",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "4cee47d9725d025c3205ff51d6ff17f8361eae3dd0d1dc6b42742cf8cb42866b",
+      "new_sha256": "4cee47d9725d025c3205ff51d6ff17f8361eae3dd0d1dc6b42742cf8cb42866b",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "6888c1354d633bce318e970e3c3bcf34fa4fe30e191f9ab504330322aee0d675",
+      "new_sha256": "6888c1354d633bce318e970e3c3bcf34fa4fe30e191f9ab504330322aee0d675",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "c568e7832a952411068f138a1cd2726719c5e63d0f04efd20c86ca0698adb928",
+      "new_sha256": "c568e7832a952411068f138a1cd2726719c5e63d0f04efd20c86ca0698adb928",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-human_like_forgetting-004",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "9eb9d47e8c8748f2f8e772a82093e25c439a5d761fb33dd1b2c3f01a3da95d62",
+      "new_sha256": "9eb9d47e8c8748f2f8e772a82093e25c439a5d761fb33dd1b2c3f01a3da95d62",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "c338b654d8e0709e863a056442b89890d589fb480dbdbb34055f88f8a5e9bfbc",
+      "new_sha256": "c338b654d8e0709e863a056442b89890d589fb480dbdbb34055f88f8a5e9bfbc",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-proactive_insight-001",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "96001e6189ac6f0ea90f7d16879be2f82e4f5f6a09558d466f3cd547c893eb67",
+      "new_sha256": "96001e6189ac6f0ea90f7d16879be2f82e4f5f6a09558d466f3cd547c893eb67",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-proactive_insight-002",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "97efffaaf79b8b54ddfbc62d2d637595191ef33964eda3012375f3b60357dc9b",
+      "new_sha256": "97efffaaf79b8b54ddfbc62d2d637595191ef33964eda3012375f3b60357dc9b",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-proactive_insight-003",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "bbb3aedcbd58d9f52be6c3164fb62b3e0a410a99eddbca3cc485785652c6515e",
+      "new_sha256": "bbb3aedcbd58d9f52be6c3164fb62b3e0a410a99eddbca3cc485785652c6515e",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-proactive_insight-004",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "991e8846ca0ab15c570fa52531f6add0bd507d812a40892ff025ad6d3b42cd98",
+      "new_sha256": "991e8846ca0ab15c570fa52531f6add0bd507d812a40892ff025ad6d3b42cd98",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-proactive_insight-005",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "95e09e0e7c4797ab4cc518a7ec54f41444c02499f89ed56dce4a267cd3b0cbba",
+      "new_sha256": "95e09e0e7c4797ab4cc518a7ec54f41444c02499f89ed56dce4a267cd3b0cbba",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-decision_quality-001",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "9f064aca0500525965d1af2aa06fedf71d330a66f88bca8993996f353a3ff8df",
+      "new_sha256": "9f064aca0500525965d1af2aa06fedf71d330a66f88bca8993996f353a3ff8df",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-decision_quality-002",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "492ce12eabeb55b1d961081ab182892ceb2ec73d20b826f4c1d1643676c2a0f0",
+      "new_sha256": "492ce12eabeb55b1d961081ab182892ceb2ec73d20b826f4c1d1643676c2a0f0",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-decision_quality-003",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "b19a99688f6197608f0e9a0b79304651060ca2a96e72157205b37cf495a34497",
+      "new_sha256": "b19a99688f6197608f0e9a0b79304651060ca2a96e72157205b37cf495a34497",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-decision_quality-004",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "0177812499ba8e54a9bfc7786ac4292c4240038ba2d3257157aac531b16a8ac6",
+      "new_sha256": "0177812499ba8e54a9bfc7786ac4292c4240038ba2d3257157aac531b16a8ac6",
+      "changed_paths": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-decision_quality-005",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "e6ab937b7ad4f319804f1a08a7c7f1948b79aae2b05e2c013f9703778a53104f",
+      "new_sha256": "e6ab937b7ad4f319804f1a08a7c7f1948b79aae2b05e2c013f9703778a53104f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-001",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "ab4dfc5af7e29d153bad715939327a769b758ff4a61c1d74e838cdc9e90f8d07",
+      "new_sha256": "ab4dfc5af7e29d153bad715939327a769b758ff4a61c1d74e838cdc9e90f8d07",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-002",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "6addc498e50406f2646cf31d1b0e5c2589cd5c6f81db39e1744c8a0d7bcd6c24",
+      "new_sha256": "6addc498e50406f2646cf31d1b0e5c2589cd5c6f81db39e1744c8a0d7bcd6c24",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-003",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "17fcf50ca2c36f99b928d0c56b7b4cb13c16838681a8c2c7cb62249113bcda01",
+      "new_sha256": "17fcf50ca2c36f99b928d0c56b7b4cb13c16838681a8c2c7cb62249113bcda01",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-004",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "4f7160350ea29e8df1839256383b357f1b932ea856214c7bfef66faa7472b432",
+      "new_sha256": "4f7160350ea29e8df1839256383b357f1b932ea856214c7bfef66faa7472b432",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-005",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "a734fc7c21ed80046b1ee0705eb168d05661844f7d917fd71b940383ca9afe27",
+      "new_sha256": "a734fc7c21ed80046b1ee0705eb168d05661844f7d917fd71b940383ca9afe27",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-006",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "5695cca9be16330ca39a485a4e85c61a4579daf379967f2322e339f4f7b2308e",
+      "new_sha256": "5695cca9be16330ca39a485a4e85c61a4579daf379967f2322e339f4f7b2308e",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-007",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "885f4cef4858f4db03b266ab419816bb687dcbfbf69d48486d9639846bb38574",
+      "new_sha256": "885f4cef4858f4db03b266ab419816bb687dcbfbf69d48486d9639846bb38574",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-008",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "25dfae502def6f93f1a37ba0e3ea5a822137ab1044f934ce05ef7ab2381772f1",
+      "new_sha256": "25dfae502def6f93f1a37ba0e3ea5a822137ab1044f934ce05ef7ab2381772f1",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-009",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "e21c83186130b8ebc666105e2e8bafa55dfd1123131de7891ef4a73f64bf1a09",
+      "new_sha256": "e21c83186130b8ebc666105e2e8bafa55dfd1123131de7891ef4a73f64bf1a09",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-010",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "002d010888db4886fe693f91024734dd6944d714741ae4581d4f0bafe954f88d",
+      "new_sha256": "002d010888db4886fe693f91024734dd6944d714741ae4581d4f0bafe954f88d",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-011",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "f349ab08040e4a3fcdc7035a053f880ecc6b951cae658b4378d48c595fb87ddb",
+      "new_sha256": "f349ab08040e4a3fcdc7035a053f880ecc6b951cae658b4378d48c595fb87ddb",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-012",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "66244a24df7912ada9deb3d2c93cc11f16f3da0156e014ab577f952ee3cc00fb",
+      "new_sha256": "66244a24df7912ada9deb3d2c93cc11f16f3da0156e014ab577f952ee3cc00fb",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-013",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "eec2227b1486e00dbc3f5195a2dfc33c812467d71c41aab4a2bb408333e73cf7",
+      "new_sha256": "eec2227b1486e00dbc3f5195a2dfc33c812467d71c41aab4a2bb408333e73cf7",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-014",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "18606151a5f2bdcbdd9e6069a48791d036d828c2ac1a3e61dba6928cc7a78d51",
+      "new_sha256": "18606151a5f2bdcbdd9e6069a48791d036d828c2ac1a3e61dba6928cc7a78d51",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-015",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "5b5c0fbe529daae165495d1e1bd091847c89b94691daaaf434c7effcbf817a7c",
+      "new_sha256": "5b5c0fbe529daae165495d1e1bd091847c89b94691daaaf434c7effcbf817a7c",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-016",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "aee4698b33212a3a0974821575dba24bcaf6e101c98090c052f5984322ae1e72",
+      "new_sha256": "aee4698b33212a3a0974821575dba24bcaf6e101c98090c052f5984322ae1e72",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-017",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "0cfb91539dc8299ba73b9dcab57ec841bb4ac54c8244c31b316824acbc8ded79",
+      "new_sha256": "0cfb91539dc8299ba73b9dcab57ec841bb4ac54c8244c31b316824acbc8ded79",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-018",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "7322936e02d9e4775150e020bab02edcc00e4bae3bdd41237429e466189badc5",
+      "new_sha256": "7322936e02d9e4775150e020bab02edcc00e4bae3bdd41237429e466189badc5",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-019",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "008ffcf1163bff306794642f517515b3da76ad750e405deef5a17aa127f8c41b",
+      "new_sha256": "008ffcf1163bff306794642f517515b3da76ad750e405deef5a17aa127f8c41b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-020",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "b2b128fb44ec27db5edaeaa24f7b4fc160dcb964d715e1cf7090c3bf3c134e0f",
+      "new_sha256": "b2b128fb44ec27db5edaeaa24f7b4fc160dcb964d715e1cf7090c3bf3c134e0f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-021",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "c21603ff00106481598220a85c7941bfb659df04b3575fbc143186d7c3be29e2",
+      "new_sha256": "c21603ff00106481598220a85c7941bfb659df04b3575fbc143186d7c3be29e2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-022",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "861a6b20f6a89b01324d3e4a993cb571664b9d39ac4ac9c3c0f4eb1a91dafeda",
+      "new_sha256": "861a6b20f6a89b01324d3e4a993cb571664b9d39ac4ac9c3c0f4eb1a91dafeda",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-023",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "2d012b304647f24c92212486d21bcd46186a2bedbfc558aea869808082b4eb5e",
+      "new_sha256": "2d012b304647f24c92212486d21bcd46186a2bedbfc558aea869808082b4eb5e",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-024",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "e3de2822e3788e3946fb01252eee47cb92a56586ecafb4cd94080af4ad582772",
+      "new_sha256": "e3de2822e3788e3946fb01252eee47cb92a56586ecafb4cd94080af4ad582772",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-025",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "f49cc7d030bdcf18daaf9373ceaf3391b4f5aa80b36ebe1d1a42d8e0357ea85d",
+      "new_sha256": "f49cc7d030bdcf18daaf9373ceaf3391b4f5aa80b36ebe1d1a42d8e0357ea85d",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-026",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "75befcce363a30850156f4050dbf35bc85e452dba051b7156b0a7b788099c6bf",
+      "new_sha256": "75befcce363a30850156f4050dbf35bc85e452dba051b7156b0a7b788099c6bf",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-027",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "2d1c2410053eec360aba5fcd4d51ec4eb4e93c58952655ddb0954b456f935abe",
+      "new_sha256": "2d1c2410053eec360aba5fcd4d51ec4eb4e93c58952655ddb0954b456f935abe",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-028",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "d2b756d4d4ccc1cd5c18e4ce2e9e210aa204f78804e3efb329c98701a52855b5",
+      "new_sha256": "d2b756d4d4ccc1cd5c18e4ce2e9e210aa204f78804e3efb329c98701a52855b5",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-029",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "5f6dae43b046beed3948b240fec5c759a12af201d582ec39092caa693befab42",
+      "new_sha256": "5f6dae43b046beed3948b240fec5c759a12af201d582ec39092caa693befab42",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-030",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "2eaf664e9dff14aa366270c382ed5f0b590967f72d66f60536414e9813dad850",
+      "new_sha256": "2eaf664e9dff14aa366270c382ed5f0b590967f72d66f60536414e9813dad850",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-031",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "dd81cdf774c705fbbab02b7ed9a7dc3e0b43498764760af3d98ce968e3603a2f",
+      "new_sha256": "dd81cdf774c705fbbab02b7ed9a7dc3e0b43498764760af3d98ce968e3603a2f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-032",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "4bdc4490afcda15ca4e8a128e56cddf3fd03dbaa8762c239c0ad865371e4e9e0",
+      "new_sha256": "4bdc4490afcda15ca4e8a128e56cddf3fd03dbaa8762c239c0ad865371e4e9e0",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-033",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "920368ef9c3e6fec0f43d296b5e03fc920fa180aa5b73d9e7cd81fef386d2a40",
+      "new_sha256": "920368ef9c3e6fec0f43d296b5e03fc920fa180aa5b73d9e7cd81fef386d2a40",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-034",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "f09533165aba21351514a1abab848dae07ae13aca7dc8686b3b5c7f1f320be44",
+      "new_sha256": "f09533165aba21351514a1abab848dae07ae13aca7dc8686b3b5c7f1f320be44",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-035",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "887473025b30a3e47f247005a18b20079bfa1c6bb69ddba1bdd7109035beca86",
+      "new_sha256": "887473025b30a3e47f247005a18b20079bfa1c6bb69ddba1bdd7109035beca86",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-036",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "479cd8da67807333d955bfc37fb2fc3ded098ae6abea3bed485c4e2199ec4e60",
+      "new_sha256": "479cd8da67807333d955bfc37fb2fc3ded098ae6abea3bed485c4e2199ec4e60",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-037",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "5f207711926137e321f1303a4d38cfc718e8c97296cfcaf779b0604748915dc4",
+      "new_sha256": "5f207711926137e321f1303a4d38cfc718e8c97296cfcaf779b0604748915dc4",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-038",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "5fd75acf1dca508e2a6ad6c221246ac06f5042260a13b4cf0efac5b72381ce2d",
+      "new_sha256": "5fd75acf1dca508e2a6ad6c221246ac06f5042260a13b4cf0efac5b72381ce2d",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-039",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "dff1a19e14fe1434347d3fcd08b0cc2b90508ff7e57532949e78148e16b494cc",
+      "new_sha256": "dff1a19e14fe1434347d3fcd08b0cc2b90508ff7e57532949e78148e16b494cc",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cognitive_continuity-040",
+      "category": "cognitive_continuity",
+      "changed": false,
+      "old_sha256": "2fb8a83f14f4d18c6432b593e980fa14dd0586484f976ec1b9aec3c5d0de914a",
+      "new_sha256": "2fb8a83f14f4d18c6432b593e980fa14dd0586484f976ec1b9aec3c5d0de914a",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-001",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "612c820d957dfa04bce8107ed48650ea8500e65c2eafb643edf06400f9402ec9",
+      "new_sha256": "612c820d957dfa04bce8107ed48650ea8500e65c2eafb643edf06400f9402ec9",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-002",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "f2f675588c4214587d1398653bd510d1389f4e9c5b7a73eba04e4951e952683b",
+      "new_sha256": "f2f675588c4214587d1398653bd510d1389f4e9c5b7a73eba04e4951e952683b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-003",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "1782a38460634302fc90302433ddc9a90edb6febfc2419cf59a8003e3afca561",
+      "new_sha256": "1782a38460634302fc90302433ddc9a90edb6febfc2419cf59a8003e3afca561",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-004",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "5e88858f1ac145c94c6d60540de9109bb3b56323f45fb016b1c53edd3ab77f0f",
+      "new_sha256": "5e88858f1ac145c94c6d60540de9109bb3b56323f45fb016b1c53edd3ab77f0f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-005",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "0389aafc6690b7f2402542954287f70caa270f5b555e5b3981b7a508cd802aa6",
+      "new_sha256": "0389aafc6690b7f2402542954287f70caa270f5b555e5b3981b7a508cd802aa6",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-006",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "0769782765c7fb7f33ff2e25409a79a0bce59d8c29e48b3f3acf412b01785c90",
+      "new_sha256": "0769782765c7fb7f33ff2e25409a79a0bce59d8c29e48b3f3acf412b01785c90",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-007",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "ac747278e68b2ebac4701f840811954cf09be486baf2fa5be2259c8c626acb6f",
+      "new_sha256": "ac747278e68b2ebac4701f840811954cf09be486baf2fa5be2259c8c626acb6f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-008",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "aa23693a99987c0ae205773af9a4efc678125977aa6b2f2868a880ca6c9f6ca6",
+      "new_sha256": "aa23693a99987c0ae205773af9a4efc678125977aa6b2f2868a880ca6c9f6ca6",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-009",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "db307ed2272bb8d4ac8550ad89f26d6c6674c676eee7fb81d00bd26ad2b045ff",
+      "new_sha256": "db307ed2272bb8d4ac8550ad89f26d6c6674c676eee7fb81d00bd26ad2b045ff",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-010",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "227a50142fac470cbcba19cf72d520c4e8aceca207cccfb0e2aeccbac4aa75bd",
+      "new_sha256": "227a50142fac470cbcba19cf72d520c4e8aceca207cccfb0e2aeccbac4aa75bd",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-011",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "34424181791f762962b31bc7250008517e54de2f04dd2eee3fa22d3fbb685e8f",
+      "new_sha256": "34424181791f762962b31bc7250008517e54de2f04dd2eee3fa22d3fbb685e8f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-012",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "b337d013b5220efabbd8993f913d17ae9062c49216f57814047d8d3bdcf44499",
+      "new_sha256": "b337d013b5220efabbd8993f913d17ae9062c49216f57814047d8d3bdcf44499",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-013",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "0312a82993fe91a667479205fee035455d34bb9f1bf7dd3a3c190505bcbae809",
+      "new_sha256": "0312a82993fe91a667479205fee035455d34bb9f1bf7dd3a3c190505bcbae809",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-014",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "f0ebbe3eca8a2fe7e2e9acc9b0e955df36f2fc0c0c2079b308d5d93e52964172",
+      "new_sha256": "f0ebbe3eca8a2fe7e2e9acc9b0e955df36f2fc0c0c2079b308d5d93e52964172",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-015",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "c29031b632bd12637460917a2d9b19997822edb53110f8d8ccdfad945980b76b",
+      "new_sha256": "c29031b632bd12637460917a2d9b19997822edb53110f8d8ccdfad945980b76b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-016",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "a8a4b6e52637e31f3819dac21d77c9c4911c13d0b0c9205ead39276a1ef8d1da",
+      "new_sha256": "a8a4b6e52637e31f3819dac21d77c9c4911c13d0b0c9205ead39276a1ef8d1da",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-017",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "11ecfe4f87ac4d7faeaabd2fcc5e1cd989518811b973f4518c0f0d5ff2097bc2",
+      "new_sha256": "11ecfe4f87ac4d7faeaabd2fcc5e1cd989518811b973f4518c0f0d5ff2097bc2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-018",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "6b3029cc76eb3175e6a05bfa646a8641679cae04f01827d7e4d1ca88133e57d2",
+      "new_sha256": "6b3029cc76eb3175e6a05bfa646a8641679cae04f01827d7e4d1ca88133e57d2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-019",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "f92630e8ded92faabf26cd9b1c6851c506707e6c3d4f7e3975b8c7b9ebad21a2",
+      "new_sha256": "f92630e8ded92faabf26cd9b1c6851c506707e6c3d4f7e3975b8c7b9ebad21a2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-020",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "0cb4184f18b85b92a8b80e1c1dcf4f6c78855b3f5568babe447fba3abfe2992a",
+      "new_sha256": "0cb4184f18b85b92a8b80e1c1dcf4f6c78855b3f5568babe447fba3abfe2992a",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-021",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "67f1db4b16ab82d2e19e9d918ed5473fbe98f983a765021f852db2099b2f0f72",
+      "new_sha256": "67f1db4b16ab82d2e19e9d918ed5473fbe98f983a765021f852db2099b2f0f72",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-022",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "b279c973adbf4ae9803e1bfc450b6d10054f8ef5fd74e82821f6a93ef2c5b5d6",
+      "new_sha256": "b279c973adbf4ae9803e1bfc450b6d10054f8ef5fd74e82821f6a93ef2c5b5d6",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-023",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "4f9b93078398d02693f54a39f13915b440b2709a8665a88cc1570cddd9e84910",
+      "new_sha256": "4f9b93078398d02693f54a39f13915b440b2709a8665a88cc1570cddd9e84910",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-024",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "23ebab1b55e658cbfb118bf0a213a86723b29603b55f86e6885b00fc76d49716",
+      "new_sha256": "23ebab1b55e658cbfb118bf0a213a86723b29603b55f86e6885b00fc76d49716",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-025",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "237fbb796e8a488b77eda0760e9cd2d3d8511e6c283aa2c0d9c8b4d947316c70",
+      "new_sha256": "237fbb796e8a488b77eda0760e9cd2d3d8511e6c283aa2c0d9c8b4d947316c70",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-026",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "8f72f4a6bcaca8ee0275cb0a2e602930c5861b6053cd4ca4afe076bc5a73b515",
+      "new_sha256": "8f72f4a6bcaca8ee0275cb0a2e602930c5861b6053cd4ca4afe076bc5a73b515",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-027",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "07224995b81aa95ed56005a426176d9c66f0032cd60451a083ba65822d656d49",
+      "new_sha256": "07224995b81aa95ed56005a426176d9c66f0032cd60451a083ba65822d656d49",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-028",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "4e2d0265f59a0b73dab8af6b26c862bac214ed215212b045968a3ab86ec77e38",
+      "new_sha256": "4e2d0265f59a0b73dab8af6b26c862bac214ed215212b045968a3ab86ec77e38",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-029",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "1cdd33a07613ba97d5a7ba378d03ef5deee925872abaa7568eeffc29ab1254b0",
+      "new_sha256": "1cdd33a07613ba97d5a7ba378d03ef5deee925872abaa7568eeffc29ab1254b0",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-030",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "02dfd065d8705f16cf2f1f16500a9a262c7ab1c395a15f0c2966d6ef5cad3400",
+      "new_sha256": "02dfd065d8705f16cf2f1f16500a9a262c7ab1c395a15f0c2966d6ef5cad3400",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-031",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "3efc68d605e6bd6e7b46cd716fc0200c3f8cce2575e59d8e82b89a4719dff403",
+      "new_sha256": "3efc68d605e6bd6e7b46cd716fc0200c3f8cce2575e59d8e82b89a4719dff403",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-032",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "2740f26698784b26218c722ddda0328573bf982a622a5708734d3a7a905b09bc",
+      "new_sha256": "2740f26698784b26218c722ddda0328573bf982a622a5708734d3a7a905b09bc",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-033",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "b90e9a6e64e169f6860e0845a9be8d3e4a25184193d5d3af1702eb2d762ac6b1",
+      "new_sha256": "b90e9a6e64e169f6860e0845a9be8d3e4a25184193d5d3af1702eb2d762ac6b1",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-034",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "09fa8dc36e81f45013f8af411ad882c1e5a6a80b88c2ca94fbcb3f2ec327d6e5",
+      "new_sha256": "09fa8dc36e81f45013f8af411ad882c1e5a6a80b88c2ca94fbcb3f2ec327d6e5",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-035",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "b69dc45294b4b3683cfde6bfb9c40185c71fcc83ea46873b8129e760db512a19",
+      "new_sha256": "b69dc45294b4b3683cfde6bfb9c40185c71fcc83ea46873b8129e760db512a19",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-036",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "860ea7c3b027d7bd1e60c4e80cda6e57f2670df7d73395294835c122058cb8c8",
+      "new_sha256": "860ea7c3b027d7bd1e60c4e80cda6e57f2670df7d73395294835c122058cb8c8",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-037",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "d98b6c6e9f050b458d38d31ed3b9b81a9dd56e3048b652abdc4db4ab6b8e7964",
+      "new_sha256": "d98b6c6e9f050b458d38d31ed3b9b81a9dd56e3048b652abdc4db4ab6b8e7964",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-038",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "32666753615b0c13367723eddacba884dccb75e420db12f6eb081ea894e13e63",
+      "new_sha256": "32666753615b0c13367723eddacba884dccb75e420db12f6eb081ea894e13e63",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-039",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "b190f42aec348286e5b278278717d1749ee05c02671f0d7c9e7fc9870e5a756a",
+      "new_sha256": "b190f42aec348286e5b278278717d1749ee05c02671f0d7c9e7fc9870e5a756a",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-memory_evolution-040",
+      "category": "memory_evolution",
+      "changed": false,
+      "old_sha256": "ff16775c092e82c09fcc26c69053d8c7535541220ac3d17ecb5c9f274f0d388b",
+      "new_sha256": "ff16775c092e82c09fcc26c69053d8c7535541220ac3d17ecb5c9f274f0d388b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-001",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "8943a87f76ccf15066277c6b5b289aacbea28ed70f2a384d3665389a12c637a9",
+      "new_sha256": "8943a87f76ccf15066277c6b5b289aacbea28ed70f2a384d3665389a12c637a9",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-002",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "75f4c9c9d6321476bd5eaa7b63631f7739a9e7c20d02e8017d56feabefeb1265",
+      "new_sha256": "75f4c9c9d6321476bd5eaa7b63631f7739a9e7c20d02e8017d56feabefeb1265",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-003",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "0b620ef5c91826bf19f7448c3b6007e2f5d5b3caa41eb23bcdc96ae765a2e8b0",
+      "new_sha256": "0b620ef5c91826bf19f7448c3b6007e2f5d5b3caa41eb23bcdc96ae765a2e8b0",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-004",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "c85384276e965db85c8bf98a95e51e3e05aac6270650dd4ac464312ba133341b",
+      "new_sha256": "c85384276e965db85c8bf98a95e51e3e05aac6270650dd4ac464312ba133341b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-005",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "123bff9913c07df34685b9f6a9d1854662ddb8c6821957bc992302ac0e58b715",
+      "new_sha256": "123bff9913c07df34685b9f6a9d1854662ddb8c6821957bc992302ac0e58b715",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-006",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "999bacb99cbfc35f8d6d431e982dda4a245d50c22a9ce42f2a91d05cd1cc1959",
+      "new_sha256": "999bacb99cbfc35f8d6d431e982dda4a245d50c22a9ce42f2a91d05cd1cc1959",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-007",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "b7d1505c1d9612b5086d943f97732034e0967a15b2495a86691bfcee269722a5",
+      "new_sha256": "b7d1505c1d9612b5086d943f97732034e0967a15b2495a86691bfcee269722a5",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-008",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "0e9d095f9d7f680a631cf25a401df88aeced4086ddb2a579f0d588b17ab2f0d3",
+      "new_sha256": "0e9d095f9d7f680a631cf25a401df88aeced4086ddb2a579f0d588b17ab2f0d3",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-009",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "4a1f3cf7b5ab352f38e7d0414886a3373e90317c1230a0a40da795a166cf1ba6",
+      "new_sha256": "4a1f3cf7b5ab352f38e7d0414886a3373e90317c1230a0a40da795a166cf1ba6",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-010",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "c5c9befce216276f9a9e8ed3e1a11f80842bcea528bdc99a0139872c1bc86a92",
+      "new_sha256": "c5c9befce216276f9a9e8ed3e1a11f80842bcea528bdc99a0139872c1bc86a92",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-011",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "e4baab674c2936d0ca950974d39760bd977a8acb0094a473cd21039ce4a4a36f",
+      "new_sha256": "e4baab674c2936d0ca950974d39760bd977a8acb0094a473cd21039ce4a4a36f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-012",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "4e9cf8e506a4d5fa296788ab46c287d46247724b80b92b6fdf625e4a22b1dda9",
+      "new_sha256": "4e9cf8e506a4d5fa296788ab46c287d46247724b80b92b6fdf625e4a22b1dda9",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-013",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "17ddca2beaac9f636954f227d0a014284391c5efc8e6ab6202272fa5546cb317",
+      "new_sha256": "17ddca2beaac9f636954f227d0a014284391c5efc8e6ab6202272fa5546cb317",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-014",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "5c5e756f20f4a151d1d8790507474ac5b13e01842e43e5c11b1d234298db3046",
+      "new_sha256": "5c5e756f20f4a151d1d8790507474ac5b13e01842e43e5c11b1d234298db3046",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-015",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "1786b9af596815a41eb7670a3c57bb34c03056385decefc0c2c8cff46cbcb10f",
+      "new_sha256": "1786b9af596815a41eb7670a3c57bb34c03056385decefc0c2c8cff46cbcb10f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-016",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "a74a4727074a3f41c3893efa527926a03f153277cc7aa2db229129e30659feb6",
+      "new_sha256": "a74a4727074a3f41c3893efa527926a03f153277cc7aa2db229129e30659feb6",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-017",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "c4b9329cc5f00853447d53a3ab68403958f5d094121d48491de8c65ef9942326",
+      "new_sha256": "c4b9329cc5f00853447d53a3ab68403958f5d094121d48491de8c65ef9942326",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-018",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "73fbc7a7c26831f976de2b0141b43ca24abf75095404befc297eff72298f7808",
+      "new_sha256": "73fbc7a7c26831f976de2b0141b43ca24abf75095404befc297eff72298f7808",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-019",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "9e5845c7c7a96d7140d0ad8ab471a349da33adbf81bf897710ab28498cdbe99b",
+      "new_sha256": "9e5845c7c7a96d7140d0ad8ab471a349da33adbf81bf897710ab28498cdbe99b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-020",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "445c719c92290b99d3befa4ad94ee13bcf7d7b83b91cadc2725f95ad56c714f2",
+      "new_sha256": "445c719c92290b99d3befa4ad94ee13bcf7d7b83b91cadc2725f95ad56c714f2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-021",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "fff0d6f618fe5b6190c80bbcf6730e7f88665a74135125b7a39f92be01ea1da1",
+      "new_sha256": "fff0d6f618fe5b6190c80bbcf6730e7f88665a74135125b7a39f92be01ea1da1",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-022",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "9117a8ee4b685da976f2fc880e2fce01b421bca4f1bfa8a560984460e78e60f7",
+      "new_sha256": "9117a8ee4b685da976f2fc880e2fce01b421bca4f1bfa8a560984460e78e60f7",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-023",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "7a7e47605bfd739e981c11e4ebe31ddf63464eb08e1a628ce7d0ee9269ff0f76",
+      "new_sha256": "7a7e47605bfd739e981c11e4ebe31ddf63464eb08e1a628ce7d0ee9269ff0f76",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-024",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "e5b1cb0dc660b495e5717a24e35dd803fd15f7160120e270226d1bcef8ea4989",
+      "new_sha256": "e5b1cb0dc660b495e5717a24e35dd803fd15f7160120e270226d1bcef8ea4989",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-025",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "b6b91917097475b9177614142965069cf7399f212414b27b37445c71428e1f11",
+      "new_sha256": "b6b91917097475b9177614142965069cf7399f212414b27b37445c71428e1f11",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-026",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "1629ab55761ea4ae4b19047552a6e30694dcf06edc960750e285c4760a82255f",
+      "new_sha256": "1629ab55761ea4ae4b19047552a6e30694dcf06edc960750e285c4760a82255f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-027",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "200088d86e9ecacc9faa8eecdb22bbb9bcace39b4306d6a2a42c42b9db524374",
+      "new_sha256": "200088d86e9ecacc9faa8eecdb22bbb9bcace39b4306d6a2a42c42b9db524374",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-028",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "e39ac02a50cdd9d09b2ecbfd3c5dd84c389721e97cd2b2e1958b83a29cb36339",
+      "new_sha256": "e39ac02a50cdd9d09b2ecbfd3c5dd84c389721e97cd2b2e1958b83a29cb36339",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-029",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "73cf38d90e61b0b6d56686052c10c98d9ba5702a639b636c7faff714e6151302",
+      "new_sha256": "73cf38d90e61b0b6d56686052c10c98d9ba5702a639b636c7faff714e6151302",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-030",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "db7a62d4843cd0ff4f5249b74c94c60a950d0bbedd2641fc03ca2d2e874ff24f",
+      "new_sha256": "db7a62d4843cd0ff4f5249b74c94c60a950d0bbedd2641fc03ca2d2e874ff24f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-031",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "dadbba880e32526e194fd17c3a1ff5ec1b97eb396dc50c5172674552be366be0",
+      "new_sha256": "dadbba880e32526e194fd17c3a1ff5ec1b97eb396dc50c5172674552be366be0",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-032",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "2fb1a0469a6fb38f37c9b2b530dcfae679fb6ff197d83b6f7aff56d73846f582",
+      "new_sha256": "2fb1a0469a6fb38f37c9b2b530dcfae679fb6ff197d83b6f7aff56d73846f582",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-033",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "e69d663fe163a0f821c5f5c31542803db4140e84756408d4ae1ddbdadd5fd160",
+      "new_sha256": "e69d663fe163a0f821c5f5c31542803db4140e84756408d4ae1ddbdadd5fd160",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-034",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "a10dc8d61789a7823ebae645ac64a8a039c9855d3c3d82fbb8633736ff87c179",
+      "new_sha256": "a10dc8d61789a7823ebae645ac64a8a039c9855d3c3d82fbb8633736ff87c179",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-035",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "2628607ee1c52203f8189fc1dd10f9afbac058bfaa7a872f92b7250b9ffb2ac3",
+      "new_sha256": "2628607ee1c52203f8189fc1dd10f9afbac058bfaa7a872f92b7250b9ffb2ac3",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-036",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "9a3f3343b51bb9feffafdd5e6c23aeab35eefe65166ff579f78b315869d43fbe",
+      "new_sha256": "9a3f3343b51bb9feffafdd5e6c23aeab35eefe65166ff579f78b315869d43fbe",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-037",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "a80fb610c25fdc92126dd8c39cffbe097c0d0b6641bbe8d6db706fe2e70a32d7",
+      "new_sha256": "a80fb610c25fdc92126dd8c39cffbe097c0d0b6641bbe8d6db706fe2e70a32d7",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-038",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "526fca878113f59cc6e7ebe1666a830a1dca6c4a9707482fd6ea198bdfaf3e61",
+      "new_sha256": "526fca878113f59cc6e7ebe1666a830a1dca6c4a9707482fd6ea198bdfaf3e61",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-039",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "0efdcf04b38c57130429c739c2e8ceae9a4ec8a47a58ff9da100a9c55baf6b69",
+      "new_sha256": "0efdcf04b38c57130429c739c2e8ceae9a4ec8a47a58ff9da100a9c55baf6b69",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-conflict_resolution-040",
+      "category": "conflict_resolution",
+      "changed": false,
+      "old_sha256": "66df25e7bd3416263fa3098d2d2cec3b1ebe247ae900e9ae1b62500e603c9eac",
+      "new_sha256": "66df25e7bd3416263fa3098d2d2cec3b1ebe247ae900e9ae1b62500e603c9eac",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-001",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "5cce579cb77250f18a439be9d3bf202227977b6ebfdd4bb4bac4d7e372db8dfe",
+      "new_sha256": "83e216ff3354f955eea259836e23091c5c7fc4cc90ddbdf4b07dbc1c999e567b",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-002",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "2a59c73bf62a8688f1663d199741209685cba82569435e82cfd1672ed93e6427",
+      "new_sha256": "e965bb7c156e50e10aae258904dc253ba673fbd56f7c4cc5110492d036bb9c9c",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-003",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "6c7e3a16d79c1b9d2279e4c86c07f695b908ba902990e8bf49f9a345971bc65b",
+      "new_sha256": "56726494894048ea2a8f195c92ccb662b000fb87ee392d4af55e74e670774b46",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-004",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "8bf8426769129fc9e0c1e8e091bac5059a307b56c15d2167657fae14ec8eb09f",
+      "new_sha256": "56af537b9cfee9114aabf3afd2e5fce78e12c231e8fefdd3d522eaf6f2a90674",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-005",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "0b2f167beb0ace6ae67ea3287087c85bdeb99d4380fb6bf328c7d287f3d413c1",
+      "new_sha256": "bd108ed33a538cbb7508085d4a1318ec6d04cfb4ca48518a190132ca9d98e1e0",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-006",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "e57c79dee5f9bc1b204da17becfe4f490c2d42364e5e68d1bcf3c371fa37c27c",
+      "new_sha256": "8f43a2783f965b6ecc40506435ddc918f6d4fc6e1214ffe00bec27eaed3e797a",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-007",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "22045760f98cb5916c84a21ac6461fe30f3aa6a439a1bb657daf43be579fda61",
+      "new_sha256": "3c83fee238d8d790de8cfdd105009308d0b38bd8e80f30ddbe896162c6ee690b",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-008",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "94433e402636c744b64ed57ac8016b4744d7660ec2a219530529eb93a5a2a935",
+      "new_sha256": "b07d7e3ded30611031f3e51243c453ce7d2869e418fa46aca080b088815a5313",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-009",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "9b7d0be573902bb03c1753a0ec880bb177e3bac97e8653532d141c858e695716",
+      "new_sha256": "6a5583133350b87879388d2778d549902a14387407b6bf1b75b8d37de865545a",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type",
+        "gold.required_sources[2]"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-010",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "3da4977017f96d8212941fafd52871ed438ad32e06a681c8c9f4e936f1a9c7e8",
+      "new_sha256": "f7fa1dfec342e89cd738d0b6c41279d73639ae56f2157af8e0cac1122d9fefd0",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-011",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "cdd92019227a44da55881c86f244ae0ee10e4a0f1b497f3cd84bd4c4753a8f4b",
+      "new_sha256": "0480908c1d076e8dc93452a725774c1a5d2b7062e213462ab985b2981dd767f6",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-012",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "44cf43bc7b683038705a303cc22b61e77d0f4e702c0c3ffa5821837124693e20",
+      "new_sha256": "963d53dbf540d7e72e6ae83ce8223072e96b0a9271f1b6013648ffe7969fd36e",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-013",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "60a7a1c963fef77bae21f4365d31d823c2155209b8287e9e24e690fe28343a37",
+      "new_sha256": "322307cc370cdc1c8f36dfbee5b9e398cc55168be0c7ba997193b1bd64639408",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-014",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "b34ee17d26a8dbb58a4951d7412e7c053a3c85c4d89abd95e0a1d68448847ded",
+      "new_sha256": "ee5f27d5d717dd9a159f705097e73757f580147d44fce4a4b03a4661783db1a2",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-015",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "f6ae01063de74546c8d5392e13dd588a6c732a5445af23325e9235da9599753f",
+      "new_sha256": "da4b92b0ff83117abebe0b94059c642a2a989ff5915c11b7e40d73e2d28433aa",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-016",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "d4d1bafc8079ab7e2ec87ab5c18c73d5cc43798bdde463c5ab6eafad975f7eaf",
+      "new_sha256": "654eed3143a4be62abb8af25f1f5690097f8b182833fc42fc5b4af2e4f90b8a0",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-017",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "5289b30e0041ada52baa72a42b6195009a6e6d4e0349f28c1ba08a06d3feeb05",
+      "new_sha256": "b59e5abd049d8f0941cfd4d8cb47fff2cf4c396377653f1b27da86ac118ba5a2",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-018",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "681c8c6b9a66b07e14eb5e583f47c77a9e3cdac8594eb7ba5813300e337278f1",
+      "new_sha256": "4e0d1daa0d4fb146c4f3a738001b208f5ca277885fe1ab7cb2426cdb6a074b9c",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-019",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "94adfc9c726e08082bbbafaa252c250a52ab37582595696a50c40f628fc0bbff",
+      "new_sha256": "204186fe045463d4be43a0f3d14be2f30c1ccc3ecbbc0d817f6f3bc507ea3f1c",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-020",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "a322212e7a02ef07094e5a24b82525e64876a44f20a86466684bed172e554cc2",
+      "new_sha256": "207c669ca128141f9c5e9a9e586b368eeccfe366b7ff01428b24f8da4f3d3b83",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-021",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "fce5621b8b86275887ae46476d93a206b8e1d23c2c64ce49d205a041fb182a85",
+      "new_sha256": "02c9c50a58034f80ddb2cdd58c6f01a699660fc4f4ae519f6630d192aab8ebed",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-022",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "2b08dddf4c3ee11d7e21f367f2997e5de8e57acb0c94db2f54aeb0f87a002941",
+      "new_sha256": "914d38653cd154b587cdb4dfc31869caae33ec919843a4043940170b1577ce69",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-023",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "4b3167c54405820c017181a137fa03de5b093848534e6aa25ab0d728a42c6673",
+      "new_sha256": "f8430c99f80eb59dbe2e8c30de6c22611be8d4602602ac92678fc4825b36fa25",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-024",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "14c155b33bfc3e89abe377596f3b09fab9cd3a7ae3748dc14a256c07f36a4486",
+      "new_sha256": "18f35024a236e5a62408bea0d71a8e423b2858ed27c9bbd1c6052e178e0b8a78",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-025",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "86744b501ff2bdc2702ab3860c15fcfd6eaa3577034463faf1d6a2c47db2fd55",
+      "new_sha256": "aaea764dd397b9216e7b768949b1ff1f1dc278e5de4e40b8dc37c1e6ac1d44b4",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-026",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "a41c5e40befdfcbc112ef05d3c25d4e937b9450560fbb3946df0a0f13b5d56c6",
+      "new_sha256": "3d360a855c7a142960741f2f1d743260ba4f94e0e1e221b7936a8348120c9603",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-027",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "275705e5c762a7ea1fea322be8e664ca6ac415594d557baca8c4b520e4599307",
+      "new_sha256": "9819466785cc4c065bdea6d8306eecfd0319ab13583e8608570c6975cf3cca3e",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-028",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "ac7b74eaa72175b0c1007ab423552e8cb623183628085ae2fe2e4d5e8b44f3e3",
+      "new_sha256": "597de514b2b21abca0817e00ed8bc11f84ad00ad0b763991b73209cf8aa9c5df",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-029",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "9ecd528f62dfef4d1071b705f2e1668977aec2a8df780be48ca8b9e5a60d8503",
+      "new_sha256": "87a2890198dc2d49dc69c7b0f78bb447d0b6cbb422a96f2e7599763dcdf90e2b",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-030",
+      "category": "cross_agent_transfer",
+      "changed": true,
+      "old_sha256": "55d8cac03f5b53b586a180769c40ae1890a85170a41c33ad5a61dba9906eff0d",
+      "new_sha256": "1498be9192b05c7af7f823084f2b524ccb5b7621b155cbf4d9edf986289cfd85",
+      "changed_paths": [
+        "events[0].text",
+        "events[1].text",
+        "events[2].text",
+        "events[3].text",
+        "events[4].text",
+        "events[4].source_type"
+      ]
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-001",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "794b68874839adf124a9d0e8f2dc364ab4b4ed181436cffa7bf433f538d2c3ac",
+      "new_sha256": "794b68874839adf124a9d0e8f2dc364ab4b4ed181436cffa7bf433f538d2c3ac",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-002",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "88ba24b3b4f03eda21f14eda0a3fd3672f920f88025451d6e271a13647c8e6d0",
+      "new_sha256": "88ba24b3b4f03eda21f14eda0a3fd3672f920f88025451d6e271a13647c8e6d0",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-003",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "5dcdd3a08e2573184d747ac4b2bac592a0cc6fe27d3f303793bacadb2756bdfc",
+      "new_sha256": "5dcdd3a08e2573184d747ac4b2bac592a0cc6fe27d3f303793bacadb2756bdfc",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-004",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "cea5a0fcc67907e02b928eeafa4c68db4a1c1594bf8edf0a56e325f40addbbe8",
+      "new_sha256": "cea5a0fcc67907e02b928eeafa4c68db4a1c1594bf8edf0a56e325f40addbbe8",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-005",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "980787d0307e82e983fe4c8f88ea9f995909f378ac7e86bb4b0463f32ca69cd3",
+      "new_sha256": "980787d0307e82e983fe4c8f88ea9f995909f378ac7e86bb4b0463f32ca69cd3",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-006",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "dff58a109d63b070f02f7657582be219376f6ee4d5ae93a09ca575e4f11ca1c8",
+      "new_sha256": "dff58a109d63b070f02f7657582be219376f6ee4d5ae93a09ca575e4f11ca1c8",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-007",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "f4af932574b68a3b87679a037e14f05ae153d0e77c63fbf0ba6dcb7ccd4f96d2",
+      "new_sha256": "f4af932574b68a3b87679a037e14f05ae153d0e77c63fbf0ba6dcb7ccd4f96d2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-008",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "2bfe1d651991f12c4f52151ff4887a45f8c3299941dd036a7b9c0ff137c3da4c",
+      "new_sha256": "2bfe1d651991f12c4f52151ff4887a45f8c3299941dd036a7b9c0ff137c3da4c",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-009",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "988ad5f5cf4fc205007e8342374b0065d903e6e3fc541eb3f10ebc0bcc12adf2",
+      "new_sha256": "988ad5f5cf4fc205007e8342374b0065d903e6e3fc541eb3f10ebc0bcc12adf2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-010",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "4bffb7f977a6896368e7058c002b5ac36abe6fe68337afe4ab34b98d2eeb2285",
+      "new_sha256": "4bffb7f977a6896368e7058c002b5ac36abe6fe68337afe4ab34b98d2eeb2285",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-011",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "7aad8c88a854296d0d84247b3ed783b12c8cedf8fa76ab23aea54d27b221b26f",
+      "new_sha256": "7aad8c88a854296d0d84247b3ed783b12c8cedf8fa76ab23aea54d27b221b26f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-012",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "274a92decb82b33d7f561e2b1884b0958bdf7d995a2aa8ffafe5ec5d85e6483c",
+      "new_sha256": "274a92decb82b33d7f561e2b1884b0958bdf7d995a2aa8ffafe5ec5d85e6483c",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-013",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "5ecfce08c64f6eab83f0cd1ed3a3217f1d5c5d610d16a7331df7623faf36edcd",
+      "new_sha256": "5ecfce08c64f6eab83f0cd1ed3a3217f1d5c5d610d16a7331df7623faf36edcd",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-014",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "bfaa32ab1c8d7fd38536c787a1f755df7ebe0ad7b089fc868904bf6edacc6126",
+      "new_sha256": "bfaa32ab1c8d7fd38536c787a1f755df7ebe0ad7b089fc868904bf6edacc6126",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-015",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "8261a31b9fdc04eb977d4ad53f8ac0dd8237ee9f1b2b11b618e128cd5bf29276",
+      "new_sha256": "8261a31b9fdc04eb977d4ad53f8ac0dd8237ee9f1b2b11b618e128cd5bf29276",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-016",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "8cfdb74d2e760f11211c31723857267110d1be9697fe4b53770ec9e687f31461",
+      "new_sha256": "8cfdb74d2e760f11211c31723857267110d1be9697fe4b53770ec9e687f31461",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-017",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "f210996d7304da052a68957966bea17a969f7e2af349cdd8fc9c55059becd6db",
+      "new_sha256": "f210996d7304da052a68957966bea17a969f7e2af349cdd8fc9c55059becd6db",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-018",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "557d95acd48adf89ca0fd75855a93d088e2b03a4e8c4cbceecbbab778266e1e3",
+      "new_sha256": "557d95acd48adf89ca0fd75855a93d088e2b03a4e8c4cbceecbbab778266e1e3",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-019",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "abeb0a23cc18f36ba979eec8b639a00888f7cc084b1e5ffd25a148f889f44b7a",
+      "new_sha256": "abeb0a23cc18f36ba979eec8b639a00888f7cc084b1e5ffd25a148f889f44b7a",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-020",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "b4c421a3ca0ad7a5c63814232d77a0693f9631f550585d6ee888f0b0c6736529",
+      "new_sha256": "b4c421a3ca0ad7a5c63814232d77a0693f9631f550585d6ee888f0b0c6736529",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-021",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "7b5922d838e40d174cf1db3c45820821d68110c1aeabb653e05a9610a4348245",
+      "new_sha256": "7b5922d838e40d174cf1db3c45820821d68110c1aeabb653e05a9610a4348245",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-022",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "98b54f595678e288130501c9da2e21d6de7c0e1bd0c2f8957542ea907544aad2",
+      "new_sha256": "98b54f595678e288130501c9da2e21d6de7c0e1bd0c2f8957542ea907544aad2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-023",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "46d120cfcf62607286fdfd7658fd5121f880bab8e3c37b6605bfe4d7338646ea",
+      "new_sha256": "46d120cfcf62607286fdfd7658fd5121f880bab8e3c37b6605bfe4d7338646ea",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-024",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "9068a63ed7378e1b84542debff53347c3ffccbd8e0aaecf099309fe7ba9eb21b",
+      "new_sha256": "9068a63ed7378e1b84542debff53347c3ffccbd8e0aaecf099309fe7ba9eb21b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-025",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "605414e26f945446217ae943a1eb7b20354b676b88b0bdd942a479f920c57f5d",
+      "new_sha256": "605414e26f945446217ae943a1eb7b20354b676b88b0bdd942a479f920c57f5d",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-026",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "f19b2d281852d313e738143419254325c83572d99f54f24af46dc0f9209b8acb",
+      "new_sha256": "f19b2d281852d313e738143419254325c83572d99f54f24af46dc0f9209b8acb",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-027",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "cc7e59f96243c3e0a1a92b90751805c9043c9bd08a9ebf74de0ae2be599788d6",
+      "new_sha256": "cc7e59f96243c3e0a1a92b90751805c9043c9bd08a9ebf74de0ae2be599788d6",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-028",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "3d14564fa58347cff338f3d443e148b4147fee5b38b406ecb60263a1f013d106",
+      "new_sha256": "3d14564fa58347cff338f3d443e148b4147fee5b38b406ecb60263a1f013d106",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-029",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "06f3db43d27c21ad6687b1dd195e785c02059ec761177a81e2a58e97bc3439d1",
+      "new_sha256": "06f3db43d27c21ad6687b1dd195e785c02059ec761177a81e2a58e97bc3439d1",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-030",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "d495e114372282529235a7650db5229fa84f90379561488ab0c492a43eba8252",
+      "new_sha256": "d495e114372282529235a7650db5229fa84f90379561488ab0c492a43eba8252",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-031",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "179bcf4a4d52c7f601caff7c7ec608a8a6ad1fa475c4cc08f880ac7f8b5c2b5b",
+      "new_sha256": "179bcf4a4d52c7f601caff7c7ec608a8a6ad1fa475c4cc08f880ac7f8b5c2b5b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-032",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "3555079d616427da23a7651d8cab78a8d21dd6e343fade7c016e2aa6d4a6a572",
+      "new_sha256": "3555079d616427da23a7651d8cab78a8d21dd6e343fade7c016e2aa6d4a6a572",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-033",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "32ee662485614656c74f75a445014059eab218381e68143c5c71978c1c7c65a8",
+      "new_sha256": "32ee662485614656c74f75a445014059eab218381e68143c5c71978c1c7c65a8",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-034",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "f21de23f7c8fc283e7cc4dd1d3c38bd6c1e26c1f1fff6fa299b65f90873631d1",
+      "new_sha256": "f21de23f7c8fc283e7cc4dd1d3c38bd6c1e26c1f1fff6fa299b65f90873631d1",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-035",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "d1bae226489b0b1a46a1e297ee38a523d44d7417fd98740ebe4ac9f354f96e8b",
+      "new_sha256": "d1bae226489b0b1a46a1e297ee38a523d44d7417fd98740ebe4ac9f354f96e8b",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-036",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "82aad25fa9a1a2873554d26af057b4577024a8a4f82428dd46445071fbb92087",
+      "new_sha256": "82aad25fa9a1a2873554d26af057b4577024a8a4f82428dd46445071fbb92087",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-037",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "eecb94e3294480805279940f9452835c52be638cdfadb4223a7b376c130cbc18",
+      "new_sha256": "eecb94e3294480805279940f9452835c52be638cdfadb4223a7b376c130cbc18",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-038",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "bcc7a9cd50b13ef1b9baaab6b274f9b0c7eb6f3b0f8a5fd7845938126f18a8ce",
+      "new_sha256": "bcc7a9cd50b13ef1b9baaab6b274f9b0c7eb6f3b0f8a5fd7845938126f18a8ce",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-039",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "225ae6f3ac4fddf65f0b218489d5d8ac1dda634e776bb246efdbb82babf264b9",
+      "new_sha256": "225ae6f3ac4fddf65f0b218489d5d8ac1dda634e776bb246efdbb82babf264b9",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-human_like_forgetting-040",
+      "category": "human_like_forgetting",
+      "changed": false,
+      "old_sha256": "d793de6b1d0aeb3a5fe4a69410d0bcc7cb93550c60b5d167508c3a7e27aa3023",
+      "new_sha256": "d793de6b1d0aeb3a5fe4a69410d0bcc7cb93550c60b5d167508c3a7e27aa3023",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-001",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "63bca7a29ec9b8ac6e34e8facd7915686d956124454b69b0ed4f5de42abaefb5",
+      "new_sha256": "63bca7a29ec9b8ac6e34e8facd7915686d956124454b69b0ed4f5de42abaefb5",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-002",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "413fc26b93cbf5ceccaef67b970e9bb2c4c2253dea2bc3deec77f620a9451efe",
+      "new_sha256": "413fc26b93cbf5ceccaef67b970e9bb2c4c2253dea2bc3deec77f620a9451efe",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-003",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "49b6b87dcd5499e85153b400b9ed18fef3ebbef7a7f8ff51ded0f92874ce7411",
+      "new_sha256": "49b6b87dcd5499e85153b400b9ed18fef3ebbef7a7f8ff51ded0f92874ce7411",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-004",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "5bcd519c2f55144428c0dacac64d78a54a9dfdfd99b88c3989f1f821f54ad057",
+      "new_sha256": "5bcd519c2f55144428c0dacac64d78a54a9dfdfd99b88c3989f1f821f54ad057",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-005",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "dd752d724f9ed6d592ba4af7da0ef71907d462bcdfeefc55a0bdff34910536c2",
+      "new_sha256": "dd752d724f9ed6d592ba4af7da0ef71907d462bcdfeefc55a0bdff34910536c2",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-006",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "6e9a705894c1414fd15932bdada9de82ae83f6d8743be06aeb36875c1dc3a05a",
+      "new_sha256": "6e9a705894c1414fd15932bdada9de82ae83f6d8743be06aeb36875c1dc3a05a",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-007",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "f61f2ff49291f74cbb5e57cbf23e90028f95a829fddc9c552410512bdfaa8a0f",
+      "new_sha256": "f61f2ff49291f74cbb5e57cbf23e90028f95a829fddc9c552410512bdfaa8a0f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-008",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "d825e9414a497b55aac5f487c145d0c652ac7a08add5030e8a327357a4c9cdcf",
+      "new_sha256": "d825e9414a497b55aac5f487c145d0c652ac7a08add5030e8a327357a4c9cdcf",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-009",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "db988360aa19fdf4d44458d0da867f5d9f55351d6681d986900a20efc7001459",
+      "new_sha256": "db988360aa19fdf4d44458d0da867f5d9f55351d6681d986900a20efc7001459",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-010",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "2ba6ed8570e9822f4529b247e7b94c267d4200ed7b3697cce689f3fa02af88be",
+      "new_sha256": "2ba6ed8570e9822f4529b247e7b94c267d4200ed7b3697cce689f3fa02af88be",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-011",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "662cece7b5c5ec1a0318ac05f9f86af4d1eeb20f53c02aedf1247a89dc5814d5",
+      "new_sha256": "662cece7b5c5ec1a0318ac05f9f86af4d1eeb20f53c02aedf1247a89dc5814d5",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-012",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "c70d32afb45016c84521a68bad1b88758e9f4c978d2a791ffb2cc16f44adc20f",
+      "new_sha256": "c70d32afb45016c84521a68bad1b88758e9f4c978d2a791ffb2cc16f44adc20f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-013",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "b8782b4fb2a9ab52f8c34abefd19ce72c4ffcaca010cfcc8ca95edbf28baa98f",
+      "new_sha256": "b8782b4fb2a9ab52f8c34abefd19ce72c4ffcaca010cfcc8ca95edbf28baa98f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-014",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "7f00e0d2397abacb66f340391ba3f83e62ad554c8088849fd3caa3c077ed3a12",
+      "new_sha256": "7f00e0d2397abacb66f340391ba3f83e62ad554c8088849fd3caa3c077ed3a12",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-015",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "d1fe517818f6c778f5ebf37d72bb74f4a05e1c56287d54acdb93c9beabf22468",
+      "new_sha256": "d1fe517818f6c778f5ebf37d72bb74f4a05e1c56287d54acdb93c9beabf22468",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-016",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "998494e08b9aec3878c759b4880ca75a812b9bfa7b8389dc068b728d9ceafb19",
+      "new_sha256": "998494e08b9aec3878c759b4880ca75a812b9bfa7b8389dc068b728d9ceafb19",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-017",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "d346e352d9e704f1cb584d64006e27ce81a9eb958dcef098c3aaa6519bf7ac0c",
+      "new_sha256": "d346e352d9e704f1cb584d64006e27ce81a9eb958dcef098c3aaa6519bf7ac0c",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-018",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "48bc2d7e94c5b24fe2d8740b2e3c416c26d13d8bc588a2ae1905f009a6784a76",
+      "new_sha256": "48bc2d7e94c5b24fe2d8740b2e3c416c26d13d8bc588a2ae1905f009a6784a76",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-019",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "dbf28ade05398fc217d851b8f4e213f5f38186937d5b9a17ddf922b3eb93b3b4",
+      "new_sha256": "dbf28ade05398fc217d851b8f4e213f5f38186937d5b9a17ddf922b3eb93b3b4",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-020",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "4a28c93fc968a72eb788281cb71a094b13f4561f6338da8679990ed083904a37",
+      "new_sha256": "4a28c93fc968a72eb788281cb71a094b13f4561f6338da8679990ed083904a37",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-021",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "4199077c47c1a457021500933554a8e9be55969975d063a4fde67d742af1f0f9",
+      "new_sha256": "4199077c47c1a457021500933554a8e9be55969975d063a4fde67d742af1f0f9",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-022",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "40bad31ba7a339a7471eb07f049e35ce6f6d875298240482f52edef4144ed439",
+      "new_sha256": "40bad31ba7a339a7471eb07f049e35ce6f6d875298240482f52edef4144ed439",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-023",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "c45dd924bfd1b89bfc10a2d0358d857e61a1b0432bf93aa6be7c884e1c196ba9",
+      "new_sha256": "c45dd924bfd1b89bfc10a2d0358d857e61a1b0432bf93aa6be7c884e1c196ba9",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-024",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "69f0701b9ff3c9066f05f31788bc80389a2a02a9733173d1af589125de674836",
+      "new_sha256": "69f0701b9ff3c9066f05f31788bc80389a2a02a9733173d1af589125de674836",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-025",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "3c15afc5205b5f2dbeb38a804677884f8c75716303f44a3935c1509c36360b51",
+      "new_sha256": "3c15afc5205b5f2dbeb38a804677884f8c75716303f44a3935c1509c36360b51",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-026",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "166779691b0ed131e0c28d376c5e4a07819f94dd514ec5b696dc895083df710e",
+      "new_sha256": "166779691b0ed131e0c28d376c5e4a07819f94dd514ec5b696dc895083df710e",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-027",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "c987d17f645e477de8cfc6d6f8ae2eed71b6c522f2c71ec65e570a6f9d94185e",
+      "new_sha256": "c987d17f645e477de8cfc6d6f8ae2eed71b6c522f2c71ec65e570a6f9d94185e",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-028",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "acecc9061bd0ace178484d39649904ed8ea9feaa68b14443410e8187b41a3c54",
+      "new_sha256": "acecc9061bd0ace178484d39649904ed8ea9feaa68b14443410e8187b41a3c54",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-029",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "0dd4e6be8a896b43e082b5760bf81c1f523762f9d75d5695059f25651fdc3344",
+      "new_sha256": "0dd4e6be8a896b43e082b5760bf81c1f523762f9d75d5695059f25651fdc3344",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-proactive_insight-030",
+      "category": "proactive_insight",
+      "changed": false,
+      "old_sha256": "12526278aba54ce2ac4ba2da8a4ba5f52fb4e312e877c815b76edfb506fafe9f",
+      "new_sha256": "12526278aba54ce2ac4ba2da8a4ba5f52fb4e312e877c815b76edfb506fafe9f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-001",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "63329e2e38c7d49f6eb4a2f67c7714ecbc0cbdb304e3703a21df60e6d7d767ab",
+      "new_sha256": "63329e2e38c7d49f6eb4a2f67c7714ecbc0cbdb304e3703a21df60e6d7d767ab",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-002",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "781502d6d97b9d8437acb4feb784d021407576248ad05833e961b2e37f60d15f",
+      "new_sha256": "781502d6d97b9d8437acb4feb784d021407576248ad05833e961b2e37f60d15f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-003",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "88d42d0143fbbf3538de3d3ef592fbcd72251d5ade5af1424955c61f752cc673",
+      "new_sha256": "88d42d0143fbbf3538de3d3ef592fbcd72251d5ade5af1424955c61f752cc673",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-004",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "1573ff6c0f2e02a6b12a554d0f5b53264bf1c7db5e4be62f15a2782b81418291",
+      "new_sha256": "1573ff6c0f2e02a6b12a554d0f5b53264bf1c7db5e4be62f15a2782b81418291",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-005",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "a3f826452bd21db45ebd60afb6998ca7b0063552862401c219b9d7edcf5e764e",
+      "new_sha256": "a3f826452bd21db45ebd60afb6998ca7b0063552862401c219b9d7edcf5e764e",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-006",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "5b8996f902d486fb30020333f7037ee569988c73bdb93f7f1934f6254af36773",
+      "new_sha256": "5b8996f902d486fb30020333f7037ee569988c73bdb93f7f1934f6254af36773",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-007",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "82f55bff7758605cca8f15924576ffc291dce6990b7d61b860b7370aeee51e1e",
+      "new_sha256": "82f55bff7758605cca8f15924576ffc291dce6990b7d61b860b7370aeee51e1e",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-008",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "f8a0be1e1e712852a524a0c1babf8c7e8eb3812606b2f3a48a5a8a53cb7ab51a",
+      "new_sha256": "f8a0be1e1e712852a524a0c1babf8c7e8eb3812606b2f3a48a5a8a53cb7ab51a",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-009",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "db74b5554eff9634dc3f53b339fc33b8a27b00cb3fb2b1f4d06bc18fcb3b93d3",
+      "new_sha256": "db74b5554eff9634dc3f53b339fc33b8a27b00cb3fb2b1f4d06bc18fcb3b93d3",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-010",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "0421ea3efc1363df7c8b76712ce36186ee6be6cf95d0228cecda4b8de5378560",
+      "new_sha256": "0421ea3efc1363df7c8b76712ce36186ee6be6cf95d0228cecda4b8de5378560",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-011",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "6083424be46f112c3effc45c0b31297a79ff757156fa544d855f1061803a9ea8",
+      "new_sha256": "6083424be46f112c3effc45c0b31297a79ff757156fa544d855f1061803a9ea8",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-012",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "9fe974a8e0f810b8e7fca7b6356eb24665b912e763bb5ba8d408ee2f208cf224",
+      "new_sha256": "9fe974a8e0f810b8e7fca7b6356eb24665b912e763bb5ba8d408ee2f208cf224",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-013",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "11c857896b0d7ceb7e6c33b5c5aa4f437a6ec7dffa98e4d9c38cb5338e5365d4",
+      "new_sha256": "11c857896b0d7ceb7e6c33b5c5aa4f437a6ec7dffa98e4d9c38cb5338e5365d4",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-014",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "4503157fca3a3cf400a5ff1e7081f06ab7b892633ebf57e61e4f6cfaa8dcafef",
+      "new_sha256": "4503157fca3a3cf400a5ff1e7081f06ab7b892633ebf57e61e4f6cfaa8dcafef",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-015",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "2654155c18d95aba32719f32628c4f8204d09b90afc062248c93f18ef20faf17",
+      "new_sha256": "2654155c18d95aba32719f32628c4f8204d09b90afc062248c93f18ef20faf17",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-016",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "15c238e62723b80e168eaca0bf147a02b6afa6fb47e6b2bb7f6b65a8448bd79f",
+      "new_sha256": "15c238e62723b80e168eaca0bf147a02b6afa6fb47e6b2bb7f6b65a8448bd79f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-017",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "59d80f64a428bd6a55b2eb4836754f3d031e538fa8e06574080fce4a8474732f",
+      "new_sha256": "59d80f64a428bd6a55b2eb4836754f3d031e538fa8e06574080fce4a8474732f",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-018",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "53ad1c0d0dfd229f1a0407d62f3a8b286b3130e37c2e449c3d1548ccec2e7bf6",
+      "new_sha256": "53ad1c0d0dfd229f1a0407d62f3a8b286b3130e37c2e449c3d1548ccec2e7bf6",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-019",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "81b60a44a243b10c5a32af41e76b34e76986ccdd336dfd356b49c6aa05332df8",
+      "new_sha256": "81b60a44a243b10c5a32af41e76b34e76986ccdd336dfd356b49c6aa05332df8",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-020",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "e081af194604b6ecdd08b93e3e36e530a1a3d2847588fc035de0e07295343daa",
+      "new_sha256": "e081af194604b6ecdd08b93e3e36e530a1a3d2847588fc035de0e07295343daa",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-021",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "b2cc7ef36007af60ed92e9b71374ba7b610570ccfc4ad8a630809076bd2ac642",
+      "new_sha256": "b2cc7ef36007af60ed92e9b71374ba7b610570ccfc4ad8a630809076bd2ac642",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-022",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "709339ab60049208ac42179496368ac33fcc51d72633567b896e6982f0973b27",
+      "new_sha256": "709339ab60049208ac42179496368ac33fcc51d72633567b896e6982f0973b27",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-023",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "58deec1b495d94fe277498bee2b40c436749ae279fc78e284e5ec5ea588cff96",
+      "new_sha256": "58deec1b495d94fe277498bee2b40c436749ae279fc78e284e5ec5ea588cff96",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-024",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "79cd3729b13e81c5c68556b388df691f87207a4e6080790f06ae5cfe254a3f3e",
+      "new_sha256": "79cd3729b13e81c5c68556b388df691f87207a4e6080790f06ae5cfe254a3f3e",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-025",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "56faae2c2a608f79d9c6755b4e0840385e33282625118581e26329f97e37d70e",
+      "new_sha256": "56faae2c2a608f79d9c6755b4e0840385e33282625118581e26329f97e37d70e",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-026",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "22f31bcdb1b29c8150f8840501f45bc30bfc423b4d6a18eea76c5a4f7db6d6c8",
+      "new_sha256": "22f31bcdb1b29c8150f8840501f45bc30bfc423b4d6a18eea76c5a4f7db6d6c8",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-027",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "ca7707fe19ded9ab86539e2294b7366721e61f7c661cab2f06e71445f7b36347",
+      "new_sha256": "ca7707fe19ded9ab86539e2294b7366721e61f7c661cab2f06e71445f7b36347",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-028",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "a0d9b61129e86dd4fc6a280ab1b7e371e5928619972ae4d1d1ddc9e0b4d20069",
+      "new_sha256": "a0d9b61129e86dd4fc6a280ab1b7e371e5928619972ae4d1d1ddc9e0b4d20069",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-029",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "532964cebcbf38d74a5b27435c73722848312d500205f173a508483e498fa0cd",
+      "new_sha256": "532964cebcbf38d74a5b27435c73722848312d500205f173a508483e498fa0cd",
+      "changed_paths": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-decision_quality-030",
+      "category": "decision_quality",
+      "changed": false,
+      "old_sha256": "dfbc0793ce5d3ae97d498afafa0d4f2904c88f27394b9ed51d4745be76f886f2",
+      "new_sha256": "dfbc0793ce5d3ae97d498afafa0d4f2904c88f27394b9ed51d4745be76f886f2",
+      "changed_paths": []
+    }
+  ]
+}

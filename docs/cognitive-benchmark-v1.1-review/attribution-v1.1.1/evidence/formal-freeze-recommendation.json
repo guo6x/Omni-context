@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "COGNITIVE BENCHMARK V1.1 ATTRIBUTION REVIEW PASSED",
+  "recommendation": "ELIGIBLE_TO_ENTER_FORMAL_DATASET_FREEZE_REVIEW",
+  "passed": true,
+  "reasons": [
+    "Cross-Agent provenance invariants pass for Smoke, Development, and Formal Draft; Formal defects are 0.",
+    "Original Gold is systematically supported by structured Scenario Events.",
+    "Deterministic Scoring v3 recomputes exactly for all 35 Full Omni results.",
+    "All 20 Attribution Reviews completed under the 60-attempt budget.",
+    "No baseline or Gold leakage was found.",
+    "Product limitations are separated from benchmark defects."
+  ],
+  "formal_dataset": "DRAFT_NOT_FROZEN",
+  "formal_250_started": false,
+  "comparison_70_started": false,
+  "locomo_conversations_2_to_10_accessed": false,
+  "kimi_calls_this_review": 0,
+  "deepseek_answer_calls_this_review": 0,
+  "deepseek_extraction_calls_this_review": 0,
+  "deepseek_attribution_logical_calls": 20,
+  "deepseek_attribution_physical_attempts": 21,
+  "final_freeze_product_code_modified": false,
+  "tag_created_or_moved": false,
+  "unresolved_p0": [],
+  "unresolved_p1": [
+    "extraction_failure: 2/20 completed reviewed samples.",
+    "retrieval_failure: 6/20 completed reviewed samples.",
+    "memory_pipeline_unresolved: 8/20 completed reviewed samples.",
+    "Full Assertion/Reranker candidate rankings were not archived for 35/35 Development scenarios; attribution uses database, mcp_usage_log entity candidates, final context, and conservative unknown states.",
+    "Retrieval-Only scored above Full Omni in Development."
+  ]
+}

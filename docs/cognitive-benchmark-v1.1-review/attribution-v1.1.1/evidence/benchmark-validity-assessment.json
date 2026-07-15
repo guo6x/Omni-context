@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "gold_supported_scenarios": 35,
+  "dataset_defects": 0,
+  "deterministic_scoring_exact": 35,
+  "scoring_defects": 0,
+  "primary_judge_defects_in_review": 0,
+  "baseline_leakage": false,
+  "gold_leakage": false,
+  "development_modified_from_results": false,
+  "score_changes_recommended": 0,
+  "new_attribution_reviews_completed": 20,
+  "new_primary_attributions": {
+    "dataset_defect": 0,
+    "extraction_failure": 2,
+    "retrieval_failure": 6,
+    "memory_pipeline_unresolved": 8,
+    "answer_generation_failure": 0,
+    "answer_schema_failure": 0,
+    "scoring_defect": 0,
+    "primary_judge_defect": 0,
+    "secondary_review_defect": 0,
+    "baseline_design_effect": 0,
+    "product_limitation": 0,
+    "no_material_issue": 4
+  },
+  "cross_agent_invariant_audit": {
+    "status": "pass",
+    "mismatches": 0,
+    "formal_count": 30,
+    "formal_dataset_defects": 0
+  },
+  "non_cross_agent_hash_consistent": true,
+  "merged_results_complete": {
+    "full_omni": 35,
+    "no_memory": 21,
+    "retrieval_only": 21
+  },
+  "unresolved_p0": [],
+  "unresolved_p1": [
+    "extraction_failure: 2/20 completed reviewed samples.",
+    "retrieval_failure: 6/20 completed reviewed samples.",
+    "memory_pipeline_unresolved: 8/20 completed reviewed samples.",
+    "Full Assertion/Reranker candidate rankings were not archived for 35/35 Development scenarios; attribution uses database, mcp_usage_log entity candidates, final context, and conservative unknown states.",
+    "Retrieval-Only scored above Full Omni in Development."
+  ]
+}

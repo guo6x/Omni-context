@@ -12,15 +12,16 @@ const COGNITIVE_ROOT = path.resolve(HERE, '..');
 const REPO = path.resolve(COGNITIVE_ROOT, '..', '..');
 const REVIEW_ROOT = path.join(REPO, 'docs', 'cognitive-benchmark-v1.1-review');
 const SOURCE_EVIDENCE = path.join(REVIEW_ROOT, 'evidence');
-const ATTRIBUTION_ROOT = path.join(REVIEW_ROOT, 'attribution');
+const REPAIRED_RUN = process.argv.includes('--v1.1.1') || process.env.COGNITIVE_ATTRIBUTION_RUN === 'v1.1.1';
+const ATTRIBUTION_ROOT = path.join(REVIEW_ROOT, REPAIRED_RUN ? 'attribution-v1.1.1' : 'attribution');
 const EVIDENCE = path.join(ATTRIBUTION_ROOT, 'evidence');
-const DATASET = path.join(SOURCE_EVIDENCE, 'development-dataset-v2.jsonl');
-const FULL_RESULTS = path.join(SOURCE_EVIDENCE, 'development-full-omni-results-v2.1.jsonl');
-const NO_MEMORY_RESULTS = path.join(SOURCE_EVIDENCE, 'development-no-memory-results-v2.1.jsonl');
-const RETRIEVAL_RESULTS = path.join(SOURCE_EVIDENCE, 'development-retrieval-only-results-v2.1.jsonl');
+const DATASET = path.join(REPAIRED_RUN ? EVIDENCE : SOURCE_EVIDENCE, REPAIRED_RUN ? 'development-dataset-v2.1.1.jsonl' : 'development-dataset-v2.jsonl');
+const FULL_RESULTS = path.join(REPAIRED_RUN ? EVIDENCE : SOURCE_EVIDENCE, REPAIRED_RUN ? 'development-full-omni-results-v2.1.1.jsonl' : 'development-full-omni-results-v2.1.jsonl');
+const NO_MEMORY_RESULTS = path.join(REPAIRED_RUN ? EVIDENCE : SOURCE_EVIDENCE, REPAIRED_RUN ? 'development-no-memory-results-v2.1.1.jsonl' : 'development-no-memory-results-v2.1.jsonl');
+const RETRIEVAL_RESULTS = path.join(REPAIRED_RUN ? EVIDENCE : SOURCE_EVIDENCE, REPAIRED_RUN ? 'development-retrieval-only-results-v2.1.1.jsonl' : 'development-retrieval-only-results-v2.1.jsonl');
 const OLD_REVIEW = path.join(SOURCE_EVIDENCE, 'secondary-agent-review-v2.1.json');
 const CONFIG = path.join(COGNITIVE_ROOT, 'config', 'default.json');
-const PROMPT = path.join(COGNITIVE_ROOT, 'prompts', 'attribution-review-v1.txt');
+const PROMPT = path.join(COGNITIVE_ROOT, 'prompts', REPAIRED_RUN ? 'attribution-review-v1.1.txt' : 'attribution-review-v1.txt');
 const RUN_ARCHIVE = path.resolve(process.env.COGNITIVE_V11_ARCHIVE || 'D:/OmniContext-cognitive-v1.1');
 const TAXONOMY = Object.freeze([
   'dataset_defect', 'extraction_failure', 'retrieval_failure', 'memory_pipeline_unresolved',
@@ -31,7 +32,9 @@ const TAXONOMY = Object.freeze([
 const LOSS_STAGES = Object.freeze(['source', 'extraction', 'indexing', 'retrieval_candidate', 'reranking', 'final_context', 'answer', 'scoring', 'judge', 'none', 'unknown']);
 const MODES = Object.freeze(['full_omni', 'no_memory', 'retrieval_only']);
 const MAX_LOGICAL_CALLS = 20;
-const MAX_PHYSICAL_ATTEMPTS = 24;
+const MAX_PHYSICAL_ATTEMPTS = REPAIRED_RUN ? 60 : 24;
+const MAX_ATTEMPTS_PER_REVIEW = REPAIRED_RUN ? 3 : 2;
+const ATTRIBUTION_ADAPTER_VERSION = REPAIRED_RUN ? 'attribution-review-adapter-v1.1' : 'attribution-review-adapter-v1';
 
 export function normalize(value) {
   return String(value ?? '').toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
@@ -54,8 +57,8 @@ function exactKeys(value, keys, label) {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`${label} keys do not match schema`);
 }
 
-export function validateAttributionReview(value, expected = {}) {
-  const keys = ['scenario_id', 'mode', 'original_gold_valid', 'gold_support_confidence', 'primary_attribution', 'secondary_attributions', 'first_loss_stage', 'score_is_valid', 'score_should_change', 'suggested_score_change', 'old_review_was_correct', 'old_review_error_types', 'benchmark_validity_impact', 'confidence', 'evidence', 'notes'];
+export function validateAttributionModelReview(value, expected = {}) {
+  const keys = ['scenario_id', 'mode', 'original_gold_valid', 'gold_support_confidence', 'primary_attribution', 'secondary_attributions', 'first_loss_stage', 'score_is_valid', 'score_should_change', 'suggested_score_change', 'benchmark_validity_impact', 'confidence', 'evidence', 'notes'];
   exactKeys(value, keys, 'attribution review');
   if (typeof value.scenario_id !== 'string' || (expected.scenario_id && value.scenario_id !== expected.scenario_id)) throw new Error('scenario_id mismatch');
   if (!MODES.includes(value.mode) || (expected.mode && value.mode !== expected.mode)) throw new Error('mode mismatch');
@@ -64,11 +67,10 @@ export function validateAttributionReview(value, expected = {}) {
   if (!TAXONOMY.includes(value.primary_attribution)) throw new Error('primary_attribution invalid');
   if (!Array.isArray(value.secondary_attributions) || value.secondary_attributions.some((item) => !TAXONOMY.includes(item))) throw new Error('secondary_attributions invalid');
   if (!LOSS_STAGES.includes(value.first_loss_stage)) throw new Error('first_loss_stage invalid');
-  for (const key of ['score_is_valid', 'score_should_change', 'old_review_was_correct']) if (typeof value[key] !== 'boolean') throw new Error(`${key} must be boolean`);
+  for (const key of ['score_is_valid', 'score_should_change']) if (typeof value[key] !== 'boolean') throw new Error(`${key} must be boolean`);
   if (value.score_should_change && value.primary_attribution !== 'scoring_defect') throw new Error('score_should_change requires scoring_defect');
   if (!value.score_should_change && value.suggested_score_change !== null) throw new Error('suggested_score_change must be null without a score change');
   if (value.score_should_change && !Number.isFinite(value.suggested_score_change)) throw new Error('suggested_score_change must be numeric');
-  if (!Array.isArray(value.old_review_error_types) || value.old_review_error_types.some((item) => typeof item !== 'string')) throw new Error('old_review_error_types invalid');
   if (!['none', 'local', 'systemic'].includes(value.benchmark_validity_impact)) throw new Error('benchmark_validity_impact invalid');
   if (!Array.isArray(value.evidence) || value.evidence.length > 6) throw new Error('evidence must have at most 6 items');
   for (const item of value.evidence) {
@@ -76,6 +78,17 @@ export function validateAttributionReview(value, expected = {}) {
     if (typeof item.claim !== 'string' || !Array.isArray(item.supporting_ids) || item.supporting_ids.some((id) => typeof id !== 'string')) throw new Error('attribution evidence invalid');
   }
   if (typeof value.notes !== 'string' || [...value.notes].length > 500) throw new Error('notes must contain at most 500 Unicode characters');
+  return value;
+}
+
+export function validateAttributionReview(value, expected = {}) {
+  const modelKeys = ['scenario_id', 'mode', 'original_gold_valid', 'gold_support_confidence', 'primary_attribution', 'secondary_attributions', 'first_loss_stage', 'score_is_valid', 'score_should_change', 'suggested_score_change', 'benchmark_validity_impact', 'confidence', 'evidence', 'notes'];
+  const keys = [...modelKeys, 'old_review_was_correct', 'old_review_error_types', 'old_review_comparable'];
+  exactKeys(value, keys, 'compared attribution review');
+  validateAttributionModelReview(Object.fromEntries(modelKeys.map((key) => [key, value[key]])), expected);
+  if (typeof value.old_review_was_correct !== 'boolean') throw new Error('old_review_was_correct must be boolean');
+  if (typeof value.old_review_comparable !== 'boolean') throw new Error('old_review_comparable must be boolean');
+  if (!Array.isArray(value.old_review_error_types) || value.old_review_error_types.some((item) => typeof item !== 'string')) throw new Error('old_review_error_types invalid');
   return value;
 }
 
@@ -420,6 +433,8 @@ async function prepare() {
     reviewerInputs.push({
       scenario_id: item.scenario.scenario_id,
       mode: item.old.mode,
+      old_review_comparable: !(REPAIRED_RUN && item.scenario.category === 'cross_agent_transfer'),
+      dataset_changed_since_old_review: Boolean(REPAIRED_RUN && item.scenario.category === 'cross_agent_transfer'),
       original_scenario: item.scenario,
       question: item.scenario.question,
       gold: item.scenario.gold,
@@ -439,7 +454,7 @@ async function prepare() {
 }
 
 function emptyLedger() {
-  return { schema_version: 1, status: 'in_progress', provider: 'DeepSeek', model: 'deepseek-v4-flash', review_type: 'secondary_attribution_review_not_human', logical_call_limit: MAX_LOGICAL_CALLS, physical_attempt_limit: MAX_PHYSICAL_ATTEMPTS, logical_calls: 0, physical_attempts: 0, completed: 0, retries_recovered: 0, failures: 0, input_tokens: 0, output_tokens: 0, total_tokens: 0, cached_tokens: 0, attempts: [] };
+  return { schema_version: REPAIRED_RUN ? '1.1.1' : 1, status: 'in_progress', provider: 'DeepSeek', model: 'deepseek-v4-flash', adapter_version: ATTRIBUTION_ADAPTER_VERSION, review_type: 'secondary_attribution_review_not_human', logical_call_limit: MAX_LOGICAL_CALLS, max_attempts_per_review: MAX_ATTEMPTS_PER_REVIEW, physical_attempt_limit: MAX_PHYSICAL_ATTEMPTS, logical_calls: 0, physical_attempts: 0, completed: 0, retries_recovered: 0, failures: 0, input_tokens: 0, output_tokens: 0, total_tokens: 0, cached_tokens: 0, attempts: [] };
 }
 
 async function loadLedger(file) { return await exists(file) ? { ...emptyLedger(), ...await readJson(file) } : emptyLedger(); }
@@ -452,27 +467,28 @@ function cleanJson(raw) {
   throw new Error('malformed_json');
 }
 
-function normalizeAttributionProtocol(value) {
+export function normalizeAttributionProtocol(value) {
   const normalized = { ...value };
   const changes = [];
   const lossAliases = {
-    context: 'final_context', visible_context: 'final_context', final_visible_context: 'final_context',
-    retrieval: 'retrieval_candidate', candidate: 'retrieval_candidate', retrieval_candidates: 'retrieval_candidate',
-    index: 'indexing', generation: 'answer', answer_generation: 'answer', answer_schema: 'answer',
-    score: 'scoring', primary_judge: 'judge', not_applicable: 'none', n_a: 'none', unresolved: 'unknown',
+    retrieval: 'retrieval_candidate', final_visible_context: 'final_context',
   };
   if (!LOSS_STAGES.includes(normalized.first_loss_stage) && lossAliases[normalize(normalized.first_loss_stage).replaceAll(' ', '_')]) {
     const from = normalized.first_loss_stage;
     normalized.first_loss_stage = lossAliases[normalize(from).replaceAll(' ', '_')];
     changes.push({ field: 'first_loss_stage', from, to: normalized.first_loss_stage, reason: 'documented_enum_alias' });
   }
-  if (normalized.old_review_was_correct === null || normalized.old_review_was_correct === undefined) {
-    normalized.old_review_was_correct = false;
-    changes.push({ field: 'old_review_was_correct', from: null, to: false, reason: 'withheld_old_verdict_placeholder' });
+  for (const field of ['original_gold_valid', 'score_is_valid', 'score_should_change']) {
+    if (normalized[field] === 'true' || normalized[field] === 'false') {
+      const from = normalized[field];
+      normalized[field] = from === 'true';
+      changes.push({ field, from, to: normalized[field], reason: 'documented_boolean_string' });
+    }
   }
-  if (!Array.isArray(normalized.old_review_error_types)) {
-    normalized.old_review_error_types = ['pending_local_comparison'];
-    changes.push({ field: 'old_review_error_types', from: 'non_array', to: 'pending_local_comparison', reason: 'withheld_old_verdict_placeholder' });
+  if (normalize(normalized.benchmark_validity_impact) === 'no impact') {
+    const from = normalized.benchmark_validity_impact;
+    normalized.benchmark_validity_impact = 'none';
+    changes.push({ field: 'benchmark_validity_impact', from, to: 'none', reason: 'documented_enum_alias' });
   }
   return { normalized, changes };
 }
@@ -484,7 +500,7 @@ async function callDeepSeek({ input, prompt, config, ledger, ledgerFile, logical
   if (!apiUrl || !apiKey) throw new Error('DeepSeek provider environment is incomplete');
   if (model !== 'deepseek-v4-flash') throw new Error(`Attribution model must be deepseek-v4-flash, got ${model}`);
   let lastError;
-  for (let localAttempt = 1; localAttempt <= 2; localAttempt++) {
+  for (let localAttempt = 1; localAttempt <= MAX_ATTEMPTS_PER_REVIEW; localAttempt++) {
     if (ledger.physical_attempts >= MAX_PHYSICAL_ATTEMPTS) throw new Error(`PHYSICAL_ATTEMPT_LIMIT_REACHED:${ledger.physical_attempts}/${MAX_PHYSICAL_ATTEMPTS}`);
     const attempt = { physical_attempt: ledger.physical_attempts + 1, logical_call: logicalCallNumber, local_attempt: localAttempt, started_at: new Date().toISOString(), status: 'started' };
     ledger.physical_attempts++;
@@ -493,7 +509,7 @@ async function callDeepSeek({ input, prompt, config, ledger, ledgerFile, logical
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), config.request_timeout_ms);
     try {
-      const system = localAttempt === 1 ? prompt : `${prompt}\n\nYour previous output failed strict parsing or validation. Return one complete JSON object with exactly the required keys.`;
+      const system = localAttempt === 1 ? prompt : `${prompt}\n\nYour previous output failed strict parsing or validation: ${String(lastError?.message || 'unknown validation error').slice(0, 400)}. Correct only the schema violation; do not change the evidence judgment. Return one complete JSON object with exactly the required keys.`;
       const response = await fetch(`${apiUrl.replace(/\/+$/, '')}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
@@ -504,14 +520,14 @@ async function callDeepSeek({ input, prompt, config, ledger, ledgerFile, logical
       const body = await response.json();
       const raw = body.choices?.[0]?.message?.content;
       const protocol = normalizeAttributionProtocol(cleanJson(raw));
-      const structured = validateAttributionReview(protocol.normalized, input);
+      const structured = validateAttributionModelReview(protocol.normalized, input);
       const usage = body.usage || {};
       const normalizedUsage = { input_tokens: usage.prompt_tokens || 0, output_tokens: usage.completion_tokens || 0, total_tokens: usage.total_tokens || 0, cached_tokens: usage.prompt_cache_hit_tokens || usage.cached_tokens || 0 };
       for (const key of Object.keys(normalizedUsage)) ledger[key] += normalizedUsage[key];
       Object.assign(attempt, { status: 'completed', completed_at: new Date().toISOString(), usage: normalizedUsage });
       if (localAttempt > 1) ledger.retries_recovered++;
       await writeJson(ledgerFile, ledger);
-      return { structured, raw_response: raw, model, usage: normalizedUsage, physical_attempts: localAttempt, schema_normalizations: protocol.changes, reviewed_at: new Date().toISOString() };
+      return { structured, raw_response: raw, model, adapter_version: ATTRIBUTION_ADAPTER_VERSION, usage: normalizedUsage, physical_attempts: localAttempt, schema_normalizations: protocol.changes, reviewed_at: new Date().toISOString() };
     } catch (error) {
       lastError = error;
       Object.assign(attempt, { status: 'failed', completed_at: new Date().toISOString(), error_type: error.name, error_summary: String(error.message).slice(0, 240) });
@@ -528,11 +544,12 @@ async function review() {
   if (prepared.count !== 20 || prepared.inputs.length !== 20 || !prepared.old_verdict_excluded) throw new Error('Reviewer input gate mismatch');
   const outputFile = path.join(EVIDENCE, 'secondary-attribution-review.json');
   const ledgerFile = path.join(EVIDENCE, 'attribution-usage.json');
-  const output = await exists(outputFile) ? await readJson(outputFile) : { schema_version: 1, status: 'in_progress', review_type: 'secondary_attribution_review_not_human', model: 'deepseek-v4-flash', human_review_completed: false, count: 0, reviews: [] };
+  const output = await exists(outputFile) ? await readJson(outputFile) : { schema_version: REPAIRED_RUN ? '1.1.1' : 1, status: 'in_progress', adapter_version: ATTRIBUTION_ADAPTER_VERSION, review_type: 'secondary_attribution_review_not_human', model: 'deepseek-v4-flash', human_review_completed: false, count: 0, reviews: [] };
   const ledger = await loadLedger(ledgerFile);
   const completedKeys = new Set(output.reviews.map((row) => `${row.scenario_id}:${row.mode}`));
   const oldByKey = new Map(oldReview.reviews.map((row) => [`${row.scenario_id}:${row.mode}`, row]));
-  const compareOld = (fresh, old) => {
+  const compareOld = (fresh, old, comparable) => {
+    if (!comparable) return { old_review_was_correct: false, old_review_error_types: ['not_comparable_dataset_changed'], old_review_comparable: false };
     const errors = [];
     const flags = old?.agent_review || {};
     if (flags.gold_ambiguity && fresh.original_gold_valid) errors.push('gold_ambiguity_confused_with_pipeline_or_answer_loss');
@@ -542,7 +559,7 @@ async function review() {
     if (flags.judge_reliability_issue && fresh.primary_attribution !== 'primary_judge_defect' && !fresh.secondary_attributions.includes('primary_judge_defect')) errors.push('judge_reliability_issue_not_supported');
     if (flags.verdict === 'agree' && fresh.primary_attribution !== 'no_material_issue') errors.push('old_review_missed_material_issue');
     if (flags.verdict === 'flag' && fresh.primary_attribution === 'no_material_issue' && fresh.secondary_attributions.length === 0) errors.push('old_review_false_positive_flag');
-    return { old_review_was_correct: errors.length === 0, old_review_error_types: errors };
+    return { old_review_was_correct: errors.length === 0, old_review_error_types: errors, old_review_comparable: true };
   };
   for (const input of prepared.inputs) {
     const key = `${input.scenario_id}:${input.mode}`;
@@ -554,9 +571,9 @@ async function review() {
     await writeJson(ledgerFile, ledger);
     const logicalCallNumber = output.reviews.length + 1;
     const response = await callDeepSeek({ input, prompt, config, ledger, ledgerFile, logicalCallNumber });
-    Object.assign(response.structured, compareOld(response.structured, oldByKey.get(key)));
+    Object.assign(response.structured, compareOld(response.structured, oldByKey.get(key), input.old_review_comparable !== false));
     validateAttributionReview(response.structured, input);
-    output.reviews.push({ schema_version: 1, scenario_id: input.scenario_id, mode: input.mode, attribution_review: response.structured, raw_response: response.raw_response, model: response.model, usage: response.usage, physical_attempts: response.physical_attempts, schema_normalizations: response.schema_normalizations, human_review: false, reviewed_at: response.reviewed_at });
+    output.reviews.push({ schema_version: REPAIRED_RUN ? '1.1.1' : 1, scenario_id: input.scenario_id, mode: input.mode, attribution_review: response.structured, raw_response: response.raw_response, model: response.model, adapter_version: response.adapter_version, usage: response.usage, physical_attempts: response.physical_attempts, schema_normalizations: response.schema_normalizations, human_review: false, reviewed_at: response.reviewed_at });
     output.count = output.reviews.length;
     await writeJson(outputFile, output);
   }
@@ -574,19 +591,24 @@ async function finalize() {
   const [scenarios, full, noMemory, retrieval, oldReview, newReview, sourceAudit, traces, firstLoss, usage] = await Promise.all([
     readJsonl(DATASET), readJsonl(FULL_RESULTS), readJsonl(NO_MEMORY_RESULTS), readJsonl(RETRIEVAL_RESULTS), readJson(OLD_REVIEW), readJson(path.join(EVIDENCE, 'secondary-attribution-review.json')), readJson(path.join(EVIDENCE, 'source-gold-support-audit.json')), readJson(path.join(EVIDENCE, 'memory-pipeline-trace.json')), readJson(path.join(EVIDENCE, 'first-loss-stage-summary.json')), readJson(path.join(EVIDENCE, 'attribution-usage.json')),
   ]);
+  const repairEvidence = REPAIRED_RUN ? {
+    invariant: await readJson(path.join(EVIDENCE, 'cross-agent-invariant-audit.json')),
+    diff: await readJson(path.join(EVIDENCE, 'dataset-scenario-diff.json')),
+    provenance: await readJson(path.join(EVIDENCE, 'result-provenance-manifest-v2.1.1.json')),
+  } : null;
   if (newReview.count < 1) throw new Error('No completed Attribution Review is available');
   if (newReview.count < 20) {
-    newReview.status = 'partial_stopped_by_physical_call_budget_projection';
-    usage.status = 'stopped_by_physical_call_budget_projection';
+    newReview.status = 'partial';
+    usage.status = 'partial';
     usage.completed = newReview.count;
-    usage.stop_reason = `${MAX_PHYSICAL_ATTEMPTS - usage.physical_attempts} physical attempts remain for ${20 - newReview.count} incomplete samples; completion would exceed the ${MAX_PHYSICAL_ATTEMPTS}-attempt cap.`;
+    usage.stop_reason = usage.physical_attempts >= MAX_PHYSICAL_ATTEMPTS ? `Physical attempt limit reached: ${usage.physical_attempts}/${MAX_PHYSICAL_ATTEMPTS}.` : `Review incomplete: ${newReview.count}/20.`;
     await Promise.all([writeJson(path.join(EVIDENCE, 'secondary-attribution-review.json'), newReview), writeJson(path.join(EVIDENCE, 'attribution-usage.json'), usage)]);
   }
   const oldByKey = new Map(oldReview.reviews.map((row) => [`${row.scenario_id}:${row.mode}`, row]));
   const comparisonRows = newReview.reviews.map((row) => {
     const old = oldByKey.get(`${row.scenario_id}:${row.mode}`);
     if (!old) throw new Error(`Old review sample mismatch: ${row.scenario_id}:${row.mode}`);
-    return { scenario_id: row.scenario_id, mode: row.mode, old_flags: Object.fromEntries(Object.entries(old.agent_review).filter(([key, value]) => key.endsWith('_issue') || key === 'gold_ambiguity').map(([key, value]) => [key, value])), old_verdict: old.agent_review.verdict, new_primary_attribution: row.attribution_review.primary_attribution, new_secondary_attributions: row.attribution_review.secondary_attributions, old_review_was_correct: row.attribution_review.old_review_was_correct, old_review_error_types: row.attribution_review.old_review_error_types, score_should_change: row.attribution_review.score_should_change, confidence: row.attribution_review.confidence };
+    return { scenario_id: row.scenario_id, mode: row.mode, old_review_comparable: row.attribution_review.old_review_comparable, old_flags: Object.fromEntries(Object.entries(old.agent_review).filter(([key, value]) => key.endsWith('_issue') || key === 'gold_ambiguity').map(([key, value]) => [key, value])), old_verdict: old.agent_review.verdict, new_primary_attribution: row.attribution_review.primary_attribution, new_secondary_attributions: row.attribution_review.secondary_attributions, old_review_was_correct: row.attribution_review.old_review_was_correct, old_review_error_types: row.attribution_review.old_review_error_types, score_should_change: row.attribution_review.score_should_change, confidence: row.attribution_review.confidence };
   });
   const oldFlagKeys = ['score_issue', 'gold_ambiguity', 'baseline_fairness_issue', 'memory_leakage_issue', 'judge_reliability_issue', 'provenance_issue', 'invalidated_fact_rejection_issue', 'temporal_transition_issue'];
   const oldFlags = Object.fromEntries(oldFlagKeys.map((key) => [key, oldReview.reviews.filter((row) => row.agent_review[key]).length]));
@@ -595,10 +617,12 @@ async function finalize() {
     schema_version: 1, status: 'completed', count: comparisonRows.length,
     old_flags: oldFlags,
     new_primary_attributions: attributionCounts,
-    old_gold_ambiguity_reclassified: comparisonRows.filter((row) => row.old_flags.gold_ambiguity).map((row) => ({ scenario_id: row.scenario_id, mode: row.mode, new_primary_attribution: row.new_primary_attribution })),
-    old_score_issue_final_attribution: Object.fromEntries(TAXONOMY.map((category) => [category, comparisonRows.filter((row) => row.old_flags.score_issue && row.new_primary_attribution === category).length])),
-    secondary_review_defect_count: comparisonRows.filter((row) => !row.old_review_was_correct || row.new_primary_attribution === 'secondary_review_defect' || row.new_secondary_attributions.includes('secondary_review_defect')).length,
-    reviewer_agreement_rate: round(ratio(comparisonRows.filter((row) => row.old_review_was_correct).length, comparisonRows.length)),
+    old_review_comparable_count: comparisonRows.filter((row) => row.old_review_comparable).length,
+    old_review_non_comparable_count: comparisonRows.filter((row) => !row.old_review_comparable).length,
+    old_gold_ambiguity_reclassified: comparisonRows.filter((row) => row.old_review_comparable && row.old_flags.gold_ambiguity).map((row) => ({ scenario_id: row.scenario_id, mode: row.mode, new_primary_attribution: row.new_primary_attribution })),
+    old_score_issue_final_attribution: Object.fromEntries(TAXONOMY.map((category) => [category, comparisonRows.filter((row) => row.old_review_comparable && row.old_flags.score_issue && row.new_primary_attribution === category).length])),
+    secondary_review_defect_count: comparisonRows.filter((row) => row.old_review_comparable && (!row.old_review_was_correct || row.new_primary_attribution === 'secondary_review_defect' || row.new_secondary_attributions.includes('secondary_review_defect'))).length,
+    reviewer_agreement_rate: round(ratio(comparisonRows.filter((row) => row.old_review_comparable && row.old_review_was_correct).length, comparisonRows.filter((row) => row.old_review_comparable).length)),
     low_confidence_count: comparisonRows.filter((row) => row.confidence < 0.7).length,
     rows: comparisonRows,
   };
@@ -643,6 +667,12 @@ async function finalize() {
   if (judgeDefects.length >= 4) unresolvedP0.push(`Systemic primary judge defects in reviewed sample: ${judgeDefects.length}/20.`);
   if (baseline.baseline_leakage) unresolvedP0.push('Baseline or No-Memory evidence leakage detected.');
   if (systemicReviews.length >= 4) unresolvedP0.push(`Systemic validity impact identified by attribution reviewer: ${systemicReviews.length}/20.`);
+  if (repairEvidence) {
+    if (repairEvidence.invariant.status !== 'pass' || repairEvidence.invariant.mismatches !== 0 || repairEvidence.invariant.formal_dataset_defects !== 0) unresolvedP0.push('Cross-Agent provenance invariant audit did not pass for the regenerated datasets.');
+    if (repairEvidence.diff.status !== 'pass' || !repairEvidence.diff.non_cross_agent_hash_consistent || repairEvidence.diff.changed_non_cross_agent_scenarios !== 0) unresolvedP0.push('Non-Cross-Agent Scenario Hash consistency failed during v2.1.1 regeneration.');
+    if (repairEvidence.provenance.status !== 'pass' || !repairEvidence.provenance.scenario_hash_verified_before_reuse) unresolvedP0.push('Result Provenance Manifest failed the Scenario Hash reuse gate.');
+    if (completeFull.length !== 35 || completeNoMemory.length !== 21 || completeRetrieval.length !== 21) unresolvedP0.push(`Merged Development results incomplete: full=${completeFull.length}/35, no_memory=${completeNoMemory.length}/21, retrieval_only=${completeRetrieval.length}/21.`);
+  }
   const unresolvedP1 = [];
   for (const category of ['extraction_failure', 'retrieval_failure', 'memory_pipeline_unresolved', 'answer_generation_failure', 'answer_schema_failure', 'primary_judge_defect', 'baseline_design_effect', 'product_limitation']) if (attributionCounts[category]) unresolvedP1.push(`${category}: ${attributionCounts[category]}/${newReview.count} completed reviewed samples.`);
   if (archiveGaps.length) unresolvedP1.push(`Full Assertion/Reranker candidate rankings were not archived for ${archiveGaps.length}/35 Development scenarios; attribution uses database, mcp_usage_log entity candidates, final context, and conservative unknown states.`);
@@ -660,6 +690,9 @@ async function finalize() {
     score_changes_recommended: scoreChanges.length,
     new_attribution_reviews_completed: newReview.count,
     new_primary_attributions: attributionCounts,
+    cross_agent_invariant_audit: repairEvidence ? { status: repairEvidence.invariant.status, mismatches: repairEvidence.invariant.mismatches, formal_count: repairEvidence.invariant.formal_count, formal_dataset_defects: repairEvidence.invariant.formal_dataset_defects } : null,
+    non_cross_agent_hash_consistent: repairEvidence?.diff.non_cross_agent_hash_consistent ?? null,
+    merged_results_complete: { full_omni: completeFull.length, no_memory: completeNoMemory.length, retrieval_only: completeRetrieval.length },
     unresolved_p0: unresolvedP0,
     unresolved_p1: unresolvedP1,
   };
@@ -670,14 +703,14 @@ async function finalize() {
     status: passed ? 'COGNITIVE BENCHMARK V1.1 ATTRIBUTION REVIEW PASSED' : 'COGNITIVE BENCHMARK V1.1 ATTRIBUTION REVIEW FAILED',
     recommendation: passed ? 'ELIGIBLE_TO_ENTER_FORMAL_DATASET_FREEZE_REVIEW' : 'BLOCK_FORMAL_DATASET_FREEZE',
     passed,
-    reasons: passed ? ['Original Gold is systematically supported by structured Scenario Events.', 'Deterministic Scoring v3 recomputes exactly for all 35 Full Omni results.', 'No baseline or Gold leakage was found.', 'Product limitations are separated from benchmark defects.'] : unresolvedP0,
+    reasons: passed ? ['Cross-Agent provenance invariants pass for Smoke, Development, and Formal Draft; Formal defects are 0.', 'Original Gold is systematically supported by structured Scenario Events.', 'Deterministic Scoring v3 recomputes exactly for all 35 Full Omni results.', 'All 20 Attribution Reviews completed under the 60-attempt budget.', 'No baseline or Gold leakage was found.', 'Product limitations are separated from benchmark defects.'] : unresolvedP0,
     formal_dataset: 'DRAFT_NOT_FROZEN', formal_250_started: false, comparison_70_started: false, locomo_conversations_2_to_10_accessed: false, kimi_calls_this_review: 0, deepseek_answer_calls_this_review: 0, deepseek_extraction_calls_this_review: 0, deepseek_attribution_logical_calls: usage.logical_calls, deepseek_attribution_physical_attempts: usage.physical_attempts, final_freeze_product_code_modified: false, tag_created_or_moved: false,
     unresolved_p0: unresolvedP0,
     unresolved_p1: unresolvedP1,
   };
   await writeJson(path.join(EVIDENCE, 'formal-freeze-recommendation.json'), recommendation);
   const manifest = {
-    schema_version: 1, status: newReview.count === 20 ? 'completed' : 'partial_stopped_by_call_budget_projection', benchmark: 'Omni-Context Cognitive Benchmark v1.1', review_type: 'final_attribution_review_before_formal_freeze', branch: 'codex/omni-cognitive-benchmark-v1.1-pre-run-hardening', starting_head: '9ade18f47018846110d573b00a34eea56e33cefa', source_dataset_sha256: sha256(await readFile(DATASET)), source_full_results_sha256: sha256(await readFile(FULL_RESULTS)), source_secondary_review_sha256: sha256(await readFile(OLD_REVIEW)), full_omni_static_audits: 35, old_secondary_review_samples: 20, new_attribution_reviews: newReview.count, attribution_model: 'deepseek-v4-flash', review_independent: false, human_review_completed: false, calls: { kimi: 0, deepseek_answer: 0, deepseek_extraction: 0, deepseek_attribution_logical: usage.logical_calls, deepseek_attribution_physical: usage.physical_attempts }, call_budget_stop_reason: usage.stop_reason || null, archive_root: 'D:/OmniContext-cognitive-v1.1', formal_dataset_frozen: false, formal_250_run: false, comparison_70_run: false, locomo_conversations_2_to_10_accessed: false,
+    schema_version: REPAIRED_RUN ? '1.1.1' : 1, status: newReview.count === 20 ? 'completed' : 'partial', benchmark: 'Omni-Context Cognitive Benchmark v1.1', review_type: 'final_attribution_review_before_formal_freeze', adapter_version: ATTRIBUTION_ADAPTER_VERSION, branch: 'codex/omni-cognitive-benchmark-v1.1-pre-run-hardening', starting_head: REPAIRED_RUN ? 'efc9494c8675ee8462ebab613e96591282ccb265' : '9ade18f47018846110d573b00a34eea56e33cefa', source_dataset_sha256: sha256(await readFile(DATASET)), source_full_results_sha256: sha256(await readFile(FULL_RESULTS)), source_secondary_review_sha256: sha256(await readFile(OLD_REVIEW)), full_omni_static_audits: 35, old_secondary_review_samples: 20, new_attribution_reviews: newReview.count, attribution_model: 'deepseek-v4-flash', review_independent_from_old_verdict: true, old_review_verdict_excluded_from_model_input: true, secondary_review_provider_independent: false, human_review_completed: false, calls: { kimi: 0, deepseek_answer: 0, deepseek_extraction: 0, deepseek_attribution_logical: usage.logical_calls, deepseek_attribution_physical: usage.physical_attempts }, call_budget_stop_reason: usage.stop_reason || null, archive_root: 'D:/OmniContext-cognitive-v1.1', formal_dataset_frozen: false, formal_250_run: false, comparison_70_run: false, locomo_conversations_2_to_10_accessed: false,
   };
   await writeJson(path.join(EVIDENCE, 'attribution-run-manifest.json'), manifest);
   console.log(JSON.stringify({ status: recommendation.status, gold_supported: validity.gold_supported_scenarios, attributions: attributionCounts, score_changes: validity.score_changes_recommended, unresolved_p0: unresolvedP0.length, unresolved_p1: unresolvedP1.length }));

@@ -1,0 +1,312 @@
+{
+  "schema_version": "1.1.1",
+  "status": "completed",
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "adapter_version": "attribution-review-adapter-v1.1",
+  "review_type": "secondary_attribution_review_not_human",
+  "logical_call_limit": 20,
+  "max_attempts_per_review": 3,
+  "physical_attempt_limit": 60,
+  "logical_calls": 20,
+  "physical_attempts": 21,
+  "completed": 20,
+  "retries_recovered": 1,
+  "failures": 0,
+  "input_tokens": 141930,
+  "output_tokens": 11106,
+  "total_tokens": 153036,
+  "cached_tokens": 6912,
+  "attempts": [
+    {
+      "physical_attempt": 1,
+      "logical_call": 1,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:58:43.832Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:58:50.335Z",
+      "usage": {
+        "input_tokens": 8065,
+        "output_tokens": 819,
+        "total_tokens": 8884,
+        "cached_tokens": 0
+      }
+    },
+    {
+      "physical_attempt": 2,
+      "logical_call": 2,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:58:50.355Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:58:54.766Z",
+      "usage": {
+        "input_tokens": 6291,
+        "output_tokens": 562,
+        "total_tokens": 6853,
+        "cached_tokens": 0
+      }
+    },
+    {
+      "physical_attempt": 3,
+      "logical_call": 3,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:58:54.804Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:58:59.929Z",
+      "usage": {
+        "input_tokens": 7864,
+        "output_tokens": 647,
+        "total_tokens": 8511,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 4,
+      "logical_call": 4,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:58:59.937Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:03.540Z",
+      "usage": {
+        "input_tokens": 6172,
+        "output_tokens": 431,
+        "total_tokens": 6603,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 5,
+      "logical_call": 5,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:03.552Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:07.833Z",
+      "usage": {
+        "input_tokens": 6941,
+        "output_tokens": 520,
+        "total_tokens": 7461,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 6,
+      "logical_call": 6,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:07.893Z",
+      "status": "failed",
+      "completed_at": "2026-07-15T01:59:13.433Z",
+      "error_type": "Error",
+      "error_summary": "notes must contain at most 500 Unicode characters"
+    },
+    {
+      "physical_attempt": 7,
+      "logical_call": 6,
+      "local_attempt": 2,
+      "started_at": "2026-07-15T01:59:13.435Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:18.896Z",
+      "usage": {
+        "input_tokens": 10721,
+        "output_tokens": 758,
+        "total_tokens": 11479,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 8,
+      "logical_call": 7,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:18.927Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:22.446Z",
+      "usage": {
+        "input_tokens": 7092,
+        "output_tokens": 447,
+        "total_tokens": 7539,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 9,
+      "logical_call": 8,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:22.486Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:26.007Z",
+      "usage": {
+        "input_tokens": 8031,
+        "output_tokens": 436,
+        "total_tokens": 8467,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 10,
+      "logical_call": 9,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:26.015Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:30.474Z",
+      "usage": {
+        "input_tokens": 7735,
+        "output_tokens": 532,
+        "total_tokens": 8267,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 11,
+      "logical_call": 10,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:30.525Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:35.626Z",
+      "usage": {
+        "input_tokens": 9325,
+        "output_tokens": 607,
+        "total_tokens": 9932,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 12,
+      "logical_call": 11,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:35.648Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:39.999Z",
+      "usage": {
+        "input_tokens": 8803,
+        "output_tokens": 635,
+        "total_tokens": 9438,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 13,
+      "logical_call": 12,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:40.024Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:43.659Z",
+      "usage": {
+        "input_tokens": 7905,
+        "output_tokens": 474,
+        "total_tokens": 8379,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 14,
+      "logical_call": 13,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:43.768Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:48.123Z",
+      "usage": {
+        "input_tokens": 7490,
+        "output_tokens": 587,
+        "total_tokens": 8077,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 15,
+      "logical_call": 14,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:48.148Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:51.966Z",
+      "usage": {
+        "input_tokens": 6326,
+        "output_tokens": 540,
+        "total_tokens": 6866,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 16,
+      "logical_call": 15,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:52.009Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:55.682Z",
+      "usage": {
+        "input_tokens": 6098,
+        "output_tokens": 496,
+        "total_tokens": 6594,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 17,
+      "logical_call": 16,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:55.708Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T01:59:59.144Z",
+      "usage": {
+        "input_tokens": 3897,
+        "output_tokens": 425,
+        "total_tokens": 4322,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 18,
+      "logical_call": 17,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T01:59:59.191Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T02:00:03.485Z",
+      "usage": {
+        "input_tokens": 6145,
+        "output_tokens": 529,
+        "total_tokens": 6674,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 19,
+      "logical_call": 18,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T02:00:03.508Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T02:00:08.092Z",
+      "usage": {
+        "input_tokens": 6742,
+        "output_tokens": 518,
+        "total_tokens": 7260,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 20,
+      "logical_call": 19,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T02:00:08.109Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T02:00:12.839Z",
+      "usage": {
+        "input_tokens": 5122,
+        "output_tokens": 613,
+        "total_tokens": 5735,
+        "cached_tokens": 384
+      }
+    },
+    {
+      "physical_attempt": 21,
+      "logical_call": 20,
+      "local_attempt": 1,
+      "started_at": "2026-07-15T02:00:12.878Z",
+      "status": "completed",
+      "completed_at": "2026-07-15T02:00:17.287Z",
+      "usage": {
+        "input_tokens": 5165,
+        "output_tokens": 530,
+        "total_tokens": 5695,
+        "cached_tokens": 384
+      }
+    }
+  ]
+}

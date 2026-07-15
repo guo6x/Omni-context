@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.1.1",
+  "status": "completed",
+  "benchmark": "Omni-Context Cognitive Benchmark v1.1",
+  "review_type": "final_attribution_review_before_formal_freeze",
+  "adapter_version": "attribution-review-adapter-v1.1",
+  "branch": "codex/omni-cognitive-benchmark-v1.1-pre-run-hardening",
+  "starting_head": "efc9494c8675ee8462ebab613e96591282ccb265",
+  "source_dataset_sha256": "8e41a861523f3ab4e9fb683dde08d352dd76cd61c44bef9b67e41ea8e118042c",
+  "source_full_results_sha256": "4c40c6a3e5528dd6c468958733fafd92807b290fe460f5c285dba6da06bfbb9f",
+  "source_secondary_review_sha256": "2262faeaa1d63abf82821bee01d9a7d35eb88d48ff959caa7debd2bc1621b4dc",
+  "full_omni_static_audits": 35,
+  "old_secondary_review_samples": 20,
+  "new_attribution_reviews": 20,
+  "attribution_model": "deepseek-v4-flash",
+  "review_independent_from_old_verdict": true,
+  "old_review_verdict_excluded_from_model_input": true,
+  "secondary_review_provider_independent": false,
+  "human_review_completed": false,
+  "calls": {
+    "kimi": 0,
+    "deepseek_answer": 0,
+    "deepseek_extraction": 0,
+    "deepseek_attribution_logical": 20,
+    "deepseek_attribution_physical": 21
+  },
+  "call_budget_stop_reason": null,
+  "archive_root": "D:/OmniContext-cognitive-v1.1",
+  "formal_dataset_frozen": false,
+  "formal_250_run": false,
+  "comparison_70_run": false,
+  "locomo_conversations_2_to_10_accessed": false
+}

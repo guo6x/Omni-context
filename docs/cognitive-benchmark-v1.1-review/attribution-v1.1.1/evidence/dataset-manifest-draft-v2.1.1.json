@@ -1,0 +1,33 @@
+{
+  "schema_version": "2.1.1",
+  "status": "DRAFT_NOT_FROZEN",
+  "generated_without_development_score_tuning": true,
+  "smoke": {
+    "count": 21,
+    "status": "CALIBRATION_ONLY"
+  },
+  "development": {
+    "count": 35,
+    "status": "DEVELOPMENT_ONLY"
+  },
+  "formal": {
+    "count": 250,
+    "status": "DRAFT_NOT_FROZEN",
+    "by_category": {
+      "cognitive_continuity": 40,
+      "memory_evolution": 40,
+      "conflict_resolution": 40,
+      "cross_agent_transfer": 30,
+      "human_like_forgetting": 40,
+      "proactive_insight": 30,
+      "decision_quality": 30
+    }
+  },
+  "comparison": {
+    "count": 70,
+    "status": "DRAFT_NOT_RUN"
+  },
+  "formal_250_run": false,
+  "comparison_70_run": false,
+  "locomo_2_to_10_accessed": false
+}
