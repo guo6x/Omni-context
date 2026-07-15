@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-memory_evolution-003",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 1200,
+  "finish_reason": "stop",
+  "prompt_tokens": 2540,
+  "completion_tokens": 534,
+  "total_tokens": 3074,
+  "response_content_characters": 1514,
+  "raw_response_content": "{\n  \"answer\": \"At checkpoint-3, Harper's current project phase is 'project phase revised 2-3'. Earlier states that are historical include 'project phase revised 2-1' and 'project phase revised 2-2'. During cycle 3, the transition from 'project phase revised 2-2' to 'project phase revised 2-3' occurred.\",\n  \"facts\": [\n    {\n      \"key\": \"Harper project phase\",\n      \"value\": \"project phase revised 2-3\",\n      \"state\": \"current\",\n      \"source_ids\": [\"848f1dda-0187-4fc1-8d14-e5348ed645e4\", \"relationship:edbf2955-676c-4dde-8f06-ca1d3764e802\"],\n      \"source_agents\": [\"Harper\"]\n    },\n    {\n      \"key\": \"Harper project phase\",\n      \"value\": \"project phase revised 2-1\",\n      \"state\": \"historical\",\n      \"source_ids\": [\"13e63a8f-e75f-4fe3-9a6f-82fa34657f76\", \"relationship:4f86455d-4ad6-450a-8e78-575dc44a84e8\"],\n      \"source_agents\": [\"Harper\"]\n    },\n    {\n      \"key\": \"Harper project phase\",\n      \"value\": \"project phase revised 2-2\",\n      \"state\": \"historical\",\n      \"source_ids\": [\"e9b6466e-2219-4ccd-ae33-03193f2cdc47\", \"relationship:45760cea-73a9-405d-903e-4dbacea6c17a\"],\n      \"source_agents\": [\"Harper\"]\n    }\n  ],\n  \"transitions\": [\n    {\n      \"key\": \"Harper project phase\",\n      \"from_value\": \"project phase revised 2-2\",\n      \"to_value\": \"project phase revised 2-3\",\n      \"source_ids\": [\"848f1dda-0187-4fc1-8d14-e5348ed645e4\", \"e9b6466e-2219-4ccd-ae33-03193f2cdc47\"]\n    }\n  ],\n  \"constraints_used\": [],\n  \"rejected_facts\": [],\n  \"insights\": [],\n  \"actions\": [],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T17:20:04.723Z"
+}

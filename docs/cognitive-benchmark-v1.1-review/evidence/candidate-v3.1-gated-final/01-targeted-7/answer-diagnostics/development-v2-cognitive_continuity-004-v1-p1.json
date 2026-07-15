@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-cognitive_continuity-004",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 1200,
+  "finish_reason": "stop",
+  "prompt_tokens": 2313,
+  "completion_tokens": 682,
+  "total_tokens": 2995,
+  "response_content_characters": 2295,
+  "raw_response_content": "{\n  \"answer\": \"Given Jordan's stable goal to lead an asynchronous research group, a budget of 611 dollars for planning cycle 4, and the confirmed support notes 4-8 and 4-9 for checkpoint-4, the next bounded step is to allocate the budget to acquire tools or resources that facilitate asynchronous collaboration (e.g., project management software, communication platforms) and to finalize the collaboration plan support notes for checkpoint-4.\",\n  \"facts\": [\n    {\n      \"key\": \"Jordan's budget for planning cycle 4\",\n      \"value\": \"611 dollars\",\n      \"state\": \"current\",\n      \"source_ids\": [\"05eae27b-4cb2-4712-8001-b4e5eb6716fb\", \"relationship:4564ae75-89d8-4a2a-9ed3-2b227c8536ea\", \"relationship:32bdb208-8774-42ae-b6bc-d4891a397cf1\", \"0d80e699-f69c-4dd6-80c1-4eae84676dec\"],\n      \"source_agents\": [\"budget 611 dollars\", \"Jordan\"]\n    },\n    {\n      \"key\": \"Jordan's long-term collaboration plan goal\",\n      \"value\": \"lead an asynchronous research group\",\n      \"state\": \"current\",\n      \"source_ids\": [\"10c1de67-a2aa-488f-84fb-90d5cc8dd157\"],\n      \"source_agents\": [\"Jordan\"]\n    },\n    {\n      \"key\": \"Jordan confirms collaboration plan support note 4-8 for checkpoint-4\",\n      \"value\": \"true\",\n      \"state\": \"current\",\n      \"source_ids\": [\"bb77d474-b569-4792-87c7-b46a4bb675e2\", \"relationship:2801b3bc-7578-42e4-b583-546e2dac33b1\"],\n      \"source_agents\": [\"Jordan\"]\n    },\n    {\n      \"key\": \"Jordan confirms collaboration plan support note 4-9 for checkpoint-4\",\n      \"value\": \"true\",\n      \"state\": \"current\",\n      \"source_ids\": [\"d96ab3a7-21f4-428c-b656-2d89dfd7eab6\", \"relationship:ef8ba9c1-ef93-47d8-b2d2-5ce72b31c541\"],\n      \"source_agents\": [\"Jordan\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"stable goal\", \"budget\", \"time\", \"preference\", \"boundary\"],\n  \"rejected_facts\": [],\n  \"insights\": [\"The budget of 611 dollars is available for planning cycle 4.\", \"The goal is to lead an asynchronous research group, which requires tools for asynchronous communication and collaboration.\", \"Support notes 4-8 and 4-9 are confirmed for checkpoint-4, indicating progress in the collaboration plan.\"],\n  \"actions\": [\"Allocate budget to acquire asynchronous collaboration tools.\", \"Finalize collaboration plan support notes for checkpoint-4.\"],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T17:17:04.288Z"
+}

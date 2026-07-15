@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "split": "development",
+  "updated_at": "2026-07-15T17:32:44.679Z",
+  "completed_keys": [
+    "development-v2-cognitive_continuity-004:full_omni",
+    "development-v2-memory_evolution-003:full_omni",
+    "development-v2-conflict_resolution-004:full_omni",
+    "development-v2-cross_agent_transfer-004:full_omni",
+    "development-v2-human_like_forgetting-002:full_omni",
+    "development-v2-proactive_insight-003:full_omni",
+    "development-v2-decision_quality-004:full_omni"
+  ],
+  "error_keys": []
+}

@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-cross_agent_transfer-004",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 1200,
+  "finish_reason": "stop",
+  "prompt_tokens": 2336,
+  "completion_tokens": 944,
+  "total_tokens": 3280,
+  "response_content_characters": 2555,
+  "raw_response_content": "{\n  \"answer\": \"Morgan's budget limit is associated with support notes 4-8, 4-9, 4-10, and 4-11 for checkpoint-4. The latest checkpoint-4 status is from note 4-11 (2025-02-04). No preference is mentioned. Incorrect reports: none identified; all notes are consistent.\",\n  \"facts\": [\n    {\n      \"key\": \"budget_limit_support_note\",\n      \"value\": \"4-8\",\n      \"state\": \"current\",\n      \"source_ids\": [\"4bbcf008-b480-4b14-a9d9-17c60085b43f\", \"53b57b67-f904-4111-99d0-e404efa4ab2a\", \"relationship:9e4713ca-0741-44a3-b0d9-2a56e3ab156f\"],\n      \"source_agents\": [\"Morgan\", \"Note4-8\"]\n    },\n    {\n      \"key\": \"budget_limit_support_note\",\n      \"value\": \"4-9\",\n      \"state\": \"current\",\n      \"source_ids\": [\"7d3facb5-7854-4716-a3e8-d3b0785242d9\", \"relationship:1e86a8da-a25f-4370-be08-c7fd08846433\"],\n      \"source_agents\": [\"Morgan\", \"Note4-9\"]\n    },\n    {\n      \"key\": \"budget_limit_support_note\",\n      \"value\": \"4-10\",\n      \"state\": \"current\",\n      \"source_ids\": [\"a1b10ec8-a5b8-4f18-929e-9f9728bd9157\", \"relationship:245c26a1-fd6b-446c-8117-5e251e1c930e\"],\n      \"source_agents\": [\"Morgan\"]\n    },\n    {\n      \"key\": \"budget_limit_support_note\",\n      \"value\": \"4-11\",\n      \"state\": \"current\",\n      \"source_ids\": [\"54e49d4a-ff8e-4f34-94f7-1db4388cbb47\", \"relationship:c1f46d9c-e879-49dd-a2e0-8b4c473c55f8\", \"relationship:067b6c5e-6a93-424d-a23a-f1ba1eb5749d\"],\n      \"source_agents\": [\"Morgan\", \"budget limit support note 4-11\"]\n    },\n    {\n      \"key\": \"checkpoint\",\n      \"value\": \"4\",\n      \"state\": \"current\",\n      \"source_ids\": [\"54e49d4a-ff8e-4f34-94f7-1db4388cbb47\", \"a1b10ec8-a5b8-4f18-929e-9f9728bd9157\", \"7d3facb5-7854-4716-a3e8-d3b0785242d9\", \"4bbcf008-b480-4b14-a9d9-17c60085b43f\"],\n      \"source_agents\": [\"Morgan\"]\n    },\n    {\n      \"key\": \"latest_checkpoint_status\",\n      \"value\": \"confirmed via note 4-11\",\n      \"state\": \"current\",\n      \"source_ids\": [\"54e49d4a-ff8e-4f34-94f7-1db4388cbb47\", \"relationship:c1f46d9c-e879-49dd-a2e0-8b4c473c55f8\", \"relationship:067b6c5e-6a93-424d-a23a-f1ba1eb5749d\"],\n      \"source_agents\": [\"Morgan\", \"budget limit support note 4-11\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"Must cite exact source IDs and agents from memory context\", \"Must isolate incorrect reports\"],\n  \"insights\": [\"All memory entries are consistent; no incorrect reports found\", \"No preference information is present in memory\"],\n  \"actions\": [\"Summarized budget limit support notes and latest checkpoint status\"],\n  \"uncertainty\": \"No preference information available; all notes are current and consistent.\"\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T17:24:45.479Z"
+}

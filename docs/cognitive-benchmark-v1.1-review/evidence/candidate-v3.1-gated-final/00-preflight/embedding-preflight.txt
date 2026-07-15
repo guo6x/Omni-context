@@ -1,0 +1,35 @@
+Embedding Preflight Result
+==========================
+Date: 2026-07-15
+
+Environment:
+  EMBEDDING_LOCAL_MODEL_PATH=D:\OmniContext-models-v3.2
+  Model: Xenova/multilingual-e5-large
+  Model path: D:\OmniContext-models-v3.2\Xenova\multilingual-e5-large\onnx\model_quantized.onnx
+
+After rebuildEmbeddings():
+  status: local
+  mode: local
+  model: Xenova/multilingual-e5-large
+  dimensions: 1024
+  actualDimension: 1024
+  modelSha256Verified: true
+  zeroVectors: 0
+  nanVectors: 0
+  indexHealthy: true
+  available: true
+  healthy: true
+  serializationVersion: entity-passage-v2+assertion-passage-v1
+  indexManifests: 2
+
+Verdict: PASS
+  - status=local ✓
+  - healthy=true ✓
+  - dimension=1024 ✓
+  - model_sha256_verified=true ✓
+  - indexHealthy=true ✓
+  - available=true ✓
+  - zeroVectors=0 ✓
+  - nanVectors=0 ✓
+
+Note: serializationVersion is entity-passage-v2+assertion-passage-v1 (code-defined in profiles.ts at benchmark commit d0ef95c). The benchmark runner calls rebuildEmbeddings() before preflight() during scenario execution, which creates index manifests and makes healthy=true.

@@ -1,0 +1,352 @@
+TAP version 13
+# Subtest: normalization and semantic phrase matching preserve structured values
+ok 1 - normalization and semantic phrase matching preserve structured values
+  ---
+  duration_ms: 2.1055
+  type: 'test'
+  ...
+# Subtest: model Attribution schema excludes locally derived old-review comparison fields
+ok 2 - model Attribution schema excludes locally derived old-review comparison fields
+  ---
+  duration_ms: 2.1033
+  type: 'test'
+  ...
+# Subtest: strict Attribution Review schema rejects extra keys and invalid score changes
+ok 3 - strict Attribution Review schema rejects extra keys and invalid score changes
+  ---
+  duration_ms: 0.3391
+  type: 'test'
+  ...
+# Subtest: strict Attribution Review schema enforces evidence and notes limits
+ok 4 - strict Attribution Review schema enforces evidence and notes limits
+  ---
+  duration_ms: 0.3642
+  type: 'test'
+  ...
+# Subtest: Attribution adapter normalizes only documented unambiguous forms
+ok 5 - Attribution adapter normalizes only documented unambiguous forms
+  ---
+  duration_ms: 0.5485
+  type: 'test'
+  ...
+# Subtest: completed result selection excludes retries and errors
+ok 6 - completed result selection excludes retries and errors
+  ---
+  duration_ms: 0.2307
+  type: 'test'
+  ...
+# Subtest: all 35 Development Gold records are supported by original events, with field/text defects separated
+ok 7 - all 35 Development Gold records are supported by original events, with field/text defects separated
+  ---
+  duration_ms: 102.7968
+  type: 'test'
+  ...
+# Subtest: Deterministic Scoring v3 executes for all 35 archived rows; baseline invalidation is detected after Gold/scoring fix
+ok 8 - Deterministic Scoring v3 executes for all 35 archived rows; baseline invalidation is detected after Gold/scoring fix
+  ---
+  duration_ms: 15.6171
+  type: 'test'
+  ...
+# Subtest: v2.1.1 evidence changes only Cross-Agent scenarios and passes Formal invariants
+ok 9 - v2.1.1 evidence changes only Cross-Agent scenarios and passes Formal invariants
+  ---
+  duration_ms: 14.8904
+  type: 'test'
+  ...
+# Subtest: v1.1.1 final Attribution Review is complete, locally compared, and P0-free
+ok 10 - v1.1.1 final Attribution Review is complete, locally compared, and P0-free
+  ---
+  duration_ms: 17.395
+  type: 'test'
+  ...
+# Subtest: generates isolated v2 sets and preselects 70 comparison IDs
+ok 11 - generates isolated v2 sets and preselects 70 comparison IDs
+  ---
+  duration_ms: 50.9968
+  type: 'test'
+  ...
+# Subtest: passes family, duplicate, and real structural difficulty audits
+ok 12 - passes family, duplicate, and real structural difficulty audits
+  ---
+  duration_ms: 26.1224
+  type: 'test'
+  ...
+# Subtest: Cross-Agent provenance has one Agent source across fields, text, and Gold
+ok 13 - Cross-Agent provenance has one Agent source across fields, text, and Gold
+  ---
+  duration_ms: 10.0309
+  type: 'test'
+  ...
+# Subtest: Cross-Agent Easy scenarios deduplicate wrapped required sources without inventing Agent-C
+ok 14 - Cross-Agent Easy scenarios deduplicate wrapped required sources without inventing Agent-C
+  ---
+  duration_ms: 27.2963
+  type: 'test'
+  ...
+# Subtest: Cross-Agent conflict reports use a real Agent and low-confidence report metadata
+ok 15 - Cross-Agent conflict reports use a real Agent and low-confidence report metadata
+  ---
+  duration_ms: 11.0928
+  type: 'test'
+  ...
+# Subtest: 1. memory_evolution: all evolution events for the same NL state use the same state_key
+ok 16 - 1. memory_evolution: all evolution events for the same NL state use the same state_key
+  ---
+  duration_ms: 31.1777
+  type: 'test'
+  ...
+# Subtest: 2. memory_evolution: each state_key has at most one final Current
+ok 17 - 2. memory_evolution: each state_key has at most one final Current
+  ---
+  duration_ms: 14.1378
+  type: 'test'
+  ...
+# Subtest: 3. memory_evolution: Current equals the last valid state in the timeline
+ok 18 - 3. memory_evolution: Current equals the last valid state in the timeline
+  ---
+  duration_ms: 23.6388
+  type: 'test'
+  ...
+# Subtest: 4. memory_evolution: Historical includes all earlier valid states
+ok 19 - 4. memory_evolution: Historical includes all earlier valid states
+  ---
+  duration_ms: 9.762
+  type: 'test'
+  ...
+# Subtest: 5. memory_evolution: Transitions connect adjacent valid states in the timeline
+ok 20 - 5. memory_evolution: Transitions connect adjacent valid states in the timeline
+  ---
+  duration_ms: 8.3489
+  type: 'test'
+  ...
+# Subtest: 6. memory_evolution: From event timestamp is strictly earlier than To event timestamp
+ok 21 - 6. memory_evolution: From event timestamp is strictly earlier than To event timestamp
+  ---
+  duration_ms: 23.509
+  type: 'test'
+  ...
+# Subtest: 7. memory_evolution: question uses plural "transitions" when transitionCount > 1
+ok 22 - 7. memory_evolution: question uses plural "transitions" when transitionCount > 1
+  ---
+  duration_ms: 6.3679
+  type: 'test'
+  ...
+# Subtest: 8. memory_evolution: no hidden numbered state keys in Gold transitions
+ok 23 - 8. memory_evolution: no hidden numbered state keys in Gold transitions
+  ---
+  duration_ms: 8.4589
+  type: 'test'
+  ...
+# Subtest: 14. memory_evolution: low-confidence conflicts and noise do not enter Gold timeline
+ok 24 - 14. memory_evolution: low-confidence conflicts and noise do not enter Gold timeline
+  ---
+  duration_ms: 10.5267
+  type: 'test'
+  ...
+# Subtest: 9. phrasePresent: "2-2" does not match "2-3"
+ok 25 - 9. phrasePresent: "2-2" does not match "2-3"
+  ---
+  duration_ms: 2.2563
+  type: 'test'
+  ...
+# Subtest: 10. phrasePresent: "3-10" does not match "3-11"
+ok 26 - 10. phrasePresent: "3-10" does not match "3-11"
+  ---
+  duration_ms: 0.5282
+  type: 'test'
+  ...
+# Subtest: 11. correct Current, Historical, and Transition answer gets positive score
+ok 27 - 11. correct Current, Historical, and Transition answer gets positive score
+  ---
+  duration_ms: 0.5303
+  type: 'test'
+  ...
+# Subtest: 12. only wrong-order Transition gets 0 for temporal ordering
+ok 28 - 12. only wrong-order Transition gets 0 for temporal ordering
+  ---
+  duration_ms: 0.3059
+  type: 'test'
+  ...
+# Subtest: 13. only last Current but wrong Historical gets no Historical score
+ok 29 - 13. only last Current but wrong Historical gets no Historical score
+  ---
+  duration_ms: 0.2592
+  type: 'test'
+  ...
+# Subtest: Kimi uses JSON Schema first and normalizes cached-token usage
+ok 30 - Kimi uses JSON Schema first and normalizes cached-token usage
+  ---
+  duration_ms: 102.6127
+  type: 'test'
+  ...
+# Subtest: Kimi records an explicit JSON-object fallback only after server rejection
+ok 31 - Kimi records an explicit JSON-object fallback only after server rejection
+  ---
+  duration_ms: 97.705
+  type: 'test'
+  ...
+# Subtest: Kimi hard-stops before physical attempt 61
+ok 32 - Kimi hard-stops before physical attempt 61
+  ---
+  duration_ms: 33.2719
+  type: 'test'
+  ...
+# Subtest: Kimi separates one logical call from three malformed physical attempts
+ok 33 - Kimi separates one logical call from three malformed physical attempts
+  ---
+  duration_ms: 111.1183
+  type: 'test'
+  ...
+# Subtest: Kimi classifies finish_reason length as output_truncated and recovers on retry
+ok 34 - Kimi classifies finish_reason length as output_truncated and recovers on retry
+  ---
+  duration_ms: 95.7873
+  type: 'test'
+  ...
+# Subtest: parseStructuredJudgeResponse accepts direct, fenced, and surrounded complete JSON only
+ok 35 - parseStructuredJudgeResponse accepts direct, fenced, and surrounded complete JSON only
+  ---
+  duration_ms: 2.1478
+  type: 'test'
+  ...
+# Subtest: DeepSeek Answer retries schema validation with a compact corrective instruction
+ok 36 - DeepSeek Answer retries schema validation with a compact corrective instruction
+  ---
+  duration_ms: 15.8619
+  type: 'test'
+  ...
+# Subtest: Answer shape normalization removes only redundant rejected_fact source_agents
+ok 37 - Answer shape normalization removes only redundant rejected_fact source_agents
+  ---
+  duration_ms: 0.9676
+  type: 'test'
+  ...
+# Subtest: Kimi omits temperature and does not retry a provider-declared temperature constraint
+ok 38 - Kimi omits temperature and does not retry a provider-declared temperature constraint
+  ---
+  duration_ms: 67.1516
+  type: 'test'
+  ...
+# Subtest: Kimi stops safely after three consecutive generic provider errors
+ok 39 - Kimi stops safely after three consecutive generic provider errors
+  ---
+  duration_ms: 156.4631
+  type: 'test'
+  ...
+# Subtest: answer.max_tokens is 1200 after proven truncation fix
+ok 40 - answer.max_tokens is 1200 after proven truncation fix
+  ---
+  duration_ms: 40.2952
+  type: 'test'
+  ...
+# Subtest: answer.max_tokens is not 900 (previous truncated value)
+ok 41 - answer.max_tokens is not 900 (previous truncated value)
+  ---
+  duration_ms: 4.0118
+  type: 'test'
+  ...
+# Subtest: validates answer-schema-v2 exact states, sources, Agents, transitions, and rejection reasons
+ok 42 - validates answer-schema-v2 exact states, sources, Agents, transitions, and rejection reasons
+  ---
+  duration_ms: 4.2417
+  type: 'test'
+  ...
+# Subtest: allows No Memory question-supported facts only with empty sources and no Agent
+ok 43 - allows No Memory question-supported facts only with empty sources and no Agent
+  ---
+  duration_ms: 2.1969
+  type: 'test'
+  ...
+# Subtest: validates Kimi Judge v2 schema including redundancy and diagnostic arrays
+ok 44 - validates Kimi Judge v2 schema including redundancy and diagnostic arrays
+  ---
+  duration_ms: 0.9635
+  type: 'test'
+  ...
+# Subtest: validates Secondary Agent Review as non-human evidence
+ok 45 - validates Secondary Agent Review as non-human evidence
+  ---
+  duration_ms: 0.6584
+  type: 'test'
+  ...
+# Subtest: recovers only visible speaker and Agent labels from evidence passages
+ok 46 - recovers only visible speaker and Agent labels from evidence passages
+  ---
+  duration_ms: 1.9048
+  type: 'test'
+  ...
+# Subtest: checkpoints, resumes, and preserves a retry record with isolated synthetic fixtures
+ok 47 - checkpoints, resumes, and preserves a retry record with isolated synthetic fixtures
+  ---
+  duration_ms: 326.6563
+  type: 'test'
+  ...
+# Subtest: No Memory context is empty and fixed retrieval contains only event text, never gold
+ok 48 - No Memory context is empty and fixed retrieval contains only event text, never gold
+  ---
+  duration_ms: 11.8707
+  type: 'test'
+  ...
+# Subtest: rejected fact and actions/insights cannot obtain required positive coverage
+ok 49 - rejected fact and actions/insights cannot obtain required positive coverage
+  ---
+  duration_ms: 4.5029
+  type: 'test'
+  ...
+# Subtest: historical fact cannot obtain current score and current fact cannot obtain historical score
+ok 50 - historical fact cannot obtain current score and current fact cannot obtain historical score
+  ---
+  duration_ms: 0.6855
+  type: 'test'
+  ...
+# Subtest: reversed transition and missing transition receive no Temporal Ordering credit
+ok 51 - reversed transition and missing transition receive no Temporal Ordering credit
+  ---
+  duration_ms: 0.484
+  type: 'test'
+  ...
+# Subtest: an omitted stale fact is not leakage, but treating it as current is leakage
+ok 52 - an omitted stale fact is not leakage, but treating it as current is leakage
+  ---
+  duration_ms: 0.4384
+  type: 'test'
+  ...
+# Subtest: invalidated fact counts as rejected only through structured rejected_facts
+ok 53 - invalidated fact counts as rejected only through structured rejected_facts
+  ---
+  duration_ms: 0.9294
+  type: 'test'
+  ...
+# Subtest: invalid source ID increases Unsupported Rate
+ok 54 - invalid source ID increases Unsupported Rate
+  ---
+  duration_ms: 0.2184
+  type: 'test'
+  ...
+# Subtest: invented Agent receives no Cross-Agent Provenance credit
+ok 55 - invented Agent receives no Cross-Agent Provenance credit
+  ---
+  duration_ms: 3.1564
+  type: 'test'
+  ...
+# Subtest: not-implemented forgetting capabilities remain null/excluded instead of numeric zero
+ok 56 - not-implemented forgetting capabilities remain null/excluded instead of numeric zero
+  ---
+  duration_ms: 8.1456
+  type: 'test'
+  ...
+# Subtest: scores seven categories, includes Judge redundancy, and macro-averages categories equally
+ok 57 - scores seven categories, includes Judge redundancy, and macro-averages categories equally
+  ---
+  duration_ms: 3.9642
+  type: 'test'
+  ...
+1..57
+# tests 57
+# suites 0
+# pass 57
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1049.1002

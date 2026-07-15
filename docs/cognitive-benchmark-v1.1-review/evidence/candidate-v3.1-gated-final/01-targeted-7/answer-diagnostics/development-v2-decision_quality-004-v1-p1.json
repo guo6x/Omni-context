@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-decision_quality-004",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 1200,
+  "finish_reason": "stop",
+  "prompt_tokens": 2924,
+  "completion_tokens": 746,
+  "total_tokens": 3670,
+  "response_content_characters": 2357,
+  "raw_response_content": "{\n  \"answer\": \"Option A is recommended for cycle 4 budget allocation because it respects the budget and stable-income constraint, while Option B has uncertain income. The next step is to allocate the budget to Option A and monitor income stability.\",\n  \"facts\": [\n    {\n      \"key\": \"Option B autonomy\",\n      \"value\": \"high autonomy\",\n      \"state\": \"current\",\n      \"source_ids\": [\"952f9e71-ce03-45f3-acfd-5a8e16dc8df3\", \"relationship:52d792d8-dcc9-4089-b977-4adc3312a0d8\"],\n      \"source_agents\": [\"Option B\", \"Agent-B\"]\n    },\n    {\n      \"key\": \"Option B income\",\n      \"value\": \"uncertain income\",\n      \"state\": \"current\",\n      \"source_ids\": [\"4be84912-26e1-4821-a9ad-985c0ef0b641\", \"relationship:a1f3605f-122f-4fb8-b9ad-d190a1bbb4ab\"],\n      \"source_agents\": [\"Option B\", \"Agent-B\"]\n    },\n    {\n      \"key\": \"checkpoint-4 support note 4-9\",\n      \"value\": \"budget allocation support note 4-9\",\n      \"state\": \"current\",\n      \"source_ids\": [\"e3f14bb7-fea1-435e-a3af-286316994983\", \"relationship:dd9b5a08-24f9-49ba-8273-463a00ce1b2d\"],\n      \"source_agents\": [\"checkpoint-4\", \"Agent-A\"]\n    },\n    {\n      \"key\": \"Riley confirmation note 4-9\",\n      \"value\": \"budget allocation support note 4-9\",\n      \"state\": \"current\",\n      \"source_ids\": [\"bd798a85-8c75-4286-bdf5-60f6fd6f4596\", \"relationship:f939dad5-410a-47cd-96da-14ac763ef925\"],\n      \"source_agents\": [\"Riley\", \"Agent-A\"]\n    },\n    {\n      \"key\": \"checkpoint-4 support note 4-8\",\n      \"value\": \"budget allocation support note 4-8\",\n      \"state\": \"current\",\n      \"source_ids\": [\"fce22902-0340-495f-99f9-72ed5e2206b5\"],\n      \"source_agents\": [\"checkpoint-4\", \"Agent-D\"]\n    },\n    {\n      \"key\": \"Riley confirmation note 4-8\",\n      \"value\": \"budget allocation support note 4-8\",\n      \"state\": \"current\",\n      \"source_ids\": [\"93d31a44-173a-4647-b28f-8fc0aea6e937\"],\n      \"source_agents\": [\"Riley\", \"Agent-D\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"budget constraint\", \"stable-income constraint\"],\n  \"rejected_facts\": [],\n  \"insights\": [\"Option B's uncertain income violates the stable-income constraint, making Option A the safer choice.\"],\n  \"actions\": [\"Allocate budget to Option A\", \"Monitor income stability for future cycles\"],\n  \"uncertainty\": \"No information about Option A is provided in memory; the recommendation assumes Option A satisfies constraints.\"\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T17:32:38.060Z"
+}

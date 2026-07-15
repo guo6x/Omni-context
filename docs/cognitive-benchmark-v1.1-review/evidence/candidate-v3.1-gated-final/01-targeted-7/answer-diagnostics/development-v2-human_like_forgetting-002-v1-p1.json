@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-human_like_forgetting-002",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 1200,
+  "finish_reason": "stop",
+  "prompt_tokens": 2370,
+  "completion_tokens": 911,
+  "total_tokens": 3281,
+  "response_content_characters": 2953,
+  "raw_response_content": "{\n  \"answer\": \"The memory that should remain influential for Harper's checkpoint-2 planning is the support from note 2-10, as it is the most recent and current. Notes 2-8 and 2-9 are also current but older; they are not stale or invalidated, but the question asks to structurally reject stale, invalidated, or noisy items. Since all notes are current and none are explicitly stale or invalidated, no rejection is strictly necessary. However, if prioritizing recency, note 2-10 is the most influential.\",\n  \"facts\": [\n    {\n      \"key\": \"checkpoint-2 supported_by note 2-8\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-8 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"58ced697-f11a-4785-9d93-97f90ca1e7b8\", \"relationship:964f6fea-d2e0-49ae-889f-a07149936b81\"],\n      \"source_agents\": [\"checkpoint-2\"]\n    },\n    {\n      \"key\": \"checkpoint-2 supported_by note 2-9\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-9 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"a8265ce6-f6b7-4699-b1b5-4b081dfc622c\", \"relationship:4b0a140f-f207-4066-88d9-0ed168b9bde5\"],\n      \"source_agents\": [\"checkpoint-2\"]\n    },\n    {\n      \"key\": \"checkpoint-2 supported_by note 2-10\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-10 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"0ea2282a-0fa9-4203-8568-b155c97dc739\", \"relationship:c0c11c95-352b-49f3-a604-93d3d94444dd\"],\n      \"source_agents\": [\"checkpoint-2\"]\n    },\n    {\n      \"key\": \"note 2-8 reviewed_by Harper\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-8 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"c82bcdcd-926a-4ca1-89c2-6db06efd6edf\"],\n      \"source_agents\": [\"note 2-8\"]\n    },\n    {\n      \"key\": \"note 2-9 reviewed_by Harper\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-9 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"e4e47e7e-fdb9-46ed-819a-550206e86d22\", \"relationship:3a2b7959-e3e8-4260-acb7-397f736cc80c\"],\n      \"source_agents\": [\"note 2-9\"]\n    },\n    {\n      \"key\": \"note 2-10 reviewed_by Harper\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-10 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"5d775c9b-22c9-4331-86f3-780f8681a8b4\"],\n      \"source_agents\": [\"note 2-10\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"Only use current valid facts\", \"Preserve requested history\", \"Disclose unresolved conflicts\", \"Respect hard constraints\"],\n  \"rejected_facts\": [],\n  \"insights\": [\"All three notes (2-8, 2-9, 2-10) are current and valid; none are stale or invalidated.\", \"The most recent note (2-10) may be considered most influential for planning.\"],\n  \"actions\": [\"Identify note 2-10 as the most influential memory for checkpoint-2 planning.\"],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T17:26:58.997Z"
+}
