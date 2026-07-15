@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-memory_evolution-003",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 1200,
+  "finish_reason": "stop",
+  "prompt_tokens": 2373,
+  "completion_tokens": 495,
+  "total_tokens": 2868,
+  "response_content_characters": 1636,
+  "raw_response_content": "{\n  \"answer\": \"At checkpoint-3, Harper's current project phase is 'project phase revised 2-3' (supported by multiple confirmations). The historical project phase was 'project phase intermediate 2-3'. The transition in cycle 3 was from 'project phase intermediate 2-3' to 'project phase revised 2-3'.\",\n  \"facts\": [\n    {\n      \"key\": \"project_phase\",\n      \"value\": \"project phase revised 2-3\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:84add4ee907649e31810af75b1ff9b766f48230ee695b130ecb166a51aea606c\"],\n      \"source_agents\": [\"Agent-F\"]\n    },\n    {\n      \"key\": \"project_phase\",\n      \"value\": \"project phase intermediate 2-3\",\n      \"state\": \"historical\",\n      \"source_ids\": [\"event:e4efcf51c171810423d666819185c1f1ca4ff596c0284c5bddb857730ebf11f9\"],\n      \"source_agents\": [\"Agent-E\"]\n    }\n  ],\n  \"transitions\": [\n    {\n      \"key\": \"project_phase\",\n      \"from_value\": \"project phase intermediate 2-3\",\n      \"to_value\": \"project phase revised 2-3\",\n      \"source_ids\": [\"event:84add4ee907649e31810af75b1ff9b766f48230ee695b130ecb166a51aea606c\"]\n    }\n  ],\n  \"constraints_used\": [],\n  \"rejected_facts\": [\n    {\n      \"value\": \"Low-confidence conflicting project phase note 3-12\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"relationship:bcfbb2cf-b893-423d-8151-6eb4e0e92fd0\"]\n    }\n  ],\n  \"insights\": [\n    \"Multiple agents confirm the current project phase as 'project phase revised 2-3'.\",\n    \"The historical phase 'project phase intermediate 2-3' is explicitly marked as historical.\",\n    \"A low-confidence conflicting note is rejected per instructions.\"\n  ],\n  \"actions\": [],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T14:41:00.896Z"
+}
