@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "scope": "targeted-7 rerun-2",
+  "completed": 7,
+  "retry_records": 2,
+  "latency_ms": {
+    "total": {
+      "p50": 138762,
+      "p95": 266835.3,
+      "min": 92243,
+      "max": 274359,
+      "mean": 167805.57142857142
+    },
+    "retrieval": {
+      "p50": 2579,
+      "p95": 2740.8
+    },
+    "answer": {
+      "p50": 5210,
+      "p95": 6106.099999999999
+    },
+    "judge": {
+      "p50": 0,
+      "p95": 7490.5
+    }
+  },
+  "usage": {
+    "answer": {
+      "input_tokens": 17162,
+      "output_tokens": 4702,
+      "cache_hit_input_tokens": 6656,
+      "cache_miss_input_tokens": 10506
+    },
+    "judge": {
+      "input_tokens": 6041,
+      "output_tokens": 463,
+      "cache_hit_input_tokens": 256,
+      "cache_miss_input_tokens": 5785
+    },
+    "extraction_calls": 19,
+    "reranker_calls": 7
+  },
+  "database_artifacts": {
+    "count": 9,
+    "total_bytes": 163037184,
+    "files": [
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-cognitive_continuity-004/attempt-1-1/conversation-1/brain.db",
+        "bytes": 17887232
+      },
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-cognitive_continuity-004/attempt-1-2/conversation-1/brain.db",
+        "bytes": 17915904
+      },
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-cognitive_continuity-004/attempt-1-3/conversation-1/brain.db",
+        "bytes": 18001920
+      },
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-conflict_resolution-004/attempt-3-1/conversation-1/brain.db",
+        "bytes": 17866752
+      },
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-cross_agent_transfer-004/attempt-4-1/conversation-1/brain.db",
+        "bytes": 18018304
+      },
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-decision_quality-004/attempt-7-1/conversation-1/brain.db",
+        "bytes": 18051072
+      },
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-human_like_forgetting-002/attempt-5-1/conversation-1/brain.db",
+        "bytes": 18026496
+      },
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-memory_evolution-003/attempt-2-1/conversation-1/brain.db",
+        "bytes": 18513920
+      },
+      {
+        "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-proactive_insight-003/attempt-6-1/conversation-1/brain.db",
+        "bytes": 18755584
+      }
+    ]
+  },
+  "model_artifact_bytes": 561768762,
+  "cost_currency": null,
+  "cost_amount": null,
+  "cost_note": "Provider responses expose token usage but no authoritative billed currency amount; no estimate substituted."
+}

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "IMPLEMENTED_NOT_FROZEN",
+  "branch": "codex/omni-evaluation-candidate-v3",
+  "base_commit": "872723b10ec4ae99b8272606a183155837104332",
+  "benchmark_commit": "1f4c7c4b77ce6ea5f80e41de3c4a1e07373bce08",
+  "primary_implementation": [
+    "verified source-event provenance and structured state transitions",
+    "versioned raw-event evidence assertions",
+    "parallel auditable retrieval with bounded raw-event fallback",
+    "human-readable evidence passages",
+    "redacted evaluation trace"
+  ],
+  "allowed_generic_fix": {
+    "count": 1,
+    "reason": "first Targeted-7 exposed extraction-gap raw events and unverified speaker fallback",
+    "changes": [
+      "persist envelope-derived raw events as first-class evidence assertions",
+      "compact raw-event passage serialization",
+      "remove subject-to-speaker fallback"
+    ]
+  },
+  "prohibited_product_strings_present": false,
+  "benchmark_modified": false,
+  "formal_dataset_read": false,
+  "conversation_2_to_10_accessed": false,
+  "development_35_run": false,
+  "candidate_tag_created": false,
+  "changed_code_files": [
+    "brain-server/src/api/handlers/mcp.ts",
+    "brain-server/src/db/sqlite.ts",
+    "brain-server/src/embedding/serialization.ts",
+    "brain-server/src/graphrag/extractor.ts",
+    "brain-server/src/graphrag/llm-pipeline.ts",
+    "brain-server/src/mcp-server.ts",
+    "brain-server/src/retrieval/config.ts",
+    "brain-server/src/retrieval/fusion.ts",
+    "brain-server/tests/assertion-fact-layer.test.ts",
+    "brain-server/tests/embedding-serialization.test.ts",
+    "brain-server/tests/llm-extraction-validation.test.ts",
+    "brain-server/tests/retrieval-fusion.test.ts",
+    "brain-server/tests/retrieval-policy.test.ts",
+    "brain-server/src/graphrag/evidence-fidelity.ts",
+    "brain-server/src/retrieval/trace.ts",
+    "brain-server/tests/evidence-fidelity.test.ts",
+    "brain-server/tests/retrieval-trace.test.ts"
+  ],
+  "product_implementation_commit": "c2d7813bc5828fe6706127c3dab0d90c62db7d6b"
+}

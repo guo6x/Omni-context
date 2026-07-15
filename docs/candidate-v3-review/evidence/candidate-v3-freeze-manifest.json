@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "status": "OMNI-CONTEXT CANDIDATE V3 NOT FROZEN",
+  "branch": "codex/omni-evaluation-candidate-v3",
+  "base_commit": "872723b10ec4ae99b8272606a183155837104332",
+  "targeted_first_run": {
+    "completed": 6,
+    "errors": 1,
+    "overall": 0.5189814814814815
+  },
+  "targeted_rerun": {
+    "completed": 7,
+    "errors": 0,
+    "retries": 2,
+    "overall": 0.5026785714285714,
+    "mandatory_gate_passed": false,
+    "failed_criteria": [
+      "memory current and historical evidence both in final context",
+      "conflict current and low-confidence historical evidence both visible"
+    ]
+  },
+  "development_35": {
+    "status": "NOT_RUN"
+  },
+  "formal_dataset": {
+    "status": "NOT_READ_NOT_RUN"
+  },
+  "conversation_2_to_10_accessed": false,
+  "unresolved_p0": 0,
+  "unresolved_p1": 3,
+  "unresolved_p1_items": [
+    "candidate-to-final-context ranking loses Development evidence",
+    "peak memory was not captured",
+    "Development-35 and ablation remain gated"
+  ],
+  "candidate_tag_created": false,
+  "final_freeze_authorized": false,
+  "product_implementation_commit": "c2d7813bc5828fe6706127c3dab0d90c62db7d6b"
+}

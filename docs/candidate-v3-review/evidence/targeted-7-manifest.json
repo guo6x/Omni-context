@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "READY_TO_RUN",
+  "iteration": 2,
+  "allowed_generic_fix_used": 1,
+  "mode": "full_omni",
+  "concurrency": 1,
+  "answer_model": "deepseek-v4-flash",
+  "judge_model": "kimi-k2.6",
+  "scenario_count": 7,
+  "scenario_ids": [
+    "development-v2-cognitive_continuity-004",
+    "development-v2-memory_evolution-003",
+    "development-v2-conflict_resolution-004",
+    "development-v2-cross_agent_transfer-004",
+    "development-v2-human_like_forgetting-002",
+    "development-v2-proactive_insight-003",
+    "development-v2-decision_quality-004"
+  ],
+  "dataset_file": "targeted-7-dataset.jsonl",
+  "results_file": "targeted-7-results.jsonl",
+  "checkpoint_file": "targeted-7-checkpoint.json",
+  "run_root": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs",
+  "traces_root": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/traces",
+  "assertion_serialization_version": "assertion-passage-v3",
+  "benchmark_modified": false,
+  "gold_modified": false,
+  "scoring_modified": false,
+  "formal_dataset_read": false,
+  "conversation_2_to_10_accessed": false,
+  "input_hashes_file": "targeted-7-input-hashes.json"
+}

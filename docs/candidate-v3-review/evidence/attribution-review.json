@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "method": "Development Gold values matched case-insensitively against persisted candidate records; no Formal data accessed.",
+  "scenarios": [
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "candidate_pool_size": 40,
+      "traced_final_context_size": 20,
+      "answer_context_size": 10,
+      "gold_value_count": 5,
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "traced_final20_presence": [
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "answer_final10_presence": [
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "loss_candidate_to_final20": [
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      "loss_final20_to_answer10": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "candidate_pool_size": 40,
+      "traced_final_context_size": 20,
+      "answer_context_size": 10,
+      "gold_value_count": 4,
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "traced_final20_presence": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "answer_final10_presence": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "loss_candidate_to_final20": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "loss_final20_to_answer10": [
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "candidate_pool_size": 40,
+      "traced_final_context_size": 20,
+      "answer_context_size": 10,
+      "gold_value_count": 5,
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "traced_final20_presence": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "answer_final10_presence": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "loss_candidate_to_final20": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "loss_final20_to_answer10": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "candidate_pool_size": 40,
+      "traced_final_context_size": 20,
+      "answer_context_size": 10,
+      "gold_value_count": 5,
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "traced_final20_presence": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "answer_final10_presence": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "loss_candidate_to_final20": [
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "loss_final20_to_answer10": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "candidate_pool_size": 40,
+      "traced_final_context_size": 20,
+      "answer_context_size": 10,
+      "gold_value_count": 2,
+      "candidate_pool_presence": [
+        true,
+        true
+      ],
+      "traced_final20_presence": [
+        true,
+        false
+      ],
+      "answer_final10_presence": [
+        true,
+        false
+      ],
+      "loss_candidate_to_final20": [
+        false,
+        true
+      ],
+      "loss_final20_to_answer10": [
+        false,
+        false
+      ]
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "candidate_pool_size": 40,
+      "traced_final_context_size": 20,
+      "answer_context_size": 10,
+      "gold_value_count": 3,
+      "candidate_pool_presence": [
+        true,
+        false,
+        false
+      ],
+      "traced_final20_presence": [
+        false,
+        false,
+        false
+      ],
+      "answer_final10_presence": [
+        false,
+        false,
+        false
+      ],
+      "loss_candidate_to_final20": [
+        true,
+        false,
+        false
+      ],
+      "loss_final20_to_answer10": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-004",
+      "candidate_pool_size": 40,
+      "traced_final_context_size": 20,
+      "answer_context_size": 10,
+      "gold_value_count": 6,
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "traced_final20_presence": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "answer_final10_presence": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "loss_candidate_to_final20": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "loss_final20_to_answer10": [
+        false,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    }
+  ],
+  "counts": {
+    "gold_values": 30,
+    "candidate_pool_present": 27,
+    "traced_final20_present": 11,
+    "answer_final10_present": 3
+  }
+}

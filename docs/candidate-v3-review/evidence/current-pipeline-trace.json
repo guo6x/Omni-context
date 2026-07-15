@@ -1,0 +1,74 @@
+{
+  "schema_version": "candidate-v3-trace-v1",
+  "status": "baseline_static_trace_complete",
+  "baseline_commit": "872723b10ec4ae99b8272606a183155837104332",
+  "model_calls": 0,
+  "stages": [
+    {
+      "stage": "raw_input_event",
+      "files": ["benchmark/cognitive/src/provider.mjs"],
+      "functions": ["FullOmniAdapter.fullOmniContext"],
+      "fields": ["event.id", "event.timestamp", "event.agent", "event.text"],
+      "loss": "typed events are flattened into text"
+    },
+    {
+      "stage": "extraction_request",
+      "files": ["brain-server/src/api/handlers/index.ts"],
+      "functions": ["handleGraphRoutes:/api/graph/extract"],
+      "fields": ["textContent", "timestamp", "source", "documentId"],
+      "loss": "event ID and agent remain untyped text"
+    },
+    {
+      "stage": "extraction_schema",
+      "files": ["brain-server/src/graphrag/llm-pipeline.ts"],
+      "functions": ["LLMExtractionResultSchema", "parseLlmExtractionResultDetailed"],
+      "fields": ["subject", "predicate", "original_predicate", "object", "confidence", "source_span", "observed_at", "event_time", "valid_from", "valid_until"],
+      "loss": "no exact_value, normalized_value, state, state_key, source_event_id, source_agent, transition, supersedes or invalidates"
+    },
+    {
+      "stage": "database_write",
+      "files": ["brain-server/src/graphrag/extractor.ts", "brain-server/src/api/handlers/index.ts", "brain-server/src/db/sqlite.ts"],
+      "functions": ["GraphRAGExtractor.extract", "Database.addAssertion"],
+      "fields": ["literal_value", "object_id", "source_span", "provenance", "valid_from", "valid_until", "invalidated_at", "version", "previous_version_id"],
+      "loss": "provenance contains extractor/model only and corrections are not linked"
+    },
+    {
+      "stage": "embedding_index",
+      "files": ["brain-server/src/embedding/serialization.ts", "brain-server/src/db/sqlite.ts", "brain-server/src/embedding/service.ts"],
+      "functions": ["serializeAssertionPassage", "Database.indexAssertion", "EmbeddingService.embedPassage"],
+      "fields": ["subject", "relation", "object", "source_span", "validity"],
+      "loss": "passage lacks explicit source event, source agent, state key and transition"
+    },
+    {
+      "stage": "retrieval_and_fusion",
+      "files": ["brain-server/src/api/handlers/mcp.ts", "brain-server/src/retrieval/fusion.ts"],
+      "functions": ["unified_memory_search", "reciprocalRankFuse"],
+      "fields": ["candidate_id", "source", "rawRank", "rawDistance", "normalizedScore", "weight", "fusedRank"],
+      "loss": "raw event and transition are not grouped evidence sources; response trace is not durable"
+    },
+    {
+      "stage": "reranker",
+      "files": ["brain-server/src/api/handlers/mcp.ts"],
+      "functions": ["rerankByLlm"],
+      "fields": ["id", "type", "name", "description"],
+      "loss": "structured state and provenance are flattened and rank is not archived"
+    },
+    {
+      "stage": "final_visible_context",
+      "files": ["brain-server/src/api/handlers/mcp.ts", "benchmark/cognitive/src/provider.mjs"],
+      "functions": ["unified_memory_search", "FullOmniAdapter.fullOmniContext"],
+      "fields": ["evidence_id", "passage", "sources", "fused_rank", "final_rank"],
+      "loss": "no structured event IDs, agents, state, transition or evidence type"
+    }
+  ],
+  "first_possible_loss": {
+    "exact_value": "extraction_schema",
+    "state": "extraction_schema",
+    "source": "extraction_schema"
+  },
+  "raw_event_id_saved": false,
+  "raw_event_directly_traceable": false,
+  "candidate_response_available": true,
+  "candidate_trace_archived_by_product": false,
+  "reranker_trace_archived_by_product": false
+}

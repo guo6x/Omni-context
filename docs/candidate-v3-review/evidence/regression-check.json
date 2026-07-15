@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "status": "PASS_FOR_IMPLEMENTATION",
+  "windows_execution": {
+    "brain_server_full_suite": "All test files passed in single-worker batches; parallel sqlite3 native exit is unstable on this host.",
+    "candidate_gate_group": {
+      "files": 12,
+      "tests": 92,
+      "passed": 92,
+      "log": "D:/OmniContext-candidate-v3/logs/candidate-v3-post-fix-static-gates-tests.log"
+    },
+    "focused_post_fix": {
+      "files": 2,
+      "tests": 10,
+      "passed": 10
+    },
+    "benchmark_static": {
+      "tests": 41,
+      "passed": 41,
+      "log": "D:/OmniContext-candidate-v3/logs/benchmark-static-tests.log"
+    },
+    "typecheck": "pass",
+    "build": "pass"
+  },
+  "benchmark_worktree_clean": true,
+  "prohibited_string_scan": "pass",
+  "formal_dataset_file_read": false,
+  "conversation_2_to_10_accessed": false
+}

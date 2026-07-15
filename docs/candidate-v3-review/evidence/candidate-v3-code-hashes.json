@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-15T05:21:31.120Z",
+  "files": {
+    "brain-server/src/api/handlers/mcp.ts": "395ef8fc6949692232575f993689b791d599365e63413561f0583e545fa5d3ba",
+    "brain-server/src/db/sqlite.ts": "e87755b2fc53b7f447450aaa62e94916a1be2ae4043b6688b164ef86d234aa1a",
+    "brain-server/src/embedding/serialization.ts": "1b338da25cb35c92ee03987f065bf4c9510a05b4f704bf93ca87d4b9367c81dd",
+    "brain-server/src/graphrag/extractor.ts": "5881003ad82843a4339bff1a24bb66050247ad24287afd6a8a42c8e1a147fec4",
+    "brain-server/src/graphrag/llm-pipeline.ts": "f8a754a94c994d6adc5efc70f83a29dec192e58f197b2ea3fccbe504caa77f86",
+    "brain-server/src/mcp-server.ts": "c5171c5232c364c67a6f0ee1e69b0f781e948f99ec3187792d446d607b3c275c",
+    "brain-server/src/retrieval/config.ts": "f2e25510b0da48bffadafd47d9509853ac7a3899971439cca2ead66ba6eb7210",
+    "brain-server/src/retrieval/fusion.ts": "7bea2943271532ae9933950fe715126767d0a5000c7c006c6970d1f40dfea621",
+    "brain-server/tests/assertion-fact-layer.test.ts": "dc1876bc5cf880fbeff434b64349fa02bbfde1495713edbe7b640e4df5036fdf",
+    "brain-server/tests/embedding-serialization.test.ts": "afc33bd2444474d7d3cef5406ebd6464ad4abe8bbde8d1a1c1d3cd1e8e0c6afd",
+    "brain-server/tests/llm-extraction-validation.test.ts": "fc29c2f84e6b1958153ef25796e0e1f99bdde94595d91817959cddc38e31c177",
+    "brain-server/tests/retrieval-fusion.test.ts": "4ecd444013cc3a7336d964ce0ae052fc910ce654a01e09fc95a5e9f97ea92fec",
+    "brain-server/tests/retrieval-policy.test.ts": "2f9fa403a4a602c568951909fb4b73d95d421136ba74b6182f0a75e72d78a6d7",
+    "brain-server/src/graphrag/evidence-fidelity.ts": "51947af174efbabacc4bd87b10363e59cd841087a7bd494cbba750b3e22b9946",
+    "brain-server/src/retrieval/trace.ts": "2d7936933f9e47679cf834ceb1631372ff9ab055bdbfc91578f6c8ed91f83b59",
+    "brain-server/tests/evidence-fidelity.test.ts": "eed75e40cae0faca29b4ec84dcb7490e8be497ce4cf0f67b2a9c4b012126fbf7",
+    "brain-server/tests/retrieval-trace.test.ts": "1a0116d932921e7b4e029cafac893a85f7e435e700e456d1dc10294bd2520a1c"
+  }
+}

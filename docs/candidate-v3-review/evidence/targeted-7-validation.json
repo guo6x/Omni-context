@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "status": "FAILED_TARGETED_GATE",
+  "final_status": "OMNI-CONTEXT CANDIDATE V3 NOT FROZEN",
+  "evaluated_at": "2026-07-15T05:13:57.939Z",
+  "criteria": {
+    "final_results_7_of_7": true,
+    "unexplained_infrastructure_errors_zero": true,
+    "memory_current_and_historical_in_final_context": false,
+    "at_least_one_valid_transition_in_context": true,
+    "conflict_current_and_low_confidence_history_visible": false,
+    "at_least_one_invalidated_fact_structurally_rejected": true,
+    "cross_agent_source_metadata_nonempty": true,
+    "agent_isolation_error_zero": true,
+    "raw_event_cross_scenario_leak_zero": true,
+    "severe_exact_duplication_zero": true,
+    "context_length_bounded": true,
+    "retrieval_trace_complete": true,
+    "kimi_calls_successful": true,
+    "benchmark_gold_scoring_modified": false
+  },
+  "counts": {
+    "result_rows": 9,
+    "completed": 7,
+    "retries": 2,
+    "errors": 0,
+    "trace_rows": 9,
+    "kimi_logical_calls": 2,
+    "kimi_physical_attempts": 2,
+    "kimi_successful_logical_calls": 2,
+    "raw_event_leak_count": 0
+  },
+  "details": [
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "status": "completed",
+      "attempts": 3,
+      "core_score": 0.6333333333333333,
+      "context_items": 10,
+      "context_characters": 5006,
+      "exact_duplicate_items": 0,
+      "required_fact_presence": [
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "current_fact_presence": [],
+      "historical_fact_presence": [],
+      "invalidated_fact_presence": [],
+      "transition_presence": [],
+      "visible_source_agents": [
+        "Agent-A",
+        "Agent-D",
+        "Agent-C"
+      ],
+      "agent_isolation_error_rate": null,
+      "leaked_source_event_ids": [],
+      "structured_rejected_fact_count": 0,
+      "judge_model": null,
+      "judge_physical_attempts": 0,
+      "total_latency_ms": 152855
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "status": "completed",
+      "attempts": 1,
+      "core_score": 0.20833333333333334,
+      "context_items": 10,
+      "context_characters": 5420,
+      "exact_duplicate_items": 0,
+      "required_fact_presence": [
+        false,
+        false
+      ],
+      "current_fact_presence": [
+        false
+      ],
+      "historical_fact_presence": [
+        false
+      ],
+      "invalidated_fact_presence": [],
+      "transition_presence": [
+        {
+          "from": false,
+          "to": false,
+          "structured": true
+        },
+        {
+          "from": false,
+          "to": false,
+          "structured": true
+        },
+        {
+          "from": false,
+          "to": false,
+          "structured": true
+        },
+        {
+          "from": true,
+          "to": true,
+          "structured": true
+        }
+      ],
+      "visible_source_agents": [
+        "Agent-F",
+        "Agent-A",
+        "Agent-D",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_isolation_error_rate": null,
+      "leaked_source_event_ids": [],
+      "structured_rejected_fact_count": 0,
+      "judge_model": null,
+      "judge_physical_attempts": 0,
+      "total_latency_ms": 249280
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "status": "completed",
+      "attempts": 1,
+      "core_score": 0.2222222222222222,
+      "context_items": 10,
+      "context_characters": 5312,
+      "exact_duplicate_items": 0,
+      "required_fact_presence": [
+        false,
+        false
+      ],
+      "current_fact_presence": [
+        false
+      ],
+      "historical_fact_presence": [
+        false
+      ],
+      "invalidated_fact_presence": [
+        false
+      ],
+      "transition_presence": [
+        {
+          "from": false,
+          "to": false,
+          "structured": false
+        }
+      ],
+      "visible_source_agents": [
+        "Agent-A",
+        "Agent-D",
+        "Agent-C",
+        "Agent-B"
+      ],
+      "agent_isolation_error_rate": null,
+      "leaked_source_event_ids": [],
+      "structured_rejected_fact_count": 6,
+      "judge_model": null,
+      "judge_physical_attempts": 0,
+      "total_latency_ms": 92243
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "status": "completed",
+      "attempts": 1,
+      "core_score": 0.6666666666666666,
+      "context_items": 10,
+      "context_characters": 4346,
+      "exact_duplicate_items": 0,
+      "required_fact_presence": [
+        false,
+        false,
+        false
+      ],
+      "current_fact_presence": [
+        false
+      ],
+      "historical_fact_presence": [],
+      "invalidated_fact_presence": [
+        false
+      ],
+      "transition_presence": [],
+      "visible_source_agents": [
+        "Agent-C",
+        "Agent-B",
+        "Agent-D",
+        "Agent-A"
+      ],
+      "agent_isolation_error_rate": 0,
+      "leaked_source_event_ids": [],
+      "structured_rejected_fact_count": 0,
+      "judge_model": null,
+      "judge_physical_attempts": 0,
+      "total_latency_ms": 131860
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "status": "completed",
+      "attempts": 1,
+      "core_score": 0.8333333333333334,
+      "context_items": 10,
+      "context_characters": 4140,
+      "exact_duplicate_items": 0,
+      "required_fact_presence": [
+        true
+      ],
+      "current_fact_presence": [],
+      "historical_fact_presence": [],
+      "invalidated_fact_presence": [
+        false
+      ],
+      "transition_presence": [],
+      "visible_source_agents": [
+        "Agent-A",
+        "Agent-D",
+        "Agent-B"
+      ],
+      "agent_isolation_error_rate": null,
+      "leaked_source_event_ids": [],
+      "structured_rejected_fact_count": 0,
+      "judge_model": null,
+      "judge_physical_attempts": 0,
+      "total_latency_ms": 135280
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "status": "completed",
+      "attempts": 1,
+      "core_score": 0.59375,
+      "context_items": 10,
+      "context_characters": 3690,
+      "exact_duplicate_items": 0,
+      "required_fact_presence": [
+        false,
+        false,
+        false
+      ],
+      "current_fact_presence": [],
+      "historical_fact_presence": [],
+      "invalidated_fact_presence": [],
+      "transition_presence": [],
+      "visible_source_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-D",
+        "Agent-F",
+        "Agent-C",
+        "Agent-E"
+      ],
+      "agent_isolation_error_rate": null,
+      "leaked_source_event_ids": [],
+      "structured_rejected_fact_count": 0,
+      "judge_model": "kimi-k2.6",
+      "judge_physical_attempts": 1,
+      "total_latency_ms": 274359
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-004",
+      "status": "completed",
+      "attempts": 1,
+      "core_score": 0.3611111111111111,
+      "context_items": 10,
+      "context_characters": 4893,
+      "exact_duplicate_items": 0,
+      "required_fact_presence": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "current_fact_presence": [],
+      "historical_fact_presence": [],
+      "invalidated_fact_presence": [],
+      "transition_presence": [],
+      "visible_source_agents": [
+        "Agent-C",
+        "Agent-B",
+        "Agent-A",
+        "Agent-D"
+      ],
+      "agent_isolation_error_rate": null,
+      "leaked_source_event_ids": [],
+      "structured_rejected_fact_count": 0,
+      "judge_model": "kimi-k2.6",
+      "judge_physical_attempts": 1,
+      "total_latency_ms": 138762
+    }
+  ],
+  "gate_passed": false,
+  "development_35_authorized": false,
+  "additional_product_fix_authorized": false,
+  "candidate_tag_authorized": false
+}

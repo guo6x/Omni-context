@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "trace_rows": 9,
+  "all_have_query_hash": true,
+  "all_have_candidates": true,
+  "all_have_final_context": true,
+  "source_trace_counts": {
+    "assertion_vector": 296,
+    "raw_event_fallback": 211,
+    "subject_attachment": 41,
+    "entity_vector": 64,
+    "graph": 64
+  },
+  "raw_event_candidate_source_hits": 211,
+  "raw_event_final_source_hits": 120,
+  "contains_text_fields": false
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "status": "COMPATIBLE_NOT_REUSED",
+  "benchmark_commit": "1f4c7c4b77ce6ea5f80e41de3c4a1e07373bce08",
+  "development_dataset_sha256": "8e41a861523f3ab4e9fb683dde08d352dd76cd61c44bef9b67e41ea8e118042c",
+  "scenario_ids_sha256": {
+    "full_35": "b572b4ceef51700302efc4f98296d1c534b13d2641df0d9a1c428ececce26084",
+    "baseline_21": "93dd08c687013d9235632e91a9115b547e31de787b3328e3e642934d265b1432"
+  },
+  "prompt_hashes": {
+    "answer": "4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21",
+    "judge": "4a1a29f04c3ba1d9261410b144169c0443981530cf99ab427410a84237ddc7c5",
+    "agent_review": "3507bae6f505c639ba37cd4c486682a3e752cf579e91350a22a8b70242ecf308"
+  },
+  "config_hash": "4a7da6a0c89f237408bd1ed034a94a5812196d51cf526a84cbcc7594791b7380",
+  "scoring_version": "deterministic-scoring-v3",
+  "answer_schema_version": "answer-schema-v2",
+  "judge_adapter_version": "kimi-judge-adapter-v2.1",
+  "judge_rubric_version": "kimi-judge-rubric-v2",
+  "answer_model": "deepseek-v4-flash",
+  "baseline_context_strategy_unchanged": true,
+  "reuse_performed": false,
+  "reuse_blocker": "Candidate failed Targeted-7; Development comparison not authorized"
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-15T04:48:24.453Z",
+  "source_development_dataset_sha256": "8e41a861523f3ab4e9fb683dde08d352dd76cd61c44bef9b67e41ea8e118042c",
+  "selected_dataset_sha256": "7d1846ae93dde0109cbdd70c7ef4a2704a8620a1254de32e39f5bbf6d5f4c590",
+  "selected_scenario_ids": [
+    "development-v2-cognitive_continuity-004",
+    "development-v2-memory_evolution-003",
+    "development-v2-conflict_resolution-004",
+    "development-v2-cross_agent_transfer-004",
+    "development-v2-human_like_forgetting-002",
+    "development-v2-proactive_insight-003",
+    "development-v2-decision_quality-004"
+  ],
+  "answer_prompt_sha256": "4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21",
+  "judge_prompt_sha256": "4a1a29f04c3ba1d9261410b144169c0443981530cf99ab427410a84237ddc7c5",
+  "agent_review_prompt_sha256": "3507bae6f505c639ba37cd4c486682a3e752cf579e91350a22a8b70242ecf308",
+  "scoring_source_sha256": "158548d907a96ddda50f488c9637504cdb0754edb8c37001f870dcfea476ebd0",
+  "config_sha256": "4a7da6a0c89f237408bd1ed034a94a5812196d51cf526a84cbcc7594791b7380",
+  "benchmark_commit": "1f4c7c4b77ce6ea5f80e41de3c4a1e07373bce08",
+  "product_base_commit": "872723b10ec4ae99b8272606a183155837104332",
+  "product_worktree_diff_sha256": "ce92d54bb4142456742fe005b6bb5d35688244f490bb4d4a5ec36c2278fa8cd4",
+  "product_untracked_files": [
+    "brain-server/src/graphrag/evidence-fidelity.ts",
+    "brain-server/src/retrieval/trace.ts",
+    "brain-server/tests/evidence-fidelity.test.ts",
+    "brain-server/tests/retrieval-trace.test.ts",
+    "docs/candidate-v3-review/01-current-pipeline-trace.md",
+    "docs/candidate-v3-review/evidence/current-pipeline-trace.json"
+  ],
+  "formal_dataset_read": false,
+  "conversation_2_to_10_accessed": false,
+  "assertion_serialization_version": "assertion-passage-v3",
+  "fix_iteration": 1,
+  "previous_run": {
+    "status": "partial",
+    "completed": 6,
+    "errors": 1,
+    "manifest_sha256": "5c8f49ea70755da6504838b98fd04ce0888d380ec076b04d16aef6d8eba1cfca",
+    "results_sha256": "116f03b38d154c60c2aabc4d5b962ec6cecc583c29e636fe65f014e208976372"
+  }
+}

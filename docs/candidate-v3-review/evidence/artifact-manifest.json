@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "status": "PRESERVED_ON_D_DRIVE",
+  "root": "D:/OmniContext-candidate-v3/targeted-7/rerun-2",
+  "databases": [
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "attempt": "attempt-1-1",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-cognitive_continuity-004/attempt-1-1/conversation-1/brain.db",
+      "bytes": 17887232,
+      "sha256": "f22b6add062fea8a4c20afa29d5f3d161bf0fd7d2d6976086f649de446b7b17d"
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "attempt": "attempt-1-2",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-cognitive_continuity-004/attempt-1-2/conversation-1/brain.db",
+      "bytes": 17915904,
+      "sha256": "9d3ac00f76506390253b88211d75241e06394b3ba4f9b16ea01e2031e8ca2bce"
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "attempt": "attempt-1-3",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-cognitive_continuity-004/attempt-1-3/conversation-1/brain.db",
+      "bytes": 18001920,
+      "sha256": "86fc4ff097e6273e07351b37979281d1c9eec36d3b9228e4c7bedb2261fadd50"
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "attempt": "attempt-3-1",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-conflict_resolution-004/attempt-3-1/conversation-1/brain.db",
+      "bytes": 17866752,
+      "sha256": "79f3016accbf5e2e59c0c15537471651797f7965d9450d6731a521a8209f8f55"
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "attempt": "attempt-4-1",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-cross_agent_transfer-004/attempt-4-1/conversation-1/brain.db",
+      "bytes": 18018304,
+      "sha256": "67d49f1684f7c06d786eb39a210bae78dc71674b2e718bcb7919e16d3f1f5e9f"
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-004",
+      "attempt": "attempt-7-1",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-decision_quality-004/attempt-7-1/conversation-1/brain.db",
+      "bytes": 18051072,
+      "sha256": "2ab848c007058f498fe35cda2cc8e4b393dfc9c52b1ccaa56b0aa752463170a0"
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "attempt": "attempt-5-1",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-human_like_forgetting-002/attempt-5-1/conversation-1/brain.db",
+      "bytes": 18026496,
+      "sha256": "d7d712b1e10a9ebe7cb2e1a90216e6b89a079a6918ba98fd0e094147da76ab2a"
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "attempt": "attempt-2-1",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-memory_evolution-003/attempt-2-1/conversation-1/brain.db",
+      "bytes": 18513920,
+      "sha256": "ae373ab253e62393560f3f5a51e1c0072144dac09f782004da8559e7a6d05031"
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "attempt": "attempt-6-1",
+      "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/runs/development-v2-proactive_insight-003/attempt-6-1/conversation-1/brain.db",
+      "bytes": 18755584,
+      "sha256": "e2098bc90fbab43374b80d93a180aacd32a462ee3c160ec8122b41536dcf4f55"
+    }
+  ],
+  "trace": {
+    "path": "D:/OmniContext-candidate-v3/targeted-7/rerun-2/traces/retrieval-trace.jsonl",
+    "bytes": 268756,
+    "sha256": "5d725f5a19679eaf0fc05c80aa9daf0a483159e8a9dd8e87aae843e74e213bf8"
+  },
+  "model": {
+    "path": "D:/OmniContext-models-v3.2/Xenova/multilingual-e5-large/onnx/model_quantized.onnx",
+    "bytes": 561768762,
+    "sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca"
+  },
+  "git_storage_note": "Large databases and model remain on D drive because Candidate v3 was not frozen; repository evidence records immutable local hashes."
+}
