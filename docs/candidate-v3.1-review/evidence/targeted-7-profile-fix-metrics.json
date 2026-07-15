@@ -1,0 +1,102 @@
+{
+  "scoring_version": "deterministic-scoring-v3",
+  "overall_cognitive_score": 0.6783333333333333,
+  "category_macro_scores": {
+    "cognitive_continuity": 0.6833333333333332,
+    "memory_evolution": 0.20833333333333334,
+    "conflict_resolution": 0.8333333333333334,
+    "cross_agent_transfer": 0.6666666666666666,
+    "human_like_forgetting": 1,
+    "proactive_insight": null,
+    "decision_quality": null
+  },
+  "deterministic_score": 0.6783333333333333,
+  "agent_judged_score": null,
+  "memory_reliability_score": 0.6770833333333334,
+  "personalization_score": 0.6833333333333332,
+  "temporal_and_conflict_score": 0.5208333333333334,
+  "insight_and_decision_score": null,
+  "by_category": {
+    "cognitive_continuity": {
+      "count": 1,
+      "macro_score": 0.6833333333333332,
+      "metrics": {
+        "profile_recall": 0.4,
+        "profile_consistency": 1,
+        "constraint_utilization": 0.3333333333333333,
+        "personalization_accuracy": 0.3666666666666667,
+        "contradiction_rate": 0,
+        "unsupported_personalization_rate": 0
+      },
+      "status": "completed"
+    },
+    "memory_evolution": {
+      "count": 1,
+      "macro_score": 0.20833333333333334,
+      "metrics": {
+        "current_state_accuracy": 0,
+        "historical_state_preservation": 0,
+        "temporal_ordering_accuracy": 0,
+        "evolution_interpretation_accuracy": 0,
+        "stale_memory_leakage": 0,
+        "state_transition_accuracy": 0.25
+      },
+      "status": "completed"
+    },
+    "conflict_resolution": {
+      "count": 1,
+      "macro_score": 0.8333333333333334,
+      "metrics": {
+        "conflict_resolution_accuracy": 1,
+        "latest_valid_fact_accuracy": 1,
+        "historical_query_accuracy": 1,
+        "invalidated_fact_rejection": 1,
+        "conflict_disclosure_accuracy": 0,
+        "unsupported_resolution_rate": 0
+      },
+      "status": "completed"
+    },
+    "cross_agent_transfer": {
+      "count": 1,
+      "macro_score": 0.6666666666666666,
+      "metrics": {
+        "cross_agent_recall": 0,
+        "cross_agent_consistency": 1,
+        "update_propagation_accuracy": 0,
+        "provenance_preservation": 1,
+        "agent_isolation_error_rate": 0,
+        "stale_transfer_rate": 0
+      },
+      "status": "completed"
+    },
+    "human_like_forgetting": {
+      "count": 1,
+      "macro_score": 1,
+      "metrics": {
+        "salient_memory_retention": 1,
+        "noise_suppression": 1,
+        "false_forgetting_rate": 0,
+        "stale_retention_rate": 0,
+        "memory_precision": 1,
+        "memory_compression_ratio": null,
+        "invalidation_accuracy": 1
+      },
+      "status": "completed"
+    },
+    "proactive_insight": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    },
+    "decision_quality": {
+      "count": 0,
+      "macro_score": null,
+      "metrics": {},
+      "status": "blocked"
+    }
+  },
+  "completed": 5,
+  "errors": 1,
+  "primary_judge_independent": true
+}

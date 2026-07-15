@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "status": "TARGETED_GATE_FAILED_PROVIDER_OVERLOAD",
+  "product_head": "e022c9c68f8de108178a13cb783a1923fea836a3",
+  "run_root": "D:\\OmniContext-candidate-v3.1\\targeted-7-profile-fix-e022c9c",
+  "previous_zero_of_seven_run_preserved": "D:\\OmniContext-candidate-v3.1\\targeted-7",
+  "embedding_root": "D:\\OmniContext-models-v3.2",
+  "files": [
+    {
+      "path": "embedding-preflight.json",
+      "bytes": 634,
+      "sha256": "5d3eace6d888c5877e19eefdd43acd6602fa470455ee14674911586319af9a39"
+    },
+    {
+      "path": "targeted-7-results.jsonl",
+      "bytes": 63206,
+      "sha256": "585aafe341eedf3f98c2d1ea5cd929f0002403d7bcbcf7e436c61f3e42286c2f"
+    },
+    {
+      "path": "targeted-7-metrics.json",
+      "bytes": 2987,
+      "sha256": "35edc8683d2b9ab902be9e193f1e510208c7ea372a8db4ad0ea402c5f913ec5d"
+    },
+    {
+      "path": "targeted-7-coverage.json",
+      "bytes": 3667,
+      "sha256": "27061412cacfd8d19633a914cfb00574bee55effd253d865f439ca84a61fb585"
+    },
+    {
+      "path": "targeted-7-run-manifest.json",
+      "bytes": 1467,
+      "sha256": "5985aea4e8ec7733455e2c983298bd2f2f17a07f121ca4837d52db89d5e940bb"
+    },
+    {
+      "path": "targeted-7-checkpoint.json",
+      "bytes": 423,
+      "sha256": "bb0d91dfd007d4cb8334406a1598b4d2877b043d80400e7e93da4e568be99be4"
+    },
+    {
+      "path": "kimi-usage.json",
+      "bytes": 3471,
+      "sha256": "335273edd8de3126a635a8d1f25bcf8891d15fa34a2f078bb320919d468a7980"
+    },
+    {
+      "path": "traces/retrieval-trace.jsonl",
+      "bytes": 679734,
+      "sha256": "c205d185820c58ff9eece0af4ce2282c0e30947e7bbd2589b43cfc1f046a3ac9"
+    }
+  ],
+  "brain_database_count": 9,
+  "brain_database_total_bytes": 164179968.0,
+  "development_35_run": false,
+  "ablations_run": false,
+  "candidate_tag_created": false
+}

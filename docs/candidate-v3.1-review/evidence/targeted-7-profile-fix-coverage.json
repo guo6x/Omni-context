@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "status": "PARTIAL_TARGETED_RUN",
+  "method": "required_facts + current_facts + historical_facts + invalidated_facts, case-insensitive substring match against persisted evidence",
+  "completed_scenarios": 5,
+  "expected_scenarios": 7,
+  "gold_values_evaluated": 21,
+  "full_target_gold_values": 30,
+  "candidate_pool_present": 21,
+  "final20_present": 18,
+  "answer_top10_present": 9,
+  "details": [
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "gold_values": [
+        "lead an asynchronous research group",
+        "611 dollars",
+        "7 focused hours per week",
+        "written asynchronous updates",
+        "no overnight travel"
+      ],
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "final20_presence": [
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "answer_top10_presence": [
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "candidate_pool_size": 40,
+      "final20_size": 20,
+      "answer_top10_size": 10
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "gold_values": [
+        "implementation",
+        "prototype",
+        "implementation",
+        "prototype"
+      ],
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "final20_presence": [
+        true,
+        false,
+        true,
+        false
+      ],
+      "answer_top10_presence": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "candidate_pool_size": 40,
+      "final20_size": 20,
+      "answer_top10_size": 10
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "gold_values": [
+        "900 dollars",
+        "500 dollars",
+        "900 dollars",
+        "500 dollars",
+        "500 dollars"
+      ],
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "final20_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "answer_top10_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "candidate_pool_size": 40,
+      "final20_size": 20,
+      "answer_top10_size": 10
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "gold_values": [
+        "800 dollars",
+        "written weekly summaries",
+        "implementation",
+        "implementation",
+        "cancelled"
+      ],
+      "candidate_pool_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "final20_presence": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "answer_top10_presence": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "candidate_pool_size": 35,
+      "final20_size": 18,
+      "answer_top10_size": 10
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "gold_values": [
+        "small practical projects for cycle 2",
+        "buy a drone"
+      ],
+      "candidate_pool_presence": [
+        true,
+        true
+      ],
+      "final20_presence": [
+        true,
+        true
+      ],
+      "answer_top10_presence": [
+        true,
+        true
+      ],
+      "candidate_pool_size": 40,
+      "final20_size": 20,
+      "answer_top10_size": 10
+    }
+  ]
+}
