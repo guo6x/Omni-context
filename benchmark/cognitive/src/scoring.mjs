@@ -8,9 +8,19 @@ function phrasePresent(text, value) {
   const target = norm(value);
   if (!target) return false;
   if (text.includes(target)) return true;
-  const tokens = [...new Set(target.split(' ').filter(Boolean))];
-  const available = new Set(text.split(' ').filter(Boolean));
-  return tokens.length > 0 && tokens.every((token) => available.has(token));
+  // Ordered contiguous token matching — preserves order, count, duplicates
+  const targetTokens = target.split(' ').filter(Boolean);
+  if (targetTokens.length === 0) return false;
+  const textTokens = text.split(' ').filter(Boolean);
+  if (textTokens.length < targetTokens.length) return false;
+  for (let i = 0; i <= textTokens.length - targetTokens.length; i++) {
+    let match = true;
+    for (let j = 0; j < targetTokens.length; j++) {
+      if (textTokens[i + j] !== targetTokens[j]) { match = false; break; }
+    }
+    if (match) return true;
+  }
+  return false;
 }
 
 const coverage = (text, values = []) => values.length ? values.filter((value) => phrasePresent(text, value)).length / values.length : 1;

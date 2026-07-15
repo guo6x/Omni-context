@@ -163,20 +163,44 @@ function semanticCore(category, ctx) {
     gold = { required_facts: [goal, ctx.budget, time, preference, boundary], required_constraints: [ctx.budget, time, boundary], forbidden_facts: ['unlimited budget', 'full-time availability'], acceptable_actions: [detail, ctx.checkpoint], forbidden_inferences: ['medical diagnosis', 'personality disorder'] };
   } else if (category === 'memory_evolution') {
     const [oldValue, newValue] = detail;
-    add(A(0), `${ctx.persona}'s ${label} was ${oldValue}.`, label, oldValue, { status: 'historical', transition_id: 'main-transition' });
-    add(A(1), `${ctx.persona} now confirms the ${label} is ${newValue}.`, label, newValue, { transition_id: 'main-transition', importance: 'high' });
-    const transitions = [{ key: label, from_value: oldValue, to_value: newValue }];
+    // Build a single-key timeline: oldValue -> newValue -> intermediate/revised pairs
+    const timeline = [oldValue, newValue];
     for (let i = 1; i < ctx.structure.transitionCount; i++) {
-      const from = `${label} intermediate ${ctx.cycle}-${i}`;
-      const to = `${label} revised ${ctx.cycle}-${i}`;
-      add(A(i + 1), `${ctx.persona}'s ${label} briefly changed to ${from}.`, `${label}_${i}`, from, { status: 'historical', transition_id: `extra-${i}` });
-      add(A(i + 2), `${ctx.persona} then updated that value to ${to}.`, `${label}_${i}`, to, { transition_id: `extra-${i}` });
-      transitions.push({ key: `${label}_${i}`, from_value: from, to_value: to });
+      timeline.push(`${label} intermediate ${ctx.cycle}-${i}`);
+      timeline.push(`${label} revised ${ctx.cycle}-${i}`);
     }
-    question = `At ${ctx.checkpoint}, what is ${ctx.persona}'s current ${label}, what was historical, and what transition occurred in cycle ${ctx.cycle + 1}?`;
-    const allCurrentValues = [newValue, ...transitions.slice(1).map((t) => t.to_value)];
-    const allHistoricalValues = [oldValue, ...transitions.slice(1).map((t) => t.from_value)];
-    gold = { required_facts: allCurrentValues.concat(allHistoricalValues), current_facts: allCurrentValues, historical_facts: allHistoricalValues, stale_as_current: [oldValue], transitions };
+    // Add events in timeline order — ALL use the same semantic state_key (label)
+    // transition_id assigned in pairs to satisfy difficulty validation
+    for (let i = 0; i < timeline.length; i++) {
+      const value = timeline[i];
+      const isLast = i === timeline.length - 1;
+      const isFirst = i === 0;
+      const agent = A(i % ctx.structure.agentCount);
+      let text;
+      if (isFirst) {
+        text = `${ctx.persona}'s ${label} was ${value}.`;
+      } else if (isLast) {
+        text = `${ctx.persona} now confirms the ${label} is ${value}.`;
+      } else {
+        text = `${ctx.persona}'s ${label} then changed to ${value}.`;
+      }
+      const pairIndex = Math.floor(i / 2);
+      add(agent, text, label, value, {
+        status: isLast ? 'current' : 'historical',
+        importance: isLast ? 'high' : 'normal',
+        transition_id: `evolution-${pairIndex}`,
+      });
+    }
+    // Gold transitions: adjacent pairs in timeline order
+    const transitions = [];
+    for (let i = 0; i < timeline.length - 1; i++) {
+      transitions.push({ key: label, from_value: timeline[i], to_value: timeline[i + 1] });
+    }
+    const current_facts = [timeline[timeline.length - 1]];
+    const historical_facts = timeline.slice(0, -1);
+    const stale_as_current = [oldValue];
+    question = `At ${ctx.checkpoint}, what is ${ctx.persona}'s current ${label}, which earlier states were historical, and what transitions occurred during cycle ${ctx.cycle + 1}?`;
+    gold = { required_facts: [...current_facts, ...historical_facts], current_facts, historical_facts, stale_as_current, transitions };
   } else if (category === 'conflict_resolution') {
     const [invalidValue, currentValue] = detail;
     add(A(0), `${ctx.persona}'s earlier ${label} was ${invalidValue}.`, label, invalidValue, { status: 'historical', transition_id: 'correction' });

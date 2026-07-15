@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-memory_evolution-003",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 1200,
+  "finish_reason": "stop",
+  "prompt_tokens": 2375,
+  "completion_tokens": 996,
+  "total_tokens": 3371,
+  "response_content_characters": 2883,
+  "raw_response_content": "{\n  \"answer\": \"At checkpoint-3, Harper's current project phase is 'project phase revised 2-3'. Earlier historical states include 'prototype', 'implementation', 'project phase revised 2-2', and 'project phase intermediate 2-3'. During cycle 3, the transitions were: 'project phase revised 2-2' -> 'project phase intermediate 2-3' (updated), and 'project phase intermediate 2-3' -> 'project phase revised 2-3' (updated).\",\n  \"facts\": [\n    {\"key\": \"project_phase\", \"value\": \"project phase revised 2-3\", \"state\": \"current\", \"source_ids\": [\"event:84add4ee907649e31810af75b1ff9b766f48230ee695b130ecb166a51aea606c\"], \"source_agents\": [\"Agent-B\"]},\n    {\"key\": \"project_phase\", \"value\": \"prototype\", \"state\": \"historical\", \"source_ids\": [\"30d2c746-eec7-4c40-9ebc-b20e018867aa\"], \"source_agents\": [\"Agent-A\"]},\n    {\"key\": \"project_phase\", \"value\": \"implementation\", \"state\": \"historical\", \"source_ids\": [\"56e58526-b46a-4f8a-ba2e-314ecf7535d5\"], \"source_agents\": [\"Agent-B\"]},\n    {\"key\": \"project_phase\", \"value\": \"project phase intermediate 2-3\", \"state\": \"historical\", \"source_ids\": [\"event:e4efcf51c171810423d666819185c1f1ca4ff596c0284c5bddb857730ebf11f9\"], \"source_agents\": [\"Agent-A\"]},\n    {\"key\": \"project_phase\", \"value\": \"project phase revised 2-2\", \"state\": \"historical\", \"source_ids\": [\"event:e4efcf51c171810423d666819185c1f1ca4ff596c0284c5bddb857730ebf11f9\"], \"source_agents\": [\"Agent-A\"]}\n  ],\n  \"transitions\": [\n    {\"key\": \"project_phase\", \"from_value\": \"project phase revised 2-2\", \"to_value\": \"project phase intermediate 2-3\", \"source_ids\": [\"event:e4efcf51c171810423d666819185c1f1ca4ff596c0284c5bddb857730ebf11f9\"]},\n    {\"key\": \"project_phase\", \"from_value\": \"project phase intermediate 2-3\", \"to_value\": \"project phase revised 2-3\", \"source_ids\": [\"event:84add4ee907649e31810af75b1ff9b766f48230ee695b130ecb166a51aea606c\"]}\n  ],\n  \"constraints_used\": [\"Only use visible memory context\", \"Distinguish current and historical states\", \"Include transitions for temporal-change questions\", \"Reject low-confidence conflicting notes\"],\n  \"insights\": [\"The current phase is confirmed by Agent-B with a transition from intermediate 2-3 to revised 2-3.\", \"Earlier phases (prototype, implementation, revised 2-2, intermediate 2-3) are historical.\", \"Low-confidence notes (3-9, 3-10) are rejected as conflicting.\"],\n  \"actions\": [\"Identified current phase from event:84add4ee907649e31810af75b1ff9b766f48230ee695b130ecb166a51aea606c\", \"Identified historical phases from events 30d2c746-eec7-4c40-9ebc-b20e018867aa, 56e58526-b46a-4f8a-ba2e-314ecf7535d5, and e4efcf51c171810423d666819185c1f1ca4ff596c0284c5bddb857730ebf11f9\", \"Extracted transitions from events e4efcf51c171810423d666819185c1f1ca4ff596c0284c5bddb857730ebf11f9 and 84add4ee907649e31810af75b1ff9b766f48230ee695b130ecb166a51aea606c\", \"Rejected low-confidence notes 3-9 and 3-10 as per constraints\"],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T16:33:14.417Z"
+}

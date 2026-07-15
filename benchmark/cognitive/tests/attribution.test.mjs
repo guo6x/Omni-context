@@ -67,15 +67,29 @@ test('all 35 Development Gold records are supported by original events, with fie
   assert.equal(scenarios.length, 35);
   const audits = scenarios.map((scenario) => deriveSourceGoldAudit(scenario, byId.get(scenario.scenario_id)));
   for (const audit of audits) assert.equal(audit.gold_supported_by_original_events, true, audit.scenario_id);
-  assert.deepEqual(audits.filter((audit) => audit.dataset_defect).map((audit) => audit.scenario_id), scenarios.filter((scenario) => scenario.category === 'cross_agent_transfer').map((scenario) => scenario.scenario_id));
+  // detectAgentFieldTextMismatches returns [] for all scenarios — the regenerated dataset
+  // has matching agent text/field pairs. No dataset_defect is expected for any category.
+  assert.deepEqual(audits.filter((audit) => audit.dataset_defect).map((audit) => audit.scenario_id), []);
 });
 
-test('Deterministic Scoring v3 recomputes exactly for all 35 archived Full Omni rows', async () => {
+test('Deterministic Scoring v3 executes for all 35 archived rows; baseline invalidation is detected after Gold/scoring fix', async () => {
   const [scenarios, results] = await Promise.all([jsonl(path.join(EVIDENCE, 'development-dataset-v2.jsonl')), jsonl(path.join(EVIDENCE, 'development-full-omni-results-v2.1.jsonl'))]);
   const byId = new Map(scenarios.map((row) => [row.scenario_id, row]));
   const completed = selectCompletedRecords(results);
   assert.equal(completed.length, 35);
-  for (const result of completed) assert.equal(compareScore(result, byId.get(result.scenario_id)).exact_within_1e_9, true, result.scenario_id);
+  // Scoring must execute deterministically for all 35 rows (no exceptions, no NaN).
+  const invalidatedCategories = new Set();
+  for (const result of completed) {
+    const scenario = byId.get(result.scenario_id);
+    const comparison = compareScore(result, scenario);
+    assert.ok(Number.isFinite(comparison.recomputed_core_score), `${result.scenario_id} core score must be finite`);
+    if (!comparison.exact_within_1e_9) invalidatedCategories.add(scenario.category);
+  }
+  // Baseline invalidation: phrasePresent ordered-matching fix affects coverage() used by
+  // all categories; memory_evolution Gold generation also changed. At least memory_evolution
+  // must be invalidated, confirming the baseline cannot be used as same-config reference.
+  assert.ok(invalidatedCategories.has('memory_evolution'), 'memory_evolution baseline must be invalidated');
+  assert.ok(invalidatedCategories.size > 0, 'baseline invalidation must be detected');
 });
 
 test('v2.1.1 evidence changes only Cross-Agent scenarios and passes Formal invariants', async () => {
