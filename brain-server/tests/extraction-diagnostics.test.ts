@@ -72,13 +72,25 @@ describe('formal evaluation extraction diagnostics', () => {
       'Caroline', 'Melanie',
     ]);
     expect(result.entities.every((entity) => entity.created_at === timestamp)).toBe(true);
-    expect(result.assertions).toHaveLength(1);
-    expect(result.assertions?.[0].valid_from).toBe(timestamp);
+    expect(result.assertions).toHaveLength(3);
+    const semanticAssertions = result.assertions?.filter(
+      (assertion) => assertion.provenance?.evidence_kind !== 'raw_event',
+    ) ?? [];
+    const rawEventAssertions = result.assertions?.filter(
+      (assertion) => assertion.provenance?.evidence_kind === 'raw_event',
+    ) ?? [];
+    expect(semanticAssertions).toHaveLength(1);
+    expect(semanticAssertions[0].valid_from).toBe(timestamp);
+    expect(rawEventAssertions).toHaveLength(2);
+    expect(rawEventAssertions.map((assertion) => assertion.provenance?.source_agent)).toEqual([
+      'Caroline', 'Melanie',
+    ]);
+    expect(rawEventAssertions.every((assertion) => assertion.valid_from === timestamp)).toBe(true);
     expect(result.diagnostics).toMatchObject({
       input_characters: 54,
       chunks: 1,
       parsed_counts: { entities: 2, facts: 1, principles: 0 },
-      produced_counts: { entities: 2, assertions: 1 },
+      produced_counts: { entities: 2, assertions: 3 },
       skipped_facts_missing_subject: 0,
     });
   });

@@ -43,6 +43,7 @@
     "brain-server/src/graphrag/evidence-fidelity.ts",
     "brain-server/src/retrieval/trace.ts",
     "brain-server/tests/evidence-fidelity.test.ts",
+    "brain-server/tests/extraction-diagnostics.test.ts",
     "brain-server/tests/retrieval-trace.test.ts"
   ],
   "product_implementation_commit": "c2d7813bc5828fe6706127c3dab0d90c62db7d6b"

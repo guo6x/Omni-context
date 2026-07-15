@@ -18,6 +18,7 @@
     "brain-server/src/graphrag/evidence-fidelity.ts": "51947af174efbabacc4bd87b10363e59cd841087a7bd494cbba750b3e22b9946",
     "brain-server/src/retrieval/trace.ts": "2d7936933f9e47679cf834ceb1631372ff9ab055bdbfc91578f6c8ed91f83b59",
     "brain-server/tests/evidence-fidelity.test.ts": "eed75e40cae0faca29b4ec84dcb7490e8be497ce4cf0f67b2a9c4b012126fbf7",
+    "brain-server/tests/extraction-diagnostics.test.ts": "85c09e8497baff3e269fb6611c7fe26b84d054da518880dd4762ecd12728cb59",
     "brain-server/tests/retrieval-trace.test.ts": "1a0116d932921e7b4e029cafac893a85f7e435e700e456d1dc10294bd2520a1c"
   }
 }

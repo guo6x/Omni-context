@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-15T05:29:54.279Z",
+  "generated_at": "2026-07-15T05:39:43.3587487Z",
   "algorithm": "sha256",
   "files": [
     {
@@ -21,11 +21,11 @@
     },
     {
       "path": "candidate-v3-change-manifest.json",
-      "sha256": "ce0a74a40ee111b25105451c72edeb90ef6abd6172e76ac9031506267cb1053e"
+      "sha256": "4fc18e6ae8717d54986acb458d9a013a255cbde03f929d88992b1a0dfd78e221"
     },
     {
       "path": "candidate-v3-code-hashes.json",
-      "sha256": "849e3515868601bf3fe2e38581389ca9b5e54f2cc2a0b744cd6fb4c9a4275cf5"
+      "sha256": "bba8d13f900f523e0dd41374fed4a3e1d3873fd72275b91232415030db054517"
     },
     {
       "path": "candidate-v3-freeze-manifest.json",
@@ -57,11 +57,11 @@
     },
     {
       "path": "regression-check.json",
-      "sha256": "56e60047a2fc6622815a851f75303c739cfee54082c1ff52b17c1dd70ab8b190"
+      "sha256": "1a4a23d1b7faadf97846734eccca5698df9ce1235a49cafef3efe6c7ad65a0dc"
     },
     {
       "path": "secret-scan.json",
-      "sha256": "0a9d0517e7a3110e941de65c3fd5d2c840072e4f4e946e9790e05911bb34fff2"
+      "sha256": "8f5a95dab1f1254dd8ca48298ae3ada397d52fee59fc523c79d0bc4bc2c87734"
     },
     {
       "path": "targeted-7-first-run-manifest.json",

@@ -8,6 +8,8 @@
 - Secret scan: passed.
 - Prohibited product-string scan: passed.
 
-The complete Brain Server suite also passed when split into single-worker batches. A single all-files parallel invocation is unreliable on this Windows host because the native sqlite3 process can exit during worker teardown; no assertion failure was observed, so evidence uses the stable single-worker gate.
+The complete Brain Server suite passed in one stable single-worker invocation: 35/35 files and 285/285 tests. This includes the extraction diagnostics compatibility assertion for the two first-class raw-event evidence rows added alongside the normalized LLM assertion. Typecheck also passed in the same verification gate.
+
+The first GitHub Actions run exposed the stale pre-change expectation (1 assertion instead of 3); product logic was unchanged. The local exact fix gate is recorded here, while the exact post-push workflow URL and job conclusions are reported from GitHub after the final commit is pushed.
 
 See `evidence/regression-check.json` and `evidence/secret-scan.json`.

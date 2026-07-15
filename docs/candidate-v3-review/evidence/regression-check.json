@@ -1,8 +1,25 @@
 {
   "schema_version": 1,
-  "status": "PASS_FOR_IMPLEMENTATION",
+  "status": "PASS_NOT_FROZEN",
   "windows_execution": {
-    "brain_server_full_suite": "All test files passed in single-worker batches; parallel sqlite3 native exit is unstable on this host.",
+    "brain_server_full_suite": {
+      "configuration": "vitest pool=forks singleFork",
+      "files": 35,
+      "tests": 285,
+      "passed": 285,
+      "failed": 0,
+      "duration_seconds": 15.79
+    },
+    "github_actions_compatibility_fix": {
+      "scope": "test expectation only",
+      "file": "brain-server/tests/extraction-diagnostics.test.ts",
+      "reason": "first-class raw-event evidence adds two bounded assertions beside the normalized assertion",
+      "focused_files": 1,
+      "focused_tests": 6,
+      "focused_passed": 6,
+      "product_logic_changed": false,
+      "evaluation_rerun_performed": false
+    },
     "candidate_gate_group": {
       "files": 12,
       "tests": 92,
