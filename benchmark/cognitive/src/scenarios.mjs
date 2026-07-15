@@ -174,7 +174,9 @@ function semanticCore(category, ctx) {
       transitions.push({ key: `${label}_${i}`, from_value: from, to_value: to });
     }
     question = `At ${ctx.checkpoint}, what is ${ctx.persona}'s current ${label}, what was historical, and what transition occurred in cycle ${ctx.cycle + 1}?`;
-    gold = { required_facts: [newValue, oldValue], current_facts: [newValue], historical_facts: [oldValue], stale_as_current: [oldValue], transitions };
+    const allCurrentValues = [newValue, ...transitions.slice(1).map((t) => t.to_value)];
+    const allHistoricalValues = [oldValue, ...transitions.slice(1).map((t) => t.from_value)];
+    gold = { required_facts: allCurrentValues.concat(allHistoricalValues), current_facts: allCurrentValues, historical_facts: allHistoricalValues, stale_as_current: [oldValue], transitions };
   } else if (category === 'conflict_resolution') {
     const [invalidValue, currentValue] = detail;
     add(A(0), `${ctx.persona}'s earlier ${label} was ${invalidValue}.`, label, invalidValue, { status: 'historical', transition_id: 'correction' });

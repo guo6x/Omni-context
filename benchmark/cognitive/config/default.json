@@ -9,7 +9,7 @@
   "answer": {
     "model": "deepseek-v4-flash",
     "temperature": 0,
-    "max_tokens": 900,
+    "max_tokens": 1200,
     "thinking": "disabled"
   },
   "primary_judge": {
@@ -22,7 +22,10 @@
     "call_limit": 60,
     "adapter_version": "kimi-judge-adapter-v2.1",
     "rubric_version": "kimi-judge-rubric-v2",
-    "categories": ["proactive_insight", "decision_quality"]
+    "categories": [
+      "proactive_insight",
+      "decision_quality"
+    ]
   },
   "secondary_review": {
     "model": "deepseek-v4-flash",
