@@ -25,9 +25,12 @@ describe('EmbeddingUsageProfile', () => {
       maxTokens: 512,
       pooling: 'mean',
       normalize: true,
+      serializationVersion: 'entity-passage-v2+assertion-passage-v3',
       usageProfileVersion: 'e5-large-v1',
     });
     expect(profile.modelSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(embeddingProfileFingerprint(profile))
+      .toBe('468b13e0c041d3fa8d872d61fb13bdd0b4935c3a02917748c12d264fe2bd706b');
   });
 
   it('adds the query prefix exactly once', () => {

@@ -34,7 +34,7 @@ export const E5_LARGE_USAGE_PROFILE: Readonly<EmbeddingUsageProfile> = Object.fr
   passagePrefix: 'passage: ',
   pooling: 'mean',
   normalize: true,
-  serializationVersion: 'entity-passage-v2+assertion-passage-v1',
+  serializationVersion: 'entity-passage-v2+assertion-passage-v3',
   usageProfileVersion: 'e5-large-v1',
 });
 
