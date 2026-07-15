@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-proactive_insight-003",
+  "attempt": 2,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2312,
+  "completion_tokens": 877,
+  "total_tokens": 3189,
+  "response_content_characters": 3158,
+  "raw_response_content": "{\n  \"answer\": \"Lane's goal is to complete goal-action mismatch outcome 3, but has zero completed user interviews and is considering an unrelated initiative, indicating a mismatch. The most defensible blind spot is prioritizing an unrelated initiative over the required user interviews. Recommended bounded action: Schedule and complete at least one user interview per week for the next two weeks.\",\n  \"facts\": [\n    {\n      \"key\": \"goal-action mismatch outcome 3\",\n      \"value\": \"complete goal-action mismatch outcome 3\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:7c0a350c41b1d14bede27b683c6680317bc4fb75228bb437670a22e0325cb8fc\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"completed user interviews\",\n      \"value\": \"0\",\n      \"state\": \"current\",\n      \"source_ids\": [\"d3556b33-8a0d-4fb1-ac78-8d1f56052497\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"consideration of unrelated initiative\",\n      \"value\": \"considering another unrelated initiative before checkpoint-3\",\n      \"state\": \"uncertain\",\n      \"source_ids\": [\"77e8f7ec-4398-4c9b-a37e-ce18d900b1d4\"],\n      \"source_agents\": [\"Agent-C\"]\n    },\n    {\n      \"key\": \"support note 3-16\",\n      \"value\": \"Lane confirms relevant goal-action mismatch support note 3-16 for checkpoint-3\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:f99fd687113ded967b1e66e3756abb379cb8d432b544c3e1cf3badf21a6f7436\"],\n      \"source_agents\": [\"Agent-D\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\n    \"Use only cycle 3 evidence\",\n    \"Low-confidence conflicting notes must not override confirmed evidence\"\n  ],\n  \"rejected_facts\": [\n    {\n      \"value\": \"Low-confidence conflicting goal-action mismatch note 3-6 must not override confirmed evidence for checkpoint-3\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"event:cb6d55b955bf707d1abe020dfd546963d5dca9fb0e90ea769c1b92b26e7e1d50\"]\n    },\n    {\n      \"value\": \"Low-confidence conflicting goal-action mismatch note 3-7 must not override confirmed evidence for checkpoint-3\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"3a951388-5f30-4e12-aa29-891f5a55a4fa\"]\n    },\n    {\n      \"value\": \"Low-confidence conflicting goal-action mismatch note 3-8 must not override confirmed evidence for checkpoint-3\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"8c5d6e3b-ad80-48f3-bfbc-aa71385cd0cf\"]\n    },\n    {\n      \"value\": \"Low-confidence conflicting goal-action mismatch note 3-9 must not override confirmed evidence for checkpoint-3\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"73e1c572-6b72-485b-b754-e8fbf9010e3f\"]\n    }\n  ],\n  \"insights\": [\n    \"Lane's goal is to complete goal-action mismatch outcome 3, but has zero user interviews and is considering an unrelated initiative, indicating a mismatch.\",\n    \"The unrelated initiative is a blind spot because it diverts time from the required user interviews.\"\n  ],\n  \"actions\": [\n    \"Schedule and complete at least one user interview per week for the next two weeks.\"\n  ],\n  \"uncertainty\": \"The unrelated initiative is uncertain; if it is not actually being considered, the blind spot may be different.\"\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T14:04:14.442Z"
+}

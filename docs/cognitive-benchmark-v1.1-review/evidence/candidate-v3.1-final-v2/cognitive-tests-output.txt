@@ -1,0 +1,256 @@
+TAP version 13
+# Subtest: normalization and semantic phrase matching preserve structured values
+ok 1 - normalization and semantic phrase matching preserve structured values
+  ---
+  duration_ms: 1.5436
+  type: 'test'
+  ...
+# Subtest: model Attribution schema excludes locally derived old-review comparison fields
+ok 2 - model Attribution schema excludes locally derived old-review comparison fields
+  ---
+  duration_ms: 1.4085
+  type: 'test'
+  ...
+# Subtest: strict Attribution Review schema rejects extra keys and invalid score changes
+ok 3 - strict Attribution Review schema rejects extra keys and invalid score changes
+  ---
+  duration_ms: 0.1881
+  type: 'test'
+  ...
+# Subtest: strict Attribution Review schema enforces evidence and notes limits
+ok 4 - strict Attribution Review schema enforces evidence and notes limits
+  ---
+  duration_ms: 0.2023
+  type: 'test'
+  ...
+# Subtest: Attribution adapter normalizes only documented unambiguous forms
+ok 5 - Attribution adapter normalizes only documented unambiguous forms
+  ---
+  duration_ms: 0.5087
+  type: 'test'
+  ...
+# Subtest: completed result selection excludes retries and errors
+ok 6 - completed result selection excludes retries and errors
+  ---
+  duration_ms: 0.3918
+  type: 'test'
+  ...
+# Subtest: all 35 Development Gold records are supported by original events, with field/text defects separated
+ok 7 - all 35 Development Gold records are supported by original events, with field/text defects separated
+  ---
+  duration_ms: 90.5497
+  type: 'test'
+  ...
+# Subtest: Deterministic Scoring v3 recomputes exactly for all 35 archived Full Omni rows
+ok 8 - Deterministic Scoring v3 recomputes exactly for all 35 archived Full Omni rows
+  ---
+  duration_ms: 11.4536
+  type: 'test'
+  ...
+# Subtest: v2.1.1 evidence changes only Cross-Agent scenarios and passes Formal invariants
+ok 9 - v2.1.1 evidence changes only Cross-Agent scenarios and passes Formal invariants
+  ---
+  duration_ms: 16.6199
+  type: 'test'
+  ...
+# Subtest: v1.1.1 final Attribution Review is complete, locally compared, and P0-free
+ok 10 - v1.1.1 final Attribution Review is complete, locally compared, and P0-free
+  ---
+  duration_ms: 41.5715
+  type: 'test'
+  ...
+# Subtest: generates isolated v2 sets and preselects 70 comparison IDs
+ok 11 - generates isolated v2 sets and preselects 70 comparison IDs
+  ---
+  duration_ms: 16.4561
+  type: 'test'
+  ...
+# Subtest: passes family, duplicate, and real structural difficulty audits
+ok 12 - passes family, duplicate, and real structural difficulty audits
+  ---
+  duration_ms: 18.3758
+  type: 'test'
+  ...
+# Subtest: Cross-Agent provenance has one Agent source across fields, text, and Gold
+ok 13 - Cross-Agent provenance has one Agent source across fields, text, and Gold
+  ---
+  duration_ms: 14.7811
+  type: 'test'
+  ...
+# Subtest: Cross-Agent Easy scenarios deduplicate wrapped required sources without inventing Agent-C
+ok 14 - Cross-Agent Easy scenarios deduplicate wrapped required sources without inventing Agent-C
+  ---
+  duration_ms: 6.9073
+  type: 'test'
+  ...
+# Subtest: Cross-Agent conflict reports use a real Agent and low-confidence report metadata
+ok 15 - Cross-Agent conflict reports use a real Agent and low-confidence report metadata
+  ---
+  duration_ms: 23.9118
+  type: 'test'
+  ...
+# Subtest: Kimi uses JSON Schema first and normalizes cached-token usage
+ok 16 - Kimi uses JSON Schema first and normalizes cached-token usage
+  ---
+  duration_ms: 108.0732
+  type: 'test'
+  ...
+# Subtest: Kimi records an explicit JSON-object fallback only after server rejection
+ok 17 - Kimi records an explicit JSON-object fallback only after server rejection
+  ---
+  duration_ms: 123.3735
+  type: 'test'
+  ...
+# Subtest: Kimi hard-stops before physical attempt 61
+ok 18 - Kimi hard-stops before physical attempt 61
+  ---
+  duration_ms: 51.6557
+  type: 'test'
+  ...
+# Subtest: Kimi separates one logical call from three malformed physical attempts
+ok 19 - Kimi separates one logical call from three malformed physical attempts
+  ---
+  duration_ms: 188.5924
+  type: 'test'
+  ...
+# Subtest: Kimi classifies finish_reason length as output_truncated and recovers on retry
+ok 20 - Kimi classifies finish_reason length as output_truncated and recovers on retry
+  ---
+  duration_ms: 106.1267
+  type: 'test'
+  ...
+# Subtest: parseStructuredJudgeResponse accepts direct, fenced, and surrounded complete JSON only
+ok 21 - parseStructuredJudgeResponse accepts direct, fenced, and surrounded complete JSON only
+  ---
+  duration_ms: 1.232
+  type: 'test'
+  ...
+# Subtest: DeepSeek Answer retries schema validation with a compact corrective instruction
+ok 22 - DeepSeek Answer retries schema validation with a compact corrective instruction
+  ---
+  duration_ms: 12.6739
+  type: 'test'
+  ...
+# Subtest: Answer shape normalization removes only redundant rejected_fact source_agents
+ok 23 - Answer shape normalization removes only redundant rejected_fact source_agents
+  ---
+  duration_ms: 0.3258
+  type: 'test'
+  ...
+# Subtest: Kimi omits temperature and does not retry a provider-declared temperature constraint
+ok 24 - Kimi omits temperature and does not retry a provider-declared temperature constraint
+  ---
+  duration_ms: 80.5676
+  type: 'test'
+  ...
+# Subtest: Kimi stops safely after three consecutive generic provider errors
+ok 25 - Kimi stops safely after three consecutive generic provider errors
+  ---
+  duration_ms: 181.5553
+  type: 'test'
+  ...
+# Subtest: validates answer-schema-v2 exact states, sources, Agents, transitions, and rejection reasons
+ok 26 - validates answer-schema-v2 exact states, sources, Agents, transitions, and rejection reasons
+  ---
+  duration_ms: 3.385
+  type: 'test'
+  ...
+# Subtest: allows No Memory question-supported facts only with empty sources and no Agent
+ok 27 - allows No Memory question-supported facts only with empty sources and no Agent
+  ---
+  duration_ms: 0.3454
+  type: 'test'
+  ...
+# Subtest: validates Kimi Judge v2 schema including redundancy and diagnostic arrays
+ok 28 - validates Kimi Judge v2 schema including redundancy and diagnostic arrays
+  ---
+  duration_ms: 0.468
+  type: 'test'
+  ...
+# Subtest: validates Secondary Agent Review as non-human evidence
+ok 29 - validates Secondary Agent Review as non-human evidence
+  ---
+  duration_ms: 0.2243
+  type: 'test'
+  ...
+# Subtest: recovers only visible speaker and Agent labels from evidence passages
+ok 30 - recovers only visible speaker and Agent labels from evidence passages
+  ---
+  duration_ms: 0.9178
+  type: 'test'
+  ...
+# Subtest: checkpoints, resumes, and preserves a retry record with isolated synthetic fixtures
+ok 31 - checkpoints, resumes, and preserves a retry record with isolated synthetic fixtures
+  ---
+  duration_ms: 462.6024
+  type: 'test'
+  ...
+# Subtest: No Memory context is empty and fixed retrieval contains only event text, never gold
+ok 32 - No Memory context is empty and fixed retrieval contains only event text, never gold
+  ---
+  duration_ms: 14.5102
+  type: 'test'
+  ...
+# Subtest: rejected fact and actions/insights cannot obtain required positive coverage
+ok 33 - rejected fact and actions/insights cannot obtain required positive coverage
+  ---
+  duration_ms: 1.9101
+  type: 'test'
+  ...
+# Subtest: historical fact cannot obtain current score and current fact cannot obtain historical score
+ok 34 - historical fact cannot obtain current score and current fact cannot obtain historical score
+  ---
+  duration_ms: 0.5693
+  type: 'test'
+  ...
+# Subtest: reversed transition and missing transition receive no Temporal Ordering credit
+ok 35 - reversed transition and missing transition receive no Temporal Ordering credit
+  ---
+  duration_ms: 0.3476
+  type: 'test'
+  ...
+# Subtest: an omitted stale fact is not leakage, but treating it as current is leakage
+ok 36 - an omitted stale fact is not leakage, but treating it as current is leakage
+  ---
+  duration_ms: 0.4356
+  type: 'test'
+  ...
+# Subtest: invalidated fact counts as rejected only through structured rejected_facts
+ok 37 - invalidated fact counts as rejected only through structured rejected_facts
+  ---
+  duration_ms: 0.4564
+  type: 'test'
+  ...
+# Subtest: invalid source ID increases Unsupported Rate
+ok 38 - invalid source ID increases Unsupported Rate
+  ---
+  duration_ms: 0.2804
+  type: 'test'
+  ...
+# Subtest: invented Agent receives no Cross-Agent Provenance credit
+ok 39 - invented Agent receives no Cross-Agent Provenance credit
+  ---
+  duration_ms: 0.8258
+  type: 'test'
+  ...
+# Subtest: not-implemented forgetting capabilities remain null/excluded instead of numeric zero
+ok 40 - not-implemented forgetting capabilities remain null/excluded instead of numeric zero
+  ---
+  duration_ms: 5.2555
+  type: 'test'
+  ...
+# Subtest: scores seven categories, includes Judge redundancy, and macro-averages categories equally
+ok 41 - scores seven categories, includes Judge redundancy, and macro-averages categories equally
+  ---
+  duration_ms: 3.8619
+  type: 'test'
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 41
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1368.4776

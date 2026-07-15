@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-cross_agent_transfer-004",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2365,
+  "completion_tokens": 464,
+  "total_tokens": 2829,
+  "response_content_characters": 1672,
+  "raw_response_content": "{\n  \"answer\": \"Morgan's budget limit is 800 dollars (Agent-A). Morgan prefers written weekly summaries (Agent B). Checkpoint-4 status is implementation (Agent C). Conflicting notes: Agent-A reports note 4-9, Agent-D reports note 4-8, Agent-C reports notes 4-7 and 4-11, Agent-B reports note 4-10. Only Agent-A's budget limit and Agent B's preference are consistent; the checkpoint-4 status from Agent C is accepted. The multiple note numbers are contradictory and likely incorrect reports.\",\n  \"facts\": [\n    {\"key\": \"budget_limit_morgan\", \"value\": \"800 dollars\", \"state\": \"current\", \"source_ids\": [\"event:841fcda65aa32c20b21b4dab3cc4a0225523b93e3a3c87a73045cda85bcf93ac\"], \"source_agents\": [\"Agent-A\"]},\n    {\"key\": \"preference_morgan\", \"value\": \"written weekly summaries\", \"state\": \"current\", \"source_ids\": [\"relationship:7a9308e2-d4fc-47e8-9866-9756728cd458\"], \"source_agents\": [\"Agent B\"]},\n    {\"key\": \"checkpoint-4_status\", \"value\": \"implementation\", \"state\": \"current\", \"source_ids\": [\"event:5b0a139c0af6afaa274b9083060318f801b0bf3cc09ac670fd3c4724c2c423e8\"], \"source_agents\": [\"Agent-C\"]}\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"Must use exact source Agents as visible in memory context\", \"Must isolate incorrect reports\"],\n  \"insights\": [\"Multiple agents report conflicting note numbers for checkpoint-4 budget limit support, indicating possible data inconsistency or errors\"],\n  \"actions\": [\"Summarized budget limit, preference, and checkpoint-4 status\", \"Identified conflicting note reports as incorrect\"],\n  \"uncertainty\": \"The correct note number for checkpoint-4 budget limit support is uncertain due to conflicting reports from multiple agents.\"\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T13:53:16.321Z"
+}

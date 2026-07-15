@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-cognitive_continuity-004",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2339,
+  "completion_tokens": 859,
+  "total_tokens": 3198,
+  "response_content_characters": 2792,
+  "raw_response_content": "{\n  \"answer\": \"Based on the stable goal to lead an asynchronous research group, a budget of 611 dollars, and a preference for written asynchronous updates, the next bounded step for planning cycle 4 is to allocate funds for asynchronous communication tools and draft a schedule for written updates, ensuring alignment with the confirmed support notes for checkpoint-4.\",\n  \"facts\": [\n    {\n      \"key\": \"goal\",\n      \"value\": \"lead an asynchronous research group\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:4805749358b1d3f5cf4ec31ea09c8676a426fee0898216fdcf5274d5fedaeaaa\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"budget_planning_cycle_4\",\n      \"value\": \"611 dollars\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:55290b8824d1b0aea5ed12d9ec87fd973c722db41f9e62337f3d97e56dccdd21\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"preference_updates\",\n      \"value\": \"written asynchronous updates\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:60541d6d8ce4e08753ea21299fb650d44a6afc6d5b9dbcd55e030906008ace8b\"],\n      \"source_agents\": [\"Agent-B\"]\n    },\n    {\n      \"key\": \"relevance_checkpoint_4\",\n      \"value\": \"checkpoint-4\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:d2c00181a729f191ca36f1f872f58c4006a729c011a6bc4d74e9351582b05104\", \"event:d69821dc1fca51c17f5ee9e15885d637587a15dc4f295819bfb2cb7a54c2c980\"],\n      \"source_agents\": [\"Agent-D\", \"Agent-A\"]\n    },\n    {\n      \"key\": \"confidence_level\",\n      \"value\": \"true\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:4d1ea4a6ed1ce676ed94c8904becc822fbcf9f7e1bbdaf1b96930f8fd29cbf6a\"],\n      \"source_agents\": [\"Agent-B\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\n    \"stable goal: lead an asynchronous research group\",\n    \"budget: 611 dollars\",\n    \"preference: written asynchronous updates\",\n    \"confirmed support notes for checkpoint-4\",\n    \"low-confidence conflicting note must not override\"\n  ],\n  \"rejected_facts\": [\n    {\n      \"value\": \"Low-confidence conflicting collaboration plan note 4-6\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"event:4d1ea4a6ed1ce676ed94c8904becc822fbcf9f7e1bbdaf1b96930f8fd29cbf6a\"]\n    },\n    {\n      \"value\": \"archived decorative sample 12\",\n      \"reason\": \"noise\",\n      \"source_ids\": [\"efd352c2-b300-4eb4-8f59-c400a29a0df8\"]\n    }\n  ],\n  \"insights\": [\n    \"Jordan's goal and preference align with asynchronous communication.\",\n    \"Budget of 611 dollars can support tools for asynchronous updates.\",\n    \"Checkpoint-4 is confirmed by multiple agents.\"\n  ],\n  \"actions\": [\n    \"Allocate budget for asynchronous communication tools.\",\n    \"Draft a schedule for written asynchronous updates.\",\n    \"Ensure alignment with support notes for checkpoint-4.\"\n  ],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T13:45:39.404Z"
+}

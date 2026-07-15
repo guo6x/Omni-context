@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-human_like_forgetting-002",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2395,
+  "completion_tokens": 811,
+  "total_tokens": 3206,
+  "response_content_characters": 2870,
+  "raw_response_content": "{\n  \"answer\": \"The memory that should remain influential for Harper's checkpoint-2 planning is the reinforced preference support note 2-8, as it is confirmed and relevant. Stale, invalidated, or noisy items include the withdrawn drone plan and low-confidence note 2-6.\",\n  \"facts\": [\n    {\n      \"key\": \"reinforced preference support note 2-8 relation to checkpoint-2\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-8 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:0be7776f65fda7c56e3eff89fc8466db0109435cc4f43e58ed592cf2d3128c36\"],\n      \"source_agents\": [\"Agent-D\"]\n    },\n    {\n      \"key\": \"small practical projects for cycle 2\",\n      \"value\": \"Harper's high-value long-term reinforced preference is small practical projects for cycle 2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:edee35997072f4715b88e4307631833ad1a97f6276e0e9986fdd2ea18f269126\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"reinforced preference support note 2-9 relation to checkpoint-2\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-9 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:dbd5f81501c879065f293e5dd19a4df98a604affddd28e08bb70fc9750f614c1\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"reinforced preference support note 2-10 relation to checkpoint-2\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-10 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:e05ddbd729dd83ab16fd2c32e28c96ad0013c3abb7ddb38a0c66e843762c31e2\"],\n      \"source_agents\": [\"Agent-B\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\n    \"Must identify influential memory for checkpoint-2 planning\",\n    \"Must structurally reject stale, invalidated, or noisy items\"\n  ],\n  \"rejected_facts\": [\n    {\n      \"value\": \"Harper explicitly withdraws the plan to buy a drone.\",\n      \"reason\": \"invalidated\",\n      \"source_ids\": [\"9c16bdeb-33dc-450e-b114-8501e82daf0b\"]\n    },\n    {\n      \"value\": \"Low-confidence conflicting reinforced preference note 2-6 must not override confirmed evidence for checkpoint-2.\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"event:a3eba111631fa3c31a456ad450816d88cce01ce2e425bf6b4e5e4e55a57a55e8\"]\n    }\n  ],\n  \"insights\": [\n    \"Multiple agents confirm reinforced preference support notes for checkpoint-2, with note 2-8 from Agent-D being the most directly relevant.\",\n    \"The drone plan is explicitly withdrawn, making it invalid for planning.\",\n    \"Note 2-6 is explicitly low-confidence and should not override confirmed evidence.\"\n  ],\n  \"actions\": [\n    \"Retain reinforced preference support note 2-8 as influential for checkpoint-2 planning.\",\n    \"Reject the withdrawn drone plan and low-confidence note 2-6.\"\n  ],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T14:00:41.473Z"
+}

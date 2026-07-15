@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-cross_agent_transfer-004",
+  "attempt": 1,
+  "validation_attempt": 2,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2412,
+  "completion_tokens": 491,
+  "total_tokens": 2903,
+  "response_content_characters": 1616,
+  "raw_response_content": "{\n  \"answer\": \"Morgan's budget limit is 800 dollars (Agent A). Morgan prefers written weekly summaries (Agent B). Checkpoint-4 status is 'implementation' (Agent C). Conflicting reports: Agent A says note 4-9, Agent D says note 4-8, Agent C says note 4-7 and note 4-11, Agent B says note 4-10. Only Agent C's checkpoint-4 status update is consistent; the note numbers are contradictory and cannot be reconciled.\",\n  \"facts\": [\n    {\"key\": \"budget_limit_morgan\", \"value\": \"800 dollars\", \"state\": \"current\", \"source_ids\": [\"event:841fcda65aa32c20b21b4dab3cc4a0225523b93e3a3c87a73045cda85bcf93ac\"], \"source_agents\": [\"Agent A\", \"Agent-A\"]},\n    {\"key\": \"preference_morgan\", \"value\": \"written weekly summaries\", \"state\": \"current\", \"source_ids\": [\"relationship:7a9308e2-d4fc-47e8-9866-9756728cd458\"], \"source_agents\": [\"Agent B\"]},\n    {\"key\": \"checkpoint-4_status\", \"value\": \"implementation\", \"state\": \"current\", \"source_ids\": [\"event:5b0a139c0af6afaa274b9083060318f801b0bf3cc09ac670fd3c4724c2c423e8\", \"relationship:15c453f6-a7f5-4a03-acb3-020cfc2d5225\"], \"source_agents\": [\"Agent C\", \"Agent-C\"]}\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"exact source Agents\", \"isolate incorrect reports\"],\n  \"insights\": [\"Multiple agents report different support note numbers for checkpoint-4, indicating a conflict or error in those reports.\", \"Only the budget limit, preference, and checkpoint-4 status have consistent sources.\"],\n  \"actions\": [\"Flag conflicting note numbers for resolution.\"],\n  \"uncertainty\": \"The correct support note for checkpoint-4 is unknown due to contradictory reports from Agents A, B, C, and D.\"\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T13:53:20.690Z"
+}

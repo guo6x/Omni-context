@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-conflict_resolution-004",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2367,
+  "completion_tokens": 678,
+  "total_tokens": 3045,
+  "response_content_characters": 1911,
+  "raw_response_content": "{\n  \"answer\": \"Lane's available budget for checkpoint-4 is supported by multiple notes (4-5, 4-8, 4-9, 4-10, 4-11) but no specific dollar amount is confirmed. The $500 claim is low-confidence and rejected.\",\n  \"facts\": [\n    {\n      \"key\": \"lane.available_budget.checkpoint-4\",\n      \"value\": \"supported by notes 4-5, 4-8, 4-9, 4-10, 4-11\",\n      \"state\": \"current\",\n      \"source_ids\": [\n        \"event:c4619ca66cd5b6416f4644ac6d25291e69485e3726f8ca3c93bf208f175b2f36\",\n        \"event:03b09ff09b3ccb886ffc93929b8edae89325ccb454e7ce52a88174c278dd68e1\",\n        \"event:fee4cfd7ecc34bea42e36145753f92dc31d56073136365af3affa2d76d16e37b\",\n        \"event:74cd3d73be04e59a1ee662f0852f9fdf8f18abcb8b2f98b3a2fcb2002c45cb90\",\n        \"relationship:856b7cec-9415-4793-b90d-a6b30cd5abcc\"\n      ],\n      \"source_agents\": [\"Agent-A\", \"Agent-D\", \"Agent-B\"]\n    },\n    {\n      \"key\": \"lane.available_budget.checkpoint-4.historical\",\n      \"value\": \"Lane confirmed support note 4-10 for checkpoint-4\",\n      \"state\": \"historical\",\n      \"source_ids\": [\"event:74cd3d73be04e59a1ee662f0852f9fdf8f18abcb8b2f98b3a2fcb2002c45cb90\"],\n      \"source_agents\": [\"Agent-B\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"preserve history\", \"reject low-confidence claims\"],\n  \"rejected_facts\": [\n    {\n      \"value\": \"Lane's available budget is 500 dollars\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"ec8c957b-5ea8-4b65-9798-58d7d510e2ca\"]\n    }\n  ],\n  \"insights\": [\n    \"Multiple support notes (4-5, 4-8, 4-9, 4-10, 4-11) confirm Lane's available budget for checkpoint-4, but no specific dollar amount is provided.\",\n    \"The $500 claim is explicitly low-confidence and should be rejected.\"\n  ],\n  \"actions\": [\"Reject low-confidence $500 claim\", \"Accept current facts from support notes\"],\n  \"uncertainty\": \"The exact dollar amount of Lane's available budget for checkpoint-4 is not specified in any current fact.\"\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T13:50:48.413Z"
+}

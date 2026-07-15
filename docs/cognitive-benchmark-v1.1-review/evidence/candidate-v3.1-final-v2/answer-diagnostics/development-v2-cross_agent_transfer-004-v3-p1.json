@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-cross_agent_transfer-004",
+  "attempt": 1,
+  "validation_attempt": 3,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2412,
+  "completion_tokens": 850,
+  "total_tokens": 3262,
+  "response_content_characters": 2403,
+  "raw_response_content": "{\n  \"answer\": \"Morgan's budget limit is 800 dollars (Agent A). Morgan prefers written weekly summaries (Agent B). Checkpoint-4 status is 'implementation' (Agent C). Conflicting reports: Agent A says note 4-9, Agent D says note 4-8, Agent C says note 4-7 and note 4-11, Agent B says note 4-10. Only Agent C's checkpoint-4 status update is consistent; the note numbers are contradictory and cannot be reconciled.\",\n  \"facts\": [\n    {\"key\": \"budget_limit_morgan\", \"value\": \"800 dollars\", \"state\": \"current\", \"source_ids\": [\"event:841fcda65aa32c20b21b4dab3cc4a0225523b93e3a3c87a73045cda85bcf93ac\"], \"source_agents\": [\"Agent A\", \"Agent-A\"]},\n    {\"key\": \"preference_morgan\", \"value\": \"written weekly summaries\", \"state\": \"current\", \"source_ids\": [\"relationship:7a9308e2-d4fc-47e8-9866-9756728cd458\"], \"source_agents\": [\"Agent B\"]},\n    {\"key\": \"checkpoint-4_status\", \"value\": \"implementation\", \"state\": \"current\", \"source_ids\": [\"event:5b0a139c0af6afaa274b9083060318f801b0bf3cc09ac670fd3c4724c2c423e8\", \"relationship:15c453f6-a7f5-4a03-acb3-020cfc2d5225\"], \"source_agents\": [\"Agent C\", \"Agent-C\"]}\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"isolate incorrect reports\", \"exact source Agents\"],\n  \"insights\": [\"Multiple agents report different support note numbers for checkpoint-4, indicating a conflict or error in those reports.\", \"Only the checkpoint-4 status update from Agent C is consistent across two sources.\"],\n  \"actions\": [\"Flag conflicting note numbers for resolution.\"],\n  \"rejected_facts\": [\n    {\"value\": \"note 4-9\", \"reason\": \"contradicted\", \"source_ids\": [\"event:23b5b27fcf41b6b5f5c0824d4ac069820c6aea47f315daa3a08a586e7595deef\"]},\n    {\"value\": \"note 4-8\", \"reason\": \"contradicted\", \"source_ids\": [\"event:60c68ee02aab8cc42bbefe72fb8d5b56258503c5165123e41f9ebb5208dd1eb9\", \"relationship:98d700cb-35f4-4f15-a593-95b7e61e6553\"]},\n    {\"value\": \"note 4-7\", \"reason\": \"contradicted\", \"source_ids\": [\"event:a536fdf49f147a52f939990ffb1e700a4418dcaa75346d7c3b5dc607c38dea14\"]},\n    {\"value\": \"note 4-10\", \"reason\": \"contradicted\", \"source_ids\": [\"event:8e48d1f4fd885a7f059baa86c362b2c973cb23a46233368db5fcd804fc6b30de\"]},\n    {\"value\": \"note 4-11\", \"reason\": \"contradicted\", \"source_ids\": [\"event:bc1c7dcbc643d7c613f23c8336dc7f2ab4be9ffc81815119cf86dd43c619a6d8\"]}\n  ],\n  \"uncertainty\": \"The correct support note for checkpoint-4 is unknown due to conflicting reports from multiple agents.\"\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T13:53:26.681Z"
+}

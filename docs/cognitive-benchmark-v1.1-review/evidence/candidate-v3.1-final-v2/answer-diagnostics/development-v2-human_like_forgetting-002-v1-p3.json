@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-human_like_forgetting-002",
+  "attempt": 3,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "length",
+  "prompt_tokens": 2279,
+  "completion_tokens": 900,
+  "total_tokens": 3179,
+  "response_content_characters": 3048,
+  "raw_response_content": "{\n  \"answer\": \"For Harper's checkpoint-2 planning, the memory that should remain influential is the high-value long-term reinforced preference for small practical projects for cycle 2, as confirmed by multiple sources. Stale, invalidated, or noisy items include the withdrawn drone plan, the temporary headache, the low-confidence conflicting note 2-6, and the blue button click noise.\",\n  \"facts\": [\n    {\n      \"key\": \"harper_preference\",\n      \"value\": \"Harper's high-value long-term reinforced preference is small practical projects for cycle 2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"60a84303-8247-4195-8499-01d93a564a7d\", \"077d3620-9dda-41c2-80e0-3f4c4f2f19b2\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"checkpoint_association\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-8 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:e2aeadf6b4f6d7b19366015a2368284e3f2b27fb44140f5795e4f89f2e82535c\"],\n      \"source_agents\": [\"Agent-D\"]\n    },\n    {\n      \"key\": \"checkpoint_association\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-10 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:0ec61cd56f7b919d12c5bd9164485eb31e3be1f56da0e05eb1c27c06b79e7247\", \"relationship:c8c9f846-839e-4eb1-9871-e64c71454a95\"],\n      \"source_agents\": [\"Agent-B\"]\n    },\n    {\n      \"key\": \"checkpoint_association\",\n      \"value\": \"Harper confirms relevant reinforced preference support note 2-9 for checkpoint-2.\",\n      \"state\": \"current\",\n      \"source_ids\": [\"relationship:6cac10d2-dae6-433b-9da1-8224d7f5143b\"],\n      \"source_agents\": []\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\"Must reject stale, invalidated, or noisy items\", \"Must preserve influential memories\"],\n  \"rejected_facts\": [\n    {\n      \"value\": \"Harper explicitly withdraws the plan to buy a drone.\",\n      \"reason\": \"invalidated\",\n      \"source_ids\": [\"e7daee62-2b0c-4984-a7bd-c668cf8da16d\"]\n    },\n    {\n      \"value\": \"Harper had a temporary headache; it is now resolved.\",\n      \"reason\": \"stale\",\n      \"source_ids\": [\"46565ce3-1713-48b2-93ce-76267c669cc0\"]\n    },\n    {\n      \"value\": \"Low-confidence conflicting reinforced preference note 2-6 must not override confirmed evidence for checkpoint-2.\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"relationship:1a4b5894-f0bb-4d81-88d4-21acf776eb5f\"]\n    },\n    {\n      \"value\": \"clicked a blue button once | Noise: Harper clicked a blue button once.\",\n      \"reason\": \"noise\",\n      \"source_ids\": [\"event:8ab166480293b5209b5d6ee28abf318ae3ee98d2a95476a00a403a2553778fe4\"]\n    }\n  ],\n  \"insights\": [\n    \"Multiple agents confirm Harper's preference for small practical projects for cycle 2, reinforcing its influence.\",\n    \"The drone plan withdrawal and headache are irrelevant to checkpoint-2 planning.\",\n    \"Low-confidence note 2-6 is explicitly instructed not to override confirmed evidence.\",\n    \"The blue button click is marked as noise and uncertain.\"\n  ],\n  \"actions",
+  "json_parse_succeeded": false,
+  "json_parse_error": "Unterminated string in JSON at position 3048 (line 63 column 11)",
+  "json_parse_error_position": 3048,
+  "response_ended_mid_string": true,
+  "response_ended_with_complete_json_shape": false,
+  "recorded_at": "2026-07-15T13:58:08.830Z"
+}

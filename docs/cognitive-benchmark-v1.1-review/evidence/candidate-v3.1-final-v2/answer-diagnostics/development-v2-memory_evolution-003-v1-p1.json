@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-memory_evolution-003",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2438,
+  "completion_tokens": 874,
+  "total_tokens": 3312,
+  "response_content_characters": 2550,
+  "raw_response_content": "{\n  \"answer\": \"At checkpoint-3, Harper's current project phase is 'project phase revised 2-3'. The historical phase was 'project phase intermediate 2-3'. The transition in cycle 3 was from 'project phase intermediate 2-3' to 'project phase revised 2-3'.\",\n  \"facts\": [\n    {\n      \"key\": \"harper_project_phase\",\n      \"value\": \"project phase revised 2-3\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:0db4d3e94dd2921ccb19645f6ed34dcbde40e965586efa30cf5932991c8b6c56\"],\n      \"source_agents\": [\"Agent-F\"]\n    },\n    {\n      \"key\": \"harper_project_phase\",\n      \"value\": \"project phase intermediate 2-3\",\n      \"state\": \"historical\",\n      \"source_ids\": [\"event:c4fb994c7dfdedbb9d89b3c122df7ea0c8a5b7c5fab54cc1ca936cbe36215713\"],\n      \"source_agents\": [\"Agent-E\"]\n    }\n  ],\n  \"transitions\": [\n    {\n      \"key\": \"harper_project_phase\",\n      \"from_value\": \"project phase intermediate 2-3\",\n      \"to_value\": \"project phase revised 2-3\",\n      \"source_ids\": [\"event:0db4d3e94dd2921ccb19645f6ed34dcbde40e965586efa30cf5932991c8b6c56\"]\n    }\n  ],\n  \"constraints_used\": [],\n  \"rejected_facts\": [\n    {\n      \"value\": \"project phase note 3-13\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"event:833342ce831f4d3890bf0e3866e174b10fa512ae9fd8205bb8ce40fee558488c\"]\n    },\n    {\n      \"value\": \"project phase note 3-16\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"relationship:c2e73a29-5044-4267-84a6-b6e976cbfbed\"]\n    },\n    {\n      \"value\": \"project phase note 3-9\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"event:22812834ce184f12c3c6084a9300fb5bd8598f97bad4ef9845ea2f1c5be04f5c\"]\n    },\n    {\n      \"value\": \"project phase note 3-10\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"event:e9f4c85f5beb1cb1e869b7943f503a2d0ccee8c63c7c63f58f236a40c9044e0e\"]\n    },\n    {\n      \"value\": \"project phase note 3-11\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"dcc8ca10-5dde-448b-b230-93bf516deb91\"]\n    },\n    {\n      \"value\": \"implementation\",\n      \"reason\": \"stale\",\n      \"source_ids\": [\"69135acb-0f13-4969-958d-b6beb5f456d1\"]\n    }\n  ],\n  \"insights\": [\n    \"The current project phase is 'project phase revised 2-3' as confirmed by Agent-F.\",\n    \"The historical phase 'project phase intermediate 2-3' was superseded by the current phase.\",\n    \"Multiple low-confidence notes (3-9, 3-10, 3-11, 3-13, 3-16) are rejected as they should not override confirmed evidence.\",\n    \"An earlier observation of 'implementation' is stale and superseded.\"\n  ],\n  \"actions\": [],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T13:48:58.223Z"
+}

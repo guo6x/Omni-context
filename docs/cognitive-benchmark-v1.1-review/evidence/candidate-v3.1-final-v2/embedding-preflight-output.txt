@@ -1,0 +1,161 @@
+Starting runtime...
+Runtime started. Rebuilding embeddings...
+Embeddings rebuilt. Running preflight...
+=== PREFLIGHT RESULT ===
+{
+  "health_ok": true,
+  "embedding": {
+    "status": "local",
+    "mode": "local",
+    "healthy": true,
+    "model": "Xenova/multilingual-e5-large",
+    "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "actualDimension": 1024,
+    "usageProfile": {
+      "family": "e5",
+      "modelId": "Xenova/multilingual-e5-large",
+      "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+      "onnxFile": "onnx/model_quantized.onnx",
+      "quantization": "QInt8",
+      "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+      "modelSha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+      "dimension": 1024,
+      "maxTokens": 512,
+      "queryPrefix": "query: ",
+      "passagePrefix": "passage: ",
+      "pooling": "mean",
+      "normalize": true,
+      "serializationVersion": "entity-passage-v2+assertion-passage-v3",
+      "usageProfileVersion": "e5-large-v1",
+      "fingerprint": "468b13e0c041d3fa8d872d61fb13bdd0b4935c3a02917748c12d264fe2bd706b"
+    },
+    "indexManifests": [
+      {
+        "index_name": "vec_assertions",
+        "model_id": "Xenova/multilingual-e5-large",
+        "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+        "dimension": 1024,
+        "usage_profile_version": "e5-large-v1",
+        "serialization_version": "assertion-passage-v3",
+        "status": "active",
+        "created_at": "2026-07-15T13:42:12.274Z",
+        "activated_at": "2026-07-15T13:42:12.274Z",
+        "content_count": 0
+      },
+      {
+        "index_name": "vec_entities",
+        "model_id": "Xenova/multilingual-e5-large",
+        "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+        "dimension": 1024,
+        "usage_profile_version": "e5-large-v1",
+        "serialization_version": "entity-passage-v2",
+        "status": "active",
+        "created_at": "2026-07-15T13:42:12.274Z",
+        "activated_at": "2026-07-15T13:42:12.274Z",
+        "content_count": 0
+      }
+    ],
+    "integrity": {
+      "entity": {
+        "active": 0,
+        "vectors": 0,
+        "metadata": 0,
+        "coverage": 1
+      },
+      "assertion": {
+        "active": 0,
+        "vectors": 0,
+        "metadata": 0,
+        "coverage": 1
+      },
+      "zeroVectors": 0,
+      "nanVectors": 0,
+      "wrongDimensions": 0,
+      "orphanVectors": 0,
+      "staleVectors": 0
+    },
+    "indexHealthy": true,
+    "modelSha256Verified": true,
+    "available": true
+  },
+  "stats_database": "present"
+}
+=== FULL EMBEDDING STATUS ===
+{
+  "mode": "local",
+  "status": "local",
+  "model": "Xenova/multilingual-e5-large",
+  "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+  "dimensions": 1024,
+  "actualDimension": 1024,
+  "usageProfile": {
+    "family": "e5",
+    "modelId": "Xenova/multilingual-e5-large",
+    "modelRevision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "onnxFile": "onnx/model_quantized.onnx",
+    "quantization": "QInt8",
+    "tokenizerVersion": "@xenova/transformers@2.17.2:XLMRobertaTokenizer",
+    "modelSha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+    "dimension": 1024,
+    "maxTokens": 512,
+    "queryPrefix": "query: ",
+    "passagePrefix": "passage: ",
+    "pooling": "mean",
+    "normalize": true,
+    "serializationVersion": "entity-passage-v2+assertion-passage-v3",
+    "usageProfileVersion": "e5-large-v1",
+    "fingerprint": "468b13e0c041d3fa8d872d61fb13bdd0b4935c3a02917748c12d264fe2bd706b"
+  },
+  "indexManifests": [
+    {
+      "index_name": "vec_assertions",
+      "model_id": "Xenova/multilingual-e5-large",
+      "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+      "dimension": 1024,
+      "usage_profile_version": "e5-large-v1",
+      "serialization_version": "assertion-passage-v3",
+      "status": "active",
+      "created_at": "2026-07-15T13:42:12.274Z",
+      "activated_at": "2026-07-15T13:42:12.274Z",
+      "content_count": 0
+    },
+    {
+      "index_name": "vec_entities",
+      "model_id": "Xenova/multilingual-e5-large",
+      "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+      "dimension": 1024,
+      "usage_profile_version": "e5-large-v1",
+      "serialization_version": "entity-passage-v2",
+      "status": "active",
+      "created_at": "2026-07-15T13:42:12.274Z",
+      "activated_at": "2026-07-15T13:42:12.274Z",
+      "content_count": 0
+    }
+  ],
+  "integrity": {
+    "entity": {
+      "active": 0,
+      "vectors": 0,
+      "metadata": 0,
+      "coverage": 1
+    },
+    "assertion": {
+      "active": 0,
+      "vectors": 0,
+      "metadata": 0,
+      "coverage": 1
+    },
+    "zeroVectors": 0,
+    "nanVectors": 0,
+    "wrongDimensions": 0,
+    "orphanVectors": 0,
+    "staleVectors": 0
+  },
+  "indexHealthy": true,
+  "modelSha256Verified": true,
+  "available": true,
+  "healthy": true,
+  "error": null
+}
+PREFLIGHT_PASS
+Runtime stopped.
