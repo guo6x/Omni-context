@@ -23,6 +23,16 @@ function sqlStringList(values: readonly string[]): string {
   return values.map((value) => `'${value.replaceAll("'", "''")}'`).join(', ');
 }
 
+function recordValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function boundedText(value: unknown, max = 2_000): string {
+  return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, max) : '';
+}
+
 sqlite3.verbose();
 
 export interface DatabaseConfig {
@@ -1855,29 +1865,108 @@ export class Database {
     }));
   }
 
+  private async reconcileAssertionTransition(input: AssertionInput): Promise<AssertionInput> {
+    const provenance = recordValue(input.provenance);
+    if (provenance.fidelity_version !== 'memory-fidelity-v1' || provenance.state !== 'current') return input;
+    const stateKey = boundedText(provenance.state_key, 500);
+    const transition = recordValue(provenance.transition);
+    const kind = boundedText(transition.kind, 40);
+    const fromValue = boundedText(transition.from_value);
+    const toValue = boundedText(transition.to_value);
+    if (!stateKey || !['updated', 'corrected', 'withdrawn', 'superseded'].includes(kind)
+      || !fromValue || !toValue) return input;
+
+    const existing = await this.getAssertions({
+      subjectId: input.subject_id,
+      includeHistorical: true,
+      limit: 1_000,
+    });
+    const prior = existing
+      .filter((candidate) => !candidate.invalidated_at && !candidate.valid_until)
+      .filter((candidate) => boundedText(recordValue(candidate.provenance).state_key, 500) === stateKey)
+      .find((candidate) => {
+        const candidateProvenance = recordValue(candidate.provenance);
+        const exact = boundedText(candidateProvenance.exact_value) || boundedText(candidate.literal_value);
+        return exact === fromValue && exact !== toValue;
+      });
+    if (!prior) return input;
+
+    const effectiveAt = boundedText(transition.effective_at, 100)
+      || input.valid_from || input.event_time || input.observed_at || new Date().toISOString();
+    const priorProvenance = recordValue(prior.provenance);
+    const invalidatesPrior = kind === 'corrected' || kind === 'withdrawn';
+    const priorState = invalidatesPrior ? 'invalidated' : 'historical';
+    await this.run(
+      `UPDATE assertions
+       SET valid_until = COALESCE(valid_until, ?),
+           invalidated_at = CASE WHEN ? = 1 THEN COALESCE(invalidated_at, ?) ELSE invalidated_at END,
+           invalidation_reason = CASE WHEN ? = 1 THEN COALESCE(invalidation_reason, ?) ELSE invalidation_reason END,
+           provenance = ?, updated_at = ?
+       WHERE id = ?`,
+      [
+        effectiveAt,
+        invalidatesPrior ? 1 : 0,
+        effectiveAt,
+        invalidatesPrior ? 1 : 0,
+        `state_transition:${kind}`,
+        JSON.stringify({ ...priorProvenance, state: priorState, superseded_by_value: toValue }),
+        new Date().toISOString(),
+        prior.id,
+      ],
+    );
+    if (invalidatesPrior) {
+      await this.run('DELETE FROM fts_assertions WHERE assertion_id = ?', [prior.id]);
+    }
+
+    const rejectedConflicts = invalidatesPrior
+      ? [
+          ...(Array.isArray(provenance.rejected_conflicts) ? provenance.rejected_conflicts : []),
+          {
+            assertion_id: prior.id,
+            value: fromValue,
+            confidence: prior.confidence,
+            state: 'invalidated',
+            source_event_ids: Array.isArray(priorProvenance.source_event_ids)
+              ? priorProvenance.source_event_ids.slice(0, 5)
+              : [],
+          },
+        ]
+      : provenance.rejected_conflicts;
+    return {
+      ...input,
+      previous_version_id: prior.id,
+      version: Math.max(input.version || 1, prior.version + 1),
+      provenance: {
+        ...provenance,
+        ...(rejectedConflicts ? { rejected_conflicts: rejectedConflicts } : {}),
+      },
+    };
+  }
+
   async addAssertion(input: AssertionInput): Promise<Assertion> {
-    if (!/^[a-z][a-z0-9_:.\/-]{0,127}$/i.test(input.predicate)) {
+    const prepared = await this.reconcileAssertionTransition(input);
+    if (!/^[a-z][a-z0-9_:.\/-]{0,127}$/i.test(prepared.predicate)) {
       throw new Error('invalid assertion predicate');
     }
-    if ((input.object_id == null) === (input.literal_value == null)) {
+    if ((prepared.object_id == null) === (prepared.literal_value == null)) {
       throw new Error('assertion requires exactly one of object_id or literal_value');
     }
-    const confidence = input.confidence ?? 1;
+    const confidence = prepared.confidence ?? 1;
     if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
       throw new Error('assertion confidence must be between 0 and 1');
     }
-    if (input.temporal_confidence != null
-      && (!Number.isFinite(input.temporal_confidence)
-        || input.temporal_confidence < 0
-        || input.temporal_confidence > 1)) {
+    if (prepared.temporal_confidence != null
+      && (!Number.isFinite(prepared.temporal_confidence)
+        || prepared.temporal_confidence < 0
+        || prepared.temporal_confidence > 1)) {
       throw new Error('temporal confidence must be between 0 and 1');
     }
 
-    const id = input.id || uuidv4();
+    const id = prepared.id || uuidv4();
     const now = new Date().toISOString();
-    const recordedAt = input.recorded_at || now;
-    const validFrom = input.valid_from || input.event_time || input.observed_at || recordedAt;
-    const version = input.version ?? 1;
+    const recordedAt = prepared.recorded_at || now;
+    const validFrom = prepared.valid_from || prepared.event_time || prepared.observed_at || recordedAt;
+    const version = prepared.version ?? 1;
     await this.run(
       `INSERT INTO assertions (
         id, subject_id, predicate, original_predicate, object_id, literal_value, literal_type, confidence, source_span, provenance,
@@ -1885,27 +1974,27 @@ export class Database {
         temporal_source, timezone, invalidated_at, invalidation_reason, version, previous_version_id, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        id, input.subject_id, input.predicate, input.original_predicate || input.predicate,
-        input.object_id || null, input.literal_value || null,
-        input.literal_type || null, confidence, input.source_span || null,
-        input.provenance ? JSON.stringify(input.provenance) : null,
-        input.observed_at || null, recordedAt, input.event_time || null, validFrom,
-        input.valid_until || null, input.temporal_confidence ?? null, input.temporal_source || null,
-        input.timezone || null, input.invalidated_at || null, input.invalidation_reason || null,
-        version, input.previous_version_id || null,
+        id, prepared.subject_id, prepared.predicate, prepared.original_predicate || prepared.predicate,
+        prepared.object_id || null, prepared.literal_value || null,
+        prepared.literal_type || null, confidence, prepared.source_span || null,
+        prepared.provenance ? JSON.stringify(prepared.provenance) : null,
+        prepared.observed_at || null, recordedAt, prepared.event_time || null, validFrom,
+        prepared.valid_until || null, prepared.temporal_confidence ?? null, prepared.temporal_source || null,
+        prepared.timezone || null, prepared.invalidated_at || null, prepared.invalidation_reason || null,
+        version, prepared.previous_version_id || null,
         now, now,
       ],
     );
     // Maintain FTS index for current (non-invalidated) assertions
-    if (!input.invalidated_at) {
+    if (!prepared.invalidated_at) {
       await this.run(
         `INSERT INTO fts_assertions (assertion_id, subject_id, predicate, literal_value, source_span)
          VALUES (?, ?, ?, ?, ?)`,
-        [id, input.subject_id, input.predicate, input.literal_value || '', input.source_span || ''],
+        [id, prepared.subject_id, prepared.predicate, prepared.literal_value || '', prepared.source_span || ''],
       );
     }
     const assertion: Assertion = {
-      ...input,
+      ...prepared,
       id,
       confidence,
       version,
@@ -2050,6 +2139,44 @@ export class Database {
   }>> {
     const assertions = await this.searchAssertions(query, limit);
     const resolved = await Promise.all(assertions.map((assertion) => this.getResolvedAssertion(assertion.id)));
+    return resolved.filter((item): item is NonNullable<typeof item> => item !== null);
+  }
+
+  /**
+   * Bounded lexical fallback over verified raw-event source spans. It returns
+   * assertion candidates, not duplicate event rows, so fusion can group every
+   * source path under the stable assertion evidence id.
+   */
+  async searchRawEventAssertions(query: string, limit: number = 10): Promise<Array<{
+    id: string;
+    assertion: Assertion;
+    subjectName: string;
+    objectName?: string;
+    passage: string;
+  }>> {
+    const terms = query
+      .normalize('NFKC')
+      .split(/[^\p{L}\p{N}_-]+/u)
+      .map((term) => term.trim())
+      .filter((term) => term.length >= 2)
+      .slice(0, 8)
+      .map((term) => `"${term.replace(/"/g, '""')}"`);
+    if (terms.length === 0) return [];
+    const now = new Date().toISOString();
+    const rows = await this.all<any>(
+      `SELECT a.* FROM assertions a
+       JOIN fts_assertions f ON f.assertion_id = a.id
+       WHERE fts_assertions MATCH ?
+         AND a.invalidated_at IS NULL
+         AND a.valid_from <= ?
+         AND (a.valid_until IS NULL OR a.valid_until > ?)
+         AND json_extract(a.provenance, '$.fidelity_version') = 'memory-fidelity-v1'
+         AND json_array_length(json_extract(a.provenance, '$.raw_event_references')) > 0
+       ORDER BY rank
+       LIMIT ?`,
+      [`source_span : (${terms.join(' OR ')})`, now, now, Math.max(1, Math.min(limit, 100))],
+    );
+    const resolved = await Promise.all(rows.map((row) => this.getResolvedAssertion(row.id)));
     return resolved.filter((item): item is NonNullable<typeof item> => item !== null);
   }
 

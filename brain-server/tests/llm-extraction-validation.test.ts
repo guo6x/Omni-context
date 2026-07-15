@@ -92,4 +92,31 @@ describe('strict LLM extraction validation', () => {
     expect(parsed.facts).toHaveLength(1);
     expect(parsed.facts[0].event_time).toBeUndefined();
   });
+
+  it('accepts structured state, exact value, and transition fields', () => {
+    const parsed = parseLlmExtractionResult(payload({
+      subject: 'Alice',
+      predicate: 'lives_in',
+      original_predicate: 'current_city',
+      object: 'Beijing',
+      exact_value: 'Beijing',
+      normalized_value: 'beijing',
+      confidence: 0.95,
+      source_span: 'Alice now lives in Beijing.',
+      state: 'current',
+      state_key: 'residence',
+      source_event_id: 'event-2',
+      transition: {
+        kind: 'updated',
+        from_value: 'Shanghai',
+        to_value: 'Beijing',
+        effective_at: '2026-07-01T00:00:00.000Z',
+      },
+    }));
+
+    expect(parsed.facts[0]).toMatchObject({
+      exact_value: 'Beijing', normalized_value: 'beijing', state: 'current', state_key: 'residence',
+      transition: { kind: 'updated', from_value: 'Shanghai', to_value: 'Beijing' },
+    });
+  });
 });

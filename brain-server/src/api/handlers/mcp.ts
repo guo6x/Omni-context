@@ -41,9 +41,10 @@ import {
   selectRelevantPrinciples,
 } from '../../mcp-retrieval.js';
 import { createAuditedAiFetch } from '../../security/audited-ai-fetch.js';
-import { assertEvaluationEmbeddingReady, loadRetrievalConfig } from '../../retrieval/config.js';
+import { assertEvaluationEmbeddingReady, loadRetrievalConfig, retrievalConfigHash } from '../../retrieval/config.js';
 import { parseTemporalQuery, temporalOptsFromQuery, filterAssertionsByTemporal, filterEntitiesByTemporal } from '../../retrieval/temporal-layer.js';
 import { reciprocalRankFuse, type FusedRetrievalCandidate, type RetrievalSourceTrace } from '../../retrieval/fusion.js';
+import { writeRetrievalTrace } from '../../retrieval/trace.js';
 
 const CORE_PRINCIPLE_CAP = 3;
 const mcpLlmFetch = createAuditedAiFetch({ purpose: 'api.decision-intelligence', kind: 'llm' });
@@ -1292,10 +1293,11 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             const umsTemporalQuery = parseTemporalQuery(parsed.query);
             const resultsData: any = {
               textResults: [], vectorResults: [], assertionTextResults: [],
-              assertionVectorResults: [], graphContext: [], subjectAttachments: [],
+              assertionVectorResults: [], rawEventResults: [], graphContext: [], subjectAttachments: [],
             };
             resultsData.textResults = await ctx.db.searchEntities(parsed.query, umsPool);
             resultsData.assertionTextResults = await ctx.db.searchResolvedAssertions(parsed.query, umsPool);
+            resultsData.rawEventResults = await ctx.db.searchRawEventAssertions(parsed.query, umsPool);
 
             try {
               const embResult = await withTimeout(
@@ -1395,6 +1397,15 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 source: 'subject_attachment', weight: RETRIEVAL_CONFIG.subjectAttachmentWeight,
                 items: resultsData.subjectAttachments.map((item: ReadableAssertionCandidate) => ({ id: item.id, kind: 'assertion' as const, value: item })),
               },
+              {
+                source: 'raw_event_fallback', weight: RETRIEVAL_CONFIG.rawEventFallbackWeight,
+                items: resultsData.rawEventResults.map((item: ReadableAssertionCandidate, index: number) => ({
+                  id: item.id, kind: 'assertion' as const, value: item,
+                  score: resultsData.rawEventResults.length <= 1
+                    ? 1
+                    : 1 - index / resultsData.rawEventResults.length,
+                })),
+              },
             ], { rrfK: RETRIEVAL_CONFIG.rrfK });
 
             const mixedForReranker = fused.slice(0, umsPool).map((candidate) => candidate.kind === 'assertion'
@@ -1431,25 +1442,46 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               ctx.db.bumpAccessCounts(umsAccIds).catch(() => {});
             }
 
+            const candidatePoolSnapshot = finalFused.slice(0, umsPool).map((candidate, index) => ({
+              id: candidate.id,
+              type: candidate.kind,
+              passage: candidate.kind === 'assertion' ? candidate.value.passage : undefined,
+              sources: candidate.sources,
+              fused_score: Number(candidate.fusedScore.toFixed(8)),
+              fused_rank: candidate.fusedRank,
+              final_rank: index + 1,
+            }));
+            const finalContextSnapshot = finalAssertions.map((candidate, index) => ({
+              evidence_id: candidate.id,
+              passage: candidate.value.passage,
+              sources: candidate.sources,
+              fused_rank: candidate.fusedRank,
+              final_rank: index + 1,
+            }));
+            const traceResult = await writeRetrievalTrace({
+              query: parsed.query,
+              temporalMode: umsTemporalQuery.mode,
+              stages: {
+                entity_fts: resultsData.textResults.map((item: any, index: number) => ({ id: item.id, rank: index + 1 })),
+                entity_vector: resultsData.vectorResults.map((item: any, index: number) => ({ id: item.id, rank: index + 1, score: item.similarity })),
+                assertion_fts: assertionTextResults.map((item: ReadableAssertionCandidate, index: number) => ({ id: item.id, rank: index + 1 })),
+                assertion_vector: resultsData.assertionVectorResults.map((item: ReadableAssertionCandidate, index: number) => ({
+                  id: item.id, rank: index + 1, distance: item.distance, score: item.similarity,
+                })),
+                raw_event_fallback: resultsData.rawEventResults.map((item: ReadableAssertionCandidate, index: number) => ({ id: item.id, rank: index + 1 })),
+                graph: (resultsData.graphContext?.nodes || []).map((item: any, index: number) => ({ id: item.id, rank: index + 1 })),
+                subject_attachment: resultsData.subjectAttachments.map((item: ReadableAssertionCandidate, index: number) => ({ id: item.id, rank: index + 1 })),
+              },
+              candidatePool: candidatePoolSnapshot,
+              finalContext: finalContextSnapshot,
+            });
+
             result = {
               results: ranked.map(toCompactEntity),
               evidence: (await buildGroundingEnvelope(ctx, ranked, finalAssertions)).evidence,
-              candidatePool: finalFused.slice(0, umsPool).map((candidate, index) => ({
-                id: candidate.id,
-                type: candidate.kind,
-                passage: candidate.kind === 'assertion' ? candidate.value.passage : undefined,
-                sources: candidate.sources,
-                fused_score: Number(candidate.fusedScore.toFixed(8)),
-                fused_rank: candidate.fusedRank,
-                final_rank: index + 1,
-              })),
-              finalContext: finalAssertions.map((candidate, index) => ({
-                evidence_id: candidate.id,
-                passage: candidate.value.passage,
-                sources: candidate.sources,
-                fused_rank: candidate.fusedRank,
-                final_rank: index + 1,
-              })),
+              candidatePool: candidatePoolSnapshot,
+              finalContext: finalContextSnapshot,
+              trace: traceResult,
               temporalQuery: {
                 mode: umsTemporalQuery.mode,
                 as_of: umsTemporalQuery.asOf || null,
@@ -1462,9 +1494,11 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 assertion_vector: resultsData.assertionVectorResults.length,
                 graph: resultsData.graphContext?.nodes?.length || 0,
                 subject_attachment: resultsData.subjectAttachments.length,
+                raw_event_fallback: resultsData.rawEventResults.length,
               },
               fusionConfig: {
                 method: 'weighted_rrf',
+                config_hash: retrievalConfigHash(RETRIEVAL_CONFIG),
                 rrfK: RETRIEVAL_CONFIG.rrfK,
                 weights: {
                   entity_vector: RETRIEVAL_CONFIG.entityVectorWeight,
@@ -1473,6 +1507,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                   assertion_fts: RETRIEVAL_CONFIG.assertionFtsWeight,
                   graph: RETRIEVAL_CONFIG.graphWeight,
                   subject_attachment: RETRIEVAL_CONFIG.subjectAttachmentWeight,
+                  raw_event_fallback: RETRIEVAL_CONFIG.rawEventFallbackWeight,
                 },
               },
             };

@@ -1357,6 +1357,7 @@ ${gaConnBlock}`;
     let vectorResults: RetrievalCandidate[] = [];
     let assertionVectorResults: any[] = [];
     let assertionTextResults: any[] = [];
+    const rawEventResults = await this.db.searchRawEventAssertions(query, pool);
     try {
       const embedded = await this.embeddingService.embedQuery(query);
       assertEvaluationEmbeddingReady(this.embeddingService.getStatus());
@@ -1414,6 +1415,10 @@ ${gaConnBlock}`;
       { source: 'FTS', weight: RETRIEVAL_CONFIG.entityFtsWeight, items: textResults.map((item) => ({ id: item.id, kind: 'entity', value: item })) },
       { source: 'FTS', weight: RETRIEVAL_CONFIG.assertionFtsWeight, items: assertionTextResults.map((item: any) => ({ id: item.id, kind: 'assertion', value: item })) },
       { source: 'graph', weight: RETRIEVAL_CONFIG.graphWeight, items: [...graphNodes.values()].map((item) => ({ id: item.id, kind: 'entity', value: item })) },
+      { source: 'raw_event_fallback', weight: RETRIEVAL_CONFIG.rawEventFallbackWeight, items: rawEventResults.map((item: any, index: number) => ({
+        id: item.id, kind: 'assertion', value: item,
+        score: rawEventResults.length <= 1 ? 1 : 1 - index / rawEventResults.length,
+      })) },
     ], { rrfK: RETRIEVAL_CONFIG.rrfK });
     const fusedAssertions: RetrievalCandidate[] = fused.filter((item) => item.kind === 'assertion').map((item) => {
       const resolved = item.value;

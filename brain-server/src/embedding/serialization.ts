@@ -1,7 +1,7 @@
 import { Assertion, Entity } from '../shared-types.js';
 
 export const ENTITY_SERIALIZATION_VERSION = 'entity-passage-v2';
-export const ASSERTION_SERIALIZATION_VERSION = 'assertion-passage-v1';
+export const ASSERTION_SERIALIZATION_VERSION = 'assertion-passage-v3';
 
 function oneLine(value: unknown, max = 500): string {
   return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, max) : '';
@@ -58,12 +58,46 @@ export function serializeAssertionPassage(input: ResolvedAssertionPassage): stri
   const relation = oneLine(assertion.original_predicate || assertion.predicate, 160) || assertion.predicate;
   const source = oneLine(assertion.source_span, 1_500);
   const speaker = oneLine(provenance.speaker || provenance.role, 160);
+  const sourceAgent = oneLine(provenance.source_agent, 160);
+  const sourceEventIds = Array.isArray(provenance.source_event_ids)
+    ? provenance.source_event_ids.map((item) => oneLine(item, 300)).filter(Boolean).slice(0, 5)
+    : [];
   const conversation = oneLine(
     provenance.conversation_id || provenance.session_id || provenance.document_id || provenance.source,
     240,
   );
   const eventTime = assertion.event_time || assertion.observed_at || '';
   const status = temporalStatus(assertion);
+  const memoryState = oneLine(provenance.state, 40) || status;
+  const stateKey = oneLine(provenance.state_key, 500);
+  const exactValue = oneLine(provenance.exact_value, 1_000) || object;
+  const transition = metadataRecord(provenance.transition);
+  const transitionKind = oneLine(transition.kind, 40);
+  const transitionFrom = oneLine(transition.from_value, 1_000);
+  const transitionTo = oneLine(transition.to_value, 1_000);
+  const transitionAt = oneLine(transition.effective_at, 100);
+  const transitionLine = transitionKind && transitionFrom && transitionTo
+    ? `[HISTORICAL] ${transitionFrom} -> [CURRENT] ${transitionTo} (${transitionKind}${transitionAt ? ` at ${transitionAt}` : ''})`
+    : '';
+  const rejectedConflicts = Array.isArray(provenance.rejected_conflicts)
+    ? provenance.rejected_conflicts.map(metadataRecord).map((conflict) => {
+        const value = oneLine(conflict.value, 500);
+        const confidence = typeof conflict.confidence === 'number' ? conflict.confidence.toFixed(2) : 'unknown';
+        const conflictState = oneLine(conflict.state, 40) || 'invalidated';
+        return value ? `[${conflictState.toUpperCase()}] ${value} (confidence ${confidence})` : '';
+      }).filter(Boolean).slice(0, 5)
+    : [];
+  if (provenance.evidence_kind === 'raw_event') {
+    return [
+      source || exactValue,
+      `Evidence kind: raw event`,
+      `Source quote: ${source || exactValue}`,
+      `Speaker: ${sourceAgent || speaker || 'not provided'}`,
+      ...(sourceEventIds.length > 0 ? [`Source event IDs: ${sourceEventIds.join(', ')}`] : []),
+      `Event time: ${eventTime || 'not provided'}`,
+      `Memory state: observed`,
+    ].join('\n');
+  }
   const fact = source
     ? `${subject}: "${source}"`
     : `${subject} ${relation.replaceAll('_', ' ')} ${object}.`;
@@ -73,8 +107,14 @@ export function serializeAssertionPassage(input: ResolvedAssertionPassage): stri
     `Relation: ${relation}`,
     `Object: ${object}`,
     `Source: ${source || 'not provided'}`,
-    `Speaker: ${speaker || subject}`,
+    `Speaker: ${sourceAgent || speaker || 'not provided'}`,
+    ...(sourceEventIds.length > 0 ? [`Source event IDs: ${sourceEventIds.join(', ')}`] : []),
     `Conversation: ${conversation || 'not provided'}`,
+    `Exact value: ${exactValue}`,
+    `Memory state: ${memoryState}`,
+    ...(stateKey ? [`State key: ${stateKey}`] : []),
+    ...(transitionLine ? [`Transition: ${transitionLine}`] : []),
+    ...(rejectedConflicts.length > 0 ? [`Rejected conflicts: ${rejectedConflicts.join(' | ')}`] : []),
     `Event time: ${eventTime || 'not provided'}`,
     `Valid from: ${assertion.valid_from}`,
     `Valid until: ${assertion.valid_until || 'open'}`,

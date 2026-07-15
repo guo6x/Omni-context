@@ -5,6 +5,11 @@ import { LLMCallDiagnostics, LLMExtractorPipeline } from './llm-pipeline.js';
 import { OCRPipeline } from '../ocr/pipeline.js';
 import { sanitizeForExtraction } from './sanitize.js';
 import { chunkDocument, coveredCharacterCount, SourceChunk } from '../ingest/chunker.js';
+import {
+  buildAssertionProvenance,
+  buildRawEventEvidenceProvenance,
+  parseRawEventReferences,
+} from './evidence-fidelity.js';
 
 // Stateful entity types must NOT auto-collapse across chunks by name alone —
 // time/context distinctions must be preserved so that state changes
@@ -342,6 +347,11 @@ export class GraphRAGExtractor {
   async extract(input: ExtractionInput): Promise<GraphRAGOutput> {
     const textContent = await this.combineInputs(input);
     const { cleaned, suspicious } = sanitizeForExtraction(textContent);
+    const rawEvents = parseRawEventReferences(textContent, {
+      timestamp: input.timestamp,
+      documentId: input.documentId,
+      source: input.source || input.sourceType,
+    });
 
     if (input.forceChunking || textContent.length > 3_500) {
       return this.extractChunked(textContent, input, suspicious);
@@ -448,10 +458,33 @@ export class GraphRAGExtractor {
             confidence,
             version: 1,
             source_span: fact.source_span,
-            provenance: {
-              extractor: 'llm',
+            provenance: buildAssertionProvenance({
+              fact: {
+                subject: fact.subject,
+                predicate: fact.predicate,
+                original_predicate: fact.original_predicate,
+                object: fact.object,
+                exact_value: fact.exact_value,
+                normalized_value: fact.normalized_value,
+                confidence: fact.confidence,
+                source_span: fact.source_span,
+                state: fact.state,
+                state_key: fact.state_key,
+                source_event_id: fact.source_event_id,
+                transition: fact.transition?.kind && fact.transition.from_value && fact.transition.to_value
+                  ? {
+                      kind: fact.transition.kind,
+                      from_value: fact.transition.from_value,
+                      to_value: fact.transition.to_value,
+                      effective_at: fact.transition.effective_at,
+                    }
+                  : undefined,
+              },
+              rawEvents,
+              source: input.source || input.sourceType,
+              documentId: input.documentId,
               model: this.config.llmModel,
-            } as Record<string, unknown>,
+            }),
             observed_at: fact.observed_at,
             event_time: fact.event_time,
             valid_from: fact.valid_from || fact.event_time || now,
@@ -530,6 +563,60 @@ export class GraphRAGExtractor {
         console.warn('[GraphRAGExtractor] LLM 提取失败，仅使用正则结果:', e);
       }
     }
+
+    // Raw transcript events are evidence, not normalized facts. Persist a
+    // bounded copy as first-class assertions so semantic retrieval can recover
+    // source material even when the LLM omits a fact. Only envelope-derived
+    // agents become subjects; arbitrary prose does not create synthetic people.
+    const rawEntityMap = new Map(entities.map((entity) => [entity.name.trim().toLocaleLowerCase(), entity]));
+    const rawAssertionIds = new Set<string>();
+    for (const event of rawEvents.slice(0, 128)) {
+      const agent = event.agent?.trim();
+      if (!agent || rawAssertionIds.has(event.event_id)) continue;
+      rawAssertionIds.add(event.event_id);
+      const key = agent.toLocaleLowerCase();
+      let subject = rawEntityMap.get(key);
+      if (!subject) {
+        subject = {
+          id: uuidv4(),
+          name: agent,
+          type: 'person',
+          description: 'Participant identified by the source event envelope.',
+          created_at: event.timestamp || input.timestamp,
+          updated_at: event.timestamp || input.timestamp,
+          last_accessed: event.timestamp || input.timestamp,
+          access_count: 0,
+          tags: ['raw-event-source'],
+          metadata: {
+            source: 'raw_event',
+            importance: 0.5,
+            provenance: { event_id: event.event_id },
+          },
+        };
+        entities.push(subject);
+        rawEntityMap.set(key, subject);
+        this.entityCache.set(key, subject);
+      }
+      assertions.push({
+        subject_id: subject.id,
+        predicate: 'relates_to',
+        original_predicate: 'reported',
+        literal_value: event.text,
+        confidence: 1,
+        version: 1,
+        source_span: event.text,
+        provenance: buildRawEventEvidenceProvenance(event, {
+          source: input.source || input.sourceType,
+          documentId: input.documentId,
+        }),
+        observed_at: event.timestamp,
+        event_time: event.timestamp,
+        valid_from: event.timestamp || input.timestamp,
+        temporal_confidence: 1,
+        temporal_source: 'source_envelope',
+      });
+    }
+    trimMapToLimit(this.entityCache, ENTITY_CACHE_LIMIT);
 
     // 记录 suspicious 到实体的 metadata 中
     if (suspicious.length > 0) {

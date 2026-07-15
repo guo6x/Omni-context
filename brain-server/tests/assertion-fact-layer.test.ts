@@ -296,4 +296,111 @@ describe('Assertion fact layer — literal types, versioning, FTS, consistency s
     expect(oldV!.version).toBe(1);
     await db.close();
   });
+
+  it('reconciles a structured state transition into historical and current versions', async () => {
+    const db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+    const person = await db.addEntity({ id: 'p-state', name: 'A person', type: 'person' });
+
+    const oldFact = await db.addAssertion({
+      subject_id: person.id,
+      predicate: 'relates_to',
+      original_predicate: 'active_setting',
+      literal_value: 'the first value',
+      confidence: 0.9,
+      source_span: 'The active setting was the first value.',
+      valid_from: '2026-05-01T00:00:00.000Z',
+      provenance: {
+        fidelity_version: 'memory-fidelity-v1', state: 'current', state_key: 'active setting',
+        exact_value: 'the first value', source_event_ids: ['evt-old'],
+      },
+    });
+
+    const currentFact = await db.addAssertion({
+      subject_id: person.id,
+      predicate: 'relates_to',
+      original_predicate: 'active_setting',
+      literal_value: 'the second value',
+      confidence: 0.95,
+      source_span: 'The active setting is now the second value.',
+      valid_from: '2026-05-04T09:00:00.000Z',
+      provenance: {
+        fidelity_version: 'memory-fidelity-v1', state: 'current', state_key: 'active setting',
+        exact_value: 'the second value', source_event_ids: ['evt-new'],
+        transition: {
+          kind: 'updated', from_value: 'the first value', to_value: 'the second value',
+          effective_at: '2026-05-04T09:00:00.000Z',
+        },
+      },
+    });
+
+    expect(currentFact.previous_version_id).toBe(oldFact.id);
+    expect(currentFact.version).toBe(2);
+    const history = await db.getAssertions({ subjectId: person.id, includeHistorical: true });
+    const storedOld = history.find((item) => item.id === oldFact.id);
+    expect(storedOld?.valid_until).toBe('2026-05-04T09:00:00.000Z');
+    expect(storedOld?.invalidated_at).toBeUndefined();
+    expect((storedOld?.provenance as Record<string, unknown>)?.state).toBe('historical');
+    await db.close();
+  });
+
+  it('invalidates a prior value only when the structured transition says corrected', async () => {
+    const db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+    const person = await db.addEntity({ id: 'p-correction', name: 'A person', type: 'person' });
+    const rejected = await db.addAssertion({
+      subject_id: person.id, predicate: 'relates_to', literal_value: 'unverified value', confidence: 0.35,
+      provenance: {
+        fidelity_version: 'memory-fidelity-v1', state: 'current', state_key: 'reported setting',
+        exact_value: 'unverified value', source_event_ids: ['evt-low'],
+      },
+    });
+    const accepted = await db.addAssertion({
+      subject_id: person.id, predicate: 'relates_to', literal_value: 'verified value', confidence: 0.98,
+      provenance: {
+        fidelity_version: 'memory-fidelity-v1', state: 'current', state_key: 'reported setting',
+        exact_value: 'verified value', source_event_ids: ['evt-high'],
+        transition: {
+          kind: 'corrected', from_value: 'unverified value', to_value: 'verified value',
+          effective_at: '2026-05-04T09:00:00.000Z',
+        },
+      },
+    });
+
+    expect(accepted.previous_version_id).toBe(rejected.id);
+    const history = await db.getAssertions({ subjectId: person.id, includeHistorical: true });
+    expect(history.find((item) => item.id === rejected.id)?.invalidated_at).toBeDefined();
+    expect((accepted.provenance as Record<string, unknown>).rejected_conflicts).toEqual([
+      expect.objectContaining({ value: 'unverified value', confidence: 0.35, state: 'invalidated' }),
+    ]);
+    await db.close();
+  });
+
+  it('offers a bounded raw-event fallback only for assertions with verified event provenance', async () => {
+    const db = initDatabase({ dbPath: ':memory:' });
+    await db.runMigrations();
+    const person = await db.addEntity({ id: 'p-raw', name: 'A person', type: 'person' });
+    const verified = await db.addAssertion({
+      subject_id: person.id, predicate: 'relates_to', literal_value: 'the active setting', confidence: 0.9,
+      source_span: 'The active setting is the second value.',
+      provenance: {
+        fidelity_version: 'memory-fidelity-v1', state: 'current', state_key: 'active setting',
+        exact_value: 'the second value', source_event_ids: ['evt-verified'],
+        raw_event_references: [{
+          event_id: 'evt-verified', agent: 'Agent One', timestamp: '2026-05-04T09:00:00.000Z',
+          text: 'The active setting is the second value.',
+        }],
+      },
+    });
+    await db.addAssertion({
+      subject_id: person.id, predicate: 'relates_to', literal_value: 'second value elsewhere', confidence: 0.9,
+      source_span: 'A second value appears without an event envelope.',
+    });
+
+    const results = await db.searchRawEventAssertions('second value', 1);
+    expect(results).toHaveLength(1);
+    expect(results[0].id).toBe(verified.id);
+    expect(results[0].passage).toContain('Source event IDs: evt-verified');
+    await db.close();
+  });
 });

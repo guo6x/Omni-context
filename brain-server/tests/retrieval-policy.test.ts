@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { collectGraphCandidates, memoryCandidateScore, rankMemoryCandidates } from '../src/mcp-retrieval.js';
-import { assertEvaluationEmbeddingReady, DEFAULT_RETRIEVAL_CONFIG, loadRetrievalConfig } from '../src/retrieval/config.js';
+import { assertEvaluationEmbeddingReady, DEFAULT_RETRIEVAL_CONFIG, loadRetrievalConfig, retrievalConfigHash } from '../src/retrieval/config.js';
 
 describe('retrieval policy', () => {
   it('expands the configured graph seeds and fuses duplicate nodes', async () => {
@@ -52,5 +52,12 @@ describe('retrieval policy', () => {
   it('forbids hash fallback only in explicit evaluation mode', () => {
     expect(() => assertEvaluationEmbeddingReady('hash-fallback', false)).not.toThrow();
     expect(() => assertEvaluationEmbeddingReady('hash-fallback', true)).toThrow(/EVALUATION_EMBEDDING_UNAVAILABLE/);
+  });
+
+  it('includes the bounded raw-event weight in a deterministic config hash', () => {
+    const baseline = retrievalConfigHash({ ...DEFAULT_RETRIEVAL_CONFIG });
+    const changed = retrievalConfigHash({ ...DEFAULT_RETRIEVAL_CONFIG, rawEventFallbackWeight: 0.8 });
+    expect(baseline).toMatch(/^[a-f0-9]{64}$/);
+    expect(changed).not.toBe(baseline);
   });
 });

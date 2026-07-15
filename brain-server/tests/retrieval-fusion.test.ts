@@ -11,10 +11,15 @@ describe('auditable reciprocal-rank fusion', () => {
       { source: 'FTS', weight: 1.1, items: [
         { id: 'a1', kind: 'assertion', value: fact, score: 0.8 },
       ] },
+      { source: 'raw_event_fallback', weight: 0.9, items: [
+        { id: 'a1', kind: 'assertion', value: fact, score: 0.7 },
+      ] },
     ], { rrfK: 60 });
 
     expect(fused).toHaveLength(1);
-    expect(fused[0].sources.map((item) => item.source)).toEqual(['assertion_vector', 'FTS']);
+    expect(fused[0].sources.map((item) => item.source)).toEqual([
+      'assertion_vector', 'FTS', 'raw_event_fallback',
+    ]);
     expect(fused[0]).toMatchObject({ fusedRank: 1, kind: 'assertion' });
     expect(fused[0].sources[0]).toMatchObject({ rawRank: 1, rawDistance: 0.1 });
   });

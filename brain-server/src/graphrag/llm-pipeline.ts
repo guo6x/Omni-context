@@ -54,6 +54,16 @@ const OptionalTemporalConfidenceSchema = z.preprocess(
   (value) => value === null ? undefined : value,
   z.number().min(0).max(1).optional(),
 );
+const OptionalFactTextSchema = z.preprocess(
+  (value) => value === null || value === '' ? undefined : value,
+  z.string().trim().min(1).max(2_000).optional(),
+);
+const StructuredTransitionSchema = z.object({
+  kind: z.enum(['updated', 'corrected', 'withdrawn', 'superseded']),
+  from_value: z.string().trim().min(1).max(2_000),
+  to_value: z.string().trim().min(1).max(2_000),
+  effective_at: OptionalTemporalTextSchema,
+}).strict();
 const LLMExtractionResultSchema = z.object({
   entities: z.array(z.object({
     name: z.string().trim().min(1).max(500),
@@ -69,8 +79,17 @@ const LLMExtractionResultSchema = z.object({
     predicate: z.enum(RELATIONSHIP_TYPES),
     original_predicate: z.string().trim().min(1).max(200).optional(),
     object: z.string().trim().min(1).max(2_000),
+    exact_value: OptionalFactTextSchema,
+    normalized_value: OptionalFactTextSchema,
     confidence: z.number().min(0).max(1),
     source_span: z.string().trim().min(1).max(20_000),
+    state: z.enum(['current', 'historical', 'invalidated', 'uncertain']).optional(),
+    state_key: OptionalFactTextSchema,
+    source_event_id: OptionalFactTextSchema,
+    transition: z.preprocess(
+      (value) => value === null ? undefined : value,
+      StructuredTransitionSchema.optional(),
+    ),
     observed_at: OptionalTemporalTextSchema,
     event_time: OptionalTemporalTextSchema,
     valid_from: OptionalTemporalTextSchema,
@@ -275,6 +294,10 @@ DIALOGUE EXTRACTION RULES:
 3. Extract durable personal facts, preferences, goals, decisions, events, relationships, locations, work, study, and family details. Do not reduce a dialogue to one generic memory entity.
 4. source_span must be a verbatim supporting span from the supplied content. Do not invent evidence.
 5. Use only the entity and relationship types listed below. If uncertain, use concept and relates_to.
+6. Preserve exact values in exact_value. normalized_value may be added, but must never replace the exact value.
+7. For facts that represent a change, correction, withdrawal, or supersession, emit a structured transition with kind, from_value, to_value, and an ISO effective_at when known.
+8. Emit state as current, historical, invalidated, or uncertain. Use invalidated only for an explicitly corrected or withdrawn claim; use uncertain when the source does not establish status.
+9. Use one stable, generic state_key for versions of the same property. Do not infer source agents: source_event_id is only a hint and will be verified against the raw transcript envelope.
 
 EXTRACTION SCHEMA:
 {
@@ -282,7 +305,7 @@ EXTRACTION SCHEMA:
     {"name": "实体名", "type": "类型", "description": "描述", "importance": 0.5}
   ],
   "facts": [
-    {"subject": "源实体名", "predicate": "关系类型", "object": "目标实体名或字面值", "confidence": 0.95, "source_span": "必须存在的原始文本片段", "event_time": "可选 ISO 8601 或原文相对时间", "valid_from": "可选", "valid_until": "可选", "temporal_confidence": 0.8, "temporal_source": "explicit_date|relative_expression", "timezone": "可选 IANA 时区"}
+    {"subject": "源实体名", "predicate": "关系类型", "original_predicate": "原始具体关系", "object": "目标实体名或字面值", "exact_value": "原始精确值", "normalized_value": "可选规范值", "confidence": 0.95, "source_span": "必须存在的原始文本片段", "state": "current|historical|invalidated|uncertain", "state_key": "同一属性的稳定键", "source_event_id": "可选原始事件ID", "transition": {"kind": "updated|corrected|withdrawn|superseded", "from_value": "旧值", "to_value": "新值", "effective_at": "可选 ISO 8601"}, "event_time": "可选 ISO 8601 或原文相对时间", "valid_from": "可选", "valid_until": "可选", "temporal_confidence": 0.8, "temporal_source": "explicit_date|relative_expression", "timezone": "可选 IANA 时区"}
   ],
   "principles": [
     {"title": "标题", "content": "内容", "type": "类型", "isCore": false}

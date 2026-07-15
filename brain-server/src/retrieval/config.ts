@@ -17,6 +17,7 @@ export interface RetrievalConfig {
   assertionFtsWeight: number;
   graphWeight: number;
   subjectAttachmentWeight: number;
+  rawEventFallbackWeight: number;
 }
 
 export const DEFAULT_RETRIEVAL_CONFIG: Readonly<RetrievalConfig> = Object.freeze({
@@ -38,6 +39,7 @@ export const DEFAULT_RETRIEVAL_CONFIG: Readonly<RetrievalConfig> = Object.freeze
   assertionFtsWeight: 1.1,
   graphWeight: 0.4,
   subjectAttachmentWeight: 0.2,
+  rawEventFallbackWeight: 0.9,
 });
 
 function boundedNumber(
@@ -74,7 +76,13 @@ export function loadRetrievalConfig(
     assertionFtsWeight: boundedNumber(env.OMNI_RETRIEVAL_ASSERTION_FTS_WEIGHT, 1.1, 0, 10),
     graphWeight: boundedNumber(env.OMNI_RETRIEVAL_GRAPH_WEIGHT, 0.4, 0, 10),
     subjectAttachmentWeight: boundedNumber(env.OMNI_RETRIEVAL_SUBJECT_ATTACHMENT_WEIGHT, 0.2, 0, 10),
+    rawEventFallbackWeight: boundedNumber(env.OMNI_RETRIEVAL_RAW_EVENT_WEIGHT, 0.9, 0, 10),
   };
+}
+
+export function retrievalConfigHash(config: RetrievalConfig): string {
+  const ordered = Object.fromEntries(Object.entries(config).sort(([a], [b]) => a.localeCompare(b)));
+  return createHash('sha256').update(JSON.stringify(ordered)).digest('hex');
 }
 
 export function assertEvaluationEmbeddingReady(
@@ -85,3 +93,4 @@ export function assertEvaluationEmbeddingReady(
     throw new Error('EVALUATION_EMBEDDING_UNAVAILABLE: hash fallback is forbidden in evaluation mode');
   }
 }
+import { createHash } from 'crypto';
