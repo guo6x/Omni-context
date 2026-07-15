@@ -1,0 +1,20 @@
+{
+  "scenario_id": "development-v2-cognitive_continuity-004",
+  "attempt": 1,
+  "validation_attempt": 1,
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-flash",
+  "requested_max_tokens": 900,
+  "finish_reason": "stop",
+  "prompt_tokens": 2334,
+  "completion_tokens": 828,
+  "total_tokens": 3162,
+  "response_content_characters": 2872,
+  "raw_response_content": "{\n  \"answer\": \"Based on Jordan's stable goal to lead an asynchronous research group, a budget of 611 dollars for planning cycle 4, and confirmed support notes 4-8, 4-9, and 4-10 for checkpoint-4, the next bounded step is to allocate the budget to acquire tools or resources that enable asynchronous collaboration, such as a shared document platform or communication software, while respecting the low-confidence note 4-6 which must not override confirmed evidence.\",\n  \"facts\": [\n    {\n      \"key\": \"Jordan:has_goal\",\n      \"value\": \"lead an asynchronous research group\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:4805749358b1d3f5cf4ec31ea09c8676a426fee0898216fdcf5274d5fedaeaaa\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"Jordan:has_budget\",\n      \"value\": \"611 dollars for planning cycle 4\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:55290b8824d1b0aea5ed12d9ec87fd973c722db41f9e62337f3d97e56dccdd21\"],\n      \"source_agents\": [\"Agent-A\"]\n    },\n    {\n      \"key\": \"Jordan:confirms\",\n      \"value\": \"relevant collaboration plan support note 4-8 for checkpoint-4\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:d2c00181a729f191ca36f1f872f58c4006a729c011a6bc4d74e9351582b05104\"],\n      \"source_agents\": [\"Agent-D\"]\n    },\n    {\n      \"key\": \"Jordan:confirms\",\n      \"value\": \"relevant collaboration plan support note 4-9 for checkpoint-4\",\n      \"state\": \"current\",\n      \"source_ids\": [\"relationship:ed05242c-d04c-4260-a9ae-63d01803caa9\"],\n      \"source_agents\": []\n    },\n    {\n      \"key\": \"Jordan:confirms\",\n      \"value\": \"relevant collaboration plan support note 4-10 for checkpoint-4\",\n      \"state\": \"current\",\n      \"source_ids\": [\"event:c52d68eec0c8384615149b31f914c6d9723c3eb0ff2ae44e88c849f0ccf4540b\"],\n      \"source_agents\": [\"Agent-B\"]\n    }\n  ],\n  \"transitions\": [],\n  \"constraints_used\": [\n    \"stable goal: lead an asynchronous research group\",\n    \"budget: 611 dollars for planning cycle 4\",\n    \"time: planning cycle 4\",\n    \"preference: confirmed support notes for checkpoint-4\",\n    \"boundary: low-confidence note 4-6 must not override confirmed evidence\"\n  ],\n  \"rejected_facts\": [\n    {\n      \"value\": \"Low-confidence conflicting collaboration plan note 4-6 must not override confirmed evidence for checkpoint-4.\",\n      \"reason\": \"low_confidence\",\n      \"source_ids\": [\"event:4d1ea4a6ed1ce676ed94c8904becc822fbcf9f7e1bbdaf1b96930f8fd29cbf6a\"]\n    }\n  ],\n  \"insights\": [\n    \"Jordan's goal and budget are stable and confirmed.\",\n    \"Multiple support notes for checkpoint-4 are confirmed, indicating a clear direction.\",\n    \"The low-confidence note is explicitly instructed not to override confirmed evidence.\"\n  ],\n  \"actions\": [\n    \"Recommend allocating budget to asynchronous collaboration tools.\",\n    \"Proceed with checkpoint-4 based on confirmed support notes.\"\n  ],\n  \"uncertainty\": null\n}",
+  "json_parse_succeeded": true,
+  "json_parse_error": null,
+  "json_parse_error_position": null,
+  "response_ended_mid_string": false,
+  "response_ended_with_complete_json_shape": true,
+  "recorded_at": "2026-07-15T12:24:45.692Z"
+}

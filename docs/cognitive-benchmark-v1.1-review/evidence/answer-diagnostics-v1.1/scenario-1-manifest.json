@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "benchmark": "Omni-Context Cognitive Benchmark v1.1",
+  "split": "development",
+  "backend": "provider",
+  "modes": [
+    "full_omni"
+  ],
+  "status": "completed",
+  "interrupted": false,
+  "dataset_hash": "ef2e91eec10fbd13eebcc4646858678c37a30bb94d194c8ef2ca4cadfa4c0f54",
+  "config_hash": "a61dffa98b08319b427ca5e413bae0536eac49de7e99cb7b6c698243d6455808",
+  "prompt_hashes": {
+    "answer": "e102ad836321591ba91ac8b5d09b1e95ce1fe3e3a3c74d0433e829e12b59b0f5",
+    "judge": "d296590a89f5f1de74e26426cf7a79c3e7b767b1c6ded77136ba3cb8ac1c289c",
+    "agent_review": "213f6edcda654e97e74b0e6adb471d148b7f2ca82ea468e8cfebae6bbd3aeba2"
+  },
+  "answer_schema_version": "answer-schema-v2",
+  "scoring_version": "deterministic-scoring-v3",
+  "judge_adapter_version": "kimi-judge-adapter-v2.1",
+  "judge_rubric_version": "kimi-judge-rubric-v2",
+  "answer_judge_independent": true,
+  "primary_judge_independent": true,
+  "primary_judge_temperature_control": "provider_default_non_configurable",
+  "primary_judge_temperature_parameter_sent": false,
+  "secondary_review_independent": false,
+  "human_review_completed": false,
+  "started_at": "2026-07-15T12:21:21.866Z",
+  "updated_at": "2026-07-15T12:24:46.002Z",
+  "expected": 1,
+  "completed": 1,
+  "errors": 0,
+  "retry_records": 0,
+  "completed_this_invocation": 1,
+  "official_locomo": false,
+  "conversation_2_to_10_accessed": false,
+  "formal_dataset_run": false,
+  "comparison_subset_run": false
+}
