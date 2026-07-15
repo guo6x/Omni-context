@@ -396,6 +396,127 @@ function groupSearchText(group: EvidenceGroup<unknown>): string {
   return [groupFact(group), ...group.predicates, ...group.stateKeys, ...group.exactValues].join(' ').toLowerCase();
 }
 
+/** Tokenize a query into lowercase word tokens (alnum + CJK), excluding common stop words. */
+const STOP_WORDS = new Set([
+  'the', 'is', 'a', 'an', 'and', 'or', 'of', 'to', 'in', 'on', 'at', 'by',
+  'for', 'with', 'from', 'as', 'it', 'its', 'this', 'that', 'these', 'those',
+  'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
+  'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'what',
+  'which', 'who', 'whom', 'whose', 'when', 'where', 'why', 'how', 'are',
+]);
+function tokenizeQuery(query: string): string[] {
+  return query.toLowerCase().split(/[^a-z0-9\u4e00-\u9fa5]+/).filter((t) => t.length > 1 && !STOP_WORDS.has(t));
+}
+
+/**
+ * Generic query relevance score for an evidence group.
+ * Uses only: query token vs fact, state_key, predicate, exact value.
+ * No scenario IDs, gold answers, person names, or fixed test values.
+ */
+function evidenceQueryRelevance(query: string, group: EvidenceGroup<unknown>): number {
+  const tokens = tokenizeQuery(query);
+  if (tokens.length === 0) return 0;
+  const haystacks = [
+    groupFact(group).toLowerCase(),
+    ...group.stateKeys.map((k) => k.toLowerCase()),
+    ...group.predicates.map((p) => p.toLowerCase()),
+    ...group.exactValues.map((v) => v.toLowerCase()),
+  ];
+  let score = 0;
+  for (const token of tokens) {
+    for (const hay of haystacks) {
+      if (hay.includes(token)) {
+        score += 1;
+        break;
+      }
+    }
+  }
+  return score;
+}
+
+/**
+ * Select the best temporal anchor state_key using query relevance + temporal complementarity.
+ * Scoring uses only: query token vs fact/state_key/predicate/exact_value, and
+ * whether current/historical/transition complementary evidence exists.
+ * Never uses the first current candidate as anchor when a better key exists.
+ */
+function selectTemporalAnchor(
+  query: string,
+  groups: EvidenceGroup<unknown>[],
+): { stateKey: string | null; score: number } {
+  const tokens = tokenizeQuery(query);
+  const allKeys = new Set<string>();
+  for (const group of groups) {
+    for (const key of group.stateKeys) allKeys.add(key);
+  }
+  if (allKeys.size === 0) return { stateKey: null, score: 0 };
+
+  let bestKey: string | null = null;
+  let bestScore = -1;
+
+  for (const key of allKeys) {
+    const keyGroups = groups.filter((group) => group.stateKeys.includes(key));
+    if (keyGroups.length === 0) continue;
+
+    const keyLower = key.toLowerCase();
+    let queryMatch = 0;
+    for (const token of tokens) {
+      if (keyLower.includes(token)) queryMatch += 2;
+    }
+    for (const group of keyGroups) {
+      queryMatch += evidenceQueryRelevance(query, group);
+    }
+
+    const stateSet = new Set(keyGroups.flatMap((group) => group.states));
+    const hasCurrent = stateSet.has('current');
+    const hasHistorical = stateSet.has('historical');
+    const hasInvalidated = stateSet.has('invalidated');
+    const hasTransition = keyGroups.some((group) => group.transitions.length > 0);
+
+    let temporalBonus = 0;
+    if (hasCurrent && hasHistorical) temporalBonus += 3;
+    if (hasTransition) temporalBonus += 2;
+    if (hasInvalidated) temporalBonus += 1;
+    if (hasCurrent && hasInvalidated) temporalBonus += 2;
+
+    const score = queryMatch + temporalBonus;
+    if (score > bestScore) {
+      bestScore = score;
+      bestKey = key;
+    }
+  }
+
+  return { stateKey: bestKey, score: bestScore };
+}
+
+/** Decision semantic role for diversity key. */
+function decisionSemanticRole(group: EvidenceGroup<unknown>): string {
+  const searchText = groupSearchText(group);
+  if (/\bgoal\b|目标/i.test(searchText)) return 'goal';
+  if (/\bconstraint|requirement|limit\b|约束|要求|限制/i.test(searchText)) return 'constraint';
+  if (/\boption\b|选项/i.test(searchText)) return 'option';
+  if (/\brisk|downside|failure\b|风险|缺点|失败/i.test(searchText)) return 'risk';
+  if (/\bnext step|reversible|experiment\b|下一步|可逆|试验/i.test(searchText)) return 'next_step';
+  return '';
+}
+
+/**
+ * Semantic diversity key — uses state_key + predicate + state + decision role.
+ * Does NOT include sourceEventId (which is unique per event and defeats diversity).
+ */
+function semanticDiversityKey(group: EvidenceGroup<unknown>): string {
+  const parts: string[] = [];
+  const stateKey = group.stateKeys[0];
+  if (stateKey) parts.push(`sk:${stateKey.toLowerCase()}`);
+  const predicate = group.predicates[0];
+  if (predicate) parts.push(`pr:${predicate.toLowerCase()}`);
+  const state = group.states[0] || 'current';
+  parts.push(`st:${state}`);
+  const role = decisionSemanticRole(group);
+  if (role) parts.push(`role:${role}`);
+  return parts.length > 0 ? parts.join('|') : `gid:${group.groupId}`;
+}
+
 /** Coverage-aware selection under a fixed budget; it never adds candidates or changes Top-K. */
 export function selectEvidenceSet<T>(input: {
   query: string;
@@ -421,30 +542,50 @@ export function selectEvidenceSet<T>(input: {
     reasons.set(group.groupId, reason);
   };
 
-  add(eligible[0], 'highest_ranked_core_evidence');
+  const query = input.query;
 
+  // Step 1: Query most relevant core evidence (ties broken by rrfRank).
+  const maxRelevance = eligible.length > 0 ? Math.max(0, ...eligible.map((group) => evidenceQueryRelevance(query, group))) : 0;
+  const sortedByRelevance = [...eligible].sort((a, b) =>
+    evidenceQueryRelevance(query, b) - evidenceQueryRelevance(query, a) || a.rrfRank - b.rrfRank);
+  add(sortedByRelevance[0] || eligible[0], 'highest_relevance_core_evidence');
+
+  // Step 2: Temporal/Conflict complementary state evidence around query-relevant anchor.
   if (intent.temporal || intent.conflict) {
-    const current = eligible.find((group) => hasState(group, 'current'));
-    const key = current?.stateKeys[0];
-    const related = key ? eligible.filter((group) => group.stateKeys.includes(key)) : eligible;
-    add(current, intent.conflict ? 'conflict_current_fact' : 'temporal_current_fact');
+    const anchor = selectTemporalAnchor(query, eligible);
+    const anchorKey = anchor.stateKey;
+    const related = anchorKey ? eligible.filter((group) => group.stateKeys.includes(anchorKey)) : eligible;
+    add(related.find((group) => hasState(group, 'current')), intent.conflict ? 'conflict_current_fact' : 'temporal_current_fact');
     add(related.find((group) => hasState(group, 'historical')), 'complementary_historical_state');
     add(related.find((group) => hasState(group, 'invalidated')), 'complementary_invalidated_state');
+    // Step 3: Transition or Correction.
     add(related.find((group) => group.transitions.length > 0), intent.conflict ? 'correction_transition' : 'state_transition');
     if (intent.conflict) add(related.find((group) => group.rejectedConflicts.length > 0), 'rejected_conflict');
+  } else {
+    // Step 3 (non-temporal): add a transition if present in top relevant candidates.
+    add(sortedByRelevance.find((group) => group.transitions.length > 0), 'state_transition');
   }
 
+  // Step 4: Different Agent sources — only from candidates meeting relevance threshold.
   if (intent.provenance) {
+    const relevanceThreshold = maxRelevance > 0 ? Math.max(1, Math.ceil(maxRelevance * 0.5)) : 0;
+    const relevantForProvenance = eligible.filter((group) => evidenceQueryRelevance(query, group) >= relevanceThreshold);
     const agents = new Set<string>();
-    for (const group of eligible) {
+    for (const group of selected) {
+      group.sourceAgents.forEach((agent) => agents.add(agent));
+    }
+    const sortedForProvenance = [...relevantForProvenance].sort((a, b) =>
+      evidenceQueryRelevance(query, b) - evidenceQueryRelevance(query, a) || a.rrfRank - b.rrfRank);
+    for (const group of sortedForProvenance) {
+      if (selected.length >= limit) break;
       if (group.sourceAgents.some((agent) => !agents.has(agent))) {
         add(group, 'distinct_relevant_source_agent');
         group.sourceAgents.forEach((agent) => agents.add(agent));
       }
-      if (selected.length >= limit) break;
     }
   }
 
+  // Decision categories (semantic role coverage).
   if (intent.decision) {
     const categories: Array<[RegExp, string]> = [
       [/\bgoal\b|目标/i, 'decision_goal'],
@@ -457,18 +598,21 @@ export function selectEvidenceSet<T>(input: {
     for (const [pattern, reason] of categories) add(eligible.find((group) => pattern.test(groupSearchText(group))), reason);
   }
 
+  // Step 5: Different semantic dimensions (no sourceEventId in key).
   const diversityKeys = new Set<string>();
   for (const group of selected) {
-    diversityKeys.add(`${group.stateKeys[0] || ''}|${group.predicates[0] || ''}|${group.sourceEventIds[0] || group.groupId}`);
+    diversityKeys.add(semanticDiversityKey(group));
   }
   for (const group of eligible) {
-    const key = `${group.stateKeys[0] || ''}|${group.predicates[0] || ''}|${group.sourceEventIds[0] || group.groupId}`;
+    if (selected.length >= limit) break;
+    const key = semanticDiversityKey(group);
     if (!diversityKeys.has(key)) {
       add(group, 'diverse_evidence_dimension');
       diversityKeys.add(key);
     }
-    if (selected.length >= limit) break;
   }
+
+  // Step 6: Fill by reranker rank.
   for (const group of eligible) {
     add(group, 'reranker_rank_fill');
     if (selected.length >= limit) break;

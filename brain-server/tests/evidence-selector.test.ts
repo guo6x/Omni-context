@@ -291,4 +291,148 @@ describe('Candidate v3.1 evidence fusion and selection', () => {
     expect(queryAwareTemporalOptions('Resolve the corrected conflict', {})).toEqual({ includeHistorical: true });
     expect(queryAwareTemporalOptions('What is the current value?', {})).toEqual({});
   });
+
+  it('31. temporal anchor ignores irrelevant first current and selects complementary state key', () => {
+    const transition = { kind: 'updated', from_value: 'red', to_value: 'blue' };
+    const ranked = groups([
+      assertionValue('irrelevant-current', { state: 'current', stateKey: 'support_note', predicate: 'mentions', literalValue: 'irrelevant' }),
+      assertionValue('color-current', { state: 'current', stateKey: 'color', predicate: 'has_color', literalValue: 'blue' }),
+      assertionValue('color-history', { state: 'historical', stateKey: 'color', predicate: 'has_color', literalValue: 'red' }),
+      assertionValue('color-transition', { state: 'current', stateKey: 'color', predicate: 'has_color', literalValue: 'blue', transition }),
+    ]);
+    const result = selectEvidenceSet({ query: 'How has the color changed?', rankedGroups: ranked, limit: 10 });
+    const selectedKeys = result.selected.flatMap((group) => group.stateKeys);
+    expect(selectedKeys).toContain('color');
+    expect(result.selected.flatMap((group) => group.states)).toContain('current');
+    expect(result.selected.flatMap((group) => group.states)).toContain('historical');
+    expect(result.selected.flatMap((group) => group.transitions)).toHaveLength(1);
+    const irrelevantTrace = result.trace.find((entry) => entry.groupId === ranked[0].groupId);
+    const temporalReasons = ['temporal_current_fact', 'complementary_historical_state', 'complementary_invalidated_state', 'state_transition', 'correction_transition'];
+    expect(temporalReasons).not.toContain(irrelevantTrace?.reason);
+  });
+
+  it('32. temporal result contains current, historical, and transition', () => {
+    const transition = { kind: 'updated', from_value: 'v1', to_value: 'v2' };
+    const ranked = groups([
+      assertionValue('cur', { state: 'current', stateKey: 'setting', predicate: 'has_setting', literalValue: 'v2' }),
+      assertionValue('hist', { state: 'historical', stateKey: 'setting', predicate: 'has_setting', literalValue: 'v1' }),
+      assertionValue('trans', { state: 'current', stateKey: 'setting', predicate: 'has_setting', literalValue: 'v2', transition }),
+    ]);
+    const selected = selectEvidenceSet({ query: 'How did the setting change over time?', rankedGroups: ranked, limit: 10 });
+    const states = selected.selected.flatMap((group) => group.states);
+    expect(states).toContain('current');
+    expect(states).toContain('historical');
+    expect(selected.selected.flatMap((group) => group.transitions)).toHaveLength(1);
+  });
+
+  it('33. cross-agent provenance prefers high-relevance core fact over low-relevance new agent', () => {
+    const ranked = groups([
+      assertionValue('core', { agent: 'Agent-A', stateKey: 'budget', predicate: 'has_budget', literalValue: 'budget' }),
+      assertionValue('irrelevant-b', { agent: 'Agent-B', stateKey: 'misc_note', predicate: 'mentions', literalValue: 'weather' }),
+      assertionValue('irrelevant-c', { agent: 'Agent-C', stateKey: 'misc_note', predicate: 'mentions', literalValue: 'weather' }),
+    ]);
+    const result = selectEvidenceSet({ query: 'What is the budget provenance and source?', rankedGroups: ranked, limit: 3 });
+    const coreTrace = result.trace.find((entry) => entry.groupId === ranked[0].groupId);
+    expect(coreTrace?.selected).toBe(true);
+    const agentDiversityReasons = result.trace.filter((entry) => entry.reason === 'distinct_relevant_source_agent');
+    expect(agentDiversityReasons.every((entry) => entry.groupId !== ranked[1].groupId && entry.groupId !== ranked[2].groupId)).toBe(true);
+  });
+
+  it('34. agent diversity only among relevant candidates', () => {
+    const ranked = groups([
+      assertionValue('rel-a', { agent: 'Agent-A', stateKey: 'project', predicate: 'has_project', literalValue: 'project' }),
+      assertionValue('rel-b', { agent: 'Agent-B', stateKey: 'project', predicate: 'has_project', literalValue: 'project' }),
+      assertionValue('irrel-c', { agent: 'Agent-C', stateKey: 'note', predicate: 'mentions', literalValue: 'weather' }),
+      assertionValue('irrel-d', { agent: 'Agent-D', stateKey: 'note', predicate: 'mentions', literalValue: 'weather' }),
+      assertionValue('irrel-e', { agent: 'Agent-E', stateKey: 'note', predicate: 'mentions', literalValue: 'weather' }),
+    ]);
+    const result = selectEvidenceSet({ query: 'What is the project source and provenance?', rankedGroups: ranked, limit: 5 });
+    const agentDiversityGroupIds = result.trace
+      .filter((entry) => entry.reason === 'distinct_relevant_source_agent')
+      .map((entry) => entry.groupId);
+    expect(agentDiversityGroupIds).toContain(ranked[1].groupId);
+    expect(agentDiversityGroupIds).not.toContain(ranked[2].groupId);
+    expect(agentDiversityGroupIds).not.toContain(ranked[3].groupId);
+    expect(agentDiversityGroupIds).not.toContain(ranked[4].groupId);
+  });
+
+  it('35. same state_key and predicate with different sourceEventId does not occupy multiple diversity slots', () => {
+    const ranked = groups([
+      assertionValue('note-1', { stateKey: 'preference', predicate: 'relates_to', sourceEventIds: ['event-1'] }),
+      assertionValue('note-2', { stateKey: 'preference', predicate: 'relates_to', sourceEventIds: ['event-2'] }),
+      assertionValue('note-3', { stateKey: 'preference', predicate: 'relates_to', sourceEventIds: ['event-3'] }),
+      assertionValue('note-4', { stateKey: 'preference', predicate: 'relates_to', sourceEventIds: ['event-4'] }),
+    ]);
+    const result = selectEvidenceSet({ query: 'general query', rankedGroups: ranked, limit: 4 });
+    const diversityCount = result.trace.filter((entry) => entry.reason === 'diverse_evidence_dimension').length;
+    expect(diversityCount).toBe(0);
+  });
+
+  it('36. conflict test still passes with anchor-based selection', () => {
+    const correction = { kind: 'corrected', from_value: 'wrong', to_value: 'right' };
+    const ranked = groups([
+      assertionValue('current', { state: 'current', stateKey: 'answer', confidence: 0.95 }),
+      assertionValue('invalid', { state: 'invalidated', stateKey: 'answer', confidence: 0.2 }),
+      assertionValue('correction', { state: 'current', stateKey: 'answer', transition: correction }),
+    ]);
+    const selected = selectEvidenceSet({ query: 'Resolve the conflict and identify the corrected value', rankedGroups: ranked, limit: 10 });
+    expect(selected.selected.flatMap((group) => group.states)).toContain('invalidated');
+    expect(selected.selected.flatMap((group) => group.transitions)[0]).toMatchObject({ kind: 'corrected' });
+  });
+
+  it('37. forgetting evidence is preserved with invalidated state', () => {
+    const ranked = groups([
+      assertionValue('valid', { state: 'current', stateKey: 'memory' }),
+      assertionValue('forgotten', { state: 'invalidated', stateKey: 'memory' }),
+    ]);
+    const selected = selectEvidenceSet({
+      query: 'What memory was invalidated or forgotten?',
+      rankedGroups: ranked,
+      limit: 10,
+      includeInvalidated: true,
+    });
+    expect(selected.selected.flatMap((group) => group.states)).toContain('invalidated');
+    expect(selected.selected.flatMap((group) => group.states)).toContain('current');
+  });
+
+  it('38. top-10 budget is strictly maintained with mixed evidence', () => {
+    const transition = { kind: 'updated', from_value: 'a', to_value: 'b' };
+    const ranked = groups([
+      assertionValue('c1', { stateKey: 'k1', agent: 'Agent-A' }),
+      assertionValue('c2', { stateKey: 'k2', agent: 'Agent-B' }),
+      assertionValue('c3', { state: 'historical', stateKey: 'k1' }),
+      assertionValue('c4', { state: 'current', stateKey: 'k1', transition }),
+      assertionValue('c5', { stateKey: 'k3' }),
+      assertionValue('c6', { stateKey: 'k4' }),
+      assertionValue('c7', { stateKey: 'k5' }),
+      assertionValue('c8', { stateKey: 'k6' }),
+      assertionValue('c9', { stateKey: 'k7' }),
+      assertionValue('c10', { stateKey: 'k8' }),
+      assertionValue('c11', { stateKey: 'k9' }),
+      assertionValue('c12', { stateKey: 'k10' }),
+    ]);
+    const result = selectEvidenceSet({ query: 'How has k1 changed? Provenance source.', rankedGroups: ranked, limit: 10 });
+    expect(result.selected).toHaveLength(10);
+  });
+
+  it('39. no duplicate groupId in selected set', () => {
+    const ranked = groups([
+      assertionValue('a-1', { stateKey: 'k1', agent: 'Agent-A' }),
+      assertionValue('a-2', { stateKey: 'k1', agent: 'Agent-B' }),
+      assertionValue('a-3', { stateKey: 'k2', agent: 'Agent-C' }),
+    ]);
+    const result = selectEvidenceSet({ query: 'provenance source', rankedGroups: ranked, limit: 10 });
+    const ids = result.selected.map((group) => group.groupId);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('40. does not cross user or scope boundaries in selection', () => {
+    const ranked = groups([
+      assertionValue('u1-a', { stateKey: 'k1', userId: 'user-1', agent: 'Agent-A' }),
+      assertionValue('u2-a', { stateKey: 'k1', userId: 'user-2', agent: 'Agent-B' }),
+    ]);
+    const result = selectEvidenceSet({ query: 'provenance source', rankedGroups: ranked, limit: 10 });
+    expect(result.selected).toHaveLength(2);
+    expect(new Set(result.selected.map((group) => group.groupId)).size).toBe(2);
+  });
 });
