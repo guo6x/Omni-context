@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "FORMAL_EVALUATION_COMPLETED_WITH_RECORDED_ERRORS",
+  "expected": 250,
+  "completed": 248,
+  "errors": 2,
+  "missing": 0,
+  "retry_records": 21,
+  "overall_cognitive_score": 0.8665461073318215,
+  "p50_total_latency_ms": 150120,
+  "p95_total_latency_ms": 243581,
+  "category_scores": {
+    "cognitive_continuity": 0.9366666666666668,
+    "memory_evolution": 0.8528659611992946,
+    "conflict_resolution": 0.8124999999999997,
+    "cross_agent_transfer": 1,
+    "human_like_forgetting": 0.8847222222222222,
+    "proactive_insight": 0.7708333333333334,
+    "decision_quality": 0.8082345679012345
+  },
+  "successful_api_calls": {
+    "deepseek_answer": 248,
+    "deepseek_extraction": 699,
+    "reranker": 248,
+    "kimi_judge": 60
+  },
+  "kimi_physical_attempts": 68,
+  "final_errors": [
+    {
+      "scenario_id": "formal-v2-memory_evolution-039",
+      "attempts": 3,
+      "reason": "truncated Answer JSON"
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-040",
+      "attempts": 3,
+      "reason": "truncated Answer JSON"
+    }
+  ],
+  "hashes": {
+    "formal_dataset_sha256": "0a3b7918aa728298226f7c38c65c5fa1d23d76b33bbde2be7f3ea398cde034e4",
+    "results_sha256": "623f9bd9bb63da5f2531bdaeabba360d88ae5a36b6ab26dd04609391e9e8d661",
+    "metrics_sha256": "f0e065cca9fcd0b5665c5576ba3e45aefae0769bf0b9ab51e2e60866a435ffc3",
+    "config_hash": "0f8855b9a0b961eac2267b893eb009a4fa537ba82ffc1373727bb3b0d3e2687d",
+    "product_build_sha256": "af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668"
+  },
+  "conversation_2_to_10_accessed": false
+}
