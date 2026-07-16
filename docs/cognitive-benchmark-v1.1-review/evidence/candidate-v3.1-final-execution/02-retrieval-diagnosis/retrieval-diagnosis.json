@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "paid_model_calls": 0,
+  "successful_single_scene_sha256": "d02662a470feea4f95e2e8f81dd77fb9c7af2d72e699ab719d8104948ac0065e",
+  "failed_targeted_batch_sha256": "dbf3d4b5326a2a1a03def38e127a3bd8fb19d64d56461aa865e4a2b68fb48360",
+  "successful_single_scene": {
+    "completed": 1,
+    "answer_top10_items": 10,
+    "structured_selector_format_items": 10,
+    "event_source_ids": 3,
+    "relationship_source_ids": 2,
+    "support_note_items": 2,
+    "invalid_source_agents": [],
+    "search_methods": {
+      "vector": 40,
+      "assertion_vector": 21,
+      "graph": 9,
+      "subject_attachment": 6,
+      "raw_event_fallback": 16
+    }
+  },
+  "failed_targeted_batch": {
+    "completed": 7,
+    "answer_top10_items": 70,
+    "structured_selector_format_items": 0,
+    "event_source_ids": 0,
+    "relationship_source_ids": 25,
+    "support_note_items": 55,
+    "invalid_source_agents": [
+      "budget 611 dollars",
+      "checkpoint-2",
+      "checkpoint-4",
+      "Harper",
+      "Jordan",
+      "Lane",
+      "Morgan",
+      "Note4-8",
+      "Note4-9",
+      "Option B",
+      "Riley",
+      "support-note names"
+    ],
+    "search_methods": {
+      "vector": 240,
+      "assertion_vector": 274,
+      "graph": 95,
+      "subject_attachment": 34,
+      "raw_event_fallback": 0
+    },
+    "candidate_pool_trace": "ABSENT",
+    "evidence_selector_trace": "ABSENT",
+    "rrf_trace": "ABSENT",
+    "reranker_trace": "ABSENT"
+  },
+  "wiring_evidence": {
+    "benchmark_cli_brain_server_root": "path.join(REPO, 'brain-server')",
+    "external_product_root_option": false,
+    "expected_product_commit_check": false,
+    "runtime_build_sha_check": false,
+    "benchmark_tree_vs_product_2e300ac": {
+      "evidence_selector_source": "deleted",
+      "retrieval_trace_source": "deleted",
+      "evidence_fidelity_source": "deleted",
+      "changed_brain_server_files": 24,
+      "approximate_deleted_lines": 2287
+    }
+  },
+  "root_cause": [
+    "WRONG_SERVER_INSTANCE",
+    "OLD_OR_STALE_BUILD",
+    "SELECTOR_BYPASSED"
+  ],
+  "product_fix_round_consumed": false
+}
