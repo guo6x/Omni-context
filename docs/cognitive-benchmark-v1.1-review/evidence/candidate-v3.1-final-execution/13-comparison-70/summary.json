@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "status": "COMPARISON_EVALUATION_COMPLETED_WITH_RECORDED_ERROR",
+  "scenarios": 70,
+  "expected_mode_records": 210,
+  "completed": 209,
+  "errors": 1,
+  "missing": 0,
+  "retry_records": 8,
+  "by_mode": {
+    "no_memory": {
+      "completed": 70,
+      "errors": 0,
+      "overall_cognitive_score": 0.3646825396825397
+    },
+    "retrieval_only": {
+      "completed": 69,
+      "errors": 1,
+      "overall_cognitive_score": 0.5523456790123457
+    },
+    "full_omni": {
+      "completed": 70,
+      "errors": 0,
+      "overall_cognitive_score": 0.8706984126984126
+    }
+  },
+  "p50_total_latency_ms_all_modes": 7375,
+  "p95_total_latency_ms_all_modes": 197639,
+  "successful_api_calls": {
+    "deepseek_answer": 209,
+    "deepseek_extraction": 189,
+    "reranker": 70,
+    "kimi_judge": 60
+  },
+  "kimi_physical_attempts": 63,
+  "final_errors": [
+    {
+      "scenario_id": "formal-v2-conflict_resolution-014",
+      "mode": "retrieval_only",
+      "attempts": 3,
+      "reason": "fact.source_ids cannot be empty with memory context"
+    }
+  ],
+  "hashes": {
+    "preselected_dataset_file_sha256": "6bed75c16ee1407c933ae42fc38fdd61eeb298504abb097fb24c3c77758aa461",
+    "runner_dataset_hash": "5efa394ce2ca05123612ea074876612dfba0946727262a68621e1e3e98953358",
+    "results_sha256": "3d9234fd9c2ae3a6c36f68d1ebec270a4314dcff36c9c3f446f5b64066b36a21",
+    "config_hash": "0f8855b9a0b961eac2267b893eb009a4fa537ba82ffc1373727bb3b0d3e2687d",
+    "product_build_sha256": "af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668"
+  },
+  "conversation_2_to_10_accessed": false
+}

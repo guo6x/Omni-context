@@ -1,0 +1,121 @@
+{
+  "scoring_version": "deterministic-scoring-v3",
+  "overall_cognitive_score": 0.5523456790123457,
+  "category_macro_scores": {
+    "cognitive_continuity": 0.6166666666666668,
+    "memory_evolution": 0.4071296296296296,
+    "conflict_resolution": 0.3271604938271605,
+    "cross_agent_transfer": 0.7555555555555555,
+    "human_like_forgetting": 0.6694444444444445,
+    "proactive_insight": 0.4875,
+    "decision_quality": 0.6029629629629628
+  },
+  "deterministic_score": 0.5598450491307632,
+  "agent_judged_score": 0.5452314814814814,
+  "memory_reliability_score": 0.5398225308641975,
+  "personalization_score": 0.6166666666666668,
+  "temporal_and_conflict_score": 0.36714506172839506,
+  "insight_and_decision_score": 0.5452314814814814,
+  "by_category": {
+    "cognitive_continuity": {
+      "count": 10,
+      "macro_score": 0.6166666666666668,
+      "metrics": {
+        "profile_recall": 0.3000000000000001,
+        "profile_consistency": 1,
+        "constraint_utilization": 0.16666666666666666,
+        "personalization_accuracy": 0.23333333333333334,
+        "contradiction_rate": 0,
+        "unsupported_personalization_rate": 0
+      },
+      "status": "completed"
+    },
+    "memory_evolution": {
+      "count": 10,
+      "macro_score": 0.4071296296296296,
+      "metrics": {
+        "current_state_accuracy": 0.5,
+        "historical_state_preservation": 0.22000000000000003,
+        "temporal_ordering_accuracy": 0.03333333333333333,
+        "evolution_interpretation_accuracy": 0.25111111111111106,
+        "stale_memory_leakage": 0,
+        "state_transition_accuracy": 0.4383333333333333
+      },
+      "status": "completed"
+    },
+    "conflict_resolution": {
+      "count": 9,
+      "macro_score": 0.3271604938271605,
+      "metrics": {
+        "conflict_resolution_accuracy": 0.4074074074074074,
+        "latest_valid_fact_accuracy": 0,
+        "historical_query_accuracy": 0,
+        "invalidated_fact_rejection": 0.2222222222222222,
+        "conflict_disclosure_accuracy": 0.3333333333333333,
+        "unsupported_resolution_rate": 0
+      },
+      "status": "completed"
+    },
+    "cross_agent_transfer": {
+      "count": 10,
+      "macro_score": 0.7555555555555555,
+      "metrics": {
+        "cross_agent_recall": 0.5,
+        "cross_agent_consistency": 1,
+        "update_propagation_accuracy": 0.2,
+        "provenance_preservation": 0.8333333333333334,
+        "agent_isolation_error_rate": 0,
+        "stale_transfer_rate": 0
+      },
+      "status": "completed"
+    },
+    "human_like_forgetting": {
+      "count": 10,
+      "macro_score": 0.6694444444444445,
+      "metrics": {
+        "salient_memory_retention": 0.6,
+        "noise_suppression": 0.9666666666666668,
+        "false_forgetting_rate": 0.4,
+        "stale_retention_rate": 0.03333333333333333,
+        "memory_precision": 0.7833333333333333,
+        "memory_compression_ratio": null,
+        "invalidation_accuracy": 0.1
+      },
+      "status": "completed"
+    },
+    "proactive_insight": {
+      "count": 10,
+      "macro_score": 0.4875,
+      "metrics": {
+        "insight_precision": 0.4,
+        "insight_recall": 0.325,
+        "blind_spot_detection_rate": 0.325,
+        "constraint_awareness": 0.125,
+        "actionability": 0.4,
+        "unsupported_claim_rate": 0.325,
+        "redundant_insight_rate": 0.05,
+        "overreach_rate": 0.3
+      },
+      "status": "completed"
+    },
+    "decision_quality": {
+      "count": 10,
+      "macro_score": 0.6029629629629628,
+      "metrics": {
+        "constraint_coverage": 0.85,
+        "goal_alignment": 0.575,
+        "personalization": 0.6666666666666667,
+        "option_comparison_quality": 0.525,
+        "risk_awareness": 0.425,
+        "actionability": 0.35,
+        "internal_consistency": 0.75,
+        "unsupported_assumption_rate": 0.2,
+        "overall_decision_quality": 0.485
+      },
+      "status": "completed"
+    }
+  },
+  "completed": 69,
+  "errors": 1,
+  "primary_judge_independent": true
+}
