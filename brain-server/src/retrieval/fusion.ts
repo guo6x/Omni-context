@@ -6,6 +6,7 @@ export type RetrievalSource =
   | 'assertion_fts'
   | 'graph'
   | 'subject_attachment'
+  | 'raw_event_vector'
   | 'raw_event_fallback';
 
 export type CandidateKind = 'entity' | 'assertion';

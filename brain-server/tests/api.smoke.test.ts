@@ -221,7 +221,7 @@ describe('API smoke: hybrid assertion retrieval', () => {
     expect(response.body.finalContext[0].evidence_id).toBe(assertion.id);
   });
 
-  it('isolates a raw event to its fallback lane and returns one hybrid evidence group', async () => {
+  it('prefers the semantic raw-event lane and returns one hybrid evidence group', async () => {
     const subject = await db.addEntity({
       name: 'Channel Isolation Subject', type: 'person', description: 'Channel isolation fixture',
       embedding: testVector('Channel Isolation Subject'),
@@ -263,7 +263,8 @@ describe('API smoke: hybrid assertion retrieval', () => {
     expect(response.body.candidatePool.some((item: any) => item.id === raw.id)).toBe(false);
     expect(group.sources.filter((source: any) => source.source === 'assertion_vector')).toHaveLength(1);
     expect(group.sources.filter((source: any) => source.source === 'assertion_fts')).toHaveLength(1);
-    expect(group.sources.filter((source: any) => source.source === 'raw_event_fallback')).toHaveLength(1);
+    expect(group.sources.filter((source: any) => source.source === 'raw_event_vector')).toHaveLength(1);
+    expect(group.sources.filter((source: any) => source.source === 'raw_event_fallback')).toHaveLength(0);
   });
 
   it('exposes manifests and integrity but requires explicit rebuild confirmation', async () => {

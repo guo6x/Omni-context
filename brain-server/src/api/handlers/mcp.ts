@@ -1547,6 +1547,10 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               group_id: group.groupId,
               passage: candidate.value.passage,
               sources: candidate.sources,
+              source_event_ids: group.sourceEventIds,
+              source_agents: group.sourceAgents,
+              states: group.states,
+              state_keys: group.stateKeys,
               fused_rank: candidate.fusedRank,
               reranker_rank: group.rerankerRank,
               final_rank: index + 1,
@@ -1562,6 +1566,9 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 entity_vector: resultsData.vectorResults.map((item: any, index: number) => ({ id: item.id, rank: index + 1, score: item.similarity })),
                 assertion_fts: isolatedItems('assertion_fts').map((item, index) => ({ id: item.id, rank: index + 1 })),
                 assertion_vector: isolatedItems('assertion_vector').map((item, index) => ({
+                  id: item.id, rank: index + 1, distance: item.distance, score: item.score,
+                })),
+                raw_event_vector: isolatedItems('raw_event_vector').map((item, index) => ({
                   id: item.id, rank: index + 1, distance: item.distance, score: item.score,
                 })),
                 raw_event_fallback: isolatedItems('raw_event_fallback').map((item, index) => ({ id: item.id, rank: index + 1 })),
@@ -1608,12 +1615,13 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 vector: resultsData.vectorResults.length,
                 assertion_text: isolatedItems('assertion_fts').length,
                 assertion_vector: isolatedItems('assertion_vector').length,
+                raw_event_vector: isolatedItems('raw_event_vector').length,
                 graph: resultsData.graphContext?.nodes?.length || 0,
                 subject_attachment: isolatedItems('subject_attachment').length,
                 raw_event_fallback: isolatedItems('raw_event_fallback').length,
               },
               fusionConfig: {
-                method: 'evidence_group_weighted_rrf_with_coverage_selector',
+                method: 'evidence_group_weighted_rrf_with_coverage_selector_v2',
                 evidence_group_version: EVIDENCE_GROUP_VERSION,
                 reranker_summary_version: RERANKER_SUMMARY_VERSION,
                 evidence_selector_version: EVIDENCE_SELECTOR_VERSION,
@@ -1624,6 +1632,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 weights: {
                   entity_vector: RETRIEVAL_CONFIG.entityVectorWeight,
                   assertion_vector: RETRIEVAL_CONFIG.assertionVectorWeight,
+                  raw_event_vector: RETRIEVAL_CONFIG.assertionVectorWeight,
                   entity_fts: RETRIEVAL_CONFIG.entityFtsWeight,
                   assertion_fts: RETRIEVAL_CONFIG.assertionFtsWeight,
                   graph: RETRIEVAL_CONFIG.graphWeight,

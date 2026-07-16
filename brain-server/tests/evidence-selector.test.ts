@@ -67,7 +67,7 @@ function groups(values: Value[]) {
 }
 
 describe('Candidate v3.1 evidence fusion and selection', () => {
-  it('1. allows raw events only in the dedicated fallback channel', () => {
+  it('1. allows raw events in a dedicated fallback channel', () => {
     const raw = assertionValue('raw-1', { raw: true });
     const lists: FusionList<Value>[] = [
       { source: 'raw_event_fallback', weight: 1, items: [{ id: raw.id, kind: 'assertion', value: raw }] },
@@ -83,12 +83,13 @@ describe('Candidate v3.1 evidence fusion and selection', () => {
     expect(result.lists[0].items).toHaveLength(0);
   });
 
-  it('3. excludes raw events from assertion vectors', () => {
+  it('3. moves semantically retrieved raw events into a dedicated vector channel', () => {
     const raw = assertionValue('raw-1', { raw: true });
     const result = isolateRawEventChannels([
       { source: 'assertion_vector', weight: 1, items: [{ id: raw.id, kind: 'assertion', value: raw }] },
     ]);
-    expect(result.lists[0].items).toHaveLength(0);
+    expect(result.lists.find((list) => list.source === 'assertion_vector')?.items).toHaveLength(0);
+    expect(result.lists.find((list) => list.source === 'raw_event_vector')?.items).toHaveLength(1);
   });
 
   it('4. prevents one raw event from receiving three channel contributions', () => {
@@ -99,7 +100,7 @@ describe('Candidate v3.1 evidence fusion and selection', () => {
       { source: 'raw_event_fallback', weight: 1, items: [{ id: raw.id, kind: 'assertion', value: raw }] },
     ]);
     expect(isolated.lists.flatMap((list) => list.items)).toHaveLength(1);
-    expect(isolated.audit[0].eligibleChannels).toEqual(['raw_event_fallback']);
+    expect(isolated.audit[0].eligibleChannels).toEqual(['raw_event_vector']);
   });
 
   it('5. groups a normalized assertion and raw event by source event ID', () => {
@@ -434,5 +435,57 @@ describe('Candidate v3.1 evidence fusion and selection', () => {
     const result = selectEvidenceSet({ query: 'provenance source', rankedGroups: ranked, limit: 10 });
     expect(result.selected).toHaveLength(2);
     expect(new Set(result.selected.map((group) => group.groupId)).size).toBe(2);
+  });
+
+  it('41. query-relevant core dimensions fill before repetitive support notes', () => {
+    const ranked = groups([
+      assertionValue('support', { stateKey: 'support_note_8', literalValue: 'project planning support note', quote: 'A repetitive project planning support note.' }),
+      assertionValue('goal', { stateKey: 'goal', predicate: 'has_goal', literalValue: 'project goal' }),
+      assertionValue('budget', { stateKey: 'budget', predicate: 'has_budget', literalValue: 'project budget' }),
+      assertionValue('time', { stateKey: 'weekly_time', predicate: 'has_time', literalValue: 'project time' }),
+      assertionValue('preference', { stateKey: 'preference', predicate: 'prefers', literalValue: 'project preference' }),
+      assertionValue('boundary', { stateKey: 'boundary', predicate: 'has_boundary', literalValue: 'project boundary' }),
+    ]);
+    const result = selectEvidenceSet({
+      query: 'Recommend project planning using the goal, budget, time, preference, and boundary.',
+      rankedGroups: ranked,
+      limit: 5,
+    });
+    expect(result.selected.flatMap((group) => group.stateKeys)).toEqual(expect.arrayContaining([
+      'goal', 'budget', 'weekly_time', 'preference', 'boundary',
+    ]));
+    expect(result.selected.flatMap((group) => group.stateKeys)).not.toContain('support_note_8');
+  });
+
+  it('42. temporal selection preserves every complementary state and transition within budget', () => {
+    const ranked = groups([
+      ...Array.from({ length: 7 }, (_, index) => assertionValue(`support-${index}`, {
+        stateKey: `support_note_${index}`,
+        literalValue: `phase support note ${index}`,
+      })),
+      assertionValue('current', { state: 'current', stateKey: 'phase', literalValue: 'v4', transition: { from_value: 'v3', to_value: 'v4' } }),
+      assertionValue('history-3', { state: 'historical', stateKey: 'phase', literalValue: 'v3', transition: { from_value: 'v2', to_value: 'v3' } }),
+      assertionValue('history-2', { state: 'historical', stateKey: 'phase', literalValue: 'v2', transition: { from_value: 'v1', to_value: 'v2' } }),
+      assertionValue('history-1', { state: 'historical', stateKey: 'phase', literalValue: 'v1' }),
+    ]);
+    const result = selectEvidenceSet({
+      query: 'What is the current phase, which earlier states were historical, and what transitions occurred?',
+      rankedGroups: ranked,
+      limit: 10,
+    });
+    const phaseGroups = result.selected.filter((group) => group.stateKeys.includes('phase'));
+    expect(phaseGroups).toHaveLength(4);
+    expect(phaseGroups.flatMap((group) => group.transitions)).toHaveLength(3);
+    expect(result.selected.slice(0, 4).every((group) => group.stateKeys.includes('phase'))).toBe(true);
+  });
+
+  it('43. joins an assertion with missing event metadata to its unique raw quote anchor', () => {
+    const quote = 'The exact original observation.';
+    const normalized = assertionValue('normalized', { sourceEventIds: [], agent: '', quote });
+    const raw = assertionValue('raw', { raw: true, sourceEventIds: ['event-anchor'], agent: 'Agent-A', quote });
+    const grouped = groups([normalized, raw]);
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].normalizedAssertions).toHaveLength(1);
+    expect(grouped[0].rawEvents).toHaveLength(1);
   });
 });

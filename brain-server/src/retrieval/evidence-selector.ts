@@ -8,8 +8,8 @@ import type {
 
 type UnknownRecord = Record<string, any>;
 
-export const EVIDENCE_GROUP_VERSION = 'evidence-group-v1';
-export const EVIDENCE_SELECTOR_VERSION = 'evidence-selector-v1';
+export const EVIDENCE_GROUP_VERSION = 'evidence-group-v2';
+export const EVIDENCE_SELECTOR_VERSION = 'evidence-selector-v2';
 export const RERANKER_SUMMARY_VERSION = 'reranker-evidence-summary-v1';
 
 export interface RawEventChannelAudit {
@@ -182,26 +182,47 @@ export function isolateRawEventChannels<T>(lists: FusionList<T>[]): {
   lists: FusionList<T>[];
   audit: RawEventChannelAudit[];
 } {
+  const rawById = new Map<string, { vector?: FusionList<T>['items'][number]; fallback?: FusionList<T>['items'][number] }>();
+  for (const list of lists) {
+    for (const item of list.items) {
+      if (item.kind !== 'assertion' || !isRawEventEvidence(item.value)) continue;
+      const entry = rawById.get(item.id) || {};
+      if (list.source === 'assertion_vector' || list.source === 'raw_event_vector') entry.vector = item;
+      if (list.source === 'raw_event_fallback') entry.fallback = item;
+      rawById.set(item.id, entry);
+    }
+  }
+
+  const isolated = lists
+    .filter((list) => list.source !== 'raw_event_vector')
+    .map((list) => ({
+      ...list,
+      items: list.items.filter((item) => {
+        if (item.kind !== 'assertion') return list.source !== 'raw_event_fallback';
+        if (!isRawEventEvidence(item.value)) return list.source !== 'raw_event_fallback';
+        return list.source === 'raw_event_fallback' && !rawById.get(item.id)?.vector;
+      }),
+    }));
+  const vectorSource = lists.find((list) => list.source === 'assertion_vector' || list.source === 'raw_event_vector');
+  const vectorItems = [...rawById.values()].map((entry) => entry.vector).filter((item): item is NonNullable<typeof item> => Boolean(item));
+  if (vectorItems.length > 0) {
+    isolated.push({
+      source: 'raw_event_vector',
+      weight: vectorSource?.weight ?? 1,
+      items: vectorItems,
+    });
+  }
   const audits = new Map<string, RawEventChannelAudit>();
-  const isolated = lists.map((list) => ({
-    ...list,
-    items: list.items.filter((item) => {
-      if (item.kind !== 'assertion') return true;
-      const raw = isRawEventEvidence(item.value);
-      if (raw) {
-        if (!audits.has(item.id)) {
-          audits.set(item.id, {
-            candidateId: item.id,
-            evidenceKind: 'raw_event',
-            eligibleChannels: ['raw_event_fallback'],
-            excludedChannels: ['assertion_vector', 'assertion_fts', 'subject_attachment'],
-          });
-        }
-        return list.source === 'raw_event_fallback';
-      }
-      return list.source !== 'raw_event_fallback';
-    }),
-  }));
+  for (const [candidateId, entry] of rawById) {
+    const selected = entry.vector ? 'raw_event_vector' : (entry.fallback ? 'raw_event_fallback' : null);
+    audits.set(candidateId, {
+      candidateId,
+      evidenceKind: 'raw_event',
+      eligibleChannels: selected ? [selected] : [],
+      excludedChannels: (['assertion_vector', 'assertion_fts', 'subject_attachment', 'raw_event_vector', 'raw_event_fallback'] as RetrievalSource[])
+        .filter((source) => source !== selected),
+    });
+  }
   return { lists: isolated, audit: [...audits.values()].sort((a, b) => a.candidateId.localeCompare(b.candidateId)) };
 }
 
@@ -236,9 +257,22 @@ export function groupFusedEvidence<T>(
   config: { rrfK: number },
 ): Array<EvidenceGroup<T>> {
   if (!Number.isFinite(config.rrfK) || config.rrfK <= 0) throw new Error('rrfK must be positive');
+  const quoteAnchors = new Map<string, Set<string>>();
+  for (const candidate of candidates) {
+    if (sourceEventIdsOf(candidate.value).length === 0 || !quoteOf(candidate.value)) continue;
+    const quoteKey = digest(`${scopeOf(candidate.value)}|${quoteOf(candidate.value)}`);
+    const anchors = quoteAnchors.get(quoteKey) || new Set<string>();
+    anchors.add(buildEvidenceGroupKey(candidate as FusedRetrievalCandidate<unknown>));
+    quoteAnchors.set(quoteKey, anchors);
+  }
   const buckets = new Map<string, Array<FusedRetrievalCandidate<T>>>();
   for (const candidate of candidates) {
-    const key = buildEvidenceGroupKey(candidate as FusedRetrievalCandidate<unknown>);
+    let key = buildEvidenceGroupKey(candidate as FusedRetrievalCandidate<unknown>);
+    if (sourceEventIdsOf(candidate.value).length === 0 && quoteOf(candidate.value)) {
+      const quoteKey = digest(`${scopeOf(candidate.value)}|${quoteOf(candidate.value)}`);
+      const anchors = quoteAnchors.get(quoteKey);
+      if (anchors?.size === 1) key = [...anchors][0];
+    }
     const bucket = buckets.get(key) || [];
     bucket.push(candidate);
     buckets.set(key, bucket);
@@ -517,6 +551,17 @@ function semanticDiversityKey(group: EvidenceGroup<unknown>): string {
   return parts.length > 0 ? parts.join('|') : `gid:${group.groupId}`;
 }
 
+function isSecondarySupport(group: EvidenceGroup<unknown>): boolean {
+  const meaningfulKeys = group.stateKeys
+    .map((value) => value.toLowerCase())
+    .filter((value) => !value.startsWith('raw_event:'));
+  const supportKeysOnly = meaningfulKeys.length > 0 && meaningfulKeys.every((key) =>
+    /(?:^|[_:-])(?:support|support_note|confirmation_note|conflict_support|noise|note[_-]?\d)/i.test(key));
+  const visibleText = [groupFact(group), ...group.rawQuotes].join(' ');
+  const supportText = /\b(?:support note|low[- ]confidence conflicting .* note|confirms relevant .* note)\b/i.test(visibleText);
+  return supportKeysOnly || supportText;
+}
+
 /** Coverage-aware selection under a fixed budget; it never adds candidates or changes Top-K. */
 export function selectEvidenceSet<T>(input: {
   query: string;
@@ -534,6 +579,9 @@ export function selectEvidenceSet<T>(input: {
     if (allowHistorical) return true;
     return !group.states.includes('invalidated') && !(intent.currentOnly && group.states.every((state) => state === 'historical'));
   });
+  const primaryEligible = eligible.filter((group) => !isSecondarySupport(group));
+  const coreEligible = primaryEligible.length > 0 ? primaryEligible : eligible;
+  const secondaryEligible = eligible.filter((group) => !coreEligible.includes(group));
   const selected: Array<EvidenceGroup<T>> = [];
   const reasons = new Map<string, string>();
   const add = (group: EvidenceGroup<T> | undefined, reason: string) => {
@@ -545,21 +593,21 @@ export function selectEvidenceSet<T>(input: {
   const query = input.query;
 
   // Step 1: Query most relevant core evidence (ties broken by rrfRank).
-  const maxRelevance = eligible.length > 0 ? Math.max(0, ...eligible.map((group) => evidenceQueryRelevance(query, group))) : 0;
-  const sortedByRelevance = [...eligible].sort((a, b) =>
+  const maxRelevance = coreEligible.length > 0 ? Math.max(0, ...coreEligible.map((group) => evidenceQueryRelevance(query, group))) : 0;
+  const sortedByRelevance = [...coreEligible].sort((a, b) =>
     evidenceQueryRelevance(query, b) - evidenceQueryRelevance(query, a) || a.rrfRank - b.rrfRank);
   add(sortedByRelevance[0] || eligible[0], 'highest_relevance_core_evidence');
 
   // Step 2: Temporal/Conflict complementary state evidence around query-relevant anchor.
   if (intent.temporal || intent.conflict) {
-    const anchor = selectTemporalAnchor(query, eligible);
+    const anchor = selectTemporalAnchor(query, coreEligible);
     const anchorKey = anchor.stateKey;
-    const related = anchorKey ? eligible.filter((group) => group.stateKeys.includes(anchorKey)) : eligible;
-    add(related.find((group) => hasState(group, 'current')), intent.conflict ? 'conflict_current_fact' : 'temporal_current_fact');
-    add(related.find((group) => hasState(group, 'historical')), 'complementary_historical_state');
-    add(related.find((group) => hasState(group, 'invalidated')), 'complementary_invalidated_state');
+    const related = anchorKey ? coreEligible.filter((group) => group.stateKeys.includes(anchorKey)) : coreEligible;
+    for (const group of related.filter((item) => hasState(item, 'current'))) add(group, intent.conflict ? 'conflict_current_fact' : 'temporal_current_fact');
+    for (const group of related.filter((item) => hasState(item, 'historical'))) add(group, 'complementary_historical_state');
+    for (const group of related.filter((item) => hasState(item, 'invalidated'))) add(group, 'complementary_invalidated_state');
     // Step 3: Transition or Correction.
-    add(related.find((group) => group.transitions.length > 0), intent.conflict ? 'correction_transition' : 'state_transition');
+    for (const group of related.filter((item) => item.transitions.length > 0)) add(group, intent.conflict ? 'correction_transition' : 'state_transition');
     if (intent.conflict) add(related.find((group) => group.rejectedConflicts.length > 0), 'rejected_conflict');
   } else {
     // Step 3 (non-temporal): add a transition if present in top relevant candidates.
@@ -569,7 +617,7 @@ export function selectEvidenceSet<T>(input: {
   // Step 4: Different Agent sources — only from candidates meeting relevance threshold.
   if (intent.provenance) {
     const relevanceThreshold = maxRelevance > 0 ? Math.max(1, Math.ceil(maxRelevance * 0.5)) : 0;
-    const relevantForProvenance = eligible.filter((group) => evidenceQueryRelevance(query, group) >= relevanceThreshold);
+    const relevantForProvenance = coreEligible.filter((group) => evidenceQueryRelevance(query, group) >= relevanceThreshold);
     const agents = new Set<string>();
     for (const group of selected) {
       group.sourceAgents.forEach((agent) => agents.add(agent));
@@ -595,7 +643,7 @@ export function selectEvidenceSet<T>(input: {
       [/\breversible|next step|experiment\b|可逆|下一步|试验/i, 'decision_reversible_step'],
       [/\brisk|downside|failure\b|风险|缺点|失败/i, 'decision_risk'],
     ];
-    for (const [pattern, reason] of categories) add(eligible.find((group) => pattern.test(groupSearchText(group))), reason);
+    for (const [pattern, reason] of categories) add(coreEligible.find((group) => pattern.test(groupSearchText(group))), reason);
   }
 
   // Step 5: Different semantic dimensions (no sourceEventId in key).
@@ -603,7 +651,9 @@ export function selectEvidenceSet<T>(input: {
   for (const group of selected) {
     diversityKeys.add(semanticDiversityKey(group));
   }
-  for (const group of eligible) {
+  const diverseCandidates = [...coreEligible].sort((a, b) =>
+    evidenceQueryRelevance(query, b) - evidenceQueryRelevance(query, a) || a.rrfRank - b.rrfRank);
+  for (const group of diverseCandidates) {
     if (selected.length >= limit) break;
     const key = semanticDiversityKey(group);
     if (!diversityKeys.has(key)) {
@@ -613,8 +663,16 @@ export function selectEvidenceSet<T>(input: {
   }
 
   // Step 6: Fill by reranker rank.
-  for (const group of eligible) {
+  for (const group of coreEligible) {
     add(group, 'reranker_rank_fill');
+    if (selected.length >= limit) break;
+  }
+
+  if (intent.conflict) {
+    add(secondaryEligible.find((group) => /low[- ]confidence|conflict/i.test(groupSearchText(group))), 'conflict_low_confidence_evidence');
+  }
+  for (const group of secondaryEligible) {
+    add(group, 'secondary_support_rank_fill');
     if (selected.length >= limit) break;
   }
 
