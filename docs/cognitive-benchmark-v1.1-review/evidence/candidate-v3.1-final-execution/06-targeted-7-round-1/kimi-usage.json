@@ -1,0 +1,89 @@
+{
+  "schema_version": 2,
+  "provider": "Moonshot",
+  "model": "kimi-k2.6",
+  "judge_adapter_version": "kimi-judge-adapter-v2.1",
+  "judge_rubric_version": "kimi-judge-rubric-v2",
+  "temperature_control": "provider_default_non_configurable",
+  "temperature_parameter_sent": false,
+  "call_limit": 60,
+  "calls": 2,
+  "physical_attempts": 2,
+  "logical_judge_calls": 2,
+  "successful_logical_calls": 2,
+  "truncated_attempts": 0,
+  "malformed_attempts": 0,
+  "schema_validation_failures": 0,
+  "retries_recovered": 0,
+  "prompt_tokens": 5739,
+  "completion_tokens": 446,
+  "total_tokens": 6185,
+  "cached_tokens": 0,
+  "errors": 0,
+  "schema_failures": 0,
+  "structured_output_fallbacks": 0,
+  "consecutive_provider_errors": 0,
+  "consecutive_schema_failures": 0,
+  "logical_calls": [
+    {
+      "logical_call_number": 1,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-003",
+      "started_at": "2026-07-16T02:47:53.144Z",
+      "status": "completed",
+      "physical_attempts": [
+        1
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T02:48:18.289Z"
+    },
+    {
+      "logical_call_number": 2,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-004",
+      "started_at": "2026-07-16T02:53:49.519Z",
+      "status": "completed",
+      "physical_attempts": [
+        2
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T02:54:22.576Z"
+    }
+  ],
+  "attempts": [
+    {
+      "call_number": 1,
+      "logical_call_number": 1,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T02:47:53.214Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 230,
+      "raw_character_count": 972,
+      "completed_at": "2026-07-16T02:48:18.235Z"
+    },
+    {
+      "call_number": 2,
+      "logical_call_number": 2,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T02:53:49.538Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 216,
+      "raw_character_count": 873,
+      "completed_at": "2026-07-16T02:54:22.544Z"
+    }
+  ]
+}

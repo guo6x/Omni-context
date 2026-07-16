@@ -1,0 +1,4 @@
+
+> omni-context-brain-server@0.1.1 typecheck
+> tsc --noEmit
+
