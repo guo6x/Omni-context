@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "status": "OMNI-CONTEXT CANDIDATE V3.1 FROZEN",
+  "tag_name": "evaluation-freeze-candidate-v3.1",
+  "tag_target_product_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "initial_product_commit": "2e300acad083626285ff43b650717e66a04671dd",
+  "product_fix_rounds": 1,
+  "product_fix_commits": [
+    "17dc1d0107b0474de84058205a91b302ba290a74"
+  ],
+  "benchmark_evidence_commit_parent": "8e291fd57912524ce35ba2737537aa64dd68dd56",
+  "dataset": {
+    "path": "docs/cognitive-benchmark-v1.1-review/evidence/development-dataset-v2.jsonl",
+    "sha256": "92cf8cc0cf33e0d49548529814ecfcd2097cea28c5075063e4be20de80149962"
+  },
+  "config": {
+    "path": "benchmark/cognitive/config/default.json",
+    "file_sha256": "873000f9366ea579620314bbdc6d7d8001b0a64578c81bea7ece2501948b8ed1",
+    "effective_run_config_hash": "0f8855b9a0b961eac2267b893eb009a4fa537ba82ffc1373727bb3b0d3e2687d",
+    "legacy_frozen_commit_field_used_for_runtime_identity": false,
+    "runtime_identity_source": "explicit CLI expected-product-commit plus runtime attestation"
+  },
+  "prompts": {
+    "answer_sha256": "e102ad836321591ba91ac8b5d09b1e95ce1fe3e3a3c74d0433e829e12b59b0f5",
+    "judge_sha256": "d296590a89f5f1de74e26426cf7a79c3e7b767b1c6ded77136ba3cb8ac1c289c"
+  },
+  "build": {
+    "api_server_sha256": "af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668",
+    "evidence_selector_version": "evidence-selector-v2",
+    "evidence_selector_sha256": "a37bbdcf589265db73d639c1b8b6c58a2baabee0e70537d6ecd860c9b928b949"
+  },
+  "embedding": {
+    "model_id": "Xenova/multilingual-e5-large",
+    "model_revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "dimension": 1024,
+    "model_sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+    "status": "local",
+    "healthy": true,
+    "serialization_version": "entity-passage-v2+assertion-passage-v3"
+  },
+  "gates": {
+    "retrieval_preflight": { "completed": 7, "errors": 0, "top10_slots": "37/38", "passed": true },
+    "targeted_7": { "completed": 7, "errors": 0, "overall": 0.840868291761149, "coverage": "28/30", "passed": true },
+    "development_35": { "completed": 35, "errors": 0, "overall": 0.8848420256991686, "passed": true },
+    "no_memory_35": { "completed": 35, "errors": 0, "overall": 0.36671296296296296 },
+    "retrieval_only_35": { "completed": 35, "errors": 0, "overall": 0.5638529856386999 },
+    "deterministic_rescore": { "records": 105, "mismatches": 0, "scoring_defects": 0 },
+    "secondary_agent_review": { "completed": 20, "human_review": false, "independent": false }
+  },
+  "ablations": {
+    "selector_off": "NOT RUN — NO EXISTING SAFE ABLATION SWITCH",
+    "evidence_group_off": "NOT RUN — NO EXISTING SAFE ABLATION SWITCH"
+  },
+  "tests": {
+    "product": "329/329",
+    "cognitive": "61/61",
+    "benchmark_harness": "242/242",
+    "typecheck": "passed",
+    "build": "passed",
+    "secret_scan": "passed"
+  },
+  "integrity": {
+    "duplicate_completed": 0,
+    "invalid_citations": 0,
+    "unresolved_p0": 0,
+    "unresolved_p1": [
+      "Secondary Agent Review uses an overly broad score_issue label; raw flags are preserved but do not override deterministic scoring."
+    ],
+    "conversation_2_to_10_accessed": false,
+    "product_worktree_clean": true,
+    "benchmark_worktree_clean_before_manifest": true
+  },
+  "artifact_archives": {
+    "repository_evidence": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution",
+    "local_machine_evidence": "D:/OmniContext-candidate-v3.1-final-execution/evidence",
+    "local_run_archive": "D:/OmniContext-candidate-v3.1-final-execution/runs",
+    "local_run_archive_size_gib": 0.98
+  },
+  "formal_evaluation_authorized": true
+}
