@@ -8,7 +8,8 @@ export function evaluateRetrievalPreflight(scenario, retrieval, identity) {
   const validAgents = new Set((scenario.events || []).map((event) => event.agent).filter(Boolean));
   const visibleAgents = unique([...candidatePool, ...final20].flatMap(sourceAgents));
   const invalidSourceAgents = visibleAgents.filter((agent) => !AGENT_RE.test(agent) || !validAgents.has(agent));
-  const selectorExecuted = retrieval?.fusionConfig?.evidence_selector_version === 'evidence-selector-v1'
+  const selectorExecuted = Boolean(identity?.expectedSelectorVersion)
+    && retrieval?.fusionConfig?.evidence_selector_version === identity.expectedSelectorVersion
     && retrieval?.trace?.status === 'written';
   const serviceCommitVerified = Boolean(
     identity?.productCommit

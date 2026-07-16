@@ -5,7 +5,7 @@ const EXACT_COMMIT_RE = /^[a-f0-9]{40}$/;
 export function resolveFullOmniRuntimeOptions({
   brainServerRoot,
   expectedProductCommit,
-  expectedSelectorVersion = 'evidence-selector-v1',
+  expectedSelectorVersion = 'evidence-selector-v2',
 }) {
   if (!brainServerRoot) {
     throw new Error('full_omni requires --brain-server-root (or OMNI_BRAIN_SERVER_ROOT)');

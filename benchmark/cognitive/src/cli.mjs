@@ -164,7 +164,7 @@ if (command === 'generate') {
   const runtimeOptions = resolveFullOmniRuntimeOptions({
     brainServerRoot: flag('--brain-server-root', process.env.OMNI_BRAIN_SERVER_ROOT),
     expectedProductCommit: flag('--expected-product-commit', process.env.OMNI_EXPECTED_PRODUCT_COMMIT),
-    expectedSelectorVersion: flag('--expected-selector-version', process.env.OMNI_EXPECTED_SELECTOR_VERSION || 'evidence-selector-v1'),
+    expectedSelectorVersion: flag('--expected-selector-version', process.env.OMNI_EXPECTED_SELECTOR_VERSION || 'evidence-selector-v2'),
   });
   const provider = await loadProvider(config, runRoot, path.join(outputDir, 'kimi-usage-not-used.json'), runtimeOptions);
   await mkdir(outputDir, { recursive: true });
@@ -179,6 +179,7 @@ if (command === 'generate') {
       const gate = evaluateRetrievalPreflight(scenario, result.retrieval, {
         productCommit: attestation?.product_commit,
         expectedProductCommit: runtimeOptions.expectedProductCommit,
+        expectedSelectorVersion: runtimeOptions.expectedSelectorVersion,
       });
       records.push({
         schema_version: 1,
@@ -236,7 +237,7 @@ if (command === 'generate') {
     ? resolveFullOmniRuntimeOptions({
       brainServerRoot: flag('--brain-server-root', process.env.OMNI_BRAIN_SERVER_ROOT),
       expectedProductCommit: flag('--expected-product-commit', process.env.OMNI_EXPECTED_PRODUCT_COMMIT),
-      expectedSelectorVersion: flag('--expected-selector-version', process.env.OMNI_EXPECTED_SELECTOR_VERSION || 'evidence-selector-v1'),
+      expectedSelectorVersion: flag('--expected-selector-version', process.env.OMNI_EXPECTED_SELECTOR_VERSION || 'evidence-selector-v2'),
     })
     : {};
   const provider = await loadProvider(config, runRoot, kimiUsage, runtimeOptions);

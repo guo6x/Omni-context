@@ -27,11 +27,12 @@ describe('retrieval-only gate evaluation', () => {
     const result = evaluateRetrievalPreflight(scenario, {
       candidatePool: items,
       finalContext: items.map((item, index) => ({ ...item, selected_for_answer: true, final_rank: index + 1 })),
-      fusionConfig: { evidence_selector_version: 'evidence-selector-v1' },
+      fusionConfig: { evidence_selector_version: 'evidence-selector-v2' },
       trace: { status: 'written', trace_id: 'trace-1' },
     }, {
       productCommit: '2e300acad083626285ff43b650717e66a04671dd',
       expectedProductCommit: '2e300acad083626285ff43b650717e66a04671dd',
+      expectedSelectorVersion: 'evidence-selector-v2',
     });
 
     assert.strictEqual(result.passed, true);
@@ -50,6 +51,7 @@ describe('retrieval-only gate evaluation', () => {
     }, {
       productCommit: '0'.repeat(40),
       expectedProductCommit: '2e300acad083626285ff43b650717e66a04671dd',
+      expectedSelectorVersion: 'evidence-selector-v2',
     });
 
     assert.strictEqual(result.passed, false);

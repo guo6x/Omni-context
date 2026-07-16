@@ -17,10 +17,10 @@ describe('full_omni runtime options', () => {
     const result = resolveFullOmniRuntimeOptions({
       brainServerRoot: 'D:/product/brain-server',
       expectedProductCommit: '2e300acad083626285ff43b650717e66a04671dd',
-      expectedSelectorVersion: 'evidence-selector-v1',
+      expectedSelectorVersion: 'evidence-selector-v2',
     });
     assert.strictEqual(result.brainServerRoot, path.resolve('D:/product/brain-server'));
     assert.strictEqual(result.expectedProductCommit, '2e300acad083626285ff43b650717e66a04671dd');
-    assert.strictEqual(result.expectedSelectorVersion, 'evidence-selector-v1');
+    assert.strictEqual(result.expectedSelectorVersion, 'evidence-selector-v2');
   });
 });
