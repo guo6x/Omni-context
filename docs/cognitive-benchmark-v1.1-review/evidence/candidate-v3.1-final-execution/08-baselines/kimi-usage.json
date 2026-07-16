@@ -1,0 +1,611 @@
+{
+  "schema_version": 2,
+  "provider": "Moonshot",
+  "model": "kimi-k2.6",
+  "judge_adapter_version": "kimi-judge-adapter-v2.1",
+  "judge_rubric_version": "kimi-judge-rubric-v2",
+  "temperature_control": "provider_default_non_configurable",
+  "temperature_parameter_sent": false,
+  "call_limit": 60,
+  "calls": 20,
+  "physical_attempts": 20,
+  "logical_judge_calls": 20,
+  "successful_logical_calls": 20,
+  "truncated_attempts": 0,
+  "malformed_attempts": 0,
+  "schema_validation_failures": 0,
+  "retries_recovered": 0,
+  "prompt_tokens": 19140,
+  "completion_tokens": 4530,
+  "total_tokens": 23670,
+  "cached_tokens": 5120,
+  "errors": 0,
+  "schema_failures": 0,
+  "structured_output_fallbacks": 0,
+  "consecutive_provider_errors": 0,
+  "consecutive_schema_failures": 0,
+  "logical_calls": [
+    {
+      "logical_call_number": 1,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-001",
+      "started_at": "2026-07-16T07:29:19.087Z",
+      "status": "completed",
+      "physical_attempts": [
+        1
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:29:56.095Z"
+    },
+    {
+      "logical_call_number": 2,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-002",
+      "started_at": "2026-07-16T07:29:57.941Z",
+      "status": "completed",
+      "physical_attempts": [
+        2
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:30:04.745Z"
+    },
+    {
+      "logical_call_number": 3,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-003",
+      "started_at": "2026-07-16T07:30:06.319Z",
+      "status": "completed",
+      "physical_attempts": [
+        3
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:30:32.794Z"
+    },
+    {
+      "logical_call_number": 4,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-004",
+      "started_at": "2026-07-16T07:30:34.683Z",
+      "status": "completed",
+      "physical_attempts": [
+        4
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:30:51.459Z"
+    },
+    {
+      "logical_call_number": 5,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-005",
+      "started_at": "2026-07-16T07:30:53.394Z",
+      "status": "completed",
+      "physical_attempts": [
+        5
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:31:11.832Z"
+    },
+    {
+      "logical_call_number": 6,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-001",
+      "started_at": "2026-07-16T07:31:15.203Z",
+      "status": "completed",
+      "physical_attempts": [
+        6
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:31:33.038Z"
+    },
+    {
+      "logical_call_number": 7,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-002",
+      "started_at": "2026-07-16T07:31:34.843Z",
+      "status": "completed",
+      "physical_attempts": [
+        7
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:31:53.539Z"
+    },
+    {
+      "logical_call_number": 8,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-003",
+      "started_at": "2026-07-16T07:31:55.661Z",
+      "status": "completed",
+      "physical_attempts": [
+        8
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:32:13.352Z"
+    },
+    {
+      "logical_call_number": 9,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-004",
+      "started_at": "2026-07-16T07:32:15.306Z",
+      "status": "completed",
+      "physical_attempts": [
+        9
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:32:22.146Z"
+    },
+    {
+      "logical_call_number": 10,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-005",
+      "started_at": "2026-07-16T07:32:25.004Z",
+      "status": "completed",
+      "physical_attempts": [
+        10
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:32:31.722Z"
+    },
+    {
+      "logical_call_number": 11,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-001",
+      "started_at": "2026-07-16T07:34:03.162Z",
+      "status": "completed",
+      "physical_attempts": [
+        11
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:34:21.785Z"
+    },
+    {
+      "logical_call_number": 12,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-002",
+      "started_at": "2026-07-16T07:34:32.327Z",
+      "status": "completed",
+      "physical_attempts": [
+        12
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:34:40.601Z"
+    },
+    {
+      "logical_call_number": 13,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-003",
+      "started_at": "2026-07-16T07:34:48.625Z",
+      "status": "completed",
+      "physical_attempts": [
+        13
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:34:56.448Z"
+    },
+    {
+      "logical_call_number": 14,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-004",
+      "started_at": "2026-07-16T07:35:05.881Z",
+      "status": "completed",
+      "physical_attempts": [
+        14
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:35:15.073Z"
+    },
+    {
+      "logical_call_number": 15,
+      "phase": "development",
+      "scenario_id": "development-v2-proactive_insight-005",
+      "started_at": "2026-07-16T07:35:19.114Z",
+      "status": "completed",
+      "physical_attempts": [
+        15
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:35:25.893Z"
+    },
+    {
+      "logical_call_number": 16,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-001",
+      "started_at": "2026-07-16T07:35:30.440Z",
+      "status": "completed",
+      "physical_attempts": [
+        16
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:35:50.845Z"
+    },
+    {
+      "logical_call_number": 17,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-002",
+      "started_at": "2026-07-16T07:36:06.331Z",
+      "status": "completed",
+      "physical_attempts": [
+        17
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:36:13.272Z"
+    },
+    {
+      "logical_call_number": 18,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-003",
+      "started_at": "2026-07-16T07:36:17.101Z",
+      "status": "completed",
+      "physical_attempts": [
+        18
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:36:32.174Z"
+    },
+    {
+      "logical_call_number": 19,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-004",
+      "started_at": "2026-07-16T07:36:35.084Z",
+      "status": "completed",
+      "physical_attempts": [
+        19
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:36:41.196Z"
+    },
+    {
+      "logical_call_number": 20,
+      "phase": "development",
+      "scenario_id": "development-v2-decision_quality-005",
+      "started_at": "2026-07-16T07:36:45.550Z",
+      "status": "completed",
+      "physical_attempts": [
+        20
+      ],
+      "physical_attempt_count": 1,
+      "error": null,
+      "completed_at": "2026-07-16T07:37:02.479Z"
+    }
+  ],
+  "attempts": [
+    {
+      "call_number": 1,
+      "logical_call_number": 1,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:29:19.123Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 198,
+      "raw_character_count": 796,
+      "completed_at": "2026-07-16T07:29:56.074Z"
+    },
+    {
+      "call_number": 2,
+      "logical_call_number": 2,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:29:57.978Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 192,
+      "raw_character_count": 818,
+      "completed_at": "2026-07-16T07:30:04.691Z"
+    },
+    {
+      "call_number": 3,
+      "logical_call_number": 3,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:30:06.346Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 202,
+      "raw_character_count": 806,
+      "completed_at": "2026-07-16T07:30:32.764Z"
+    },
+    {
+      "call_number": 4,
+      "logical_call_number": 4,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:30:34.739Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 199,
+      "raw_character_count": 795,
+      "completed_at": "2026-07-16T07:30:51.437Z"
+    },
+    {
+      "call_number": 5,
+      "logical_call_number": 5,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:30:53.420Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 200,
+      "raw_character_count": 826,
+      "completed_at": "2026-07-16T07:31:11.810Z"
+    },
+    {
+      "call_number": 6,
+      "logical_call_number": 6,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:31:15.240Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 230,
+      "raw_character_count": 970,
+      "completed_at": "2026-07-16T07:31:33.019Z"
+    },
+    {
+      "call_number": 7,
+      "logical_call_number": 7,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:31:34.882Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 201,
+      "raw_character_count": 789,
+      "completed_at": "2026-07-16T07:31:53.519Z"
+    },
+    {
+      "call_number": 8,
+      "logical_call_number": 8,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:31:55.698Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 207,
+      "raw_character_count": 847,
+      "completed_at": "2026-07-16T07:32:13.326Z"
+    },
+    {
+      "call_number": 9,
+      "logical_call_number": 9,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:32:15.339Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 202,
+      "raw_character_count": 865,
+      "completed_at": "2026-07-16T07:32:22.126Z"
+    },
+    {
+      "call_number": 10,
+      "logical_call_number": 10,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:32:25.025Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 190,
+      "raw_character_count": 776,
+      "completed_at": "2026-07-16T07:32:31.686Z"
+    },
+    {
+      "call_number": 11,
+      "logical_call_number": 11,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:34:03.238Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 194,
+      "raw_character_count": 776,
+      "completed_at": "2026-07-16T07:34:21.761Z"
+    },
+    {
+      "call_number": 12,
+      "logical_call_number": 12,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:34:32.351Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 225,
+      "raw_character_count": 917,
+      "completed_at": "2026-07-16T07:34:40.569Z"
+    },
+    {
+      "call_number": 13,
+      "logical_call_number": 13,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:34:48.679Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 250,
+      "raw_character_count": 1083,
+      "completed_at": "2026-07-16T07:34:56.426Z"
+    },
+    {
+      "call_number": 14,
+      "logical_call_number": 14,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:35:05.895Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 256,
+      "raw_character_count": 1022,
+      "completed_at": "2026-07-16T07:35:15.039Z"
+    },
+    {
+      "call_number": 15,
+      "logical_call_number": 15,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:35:19.144Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 248,
+      "raw_character_count": 1032,
+      "completed_at": "2026-07-16T07:35:25.862Z"
+    },
+    {
+      "call_number": 16,
+      "logical_call_number": 16,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:35:30.490Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 455,
+      "raw_character_count": 1324,
+      "completed_at": "2026-07-16T07:35:50.815Z"
+    },
+    {
+      "call_number": 17,
+      "logical_call_number": 17,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:36:06.394Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 212,
+      "raw_character_count": 860,
+      "completed_at": "2026-07-16T07:36:13.247Z"
+    },
+    {
+      "call_number": 18,
+      "logical_call_number": 18,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:36:17.124Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 219,
+      "raw_character_count": 935,
+      "completed_at": "2026-07-16T07:36:32.143Z"
+    },
+    {
+      "call_number": 19,
+      "logical_call_number": 19,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:36:35.111Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 215,
+      "raw_character_count": 886,
+      "completed_at": "2026-07-16T07:36:41.177Z"
+    },
+    {
+      "call_number": 20,
+      "logical_call_number": 20,
+      "physical_attempt": 1,
+      "phase": "development",
+      "started_at": "2026-07-16T07:36:45.601Z",
+      "response_format": "json_schema",
+      "structured_output_fallback": false,
+      "fallback_reason": null,
+      "temperature_parameter_sent": false,
+      "status": "completed",
+      "finish_reason": "stop",
+      "completion_tokens": 235,
+      "raw_character_count": 1002,
+      "completed_at": "2026-07-16T07:37:02.452Z"
+    }
+  ]
+}

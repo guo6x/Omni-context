@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "selector_off": {
+    "status": "NOT RUN — NO EXISTING SAFE ABLATION SWITCH",
+    "product_modified": false
+  },
+  "evidence_group_off": {
+    "status": "NOT RUN — NO EXISTING SAFE ABLATION SWITCH",
+    "product_modified": false
+  },
+  "inspection_scope": [
+    "brain-server/src/api/handlers/mcp.ts",
+    "brain-server/src/retrieval/evidence-selector.ts"
+  ]
+}
