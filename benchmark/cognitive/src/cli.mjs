@@ -2,6 +2,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveFullOmniRuntimeOptions } from './runtime-options.mjs';
+import { aggregateRetrievalPreflight, evaluateRetrievalPreflight } from './retrieval-preflight.mjs';
 import { duplicateAudit, familyAudit, difficultyAudit, leakageAudit, formalDiversityAudit } from './audits.mjs';
 import { CATEGORY_KEYS, CATEGORY_SPECS } from './constants.mjs';
 import { CognitiveProvider } from './provider.mjs';
@@ -26,13 +28,13 @@ async function loadConfig() {
   return config;
 }
 
-async function loadProvider(config, runRoot, kimiUsagePath) {
+async function loadProvider(config, runRoot, kimiUsagePath, runtimeOptions = {}) {
   const [answerPrompt, judgePrompt, reviewPrompt] = await Promise.all([
     readFile(path.join(ROOT, 'prompts', 'answer-v2.txt'), 'utf8'),
     readFile(path.join(ROOT, 'prompts', 'judge-v2-kimi.txt'), 'utf8'),
     readFile(path.join(ROOT, 'prompts', 'agent-review-v1.txt'), 'utf8'),
   ]);
-  return new CognitiveProvider({ config, answerPrompt, judgePrompt, reviewPrompt, runRoot, brainServerRoot: path.join(REPO, 'brain-server'), kimiUsagePath });
+  return new CognitiveProvider({ config, answerPrompt, judgePrompt, reviewPrompt, runRoot, kimiUsagePath, ...runtimeOptions });
 }
 
 if (command === 'generate') {
@@ -153,6 +155,70 @@ if (command === 'generate') {
     writeJson(stabilityOutput, stability),
   ]);
   console.log(JSON.stringify({ status, completed: completed.length, model: completed[0]?.model || null, physical_attempts: completed.reduce((sum, result) => sum + result.physical_attempts, 0), retries_recovered: completed.filter((result) => result.retries_recovered).length, fallbacks: completed.filter((result) => result.structured_output_fallback).length, no_truncation: noTruncation, no_markdown: noMarkdown, mean_absolute_delta: meanAbsoluteDelta, max_absolute_delta: maxAbsoluteDelta, rank_order_consistency: rankOrderConsistency, error: preflightError?.message || null }));
+} else if (command === 'retrieval-preflight') {
+  const datasetPath = path.resolve(flag('--dataset'));
+  const outputDir = path.resolve(flag('--output-dir'));
+  const runRoot = path.resolve(flag('--run-root', path.join(outputDir, 'run')));
+  const config = await loadConfig();
+  const scenarios = await readJsonl(datasetPath);
+  const runtimeOptions = resolveFullOmniRuntimeOptions({
+    brainServerRoot: flag('--brain-server-root', process.env.OMNI_BRAIN_SERVER_ROOT),
+    expectedProductCommit: flag('--expected-product-commit', process.env.OMNI_EXPECTED_PRODUCT_COMMIT),
+    expectedSelectorVersion: flag('--expected-selector-version', process.env.OMNI_EXPECTED_SELECTOR_VERSION || 'evidence-selector-v1'),
+  });
+  const provider = await loadProvider(config, runRoot, path.join(outputDir, 'kimi-usage-not-used.json'), runtimeOptions);
+  await mkdir(outputDir, { recursive: true });
+  const embeddingPreflight = await provider.preflightRuntime();
+  await writeJson(path.join(outputDir, 'embedding-preflight.json'), embeddingPreflight);
+  const records = [];
+  for (let index = 0; index < scenarios.length; index++) {
+    const scenario = scenarios[index];
+    try {
+      const result = await provider.retrievalPreflight(scenario, index + 1);
+      const attestation = result.diagnostics.runtime_attestation;
+      const gate = evaluateRetrievalPreflight(scenario, result.retrieval, {
+        productCommit: attestation?.product_commit,
+        expectedProductCommit: runtimeOptions.expectedProductCommit,
+      });
+      records.push({
+        schema_version: 1,
+        status: 'completed',
+        scenario_id: scenario.scenario_id,
+        category: scenario.category,
+        diagnostics: result.diagnostics,
+        candidate_pool: result.retrieval.candidatePool || [],
+        final20: (result.retrieval.finalContext || []).slice(0, 20),
+        answer_top10: (result.retrieval.finalContext || []).filter((item, itemIndex) => item.selected_for_answer === true || itemIndex < 10).slice(0, 10),
+        selector_trace: result.retrieval.trace || null,
+        fusion_config: result.retrieval.fusionConfig || null,
+        gate,
+      });
+    } catch (error) {
+      records.push({
+        schema_version: 1,
+        status: 'error',
+        scenario_id: scenario.scenario_id,
+        category: scenario.category,
+        error: { type: error?.name || 'Error', message: error?.message || String(error) },
+      });
+    }
+    await writeJsonl(path.join(outputDir, 'retrieval-results.jsonl'), records);
+  }
+  const summary = aggregateRetrievalPreflight(records);
+  const manifest = {
+    ...summary,
+    command: 'retrieval-preflight',
+    dataset: datasetPath,
+    run_root: runRoot,
+    answer_calls: 0,
+    judge_calls: 0,
+    expected_product_commit: runtimeOptions.expectedProductCommit,
+    runtime_preflight: embeddingPreflight,
+    completed_at: new Date().toISOString(),
+  };
+  await writeJson(path.join(outputDir, 'manifest.json'), manifest);
+  console.log(JSON.stringify(manifest));
+  if (!summary.passed) process.exitCode = 2;
 } else if (['run', 'resume', 'retry-errors'].includes(command)) {
   const datasetPath = path.resolve(flag('--dataset'));
   const resultsPath = path.resolve(flag('--results'));
@@ -166,7 +232,14 @@ if (command === 'generate') {
   const backend = flag('--backend', 'synthetic_calibration');
   const runRoot = path.resolve(flag('--run-root', 'D:/OmniContext-cognitive-v1.1/runs'));
   const kimiUsage = path.resolve(flag('--kimi-usage', path.join(DEFAULT_EVIDENCE, 'kimi-usage-adapter-v2.1.json')));
-  const provider = await loadProvider(config, runRoot, kimiUsage);
+  const runtimeOptions = modes.includes('full_omni')
+    ? resolveFullOmniRuntimeOptions({
+      brainServerRoot: flag('--brain-server-root', process.env.OMNI_BRAIN_SERVER_ROOT),
+      expectedProductCommit: flag('--expected-product-commit', process.env.OMNI_EXPECTED_PRODUCT_COMMIT),
+      expectedSelectorVersion: flag('--expected-selector-version', process.env.OMNI_EXPECTED_SELECTOR_VERSION || 'evidence-selector-v1'),
+    })
+    : {};
+  const provider = await loadProvider(config, runRoot, kimiUsage, runtimeOptions);
   clearShutdown();
   await mkdir(path.dirname(resultsPath), { recursive: true });
   const result = await runCalibration({ scenarios, modes, provider, resultsPath, checkpointPath, manifestPath, config, split: selected[0]?.split, backend, stopAfter: Number(flag('--stop-after', '0')) || null, injectInterruptAfter: Number(flag('--inject-interrupt-after', '0')) || null, injectErrorOnce: flag('--inject-error-once', null), retryErrorsOnly: command === 'retry-errors', selectedScenarios: selected, logger: console.log });
@@ -257,5 +330,5 @@ if (command === 'generate') {
   await writeJson(path.resolve(flag('--output')), { schema_version: 3, status: 'DEVELOPMENT_FINAL_NOT_FORMAL', answer_schema_version: 'answer-schema-v2', scoring_version: 'deterministic-scoring-v3', judge_adapter_version: config.primary_judge.adapter_version, judge_rubric_version: config.primary_judge.rubric_version, primary_judge: 'kimi-k2.6', primary_judge_independent: true, by_mode: byMode });
   console.log(JSON.stringify(Object.fromEntries(Object.entries(byMode).map(([mode, metrics]) => [mode, metrics.overall_cognitive_score]))));
 } else {
-  throw new Error('Commands: generate | preflight-kimi | run | resume | retry-errors | rejudge-results | metrics | review | rescore | aggregate');
+  throw new Error('Commands: generate | preflight-kimi | retrieval-preflight | run | resume | retry-errors | rejudge-results | metrics | review | rescore | aggregate');
 }

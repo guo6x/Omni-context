@@ -158,13 +158,15 @@ function kimiUsage(body) {
 }
 
 export class CognitiveProvider {
-  constructor({ config, answerPrompt, judgePrompt, reviewPrompt, runRoot, brainServerRoot, kimiUsagePath }) {
+  constructor({ config, answerPrompt, judgePrompt, reviewPrompt, runRoot, brainServerRoot, expectedProductCommit, expectedSelectorVersion, kimiUsagePath }) {
     this.config = config;
     this.answerPrompt = answerPrompt;
     this.judgePrompt = judgePrompt;
     this.reviewPrompt = reviewPrompt;
     this.runRoot = runRoot;
     this.brainServerRoot = brainServerRoot;
+    this.expectedProductCommit = expectedProductCommit;
+    this.expectedSelectorVersion = expectedSelectorVersion;
     this.kimiUsagePath = kimiUsagePath || path.join(runRoot, 'kimi-usage.json');
   }
 
@@ -487,9 +489,54 @@ export class CognitiveProvider {
       .sort((a, b) => b.lexical_score - a.lexical_score || a.id.localeCompare(b.id)).slice(0, this.config.retrieval_only.top_k);
   }
 
+  async preflightRuntime() {
+    const runDir = path.join(this.runRoot, '_runtime-preflight');
+    const runtime = createConversationRuntime({
+      runDir,
+      conversationId: 1,
+      brainServerRoot: this.brainServerRoot,
+      expectedProductCommit: this.expectedProductCommit,
+      expectedSelectorVersion: this.expectedSelectorVersion,
+    });
+    try {
+      await runtime.start();
+      await runtime.client.rebuildEmbeddings();
+      const checks = await runtime.client.preflight();
+      return {
+        status: 'passed',
+        runtime_attestation: runtime.getAttestation(),
+        embedding: checks.embeddingStatus,
+        health: checks.health,
+      };
+    } finally {
+      await runtime.stop().catch(() => {});
+    }
+  }
+
+  async retrievalPreflight(scenario, ordinal) {
+    const full = await this.fullOmniContext(scenario, ordinal);
+    try {
+      return {
+        retrieval: full.rawRetrieval,
+        diagnostics: full.diagnostics,
+      };
+    } finally {
+      await full.runtime.stop().catch(() => {});
+    }
+  }
+
   async fullOmniContext(scenario, ordinal) {
     const scenarioRunDir = `${this.runRoot}/${scenario.scenario_id}/attempt-${ordinal}`;
-    const runtime = createConversationRuntime({ runDir: scenarioRunDir, conversationId: 1, brainServerRoot: this.brainServerRoot });
+    const runtime = createConversationRuntime({
+      runDir: scenarioRunDir,
+      conversationId: 1,
+      brainServerRoot: this.brainServerRoot,
+      expectedProductCommit: this.expectedProductCommit,
+      expectedSelectorVersion: this.expectedSelectorVersion,
+      extraEnv: {
+        OMNI_EVALUATION_TRACE_DIR: path.join(scenarioRunDir, 'conversation-1'),
+      },
+    });
     const started = Date.now();
     await runtime.start();
     let extractionCalls = 0;
@@ -521,7 +568,7 @@ export class CognitiveProvider {
           source_agents: evidenceSourceAgents(item, text),
         };
       });
-      return { contextItems, diagnostics: { extraction_calls: extractionCalls, extraction_input_characters: extractionCharacters, retrieval_calls: 1, reranker_calls: 1, retrieval_latency_ms: retrievalLatency, runtime_startup_and_ingestion_ms: Date.now() - started, search_methods: retrieval.searchMethods || {} }, runtime };
+      return { contextItems, rawRetrieval: retrieval, diagnostics: { extraction_calls: extractionCalls, extraction_input_characters: extractionCharacters, retrieval_calls: 1, reranker_calls: 1, retrieval_latency_ms: retrievalLatency, runtime_startup_and_ingestion_ms: Date.now() - started, search_methods: retrieval.searchMethods || {}, runtime_attestation: runtime.getAttestation() }, runtime };
     } catch (error) {
       await runtime.stop().catch(() => {});
       throw error;

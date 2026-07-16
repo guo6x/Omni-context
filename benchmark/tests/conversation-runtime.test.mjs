@@ -107,6 +107,20 @@ describe('per-conversation isolated Brain Server runtime', () => {
     const missing = runtime(99, true);
     await assert.rejects(() => missing.start(), /requires the original conversation database/);
   });
+
+  it('rejects a mismatched expected product commit before launching a process', async () => {
+    const mismatched = new ConversationRuntime({
+      runDir,
+      conversationId: 100,
+      brainServerRoot: TEST_DIR,
+      serverEntry: FAKE_SERVER,
+      expectedProductCommit: '0'.repeat(40),
+      expectedSelectorVersion: 'evidence-selector-v1',
+    });
+    active.push(mismatched);
+    await assert.rejects(() => mismatched.start(), /Product commit mismatch/);
+    assert.strictEqual(mismatched.child, null);
+  });
 });
 
 function isAlive(pid) {

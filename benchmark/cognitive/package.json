@@ -7,6 +7,7 @@
     "test": "node --test tests/*.test.mjs",
     "generate": "node src/cli.mjs generate",
     "preflight-kimi": "node src/cli.mjs preflight-kimi",
+    "preflight-retrieval": "node src/cli.mjs retrieval-preflight",
     "run": "node src/cli.mjs run",
     "resume": "node src/cli.mjs resume",
     "retry-errors": "node src/cli.mjs retry-errors",
