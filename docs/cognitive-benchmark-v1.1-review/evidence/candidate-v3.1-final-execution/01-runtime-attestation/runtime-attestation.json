@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-07-16T01:18:20.0936859Z",
+  "paid_model_calls": 0,
+  "node_processes": [],
+  "brain_server_processes": [],
+  "known_brain_server_port_listeners": [],
+  "stale_processes_terminated": 0,
+  "product": {
+    "worktree": "D:/OmniContext-candidate-v3.1-final-execution/product",
+    "branch": "codex/omni-evaluation-candidate-v3.1-final",
+    "git_commit": "2e300acad083626285ff43b650717e66a04671dd",
+    "working_tree_clean": true,
+    "brain_server_root": "D:/OmniContext-candidate-v3.1-final-execution/product/brain-server",
+    "server_entry": "dist/api-server.js",
+    "server_entry_sha256": "af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668",
+    "evidence_selector_entry": "dist/retrieval/evidence-selector.js",
+    "evidence_selector_sha256": "3bf20d76686ea2789f4d65a40729c1e84bfbba690348a03026c123f99acb2e55"
+  },
+  "benchmark": {
+    "worktree": "D:/OmniContext-v3.1-answer-diagnostic/benchmark",
+    "branch": "codex/omni-cognitive-benchmark-v1.1-answer-diagnostics",
+    "git_commit": "0494070cceabf6f5093ef77e7af4ebd54e94f7d7",
+    "working_tree_clean": true
+  },
+  "database": {
+    "reused": false,
+    "path": null,
+    "reason": "runtime audit completed before any service or scenario start"
+  },
+  "status": "PASS_NO_RUNNING_INSTANCE"
+}
