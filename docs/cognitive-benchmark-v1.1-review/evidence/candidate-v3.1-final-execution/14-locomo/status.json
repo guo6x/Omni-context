@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "NOT_RUN",
+  "reason": "CANDIDATE_V3_1_NOT_BOUND_TO_EXISTING_HELDOUT_AUTHORIZATION",
+  "runner_exists": true,
+  "official_dataset_manifest_exists": true,
+  "official_dataset_path_located": true,
+  "official_dataset_content_opened": false,
+  "official_dataset_hashed": false,
+  "official_dataset_parsed": false,
+  "existing_authorization": {
+    "name": "Omni-Context Evaluation Freeze v1",
+    "tag": "omni-context-evaluation-freeze-v1",
+    "commit": "872723b10ec4ae99b8272606a183155837104332"
+  },
+  "candidate_v3_1": {
+    "tag": "evaluation-freeze-candidate-v3.1",
+    "product_commit": "17dc1d0107b0474de84058205a91b302ba290a74"
+  },
+  "conversation_2_to_10_accessed": false
+}
