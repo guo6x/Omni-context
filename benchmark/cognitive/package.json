@@ -1,0 +1,26 @@
+{
+  "name": "omni-context-cognitive-benchmark-v1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "generate": "node src/cli.mjs generate",
+    "preflight-kimi": "node src/cli.mjs preflight-kimi",
+    "preflight-retrieval": "node src/cli.mjs retrieval-preflight",
+    "run": "node src/cli.mjs run",
+    "resume": "node src/cli.mjs resume",
+    "retry-errors": "node src/cli.mjs retry-errors",
+    "metrics": "node src/cli.mjs metrics",
+    "review": "node src/cli.mjs review",
+    "rescore": "node src/cli.mjs rescore",
+    "analyze": "node src/analyze.mjs",
+    "finalize:v1.1": "node src/finalize-v1.1.mjs",
+    "attribution:v1.1": "node src/attribution-v1.1.mjs",
+    "repair:v1.1.1": "node src/repair-v1.1.1.mjs",
+    "aggregate": "node src/cli.mjs aggregate"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

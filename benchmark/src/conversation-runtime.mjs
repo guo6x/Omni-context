@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BrainServerClient } from './brain-server-client.mjs';
 import { sha256File } from './integrity.mjs';
+import { attestBrainServerBuild } from './runtime-attestation.mjs';
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_BRAIN_SERVER_ROOT = path.resolve(MODULE_DIR, '../../brain-server');
@@ -34,6 +35,8 @@ export class ConversationRuntime {
     resume = false,
     brainServerRoot = DEFAULT_BRAIN_SERVER_ROOT,
     serverEntry,
+    expectedProductCommit = null,
+    expectedSelectorVersion = null,
     host = '127.0.0.1',
     token = process.env.LOCAL_API_TOKEN || '',
     extraEnv = {},
@@ -49,6 +52,8 @@ export class ConversationRuntime {
     this.resume = resume;
     this.brainServerRoot = brainServerRoot;
     this.serverEntry = serverEntry || path.join(brainServerRoot, 'dist', 'api-server.js');
+    this.expectedProductCommit = expectedProductCommit;
+    this.expectedSelectorVersion = expectedSelectorVersion;
     this.host = host;
     // A per-process token prevents the isolated server from falling back to a
     // separately generated credential that the parent runner cannot know.
@@ -68,9 +73,20 @@ export class ConversationRuntime {
     this.logHandle = null;
     this.port = null;
     this.client = null;
+    this.attestation = null;
   }
 
   async start() {
+    if (this.expectedProductCommit || this.expectedSelectorVersion) {
+      this.attestation = await attestBrainServerBuild({
+        brainServerRoot: this.brainServerRoot,
+        serverEntry: this.serverEntry,
+        expectedProductCommit: this.expectedProductCommit,
+        expectedSelectorVersion: this.expectedSelectorVersion,
+      });
+      this.brainServerRoot = this.attestation.brain_server_root;
+      this.serverEntry = path.join(this.brainServerRoot, ...this.attestation.server_entry.split('/'));
+    }
     await mkdir(this.conversationDir, { recursive: true });
     await this.cleanupOrphan();
     await access(this.serverEntry).catch(() => {
@@ -200,7 +216,8 @@ export class ConversationRuntime {
   async persistRuntime(status, extra = {}) {
     const previous = await readJson(this.runtimePath);
     const record = {
-      schema_version: 1,
+      schema_version: 2,
+      service: 'omni-context-brain-server',
       conversation_id: this.conversationId,
       status,
       pid: this.child?.pid ?? previous?.pid ?? null,
@@ -209,12 +226,23 @@ export class ConversationRuntime {
       db_file: 'brain.db',
       log_file: 'server.log',
       server_entry: path.relative(this.brainServerRoot, this.serverEntry).replaceAll('\\', '/'),
+      working_directory: this.attestation?.brain_server_root || path.resolve(this.brainServerRoot),
+      database_path: path.resolve(this.dbPath),
+      product_commit: this.attestation?.product_commit || null,
+      expected_product_commit: this.attestation?.expected_product_commit || null,
+      build_sha256: this.attestation?.build_sha256 || null,
+      selector: this.attestation?.selector || null,
+      runtime_attestation: this.attestation,
       started_at: previous?.started_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       resume: this.resume,
       ...extra,
     };
     await writeFile(this.runtimePath, `${JSON.stringify(record, null, 2)}\n`);
+  }
+
+  getAttestation() {
+    return this.attestation ? structuredClone(this.attestation) : null;
   }
 
   async closeLog() {

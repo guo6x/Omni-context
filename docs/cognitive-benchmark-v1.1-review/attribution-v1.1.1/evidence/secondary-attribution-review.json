@@ -1,0 +1,1611 @@
+{
+  "schema_version": "1.1.1",
+  "status": "completed",
+  "adapter_version": "attribution-review-adapter-v1.1",
+  "review_type": "secondary_attribution_review_not_human",
+  "model": "deepseek-v4-flash",
+  "human_review_completed": false,
+  "count": 20,
+  "reviews": [
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-cross_agent_transfer-004",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [
+          "retrieval_failure"
+        ],
+        "first_loss_stage": "retrieval_candidate",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold required facts are explicitly supported by original events e01, e02, e03.",
+            "supporting_ids": [
+              "development-v2-cross_agent_transfer-004-e01",
+              "development-v2-cross_agent_transfer-004-e02",
+              "development-v2-cross_agent_transfer-004-e03"
+            ]
+          },
+          {
+            "claim": "Final visible context lacks the three required facts (800 dollars, written weekly summaries, implementation) and their source agents.",
+            "supporting_ids": [
+              "735cd490-7336-45a8-b4e5-7769f7d03804",
+              "relationship:2fc6dee6-7082-4bed-89f8-0362aa303dea",
+              "e5a4f69c-834e-4032-9658-763d7faaefac",
+              "a96f291f-b49f-498c-bbf2-edc4469589a8",
+              "relationship:ba7fed3f-c805-457a-ab89-baf811fc667f",
+              "15db0631-8334-4834-8f79-a6536d9e7b89",
+              "relationship:98a3bf3d-11c6-4167-956f-95469b3106bb",
+              "relationship:01208ada-d0fb-4f20-bf1f-804abdc1044c",
+              "relationship:e85510de-d888-4902-9d99-482e5884bf44",
+              "relationship:707714a1-d2a4-4893-a6e6-68bb663707d2"
+            ]
+          },
+          {
+            "claim": "Memory pipeline trace shows required facts were extracted and indexed but not present in final visible context; retrieval candidate status is unknown due to missing snapshot.",
+            "supporting_ids": [
+              "b370f2e3-794f-4bf3-ad95-27e9192972a8",
+              "bce14523-bdde-42f0-98e1-d5eb3386f4aa",
+              "817862a9-b865-4cbe-b32a-1c38f59a6d12",
+              "b56623f7-d34a-4f28-a175-205e81f5125b",
+              "4ece7ff8-d256-4a32-99eb-1de6a59eddcd"
+            ]
+          },
+          {
+            "claim": "The structured answer fails to include the required facts and sources, indicating retrieval failure.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Deterministic score (0.5556) is consistent with missing required facts and sources; no scoring defect.",
+            "supporting_ids": []
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. The system failed to retrieve the three required facts into final context, causing low recall and provenance scores. Attribution is memory_pipeline_unresolved because the exact retrieval stage cannot be pinpointed without a reranker snapshot, but retrieval failure is the likely cause. Score accurately reflects system output.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "not_comparable_dataset_changed"
+        ],
+        "old_review_comparable": false
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-cross_agent_transfer-004\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [\"retrieval_failure\"],\n  \"first_loss_stage\": \"retrieval_candidate\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required facts are explicitly supported by original events e01, e02, e03.\",\n      \"supporting_ids\": [\"development-v2-cross_agent_transfer-004-e01\", \"development-v2-cross_agent_transfer-004-e02\", \"development-v2-cross_agent_transfer-004-e03\"]\n    },\n    {\n      \"claim\": \"Final visible context lacks the three required facts (800 dollars, written weekly summaries, implementation) and their source agents.\",\n      \"supporting_ids\": [\"735cd490-7336-45a8-b4e5-7769f7d03804\", \"relationship:2fc6dee6-7082-4bed-89f8-0362aa303dea\", \"e5a4f69c-834e-4032-9658-763d7faaefac\", \"a96f291f-b49f-498c-bbf2-edc4469589a8\", \"relationship:ba7fed3f-c805-457a-ab89-baf811fc667f\", \"15db0631-8334-4834-8f79-a6536d9e7b89\", \"relationship:98a3bf3d-11c6-4167-956f-95469b3106bb\", \"relationship:01208ada-d0fb-4f20-bf1f-804abdc1044c\", \"relationship:e85510de-d888-4902-9d99-482e5884bf44\", \"relationship:707714a1-d2a4-4893-a6e6-68bb663707d2\"]\n    },\n    {\n      \"claim\": \"Memory pipeline trace shows required facts were extracted and indexed but not present in final visible context; retrieval candidate status is unknown due to missing snapshot.\",\n      \"supporting_ids\": [\"b370f2e3-794f-4bf3-ad95-27e9192972a8\", \"bce14523-bdde-42f0-98e1-d5eb3386f4aa\", \"817862a9-b865-4cbe-b32a-1c38f59a6d12\", \"b56623f7-d34a-4f28-a175-205e81f5125b\", \"4ece7ff8-d256-4a32-99eb-1de6a59eddcd\"]\n    },\n    {\n      \"claim\": \"The structured answer fails to include the required facts and sources, indicating retrieval failure.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Deterministic score (0.5556) is consistent with missing required facts and sources; no scoring defect.\",\n      \"supporting_ids\": []\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. The system failed to retrieve the three required facts into final context, causing low recall and provenance scores. Attribution is memory_pipeline_unresolved because the exact retrieval stage cannot be pinpointed without a reranker snapshot, but retrieval failure is the likely cause. Score accurately reflects system output.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 8065,
+        "output_tokens": 819,
+        "total_tokens": 8884,
+        "cached_tokens": 0
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:58:50.338Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-memory_evolution-001",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-memory_evolution-001",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [
+          "retrieval_failure"
+        ],
+        "first_loss_stage": "retrieval_candidate",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold is fully supported by original events e01 and e02.",
+            "supporting_ids": [
+              "development-v2-memory_evolution-001-e01",
+              "development-v2-memory_evolution-001-e02"
+            ]
+          },
+          {
+            "claim": "Final visible context contains only support notes, not the actual technology stack values.",
+            "supporting_ids": [
+              "b890fbeb-4676-4506-979a-1720cecc7bee",
+              "debb5111-0d04-4785-9f15-bd94a46079b8",
+              "b7e57ba5-1353-4bb9-be1d-1508967ec9fb"
+            ]
+          },
+          {
+            "claim": "Retrieval candidate log shows entity candidates but no assertion candidates for Rust or Python.",
+            "supporting_ids": [
+              "679be0f0-3f64-4ca9-9c95-e59c33243170"
+            ]
+          },
+          {
+            "claim": "Extraction and indexing of Rust and Python assertions succeeded.",
+            "supporting_ids": [
+              "relationship:8982b657-d3ef-4e8f-9e21-b3aa5898871b",
+              "relationship:bdb3f722-1534-4c7b-af73-cd33738771d6"
+            ]
+          },
+          {
+            "claim": "Score accurately reflects system output; low score is due to missing gold facts in final context.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "No dataset defect; gold is correct and unambiguous.",
+            "supporting_ids": []
+          }
+        ],
+        "notes": "Gold is valid. The system failed to retrieve the actual technology stack values (Rust, Python) into final context, retrieving only support notes. This is a retrieval failure, likely at the candidate or reranking stage. Score is valid as it measures the system's failure.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "gold_ambiguity_confused_with_pipeline_or_answer_loss",
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-memory_evolution-001\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [\"retrieval_failure\"],\n  \"first_loss_stage\": \"retrieval_candidate\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold is fully supported by original events e01 and e02.\",\n      \"supporting_ids\": [\"development-v2-memory_evolution-001-e01\", \"development-v2-memory_evolution-001-e02\"]\n    },\n    {\n      \"claim\": \"Final visible context contains only support notes, not the actual technology stack values.\",\n      \"supporting_ids\": [\"b890fbeb-4676-4506-979a-1720cecc7bee\", \"debb5111-0d04-4785-9f15-bd94a46079b8\", \"b7e57ba5-1353-4bb9-be1d-1508967ec9fb\"]\n    },\n    {\n      \"claim\": \"Retrieval candidate log shows entity candidates but no assertion candidates for Rust or Python.\",\n      \"supporting_ids\": [\"679be0f0-3f64-4ca9-9c95-e59c33243170\"]\n    },\n    {\n      \"claim\": \"Extraction and indexing of Rust and Python assertions succeeded.\",\n      \"supporting_ids\": [\"relationship:8982b657-d3ef-4e8f-9e21-b3aa5898871b\", \"relationship:bdb3f722-1534-4c7b-af73-cd33738771d6\"]\n    },\n    {\n      \"claim\": \"Score accurately reflects system output; low score is due to missing gold facts in final context.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"No dataset defect; gold is correct and unambiguous.\",\n      \"supporting_ids\": []\n    }\n  ],\n  \"notes\": \"Gold is valid. The system failed to retrieve the actual technology stack values (Rust, Python) into final context, retrieving only support notes. This is a retrieval failure, likely at the candidate or reranking stage. Score is valid as it measures the system's failure.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 6291,
+        "output_tokens": 562,
+        "total_tokens": 6853,
+        "cached_tokens": 0
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:58:54.769Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-memory_evolution-004",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-memory_evolution-004",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [
+          "retrieval_failure"
+        ],
+        "first_loss_stage": "retrieval_candidate",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold facts 'hybrid two days onsite' and 'fully remote' are explicitly supported by original events e02 and e01 respectively.",
+            "supporting_ids": [
+              "development-v2-memory_evolution-004-e02",
+              "development-v2-memory_evolution-004-e01"
+            ]
+          },
+          {
+            "claim": "The transition from 'fully remote' to 'hybrid two days onsite' is supported by events e01 and e02 sharing transition_id 'main-transition'.",
+            "supporting_ids": [
+              "development-v2-memory_evolution-004-e01",
+              "development-v2-memory_evolution-004-e02"
+            ]
+          },
+          {
+            "claim": "Final visible context contains only support notes (4-5 through 4-9) and lacks any mention of 'hybrid two days onsite' or 'fully remote'.",
+            "supporting_ids": [
+              "b8d30d81-0dbc-4eb2-91fb-140669c0d06f",
+              "fa332078-bde1-4af7-a71b-00c07f9f183e",
+              "3d9f3c63-e56f-44df-b602-c2a84f243ee9",
+              "a3bcc9e9-d68e-47ad-b96c-dc30c0ce6511",
+              "e6aa2681-2c73-45b5-b5da-632b21bcef39"
+            ]
+          },
+          {
+            "claim": "Memory pipeline trace shows gold facts were extracted and indexed but not present in final visible context; retrieval candidate status is unknown.",
+            "supporting_ids": [
+              "memory_pipeline_trace"
+            ]
+          },
+          {
+            "claim": "The structured answer incorrectly treats support notes as the work arrangement values, failing to answer the actual question.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "The deterministic score of 0.208 reflects the system's failure to retrieve and use the correct gold facts, which is a valid benchmark finding.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. The system lost the gold facts between indexing and final context, likely at retrieval candidate stage. The score accurately reflects system output; no scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-memory_evolution-004\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [\"retrieval_failure\"],\n  \"first_loss_stage\": \"retrieval_candidate\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold facts 'hybrid two days onsite' and 'fully remote' are explicitly supported by original events e02 and e01 respectively.\",\n      \"supporting_ids\": [\"development-v2-memory_evolution-004-e02\", \"development-v2-memory_evolution-004-e01\"]\n    },\n    {\n      \"claim\": \"The transition from 'fully remote' to 'hybrid two days onsite' is supported by events e01 and e02 sharing transition_id 'main-transition'.\",\n      \"supporting_ids\": [\"development-v2-memory_evolution-004-e01\", \"development-v2-memory_evolution-004-e02\"]\n    },\n    {\n      \"claim\": \"Final visible context contains only support notes (4-5 through 4-9) and lacks any mention of 'hybrid two days onsite' or 'fully remote'.\",\n      \"supporting_ids\": [\"b8d30d81-0dbc-4eb2-91fb-140669c0d06f\", \"fa332078-bde1-4af7-a71b-00c07f9f183e\", \"3d9f3c63-e56f-44df-b602-c2a84f243ee9\", \"a3bcc9e9-d68e-47ad-b96c-dc30c0ce6511\", \"e6aa2681-2c73-45b5-b5da-632b21bcef39\"]\n    },\n    {\n      \"claim\": \"Memory pipeline trace shows gold facts were extracted and indexed but not present in final visible context; retrieval candidate status is unknown.\",\n      \"supporting_ids\": [\"memory_pipeline_trace\"]\n    },\n    {\n      \"claim\": \"The structured answer incorrectly treats support notes as the work arrangement values, failing to answer the actual question.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"The deterministic score of 0.208 reflects the system's failure to retrieve and use the correct gold facts, which is a valid benchmark finding.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. The system lost the gold facts between indexing and final context, likely at retrieval candidate stage. The score accurately reflects system output; no scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 7864,
+        "output_tokens": 647,
+        "total_tokens": 8511,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:58:59.934Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-memory_evolution-005",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-memory_evolution-005",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [],
+        "first_loss_stage": "unknown",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold answer is fully supported by original events e01 and e02.",
+            "supporting_ids": [
+              "development-v2-memory_evolution-005-e01",
+              "development-v2-memory_evolution-005-e02"
+            ]
+          },
+          {
+            "claim": "Final visible context lacks any mention of 'live meetings' or 'written summaries'; only support notes 5-6 and 5-7 appear.",
+            "supporting_ids": [
+              "033ba5f5-3e74-4a27-bef4-23da06800d4a",
+              "6c8de8e2-75e9-4ec6-b8bc-a873253ba6e0"
+            ]
+          },
+          {
+            "claim": "Structured answer incorrectly identifies support notes as the communication preference values.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Memory pipeline trace shows gold facts were extracted and indexed but lost before final context; first loss stage is unknown due to missing reranking snapshot.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Deterministic score of 0.208 correctly reflects the system's failure to retrieve the correct facts.",
+            "supporting_ids": []
+          }
+        ],
+        "notes": "Gold is valid. System output is wrong due to retrieval failure; score accurately penalizes that. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-memory_evolution-005\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [],\n  \"first_loss_stage\": \"unknown\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold answer is fully supported by original events e01 and e02.\",\n      \"supporting_ids\": [\"development-v2-memory_evolution-005-e01\", \"development-v2-memory_evolution-005-e02\"]\n    },\n    {\n      \"claim\": \"Final visible context lacks any mention of 'live meetings' or 'written summaries'; only support notes 5-6 and 5-7 appear.\",\n      \"supporting_ids\": [\"033ba5f5-3e74-4a27-bef4-23da06800d4a\", \"6c8de8e2-75e9-4ec6-b8bc-a873253ba6e0\"]\n    },\n    {\n      \"claim\": \"Structured answer incorrectly identifies support notes as the communication preference values.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Memory pipeline trace shows gold facts were extracted and indexed but lost before final context; first loss stage is unknown due to missing reranking snapshot.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Deterministic score of 0.208 correctly reflects the system's failure to retrieve the correct facts.\",\n      \"supporting_ids\": []\n    }\n  ],\n  \"notes\": \"Gold is valid. System output is wrong due to retrieval failure; score accurately penalizes that. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 6172,
+        "output_tokens": 431,
+        "total_tokens": 6603,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:03.544Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-conflict_resolution-001",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "retrieval_failure",
+        "secondary_attributions": [
+          "memory_pipeline_unresolved"
+        ],
+        "first_loss_stage": "final_context",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold is fully supported by original events.",
+            "supporting_ids": [
+              "development-v2-conflict_resolution-001-e01",
+              "development-v2-conflict_resolution-001-e02",
+              "development-v2-conflict_resolution-001-e03"
+            ]
+          },
+          {
+            "claim": "Required facts 'hybrid two days onsite' and 'onsite every day' are absent from final visible context.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Final visible context contains only support notes and distractors, not the work arrangement values.",
+            "supporting_ids": [
+              "20fb4441-d275-4849-a1f5-c487db076e53",
+              "df8118d6-f758-4508-9d6f-7fbabb821d5f",
+              "9192ae32-1bf6-4102-bef4-7aeb8745067c"
+            ]
+          },
+          {
+            "claim": "The system's answer does not address the gold required facts, resulting in low score.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Retrieval failure is the primary cause: gold facts were extracted and indexed but not present in final context.",
+            "supporting_ids": [
+              "a7c4f95e-40cb-4eab-a1f8-83cd1cf31cbd"
+            ]
+          },
+          {
+            "claim": "Score accurately reflects system output given missing information.",
+            "supporting_ids": []
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. The system failed to retrieve the work arrangement facts into final visible context, leading to an answer that misses the gold requirements. The score is correct for the output produced.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-conflict_resolution-001\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"retrieval_failure\",\n  \"secondary_attributions\": [\"memory_pipeline_unresolved\"],\n  \"first_loss_stage\": \"final_context\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold is fully supported by original events.\",\n      \"supporting_ids\": [\"development-v2-conflict_resolution-001-e01\", \"development-v2-conflict_resolution-001-e02\", \"development-v2-conflict_resolution-001-e03\"]\n    },\n    {\n      \"claim\": \"Required facts 'hybrid two days onsite' and 'onsite every day' are absent from final visible context.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Final visible context contains only support notes and distractors, not the work arrangement values.\",\n      \"supporting_ids\": [\"20fb4441-d275-4849-a1f5-c487db076e53\", \"df8118d6-f758-4508-9d6f-7fbabb821d5f\", \"9192ae32-1bf6-4102-bef4-7aeb8745067c\"]\n    },\n    {\n      \"claim\": \"The system's answer does not address the gold required facts, resulting in low score.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Retrieval failure is the primary cause: gold facts were extracted and indexed but not present in final context.\",\n      \"supporting_ids\": [\"a7c4f95e-40cb-4eab-a1f8-83cd1cf31cbd\"]\n    },\n    {\n      \"claim\": \"Score accurately reflects system output given missing information.\",\n      \"supporting_ids\": []\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. The system failed to retrieve the work arrangement facts into final visible context, leading to an answer that misses the gold requirements. The score is correct for the output produced.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 6941,
+        "output_tokens": 520,
+        "total_tokens": 7461,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:07.836Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-cross_agent_transfer-003",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [
+          "retrieval_failure"
+        ],
+        "first_loss_stage": "final_context",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold required facts are fully supported by original events.",
+            "supporting_ids": [
+              "development-v2-cross_agent_transfer-003-e01",
+              "development-v2-cross_agent_transfer-003-e02",
+              "development-v2-cross_agent_transfer-003-e03"
+            ]
+          },
+          {
+            "claim": "Gold required source agents are present in original events.",
+            "supporting_ids": [
+              "development-v2-cross_agent_transfer-003-e01",
+              "development-v2-cross_agent_transfer-003-e02",
+              "development-v2-cross_agent_transfer-003-e03",
+              "development-v2-cross_agent_transfer-003-e04"
+            ]
+          },
+          {
+            "claim": "Gold forbidden fact 'cancelled' is supported by a low-confidence event and correctly invalidated.",
+            "supporting_ids": [
+              "development-v2-cross_agent_transfer-003-e05"
+            ]
+          },
+          {
+            "claim": "Final visible context contains only support notes for checkpoint-3, missing the core required facts (implementation, written weekly summaries) and source agents.",
+            "supporting_ids": [
+              "51958f68-b36a-46ce-8e2a-155e150f8f61",
+              "relationship:f9cecec3-9378-4366-b007-71a841d196ed",
+              "ec6bf179-9644-4005-97fe-868620a95c76",
+              "dd07d6a1-e4f0-4e08-a006-2ecaaaa64d86",
+              "relationship:97e1dde7-f9c6-4238-85c5-9e4b386b86dc",
+              "1c1842d5-abdd-4641-b3f3-d097acee3051",
+              "relationship:2bdc5659-c283-40f3-8b02-94cf868c5389",
+              "d01ed550-b283-4113-8c18-be1160d31819",
+              "relationship:ff652b12-4951-472a-a7a6-d516a6516b3a",
+              "855e253c-e1aa-4172-8c0f-6c3fc9e1e018"
+            ]
+          },
+          {
+            "claim": "Structured answer fails to report required facts and source agents, and does not isolate incorrect reports.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "Deterministic score correctly reflects the system's failure to retrieve and answer correctly.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. The system's final visible context and answer lack core required facts and source agents, indicating a retrieval failure. The score accurately captures this failure; no scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "not_comparable_dataset_changed"
+        ],
+        "old_review_comparable": false
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-cross_agent_transfer-003\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [\"retrieval_failure\"],\n  \"first_loss_stage\": \"final_context\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required facts are fully supported by original events.\",\n      \"supporting_ids\": [\"development-v2-cross_agent_transfer-003-e01\", \"development-v2-cross_agent_transfer-003-e02\", \"development-v2-cross_agent_transfer-003-e03\"]\n    },\n    {\n      \"claim\": \"Gold required source agents are present in original events.\",\n      \"supporting_ids\": [\"development-v2-cross_agent_transfer-003-e01\", \"development-v2-cross_agent_transfer-003-e02\", \"development-v2-cross_agent_transfer-003-e03\", \"development-v2-cross_agent_transfer-003-e04\"]\n    },\n    {\n      \"claim\": \"Gold forbidden fact 'cancelled' is supported by a low-confidence event and correctly invalidated.\",\n      \"supporting_ids\": [\"development-v2-cross_agent_transfer-003-e05\"]\n    },\n    {\n      \"claim\": \"Final visible context contains only support notes for checkpoint-3, missing the core required facts (implementation, written weekly summaries) and source agents.\",\n      \"supporting_ids\": [\"51958f68-b36a-46ce-8e2a-155e150f8f61\", \"relationship:f9cecec3-9378-4366-b007-71a841d196ed\", \"ec6bf179-9644-4005-97fe-868620a95c76\", \"dd07d6a1-e4f0-4e08-a006-2ecaaaa64d86\", \"relationship:97e1dde7-f9c6-4238-85c5-9e4b386b86dc\", \"1c1842d5-abdd-4641-b3f3-d097acee3051\", \"relationship:2bdc5659-c283-40f3-8b02-94cf868c5389\", \"d01ed550-b283-4113-8c18-be1160d31819\", \"relationship:ff652b12-4951-472a-a7a6-d516a6516b3a\", \"855e253c-e1aa-4172-8c0f-6c3fc9e1e018\"]\n    },\n    {\n      \"claim\": \"Structured answer fails to report required facts and source agents, and does not isolate incorrect reports.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"Deterministic score correctly reflects the system's failure to retrieve and answer correctly.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. The system's final visible context and answer lack core required facts and source agents, indicating a retrieval failure. The score accurately captures this failure; no scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 10721,
+        "output_tokens": 758,
+        "total_tokens": 11479,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 2,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:18.903Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-proactive_insight-005",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-proactive_insight-005",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "extraction_failure",
+        "secondary_attributions": [
+          "memory_pipeline_unresolved"
+        ],
+        "first_loss_stage": "extraction",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold fact 'no user interviews' is supported by original event e04 but was not extracted.",
+            "supporting_ids": [
+              "development-v2-proactive_insight-005-e04"
+            ]
+          },
+          {
+            "claim": "Gold fact '5 hours per week' is supported by original event e04 but missing from final visible context.",
+            "supporting_ids": [
+              "development-v2-proactive_insight-005-e04"
+            ]
+          },
+          {
+            "claim": "The answer fails to mention the 5 hours per week and no user interviews constraints, leading to low constraint_awareness.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "The deterministic score of 0.53125 accurately reflects the answer's deficiencies given missing constraints.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          },
+          {
+            "claim": "The gold is valid and supported by original events; the loss occurs during extraction and retrieval.",
+            "supporting_ids": [
+              "source_gold_support_audit",
+              "memory_pipeline_trace"
+            ]
+          }
+        ],
+        "notes": "Gold is valid. Two required constraints (5 hours/week, no user interviews) are missing from final context due to extraction failure for 'no user interviews' and unknown retrieval loss for '5 hours per week'. The answer correctly identifies a blind spot but misses constraints, so score is accurate. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure",
+          "judge_reliability_issue_not_supported"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-proactive_insight-005\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"extraction_failure\",\n  \"secondary_attributions\": [\"memory_pipeline_unresolved\"],\n  \"first_loss_stage\": \"extraction\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold fact 'no user interviews' is supported by original event e04 but was not extracted.\",\n      \"supporting_ids\": [\"development-v2-proactive_insight-005-e04\"]\n    },\n    {\n      \"claim\": \"Gold fact '5 hours per week' is supported by original event e04 but missing from final visible context.\",\n      \"supporting_ids\": [\"development-v2-proactive_insight-005-e04\"]\n    },\n    {\n      \"claim\": \"The answer fails to mention the 5 hours per week and no user interviews constraints, leading to low constraint_awareness.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"The deterministic score of 0.53125 accurately reflects the answer's deficiencies given missing constraints.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    },\n    {\n      \"claim\": \"The gold is valid and supported by original events; the loss occurs during extraction and retrieval.\",\n      \"supporting_ids\": [\"source_gold_support_audit\", \"memory_pipeline_trace\"]\n    }\n  ],\n  \"notes\": \"Gold is valid. Two required constraints (5 hours/week, no user interviews) are missing from final context due to extraction failure for 'no user interviews' and unknown retrieval loss for '5 hours per week'. The answer correctly identifies a blind spot but misses constraints, so score is accurate. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 7092,
+        "output_tokens": 447,
+        "total_tokens": 7539,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:22.452Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-cross_agent_transfer-005",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "retrieval_failure",
+        "secondary_attributions": [
+          "memory_pipeline_unresolved"
+        ],
+        "first_loss_stage": "final_context",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold required fact 'ready for review' is present in final visible context.",
+            "supporting_ids": [
+              "37a98e3c-a14e-451a-bf2d-b8f5c1d67c61"
+            ]
+          },
+          {
+            "claim": "Gold required fact 'written weekly summaries' is missing from final visible context.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Gold required fact 'implementation' is missing from final visible context.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Both missing facts were extracted and indexed but not retrieved into final context.",
+            "supporting_ids": [
+              "memory_pipeline_trace"
+            ]
+          },
+          {
+            "claim": "The system's answer correctly uses only visible context and achieves a partial score.",
+            "supporting_ids": [
+              "structured_answer",
+              "deterministic_score"
+            ]
+          },
+          {
+            "claim": "The score accurately reflects the system's performance given the visible context.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. Two required facts (written weekly summaries, implementation) were extracted and indexed but not present in final visible context, indicating a retrieval failure. The system correctly answered based on available context, so the score is valid. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "not_comparable_dataset_changed"
+        ],
+        "old_review_comparable": false
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-cross_agent_transfer-005\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"retrieval_failure\",\n  \"secondary_attributions\": [\"memory_pipeline_unresolved\"],\n  \"first_loss_stage\": \"final_context\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required fact 'ready for review' is present in final visible context.\",\n      \"supporting_ids\": [\"37a98e3c-a14e-451a-bf2d-b8f5c1d67c61\"]\n    },\n    {\n      \"claim\": \"Gold required fact 'written weekly summaries' is missing from final visible context.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Gold required fact 'implementation' is missing from final visible context.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Both missing facts were extracted and indexed but not retrieved into final context.\",\n      \"supporting_ids\": [\"memory_pipeline_trace\"]\n    },\n    {\n      \"claim\": \"The system's answer correctly uses only visible context and achieves a partial score.\",\n      \"supporting_ids\": [\"structured_answer\", \"deterministic_score\"]\n    },\n    {\n      \"claim\": \"The score accurately reflects the system's performance given the visible context.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. Two required facts (written weekly summaries, implementation) were extracted and indexed but not present in final visible context, indicating a retrieval failure. The system correctly answered based on available context, so the score is valid. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 8031,
+        "output_tokens": 436,
+        "total_tokens": 8467,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:26.010Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-proactive_insight-004",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-proactive_insight-004",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "extraction_failure",
+        "secondary_attributions": [
+          "memory_pipeline_unresolved"
+        ],
+        "first_loss_stage": "extraction",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold required fact 'no user interviews' is supported by original event e04 but missing from extraction.",
+            "supporting_ids": [
+              "development-v2-proactive_insight-004-e04"
+            ]
+          },
+          {
+            "claim": "Gold required facts 'complete repeated failure pattern outcome 4' and '8 hours per week' are supported by original events but absent from final visible context.",
+            "supporting_ids": [
+              "development-v2-proactive_insight-004-e01",
+              "development-v2-proactive_insight-004-e04"
+            ]
+          },
+          {
+            "claim": "Final visible context contains only support note confirmations, missing key constraint and goal information.",
+            "supporting_ids": [
+              "d5df3dbb-6042-453d-94ee-5ab7635b3964",
+              "03930fff-e8c5-45d8-8616-c9d788f5c102",
+              "d72e7edd-9a7d-4a19-b5d8-37738030c934",
+              "ef1adfbb-fe64-4ef4-b05d-ecbf07a7ef33"
+            ]
+          },
+          {
+            "claim": "The deterministic score of 0.5625 accurately reflects the system's answer given the missing context.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "Memory pipeline trace shows 'no user interviews' lost at extraction stage; other facts lost at unknown stage but likely retrieval or reranking.",
+            "supporting_ids": []
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. System output missing key constraints due to extraction failure for 'no user interviews' and likely retrieval failure for other facts. Score correctly penalizes missing constraints and unsupported claims. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-proactive_insight-004\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"extraction_failure\",\n  \"secondary_attributions\": [\"memory_pipeline_unresolved\"],\n  \"first_loss_stage\": \"extraction\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required fact 'no user interviews' is supported by original event e04 but missing from extraction.\",\n      \"supporting_ids\": [\"development-v2-proactive_insight-004-e04\"]\n    },\n    {\n      \"claim\": \"Gold required facts 'complete repeated failure pattern outcome 4' and '8 hours per week' are supported by original events but absent from final visible context.\",\n      \"supporting_ids\": [\"development-v2-proactive_insight-004-e01\", \"development-v2-proactive_insight-004-e04\"]\n    },\n    {\n      \"claim\": \"Final visible context contains only support note confirmations, missing key constraint and goal information.\",\n      \"supporting_ids\": [\"d5df3dbb-6042-453d-94ee-5ab7635b3964\", \"03930fff-e8c5-45d8-8616-c9d788f5c102\", \"d72e7edd-9a7d-4a19-b5d8-37738030c934\", \"ef1adfbb-fe64-4ef4-b05d-ecbf07a7ef33\"]\n    },\n    {\n      \"claim\": \"The deterministic score of 0.5625 accurately reflects the system's answer given the missing context.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"Memory pipeline trace shows 'no user interviews' lost at extraction stage; other facts lost at unknown stage but likely retrieval or reranking.\",\n      \"supporting_ids\": []\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. System output missing key constraints due to extraction failure for 'no user interviews' and likely retrieval failure for other facts. Score correctly penalizes missing constraints and unsupported claims. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 7735,
+        "output_tokens": 532,
+        "total_tokens": 8267,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:30.479Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-decision_quality-002",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-decision_quality-002",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [
+          "answer_generation_failure"
+        ],
+        "first_loss_stage": "unknown",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold is fully supported by original events with explicit matches for all required facts.",
+            "supporting_ids": [
+              "development-v2-decision_quality-002-e01",
+              "development-v2-decision_quality-002-e02",
+              "development-v2-decision_quality-002-e03",
+              "development-v2-decision_quality-002-e04",
+              "development-v2-decision_quality-002-e05"
+            ]
+          },
+          {
+            "claim": "Final visible context lacks several required facts (goal, budget, stable income, reversible test) that were present in original events and extracted/indexed.",
+            "supporting_ids": [
+              "7a69c818-9310-4242-8694-d1a306e38d47",
+              "3ed2dc76-84e2-4a07-8b57-82b9d64fbaf6",
+              "7bace7ef-695d-4591-b211-b95b0564f025"
+            ]
+          },
+          {
+            "claim": "The structured answer fails to mention the specific budget amount (537 dollars) and the reversible test, and does not perform a substantive comparison of trade-offs.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "The deterministic score accurately reflects the system's incomplete answer; the low scores for risk_awareness and option_comparison_quality are justified.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          },
+          {
+            "claim": "The memory pipeline trace shows that required facts were extracted and indexed but lost before final visible context, with no reranker snapshot to determine exact loss stage.",
+            "supporting_ids": [
+              "memory_pipeline_trace"
+            ]
+          },
+          {
+            "claim": "The kimi judge result identifies missing required elements, consistent with the answer's deficiencies.",
+            "supporting_ids": [
+              "kimi_judge_result"
+            ]
+          }
+        ],
+        "notes": "Gold is valid and supported. The system's answer is incomplete due to missing facts in final context and insufficient reasoning. Score correctly penalizes these gaps. Primary attribution is memory_pipeline_unresolved because the loss stage cannot be pinpointed without reranker snapshot.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-decision_quality-002\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [\"answer_generation_failure\"],\n  \"first_loss_stage\": \"unknown\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold is fully supported by original events with explicit matches for all required facts.\",\n      \"supporting_ids\": [\"development-v2-decision_quality-002-e01\", \"development-v2-decision_quality-002-e02\", \"development-v2-decision_quality-002-e03\", \"development-v2-decision_quality-002-e04\", \"development-v2-decision_quality-002-e05\"]\n    },\n    {\n      \"claim\": \"Final visible context lacks several required facts (goal, budget, stable income, reversible test) that were present in original events and extracted/indexed.\",\n      \"supporting_ids\": [\"7a69c818-9310-4242-8694-d1a306e38d47\", \"3ed2dc76-84e2-4a07-8b57-82b9d64fbaf6\", \"7bace7ef-695d-4591-b211-b95b0564f025\"]\n    },\n    {\n      \"claim\": \"The structured answer fails to mention the specific budget amount (537 dollars) and the reversible test, and does not perform a substantive comparison of trade-offs.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"The deterministic score accurately reflects the system's incomplete answer; the low scores for risk_awareness and option_comparison_quality are justified.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    },\n    {\n      \"claim\": \"The memory pipeline trace shows that required facts were extracted and indexed but lost before final visible context, with no reranker snapshot to determine exact loss stage.\",\n      \"supporting_ids\": [\"memory_pipeline_trace\"]\n    },\n    {\n      \"claim\": \"The kimi judge result identifies missing required elements, consistent with the answer's deficiencies.\",\n      \"supporting_ids\": [\"kimi_judge_result\"]\n    }\n  ],\n  \"notes\": \"Gold is valid and supported. The system's answer is incomplete due to missing facts in final context and insufficient reasoning. Score correctly penalizes these gaps. Primary attribution is memory_pipeline_unresolved because the loss stage cannot be pinpointed without reranker snapshot.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 9325,
+        "output_tokens": 607,
+        "total_tokens": 9932,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:35.629Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-decision_quality-001",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-decision_quality-001",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "no_material_issue",
+        "secondary_attributions": [],
+        "first_loss_stage": "none",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "All required facts in Gold are explicitly supported by original events.",
+            "supporting_ids": [
+              "development-v2-decision_quality-001-e01",
+              "development-v2-decision_quality-001-e02",
+              "development-v2-decision_quality-001-e03",
+              "development-v2-decision_quality-001-e04",
+              "development-v2-decision_quality-001-e05"
+            ]
+          },
+          {
+            "claim": "All required facts are present in Final Visible Context.",
+            "supporting_ids": [
+              "5089b972-b1c8-4717-a544-49595fb51f9d",
+              "relationship:5044d75c-7d6f-41d0-83d0-b9e2a7713976",
+              "98f4b901-acff-4a50-b701-8499f137d027",
+              "4a0947f3-225d-4d6f-ae07-606d234992dd",
+              "f37b4a57-ebf1-4118-ab72-784646d58a49",
+              "8ba429ae-4d2d-41f5-9cd7-d505e7e9d89c",
+              "99af6549-9a2e-4870-a415-29d2aa2fcc8c",
+              "relationship:eef7ceab-bee9-490e-a87f-1e79b5d503b2"
+            ]
+          },
+          {
+            "claim": "The structured answer correctly uses all required facts and constraints.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "The deterministic score matches the recomputed score exactly.",
+            "supporting_ids": [
+              "score_comparison"
+            ]
+          },
+          {
+            "claim": "No dataset defect, extraction failure, or retrieval failure is present.",
+            "supporting_ids": [
+              "source_gold_support_audit",
+              "memory_pipeline_trace"
+            ]
+          },
+          {
+            "claim": "The answer covers all required elements and respects constraints.",
+            "supporting_ids": [
+              "kimi_judge_result",
+              "structured_answer"
+            ]
+          }
+        ],
+        "notes": "Gold is fully supported and visible. Answer correctly compares options, respects constraints, and recommends a risk-aware step. Score is valid.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure",
+          "old_review_false_positive_flag"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-decision_quality-001\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"no_material_issue\",\n  \"secondary_attributions\": [],\n  \"first_loss_stage\": \"none\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"All required facts in Gold are explicitly supported by original events.\",\n      \"supporting_ids\": [\"development-v2-decision_quality-001-e01\", \"development-v2-decision_quality-001-e02\", \"development-v2-decision_quality-001-e03\", \"development-v2-decision_quality-001-e04\", \"development-v2-decision_quality-001-e05\"]\n    },\n    {\n      \"claim\": \"All required facts are present in Final Visible Context.\",\n      \"supporting_ids\": [\"5089b972-b1c8-4717-a544-49595fb51f9d\", \"relationship:5044d75c-7d6f-41d0-83d0-b9e2a7713976\", \"98f4b901-acff-4a50-b701-8499f137d027\", \"4a0947f3-225d-4d6f-ae07-606d234992dd\", \"f37b4a57-ebf1-4118-ab72-784646d58a49\", \"8ba429ae-4d2d-41f5-9cd7-d505e7e9d89c\", \"99af6549-9a2e-4870-a415-29d2aa2fcc8c\", \"relationship:eef7ceab-bee9-490e-a87f-1e79b5d503b2\"]\n    },\n    {\n      \"claim\": \"The structured answer correctly uses all required facts and constraints.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"The deterministic score matches the recomputed score exactly.\",\n      \"supporting_ids\": [\"score_comparison\"]\n    },\n    {\n      \"claim\": \"No dataset defect, extraction failure, or retrieval failure is present.\",\n      \"supporting_ids\": [\"source_gold_support_audit\", \"memory_pipeline_trace\"]\n    },\n    {\n      \"claim\": \"The answer covers all required elements and respects constraints.\",\n      \"supporting_ids\": [\"kimi_judge_result\", \"structured_answer\"]\n    }\n  ],\n  \"notes\": \"Gold is fully supported and visible. Answer correctly compares options, respects constraints, and recommends a risk-aware step. Score is valid.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 8803,
+        "output_tokens": 635,
+        "total_tokens": 9438,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:40.002Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-cognitive_continuity-005",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "retrieval_failure",
+        "secondary_attributions": [
+          "no_material_issue"
+        ],
+        "first_loss_stage": "final_context",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold required facts are fully supported by original events.",
+            "supporting_ids": [
+              "development-v2-cognitive_continuity-005-e01",
+              "development-v2-cognitive_continuity-005-e02",
+              "development-v2-cognitive_continuity-005-e03",
+              "development-v2-cognitive_continuity-005-e04",
+              "development-v2-cognitive_continuity-005-e05"
+            ]
+          },
+          {
+            "claim": "Two gold facts (8 focused hours per week, no work after 20:00) are missing from final visible context despite being present in extraction and indexing.",
+            "supporting_ids": [
+              "development-v2-cognitive_continuity-005-e03",
+              "development-v2-cognitive_continuity-005-e05"
+            ]
+          },
+          {
+            "claim": "The structured answer does not include the missing facts, leading to reduced profile_recall and constraint_utilization.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "The deterministic score accurately reflects the system output given the missing facts.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          },
+          {
+            "claim": "No dataset defect or extraction failure; the loss occurs at final_context stage due to retrieval failure.",
+            "supporting_ids": [
+              "memory_pipeline_trace"
+            ]
+          }
+        ],
+        "notes": "Gold is valid and supported. Two required facts (time and boundary) were lost between indexing and final context, causing lower recall. Score correctly penalizes this. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-cognitive_continuity-005\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"retrieval_failure\",\n  \"secondary_attributions\": [\"no_material_issue\"],\n  \"first_loss_stage\": \"final_context\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required facts are fully supported by original events.\",\n      \"supporting_ids\": [\"development-v2-cognitive_continuity-005-e01\", \"development-v2-cognitive_continuity-005-e02\", \"development-v2-cognitive_continuity-005-e03\", \"development-v2-cognitive_continuity-005-e04\", \"development-v2-cognitive_continuity-005-e05\"]\n    },\n    {\n      \"claim\": \"Two gold facts (8 focused hours per week, no work after 20:00) are missing from final visible context despite being present in extraction and indexing.\",\n      \"supporting_ids\": [\"development-v2-cognitive_continuity-005-e03\", \"development-v2-cognitive_continuity-005-e05\"]\n    },\n    {\n      \"claim\": \"The structured answer does not include the missing facts, leading to reduced profile_recall and constraint_utilization.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"The deterministic score accurately reflects the system output given the missing facts.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    },\n    {\n      \"claim\": \"No dataset defect or extraction failure; the loss occurs at final_context stage due to retrieval failure.\",\n      \"supporting_ids\": [\"memory_pipeline_trace\"]\n    }\n  ],\n  \"notes\": \"Gold is valid and supported. Two required facts (time and boundary) were lost between indexing and final context, causing lower recall. Score correctly penalizes this. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 7905,
+        "output_tokens": 474,
+        "total_tokens": 8379,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:43.665Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-cross_agent_transfer-001",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "no_material_issue",
+        "secondary_attributions": [],
+        "first_loss_stage": "none",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold required facts are explicitly supported by original events.",
+            "supporting_ids": [
+              "development-v2-cross_agent_transfer-001-e01",
+              "development-v2-cross_agent_transfer-001-e02",
+              "development-v2-cross_agent_transfer-001-e03"
+            ]
+          },
+          {
+            "claim": "All required facts are present in final visible context.",
+            "supporting_ids": [
+              "relationship:ae4ef0ef-689f-4485-9597-9ae3097e3955",
+              "11c9e6be-4c0c-4cd9-bfee-a241e6f336d3",
+              "relationship:eec387df-e8ed-4bfe-a44d-71ef6aff189e",
+              "relationship:072e83b9-5801-4697-825f-7ad71dd92c42",
+              "b0ad0dba-5775-4f2d-bb6d-64eb99a8dcc4"
+            ]
+          },
+          {
+            "claim": "Answer correctly includes all required facts and isolates the incorrect report.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "Provenance preservation score 0.5 is correct because answer attributes checkpoint-1 status to 'checkpoint-1' instead of Agent-A.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "No dataset defect, extraction failure, or retrieval failure observed.",
+            "supporting_ids": [
+              "source_gold_support_audit",
+              "memory_pipeline_trace"
+            ]
+          },
+          {
+            "claim": "Deterministic score matches recomputed score exactly.",
+            "supporting_ids": [
+              "score_comparison"
+            ]
+          }
+        ],
+        "notes": "Gold is valid and fully supported. Answer correctly includes all required facts and isolates the incorrect report. Provenance preservation is correctly scored at 0.5 because the answer attributes checkpoint-1 status to 'checkpoint-1' rather than Agent-A, which is a product limitation in source attribution. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "not_comparable_dataset_changed"
+        ],
+        "old_review_comparable": false
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-cross_agent_transfer-001\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"no_material_issue\",\n  \"secondary_attributions\": [],\n  \"first_loss_stage\": \"none\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required facts are explicitly supported by original events.\",\n      \"supporting_ids\": [\"development-v2-cross_agent_transfer-001-e01\", \"development-v2-cross_agent_transfer-001-e02\", \"development-v2-cross_agent_transfer-001-e03\"]\n    },\n    {\n      \"claim\": \"All required facts are present in final visible context.\",\n      \"supporting_ids\": [\"relationship:ae4ef0ef-689f-4485-9597-9ae3097e3955\", \"11c9e6be-4c0c-4cd9-bfee-a241e6f336d3\", \"relationship:eec387df-e8ed-4bfe-a44d-71ef6aff189e\", \"relationship:072e83b9-5801-4697-825f-7ad71dd92c42\", \"b0ad0dba-5775-4f2d-bb6d-64eb99a8dcc4\"]\n    },\n    {\n      \"claim\": \"Answer correctly includes all required facts and isolates the incorrect report.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"Provenance preservation score 0.5 is correct because answer attributes checkpoint-1 status to 'checkpoint-1' instead of Agent-A.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"No dataset defect, extraction failure, or retrieval failure observed.\",\n      \"supporting_ids\": [\"source_gold_support_audit\", \"memory_pipeline_trace\"]\n    },\n    {\n      \"claim\": \"Deterministic score matches recomputed score exactly.\",\n      \"supporting_ids\": [\"score_comparison\"]\n    }\n  ],\n  \"notes\": \"Gold is valid and fully supported. Answer correctly includes all required facts and isolates the incorrect report. Provenance preservation is correctly scored at 0.5 because the answer attributes checkpoint-1 status to 'checkpoint-1' rather than Agent-A, which is a product limitation in source attribution. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 7490,
+        "output_tokens": 587,
+        "total_tokens": 8077,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:48.126Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-human_like_forgetting-005",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "no_material_issue",
+        "secondary_attributions": [],
+        "first_loss_stage": "none",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold required fact 'opened the settings page for cycle 5' is explicitly supported by original events e01 and e02.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-005-e01",
+              "development-v2-human_like_forgetting-005-e02"
+            ]
+          },
+          {
+            "claim": "Gold invalidated fact 'buy a drone' is supported by original event e05.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-005-e05"
+            ]
+          },
+          {
+            "claim": "All required facts appear in final visible context with correct status.",
+            "supporting_ids": [
+              "6dd2f615-a253-4d1b-9f5b-75c4e9f10739",
+              "relationship:4c181ca5-acca-40c1-8604-c8933068f4cd",
+              "161f7754-2912-40e8-8d8e-f865d6b74b78",
+              "relationship:2c188ff9-47d6-42d7-9a4e-740a9bb1f574"
+            ]
+          },
+          {
+            "claim": "Structured answer correctly retains the required fact and rejects noisy/invalidated items.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "Deterministic score (0.833) is correctly computed based on metrics.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          },
+          {
+            "claim": "No dataset defect, extraction failure, or pipeline loss detected.",
+            "supporting_ids": [
+              "source_gold_support_audit",
+              "memory_pipeline_trace"
+            ]
+          }
+        ],
+        "notes": "Gold is fully supported by original events and present in final context. Answer correctly retains the required fact and rejects noisy items. Score is valid.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure",
+          "old_review_false_positive_flag"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-human_like_forgetting-005\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"no_material_issue\",\n  \"secondary_attributions\": [],\n  \"first_loss_stage\": \"none\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required fact 'opened the settings page for cycle 5' is explicitly supported by original events e01 and e02.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-005-e01\", \"development-v2-human_like_forgetting-005-e02\"]\n    },\n    {\n      \"claim\": \"Gold invalidated fact 'buy a drone' is supported by original event e05.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-005-e05\"]\n    },\n    {\n      \"claim\": \"All required facts appear in final visible context with correct status.\",\n      \"supporting_ids\": [\"6dd2f615-a253-4d1b-9f5b-75c4e9f10739\", \"relationship:4c181ca5-acca-40c1-8604-c8933068f4cd\", \"161f7754-2912-40e8-8d8e-f865d6b74b78\", \"relationship:2c188ff9-47d6-42d7-9a4e-740a9bb1f574\"]\n    },\n    {\n      \"claim\": \"Structured answer correctly retains the required fact and rejects noisy/invalidated items.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"Deterministic score (0.833) is correctly computed based on metrics.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    },\n    {\n      \"claim\": \"No dataset defect, extraction failure, or pipeline loss detected.\",\n      \"supporting_ids\": [\"source_gold_support_audit\", \"memory_pipeline_trace\"]\n    }\n  ],\n  \"notes\": \"Gold is fully supported by original events and present in final context. Answer correctly retains the required fact and rejects noisy items. Score is valid.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 6326,
+        "output_tokens": 540,
+        "total_tokens": 6866,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:51.971Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "mode": "full_omni",
+      "attribution_review": {
+        "scenario_id": "development-v2-human_like_forgetting-001",
+        "mode": "full_omni",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "no_material_issue",
+        "secondary_attributions": [],
+        "first_loss_stage": "none",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold required fact 'launch a community workshop for cycle 1' is explicitly supported by original events e01 and e02.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-001-e01",
+              "development-v2-human_like_forgetting-001-e02"
+            ]
+          },
+          {
+            "claim": "Gold invalidated fact 'buy a drone' is supported by original event e05.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-001-e05"
+            ]
+          },
+          {
+            "claim": "All gold required facts are present in final visible context.",
+            "supporting_ids": [
+              "6d6e50db-74a9-4f3f-8eae-69ac6976f57f",
+              "relationship:bd433399-4aaa-4bf2-966c-e71aec55dd25"
+            ]
+          },
+          {
+            "claim": "System answer correctly retains the salient goal and rejects invalidated, stale, and noisy items.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "Deterministic score is 1, matching recomputed score with no delta.",
+            "supporting_ids": [
+              "score_comparison"
+            ]
+          },
+          {
+            "claim": "No dataset defect, extraction failure, or pipeline loss detected.",
+            "supporting_ids": [
+              "source_gold_support_audit",
+              "memory_pipeline_trace"
+            ]
+          }
+        ],
+        "notes": "Gold is fully supported by original events and present in final context. System answer correctly identifies the salient goal and rejects all invalidated/stale/noisy items. Score is valid and should not change.",
+        "old_review_was_correct": true,
+        "old_review_error_types": [],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-human_like_forgetting-001\",\n  \"mode\": \"full_omni\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"no_material_issue\",\n  \"secondary_attributions\": [],\n  \"first_loss_stage\": \"none\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required fact 'launch a community workshop for cycle 1' is explicitly supported by original events e01 and e02.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-001-e01\", \"development-v2-human_like_forgetting-001-e02\"]\n    },\n    {\n      \"claim\": \"Gold invalidated fact 'buy a drone' is supported by original event e05.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-001-e05\"]\n    },\n    {\n      \"claim\": \"All gold required facts are present in final visible context.\",\n      \"supporting_ids\": [\"6d6e50db-74a9-4f3f-8eae-69ac6976f57f\", \"relationship:bd433399-4aaa-4bf2-966c-e71aec55dd25\"]\n    },\n    {\n      \"claim\": \"System answer correctly retains the salient goal and rejects invalidated, stale, and noisy items.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"Deterministic score is 1, matching recomputed score with no delta.\",\n      \"supporting_ids\": [\"score_comparison\"]\n    },\n    {\n      \"claim\": \"No dataset defect, extraction failure, or pipeline loss detected.\",\n      \"supporting_ids\": [\"source_gold_support_audit\", \"memory_pipeline_trace\"]\n    }\n  ],\n  \"notes\": \"Gold is fully supported by original events and present in final context. System answer correctly identifies the salient goal and rejects all invalidated/stale/noisy items. Score is valid and should not change.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 6098,
+        "output_tokens": 496,
+        "total_tokens": 6594,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:55.686Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "mode": "no_memory",
+      "attribution_review": {
+        "scenario_id": "development-v2-human_like_forgetting-001",
+        "mode": "no_memory",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "retrieval_failure",
+        "secondary_attributions": [
+          "no_material_issue"
+        ],
+        "first_loss_stage": "final_context",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold required fact 'launch a community workshop for cycle 1' is supported by original events e01 and e02.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-001-e01",
+              "development-v2-human_like_forgetting-001-e02"
+            ]
+          },
+          {
+            "claim": "Gold invalidated fact 'buy a drone' is supported by original event e05.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-001-e05"
+            ]
+          },
+          {
+            "claim": "Final visible context is empty, causing the system to fail to retrieve any memory.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "The system's answer correctly reflects the empty context, stating no memory available.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "The deterministic score accurately measures performance given the empty context.",
+            "supporting_ids": []
+          },
+          {
+            "claim": "No dataset defect or extraction failure; the gold is valid and extractable.",
+            "supporting_ids": []
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. The empty final visible context is a retrieval failure (likely due to no_memory mode). The score correctly reflects the system output; no change needed.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure",
+          "baseline_fairness_issue_not_supported"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-human_like_forgetting-001\",\n  \"mode\": \"no_memory\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"retrieval_failure\",\n  \"secondary_attributions\": [\"no_material_issue\"],\n  \"first_loss_stage\": \"final_context\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required fact 'launch a community workshop for cycle 1' is supported by original events e01 and e02.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-001-e01\", \"development-v2-human_like_forgetting-001-e02\"]\n    },\n    {\n      \"claim\": \"Gold invalidated fact 'buy a drone' is supported by original event e05.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-001-e05\"]\n    },\n    {\n      \"claim\": \"Final visible context is empty, causing the system to fail to retrieve any memory.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"The system's answer correctly reflects the empty context, stating no memory available.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"The deterministic score accurately measures performance given the empty context.\",\n      \"supporting_ids\": []\n    },\n    {\n      \"claim\": \"No dataset defect or extraction failure; the gold is valid and extractable.\",\n      \"supporting_ids\": []\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. The empty final visible context is a retrieval failure (likely due to no_memory mode). The score correctly reflects the system output; no change needed.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 3897,
+        "output_tokens": 425,
+        "total_tokens": 4322,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T01:59:59.149Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "mode": "retrieval_only",
+      "attribution_review": {
+        "scenario_id": "development-v2-conflict_resolution-002",
+        "mode": "retrieval_only",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [
+          "retrieval_failure"
+        ],
+        "first_loss_stage": "retrieval_candidate",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "local",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "claim": "Gold is fully supported by original events (e01-e04).",
+            "supporting_ids": [
+              "development-v2-conflict_resolution-002-e01",
+              "development-v2-conflict_resolution-002-e02",
+              "development-v2-conflict_resolution-002-e03",
+              "development-v2-conflict_resolution-002-e04"
+            ]
+          },
+          {
+            "claim": "Final visible context lacks the critical correction event (e03) and only contains low-confidence April 2 and support notes.",
+            "supporting_ids": [
+              "development-v2-conflict_resolution-002-e02",
+              "development-v2-conflict_resolution-002-e05",
+              "development-v2-conflict_resolution-002-e06",
+              "development-v2-conflict_resolution-002-e07"
+            ]
+          },
+          {
+            "claim": "The system's answer correctly rejects the low-confidence April 2 but cannot state the current value because the correction (April 18) is absent from context.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "The deterministic score accurately reflects the system's inability to retrieve the correction event.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          },
+          {
+            "claim": "The memory pipeline trace shows extraction and indexing succeeded for the correction event, but it was not retrieved as a candidate.",
+            "supporting_ids": [
+              "memory_pipeline_trace"
+            ]
+          },
+          {
+            "claim": "The first loss stage is retrieval_candidate because the correction event was indexed but not retrieved.",
+            "supporting_ids": [
+              "memory_pipeline_trace"
+            ]
+          }
+        ],
+        "notes": "Gold is valid. System failed to retrieve the correction event (e03) due to retrieval pipeline issue. Score correctly reflects this failure. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure",
+          "baseline_fairness_issue_not_supported"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-conflict_resolution-002\",\n  \"mode\": \"retrieval_only\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [\"retrieval_failure\"],\n  \"first_loss_stage\": \"retrieval_candidate\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"local\",\n  \"confidence\": 0.95,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold is fully supported by original events (e01-e04).\",\n      \"supporting_ids\": [\"development-v2-conflict_resolution-002-e01\", \"development-v2-conflict_resolution-002-e02\", \"development-v2-conflict_resolution-002-e03\", \"development-v2-conflict_resolution-002-e04\"]\n    },\n    {\n      \"claim\": \"Final visible context lacks the critical correction event (e03) and only contains low-confidence April 2 and support notes.\",\n      \"supporting_ids\": [\"development-v2-conflict_resolution-002-e02\", \"development-v2-conflict_resolution-002-e05\", \"development-v2-conflict_resolution-002-e06\", \"development-v2-conflict_resolution-002-e07\"]\n    },\n    {\n      \"claim\": \"The system's answer correctly rejects the low-confidence April 2 but cannot state the current value because the correction (April 18) is absent from context.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"The deterministic score accurately reflects the system's inability to retrieve the correction event.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    },\n    {\n      \"claim\": \"The memory pipeline trace shows extraction and indexing succeeded for the correction event, but it was not retrieved as a candidate.\",\n      \"supporting_ids\": [\"memory_pipeline_trace\"]\n    },\n    {\n      \"claim\": \"The first loss stage is retrieval_candidate because the correction event was indexed but not retrieved.\",\n      \"supporting_ids\": [\"memory_pipeline_trace\"]\n    }\n  ],\n  \"notes\": \"Gold is valid. System failed to retrieve the correction event (e03) due to retrieval pipeline issue. Score correctly reflects this failure. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 6145,
+        "output_tokens": 529,
+        "total_tokens": 6674,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T02:00:03.489Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-decision_quality-001",
+      "mode": "no_memory",
+      "attribution_review": {
+        "scenario_id": "development-v2-decision_quality-001",
+        "mode": "no_memory",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "memory_pipeline_unresolved",
+        "secondary_attributions": [
+          "no_material_issue"
+        ],
+        "first_loss_stage": "final_context",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold is fully supported by original events with explicit matches for all required facts.",
+            "supporting_ids": [
+              "development-v2-decision_quality-001-e01",
+              "development-v2-decision_quality-001-e02",
+              "development-v2-decision_quality-001-e03",
+              "development-v2-decision_quality-001-e04",
+              "development-v2-decision_quality-001-e05"
+            ]
+          },
+          {
+            "claim": "The system's final visible context is empty, indicating that no memory was retrieved despite the mode being no_memory.",
+            "supporting_ids": [
+              "final_visible_context"
+            ]
+          },
+          {
+            "claim": "The structured answer acknowledges lack of context and does not attempt to answer the question, which is appropriate given the empty context.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "The deterministic score of 0.222 is consistent with the system's failure to retrieve any relevant information, as it correctly penalizes missing required elements.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          },
+          {
+            "claim": "The memory pipeline trace shows that all required facts were present in extraction and indexing, but the final visible context is empty, indicating a retrieval or context assembly failure.",
+            "supporting_ids": [
+              "memory_pipeline_trace"
+            ]
+          },
+          {
+            "claim": "The benchmark validity is not impacted because the scoring accurately reflects the system's output given the mode and the empty context.",
+            "supporting_ids": [
+              "deterministic_score",
+              "structured_answer"
+            ]
+          }
+        ],
+        "notes": "The system correctly produced an empty context in no_memory mode, leading to a low but valid score. The gold is valid and supported. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure",
+          "baseline_fairness_issue_not_supported",
+          "judge_reliability_issue_not_supported"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-decision_quality-001\",\n  \"mode\": \"no_memory\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"memory_pipeline_unresolved\",\n  \"secondary_attributions\": [\"no_material_issue\"],\n  \"first_loss_stage\": \"final_context\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold is fully supported by original events with explicit matches for all required facts.\",\n      \"supporting_ids\": [\"development-v2-decision_quality-001-e01\", \"development-v2-decision_quality-001-e02\", \"development-v2-decision_quality-001-e03\", \"development-v2-decision_quality-001-e04\", \"development-v2-decision_quality-001-e05\"]\n    },\n    {\n      \"claim\": \"The system's final visible context is empty, indicating that no memory was retrieved despite the mode being no_memory.\",\n      \"supporting_ids\": [\"final_visible_context\"]\n    },\n    {\n      \"claim\": \"The structured answer acknowledges lack of context and does not attempt to answer the question, which is appropriate given the empty context.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"The deterministic score of 0.222 is consistent with the system's failure to retrieve any relevant information, as it correctly penalizes missing required elements.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    },\n    {\n      \"claim\": \"The memory pipeline trace shows that all required facts were present in extraction and indexing, but the final visible context is empty, indicating a retrieval or context assembly failure.\",\n      \"supporting_ids\": [\"memory_pipeline_trace\"]\n    },\n    {\n      \"claim\": \"The benchmark validity is not impacted because the scoring accurately reflects the system's output given the mode and the empty context.\",\n      \"supporting_ids\": [\"deterministic_score\", \"structured_answer\"]\n    }\n  ],\n  \"notes\": \"The system correctly produced an empty context in no_memory mode, leading to a low but valid score. The gold is valid and supported. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 6742,
+        "output_tokens": 518,
+        "total_tokens": 7260,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T02:00:08.095Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "mode": "retrieval_only",
+      "attribution_review": {
+        "scenario_id": "development-v2-human_like_forgetting-002",
+        "mode": "retrieval_only",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "retrieval_failure",
+        "secondary_attributions": [],
+        "first_loss_stage": "final_context",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold required fact 'small practical projects for cycle 2' is explicitly supported by original events e01 and e02.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-002-e01",
+              "development-v2-human_like_forgetting-002-e02"
+            ]
+          },
+          {
+            "claim": "Gold invalidated fact 'buy a drone' is explicitly supported by original event e05.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-002-e05"
+            ]
+          },
+          {
+            "claim": "The required fact 'small practical projects for cycle 2' is present in the final visible context (e01) but the answer incorrectly rejects the three support notes (e08, e09, e10) as stale, which are actually current and relevant.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-002-e01",
+              "development-v2-human_like_forgetting-002-e08",
+              "development-v2-human_like_forgetting-002-e09",
+              "development-v2-human_like_forgetting-002-e10"
+            ]
+          },
+          {
+            "claim": "The system's answer fails to include the required fact and incorrectly rejects valid support notes, leading to a low score.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-002-e01",
+              "development-v2-human_like_forgetting-002-e08",
+              "development-v2-human_like_forgetting-002-e09",
+              "development-v2-human_like_forgetting-002-e10"
+            ]
+          },
+          {
+            "claim": "The memory pipeline trace shows the required fact was present in extraction and indexing but missing from final visible context, indicating a retrieval failure.",
+            "supporting_ids": [
+              "development-v2-human_like_forgetting-002-e01"
+            ]
+          },
+          {
+            "claim": "The deterministic score of 0.8333 is valid given the system's output; the scoring correctly reflects the answer's deficiencies.",
+            "supporting_ids": []
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. The system's answer failed to retain the required fact and incorrectly rejected valid support notes, which is a retrieval failure. The score accurately reflects this failure.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-human_like_forgetting-002\",\n  \"mode\": \"retrieval_only\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"retrieval_failure\",\n  \"secondary_attributions\": [],\n  \"first_loss_stage\": \"final_context\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required fact 'small practical projects for cycle 2' is explicitly supported by original events e01 and e02.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-002-e01\", \"development-v2-human_like_forgetting-002-e02\"]\n    },\n    {\n      \"claim\": \"Gold invalidated fact 'buy a drone' is explicitly supported by original event e05.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-002-e05\"]\n    },\n    {\n      \"claim\": \"The required fact 'small practical projects for cycle 2' is present in the final visible context (e01) but the answer incorrectly rejects the three support notes (e08, e09, e10) as stale, which are actually current and relevant.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-002-e01\", \"development-v2-human_like_forgetting-002-e08\", \"development-v2-human_like_forgetting-002-e09\", \"development-v2-human_like_forgetting-002-e10\"]\n    },\n    {\n      \"claim\": \"The system's answer fails to include the required fact and incorrectly rejects valid support notes, leading to a low score.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-002-e01\", \"development-v2-human_like_forgetting-002-e08\", \"development-v2-human_like_forgetting-002-e09\", \"development-v2-human_like_forgetting-002-e10\"]\n    },\n    {\n      \"claim\": \"The memory pipeline trace shows the required fact was present in extraction and indexing but missing from final visible context, indicating a retrieval failure.\",\n      \"supporting_ids\": [\"development-v2-human_like_forgetting-002-e01\"]\n    },\n    {\n      \"claim\": \"The deterministic score of 0.8333 is valid given the system's output; the scoring correctly reflects the answer's deficiencies.\",\n      \"supporting_ids\": []\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. The system's answer failed to retain the required fact and incorrectly rejected valid support notes, which is a retrieval failure. The score accurately reflects this failure.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 5122,
+        "output_tokens": 613,
+        "total_tokens": 5735,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T02:00:12.844Z"
+    },
+    {
+      "schema_version": "1.1.1",
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "mode": "retrieval_only",
+      "attribution_review": {
+        "scenario_id": "development-v2-conflict_resolution-001",
+        "mode": "retrieval_only",
+        "original_gold_valid": true,
+        "gold_support_confidence": 1,
+        "primary_attribution": "retrieval_failure",
+        "secondary_attributions": [],
+        "first_loss_stage": "final_context",
+        "score_is_valid": true,
+        "score_should_change": false,
+        "suggested_score_change": null,
+        "benchmark_validity_impact": "none",
+        "confidence": 1,
+        "evidence": [
+          {
+            "claim": "Gold required facts are fully supported by original events.",
+            "supporting_ids": [
+              "development-v2-conflict_resolution-001-e01",
+              "development-v2-conflict_resolution-001-e02",
+              "development-v2-conflict_resolution-001-e03"
+            ]
+          },
+          {
+            "claim": "Final visible context lacks the key event e03 containing the current value 'hybrid two days onsite'.",
+            "supporting_ids": [
+              "development-v2-conflict_resolution-001-e03"
+            ]
+          },
+          {
+            "claim": "Final visible context includes only e02, e04, e05, e06, missing e01 and e03.",
+            "supporting_ids": [
+              "development-v2-conflict_resolution-001-e02",
+              "development-v2-conflict_resolution-001-e04",
+              "development-v2-conflict_resolution-001-e05",
+              "development-v2-conflict_resolution-001-e06"
+            ]
+          },
+          {
+            "claim": "The system answer correctly rejects the low-confidence claim but fails to state the current value because it was not retrieved.",
+            "supporting_ids": [
+              "structured_answer"
+            ]
+          },
+          {
+            "claim": "The deterministic score accurately reflects the system's partial performance given the missing context.",
+            "supporting_ids": [
+              "deterministic_score"
+            ]
+          },
+          {
+            "claim": "No dataset defect or scoring defect is present; the failure is due to retrieval not bringing the necessary events into final context.",
+            "supporting_ids": [
+              "source_gold_support_audit",
+              "memory_pipeline_trace"
+            ]
+          }
+        ],
+        "notes": "Gold is valid and supported by original events. The system failed to retrieve the critical correction event (e03) and the historical event (e01), leading to an incomplete answer. The score correctly penalizes missing facts. No scoring defect.",
+        "old_review_was_correct": false,
+        "old_review_error_types": [
+          "gold_ambiguity_confused_with_pipeline_or_answer_loss",
+          "score_issue_confused_with_system_or_product_failure"
+        ],
+        "old_review_comparable": true
+      },
+      "raw_response": "{\n  \"scenario_id\": \"development-v2-conflict_resolution-001\",\n  \"mode\": \"retrieval_only\",\n  \"original_gold_valid\": true,\n  \"gold_support_confidence\": 1.0,\n  \"primary_attribution\": \"retrieval_failure\",\n  \"secondary_attributions\": [],\n  \"first_loss_stage\": \"final_context\",\n  \"score_is_valid\": true,\n  \"score_should_change\": false,\n  \"suggested_score_change\": null,\n  \"benchmark_validity_impact\": \"none\",\n  \"confidence\": 1.0,\n  \"evidence\": [\n    {\n      \"claim\": \"Gold required facts are fully supported by original events.\",\n      \"supporting_ids\": [\"development-v2-conflict_resolution-001-e01\", \"development-v2-conflict_resolution-001-e02\", \"development-v2-conflict_resolution-001-e03\"]\n    },\n    {\n      \"claim\": \"Final visible context lacks the key event e03 containing the current value 'hybrid two days onsite'.\",\n      \"supporting_ids\": [\"development-v2-conflict_resolution-001-e03\"]\n    },\n    {\n      \"claim\": \"Final visible context includes only e02, e04, e05, e06, missing e01 and e03.\",\n      \"supporting_ids\": [\"development-v2-conflict_resolution-001-e02\", \"development-v2-conflict_resolution-001-e04\", \"development-v2-conflict_resolution-001-e05\", \"development-v2-conflict_resolution-001-e06\"]\n    },\n    {\n      \"claim\": \"The system answer correctly rejects the low-confidence claim but fails to state the current value because it was not retrieved.\",\n      \"supporting_ids\": [\"structured_answer\"]\n    },\n    {\n      \"claim\": \"The deterministic score accurately reflects the system's partial performance given the missing context.\",\n      \"supporting_ids\": [\"deterministic_score\"]\n    },\n    {\n      \"claim\": \"No dataset defect or scoring defect is present; the failure is due to retrieval not bringing the necessary events into final context.\",\n      \"supporting_ids\": [\"source_gold_support_audit\", \"memory_pipeline_trace\"]\n    }\n  ],\n  \"notes\": \"Gold is valid and supported by original events. The system failed to retrieve the critical correction event (e03) and the historical event (e01), leading to an incomplete answer. The score correctly penalizes missing facts. No scoring defect.\"\n}",
+      "model": "deepseek-v4-flash",
+      "adapter_version": "attribution-review-adapter-v1.1",
+      "usage": {
+        "input_tokens": 5165,
+        "output_tokens": 530,
+        "total_tokens": 5695,
+        "cached_tokens": 384
+      },
+      "physical_attempts": 1,
+      "schema_normalizations": [],
+      "human_review": false,
+      "reviewed_at": "2026-07-15T02:00:17.290Z"
+    }
+  ]
+}

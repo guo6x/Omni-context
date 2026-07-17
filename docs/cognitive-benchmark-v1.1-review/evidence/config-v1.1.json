@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "benchmark_version": "cognitive-benchmark-v1.1",
+  "seed": 20260715,
+  "concurrency": 1,
+  "max_retries": 2,
+  "retry_base_ms": 1000,
+  "request_timeout_ms": 90000,
+  "answer": {
+    "model": "deepseek-v4-flash",
+    "temperature": 0,
+    "max_tokens": 1200,
+    "thinking": "disabled"
+  },
+  "primary_judge": {
+    "model": "kimi-k2.6",
+    "temperature_control": "provider_default_non_configurable",
+    "temperature_parameter_sent": false,
+    "max_completion_tokens": 1200,
+    "thinking": "disabled",
+    "independent": true,
+    "call_limit": 60,
+    "adapter_version": "kimi-judge-adapter-v2.1",
+    "rubric_version": "kimi-judge-rubric-v2",
+    "categories": [
+      "proactive_insight",
+      "decision_quality"
+    ]
+  },
+  "secondary_review": {
+    "model": "deepseek-v4-flash",
+    "independent": false,
+    "human_review_completed": false
+  },
+  "embedding": {
+    "model": "Xenova/multilingual-e5-large",
+    "revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "dimension": 1024,
+    "profile_hash": "369ab26bb142863960d7cf22bb1b79afda1195120079f4b8aea28e605f77b853"
+  },
+  "retrieval_only": {
+    "method": "fixed_lexical_overlap_v1",
+    "top_k": 4,
+    "graph_expansion": false,
+    "temporal_evolution": false,
+    "proactive_insight": false
+  },
+  "full_omni": {
+    "top_k": 10,
+    "isolated_database_per_scenario": true,
+    "frozen_commit": "872723b10ec4ae99b8272606a183155837104332"
+  },
+  "pricing_usd_per_million_tokens": {
+    "source": "https://api-docs.deepseek.com/quick_start/pricing/",
+    "checked_at": "2026-07-14",
+    "cache_hit_input": 0.0028,
+    "cache_miss_input": 0.14,
+    "output": 0.28
+  },
+  "answer_schema_version": "answer-schema-v2",
+  "scoring_version": "deterministic-scoring-v3",
+  "formal_status": "DRAFT_NOT_FROZEN",
+  "comparison_status": "DRAFT_NOT_RUN"
+}

@@ -1,0 +1,915 @@
+{
+  "schema_version": "1.1.1",
+  "status": "pass",
+  "count": 38,
+  "mismatches": 0,
+  "formal_count": 30,
+  "formal_dataset_defects": 0,
+  "audits": [
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cross_agent_transfer-001",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cross_agent_transfer-002",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "smoke",
+      "scenario_id": "smoke-v2-cross_agent_transfer-003",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D",
+        "Agent-F",
+        "Agent-E"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-C",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D",
+        "Agent-F",
+        "Agent-E"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-C",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "development",
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-001",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-002",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-003",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-004",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-005",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-006",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-007",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-008",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-009",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-010",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-011",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-C",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-012",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-013",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-014",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-015",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-016",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-017",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-018",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-019",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-C",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-020",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-021",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-022",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-023",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-024",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-025",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-026",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D",
+        "Agent-E"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-027",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D",
+        "Agent-F",
+        "Agent-E"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-C",
+        "Agent-B"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-028",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-029",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D",
+        "Agent-E"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    },
+    {
+      "split": "formal",
+      "scenario_id": "formal-v2-cross_agent_transfer-030",
+      "status": "pass",
+      "unique_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C",
+        "Agent-D",
+        "Agent-F",
+        "Agent-E"
+      ],
+      "required_fact_agents": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "required_sources": [
+        "Agent-A",
+        "Agent-B",
+        "Agent-C"
+      ],
+      "agent_text_field_mismatches": [],
+      "unknown_text_agents": [],
+      "missing_required_sources": [],
+      "uncredited_fact_sources": []
+    }
+  ]
+}

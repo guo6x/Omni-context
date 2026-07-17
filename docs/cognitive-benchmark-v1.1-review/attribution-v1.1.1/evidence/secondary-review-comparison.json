@@ -1,0 +1,575 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "count": 20,
+  "old_flags": {
+    "score_issue": 19,
+    "gold_ambiguity": 2,
+    "baseline_fairness_issue": 3,
+    "memory_leakage_issue": 0,
+    "judge_reliability_issue": 2,
+    "provenance_issue": 4,
+    "invalidated_fact_rejection_issue": 3,
+    "temporal_transition_issue": 4
+  },
+  "new_primary_attributions": {
+    "dataset_defect": 0,
+    "extraction_failure": 2,
+    "retrieval_failure": 6,
+    "memory_pipeline_unresolved": 8,
+    "answer_generation_failure": 0,
+    "answer_schema_failure": 0,
+    "scoring_defect": 0,
+    "primary_judge_defect": 0,
+    "secondary_review_defect": 0,
+    "baseline_design_effect": 0,
+    "product_limitation": 0,
+    "no_material_issue": 4
+  },
+  "old_review_comparable_count": 16,
+  "old_review_non_comparable_count": 4,
+  "old_gold_ambiguity_reclassified": [
+    {
+      "scenario_id": "development-v2-memory_evolution-001",
+      "mode": "full_omni",
+      "new_primary_attribution": "memory_pipeline_unresolved"
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "mode": "retrieval_only",
+      "new_primary_attribution": "retrieval_failure"
+    }
+  ],
+  "old_score_issue_final_attribution": {
+    "dataset_defect": 0,
+    "extraction_failure": 2,
+    "retrieval_failure": 5,
+    "memory_pipeline_unresolved": 6,
+    "answer_generation_failure": 0,
+    "answer_schema_failure": 0,
+    "scoring_defect": 0,
+    "primary_judge_defect": 0,
+    "secondary_review_defect": 0,
+    "baseline_design_effect": 0,
+    "product_limitation": 0,
+    "no_material_issue": 2
+  },
+  "secondary_review_defect_count": 15,
+  "reviewer_agreement_rate": 0.0625,
+  "low_confidence_count": 0,
+  "rows": [
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "mode": "full_omni",
+      "old_review_comparable": false,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": true,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [
+        "retrieval_failure"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "not_comparable_dataset_changed"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-001",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": true,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": true
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [
+        "retrieval_failure"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "gold_ambiguity_confused_with_pipeline_or_answer_loss",
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-004",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": true
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [
+        "retrieval_failure"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-005",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": true,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "retrieval_failure",
+      "new_secondary_attributions": [
+        "memory_pipeline_unresolved"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "mode": "full_omni",
+      "old_review_comparable": false,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": true,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [
+        "retrieval_failure"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "not_comparable_dataset_changed"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-005",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": true,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "extraction_failure",
+      "new_secondary_attributions": [
+        "memory_pipeline_unresolved"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure",
+        "judge_reliability_issue_not_supported"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "mode": "full_omni",
+      "old_review_comparable": false,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": true,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "retrieval_failure",
+      "new_secondary_attributions": [
+        "memory_pipeline_unresolved"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "not_comparable_dataset_changed"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-004",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "extraction_failure",
+      "new_secondary_attributions": [
+        "memory_pipeline_unresolved"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-002",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [
+        "answer_generation_failure"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-001",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "no_material_issue",
+      "new_secondary_attributions": [],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure",
+        "old_review_false_positive_flag"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "retrieval_failure",
+      "new_secondary_attributions": [
+        "no_material_issue"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "mode": "full_omni",
+      "old_review_comparable": false,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": true,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "no_material_issue",
+      "new_secondary_attributions": [],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "not_comparable_dataset_changed"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": true,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "no_material_issue",
+      "new_secondary_attributions": [],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure",
+        "old_review_false_positive_flag"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "mode": "full_omni",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": false,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "agree",
+      "new_primary_attribution": "no_material_issue",
+      "new_secondary_attributions": [],
+      "old_review_was_correct": true,
+      "old_review_error_types": [],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "mode": "no_memory",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": true,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "retrieval_failure",
+      "new_secondary_attributions": [
+        "no_material_issue"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure",
+        "baseline_fairness_issue_not_supported"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "mode": "retrieval_only",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": true,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": true
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [
+        "retrieval_failure"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure",
+        "baseline_fairness_issue_not_supported"
+      ],
+      "score_should_change": false,
+      "confidence": 0.95
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-001",
+      "mode": "no_memory",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": true,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": true,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "memory_pipeline_unresolved",
+      "new_secondary_attributions": [
+        "no_material_issue"
+      ],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure",
+        "baseline_fairness_issue_not_supported",
+        "judge_reliability_issue_not_supported"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "mode": "retrieval_only",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": false,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": true,
+        "temporal_transition_issue": false
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "retrieval_failure",
+      "new_secondary_attributions": [],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "mode": "retrieval_only",
+      "old_review_comparable": true,
+      "old_flags": {
+        "score_issue": true,
+        "gold_ambiguity": true,
+        "baseline_fairness_issue": false,
+        "memory_leakage_issue": false,
+        "judge_reliability_issue": false,
+        "provenance_issue": false,
+        "invalidated_fact_rejection_issue": false,
+        "temporal_transition_issue": true
+      },
+      "old_verdict": "flag",
+      "new_primary_attribution": "retrieval_failure",
+      "new_secondary_attributions": [],
+      "old_review_was_correct": false,
+      "old_review_error_types": [
+        "gold_ambiguity_confused_with_pipeline_or_answer_loss",
+        "score_issue_confused_with_system_or_product_failure"
+      ],
+      "score_should_change": false,
+      "confidence": 1
+    }
+  ]
+}
