@@ -1,0 +1,6 @@
+claim_id,allowed_wording,forbidden_wording,paper_section,source,status
+EX01,"Fixture-tested adapters exist for LongMemEval and LoCoMo public schemas.","Do not claim official records were processed.",Experiments,external-eval/tests/sealed-runner.test.mjs,VERIFIED
+EX02,"Formal runs require custodian authorization and exact dataset/product/adapter/preregistration hashes.","Do not imply preregistration alone authorizes a run.",Experiments,external-eval/SECURITY_AND_HELDOUT_POLICY.md,VERIFIED
+EX03,"LongMemEval formal evaluation is NOT RUN.","Do not report or imply a LongMemEval score.",Results,external-eval/preregistration/longmemeval-v1.json,VERIFIED
+EX04,"LoCoMo Conversations 2--10 remain unaccessed and formal evaluation is NOT RUN.","Do not claim complete or held-out LoCoMo validation.",Limitations,external-eval/preregistration/locomo-heldout-v1.json,VERIFIED
+EX05,"LongMemEval-V2 is assessed only as follow-up feasibility.","Do not place a V2 result in this paper.",Limitations,external-eval/reports/longmemeval-v2-feasibility.md,VERIFIED
