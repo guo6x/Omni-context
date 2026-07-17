@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "run_id": "development35-strict-20260717-r3",
+  "run_root_placeholder": "<D_DRIVE>/OmniContext-research-runs/ablation/development35-strict-20260717-r3",
+  "seed": 2026071701,
+  "dataset_sha256": "9d8761ff48c8ce7e432677a634f554d06fa4a500edaa708a33ac7d6366817ae4",
+  "frozen_product_base_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "research_instrumentation_commit": "c58e2e349626fa51e5f00b75c44c6e792fc02b4b",
+  "frozen_benchmark_commit": "62b0b20f944f7e9a2c58f02ce1c65bb43dfbf841",
+  "benchmark_behavior_modified": false,
+  "formal_run": false,
+  "comparison_run": false,
+  "official_locomo": false,
+  "conversation_2_to_10_accessed": false,
+  "expected": 140,
+  "completed": 140,
+  "errors": 0,
+  "retry_records": 872,
+  "stop_reason": null,
+  "completed_at": "2026-07-17T10:22:32.212Z",
+  "conditions": [
+    {
+      "condition": "full_omni_fresh_control",
+      "completed": 35,
+      "errors": 0,
+      "retry_records": 214
+    },
+    {
+      "condition": "selector_off",
+      "completed": 35,
+      "errors": 0,
+      "retry_records": 215
+    },
+    {
+      "condition": "grouping_off",
+      "completed": 35,
+      "errors": 0,
+      "retry_records": 220
+    },
+    {
+      "condition": "source_aware_fusion_off",
+      "completed": 35,
+      "errors": 0,
+      "retry_records": 223
+    }
+  ]
+}

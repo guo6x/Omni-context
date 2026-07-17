@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "run_id": "development35-strict-20260717-r3",
+  "scoring_version": "deterministic-scoring-v3",
+  "overall_scores": {
+    "full_omni_fresh_control": {
+      "label": "Full Omni (Control)",
+      "overall_cognitive_score": 0.886957,
+      "deterministic_score": 0.905397,
+      "agent_judged_score": 0.840856,
+      "memory_reliability_score": 0.890079,
+      "personalization_score": 0.966667,
+      "temporal_and_conflict_score": 0.857937,
+      "insight_and_decision_score": 0.840856
+    },
+    "selector_off": {
+      "label": "Selector Off",
+      "overall_cognitive_score": 0.700277,
+      "deterministic_score": 0.716847,
+      "agent_judged_score": 0.658852,
+      "memory_reliability_score": 0.717725,
+      "personalization_score": 0.713333,
+      "temporal_and_conflict_score": 0.629894,
+      "insight_and_decision_score": 0.658852
+    },
+    "grouping_off": {
+      "label": "Grouping Off",
+      "overall_cognitive_score": 0.860762,
+      "deterministic_score": 0.886085,
+      "agent_judged_score": 0.797454,
+      "memory_reliability_score": 0.857606,
+      "personalization_score": 1,
+      "temporal_and_conflict_score": 0.851323,
+      "insight_and_decision_score": 0.797454
+    },
+    "source_aware_fusion_off": {
+      "label": "Source-Aware Fusion Off",
+      "overall_cognitive_score": 0.885454,
+      "deterministic_score": 0.922444,
+      "agent_judged_score": 0.792977,
+      "memory_reliability_score": 0.922222,
+      "personalization_score": 0.923333,
+      "temporal_and_conflict_score": 0.863889,
+      "insight_and_decision_score": 0.792977
+    }
+  },
+  "category_scores": {
+    "cognitive_continuity": {
+      "full_omni_fresh_control": 0.9667,
+      "selector_off": 0.7133,
+      "grouping_off": 1,
+      "source_aware_fusion_off": 0.9233
+    },
+    "memory_evolution": {
+      "full_omni_fresh_control": 0.8492,
+      "selector_off": 0.7487,
+      "grouping_off": 0.8693,
+      "source_aware_fusion_off": 0.8944
+    },
+    "conflict_resolution": {
+      "full_omni_fresh_control": 0.8667,
+      "selector_off": 0.5111,
+      "grouping_off": 0.8333,
+      "source_aware_fusion_off": 0.8333
+    },
+    "cross_agent_transfer": {
+      "full_omni_fresh_control": 1,
+      "selector_off": 0.7,
+      "grouping_off": 0.9556,
+      "source_aware_fusion_off": 1
+    },
+    "human_like_forgetting": {
+      "full_omni_fresh_control": 0.8444,
+      "selector_off": 0.9111,
+      "grouping_off": 0.7722,
+      "source_aware_fusion_off": 0.9611
+    },
+    "proactive_insight": {
+      "full_omni_fresh_control": 0.8688,
+      "selector_off": 0.65,
+      "grouping_off": 0.7875,
+      "source_aware_fusion_off": 0.8063
+    },
+    "decision_quality": {
+      "full_omni_fresh_control": 0.813,
+      "selector_off": 0.6677,
+      "grouping_off": 0.8074,
+      "source_aware_fusion_off": 0.7797
+    }
+  },
+  "deltas_vs_control": {
+    "selector_off": {
+      "overall_delta": -0.18668,
+      "overall_delta_percent": -21.05,
+      "category_deltas": {
+        "cognitive_continuity": -0.2533,
+        "memory_evolution": -0.1005,
+        "conflict_resolution": -0.3556,
+        "cross_agent_transfer": -0.3,
+        "human_like_forgetting": 0.0667,
+        "proactive_insight": -0.2187,
+        "decision_quality": -0.1453
+      }
+    },
+    "grouping_off": {
+      "overall_delta": -0.026195,
+      "overall_delta_percent": -2.95,
+      "category_deltas": {
+        "cognitive_continuity": 0.0333,
+        "memory_evolution": 0.0201,
+        "conflict_resolution": -0.0333,
+        "cross_agent_transfer": -0.0444,
+        "human_like_forgetting": -0.0722,
+        "proactive_insight": -0.0813,
+        "decision_quality": -0.0056
+      }
+    },
+    "source_aware_fusion_off": {
+      "overall_delta": -0.001503,
+      "overall_delta_percent": -0.17,
+      "category_deltas": {
+        "cognitive_continuity": -0.0433,
+        "memory_evolution": 0.0452,
+        "conflict_resolution": -0.0333,
+        "cross_agent_transfer": 0,
+        "human_like_forgetting": 0.1167,
+        "proactive_insight": -0.0625,
+        "decision_quality": -0.0333
+      }
+    }
+  },
+  "component_attribution": {
+    "selector": 0.18668,
+    "grouping": 0.026195,
+    "source_aware_fusion": 0.001503
+  },
+  "summary": {
+    "completed": 140,
+    "errors": 0,
+    "conditions": 4,
+    "scenarios_per_condition": 35,
+    "control_overall_score": 0.886957,
+    "largest_drop_condition": "selector_off",
+    "largest_drop_magnitude": 0.18668,
+    "smallest_drop_condition": "source_aware_fusion_off",
+    "smallest_drop_magnitude": 0.001503,
+    "call_budget_exceeded": false,
+    "primary_judge_independent": true
+  }
+}
