@@ -98,7 +98,7 @@ function expectedCallProfile(scenarios) {
   };
 }
 
-async function budgetSnapshot(outputRoot, scenarios) {
+export async function budgetSnapshot(outputRoot, scenarios, prior = { deepseekKnown: 0, kimiPhysical: 0 }) {
   const expected = expectedCallProfile(scenarios);
   let completed = 0;
   let errors = 0;
@@ -127,6 +127,8 @@ async function budgetSnapshot(outputRoot, scenarios) {
     } catch {}
   }
   const deepseekKnown = extraction + reranker + answerPhysicalProxy;
+  const globalDeepseekKnown = Number(prior.deepseekKnown || 0) + deepseekKnown;
+  const globalKimiPhysical = Number(prior.kimiPhysical || 0) + kimiPhysical;
   const limits = {
     scenario_condition_runs: expected.scenario_condition_runs,
     deepseek_known_plus_15_percent: Math.ceil(expected.deepseek_logical * 1.15),
@@ -136,10 +138,12 @@ async function budgetSnapshot(outputRoot, scenarios) {
     schema_version: 1,
     expected,
     limits,
+    prior_consumption: { deepseek_known: Number(prior.deepseekKnown || 0), kimi_physical: Number(prior.kimiPhysical || 0) },
     observed: { completed, errors, retries, extraction, reranker, answer_physical_proxy: answerPhysicalProxy, deepseek_known: deepseekKnown, kimi_physical: kimiPhysical },
+    global_observed: { deepseek_known: globalDeepseekKnown, kimi_physical: globalKimiPhysical },
     exceeded: completed + errors > limits.scenario_condition_runs
-      || deepseekKnown > limits.deepseek_known_plus_15_percent
-      || kimiPhysical > limits.kimi_physical_plus_15_percent,
+      || globalDeepseekKnown > limits.deepseek_known_plus_15_percent
+      || globalKimiPhysical > limits.kimi_physical_plus_15_percent,
   };
 }
 
@@ -149,6 +153,10 @@ async function main() {
   const brainServerRoot = path.resolve(flag('--brain-server-root'));
   const expectedProductCommit = flag('--expected-product-commit');
   const seed = Number(flag('--seed', '2026071701'));
+  const priorConsumption = {
+    deepseekKnown: Number(flag('--prior-deepseek-known', '0')),
+    kimiPhysical: Number(flag('--prior-kimi-physical', '0')),
+  };
   const resume = process.argv.includes('--resume');
   if (!/^[a-f0-9]{40}$/.test(expectedProductCommit || '')) throw new Error('--expected-product-commit must be an exact SHA');
   if (!process.env.LLM_API_URL || !process.env.LLM_API_KEY) throw new Error('DeepSeek provider environment is incomplete');
@@ -245,7 +253,7 @@ async function main() {
       selectedScenarios: scheduledByCondition[condition],
       logger: (message) => process.stdout.write(`${condition} ${message}\n`),
     });
-    const budget = await budgetSnapshot(outputRoot, scenarios);
+    const budget = await budgetSnapshot(outputRoot, scenarios, priorConsumption);
     await writeJson(path.join(outputRoot, 'call-budget.json'), budget);
     await writeJson(path.join(outputRoot, 'progress.json'), {
       schema_version: 1,
@@ -292,7 +300,7 @@ async function main() {
     retries += summary.retry_records;
     await writeJson(path.join(root, 'condition-summary.json'), summary);
   }
-  const budget = await budgetSnapshot(outputRoot, scenarios);
+  const budget = await budgetSnapshot(outputRoot, scenarios, priorConsumption);
   const manifest = {
     schema_version: 1,
     status: stopReason ? 'partial' : completed === 140 && errors === 0 ? 'completed' : 'partial',
@@ -312,6 +320,11 @@ async function main() {
     official_locomo: false,
     conversation_2_to_10_accessed: false,
     call_budget: budget,
+    prior_partial_run: {
+      path_placeholder: '<D_DRIVE>/OmniContext-research-runs/ablation/development35-strict-20260717-r2',
+      reason: priorConsumption.deepseekKnown > 0 ? 'runtime attestation invalidated after research HEAD changed during evidence commit' : null,
+      retained: priorConsumption.deepseekKnown > 0,
+    },
     conditions: conditionSummaries,
     completed_at: new Date().toISOString(),
   };
@@ -320,7 +333,9 @@ async function main() {
   if (manifest.status !== 'completed') process.exitCode = 2;
 }
 
-main().catch((error) => {
-  process.stderr.write(`${JSON.stringify({ event: 'strict_ablation_run_failed', error: error instanceof Error ? error.message : String(error) })}\n`);
-  process.exitCode = 1;
-});
+if (path.resolve(process.argv[1] || '') === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    process.stderr.write(`${JSON.stringify({ event: 'strict_ablation_run_failed', error: error instanceof Error ? error.message : String(error) })}\n`);
+    process.exitCode = 1;
+  });
+}

@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import path from 'node:path';
 import {
   buildInterleavedPlan,
   CONDITION_TO_ENV,
   STRICT_ABLATION_CONDITIONS,
 } from '../research/strict-ablation-plan.mjs';
+import { budgetSnapshot } from '../research/strict-ablation-runner.mjs';
 import { bootstrapMeanDifference, pairedSummary, wilcoxonSignedRank } from '../research/paired-statistics.mjs';
 
 const scenarios = Array.from({ length: 5 }, (_, index) => ({ scenario_id: `fixture-${index + 1}`, category: 'fixture' }));
@@ -53,4 +56,18 @@ test('Wilcoxon handles all ties without claiming significance', () => {
     p_two_sided: 1,
     rank_biserial: 0,
   });
+});
+
+test('strict ablation call budget includes retained prior-run consumption', async () => {
+  const base = 'D:\\OmniContext-research-runs\\ablation\\test-temp';
+  await mkdir(base, { recursive: true });
+  const root = await mkdtemp(path.join(base, 'omni-ablation-budget-'));
+  try {
+    const scenarios = Array.from({ length: 35 }, (_, index) => ({ scenario_id: `s-${index}`, state_transition_count: 0, category: 'cognitive_continuity' }));
+    const budget = await budgetSnapshot(root, scenarios, { deepseekKnown: 742, kimiPhysical: 0 });
+    assert.equal(budget.global_observed.deepseek_known, 742);
+    assert.equal(budget.exceeded, true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
