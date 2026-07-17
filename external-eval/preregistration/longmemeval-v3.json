@@ -24,7 +24,7 @@
   "adapter_file_sha256": "3883fe995a1d5aa22d605e87f1467e83a6861785ced975ea43c0d09f7a250f44",
   "adapter_module_path": "external-eval/adapters/longmemeval.mjs",
   "engine_adapter_commit": "b0847444a7024906f10a3511f705bbde63650c48",
-  "engine_adapter_file_sha256": "bac75adfde3945686c733eefe6f912ed24f7e5b816c9ae472884ff421deb37dc",
+  "engine_adapter_file_sha256": "330ea359b09f1071c5e21ae6a293503dff74cb99ef4bd4860506503a82756d82",
   "engine_interface": "createEngine-v1",
   "engine_module_path": "external-eval/engines/omni-frozen-v3.1.mjs",
   "formal_runner_commit": "b0847444a7024906f10a3511f705bbde63650c48",

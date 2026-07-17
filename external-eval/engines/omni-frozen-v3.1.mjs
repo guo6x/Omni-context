@@ -15,6 +15,7 @@ const REPO_ROOT = path.resolve(MODULE_DIR, '../..');
 
 const EXPECTED_PRODUCT_COMMIT = '17dc1d0107b0474de84058205a91b302ba290a74';
 const EXPECTED_PROMPT_SHA256 = '4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21';
+const EXPECTED_SELECTOR_VERSION = 'evidence-selector-v2';
 
 function defaultRandomId() {
   return randomBytes(16).toString('hex');
@@ -84,6 +85,7 @@ export async function createEngineWithDeps({ productCommit, isolatedDatabase, dy
     runRoot: runDir,
     brainServerRoot,
     expectedProductCommit: productCommit,
+    expectedSelectorVersion: EXPECTED_SELECTOR_VERSION,
   });
 
   const runtime = createRuntime({
@@ -91,6 +93,7 @@ export async function createEngineWithDeps({ productCommit, isolatedDatabase, dy
     conversationId: 1,
     brainServerRoot,
     expectedProductCommit: productCommit,
+    expectedSelectorVersion: EXPECTED_SELECTOR_VERSION,
     extraEnv: {
       OMNI_EVALUATION_TRACE_DIR: path.join(runDir, 'conversation-1'),
     },

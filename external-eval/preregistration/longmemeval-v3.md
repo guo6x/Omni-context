@@ -63,7 +63,7 @@ The envelope is not a diagnostics-only field. Diagnostics additionally record `o
 
 ## Engine Adapter
 
-- `engine_adapter_file_sha256 = bac75adfde3945686c733eefe6f912ed24f7e5b816c9ae472884ff421deb37dc`
+- `engine_adapter_file_sha256 = 330ea359b09f1071c5e21ae6a293503dff74cb99ef4bd4860506503a82756d82`
 - `engine_interface = createEngine-v1`
 - `engine_module_path = external-eval/engines/omni-frozen-v3.1.mjs`
 
@@ -164,7 +164,7 @@ The rubric implements the official task-type semantics from the pinned official 
 | File | SHA-256 |
 | --- | --- |
 | `external-eval/adapters/longmemeval.mjs` | `3883fe995a1d5aa22d605e87f1467e83a6861785ced975ea43c0d09f7a250f44` |
-| `external-eval/engines/omni-frozen-v3.1.mjs` | `bac75adfde3945686c733eefe6f912ed24f7e5b816c9ae472884ff421deb37dc` |
+| `external-eval/engines/omni-frozen-v3.1.mjs` | `330ea359b09f1071c5e21ae6a293503dff74cb99ef4bd4860506503a82756d82` |
 | `external-eval/runners/sealed-runner.mjs` | `d45b1d6f23722ff0fe8e65bb9290a57812e5bfd090d68c415d0502ad5097b62c` |
 | `external-eval/scorers/kimi-longmemeval-v1.mjs` | `a26a59e698b4987f954401d794bc9bdf8e8fd65b2894f22c1bc269268bfdeca5` |
 | `external-eval/scorers/prompts/kimi-longmemeval-judge-v1.txt` | `6d4cfa724d722553ea79511769fd842afdadfa4cc412de4852dd43ade17448af` |
