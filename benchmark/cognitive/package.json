@@ -18,7 +18,9 @@
     "finalize:v1.1": "node src/finalize-v1.1.mjs",
     "attribution:v1.1": "node src/attribution-v1.1.mjs",
     "repair:v1.1.1": "node src/repair-v1.1.1.mjs",
-    "aggregate": "node src/cli.mjs aggregate"
+    "aggregate": "node src/cli.mjs aggregate",
+    "research:strict-ablations": "node research/strict-ablation-runner.mjs",
+    "research:strict-stats": "node research/strict-ablation-stats.mjs"
   },
   "engines": {
     "node": ">=22"
