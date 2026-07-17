@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "benchmark": "longmemeval",
+  "dataset_variant": "longmemeval_s_cleaned",
+  "formal_status": "LONGMEMEVAL_S_FORMAL_BLOCKED",
+  "blocker_reason": "MISSING_ENGINE_MODULE",
+  "blocked_at_phase": 6,
+  "authorized_by": "project-owner-explicit-chat-authorization-2026-07-17",
+  "authorized_at": "2026-07-17T00:00:00Z",
+  "run_started_at": "2026-07-17T00:00:00Z",
+  "run_blocked_at": "2026-07-17T00:00:00Z",
+  "version_pins": {
+    "execution_branch": "codex/omni-external-eval-and-paper-v1",
+    "execution_branch_commit": "5ab7ed3bd74361a313e9ccbe715773e3a8598980",
+    "product_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+    "product_freeze_tag": "evaluation-freeze-candidate-v3.1",
+    "product_freeze_tag_target": "17dc1d0107b0474de84058205a91b302ba290a74",
+    "adapter_commit": "066b63cb0b72d6aa494804864f59bfc05be5a734",
+    "longmemeval_official_commit": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+    "preregistration_file": "external-eval/preregistration/longmemeval-v1.json",
+    "preregistration_sha256": "05205f6a074ba8b044051c00e045b4f943f40d974ccfb075b1357f34097bcc15",
+    "answer_model": "deepseek-v4-flash",
+    "embedding_model": "Xenova/multilingual-e5-large@a19b072cb4f0cc8bf98b4e46f90a787a61380979"
+  },
+  "phase_0_verification": {
+    "status": "PASSED",
+    "head": "5ab7ed3bd74361a313e9ccbe715773e3a8598980",
+    "freeze_tag_target": "17dc1d0107b0474de84058205a91b302ba290a74",
+    "worktree_status": "clean",
+    "validate_only": {
+      "status": "VALID",
+      "formal_run": false,
+      "heldout_accessed": false
+    }
+  },
+  "phase_1_environment": {
+    "status": "NOT_STARTED",
+    "provider_credentials": "AVAILABLE_IN_EXTERNAL_SECRETS_FILE",
+    "provider_credentials_variables": ["LLM_API_URL", "LLM_API_KEY", "LLM_MODEL"],
+    "openai_api_key": "NOT_AVAILABLE"
+  },
+  "phase_2_data_download": {
+    "status": "NOT_STARTED",
+    "official_dataset_sha256": null,
+    "official_dataset_bytes": null,
+    "download_source": null,
+    "download_time": null
+  },
+  "phase_3_projection": {
+    "status": "NOT_STARTED",
+    "generation_projection_sha256": null,
+    "gold_projection_sha256": null
+  },
+  "phase_4_authorization": {
+    "status": "NOT_STARTED",
+    "authorization_file_created": false
+  },
+  "phase_5_gate": {
+    "status": "NOT_STARTED",
+    "items_checked": 0,
+    "items_passed": 0,
+    "items_failed": 0
+  },
+  "phase_6_generation": {
+    "status": "BLOCKED",
+    "blocker": "MISSING_ENGINE_MODULE",
+    "blocker_detail": "sealed-runner.mjs runFormalGeneration() requires --engine-module pointing to a module exporting createEngine({productCommit, isolatedDatabase, dynamicPort}) returning {ingest(session), query({question, questionDate}), stop?()}. No such module exists in any worktree. Writing it constitutes system development, outside run administrator role.",
+    "completed": 0,
+    "errors": 0,
+    "result_sha256": null
+  },
+  "phase_7_scoring": {
+    "status": "NOT_STARTED",
+    "official_scoring_complete": false
+  },
+  "data_access": {
+    "official_data_downloaded": false,
+    "official_data_previewed": false,
+    "gold_accessed_during_generation": false,
+    "heldout_questions_read": false
+  },
+  "integrity_attestations": {
+    "product_modified": false,
+    "prompt_modified": false,
+    "rerun_based_on_score": false,
+    "locomo_run": false,
+    "longmemeval_m_or_oracle_run": false,
+    "data_committed_to_git": false,
+    "codex_model_used_for_answers": false
+  },
+  "result_branch": "codex/omni-longmemeval-s-formal-v1",
+  "result_branch_base_commit": "5ab7ed3bd74361a313e9ccbe715773e3a8598980"
+}

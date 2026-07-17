@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "formal_status": "LONGMEMEVAL_S_FORMAL_BLOCKED",
+  "blocker_reason": "MISSING_ENGINE_MODULE",
+  "blocked_at_phase": 6,
+  "failure_category": "infrastructure_gap",
+  "is_run_invalid": false,
+  "run_invalid_reason": null,
+  "blocker_detail": {
+    "component": "external-eval/runners/sealed-runner.mjs",
+    "function": "runFormalGeneration",
+    "required_interface": {
+      "flag": "--engine-module",
+      "export": "createEngine",
+      "signature": "createEngine({productCommit, isolatedDatabase, dynamicPort}) -> Promise<Engine>",
+      "engine_methods": ["ingest(session)", "query({question, questionDate}) -> {answer, diagnostics}", "stop()?"]
+    },
+    "search_performed": true,
+    "worktrees_searched_count": 5,
+    "worktrees_searched": [
+      "<external-eval-paper-worktree>",
+      "<candidate-v3.1-final-execution-product-worktree>",
+      "<candidate-v3.1-gated-final-product-worktree>",
+      "<strict-ablations-worktree>",
+      "<main-repo-worktree>"
+    ],
+    "createEngine_found": false,
+    "product_brain_server_has_http_api": true,
+    "product_brain_server_http_endpoints": {
+      "ingest": "POST /api/graph/extract",
+      "query": "POST /api/mcp/tool/graph_answer",
+      "health": "GET /health"
+    },
+    "wrapper_could_be_written": true,
+    "wrapper_writing_violates_role_constraint": true,
+    "role_constraint": "run-administrator-role-no-system-development"
+  },
+  "resolution_required": {
+    "action": "system_developer_must_provide_engine_module",
+    "steps": [
+      "Implement engine module exporting createEngine wrapping frozen brain-server HTTP API",
+      "Commit and freeze the engine module",
+      "Re-run this formal evaluation from Phase 1 with --engine-module=<path>"
+    ]
+  },
+  "secondary_blocker": {
+    "component": "OPENAI_API_KEY",
+    "status": "NOT_AVAILABLE",
+    "impact": "If engine module were resolved, official scoring would be GENERATION_COMPLETE_OFFICIAL_SCORING_PENDING",
+    "severity": "secondary"
+  }
+}
