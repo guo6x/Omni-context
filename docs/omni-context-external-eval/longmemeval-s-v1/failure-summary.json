@@ -1,8 +1,10 @@
 {
-  "schema_version": 1,
-  "formal_status": "LONGMEMEVAL_S_FORMAL_BLOCKED",
+  "schema_version": 2,
+  "formal_status": "READY_FOR_NEW_AUTHORIZATION",
   "blocker_reason": "MISSING_ENGINE_MODULE",
+  "blocker_status": "RESOLVED",
   "blocked_at_phase": 6,
+  "resolved_at": "2026-07-17T00:00:00Z",
   "failure_category": "infrastructure_gap",
   "is_run_invalid": false,
   "run_invalid_reason": null,
@@ -35,14 +37,42 @@
     "wrapper_writing_violates_role_constraint": true,
     "role_constraint": "run-administrator-role-no-system-development"
   },
-  "resolution_required": {
-    "action": "system_developer_must_provide_engine_module",
-    "steps": [
-      "Implement engine module exporting createEngine wrapping frozen brain-server HTTP API",
-      "Commit and freeze the engine module",
-      "Re-run this formal evaluation from Phase 1 with --engine-module=<path>"
-    ]
+  "resolution": {
+    "status": "RESOLVED",
+    "resolved_by": "system-developer-engine-adapter-round",
+    "resolved_at": "2026-07-17T00:00:00Z",
+    "engine_adapter_commit": "e98ab1039091481c2b3e1bb34dfec07acaa3532c",
+    "engine_adapter_file": "external-eval/engines/omni-frozen-v3.1.mjs",
+    "engine_adapter_file_sha256": "eacb6e2c7997d913715d682d9f0c2a234f3ac1d18639ca0de3b2db9a9d6ec309",
+    "engine_interface": "createEngine-v1",
+    "answer_path": "unified_memory_search_top10_then_answer_v2",
+    "graph_answer_used": false,
+    "preregistration_v2_commit": "d03238dd584538958e4c5c8e20f263cbe821506c",
+    "preregistration_v2_file": "external-eval/preregistration/longmemeval-v2.json",
+    "preregistration_v2_sha256": "295dfe081514f34351f7399a0d5da2b09e640b6ed1a5e43b14509f7079784a0b",
+    "validate_only_commit": "9ca1c6d",
+    "engine_tests_passing": 22,
+    "sealed_runner_tests_passing": 12,
+    "validate_only_status": "VALID",
+    "engine_adapter_verified": true,
+    "formal_dataset_accessed_during_resolution": false,
+    "formal_provider_calls_during_resolution": 0,
+    "gold_accessed_during_resolution": false,
+    "product_modified_during_resolution": false,
+    "prompt_modified_during_resolution": false
   },
+  "resolution_steps": [
+    "Implemented engine module exporting createEngine wrapping frozen brain-server HTTP API and CognitiveProvider",
+    "Engine uses unified_memory_search Top-10 (not graph_answer) with temperature=0",
+    "Created 22 tests covering all 20 spec assertions plus fixture integration test",
+    "Created preregistration v2 preserving all v1 parameters with engine adapter metadata",
+    "Updated validate-only to recognize v2 and verify engine adapter file hash",
+    "Committed and verified all changes without accessing formal data or calling Providers"
+  ],
+  "next_steps": [
+    "Custodian creates new authorization file matching v2 preregistration hashes",
+    "Formal run proceeds from Phase 1 with --engine-module=external-eval/engines/omni-frozen-v3.1.mjs --preregistration=external-eval/preregistration/longmemeval-v2.json"
+  ],
   "secondary_blocker": {
     "component": "OPENAI_API_KEY",
     "status": "NOT_AVAILABLE",
