@@ -107,6 +107,7 @@ heldout-data/
 locomo10.json
 longmemeval*.json
 !external-eval/fixtures/longmemeval-generation-12.json
+!external-eval/preregistration/longmemeval-v1.json
 trajectory_screenshots/
 external-eval/runs/
 
