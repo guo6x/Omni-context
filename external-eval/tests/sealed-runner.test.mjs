@@ -40,12 +40,12 @@ function validAuth(overrides = {}) {
   };
 }
 
-test('LongMemEval has twelve fictional, Gold-free fixture records and chronological normalization', async () => {
+test('LongMemEval has twelve fictional, Gold-free fixture records with official order preserved', async () => {
   const records = JSON.parse(await readFile(path.join(ROOT, 'fixtures', 'longmemeval-generation-12.json'), 'utf8'));
   assert.equal(records.length, 12);
   assert.doesNotThrow(() => assertGoldFree(records));
   const normalized = normalizeLongMemEvalGeneration(records[3]);
-  assert.deepEqual(normalized.sessions.map((item) => item.session_id), ['s1', 's2']);
+  assert.deepEqual(normalized.sessions.map((item) => item.session_id), ['s2', 's1']);
 });
 
 test('LoCoMo fictional fixture supports four QA forms without annotation fields', async () => {

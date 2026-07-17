@@ -111,22 +111,17 @@ function fictionalRecord() {
     question_id: 'fx-test-01',
     question: 'Which color did the user choose?',
     question_date: '2026-01-12',
+    question_type: 'single-session-user',
+    haystack_session_ids: ['s1', 's2'],
+    haystack_dates: ['2026-01-01T09:00:00Z', '2026-01-05T09:00:00Z'],
     haystack_sessions: [
-      {
-        session_id: 's1',
-        timestamp: '2026-01-01T09:00:00Z',
-        messages: [
-          { role: 'user', content: 'I chose a teal notebook for the workshop.' },
-          { role: 'assistant', content: 'Teal notebook noted.' },
-        ],
-      },
-      {
-        session_id: 's2',
-        timestamp: '2026-01-05T09:00:00Z',
-        messages: [
-          { role: 'user', content: 'The workshop starts at noon.' },
-        ],
-      },
+      [
+        { role: 'user', content: 'I chose a teal notebook for the workshop.' },
+        { role: 'assistant', content: 'Teal notebook noted.' },
+      ],
+      [
+        { role: 'user', content: 'The workshop starts at noon.' },
+      ],
     ],
   };
 }
@@ -258,7 +253,7 @@ test('query calls unifiedMemorySearch with limit=10', async () => {
     await engine.query({ question: 'What color?', questionDate: '2026-01-12' });
 
     assert.equal(mocks.calls.unifiedMemorySearch.length, 1);
-    assert.equal(mocks.calls.unifiedMemorySearch[0].query, 'What color?');
+    assert.equal(mocks.calls.unifiedMemorySearch[0].query, 'Current Date: 2026-01-12\nQuestion: What color?');
     assert.equal(mocks.calls.unifiedMemorySearch[0].limit, 10, 'top-k must be 10');
   } finally {
     await engine.stop();
@@ -288,7 +283,7 @@ test('evidence IDs are accurately mapped from retrieval items', async () => {
   const items = [
     { evidence_id: 'ev-alpha', passage: 'Alpha passage.' },
     { id: 'ev-beta', passage: 'Beta passage.' },
-    { passage: 'Gamma passage.' }, // no id â†?fallback
+    { passage: 'Gamma passage.' }, // no id ï¿½?fallback
   ];
   const mocks = createMocks({ retrievalResult: { finalContext: items, searchMethods: {} } });
   const engine = await createEngine(mocks);
@@ -376,7 +371,7 @@ test('stop() is idempotent and can be called after failed operations', async () 
   });
   const engine = await createEngine(mocks);
 
-  // Call stop twice â€?no error
+  // Call stop twice ï¿½?no error
   await engine.stop();
   await engine.stop();
   assert.equal(mocks.calls.runtimeStop, 1, 'runtime.stop called exactly once');
@@ -438,7 +433,7 @@ test('engine does not read or access any formal dataset file', async () => {
   const mocks = createMocks();
   const engine = await createEngine(mocks);
   try {
-    // The engine only receives sessions via ingest() â€?it has no file path to formal data.
+    // The engine only receives sessions via ingest() ï¿½?it has no file path to formal data.
     // Verify runtimeOptions do not contain any dataset path.
     const opts = mocks.calls.runtimeOptions;
     assert.ok(!opts.engineModule, 'runtime options must not contain engine module path');
@@ -453,7 +448,7 @@ test('engine does not read or access any formal dataset file', async () => {
   }
 });
 
-// === Assertion 20: Secret scan â€?no API keys or absolute paths in output ===
+// === Assertion 20: Secret scan ï¿½?no API keys or absolute paths in output ===
 test('query output contains no API keys, secrets, or absolute local paths', async () => {
   const mocks = createMocks();
   const engine = await createEngine(mocks);
@@ -520,7 +515,7 @@ test('runtime attestation is captured in diagnostics', async () => {
 });
 
 // === Fixture Integration Test ===
-test('fixture integration: createEngine â†?ingest fictional sessions â†?query fictional question â†?stop (all PASS)', async (t) => {
+test('fixture integration: createEngine ï¿½?ingest fictional sessions ï¿½?query fictional question ï¿½?stop (all PASS)', async (t) => {
   const fixturePath = path.join(TEST_ROOT, 'fixtures', 'longmemeval-generation-12.json');
   const fixtureRecords = JSON.parse(await readFile(fixturePath, 'utf8'));
   const normalized = normalizeLongMemEvalGeneration(fixtureRecords[0]);

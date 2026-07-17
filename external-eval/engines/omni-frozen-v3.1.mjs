@@ -4,6 +4,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createConversationRuntime } from '../../benchmark/src/conversation-runtime.mjs';
 import { CognitiveProvider, evidenceSourceAgents } from '../../benchmark/cognitive/src/provider.mjs';
+import {
+  buildLongMemEvalQuestionEnvelope,
+  QUESTION_ENVELOPE_VERSION,
+  QUESTION_ENVELOPE_SHA256,
+} from '../adapters/longmemeval.mjs';
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_DIR, '../..');
@@ -39,6 +44,9 @@ export async function createEngineWithDeps({ productCommit, isolatedDatabase, dy
     CognitiveProvider,
     evidenceSourceAgents,
     randomId: defaultRandomId,
+    buildEnvelope: buildLongMemEvalQuestionEnvelope,
+    envelopeVersion: QUESTION_ENVELOPE_VERSION,
+    envelopeSha256: QUESTION_ENVELOPE_SHA256,
     ...deps,
   };
   const {
@@ -46,6 +54,9 @@ export async function createEngineWithDeps({ productCommit, isolatedDatabase, dy
     CognitiveProvider: Provider,
     evidenceSourceAgents: sourceAgents,
     randomId,
+    buildEnvelope,
+    envelopeVersion,
+    envelopeSha256,
   } = resolvedDeps;
 
   const brainServerRoot = process.env.OMNI_BRAIN_SERVER_ROOT;
@@ -115,8 +126,13 @@ export async function createEngineWithDeps({ productCommit, isolatedDatabase, dy
       firstQueryDone = true;
     }
 
+    // Build the deterministic Question Date Envelope.
+    // This envelope is used for BOTH retrieval and the Answer Provider's
+    // scenario.question — not just diagnostics.
+    const questionEnvelope = buildEnvelope(question, questionDate);
+
     const retrievalStart = Date.now();
-    const retrieval = await runtime.client.unifiedMemorySearch(question, 10);
+    const retrieval = await runtime.client.unifiedMemorySearch(questionEnvelope, 10);
     const retrievalLatencyMs = Date.now() - retrievalStart;
 
     const items = (retrieval.finalContext || retrieval.evidence || retrieval.results || []).slice(0, 10);
@@ -130,9 +146,11 @@ export async function createEngineWithDeps({ productCommit, isolatedDatabase, dy
       };
     });
 
+    // The scenario.question is the envelope (not the original question),
+    // so the Answer Provider sees the Current Date context.
     const scenario = {
       scenario_id: randomId(),
-      question,
+      question: questionEnvelope,
     };
 
     const answerResult = await provider.answer({ scenario, mode: 'full_omni', context });
@@ -141,7 +159,10 @@ export async function createEngineWithDeps({ productCommit, isolatedDatabase, dy
       answer: answerResult.structured.answer,
       diagnostics: {
         runtime_attestation: runtimeAttestation,
+        original_question: question,
         question_date: questionDate || null,
+        question_envelope_version: envelopeVersion,
+        question_envelope_sha256: envelopeSha256,
         ingested_sessions: ingestedSessions,
         extraction_calls: extractionCalls,
         extraction_input_characters: extractionInputCharacters,
@@ -184,6 +205,9 @@ export async function createEngine({ productCommit, isolatedDatabase, dynamicPor
       CognitiveProvider,
       evidenceSourceAgents,
       randomId: defaultRandomId,
+      buildEnvelope: buildLongMemEvalQuestionEnvelope,
+      envelopeVersion: QUESTION_ENVELOPE_VERSION,
+      envelopeSha256: QUESTION_ENVELOPE_SHA256,
     },
   });
 }
