@@ -5,7 +5,7 @@
     {
       "check": "table-count",
       "status": "PASS",
-      "detail": "7 expected tables"
+      "detail": "8 expected tables"
     },
     {
       "check": "figure-count",
@@ -31,6 +31,11 @@
       "check": "claim-map",
       "status": "PASS",
       "detail": "14 bounded claims"
+    },
+    {
+      "check": "external-claim-map",
+      "status": "PASS",
+      "detail": "5 bounded external-evaluation claims"
     },
     {
       "check": "svg-integrity",

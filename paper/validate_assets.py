@@ -18,7 +18,7 @@ checks = []
 def check(name, passed, detail):
     checks.append({"check": name, "status": "PASS" if passed else "FAIL", "detail": detail})
 
-expected_tables = ["main-results.tex","category-results.tex","category-details.tex","category-submetrics.tex","efficiency-results.tex","error-summary.tex","reproducibility-summary.tex"]
+expected_tables = ["main-results.tex","category-results.tex","category-details.tex","category-submetrics.tex","efficiency-results.tex","error-summary.tex","reproducibility-summary.tex","external-heldout-results-placeholder.tex"]
 expected_figures = ["architecture","retrieval-pipeline","overall-comparison","category-comparison","coverage-funnel","latency-summary"]
 check("table-count", all((PAPER/"tables"/name).is_file() for name in expected_tables), f"{len(expected_tables)} expected tables")
 check("figure-count", all((PAPER/"figures"/f"{name}.{ext}").is_file() for name in expected_figures for ext in ("svg","pdf")), "6 SVG/PDF pairs")
@@ -35,6 +35,10 @@ check("aggregation-note", "category-macro" in main and "not strict component abl
 with (PAPER/"evidence"/"manuscript-claim-map.csv").open(encoding="utf-8", newline="") as handle:
     claims = list(csv.DictReader(handle))
 check("claim-map", len(claims) >= 14 and all(r["status"] == "VERIFIED" and r["allowed_wording"] and r["forbidden_wording"] for r in claims), f"{len(claims)} bounded claims")
+
+with (PAPER/"evidence"/"external-eval-claim-map.csv").open(encoding="utf-8", newline="") as handle:
+    external_claims = list(csv.DictReader(handle))
+check("external-claim-map", len(external_claims) == 5 and all(r["status"] == "VERIFIED" and r["allowed_wording"] and r["forbidden_wording"] for r in external_claims), f"{len(external_claims)} bounded external-evaluation claims")
 
 svg_ok = True
 svg_detail = []

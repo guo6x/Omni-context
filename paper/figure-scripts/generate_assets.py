@@ -254,9 +254,9 @@ for evaluation, stats, _ in detail_sources:
         submetric_rows.append(f"{evaluation} & {CATEGORY_LABELS[c]} & {tex_escape(rendered)} \\\\")
 write(TABLES / "category-submetrics.tex", rf"""\begin{{longtable}}{{p{{0.12\textwidth}}p{{0.20\textwidth}}p{{0.60\textwidth}}}}
 \caption{{Verified category submetrics.}}\label{{tab:category-submetrics}}\\
-\toprule Evaluation & Category & Submetrics \\\ \midrule
+\toprule Evaluation & Category & Submetrics \\ \midrule
 \endfirsthead
-\toprule Evaluation & Category & Submetrics \\\ \midrule
+\toprule Evaluation & Category & Submetrics \\ \midrule
 \endhead
 {chr(10).join(submetric_rows)}
 \bottomrule
@@ -284,13 +284,16 @@ for row in errors:
     attribution = "Provider structured-output truncation" if row["mode"] == "full_omni" else "Baseline schema robustness"
     error_type = "JSON truncation" if row["mode"] == "full_omni" else "empty source_ids"
     reporting = "Retained terminal error; no score imputed"
-    error_rows.append(f"\\texttt{{\\detokenize{{{row['scenario_id']}}}}} & {('Formal-250' if row['mode']=='full_omni' else 'Comparison-70')} & {tex_escape(MODE_LABELS.get(row['mode'],row['mode']))} & {tex_escape(error_type)} & 3 & {tex_escape(finish)} & No & {tex_escape(attribution)} & {tex_escape(reporting)} \\\\")
+    scenario = tex_escape(row["scenario_id"]).replace(r"\_", r"\_\allowbreak{}")
+    failure = f"{error_type}; 3 attempts; finish={finish}"
+    error_rows.append(f"\\texttt{{{scenario}}} & {tex_escape(failure)} & {tex_escape(attribution)} & {tex_escape(reporting)} \\\\")
 write(TABLES / "error-summary.tex", rf"""\begin{{table*}}[t]
-\centering\scriptsize
+\centering\small
+\setlength{{\tabcolsep}}{{4pt}}
 \caption{{Terminal errors retained after three prescribed attempts. No failed record entered score aggregation.}}
 \label{{tab:errors}}
-\begin{{tabular}}{{p{{0.20\textwidth}}lllclclp{{0.18\textwidth}}p{{0.20\textwidth}}}}
-\toprule Scenario & Eval. & Mode & Error & Attempts & Finish & Scored & Attribution & Paper reporting \\
+\begin{{tabular}}{{p{{0.24\textwidth}}p{{0.22\textwidth}}p{{0.22\textwidth}}p{{0.24\textwidth}}}}
+\toprule Scenario & Failure & Attribution & Paper reporting \\
 \midrule
 {chr(10).join(error_rows)}
 \bottomrule

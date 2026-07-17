@@ -1,5 +1,6 @@
-NOT COMPILED — LATEX TOOLCHAIN UNAVAILABLE
+COMPILED — TECTONIC 0.16.9
 
-Checked tools: pdflatex, xelatex, lualatex.
-No LaTeX distribution was installed automatically.
-Draft PDF: NOT GENERATED.
+Windows release archive SHA-256: 131a24604785a9600989a3d91225f597df52ac06f00aeffe86fd529f99ee5cdd.
+Missing packages, undefined references, missing citations, and missing figures: 0.
+Underfull-box warnings in dense appendix tables are retained in paper/evidence/latex-log-audit.json.
+Draft PDF: paper/build/main.pdf.

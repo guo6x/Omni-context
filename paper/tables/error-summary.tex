@@ -1,13 +1,14 @@
 \begin{table*}[t]
-\centering\scriptsize
+\centering\small
+\setlength{\tabcolsep}{4pt}
 \caption{Terminal errors retained after three prescribed attempts. No failed record entered score aggregation.}
 \label{tab:errors}
-\begin{tabular}{p{0.20\textwidth}lllclclp{0.18\textwidth}p{0.20\textwidth}}
-\toprule Scenario & Eval. & Mode & Error & Attempts & Finish & Scored & Attribution & Paper reporting \\
+\begin{tabular}{p{0.24\textwidth}p{0.22\textwidth}p{0.22\textwidth}p{0.24\textwidth}}
+\toprule Scenario & Failure & Attribution & Paper reporting \\
 \midrule
-\texttt{\detokenize{formal-v2-memory_evolution-039}} & Formal-250 & Full Omni & JSON truncation & 3 & length/length/length & No & Provider structured-output truncation & Retained terminal error; no score imputed \\
-\texttt{\detokenize{formal-v2-memory_evolution-040}} & Formal-250 & Full Omni & JSON truncation & 3 & length/length/length & No & Provider structured-output truncation & Retained terminal error; no score imputed \\
-\texttt{\detokenize{formal-v2-conflict_resolution-014}} & Comparison-70 & Retrieval-only & empty source\_ids & 3 & stop/stop/stop & No & Baseline schema robustness & Retained terminal error; no score imputed \\
+\texttt{formal-v2-memory\_\allowbreak{}evolution-039} & JSON truncation; 3 attempts; finish=length/length/length & Provider structured-output truncation & Retained terminal error; no score imputed \\
+\texttt{formal-v2-memory\_\allowbreak{}evolution-040} & JSON truncation; 3 attempts; finish=length/length/length & Provider structured-output truncation & Retained terminal error; no score imputed \\
+\texttt{formal-v2-conflict\_\allowbreak{}resolution-014} & empty source\_ids; 3 attempts; finish=stop/stop/stop & Baseline schema robustness & Retained terminal error; no score imputed \\
 \bottomrule
 \end{tabular}
 \end{table*}

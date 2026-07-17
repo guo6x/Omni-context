@@ -27,7 +27,7 @@ The generation script reads the frozen evidence package once and emits the share
 
 ## LaTeX status
 
-`main.tex` uses a generic two-column `article` layout. The current machine has no LaTeX toolchain, so the manuscript draft was not compiled. See `build/latex-status.txt`. No LaTeX distribution was installed automatically.
+`main.tex` uses a generic two-column `article` layout and compiles with pinned Tectonic 0.16.9 via `build-paper.ps1` or `build-paper.sh`. The Windows executable/cache used for local verification live on D: outside the repository. See `build/latex-status.txt` and `evidence/latex-log-audit.json`.
 
 ## Claim limits
 
