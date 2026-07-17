@@ -1,0 +1,18 @@
+\begin{table*}[t]
+\centering\small
+\caption{Version and reproducibility locks.}
+\label{tab:reproducibility}
+\begin{tabular}{lp{0.73\textwidth}}
+\toprule Item & Locked value \\
+\midrule
+Product commit & \texttt{17dc1d0107b0474de84058205a91b302ba290a74} \\
+Benchmark commit & \texttt{62b0b20f944f7e9a2c58f02ce1c65bb43dfbf841} \\
+Evidence commit & \texttt{ad1fe8806255e420e65398ae67df0a50474356d4} \\
+Embedding & Xenova/multilingual-e5-large, revision \texttt{a19b072cb4f0cc8bf98b4e46f90a787a61380979}, 1024 dimensions \\
+Answer & deepseek-v4-flash, max tokens 1200, temperature 0, thinking disabled \\
+Deterministic rescore & 105 records, 0 differences, 0 scoring defects \\
+Open issues & P0=0; P1 classes=2 \\
+LoCoMo & NOT RUN; Conversation 2--10 accessed=false \\
+\bottomrule
+\end{tabular}
+\end{table*}

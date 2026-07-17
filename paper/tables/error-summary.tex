@@ -1,0 +1,13 @@
+\begin{table*}[t]
+\centering\scriptsize
+\caption{Terminal errors retained after three prescribed attempts. No failed record entered score aggregation.}
+\label{tab:errors}
+\begin{tabular}{p{0.20\textwidth}lllclclp{0.18\textwidth}p{0.20\textwidth}}
+\toprule Scenario & Eval. & Mode & Error & Attempts & Finish & Scored & Attribution & Paper reporting \\
+\midrule
+\texttt{\detokenize{formal-v2-memory_evolution-039}} & Formal-250 & Full Omni & JSON truncation & 3 & length/length/length & No & Provider structured-output truncation & Retained terminal error; no score imputed \\
+\texttt{\detokenize{formal-v2-memory_evolution-040}} & Formal-250 & Full Omni & JSON truncation & 3 & length/length/length & No & Provider structured-output truncation & Retained terminal error; no score imputed \\
+\texttt{\detokenize{formal-v2-conflict_resolution-014}} & Comparison-70 & Retrieval-only & empty source\_ids & 3 & stop/stop/stop & No & Baseline schema robustness & Retained terminal error; no score imputed \\
+\bottomrule
+\end{tabular}
+\end{table*}
