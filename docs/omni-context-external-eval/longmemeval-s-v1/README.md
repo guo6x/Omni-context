@@ -1,9 +1,9 @@
-# Omni-Context Candidate v3.1 — LongMemEval-S Formal Evaluation (PIPELINE READY)
+# Omni-Context Candidate v3.1 — LongMemEval-S Formal Evaluation (PIPELINE READY FOR AUTHORIZATION V4)
 
 ## Final Status
 
 ```
-LONGMEMEVAL_FORMAL_PIPELINE_READY
+LONGMEMEVAL_FORMAL_PIPELINE_READY_FOR_AUTHORIZATION_V4
 ```
 
 ## Round Summary
@@ -13,77 +13,145 @@ FORMAL DATASET ACCESSED = false
 FORMAL GOLD ACCESSED = false
 FORMAL PROVIDER CALLS = 0
 FORMAL 500-QUESTION RUN = not executed
-INFRASTRUCTURE ROUND = v3_infrastructure_repair
+INFRASTRUCTURE ROUND = v4_integrity_repair
 VALIDATE-ONLY = VALID
-TESTS PASSING = 77/77
-SMOKE TEST (real Brain Server) = PASS (12/12 checks)
-SMOKE TEST (Kimi Judge) = PASS (8/8 checks)
+TESTS PASSING = 100/100 (77 v3 + 23 v4)
+NEW TESTS ADDED = 23
+FICTIONAL SCORING SMOKE = PASS (14/14 checks, 2 success + 1 generation error, <=4 Kimi calls)
 ```
 
-## Summary
+## V4 Round Summary
 
-This directory archives the formal LongMemEval-S sealed held-out evaluation attempt for Omni-Context Candidate v3.1. After the engine adapter was built in the previous round, an independent pre-data-access audit identified five additional infrastructure defects:
+This round performed a final evidence integrity repair on top of the v3 infrastructure. A pre-data-access audit identified six integrity defects that have all been repaired. **No formal data was accessed, no formal Provider call was made, and no Gold was opened during this round.** The formal 500-question run remains NOT AUTHORIZED / NOT RUN.
 
-1. LongMemEval official data structure incompatibility (parallel arrays vs nested objects)
-2. question_date was not propagated into retrieval or answer
-3. Scoring preregistration pointed to official GPT-4o, but the project elected not to use OpenAI
-4. Formal Runner did not preserve terminal-error records and was not resumable
-5. Engine tests used only Mock — no real end-to-end smoke test existed
+### V4 Defects Repaired
 
-All five defects have been repaired in the v3 infrastructure round. **No formal data was accessed, no formal Provider call was made, and no Gold was opened during this round.** This was evaluation-side infrastructure development only. The formal 500-question run remains NOT AUTHORIZED / NOT RUN.
+1. **Engine commit/file mismatch** — v3 preregistration bound the engine to the adapter commit `b084744` instead of the actual engine-file last-modification commit `55f793b`. v4 binds `engine_adapter_commit = 55f793be55fe14002d49a4c3bb577ee1255a30f9` and `engine_adapter_file_sha256 = 330ea359b09f1071c5e21ae6a293503dff74cb99ef4bd4860506503a82756d82`.
+2. **Gold projection hash not bound to scoring authorization** — v3 used a single ambiguous `dataset_sha256` that conflated Generation projection and Gold projection. v4 introduces Authorization Schema v2 with phase-separated `generation_projection_sha256` and `gold_projection_sha256`.
+3. **Generation terminal errors being interpreted as abstentions** — `status=error, hypothesis=null` results were sent to Kimi as abstentions. v4 skips Kimi for generation errors entirely and counts them as incorrect in `end_to_end_accuracy`.
+4. **Incorrect generation/judge error metrics** — v4 defines 12 finalized metrics with exact definitions, separating `generation_terminal_error_rate` from `kimi_judge_error_rate` and defining `end_to_end_accuracy = correct / total_questions` (generation and judge errors both counted as incorrect).
+5. **Missing formal score-log paths** — v4 mandates `--full-score-log-dir` and `--sanitized-score-log` for formal scoring; missing either rejects formal scoring.
+6. **Crash window between result append and checkpoint persistence** — v4 adds `rebuildStateFromResults` + `mergeCheckpointWithResults` to close the window; terminal results are never re-run.
 
-## V3 Round Repairs
+### V4 Round Commits (development branch)
 
-- **Official Parallel-Arrays Adapter** — external-eval/adapters/longmemeval.mjs now consumes the official LongMemEval schema (haystack_session_ids[], haystack_dates[], haystack_sessions[][]) with strict assertions on array presence, equal length, unique non-empty session IDs, valid turn roles, and automatic discard of has_answer and any non-role/content fields. Original official order is preserved. assertGoldFree still gates Generation Projection.
-- **Question Date Envelope** — buildLongMemEvalQuestionEnvelope(question, questionDate) produces a deterministic "Current Date: {questionDate}\nQuestion: {question}" envelope. The envelope is used for BOTH unifiedMemorySearch(envelope, 10) AND CognitiveProvider.answer scenario.question — not just diagnostics. Diagnostics record original_question, question_date, question_envelope_version, question_envelope_sha256. No Gold is recorded.
-- **Formal Runner Retry and Terminal Errors** — external-eval/runners/sealed-runner.mjs now performs initial attempt + 2 retries, retryable only on schema_validation, 429, 5xx, network, timeout. Score-based retry is forbidden. Each attempt logs a sanitized record (question_id, attempt, status, error_type, started_at, completed_at) — never Question text, Gold, or full Hypothesis. Retry exhaustion writes a terminal error record to results.jsonl. Checkpoint tracks both completed_ids and terminal_error_ids. Resumable: completed and terminal-error questions are skipped; only interrupted-no-terminal questions resume. Formal completion requires completed + terminal_errors = 500, then Results Hash is locked.
-- **Kimi-K2.6 Scoring Protocol** — New external-eval/scorers/kimi-longmemeval-v1.mjs implements the judge with Moonshot provider, model kimi-k2.6, max 500 calls, max retries 2, max output tokens 10, fixed output {"label":"yes"} or {"label":"no"}. Temperature is attempted at 0; if the provider rejects it, temperature_control is recorded as provider_default_non_configurable (no fabricated temperature=0). Full logs are kept outside the repo; Git archives only question_id, label, attempts, usage, latency, error_type. Metric name is fixed as "Kimi-K2.6-judged LongMemEval-S QA accuracy". official_gpt4o_scoring_performed=false and leaderboard_comparable=false are recorded. The prohibited labels "official LongMemEval score", "official GPT-4o score", and "leaderboard-comparable score" are forbidden.
-- **LongMemEval Preregistration v3** — external-eval/preregistration/longmemeval-v3.json and longmemeval-v3.md supersede v2. v1 and v2 are preserved unmodified. v3 records formal_dataset_access_before_v3=false, formal_gold_access_before_v3=false, the official_dataset_schema=parallel_arrays_v1, session_order_policy=preserve_official_order, question_envelope_version, question_envelope_sha256, engine_adapter_commit, engine_adapter_file_sha256, formal_runner_commit, formal_runner_file_sha256, scoring_protocol=kimi-longmemeval-judge-v1, scoring_preregistration_sha256, official_gpt4o_scorer_used=false, leaderboard_comparable=false. Primary metrics are Kimi-K2.6-judged QA accuracy, completion rate, terminal error rate. official_scorer_preferred and official LongMemEval QA accuracy are removed. Status remains NOT AUTHORIZED / NOT RUN.
-- **Validate-only Update** — v1 and v2 preserved; v3 is the current version; formal data not accessed; adapter hash, engine hash, formal runner hash, envelope hash, Kimi judge prompt hash all match; judge model is kimi-k2.6; OpenAI scorer disabled; leaderboard_comparable=false; product commit and build hash unchanged; top-k=10; answer temperature=0; graph_answer=false.
-- **Real End-to-End Smoke Test** — After v3 was committed, a real smoke test was run with purely fictional data: 2 fictional sessions, 1 fictional question, max 20 Provider physical calls. Real frozen Brain Server was started with an isolated temporary database, real Embedding (Xenova/multilingual-e5-large), and real DeepSeek extraction/reranking/answer generation. All 12 checks PASSED: runtime attestation, product commit, product build hash, session ingestion, embedding rebuild, unified retrieval, question_date propagation, answer schema, result output, runtime shutdown, database hash generated, not-formal-benchmark. Provider calls: 5/20. Answer model: deepseek-v4-flash. Evidence count: 9. The fictional smoke test is NOT a formal Benchmark result.
-- **Kimi Judge Smoke Test** — With purely fictional Question, Reference Answer, and Hypothesis, the Kimi Judge smoke test exercised the real Moonshot API. All 8 checks PASSED: credentials available, judge call succeeded, metric name correct, judge model correct, GPT-4o not used, leaderboard not comparable, label returned, sanitized log written. Temperature fallback worked (provider_default_non_configurable).
+- **Commit A** (code + tests): `0842be6966069cb9e3c8158979366c12dfd90767` — `fix(external-eval): finalize scoring integrity and sealed authorization`
+- **Commit B** (v4 preregistration): `27bad22ec13921e0e80428192aedfd8751b8419b` — `docs(external-eval): freeze LongMemEval v4 formal pipeline`
+- **Engine adapter commit**: `55f793be55fe14002d49a4c3bb577ee1255a30f9` (unchanged from v3 selector fix)
+- **Adapter commit**: `b0847444a7024906f10a3511f705bbde63650c48` (unchanged from v3 infra)
 
-## V3 Round Commits (development branch)
-
-- **v3_infra**: b0847444a7024906f10a3511f705bbde63650c48
-- **backfill_sha**: 418a633d159da6f7485dc5abd2fc71ce0920e3c2
-- **selector_fix**: 55f793be55fe14002d49a4c3bb577ee1255a30f9 (current HEAD of codex/omni-external-eval-and-paper-v1)
-
-## File Hash Registry (V3 Round)
+### V4 File Hash Registry
 
 | File | SHA-256 |
 |------|---------|
 | adapters/longmemeval.mjs | 3883fe995a1d5aa22d605e87f1467e83a6861785ced975ea43c0d09f7a250f44 |
 | engines/omni-frozen-v3.1.mjs | 330ea359b09f1071c5e21ae6a293503dff74cb99ef4bd4860506503a82756d82 |
-| runners/sealed-runner.mjs | d45b1d6f23722ff0fe8e65bb9290a57812e5bfd090d68c415d0502ad5097b62c |
-| scorers/kimi-longmemeval-v1.mjs | a26a59e698b4987f954401d794bc9bdf8e8fd65b2894f22c1bc269268bfdeca5 |
+| runners/sealed-runner.mjs | d63c11d75f4f10951516223583c720aa5cc0e5e439e8c104f707cedbbe149329 |
+| scorers/kimi-longmemeval-v1.mjs | 54bd9a5c2c13bc6faf2519cdb5ed9755f170a857ee2e344af51b3c63e33c2270 |
 | scorers/prompts/kimi-longmemeval-judge-v1.txt | 6d4cfa724d722553ea79511769fd842afdadfa4cc412de4852dd43ade17448af |
 | scorers/schemas/kimi-longmemeval-judge-v1.json | e5bab488fa6872c2d4383da61a97509f8fca4d3d16985b96af939508fcd2429f |
-| preregistration/longmemeval-kimi-judge-v1.json | 9bc6cfdb4742163765f32cbab7a3194c0840bb63cd7794ea9d00ef178a4108ff |
-| preregistration/longmemeval-kimi-judge-v1.md | 6b14c91c28474013d795b6f4c827a424d37e6f58700c808a46ca829198208e8a |
-| preregistration/longmemeval-v3.json | b5f0f17a88b70056eff997b73c8a0d1ca430147269c75ca41d36f4066e3f8f01 |
-| preregistration/longmemeval-v3.md | 85230674446b6f311922a992931fd620d47649e69ce3629dc2e6fe7b69d6b4e5 |
-| fixtures/longmemeval-generation-12.json | 1e9ee1aec948b66794a316113dc7e5e1c6df36fe9a798d0b5693ea84a3f25baf |
-| tests/mock-engine.mjs | 68c2b448c18c2963b9465ba4ddabd3b214242d39cbfb74ea7ea4612f46b18db0 |
-| tests/omni-engine.test.mjs | eb5870144616a508b8d419ccc3058d650c85411195daf22ec9bd65c322807795 |
-| tests/kimi-judge.test.mjs | 0d497671a0d6f05f143e39a700bbf821948d264168cacc04fa399c78e4384507 |
-| tests/longmemeval-adapter-v3.test.mjs | 6efbd0d25bb44a18bd668163788174dc79c5e4554236d4707a98c5bac2a23fc1 |
-| tests/sealed-runner-retry.test.mjs | 89b82f48e910b3b081d2c255d2373e7fc01068d5d57983c155795c865092bfa1 |
-| tests/sealed-runner.test.mjs | 12a99f0626dee70b644c1a6dd82af39336920770b7c08f09841c377be162f112 |
-| Question Envelope version | 1 |
-| Question Envelope SHA-256 | 1e26c66a675a17b74e78dd8d1c6624996143a14b47c5b8753e1c67959fdb96cc |
+| lib/sealed.mjs | 82191a1840489f0bc6c5e581d08871024a259af71b4b293bda9c9f2cce9c0a39 |
+| schemas/authorization-v2.schema.json | 5ca303271becd4f88d6a0eeb93393aac00abb3ab2d63dd34b392862c7fe1344a |
+| preregistration/longmemeval-v4.json | 4b5093af545636fbfb2c7337f2157a2db4bc1dbeb811142d60d9d2f8fb51c65e |
+| preregistration/longmemeval-v4.md | 8810fe7756746a698d077c44124b6ec0131eaa9f43bcc4e681bb87ebc8df974f |
+| preregistration/longmemeval-kimi-judge-v1.json | 400ea3e8362339c3fa053a778cf1c766aae493b6ea2377b2ce4c7035ac31d6dc |
+| tests/integrity-v4.test.mjs | ed76eb011ddd4bf57ed1955ce09a90a6b832fc49a441456bff3b0a0661436ae2 |
+| tests/kimi-judge.test.mjs | 256591d1c2691f2b57ce73a9c56bd7268957abae03adadc8c02ade5d348fabb0 |
+
+### Authorization Schema v2
+
+Phase-separated authorization replaces the single ambiguous `dataset_sha256`:
+
+- **Generation phase** verifies `generation_projection_sha256` and `allow_formal_generation = true`; cannot read Gold.
+- **Score-only phase** verifies Gold bytes SHA-256 before parsing; also verifies `result_sha256`, `scoring_preregistration_sha256`, `scorer_module_sha256`, `judge_prompt_sha256`, `allow_formal_scoring = true`; cannot start product service.
+
+### V4 Metric Definitions
+
+| Metric | Definition |
+|--------|-----------|
+| `total_questions` | `results.length` |
+| `generation_completed` | count of results with `status != error` |
+| `generation_terminal_errors` | count of results with `status == error` |
+| `generation_completion_rate` | `generation_completed / total_questions` |
+| `generation_terminal_error_rate` | `generation_terminal_errors / total_questions` |
+| `kimi_calls` | count of Kimi judge invocations (one per successful generation) |
+| `kimi_valid_labels` | count of Kimi judge results with `label in {yes, no}` |
+| `kimi_judge_errors` | count of Kimi judge results with `label == null` |
+| `kimi_judge_completion_rate` | `kimi_valid_labels / generation_completed` (null if denominator 0) |
+| `kimi_judge_error_rate` | `kimi_judge_errors / generation_completed` (null if denominator 0) |
+| `correct` | count of Kimi judge results with `label == yes` |
+| `end_to_end_accuracy` | `correct / total_questions` (generation and judge errors both counted as incorrect) |
+| `valid_judgment_accuracy` | `correct / kimi_valid_labels` (null if denominator 0; never fabricated as 0) |
+
+### V4 Fictional Scoring Smoke Test
+
+Purely fictional data: 2 successful results + 1 generation terminal error, ≤4 Kimi physical calls.
+
+- Kimi physical calls: 2 (≤4) ✓
+- Total results: 3 ✓
+- End-to-end denominator: 3 ✓
+- Generation completed: 2, terminal errors: 1 ✓
+- Generation completion rate: 2/3, terminal error rate: 1/3 ✓
+- Kimi calls: 2, valid labels: 2, judge errors: 0 ✓
+- Kimi judge completion rate: 1, error rate: 0 ✓
+- Correct: 2, end-to-end accuracy: 2/3 ✓
+- Full log generated with question/reference_answer/hypothesis ✓
+- Sanitized log generated with question_id/label/attempts/usage/latency_ms/error_type/generation_status ✓
+- Score manifest records both log SHA-256 ✓
+- Gold hash lock effective (correct accepted, wrong rejected) ✓
+- OpenAI not used ✓
+- Temperature control: fixed_zero ✓
+- kimi_calls(2) ≤ generation_completed(2) ≤ 500 ✓
+
+### V4 Tests Added (23 new)
+
+1. Engine Commit and file hash binding
+2. Gold hash mismatch rejected before parsing
+3. Result hash mismatch rejected for scoring
+4. Scorer hash mismatch rejected
+5. Judge prompt hash mismatch rejected
+6. Generation error does not call Kimi
+7. Generation error counts as incorrect in end_to_end_accuracy
+8. Judge error counts as incorrect in end_to_end_accuracy
+9. Generation and judge error rates separately calculated
+10. Duplicate result IDs rejected
+11. Duplicate gold IDs rejected
+12. ID set mismatch rejected
+13. Non-500 count rejected for formal scoring
+14. Kimi logical calls do not exceed limit
+15. Missing full score log path rejected
+16. Missing sanitized score log path rejected
+17. Crash recovery — result written but checkpoint not updated
+18. Temperature mixed aggregation
+19. Generation-only auth rejected for scoring phase
+20. Scoring-only auth rejected for generation phase
+21. rebuildStateFromResults rejects duplicate completed results
+22. validateFormalLock rejects non-500 results
+23. validateFormalLock rejects duplicate IDs
+
+## V3 Round (Preserved)
+
+The v3 round details are preserved in the `v3_round` block of failure-summary.json. All v3 repairs remain in effect:
+
+- Official parallel-arrays adapter
+- Question Date Envelope propagation
+- Formal Runner retry and terminal errors
+- Kimi-K2.6 scoring protocol
+- LongMemEval preregistration v3 (superseded by v4)
+- Real end-to-end Brain Server smoke test (12/12 PASS)
+- Kimi Judge smoke test (8/8 PASS)
 
 ## Preserved Experimental Parameters
 
 - **Product Commit**: 17dc1d0107b0474de84058205a91b302ba290a74 (frozen, not modified)
 - **Product Build SHA-256**: af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668
-- **Answer Model**: deepseek-v4-flash
+- **Answer Model**: deepseek-v4-flash (not modified)
 - **Embedding Model**: Xenova/multilingual-e5-large@a19b072cb4f0cc8bf98b4e46f90a787a61380979
-- **Answer Prompt SHA-256**: 4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21
+- **Answer Prompt SHA-256**: 4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21 (not modified)
 - **Answer temperature**: 0
 - **Answer max_tokens**: 1200
 - **Answer thinking**: disabled
-- **Answer Top-K**: 10
+- **Answer Top-K**: 10 (not modified)
 - **Concurrency**: 1
 - **graph_answer Used**: false
 - **Retry Policy**: max_retries_after_initial=2; allowed=[schema_validation, 429, 5xx, network, timeout]; score_based_retry_forbidden=true
@@ -96,6 +164,8 @@ All five defects have been repaired in the v3 infrastructure round. **No formal 
 - No frozen product modified
 - No answer prompt modified
 - No retrieval algorithm changed
+- No answer model changed
+- No Top-K changed
 - graph_answer not enabled
 - OpenAI not used
 - DeepSeek self-judge not used
@@ -113,13 +183,14 @@ All five defects have been repaired in the v3 infrastructure round. **No formal 
 ## Next Steps
 
 To proceed with the formal evaluation:
-1. A custodian must create a new authorization file matching all v3 preregistration hashes
-2. The formal run can proceed from Phase 1 using --engine-module=external-eval/engines/omni-frozen-v3.1.mjs and --preregistration=external-eval/preregistration/longmemeval-v3.json
-3. After generation, scoring uses external-eval/scorers/kimi-longmemeval-v1.mjs with Moonshot credentials
+1. A custodian must create a new Authorization Schema v2 file matching all v4 preregistration hashes (generation_projection_sha256, gold_projection_sha256, product_commit, product_build_sha256, adapter_commit, engine_adapter_commit, formal_runner_commit, preregistration_sha256, scoring_preregistration_sha256, scorer_module_sha256, judge_prompt_sha256, allow_formal_generation, allow_formal_scoring, expires_at)
+2. The formal Generation run uses `--preregistration=external-eval/preregistration/longmemeval-v4.json` and `--engine-module=external-eval/engines/omni-frozen-v3.1.mjs`
+3. After Generation, Score-only uses `external-eval/scorers/kimi-longmemeval-v1.mjs` with Moonshot credentials, `--full-score-log-dir=<EXTERNAL_PATH>` and `--sanitized-score-log=<EXTERNAL_PATH>`
+4. Primary metric: Kimi-K2.6-judged end-to-end LongMemEval-S QA accuracy
 
 ## Files in This Archive
 
 - README.md — this file
 - run-manifest.json — version pins, verification results, blocker details, resolution
-- failure-summary.json — structured failure report with v3 round details
+- failure-summary.json — structured failure report with v3 and v4 round details
 - data-access-log-redacted.jsonl — empty (no data accessed)
