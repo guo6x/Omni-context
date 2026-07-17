@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Omni-Context held-out authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "authorized_by", "authorized_at", "expires_at", "benchmark", "dataset_variant", "allowed_subset", "dataset_sha256", "product_commit", "adapter_commit", "preregistration_sha256", "allow_formal_run"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "authorized_by": {"type": "string", "minLength": 1},
+    "authorized_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "benchmark": {"enum": ["longmemeval", "locomo"]},
+    "dataset_variant": {"type": "string", "minLength": 1},
+    "allowed_subset": {"type": "string", "minLength": 1},
+    "dataset_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "product_commit": {"const": "17dc1d0107b0474de84058205a91b302ba290a74"},
+    "adapter_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "preregistration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "allow_formal_run": {"const": true}
+  }
+}

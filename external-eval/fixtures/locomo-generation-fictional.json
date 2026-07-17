@@ -1,0 +1,23 @@
+[
+  {
+    "sample_id": "fixture-conversation-1",
+    "conversation": {
+      "speaker_a": "Ari",
+      "speaker_b": "Bo",
+      "session_1_date_time": "2026-02-01T09:00:00Z",
+      "session_1": [{"speaker":"Ari","dia_id":"d1","text":"I started a fictional rooftop herb garden."},{"speaker":"Bo","dia_id":"d2","text":"Basil should handle the shade."}],
+      "session_2_date_time": "2026-02-05T11:00:00Z",
+      "session_2": [{"speaker":"Ari","dia_id":"d3","text":"The basil wilted after the heater was installed."},{"speaker":"Bo","dia_id":"d4","text":"Move it away from the heater."}],
+      "session_3_date_time": "2026-02-09T15:00:00Z",
+      "session_3": [{"speaker":"Ari","dia_id":"d5","text":"I moved it and planted thyme beside it."},{"speaker":"Bo","dia_id":"d6","text":"That explains the new second pot."}],
+      "session_4_date_time": "2026-02-12T12:00:00Z",
+      "session_4": [{"speaker":"Ari","dia_id":"d7","text":"The basil recovered."},{"speaker":"Bo","dia_id":"d8","text":"The move solved the heat problem."}]
+    },
+    "questions": [
+      {"question_id":"q1","question":"What did Ari start?","category":"single-session"},
+      {"question_id":"q2","question":"When was thyme planted relative to the move?","category":"temporal"},
+      {"question_id":"q3","question":"Why did the basil recover?","category":"causal"},
+      {"question_id":"q4","question":"Which two herbs are now in the garden?","category":"multi-session"}
+    ]
+  }
+]

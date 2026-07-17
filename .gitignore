@@ -101,5 +101,14 @@ pair-code.txt
 .antigravitycli/
 .codegraph/
 
+# External benchmark material must remain outside Git and outside this worktree.
+external-data/
+heldout-data/
+locomo10.json
+longmemeval*.json
+!external-eval/fixtures/longmemeval-generation-12.json
+trajectory_screenshots/
+external-eval/runs/
+
 # Local audit model cache is multi-gigabyte; pinned runtime models live on D:.
 docs/embedding-audit-v1/evidence/model-cache/

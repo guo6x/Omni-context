@@ -1,0 +1,5 @@
+{
+  "fixture_only": true,
+  "longmemeval": {"fx-lme-01":"teal","fx-lme-02":"North Quay Map Museum","fx-lme-03":"mint tea without sugar"},
+  "locomo": {"fixture-conversation-1:q1":"a rooftop herb garden"}
+}

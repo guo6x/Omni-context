@@ -1,0 +1,11 @@
+{
+  "name": "omni-context-sealed-external-eval",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "fixture:longmemeval": "node runners/sealed-runner.mjs --fixture --benchmark=longmemeval",
+    "fixture:locomo": "node runners/sealed-runner.mjs --fixture --benchmark=locomo",
+    "validate": "node runners/sealed-runner.mjs --validate-only"
+  }
+}
