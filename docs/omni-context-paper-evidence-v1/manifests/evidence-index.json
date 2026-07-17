@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-17T00:29:18.762Z",
+  "committed_evidence": [
+    {
+      "stage": "01-runtime-attestation",
+      "file": "README.md",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/01-runtime-attestation/README.md",
+      "sha256": "74b6d326a0e8c4dee9efa2702c0430f32b25acd239a10da9cfe775c82e80add1",
+      "size_bytes": 794
+    },
+    {
+      "stage": "01-runtime-attestation",
+      "file": "runtime-attestation.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/01-runtime-attestation/runtime-attestation.json",
+      "sha256": "df23ca6aaa9dbe838ddd0a46ee6d20f5414742a8b63f057e55d92fd0bd322072",
+      "size_bytes": 1312
+    },
+    {
+      "stage": "02-retrieval-diagnosis",
+      "file": "README.md",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/02-retrieval-diagnosis/README.md",
+      "sha256": "4906db13e81d44759883cbeaecdddf0753ce0348235b27b02b0a4ffd67b6d71b",
+      "size_bytes": 1394
+    },
+    {
+      "stage": "02-retrieval-diagnosis",
+      "file": "retrieval-diagnosis.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/02-retrieval-diagnosis/retrieval-diagnosis.json",
+      "sha256": "39c83fb9a9210e840492f9e6e51ab732f4d3e539b969670670737f5bdd4063ac",
+      "size_bytes": 2086
+    },
+    {
+      "stage": "03-retrieval-preflight",
+      "file": "embedding-preflight.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/03-retrieval-preflight/embedding-preflight.json",
+      "sha256": "c485ad553e03fb7f5d71a8971b648b08b8f7e9494f9fc69dc7d076d0f541d339",
+      "size_bytes": 3417
+    },
+    {
+      "stage": "03-retrieval-preflight",
+      "file": "manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/03-retrieval-preflight/manifest.json",
+      "sha256": "f96ed892e6ed8bb112b767f1459b48c5c38d6ce10b7d1dcede8aeaeccc983227",
+      "size_bytes": 4438
+    },
+    {
+      "stage": "03-retrieval-preflight",
+      "file": "retrieval-results.jsonl",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/03-retrieval-preflight/retrieval-results.jsonl",
+      "sha256": "6f25bb5e945f980e9edb10d41f89e1e9e93020f40fc7c16ac5d04f43a57b5e80",
+      "size_bytes": 607929
+    },
+    {
+      "stage": "04-product-fix-round-1",
+      "file": "product-build.txt",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/04-product-fix-round-1/product-build.txt",
+      "sha256": "1c5c70ba2ed484bc10e26b350f3291114e3c2d9e9e92918bb9d6289f21c955b8",
+      "size_bytes": 52
+    },
+    {
+      "stage": "04-product-fix-round-1",
+      "file": "product-tests.txt",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/04-product-fix-round-1/product-tests.txt",
+      "sha256": "7dec85443ceaced9ad6e66840634ae488cbc5e361be2e7169a2fc36a1ce1eb56",
+      "size_bytes": 784000
+    },
+    {
+      "stage": "04-product-fix-round-1",
+      "file": "product-typecheck.txt",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/04-product-fix-round-1/product-typecheck.txt",
+      "sha256": "89cf091d2c449e9b9407a6da15e275fe5c4d202ae07e3bebc6ff9df621f4c1e2",
+      "size_bytes": 65
+    },
+    {
+      "stage": "05-retrieval-preflight-round-1",
+      "file": "embedding-preflight.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/embedding-preflight.json",
+      "sha256": "5d10fe041d7644a9de01c7619a734795ca4e9a519dfcc8b0b22250a220de13a3",
+      "size_bytes": 3417
+    },
+    {
+      "stage": "05-retrieval-preflight-round-1",
+      "file": "manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/manifest.json",
+      "sha256": "a48ae7c37ad369faa17deb86f286655335d190df200b5145b5cf49118c9bb125",
+      "size_bytes": 4445
+    },
+    {
+      "stage": "05-retrieval-preflight-round-1",
+      "file": "retrieval-results.jsonl",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/retrieval-results.jsonl",
+      "sha256": "327ee084c92b5ae3d23ecc9453aa4bed6c6f1ea5bc11eb8c7af216358cd34217",
+      "size_bytes": 650257
+    },
+    {
+      "stage": "06-targeted-7-round-1",
+      "file": "checkpoint.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/checkpoint.json",
+      "sha256": "885b4b2f027c3541ad6f366aa51a359bc49a90c7ba0d631c83c2f4aa9a4c8703",
+      "size_bytes": 530
+    },
+    {
+      "stage": "06-targeted-7-round-1",
+      "file": "gate-summary.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/gate-summary.json",
+      "sha256": "d811441c317f6a9a24554dfedee61d3c477075f42495e6acaae3d19e9dc23669",
+      "size_bytes": 1043
+    },
+    {
+      "stage": "06-targeted-7-round-1",
+      "file": "kimi-usage.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/kimi-usage.json",
+      "sha256": "e14a4b7a9982a73bbb584e5e5fbac0ae1c3299e0f71a51b958ce6a3063abdcd5",
+      "size_bytes": 2555
+    },
+    {
+      "stage": "06-targeted-7-round-1",
+      "file": "manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/manifest.json",
+      "sha256": "14445cb27d11700c659361a2998ad7526e752e93ec6a9dd15b2827af901c711a",
+      "size_bytes": 1470
+    },
+    {
+      "stage": "06-targeted-7-round-1",
+      "file": "metrics.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/metrics.json",
+      "sha256": "128951c58df2f4a07033ffd47c2d98d18a67f12492fd1f74c99eb2e66eed8dcb",
+      "size_bytes": 3613
+    },
+    {
+      "stage": "06-targeted-7-round-1",
+      "file": "results.jsonl",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/results.jsonl",
+      "sha256": "8aad1404220cf38e5a5d0d01defe8ecc7d480a04f4cbc88e51798a9665dbe68b",
+      "size_bytes": 98529
+    },
+    {
+      "stage": "07-development-35",
+      "file": "checkpoint.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/07-development-35/checkpoint.json",
+      "sha256": "a1646c300e8bcacf1de6cd11bb72217960ca4f8e22599d065d6ea787173c348c",
+      "size_bytes": 2082
+    },
+    {
+      "stage": "07-development-35",
+      "file": "kimi-usage.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/07-development-35/kimi-usage.json",
+      "sha256": "f6a765f13e982b38932d0ecea2a136efcc6b6c42910ecf65b53a8ee6f60ea108",
+      "size_bytes": 9559
+    },
+    {
+      "stage": "07-development-35",
+      "file": "manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/07-development-35/manifest.json",
+      "sha256": "78fba0d12f37fdbe7ac09db7e1b6bd06142bedde644db823c1d8efa00535eac8",
+      "size_bytes": 1473
+    },
+    {
+      "stage": "07-development-35",
+      "file": "metrics.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/07-development-35/metrics.json",
+      "sha256": "1b0ba814aff4b095f0bd4365beed52b1af502ca69e1f8115d4995289a24b2a39",
+      "size_bytes": 3800
+    },
+    {
+      "stage": "07-development-35",
+      "file": "results.jsonl",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/07-development-35/results.jsonl",
+      "sha256": "b18c3140dd375fd72771ba072571ebbe333a08aabf9738ffdb0e6056c81b3e57",
+      "size_bytes": 483096
+    },
+    {
+      "stage": "08-baselines",
+      "file": "checkpoint.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/08-baselines/checkpoint.json",
+      "sha256": "77bd68243a3960f49a0e8d484f43fadfe172c379998aaed9c3b8a8146a269836",
+      "size_bytes": 4197
+    },
+    {
+      "stage": "08-baselines",
+      "file": "comparison-metrics.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/08-baselines/comparison-metrics.json",
+      "sha256": "903d5196e93ae04b96d07d55eb701cececcf03dae37575338ee93198638e8bd9",
+      "size_bytes": 13118
+    },
+    {
+      "stage": "08-baselines",
+      "file": "kimi-usage.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/08-baselines/kimi-usage.json",
+      "sha256": "7740759744595714b832c4f3081e6badff7c99e11d309fa26fab7903b440237a",
+      "size_bytes": 18337
+    },
+    {
+      "stage": "08-baselines",
+      "file": "manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/08-baselines/manifest.json",
+      "sha256": "cc3e57bee2ec1fa92d6dbf0e4ac319a971a9b5e6d83a011da16e6134ecf173ca",
+      "size_bytes": 1495
+    },
+    {
+      "stage": "08-baselines",
+      "file": "results.jsonl",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/08-baselines/results.jsonl",
+      "sha256": "39e103d6d768c11c8dc42ad4b762b6ffd19ab667c0ce5df8a31262c5339d8c69",
+      "size_bytes": 367902
+    },
+    {
+      "stage": "09-ablations",
+      "file": "ablation-status.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/09-ablations/ablation-status.json",
+      "sha256": "58a757424b5f5f501bf76c59bbbe70cbd1d618b1d8a350a73ca62b742d9b3e7a",
+      "size_bytes": 393
+    },
+    {
+      "stage": "10-attribution",
+      "file": "attribution-assessment.md",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/10-attribution/attribution-assessment.md",
+      "sha256": "72aa2f2e1b6ff05fcd95cbfe18e4e3fee023625d89ead0cf78de154a10a39b79",
+      "size_bytes": 1101
+    },
+    {
+      "stage": "10-attribution",
+      "file": "reviews.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/10-attribution/reviews.json",
+      "sha256": "2a0eaf345d02123a938c451c2b5e69f0ebb62548b7c40f2fbb84979f0edb62db",
+      "size_bytes": 42444
+    },
+    {
+      "stage": "11-candidate-freeze",
+      "file": "freeze-manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/11-candidate-freeze/freeze-manifest.json",
+      "sha256": "88744914a97c2bb2c665a7fd8353aad09e7cd368be2ed28f4159a0efdf7f5ca8",
+      "size_bytes": 3733
+    },
+    {
+      "stage": "11-candidate-freeze",
+      "file": "readiness.md",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/11-candidate-freeze/readiness.md",
+      "sha256": "f00db43aca0cfb790636f7031aa65112e91ef20e4b068700e86a4ab175dceff4",
+      "size_bytes": 984
+    },
+    {
+      "stage": "12-formal-250",
+      "file": "checkpoint-resume-manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/12-formal-250/checkpoint-resume-manifest.json",
+      "sha256": "7d2934e49d0c12e85bf6c55848613bf21d8e06fe920db5cf58d3e22d82bc51d3",
+      "size_bytes": 1466
+    },
+    {
+      "stage": "12-formal-250",
+      "file": "initial-manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/12-formal-250/initial-manifest.json",
+      "sha256": "de18449fa72b1aba71936d1280995ce5e6ed1f07d51e1183a147ffdc1c0280fd",
+      "size_bytes": 1469
+    },
+    {
+      "stage": "12-formal-250",
+      "file": "metrics.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/12-formal-250/metrics.json",
+      "sha256": "f0e065cca9fcd0b5665c5576ba3e45aefae0769bf0b9ab51e2e60866a435ffc3",
+      "size_bytes": 4016
+    },
+    {
+      "stage": "12-formal-250",
+      "file": "README.md",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/12-formal-250/README.md",
+      "sha256": "9ee038cc365c149252d60e03b0066a892bffba236bbc0284e40f0fbb7f7f10ed",
+      "size_bytes": 1157
+    },
+    {
+      "stage": "12-formal-250",
+      "file": "summary.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/12-formal-250/summary.json",
+      "sha256": "2f29f0c562085acacdd1eb1b603c81fff0f755e1ceb3101f29db2afbaa823762",
+      "size_bytes": 1604
+    },
+    {
+      "stage": "13-comparison-70",
+      "file": "checkpoint-resume-manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/13-comparison-70/checkpoint-resume-manifest.json",
+      "sha256": "4c8eec4fb6ad7e0ff86210f7d30928f68c6f0b30cd49616c808b54fd15aae8a8",
+      "size_bytes": 1466
+    },
+    {
+      "stage": "13-comparison-70",
+      "file": "initial-manifest.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/13-comparison-70/initial-manifest.json",
+      "sha256": "e5b69ae9884cf72d27fa1eeee5a1035878be3eeef75bf03e5314939da7d89f79",
+      "size_bytes": 1507
+    },
+    {
+      "stage": "13-comparison-70",
+      "file": "metrics-full_omni.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/13-comparison-70/metrics-full_omni.json",
+      "sha256": "4d373a41c68083e84e75b7e4ffa9475b7ae3bbc2d2fa271d09e53196697fde67",
+      "size_bytes": 3872
+    },
+    {
+      "stage": "13-comparison-70",
+      "file": "metrics-no_memory.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/13-comparison-70/metrics-no_memory.json",
+      "sha256": "9b25b30dbbadb041c4ab9dde43e399b8a6dba2bf07fac3e561f890a6d82d2342",
+      "size_bytes": 3625
+    },
+    {
+      "stage": "13-comparison-70",
+      "file": "metrics-retrieval_only.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/13-comparison-70/metrics-retrieval_only.json",
+      "sha256": "ae5ff1b18a3501323b96b4541ada767fc54a60c8c224cdffd17cdafe7ff43022",
+      "size_bytes": 3962
+    },
+    {
+      "stage": "13-comparison-70",
+      "file": "README.md",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/13-comparison-70/README.md",
+      "sha256": "5923a23f61ff4624160f608ebbf53107a2632ef2a2e3f42071dd8fbb00fca1fd",
+      "size_bytes": 909
+    },
+    {
+      "stage": "13-comparison-70",
+      "file": "summary.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/13-comparison-70/summary.json",
+      "sha256": "60a0594291c2e3acc760fcf4f94c22e20fc50c4a4f5d27b348718297d8227bf4",
+      "size_bytes": 1606
+    },
+    {
+      "stage": "14-locomo",
+      "file": "README.md",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/14-locomo/README.md",
+      "sha256": "4fd47c121169b51d77f06fd517fab15e3cce9b05eab357b1cbd95074b1851a68",
+      "size_bytes": 840
+    },
+    {
+      "stage": "14-locomo",
+      "file": "status.json",
+      "path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/14-locomo/status.json",
+      "sha256": "cc877fe6c19e6a921357e889e6a5369dd00d037bcc0dee8cb2489ccf63be65fd",
+      "size_bytes": 719
+    }
+  ],
+  "local_supplement_policy": "Only derived, redacted summaries are committed; raw databases, model weights, and large logs are excluded."
+}

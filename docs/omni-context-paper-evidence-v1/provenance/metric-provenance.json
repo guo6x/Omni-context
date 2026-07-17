@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-17T00:29:18.762Z",
+  "metrics": {
+    "Retrieval Preflight completed": {
+      "value": "7/7",
+      "source_file": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/manifest.json",
+      "source_field": "$.completed / $.total",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Retrieval Preflight Top-10 slot coverage": {
+      "value": "37/38",
+      "source_file": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/manifest.json",
+      "source_field": "$.top10_slot_coverage",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Targeted-7 Overall": {
+      "value": 0.840868,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/06-targeted-7-round-1/results.jsonl",
+      "source_field": "latest completed[*].score.core_score aggregate",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Development-35 full_omni Overall": {
+      "value": 0.884842,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/07-development-35/results.jsonl",
+      "source_field": "latest completed[*].score.core_score aggregate",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Development-35 retrieval_only Overall": {
+      "value": 0.563853,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl",
+      "source_field": "latest completed[*].score.core_score aggregate",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Development-35 no_memory Overall": {
+      "value": 0.366713,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl",
+      "source_field": "latest completed[*].score.core_score aggregate",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Formal-250 completed": {
+      "value": "248/250",
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl",
+      "source_field": "latest status counts",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED",
+      "note": "2 final errors are retained"
+    },
+    "Formal-250 Overall": {
+      "value": 0.866546,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl",
+      "source_field": "latest completed[*].score.core_score aggregate",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Formal P50 latency ms": {
+      "value": 150120,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl",
+      "source_field": "latest completed[*].latency_ms.total",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Formal P95 latency ms": {
+      "value": 243581,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl",
+      "source_field": "latest completed[*].latency_ms.total",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Comparison-70 full_omni": {
+      "value": 0.870698,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl",
+      "source_field": "latest completed[*].score.core_score aggregate",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED",
+      "note": "70/70 completed; 0 error(s)"
+    },
+    "Comparison-70 retrieval_only": {
+      "value": 0.552346,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl",
+      "source_field": "latest completed[*].score.core_score aggregate",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED",
+      "note": "69/70 completed; 1 error(s)"
+    },
+    "Comparison-70 no_memory": {
+      "value": 0.364683,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl",
+      "source_field": "latest completed[*].score.core_score aggregate",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED",
+      "note": "70/70 completed; 0 error(s)"
+    },
+    "Retry records": {
+      "value": 34,
+      "source_file": "multiple supplemental results.jsonl",
+      "source_field": "status == retry",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Answer successful calls": {
+      "value": 569,
+      "source_file": "multiple supplemental results.jsonl",
+      "source_field": "latest terminal[*].usage.answer_calls",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Extraction successful calls": {
+      "value": 998,
+      "source_file": "multiple supplemental results.jsonl",
+      "source_field": "latest terminal[*].usage.extraction_calls",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Reranker successful calls": {
+      "value": 360,
+      "source_file": "multiple supplemental results.jsonl",
+      "source_field": "latest terminal[*].usage.reranker_calls",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Kimi logical judge calls": {
+      "value": 152,
+      "source_file": "multiple supplemental results.jsonl",
+      "source_field": "latest terminal[*].usage.judge_calls",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    "Kimi physical attempts": {
+      "value": 163,
+      "source_file": "stage Kimi usage manifests",
+      "source_field": "successful physical attempts across stages",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    }
+  }
+}

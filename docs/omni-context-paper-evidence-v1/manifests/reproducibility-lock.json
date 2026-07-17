@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "node": "v22.15.1",
+  "npm": "10.9.2",
+  "os": "win32 10.0.26200 x64",
+  "benchmark_config": "benchmark/cognitive/config/default.json",
+  "answer_model": "deepseek-v4-flash",
+  "judge_model": "kimi-k2.6",
+  "embedding": {
+    "model_id": "Xenova/multilingual-e5-large",
+    "revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+    "dimension": 1024,
+    "max_tokens": 512,
+    "model_sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+    "serialization": "entity-passage-v2+assertion-passage-v3"
+  },
+  "answer": {
+    "max_tokens": 1200,
+    "temperature": 0,
+    "thinking": "disabled"
+  },
+  "concurrency": 1,
+  "max_retries": 2,
+  "paths": {
+    "repo_root": "<REPO_ROOT>",
+    "model_root": "<MODEL_ROOT>",
+    "run_root": "<RUN_ROOT>"
+  }
+}

@@ -1,0 +1,9 @@
+purpose,source_name,source_kind,portable_source_path
+version and freeze,11-candidate-freeze/freeze-manifest.json,committed,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/11-candidate-freeze/freeze-manifest.json
+preflight before fix,03-retrieval-preflight/manifest.json,committed,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/03-retrieval-preflight/manifest.json
+preflight after fix,05-retrieval-preflight-round-1/manifest.json,committed,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/manifest.json
+targeted metrics,06-targeted-7-round-1/metrics.json,committed,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/metrics.json
+development raw,07-development-35/results.jsonl,local supplement,<LOCAL_EVIDENCE_ROOT>/07-development-35/results.jsonl
+formal raw,12-formal-250/results.jsonl,local supplement,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl
+comparison raw,13-comparison-70/results.jsonl,local supplement,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl
+failure diagnostics,answer-diagnostics/*.json,local supplement,<RUN_ROOT>/{stage}/answer-diagnostics/*.json

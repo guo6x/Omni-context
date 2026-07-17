@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-17T00:29:18.762Z",
+  "repository": "https://github.com/guo6x/Omni-context",
+  "product_branch": "codex/omni-evaluation-candidate-v3.1-final",
+  "product_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "product_initial_commit": "2e300acad083626285ff43b650717e66a04671dd",
+  "benchmark_branch": "codex/omni-cognitive-benchmark-v1.1-answer-diagnostics",
+  "benchmark_commit": "62b0b20f944f7e9a2c58f02ce1c65bb43dfbf841",
+  "freeze_tag": "evaluation-freeze-candidate-v3.1",
+  "freeze_tag_object": "1bcd4d1a4f1dfdab6c367c8234cea87b151d1cb4",
+  "freeze_tag_target": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "product_build_sha256": "af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668",
+  "freeze_manifest_path": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/11-candidate-freeze/freeze-manifest.json",
+  "freeze_manifest_sha256": "88744914a97c2bb2c665a7fd8353aad09e7cd368be2ed28f4159a0efdf7f5ca8",
+  "expected_freeze_manifest_sha256": "88744914a97c2bb2c665a7fd8353aad09e7cd368be2ed28f4159a0efdf7f5ca8",
+  "behavior_modified": false,
+  "paid_provider_called": false
+}
