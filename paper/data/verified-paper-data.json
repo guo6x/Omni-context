@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "generated_from_evidence_commit": "ad1fe8806255e420e65398ae67df0a50474356d4",
+  "product_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "benchmark_commit": "62b0b20f944f7e9a2c58f02ce1c65bb43dfbf841",
+  "main_results": [
+    {
+      "evaluation": "Targeted-7",
+      "mode": "Full Omni",
+      "completed": 7,
+      "expected": 7,
+      "errors": 0,
+      "overall": 0.840868,
+      "source": "metrics/targeted-7-summary.json"
+    },
+    {
+      "evaluation": "Development-35",
+      "mode": "Full Omni",
+      "completed": 35,
+      "expected": 35,
+      "errors": 0,
+      "overall": 0.884842,
+      "source": "metrics/development-35-summary.json"
+    },
+    {
+      "evaluation": "Development-35",
+      "mode": "Retrieval-only",
+      "completed": 35,
+      "expected": 35,
+      "errors": 0,
+      "overall": 0.563853,
+      "source": "metrics/development-35-summary.json"
+    },
+    {
+      "evaluation": "Development-35",
+      "mode": "No Memory",
+      "completed": 35,
+      "expected": 35,
+      "errors": 0,
+      "overall": 0.366713,
+      "source": "metrics/development-35-summary.json"
+    },
+    {
+      "evaluation": "Formal-250",
+      "mode": "Full Omni",
+      "completed": 248,
+      "expected": 250,
+      "errors": 2,
+      "overall": 0.866546,
+      "source": "metrics/formal-250-summary.json"
+    },
+    {
+      "evaluation": "Comparison-70",
+      "mode": "Full Omni",
+      "completed": 70,
+      "expected": 70,
+      "errors": 0,
+      "overall": 0.870698,
+      "source": "metrics/comparison-70-summary.json"
+    },
+    {
+      "evaluation": "Comparison-70",
+      "mode": "Retrieval-only",
+      "completed": 69,
+      "expected": 70,
+      "errors": 1,
+      "overall": 0.552346,
+      "source": "metrics/comparison-70-summary.json"
+    },
+    {
+      "evaluation": "Comparison-70",
+      "mode": "No Memory",
+      "completed": 70,
+      "expected": 70,
+      "errors": 0,
+      "overall": 0.364683,
+      "source": "metrics/comparison-70-summary.json"
+    }
+  ],
+  "categories": {
+    "development_full": {
+      "cognitive_continuity": 0.916667,
+      "memory_evolution": 0.856746,
+      "conflict_resolution": 0.833333,
+      "cross_agent_transfer": 1.0,
+      "human_like_forgetting": 0.927778,
+      "proactive_insight": 0.875,
+      "decision_quality": 0.78437
+    },
+    "formal_full": {
+      "cognitive_continuity": 0.936667,
+      "memory_evolution": 0.852866,
+      "conflict_resolution": 0.8125,
+      "cross_agent_transfer": 1.0,
+      "human_like_forgetting": 0.884722,
+      "proactive_insight": 0.770833,
+      "decision_quality": 0.808235
+    },
+    "comparison": {
+      "full_omni": {
+        "cognitive_continuity": 0.956667,
+        "memory_evolution": 0.897963,
+        "conflict_resolution": 0.788889,
+        "cross_agent_transfer": 0.994444,
+        "human_like_forgetting": 0.886111,
+        "proactive_insight": 0.8,
+        "decision_quality": 0.770815
+      },
+      "retrieval_only": {
+        "cognitive_continuity": 0.616667,
+        "memory_evolution": 0.40713,
+        "conflict_resolution": 0.32716,
+        "cross_agent_transfer": 0.755556,
+        "human_like_forgetting": 0.669444,
+        "proactive_insight": 0.4875,
+        "decision_quality": 0.602963
+      },
+      "no_memory": {
+        "cognitive_continuity": 0.5,
+        "memory_evolution": 0.208333,
+        "conflict_resolution": 0.222222,
+        "cross_agent_transfer": 0.5,
+        "human_like_forgetting": 0.416667,
+        "proactive_insight": 0.4,
+        "decision_quality": 0.305556
+      }
+    }
+  },
+  "coverage": {
+    "targeted": {
+      "candidate_pool": [
+        28,
+        30
+      ],
+      "final_20": [
+        28,
+        30
+      ],
+      "answer_top_10": [
+        28,
+        30
+      ]
+    },
+    "retrieval_preflight_top_10": [
+      37,
+      38
+    ],
+    "initial_retrieval_preflight_top_10": [
+      20,
+      38
+    ]
+  },
+  "efficiency": {
+    "formal_p50_ms": 150120,
+    "formal_p95_ms": 243581,
+    "retry_records": 34,
+    "formal_final_errors": 2,
+    "comparison_final_errors": 1
+  },
+  "stability": {
+    "attribution_completed": 20,
+    "attribution_expected": 20,
+    "deterministic_rescore_records": 105,
+    "scoring_differences": 0,
+    "scoring_defects": 0,
+    "unresolved_p0": 0,
+    "unresolved_p1_classes": 2,
+    "retry_records": 34
+  },
+  "calls": {
+    "answer_successful": 569,
+    "extraction_successful": 998,
+    "reranker_successful": 360,
+    "kimi_judge_logical_successful": 152,
+    "kimi_physical_attempts": 163
+  },
+  "errors": [
+    {
+      "scenario_id": "formal-v2-memory_evolution-039",
+      "category": "memory_evolution",
+      "mode": "full_omni",
+      "attempts": "3",
+      "requested_max_tokens": "1200",
+      "completion_tokens": "1200|1200|1200",
+      "finish_reason": "length|length|length",
+      "json_parse_error": "Unterminated string in JSON at position 3710 (line 76 column 31) | Unterminated string in JSON at position 3786 (line 78 column 66) | Unterminated string in JSON at position 3710 (line 76 column 31)",
+      "entered_scoring": "false",
+      "overall_impact": "Counts as an error and is excluded from completed-score aggregation.",
+      "classification": "Provider structured-output truncation; not scored as product capability.",
+      "paper_reporting": "Report as a final error after three allowed attempts; do not impute a score.",
+      "source_file": "<RUN_ROOT>/12-formal-250/answer-diagnostics/formal-v2-memory_evolution-039-*.json"
+    },
+    {
+      "scenario_id": "formal-v2-memory_evolution-040",
+      "category": "memory_evolution",
+      "mode": "full_omni",
+      "attempts": "3",
+      "requested_max_tokens": "1200",
+      "completion_tokens": "1200|1200|1200",
+      "finish_reason": "length|length|length",
+      "json_parse_error": "Unterminated string in JSON at position 3645 (line 80 column 119) | Unterminated string in JSON at position 3677 (line 84 column 12) | Unterminated string in JSON at position 3677 (line 84 column 12)",
+      "entered_scoring": "false",
+      "overall_impact": "Counts as an error and is excluded from completed-score aggregation.",
+      "classification": "Provider structured-output truncation; not scored as product capability.",
+      "paper_reporting": "Report as a final error after three allowed attempts; do not impute a score.",
+      "source_file": "<RUN_ROOT>/12-formal-250/answer-diagnostics/formal-v2-memory_evolution-040-*.json"
+    },
+    {
+      "scenario_id": "formal-v2-conflict_resolution-014",
+      "category": "conflict_resolution",
+      "mode": "retrieval_only",
+      "attempts": "3",
+      "requested_max_tokens": "1200",
+      "completion_tokens": "490|346|336",
+      "finish_reason": "stop|stop|stop",
+      "json_parse_error": "schema validation failure | schema validation failure | schema validation failure",
+      "entered_scoring": "false",
+      "overall_impact": "Counts as an error and is excluded from completed-score aggregation.",
+      "classification": "Provider/schema robustness at the benchmark boundary; not a Full Omni product-core failure.",
+      "paper_reporting": "Report as a final error after three allowed attempts; do not impute a score.",
+      "source_file": "<RUN_ROOT>/13-comparison-70/answer-diagnostics/formal-v2-conflict_resolution-014-*.json"
+    }
+  ],
+  "runtime": {
+    "schema_version": 1,
+    "node": "v22.15.1",
+    "npm": "10.9.2",
+    "os": "win32 10.0.26200 x64",
+    "benchmark_config": "benchmark/cognitive/config/default.json",
+    "answer_model": "deepseek-v4-flash",
+    "judge_model": "kimi-k2.6",
+    "embedding": {
+      "model_id": "Xenova/multilingual-e5-large",
+      "revision": "a19b072cb4f0cc8bf98b4e46f90a787a61380979",
+      "dimension": 1024,
+      "max_tokens": 512,
+      "model_sha256": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca",
+      "serialization": "entity-passage-v2+assertion-passage-v3"
+    },
+    "answer": {
+      "max_tokens": 1200,
+      "temperature": 0,
+      "thinking": "disabled"
+    },
+    "concurrency": 1,
+    "max_retries": 2,
+    "paths": {
+      "repo_root": "<REPO_ROOT>",
+      "model_root": "<MODEL_ROOT>",
+      "run_root": "<RUN_ROOT>"
+    }
+  },
+  "module_map": [
+    {
+      "module": "Input / Event Ingestion",
+      "repository_path": "brain-server/src/api/handlers",
+      "main_file": "ingest.ts",
+      "important_function_or_class": "runIngestPipeline / handleIngestRoutes",
+      "role": "Accept and preprocess source payloads",
+      "input": "File or capture",
+      "output": "Chunks, entities, assertions",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Extraction",
+      "repository_path": "brain-server/src/graphrag",
+      "main_file": "llm-pipeline.ts",
+      "important_function_or_class": "extractEntitiesWithLlm / extraction pipeline",
+      "role": "Convert text into structured graph facts",
+      "input": "Text chunks",
+      "output": "Entities, relationships, assertions",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Memory Storage",
+      "repository_path": "brain-server/src/db",
+      "main_file": "sqlite.ts",
+      "important_function_or_class": "SQLiteDatabase methods",
+      "role": "Persist graph, temporal assertions, vectors and metadata",
+      "input": "Structured memories",
+      "output": "SQLite rows and vector indexes",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Vector / Text / Assertion / Graph Retrieval",
+      "repository_path": "brain-server/src/api/handlers",
+      "main_file": "mcp.ts",
+      "important_function_or_class": "unified_memory_search handler",
+      "role": "Run parallel candidate channels and temporal filtering",
+      "input": "Question/query",
+      "output": "Typed retrieval candidates",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Fusion",
+      "repository_path": "brain-server/src/retrieval",
+      "main_file": "fusion.ts",
+      "important_function_or_class": "reciprocalRankFuse",
+      "role": "Auditable rank fusion with source traces",
+      "input": "Ranked channel lists",
+      "output": "Fused candidates",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Reranking",
+      "repository_path": "brain-server/src/api/handlers",
+      "main_file": "mcp.ts",
+      "important_function_or_class": "rerankByLlm",
+      "role": "Rerank readable evidence summaries with bounded fallback",
+      "input": "Fused/grouped evidence",
+      "output": "Reranked groups",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Evidence Grouping",
+      "repository_path": "brain-server/src/retrieval",
+      "main_file": "evidence-selector.ts",
+      "important_function_or_class": "groupFusedEvidence / buildEvidenceGroupPassage",
+      "role": "Group duplicate and related evidence while retaining channels",
+      "input": "Fused candidates",
+      "output": "Evidence groups",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Evidence Selector",
+      "repository_path": "brain-server/src/retrieval",
+      "main_file": "evidence-selector.ts",
+      "important_function_or_class": "selectEvidenceSet",
+      "role": "Select diverse, query-aware evidence and suppress graph noise",
+      "input": "Evidence groups + intent",
+      "output": "Selected evidence",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Answer Top-10",
+      "repository_path": "brain-server/src/api/handlers",
+      "main_file": "mcp.ts",
+      "important_function_or_class": "unified_memory_search response assembly",
+      "role": "Mark final evidence selected_for_answer under limit",
+      "input": "Selected evidence",
+      "output": "Answer context",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    },
+    {
+      "module": "Answer Generation",
+      "repository_path": "benchmark/cognitive/src",
+      "main_file": "provider.mjs",
+      "important_function_or_class": "CognitiveProvider.answer",
+      "role": "Produce strict structured answer from visible context",
+      "input": "Question + top evidence",
+      "output": "Structured answer",
+      "paper_section_relevance": "Evaluation protocol",
+      "verification_status": "VERIFIED AT BENCHMARK COMMIT"
+    },
+    {
+      "module": "Provenance Output",
+      "repository_path": "brain-server/src/api/handlers",
+      "main_file": "mcp.ts",
+      "important_function_or_class": "retrieval trace/result assembly",
+      "role": "Return source path, ranks, IDs and selection metadata",
+      "input": "Selected evidence",
+      "output": "Auditable provenance",
+      "paper_section_relevance": "Methods",
+      "verification_status": "VERIFIED AT PRODUCT COMMIT"
+    }
+  ],
+  "locomo": {
+    "status": "NOT RUN",
+    "reason": "Candidate v3.1 is not bound to the existing held-out authorization.",
+    "conversation_2_10_accessed": false
+  }
+}
