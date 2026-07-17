@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "frozen_product_base": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "research_instrumentation_commit": "31d56b2044a3dc9b088e697dc9d47fd37c9d9a6c",
+  "switches": ["selector_off", "grouping_off", "source_aware_fusion_off"],
+  "guard": "OMNI_RESEARCH_ABLATION_MODE=1",
+  "selector_budget": 10,
+  "default_ablation": "none",
+  "scenario_id_in_product_logic": false,
+  "gold_in_product_logic": false,
+  "brain_tests": {"passed": 340, "total": 340, "failed": 0},
+  "cognitive_tests": {"passed": 66, "total": 66, "failed": 0},
+  "security_scanner_tests": {"passed": 3, "total": 3, "failed": 0},
+  "typecheck": "PASS",
+  "build": "PASS",
+  "secret_scan": "PASS"
+}

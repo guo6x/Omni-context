@@ -1,0 +1,7508 @@
+{
+  "schema_version": 1,
+  "fixture_kind": "synthetic_only",
+  "provider_calls": 0,
+  "answer_model_calls": 0,
+  "judge_model_calls": 0,
+  "fixed_limits": {
+    "candidate_pool": 40,
+    "final_context": 20,
+    "answer": 10,
+    "rrf_k": 60
+  },
+  "fixture_coverage": [
+    "duplicate_graph_relations",
+    "support_note_noise",
+    "current_historical_states",
+    "conflict_invalidated_facts",
+    "multiple_source_agents",
+    "multiple_semantic_slots"
+  ],
+  "signatures": {
+    "full_omni": "28574d14c8a453f3476cdebe8dc9b114574d9236d9dd0a36e585de527b17af95",
+    "selector_off": "3158c866a5f6bf384bca1accf7d9f0af6fd8fa5fc9eb340173e244185802f389",
+    "grouping_off": "f06ab1a9fe6617271278b629950bcf6b298da9a87784c5bbc9b05f9ea0ebbb07",
+    "source_aware_fusion_off": "a3338d726996707c8fcaddd7dacabf8bc46e064ac9a7599d240c378926ca0298"
+  },
+  "mechanism_changed_from_full": {
+    "full_omni": false,
+    "selector_off": true,
+    "grouping_off": true,
+    "source_aware_fusion_off": true
+  },
+  "results": [
+    {
+      "condition": "full_omni",
+      "ablation": "none",
+      "config": {
+        "researchMode": false,
+        "ablation": "none"
+      },
+      "channel_audit": [
+        {
+          "candidateId": "raw-preference",
+          "evidenceKind": "raw_event",
+          "eligibleChannels": [
+            "raw_event_vector"
+          ],
+          "excludedChannels": [
+            "assertion_vector",
+            "assertion_fts",
+            "subject_attachment",
+            "raw_event_fallback"
+          ]
+        }
+      ],
+      "candidate_pool": [
+        {
+          "id": "support-5",
+          "kind": "assertion",
+          "rank": 1,
+          "score": 0.03860025,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_5",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-6",
+          "kind": "assertion",
+          "rank": 2,
+          "score": 0.03269795,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_6",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-7",
+          "kind": "assertion",
+          "rank": 3,
+          "score": 0.03219616,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_7",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-8",
+          "kind": "assertion",
+          "rank": 4,
+          "score": 0.03170956,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_8",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "goal-core",
+          "kind": "assertion",
+          "rank": 5,
+          "score": 0.03043478,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "goal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "budget-core",
+          "kind": "assertion",
+          "rank": 6,
+          "score": 0.03,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "budget",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "preference-core",
+          "kind": "assertion",
+          "rank": 7,
+          "score": 0.02899543,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "preference",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "phase-current",
+          "kind": "assertion",
+          "rank": 8,
+          "score": 0.02889227,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "temporal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "conflict-current",
+          "kind": "assertion",
+          "rank": 9,
+          "score": 0.02828947,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "conflict",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-1",
+          "kind": "assertion",
+          "rank": 10,
+          "score": 0.02540984,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_1",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-2",
+          "kind": "assertion",
+          "rank": 11,
+          "score": 0.025,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_2",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-3",
+          "kind": "assertion",
+          "rank": 12,
+          "score": 0.02460317,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_3",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-4",
+          "kind": "assertion",
+          "rank": 13,
+          "score": 0.02421875,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_4",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "time-core",
+          "kind": "assertion",
+          "rank": 14,
+          "score": 0.02220444,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "time",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "boundary-core",
+          "kind": "assertion",
+          "rank": 15,
+          "score": 0.02166224,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "boundary",
+          "source_agent": "Agent-D",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "graph-project",
+          "kind": "entity",
+          "rank": 16,
+          "score": 0.02131148,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "graph-project-alias",
+          "kind": "entity",
+          "rank": 17,
+          "score": 0.02096774,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "conflict-invalidated",
+          "kind": "assertion",
+          "rank": 18,
+          "score": 0.02073147,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "conflict",
+          "source_agent": "Agent-D",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "graph-agent",
+          "kind": "entity",
+          "rank": 19,
+          "score": 0.02051091,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "raw-preference",
+          "kind": "assertion",
+          "rank": 20,
+          "score": 0.01967213,
+          "sources": [
+            "raw_event_vector"
+          ],
+          "evidence_kind": "raw_event",
+          "state_key": "preference",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "phase-history",
+          "kind": "assertion",
+          "rank": 21,
+          "score": 0.016,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "temporal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "provenance-a",
+          "kind": "assertion",
+          "rank": 22,
+          "score": 0.01538462,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "provenance",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "provenance-b",
+          "kind": "assertion",
+          "rank": 23,
+          "score": 0.01518987,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "provenance",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-9",
+          "kind": "assertion",
+          "rank": 24,
+          "score": 0.01384615,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_9",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-10",
+          "kind": "assertion",
+          "rank": 25,
+          "score": 0.01363636,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_10",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-11",
+          "kind": "assertion",
+          "rank": 26,
+          "score": 0.01343284,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_11",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-12",
+          "kind": "assertion",
+          "rank": 27,
+          "score": 0.01323529,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_12",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        }
+      ],
+      "evidence_groups": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.04866756,
+          "member_ids": [
+            "preference-core",
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector",
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:26aae369e29a54a59f8f06b4ef28b23b7bf2e07a7d69db75b155cc78ece26103",
+          "rank": 2,
+          "rrf_rank": 2,
+          "score": 0.03860025,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:cf372541f160e39a557d9d3810107471c715b594518a7f3f42be28c7374dd8a0",
+          "rank": 3,
+          "rrf_rank": 3,
+          "score": 0.03269795,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:3f6ea6bb184b01fe189467ce7798c38b8ffd30f29192cb9dd4c307a703afe0cc",
+          "rank": 4,
+          "rrf_rank": 4,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:7f27a2f3e0e63eafa71fb9d1751116a446bb7e04b9e9f3df34ab7fad6c96eaa3",
+          "rank": 5,
+          "rrf_rank": 5,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 6,
+          "rrf_rank": 6,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 7,
+          "rrf_rank": 7,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 8,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:606d5cb1c5e4e7ea9ca8dd74ae7da6071afaa9dde72658cfbcda768751a0506e",
+          "rank": 10,
+          "rrf_rank": 10,
+          "score": 0.02540984,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:b0e3f5a26cd6d6242df4fce20543d518b88ef762beb4eee979e4be8e005e6b70",
+          "rank": 11,
+          "rrf_rank": 11,
+          "score": 0.025,
+          "member_ids": [
+            "support-2"
+          ],
+          "state_keys": [
+            "support_note_2"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:d28512dbc8e85c1e0bba458bb233631c3384c89680b0bbde068ae8b64204927f",
+          "rank": 12,
+          "rrf_rank": 12,
+          "score": 0.02460317,
+          "member_ids": [
+            "support-3"
+          ],
+          "state_keys": [
+            "support_note_3"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:4cd75c3c3254ff9824976804b89aaaf54672622e96176a518791ede8936b5bd4",
+          "rank": 13,
+          "rrf_rank": 13,
+          "score": 0.02421875,
+          "member_ids": [
+            "support-4"
+          ],
+          "state_keys": [
+            "support_note_4"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:388a9ceb676ea20441142fe3cfaf6b314f1280c665bdea6459c02bd7c5884b92",
+          "rank": 14,
+          "rrf_rank": 14,
+          "score": 0.02220444,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:2253ea4b1ac37a46b926606101f78d9383acc1729989b4926f7159798c43185e",
+          "rank": 15,
+          "rrf_rank": 15,
+          "score": 0.02166224,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-project",
+          "rank": 16,
+          "rrf_rank": 16,
+          "score": 0.02131148,
+          "member_ids": [
+            "graph-project"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-project-alias",
+          "rank": 17,
+          "rrf_rank": 17,
+          "score": 0.02096774,
+          "member_ids": [
+            "graph-project-alias"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "event:69e2a975138de12424a1d7f9936cbbb605c092166a78fd42cfcc2337e4dab3f8",
+          "rank": 18,
+          "rrf_rank": 18,
+          "score": 0.02073147,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-agent",
+          "rank": 19,
+          "rrf_rank": 19,
+          "score": 0.02051091,
+          "member_ids": [
+            "graph-agent"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "event:643e1dc6fb9b8b9bae94f2575c0b1338ec8e8175f6f59b13845794aa6e2d4c9f",
+          "rank": 20,
+          "rrf_rank": 20,
+          "score": 0.016,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:ca7b332bb6c9eda5f1e792cbe52c5860bcf5a9de3880c6f27124f1eec96f059b",
+          "rank": 21,
+          "rrf_rank": 21,
+          "score": 0.01538462,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:d6285738350e5026dc84aac33edb931d21638832b5ad07cb48a61d70f526381f",
+          "rank": 22,
+          "rrf_rank": 22,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-b"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:a6e19c61e6504a3923f7e0753ee62a8b9b6f3ca177216447ec7f2f3866c7f220",
+          "rank": 23,
+          "rrf_rank": 23,
+          "score": 0.01384615,
+          "member_ids": [
+            "support-9"
+          ],
+          "state_keys": [
+            "support_note_9"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:0231520ed97c5bcdc3a7fac00caf33fef8a7bd122fe84915a8ff789a6380cab4",
+          "rank": 24,
+          "rrf_rank": 24,
+          "score": 0.01363636,
+          "member_ids": [
+            "support-10"
+          ],
+          "state_keys": [
+            "support_note_10"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:0d17f626158146cd8086dd75ddf9cdd87cfe066bc602701c7ef2764533638d08",
+          "rank": 25,
+          "rrf_rank": 25,
+          "score": 0.01343284,
+          "member_ids": [
+            "support-11"
+          ],
+          "state_keys": [
+            "support_note_11"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:ef296528a4dd26f7c0b8d51612cc4400e54c9546fc5dad15003e549348f0befe",
+          "rank": 26,
+          "rrf_rank": 26,
+          "score": 0.01323529,
+          "member_ids": [
+            "support-12"
+          ],
+          "state_keys": [
+            "support_note_12"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        }
+      ],
+      "final_20": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.04866756,
+          "member_ids": [
+            "preference-core",
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector",
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 2,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 3,
+          "rrf_rank": 7,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:2253ea4b1ac37a46b926606101f78d9383acc1729989b4926f7159798c43185e",
+          "rank": 4,
+          "rrf_rank": 15,
+          "score": 0.02166224,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 5,
+          "rrf_rank": 6,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:388a9ceb676ea20441142fe3cfaf6b314f1280c665bdea6459c02bd7c5884b92",
+          "rank": 6,
+          "rrf_rank": 14,
+          "score": 0.02220444,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:643e1dc6fb9b8b9bae94f2575c0b1338ec8e8175f6f59b13845794aa6e2d4c9f",
+          "rank": 7,
+          "rrf_rank": 20,
+          "score": 0.016,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:ca7b332bb6c9eda5f1e792cbe52c5860bcf5a9de3880c6f27124f1eec96f059b",
+          "rank": 8,
+          "rrf_rank": 21,
+          "score": 0.01538462,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:69e2a975138de12424a1d7f9936cbbb605c092166a78fd42cfcc2337e4dab3f8",
+          "rank": 10,
+          "rrf_rank": 18,
+          "score": 0.02073147,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:26aae369e29a54a59f8f06b4ef28b23b7bf2e07a7d69db75b155cc78ece26103",
+          "rank": 11,
+          "rrf_rank": 2,
+          "score": 0.03860025,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:cf372541f160e39a557d9d3810107471c715b594518a7f3f42be28c7374dd8a0",
+          "rank": 12,
+          "rrf_rank": 3,
+          "score": 0.03269795,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:3f6ea6bb184b01fe189467ce7798c38b8ffd30f29192cb9dd4c307a703afe0cc",
+          "rank": 13,
+          "rrf_rank": 4,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:7f27a2f3e0e63eafa71fb9d1751116a446bb7e04b9e9f3df34ab7fad6c96eaa3",
+          "rank": 14,
+          "rrf_rank": 5,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:606d5cb1c5e4e7ea9ca8dd74ae7da6071afaa9dde72658cfbcda768751a0506e",
+          "rank": 15,
+          "rrf_rank": 10,
+          "score": 0.02540984,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:b0e3f5a26cd6d6242df4fce20543d518b88ef762beb4eee979e4be8e005e6b70",
+          "rank": 16,
+          "rrf_rank": 11,
+          "score": 0.025,
+          "member_ids": [
+            "support-2"
+          ],
+          "state_keys": [
+            "support_note_2"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:d28512dbc8e85c1e0bba458bb233631c3384c89680b0bbde068ae8b64204927f",
+          "rank": 17,
+          "rrf_rank": 12,
+          "score": 0.02460317,
+          "member_ids": [
+            "support-3"
+          ],
+          "state_keys": [
+            "support_note_3"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:4cd75c3c3254ff9824976804b89aaaf54672622e96176a518791ede8936b5bd4",
+          "rank": 18,
+          "rrf_rank": 13,
+          "score": 0.02421875,
+          "member_ids": [
+            "support-4"
+          ],
+          "state_keys": [
+            "support_note_4"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:d6285738350e5026dc84aac33edb931d21638832b5ad07cb48a61d70f526381f",
+          "rank": 19,
+          "rrf_rank": 22,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-b"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:a6e19c61e6504a3923f7e0753ee62a8b9b6f3ca177216447ec7f2f3866c7f220",
+          "rank": 20,
+          "rrf_rank": 23,
+          "score": 0.01384615,
+          "member_ids": [
+            "support-9"
+          ],
+          "state_keys": [
+            "support_note_9"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        }
+      ],
+      "answer_top_10": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.04866756,
+          "member_ids": [
+            "preference-core",
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector",
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false,
+          "selection_reason": "highest_relevance_core_evidence"
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 2,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false,
+          "selection_reason": "state_transition"
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 3,
+          "rrf_rank": 7,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false,
+          "selection_reason": "distinct_relevant_source_agent"
+        },
+        {
+          "id": "event:2253ea4b1ac37a46b926606101f78d9383acc1729989b4926f7159798c43185e",
+          "rank": 4,
+          "rrf_rank": 15,
+          "score": 0.02166224,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false,
+          "selection_reason": "distinct_relevant_source_agent"
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 5,
+          "rrf_rank": 6,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false,
+          "selection_reason": "decision_goal"
+        },
+        {
+          "id": "event:388a9ceb676ea20441142fe3cfaf6b314f1280c665bdea6459c02bd7c5884b92",
+          "rank": 6,
+          "rrf_rank": 14,
+          "score": 0.02220444,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "event:643e1dc6fb9b8b9bae94f2575c0b1338ec8e8175f6f59b13845794aa6e2d4c9f",
+          "rank": 7,
+          "rrf_rank": 20,
+          "score": 0.016,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "event:ca7b332bb6c9eda5f1e792cbe52c5860bcf5a9de3880c6f27124f1eec96f059b",
+          "rank": 8,
+          "rrf_rank": 21,
+          "score": 0.01538462,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "event:69e2a975138de12424a1d7f9936cbbb605c092166a78fd42cfcc2337e4dab3f8",
+          "rank": 10,
+          "rrf_rank": 18,
+          "score": 0.02073147,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        }
+      ],
+      "metrics": {
+        "candidate_count": 27,
+        "group_count": 26,
+        "final_20_count": 20,
+        "answer_top_10_count": 10,
+        "required_slots": [
+          "goal",
+          "budget",
+          "time",
+          "preference",
+          "boundary",
+          "temporal",
+          "conflict",
+          "provenance"
+        ],
+        "covered_slots": [
+          "boundary",
+          "budget",
+          "conflict",
+          "goal",
+          "preference",
+          "provenance",
+          "temporal",
+          "time"
+        ],
+        "slot_coverage": 1,
+        "source_agents": [
+          "Agent-A",
+          "Agent-B",
+          "Agent-C",
+          "Agent-D"
+        ],
+        "duplicate_evidence_rate": 0.037,
+        "candidate_graph_noise_ratio": 0.1111,
+        "candidate_support_noise_ratio": 0.4444,
+        "final_support_noise_ratio": 0.45,
+        "answer_support_noise_ratio": 0
+      }
+    },
+    {
+      "condition": "selector_off",
+      "ablation": "selector_off",
+      "config": {
+        "researchMode": true,
+        "ablation": "selector_off"
+      },
+      "channel_audit": [
+        {
+          "candidateId": "raw-preference",
+          "evidenceKind": "raw_event",
+          "eligibleChannels": [
+            "raw_event_vector"
+          ],
+          "excludedChannels": [
+            "assertion_vector",
+            "assertion_fts",
+            "subject_attachment",
+            "raw_event_fallback"
+          ]
+        }
+      ],
+      "candidate_pool": [
+        {
+          "id": "support-5",
+          "kind": "assertion",
+          "rank": 1,
+          "score": 0.03860025,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_5",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-6",
+          "kind": "assertion",
+          "rank": 2,
+          "score": 0.03269795,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_6",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-7",
+          "kind": "assertion",
+          "rank": 3,
+          "score": 0.03219616,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_7",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-8",
+          "kind": "assertion",
+          "rank": 4,
+          "score": 0.03170956,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_8",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "goal-core",
+          "kind": "assertion",
+          "rank": 5,
+          "score": 0.03043478,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "goal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "budget-core",
+          "kind": "assertion",
+          "rank": 6,
+          "score": 0.03,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "budget",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "preference-core",
+          "kind": "assertion",
+          "rank": 7,
+          "score": 0.02899543,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "preference",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "phase-current",
+          "kind": "assertion",
+          "rank": 8,
+          "score": 0.02889227,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "temporal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "conflict-current",
+          "kind": "assertion",
+          "rank": 9,
+          "score": 0.02828947,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "conflict",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-1",
+          "kind": "assertion",
+          "rank": 10,
+          "score": 0.02540984,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_1",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-2",
+          "kind": "assertion",
+          "rank": 11,
+          "score": 0.025,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_2",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-3",
+          "kind": "assertion",
+          "rank": 12,
+          "score": 0.02460317,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_3",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-4",
+          "kind": "assertion",
+          "rank": 13,
+          "score": 0.02421875,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_4",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "time-core",
+          "kind": "assertion",
+          "rank": 14,
+          "score": 0.02220444,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "time",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "boundary-core",
+          "kind": "assertion",
+          "rank": 15,
+          "score": 0.02166224,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "boundary",
+          "source_agent": "Agent-D",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "graph-project",
+          "kind": "entity",
+          "rank": 16,
+          "score": 0.02131148,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "graph-project-alias",
+          "kind": "entity",
+          "rank": 17,
+          "score": 0.02096774,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "conflict-invalidated",
+          "kind": "assertion",
+          "rank": 18,
+          "score": 0.02073147,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "conflict",
+          "source_agent": "Agent-D",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "graph-agent",
+          "kind": "entity",
+          "rank": 19,
+          "score": 0.02051091,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "raw-preference",
+          "kind": "assertion",
+          "rank": 20,
+          "score": 0.01967213,
+          "sources": [
+            "raw_event_vector"
+          ],
+          "evidence_kind": "raw_event",
+          "state_key": "preference",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "phase-history",
+          "kind": "assertion",
+          "rank": 21,
+          "score": 0.016,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "temporal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "provenance-a",
+          "kind": "assertion",
+          "rank": 22,
+          "score": 0.01538462,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "provenance",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "provenance-b",
+          "kind": "assertion",
+          "rank": 23,
+          "score": 0.01518987,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "provenance",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-9",
+          "kind": "assertion",
+          "rank": 24,
+          "score": 0.01384615,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_9",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-10",
+          "kind": "assertion",
+          "rank": 25,
+          "score": 0.01363636,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_10",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-11",
+          "kind": "assertion",
+          "rank": 26,
+          "score": 0.01343284,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_11",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-12",
+          "kind": "assertion",
+          "rank": 27,
+          "score": 0.01323529,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_12",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        }
+      ],
+      "evidence_groups": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.04866756,
+          "member_ids": [
+            "preference-core",
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector",
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:26aae369e29a54a59f8f06b4ef28b23b7bf2e07a7d69db75b155cc78ece26103",
+          "rank": 2,
+          "rrf_rank": 2,
+          "score": 0.03860025,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:cf372541f160e39a557d9d3810107471c715b594518a7f3f42be28c7374dd8a0",
+          "rank": 3,
+          "rrf_rank": 3,
+          "score": 0.03269795,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:3f6ea6bb184b01fe189467ce7798c38b8ffd30f29192cb9dd4c307a703afe0cc",
+          "rank": 4,
+          "rrf_rank": 4,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:7f27a2f3e0e63eafa71fb9d1751116a446bb7e04b9e9f3df34ab7fad6c96eaa3",
+          "rank": 5,
+          "rrf_rank": 5,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 6,
+          "rrf_rank": 6,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 7,
+          "rrf_rank": 7,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 8,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:606d5cb1c5e4e7ea9ca8dd74ae7da6071afaa9dde72658cfbcda768751a0506e",
+          "rank": 10,
+          "rrf_rank": 10,
+          "score": 0.02540984,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:b0e3f5a26cd6d6242df4fce20543d518b88ef762beb4eee979e4be8e005e6b70",
+          "rank": 11,
+          "rrf_rank": 11,
+          "score": 0.025,
+          "member_ids": [
+            "support-2"
+          ],
+          "state_keys": [
+            "support_note_2"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:d28512dbc8e85c1e0bba458bb233631c3384c89680b0bbde068ae8b64204927f",
+          "rank": 12,
+          "rrf_rank": 12,
+          "score": 0.02460317,
+          "member_ids": [
+            "support-3"
+          ],
+          "state_keys": [
+            "support_note_3"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:4cd75c3c3254ff9824976804b89aaaf54672622e96176a518791ede8936b5bd4",
+          "rank": 13,
+          "rrf_rank": 13,
+          "score": 0.02421875,
+          "member_ids": [
+            "support-4"
+          ],
+          "state_keys": [
+            "support_note_4"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:388a9ceb676ea20441142fe3cfaf6b314f1280c665bdea6459c02bd7c5884b92",
+          "rank": 14,
+          "rrf_rank": 14,
+          "score": 0.02220444,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:2253ea4b1ac37a46b926606101f78d9383acc1729989b4926f7159798c43185e",
+          "rank": 15,
+          "rrf_rank": 15,
+          "score": 0.02166224,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-project",
+          "rank": 16,
+          "rrf_rank": 16,
+          "score": 0.02131148,
+          "member_ids": [
+            "graph-project"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-project-alias",
+          "rank": 17,
+          "rrf_rank": 17,
+          "score": 0.02096774,
+          "member_ids": [
+            "graph-project-alias"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "event:69e2a975138de12424a1d7f9936cbbb605c092166a78fd42cfcc2337e4dab3f8",
+          "rank": 18,
+          "rrf_rank": 18,
+          "score": 0.02073147,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-agent",
+          "rank": 19,
+          "rrf_rank": 19,
+          "score": 0.02051091,
+          "member_ids": [
+            "graph-agent"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "event:643e1dc6fb9b8b9bae94f2575c0b1338ec8e8175f6f59b13845794aa6e2d4c9f",
+          "rank": 20,
+          "rrf_rank": 20,
+          "score": 0.016,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:ca7b332bb6c9eda5f1e792cbe52c5860bcf5a9de3880c6f27124f1eec96f059b",
+          "rank": 21,
+          "rrf_rank": 21,
+          "score": 0.01538462,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:d6285738350e5026dc84aac33edb931d21638832b5ad07cb48a61d70f526381f",
+          "rank": 22,
+          "rrf_rank": 22,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-b"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:a6e19c61e6504a3923f7e0753ee62a8b9b6f3ca177216447ec7f2f3866c7f220",
+          "rank": 23,
+          "rrf_rank": 23,
+          "score": 0.01384615,
+          "member_ids": [
+            "support-9"
+          ],
+          "state_keys": [
+            "support_note_9"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:0231520ed97c5bcdc3a7fac00caf33fef8a7bd122fe84915a8ff789a6380cab4",
+          "rank": 24,
+          "rrf_rank": 24,
+          "score": 0.01363636,
+          "member_ids": [
+            "support-10"
+          ],
+          "state_keys": [
+            "support_note_10"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:0d17f626158146cd8086dd75ddf9cdd87cfe066bc602701c7ef2764533638d08",
+          "rank": 25,
+          "rrf_rank": 25,
+          "score": 0.01343284,
+          "member_ids": [
+            "support-11"
+          ],
+          "state_keys": [
+            "support_note_11"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:ef296528a4dd26f7c0b8d51612cc4400e54c9546fc5dad15003e549348f0befe",
+          "rank": 26,
+          "rrf_rank": 26,
+          "score": 0.01323529,
+          "member_ids": [
+            "support-12"
+          ],
+          "state_keys": [
+            "support_note_12"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        }
+      ],
+      "final_20": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.04866756,
+          "member_ids": [
+            "preference-core",
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector",
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:26aae369e29a54a59f8f06b4ef28b23b7bf2e07a7d69db75b155cc78ece26103",
+          "rank": 2,
+          "rrf_rank": 2,
+          "score": 0.03860025,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:cf372541f160e39a557d9d3810107471c715b594518a7f3f42be28c7374dd8a0",
+          "rank": 3,
+          "rrf_rank": 3,
+          "score": 0.03269795,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:3f6ea6bb184b01fe189467ce7798c38b8ffd30f29192cb9dd4c307a703afe0cc",
+          "rank": 4,
+          "rrf_rank": 4,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:7f27a2f3e0e63eafa71fb9d1751116a446bb7e04b9e9f3df34ab7fad6c96eaa3",
+          "rank": 5,
+          "rrf_rank": 5,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 6,
+          "rrf_rank": 6,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 7,
+          "rrf_rank": 7,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 8,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:606d5cb1c5e4e7ea9ca8dd74ae7da6071afaa9dde72658cfbcda768751a0506e",
+          "rank": 10,
+          "rrf_rank": 10,
+          "score": 0.02540984,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:b0e3f5a26cd6d6242df4fce20543d518b88ef762beb4eee979e4be8e005e6b70",
+          "rank": 11,
+          "rrf_rank": 11,
+          "score": 0.025,
+          "member_ids": [
+            "support-2"
+          ],
+          "state_keys": [
+            "support_note_2"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:d28512dbc8e85c1e0bba458bb233631c3384c89680b0bbde068ae8b64204927f",
+          "rank": 12,
+          "rrf_rank": 12,
+          "score": 0.02460317,
+          "member_ids": [
+            "support-3"
+          ],
+          "state_keys": [
+            "support_note_3"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:4cd75c3c3254ff9824976804b89aaaf54672622e96176a518791ede8936b5bd4",
+          "rank": 13,
+          "rrf_rank": 13,
+          "score": 0.02421875,
+          "member_ids": [
+            "support-4"
+          ],
+          "state_keys": [
+            "support_note_4"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:388a9ceb676ea20441142fe3cfaf6b314f1280c665bdea6459c02bd7c5884b92",
+          "rank": 14,
+          "rrf_rank": 14,
+          "score": 0.02220444,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:2253ea4b1ac37a46b926606101f78d9383acc1729989b4926f7159798c43185e",
+          "rank": 15,
+          "rrf_rank": 15,
+          "score": 0.02166224,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:69e2a975138de12424a1d7f9936cbbb605c092166a78fd42cfcc2337e4dab3f8",
+          "rank": 16,
+          "rrf_rank": 18,
+          "score": 0.02073147,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:643e1dc6fb9b8b9bae94f2575c0b1338ec8e8175f6f59b13845794aa6e2d4c9f",
+          "rank": 17,
+          "rrf_rank": 20,
+          "score": 0.016,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:ca7b332bb6c9eda5f1e792cbe52c5860bcf5a9de3880c6f27124f1eec96f059b",
+          "rank": 18,
+          "rrf_rank": 21,
+          "score": 0.01538462,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:d6285738350e5026dc84aac33edb931d21638832b5ad07cb48a61d70f526381f",
+          "rank": 19,
+          "rrf_rank": 22,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-b"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:a6e19c61e6504a3923f7e0753ee62a8b9b6f3ca177216447ec7f2f3866c7f220",
+          "rank": 20,
+          "rrf_rank": 23,
+          "score": 0.01384615,
+          "member_ids": [
+            "support-9"
+          ],
+          "state_keys": [
+            "support_note_9"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        }
+      ],
+      "answer_top_10": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.04866756,
+          "member_ids": [
+            "preference-core",
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector",
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:26aae369e29a54a59f8f06b4ef28b23b7bf2e07a7d69db75b155cc78ece26103",
+          "rank": 2,
+          "rrf_rank": 2,
+          "score": 0.03860025,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:cf372541f160e39a557d9d3810107471c715b594518a7f3f42be28c7374dd8a0",
+          "rank": 3,
+          "rrf_rank": 3,
+          "score": 0.03269795,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:3f6ea6bb184b01fe189467ce7798c38b8ffd30f29192cb9dd4c307a703afe0cc",
+          "rank": 4,
+          "rrf_rank": 4,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:7f27a2f3e0e63eafa71fb9d1751116a446bb7e04b9e9f3df34ab7fad6c96eaa3",
+          "rank": 5,
+          "rrf_rank": 5,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 6,
+          "rrf_rank": 6,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 7,
+          "rrf_rank": 7,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 8,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false,
+          "selection_reason": "ablation_selector_off_rank_only"
+        },
+        {
+          "id": "event:606d5cb1c5e4e7ea9ca8dd74ae7da6071afaa9dde72658cfbcda768751a0506e",
+          "rank": 10,
+          "rrf_rank": 10,
+          "score": 0.02540984,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true,
+          "selection_reason": "ablation_selector_off_rank_only"
+        }
+      ],
+      "metrics": {
+        "candidate_count": 27,
+        "group_count": 26,
+        "final_20_count": 20,
+        "answer_top_10_count": 10,
+        "required_slots": [
+          "goal",
+          "budget",
+          "time",
+          "preference",
+          "boundary",
+          "temporal",
+          "conflict",
+          "provenance"
+        ],
+        "covered_slots": [
+          "budget",
+          "conflict",
+          "goal",
+          "preference",
+          "temporal"
+        ],
+        "slot_coverage": 0.625,
+        "source_agents": [
+          "Agent-A",
+          "Agent-B",
+          "Agent-C"
+        ],
+        "duplicate_evidence_rate": 0.037,
+        "candidate_graph_noise_ratio": 0.1111,
+        "candidate_support_noise_ratio": 0.4444,
+        "final_support_noise_ratio": 0.45,
+        "answer_support_noise_ratio": 0.5
+      }
+    },
+    {
+      "condition": "grouping_off",
+      "ablation": "grouping_off",
+      "config": {
+        "researchMode": true,
+        "ablation": "grouping_off"
+      },
+      "channel_audit": [
+        {
+          "candidateId": "raw-preference",
+          "evidenceKind": "raw_event",
+          "eligibleChannels": [
+            "raw_event_vector"
+          ],
+          "excludedChannels": [
+            "assertion_vector",
+            "assertion_fts",
+            "subject_attachment",
+            "raw_event_fallback"
+          ]
+        }
+      ],
+      "candidate_pool": [
+        {
+          "id": "support-5",
+          "kind": "assertion",
+          "rank": 1,
+          "score": 0.03860025,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_5",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-6",
+          "kind": "assertion",
+          "rank": 2,
+          "score": 0.03269795,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_6",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-7",
+          "kind": "assertion",
+          "rank": 3,
+          "score": 0.03219616,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_7",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-8",
+          "kind": "assertion",
+          "rank": 4,
+          "score": 0.03170956,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_8",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "goal-core",
+          "kind": "assertion",
+          "rank": 5,
+          "score": 0.03043478,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "goal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "budget-core",
+          "kind": "assertion",
+          "rank": 6,
+          "score": 0.03,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "budget",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "preference-core",
+          "kind": "assertion",
+          "rank": 7,
+          "score": 0.02899543,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "preference",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "phase-current",
+          "kind": "assertion",
+          "rank": 8,
+          "score": 0.02889227,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "temporal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "conflict-current",
+          "kind": "assertion",
+          "rank": 9,
+          "score": 0.02828947,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "conflict",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-1",
+          "kind": "assertion",
+          "rank": 10,
+          "score": 0.02540984,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_1",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-2",
+          "kind": "assertion",
+          "rank": 11,
+          "score": 0.025,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_2",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-3",
+          "kind": "assertion",
+          "rank": 12,
+          "score": 0.02460317,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_3",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-4",
+          "kind": "assertion",
+          "rank": 13,
+          "score": 0.02421875,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_4",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "time-core",
+          "kind": "assertion",
+          "rank": 14,
+          "score": 0.02220444,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "time",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "boundary-core",
+          "kind": "assertion",
+          "rank": 15,
+          "score": 0.02166224,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "boundary",
+          "source_agent": "Agent-D",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "graph-project",
+          "kind": "entity",
+          "rank": 16,
+          "score": 0.02131148,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "graph-project-alias",
+          "kind": "entity",
+          "rank": 17,
+          "score": 0.02096774,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "conflict-invalidated",
+          "kind": "assertion",
+          "rank": 18,
+          "score": 0.02073147,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "conflict",
+          "source_agent": "Agent-D",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "graph-agent",
+          "kind": "entity",
+          "rank": 19,
+          "score": 0.02051091,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "raw-preference",
+          "kind": "assertion",
+          "rank": 20,
+          "score": 0.01967213,
+          "sources": [
+            "raw_event_vector"
+          ],
+          "evidence_kind": "raw_event",
+          "state_key": "preference",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "phase-history",
+          "kind": "assertion",
+          "rank": 21,
+          "score": 0.016,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "temporal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "provenance-a",
+          "kind": "assertion",
+          "rank": 22,
+          "score": 0.01538462,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "provenance",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "provenance-b",
+          "kind": "assertion",
+          "rank": 23,
+          "score": 0.01518987,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "provenance",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-9",
+          "kind": "assertion",
+          "rank": 24,
+          "score": 0.01384615,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_9",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-10",
+          "kind": "assertion",
+          "rank": 25,
+          "score": 0.01363636,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_10",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-11",
+          "kind": "assertion",
+          "rank": 26,
+          "score": 0.01343284,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_11",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-12",
+          "kind": "assertion",
+          "rank": 27,
+          "score": 0.01323529,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_12",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        }
+      ],
+      "evidence_groups": [
+        {
+          "id": "standalone:assertion:support-5",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.03860025,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-6",
+          "rank": 2,
+          "rrf_rank": 2,
+          "score": 0.03269795,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-7",
+          "rank": 3,
+          "rrf_rank": 3,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-8",
+          "rank": 4,
+          "rrf_rank": 4,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:goal-core",
+          "rank": 5,
+          "rrf_rank": 5,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:budget-core",
+          "rank": 6,
+          "rrf_rank": 6,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:preference-core",
+          "rank": 7,
+          "rrf_rank": 7,
+          "score": 0.02899543,
+          "member_ids": [
+            "preference-core"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:phase-current",
+          "rank": 8,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:conflict-current",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:support-1",
+          "rank": 10,
+          "rrf_rank": 10,
+          "score": 0.02540984,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-2",
+          "rank": 11,
+          "rrf_rank": 11,
+          "score": 0.025,
+          "member_ids": [
+            "support-2"
+          ],
+          "state_keys": [
+            "support_note_2"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-3",
+          "rank": 12,
+          "rrf_rank": 12,
+          "score": 0.02460317,
+          "member_ids": [
+            "support-3"
+          ],
+          "state_keys": [
+            "support_note_3"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-4",
+          "rank": 13,
+          "rrf_rank": 13,
+          "score": 0.02421875,
+          "member_ids": [
+            "support-4"
+          ],
+          "state_keys": [
+            "support_note_4"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:time-core",
+          "rank": 14,
+          "rrf_rank": 14,
+          "score": 0.02220444,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:boundary-core",
+          "rank": 15,
+          "rrf_rank": 15,
+          "score": 0.02166224,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:entity:graph-project",
+          "rank": 16,
+          "rrf_rank": 16,
+          "score": 0.02131148,
+          "member_ids": [
+            "graph-project"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:entity:graph-project-alias",
+          "rank": 17,
+          "rrf_rank": 17,
+          "score": 0.02096774,
+          "member_ids": [
+            "graph-project-alias"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:conflict-invalidated",
+          "rank": 18,
+          "rrf_rank": 18,
+          "score": 0.02073147,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:entity:graph-agent",
+          "rank": 19,
+          "rrf_rank": 19,
+          "score": 0.02051091,
+          "member_ids": [
+            "graph-agent"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:raw-preference",
+          "rank": 20,
+          "rrf_rank": 20,
+          "score": 0.01967213,
+          "member_ids": [
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:phase-history",
+          "rank": 21,
+          "rrf_rank": 21,
+          "score": 0.016,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:provenance-a",
+          "rank": 22,
+          "rrf_rank": 22,
+          "score": 0.01538462,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:provenance-b",
+          "rank": 23,
+          "rrf_rank": 23,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-b"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:support-9",
+          "rank": 24,
+          "rrf_rank": 24,
+          "score": 0.01384615,
+          "member_ids": [
+            "support-9"
+          ],
+          "state_keys": [
+            "support_note_9"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-10",
+          "rank": 25,
+          "rrf_rank": 25,
+          "score": 0.01363636,
+          "member_ids": [
+            "support-10"
+          ],
+          "state_keys": [
+            "support_note_10"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-11",
+          "rank": 26,
+          "rrf_rank": 26,
+          "score": 0.01343284,
+          "member_ids": [
+            "support-11"
+          ],
+          "state_keys": [
+            "support_note_11"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-12",
+          "rank": 27,
+          "rrf_rank": 27,
+          "score": 0.01323529,
+          "member_ids": [
+            "support-12"
+          ],
+          "state_keys": [
+            "support_note_12"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        }
+      ],
+      "final_20": [
+        {
+          "id": "standalone:assertion:goal-core",
+          "rank": 1,
+          "rrf_rank": 5,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:phase-current",
+          "rank": 2,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:budget-core",
+          "rank": 3,
+          "rrf_rank": 6,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:preference-core",
+          "rank": 4,
+          "rrf_rank": 7,
+          "score": 0.02899543,
+          "member_ids": [
+            "preference-core"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:boundary-core",
+          "rank": 5,
+          "rrf_rank": 15,
+          "score": 0.02166224,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:time-core",
+          "rank": 6,
+          "rrf_rank": 14,
+          "score": 0.02220444,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:raw-preference",
+          "rank": 7,
+          "rrf_rank": 20,
+          "score": 0.01967213,
+          "member_ids": [
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:phase-history",
+          "rank": 8,
+          "rrf_rank": 21,
+          "score": 0.016,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:provenance-a",
+          "rank": 9,
+          "rrf_rank": 22,
+          "score": 0.01538462,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:conflict-current",
+          "rank": 10,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:support-5",
+          "rank": 11,
+          "rrf_rank": 1,
+          "score": 0.03860025,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-6",
+          "rank": 12,
+          "rrf_rank": 2,
+          "score": 0.03269795,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-7",
+          "rank": 13,
+          "rrf_rank": 3,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-8",
+          "rank": 14,
+          "rrf_rank": 4,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-1",
+          "rank": 15,
+          "rrf_rank": 10,
+          "score": 0.02540984,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-2",
+          "rank": 16,
+          "rrf_rank": 11,
+          "score": 0.025,
+          "member_ids": [
+            "support-2"
+          ],
+          "state_keys": [
+            "support_note_2"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-3",
+          "rank": 17,
+          "rrf_rank": 12,
+          "score": 0.02460317,
+          "member_ids": [
+            "support-3"
+          ],
+          "state_keys": [
+            "support_note_3"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:support-4",
+          "rank": 18,
+          "rrf_rank": 13,
+          "score": 0.02421875,
+          "member_ids": [
+            "support-4"
+          ],
+          "state_keys": [
+            "support_note_4"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "standalone:assertion:conflict-invalidated",
+          "rank": 19,
+          "rrf_rank": 18,
+          "score": 0.02073147,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "standalone:assertion:provenance-b",
+          "rank": 20,
+          "rrf_rank": 23,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-b"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        }
+      ],
+      "answer_top_10": [
+        {
+          "id": "standalone:assertion:goal-core",
+          "rank": 1,
+          "rrf_rank": 5,
+          "score": 0.03043478,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false,
+          "selection_reason": "highest_relevance_core_evidence"
+        },
+        {
+          "id": "standalone:assertion:phase-current",
+          "rank": 2,
+          "rrf_rank": 8,
+          "score": 0.02889227,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false,
+          "selection_reason": "state_transition"
+        },
+        {
+          "id": "standalone:assertion:budget-core",
+          "rank": 3,
+          "rrf_rank": 6,
+          "score": 0.03,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false,
+          "selection_reason": "distinct_relevant_source_agent"
+        },
+        {
+          "id": "standalone:assertion:preference-core",
+          "rank": 4,
+          "rrf_rank": 7,
+          "score": 0.02899543,
+          "member_ids": [
+            "preference-core"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false,
+          "selection_reason": "distinct_relevant_source_agent"
+        },
+        {
+          "id": "standalone:assertion:boundary-core",
+          "rank": 5,
+          "rrf_rank": 15,
+          "score": 0.02166224,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false,
+          "selection_reason": "distinct_relevant_source_agent"
+        },
+        {
+          "id": "standalone:assertion:time-core",
+          "rank": 6,
+          "rrf_rank": 14,
+          "score": 0.02220444,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "standalone:assertion:raw-preference",
+          "rank": 7,
+          "rrf_rank": 20,
+          "score": 0.01967213,
+          "member_ids": [
+            "raw-preference"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "raw_event_vector"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "standalone:assertion:phase-history",
+          "rank": 8,
+          "rrf_rank": 21,
+          "score": 0.016,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "standalone:assertion:provenance-a",
+          "rank": 9,
+          "rrf_rank": 22,
+          "score": 0.01538462,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "standalone:assertion:conflict-current",
+          "rank": 10,
+          "rrf_rank": 9,
+          "score": 0.02828947,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        }
+      ],
+      "metrics": {
+        "candidate_count": 27,
+        "group_count": 27,
+        "final_20_count": 20,
+        "answer_top_10_count": 10,
+        "required_slots": [
+          "goal",
+          "budget",
+          "time",
+          "preference",
+          "boundary",
+          "temporal",
+          "conflict",
+          "provenance"
+        ],
+        "covered_slots": [
+          "boundary",
+          "budget",
+          "conflict",
+          "goal",
+          "preference",
+          "provenance",
+          "temporal",
+          "time"
+        ],
+        "slot_coverage": 1,
+        "source_agents": [
+          "Agent-A",
+          "Agent-B",
+          "Agent-C",
+          "Agent-D"
+        ],
+        "duplicate_evidence_rate": 0,
+        "candidate_graph_noise_ratio": 0.1111,
+        "candidate_support_noise_ratio": 0.4444,
+        "final_support_noise_ratio": 0.4,
+        "answer_support_noise_ratio": 0
+      }
+    },
+    {
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off",
+      "config": {
+        "researchMode": true,
+        "ablation": "source_aware_fusion_off"
+      },
+      "channel_audit": [],
+      "candidate_pool": [
+        {
+          "id": "raw-preference",
+          "kind": "assertion",
+          "rank": 1,
+          "score": 0.0442623,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts",
+            "subject_attachment",
+            "raw_event_fallback"
+          ],
+          "evidence_kind": "raw_event",
+          "state_key": "preference",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-5",
+          "kind": "assertion",
+          "rank": 2,
+          "score": 0.03800098,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_5",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-6",
+          "kind": "assertion",
+          "rank": 3,
+          "score": 0.03219616,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_6",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-7",
+          "kind": "assertion",
+          "rank": 4,
+          "score": 0.03170956,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_7",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-8",
+          "kind": "assertion",
+          "rank": 5,
+          "score": 0.03123746,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_8",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "goal-core",
+          "kind": "assertion",
+          "rank": 6,
+          "score": 0.03,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "goal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "budget-core",
+          "kind": "assertion",
+          "rank": 7,
+          "score": 0.02957746,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "budget",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "preference-core",
+          "kind": "assertion",
+          "rank": 8,
+          "score": 0.02860052,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "preference",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "phase-current",
+          "kind": "assertion",
+          "rank": 9,
+          "score": 0.0285,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "temporal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "conflict-current",
+          "kind": "assertion",
+          "rank": 10,
+          "score": 0.02791318,
+          "sources": [
+            "assertion_vector",
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "conflict",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-1",
+          "kind": "assertion",
+          "rank": 11,
+          "score": 0.025,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_1",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-2",
+          "kind": "assertion",
+          "rank": 12,
+          "score": 0.02460317,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_2",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-3",
+          "kind": "assertion",
+          "rank": 13,
+          "score": 0.02421875,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_3",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-4",
+          "kind": "assertion",
+          "rank": 14,
+          "score": 0.02384615,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_4",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "time-core",
+          "kind": "assertion",
+          "rank": 15,
+          "score": 0.02189055,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "time",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "boundary-core",
+          "kind": "assertion",
+          "rank": 16,
+          "score": 0.02136328,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "boundary",
+          "source_agent": "Agent-D",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "graph-project",
+          "kind": "entity",
+          "rank": 17,
+          "score": 0.02131148,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "graph-project-alias",
+          "kind": "entity",
+          "rank": 18,
+          "score": 0.02096774,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "graph-agent",
+          "kind": "entity",
+          "rank": 19,
+          "score": 0.02051091,
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "evidence_kind": "entity",
+          "state_key": null,
+          "source_agent": null,
+          "graph_noise": true,
+          "support_noise": false
+        },
+        {
+          "id": "conflict-invalidated",
+          "kind": "assertion",
+          "rank": 20,
+          "score": 0.02045708,
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "conflict",
+          "source_agent": "Agent-D",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "phase-history",
+          "kind": "assertion",
+          "rank": 21,
+          "score": 0.01578947,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "temporal",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "provenance-a",
+          "kind": "assertion",
+          "rank": 22,
+          "score": 0.01518987,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "provenance",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "provenance-b",
+          "kind": "assertion",
+          "rank": 23,
+          "score": 0.015,
+          "sources": [
+            "assertion_vector"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "provenance",
+          "source_agent": "Agent-B",
+          "graph_noise": false,
+          "support_noise": false
+        },
+        {
+          "id": "support-9",
+          "kind": "assertion",
+          "rank": 24,
+          "score": 0.01363636,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_9",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-10",
+          "kind": "assertion",
+          "rank": 25,
+          "score": 0.01343284,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_10",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-11",
+          "kind": "assertion",
+          "rank": 26,
+          "score": 0.01323529,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_11",
+          "source_agent": "Agent-A",
+          "graph_noise": false,
+          "support_noise": true
+        },
+        {
+          "id": "support-12",
+          "kind": "assertion",
+          "rank": 27,
+          "score": 0.01304348,
+          "sources": [
+            "assertion_fts"
+          ],
+          "evidence_kind": "normalized_assertion",
+          "state_key": "support_note_12",
+          "source_agent": "Agent-C",
+          "graph_noise": false,
+          "support_noise": true
+        }
+      ],
+      "evidence_groups": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.0442623,
+          "member_ids": [
+            "raw-preference",
+            "preference-core"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "raw_event_fallback",
+            "subject_attachment"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:26aae369e29a54a59f8f06b4ef28b23b7bf2e07a7d69db75b155cc78ece26103",
+          "rank": 2,
+          "rrf_rank": 2,
+          "score": 0.03800098,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:cf372541f160e39a557d9d3810107471c715b594518a7f3f42be28c7374dd8a0",
+          "rank": 3,
+          "rrf_rank": 3,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:3f6ea6bb184b01fe189467ce7798c38b8ffd30f29192cb9dd4c307a703afe0cc",
+          "rank": 4,
+          "rrf_rank": 4,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:7f27a2f3e0e63eafa71fb9d1751116a446bb7e04b9e9f3df34ab7fad6c96eaa3",
+          "rank": 5,
+          "rrf_rank": 5,
+          "score": 0.03123746,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 6,
+          "rrf_rank": 6,
+          "score": 0.03,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 7,
+          "rrf_rank": 7,
+          "score": 0.02957746,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 8,
+          "rrf_rank": 8,
+          "score": 0.0285,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02791318,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:606d5cb1c5e4e7ea9ca8dd74ae7da6071afaa9dde72658cfbcda768751a0506e",
+          "rank": 10,
+          "rrf_rank": 10,
+          "score": 0.025,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:b0e3f5a26cd6d6242df4fce20543d518b88ef762beb4eee979e4be8e005e6b70",
+          "rank": 11,
+          "rrf_rank": 11,
+          "score": 0.02460317,
+          "member_ids": [
+            "support-2"
+          ],
+          "state_keys": [
+            "support_note_2"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:d28512dbc8e85c1e0bba458bb233631c3384c89680b0bbde068ae8b64204927f",
+          "rank": 12,
+          "rrf_rank": 12,
+          "score": 0.02421875,
+          "member_ids": [
+            "support-3"
+          ],
+          "state_keys": [
+            "support_note_3"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:4cd75c3c3254ff9824976804b89aaaf54672622e96176a518791ede8936b5bd4",
+          "rank": 13,
+          "rrf_rank": 13,
+          "score": 0.02384615,
+          "member_ids": [
+            "support-4"
+          ],
+          "state_keys": [
+            "support_note_4"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:388a9ceb676ea20441142fe3cfaf6b314f1280c665bdea6459c02bd7c5884b92",
+          "rank": 14,
+          "rrf_rank": 14,
+          "score": 0.02189055,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:2253ea4b1ac37a46b926606101f78d9383acc1729989b4926f7159798c43185e",
+          "rank": 15,
+          "rrf_rank": 15,
+          "score": 0.02136328,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-project",
+          "rank": 16,
+          "rrf_rank": 16,
+          "score": 0.02131148,
+          "member_ids": [
+            "graph-project"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-project-alias",
+          "rank": 17,
+          "rrf_rank": 17,
+          "score": 0.02096774,
+          "member_ids": [
+            "graph-project-alias"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "self:entity:graph-agent",
+          "rank": 18,
+          "rrf_rank": 18,
+          "score": 0.02051091,
+          "member_ids": [
+            "graph-agent"
+          ],
+          "state_keys": [],
+          "states": [
+            "current"
+          ],
+          "source_agents": [],
+          "sources": [
+            "entity_vector",
+            "graph"
+          ],
+          "slots": [],
+          "support_noise": false
+        },
+        {
+          "id": "event:69e2a975138de12424a1d7f9936cbbb605c092166a78fd42cfcc2337e4dab3f8",
+          "rank": 19,
+          "rrf_rank": 19,
+          "score": 0.02045708,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:643e1dc6fb9b8b9bae94f2575c0b1338ec8e8175f6f59b13845794aa6e2d4c9f",
+          "rank": 20,
+          "rrf_rank": 20,
+          "score": 0.01578947,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:ca7b332bb6c9eda5f1e792cbe52c5860bcf5a9de3880c6f27124f1eec96f059b",
+          "rank": 21,
+          "rrf_rank": 21,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:d6285738350e5026dc84aac33edb931d21638832b5ad07cb48a61d70f526381f",
+          "rank": 22,
+          "rrf_rank": 22,
+          "score": 0.015,
+          "member_ids": [
+            "provenance-b"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:a6e19c61e6504a3923f7e0753ee62a8b9b6f3ca177216447ec7f2f3866c7f220",
+          "rank": 23,
+          "rrf_rank": 23,
+          "score": 0.01363636,
+          "member_ids": [
+            "support-9"
+          ],
+          "state_keys": [
+            "support_note_9"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:0231520ed97c5bcdc3a7fac00caf33fef8a7bd122fe84915a8ff789a6380cab4",
+          "rank": 24,
+          "rrf_rank": 24,
+          "score": 0.01343284,
+          "member_ids": [
+            "support-10"
+          ],
+          "state_keys": [
+            "support_note_10"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:0d17f626158146cd8086dd75ddf9cdd87cfe066bc602701c7ef2764533638d08",
+          "rank": 25,
+          "rrf_rank": 25,
+          "score": 0.01323529,
+          "member_ids": [
+            "support-11"
+          ],
+          "state_keys": [
+            "support_note_11"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:ef296528a4dd26f7c0b8d51612cc4400e54c9546fc5dad15003e549348f0befe",
+          "rank": 26,
+          "rrf_rank": 26,
+          "score": 0.01304348,
+          "member_ids": [
+            "support-12"
+          ],
+          "state_keys": [
+            "support_note_12"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        }
+      ],
+      "final_20": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.0442623,
+          "member_ids": [
+            "raw-preference",
+            "preference-core"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "raw_event_fallback",
+            "subject_attachment"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 2,
+          "rrf_rank": 8,
+          "score": 0.0285,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 3,
+          "rrf_rank": 7,
+          "score": 0.02957746,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:2253ea4b1ac37a46b926606101f78d9383acc1729989b4926f7159798c43185e",
+          "rank": 4,
+          "rrf_rank": 15,
+          "score": 0.02136328,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 5,
+          "rrf_rank": 6,
+          "score": 0.03,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:388a9ceb676ea20441142fe3cfaf6b314f1280c665bdea6459c02bd7c5884b92",
+          "rank": 6,
+          "rrf_rank": 14,
+          "score": 0.02189055,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:643e1dc6fb9b8b9bae94f2575c0b1338ec8e8175f6f59b13845794aa6e2d4c9f",
+          "rank": 7,
+          "rrf_rank": 20,
+          "score": 0.01578947,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:ca7b332bb6c9eda5f1e792cbe52c5860bcf5a9de3880c6f27124f1eec96f059b",
+          "rank": 8,
+          "rrf_rank": 21,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02791318,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:69e2a975138de12424a1d7f9936cbbb605c092166a78fd42cfcc2337e4dab3f8",
+          "rank": 10,
+          "rrf_rank": 19,
+          "score": 0.02045708,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:26aae369e29a54a59f8f06b4ef28b23b7bf2e07a7d69db75b155cc78ece26103",
+          "rank": 11,
+          "rrf_rank": 2,
+          "score": 0.03800098,
+          "member_ids": [
+            "support-5"
+          ],
+          "state_keys": [
+            "support_note_5"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:cf372541f160e39a557d9d3810107471c715b594518a7f3f42be28c7374dd8a0",
+          "rank": 12,
+          "rrf_rank": 3,
+          "score": 0.03219616,
+          "member_ids": [
+            "support-6"
+          ],
+          "state_keys": [
+            "support_note_6"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:3f6ea6bb184b01fe189467ce7798c38b8ffd30f29192cb9dd4c307a703afe0cc",
+          "rank": 13,
+          "rrf_rank": 4,
+          "score": 0.03170956,
+          "member_ids": [
+            "support-7"
+          ],
+          "state_keys": [
+            "support_note_7"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:7f27a2f3e0e63eafa71fb9d1751116a446bb7e04b9e9f3df34ab7fad6c96eaa3",
+          "rank": 14,
+          "rrf_rank": 5,
+          "score": 0.03123746,
+          "member_ids": [
+            "support-8"
+          ],
+          "state_keys": [
+            "support_note_8"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:606d5cb1c5e4e7ea9ca8dd74ae7da6071afaa9dde72658cfbcda768751a0506e",
+          "rank": 15,
+          "rrf_rank": 10,
+          "score": 0.025,
+          "member_ids": [
+            "support-1"
+          ],
+          "state_keys": [
+            "support_note_1"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:b0e3f5a26cd6d6242df4fce20543d518b88ef762beb4eee979e4be8e005e6b70",
+          "rank": 16,
+          "rrf_rank": 11,
+          "score": 0.02460317,
+          "member_ids": [
+            "support-2"
+          ],
+          "state_keys": [
+            "support_note_2"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:d28512dbc8e85c1e0bba458bb233631c3384c89680b0bbde068ae8b64204927f",
+          "rank": 17,
+          "rrf_rank": 12,
+          "score": 0.02421875,
+          "member_ids": [
+            "support-3"
+          ],
+          "state_keys": [
+            "support_note_3"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:4cd75c3c3254ff9824976804b89aaaf54672622e96176a518791ede8936b5bd4",
+          "rank": 18,
+          "rrf_rank": 13,
+          "score": 0.02384615,
+          "member_ids": [
+            "support-4"
+          ],
+          "state_keys": [
+            "support_note_4"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_vector",
+            "subject_attachment"
+          ],
+          "slots": [],
+          "support_noise": true
+        },
+        {
+          "id": "event:d6285738350e5026dc84aac33edb931d21638832b5ad07cb48a61d70f526381f",
+          "rank": 19,
+          "rrf_rank": 22,
+          "score": 0.015,
+          "member_ids": [
+            "provenance-b"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false
+        },
+        {
+          "id": "event:a6e19c61e6504a3923f7e0753ee62a8b9b6f3ca177216447ec7f2f3866c7f220",
+          "rank": 20,
+          "rrf_rank": 23,
+          "score": 0.01363636,
+          "member_ids": [
+            "support-9"
+          ],
+          "state_keys": [
+            "support_note_9"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts"
+          ],
+          "slots": [],
+          "support_noise": true
+        }
+      ],
+      "answer_top_10": [
+        {
+          "id": "event:8b6162637cb0d62fcf67aa66317f2100c7fd98284ec3671fa098a196c20d6b3c",
+          "rank": 1,
+          "rrf_rank": 1,
+          "score": 0.0442623,
+          "member_ids": [
+            "raw-preference",
+            "preference-core"
+          ],
+          "state_keys": [
+            "preference"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-B"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector",
+            "raw_event_fallback",
+            "subject_attachment"
+          ],
+          "slots": [
+            "preference"
+          ],
+          "support_noise": false,
+          "selection_reason": "highest_relevance_core_evidence"
+        },
+        {
+          "id": "event:5ae752a906a79105e3aa972a8d415dcf1df0506b4f7de894a1537a45ba36aa43",
+          "rank": 2,
+          "rrf_rank": 8,
+          "score": 0.0285,
+          "member_ids": [
+            "phase-current"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false,
+          "selection_reason": "state_transition"
+        },
+        {
+          "id": "event:58b4b2b1e8042fce4766bda92fba17da857ab9b266bfd7aa208b4e4c971f07c1",
+          "rank": 3,
+          "rrf_rank": 7,
+          "score": 0.02957746,
+          "member_ids": [
+            "budget-core"
+          ],
+          "state_keys": [
+            "budget"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "budget"
+          ],
+          "support_noise": false,
+          "selection_reason": "distinct_relevant_source_agent"
+        },
+        {
+          "id": "event:2253ea4b1ac37a46b926606101f78d9383acc1729989b4926f7159798c43185e",
+          "rank": 4,
+          "rrf_rank": 15,
+          "score": 0.02136328,
+          "member_ids": [
+            "boundary-core"
+          ],
+          "state_keys": [
+            "boundary"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "boundary"
+          ],
+          "support_noise": false,
+          "selection_reason": "distinct_relevant_source_agent"
+        },
+        {
+          "id": "event:bb9aba9c36e601526882334c7174ac84681b17edeceb1ff96261c4974d325616",
+          "rank": 5,
+          "rrf_rank": 6,
+          "score": 0.03,
+          "member_ids": [
+            "goal-core"
+          ],
+          "state_keys": [
+            "goal"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "goal"
+          ],
+          "support_noise": false,
+          "selection_reason": "decision_goal"
+        },
+        {
+          "id": "event:388a9ceb676ea20441142fe3cfaf6b314f1280c665bdea6459c02bd7c5884b92",
+          "rank": 6,
+          "rrf_rank": 14,
+          "score": 0.02189055,
+          "member_ids": [
+            "time-core"
+          ],
+          "state_keys": [
+            "time"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "time"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "event:643e1dc6fb9b8b9bae94f2575c0b1338ec8e8175f6f59b13845794aa6e2d4c9f",
+          "rank": 7,
+          "rrf_rank": 20,
+          "score": 0.01578947,
+          "member_ids": [
+            "phase-history"
+          ],
+          "state_keys": [
+            "temporal"
+          ],
+          "states": [
+            "historical"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "temporal"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "event:ca7b332bb6c9eda5f1e792cbe52c5860bcf5a9de3880c6f27124f1eec96f059b",
+          "rank": 8,
+          "rrf_rank": 21,
+          "score": 0.01518987,
+          "member_ids": [
+            "provenance-a"
+          ],
+          "state_keys": [
+            "provenance"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-A"
+          ],
+          "sources": [
+            "assertion_vector"
+          ],
+          "slots": [
+            "provenance"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "event:327e643a63e6e58d8bffb23364cac53d8672aa5854c1c17ba4c5763c755519a5",
+          "rank": 9,
+          "rrf_rank": 9,
+          "score": 0.02791318,
+          "member_ids": [
+            "conflict-current"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "current"
+          ],
+          "source_agents": [
+            "Agent-C"
+          ],
+          "sources": [
+            "assertion_fts",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        },
+        {
+          "id": "event:69e2a975138de12424a1d7f9936cbbb605c092166a78fd42cfcc2337e4dab3f8",
+          "rank": 10,
+          "rrf_rank": 19,
+          "score": 0.02045708,
+          "member_ids": [
+            "conflict-invalidated"
+          ],
+          "state_keys": [
+            "conflict"
+          ],
+          "states": [
+            "invalidated"
+          ],
+          "source_agents": [
+            "Agent-D"
+          ],
+          "sources": [
+            "subject_attachment",
+            "assertion_vector"
+          ],
+          "slots": [
+            "conflict"
+          ],
+          "support_noise": false,
+          "selection_reason": "diverse_evidence_dimension"
+        }
+      ],
+      "metrics": {
+        "candidate_count": 27,
+        "group_count": 26,
+        "final_20_count": 20,
+        "answer_top_10_count": 10,
+        "required_slots": [
+          "goal",
+          "budget",
+          "time",
+          "preference",
+          "boundary",
+          "temporal",
+          "conflict",
+          "provenance"
+        ],
+        "covered_slots": [
+          "boundary",
+          "budget",
+          "conflict",
+          "goal",
+          "preference",
+          "provenance",
+          "temporal",
+          "time"
+        ],
+        "slot_coverage": 1,
+        "source_agents": [
+          "Agent-A",
+          "Agent-B",
+          "Agent-C",
+          "Agent-D"
+        ],
+        "duplicate_evidence_rate": 0.037,
+        "candidate_graph_noise_ratio": 0.1111,
+        "candidate_support_noise_ratio": 0.4444,
+        "final_support_noise_ratio": 0.45,
+        "answer_support_noise_ratio": 0
+      }
+    }
+  ]
+}

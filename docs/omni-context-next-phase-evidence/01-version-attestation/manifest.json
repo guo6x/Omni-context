@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-07-17T01:55:00Z",
+  "frozen_product_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "freeze_tag": "evaluation-freeze-candidate-v3.1",
+  "freeze_tag_target": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "benchmark_commit": "62b0b20f944f7e9a2c58f02ce1c65bb43dfbf841",
+  "evidence_commit": "ad1fe8806255e420e65398ae67df0a50474356d4",
+  "manuscript_commit": "7cbc54b991c636a2bc088b17c2acc89064f60344",
+  "research_branch": "codex/omni-v3.1-strict-ablations",
+  "worktree": "<D_DRIVE>/OmniContext-strict-ablations",
+  "node": "v22.15.1",
+  "npm": "10.9.2",
+  "pnpm": "11.7.0",
+  "git": "2.55.0.windows.2",
+  "formal_results_modified": false,
+  "comparison_results_modified": false,
+  "development_gold_modified": false
+}
