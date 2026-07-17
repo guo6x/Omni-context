@@ -1,0 +1,7 @@
+evaluation,layer,covered,total,rate,loss_from_previous,unknown_reason,source_file
+Retrieval Preflight,Answer Top-10,37,38,0.973684,1,,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/manifest.json
+Targeted-7,Candidate Pool,28,30,0.933333,2,,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/gate-summary.json
+Targeted-7,Final-20,28,30,0.933333,0,,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/gate-summary.json
+Targeted-7,Answer Top-10,28,30,0.933333,0,,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/06-targeted-7-round-1/gate-summary.json
+Targeted-7,Final Answer,UNKNOWN,30,UNKNOWN,UNKNOWN,No machine-verified slot-level final-answer coverage artifact exists.,MISSING — slot-level final-answer coverage was not archived
+Development-35,Candidate Pool,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,No aggregate slot-level funnel artifact was archived for Development-35.,MISSING — aggregate coverage artifact

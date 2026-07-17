@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "evaluation": "Targeted-7",
+  "expected": 7,
+  "completed": 7,
+  "errors": 0,
+  "missing": 0,
+  "completion_rate": 1,
+  "error_rate": 0,
+  "overall": 0.840868,
+  "expected_machine_summary_overall": 0.840868,
+  "aggregate_matches_machine_summary": true,
+  "source_file": "<LOCAL_EVIDENCE_ROOT>/06-targeted-7-round-1/results.jsonl",
+  "extraction_script": "validation/extract_evidence.mjs",
+  "generated_at": "2026-07-17T00:29:18.762Z",
+  "coverage": {
+    "candidate_pool": {
+      "covered": 28,
+      "total": 30
+    },
+    "final_20": {
+      "covered": 28,
+      "total": 30
+    },
+    "answer_top_10": {
+      "covered": 28,
+      "total": 30
+    },
+    "final_answer": {
+      "covered": "UNKNOWN",
+      "total": 30,
+      "unknown_reason": "No machine-verified slot-level final-answer coverage artifact exists."
+    }
+  }
+}

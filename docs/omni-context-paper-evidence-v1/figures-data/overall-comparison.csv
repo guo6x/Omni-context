@@ -1,0 +1,7 @@
+evaluation,mode,expected,completed,errors,missing,completion_rate,error_rate,overall,source_file,source_field,extraction_script,validation_status
+Development-35,full_omni,35,35,0,0,1,0,0.884842,<LOCAL_EVIDENCE_ROOT>/07-development-35/results.jsonl,latest terminal records where mode=full_omni; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED
+Development-35,retrieval_only,35,35,0,0,1,0,0.563853,<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl,latest terminal records where mode=retrieval_only; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED
+Development-35,no_memory,35,35,0,0,1,0,0.366713,<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl,latest terminal records where mode=no_memory; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED
+Comparison-70,full_omni,70,70,0,0,1,0,0.870698,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest terminal records where mode=full_omni; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED
+Comparison-70,retrieval_only,70,69,1,0,0.985714,0.014286,0.552346,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest terminal records where mode=retrieval_only; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED
+Comparison-70,no_memory,70,70,0,0,1,0,0.364683,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest terminal records where mode=no_memory; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED

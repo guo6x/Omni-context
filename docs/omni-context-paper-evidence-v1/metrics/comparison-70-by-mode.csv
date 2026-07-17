@@ -1,0 +1,4 @@
+mode,expected,completed,errors,missing,completion_rate,error_rate,overall,source_file,source_field,extraction_script,validation_status
+full_omni,70,70,0,0,1,0,0.870698,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest terminal records where mode=full_omni; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED
+retrieval_only,70,69,1,0,0.985714,0.014286,0.552346,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest terminal records where mode=retrieval_only; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED
+no_memory,70,70,0,0,1,0,0.364683,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest terminal records where mode=no_memory; category-macro of $.score.core_score,validation/extract_evidence.mjs,VERIFIED

@@ -1,0 +1,20 @@
+metric,value,source_file,source_field,extraction_script,validation_status,note
+Retrieval Preflight completed,7/7,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/manifest.json,$.completed / $.total,validation/extract_evidence.mjs,VERIFIED,
+Retrieval Preflight Top-10 slot coverage,37/38,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/manifest.json,$.top10_slot_coverage,validation/extract_evidence.mjs,VERIFIED,
+Targeted-7 Overall,0.840868,<LOCAL_EVIDENCE_ROOT>/06-targeted-7-round-1/results.jsonl,latest completed[*].score.core_score aggregate,validation/extract_evidence.mjs,VERIFIED,
+Development-35 full_omni Overall,0.884842,<LOCAL_EVIDENCE_ROOT>/07-development-35/results.jsonl,latest completed[*].score.core_score aggregate,validation/extract_evidence.mjs,VERIFIED,
+Development-35 retrieval_only Overall,0.563853,<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl,latest completed[*].score.core_score aggregate,validation/extract_evidence.mjs,VERIFIED,
+Development-35 no_memory Overall,0.366713,<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl,latest completed[*].score.core_score aggregate,validation/extract_evidence.mjs,VERIFIED,
+Formal-250 completed,248/250,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl,latest status counts,validation/extract_evidence.mjs,VERIFIED,2 final errors are retained
+Formal-250 Overall,0.866546,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl,latest completed[*].score.core_score aggregate,validation/extract_evidence.mjs,VERIFIED,
+Formal P50 latency ms,150120,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl,latest completed[*].latency_ms.total,validation/extract_evidence.mjs,VERIFIED,
+Formal P95 latency ms,243581,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl,latest completed[*].latency_ms.total,validation/extract_evidence.mjs,VERIFIED,
+Comparison-70 full_omni,0.870698,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest completed[*].score.core_score aggregate,validation/extract_evidence.mjs,VERIFIED,70/70 completed; 0 error(s)
+Comparison-70 retrieval_only,0.552346,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest completed[*].score.core_score aggregate,validation/extract_evidence.mjs,VERIFIED,69/70 completed; 1 error(s)
+Comparison-70 no_memory,0.364683,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest completed[*].score.core_score aggregate,validation/extract_evidence.mjs,VERIFIED,70/70 completed; 0 error(s)
+Retry records,34,multiple supplemental results.jsonl,status == retry,validation/extract_evidence.mjs,VERIFIED,
+Answer successful calls,569,multiple supplemental results.jsonl,latest terminal[*].usage.answer_calls,validation/extract_evidence.mjs,VERIFIED,
+Extraction successful calls,998,multiple supplemental results.jsonl,latest terminal[*].usage.extraction_calls,validation/extract_evidence.mjs,VERIFIED,
+Reranker successful calls,360,multiple supplemental results.jsonl,latest terminal[*].usage.reranker_calls,validation/extract_evidence.mjs,VERIFIED,
+Kimi logical judge calls,152,multiple supplemental results.jsonl,latest terminal[*].usage.judge_calls,validation/extract_evidence.mjs,VERIFIED,
+Kimi physical attempts,163,stage Kimi usage manifests,successful physical attempts across stages,validation/extract_evidence.mjs,VERIFIED,

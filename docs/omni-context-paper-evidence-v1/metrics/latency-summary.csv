@@ -1,0 +1,9 @@
+stage,mode,completed,p50_ms,p95_ms,minimum_ms,maximum_ms,source_file,source_field,extraction_script,validation_status
+Targeted-7,full_omni,7,171869,366056,112123,366056,See evidence index,latest completed records where mode=full_omni: $.latency_ms.total,validation/extract_evidence.mjs,VERIFIED
+Development-35,full_omni,35,157953,320382,55801,359451,See evidence index,latest completed records where mode=full_omni: $.latency_ms.total,validation/extract_evidence.mjs,VERIFIED
+Development baselines,no_memory,35,1718,27975,1324,38570,See evidence index,latest completed records where mode=no_memory: $.latency_ms.total,validation/extract_evidence.mjs,VERIFIED
+Development baselines,retrieval_only,35,3381,21806,2337,24859,See evidence index,latest completed records where mode=retrieval_only: $.latency_ms.total,validation/extract_evidence.mjs,VERIFIED
+Formal-250,full_omni,248,150120,243581,49158,351626,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl,latest completed records where mode=full_omni: $.latency_ms.total,validation/extract_evidence.mjs,VERIFIED
+Comparison-70,no_memory,70,1772,13627,1286,19663,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest completed records where mode=no_memory: $.latency_ms.total,validation/extract_evidence.mjs,VERIFIED
+Comparison-70,retrieval_only,69,3227,14560,2084,20964,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest completed records where mode=retrieval_only: $.latency_ms.total,validation/extract_evidence.mjs,VERIFIED
+Comparison-70,full_omni,70,144439,236507,58255,288897,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,latest completed records where mode=full_omni: $.latency_ms.total,validation/extract_evidence.mjs,VERIFIED

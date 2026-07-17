@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "evaluation": "Formal-250 Full Omni",
+  "expected": 250,
+  "completed": 248,
+  "errors": 2,
+  "missing": 0,
+  "completion_rate": 0.992,
+  "error_rate": 0.008,
+  "overall": 0.866546,
+  "expected_machine_summary_overall": 0.866546,
+  "aggregate_matches_machine_summary": true,
+  "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl",
+  "extraction_script": "validation/extract_evidence.mjs",
+  "generated_at": "2026-07-17T00:29:18.762Z",
+  "p50_latency_ms": 150120,
+  "p95_latency_ms": 243581,
+  "error_scenarios": [
+    "formal-v2-memory_evolution-039",
+    "formal-v2-memory_evolution-040"
+  ]
+}

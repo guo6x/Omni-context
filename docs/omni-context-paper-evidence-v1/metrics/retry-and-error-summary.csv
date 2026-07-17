@@ -1,0 +1,6 @@
+stage,retry_records,final_errors,source_file,source_field,extraction_script,validation_status
+targeted,0,0,<LOCAL_EVIDENCE_ROOT>/06-targeted-7-round-1/results.jsonl,$.status counts after scenario+mode terminal deduplication,validation/extract_evidence.mjs,VERIFIED
+development,4,0,<LOCAL_EVIDENCE_ROOT>/07-development-35/results.jsonl,$.status counts after scenario+mode terminal deduplication,validation/extract_evidence.mjs,VERIFIED
+baselines,1,0,<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl,$.status counts after scenario+mode terminal deduplication,validation/extract_evidence.mjs,VERIFIED
+formal,21,2,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl,$.status counts after scenario+mode terminal deduplication,validation/extract_evidence.mjs,VERIFIED
+comparison,8,1,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,$.status counts after scenario+mode terminal deduplication,validation/extract_evidence.mjs,VERIFIED

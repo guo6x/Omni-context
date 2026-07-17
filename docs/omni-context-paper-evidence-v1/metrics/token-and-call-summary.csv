@@ -1,0 +1,6 @@
+stage,completed,errors,answer_calls,judge_logical_calls,extraction_calls,reranker_calls,answer_input_tokens,answer_output_tokens,judge_input_tokens,judge_output_tokens,source_file,source_field,extraction_script,validation_status
+Targeted-7,7,0,7,2,19,7,16425,4906,5739,446,See provenance/source-file-map.csv,latest terminal records: $.usage,validation/extract_evidence.mjs,VERIFIED
+Development-35,35,0,35,10,91,35,79149,24707,32214,2027,See provenance/source-file-map.csv,latest terminal records: $.usage,validation/extract_evidence.mjs,VERIFIED
+Development baselines,70,0,70,20,0,0,41937,19063,19140,4530,See provenance/source-file-map.csv,latest terminal records: $.usage,validation/extract_evidence.mjs,VERIFIED
+Formal-250,248,2,248,60,699,248,571818,182776,219374,16042,See provenance/source-file-map.csv,latest terminal records: $.usage,validation/extract_evidence.mjs,VERIFIED
+Comparison-70,209,1,209,60,189,70,245857,86568,105967,14102,See provenance/source-file-map.csv,latest terminal records: $.usage,validation/extract_evidence.mjs,VERIFIED

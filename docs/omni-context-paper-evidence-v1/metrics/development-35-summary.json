@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "modes": [
+    {
+      "mode": "full_omni",
+      "expected": 35,
+      "completed": 35,
+      "errors": 0,
+      "missing": 0,
+      "completion_rate": 1,
+      "error_rate": 0,
+      "overall": 0.884842,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/07-development-35/results.jsonl",
+      "source_field": "latest terminal records where mode=full_omni; category-macro of $.score.core_score",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    {
+      "mode": "retrieval_only",
+      "expected": 35,
+      "completed": 35,
+      "errors": 0,
+      "missing": 0,
+      "completion_rate": 1,
+      "error_rate": 0,
+      "overall": 0.563853,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl",
+      "source_field": "latest terminal records where mode=retrieval_only; category-macro of $.score.core_score",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    },
+    {
+      "mode": "no_memory",
+      "expected": 35,
+      "completed": 35,
+      "errors": 0,
+      "missing": 0,
+      "completion_rate": 1,
+      "error_rate": 0,
+      "overall": 0.366713,
+      "source_file": "<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl",
+      "source_field": "latest terminal records where mode=no_memory; category-macro of $.score.core_score",
+      "extraction_script": "validation/extract_evidence.mjs",
+      "validation_status": "VERIFIED"
+    }
+  ],
+  "deltas": {
+    "full_minus_retrieval_only": 0.320989,
+    "full_minus_no_memory": 0.518129,
+    "full_relative_to_retrieval_only_percent": 56.927781,
+    "full_relative_to_no_memory_percent": 141.290055
+  },
+  "relative_improvement_denominator": "baseline mode score"
+}

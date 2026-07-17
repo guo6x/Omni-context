@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-17T00:29:18.762Z",
+  "retrieval_preflight": {
+    "completed": 7,
+    "expected": 7,
+    "top10_slots_covered": 37,
+    "top10_slots_total": 38
+  },
+  "targeted_7": {
+    "schema_version": 1,
+    "evaluation": "Targeted-7",
+    "expected": 7,
+    "completed": 7,
+    "errors": 0,
+    "missing": 0,
+    "completion_rate": 1,
+    "error_rate": 0,
+    "overall": 0.840868,
+    "expected_machine_summary_overall": 0.840868,
+    "aggregate_matches_machine_summary": true,
+    "source_file": "<LOCAL_EVIDENCE_ROOT>/06-targeted-7-round-1/results.jsonl",
+    "extraction_script": "validation/extract_evidence.mjs",
+    "generated_at": "2026-07-17T00:29:18.762Z"
+  },
+  "development_35": {
+    "modes": [
+      {
+        "mode": "full_omni",
+        "expected": 35,
+        "completed": 35,
+        "errors": 0,
+        "missing": 0,
+        "completion_rate": 1,
+        "error_rate": 0,
+        "overall": 0.884842,
+        "source_file": "<LOCAL_EVIDENCE_ROOT>/07-development-35/results.jsonl",
+        "source_field": "latest terminal records where mode=full_omni; category-macro of $.score.core_score",
+        "extraction_script": "validation/extract_evidence.mjs",
+        "validation_status": "VERIFIED"
+      },
+      {
+        "mode": "retrieval_only",
+        "expected": 35,
+        "completed": 35,
+        "errors": 0,
+        "missing": 0,
+        "completion_rate": 1,
+        "error_rate": 0,
+        "overall": 0.563853,
+        "source_file": "<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl",
+        "source_field": "latest terminal records where mode=retrieval_only; category-macro of $.score.core_score",
+        "extraction_script": "validation/extract_evidence.mjs",
+        "validation_status": "VERIFIED"
+      },
+      {
+        "mode": "no_memory",
+        "expected": 35,
+        "completed": 35,
+        "errors": 0,
+        "missing": 0,
+        "completion_rate": 1,
+        "error_rate": 0,
+        "overall": 0.366713,
+        "source_file": "<LOCAL_EVIDENCE_ROOT>/08-baselines/results.jsonl",
+        "source_field": "latest terminal records where mode=no_memory; category-macro of $.score.core_score",
+        "extraction_script": "validation/extract_evidence.mjs",
+        "validation_status": "VERIFIED"
+      }
+    ]
+  },
+  "formal_250": {
+    "schema_version": 1,
+    "evaluation": "Formal-250 Full Omni",
+    "expected": 250,
+    "completed": 248,
+    "errors": 2,
+    "missing": 0,
+    "completion_rate": 0.992,
+    "error_rate": 0.008,
+    "overall": 0.866546,
+    "expected_machine_summary_overall": 0.866546,
+    "aggregate_matches_machine_summary": true,
+    "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl",
+    "extraction_script": "validation/extract_evidence.mjs",
+    "generated_at": "2026-07-17T00:29:18.762Z",
+    "p50_latency_ms": 150120,
+    "p95_latency_ms": 243581
+  },
+  "comparison_70": {
+    "modes": [
+      {
+        "mode": "full_omni",
+        "expected": 70,
+        "completed": 70,
+        "errors": 0,
+        "missing": 0,
+        "completion_rate": 1,
+        "error_rate": 0,
+        "overall": 0.870698,
+        "source_file": "<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl",
+        "source_field": "latest terminal records where mode=full_omni; category-macro of $.score.core_score",
+        "extraction_script": "validation/extract_evidence.mjs",
+        "validation_status": "VERIFIED"
+      },
+      {
+        "mode": "retrieval_only",
+        "expected": 70,
+        "completed": 69,
+        "errors": 1,
+        "missing": 0,
+        "completion_rate": 0.985714,
+        "error_rate": 0.014286,
+        "overall": 0.552346,
+        "source_file": "<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl",
+        "source_field": "latest terminal records where mode=retrieval_only; category-macro of $.score.core_score",
+        "extraction_script": "validation/extract_evidence.mjs",
+        "validation_status": "VERIFIED"
+      },
+      {
+        "mode": "no_memory",
+        "expected": 70,
+        "completed": 70,
+        "errors": 0,
+        "missing": 0,
+        "completion_rate": 1,
+        "error_rate": 0,
+        "overall": 0.364683,
+        "source_file": "<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl",
+        "source_field": "latest terminal records where mode=no_memory; category-macro of $.score.core_score",
+        "extraction_script": "validation/extract_evidence.mjs",
+        "validation_status": "VERIFIED"
+      }
+    ]
+  },
+  "stability": {
+    "attribution_completed": 20,
+    "attribution_expected": 20,
+    "deterministic_rescore_records": 105,
+    "scoring_differences": 0,
+    "scoring_defects": 0,
+    "unresolved_p0": 0,
+    "unresolved_p1_classes": 2,
+    "retry_records": 34
+  },
+  "calls": {
+    "answer_successful": 569,
+    "extraction_successful": 998,
+    "reranker_successful": 360,
+    "kimi_judge_logical_successful": 152,
+    "kimi_physical_attempts": 163
+  },
+  "tests": {
+    "product": "329/329",
+    "cognitive": "61/61",
+    "harness": "242/242",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "secret_scan": "PASS"
+  },
+  "locomo": {
+    "status": "NOT RUN",
+    "reason": "Candidate v3.1 is not bound to the existing held-out authorization.",
+    "conversation_2_10_accessed": false
+  }
+}
