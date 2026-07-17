@@ -56,7 +56,7 @@ check('test-gates',h.tests.product==='329/329'&&h.tests.cognitive==='61/61'&&h.t
 check('no-heavy-artifacts',!files.some(f=>/\.(?:db|sqlite|onnx|bin|zst)$/i.test(f))&&Math.max(...files.map(f=>fs.statSync(f).size))<5*1024*1024,'No database/model/archive is present and every package file is below 5 MiB.');
 
 const status=checks.every(c=>c.status==='PASS')?'PASS':'FAIL';
-const report={schema_version:1,status,generated_at:new Date().toISOString(),checks,summary:{passed:checks.filter(c=>c.status==='PASS').length,total:checks.length,failed:checks.filter(c=>c.status==='FAIL').map(c=>c.id)}};
+const report={schema_version:1,status,generated_at:v.generated_at,checks,summary:{passed:checks.filter(c=>c.status==='PASS').length,total:checks.length,failed:checks.filter(c=>c.status==='FAIL').map(c=>c.id)}};
 fs.writeFileSync(path.join(root,'validation/validation-report.json'),JSON.stringify(report,null,2)+'\n');
 fs.writeFileSync(path.join(root,'validation/validation-report.md'),`# Evidence validation report\n\nStatus: **${status}**\n\n${checks.map(c=>`- ${c.status}: ${c.id} — ${c.detail}`).join('\n')}\n\nThe extraction recomputation confirmed category-macro scoring. A scenario-weighted mean would differ for unequal category counts, so the package uses the benchmark's category-macro definition.\n`);
 console.log(JSON.stringify(report,null,2));
