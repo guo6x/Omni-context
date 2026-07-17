@@ -1,0 +1,15 @@
+{
+  "scenario_id": "formal-v2-memory_evolution-039",
+  "category": "memory_evolution",
+  "mode": "full_omni",
+  "attempts": 3,
+  "requested_max_tokens": 1200,
+  "completion_tokens": "1200|1200|1200",
+  "finish_reason": "length|length|length",
+  "json_parse_error": "Unterminated string in JSON at position 3710 (line 76 column 31) | Unterminated string in JSON at position 3786 (line 78 column 66) | Unterminated string in JSON at position 3710 (line 76 column 31)",
+  "entered_scoring": false,
+  "overall_impact": "Counts as an error and is excluded from completed-score aggregation.",
+  "classification": "Provider structured-output truncation; not scored as product capability.",
+  "paper_reporting": "Report as a final error after three allowed attempts; do not impute a score.",
+  "source_file": "<RUN_ROOT>/12-formal-250/answer-diagnostics/formal-v2-memory_evolution-039-*.json"
+}

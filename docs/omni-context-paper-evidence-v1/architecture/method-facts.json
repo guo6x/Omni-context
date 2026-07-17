@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "frozen_product_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "facts": [
+    {
+      "id": "M1",
+      "fact": "Events are extracted into temporal graph facts and embeddings.",
+      "code": [
+        "brain-server/src/api/handlers/ingest.ts",
+        "brain-server/src/graphrag/llm-pipeline.ts"
+      ]
+    },
+    {
+      "id": "M2",
+      "fact": "Retrieval combines vector, text, assertion, raw-event, and graph channels.",
+      "code": [
+        "brain-server/src/api/handlers/mcp.ts"
+      ]
+    },
+    {
+      "id": "M3",
+      "fact": "Candidate lists use reciprocal-rank fusion with source traces.",
+      "code": [
+        "brain-server/src/retrieval/fusion.ts"
+      ]
+    },
+    {
+      "id": "M4",
+      "fact": "Evidence Selector v2 groups and query-selects evidence before Answer Top-10.",
+      "code": [
+        "brain-server/src/retrieval/evidence-selector.ts",
+        "brain-server/src/api/handlers/mcp.ts"
+      ]
+    },
+    {
+      "id": "M5",
+      "fact": "Embedding preflight verifies local E5 Large, pinned revision/hash, and 1024 dimensions.",
+      "evidence": "docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/05-retrieval-preflight-round-1/manifest.json"
+    }
+  ]
+}

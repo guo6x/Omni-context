@@ -1,0 +1,68 @@
+{
+  "scenario_id": "formal-v2-cross_agent_transfer-001",
+  "category": "cross_agent_transfer",
+  "question": "As a shared-memory agent in cycle 1, summarize Devon's long-term goal, preference, and latest checkpoint-1 status with exact source Agents, isolating incorrect reports.",
+  "key_original_events": [
+    {
+      "source_id": "event:909eccf5aab6e899721a61a82560f7eed1b5bef465e4aefd5091bbfe46de4a01",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Devon: \"Devon's long-term goal: launch a community workshop.\" Exact value: Agent-A records Devon's long-term goal: launch a community workshop. | launch a community workshop State: current | observed State key: devon_long_term_goal | raw_event:formal-v2-cross_agent_transfer-001-e01 Transition: Rejected conflicts: Source Agent: Agent-A Source Event I…"
+    },
+    {
+      "source_id": "event:588c3642a11a22aee74ead169877f72619497ea9b9397063da83e4c55ecca7a2",
+      "source_agents": [
+        "Agent-B"
+      ],
+      "text": "passage: Devon: \"Devon prefers written weekly summaries.\" Exact value: written weekly summaries | Agent-B confirms Devon prefers written weekly summaries. State: current | observed State key: devon_preference_communication | raw_event:formal-v2-cross_agent_transfer-001-e02 Transition: Rejected conflicts: Source Agent: Agent-B Source Event ID: formal-v2-cross…"
+    },
+    {
+      "source_id": "relationship:28b8df42-e6aa-406b-9557-c6126eca8976",
+      "source_agents": [],
+      "text": "passage: Devon: \"Devon's long-term goal: launch a community workshop.\" Exact value: State: current State key: Transition: Rejected conflicts: Source Agent: Source Event ID: Raw Source Quote: Devon's long-term goal: launch a community workshop."
+    }
+  ],
+  "candidate_pool_evidence": "The archived terminal result exposes the final visible context but not a separately serialized per-case Candidate Pool snapshot.",
+  "final_20_evidence": "MISSING — no per-case Final-20 layer was archived in the supplemental result record.",
+  "answer_top_10": [
+    {
+      "source_id": "event:909eccf5aab6e899721a61a82560f7eed1b5bef465e4aefd5091bbfe46de4a01",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Devon: \"Devon's long-term goal: launch a community workshop.\" Exact value: Agent-A records Devon's long-term goal: launch a community workshop. | launch a community workshop State: current | observed State key: devon_long_term_goal | raw_event:formal-v2-cross_agent_transfer-001-e01 Transition: Rejected conflicts: Source Agent: Agent-A Source Event I…"
+    },
+    {
+      "source_id": "event:588c3642a11a22aee74ead169877f72619497ea9b9397063da83e4c55ecca7a2",
+      "source_agents": [
+        "Agent-B"
+      ],
+      "text": "passage: Devon: \"Devon prefers written weekly summaries.\" Exact value: written weekly summaries | Agent-B confirms Devon prefers written weekly summaries. State: current | observed State key: devon_preference_communication | raw_event:formal-v2-cross_agent_transfer-001-e02 Transition: Rejected conflicts: Source Agent: Agent-B Source Event ID: formal-v2-cross…"
+    },
+    {
+      "source_id": "relationship:28b8df42-e6aa-406b-9557-c6126eca8976",
+      "source_agents": [],
+      "text": "passage: Devon: \"Devon's long-term goal: launch a community workshop.\" Exact value: State: current State key: Transition: Rejected conflicts: Source Agent: Source Event ID: Raw Source Quote: Devon's long-term goal: launch a community workshop."
+    }
+  ],
+  "structured_answer_summary": "Devon's long-term goal is to launch a community workshop (Agent-A). Devon prefers written weekly summaries (Agent-B). Checkpoint-1 status is implementation (Agent-A). Agent-B's low-confidence report that checkpoint-1 is cancelled is incorrect and rejected.",
+  "key_metrics": {
+    "status": "completed",
+    "category": "cross_agent_transfer",
+    "metrics": {
+      "cross_agent_recall": 1,
+      "cross_agent_consistency": 1,
+      "update_propagation_accuracy": 1,
+      "provenance_preservation": 1,
+      "agent_isolation_error_rate": 0,
+      "stale_transfer_rate": 0
+    },
+    "core_score": 1,
+    "deterministic": true,
+    "judge_independent": null,
+    "scoring_version": "deterministic-scoring-v3"
+  },
+  "why_success": "Completed with core_score=1; selected evidence and structured answer retained source identifiers.",
+  "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl"
+}

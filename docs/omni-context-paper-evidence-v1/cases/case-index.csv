@@ -1,0 +1,9 @@
+case_type,scenario_id,category,mode,status,core_score,evidence_file,source_file
+success,formal-v2-memory_evolution-001,memory_evolution,full_omni,completed,1,cases/case-evidence/formal-v2-memory_evolution-001.json,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl
+success,formal-v2-conflict_resolution-001,conflict_resolution,full_omni,completed,0.8333333333333334,cases/case-evidence/formal-v2-conflict_resolution-001.json,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl
+success,formal-v2-cross_agent_transfer-001,cross_agent_transfer,full_omni,completed,1,cases/case-evidence/formal-v2-cross_agent_transfer-001.json,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl
+success,formal-v2-human_like_forgetting-005,human_like_forgetting,full_omni,completed,1,cases/case-evidence/formal-v2-human_like_forgetting-005.json,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl
+success,formal-v2-decision_quality-014,decision_quality,full_omni,completed,0.925925925925926,cases/case-evidence/formal-v2-decision_quality-014.json,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl
+failure,formal-v2-memory_evolution-039,memory_evolution,full_omni,error,NOT SCORED,cases/case-evidence/formal-v2-memory_evolution-039-full_omni-failure.json,<RUN_ROOT>/12-formal-250/answer-diagnostics/formal-v2-memory_evolution-039-*.json
+failure,formal-v2-memory_evolution-040,memory_evolution,full_omni,error,NOT SCORED,cases/case-evidence/formal-v2-memory_evolution-040-full_omni-failure.json,<RUN_ROOT>/12-formal-250/answer-diagnostics/formal-v2-memory_evolution-040-*.json
+failure,formal-v2-conflict_resolution-014,conflict_resolution,retrieval_only,error,NOT SCORED,cases/case-evidence/formal-v2-conflict_resolution-014-retrieval_only-failure.json,<RUN_ROOT>/13-comparison-70/answer-diagnostics/formal-v2-conflict_resolution-014-*.json

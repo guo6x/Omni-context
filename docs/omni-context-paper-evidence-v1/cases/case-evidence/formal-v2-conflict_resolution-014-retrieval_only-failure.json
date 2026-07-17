@@ -1,0 +1,15 @@
+{
+  "scenario_id": "formal-v2-conflict_resolution-014",
+  "category": "conflict_resolution",
+  "mode": "retrieval_only",
+  "attempts": 3,
+  "requested_max_tokens": 1200,
+  "completion_tokens": "490|346|336",
+  "finish_reason": "stop|stop|stop",
+  "json_parse_error": "schema validation failure | schema validation failure | schema validation failure",
+  "entered_scoring": false,
+  "overall_impact": "Counts as an error and is excluded from completed-score aggregation.",
+  "classification": "Provider/schema robustness at the benchmark boundary; not a Full Omni product-core failure.",
+  "paper_reporting": "Report as a final error after three allowed attempts; do not impute a score.",
+  "source_file": "<RUN_ROOT>/13-comparison-70/answer-diagnostics/formal-v2-conflict_resolution-014-*.json"
+}

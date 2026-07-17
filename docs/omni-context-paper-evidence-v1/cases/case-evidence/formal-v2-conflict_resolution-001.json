@@ -1,0 +1,72 @@
+{
+  "scenario_id": "formal-v2-conflict_resolution-001",
+  "category": "conflict_resolution",
+  "question": "Resolve Casey's work arrangement conflict for checkpoint-1: give the current value, preserve history, and explicitly reject invalid or low-confidence claims.",
+  "key_original_events": [
+    {
+      "source_id": "f36e97a0-bcf3-4f5c-8112-422ea4dd4d69",
+      "source_agents": [
+        "Agent-B"
+      ],
+      "text": "passage: A low-confidence import says Casey's work arrangement is onsite every day. Exact value: A low-confidence import says Casey's work arrangement is onsite every day. State: observed State key: raw_event:formal-v2-conflict_resolution-001-e02 Transition: Rejected conflicts: Source Agent: Agent-B Source Event ID: formal-v2-conflict_resolution-001-e02 Raw …"
+    },
+    {
+      "source_id": "event:1b7a955916d35e4ff67e77d98d089f732111969bf89d59da25fa6ba948a829f9",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: hybrid two days onsite Exact value: hybrid two days onsite | Casey explicitly corrects the work arrangement to hybrid two days onsite. State: current | observed State key: raw_event:formal-v2-conflict_resolution-001-e03 | work_arrangement Transition: onsite every day -> hybrid two days onsite (corrected) Rejected conflicts: onsite every day Source A…"
+    },
+    {
+      "source_id": "event:72df146984da06b7b54f9ea731985b01353119345f4df11abf45fc9f73fa5a80",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: onsite every day Exact value: Casey's earlier work arrangement was onsite every day. | onsite every day State: invalidated | observed State key: raw_event:formal-v2-conflict_resolution-001-e01 | work_arrangement Transition: Rejected conflicts: Source Agent: Agent-A Source Event ID: formal-v2-conflict_resolution-001-e01 Raw Source Quote: Casey's earl…"
+    }
+  ],
+  "candidate_pool_evidence": "The archived terminal result exposes the final visible context but not a separately serialized per-case Candidate Pool snapshot.",
+  "final_20_evidence": "MISSING — no per-case Final-20 layer was archived in the supplemental result record.",
+  "answer_top_10": [
+    {
+      "source_id": "f36e97a0-bcf3-4f5c-8112-422ea4dd4d69",
+      "source_agents": [
+        "Agent-B"
+      ],
+      "text": "passage: A low-confidence import says Casey's work arrangement is onsite every day. Exact value: A low-confidence import says Casey's work arrangement is onsite every day. State: observed State key: raw_event:formal-v2-conflict_resolution-001-e02 Transition: Rejected conflicts: Source Agent: Agent-B Source Event ID: formal-v2-conflict_resolution-001-e02 Raw …"
+    },
+    {
+      "source_id": "event:1b7a955916d35e4ff67e77d98d089f732111969bf89d59da25fa6ba948a829f9",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: hybrid two days onsite Exact value: hybrid two days onsite | Casey explicitly corrects the work arrangement to hybrid two days onsite. State: current | observed State key: raw_event:formal-v2-conflict_resolution-001-e03 | work_arrangement Transition: onsite every day -> hybrid two days onsite (corrected) Rejected conflicts: onsite every day Source A…"
+    },
+    {
+      "source_id": "event:72df146984da06b7b54f9ea731985b01353119345f4df11abf45fc9f73fa5a80",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: onsite every day Exact value: Casey's earlier work arrangement was onsite every day. | onsite every day State: invalidated | observed State key: raw_event:formal-v2-conflict_resolution-001-e01 | work_arrangement Transition: Rejected conflicts: Source Agent: Agent-A Source Event ID: formal-v2-conflict_resolution-001-e01 Raw Source Quote: Casey's earl…"
+    }
+  ],
+  "structured_answer_summary": "hybrid two days onsite",
+  "key_metrics": {
+    "status": "completed",
+    "category": "conflict_resolution",
+    "metrics": {
+      "conflict_resolution_accuracy": 1,
+      "latest_valid_fact_accuracy": 1,
+      "historical_query_accuracy": 1,
+      "invalidated_fact_rejection": 1,
+      "conflict_disclosure_accuracy": 0,
+      "unsupported_resolution_rate": 0
+    },
+    "core_score": 0.8333333333333334,
+    "deterministic": true,
+    "judge_independent": null,
+    "scoring_version": "deterministic-scoring-v3"
+  },
+  "why_success": "Completed with core_score=0.8333333333333334; selected evidence and structured answer retained source identifiers.",
+  "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl"
+}

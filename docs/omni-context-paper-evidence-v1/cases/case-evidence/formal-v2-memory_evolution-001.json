@@ -1,0 +1,68 @@
+{
+  "scenario_id": "formal-v2-memory_evolution-001",
+  "category": "memory_evolution",
+  "question": "At checkpoint-1, what is Blair's current technology stack, which earlier states were historical, and what transitions occurred during cycle 1?",
+  "key_original_events": [
+    {
+      "source_id": "event:1f2d0c74020b8e666b34be39577e78ac83026429608dd6c6a8d6ca655baf5461",
+      "source_agents": [
+        "Agent-B"
+      ],
+      "text": "passage: Blair: \"the technology stack is Rust\" Exact value: Rust | Blair now confirms the technology stack is Rust. State: current | observed State key: raw_event:formal-v2-memory_evolution-001-e02 | technology_stack Transition: Python -> Rust (corrected) Rejected conflicts: Python Source Agent: Agent-B Source Event ID: formal-v2-memory_evolution-001-e02 Raw…"
+    },
+    {
+      "source_id": "event:577da9ef198f77163cc725a2ffbd576f823974989421cb738e73af8834e0e5ca",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Blair: \"Blair's technology stack was Python\" Exact value: Blair's technology stack was Python. | Python State: invalidated | observed State key: raw_event:formal-v2-memory_evolution-001-e01 | technology_stack Transition: Rejected conflicts: Source Agent: Agent-A Source Event ID: formal-v2-memory_evolution-001-e01 Raw Source Quote: Blair's technology…"
+    },
+    {
+      "source_id": "relationship:6f49be7b-c4e7-4314-aa85-8f0956935199",
+      "source_agents": [],
+      "text": "passage: Blair: \"Blair's technology stack was Python\" Exact value: State: current State key: Transition: Rejected conflicts: Source Agent: Source Event ID: Raw Source Quote: Blair's technology stack was Python"
+    }
+  ],
+  "candidate_pool_evidence": "The archived terminal result exposes the final visible context but not a separately serialized per-case Candidate Pool snapshot.",
+  "final_20_evidence": "MISSING — no per-case Final-20 layer was archived in the supplemental result record.",
+  "answer_top_10": [
+    {
+      "source_id": "event:1f2d0c74020b8e666b34be39577e78ac83026429608dd6c6a8d6ca655baf5461",
+      "source_agents": [
+        "Agent-B"
+      ],
+      "text": "passage: Blair: \"the technology stack is Rust\" Exact value: Rust | Blair now confirms the technology stack is Rust. State: current | observed State key: raw_event:formal-v2-memory_evolution-001-e02 | technology_stack Transition: Python -> Rust (corrected) Rejected conflicts: Python Source Agent: Agent-B Source Event ID: formal-v2-memory_evolution-001-e02 Raw…"
+    },
+    {
+      "source_id": "event:577da9ef198f77163cc725a2ffbd576f823974989421cb738e73af8834e0e5ca",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Blair: \"Blair's technology stack was Python\" Exact value: Blair's technology stack was Python. | Python State: invalidated | observed State key: raw_event:formal-v2-memory_evolution-001-e01 | technology_stack Transition: Rejected conflicts: Source Agent: Agent-A Source Event ID: formal-v2-memory_evolution-001-e01 Raw Source Quote: Blair's technology…"
+    },
+    {
+      "source_id": "relationship:6f49be7b-c4e7-4314-aa85-8f0956935199",
+      "source_agents": [],
+      "text": "passage: Blair: \"Blair's technology stack was Python\" Exact value: State: current State key: Transition: Rejected conflicts: Source Agent: Source Event ID: Raw Source Quote: Blair's technology stack was Python"
+    }
+  ],
+  "structured_answer_summary": "At checkpoint-1, Blair's current technology stack is Rust. The earlier state was Python, which is now historical. The transition during cycle 1 was from Python to Rust.",
+  "key_metrics": {
+    "status": "completed",
+    "category": "memory_evolution",
+    "metrics": {
+      "current_state_accuracy": 1,
+      "historical_state_preservation": 1,
+      "temporal_ordering_accuracy": 1,
+      "evolution_interpretation_accuracy": 1,
+      "stale_memory_leakage": 0,
+      "state_transition_accuracy": 1
+    },
+    "core_score": 1,
+    "deterministic": true,
+    "judge_independent": null,
+    "scoring_version": "deterministic-scoring-v3"
+  },
+  "why_success": "Completed with core_score=1; selected evidence and structured answer retained source identifiers.",
+  "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl"
+}

@@ -1,0 +1,12 @@
+module,repository_path,main_file,important_function_or_class,role,input,output,paper_section_relevance,verification_status
+Input / Event Ingestion,brain-server/src/api/handlers,ingest.ts,runIngestPipeline / handleIngestRoutes,Accept and preprocess source payloads,File or capture,"Chunks, entities, assertions",Methods,VERIFIED AT PRODUCT COMMIT
+Extraction,brain-server/src/graphrag,llm-pipeline.ts,extractEntitiesWithLlm / extraction pipeline,Convert text into structured graph facts,Text chunks,"Entities, relationships, assertions",Methods,VERIFIED AT PRODUCT COMMIT
+Memory Storage,brain-server/src/db,sqlite.ts,SQLiteDatabase methods,"Persist graph, temporal assertions, vectors and metadata",Structured memories,SQLite rows and vector indexes,Methods,VERIFIED AT PRODUCT COMMIT
+Vector / Text / Assertion / Graph Retrieval,brain-server/src/api/handlers,mcp.ts,unified_memory_search handler,Run parallel candidate channels and temporal filtering,Question/query,Typed retrieval candidates,Methods,VERIFIED AT PRODUCT COMMIT
+Fusion,brain-server/src/retrieval,fusion.ts,reciprocalRankFuse,Auditable rank fusion with source traces,Ranked channel lists,Fused candidates,Methods,VERIFIED AT PRODUCT COMMIT
+Reranking,brain-server/src/api/handlers,mcp.ts,rerankByLlm,Rerank readable evidence summaries with bounded fallback,Fused/grouped evidence,Reranked groups,Methods,VERIFIED AT PRODUCT COMMIT
+Evidence Grouping,brain-server/src/retrieval,evidence-selector.ts,groupFusedEvidence / buildEvidenceGroupPassage,Group duplicate and related evidence while retaining channels,Fused candidates,Evidence groups,Methods,VERIFIED AT PRODUCT COMMIT
+Evidence Selector,brain-server/src/retrieval,evidence-selector.ts,selectEvidenceSet,"Select diverse, query-aware evidence and suppress graph noise",Evidence groups + intent,Selected evidence,Methods,VERIFIED AT PRODUCT COMMIT
+Answer Top-10,brain-server/src/api/handlers,mcp.ts,unified_memory_search response assembly,Mark final evidence selected_for_answer under limit,Selected evidence,Answer context,Methods,VERIFIED AT PRODUCT COMMIT
+Answer Generation,benchmark/cognitive/src,provider.mjs,CognitiveProvider.answer,Produce strict structured answer from visible context,Question + top evidence,Structured answer,Evaluation protocol,VERIFIED AT BENCHMARK COMMIT
+Provenance Output,brain-server/src/api/handlers,mcp.ts,retrieval trace/result assembly,"Return source path, ranks, IDs and selection metadata",Selected evidence,Auditable provenance,Methods,VERIFIED AT PRODUCT COMMIT

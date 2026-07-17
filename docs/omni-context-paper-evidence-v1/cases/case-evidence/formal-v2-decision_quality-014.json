@@ -1,0 +1,75 @@
+{
+  "scenario_id": "formal-v2-decision_quality-014",
+  "category": "decision_quality",
+  "question": "For Nova's budget allocation decision in cycle 14, compare Option A and Option B, respect the budget and stable-income constraint, and recommend a risk-aware next step.",
+  "key_original_events": [
+    {
+      "source_id": "event:bc9443c70914a1a140cab876f561551d76d426c8d9975377c60fd6dcbeaaf7de",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Nova: \"Nova has 981 dollars of risk budget and needs stable income.\" Exact value: 981 dollars | needs stable income | Nova has 981 dollars of risk budget and needs stable income. State: current | observed State key: Nova:has_budget | Nova:needs | raw_event:formal-v2-decision_quality-014-e02 Transition: Rejected conflicts: Source Agent: Agent-A Sourc…"
+    },
+    {
+      "source_id": "event:776a29a01888c38f2dda37ea1911417bb701df1813a976cf9869cdf0eff5b998",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Nova: \"Nova's long-term goal is to achieve budget allocation objective 14.\" Exact value: Nova's long-term goal is to achieve budget allocation objective 14. | achieve budget allocation objective 14 State: current | observed State key: Nova:has_goal | raw_event:formal-v2-decision_quality-014-e01 Transition: Rejected conflicts: Source Agent: Agent-A S…"
+    },
+    {
+      "source_id": "event:fa867628517404df49b93d29cf3abde3d6b25d19509b1377c73708d9b051f9df",
+      "source_agents": [
+        "Agent-B"
+      ],
+      "text": "passage: stability but limited autonomy Exact value: Option A offers stability but limited autonomy for budget allocation. | stability but limited autonomy State: current | observed State key: Option A:offers | raw_event:formal-v2-decision_quality-014-e03 Transition: Rejected conflicts: Source Agent: Agent-B Source Event ID: formal-v2-decision_quality-014-e0…"
+    }
+  ],
+  "candidate_pool_evidence": "The archived terminal result exposes the final visible context but not a separately serialized per-case Candidate Pool snapshot.",
+  "final_20_evidence": "MISSING — no per-case Final-20 layer was archived in the supplemental result record.",
+  "answer_top_10": [
+    {
+      "source_id": "event:bc9443c70914a1a140cab876f561551d76d426c8d9975377c60fd6dcbeaaf7de",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Nova: \"Nova has 981 dollars of risk budget and needs stable income.\" Exact value: 981 dollars | needs stable income | Nova has 981 dollars of risk budget and needs stable income. State: current | observed State key: Nova:has_budget | Nova:needs | raw_event:formal-v2-decision_quality-014-e02 Transition: Rejected conflicts: Source Agent: Agent-A Sourc…"
+    },
+    {
+      "source_id": "event:776a29a01888c38f2dda37ea1911417bb701df1813a976cf9869cdf0eff5b998",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Nova: \"Nova's long-term goal is to achieve budget allocation objective 14.\" Exact value: Nova's long-term goal is to achieve budget allocation objective 14. | achieve budget allocation objective 14 State: current | observed State key: Nova:has_goal | raw_event:formal-v2-decision_quality-014-e01 Transition: Rejected conflicts: Source Agent: Agent-A S…"
+    },
+    {
+      "source_id": "event:fa867628517404df49b93d29cf3abde3d6b25d19509b1377c73708d9b051f9df",
+      "source_agents": [
+        "Agent-B"
+      ],
+      "text": "passage: stability but limited autonomy Exact value: Option A offers stability but limited autonomy for budget allocation. | stability but limited autonomy State: current | observed State key: Option A:offers | raw_event:formal-v2-decision_quality-014-e03 Transition: Rejected conflicts: Source Agent: Agent-B Source Event ID: formal-v2-decision_quality-014-e0…"
+    }
+  ],
+  "structured_answer_summary": "Given Nova's $981 risk budget and need for stable income, Option A (stability but limited autonomy) aligns with the stable-income constraint, while Option B (high autonomy but uncertain income) does not. A risk-aware next step is to take the reversible four-week test before checkpoint-14 to evaluate Option A's performance without committing fully.",
+  "key_metrics": {
+    "status": "completed",
+    "category": "decision_quality",
+    "metrics": {
+      "constraint_coverage": 1,
+      "goal_alignment": 1,
+      "personalization": 0.8333333333333334,
+      "option_comparison_quality": 1,
+      "risk_awareness": 0.75,
+      "actionability": 1,
+      "internal_consistency": 1,
+      "unsupported_assumption_rate": 0,
+      "overall_decision_quality": 0.75
+    },
+    "core_score": 0.925925925925926,
+    "deterministic": false,
+    "judge_independent": true,
+    "scoring_version": "deterministic-scoring-v3"
+  },
+  "why_success": "Completed with core_score=0.925925925925926; selected evidence and structured answer retained source identifiers.",
+  "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl"
+}

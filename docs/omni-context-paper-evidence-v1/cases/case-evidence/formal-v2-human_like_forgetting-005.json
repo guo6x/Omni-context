@@ -1,0 +1,80 @@
+{
+  "scenario_id": "formal-v2-human_like_forgetting-005",
+  "category": "human_like_forgetting",
+  "question": "For Avery's checkpoint-5 planning, identify the memory that should remain influential and structurally reject stale, invalidated, or noisy items.",
+  "key_original_events": [
+    {
+      "source_id": "event:905bf2766707d080f1b52b07384417135c5c65a766b745f02b0e1ee65e9b8959",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: important Exact value: Avery repeats that opened the settings page for cycle 5 remains important. | important State: current | observed State key: importance | raw_event:formal-v2-human_like_forgetting-005-e02 Transition: Rejected conflicts: Source Agent: Agent-A Source Event ID: formal-v2-human_like_forgetting-005-e02 Raw Source Quote: Avery repeat…"
+    },
+    {
+      "source_id": "event:a3e638eace7e0c268bfc15366b881daaf79226fc393dfd6c5e366d9e9f56eaa5",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Avery: \"explicitly withdraws the plan to buy a drone\" Exact value: plan to buy a drone | Avery explicitly withdraws the plan to buy a drone. State: invalidated | observed State key: drone_plan_status | raw_event:formal-v2-human_like_forgetting-005-e05 Transition: active -> withdrawn (withdrawn) Rejected conflicts: Source Agent: Agent-A Source Event …"
+    },
+    {
+      "source_id": "event:a53ae74699a779848ff4827e34f1925353c410e9f87f47f1f6979b88cdb2ab74",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Avery: \"Avery's high-value long-term low-value repetition is opened the settings page for cycle 5.\" | Avery: \"high-value long-term low-value repetition\" Exact value: opened | Avery's high-value long-term low-value repetition is opened the settings page for cycle 5. | high-value long-term low-value repetition State: current | observed State key: Aver…"
+    }
+  ],
+  "candidate_pool_evidence": "The archived terminal result exposes the final visible context but not a separately serialized per-case Candidate Pool snapshot.",
+  "final_20_evidence": "MISSING — no per-case Final-20 layer was archived in the supplemental result record.",
+  "answer_top_10": [
+    {
+      "source_id": "event:905bf2766707d080f1b52b07384417135c5c65a766b745f02b0e1ee65e9b8959",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: important Exact value: Avery repeats that opened the settings page for cycle 5 remains important. | important State: current | observed State key: importance | raw_event:formal-v2-human_like_forgetting-005-e02 Transition: Rejected conflicts: Source Agent: Agent-A Source Event ID: formal-v2-human_like_forgetting-005-e02 Raw Source Quote: Avery repeat…"
+    },
+    {
+      "source_id": "event:a3e638eace7e0c268bfc15366b881daaf79226fc393dfd6c5e366d9e9f56eaa5",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Avery: \"explicitly withdraws the plan to buy a drone\" Exact value: plan to buy a drone | Avery explicitly withdraws the plan to buy a drone. State: invalidated | observed State key: drone_plan_status | raw_event:formal-v2-human_like_forgetting-005-e05 Transition: active -> withdrawn (withdrawn) Rejected conflicts: Source Agent: Agent-A Source Event …"
+    },
+    {
+      "source_id": "event:a53ae74699a779848ff4827e34f1925353c410e9f87f47f1f6979b88cdb2ab74",
+      "source_agents": [
+        "Agent-A"
+      ],
+      "text": "passage: Avery: \"Avery's high-value long-term low-value repetition is opened the settings page for cycle 5.\" | Avery: \"high-value long-term low-value repetition\" Exact value: opened | Avery's high-value long-term low-value repetition is opened the settings page for cycle 5. | high-value long-term low-value repetition State: current | observed State key: Aver…"
+    }
+  ],
+  "structured_answer_summary": "The memory that should remain influential for Avery's checkpoint-5 planning is that Avery opened the settings page for cycle 5, which is a high-value long-term low-value repetition. The drone purchase plan is withdrawn and should be rejected. The blue button click is noise and should be rejected. The temporary headache is resolved and historical, not influential.",
+  "key_metrics": {
+    "status": "completed",
+    "category": "human_like_forgetting",
+    "metrics": {
+      "salient_memory_retention": 1,
+      "noise_suppression": 1,
+      "false_forgetting_rate": 0,
+      "stale_retention_rate": 0,
+      "memory_precision": 1,
+      "memory_compression_ratio": null,
+      "invalidation_accuracy": 1
+    },
+    "core_score": 1,
+    "deterministic": true,
+    "judge_independent": null,
+    "scoring_version": "deterministic-scoring-v3",
+    "forgetting_capabilities": {
+      "physical_deletion": "not_implemented",
+      "logical_invalidation": "implemented",
+      "retrieval_suppression": "implemented",
+      "noise_filtering": "implemented",
+      "memory_compression": "not_implemented"
+    }
+  },
+  "why_success": "Completed with core_score=1; selected evidence and structured answer retained source identifiers.",
+  "source_file": "<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl"
+}

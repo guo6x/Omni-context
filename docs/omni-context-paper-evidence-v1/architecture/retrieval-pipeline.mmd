@@ -1,0 +1,14 @@
+flowchart TD
+  Q[Question] --> T[Temporal intent parsing]
+  Q --> V[Entity and assertion vector search]
+  Q --> X[Text search]
+  Q --> G[Graph expansion]
+  V --> R[RRF fusion]
+  X --> R
+  G --> R
+  T --> R
+  R --> EG[Evidence grouping]
+  EG --> RR[Existing LLM reranker]
+  RR --> ES[Evidence Selector v2]
+  ES --> A10[Answer Top-10]
+  A10 --> TR[Retrieval trace and source IDs]

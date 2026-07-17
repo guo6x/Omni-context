@@ -1,0 +1,11 @@
+flowchart LR
+  A[Input and event ingestion] --> B[Extraction]
+  B --> C[(Temporal graph and vector storage)]
+  C --> D[Vector text assertion graph retrieval]
+  D --> E[Reciprocal rank fusion]
+  E --> F[Reranking]
+  F --> G[Evidence grouping]
+  G --> H[Evidence Selector v2]
+  H --> I[Answer Top-10]
+  I --> J[Structured answer generation]
+  J --> K[Provenance output]
