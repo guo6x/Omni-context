@@ -68,6 +68,14 @@ test('formal CLI refuses before resolving data when authorization environment is
   assert.match(run.stderr, /HELDOUT_AUTHORIZATION_REQUIRED:OMNI_HELDOUT_AUTHORIZATION_FILE/);
 });
 
+test('score-only CLI refuses before resolving Gold when authorization environment is absent', () => {
+  const env = { ...process.env };
+  delete env.OMNI_HELDOUT_AUTHORIZATION_FILE;
+  const run = spawnSync(process.execPath, [path.join(ROOT, 'runners', 'sealed-runner.mjs'), '--score-only', '--benchmark=longmemeval'], { env, encoding: 'utf8' });
+  assert.notEqual(run.status, 0);
+  assert.match(run.stderr, /HELDOUT_AUTHORIZATION_REQUIRED:OMNI_HELDOUT_AUTHORIZATION_FILE/);
+});
+
 test('authorization rejects data hash, product, adapter, preregistration, and subset mismatch', () => {
   const cases = [
     ['dataset_sha256', validAuth(), { dataset_sha256: 'c'.repeat(64) }],
@@ -114,13 +122,15 @@ test('score-only writes separate metrics and cannot modify locked results', asyn
   const lockPath = path.join(dir, 'results.lock.json');
   const goldPath = path.join(dir, 'gold.json');
   const metricsPath = path.join(dir, 'metrics.json');
+  const accessLog = path.join(dir, 'data-access.jsonl');
   await writeFile(resultPath, '{"question_id":"q1","hypothesis":"x"}\n');
   await writeFile(goldPath, '{"q1":"x"}\n');
   await lockResults(resultPath, lockPath);
   const before = await sha256File(resultPath);
-  await runScoreOnly({ resultPath, lockPath, goldPath, scoreOutputPath: metricsPath, scorer: (rows, gold) => ({ exact: rows[0].hypothesis === gold.q1 ? 1 : 0 }) });
+  await runScoreOnly({ resultPath, lockPath, goldPath, scoreOutputPath: metricsPath, scorer: (rows, gold) => ({ exact: rows[0].hypothesis === gold.q1 ? 1 : 0 }), accessLog, allowedSubset: 'fixture-only', adapterCommit: ADAPTER_COMMIT });
   assert.equal(await sha256File(resultPath), before);
   assert.equal((await readFile(metricsPath, 'utf8')).includes('"exact": 1'), true);
+  assert.match(await readFile(accessLog, 'utf8'), /"phase":"scoring".*"accessed_gold":true/);
 });
 
 test('fixture checkpoint resumes without duplicate rows', async (t) => {

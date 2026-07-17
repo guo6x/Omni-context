@@ -11,3 +11,5 @@ node external-eval/runners/sealed-runner.mjs --validate-only
 ```
 
 Official datasets belong outside the repository. Do not preview or search them before authorization.
+
+The implemented `--score-only` mode is also sealed: it requires custodian authorization and a separately pinned official scorer module. Its interface and pre-run hash-lock requirements are documented in `scoring/README.md`; it has not been invoked against external data.

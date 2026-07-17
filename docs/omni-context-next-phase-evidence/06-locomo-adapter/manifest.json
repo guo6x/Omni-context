@@ -2,6 +2,8 @@
   "schema_version": 1,
   "official_repository": "https://github.com/snap-research/locomo",
   "official_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+  "official_license": "CC BY-NC 4.0",
+  "license_boundary": "formal use requires confirmed noncommercial research purpose and attribution compliance",
   "adapter_commit": "066b63cb0b72d6aa494804864f59bfc05be5a734",
   "task": "question answering only",
   "fictional_fixture_questions": 4,

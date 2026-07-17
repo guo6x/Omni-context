@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "formal_status": "NOT AUTHORIZED / NOT RUN",
+  "interfaces": [
+    {
+      "benchmark": "longmemeval",
+      "repository": "https://github.com/xiaowu0162/LongMemEval",
+      "commit": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+      "script_path": "src/evaluation/evaluate_qa.py",
+      "interface": "python evaluate_qa.py <metric_model> <hyp_file> <ref_file>",
+      "script_sha256": "PENDING_AUTHORIZED_OFFICIAL_CHECKOUT",
+      "wrapper_status": "NOT CREATED"
+    },
+    {
+      "benchmark": "locomo",
+      "repository": "https://github.com/snap-research/locomo",
+      "commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+      "script_path": "task_eval/evaluation.py",
+      "interface": "eval_question_answering(qas, eval_key='prediction', metric='f1')",
+      "script_sha256": "PENDING_AUTHORIZED_OFFICIAL_CHECKOUT",
+      "wrapper_status": "NOT CREATED"
+    }
+  ],
+  "real_records_accessed": false,
+  "gold_accessed": false
+}

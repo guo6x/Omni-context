@@ -2,6 +2,7 @@
   "schema_version": 1,
   "official_repository": "https://github.com/xiaowu0162/LongMemEval-V2",
   "official_commit": "be15ea6e995462f3391c1a610892df3f67dfa7bd",
+  "official_license": "Apache-2.0",
   "dataset_accessed": false,
   "trajectory_or_screenshot_accessed": false,
   "implemented_or_run": false,

@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
-  "tests_passed": 11,
-  "tests_total": 11,
+  "tests_passed": 12,
+  "tests_total": 12,
   "covered": [
     "authorization required and expiry",
     "dataset/product/adapter/preregistration/subset mismatch",
     "Gold inaccessible in generation",
     "result SHA-256 lock",
-    "score-only result immutability",
+    "score-only authorization before Gold access",
+    "score-only result immutability and scoring-phase access log",
     "checkpoint resume without duplicates",
     "secret scan"
   ],

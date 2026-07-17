@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeLongMemEvalGeneration, toLongMemEvalOfficialOutput } from '../adapters/longmemeval.mjs';
 import { normalizeLocomoGeneration, toLocomoOfficialOutput } from '../adapters/locomo.mjs';
-import { PRODUCT_COMMIT, assertGoldFree, assertResultsLocked, loadAuthorization, lockResults, readGenerationProjection, sha256File } from '../lib/sealed.mjs';
+import { PRODUCT_COMMIT, appendAccessLog, assertGoldFree, assertResultsLocked, loadAuthorization, lockResults, readGenerationProjection, sha256File } from '../lib/sealed.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = path.resolve(ROOT, '..');
@@ -14,6 +14,12 @@ function flag(name, fallback) {
   if (assigned) return assigned.slice(name.length + 1);
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : fallback;
+}
+
+function requiredFlag(name) {
+  const value = flag(name);
+  if (!value) throw new Error(`REQUIRED_ARGUMENT_MISSING:${name}`);
+  return value;
 }
 
 async function readJson(file) { return JSON.parse(await readFile(file, 'utf8')); }
@@ -117,9 +123,24 @@ export async function runFormalGeneration(options) {
   return lockResults(resultPath, path.join(options.outputRoot, 'results.lock.json'));
 }
 
-export async function runScoreOnly({ resultPath, lockPath, goldPath, scoreOutputPath, scorer }) {
+export async function runScoreOnly({ resultPath, lockPath, goldPath, scoreOutputPath, scorer, accessLog, allowedSubset, adapterCommit }) {
   const before = await assertResultsLocked(resultPath, lockPath);
-  const gold = JSON.parse(await readFile(goldPath, 'utf8'));
+  const goldBytes = await readFile(goldPath);
+  const gold = JSON.parse(goldBytes.toString('utf8'));
+  if (accessLog) {
+    const goldCount = Array.isArray(gold) ? gold.length : Object.keys(gold).length;
+    await appendAccessLog(accessLog, {
+      dataset_path: goldPath,
+      dataset_sha256: await sha256File(goldPath),
+      file_size: goldBytes.byteLength,
+      dataset_id_count: goldCount,
+      allowed_subset: allowedSubset,
+      reader_commit: adapterCommit,
+      phase: 'scoring',
+      accessed_question: false,
+      accessed_gold: true,
+    });
+  }
   const results = (await readFile(resultPath, 'utf8')).trim().split(/\r?\n/).filter(Boolean).map(JSON.parse);
   const metrics = await scorer(results, gold);
   await writeFile(scoreOutputPath, `${JSON.stringify({ schema_version: 1, result_sha256: before.result_sha256, metrics }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
@@ -154,7 +175,40 @@ async function main() {
     const options = { authorizationFile, adapterCommit, preregistrationPath, generationDataPath, benchmark, datasetVariant: flag('--dataset-variant'), allowedSubset: flag('--allowed-subset'), accessLog: path.join(outputRoot, 'data-access.jsonl'), outputRoot, engineModule: flag('--engine-module') };
     return console.log(JSON.stringify(await runFormalGeneration(options)));
   }
-  if (process.argv.includes('--score-only')) throw new Error('SCORE_ONLY_REQUIRES_IMPORTED_OFFICIAL_SCORER_MODULE');
+  if (process.argv.includes('--score-only')) {
+    const authorizationFile = process.env.OMNI_HELDOUT_AUTHORIZATION_FILE;
+    if (!authorizationFile) throw new Error('HELDOUT_AUTHORIZATION_REQUIRED:OMNI_HELDOUT_AUTHORIZATION_FILE');
+    const adapterCommit = requiredFlag('--adapter-commit');
+    const preregistrationPath = path.resolve(requiredFlag('--preregistration'));
+    const generationDataPath = path.resolve(requiredFlag('--generation-data'));
+    const allowedSubset = requiredFlag('--allowed-subset');
+    const preregistrationSha256 = await sha256File(preregistrationPath);
+    const datasetSha256 = await sha256File(generationDataPath);
+    await loadAuthorization(authorizationFile, {
+      benchmark,
+      dataset_variant: requiredFlag('--dataset-variant'),
+      allowed_subset: allowedSubset,
+      dataset_sha256: datasetSha256,
+      product_commit: PRODUCT_COMMIT,
+      adapter_commit: adapterCommit,
+      preregistration_sha256: preregistrationSha256,
+    });
+    const scorerModulePath = flag('--scorer-module');
+    if (!scorerModulePath) throw new Error('OFFICIAL_SCORER_MODULE_REQUIRED');
+    const scorerModule = await import(pathToFileURL(path.resolve(scorerModulePath)));
+    if (typeof scorerModule.score !== 'function') throw new Error('OFFICIAL_SCORER_INTERFACE_INVALID');
+    const metrics = await runScoreOnly({
+      resultPath: path.resolve(requiredFlag('--results')),
+      lockPath: path.resolve(requiredFlag('--result-lock')),
+      goldPath: path.resolve(requiredFlag('--gold')),
+      scoreOutputPath: path.resolve(requiredFlag('--score-output')),
+      scorer: scorerModule.score,
+      accessLog: path.resolve(requiredFlag('--access-log')),
+      allowedSubset,
+      adapterCommit,
+    });
+    return console.log(JSON.stringify({ schema_version: 1, status: 'SCORED', metrics }));
+  }
   throw new Error('MODE_REQUIRED:--fixture|--validate-only|--formal|--score-only');
 }
 
