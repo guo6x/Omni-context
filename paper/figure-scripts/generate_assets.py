@@ -373,7 +373,11 @@ plt.rcParams.update({"font.family":"sans-serif","font.sans-serif":["Arial","Libe
                      "svg.hashsalt":"omni-context-paper-v1","pdf.fonttype":42})
 
 def save_figure(fig, stem):
-    fig.savefig(FIGURES / f"{stem}.svg", bbox_inches="tight", metadata={"Creator":"Omni-Context evidence-linked figure generator", "Date":None})
+    svg_path = FIGURES / f"{stem}.svg"
+    fig.savefig(svg_path, bbox_inches="tight", metadata={"Creator":"Omni-Context evidence-linked figure generator", "Date":None})
+    # Matplotlib writes harmless trailing spaces in multiline path data; normalize for clean diffs.
+    svg_text = svg_path.read_text(encoding="utf-8")
+    svg_path.write_text("\n".join(line.rstrip() for line in svg_text.splitlines()) + "\n", encoding="utf-8", newline="\n")
     fig.savefig(FIGURES / f"{stem}.pdf", bbox_inches="tight", metadata={"Creator":"Omni-Context evidence-linked figure generator", "CreationDate":None, "ModDate":None})
     plt.close(fig)
 
