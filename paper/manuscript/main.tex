@@ -1,0 +1,40 @@
+\documentclass[10pt,twocolumn]{article}
+
+\usepackage[margin=0.72in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+
+\input{macros}
+
+\title{Omni-Context: Evidence-Linked Manuscript Scaffold}
+\author{\TODO{Author names and affiliations required.}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\input{sections/00-abstract}
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-method}
+\input{sections/04-benchmark}
+\input{sections/05-experiments}
+\input{sections/06-results}
+\input{sections/07-analysis}
+\input{sections/08-limitations}
+\input{sections/09-conclusion}
+
+\appendix
+\section{Detailed Category Evidence}
+\input{../tables/category-details}
+\input{../tables/category-submetrics}
+
+% references.bib is intentionally empty until references are provided and verified.
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}

@@ -1,0 +1,25 @@
+\section{Analysis}
+% CONTENT GOAL: Analyze retrieval coverage, final product fix evidence, efficiency, and retained failure modes.
+% QUESTIONS FOR AUTHORS: Which causal interpretations are supported by the fix diff and preflight? Which remain hypotheses?
+% VERIFIED FACT: Retrieval-preflight Top-10 slot coverage changed from 20/38 to 37/38 across the documented general fix.
+% VERIFIED FACT: Targeted Candidate Pool, Final-20, and Answer Top-10 each covered 28/30 slots under a different statistical denominator.
+% EVIDENCE: docs/omni-context-paper-evidence-v1/architecture/final-product-fix.md
+% EVIDENCE: docs/omni-context-paper-evidence-v1/metrics/targeted-7-summary.json
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{../figures/coverage-funnel.pdf}
+  \caption{Coverage evidence with Targeted and retrieval-preflight denominators kept separate.}
+  \label{fig:coverage}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{../figures/latency-summary.pdf}
+  \caption{Formal latency and retained retry/error counts.}
+  \label{fig:efficiency}
+\end{figure*}
+
+\input{../tables/efficiency-results}
+\input{../tables/error-summary}
+\TODO{Author analysis required.}

@@ -1,0 +1,26 @@
+\section{Results}
+% CONTENT GOAL: Report all completed/error counts next to category-macro scores and keep internal mode comparisons bounded.
+% VERIFIED FACT: Development Full Omni=\DevelopmentFullOverall, Retrieval-only=\DevelopmentRetrievalOverall, No Memory=\DevelopmentNoMemoryOverall.
+% VERIFIED FACT: Formal completed 248/250 with two errors and Overall=\FormalOverall.
+% VERIFIED FACT: Comparison Full Omni=\ComparisonFullOverall; Retrieval-only is 69/70 at \ComparisonRetrievalOverall; No Memory=\ComparisonNoMemoryOverall.
+% EVIDENCE: docs/omni-context-paper-evidence-v1/metrics/
+% FORBIDDEN: Call the mode comparison a strict component ablation.
+
+\input{../tables/main-results}
+\input{../tables/category-results}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{../figures/overall-comparison.pdf}
+  \caption{Internal Development-35 and Comparison-70 mode results.}
+  \label{fig:overall-comparison}
+\end{figure}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{../figures/category-comparison.pdf}
+  \caption{Verified category means. Missing Development/Formal baselines are not fabricated.}
+  \label{fig:category-comparison}
+\end{figure*}
+
+\TODO{Author interpretation required.}
