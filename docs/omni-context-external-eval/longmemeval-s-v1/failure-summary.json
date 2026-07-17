@@ -1,82 +1,101 @@
 {
-  "schema_version": 2,
-  "formal_status": "READY_FOR_NEW_AUTHORIZATION",
-  "blocker_reason": "MISSING_ENGINE_MODULE",
-  "blocker_status": "RESOLVED",
-  "blocked_at_phase": 6,
-  "resolved_at": "2026-07-17T00:00:00Z",
-  "failure_category": "infrastructure_gap",
+  "schema_version": 3,
   "is_run_invalid": false,
+  "blocker_status": null,
   "run_invalid_reason": null,
-  "blocker_detail": {
-    "component": "external-eval/runners/sealed-runner.mjs",
-    "function": "runFormalGeneration",
-    "required_interface": {
-      "flag": "--engine-module",
-      "export": "createEngine",
-      "signature": "createEngine({productCommit, isolatedDatabase, dynamicPort}) -> Promise<Engine>",
-      "engine_methods": ["ingest(session)", "query({question, questionDate}) -> {answer, diagnostics}", "stop()?"]
+  "formal_status": "LONGMEMEVAL_FORMAL_PIPELINE_READY",
+  "v3_round": {
+    "tests_failing": 0,
+    "smoke_test": {
+      "kimi_judge": {
+        "temperature_control": "provider_default_non_configurable",
+        "leaderboard_comparable": false,
+        "metric_name": "Kimi-K2.6-judged LongMemEval-S QA accuracy",
+        "gpt4o_scoring": false,
+        "checks": {
+          "credentials_available": true,
+          "judge_call_succeeded": true,
+          "metric_name_correct": true,
+          "judge_model_correct": true,
+          "gpt4o_not_used": true,
+          "leaderboard_not_comparable": true,
+          "label_returned": true,
+          "sanitized_log_written": true
+        },
+        "judge_model": "kimi-k2.6",
+        "all_pass": true
+      },
+      "real_brain_server": {
+        "evidence_count": 9,
+        "database_hash": "378e41b8ee2be5dad1e6e65e32644629c630097dba74168f5311d8f8b128ddf6",
+        "checks": {
+          "runtime_attestation": true,
+          "product_commit": true,
+          "product_build_hash": true,
+          "session_ingestion": true,
+          "embedding_rebuild": true,
+          "unified_retrieval": true,
+          "question_date_propagation": true,
+          "answer_schema": true,
+          "result_output": true,
+          "runtime_shutdown": true,
+          "database_hash_generated": true,
+          "not_formal_benchmark": true
+        },
+        "provider_calls_estimate": 5,
+        "all_pass": true,
+        "answer_model": "deepseek-v4-flash"
+      }
     },
-    "search_performed": true,
-    "worktrees_searched_count": 5,
-    "worktrees_searched": [
-      "<external-eval-paper-worktree>",
-      "<candidate-v3.1-final-execution-product-worktree>",
-      "<candidate-v3.1-gated-final-product-worktree>",
-      "<strict-ablations-worktree>",
-      "<main-repo-worktree>"
-    ],
-    "createEngine_found": false,
-    "product_brain_server_has_http_api": true,
-    "product_brain_server_http_endpoints": {
-      "ingest": "POST /api/graph/extract",
-      "query": "POST /api/mcp/tool/graph_answer",
-      "health": "GET /health"
+    "tests_passing": 77,
+    "envelope": {
+      "version": "1",
+      "sha256": "1e26c66a675a17b74e78dd8d1c6624996143a14b47c5b8753e1c67959fdb96cc"
     },
-    "wrapper_could_be_written": true,
-    "wrapper_writing_violates_role_constraint": true,
-    "role_constraint": "run-administrator-role-no-system-development"
-  },
-  "resolution": {
-    "status": "RESOLVED",
-    "resolved_by": "system-developer-engine-adapter-round",
-    "resolved_at": "2026-07-17T00:00:00Z",
-    "engine_adapter_commit": "e98ab1039091481c2b3e1bb34dfec07acaa3532c",
-    "engine_adapter_file": "external-eval/engines/omni-frozen-v3.1.mjs",
-    "engine_adapter_file_sha256": "eacb6e2c7997d913715d682d9f0c2a234f3ac1d18639ca0de3b2db9a9d6ec309",
-    "engine_interface": "createEngine-v1",
-    "answer_path": "unified_memory_search_top10_then_answer_v2",
-    "graph_answer_used": false,
-    "preregistration_v2_commit": "d03238dd584538958e4c5c8e20f263cbe821506c",
-    "preregistration_v2_file": "external-eval/preregistration/longmemeval-v2.json",
-    "preregistration_v2_sha256": "295dfe081514f34351f7399a0d5da2b09e640b6ed1a5e43b14509f7079784a0b",
-    "validate_only_commit": "9ca1c6d",
-    "engine_tests_passing": 22,
-    "sealed_runner_tests_passing": 12,
+    "file_hashes": {
+      "kimi_judge_prompt": "6d4cfa724d722553ea79511769fd842afdadfa4cc412de4852dd43ade17448af",
+      "kimi_judge_prereg_md": "6b14c91c28474013d795b6f4c827a424d37e6f58700c808a46ca829198208e8a",
+      "engine_adapter": "330ea359b09f1071c5e21ae6a293503dff74cb99ef4bd4860506503a82756d82",
+      "kimi_scorer": "a26a59e698b4987f954401d794bc9bdf8e8fd65b2894f22c1bc269268bfdeca5",
+      "v3_md": "85230674446b6f311922a992931fd620d47649e69ce3629dc2e6fe7b69d6b4e5",
+      "fixture": "1e9ee1aec948b66794a316113dc7e5e1c6df36fe9a798d0b5693ea84a3f25baf",
+      "kimi_judge_schema": "e5bab488fa6872c2d4383da61a97509f8fca4d3d16985b96af939508fcd2429f",
+      "v3_json": "b5f0f17a88b70056eff997b73c8a0d1ca430147269c75ca41d36f4066e3f8f01",
+      "kimi_judge_prereg_json": "9bc6cfdb4742163765f32cbab7a3194c0840bb63cd7794ea9d00ef178a4108ff",
+      "adapter": "3883fe995a1d5aa22d605e87f1467e83a6861785ced975ea43c0d09f7a250f44",
+      "formal_runner": "d45b1d6f23722ff0fe8e65bb9290a57812e5bfd090d68c415d0502ad5097b62c"
+    },
     "validate_only_status": "VALID",
-    "engine_adapter_verified": true,
-    "formal_dataset_accessed_during_resolution": false,
-    "formal_provider_calls_during_resolution": 0,
-    "gold_accessed_during_resolution": false,
-    "product_modified_during_resolution": false,
-    "prompt_modified_during_resolution": false
+    "prohibitions_honored": {
+      "formal_500_run": false,
+      "product_modified": false,
+      "retrieval_algorithm_changed": false,
+      "graph_answer_used": false,
+      "deepseek_self_judge": false,
+      "answer_prompt_modified": false,
+      "formal_data_downloaded": false,
+      "gold_accessed": false,
+      "score_based_tuning": false,
+      "openai_used": false
+    },
+    "fixes": [
+      "Official parallel-arrays adapter (haystack_session_ids/haystack_dates/haystack_sessions)",
+      "Question Date Envelope propagated to retrieval and answer provider",
+      "Formal Runner retry (initial+2) with terminal error retention and resumable checkpoint",
+      "Kimi-K2.6 scoring protocol (Moonshot, no OpenAI, no GPT-4o)",
+      "LongMemEval preregistration v3 supersedes v2",
+      "Real end-to-end smoke test with fictional data"
+    ],
+    "commits": {
+      "selector_fix": "55f793be55fe14002d49a4c3bb577ee1255a30f9",
+      "v3_infra": "b0847444a7024906f10a3511f705bbde63650c48",
+      "backfill_sha": "418a633d159da6f7485dc5abd2fc71ce0920e3c2",
+      "current_head": "55f793be55fe14002d49a4c3bb577ee1255a30f9"
+    },
+    "round_name": "v3_infrastructure_repair",
+    "performed_at": "2026-07-17T18:00:56Z"
   },
-  "resolution_steps": [
-    "Implemented engine module exporting createEngine wrapping frozen brain-server HTTP API and CognitiveProvider",
-    "Engine uses unified_memory_search Top-10 (not graph_answer) with temperature=0",
-    "Created 22 tests covering all 20 spec assertions plus fixture integration test",
-    "Created preregistration v2 preserving all v1 parameters with engine adapter metadata",
-    "Updated validate-only to recognize v2 and verify engine adapter file hash",
-    "Committed and verified all changes without accessing formal data or calling Providers"
-  ],
-  "next_steps": [
-    "Custodian creates new authorization file matching v2 preregistration hashes",
-    "Formal run proceeds from Phase 1 with --engine-module=external-eval/engines/omni-frozen-v3.1.mjs --preregistration=external-eval/preregistration/longmemeval-v2.json"
-  ],
-  "secondary_blocker": {
-    "component": "OPENAI_API_KEY",
-    "status": "NOT_AVAILABLE",
-    "impact": "If engine module were resolved, official scoring would be GENERATION_COMPLETE_OFFICIAL_SCORING_PENDING",
-    "severity": "secondary"
-  }
+  "blocker_reason": null,
+  "failure_category": null,
+  "blocked_at_phase": null
 }
