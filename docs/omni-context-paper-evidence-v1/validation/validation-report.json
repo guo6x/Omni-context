@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "generated_at": "2026-07-17T00:29:19.772Z",
+  "checks": [
+    {
+      "id": "commit-format",
+      "status": "PASS",
+      "detail": "Product and benchmark commits are full hexadecimal SHAs."
+    },
+    {
+      "id": "freeze-tag-target",
+      "status": "PASS",
+      "detail": "tag target=17dc1d0107b0474de84058205a91b302ba290a74"
+    },
+    {
+      "id": "freeze-manifest-hash",
+      "status": "PASS",
+      "detail": "sha256=88744914a97c2bb2c665a7fd8353aad09e7cd368be2ed28f4159a0efdf7f5ca8"
+    },
+    {
+      "id": "summary-counts",
+      "status": "PASS",
+      "detail": "Targeted 7/7; Formal 248 completed, 2 errors, 0 missing."
+    },
+    {
+      "id": "overall-aggregates",
+      "status": "PASS",
+      "detail": "Category macro aggregates match machine summaries."
+    },
+    {
+      "id": "category-rows",
+      "status": "PASS",
+      "detail": "Formal category CSV contains header plus seven categories; values were emitted by the extraction script from terminal records."
+    },
+    {
+      "id": "comparison-counts",
+      "status": "PASS",
+      "detail": "Comparison mode terminal counts are 70/70, 69/70, and 70/70."
+    },
+    {
+      "id": "retry-total",
+      "status": "PASS",
+      "detail": "Retry records=34."
+    },
+    {
+      "id": "deterministic-rescore",
+      "status": "PASS",
+      "detail": "105 deterministic records; 0 differences; 0 scoring defects."
+    },
+    {
+      "id": "csv-json-consistency",
+      "status": "PASS",
+      "detail": "Main CSV agrees with summary JSON."
+    },
+    {
+      "id": "unknown-reasons",
+      "status": "PASS",
+      "detail": "Every exact UNKNOWN JSON value has a sibling unknown_reason."
+    },
+    {
+      "id": "api-key-scan",
+      "status": "PASS",
+      "detail": "No API-key or JWT-shaped value found."
+    },
+    {
+      "id": "authorization-header",
+      "status": "PASS",
+      "detail": "No Authorization Bearer header found."
+    },
+    {
+      "id": "absolute-path-redaction",
+      "status": "PASS",
+      "detail": "Only portable placeholders are present."
+    },
+    {
+      "id": "locomo-status",
+      "status": "PASS",
+      "detail": "LoCoMo is NOT RUN; Conversation 2–10 accessed=false."
+    },
+    {
+      "id": "formal-not-overstated",
+      "status": "PASS",
+      "detail": "Formal is not represented as 250/250."
+    },
+    {
+      "id": "retrieval-only-not-overstated",
+      "status": "PASS",
+      "detail": "Comparison Retrieval-only is not represented as 70/70."
+    },
+    {
+      "id": "call-totals",
+      "status": "PASS",
+      "detail": "Call totals match stage terminal records and usage manifests."
+    },
+    {
+      "id": "test-gates",
+      "status": "PASS",
+      "detail": "Recorded tests/build/typecheck/secret scan gates pass."
+    },
+    {
+      "id": "no-heavy-artifacts",
+      "status": "PASS",
+      "detail": "No database/model/archive is present and every package file is below 5 MiB."
+    }
+  ],
+  "summary": {
+    "passed": 20,
+    "total": 20,
+    "failed": []
+  }
+}

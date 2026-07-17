@@ -1,0 +1,6 @@
+artifact,portable_path,purpose,availability
+Freeze manifest,docs/cognitive-benchmark-v1.1-review/evidence/candidate-v3.1-final-execution/11-candidate-freeze/freeze-manifest.json,Version and gate lock,COMMITTED
+Formal raw results,<LOCAL_EVIDENCE_ROOT>/12-formal-250/results.jsonl,Per-scenario aggregation,LOCAL SUPPLEMENT; derived summaries committed
+Comparison raw results,<LOCAL_EVIDENCE_ROOT>/13-comparison-70/results.jsonl,Per-mode aggregation,LOCAL SUPPLEMENT; derived summaries committed
+Answer diagnostics,<RUN_ROOT>/{stage}/answer-diagnostics/*.json,Failure attempt details,LOCAL SUPPLEMENT; bounded failure summaries committed
+Embedding weights,<MODEL_ROOT>/Xenova/multilingual-e5-large,Local embedding runtime,NOT COMMITTED; immutable hash recorded
