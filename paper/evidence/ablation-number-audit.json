@@ -1,0 +1,481 @@
+{
+  "schema_version": 1,
+  "status": "VERIFIED",
+  "run_id": "development35-strict-20260717-r3",
+  "dataset_sha256": "9d8761ff48c8ce7e432677a634f554d06fa4a500edaa708a33ac7d6366817ae4",
+  "seed": 2026071701,
+  "completed": 140,
+  "errors": 0,
+  "conditions": 4,
+  "scenarios_per_condition": 35,
+  "numbers": [
+    {
+      "condition": "full_omni_fresh_control",
+      "field": "completed",
+      "value": 35,
+      "source": "ablation-status.json",
+      "json_path": "$.conditions.full_omni_fresh_control.completed",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "full_omni_fresh_control",
+      "field": "errors",
+      "value": 0,
+      "source": "ablation-status.json",
+      "json_path": "$.conditions.full_omni_fresh_control.errors",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "full_omni_fresh_control",
+      "field": "overall_cognitive_score",
+      "value": 0.886957,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.full_omni_fresh_control.overall_cognitive_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex",
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "condition": "full_omni_fresh_control",
+      "field": "deterministic_score",
+      "value": 0.905397,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.full_omni_fresh_control.deterministic_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "full_omni_fresh_control",
+      "field": "agent_judged_score",
+      "value": 0.840856,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.full_omni_fresh_control.agent_judged_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "selector_off",
+      "field": "completed",
+      "value": 35,
+      "source": "ablation-status.json",
+      "json_path": "$.conditions.selector_off.completed",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "selector_off",
+      "field": "errors",
+      "value": 0,
+      "source": "ablation-status.json",
+      "json_path": "$.conditions.selector_off.errors",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "selector_off",
+      "field": "overall_cognitive_score",
+      "value": 0.700277,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.selector_off.overall_cognitive_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex",
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "condition": "selector_off",
+      "field": "deterministic_score",
+      "value": 0.716847,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.selector_off.deterministic_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "selector_off",
+      "field": "agent_judged_score",
+      "value": 0.658852,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.selector_off.agent_judged_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "grouping_off",
+      "field": "completed",
+      "value": 35,
+      "source": "ablation-status.json",
+      "json_path": "$.conditions.grouping_off.completed",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "grouping_off",
+      "field": "errors",
+      "value": 0,
+      "source": "ablation-status.json",
+      "json_path": "$.conditions.grouping_off.errors",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "grouping_off",
+      "field": "overall_cognitive_score",
+      "value": 0.860762,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.grouping_off.overall_cognitive_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex",
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "condition": "grouping_off",
+      "field": "deterministic_score",
+      "value": 0.886085,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.grouping_off.deterministic_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "grouping_off",
+      "field": "agent_judged_score",
+      "value": 0.797454,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.grouping_off.agent_judged_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "source_aware_fusion_off",
+      "field": "completed",
+      "value": 35,
+      "source": "ablation-status.json",
+      "json_path": "$.conditions.source_aware_fusion_off.completed",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "source_aware_fusion_off",
+      "field": "errors",
+      "value": 0,
+      "source": "ablation-status.json",
+      "json_path": "$.conditions.source_aware_fusion_off.errors",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "source_aware_fusion_off",
+      "field": "overall_cognitive_score",
+      "value": 0.885454,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.source_aware_fusion_off.overall_cognitive_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex",
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "condition": "source_aware_fusion_off",
+      "field": "deterministic_score",
+      "value": 0.922444,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.source_aware_fusion_off.deterministic_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "condition": "source_aware_fusion_off",
+      "field": "agent_judged_score",
+      "value": 0.792977,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.overall_scores.source_aware_fusion_off.agent_judged_score",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "overall_delta",
+      "value": -0.18668,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.deltas_vs_control.selector_off.overall_delta",
+      "consumers": [
+        "paper/tables/strict-ablations.tex",
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "overall_delta_percent",
+      "value": -21.05,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.deltas_vs_control.selector_off.overall_delta_percent",
+      "consumers": [
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "mean_control",
+      "value": null,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.mean_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "mean_ablated",
+      "value": null,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.mean_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "mean_delta",
+      "value": null,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.mean_delta",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "wins_for_control",
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.wins_for_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "wins_for_ablated",
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.wins_for_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "ties",
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.ties",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "overall_delta",
+      "value": -0.026195,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.deltas_vs_control.grouping_off.overall_delta",
+      "consumers": [
+        "paper/tables/strict-ablations.tex",
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "overall_delta_percent",
+      "value": -2.95,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.deltas_vs_control.grouping_off.overall_delta_percent",
+      "consumers": [
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "mean_control",
+      "value": null,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.mean_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "mean_ablated",
+      "value": null,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.mean_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "mean_delta",
+      "value": null,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.mean_delta",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "wins_for_control",
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.wins_for_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "wins_for_ablated",
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.wins_for_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "ties",
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.ties",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "overall_delta",
+      "value": -0.001503,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.deltas_vs_control.source_aware_fusion_off.overall_delta",
+      "consumers": [
+        "paper/tables/strict-ablations.tex",
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "overall_delta_percent",
+      "value": -0.17,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.deltas_vs_control.source_aware_fusion_off.overall_delta_percent",
+      "consumers": [
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "mean_control",
+      "value": null,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.mean_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "mean_ablated",
+      "value": null,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.mean_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "mean_delta",
+      "value": null,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.mean_delta",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "wins_for_control",
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.wins_for_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "wins_for_ablated",
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.wins_for_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "ties",
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.ties",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "component": "selector",
+      "field": "attribution",
+      "value": 0.18668,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.component_attribution.selector",
+      "consumers": [
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "component": "grouping",
+      "field": "attribution",
+      "value": 0.026195,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.component_attribution.grouping",
+      "consumers": [
+        "paper/figures/strict-ablations.svg"
+      ]
+    },
+    {
+      "component": "source_aware_fusion",
+      "field": "attribution",
+      "value": 0.001503,
+      "source": "strict-ablation-statistics.json",
+      "json_path": "$.component_attribution.source_aware_fusion",
+      "consumers": [
+        "paper/figures/strict-ablations.svg"
+      ]
+    }
+  ]
+}

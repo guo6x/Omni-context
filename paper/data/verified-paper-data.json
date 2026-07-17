@@ -82,7 +82,7 @@
       "cognitive_continuity": 0.916667,
       "memory_evolution": 0.856746,
       "conflict_resolution": 0.833333,
-      "cross_agent_transfer": 1.0,
+      "cross_agent_transfer": 1,
       "human_like_forgetting": 0.927778,
       "proactive_insight": 0.875,
       "decision_quality": 0.78437
@@ -91,7 +91,7 @@
       "cognitive_continuity": 0.936667,
       "memory_evolution": 0.852866,
       "conflict_resolution": 0.8125,
-      "cross_agent_transfer": 1.0,
+      "cross_agent_transfer": 1,
       "human_like_forgetting": 0.884722,
       "proactive_insight": 0.770833,
       "decision_quality": 0.808235
@@ -377,5 +377,65 @@
     "status": "NOT RUN",
     "reason": "Candidate v3.1 is not bound to the existing held-out authorization.",
     "conversation_2_10_accessed": false
+  },
+  "strict_ablation": {
+    "schema_version": 1,
+    "run_id": "development35-strict-20260717-r3",
+    "status": "completed",
+    "seed": 2026071701,
+    "completed": 140,
+    "errors": 0,
+    "conditions": {
+      "full_omni_fresh_control": {
+        "label": "Full Omni fresh control",
+        "completed": 35,
+        "errors": 0,
+        "overall_cognitive_score": 0.886957,
+        "deterministic_score": 0.905397,
+        "agent_judged_score": 0.840856
+      },
+      "selector_off": {
+        "label": "Selector Off",
+        "completed": 35,
+        "errors": 0,
+        "overall_cognitive_score": 0.700277,
+        "deterministic_score": 0.716847,
+        "agent_judged_score": 0.658852
+      },
+      "grouping_off": {
+        "label": "Evidence Grouping Off",
+        "completed": 35,
+        "errors": 0,
+        "overall_cognitive_score": 0.860762,
+        "deterministic_score": 0.886085,
+        "agent_judged_score": 0.797454
+      },
+      "source_aware_fusion_off": {
+        "label": "Source-aware Fusion Off",
+        "completed": 35,
+        "errors": 0,
+        "overall_cognitive_score": 0.885454,
+        "deterministic_score": 0.922444,
+        "agent_judged_score": 0.792977
+      }
+    },
+    "component_attribution": {
+      "selector": 0.18668,
+      "grouping": 0.026195,
+      "source_aware_fusion": 0.001503
+    },
+    "summary": {
+      "completed": 140,
+      "errors": 0,
+      "conditions": 4,
+      "scenarios_per_condition": 35,
+      "control_overall_score": 0.886957,
+      "largest_drop_condition": "selector_off",
+      "largest_drop_magnitude": 0.18668,
+      "smallest_drop_condition": "source_aware_fusion_off",
+      "smallest_drop_magnitude": 0.001503,
+      "call_budget_exceeded": false,
+      "primary_judge_independent": true
+    }
   }
 }

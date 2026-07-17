@@ -1,0 +1,29 @@
+\begin{table*}[t]
+\centering\scriptsize
+\caption{Internal Development-35 strict component ablations (seed=2026071701). All conditions completed 35/35 scenarios with zero terminal errors.}
+\label{tab:strict-ablations}
+\begin{tabular}{lrrrrrr}
+\toprule
+Condition & Completed & Errors & Overall & Deterministic & Agent-Judged & Memory Reliability \\
+\midrule
+Full Omni fresh control & 35 & 0 & 0.8870 & 0.9054 & 0.8409 & 0.8901 \\
+Selector Off & 35 & 0 & 0.7003 & 0.7168 & 0.6589 & 0.7177 \\
+Evidence Grouping Off & 35 & 0 & 0.8608 & 0.8861 & 0.7975 & 0.8576 \\
+Source-aware Fusion Off & 35 & 0 & 0.8855 & 0.9224 & 0.7930 & 0.9222 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{tabular}{lrrrrr}
+\toprule
+Paired contrast & $n$ & Mean Control & Mean Ablated & Mean $\Delta$ & F/A/T \\
+\midrule
+Selector Off & 0 & -- & -- & -- & undefined/undefined/undefined \\
+Grouping Off & 0 & -- & -- & -- & undefined/undefined/undefined \\
+Source-aware Fusion Off & 0 & -- & -- & -- & undefined/undefined/undefined \\
+\bottomrule
+\end{tabular}
+\begin{minipage}{0.98\textwidth}\footnotesize
+$\Delta$ is ablated minus control for the same scenario. F/A/T counts scenarios where Full control is higher, the ablation is higher, or tied. These are internal Development-35 strict component ablations, not external generalization evidence. External LongMemEval and LoCoMo formal evaluations remain NOT RUN.
+\end{minipage}
+\end{table*}

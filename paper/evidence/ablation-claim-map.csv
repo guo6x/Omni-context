@@ -1,0 +1,6 @@
+claim_id,allowed_wording,forbidden_wording,paper_section,source_field,status
+"AB01","The four conditions completed 35/35 internal scenarios with zero terminal errors.","Do not describe Development-35 as held-out or external validation.","Results","$.conditions","VERIFIED"
+"AB02","Each paired contrast compares the same scenarios under control and ablated conditions.","Do not infer statistical significance from aggregate scores alone.","Results","$.paired","VERIFIED"
+"AB03","Earlier Full Omni / Retrieval-only / No Memory comparisons are mode comparisons; these selector/grouping/fusion runs are strict component ablations.","Do not relabel prior mode comparisons as component ablations.","Experiments","instrumentation and $.conditions","VERIFIED"
+"AB04","Only observed internal Development-35 differences may be stated.","Do not claim any component is universally necessary.","Analysis","$.interpretation_scope","VERIFIED"
+"AB05","External LongMemEval and LoCoMo formal evaluations remain NOT RUN.","Do not combine these ablations with an external-generalization claim.","Limitations","external preregistrations","VERIFIED"
