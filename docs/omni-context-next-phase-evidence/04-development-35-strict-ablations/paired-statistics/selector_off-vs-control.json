@@ -1,10 +1,283 @@
 {
   "schema_version": 1,
   "run_id": "development35-strict-20260717-r3",
-  "comparison": "selector_off-vs-full_omni_fresh_control",
-  "n": 0,
-  "mean_control": null,
-  "mean_ablated": null,
-  "mean_delta": null,
-  "scenario_deltas": []
+  "comparison": "full_minus_selector_off",
+  "control_condition": "full_omni_fresh_control",
+  "ablated_condition": "selector_off",
+  "paired_n": 35,
+  "mean_control": 0.886957,
+  "mean_ablated": 0.700277,
+  "mean_difference": 0.18668,
+  "median_difference": 0.166667,
+  "full_higher": 25,
+  "ablation_higher": 3,
+  "ties": 7,
+  "bootstrap_95_ci": {
+    "lower": 0.11637,
+    "upper": 0.26071,
+    "iterations": 10000,
+    "seed": 2026071702,
+    "method": "paired_bootstrap_percentile"
+  },
+  "wilcoxon": {
+    "W_plus": 385,
+    "W_minus": 21,
+    "n_nonzero": 28,
+    "z": 4.133817,
+    "p_two_sided": 0.000036,
+    "method": "wilcoxon_signed_rank_normal_approximation"
+  },
+  "rank_biserial": 0.896552,
+  "effect_size": {
+    "paired_cohens_dz": 0.840202
+  },
+  "scenario_ids": [
+    "development-v2-cognitive_continuity-001",
+    "development-v2-cognitive_continuity-002",
+    "development-v2-cognitive_continuity-003",
+    "development-v2-cognitive_continuity-004",
+    "development-v2-cognitive_continuity-005",
+    "development-v2-conflict_resolution-001",
+    "development-v2-conflict_resolution-002",
+    "development-v2-conflict_resolution-003",
+    "development-v2-conflict_resolution-004",
+    "development-v2-conflict_resolution-005",
+    "development-v2-cross_agent_transfer-001",
+    "development-v2-cross_agent_transfer-002",
+    "development-v2-cross_agent_transfer-003",
+    "development-v2-cross_agent_transfer-004",
+    "development-v2-cross_agent_transfer-005",
+    "development-v2-decision_quality-001",
+    "development-v2-decision_quality-002",
+    "development-v2-decision_quality-003",
+    "development-v2-decision_quality-004",
+    "development-v2-decision_quality-005",
+    "development-v2-human_like_forgetting-001",
+    "development-v2-human_like_forgetting-002",
+    "development-v2-human_like_forgetting-003",
+    "development-v2-human_like_forgetting-004",
+    "development-v2-human_like_forgetting-005",
+    "development-v2-memory_evolution-001",
+    "development-v2-memory_evolution-002",
+    "development-v2-memory_evolution-003",
+    "development-v2-memory_evolution-004",
+    "development-v2-memory_evolution-005",
+    "development-v2-proactive_insight-001",
+    "development-v2-proactive_insight-002",
+    "development-v2-proactive_insight-003",
+    "development-v2-proactive_insight-004",
+    "development-v2-proactive_insight-005"
+  ],
+  "scenario_deltas": [
+    {
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "control": 0.833333,
+      "ablated": 0.866667,
+      "delta": -0.033333
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "control": 1,
+      "ablated": 0.6,
+      "delta": 0.4
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "control": 1,
+      "ablated": 0.683333,
+      "delta": 0.316667
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "control": 1,
+      "ablated": 0.55,
+      "delta": 0.45
+    },
+    {
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "control": 1,
+      "ablated": 0.866667,
+      "delta": 0.133333
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "control": 0.833333,
+      "ablated": 0.666667,
+      "delta": 0.166667
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "control": 1,
+      "ablated": 0.611111,
+      "delta": 0.388889
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "control": 0.833333,
+      "ablated": 0.222222,
+      "delta": 0.611111
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "control": 0.833333,
+      "ablated": 0.388889,
+      "delta": 0.444444
+    },
+    {
+      "scenario_id": "development-v2-conflict_resolution-005",
+      "control": 0.833333,
+      "ablated": 0.666667,
+      "delta": 0.166667
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "control": 1,
+      "ablated": 0.777778,
+      "delta": 0.222222
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "control": 1,
+      "ablated": 0.666667,
+      "delta": 0.333333
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "control": 1,
+      "ablated": 0.944444,
+      "delta": 0.055556
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "control": 1,
+      "ablated": 0.111111,
+      "delta": 0.888889
+    },
+    {
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "control": 1,
+      "ablated": 1,
+      "delta": 0
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-001",
+      "control": 0.787037,
+      "ablated": 0.740741,
+      "delta": 0.046296
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-002",
+      "control": 0.796296,
+      "ablated": 0.718148,
+      "delta": 0.078148
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-003",
+      "control": 0.787037,
+      "ablated": 0.490741,
+      "delta": 0.296296
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-004",
+      "control": 0.842593,
+      "ablated": 0.62963,
+      "delta": 0.212963
+    },
+    {
+      "scenario_id": "development-v2-decision_quality-005",
+      "control": 0.851852,
+      "ablated": 0.759259,
+      "delta": 0.092593
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "control": 0.833333,
+      "ablated": 1,
+      "delta": -0.166667
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "control": 1,
+      "ablated": 1,
+      "delta": 0
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "control": 0.694444,
+      "ablated": 0.694444,
+      "delta": 0
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-004",
+      "control": 0.694444,
+      "ablated": 0.861111,
+      "delta": -0.166667
+    },
+    {
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "control": 1,
+      "ablated": 1,
+      "delta": 0
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-001",
+      "control": 0.736111,
+      "ablated": 0.736111,
+      "delta": 0
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-002",
+      "control": 0.736111,
+      "ablated": 0.648148,
+      "delta": 0.087963
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-003",
+      "control": 0.77381,
+      "ablated": 0.359127,
+      "delta": 0.414683
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-004",
+      "control": 1,
+      "ablated": 1,
+      "delta": 0
+    },
+    {
+      "scenario_id": "development-v2-memory_evolution-005",
+      "control": 1,
+      "ablated": 1,
+      "delta": 0
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-001",
+      "control": 1,
+      "ablated": 0.6875,
+      "delta": 0.3125
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-002",
+      "control": 0.84375,
+      "ablated": 0.625,
+      "delta": 0.21875
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-003",
+      "control": 0.78125,
+      "ablated": 0.59375,
+      "delta": 0.1875
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-004",
+      "control": 0.875,
+      "ablated": 0.53125,
+      "delta": 0.34375
+    },
+    {
+      "scenario_id": "development-v2-proactive_insight-005",
+      "control": 0.84375,
+      "ablated": 0.8125,
+      "delta": 0.03125
+    }
+  ]
 }

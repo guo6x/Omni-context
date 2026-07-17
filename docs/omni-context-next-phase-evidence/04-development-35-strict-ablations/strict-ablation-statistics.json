@@ -146,5 +146,100 @@
     "smallest_drop_magnitude": 0.001503,
     "call_budget_exceeded": false,
     "primary_judge_independent": true
-  }
+  },
+  "paired": {
+    "full_minus_selector_off": {
+      "label": "Full minus Selector Off",
+      "paired_n": 35,
+      "mean_control": 0.886957,
+      "mean_ablated": 0.700277,
+      "mean_difference": 0.18668,
+      "median_difference": 0.166667,
+      "full_higher": 25,
+      "ablation_higher": 3,
+      "ties": 7,
+      "bootstrap_95_ci": {
+        "lower": 0.11637,
+        "upper": 0.26071,
+        "iterations": 10000,
+        "seed": 2026071702,
+        "method": "paired_bootstrap_percentile"
+      },
+      "wilcoxon": {
+        "W_plus": 385,
+        "W_minus": 21,
+        "n_nonzero": 28,
+        "z": 4.133817,
+        "p_two_sided": 0.000036,
+        "method": "wilcoxon_signed_rank_normal_approximation"
+      },
+      "rank_biserial": 0.896552,
+      "effect_size": {
+        "paired_cohens_dz": 0.840202
+      }
+    },
+    "full_minus_grouping_off": {
+      "label": "Full minus Grouping Off",
+      "paired_n": 35,
+      "mean_control": 0.886957,
+      "mean_ablated": 0.860762,
+      "mean_difference": 0.026195,
+      "median_difference": 0,
+      "full_higher": 11,
+      "ablation_higher": 7,
+      "ties": 17,
+      "bootstrap_95_ci": {
+        "lower": -0.015438,
+        "upper": 0.071296,
+        "iterations": 10000,
+        "seed": 2026071702,
+        "method": "paired_bootstrap_percentile"
+      },
+      "wilcoxon": {
+        "W_plus": 111,
+        "W_minus": 60,
+        "n_nonzero": 18,
+        "z": 1.093697,
+        "p_two_sided": 0.274088,
+        "method": "wilcoxon_signed_rank_normal_approximation"
+      },
+      "rank_biserial": 0.298246,
+      "effect_size": {
+        "paired_cohens_dz": 0.196766
+      }
+    },
+    "full_minus_source_aware_fusion_off": {
+      "label": "Full minus Source-aware Fusion Off",
+      "paired_n": 35,
+      "mean_control": 0.886957,
+      "mean_ablated": 0.885454,
+      "mean_difference": 0.001503,
+      "median_difference": 0,
+      "full_higher": 13,
+      "ablation_higher": 6,
+      "ties": 16,
+      "bootstrap_95_ci": {
+        "lower": -0.039278,
+        "upper": 0.040763,
+        "iterations": 10000,
+        "seed": 2026071702,
+        "method": "paired_bootstrap_percentile"
+      },
+      "wilcoxon": {
+        "W_plus": 102.5,
+        "W_minus": 87.5,
+        "n_nonzero": 19,
+        "z": 0.282785,
+        "p_two_sided": 0.777342,
+        "method": "wilcoxon_signed_rank_normal_approximation"
+      },
+      "rank_biserial": 0.078947,
+      "effect_size": {
+        "paired_cohens_dz": 0.012571
+      }
+    }
+  },
+  "bootstrap_iterations": 10000,
+  "bootstrap_seed": 2026071702,
+  "delta_definition": "delta = control - ablated (positive = Full Omni higher)"
 }
