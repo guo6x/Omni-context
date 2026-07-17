@@ -43,20 +43,29 @@ import {
 import { createAuditedAiFetch } from '../../security/audited-ai-fetch.js';
 import { assertEvaluationEmbeddingReady, loadRetrievalConfig, retrievalConfigHash } from '../../retrieval/config.js';
 import { parseTemporalQuery, temporalOptsFromQuery, filterAssertionsByTemporal, filterEntitiesByTemporal } from '../../retrieval/temporal-layer.js';
-import { reciprocalRankFuse, type FusedRetrievalCandidate, type RetrievalSourceTrace } from '../../retrieval/fusion.js';
+import {
+  reciprocalRankFuse,
+  type FusedRetrievalCandidate,
+  type FusionList,
+  type RetrievalSourceTrace,
+} from '../../retrieval/fusion.js';
 import {
   buildEvidenceGroupPassage,
   buildRerankerEvidenceSummary,
   detectEvidenceIntent,
   EVIDENCE_GROUP_VERSION,
   EVIDENCE_SELECTOR_VERSION,
-  groupFusedEvidence,
-  isolateRawEventChannels,
   queryAwareTemporalOptions,
   RERANKER_SUMMARY_VERSION,
-  selectEvidenceSet,
   type EvidenceGroup,
 } from '../../retrieval/evidence-selector.js';
+import {
+  applySourceAwareFusionAblation,
+  buildEvidenceGroupsForAblation,
+  loadResearchAblationConfig,
+  researchAblationTraceStage,
+  selectEvidenceForAblation,
+} from '../../retrieval/research-ablation.js';
 import { writeRetrievalTrace } from '../../retrieval/trace.js';
 
 const CORE_PRINCIPLE_CAP = 3;
@@ -64,6 +73,12 @@ const mcpLlmFetch = createAuditedAiFetch({ purpose: 'api.decision-intelligence',
 const MCP_EMBEDDING_TIMEOUT_MS = Number(process.env.MCP_EMBEDDING_TIMEOUT_MS || 2500);
 const MCP_RERANK_TIMEOUT_MS = Number(process.env.MCP_RERANK_TIMEOUT_MS || 2500);
 const RETRIEVAL_CONFIG = loadRetrievalConfig();
+const RESEARCH_ABLATION_CONFIG = loadResearchAblationConfig();
+process.stderr.write(`${JSON.stringify({
+  event: 'research_ablation_config',
+  research_mode: RESEARCH_ABLATION_CONFIG.researchMode,
+  ablation: RESEARCH_ABLATION_CONFIG.ablation,
+})}\n`);
 
 export function toCompactEntity(entity: any): any {
   if (!entity) return entity;
@@ -1399,7 +1414,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
             }));
             resultsData.subjectAttachments = attachmentGroups.flat().filter(Boolean);
 
-            const channelIsolation = isolateRawEventChannels<ReadableAssertionCandidate | any>([
+            const fusionLists: FusionList<ReadableAssertionCandidate | any>[] = [
               {
                 source: 'entity_vector', weight: RETRIEVAL_CONFIG.entityVectorWeight,
                 items: resultsData.vectorResults.map((item: any) => ({ id: item.id, kind: 'entity' as const, value: item, score: item.similarity })),
@@ -1433,13 +1448,21 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                     : 1 - index / resultsData.rawEventResults.length,
                 })),
               },
-            ]);
+            ];
+            const channelIsolation = applySourceAwareFusionAblation<ReadableAssertionCandidate | any>(
+              fusionLists,
+              RESEARCH_ABLATION_CONFIG,
+            );
             const isolatedItems = (source: string) => channelIsolation.lists.find((list) => list.source === source)?.items || [];
             const fused = reciprocalRankFuse<ReadableAssertionCandidate | any>(
               channelIsolation.lists,
               { rrfK: RETRIEVAL_CONFIG.rrfK },
             );
-            const evidenceGroups = groupFusedEvidence(fused, { rrfK: RETRIEVAL_CONFIG.rrfK });
+            const evidenceGroups = buildEvidenceGroupsForAblation(
+              fused,
+              { rrfK: RETRIEVAL_CONFIG.rrfK },
+              RESEARCH_ABLATION_CONFIG,
+            );
             const mixedForReranker = evidenceGroups.slice(0, umsPool).map((group) => {
               const rerankerSummary = buildRerankerEvidenceSummary(group);
               return {
@@ -1462,13 +1485,13 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               return a.rrfRank - b.rrfRank;
             }).map((group, index) => ({ ...group, rerankerRank: index + 1 }));
             const assertionGroups = rankedGroups.filter((group) => group.normalizedAssertions.length > 0 || group.rawEvents.length > 0);
-            const selection = selectEvidenceSet({
+            const selection = selectEvidenceForAblation({
               query: parsed.query,
               rankedGroups: assertionGroups,
               limit,
               temporalMode: umsTemporalMode,
               includeInvalidated: includeInvalidated || umsEvidenceIntent.conflict,
-            });
+            }, RESEARCH_ABLATION_CONFIG);
             const selectedIds = new Set(selection.selected.map((group) => group.groupId));
             const finalContextGroups = [
               ...selection.selected,
@@ -1562,6 +1585,7 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
               query: parsed.query,
               temporalMode: umsTemporalMode,
               stages: {
+                research_ablation: researchAblationTraceStage(RESEARCH_ABLATION_CONFIG),
                 entity_fts: resultsData.textResults.map((item: any, index: number) => ({ id: item.id, rank: index + 1 })),
                 entity_vector: resultsData.vectorResults.map((item: any, index: number) => ({ id: item.id, rank: index + 1, score: item.similarity })),
                 assertion_fts: isolatedItems('assertion_fts').map((item, index) => ({ id: item.id, rank: index + 1 })),
@@ -1610,6 +1634,10 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 as_of: umsTemporalQuery.asOf || null,
               },
               graphContext,
+              researchAblation: {
+                research_mode: RESEARCH_ABLATION_CONFIG.researchMode,
+                ablation: RESEARCH_ABLATION_CONFIG.ablation,
+              },
               searchMethods: {
                 text: resultsData.textResults.length,
                 vector: resultsData.vectorResults.length,
@@ -1627,6 +1655,8 @@ ${selected.map((p, i) => `${i + 1}. **${p.name}**${p.description ? `\n   ${p.des
                 evidence_selector_version: EVIDENCE_SELECTOR_VERSION,
                 answer_context_limit: limit,
                 trace_context_limit: limit * 2,
+                research_mode: RESEARCH_ABLATION_CONFIG.researchMode,
+                research_ablation: RESEARCH_ABLATION_CONFIG.ablation,
                 config_hash: retrievalConfigHash(RETRIEVAL_CONFIG),
                 rrfK: RETRIEVAL_CONFIG.rrfK,
                 weights: {
