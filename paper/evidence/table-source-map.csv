@@ -1,0 +1,8 @@
+table,source,generator,status
+paper/tables/main-results.tex,metrics/targeted-7-summary.json; metrics/development-35-summary.json; metrics/formal-250-summary.json; metrics/comparison-70-summary.json,paper/figure-scripts/generate_assets.py,VERIFIED
+paper/tables/category-results.tex,figures-data/category-comparison.csv,paper/figure-scripts/generate_assets.py,VERIFIED
+paper/tables/category-details.tex,metrics/development-35-by-category.csv; metrics/formal-250-by-category.csv,paper/figure-scripts/generate_assets.py,VERIFIED
+paper/tables/category-submetrics.tex,metrics/development-35-by-category.csv; metrics/formal-250-by-category.csv,paper/figure-scripts/generate_assets.py,VERIFIED
+paper/tables/efficiency-results.tex,metrics/headline-metrics.json,paper/figure-scripts/generate_assets.py,VERIFIED
+paper/tables/error-summary.tex,figures-data/formal-error-distribution.csv,paper/figure-scripts/generate_assets.py,VERIFIED
+paper/tables/reproducibility-summary.tex,manifests/reproducibility-lock.json; metrics/headline-metrics.json,paper/figure-scripts/generate_assets.py,VERIFIED

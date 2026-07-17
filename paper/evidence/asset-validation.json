@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "table-count",
+      "status": "PASS",
+      "detail": "7 expected tables"
+    },
+    {
+      "check": "figure-count",
+      "status": "PASS",
+      "detail": "6 SVG/PDF pairs"
+    },
+    {
+      "check": "number-audit",
+      "status": "PASS",
+      "detail": "577 verified entries with existing sources and consumers"
+    },
+    {
+      "check": "main-result-facts",
+      "status": "PASS",
+      "detail": "Required completion/error/score tuples are preserved"
+    },
+    {
+      "check": "aggregation-note",
+      "status": "PASS",
+      "detail": "Aggregation and mode-comparison boundaries are explicit"
+    },
+    {
+      "check": "claim-map",
+      "status": "PASS",
+      "detail": "14 bounded claims"
+    },
+    {
+      "check": "svg-integrity",
+      "status": "PASS",
+      "detail": "architecture=ok; retrieval-pipeline=ok; overall-comparison=ok; category-comparison=ok; coverage-funnel=ok; latency-summary=ok"
+    },
+    {
+      "check": "pdf-integrity",
+      "status": "PASS",
+      "detail": "architecture=411x189pt; retrieval-pipeline=411x181pt; overall-comparison=235x216pt; category-comparison=486x288pt; coverage-funnel=508x201pt; latency-summary=509x204pt"
+    },
+    {
+      "check": "latex-paths",
+      "status": "PASS",
+      "detail": "All main.tex input and figure paths resolve from paper/manuscript"
+    },
+    {
+      "check": "latex-structure",
+      "status": "PASS",
+      "detail": "All TeX files have balanced braces and environments"
+    },
+    {
+      "check": "references",
+      "status": "PASS",
+      "detail": "No unverified BibTeX records"
+    },
+    {
+      "check": "secret-scan",
+      "status": "PASS",
+      "detail": "No API key or Authorization header pattern"
+    },
+    {
+      "check": "absolute-paths",
+      "status": "PASS",
+      "detail": "No absolute local path in committed paper assets"
+    },
+    {
+      "check": "locomo-boundary",
+      "status": "PASS",
+      "detail": "LoCoMo remains NOT RUN with no numeric result"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+NOT COMPILED — LATEX TOOLCHAIN UNAVAILABLE
+
+Checked tools: pdflatex, xelatex, lualatex.
+No LaTeX distribution was installed automatically.
+Draft PDF: NOT GENERATED.

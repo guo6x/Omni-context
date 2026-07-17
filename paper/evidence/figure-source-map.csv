@@ -1,0 +1,7 @@
+figure,svg,pdf,source,generator,status
+architecture,paper/figures/architecture.svg,paper/figures/architecture.pdf,architecture/module-to-code-map.csv; architecture/method-facts.json,paper/figure-scripts/generate_assets.py,VERIFIED
+retrieval-pipeline,paper/figures/retrieval-pipeline.svg,paper/figures/retrieval-pipeline.pdf,architecture/final-product-fix.md; metrics/headline-metrics.json,paper/figure-scripts/generate_assets.py,VERIFIED
+overall-comparison,paper/figures/overall-comparison.svg,paper/figures/overall-comparison.pdf,metrics/development-35-summary.json; metrics/comparison-70-summary.json,paper/figure-scripts/generate_assets.py,VERIFIED
+category-comparison,paper/figures/category-comparison.svg,paper/figures/category-comparison.pdf,figures-data/category-comparison.csv,paper/figure-scripts/generate_assets.py,VERIFIED
+coverage-funnel,paper/figures/coverage-funnel.svg,paper/figures/coverage-funnel.pdf,metrics/targeted-7-summary.json; metrics/headline-metrics.json,paper/figure-scripts/generate_assets.py,VERIFIED
+latency-summary,paper/figures/latency-summary.svg,paper/figures/latency-summary.pdf,metrics/formal-250-summary.json; metrics/headline-metrics.json,paper/figure-scripts/generate_assets.py,VERIFIED
