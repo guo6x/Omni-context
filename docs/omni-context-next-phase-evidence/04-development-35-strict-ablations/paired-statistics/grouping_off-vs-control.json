@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "run_id": "development35-strict-20260717-r3",
+  "comparison": "grouping_off-vs-full_omni_fresh_control",
+  "n": 0,
+  "mean_control": null,
+  "mean_ablated": null,
+  "mean_delta": null,
+  "scenario_deltas": []
+}

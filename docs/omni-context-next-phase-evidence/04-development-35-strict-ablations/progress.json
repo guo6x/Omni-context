@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "last_plan_ordinal": 140,
+  "last_scenario_id": "development-v2-decision_quality-005",
+  "last_condition": "grouping_off",
+  "budget": {
+    "schema_version": 1,
+    "expected": {
+      "scenarios": 35,
+      "conditions": 4,
+      "scenario_condition_runs": 140,
+      "deepseek_logical": 644,
+      "kimi_logical": 40,
+      "extraction": 364,
+      "reranker": 140,
+      "answer": 140,
+      "judge": 40
+    },
+    "limits": {
+      "scenario_condition_runs": 140,
+      "deepseek_known_plus_15_percent": 741,
+      "kimi_physical_plus_15_percent": 46
+    },
+    "prior_consumption": {
+      "deepseek_known": 66,
+      "kimi_physical": 0
+    },
+    "observed": {
+      "completed": 140,
+      "errors": 0,
+      "retries": 872,
+      "extraction": 364,
+      "reranker": 140,
+      "answer_physical_proxy": 147,
+      "deepseek_known": 651,
+      "kimi_physical": 40
+    },
+    "global_observed": {
+      "deepseek_known": 717,
+      "kimi_physical": 40
+    },
+    "exceeded": false
+  },
+  "updated_at": "2026-07-17T10:22:31.996Z"
+}

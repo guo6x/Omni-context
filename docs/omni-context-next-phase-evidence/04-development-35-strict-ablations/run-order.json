@@ -1,0 +1,1144 @@
+{
+  "schema_version": 1,
+  "created_before_provider_calls": true,
+  "seed": 2026071701,
+  "dataset_path": "D:\\OmniContext-strict-ablations\\docs\\cognitive-benchmark-v1.1-review\\evidence\\development-dataset-v2.jsonl",
+  "dataset_sha256": "9d8761ff48c8ce7e432677a634f554d06fa4a500edaa708a33ac7d6366817ae4",
+  "frozen_product_base_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "research_instrumentation_commit": "c58e2e349626fa51e5f00b75c44c6e792fc02b4b",
+  "frozen_benchmark_commit": "62b0b20f944f7e9a2c58f02ce1c65bb43dfbf841",
+  "config_sha256": "0f8855b9a0b961eac2267b893eb009a4fa537ba82ffc1373727bb3b0d3e2687d",
+  "prompt_hashes": {
+    "answer": "e102ad836321591ba91ac8b5d09b1e95ce1fe3e3a3c74d0433e829e12b59b0f5",
+    "judge": "d296590a89f5f1de74e26426cf7a79c3e7b767b1c6ded77136ba3cb8ac1c289c",
+    "agent_review": "213f6edcda654e97e74b0e6adb471d148b7f2ca82ea468e8cfebae6bbd3aeba2"
+  },
+  "conditions": [
+    "full_omni_fresh_control",
+    "selector_off",
+    "grouping_off",
+    "source_aware_fusion_off"
+  ],
+  "plan": [
+    {
+      "ordinal": 1,
+      "scenario_index": 1,
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "category": "cognitive_continuity",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 2,
+      "scenario_index": 1,
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "category": "cognitive_continuity",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 3,
+      "scenario_index": 1,
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "category": "cognitive_continuity",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 4,
+      "scenario_index": 1,
+      "scenario_id": "development-v2-cognitive_continuity-001",
+      "category": "cognitive_continuity",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 5,
+      "scenario_index": 2,
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "category": "cognitive_continuity",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 6,
+      "scenario_index": 2,
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "category": "cognitive_continuity",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 7,
+      "scenario_index": 2,
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "category": "cognitive_continuity",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 8,
+      "scenario_index": 2,
+      "scenario_id": "development-v2-cognitive_continuity-002",
+      "category": "cognitive_continuity",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 9,
+      "scenario_index": 3,
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "category": "cognitive_continuity",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 10,
+      "scenario_index": 3,
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "category": "cognitive_continuity",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 11,
+      "scenario_index": 3,
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "category": "cognitive_continuity",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 12,
+      "scenario_index": 3,
+      "scenario_id": "development-v2-cognitive_continuity-003",
+      "category": "cognitive_continuity",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 13,
+      "scenario_index": 4,
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "category": "cognitive_continuity",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 14,
+      "scenario_index": 4,
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "category": "cognitive_continuity",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 15,
+      "scenario_index": 4,
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "category": "cognitive_continuity",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 16,
+      "scenario_index": 4,
+      "scenario_id": "development-v2-cognitive_continuity-004",
+      "category": "cognitive_continuity",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 17,
+      "scenario_index": 5,
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "category": "cognitive_continuity",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 18,
+      "scenario_index": 5,
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "category": "cognitive_continuity",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 19,
+      "scenario_index": 5,
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "category": "cognitive_continuity",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 20,
+      "scenario_index": 5,
+      "scenario_id": "development-v2-cognitive_continuity-005",
+      "category": "cognitive_continuity",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 21,
+      "scenario_index": 6,
+      "scenario_id": "development-v2-memory_evolution-001",
+      "category": "memory_evolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 22,
+      "scenario_index": 6,
+      "scenario_id": "development-v2-memory_evolution-001",
+      "category": "memory_evolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 23,
+      "scenario_index": 6,
+      "scenario_id": "development-v2-memory_evolution-001",
+      "category": "memory_evolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 24,
+      "scenario_index": 6,
+      "scenario_id": "development-v2-memory_evolution-001",
+      "category": "memory_evolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 25,
+      "scenario_index": 7,
+      "scenario_id": "development-v2-memory_evolution-002",
+      "category": "memory_evolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 26,
+      "scenario_index": 7,
+      "scenario_id": "development-v2-memory_evolution-002",
+      "category": "memory_evolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 27,
+      "scenario_index": 7,
+      "scenario_id": "development-v2-memory_evolution-002",
+      "category": "memory_evolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 28,
+      "scenario_index": 7,
+      "scenario_id": "development-v2-memory_evolution-002",
+      "category": "memory_evolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 29,
+      "scenario_index": 8,
+      "scenario_id": "development-v2-memory_evolution-003",
+      "category": "memory_evolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 30,
+      "scenario_index": 8,
+      "scenario_id": "development-v2-memory_evolution-003",
+      "category": "memory_evolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 31,
+      "scenario_index": 8,
+      "scenario_id": "development-v2-memory_evolution-003",
+      "category": "memory_evolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 32,
+      "scenario_index": 8,
+      "scenario_id": "development-v2-memory_evolution-003",
+      "category": "memory_evolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 33,
+      "scenario_index": 9,
+      "scenario_id": "development-v2-memory_evolution-004",
+      "category": "memory_evolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 34,
+      "scenario_index": 9,
+      "scenario_id": "development-v2-memory_evolution-004",
+      "category": "memory_evolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 35,
+      "scenario_index": 9,
+      "scenario_id": "development-v2-memory_evolution-004",
+      "category": "memory_evolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 36,
+      "scenario_index": 9,
+      "scenario_id": "development-v2-memory_evolution-004",
+      "category": "memory_evolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 37,
+      "scenario_index": 10,
+      "scenario_id": "development-v2-memory_evolution-005",
+      "category": "memory_evolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 38,
+      "scenario_index": 10,
+      "scenario_id": "development-v2-memory_evolution-005",
+      "category": "memory_evolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 39,
+      "scenario_index": 10,
+      "scenario_id": "development-v2-memory_evolution-005",
+      "category": "memory_evolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 40,
+      "scenario_index": 10,
+      "scenario_id": "development-v2-memory_evolution-005",
+      "category": "memory_evolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 41,
+      "scenario_index": 11,
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "category": "conflict_resolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 42,
+      "scenario_index": 11,
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "category": "conflict_resolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 43,
+      "scenario_index": 11,
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "category": "conflict_resolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 44,
+      "scenario_index": 11,
+      "scenario_id": "development-v2-conflict_resolution-001",
+      "category": "conflict_resolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 45,
+      "scenario_index": 12,
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "category": "conflict_resolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 46,
+      "scenario_index": 12,
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "category": "conflict_resolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 47,
+      "scenario_index": 12,
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "category": "conflict_resolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 48,
+      "scenario_index": 12,
+      "scenario_id": "development-v2-conflict_resolution-002",
+      "category": "conflict_resolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 49,
+      "scenario_index": 13,
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "category": "conflict_resolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 50,
+      "scenario_index": 13,
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "category": "conflict_resolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 51,
+      "scenario_index": 13,
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "category": "conflict_resolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 52,
+      "scenario_index": 13,
+      "scenario_id": "development-v2-conflict_resolution-003",
+      "category": "conflict_resolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 53,
+      "scenario_index": 14,
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "category": "conflict_resolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 54,
+      "scenario_index": 14,
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "category": "conflict_resolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 55,
+      "scenario_index": 14,
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "category": "conflict_resolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 56,
+      "scenario_index": 14,
+      "scenario_id": "development-v2-conflict_resolution-004",
+      "category": "conflict_resolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 57,
+      "scenario_index": 15,
+      "scenario_id": "development-v2-conflict_resolution-005",
+      "category": "conflict_resolution",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 58,
+      "scenario_index": 15,
+      "scenario_id": "development-v2-conflict_resolution-005",
+      "category": "conflict_resolution",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 59,
+      "scenario_index": 15,
+      "scenario_id": "development-v2-conflict_resolution-005",
+      "category": "conflict_resolution",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 60,
+      "scenario_index": 15,
+      "scenario_id": "development-v2-conflict_resolution-005",
+      "category": "conflict_resolution",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 61,
+      "scenario_index": 16,
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "category": "cross_agent_transfer",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 62,
+      "scenario_index": 16,
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "category": "cross_agent_transfer",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 63,
+      "scenario_index": 16,
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "category": "cross_agent_transfer",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 64,
+      "scenario_index": 16,
+      "scenario_id": "development-v2-cross_agent_transfer-001",
+      "category": "cross_agent_transfer",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 65,
+      "scenario_index": 17,
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "category": "cross_agent_transfer",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 66,
+      "scenario_index": 17,
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "category": "cross_agent_transfer",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 67,
+      "scenario_index": 17,
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "category": "cross_agent_transfer",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 68,
+      "scenario_index": 17,
+      "scenario_id": "development-v2-cross_agent_transfer-002",
+      "category": "cross_agent_transfer",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 69,
+      "scenario_index": 18,
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "category": "cross_agent_transfer",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 70,
+      "scenario_index": 18,
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "category": "cross_agent_transfer",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 71,
+      "scenario_index": 18,
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "category": "cross_agent_transfer",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 72,
+      "scenario_index": 18,
+      "scenario_id": "development-v2-cross_agent_transfer-003",
+      "category": "cross_agent_transfer",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 73,
+      "scenario_index": 19,
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "category": "cross_agent_transfer",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 74,
+      "scenario_index": 19,
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "category": "cross_agent_transfer",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 75,
+      "scenario_index": 19,
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "category": "cross_agent_transfer",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 76,
+      "scenario_index": 19,
+      "scenario_id": "development-v2-cross_agent_transfer-004",
+      "category": "cross_agent_transfer",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 77,
+      "scenario_index": 20,
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "category": "cross_agent_transfer",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 78,
+      "scenario_index": 20,
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "category": "cross_agent_transfer",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 79,
+      "scenario_index": 20,
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "category": "cross_agent_transfer",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 80,
+      "scenario_index": 20,
+      "scenario_id": "development-v2-cross_agent_transfer-005",
+      "category": "cross_agent_transfer",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 81,
+      "scenario_index": 21,
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "category": "human_like_forgetting",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 82,
+      "scenario_index": 21,
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "category": "human_like_forgetting",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 83,
+      "scenario_index": 21,
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "category": "human_like_forgetting",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 84,
+      "scenario_index": 21,
+      "scenario_id": "development-v2-human_like_forgetting-001",
+      "category": "human_like_forgetting",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 85,
+      "scenario_index": 22,
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "category": "human_like_forgetting",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 86,
+      "scenario_index": 22,
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "category": "human_like_forgetting",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 87,
+      "scenario_index": 22,
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "category": "human_like_forgetting",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 88,
+      "scenario_index": 22,
+      "scenario_id": "development-v2-human_like_forgetting-002",
+      "category": "human_like_forgetting",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 89,
+      "scenario_index": 23,
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "category": "human_like_forgetting",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 90,
+      "scenario_index": 23,
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "category": "human_like_forgetting",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 91,
+      "scenario_index": 23,
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "category": "human_like_forgetting",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 92,
+      "scenario_index": 23,
+      "scenario_id": "development-v2-human_like_forgetting-003",
+      "category": "human_like_forgetting",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 93,
+      "scenario_index": 24,
+      "scenario_id": "development-v2-human_like_forgetting-004",
+      "category": "human_like_forgetting",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 94,
+      "scenario_index": 24,
+      "scenario_id": "development-v2-human_like_forgetting-004",
+      "category": "human_like_forgetting",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 95,
+      "scenario_index": 24,
+      "scenario_id": "development-v2-human_like_forgetting-004",
+      "category": "human_like_forgetting",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 96,
+      "scenario_index": 24,
+      "scenario_id": "development-v2-human_like_forgetting-004",
+      "category": "human_like_forgetting",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 97,
+      "scenario_index": 25,
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "category": "human_like_forgetting",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 98,
+      "scenario_index": 25,
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "category": "human_like_forgetting",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 99,
+      "scenario_index": 25,
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "category": "human_like_forgetting",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 100,
+      "scenario_index": 25,
+      "scenario_id": "development-v2-human_like_forgetting-005",
+      "category": "human_like_forgetting",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 101,
+      "scenario_index": 26,
+      "scenario_id": "development-v2-proactive_insight-001",
+      "category": "proactive_insight",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 102,
+      "scenario_index": 26,
+      "scenario_id": "development-v2-proactive_insight-001",
+      "category": "proactive_insight",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 103,
+      "scenario_index": 26,
+      "scenario_id": "development-v2-proactive_insight-001",
+      "category": "proactive_insight",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 104,
+      "scenario_index": 26,
+      "scenario_id": "development-v2-proactive_insight-001",
+      "category": "proactive_insight",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 105,
+      "scenario_index": 27,
+      "scenario_id": "development-v2-proactive_insight-002",
+      "category": "proactive_insight",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 106,
+      "scenario_index": 27,
+      "scenario_id": "development-v2-proactive_insight-002",
+      "category": "proactive_insight",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 107,
+      "scenario_index": 27,
+      "scenario_id": "development-v2-proactive_insight-002",
+      "category": "proactive_insight",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 108,
+      "scenario_index": 27,
+      "scenario_id": "development-v2-proactive_insight-002",
+      "category": "proactive_insight",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 109,
+      "scenario_index": 28,
+      "scenario_id": "development-v2-proactive_insight-003",
+      "category": "proactive_insight",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 110,
+      "scenario_index": 28,
+      "scenario_id": "development-v2-proactive_insight-003",
+      "category": "proactive_insight",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 111,
+      "scenario_index": 28,
+      "scenario_id": "development-v2-proactive_insight-003",
+      "category": "proactive_insight",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 112,
+      "scenario_index": 28,
+      "scenario_id": "development-v2-proactive_insight-003",
+      "category": "proactive_insight",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 113,
+      "scenario_index": 29,
+      "scenario_id": "development-v2-proactive_insight-004",
+      "category": "proactive_insight",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 114,
+      "scenario_index": 29,
+      "scenario_id": "development-v2-proactive_insight-004",
+      "category": "proactive_insight",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 115,
+      "scenario_index": 29,
+      "scenario_id": "development-v2-proactive_insight-004",
+      "category": "proactive_insight",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 116,
+      "scenario_index": 29,
+      "scenario_id": "development-v2-proactive_insight-004",
+      "category": "proactive_insight",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 117,
+      "scenario_index": 30,
+      "scenario_id": "development-v2-proactive_insight-005",
+      "category": "proactive_insight",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 118,
+      "scenario_index": 30,
+      "scenario_id": "development-v2-proactive_insight-005",
+      "category": "proactive_insight",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 119,
+      "scenario_index": 30,
+      "scenario_id": "development-v2-proactive_insight-005",
+      "category": "proactive_insight",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 120,
+      "scenario_index": 30,
+      "scenario_id": "development-v2-proactive_insight-005",
+      "category": "proactive_insight",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 121,
+      "scenario_index": 31,
+      "scenario_id": "development-v2-decision_quality-001",
+      "category": "decision_quality",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 122,
+      "scenario_index": 31,
+      "scenario_id": "development-v2-decision_quality-001",
+      "category": "decision_quality",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 123,
+      "scenario_index": 31,
+      "scenario_id": "development-v2-decision_quality-001",
+      "category": "decision_quality",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 124,
+      "scenario_index": 31,
+      "scenario_id": "development-v2-decision_quality-001",
+      "category": "decision_quality",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 125,
+      "scenario_index": 32,
+      "scenario_id": "development-v2-decision_quality-002",
+      "category": "decision_quality",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 126,
+      "scenario_index": 32,
+      "scenario_id": "development-v2-decision_quality-002",
+      "category": "decision_quality",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 127,
+      "scenario_index": 32,
+      "scenario_id": "development-v2-decision_quality-002",
+      "category": "decision_quality",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 128,
+      "scenario_index": 32,
+      "scenario_id": "development-v2-decision_quality-002",
+      "category": "decision_quality",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 129,
+      "scenario_index": 33,
+      "scenario_id": "development-v2-decision_quality-003",
+      "category": "decision_quality",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 130,
+      "scenario_index": 33,
+      "scenario_id": "development-v2-decision_quality-003",
+      "category": "decision_quality",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 131,
+      "scenario_index": 33,
+      "scenario_id": "development-v2-decision_quality-003",
+      "category": "decision_quality",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 132,
+      "scenario_index": 33,
+      "scenario_id": "development-v2-decision_quality-003",
+      "category": "decision_quality",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 133,
+      "scenario_index": 34,
+      "scenario_id": "development-v2-decision_quality-004",
+      "category": "decision_quality",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 134,
+      "scenario_index": 34,
+      "scenario_id": "development-v2-decision_quality-004",
+      "category": "decision_quality",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    },
+    {
+      "ordinal": 135,
+      "scenario_index": 34,
+      "scenario_id": "development-v2-decision_quality-004",
+      "category": "decision_quality",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 136,
+      "scenario_index": 34,
+      "scenario_id": "development-v2-decision_quality-004",
+      "category": "decision_quality",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 137,
+      "scenario_index": 35,
+      "scenario_id": "development-v2-decision_quality-005",
+      "category": "decision_quality",
+      "condition": "source_aware_fusion_off",
+      "ablation": "source_aware_fusion_off"
+    },
+    {
+      "ordinal": 138,
+      "scenario_index": 35,
+      "scenario_id": "development-v2-decision_quality-005",
+      "category": "decision_quality",
+      "condition": "selector_off",
+      "ablation": "selector_off"
+    },
+    {
+      "ordinal": 139,
+      "scenario_index": 35,
+      "scenario_id": "development-v2-decision_quality-005",
+      "category": "decision_quality",
+      "condition": "full_omni_fresh_control",
+      "ablation": "none"
+    },
+    {
+      "ordinal": 140,
+      "scenario_index": 35,
+      "scenario_id": "development-v2-decision_quality-005",
+      "category": "decision_quality",
+      "condition": "grouping_off",
+      "ablation": "grouping_off"
+    }
+  ]
+}

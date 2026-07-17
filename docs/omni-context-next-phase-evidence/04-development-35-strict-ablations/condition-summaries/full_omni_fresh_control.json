@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "condition": "full_omni_fresh_control",
+  "ablation": "none",
+  "completed": 35,
+  "errors": 0,
+  "retry_records": 214,
+  "metrics": {
+    "scoring_version": "deterministic-scoring-v3",
+    "overall_cognitive_score": 0.8869567271352988,
+    "category_macro_scores": {
+      "cognitive_continuity": 0.9666666666666668,
+      "memory_evolution": 0.8492063492063492,
+      "conflict_resolution": 0.8666666666666668,
+      "cross_agent_transfer": 1,
+      "human_like_forgetting": 0.8444444444444447,
+      "proactive_insight": 0.86875,
+      "decision_quality": 0.812962962962963
+    },
+    "deterministic_score": 0.9053968253968253,
+    "agent_judged_score": 0.8408564814814815,
+    "memory_reliability_score": 0.8900793650793651,
+    "personalization_score": 0.9666666666666668,
+    "temporal_and_conflict_score": 0.857936507936508,
+    "insight_and_decision_score": 0.8408564814814815,
+    "by_category": {
+      "cognitive_continuity": {
+        "count": 5,
+        "macro_score": 0.9666666666666668,
+        "metrics": {
+          "profile_recall": 1,
+          "profile_consistency": 1,
+          "constraint_utilization": 0.8666666666666666,
+          "personalization_accuracy": 0.9333333333333332,
+          "contradiction_rate": 0,
+          "unsupported_personalization_rate": 0
+        },
+        "status": "completed"
+      },
+      "memory_evolution": {
+        "count": 5,
+        "macro_score": 0.8492063492063492,
+        "metrics": {
+          "current_state_accuracy": 1,
+          "historical_state_preservation": 1,
+          "temporal_ordering_accuracy": 0.42857142857142855,
+          "evolution_interpretation_accuracy": 0.8095238095238095,
+          "stale_memory_leakage": 0,
+          "state_transition_accuracy": 0.8571428571428571
+        },
+        "status": "completed"
+      },
+      "conflict_resolution": {
+        "count": 5,
+        "macro_score": 0.8666666666666668,
+        "metrics": {
+          "conflict_resolution_accuracy": 1,
+          "latest_valid_fact_accuracy": 1,
+          "historical_query_accuracy": 1,
+          "invalidated_fact_rejection": 1,
+          "conflict_disclosure_accuracy": 0.2,
+          "unsupported_resolution_rate": 0
+        },
+        "status": "completed"
+      },
+      "cross_agent_transfer": {
+        "count": 5,
+        "macro_score": 1,
+        "metrics": {
+          "cross_agent_recall": 1,
+          "cross_agent_consistency": 1,
+          "update_propagation_accuracy": 1,
+          "provenance_preservation": 1,
+          "agent_isolation_error_rate": 0,
+          "stale_transfer_rate": 0
+        },
+        "status": "completed"
+      },
+      "human_like_forgetting": {
+        "count": 5,
+        "macro_score": 0.8444444444444447,
+        "metrics": {
+          "salient_memory_retention": 1,
+          "noise_suppression": 0.8666666666666668,
+          "false_forgetting_rate": 0,
+          "stale_retention_rate": 0.13333333333333333,
+          "memory_precision": 0.9333333333333333,
+          "memory_compression_ratio": null,
+          "invalidation_accuracy": 0.4
+        },
+        "status": "completed"
+      },
+      "proactive_insight": {
+        "count": 5,
+        "macro_score": 0.86875,
+        "metrics": {
+          "insight_precision": 0.8,
+          "insight_recall": 0.8,
+          "blind_spot_detection_rate": 0.85,
+          "constraint_awareness": 0.8,
+          "actionability": 0.8,
+          "unsupported_claim_rate": 0.05,
+          "redundant_insight_rate": 0.05,
+          "overreach_rate": 0
+        },
+        "status": "completed"
+      },
+      "decision_quality": {
+        "count": 5,
+        "macro_score": 0.812962962962963,
+        "metrics": {
+          "constraint_coverage": 0.9,
+          "goal_alignment": 0.8,
+          "personalization": 0.7666666666666667,
+          "option_comparison_quality": 0.8,
+          "risk_awareness": 0.7,
+          "actionability": 0.75,
+          "internal_consistency": 0.85,
+          "unsupported_assumption_rate": 0,
+          "overall_decision_quality": 0.75
+        },
+        "status": "completed"
+      }
+    },
+    "completed": 35,
+    "errors": 0,
+    "primary_judge_independent": true
+  }
+}

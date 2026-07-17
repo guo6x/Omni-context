@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "run_id": "development35-strict-20260717-r3",
+  "control_condition": "full_omni_fresh_control",
+  "ablated_conditions": [
+    "selector_off",
+    "grouping_off",
+    "source_aware_fusion_off"
+  ],
+  "scenario_count": 35,
+  "paired_comparisons": {
+    "selector_off": {
+      "n": 0,
+      "mean_control": null,
+      "mean_ablated": null,
+      "mean_delta": null,
+      "wins_for_ablated": 0,
+      "wins_for_control": 0,
+      "ties": 0
+    },
+    "grouping_off": {
+      "n": 0,
+      "mean_control": null,
+      "mean_ablated": null,
+      "mean_delta": null,
+      "wins_for_ablated": 0,
+      "wins_for_control": 0,
+      "ties": 0
+    },
+    "source_aware_fusion_off": {
+      "n": 0,
+      "mean_control": null,
+      "mean_ablated": null,
+      "mean_delta": null,
+      "wins_for_ablated": 0,
+      "wins_for_control": 0,
+      "ties": 0
+    }
+  }
+}
