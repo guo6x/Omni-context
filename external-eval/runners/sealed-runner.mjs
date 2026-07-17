@@ -149,16 +149,51 @@ export async function runScoreOnly({ resultPath, lockPath, goldPath, scoreOutput
 }
 
 async function validateOnly() {
-  const paths = [
-    path.join(ROOT, 'preregistration', 'longmemeval-v1.json'),
-    path.join(ROOT, 'preregistration', 'locomo-heldout-v1.json'),
-  ];
-  const preregistrations = await Promise.all(paths.map(readJson));
-  for (const prereg of preregistrations) {
-    if (prereg.product_commit !== PRODUCT_COMMIT || prereg.formal_status !== 'NOT AUTHORIZED / NOT RUN') throw new Error('PREREGISTRATION_LOCK_INVALID');
-  }
+  const v1Path = path.join(ROOT, 'preregistration', 'longmemeval-v1.json');
+  const v2Path = path.join(ROOT, 'preregistration', 'longmemeval-v2.json');
+  const locomoPath = path.join(ROOT, 'preregistration', 'locomo-heldout-v1.json');
+
+  // v1 history (preserved, read-only)
+  const v1 = await readJson(v1Path);
+  if (v1.product_commit !== PRODUCT_COMMIT || v1.formal_status !== 'NOT AUTHORIZED / NOT RUN') throw new Error('PREREGISTRATION_V1_LOCK_INVALID');
+
+  // v2 current (engine adapter)
+  const v2 = await readJson(v2Path);
+  if (v2.product_commit !== PRODUCT_COMMIT) throw new Error('PREREGISTRATION_V2_PRODUCT_COMMIT_MISMATCH');
+  if (v2.formal_status !== 'NOT AUTHORIZED / NOT RUN') throw new Error('PREREGISTRATION_V2_FORMAL_STATUS_INVALID');
+  if (v2.formal_dataset_access_before_v2 !== false) throw new Error('PREREGISTRATION_V2_DATASET_ACCESSED_BEFORE_V2');
+  if (v2.formal_provider_calls_before_v2 !== 0) throw new Error('PREREGISTRATION_V2_PROVIDER_CALLS_INVALID');
+  if (v2.graph_answer_used !== false) throw new Error('PREREGISTRATION_V2_GRAPH_ANSWER_USED');
+  if (v2.answer_model !== 'deepseek-v4-flash') throw new Error('PREREGISTRATION_V2_ANSWER_MODEL_MISMATCH');
+  if (v2.answer.temperature !== 0) throw new Error('PREREGISTRATION_V2_TEMPERATURE_MISMATCH');
+  if (v2.retrieval.answer_top_k !== 10) throw new Error('PREREGISTRATION_V2_TOP_K_MISMATCH');
+  if (v2.prompt_sha256 !== '4eb58be8c29f789618fc15f1da3d7c22d3a36c70de549d559c2bb8fefbb5fd21') throw new Error('PREREGISTRATION_V2_PROMPT_HASH_MISMATCH');
+  if (v2.supersedes !== 'external-eval/preregistration/longmemeval-v1.json') throw new Error('PREREGISTRATION_V2_SUPERSEDES_INVALID');
+  if (!/^[0-9a-f]{40}$/.test(v2.engine_adapter_commit)) throw new Error('PREREGISTRATION_V2_ENGINE_ADAPTER_COMMIT_FORMAT_INVALID');
+
+  // Engine adapter file hash verification
+  const engineAdapterPath = path.join(ROOT, 'engines', 'omni-frozen-v3.1.mjs');
+  const engineFileHash = await sha256File(engineAdapterPath);
+  if (engineFileHash !== v2.engine_adapter_file_sha256) throw new Error('PREREGISTRATION_V2_ENGINE_FILE_HASH_MISMATCH');
+
+  // locomo (preserved)
+  const locomo = await readJson(locomoPath);
+  if (locomo.product_commit !== PRODUCT_COMMIT || locomo.formal_status !== 'NOT AUTHORIZED / NOT RUN') throw new Error('PREREGISTRATION_LOCOMO_LOCK_INVALID');
+
   for (const benchmark of ['longmemeval', 'locomo']) assertGoldFree(await readJson(adapterFor(benchmark).fixture));
-  return { schema_version: 1, status: 'VALID', formal_run: false, heldout_accessed: false, preregistrations: paths.map((file, index) => ({ file: path.relative(REPO, file).replaceAll('\\', '/'), benchmark: preregistrations[index].benchmark })) };
+
+  return {
+    schema_version: 2,
+    status: 'VALID',
+    formal_run: false,
+    heldout_accessed: false,
+    engine_adapter_verified: true,
+    preregistrations: [
+      { file: path.relative(REPO, v1Path).replaceAll('\\', '/'), benchmark: v1.benchmark, version: 1, superseded_by: 'longmemeval-v2.json' },
+      { file: path.relative(REPO, v2Path).replaceAll('\\', '/'), benchmark: v2.benchmark, version: 2, current: true, engine_adapter_commit: v2.engine_adapter_commit },
+      { file: path.relative(REPO, locomoPath).replaceAll('\\', '/'), benchmark: locomo.benchmark, version: 1 },
+    ],
+  };
 }
 
 async function main() {
