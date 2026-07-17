@@ -31,6 +31,8 @@ export function assertGoldFree(value, at = '$') {
   }
 }
 
+// --- Authorization Schema v1 (legacy, preserved for backward compatibility) ---
+
 export function validateAuthorization(auth, expected) {
   const required = ['schema_version', 'authorized_by', 'authorized_at', 'expires_at', 'benchmark', 'dataset_variant', 'allowed_subset', 'dataset_sha256', 'product_commit', 'adapter_commit', 'preregistration_sha256', 'allow_formal_run'];
   for (const key of required) if (auth?.[key] === undefined || auth[key] === '') throw new Error(`AUTHORIZATION_INVALID:missing_${key}`);
@@ -46,6 +48,103 @@ export function validateAuthorization(auth, expected) {
 export async function loadAuthorization(file, expected) {
   if (!file) throw new Error('HELDOUT_AUTHORIZATION_REQUIRED:OMNI_HELDOUT_AUTHORIZATION_FILE');
   return validateAuthorization(JSON.parse(await readFile(file, 'utf8')), expected);
+}
+
+// --- Authorization Schema v2 (phase-separated) ---
+
+const AUTH_V2_REQUIRED = [
+  'schema_version', 'authorized_by', 'authorized_at', 'expires_at',
+  'benchmark', 'dataset_variant', 'allowed_subset',
+  'generation_projection_sha256', 'gold_projection_sha256',
+  'product_commit', 'product_build_sha256',
+  'adapter_commit', 'engine_adapter_commit', 'formal_runner_commit',
+  'preregistration_sha256', 'scoring_preregistration_sha256',
+  'scorer_module_sha256', 'judge_prompt_sha256',
+  'allow_formal_generation', 'allow_formal_scoring',
+];
+
+const AUTH_V2_HASH_FIELDS = [
+  'generation_projection_sha256', 'gold_projection_sha256',
+  'product_build_sha256', 'preregistration_sha256',
+  'scoring_preregistration_sha256', 'scorer_module_sha256', 'judge_prompt_sha256',
+];
+
+const AUTH_V2_COMMIT_FIELDS = [
+  'adapter_commit', 'engine_adapter_commit', 'formal_runner_commit',
+];
+
+/**
+ * Validate an Authorization Schema v2 object for a specific phase.
+ *
+ * Phase 'generation':
+ *   - allow_formal_generation must be true
+ *   - Verifies generation_projection_sha256, product_commit, adapter_commit,
+ *     engine_adapter_commit, formal_runner_commit, preregistration_sha256
+ *   - Gold path is NOT read; gold_projection_sha256 is NOT verified
+ *
+ * Phase 'scoring':
+ *   - allow_formal_scoring must be true
+ *   - Verifies gold_projection_sha256, result_sha256 (in expected),
+ *     scoring_preregistration_sha256, scorer_module_sha256, judge_prompt_sha256
+ *   - Product service is NOT started
+ *
+ * An authorization with allow_formal_generation=true and allow_formal_scoring=false
+ * cannot be used for scoring, and vice versa.
+ */
+export function validateAuthorizationV2(auth, expected, phase) {
+  if (phase !== 'generation' && phase !== 'scoring') {
+    throw new Error(`AUTHORIZATION_V2_PHASE_INVALID:${String(phase)}`);
+  }
+  for (const key of AUTH_V2_REQUIRED) {
+    if (auth?.[key] === undefined || auth[key] === '') {
+      throw new Error(`AUTHORIZATION_V2_INVALID:missing_${key}`);
+    }
+  }
+  if (auth.schema_version !== 2) throw new Error('AUTHORIZATION_V2_INVALID:not_v2');
+
+  for (const key of AUTH_V2_HASH_FIELDS) {
+    if (!SHA256_RE.test(auth[key])) throw new Error(`AUTHORIZATION_V2_INVALID:hash_format_${key}`);
+  }
+  for (const key of AUTH_V2_COMMIT_FIELDS) {
+    if (!SHA1_RE.test(auth[key])) throw new Error(`AUTHORIZATION_V2_INVALID:commit_format_${key}`);
+  }
+  if (auth.product_commit !== PRODUCT_COMMIT) throw new Error('AUTHORIZATION_V2_INVALID:product_commit');
+
+  const authorized = Date.parse(auth.authorized_at);
+  const expires = Date.parse(auth.expires_at);
+  if (!Number.isFinite(authorized) || !Number.isFinite(expires) || authorized > Date.now() + 300000 || expires <= Date.now()) {
+    throw new Error('AUTHORIZATION_V2_EXPIRED');
+  }
+
+  if (phase === 'generation') {
+    if (auth.allow_formal_generation !== true) throw new Error('AUTHORIZATION_V2_GENERATION_NOT_ALLOWED');
+  } else {
+    if (auth.allow_formal_scoring !== true) throw new Error('AUTHORIZATION_V2_SCORING_NOT_ALLOWED');
+  }
+
+  for (const [key, value] of Object.entries(expected || {})) {
+    if (value === undefined) continue;
+    if (auth[key] !== value) throw new Error(`AUTHORIZATION_V2_MISMATCH:${key}`);
+  }
+  return auth;
+}
+
+export async function loadAuthorizationV2(file, expected, phase) {
+  if (!file) throw new Error('HELDOUT_AUTHORIZATION_REQUIRED:OMNI_HELDOUT_AUTHORIZATION_FILE');
+  return validateAuthorizationV2(JSON.parse(await readFile(file, 'utf8')), expected, phase);
+}
+
+/**
+ * Read Gold bytes, compute SHA-256, compare to expected, then parse.
+ * Stops immediately on hash mismatch — before parsing.
+ */
+export async function readGoldProjection(file, expectedSha256) {
+  const bytes = await readFile(file);
+  const hash = sha256Bytes(bytes);
+  if (hash !== expectedSha256) {
+    throw new Error(`GOLD_PROJECTION_SHA256_MISMATCH:expected_${expectedSha256}_actual_${hash}`);
+  }
+  return { parsed: JSON.parse(bytes.toString('utf8')), sha256: hash, bytes };
 }
 
 export async function appendAccessLog(file, event) {

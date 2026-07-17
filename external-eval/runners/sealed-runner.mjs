@@ -4,13 +4,14 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeLongMemEvalGeneration, toLongMemEvalOfficialOutput, QUESTION_ENVELOPE_VERSION, QUESTION_ENVELOPE_SHA256 } from '../adapters/longmemeval.mjs';
 import { normalizeLocomoGeneration, toLocomoOfficialOutput } from '../adapters/locomo.mjs';
-import { PRODUCT_COMMIT, appendAccessLog, assertGoldFree, assertResultsLocked, loadAuthorization, lockResults, readGenerationProjection, sha256File } from '../lib/sealed.mjs';
+import { PRODUCT_COMMIT, appendAccessLog, assertGoldFree, assertResultsLocked, loadAuthorization, loadAuthorizationV2, lockResults, readGenerationProjection, readGoldProjection, sha256File, sha256Bytes, validateAuthorizationV2 } from '../lib/sealed.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = path.resolve(ROOT, '..');
 
 const FORMAL_RETRYABLE_ERRORS = new Set(['schema_validation', '429', '5xx', 'network', 'timeout']);
 const FORMAL_MAX_RETRIES = 2;
+const FORMAL_EXPECTED_TOTAL = 500;
 
 function flag(name, fallback) {
   const assigned = process.argv.slice(2).find((value) => value.startsWith(`${name}=`));
@@ -77,6 +78,8 @@ export async function runFixture({ benchmark, outputRoot, interruptAfter = Infin
   return { status: 'completed', completed: completedIds.size, expected: records.length, resultPath, lock };
 }
 
+// --- v1 authorization (preserved for backward compatibility with existing tests) ---
+
 export async function validateFormalRequest(options) {
   const preregHash = await sha256File(options.preregistrationPath);
   const generationHash = await sha256File(options.generationDataPath);
@@ -90,6 +93,86 @@ export async function validateFormalRequest(options) {
     preregistration_sha256: preregHash,
   });
   return { auth, preregHash, generationHash };
+}
+
+// --- Crash recovery: rebuild state from existing results.jsonl ---
+
+/**
+ * Read existing results.jsonl and rebuild completed_ids and terminal_error_ids.
+ * Verifies that each question_id has at most one terminal result (status 'ok' or 'error').
+ * Returns { rows, completed_ids, terminal_error_ids, idCounts }.
+ */
+export async function rebuildStateFromResults(resultPath) {
+  let rows = [];
+  if (await exists(resultPath)) {
+    const text = await readFile(resultPath, 'utf8');
+    rows = text.trim().split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+  }
+  const completedIds = new Set();
+  const terminalErrorIds = new Set();
+  const idCounts = new Map();
+  for (const row of rows) {
+    const id = row?.question_id;
+    if (!id) throw new Error('RESULT_ROW_MISSING_QUESTION_ID');
+    idCounts.set(id, (idCounts.get(id) || 0) + 1);
+    if (row.status === 'error') {
+      // Terminal error row
+      if (terminalErrorIds.has(id)) {
+        throw new Error(`DUPLICATE_TERMINAL_ERROR_RESULT:${id}`);
+      }
+      if (completedIds.has(id)) {
+        throw new Error(`RESULT_CONFLICT_COMPLETED_AND_ERROR:${id}`);
+      }
+      terminalErrorIds.add(id);
+    } else {
+      // Successful generation row (status 'ok' or absent)
+      if (completedIds.has(id)) {
+        throw new Error(`DUPLICATE_COMPLETED_RESULT:${id}`);
+      }
+      if (terminalErrorIds.has(id)) {
+        throw new Error(`RESULT_CONFLICT_ERROR_AND_COMPLETED:${id}`);
+      }
+      completedIds.add(id);
+    }
+  }
+  return { rows, completedIds, terminalErrorIds, idCounts };
+}
+
+/**
+ * Merge checkpoint state with results-derived state.
+ * If they conflict (e.g., checkpoint says completed but results say error), stop.
+ */
+function mergeCheckpointWithResults(checkpoint, resultsState) {
+  const { completedIds: rCompleted, terminalErrorIds: rErrors } = resultsState;
+  const { completed_ids: cCompleted, terminal_error_ids: cErrors } = checkpoint;
+
+  // Results-derived state is the source of truth (results.jsonl is durable).
+  // Checkpoint should be a subset of results state. If checkpoint has an ID that
+  // results doesn't have in the corresponding terminal state, that's a conflict.
+  for (const id of cCompleted) {
+    if (rErrors.has(id)) {
+      throw new Error(`CHECKPOINT_RESULTS_CONFLICT:checkpoint_completed_but_results_error:${id}`);
+    }
+    // If checkpoint says completed but results has no record, results may be stale — trust checkpoint.
+  }
+  for (const id of cErrors) {
+    if (rCompleted.has(id)) {
+      throw new Error(`CHECKPOINT_RESULTS_CONFLICT:checkpoint_error_but_results_completed:${id}`);
+    }
+  }
+
+  // Union: results-derived + checkpoint (in case results.jsonl was lost but checkpoint persists).
+  const mergedCompleted = new Set([...rCompleted, ...cCompleted]);
+  const mergedErrors = new Set([...rErrors, ...cErrors]);
+
+  // Conflict if an ID is in both completed and errors
+  for (const id of mergedCompleted) {
+    if (mergedErrors.has(id)) {
+      throw new Error(`STATE_CONFLICT_ID_IN_BOTH_COMPLETED_AND_ERROR:${id}`);
+    }
+  }
+
+  return { completed_ids: mergedCompleted, terminal_error_ids: mergedErrors };
 }
 
 function classifyFormalError(error) {
@@ -181,9 +264,12 @@ export async function runFormalGeneration(options) {
   const checkpointPath = path.join(options.outputRoot, 'checkpoint.json');
   const attemptLogPath = path.join(options.outputRoot, 'attempt-log.jsonl');
 
+  // --- Crash recovery: read existing results first, verify, then merge with checkpoint ---
+  const resultsState = await rebuildStateFromResults(resultPath);
   const checkpoint = await loadCheckpoint(checkpointPath);
-  const completedIds = checkpoint.completed_ids;
-  const terminalErrorIds = checkpoint.terminal_error_ids;
+  const merged = mergeCheckpointWithResults(checkpoint, resultsState);
+  const completedIds = merged.completed_ids;
+  const terminalErrorIds = merged.terminal_error_ids;
 
   for (const record of normalized) {
     if (completedIds.has(record.id)) continue;
@@ -263,16 +349,92 @@ export async function runFormalGeneration(options) {
   };
 }
 
-export async function runScoreOnly({ resultPath, lockPath, goldPath, scoreOutputPath, scorer, accessLog, allowedSubset, adapterCommit }) {
-  const before = await assertResultsLocked(resultPath, lockPath);
-  const goldBytes = await readFile(goldPath);
-  const gold = JSON.parse(goldBytes.toString('utf8'));
+/**
+ * Validate formal lock conditions before formal scoring:
+ *   - unique question_ids = expectedTotal (default 500)
+ *   - result terminal rows = expectedTotal
+ *   - duplicate question_ids = 0
+ *   - completed + generation_terminal_errors = expectedTotal
+ */
+export function validateFormalLock(results, expectedTotal = FORMAL_EXPECTED_TOTAL) {
+  if (!Array.isArray(results)) throw new Error('FORMAL_LOCK_RESULTS_NOT_ARRAY');
+  const ids = new Set();
+  let duplicates = 0;
+  let completed = 0;
+  let terminalErrors = 0;
+  for (const row of results) {
+    const id = row?.question_id;
+    if (!id) throw new Error('FORMAL_LOCK_ROW_MISSING_QUESTION_ID');
+    if (ids.has(id)) duplicates++;
+    else ids.add(id);
+    if (row.status === 'error') terminalErrors++;
+    else completed++;
+  }
+  if (duplicates !== 0) {
+    throw new Error(`FORMAL_LOCK_DUPLICATE_IDS:${duplicates}`);
+  }
+  if (ids.size !== expectedTotal) {
+    throw new Error(`FORMAL_LOCK_UNIQUE_IDS_MISMATCH:expected_${expectedTotal}_actual_${ids.size}`);
+  }
+  if (results.length !== expectedTotal) {
+    throw new Error(`FORMAL_LOCK_RESULT_ROWS_MISMATCH:expected_${expectedTotal}_actual_${results.length}`);
+  }
+  if (completed + terminalErrors !== expectedTotal) {
+    throw new Error(`FORMAL_LOCK_TERMINAL_SUM_MISMATCH:completed_${completed}_errors_${terminalErrors}_expected_${expectedTotal}`);
+  }
+  return { unique_ids: ids.size, result_rows: results.length, duplicates, completed, terminal_errors: terminalErrors };
+}
+
+/**
+ * Score-only entrypoint (v2-aware). Uses Authorization Schema v2 phase='scoring'.
+ * Verifies Gold projection hash BEFORE parsing. Does NOT start product service.
+ */
+export async function runScoreOnly({
+  resultPath,
+  lockPath,
+  goldPath,
+  scoreOutputPath,
+  scorer,
+  accessLog,
+  allowedSubset,
+  adapterCommit,
+  // v2 phase-separated authorization:
+  authorizationFile,
+  expected = {},
+  fullScoreLogDir,
+  sanitizedScoreLogPath,
+  enforceFormalChecks = false,
+  expectedTotalQuestions = FORMAL_EXPECTED_TOTAL,
+}) {
+  // Verify results are locked and capture result_sha256
+  const lock = await assertResultsLocked(resultPath, lockPath);
+  const resultSha256 = lock.result_sha256;
+
+  // v2 phase-separated authorization for scoring
+  if (authorizationFile) {
+    const auth = await loadAuthorizationV2(authorizationFile, {
+      ...expected,
+      gold_projection_sha256: expected.gold_projection_sha256,
+      product_commit: PRODUCT_COMMIT,
+    }, 'scoring');
+    // result_sha256 is required for scoring phase
+    if (!auth.result_sha256) throw new Error('RESULT_SHA256_REQUIRED_FOR_SCORING');
+    if (auth.result_sha256 !== resultSha256) {
+      throw new Error(`RESULT_SHA256_MISMATCH:auth_${auth.result_sha256}_lock_${resultSha256}`);
+    }
+    // scoring_preregistration_sha256, scorer_module_sha256, judge_prompt_sha256 are validated by loadAuthorizationV2
+  }
+
+  // Read Gold bytes, compute SHA-256, compare to expected, then parse
+  const goldSha256 = expected.gold_projection_sha256 || (await sha256File(goldPath));
+  const { parsed: gold, sha256: verifiedGoldSha256 } = await readGoldProjection(goldPath, goldSha256);
+
   if (accessLog) {
     const goldCount = Array.isArray(gold) ? gold.length : Object.keys(gold).length;
     await appendAccessLog(accessLog, {
       dataset_path: goldPath,
-      dataset_sha256: await sha256File(goldPath),
-      file_size: goldBytes.byteLength,
+      dataset_sha256: verifiedGoldSha256,
+      file_size: (await readFile(goldPath)).byteLength,
       dataset_id_count: goldCount,
       allowed_subset: allowedSubset,
       reader_commit: adapterCommit,
@@ -281,9 +443,29 @@ export async function runScoreOnly({ resultPath, lockPath, goldPath, scoreOutput
       accessed_gold: true,
     });
   }
+
   const results = (await readFile(resultPath, 'utf8')).trim().split(/\r?\n/).filter(Boolean).map(JSON.parse);
-  const metrics = await scorer(results, gold);
-  await writeFile(scoreOutputPath, `${JSON.stringify({ schema_version: 1, result_sha256: before.result_sha256, metrics }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+
+  // Formal lock validation (when enforceFormalChecks)
+  if (enforceFormalChecks) {
+    validateFormalLock(results, expectedTotalQuestions);
+  }
+
+  const metrics = await scorer(results, gold, {
+    fullLogDir: fullScoreLogDir,
+    sanitizedLogPath: sanitizedScoreLogPath,
+    enforceFormalChecks,
+    expectedTotalQuestions,
+  });
+
+  const manifest = {
+    schema_version: 2,
+    result_sha256: resultSha256,
+    gold_projection_sha256: verifiedGoldSha256,
+    metrics,
+    log_manifest: metrics?.log_manifest || null,
+  };
+  await writeFile(scoreOutputPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
   await assertResultsLocked(resultPath, lockPath);
   return metrics;
 }
@@ -292,6 +474,8 @@ async function validateOnly() {
   const v1Path = path.join(ROOT, 'preregistration', 'longmemeval-v1.json');
   const v2Path = path.join(ROOT, 'preregistration', 'longmemeval-v2.json');
   const v3Path = path.join(ROOT, 'preregistration', 'longmemeval-v3.json');
+  const v4Path = path.join(ROOT, 'preregistration', 'longmemeval-v4.json');
+  const v4MdPath = path.join(ROOT, 'preregistration', 'longmemeval-v4.md');
   const kimiJudgePath = path.join(ROOT, 'preregistration', 'longmemeval-kimi-judge-v1.json');
   const locomoPath = path.join(ROOT, 'preregistration', 'locomo-heldout-v1.json');
 
@@ -305,68 +489,88 @@ async function validateOnly() {
   if (v2.formal_status !== 'NOT AUTHORIZED / NOT RUN') throw new Error('PREREGISTRATION_V2_FORMAL_STATUS_INVALID');
   if (v2.graph_answer_used !== false) throw new Error('PREREGISTRATION_V2_GRAPH_ANSWER_USED');
 
-  // 3. v3 is current
+  // 3. v3 preserved (read-only history, superseded by v4)
   const v3 = await readJson(v3Path);
   if (v3.preregistration_version !== 3) throw new Error('PREREGISTRATION_V3_VERSION_INVALID');
   if (v3.supersedes !== 'external-eval/preregistration/longmemeval-v2.json') throw new Error('PREREGISTRATION_V3_SUPERSEDES_INVALID');
   if (v3.formal_status !== 'NOT AUTHORIZED / NOT RUN') throw new Error('PREREGISTRATION_V3_FORMAL_STATUS_INVALID');
-  if (v3.formal_dataset_access_before_v3 !== false) throw new Error('PREREGISTRATION_V3_DATASET_ACCESSED_BEFORE_V3');
-  if (v3.formal_gold_access_before_v3 !== false) throw new Error('PREREGISTRATION_V3_GOLD_ACCESSED_BEFORE_V3');
   if (v3.product_commit !== PRODUCT_COMMIT) throw new Error('PREREGISTRATION_V3_PRODUCT_COMMIT_MISMATCH');
-  if (v3.product_build_sha256 !== 'af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668') throw new Error('PREREGISTRATION_V3_PRODUCT_BUILD_HASH_MISMATCH');
-  if (v3.official_dataset_schema !== 'parallel_arrays_v1') throw new Error('PREREGISTRATION_V3_OFFICIAL_SCHEMA_INVALID');
-  if (v3.session_order_policy !== 'preserve_official_order') throw new Error('PREREGISTRATION_V3_SESSION_ORDER_POLICY_INVALID');
-  if (v3.question_envelope_version !== QUESTION_ENVELOPE_VERSION) throw new Error('PREREGISTRATION_V3_ENVELOPE_VERSION_MISMATCH');
-  if (v3.question_envelope_sha256 !== QUESTION_ENVELOPE_SHA256) throw new Error('PREREGISTRATION_V3_ENVELOPE_SHA256_MISMATCH');
-  if (v3.graph_answer_used !== false) throw new Error('PREREGISTRATION_V3_GRAPH_ANSWER_USED');
-  if (v3.answer_model !== 'deepseek-v4-flash') throw new Error('PREREGISTRATION_V3_ANSWER_MODEL_MISMATCH');
-  if (v3.answer.temperature !== 0) throw new Error('PREREGISTRATION_V3_TEMPERATURE_MISMATCH');
-  if (v3.retrieval.answer_top_k !== 10) throw new Error('PREREGISTRATION_V3_TOP_K_MISMATCH');
-  if (v3.scoring_protocol !== 'kimi-longmemeval-judge-v1') throw new Error('PREREGISTRATION_V3_SCORING_PROTOCOL_INVALID');
-  if (v3.official_gpt4o_scorer_used !== false) throw new Error('PREREGISTRATION_V3_OFFICIAL_GPT4O_SCORER_USED_INVALID');
-  if (v3.leaderboard_comparable !== false) throw new Error('PREREGISTRATION_V3_LEADERBOARD_COMPARABLE_INVALID');
-  if (!Array.isArray(v3.primary_metrics) || !v3.primary_metrics.includes('Kimi-K2.6-judged QA accuracy')) throw new Error('PREREGISTRATION_V3_PRIMARY_METRICS_INVALID');
 
-  // 4. Adapter file hash
+  // 4. v4 is current
+  if (!await exists(v4Path)) throw new Error('PREREGISTRATION_V4_MISSING');
+  if (!await exists(v4MdPath)) throw new Error('PREREGISTRATION_V4_MD_MISSING');
+  const v4 = await readJson(v4Path);
+  if (v4.preregistration_version !== 4) throw new Error('PREREGISTRATION_V4_VERSION_INVALID');
+  if (v4.supersedes !== 'external-eval/preregistration/longmemeval-v3.json') throw new Error('PREREGISTRATION_V4_SUPERSEDES_INVALID');
+  if (v4.formal_status !== 'NOT AUTHORIZED / NOT RUN') throw new Error('PREREGISTRATION_V4_FORMAL_STATUS_INVALID');
+  if (v4.formal_dataset_access_before_v4 !== false) throw new Error('PREREGISTRATION_V4_DATASET_ACCESSED_BEFORE_V4');
+  if (v4.formal_gold_access_before_v4 !== false) throw new Error('PREREGISTRATION_V4_GOLD_ACCESSED_BEFORE_V4');
+  if (v4.formal_500_run_before_v4 !== false) throw new Error('PREREGISTRATION_V4_500_RUN_BEFORE_V4');
+  if (v4.product_commit !== PRODUCT_COMMIT) throw new Error('PREREGISTRATION_V4_PRODUCT_COMMIT_MISMATCH');
+  if (v4.product_build_sha256 !== 'af487d47018e3005c82684fd2c576524e12fbbb51dee2a64719fba0e255c2668') throw new Error('PREREGISTRATION_V4_PRODUCT_BUILD_HASH_MISMATCH');
+  if (v4.question_envelope_version !== QUESTION_ENVELOPE_VERSION) throw new Error('PREREGISTRATION_V4_ENVELOPE_VERSION_MISMATCH');
+  if (v4.question_envelope_sha256 !== QUESTION_ENVELOPE_SHA256) throw new Error('PREREGISTRATION_V4_ENVELOPE_SHA256_MISMATCH');
+  if (v4.graph_answer_used !== false) throw new Error('PREREGISTRATION_V4_GRAPH_ANSWER_USED');
+  if (v4.answer_model !== 'deepseek-v4-flash') throw new Error('PREREGISTRATION_V4_ANSWER_MODEL_MISMATCH');
+  if (v4.answer.temperature !== 0) throw new Error('PREREGISTRATION_V4_TEMPERATURE_MISMATCH');
+  if (v4.retrieval.answer_top_k !== 10) throw new Error('PREREGISTRATION_V4_TOP_K_MISMATCH');
+  if (v4.scoring_protocol !== 'kimi-longmemeval-judge-v1') throw new Error('PREREGISTRATION_V4_SCORING_PROTOCOL_INVALID');
+  if (v4.official_gpt4o_scorer_used !== false) throw new Error('PREREGISTRATION_V4_OFFICIAL_GPT4O_SCORER_USED_INVALID');
+  if (v4.leaderboard_comparable !== false) throw new Error('PREREGISTRATION_V4_LEADERBOARD_COMPARABLE_INVALID');
+
+  // Engine commit must equal 55f793b...
+  const EXPECTED_ENGINE_COMMIT = '55f793be55fe14002d49a4c3bb577ee1255a30f9';
+  const EXPECTED_ENGINE_HASH = '330ea359b09f1071c5e21ae6a293503dff74cb99ef4bd4860506503a82756d82';
+  if (v4.engine_adapter_commit !== EXPECTED_ENGINE_COMMIT) {
+    throw new Error(`PREREGISTRATION_V4_ENGINE_COMMIT_MISMATCH:expected_${EXPECTED_ENGINE_COMMIT}_actual_${v4.engine_adapter_commit}`);
+  }
+  if (v4.engine_adapter_file_sha256 !== EXPECTED_ENGINE_HASH) {
+    throw new Error(`PREREGISTRATION_V4_ENGINE_HASH_MISMATCH:expected_${EXPECTED_ENGINE_HASH}_actual_${v4.engine_adapter_file_sha256}`);
+  }
+
+  // Primary metrics fixed
+  const requiredPrimaryMetrics = [
+    'Kimi-K2.6-judged end-to-end QA accuracy',
+    'generation completion rate',
+    'generation terminal error rate',
+    'Kimi judge completion rate',
+    'Kimi judge error rate',
+  ];
+  if (!Array.isArray(v4.primary_metrics)) throw new Error('PREREGISTRATION_V4_PRIMARY_METRICS_NOT_ARRAY');
+  for (const metric of requiredPrimaryMetrics) {
+    if (!v4.primary_metrics.includes(metric)) {
+      throw new Error(`PREREGISTRATION_V4_PRIMARY_METRIC_MISSING:${metric}`);
+    }
+  }
+
+  // Authorization schema version 2
+  if (v4.authorization_schema_version !== 2) throw new Error('PREREGISTRATION_V4_AUTH_SCHEMA_VERSION_INVALID');
+
+  // File hashes — verify all referenced files match
   const adapterPath = path.join(ROOT, 'adapters', 'longmemeval.mjs');
   const adapterHash = await sha256File(adapterPath);
-  if (adapterHash !== v3.adapter_file_sha256) throw new Error('PREREGISTRATION_V3_ADAPTER_FILE_HASH_MISMATCH');
+  if (adapterHash !== v4.adapter_file_sha256) throw new Error('PREREGISTRATION_V4_ADAPTER_FILE_HASH_MISMATCH');
 
-  // 5. Engine file hash
   const engineAdapterPath = path.join(ROOT, 'engines', 'omni-frozen-v3.1.mjs');
   const engineFileHash = await sha256File(engineAdapterPath);
-  if (engineFileHash !== v3.engine_adapter_file_sha256) throw new Error('PREREGISTRATION_V3_ENGINE_FILE_HASH_MISMATCH');
+  if (engineFileHash !== v4.engine_adapter_file_sha256) throw new Error('PREREGISTRATION_V4_ENGINE_FILE_HASH_MISMATCH');
 
-  // 6. Formal runner file hash
   const formalRunnerPath = path.join(ROOT, 'runners', 'sealed-runner.mjs');
   const formalRunnerHash = await sha256File(formalRunnerPath);
-  if (formalRunnerHash !== v3.formal_runner_file_sha256) throw new Error('PREREGISTRATION_V3_RUNNER_FILE_HASH_MISMATCH');
+  if (formalRunnerHash !== v4.formal_runner_file_sha256) throw new Error('PREREGISTRATION_V4_RUNNER_FILE_HASH_MISMATCH');
 
-  // 7. Question envelope hash (already checked above against constants, also verify in v3)
-  if (v3.question_envelope_sha256 !== '1e26c66a675a17b74e78dd8d1c6624996143a14b47c5b8753e1c67959fdb96cc') throw new Error('PREREGISTRATION_V3_ENVELOPE_SHA256_CONST_INVALID');
+  const kimiScorerPath = path.join(ROOT, 'scorers', 'kimi-longmemeval-v1.mjs');
+  const kimiScorerHash = await sha256File(kimiScorerPath);
+  if (kimiScorerHash !== v4.kimi_scorer_module_sha256) throw new Error('PREREGISTRATION_V4_KIMI_SCORER_FILE_HASH_MISMATCH');
 
-  // 8. Kimi judge prompt hash
   const kimiPromptPath = path.join(ROOT, 'scorers', 'prompts', 'kimi-longmemeval-judge-v1.txt');
   const kimiPromptRaw = await readFile(kimiPromptPath, 'utf8');
   const kimiPromptHash = (await import('node:crypto')).createHash('sha256').update(kimiPromptRaw.replace(/\r\n/g, '\n')).digest('hex');
-  if (kimiPromptHash !== v3.kimi_judge_prompt_sha256) throw new Error('PREREGISTRATION_V3_KIMI_PROMPT_HASH_MISMATCH');
+  if (kimiPromptHash !== v4.kimi_judge_prompt_sha256) throw new Error('PREREGISTRATION_V4_KIMI_PROMPT_HASH_MISMATCH');
 
-  // 9. Judge model
-  if (v3.judge_model !== 'kimi-k2.6') throw new Error('PREREGISTRATION_V3_JUDGE_MODEL_INVALID');
-
-  // 10. OpenAI scorer off
-  if (v3.official_gpt4o_scorer_used !== false) throw new Error('PREREGISTRATION_V3_OPENAI_SCORER_NOT_OFF');
-
-  // 11. Leaderboard comparable false
-  if (v3.leaderboard_comparable !== false) throw new Error('PREREGISTRATION_V3_LEADERBOARD_NOT_FALSE');
-
-  // 12. Product commit and build hash (already checked above)
-
-  // 13. Top-K = 10 (already checked above)
-
-  // 14. Answer temperature = 0 (already checked above)
-
-  // 15. graph_answer = false (already checked above)
+  const kimiSchemaPath = path.join(ROOT, 'scorers', 'schemas', 'kimi-longmemeval-judge-v1.json');
+  const kimiSchemaHash = await sha256File(kimiSchemaPath);
+  if (kimiSchemaHash !== v4.kimi_judge_schema_sha256) throw new Error('PREREGISTRATION_V4_KIMI_SCHEMA_HASH_MISMATCH');
 
   // Kimi judge preregistration
   const kimiJudge = await readJson(kimiJudgePath);
@@ -376,7 +580,11 @@ async function validateOnly() {
   if (kimiJudge.score_based_retry_forbidden !== true) throw new Error('KIMI_JUDGE_PREREG_SCORE_RETRY_INVALID');
   if (kimiJudge.max_output_tokens !== 10) throw new Error('KIMI_JUDGE_PREREG_MAX_TOKENS_INVALID');
   if (kimiJudge.max_retries_after_initial !== 2) throw new Error('KIMI_JUDGE_PREREG_MAX_RETRIES_INVALID');
-  if (v3.scoring_preregistration_sha256 !== await sha256File(kimiJudgePath)) throw new Error('PREREGISTRATION_V3_KIMI_JUDGE_HASH_MISMATCH');
+  // Sanitized log must include generation_status
+  if (!Array.isArray(kimiJudge.sanitized_log_fields) || !kimiJudge.sanitized_log_fields.includes('generation_status')) {
+    throw new Error('KIMI_JUDGE_PREREG_SANITIZED_LOG_MISSING_GENERATION_STATUS');
+  }
+  if (v4.scoring_preregistration_sha256 !== await sha256File(kimiJudgePath)) throw new Error('PREREGISTRATION_V4_KIMI_JUDGE_HASH_MISMATCH');
 
   // locomo (preserved)
   const locomo = await readJson(locomoPath);
@@ -385,17 +593,29 @@ async function validateOnly() {
   for (const benchmark of ['longmemeval', 'locomo']) assertGoldFree(await readJson(adapterFor(benchmark).fixture));
 
   return {
-    schema_version: 3,
+    schema_version: 4,
     status: 'VALID',
     formal_run: false,
     heldout_accessed: false,
     engine_adapter_verified: true,
     formal_runner_verified: true,
     kimi_judge_verified: true,
+    authorization_schema_version: 2,
+    gold_hash_required_for_scoring: true,
+    result_hash_required_for_scoring: true,
+    judge_prompt_hash_required_for_scoring: true,
+    generation_error_not_abstention: true,
+    id_uniqueness_gated: true,
+    max_kimi_logical_calls: 500,
+    formal_log_paths_required: true,
+    openai_scorer_off: true,
+    leaderboard_comparable: false,
+    formal_data_accessed: false,
     preregistrations: [
       { file: path.relative(REPO, v1Path).replaceAll('\\', '/'), benchmark: v1.benchmark, version: 1, superseded_by: 'longmemeval-v2.json' },
       { file: path.relative(REPO, v2Path).replaceAll('\\', '/'), benchmark: v2.benchmark, version: 2, superseded_by: 'longmemeval-v3.json' },
-      { file: path.relative(REPO, v3Path).replaceAll('\\', '/'), benchmark: v3.benchmark, version: 3, current: true, engine_adapter_commit: v3.engine_adapter_commit, formal_runner_commit: v3.formal_runner_commit },
+      { file: path.relative(REPO, v3Path).replaceAll('\\', '/'), benchmark: v3.benchmark, version: 3, superseded_by: 'longmemeval-v4.json' },
+      { file: path.relative(REPO, v4Path).replaceAll('\\', '/'), benchmark: v4.benchmark, version: 4, current: true, engine_adapter_commit: v4.engine_adapter_commit, formal_runner_commit: v4.formal_runner_commit, authorization_schema_version: v4.authorization_schema_version },
       { file: path.relative(REPO, kimiJudgePath).replaceAll('\\', '/'), judge_model: kimiJudge.judge_model, version: 1 },
       { file: path.relative(REPO, locomoPath).replaceAll('\\', '/'), benchmark: locomo.benchmark, version: 1 },
     ],
@@ -425,30 +645,68 @@ async function main() {
     const allowedSubset = requiredFlag('--allowed-subset');
     const preregistrationSha256 = await sha256File(preregistrationPath);
     const datasetSha256 = await sha256File(generationDataPath);
-    await loadAuthorization(authorizationFile, {
-      benchmark,
-      dataset_variant: requiredFlag('--dataset-variant'),
-      allowed_subset: allowedSubset,
-      dataset_sha256: datasetSha256,
-      product_commit: PRODUCT_COMMIT,
-      adapter_commit: adapterCommit,
-      preregistration_sha256: preregistrationSha256,
-    });
+
+    // Try v2 first; fall back to v1 for backward compat with existing tests
+    const useV2 = flag('--auth-schema-version') === '2' || flag('--auth-v2') === 'true';
+    let authExpectedV2;
+    if (useV2) {
+      authExpectedV2 = {
+        benchmark,
+        dataset_variant: requiredFlag('--dataset-variant'),
+        allowed_subset: allowedSubset,
+        generation_projection_sha256: datasetSha256,
+        product_commit: PRODUCT_COMMIT,
+        adapter_commit: adapterCommit,
+        preregistration_sha256: preregistrationSha256,
+      };
+      await loadAuthorizationV2(authorizationFile, authExpectedV2, 'scoring');
+    } else {
+      await loadAuthorization(authorizationFile, {
+        benchmark,
+        dataset_variant: requiredFlag('--dataset-variant'),
+        allowed_subset: allowedSubset,
+        dataset_sha256: datasetSha256,
+        product_commit: PRODUCT_COMMIT,
+        adapter_commit: adapterCommit,
+        preregistration_sha256: preregistrationSha256,
+      });
+    }
+
     const scorerModulePath = flag('--scorer-module');
-    if (!scorerModulePath) throw new Error('OFFICIAL_SCORER_MODULE_REQUIRED');
+    if (!scorerModulePath) throw new Error('SCORER_MODULE_REQUIRED');
     const scorerModule = await import(pathToFileURL(path.resolve(scorerModulePath)));
-    if (typeof scorerModule.score !== 'function') throw new Error('OFFICIAL_SCORER_INTERFACE_INVALID');
+    if (typeof scorerModule.score !== 'function') throw new Error('SCORER_INTERFACE_INVALID');
+
+    const fullScoreLogDir = flag('--full-score-log-dir');
+    const sanitizedScoreLog = flag('--sanitized-score-log');
+    const enforceFormal = process.argv.includes('--enforce-formal-checks');
+
+    // For formal scoring, both log paths are required
+    if (enforceFormal) {
+      if (!fullScoreLogDir) throw new Error('FULL_SCORE_LOG_DIR_REQUIRED');
+      if (!sanitizedScoreLog) throw new Error('SANITIZED_SCORE_LOG_PATH_REQUIRED');
+    }
+
+    const goldPath = path.resolve(requiredFlag('--gold'));
+    const goldSha256 = useV2 ? (await sha256File(goldPath)) : undefined;
+
     const metrics = await runScoreOnly({
       resultPath: path.resolve(requiredFlag('--results')),
       lockPath: path.resolve(requiredFlag('--result-lock')),
-      goldPath: path.resolve(requiredFlag('--gold')),
+      goldPath,
       scoreOutputPath: path.resolve(requiredFlag('--score-output')),
       scorer: scorerModule.score,
       accessLog: path.resolve(requiredFlag('--access-log')),
       allowedSubset,
       adapterCommit,
+      authorizationFile: useV2 ? authorizationFile : undefined,
+      expected: useV2 ? { ...authExpectedV2, gold_projection_sha256: goldSha256 } : undefined,
+      fullScoreLogDir: fullScoreLogDir ? path.resolve(fullScoreLogDir) : undefined,
+      sanitizedScoreLogPath: sanitizedScoreLog ? path.resolve(sanitizedScoreLog) : undefined,
+      enforceFormalChecks: enforceFormal,
+      expectedTotalQuestions: parseInt(flag('--expected-total', '500'), 10),
     });
-    return console.log(JSON.stringify({ schema_version: 1, status: 'SCORED', metrics }));
+    return console.log(JSON.stringify({ schema_version: 2, status: 'SCORED', metrics }));
   }
   throw new Error('MODE_REQUIRED:--fixture|--validate-only|--formal|--score-only');
 }

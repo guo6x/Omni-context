@@ -208,7 +208,7 @@ test('Kimi judge: temperature_parameter_sent tracked when accepted', async () =>
   const callMoonshot = async () => ({ content: '{"label":"yes"}', usage: { total_tokens: 10 } });
   const metrics = await scoreWithDeps({ results, gold, deps: { callMoonshot, apiKey: 'test-key' } });
   assert.equal(metrics.temperature_parameter_sent, true);
-  assert.equal(metrics.temperature_control, '0');
+  assert.equal(metrics.temperature_control, 'fixed_zero');
 });
 
 test('Kimi judge: temperature fallback when API rejects temperature=0', async () => {
