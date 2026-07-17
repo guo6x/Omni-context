@@ -8,6 +8,9 @@
   "errors": 0,
   "conditions": 4,
   "scenarios_per_condition": 35,
+  "bootstrap_iterations": 10000,
+  "bootstrap_seed": 2026071702,
+  "paired_n_per_comparison": 35,
   "numbers": [
     {
       "condition": "full_omni_fresh_control",
@@ -235,63 +238,6 @@
       ]
     },
     {
-      "comparison": "selector_off",
-      "field": "mean_control",
-      "value": null,
-      "source": "paired-statistics/selector_off-vs-control.json",
-      "json_path": "$.mean_control",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "selector_off",
-      "field": "mean_ablated",
-      "value": null,
-      "source": "paired-statistics/selector_off-vs-control.json",
-      "json_path": "$.mean_ablated",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "selector_off",
-      "field": "mean_delta",
-      "value": null,
-      "source": "paired-statistics/selector_off-vs-control.json",
-      "json_path": "$.mean_delta",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "selector_off",
-      "field": "wins_for_control",
-      "source": "paired-statistics/selector_off-vs-control.json",
-      "json_path": "$.wins_for_control",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "selector_off",
-      "field": "wins_for_ablated",
-      "source": "paired-statistics/selector_off-vs-control.json",
-      "json_path": "$.wins_for_ablated",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "selector_off",
-      "field": "ties",
-      "source": "paired-statistics/selector_off-vs-control.json",
-      "json_path": "$.ties",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
       "comparison": "grouping_off",
       "field": "overall_delta",
       "value": -0.026195,
@@ -313,63 +259,6 @@
       ]
     },
     {
-      "comparison": "grouping_off",
-      "field": "mean_control",
-      "value": null,
-      "source": "paired-statistics/grouping_off-vs-control.json",
-      "json_path": "$.mean_control",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "grouping_off",
-      "field": "mean_ablated",
-      "value": null,
-      "source": "paired-statistics/grouping_off-vs-control.json",
-      "json_path": "$.mean_ablated",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "grouping_off",
-      "field": "mean_delta",
-      "value": null,
-      "source": "paired-statistics/grouping_off-vs-control.json",
-      "json_path": "$.mean_delta",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "grouping_off",
-      "field": "wins_for_control",
-      "source": "paired-statistics/grouping_off-vs-control.json",
-      "json_path": "$.wins_for_control",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "grouping_off",
-      "field": "wins_for_ablated",
-      "source": "paired-statistics/grouping_off-vs-control.json",
-      "json_path": "$.wins_for_ablated",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "grouping_off",
-      "field": "ties",
-      "source": "paired-statistics/grouping_off-vs-control.json",
-      "json_path": "$.ties",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
       "comparison": "source_aware_fusion_off",
       "field": "overall_delta",
       "value": -0.001503,
@@ -388,63 +277,6 @@
       "json_path": "$.deltas_vs_control.source_aware_fusion_off.overall_delta_percent",
       "consumers": [
         "paper/figures/strict-ablations.svg"
-      ]
-    },
-    {
-      "comparison": "source_aware_fusion_off",
-      "field": "mean_control",
-      "value": null,
-      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
-      "json_path": "$.mean_control",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "source_aware_fusion_off",
-      "field": "mean_ablated",
-      "value": null,
-      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
-      "json_path": "$.mean_ablated",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "source_aware_fusion_off",
-      "field": "mean_delta",
-      "value": null,
-      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
-      "json_path": "$.mean_delta",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "source_aware_fusion_off",
-      "field": "wins_for_control",
-      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
-      "json_path": "$.wins_for_control",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "source_aware_fusion_off",
-      "field": "wins_for_ablated",
-      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
-      "json_path": "$.wins_for_ablated",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
-      ]
-    },
-    {
-      "comparison": "source_aware_fusion_off",
-      "field": "ties",
-      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
-      "json_path": "$.ties",
-      "consumers": [
-        "paper/tables/strict-ablations.tex"
       ]
     },
     {
@@ -476,6 +308,492 @@
       "consumers": [
         "paper/figures/strict-ablations.svg"
       ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "paired_n",
+      "value": 35,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.paired_n",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "mean_control",
+      "value": 0.886957,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.mean_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "mean_ablated",
+      "value": 0.700277,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.mean_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "mean_difference",
+      "value": 0.18668,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.mean_difference",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "median_difference",
+      "value": 0.166667,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.median_difference",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "full_higher",
+      "value": 25,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.full_higher",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "ablation_higher",
+      "value": 3,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.ablation_higher",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "ties",
+      "value": 7,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.ties",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "bootstrap_95_ci.lower",
+      "value": 0.11637,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.bootstrap_95_ci.lower",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "bootstrap_95_ci.upper",
+      "value": 0.26071,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.bootstrap_95_ci.upper",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "wilcoxon.W_plus",
+      "value": 385,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.wilcoxon.W_plus",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "wilcoxon.W_minus",
+      "value": 21,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.wilcoxon.W_minus",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "wilcoxon.z",
+      "value": 4.133817,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.wilcoxon.z",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "wilcoxon.p_two_sided",
+      "value": 0.000036,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.wilcoxon.p_two_sided",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "rank_biserial",
+      "value": 0.896552,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.rank_biserial",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "selector_off",
+      "field": "effect_size.paired_cohens_dz",
+      "value": 0.840202,
+      "source": "paired-statistics/selector_off-vs-control.json",
+      "json_path": "$.effect_size.paired_cohens_dz",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "paired_n",
+      "value": 35,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.paired_n",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "mean_control",
+      "value": 0.886957,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.mean_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "mean_ablated",
+      "value": 0.860762,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.mean_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "mean_difference",
+      "value": 0.026195,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.mean_difference",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "median_difference",
+      "value": 0,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.median_difference",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "full_higher",
+      "value": 11,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.full_higher",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "ablation_higher",
+      "value": 7,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.ablation_higher",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "ties",
+      "value": 17,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.ties",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "bootstrap_95_ci.lower",
+      "value": -0.015438,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.bootstrap_95_ci.lower",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "bootstrap_95_ci.upper",
+      "value": 0.071296,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.bootstrap_95_ci.upper",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "wilcoxon.W_plus",
+      "value": 111,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.wilcoxon.W_plus",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "wilcoxon.W_minus",
+      "value": 60,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.wilcoxon.W_minus",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "wilcoxon.z",
+      "value": 1.093697,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.wilcoxon.z",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "wilcoxon.p_two_sided",
+      "value": 0.274088,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.wilcoxon.p_two_sided",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "rank_biserial",
+      "value": 0.298246,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.rank_biserial",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "grouping_off",
+      "field": "effect_size.paired_cohens_dz",
+      "value": 0.196766,
+      "source": "paired-statistics/grouping_off-vs-control.json",
+      "json_path": "$.effect_size.paired_cohens_dz",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "paired_n",
+      "value": 35,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.paired_n",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "mean_control",
+      "value": 0.886957,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.mean_control",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "mean_ablated",
+      "value": 0.885454,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.mean_ablated",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "mean_difference",
+      "value": 0.001503,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.mean_difference",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "median_difference",
+      "value": 0,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.median_difference",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "full_higher",
+      "value": 13,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.full_higher",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "ablation_higher",
+      "value": 6,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.ablation_higher",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "ties",
+      "value": 16,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.ties",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "bootstrap_95_ci.lower",
+      "value": -0.039278,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.bootstrap_95_ci.lower",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "bootstrap_95_ci.upper",
+      "value": 0.040763,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.bootstrap_95_ci.upper",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "wilcoxon.W_plus",
+      "value": 102.5,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.wilcoxon.W_plus",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "wilcoxon.W_minus",
+      "value": 87.5,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.wilcoxon.W_minus",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "wilcoxon.z",
+      "value": 0.282785,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.wilcoxon.z",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "wilcoxon.p_two_sided",
+      "value": 0.777342,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.wilcoxon.p_two_sided",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "rank_biserial",
+      "value": 0.078947,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.rank_biserial",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
+    },
+    {
+      "comparison": "source_aware_fusion_off",
+      "field": "effect_size.paired_cohens_dz",
+      "value": 0.012571,
+      "source": "paired-statistics/source_aware_fusion_off-vs-control.json",
+      "json_path": "$.effect_size.paired_cohens_dz",
+      "consumers": [
+        "paper/tables/strict-ablations.tex"
+      ]
     }
-  ]
+  ],
+  "verification": {
+    "no_null_verified": true,
+    "all_paired_n_35": true,
+    "all_FAT_sums_35": true,
+    "no_undefined": true
+  }
 }
