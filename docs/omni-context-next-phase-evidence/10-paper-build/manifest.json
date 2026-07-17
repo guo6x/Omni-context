@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "toolchain": "Tectonic 0.16.9",
+  "windows_archive_sha256": "131a24604785a9600989a3d91225f597df52ac06f00aeffe86fd529f99ee5cdd",
+  "windows_binary_sha256": "a0a9a5eaf1a940d9a615ad78d35225ca59420c7984576c6402fffb3e9fb05ceb",
+  "pdf": "paper/build/main.pdf",
+  "pdf_sha256": "41a80f1ad5ec6d20df271020383ed15beca779f47e925313f61c1c4d093321b5",
+  "pdf_bytes": 388121,
+  "pages": 9,
+  "missing_packages": 0,
+  "undefined_references": 0,
+  "missing_citations": 0,
+  "missing_figures": 0,
+  "overfull_boxes": 0,
+  "underfull_boxes": 61,
+  "visual_render_check": "PASS",
+  "references_bib": "intentionally empty; no references invented"
+}

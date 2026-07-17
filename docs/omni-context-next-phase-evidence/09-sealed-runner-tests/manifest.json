@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "tests_passed": 11,
+  "tests_total": 11,
+  "covered": [
+    "authorization required and expiry",
+    "dataset/product/adapter/preregistration/subset mismatch",
+    "Gold inaccessible in generation",
+    "result SHA-256 lock",
+    "score-only result immutability",
+    "checkpoint resume without duplicates",
+    "secret scan"
+  ],
+  "formal_without_authorization": "REFUSED",
+  "fixture_and_validate_only_executed": true,
+  "formal_or_score_only_official_execution": false
+}

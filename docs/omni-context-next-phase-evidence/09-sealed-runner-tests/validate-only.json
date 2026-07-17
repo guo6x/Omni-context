@@ -1,0 +1,1 @@
+{"schema_version":1,"status":"VALID","formal_run":false,"heldout_accessed":false,"preregistrations":[{"file":"external-eval/preregistration/longmemeval-v1.json","benchmark":"longmemeval"},{"file":"external-eval/preregistration/locomo-heldout-v1.json","benchmark":"locomo"}]}

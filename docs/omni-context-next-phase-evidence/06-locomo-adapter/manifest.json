@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "official_repository": "https://github.com/snap-research/locomo",
+  "official_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+  "adapter_commit": "066b63cb0b72d6aa494804864f59bfc05be5a734",
+  "task": "question answering only",
+  "fictional_fixture_questions": 4,
+  "fixture_result_sha256": "0fa64415fef87490d82ab1592521f8924173a408482754234b6e5b83f004012a",
+  "adapter_validation_scope": "Conversation 1 only if separately authorized; not run here",
+  "heldout_scope": "Conversations 2-10",
+  "conversation_2_to_10_accessed": false,
+  "formal_status": "NOT RUN"
+}

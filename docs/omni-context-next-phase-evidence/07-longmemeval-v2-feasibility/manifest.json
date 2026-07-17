@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "official_repository": "https://github.com/xiaowu0162/LongMemEval-V2",
+  "official_commit": "be15ea6e995462f3391c1a610892df3f67dfa7bd",
+  "dataset_accessed": false,
+  "trajectory_or_screenshot_accessed": false,
+  "implemented_or_run": false,
+  "recommendation": "FEASIBLE AS FOLLOW-UP, NOT IN CURRENT FORMAL SCOPE",
+  "report": "external-eval/reports/longmemeval-v2-feasibility.md"
+}

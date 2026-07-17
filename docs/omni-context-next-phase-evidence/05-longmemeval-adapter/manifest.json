@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "official_repository": "https://github.com/xiaowu0162/LongMemEval",
+  "official_commit": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+  "recommended_variant": "longmemeval_s_cleaned",
+  "adapter_commit": "066b63cb0b72d6aa494804864f59bfc05be5a734",
+  "fictional_fixture_records": 12,
+  "fixture_result_sha256": "df82f6b13f29b222fea62c5588e2f542d3ad06d877e2f79634d373ffd3ecc068",
+  "official_records_accessed": false,
+  "official_scoring_run": false,
+  "formal_status": "NOT RUN"
+}

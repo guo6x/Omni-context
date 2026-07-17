@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "longmemeval_preregistration": "external-eval/preregistration/longmemeval-v1.json",
+  "longmemeval_preregistration_sha256": "05205f6a074ba8b044051c00e045b4f943f40d974ccfb075b1357f34097bcc15",
+  "locomo_preregistration": "external-eval/preregistration/locomo-heldout-v1.json",
+  "locomo_preregistration_sha256": "2c880dc68d12c0a3dee5988cce4bed84dc1fc17c87b8491171b4a63ca9f9bca6",
+  "authorization_file_present": false,
+  "formal_run_authorized": false,
+  "formal_run_executed": false
+}

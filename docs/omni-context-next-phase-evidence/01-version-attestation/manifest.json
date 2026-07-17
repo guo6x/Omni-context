@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "frozen_product_commit": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "freeze_tag": "evaluation-freeze-candidate-v3.1",
+  "freeze_tag_target": "17dc1d0107b0474de84058205a91b302ba290a74",
+  "benchmark_commit": "62b0b20f944f7e9a2c58f02ce1c65bb43dfbf841",
+  "paper_evidence_commit": "ad1fe8806255e420e65398ae67df0a50474356d4",
+  "manuscript_base_commit": "7cbc54b991c636a2bc088b17c2acc89064f60344",
+  "product_ablation_branch": "codex/omni-v3.1-strict-ablations",
+  "external_paper_branch": "codex/omni-external-eval-and-paper-v1",
+  "formal_or_comparison_results_modified": false,
+  "freeze_tag_modified": false
+}

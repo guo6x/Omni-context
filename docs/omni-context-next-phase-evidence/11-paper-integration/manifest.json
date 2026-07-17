@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "external_placeholder": "paper/tables/external-heldout-results-placeholder.tex",
+  "external_placeholder_status": "NOT RUN",
+  "external_claim_map": "paper/evidence/external-eval-claim-map.csv",
+  "strict_ablation_table": "PENDING COMPLETED INTERNAL RUN",
+  "strict_ablation_figure": "PENDING COMPLETED INTERNAL RUN",
+  "abstract_external_success_claim": false,
+  "conclusion_external_success_claim": false
+}
