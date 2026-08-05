@@ -96,7 +96,7 @@ class McpProxyServer {
     this.server = new Server(
       {
         name: 'omni-context-mcp-proxy',
-        version: '2.0.0',
+        version: '0.1.1',
       },
       {
         capabilities: {

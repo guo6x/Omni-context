@@ -62,7 +62,8 @@ Browser extension          + vectors + full-text         Claude · Cursor · Cli
 
 ## Tools
 
-25 MCP tools, grouped by what they do.
+26 MCP tools, grouped by what they do. Canonical count is generated in
+[`mcp_tool_manifest.json`](mcp_tool_manifest.json).
 
 ### Decision & retrieval — the "brain"
 
@@ -93,6 +94,7 @@ Browser extension          + vectors + full-text         Claude · Cursor · Cli
 - `analyze_decision` — analyze a decision for coherence and potential conflicts
 - `discuss_decision` — explore a decision from multiple angles
 - `get_decision_lineage` — trace how a decision evolved over time
+- `record_decision_outcome` — record an observed result for a saved decision (calibration, lessons, follow-ups)
 
 ### Graph maintenance
 

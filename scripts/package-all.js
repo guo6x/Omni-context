@@ -30,6 +30,16 @@ function stagePinnedEmbeddingModel(destinationModelsRoot) {
 console.log('🚀 开始打包 Omni-Context 所有组件...\n');
 const failures = [];
 
+// 受控文件守卫：Tauri CLI / 工具链不得静默改写受控文件。
+console.log('🛡️  校验受控文件（Tauri CLI 防静默改写）...');
+try {
+  execSync('cd desktop-daemon && npm run verify:controlled', { stdio: 'inherit' });
+  console.log('✅ 受控文件校验通过');
+} catch (e) {
+  console.log('❌ 受控文件被修改，中止打包');
+  failures.push('controlled-files');
+}
+
 // 创建输出目录
 if (!fs.existsSync(DIST_DIR)) {
   fs.mkdirSync(DIST_DIR, { recursive: true });

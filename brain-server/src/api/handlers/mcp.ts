@@ -94,7 +94,7 @@ async function handleMcpRpcMessage(msg: any, principal: AuthPrincipal, dispatche
       return rpcResult(id, {
         protocolVersion: typeof params.protocolVersion === 'string' ? params.protocolVersion : '2025-06-18',
         capabilities: { tools: {} },
-        serverInfo: { name: 'omni-context', version: '2.0.0' },
+        serverInfo: { name: 'omni-context', version: '0.1.1' },
         instructions: MCP_HTTP_INSTRUCTIONS,
       });
     }

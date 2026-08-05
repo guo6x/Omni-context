@@ -68,6 +68,38 @@ cd desktop-daemon && npm install
 cd ../brain-server && npm install
 ```
 
+### 本地 Embedding 模型（安装与校验）
+
+向量检索默认使用本地模型（`EMBEDDING_MODE=local`），不联网、不上传数据。
+产品基线固定使用 **E5-large**；E5-small 仅作为旧档案/小内存环境的可选替代。
+
+| 模型 | 目录 | 维度 | 序列化画像 | SHA-256（onnx/model_quantized.onnx） |
+|---|---|---|---|---|
+| `Xenova/multilingual-e5-large` | `brain-server/models/Xenova/multilingual-e5-large` | 1024 | `entity-passage-v2+assertion-passage-v3` | `0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca` |
+| `Xenova/multilingual-e5-small` | `brain-server/models/Xenova/multilingual-e5-small` | 384 | `entity-passage-v2+assertion-passage-v1` | `f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193` |
+
+> 注：模型 id 为 `Xenova/...`（xenova 的规范拼写）。上表保持与
+> `brain-server/src/embedding/profiles.ts` 的 `modelSha256` 一致；如不一致，以
+> `profiles.ts` 为准并修正本表。
+
+安装（需要网络，首次一次性）：
+
+```bash
+cd brain-server
+node download-embed-model.mjs Xenova/multilingual-e5-large   # 支持代理/镜像，见脚本头注释
+```
+
+校验（离线，任何时候）：
+
+```bash
+# 对比模型文件哈希与 profiles.ts 中的 modelSha256
+node -e "const {createHash}=require('crypto');const{readFileSync}=require('fs');const p='models/Xenova/multilingual-e5-large/onnx/model_quantized.onnx';console.log(createHash('sha256').update(readFileSync(p)).digest('hex'))"
+# 期望输出: 0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca
+```
+
+打包时 `scripts/package-all.js` 会对内嵌模型强制校验哈希，不一致即中止，防止
+静默混用不同模型权重。
+
 ## 开发模式
 
 开发模式下应用会自动重新加载：
