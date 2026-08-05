@@ -66,9 +66,26 @@
   ],
   "phase_scope": {
     "phase_1_identity_cleanup": "completed",
-    "phase_2_unified_dispatch": "planned",
-    "phase_3_embedding_v3": "planned",
-    "phase_4_clean_room_fixes": "planned",
-    "phase_5_privacy_device_security": "planned"
-  }
+    "phase_2_unified_dispatch": "completed",
+    "phase_3_embedding_v3": "completed (design + fixtures; real migration operator-gated)",
+    "phase_4_clean_room_fixes": "completed",
+    "phase_5_privacy_device_security": "completed"
+  },
+  "outputs": {
+    "product-baseline-manifest.json": "this file",
+    "unified-dispatch-design.md": "docs/unified-dispatch-design.md",
+    "embedding-migration-plan.md": "docs/embedding-migration-plan.md",
+    "privacy-and-device-security.md": "docs/privacy-and-device-security.md",
+    "build-and-test-report.md": "build-and-test-report.md",
+    "unresolved-product-risks.md": "docs/unresolved-product-risks.md"
+  },
+  "commit_sequence": [
+    "17dc1d0 (engineering starting point)",
+    "11bfff9 docs(product-baseline): identity + tag remediation proposal",
+    "1ff51d6 refactor(mcp): unified business dispatch layer",
+    "9aaafd2 feat(embedding): embedding v3 migration plan",
+    "26dff3e chore(clean-room): lockfiles/Tauri guard/.env.example/hashes/version/tool count",
+    "7d98077 feat(security): privacy & device security",
+    "final: reports (build-and-test, unresolved risks)"
+  ]
 }
