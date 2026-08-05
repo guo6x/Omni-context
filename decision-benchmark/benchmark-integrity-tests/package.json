@@ -1,0 +1,10 @@
+{
+  "name": "decision-benchmark-integrity-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic integrity tests for Omni-Context Decision Benchmark v1 (no model evaluation).",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
+}

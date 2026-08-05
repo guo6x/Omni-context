@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omni-context.dev/schemas/decision-benchmark-v1.json",
+  "title": "Omni-Context Decision Benchmark v1 sample",
+  "description": "Deterministic benchmark sample for Omni-Context decision capability. Each sample is a self-contained decision scenario. No formal model evaluation is run by this benchmark; expected actions are fixed and scored by the deterministic reference judge.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "sample_id",
+    "task_type",
+    "title",
+    "narrative",
+    "memory_timeline",
+    "goal",
+    "candidates",
+    "hard_constraints",
+    "soft_preferences",
+    "valid_evidence",
+    "expired_evidence",
+    "conflicting_evidence",
+    "historical_decisions",
+    "execution_results",
+    "expected_decision_action",
+    "expected_action_detail",
+    "acceptable_explanation",
+    "severe_failure_label",
+    "tags"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "decision-benchmark-v1"
+    },
+    "sample_id": {
+      "type": "string",
+      "pattern": "^(dev|reg)-[0-9]{3}$"
+    },
+    "task_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 15
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "narrative": {
+      "description": "The decision situation as presented to the system (what the user asks / what the system must reason about).",
+      "type": "string",
+      "minLength": 10
+    },
+    "memory_timeline": {
+      "description": "Ordered memory events. The system's retrieval must surface these; the benchmark fixes them so scoring is deterministic.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["t", "kind", "content"],
+        "properties": {
+          "t": { "type": "string", "format": "date-time" },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "goal",
+              "candidate",
+              "hard_constraint",
+              "soft_preference",
+              "evidence",
+              "evidence_expired",
+              "evidence_conflict",
+              "evidence_deleted",
+              "decision",
+              "decision_revision",
+              "outcome",
+              "agent_advice",
+              "user_override",
+              "revisit_due"
+            ]
+          },
+          "content": { "type": "string", "minLength": 1 },
+          "entity_id": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "goal": { "type": "string", "minLength": 1 },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "hard_constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "soft_preferences": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "valid_evidence": {
+      "description": "Evidence that is current and supports reasoning.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["entity_id", "content", "temporal_status"],
+        "properties": {
+          "entity_id": { "type": "string" },
+          "content": { "type": "string", "minLength": 1 },
+          "temporal_status": { "const": "current" },
+          "role": { "enum": ["supporting", "opposing", "neutral"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "expired_evidence": {
+      "description": "Evidence whose valid_until is in the past; the system must not treat it as current.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["entity_id", "content", "valid_until", "temporal_status"],
+        "properties": {
+          "entity_id": { "type": "string" },
+          "content": { "type": "string", "minLength": 1 },
+          "valid_until": { "type": "string", "format": "date-time" },
+          "temporal_status": { "const": "expired" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "conflicting_evidence": {
+      "description": "Evidence that contradicts other evidence. group groups mutually exclusive claims.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["entity_id", "content", "group"],
+        "properties": {
+          "entity_id": { "type": "string" },
+          "content": { "type": "string", "minLength": 1 },
+          "group": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "historical_decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["decision_id", "conclusion", "status"],
+        "properties": {
+          "decision_id": { "type": "string" },
+          "conclusion": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["active", "superseded", "reversed", "invalidated", "under_review", "continues"]
+          },
+          "revisit_at": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "execution_results": {
+      "description": "Observed outcomes of prior decisions (see record_decision_outcome).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["decision_id", "actual_outcome", "outcome_score", "outcome_timestamp"],
+        "properties": {
+          "decision_id": { "type": "string" },
+          "actual_outcome": { "type": "string", "minLength": 1 },
+          "outcome_score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "outcome_timestamp": { "type": "string", "format": "date-time" },
+          "assumption_failures": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "lessons_learned": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "expected_decision_action": {
+      "type": "string",
+      "enum": [
+        "decide",
+        "clarify",
+        "persist",
+        "revise",
+        "flag_review",
+        "accept_override"
+      ]
+    },
+    "expected_action_detail": {
+      "description": "Structured expectation. Fields are interpreted per action (see decision-benchmark-v1.md §Protocol).",
+      "type": "object",
+      "required": ["action", "selected_candidate"],
+      "properties": {
+        "action": { "type": "string", "enum": ["decide", "clarify", "persist", "revise", "flag_review", "accept_override"] },
+        "selected_candidate": { "type": ["string", "null"] },
+        "clarifying_question": { "type": ["string", "null"] },
+        "max_clarifying_questions": { "type": "integer", "minimum": 0 },
+        "revision_type": { "enum": ["supersede", "reverse", "revise", "continue", "invalidate", null] },
+        "persisted_decision_id": { "type": ["string", "null"] },
+        "risk_level": { "enum": ["low", "medium", "high", null] }
+      },
+      "additionalProperties": true
+    },
+    "acceptable_explanation": {
+      "description": "Non-exhaustive set of explanation features that count as traceable; a candidate explanation must match at least one to satisfy Explanation Traceability.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["feature", "must_mention"],
+        "properties": {
+          "feature": { "type": "string" },
+          "must_mention": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "severe_failure_label": {
+      "type": "string",
+      "enum": [
+        "hard_constraint_violation",
+        "unsupported_reversal",
+        "missed_expiry",
+        "missed_conflict",
+        "unwarranted_abstention",
+        "unnecessary_clarification",
+        "missed_revision",
+        "flip_flop",
+        "arbitrary_decision",
+        "ignored_override",
+        "missed_revisit",
+        "missed_invalidation_propagation",
+        "none"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}
