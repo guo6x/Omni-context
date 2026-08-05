@@ -707,7 +707,7 @@ describe('API smoke: admin export', () => {
     expect(status).toBe(200);
     expect(body).toMatchObject({
       version: 2,
-      schemaVersion: 27,
+      schemaVersion: 28,
       appVersion: '0.1.1',
       exportedAt: expect.any(String),
       entities: expect.any(Array),

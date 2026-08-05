@@ -10,6 +10,7 @@ import * as sqliteVec from 'sqlite-vec';
 import { ENTITY_TYPES, NOTIFICATION_TYPES, RELATIONSHIP_TYPES } from '../schema/domain.js';
 import type { BehaviorEventInput } from '../behavior/events.js';
 import type { EmbeddingService } from '../embedding/service.js';
+import type { EmbeddingUsageProfile } from '../embedding/profiles.js';
 import {
   ASSERTION_SERIALIZATION_VERSION,
   ENTITY_SERIALIZATION_VERSION,
@@ -838,6 +839,21 @@ const MIGRATIONS: Migration[] = [
             SELECT id FROM assertions WHERE subject_id = NEW.id OR object_id = NEW.id
           );
       END;
+    `,
+  },
+  {
+    version: 28,
+    name: 'add_embedding_metadata_normalized_flag',
+    up: `
+      -- Phase 3 (embedding v3 migration): every embedding row records whether
+      -- the vector is L2-normalized. v3 profile normalizes (true); legacy
+      -- fallback-hash rows may not. Default keeps existing rows as normalized=1
+      -- (the E5 pipeline always normalized); the re-embed tool rewrites rows
+      -- with the real flag from the active usage profile.
+      ALTER TABLE entity_embedding_metadata ADD COLUMN normalized INTEGER NOT NULL DEFAULT 1
+        CHECK(normalized IN (0, 1));
+      ALTER TABLE assertion_embedding_metadata ADD COLUMN normalized INTEGER NOT NULL DEFAULT 1
+        CHECK(normalized IN (0, 1));
     `,
   },
 ];
@@ -2977,6 +2993,90 @@ export class Database {
     );
   }
 
+  /**
+   * Phase 3 guard: verify the ACTIVE index contains no mixed embedding
+   * generations. Every metadata row must match the manifest's model, dimension
+   * and serialization version, and must carry a normalized flag. Throws
+   * `EMBEDDING_SERIALIZATION_MIX` otherwise — callers (re-embed tool, admin
+   * health) must surface this instead of silently searching a mixed index.
+   */
+  async verifyEmbeddingIndexConsistency(indexName: EmbeddingIndexSpec['indexName']): Promise<{
+    ok: boolean;
+    rows: number;
+    serializationVersion: string;
+    modelId: string;
+    dimension: number;
+    mismatches: string[];
+  }> {
+    const manifest = await this.getEmbeddingIndexManifest(indexName);
+    const mismatches: string[] = [];
+    if (!manifest) {
+      return { ok: false, rows: 0, serializationVersion: '', modelId: '', dimension: 0, mismatches: ['manifest missing'] };
+    }
+    if (manifest.status !== 'active') {
+      return { ok: false, rows: 0, serializationVersion: manifest.serialization_version, modelId: manifest.model_id, dimension: manifest.dimension, mismatches: [`index not active: ${manifest.status}`] };
+    }
+    const table = indexName === 'vec_entities' ? 'entity_embedding_metadata' : 'assertion_embedding_metadata';
+    const idColumn = indexName === 'vec_entities' ? 'entity_id' : 'assertion_id';
+    const rows = await this.all<any>(
+      `SELECT ${idColumn} AS id, embedding_model, dimension, serialization_version, normalized
+       FROM ${table}`,
+    );
+    for (const row of rows) {
+      if (row.embedding_model !== manifest.model_id) mismatches.push(`model:${row.id}=${row.embedding_model}`);
+      if (Number(row.dimension) !== Number(manifest.dimension)) mismatches.push(`dimension:${row.id}=${row.dimension}`);
+      if (row.serialization_version !== manifest.serialization_version) mismatches.push(`serialization:${row.id}=${row.serialization_version}`);
+      if (row.normalized === null || row.normalized === undefined) mismatches.push(`normalized:${row.id}=null`);
+    }
+    if (rows.length !== Number(manifest.content_count)) {
+      mismatches.push(`count:metadata=${rows.length} manifest=${manifest.content_count}`);
+    }
+    return {
+      ok: mismatches.length === 0,
+      rows: rows.length,
+      serializationVersion: manifest.serialization_version,
+      modelId: manifest.model_id,
+      dimension: manifest.dimension,
+      mismatches,
+    };
+  }
+
+  /**
+   * Phase 3 guard: verify the resumable shadow build is internally consistent
+   * BEFORE it is swapped in. Called by rebuildAllEmbeddings unless explicitly
+   * disabled. Prevents silent mixing of old/new embedding generations.
+   */
+  private async verifyEmbeddingShadowBuildConsistency(
+    profile: EmbeddingUsageProfile,
+    entityDone: number,
+    assertionDone: number,
+  ): Promise<void> {
+    const entityRows = await this.all<any>(
+      'SELECT entity_id AS id, embedding_model, dimension, serialization_version, normalized FROM entity_embedding_metadata_build',
+    );
+    const assertionRows = await this.all<any>(
+      'SELECT assertion_id AS id, embedding_model, dimension, serialization_version, normalized FROM assertion_embedding_metadata_build',
+    );
+    const problems: string[] = [];
+    for (const row of entityRows) {
+      if (row.embedding_model !== profile.modelId) problems.push(`entity:${row.id} model=${row.embedding_model}`);
+      if (Number(row.dimension) !== Number(profile.dimension)) problems.push(`entity:${row.id} dim=${row.dimension}`);
+      if (row.serialization_version !== ENTITY_SERIALIZATION_VERSION) problems.push(`entity:${row.id} serial=${row.serialization_version}`);
+      if (row.normalized !== (profile.normalize ? 1 : 0)) problems.push(`entity:${row.id} normalized=${row.normalized}`);
+    }
+    for (const row of assertionRows) {
+      if (row.embedding_model !== profile.modelId) problems.push(`assertion:${row.id} model=${row.embedding_model}`);
+      if (Number(row.dimension) !== Number(profile.dimension)) problems.push(`assertion:${row.id} dim=${row.dimension}`);
+      if (row.serialization_version !== ASSERTION_SERIALIZATION_VERSION) problems.push(`assertion:${row.id} serial=${row.serialization_version}`);
+      if (row.normalized !== (profile.normalize ? 1 : 0)) problems.push(`assertion:${row.id} normalized=${row.normalized}`);
+    }
+    if (entityRows.length !== entityDone) problems.push(`entity count: build=${entityRows.length} done=${entityDone}`);
+    if (assertionRows.length !== assertionDone) problems.push(`assertion count: build=${assertionRows.length} done=${assertionDone}`);
+    if (problems.length > 0) {
+      throw new Error(`EMBEDDING_SERIALIZATION_MIX: ${problems.slice(0, 20).join('; ')}`);
+    }
+  }
+
   /** Explicit management operation. Query/write paths never call this method. */
   async prepareEmbeddingIndexes(specs: EmbeddingIndexSpec[], options: { force?: boolean } = {}): Promise<void> {
     if (!this.vecEnabled) throw new Error('EMBEDDING_INDEX_REBUILD_REQUIRES_SQLITE_VEC');
@@ -3212,9 +3312,11 @@ export class Database {
   async rebuildAllEmbeddings(
     service: EmbeddingService,
     onProgress?: (progress: { phase: 'entities' | 'assertions'; done: number; total: number }) => void,
+    options: { verifyBeforeActivate?: boolean } = {},
   ): Promise<{ entities: number; assertions: number }> {
     this.attachEmbeddingService(service);
     const profile = service.getUsageProfile();
+    const verifyBeforeActivate = options.verifyBeforeActivate !== false;
     const specs: EmbeddingIndexSpec[] = [
       {
         indexName: 'vec_entities', modelId: profile.modelId, modelRevision: profile.modelRevision,
@@ -3305,10 +3407,11 @@ export class Database {
           await this.run(
             `INSERT INTO entity_embedding_metadata_build(
                entity_id, embedding_model, model_revision, dimension, usage_profile_version,
-               serialization_version, embedded_at, content_sha256
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+               serialization_version, embedded_at, content_sha256, normalized
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [entity.id, profile.modelId, profile.modelRevision, profile.dimension,
-              profile.usageProfileVersion, ENTITY_SERIALIZATION_VERSION, new Date().toISOString(), contentHash],
+              profile.usageProfileVersion, ENTITY_SERIALIZATION_VERSION, new Date().toISOString(), contentHash,
+              profile.normalize ? 1 : 0],
           );
         }
         entityDone++;
@@ -3337,15 +3440,22 @@ export class Database {
           await this.run(
             `INSERT INTO assertion_embedding_metadata_build(
                assertion_id, embedding_model, model_revision, dimension, usage_profile_version,
-               serialization_version, embedded_at, content_sha256, valid_from, valid_until, invalidated_at
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               serialization_version, embedded_at, content_sha256, valid_from, valid_until, invalidated_at, normalized
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [row.id, profile.modelId, profile.modelRevision, profile.dimension,
               profile.usageProfileVersion, ASSERTION_SERIALIZATION_VERSION, new Date().toISOString(), contentHash,
-              resolved.assertion.valid_from, resolved.assertion.valid_until || null, null],
+              resolved.assertion.valid_from, resolved.assertion.valid_until || null, null,
+              profile.normalize ? 1 : 0],
           );
         }
         assertionDone++;
         onProgress?.({ phase: 'assertions', done: assertionDone, total: assertionRows.length });
+      }
+
+      // Phase 3 guard: never swap in a mixed-generation index. Verify the
+      // shadow build matches the requested profile before activation.
+      if (verifyBeforeActivate) {
+        await this.verifyEmbeddingShadowBuildConsistency(profile, entityDone, assertionDone);
       }
 
       const switchedAt = new Date().toISOString();
