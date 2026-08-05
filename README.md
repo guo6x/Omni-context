@@ -17,6 +17,9 @@
   <a href="https://guo6x.github.io/Omni-context/">Landing page</a>
 </p>
 
+> **Product baseline status** — `17dc1d0` is the **engineering starting point** of the product integration branch `product/omni-v3-unified-r1`. It is **NOT** an official frozen experiment product, the original Targeted-7 gate **FAILED**, and the current selector has **no formal performance proof**. See [docs/PRODUCT-BASELINE.md](docs/PRODUCT-BASELINE.md) and [docs/tag-remediation-proposal.md](docs/tag-remediation-proposal.md).
+
+
 ---
 
 ## Why Omni-Context

@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "manifest_name": "product-baseline-manifest",
+  "created_at": "2026-08-05T00:00:00+08:00",
+  "product_branch": "product/omni-v3-unified-r1",
+  "starting_commit": {
+    "sha": "17dc1d0107b0474de84058205a91b302ba290a74",
+    "short": "17dc1d0",
+    "subject": "fix(retrieval): prioritize semantic core evidence",
+    "authored_at": "2026-07-16T10:06:47+08:00"
+  },
+  "identity": {
+    "role": "engineering_starting_point",
+    "is_official_frozen_experiment_product": false,
+    "original_targeted_7_gate": "FAILED",
+    "targeted_7_details_v3": "FAILED_TARGETED_GATE (7/7 completed, mandatory final-context evidence conditions failed)",
+    "targeted_7_details_v3_1": "gate not passed (5/7 completed, 1 provider error, partial score 0.6783)",
+    "selector_has_formal_performance_proof": false,
+    "development_35_run": false,
+    "ablation_run": false,
+    "formal_benchmark_run_in_this_round": false,
+    "statements": [
+      "17dc1d0 is the engineering starting point of the product baseline branch.",
+      "17dc1d0 is NOT an official frozen experiment product.",
+      "The original Targeted-7 gate FAILED.",
+      "The current evidence selector has NO formal performance proof."
+    ]
+  },
+  "tag_audit": [
+    {
+      "tag": "omni-context-evaluation-freeze-v1",
+      "peeled_commit": "872723b",
+      "verdict": "historical_freeze_keep",
+      "note": "Documented Omni-Context Evaluation Freeze v1 (docs/freeze-v1). Historical, do not move."
+    },
+    {
+      "tag": "evaluation-freeze-candidate-v1",
+      "peeled_commit": "3bdb6e1",
+      "verdict": "historical_candidate_keep",
+      "note": "Candidate v1 manifest tag. Historical, do not move."
+    },
+    {
+      "tag": "evaluation-freeze-candidate-v2",
+      "peeled_commit": "be20db6",
+      "verdict": "historical_candidate_keep",
+      "note": "Candidate v2 sealed manifest tag. Historical, do not move."
+    },
+    {
+      "tag": "evaluation-freeze-candidate-v3.1",
+      "peeled_commit": "17dc1d0",
+      "verdict": "misleading_deprecated",
+      "note": "Points at the engineering starting commit 17dc1d0 while claiming 'Candidate v3.1 freeze'. docs/candidate-v3.1-review/13 explicitly said this tag must NOT be created and 14 records NOT FROZEN. See docs/tag-remediation-proposal.md. Not deleted in this round; remote tag untouched."
+    },
+    {
+      "tag": "v0.1.1",
+      "peeled_commit": "ad36b3c",
+      "verdict": "version_keep",
+      "note": "Version tag, unrelated to evaluation freeze."
+    },
+    {
+      "tag": "v3.0.0",
+      "peeled_commit": "9d8d403",
+      "verdict": "version_keep",
+      "note": "Version tag, unrelated to evaluation freeze."
+    }
+  ],
+  "phase_scope": {
+    "phase_1_identity_cleanup": "completed",
+    "phase_2_unified_dispatch": "planned",
+    "phase_3_embedding_v3": "planned",
+    "phase_4_clean_room_fixes": "planned",
+    "phase_5_privacy_device_security": "planned"
+  }
+}

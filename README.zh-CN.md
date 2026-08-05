@@ -17,6 +17,9 @@
   <a href="https://guo6x.github.io/Omni-context/">介绍页</a>
 </p>
 
+> **产品基线状态** — `17dc1d0` 是产品集成分支 `product/omni-v3-unified-r1` 的**工程起点**：**不是**正式实验冻结产品，原 Targeted-7 门禁**失败**，当前 selector **无正式性能证明**。详见 [docs/PRODUCT-BASELINE.md](docs/PRODUCT-BASELINE.md) 与 [docs/tag-remediation-proposal.md](docs/tag-remediation-proposal.md)。
+
+
 ---
 
 ## 为什么需要 Omni-Context
