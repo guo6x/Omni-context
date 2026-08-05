@@ -8,6 +8,7 @@ import { AgentLoop } from '../agent/agent-loop.js';
 import { EmbeddingService } from '../embedding/service.js';
 import { MemoryDecayScheduler } from '../memory/decay-scheduler.js';
 import { AuthPrincipal, AuthService } from '../security/auth.js';
+import { McpBusinessDispatcher } from '../mcp/dispatch.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -30,6 +31,7 @@ export interface RequestContext {
   agentLoop: AgentLoop | null;
   embeddingService: EmbeddingService;
   decayScheduler?: MemoryDecayScheduler;
+  mcpDispatcher: McpBusinessDispatcher;
   auth: AuthPrincipal;
 }
 
@@ -86,19 +88,37 @@ export class ApiRouter {
   private routes: Route[];
   private context: BaseRequestContext;
 
-  constructor(db: Database, agentLoop: AgentLoop | null = null, embeddingService: EmbeddingService, decayScheduler?: MemoryDecayScheduler) {
+  constructor(
+    db: Database,
+    agentLoop: AgentLoop | null = null,
+    embeddingService: EmbeddingService,
+    decayScheduler?: MemoryDecayScheduler,
+    mcpDispatcher?: McpBusinessDispatcher,
+  ) {
+    const extractor = new GraphRAGExtractor();
+    const finalDecayScheduler = decayScheduler || new MemoryDecayScheduler(db, {
+      decayFactor: 0.95,
+      staleDays: 90,
+      intervalMs: 60 * 60 * 1000,
+      autoStart: true,
+    });
     this.context = {
       db,
       coreMemory: new CoreMemory(db),
       archivalMemory: new ArchivalMemory(db),
-      extractor: new GraphRAGExtractor(),
+      extractor,
       agentLoop,
       embeddingService,
-      decayScheduler: decayScheduler || new MemoryDecayScheduler(db, {
-        decayFactor: 0.95,
-        staleDays: 90,
-        intervalMs: 60 * 60 * 1000,
-        autoStart: true,
+      decayScheduler: finalDecayScheduler,
+      // 统一业务 dispatch 层：HTTP 适配器与 stdio 适配器共享同一实现。
+      // 若调用方（如 mcp-server.ts 双模模式）已持有 dispatcher 实例则复用，
+      // 否则在此创建一份（与 HTTP 业务共用同一 db/embedding）。
+      mcpDispatcher: mcpDispatcher ?? new McpBusinessDispatcher({
+        db,
+        extractor,
+        embeddingService,
+        decayScheduler: finalDecayScheduler,
+        agentLoop,
       }),
     };
 
@@ -309,7 +329,13 @@ async function auditEmbeddingIndexCompatibility(db: Database, emb: EmbeddingServ
   }
 }
 
-export function createServer(db: Database, agentLoop?: AgentLoop, embeddingService?: EmbeddingService, decayScheduler?: MemoryDecayScheduler): http.Server {
+export function createServer(
+  db: Database,
+  agentLoop?: AgentLoop,
+  embeddingService?: EmbeddingService,
+  decayScheduler?: MemoryDecayScheduler,
+  mcpDispatcher?: McpBusinessDispatcher,
+): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
   db.attachEmbeddingService(finalEmbeddingService);
   const ownsDecayScheduler = !decayScheduler;
@@ -319,7 +345,7 @@ export function createServer(db: Database, agentLoop?: AgentLoop, embeddingServi
     intervalMs: 60 * 60 * 1000,
     autoStart: true,
   });
-  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, finalDecayScheduler);
+  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, finalDecayScheduler, mcpDispatcher);
 
   void auditEmbeddingIndexCompatibility(db, finalEmbeddingService);
 
