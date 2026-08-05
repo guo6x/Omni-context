@@ -9,7 +9,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 const PROTOCOL_VERSION: u8 = 1;
 const MAX_CLOCK_SKEW_SECONDS: i64 = 120;
-const MAX_NONCES_PER_DEVICE: usize = 256;
+// Retain more nonces per device so a local attacker cannot trivially evict
+// old nonces by flooding valid signed packets and then replaying a packet
+// inside the 120s timestamp window. 4096 covers the worst realistic button
+// rate (≈1/20ms) for >80s while bounding persisted state.
+const MAX_NONCES_PER_DEVICE: usize = 4096;
 const MIN_SECRET_BYTES: usize = 32;
 
 type HmacSha256 = Hmac<Sha256>;
