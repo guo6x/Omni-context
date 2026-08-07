@@ -1,0 +1,16 @@
+{
+  "schema_version": "holdback-run-auth-v1",
+  "authorizer": "goal18-project-owner",
+  "authorized_at": "2026-08-07T00:00:00Z",
+  "purpose": "Goal 18 holdback construction and sealing only. Explicitly NOT authorized: running any model/kernel on holdback, reading plaintext by kernel implementers, modifying fixtures after sealing.",
+  "gates": {
+    "dev_reg_sealed": "true",
+    "generator_deterministic": "true",
+    "schema_validation": "PASS",
+    "integrity_suite": "PASS (see commands-and-results.log)"
+  },
+  "scope": ["holdback-fixtures.jsonl (plaintext, custody only)", "holdback-sealed.bin", "holdback-public-manifest.json", "holdback-access-log.jsonl", "decision-benchmark-v2-schema.json"],
+  "forbidden": ["run_models", "score_holdback", "edit_fixtures_after_seal", "release_seed_without_two_person_rule"],
+  "seed_hash": "0F898583F08B4AEAAB5BF334224582C4144EEEC581612BACE4E7345B770909CF",
+  "signature": "offline-signature-pending (custodian records)"
+}

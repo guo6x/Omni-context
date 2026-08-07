@@ -1,0 +1,35 @@
+{
+  "schema_version": "human-review-readiness-v2",
+  "goal": "Goal 18H-R",
+  "generated_at": "2026-08-07T09:41:54.150Z",
+  "final_status": "GLOBAL_BENCHMARK_DEFECT_FOUND",
+  "status_rationale": "RI-02 dangling supports (hc1) is a generator-level structural bug affecting all 8 TT15 validation samples and (by shared builder path) the sealed holdback; per Goal 18H-R `11 must STOP_AND_REPORT_GLOBAL_BENCHMARK_DEFECT and not enter Goal 20 until the holdback question is adjudicated.",
+  "remediation": {
+    "validation": "FIXED under `12 discipline (8 samples, supports hc1->[]; new freeze VALIDATION_GOLD_FREEZE_V1.1; integrity 18/18; RI audit ERROR=0)",
+    "holdback": "NOT touched / NOT decrypted; same generator path - pending adjudication (post-unseal audit or rebuild)",
+    "ri03": "Definition A confirmed (relevant evidence); documentation gap flagged for schema/docs/UI",
+    "ri04": "TT15 GHOST-CITATION designed trap; not a defect"
+  },
+  "package_v2": {
+    "path": "human-review-package-v2/",
+    "samples": 45,
+    "tutorials": 2,
+    "p0_fixed": true,
+    "gold_blind": true,
+    "kernel_blind": true,
+    "e2e": {
+      "edge": "34/34 PASS",
+      "chrome": "34/34 PASS",
+      "file_probe": "PASS"
+    },
+    "bat_verified": true,
+    "human_usability_smoke_test": "PENDING - requires the project coordinator (real human) to try tutorial + 1 dummy sample before declaring HUMAN_REVIEW_READY"
+  },
+  "gates": {
+    "coordinator_smoke_test": "NOT_DONE (human step - coordinator)",
+    "human_blind_review": "NOT_DONE (HR1 real human)",
+    "agreement_and_adjudication": "NOT_DONE",
+    "final_validation_gold_freeze_v2": "NOT_ISSUED (pending human review)"
+  },
+  "goal20_gate": "BLOCKED - holdback RI-02 risk must be adjudicated first; do not run Goal 20"
+}

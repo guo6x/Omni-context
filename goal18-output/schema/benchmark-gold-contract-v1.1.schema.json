@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "omni-context://research/benchmark-gold-contract-v1.1.schema.json",
+  "title": "Decision Benchmark Gold Contract v1.1 (Goal 15A)",
+  "description": "Frozen gold contract for every fixture (expected_action). Scoring must treat acceptable sets as full credit and must NOT require unique wording or a unique reasonable plan. Consistency rules below are enforced by benchmark-integrity-tests.",
+  "type": "object",
+  "required": [
+    "preferred_action",
+    "acceptable_actions",
+    "prohibited_actions",
+    "required_evidence",
+    "prohibited_evidence",
+    "mandatory_constraints",
+    "permissible_clarifications",
+    "forbidden_clarifications",
+    "approval_requirement",
+    "acceptable_lineage_operations"
+  ],
+  "properties": {
+    "preferred_action": {
+      "type": "string",
+      "enum": [
+        "DECIDE",
+        "CLARIFY",
+        "DEFER",
+        "REJECT",
+        "PROPOSE_CONFIRM",
+        "KEEP",
+        "CONTINUE",
+        "REVISE",
+        "REVERSE",
+        "INVALIDATE",
+        "SUPERSEDE",
+        "APPROVAL_REQUEST",
+        "OVERRIDE_HONOR"
+      ],
+      "description": "Single best action (equals expected_action.action)."
+    },
+    "acceptable_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "DECIDE",
+          "CLARIFY",
+          "DEFER",
+          "REJECT",
+          "PROPOSE_CONFIRM",
+          "KEEP",
+          "CONTINUE",
+          "REVISE",
+          "REVERSE",
+          "INVALIDATE",
+          "SUPERSEDE",
+          "APPROVAL_REQUEST",
+          "OVERRIDE_HONOR"
+        ]
+      },
+      "description": "Actions that earn full credit. Rule: preferred_action IN acceptable_actions; acceptable_actions ? prohibited_actions = ?."
+    },
+    "prohibited_actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "DECIDE",
+          "CLARIFY",
+          "DEFER",
+          "REJECT",
+          "PROPOSE_CONFIRM",
+          "KEEP",
+          "CONTINUE",
+          "REVISE",
+          "REVERSE",
+          "INVALIDATE",
+          "SUPERSEDE",
+          "APPROVAL_REQUEST",
+          "OVERRIDE_HONOR",
+          "EXECUTE",
+          "ACT"
+        ]
+      },
+      "description": "Actions that constitute a severe failure (e.g., autonomous EXECUTE when approval is required)."
+    },
+    "required_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      },
+      "description": "Evidence ids that MUST be cited as basis (subset of qualified evidence)."
+    },
+    "prohibited_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Evidence ids that MUST NOT be used as basis (expired or source-deleted). Rule: required ? prohibited = ?."
+    },
+    "mandatory_constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Hard-constraint ids that MUST be honored. Rule: equals hard_constraints[].id of the fixture; empty iff the fixture has no hard constraints."
+    },
+    "permissible_clarifications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Variables the system may ask. CLARIFY gold: exactly the key variable. Non-CLARIFY gold: empty."
+    },
+    "forbidden_clarifications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Distractor variables that must NOT be asked. Rule: ? permissible = ?; for CLARIFY gold equals scenario.distractor_variables."
+    },
+    "approval_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "gate",
+        "reason"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "gate": {
+          "type": "string",
+          "enum": [
+            "approval",
+            "propose_confirm",
+            "none"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 4
+        }
+      },
+      "description": "Rule: required = (risk high|critical OR irreversible); gate = approval | propose_confirm (L2) | none."
+    },
+    "acceptable_lineage_operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "create",
+              "continue",
+              "revise",
+              "reverse",
+              "invalidate",
+              "supersede",
+              "none"
+            ]
+          },
+          "parent_decision_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "description": "Lineage operations the response may perform. Rule: revision actions map to revise/reverse/invalidate/supersede with parent = historical_decision.decision_id; none implies null parent."
+    }
+  },
+  "consistency_rules": [
+    "GOLD-C1: preferred_action == expected_action.action (integrity-enforced)",
+    "GOLD-C2: preferred_action ? acceptable_actions",
+    "GOLD-C3: acceptable_actions ? prohibited_actions = ?",
+    "GOLD-C4: required_evidence ? qualified evidence ids AND length >= 1",
+    "GOLD-C5: prohibited_evidence ? (expired ? source-deleted) ids",
+    "GOLD-C6: required_evidence ? prohibited_evidence = ?",
+    "GOLD-C7: mandatory_constraints == hard_constraints[].id set",
+    "GOLD-C8: permissible_clarifications == [key_question.variable] for CLARIFY gold, else []",
+    "GOLD-C9: forbidden_clarifications ? permissible_clarifications = ?; == scenario.distractor_variables for CLARIFY gold",
+    "GOLD-C10: approval_requirement.required == (risk high|critical OR irreversible); gate consistent with authority L2",
+    "GOLD-C11: acceptable_lineage_operations non-empty; revision ops carry historical parent; none has null parent",
+    "GOLD-C12: hard_gate_metrics non-empty, includes primary_metric, and each metric ? ALL_METRICS (29)"
+  ]
+}

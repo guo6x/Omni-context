@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "omni-context://research/holdback-seal-manifest-v1.schema.json",
+  "title": "Holdback Seal Manifest v1 (Goal 15A interface, not yet generated)",
+  "description": "Schema for the future holdback seal manifest. Generated only after Goal 16 implementation and explicit authorization. Generation remains FORBIDDEN this round.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "holdback_file",
+    "sha256",
+    "seed_hash",
+    "generator_version",
+    "schema_sha256",
+    "authorized_by",
+    "generated_at",
+    "policy_version",
+    "immutability",
+    "access_log_ref"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "holdback-seal-manifest-v1"
+    },
+    "holdback_file": {
+      "type": "string",
+      "const": "goal14-output/holdback-fixtures.jsonl"
+    },
+    "sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "description": "sha256 of the holdback fixture file."
+    },
+    "seed_hash": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "description": "sha256(seed_holdback); the seed itself is never stored in the repo."
+    },
+    "generator_version": {
+      "type": "string",
+      "description": "Version of scripts/holdback-generate.mjs used (determinism pin)."
+    },
+    "schema_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "description": "sha256 of decision-benchmark-schema.json at generation time."
+    },
+    "authorized_by": {
+      "type": "string",
+      "description": "Reference to the holdback-run-auth.json that authorized generation."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "policy_version": {
+      "type": "string",
+      "description": "decision-policy-rules / invariants version in force."
+    },
+    "immutability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edits_forbidden",
+        "reseal_requires"
+      ],
+      "properties": {
+        "edits_forbidden": {
+          "const": true
+        },
+        "reseal_requires": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Conditions for regeneration: new authorization, seed custody release, full integrity suite."
+        }
+      }
+    },
+    "access_log_ref": {
+      "type": "string",
+      "description": "Path of the append-only access log (holdback-access-log.jsonl)."
+    }
+  }
+}

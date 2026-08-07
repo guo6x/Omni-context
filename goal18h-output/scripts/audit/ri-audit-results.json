@@ -1,0 +1,520 @@
+{
+  "schema_version": "validation-ri-audit-v1.1",
+  "scope": "validation split only (120 samples); holdback plaintext NOT inspected per Goal 18H-R",
+  "generated_at": "2026-08-07T09:47:54.160Z",
+  "totals": {
+    "violations": 55,
+    "samples_affected": 46,
+    "by_rule": {
+      "RI-03": 47,
+      "RI-04": 8
+    },
+    "by_severity": {
+      "INFO": 55
+    }
+  },
+  "notes": [
+    "RI-01: options[].evidence_refs must exist among qualified+expired+conflicting evidence ids.",
+    "RI-02: evidence[].supports must reference an existing option/constraint/decision id.",
+    "RI-03: RESOLVED - evidence_refs = RELEVANT evidence (qualified-only at kernel encode time), may include evidence that opposes the option or expired/conflicting traps; confirmed by frozen v1.1 fixtures (16 analogous cases) and spec context-encoding (\"filtered evidence_refs (qualified ids only)\"). Schema/docs/UI must document this.",
+    "RI-04: TT15 qualified evidence with deleted source_ref is a DESIGNED GHOST-CITATION trap (gold GHOST-CITATION/CASCADE-INVALIDATION); INFO for TT15, ERROR otherwise.",
+    "RI-05/06/07/08: bonus referential hygiene checks."
+  ],
+  "violations": [
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-000",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-b] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-000",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-b] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-001",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-002",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-002",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[opt-a,opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-003",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-b] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-003",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-b] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-004",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-004",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[opt-a,opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-005",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-b] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-005",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-b] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-006",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-006",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[opt-a,opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt01-007",
+      "task_type": "TT01",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt02-004",
+      "task_type": "TT02",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-a,opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt02-006",
+      "task_type": "TT02",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-a,opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt03-000",
+      "task_type": "TT03",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt03-006",
+      "task_type": "TT03",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-000",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ex001 whose supports=[] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-000",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[opt-a,opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-001",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ex001 whose supports=[] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-002",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ex001 whose supports=[] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-002",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[opt-a,opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-003",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ex001 whose supports=[] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-004",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ex001 whose supports=[] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-005",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ex001 whose supports=[] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-006",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ex001 whose supports=[] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt04-007",
+      "task_type": "TT04",
+      "field_path": "candidates[opt-a].evidence_refs",
+      "detail": "cites ex001 whose supports=[] does not include opt-a",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt06-005",
+      "task_type": "TT06",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev002 whose supports=[opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt06-005",
+      "task_type": "TT06",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[hc1,opt-a,opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt10-003",
+      "task_type": "TT10",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt10-006",
+      "task_type": "TT10",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt10-007",
+      "task_type": "TT10",
+      "field_path": "candidates[opt-c].evidence_refs",
+      "detail": "cites ev003 whose supports=[opt-b] does not include opt-c",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt13-000",
+      "task_type": "TT13",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt13-001",
+      "task_type": "TT13",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt13-002",
+      "task_type": "TT13",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt13-003",
+      "task_type": "TT13",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt13-004",
+      "task_type": "TT13",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt13-005",
+      "task_type": "TT13",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt13-006",
+      "task_type": "TT13",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt13-007",
+      "task_type": "TT13",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev002 whose supports=[] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt14-001",
+      "task_type": "TT14",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt14-003",
+      "task_type": "TT14",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt14-004",
+      "task_type": "TT14",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt14-005",
+      "task_type": "TT14",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt14-006",
+      "task_type": "TT14",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-03",
+      "sample_id": "decision-bench-v2-val-tt14-007",
+      "task_type": "TT14",
+      "field_path": "candidates[opt-b].evidence_refs",
+      "detail": "cites ev001 whose supports=[opt-a] does not include opt-b",
+      "severity": "INFO",
+      "root_cause": "evidence_refs semantics under-defined in schema/docs (generator uses it as relevant-evidence in some builders, supporting-evidence in others)"
+    },
+    {
+      "rule": "RI-04",
+      "sample_id": "decision-bench-v2-val-tt15-000",
+      "task_type": "TT15",
+      "field_path": "evidence[ev001].source_ref",
+      "detail": "TT15 designed trap: qualified evidence source_ref=e001 is a DELETED event (delete at 2026-05-30T02:00:00.000Z); evidence at 2026-06-04T02:00:00.000Z claims current info without a revalidation event. Gold GHOST-CITATION semantics require detecting this.",
+      "severity": "INFO",
+      "root_cause": "TT15 ghost-citation trap by design (confirmed vs gold + plans.mjs + frozen v1 convention)"
+    },
+    {
+      "rule": "RI-04",
+      "sample_id": "decision-bench-v2-val-tt15-001",
+      "task_type": "TT15",
+      "field_path": "evidence[ev001].source_ref",
+      "detail": "TT15 designed trap: qualified evidence source_ref=e001 is a DELETED event (delete at 2026-06-04T13:00:00.000Z); evidence at 2026-06-09T13:00:00.000Z claims current info without a revalidation event. Gold GHOST-CITATION semantics require detecting this.",
+      "severity": "INFO",
+      "root_cause": "TT15 ghost-citation trap by design (confirmed vs gold + plans.mjs + frozen v1 convention)"
+    },
+    {
+      "rule": "RI-04",
+      "sample_id": "decision-bench-v2-val-tt15-002",
+      "task_type": "TT15",
+      "field_path": "evidence[ev001].source_ref",
+      "detail": "TT15 designed trap: qualified evidence source_ref=e001 is a DELETED event (delete at 2026-06-09T00:00:00.000Z); evidence at 2026-06-14T00:00:00.000Z claims current info without a revalidation event. Gold GHOST-CITATION semantics require detecting this.",
+      "severity": "INFO",
+      "root_cause": "TT15 ghost-citation trap by design (confirmed vs gold + plans.mjs + frozen v1 convention)"
+    },
+    {
+      "rule": "RI-04",
+      "sample_id": "decision-bench-v2-val-tt15-003",
+      "task_type": "TT15",
+      "field_path": "evidence[ev001].source_ref",
+      "detail": "TT15 designed trap: qualified evidence source_ref=e001 is a DELETED event (delete at 2026-06-14T11:00:00.000Z); evidence at 2026-06-19T11:00:00.000Z claims current info without a revalidation event. Gold GHOST-CITATION semantics require detecting this.",
+      "severity": "INFO",
+      "root_cause": "TT15 ghost-citation trap by design (confirmed vs gold + plans.mjs + frozen v1 convention)"
+    },
+    {
+      "rule": "RI-04",
+      "sample_id": "decision-bench-v2-val-tt15-004",
+      "task_type": "TT15",
+      "field_path": "evidence[ev001].source_ref",
+      "detail": "TT15 designed trap: qualified evidence source_ref=e001 is a DELETED event (delete at 2026-06-19T22:00:00.000Z); evidence at 2026-06-24T22:00:00.000Z claims current info without a revalidation event. Gold GHOST-CITATION semantics require detecting this.",
+      "severity": "INFO",
+      "root_cause": "TT15 ghost-citation trap by design (confirmed vs gold + plans.mjs + frozen v1 convention)"
+    },
+    {
+      "rule": "RI-04",
+      "sample_id": "decision-bench-v2-val-tt15-005",
+      "task_type": "TT15",
+      "field_path": "evidence[ev001].source_ref",
+      "detail": "TT15 designed trap: qualified evidence source_ref=e001 is a DELETED event (delete at 2026-06-24T09:00:00.000Z); evidence at 2026-06-29T09:00:00.000Z claims current info without a revalidation event. Gold GHOST-CITATION semantics require detecting this.",
+      "severity": "INFO",
+      "root_cause": "TT15 ghost-citation trap by design (confirmed vs gold + plans.mjs + frozen v1 convention)"
+    },
+    {
+      "rule": "RI-04",
+      "sample_id": "decision-bench-v2-val-tt15-006",
+      "task_type": "TT15",
+      "field_path": "evidence[ev001].source_ref",
+      "detail": "TT15 designed trap: qualified evidence source_ref=e001 is a DELETED event (delete at 2026-06-29T20:00:00.000Z); evidence at 2026-07-04T20:00:00.000Z claims current info without a revalidation event. Gold GHOST-CITATION semantics require detecting this.",
+      "severity": "INFO",
+      "root_cause": "TT15 ghost-citation trap by design (confirmed vs gold + plans.mjs + frozen v1 convention)"
+    },
+    {
+      "rule": "RI-04",
+      "sample_id": "decision-bench-v2-val-tt15-007",
+      "task_type": "TT15",
+      "field_path": "evidence[ev001].source_ref",
+      "detail": "TT15 designed trap: qualified evidence source_ref=e001 is a DELETED event (delete at 2026-07-04T07:00:00.000Z); evidence at 2026-07-09T07:00:00.000Z claims current info without a revalidation event. Gold GHOST-CITATION semantics require detecting this.",
+      "severity": "INFO",
+      "root_cause": "TT15 ghost-citation trap by design (confirmed vs gold + plans.mjs + frozen v1 convention)"
+    }
+  ]
+}

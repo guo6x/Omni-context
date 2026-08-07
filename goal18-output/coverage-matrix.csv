@@ -1,0 +1,181 @@
+task_type,factor,validation_values,holdback_values,all_values,note
+TT01,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT01,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT01,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT01,F4_risk_level,low;medium,low;medium,low;medium,
+TT01,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT01,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT01,F7_approval_required,not_required,not_required,not_required,
+TT01,F8_history,absent,absent,absent,
+TT01,F9_outcome,none,none,none,
+TT01,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT01,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT01,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT02,F1_evidence_sufficiency,insufficient,insufficient,insufficient,
+TT02,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT02,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT02,F4_risk_level,medium;negligible,medium;negligible,medium;negligible,
+TT02,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT02,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT02,F7_approval_required,not_required,not_required,not_required,
+TT02,F8_history,absent,absent,absent,
+TT02,F9_outcome,none,none,none,
+TT02,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT02,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT02,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT03,F1_evidence_sufficiency,insufficient;sufficient,insufficient;sufficient,insufficient;sufficient,
+TT03,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT03,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT03,F4_risk_level,low;medium;negligible,low;medium;negligible,low;medium;negligible,
+TT03,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT03,F6_authority,L0;L1;L3;L4,L0;L1;L3;L4,L0;L1;L3;L4,
+TT03,F7_approval_required,not_required,not_required,not_required,
+TT03,F8_history,absent,absent,absent,
+TT03,F9_outcome,none,none,none,
+TT03,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT03,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT03,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT04,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT04,F2_evidence_currency,stale_present,stale_present,stale_present,
+TT04,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT04,F4_risk_level,low;medium,low;medium,low;medium,
+TT04,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT04,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT04,F7_approval_required,not_required,not_required,not_required,
+TT04,F8_history,absent,absent,absent,
+TT04,F9_outcome,none,none,none,
+TT04,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT04,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT04,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT05,F1_evidence_sufficiency,insufficient;sufficient,insufficient;sufficient,insufficient;sufficient,
+TT05,F2_evidence_currency,current;stale_present,current;stale_present,current;stale_present,
+TT05,F3_source_consistency,conflicting_open;conflicting_resolved,conflicting_open;conflicting_resolved,conflicting_open;conflicting_resolved,
+TT05,F4_risk_level,medium;negligible,low;medium;negligible,low;medium;negligible,
+TT05,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT05,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT05,F7_approval_required,not_required,not_required,not_required,
+TT05,F8_history,absent,absent,absent,
+TT05,F9_outcome,none,none,none,
+TT05,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT05,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT05,F12_agent_disagreement,single,single,single,
+TT06,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT06,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT06,F3_source_consistency,consistent,conflicting_open;consistent,conflicting_open;consistent,
+TT06,F4_risk_level,medium,medium,medium,
+TT06,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT06,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT06,F7_approval_required,not_required,not_required,not_required,
+TT06,F8_history,present,present,present,
+TT06,F9_outcome,none,none,none,
+TT06,F10_revision_warranted,warranted,warranted,warranted,
+TT06,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT06,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT07,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT07,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT07,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT07,F4_risk_level,medium;negligible,medium;negligible,medium;negligible,
+TT07,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT07,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT07,F7_approval_required,not_required,not_required,not_required,
+TT07,F8_history,present,present,present,
+TT07,F9_outcome,none,none,none,
+TT07,F10_revision_warranted,not_warranted,not_warranted,not_warranted,
+TT07,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT07,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT08,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT08,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT08,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT08,F4_risk_level,low,low,low,
+TT08,F5_reversibility,reversible,reversible,reversible,
+TT08,F6_authority,L2;L3;L4;L5,L2;L3;L4;L5,L2;L3;L4;L5,
+TT08,F7_approval_required,not_required,not_required,not_required,
+TT08,F8_history,absent,absent,absent,
+TT08,F9_outcome,none,none,none,
+TT08,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT08,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT08,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT09,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT09,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT09,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT09,F4_risk_level,critical;high,critical;high,critical;high,
+TT09,F5_reversibility,conditionally_reversible;irreversible,conditionally_reversible;irreversible,conditionally_reversible;irreversible,
+TT09,F6_authority,L0;L2;L3;L4;L5,L1;L2;L3;L4;L5,L0;L1;L2;L3;L4;L5,
+TT09,F7_approval_required,required,required,required,
+TT09,F8_history,absent,absent,absent,
+TT09,F9_outcome,none,none,none,
+TT09,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT09,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT09,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT10,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT10,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT10,F3_source_consistency,conflicting_open;consistent,conflicting_open;consistent,conflicting_open;consistent,
+TT10,F4_risk_level,medium,medium,medium,
+TT10,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT10,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT10,F7_approval_required,not_required,not_required,not_required,
+TT10,F8_history,present,present,present,
+TT10,F9_outcome,contradicts,contradicts,contradicts,
+TT10,F10_revision_warranted,warranted,warranted,warranted,
+TT10,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT10,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT11,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT11,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT11,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT11,F4_risk_level,medium;negligible,medium;negligible,medium;negligible,
+TT11,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT11,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT11,F7_approval_required,not_required,not_required,not_required,
+TT11,F8_history,present,present,present,
+TT11,F9_outcome,supports,supports,supports,
+TT11,F10_revision_warranted,not_warranted,not_warranted,not_warranted,
+TT11,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT11,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT12,F1_evidence_sufficiency,insufficient;sufficient,insufficient;sufficient,insufficient;sufficient,
+TT12,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT12,F3_source_consistency,conflicting_open;conflicting_resolved,conflicting_open;conflicting_resolved,conflicting_open;conflicting_resolved,
+TT12,F4_risk_level,low;medium;negligible,low;medium;negligible,low;medium;negligible,
+TT12,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT12,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT12,F7_approval_required,not_required,not_required,not_required,
+TT12,F8_history,absent,absent,absent,
+TT12,F9_outcome,none,none,none,
+TT12,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT12,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT12,F12_agent_disagreement,multi,multi,multi,
+TT13,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT13,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT13,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT13,F4_risk_level,medium;negligible,medium;negligible,medium;negligible,
+TT13,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT13,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT13,F7_approval_required,not_required,not_required,not_required,
+TT13,F8_history,present,present,present,
+TT13,F9_outcome,none,none,none,
+TT13,F10_revision_warranted,n/a,n/a,n/a,N/A by design for this TT (no revision semantics)
+TT13,F11_user_override,present,present,present,
+TT13,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT14,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT14,F2_evidence_currency,current,current,current,N/A by design for this TT (no expired trap)
+TT14,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT14,F4_risk_level,medium,medium,medium,
+TT14,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT14,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT14,F7_approval_required,not_required,not_required,not_required,
+TT14,F8_history,present,present,present,
+TT14,F9_outcome,none,none,none,
+TT14,F10_revision_warranted,not_warranted;warranted,not_warranted;warranted,not_warranted;warranted,
+TT14,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT14,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)
+TT15,F1_evidence_sufficiency,sufficient,sufficient,sufficient,N/A by design for this TT (gold always sufficient)
+TT15,F2_evidence_currency,stale_present,stale_present,stale_present,
+TT15,F3_source_consistency,consistent,consistent,consistent,N/A by design for this TT (single-source)
+TT15,F4_risk_level,medium;negligible,medium;negligible,medium;negligible,
+TT15,F5_reversibility,conditionally_reversible;reversible,conditionally_reversible;reversible,conditionally_reversible;reversible,
+TT15,F6_authority,L3;L4;L5,L3;L4;L5,L3;L4;L5,
+TT15,F7_approval_required,not_required,not_required,not_required,
+TT15,F8_history,present,present,present,
+TT15,F9_outcome,none,none,none,
+TT15,F10_revision_warranted,warranted,warranted,warranted,
+TT15,F11_user_override,absent,absent,absent,N/A by design for this TT (override only in TT13)
+TT15,F12_agent_disagreement,none,none,none,N/A by design for this TT (single-agent)

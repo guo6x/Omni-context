@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "validation-manifest-v2",
+  "split": "validation",
+  "goal": "Goal 18",
+  "generated_at": "2026-08-07T09:30:11.167Z",
+  "generator_version": "goal18-generator/v2.0.0",
+  "seed": "goal18-validation-seed-7f3a9c2e",
+  "seed_hash": "7ed2454b19b723968dad403f0f574c08505b3a45355b77b12ae8fd0afba54cc0",
+  "schema_sha256": "aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4",
+  "counts": {
+    "total": 120,
+    "per_task_type": {
+      "TT01": 8,
+      "TT02": 8,
+      "TT03": 8,
+      "TT04": 8,
+      "TT05": 8,
+      "TT06": 8,
+      "TT07": 8,
+      "TT08": 8,
+      "TT09": 8,
+      "TT10": 8,
+      "TT11": 8,
+      "TT12": 8,
+      "TT13": 8,
+      "TT14": 8,
+      "TT15": 8
+    },
+    "per_source_type": {
+      "human_design": 48,
+      "multi_model_reconstruction": 36,
+      "anonymized_pattern_synthesis": 24,
+      "adversarial_boundary": 12
+    },
+    "per_domain": {
+      "software-dev": 7,
+      "schedule-time": 7,
+      "travel-planning": 9,
+      "longterm-project": 10,
+      "home-living": 8,
+      "legal-matters": 3,
+      "learning-courses": 9,
+      "privacy-device": 9,
+      "purchase-budget": 7,
+      "content-publishing": 8,
+      "files-knowledge": 7,
+      "medical-care": 3,
+      "health-lifestyle": 9,
+      "community-events": 7,
+      "financial-planning": 2,
+      "career-job-search": 7,
+      "team-collaboration": 8
+    },
+    "risk_levels": {
+      "low": 20,
+      "medium": 73,
+      "negligible": 19,
+      "high": 5,
+      "critical": 3
+    },
+    "authorities": {
+      "L3": 49,
+      "L4": 37,
+      "L5": 26,
+      "L0": 2,
+      "L1": 1,
+      "L2": 5
+    }
+  },
+  "files": {
+    "validation-set.jsonl": {
+      "sha256": "59e924631934a8712f05daedc269c4f27791bf86b97ed11fa5f1af0bdb3cbf34",
+      "lines": 120
+    },
+    "validation-gold.jsonl": {
+      "sha256": "763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed",
+      "lines": 120
+    }
+  },
+  "review_refs": {
+    "reviewer_agreement_report": "reviewer-agreement-report.md",
+    "adjudication_log": "adjudication-log.jsonl",
+    "coverage_matrix": "coverage-matrix.csv",
+    "leakage_analysis": "leakage-analysis.md"
+  },
+  "integrity": {
+    "suite": "benchmark-integrity-tests/run.mjs",
+    "status": "SEE commands-and-results.log"
+  },
+  "immutability": {
+    "edits_forbidden_after_freeze": false,
+    "note": "Frozen at Goal 18; single authorized RI-02 fix applied in Goal 18H-R (documented above). No further edits without a new authorized revision."
+  },
+  "freeze_id": "VALIDATION_GOLD_FREEZE_V1.1",
+  "freeze_note": "Fixture revision issued by Goal 18H-R after RI-02 referential-integrity fix (8 TT15 samples, evidence[ev002].supports hc1 dangling -> []). Gold untouched. Supersedes the original Goal 18 freeze (manifest v2, set sha 3ceddb1a...).",
+  "revision": {
+    "schema_version": "validation-manifest-revision-v1",
+    "goal": "Goal 18H-R",
+    "change": "RI-02_DANGLING_SUPPORTS_FIX",
+    "samples_changed": 8,
+    "task_types": [
+      "TT15"
+    ],
+    "old_set_sha256": "3ceddb1aaee51e28dfe20a930696b01065dcfae4d47bdac1f1dd5dc3c39e9667",
+    "new_set_sha256": "59e924631934a8712f05daedc269c4f27791bf86b97ed11fa5f1af0bdb3cbf34",
+    "gold_sha256_unchanged": "763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed",
+    "old_manifest_sha256": "1cffe23134959b3f0a276360a82a99d6e91d8ccfc3f3e93b5a99c7d116a2e7d7",
+    "archived": "goal18h-output/archive/v1-validation-set.jsonl, v1-validation-manifest.json, v1-fixture-sha256.txt",
+    "discipline": "Goal 18H-R ?12: preserve original, field-level diff, semantic reason, no Kernel outputs consulted, rerun integrity + RI tests, new hashes, supersede manifest"
+  }
+}

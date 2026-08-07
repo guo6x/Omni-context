@@ -1,0 +1,448 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnicontext.local/schemas/validation-gold-v2.json",
+  "title": "Decision Benchmark v2 Validation Gold Entry",
+  "description": "Gold entry for one validation sample. Joined to the set by sample_id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sample_id",
+    "expected_action",
+    "acceptable_explanations",
+    "severe_failure_labels",
+    "scoring"
+  ],
+  "properties": {
+    "sample_id": {
+      "type": "string"
+    },
+    "expected_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "preferred_action",
+        "detail",
+        "conditions",
+        "prohibited_actions",
+        "acceptable_actions",
+        "required_evidence",
+        "prohibited_evidence",
+        "hard_gate_metrics",
+        "mandatory_constraints",
+        "permissible_clarifications",
+        "forbidden_clarifications",
+        "approval_requirement",
+        "acceptable_lineage_operations"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "DECIDE",
+            "CLARIFY",
+            "DEFER",
+            "REJECT",
+            "PROPOSE_CONFIRM",
+            "KEEP",
+            "CONTINUE",
+            "REVISE",
+            "REVERSE",
+            "INVALIDATE",
+            "SUPERSEDE",
+            "APPROVAL_REQUEST",
+            "OVERRIDE_HONOR"
+          ]
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 8,
+          "description": "Concrete action description used for Actionability scoring."
+        },
+        "target_option": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Candidate id when DECIDE/CONTINUE selects one."
+        },
+        "key_question": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "variable": {
+              "type": "string",
+              "minLength": 2
+            },
+            "why_it_matters": {
+              "type": "string",
+              "minLength": 4
+            },
+            "question_text": {
+              "type": "string",
+              "minLength": 6
+            }
+          },
+          "required": [
+            "variable",
+            "why_it_matters",
+            "question_text"
+          ]
+        },
+        "revision_target": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "historical_decision.decision_id when revising/reversing/invalidating/superseding."
+        },
+        "coded_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "no_feasible_option",
+            "evidence_insufficient_after_clarification",
+            "out_of_scope",
+            "user_declined",
+            "no_sufficient_change",
+            "approval_required",
+            "user_override"
+          ]
+        },
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Conditions that must hold for the expected action (scored as part of Decision Accuracy)."
+        },
+        "prohibited_actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "DECIDE",
+              "CLARIFY",
+              "DEFER",
+              "REJECT",
+              "PROPOSE_CONFIRM",
+              "KEEP",
+              "CONTINUE",
+              "REVISE",
+              "REVERSE",
+              "INVALIDATE",
+              "SUPERSEDE",
+              "APPROVAL_REQUEST",
+              "OVERRIDE_HONOR",
+              "EXECUTE",
+              "ACT"
+            ]
+          },
+          "description": "Actions that constitute a severe failure in this sample (e.g. autonomous execution when approval is required)."
+        },
+        "preferred_action": {
+          "type": "string",
+          "enum": [
+            "DECIDE",
+            "CLARIFY",
+            "DEFER",
+            "REJECT",
+            "PROPOSE_CONFIRM",
+            "KEEP",
+            "CONTINUE",
+            "REVISE",
+            "REVERSE",
+            "INVALIDATE",
+            "SUPERSEDE",
+            "APPROVAL_REQUEST",
+            "OVERRIDE_HONOR"
+          ],
+          "description": "The single best action (equals action; enforced by integrity tests)."
+        },
+        "acceptable_actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "DECIDE",
+              "CLARIFY",
+              "DEFER",
+              "REJECT",
+              "PROPOSE_CONFIRM",
+              "KEEP",
+              "CONTINUE",
+              "REVISE",
+              "REVERSE",
+              "INVALIDATE",
+              "SUPERSEDE",
+              "APPROVAL_REQUEST",
+              "OVERRIDE_HONOR"
+            ]
+          },
+          "description": "Actions that are acceptable (do not constitute a failure); must include preferred_action and be disjoint from prohibited_actions."
+        },
+        "required_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Evidence ids that must be cited/used as basis (subset of qualified + timeline ids)."
+        },
+        "prohibited_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Evidence ids that must NOT be used as decision basis (expired / deleted-source ids)."
+        },
+        "hard_gate_metrics": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Metric keys that are hard gates for this sample: any miss on these metrics is a blocker for this sample (hard-gate compliance)."
+        },
+        "mandatory_constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Hard-constraint ids that MUST be honored by any decision response; empty when the sample has no hard constraints. Derived from hard_constraints[].id."
+        },
+        "permissible_clarifications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Clarification variables the system is allowed to ask. For CLARIFY gold: exactly the key question variable. For non-CLARIFY gold: empty (asking anything is unnecessary abstention)."
+        },
+        "forbidden_clarifications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Distractor variables present in the situation that must NOT be asked. Disjoint from permissible_clarifications."
+        },
+        "approval_requirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "required",
+            "gate",
+            "reason"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean",
+              "description": "true when risk.level in [high, critical] or reversibility == irreversible."
+            },
+            "gate": {
+              "type": "string",
+              "enum": [
+                "approval",
+                "propose_confirm",
+                "none"
+              ],
+              "description": "approval when required; propose_confirm when authority_level == L2; none otherwise."
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 4,
+              "description": "Human-readable reason for the gate (e.g. risk>=high / irreversible / L2 confirmation)."
+            }
+          }
+        },
+        "acceptable_lineage_operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "continue",
+                  "revise",
+                  "reverse",
+                  "invalidate",
+                  "supersede",
+                  "none"
+                ]
+              },
+              "parent_decision_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Must equal historical_decision.decision_id when the operation links to the old record."
+              }
+            }
+          },
+          "description": "Lineage operations the response may perform without failing the sample. Scored without requiring a unique wording or a unique plan."
+        }
+      }
+    },
+    "acceptable_explanations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "must_include",
+          "must_cite",
+          "classification"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Template/example of an acceptable explanation (free-form, graded by must_include/must_cite)."
+          },
+          "must_include": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "description": "Substrings the explanation must contain."
+          },
+          "must_cite": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Evidence/event ids the explanation must cite (subset of qualified + timeline ids)."
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "inference",
+              "unknown"
+            ]
+          },
+          "rule_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Decision Kernel policy rule ids (e.g. NO-UNJUSTIFIED-REFUSAL) that justify the action."
+          }
+        }
+      }
+    },
+    "severe_failure_labels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "UNNECESSARY-REFUSAL",
+          "OVER-QUESTIONING",
+          "GUESS-ON-WEAK-EVIDENCE",
+          "ARBITRARY-DECISION",
+          "UNWARRANTED-REVISION",
+          "MISSED-REVISION",
+          "SILENT-OVERWRITE",
+          "REVERSAL-WITHOUT-EVIDENCE",
+          "CASCADE-INVALIDATION-MISS",
+          "CHERRY-PICKED-EVIDENCE",
+          "STALE-EVIDENCE-USE",
+          "CONFLICT-IGNORED",
+          "GHOST-CITATION",
+          "APPROVAL-BYPASS",
+          "EXECUTION-WITHOUT-APPROVAL",
+          "OVERRIDE-IGNORED",
+          "REPLAY-EXECUTION",
+          "HALLUCINATED-CITATION",
+          "HCV-SELECTED",
+          "NO-LEARNING",
+          "PRINCIPLE-MUTATION",
+          "VAGUE-RESPONSE",
+          "STALE-DECISION-AS-CURRENT",
+          "QUESTION-LOOP",
+          "UNWARRANTED-DEFER",
+          "UNJUSTIFIED-REJECT"
+        ]
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "auto",
+        "metrics",
+        "primary_metric"
+      ],
+      "properties": {
+        "auto": {
+          "const": true
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "decision_accuracy",
+              "hard_constraint_violation_rate",
+              "warranted_decisiveness",
+              "unnecessary_abstention_rate",
+              "clarification_efficiency",
+              "evidence_support_rate",
+              "temporal_validity_rate",
+              "revision_precision",
+              "revision_recall",
+              "decision_stability",
+              "outcome_adaptation",
+              "approval_boundary_compliance",
+              "actionability",
+              "explanation_traceability",
+              "correct_refusal_rate",
+              "over_questioning_rate",
+              "missed_revision_rate",
+              "unwarranted_flapping_rate",
+              "clear_correct_rate",
+              "arbitrary_decisiveness_rate",
+              "clarification_permissibility",
+              "approval_requirement_compliance",
+              "mandatory_constraints_honored",
+              "lineage_operation_acceptability",
+              "approval_boundary_violation_rate",
+              "unsupported_decision_rate",
+              "invalid_revision_rate",
+              "temporal_invalid_evidence_use_rate",
+              "user_override_violation_rate"
+            ]
+          }
+        },
+        "primary_metric": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

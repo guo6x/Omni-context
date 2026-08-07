@@ -1,0 +1,47 @@
+# Goal 18 - Decision Benchmark v2 - artifact-sha256.txt
+# Revised by Goal 18H-R (2026-08-07) for VALIDATION_GOLD_FREEZE_V1.1: validation-set / validation-manifest / fixture-sha256 hashes updated (RI-02 fix); benchmark-v2-design.md updated with evidence_refs semantics (Definition A). Original values preserved in goal18h-output/archive/.
+# Generated 2026-08-07 01:45:49.504 UTC
+# artifact-sha256.txt itself is not self-referenced; verify it with Get-FileHash.
+# holdback-fixtures.jsonl (plaintext) lives ONLY in offline custody; its hash is recorded below.
+
+sha256  benchmark-v2-design.md  054dc7c32b5a957323e16c340190650cab4434adfedb7c9fa365c730ab30879a
+sha256  validation-set.jsonl  59e924631934a8712f05daedc269c4f27791bf86b97ed11fa5f1af0bdb3cbf34
+sha256  validation-gold.jsonl  763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed
+sha256  validation-manifest.json  01e5efed8b5a1fd9062672157060cfaf2aa903d5fe8bd98fe6518df3b4353af7
+sha256  holdback-sealed.bin  f0d08a12731299fd0246492babc2edd118a08c836588ad0aa841b84543333ea3
+sha256  holdback-public-manifest.json  d433bfa5edd9a10d361dd478a3b4a68a4e8271766b17e07f0c7976d6bdbb0fd8
+sha256  holdback-run-auth.json  c7b60c1615f17fbc146b8978fdbb0f6a373f628e79c4f091b58da91370a307fd
+sha256  holdback-access-log.jsonl  1c39c97ec9077b439cfede437dd9973dcb7fe6aa566b16709114541783f5d151
+sha256  annotation-guide.md  7d4d11cfd81eee67a8892f5ca0bedaa309dc8fd24b13dddb82cee65448ba5a64
+sha256  reviewer-agreement-report.md  900ef10454003459832d604b946103d51c1b40e46b7d52cfad6b5a7a589b3fb0
+sha256  adjudication-log.jsonl  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+sha256  coverage-matrix.csv  94791d5a5f18cf451f0fceb6a51421c49d2e8dc52060b490e80aed072ba7c206
+sha256  leakage-analysis.md  98a1eabb1e75eeb5cb6e485ad85e1e65f5b27573ff4d49c1355d5bd8dc9226b2
+sha256  dataset-card.md  7390c92afcd324a9639f11d1718719e70c2b341ff9eaf49820d2487ac3d012fc
+sha256  commands-and-results.log  3086334fb5c05220263ffca7da15e0c97727ec7bd7a12907b8e9c6db402500e8
+sha256  schema/benchmark-gold-contract-v1.1.schema.json  b2c1890f5dd012d193101dcc80d4317d12f8c85e51107de923628964fe6ac103
+sha256  schema/decision-benchmark-v2-schema.json  aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4
+sha256  schema/decision-benchmark-v2-set.schema.json  a96fec20e2ea7061c158fa3e9a1bf523f476c3f2de0184bdef412a7f8846aa84
+sha256  schema/holdback-seal-manifest-v1.schema.json  2c1d03847bbb9eed4e4205cafdde791817c373dc40059f809e4f1eb1465ef756
+sha256  schema/validation-gold-v2.schema.json  c9db51d414df56d57fe12ee2e00c8f5dea5c77c0b4c2b81f1a7ef820fb06798f
+sha256  benchmark-integrity-tests/README.md  3331e90756ca021cc6f6cfed476bcec7380241c2306b547720faf43821d89050
+sha256  benchmark-integrity-tests/fixture-sha256.txt  e2254cd4d3c9d1346ad113ab9f5d1afff0cf328ebc5857264d89e67bda6733cc
+sha256  benchmark-integrity-tests/fixtures-loader.mjs  85f45d73aa9c48a78142b2b543cffbf921a45ae8a9c2e5479413374ba59722f1
+sha256  benchmark-integrity-tests/integrity.test.mjs  08b8660252ea5eebe66742aab1e79a7c55e401d71ee53bc39a49e572397c2694
+sha256  benchmark-integrity-tests/run.mjs  1cafae6d4e81e94f7ec73adc4e1c5135958d4d6d8b86fe6175149d6cee8619d2
+sha256  benchmark-integrity-tests/schema-validator.mjs  9d686b8dc6661fbbd9683d48bbf690b08a84b6f763ff513fbbe24337a09e49a2
+sha256  benchmark-integrity-tests/scorer.mjs  d1217464e10c24140607dee32d4c83d4206fd7d1f3b9676959c840fb3b688617
+sha256  benchmark-integrity-tests/verify-seal.mjs  8d13de042f12b1b23d70f56c7135993aeec9b320bd38794c50b3d47eea5285a6
+sha256  scripts/build-reports.mjs  4bcf35a6810732b5f62ee77d73b4c1fb02de4a6c9e46aed550de6c9aa75d28b1
+sha256  scripts/build-validation-manifest.mjs  78f5eb84b8c89701092a66d566cfe42150933ac8315de515a4ac47d2b7ad3060
+sha256  scripts/generator/builders-tt01-05.mjs  415517a210fb1e6f6a5f119a1ff39acdd774bc2b5eed414d0705636aec1831d4
+sha256  scripts/generator/builders-tt06-10.mjs  37cdc4965ef38862d0db7be3777744b003dcd3ddc076704f403416aac2424bd3
+sha256  scripts/generator/builders-tt11-15.mjs  99611305fc9ec0018c6c2d5be7116294b99614ec6f8af776c93525850960a474
+sha256  scripts/generator/common.mjs  9a305d5c52dbff0041e4e089c6a3293fb30e22c991d9063fe46059ea5ecbbbe1
+sha256  scripts/generator/generate.mjs  21ba20a8f6afdef05969435ec38deb571ff5a58c4af7ef400f11385cf96f61a8
+sha256  scripts/generator/plans.mjs  4899a892de658a8bcac11c72ae6ba3a814565f4913b6eb826a40193889336b41
+sha256  scripts/generator/pools.mjs  5c5a1195a8fcb3e2eab2b31e4601d20179718bf0260581a6e2cfcb34fb6e99cc
+sha256  scripts/generator/rng.mjs  b136b6d7f40511754cd802f1ae668658ea1d532910db0f797608e09252d8fe6f
+sha256  scripts/review/reviewer-rederive.mjs  2703bd333069316f466730c536b4323e24fce94640d527183dd484d61803c9c3
+sha256  scripts/seal/seal-holdback.mjs  10da54fb832168784eb365449911c855424d4b796b920ff31b6d768a06c2bf97
+sha256  holdback-fixtures.jsonl (plaintext, offline custody: C:/Users/00/.codex/goal18-holdback-custody)  f3a69fcd2d0167dafa8d6debd8ccb0b4893434a80811f96d6241f4feb668ba4a
