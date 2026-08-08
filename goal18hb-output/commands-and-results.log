@@ -61,4 +61,5 @@
 - commit A: benchmark(holdback-v2): post-seal evidence archival freeze (Goal 18HB-A)
 - commit B: benchmark(holdback-v2): finalize archival freeze record with evidence commit sha (Goal 18HB-A)
 - clean-checkout verification: fresh git worktree at HEAD; sealed hash identical; node --check PASS; secret scan PASS; git status --porcelain empty
-- final status: HOLDBACK_V2_ARCHIVAL_FREEZE_COMPLETE; Goal20 = WAITING_FOR_HR1_AND_VALIDATION_FREEZE; VALIDATION_GOLD_FREEZE = PENDING_VALIDATION_GOLD_FREEZE_V2
+- final status: HOLDBACK_V2_ARCHIVAL_FREEZE_COMPLETE; Goal20 = WAITING_FOR_HR1_AND_VALIDATION_FREEZE; VALIDATION_GOLD_FREEZE = PENDING_VALIDATION_GOLD_FREEZE_V2- commit A: 633fff1f3ce0275f4102152a6cb64198e6633ead (evidence archival freeze; 49 files)
+- commit B: finalize archival freeze record with evidence commit sha (Goal 18HB-A); SHA recorded post-creation

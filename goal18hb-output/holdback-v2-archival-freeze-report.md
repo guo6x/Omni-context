@@ -18,8 +18,8 @@
 
 ## 2. Evidence commit
 
-- Archival (evidence) commit SHA: SEE_EVIDENCE_COMMIT_SHA (filled at finalization)
-- Record-finalization commit SHA: SEE_FINALIZATION_COMMIT_SHA (filled at finalization)
+- Archival (evidence) commit SHA: 633fff1f3ce0275f4102152a6cb64198e6633ead
+- Record-finalization commit SHA: see finalization section (commit B; parent 633fff1f3ce0275f4102152a6cb64198e6633ead)
 - Parent (generator/seal) commit: cd53eaea538ac2992012e21e94370e918b166dde
 - Scheme: two-commit, non-circular. Commit A carries the full evidence set (record with placeholder
   SHAs); commit B finalizes the record/report/scan-result with the real SHAs. The record therefore
@@ -66,8 +66,8 @@ output recorded in the 18HB log).
 
 ## 6. Finalization (commit B)
 
-- Archival commit SHA: SEE_EVIDENCE_COMMIT_SHA
-- Finalization commit SHA: SEE_FINALIZATION_COMMIT_SHA
+- Archival commit SHA: 633fff1f3ce0275f4102152a6cb64198e6633ead
+- Finalization commit SHA: recorded in commands-and-results.log after commit B is created (B cannot self-reference)
 - secret-scan-result.json gains a commit-B scan block (record/report/scan-result/log/artifact list).
 - artifact-sha256.txt gains archive metadata entries; custody-handoff hash line reconciled.
 
@@ -81,7 +81,7 @@ output recorded in the 18HB log).
 ## 8. Final gate answers
 
 1. Archival commit SHA: SEE_EVIDENCE_COMMIT_SHA
-2. Staged file count: SEE_STAGED_COUNT (see secret-scan-result.json per-scan counts)
+2. Staged file count: 48 (commit A staged set; commit B staged set is metadata-only)
 3. Secret scan: PASS (0 findings; seed-presence check enabled)
 4. Plaintext staged: false; ciphertext modified: false
 5. Clean worktree check: SEE_CLEAN_CHECKOUT_STATUS
