@@ -96,7 +96,20 @@
                                         "git_status_porcelain_clean":  true,
                                         "sealed_hash_matches":  true,
                                         "node_check":  "PASS (0 failures across all .mjs)",
-                                        "secret_scan_worktree":  "PASS (54 files, 0 findings)"
+                                        "secret_scan_worktree":  "PASS (54 files, 0 findings)",
+                                        "archival_commit_check":  {
+                                                                      "status":  "PASS",
+                                                                      "commit":  "633fff1f3ce0275f4102152a6cb64198e6633ead",
+                                                                      "verified_at":  "2026-08-08T12:16:00+08:00",
+                                                                      "worktree_path":  "D:\\ai_code\\Omni-context\\.worktrees\\18hba-archive-verify-a",
+                                                                      "git_status_porcelain_clean":  true,
+                                                                      "scripts_exist":  true,
+                                                                      "reports_exist":  true,
+                                                                      "sealed_hash_matches":  true,
+                                                                      "node_check":  "PASS (0 failures across all .mjs)",
+                                                                      "secret_scan_worktree":  "PASS (54 files, 0 findings)",
+                                                                      "worktree_removed":  true
+                                                                  }
                                     },
-    "finalized_at":  "2026-08-08T12:13:06+08:00"
+    "finalized_at":  "2026-08-08T12:16:00+08:00"
 }

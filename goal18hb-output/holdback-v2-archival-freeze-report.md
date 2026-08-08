@@ -73,10 +73,10 @@ output recorded in the 18HB log).
 
 ## 7. Clean-checkout verification (after commit B)
 
-- Status: PASS (verified 2026-08-08T12:13:06+08:00)
+- Status: PASS (verified 2026-08-08T12:13:06+08:00 at finalization HEAD e5bc6e3; re-verified at the archival commit itself 633fff1 on 2026-08-08T12:16:00+08:00)
 - Verified at HEAD in a fresh `git worktree`: sealed hash identical, scripts pass `node --check`,
   required reports exist, secret scan PASS, `git status --porcelain` empty in the worktree.
-- Worktree path: D:\ai_code\Omni-context\.worktrees\18hba-archive-verify (removed after verification)
+- Worktree paths: D:\ai_code\Omni-context\.worktrees\18hba-archive-verify (HEAD e5bc6e3) and D:\ai_code\Omni-context\.worktrees\18hba-archive-verify-a (archival commit 633fff1); both removed after verification
 
 ## 8. Final gate answers
 

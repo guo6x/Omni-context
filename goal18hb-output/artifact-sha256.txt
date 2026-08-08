@@ -1,6 +1,6 @@
 # Goal 18HB - artifact-sha256.txt
-# 鐢熸垚鏃ユ湡: 2026-08-08 (Asia/Shanghai)
-# 璇存槑: 浠呭叕寮€ artifacts锛沺laintext/seed 涓嶅湪浠撳簱銆俢ustody 鍓湰鍝堝笇瑙?holdback-v2-public-manifest.json 涓?verify-seal-v2 杈撳嚭銆?
+# 閻㈢喐鍨氶弮銉︽埂: 2026-08-08 (Asia/Shanghai)
+# 鐠囧瓨妲? 娴犲懎鍙曞鈧?artifacts閿涙埠laintext/seed 娑撳秴婀禒鎾崇氨閵嗕竣ustody 閸擃垱婀伴崫鍫濈瑖鐟?holdback-v2-public-manifest.json 娑?verify-seal-v2 鏉堟挸鍤妴?
 
 sha256  holdback-v2-sealed.bin  4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3
 sha256  holdback-v2-public-manifest.json  4e4239d4170b56286eb33cd832e66c3aa1c2c2ba3bb7053e050af7c7a4319d7a
@@ -40,13 +40,13 @@ sha256  work/19f-sync-draft.md  a15e82d571ca509ad569d5ff7cf0a520a1c6518cca74d6f6
 sha256  work/custody-role-templates.md  35e0d908a6094c9bf6b71f70428ed72e7ea7d1443a3cdab7d1f97ed3d41aaa4a
 sha256  work/dummy-seal-decrypt-results.json  896a5fc3003b5d07a948a4dc9785b7be57fe75f77167309b1651a654a2849490
 
-# 绂荤嚎 custody 鍝堝笇锛堜笉鍦ㄤ粨搴撳唴锛?
+# 缁傝崵鍤?custody 閸濆牆绗囬敍鍫滅瑝閸︺劋绮ㄦ惔鎾冲敶閿?
 # holdback-v2-fixtures.jsonl  005aa51f1d030dae2019a70f2de705ac2b2a5480a9f2ce043930eef29057050a
 # holdback-v2-gold.jsonl      80ab80ecb4784f783a4ba38d5511f5f10d16452b130a006a724c39d40209e45b
-# seed.txt                   seed_hash c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1 (raw 涓嶅叕寮€)
+# seed.txt                   seed_hash c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1 (raw 娑撳秴鍙曞鈧?
 
 # Goal 18HB-A archive metadata (added at archival freeze finalization)
 sha256  scripts/archive/secret-scan.mjs  6bd7adbc49337b54573e29b0e6487a59f067b80aefef31d2492eae43f6b7304d
-sha256  secret-scan-result.json  229e7b6c5e2ca91208d222c1e7e2ee1b34b19feb3f690025cef06280fc40fdd0
-sha256  post-seal-archive-record.json  6f04fcaa309a047b15e16354377473be353f06e7d6476b8661f658b5bf9a7300
-sha256  holdback-v2-archival-freeze-report.md  43e9321f485605de02effd76fcda63c5646beac5944c4bd473b5756eca7ccb82
+sha256  secret-scan-result.json  d7fef75b763e28771257a45ec150098365fd0634bef07792f3f2f665beff8c81
+sha256  post-seal-archive-record.json  3b210017d975aa452d83465c628f9a4fe98963af911697e6a3729b9ab941b229
+sha256  holdback-v2-archival-freeze-report.md  d1048584ce3b7105fb6458771a5df03e7779b4e4dff758086177b06b84eed872
