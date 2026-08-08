@@ -19,7 +19,7 @@
 ## 2. Evidence commit
 
 - Archival (evidence) commit SHA: 633fff1f3ce0275f4102152a6cb64198e6633ead
-- Record-finalization commit SHA: see finalization section (commit B; parent 633fff1f3ce0275f4102152a6cb64198e6633ead)
+- Record-finalization commit SHA: e5bc6e3eca2e3659f57c73a7dff25501afa05163 (commit B; parent 633fff1f3ce0275f4102152a6cb64198e6633ead; recorded here because a commit cannot embed its own SHA)
 - Parent (generator/seal) commit: cd53eaea538ac2992012e21e94370e918b166dde
 - Scheme: two-commit, non-circular. Commit A carries the full evidence set (record with placeholder
   SHAs); commit B finalizes the record/report/scan-result with the real SHAs. The record therefore
@@ -67,16 +67,16 @@ output recorded in the 18HB log).
 ## 6. Finalization (commit B)
 
 - Archival commit SHA: 633fff1f3ce0275f4102152a6cb64198e6633ead
-- Finalization commit SHA: recorded in commands-and-results.log after commit B is created (B cannot self-reference)
+- Finalization commit SHA: e5bc6e3eca2e3659f57c73a7dff25501afa05163 (commit B; verification-record commit C carries this report's final version)
 - secret-scan-result.json gains a commit-B scan block (record/report/scan-result/log/artifact list).
 - artifact-sha256.txt gains archive metadata entries; custody-handoff hash line reconciled.
 
 ## 7. Clean-checkout verification (after commit B)
 
-- Status: SEE_CLEAN_CHECKOUT_STATUS
+- Status: PASS (verified 2026-08-08T12:13:06+08:00)
 - Verified at HEAD in a fresh `git worktree`: sealed hash identical, scripts pass `node --check`,
   required reports exist, secret scan PASS, `git status --porcelain` empty in the worktree.
-- Worktree path: SEE_WORKTREE_PATH
+- Worktree path: D:\ai_code\Omni-context\.worktrees\18hba-archive-verify (removed after verification)
 
 ## 8. Final gate answers
 
@@ -84,7 +84,7 @@ output recorded in the 18HB log).
 2. Staged file count: 48 (commit A staged set; commit B staged set is metadata-only)
 3. Secret scan: PASS (0 findings; seed-presence check enabled)
 4. Plaintext staged: false; ciphertext modified: false
-5. Clean worktree check: SEE_CLEAN_CHECKOUT_STATUS
+5. Clean worktree check: PASS (git status --porcelain empty; sealed.bin hash identical 4737bc77...; node --check 0 failures; JSON parse 0 failures; secret scan PASS 54 files / 0 findings; worktree removed after verification)
 6. Validation gold freeze: PENDING_VALIDATION_GOLD_FREEZE_V2 (3ceddb1a... untouched)
 7. Goal 20: WAITING_FOR_HR1_AND_VALIDATION_FREEZE
 8. Holdback access: never decrypted; plaintext never read beyond custody hash verification

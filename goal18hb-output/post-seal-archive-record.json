@@ -86,16 +86,17 @@
                   "formal-experiment-freeze-manifest.json validation_fixture_sha256 (3ceddb1a...) intentionally left untouched; owned by the Goal 18H final freeze (VALIDATION_GOLD_FREEZE_V2).",
                   "Custody seed re-verified at archival time: trimmed seed sha256 equals the public seed hash c627039c... (raw seed never printed).",
                   "artifact-sha256.txt line for holdback-v2-custody-handoff-pending.md reconciled to the current file hash (TBD fields were filled after the original hash list was written).",
-                  "No regeneration, no re-seal, no plaintext access, no decryption, no model/kernel/scorer run performed for this archival freeze."
+                  "No regeneration, no re-seal, no plaintext access, no decryption, no model/kernel/scorer run performed for this archival freeze.",
+                  "Clean-checkout verification at HEAD (commit B) recorded in this record; verification results captured in commit C (this commit)."
               ],
     "clean_checkout_verification":  {
-                                        "status":  "PENDING",
-                                        "verified_at":  null,
-                                        "worktree_path":  null,
-                                        "git_status_porcelain_clean":  null,
-                                        "sealed_hash_matches":  null,
-                                        "node_check":  null,
-                                        "secret_scan_worktree":  null
+                                        "status":  "PASS",
+                                        "verified_at":  "2026-08-08T12:13:06+08:00",
+                                        "worktree_path":  "D:\\ai_code\\Omni-context\\.worktrees\\18hba-archive-verify",
+                                        "git_status_porcelain_clean":  true,
+                                        "sealed_hash_matches":  true,
+                                        "node_check":  "PASS (0 failures across all .mjs)",
+                                        "secret_scan_worktree":  "PASS (54 files, 0 findings)"
                                     },
-    "finalized_at":  "2026-08-08T12:20:00+08:00"
+    "finalized_at":  "2026-08-08T12:13:06+08:00"
 }

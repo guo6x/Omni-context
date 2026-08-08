@@ -44,3 +44,9 @@ sha256  work/dummy-seal-decrypt-results.json  896a5fc3003b5d07a948a4dc9785b7be57
 # holdback-v2-fixtures.jsonl  005aa51f1d030dae2019a70f2de705ac2b2a5480a9f2ce043930eef29057050a
 # holdback-v2-gold.jsonl      80ab80ecb4784f783a4ba38d5511f5f10d16452b130a006a724c39d40209e45b
 # seed.txt                   seed_hash c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1 (raw 涓嶅叕寮€)
+
+# Goal 18HB-A archive metadata (added at archival freeze finalization)
+sha256  scripts/archive/secret-scan.mjs  6bd7adbc49337b54573e29b0e6487a59f067b80aefef31d2492eae43f6b7304d
+sha256  secret-scan-result.json  229e7b6c5e2ca91208d222c1e7e2ee1b34b19feb3f690025cef06280fc40fdd0
+sha256  post-seal-archive-record.json  6f04fcaa309a047b15e16354377473be353f06e7d6476b8661f658b5bf9a7300
+sha256  holdback-v2-archival-freeze-report.md  43e9321f485605de02effd76fcda63c5646beac5944c4bd473b5756eca7ccb82
