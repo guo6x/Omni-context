@@ -37,7 +37,8 @@ export function loadHoldbackFull() {
   // env path during pre-seal auditing). Never read the V1 custody dir.
   const explicit = process.env.HOLDBACK_V2_FIXTURES;
   const repoPath = path.join(path.resolve(here, '..'), 'holdback-v2-fixtures.jsonl');
-  const candidates = [explicit, repoPath, 'C:/Users/00/.codex/goal18hb-holdback-custody/holdback-fixtures.jsonl'].filter(Boolean);
+  const workPath = path.join(path.resolve(here, '..'), 'work', 'holdback-fixtures.jsonl');
+  const candidates = [explicit, repoPath, workPath, 'C:/Users/00/.codex/goal18hb-holdback-custody/holdback-v2-fixtures.jsonl'].filter(Boolean);
   const found = candidates.find((c) => fs.existsSync(c));
   if (!found) throw new Error('holdback fixtures unavailable: repo plaintext sealed and custody copy not found');
   const raw = fs.readFileSync(found, 'utf8').replace(/^\uFEFF/, '');

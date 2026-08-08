@@ -1,0 +1,498 @@
+{
+  "meta": {
+    "goal": "18HB",
+    "task": "Goal 19F formal experiment configuration: holdback-reference map for the strictly-allowlisted Holdback V2 sync",
+    "spec_allowlist": [
+      "holdback public manifest identity (path/schema)",
+      "sample count",
+      "schema hash",
+      "fixture hash",
+      "seal hash",
+      "replacement note"
+    ],
+    "spec_no_change": [
+      "model",
+      "prompts",
+      "A0-A5 definitions",
+      "scorer",
+      "product",
+      "evaluator",
+      "validation protocol",
+      "hypothesis",
+      "metrics",
+      "budgets",
+      "authorization template"
+    ],
+    "constraints_honored": [
+      "READ-ONLY on goal19f-output and goal18-output; no goal19f-output file modified",
+      "C:\\Users\\00\\.codex\\goal18-holdback-custody\\ never listed, read, or opened",
+      "holdback-fixtures.jsonl never read (path string seen only as metadata in holdback-public-manifest.json)",
+      "holdback-sealed.bin not opened (only its sha256/cipher metadata from manifests)"
+    ],
+    "generated_at": "2026-08-08",
+    "note": "new_value=TBD_AFTER_SEAL on UPDATE rows; allowed_by_spec=false UPDATE rows are SPEC_GAP items requiring lead sign-off before the sync may touch them."
+  },
+  "summary": {
+    "total_fields": 49,
+    "update": 12,
+    "update_allowlisted": 10,
+    "update_spec_gap": 2,
+    "no_change": 37,
+    "no_change_allowlisted_but_unchanged": 3
+  },
+  "fields": [
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "datasets.prohibited[1]",
+      "line": 382,
+      "current_value": "goal18 holdback (plaintext never decrypted; public manifest is metadata only)",
+      "action": "NO_CHANGE",
+      "reason": "Policy prohibition text; not a sealed value; remains true for Holdback V2 (plaintext still never decrypted, public manifest still metadata-only).",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.note",
+      "line": 399,
+      "current_value": "metadata only — read from manifests; validation fixtures/holdback plaintext never loaded by this goal or the harness",
+      "action": "NO_CHANGE",
+      "reason": "Metadata-only policy note; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.holdback_public_manifest.file",
+      "line": 418,
+      "current_value": "goal18-output/holdback-public-manifest.json",
+      "action": "UPDATE",
+      "reason": "§17 allowlist item 1 (holdback public manifest identity - path). Must point at the V2 manifest after seal.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.holdback_public_manifest.schema",
+      "line": 419,
+      "current_value": "holdback-seal-manifest-v2",
+      "action": "UPDATE",
+      "reason": "§17 allowlist item 1 (holdback public manifest identity - schema). Reflects the V2 schema version after seal.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.holdback_public_manifest.holdback_fixture_sha256",
+      "line": 420,
+      "current_value": "f3a69fcd2d0167dafa8d6debd8ccb0b4893434a80811f96d6241f4feb668ba4a",
+      "action": "UPDATE",
+      "reason": "§17 allowlist item 4 (fixture hash). New V2 fixture set changes this hash.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.holdback_public_manifest.sealed_artifact.file",
+      "line": 422,
+      "current_value": "goal18-output/holdback-sealed.bin",
+      "action": "UPDATE",
+      "reason": "§17 allowlist item 1 (manifest identity - path of the sealed artifact referenced by the manifest). New V2 sealed artifact; exact filename TBD (same name if overwritten in place, else v2 name).",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.holdback_public_manifest.sealed_artifact.sha256",
+      "line": 423,
+      "current_value": "f0d08a12731299fd0246492babc2edd118a08c836588ad0aa841b84543333ea3",
+      "action": "UPDATE",
+      "reason": "§17 allowlist item 5 (seal hash). New V2 seal produces a new artifact hash.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.holdback_public_manifest.sealed_artifact.cipher",
+      "line": 424,
+      "current_value": "AES-256-GCM",
+      "action": "NO_CHANGE",
+      "reason": "Not on the §17 allowlist. AES-256-GCM expected to remain; change only with explicit lead sign-off.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.holdback_public_manifest.seed_hash",
+      "line": 426,
+      "current_value": "0f898583f08b4aeaab5bf334224582c4144eeec581612bace4e7345b770909cf",
+      "action": "UPDATE",
+      "reason": "SPEC_GAP: seed hash is NOT on the §17 allowlist, but a V2 fixture set necessarily has a new seed. Requires explicit lead scope approval before the sync may touch it.",
+      "allowed_by_spec": false,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.holdback_public_manifest.sha256_of_manifest",
+      "line": 427,
+      "current_value": "d433bfa5edd9a10d361dd478a3b4a68a4e8271766b17e07f0c7976d6bdbb0fd8",
+      "action": "UPDATE",
+      "reason": "SPEC_GAP: hash of the manifest file itself; necessarily changes when the V2 manifest replaces v1. Not explicitly listed in §17; treat as covered by manifest identity or obtain explicit scope extension.",
+      "allowed_by_spec": false,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.benchmark_schema.sha256",
+      "line": 431,
+      "current_value": "aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4",
+      "action": "NO_CHANGE",
+      "reason": "§17 allowlist item 3 (schema hash) - permitted to change, but expected to stay identical: decision-benchmark-v2 schema is shared with validation and V2 is expected to reuse it. UPDATE only if the V2 seal references a different schema.",
+      "allowed_by_spec": true
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "goal18_integrity.access_policy",
+      "line": 437,
+      "current_value": "formal runs never read validation fixture/gold content or holdback plaintext; only the hashes above are used for integrity gates",
+      "action": "NO_CHANGE",
+      "reason": "Policy statement (hashes-only integrity gates); not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "budget_estimates.holdback.samples",
+      "line": 471,
+      "current_value": "TBD (target 180 per D-08)",
+      "action": "UPDATE",
+      "reason": "§17 allowlist item 2 (sample count). Replace the \"TBD (target 180 per D-08)\" placeholder with the actual V2 count after seal.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "budget_estimates.holdback.arms",
+      "line": 472,
+      "current_value": 6,
+      "action": "NO_CHANGE",
+      "reason": "Budget/design field; arms matrix fixed at 6 arms; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "budget_estimates.holdback.max_attempts",
+      "line": 473,
+      "current_value": 3,
+      "action": "NO_CHANGE",
+      "reason": "Budget/design field; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "budget_estimates.holdback.formula",
+      "line": 474,
+      "current_value": "samples x arms x attempts x tokens_per_call x price_per_token",
+      "action": "NO_CHANGE",
+      "reason": "Budget formula; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "budget_estimates.holdback.estimated_cost_cny",
+      "line": 475,
+      "current_value": null,
+      "action": "NO_CHANGE",
+      "reason": "Budget estimate (null until provider pricing); §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "budget_estimates.holdback.note",
+      "line": 476,
+      "current_value": "single sealed pass; finalized before holdback ceremony; fits within ¥220",
+      "action": "NO_CHANGE",
+      "reason": "Budget note; the §17 \"replacement note\" item refers to the V2 manifest replacement note, not this field.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "remote_data_processing.prohibited[6]",
+      "line": 493,
+      "current_value": "holdback custody/seal secrets",
+      "action": "NO_CHANGE",
+      "reason": "Policy prohibition (holdback custody/seal secrets never sent); not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-config-v1.json",
+      "json_path": "remote_data_processing.holdback_rule",
+      "line": 495,
+      "current_value": "only benchmark sample content necessary for inference may be sent during the two-person ceremony",
+      "action": "NO_CHANGE",
+      "reason": "Data-egress policy for the two-person ceremony; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-experiment-freeze-manifest.json",
+      "json_path": "blocker_status.B1.decided.remote_processing",
+      "line": 19,
+      "current_value": "approved for synthetic/anonymized benchmark inputs + frozen prompt/context only; holdback custody/seal secrets never sent",
+      "action": "NO_CHANGE",
+      "reason": "Owner-decision policy text; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-experiment-freeze-manifest.json",
+      "json_path": "datasets.goal18.holdback",
+      "line": 83,
+      "current_value": "NOT RUN; plaintext never decrypted; public manifest metadata only",
+      "action": "NO_CHANGE",
+      "reason": "Dataset status text; remains true for V2 (\"NOT RUN; plaintext never decrypted; public manifest metadata only\"). Not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-experiment-freeze-manifest.json",
+      "json_path": "goal18_integrity.holdback_public_manifest",
+      "line": 130,
+      "current_value": "goal18-output/holdback-public-manifest.json (schema holdback-seal-manifest-v2; fixture sha256 f3a69fcd...; sealed artifact f0d08a12...)",
+      "action": "UPDATE",
+      "reason": "Compact string embedding §17 allowlist items 1/4/5 (manifest path+schema identity, fixture hash, seal hash). Must be rewritten to the V2 values after seal.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "formal-experiment-freeze-manifest.json",
+      "json_path": "goal18_integrity.benchmark_schema_sha256",
+      "line": 131,
+      "current_value": "aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4",
+      "action": "NO_CHANGE",
+      "reason": "§17 allowlist item 3 (schema hash) - permitted to change, but expected identical unless V2 references a new schema.",
+      "allowed_by_spec": true
+    },
+    {
+      "file": "formal-experiment-freeze-manifest.json",
+      "json_path": "goal18_integrity.note",
+      "line": 132,
+      "current_value": "metadata only; validation/holdback content never loaded",
+      "action": "NO_CHANGE",
+      "reason": "Metadata-only policy note; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-experiment-freeze-manifest.json",
+      "json_path": "model_identity.validation_holdback_estimates.status",
+      "line": 163,
+      "current_value": "TBD provider pricing; must be finalized within ¥220 before the first formal call",
+      "action": "NO_CHANGE",
+      "reason": "Budget status text; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-experiment-freeze-manifest.json",
+      "json_path": "model_identity.validation_holdback_estimates.validation",
+      "line": 164,
+      "current_value": "120 samples x 6 arms x attempts x tokens x price",
+      "action": "NO_CHANGE",
+      "reason": "Validation estimate (120 samples) - not holdback and not on the allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-experiment-freeze-manifest.json",
+      "json_path": "model_identity.validation_holdback_estimates.holdback",
+      "line": 165,
+      "current_value": "single sealed pass; samples TBD (target 180 per D-08)",
+      "action": "UPDATE",
+      "reason": "Embeds §17 allowlist item 2 (sample count placeholder \"TBD (target 180 per D-08)\"). Replace with actual V2 count after seal.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "approved_main_model.role",
+      "line": 12,
+      "current_value": "primary reasoning model for formal validation (A0-A5) and the later authorized sealed holdback",
+      "action": "NO_CHANGE",
+      "reason": "Model role text; §17 says model = NO_CHANGE; statement stays true for the V2 holdback pass.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "budget_cny.rules[1]",
+      "line": 38,
+      "current_value": "validation and holdback budgets are estimated and recorded separately (see budget_estimates)",
+      "action": "NO_CHANGE",
+      "reason": "Budget rule; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "budget_estimates.validation.note",
+      "line": 49,
+      "current_value": "estimate must be finalized from provider pricing BEFORE the validation run; if validation + holdback estimates exceed ¥220, stop and report the gap",
+      "action": "NO_CHANGE",
+      "reason": "Budget note (validation); §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "budget_estimates.holdback.samples",
+      "line": 52,
+      "current_value": "TBD (target 180 per D-08; holdback-public-manifest counts.total is null pending dataset freeze)",
+      "action": "UPDATE",
+      "reason": "§17 allowlist item 2 (sample count). Replace the \"TBD (target 180 per D-08)\" placeholder with the actual V2 count after seal.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "budget_estimates.holdback.arms",
+      "line": 53,
+      "current_value": 6,
+      "action": "NO_CHANGE",
+      "reason": "Budget/design field; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "budget_estimates.holdback.max_attempts",
+      "line": 54,
+      "current_value": 3,
+      "action": "NO_CHANGE",
+      "reason": "Budget/design field; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "budget_estimates.holdback.formula",
+      "line": 55,
+      "current_value": "samples x arms x attempts x tokens_per_call x price_per_token",
+      "action": "NO_CHANGE",
+      "reason": "Budget formula; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "budget_estimates.holdback.estimated_cost_cny",
+      "line": 56,
+      "current_value": null,
+      "action": "NO_CHANGE",
+      "reason": "Budget estimate (null until pricing); §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "budget_estimates.holdback.note",
+      "line": 57,
+      "current_value": "single sealed pass; estimate finalized before the holdback ceremony; must fit within the ¥220 total cap",
+      "action": "NO_CHANGE",
+      "reason": "Budget note; §17 \"replacement note\" refers to the V2 manifest note, not this field.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "remote_data_processing.prohibited[6]",
+      "line": 76,
+      "current_value": "holdback custody secrets, seed, decryption material, or authorization keys",
+      "action": "NO_CHANGE",
+      "reason": "Policy prohibition; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "remote_data_processing.holdback_rule",
+      "line": 78,
+      "current_value": "when the holdback is later executed under a formal two-person ceremony, ONLY the benchmark sample content necessary for model inference may be sent; custody/seal secrets must never be sent",
+      "action": "NO_CHANGE",
+      "reason": "Two-person ceremony egress policy; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "next_steps[0]",
+      "line": 108,
+      "current_value": "record provider pricing and finalize validation/holdback estimates within ¥220 before any formal call",
+      "action": "NO_CHANGE",
+      "reason": "Next-step text about finalizing estimates; §17 says budgets = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "model-and-budget-owner-decision.json",
+      "json_path": "next_steps[2]",
+      "line": 110,
+      "current_value": "formal run order: validation (120) then single sealed holdback ceremony",
+      "action": "NO_CHANGE",
+      "reason": "Run-order plan text (\"validation (120) then single sealed holdback ceremony\"); remains true; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-authorization-template.json",
+      "json_path": "frozen.model.note",
+      "line": 145,
+      "current_value": "owner-approved: DeepSeek V4 Flash (deepseek-v4-flash) as the single main model for A0-A5 + validation + sealed holdback; actual returned model identity/version must be recorded at run start and must match the frozen id, else the run is invalid (MODEL_IDENTITY_MISMATCH). max_output_tokens/snapshot_date/serving_version_hash are placeholders to be replaced with the values recorded at provider confirmation before this authorization is sealed.",
+      "action": "NO_CHANGE",
+      "reason": "Authorization-template model note; §17 explicitly lists authorization template = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "formal-run-authorization-template.json",
+      "json_path": "frozen.model.remote_processing",
+      "line": 157,
+      "current_value": "approved for synthetic/anonymized benchmark inputs + frozen prompt/context only; holdback custody/seal secrets never sent",
+      "action": "NO_CHANGE",
+      "reason": "Authorization-template egress policy; §17 explicitly lists authorization template = NO_CHANGE.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "prompt-byte-manifest.json",
+      "json_path": "provenance.validation_holdback_note",
+      "line": 10,
+      "current_value": "The frozen per-arm prompt sets are split-independent: validation and holdback use the SAME prompts per arm. No holdback-specific wording exists or may be added (spec §4); prompt hashes must match this manifest for every formal split.",
+      "action": "NO_CHANGE",
+      "reason": "Prompt policy note; §17 explicitly lists prompts = NO_CHANGE (note itself forbids holdback-specific wording, which stays true for V2).",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "unresolved-formal-run-risks.md",
+      "json_path": "R-HOLD-1 (single-use integrity)",
+      "line": "72-78",
+      "current_value": "## R-HOLD-1 — Holdback single-use integrity  - What: the holdback must be used exactly once at the end; accidental exposure   would invalidate the paper's confirmatory claim. - Mitigation: this goal and the harness never load goal18 validation/holdback   fixtures; dataset manifests cover only development/regression; the harness   rejects missing/mismatched fixture paths.",
+      "action": "NO_CHANGE",
+      "reason": "Risk-register entry; risk and mitigation remain true for V2 (harness never loads holdback content); not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "unresolved-formal-run-risks.md",
+      "json_path": "R-BUDGET-1 (holdback sentence)",
+      "line": 107,
+      "current_value": "  confirmed; validation (120) and holdback (TBD, target 180) cost estimates are",
+      "action": "UPDATE",
+      "reason": "Embeds §17 allowlist item 2 (sample-count placeholder \"holdback (TBD, target 180)\"). Replace with actual V2 count after seal.",
+      "allowed_by_spec": true,
+      "new_value": "TBD_AFTER_SEAL"
+    },
+    {
+      "file": "dry-run-report.md",
+      "json_path": "constraints-honored (holdback sentence)",
+      "line": "6-7",
+      "current_value": "validation/holdback NOT run, NOT inspected (only public manifest hashes read); holdback plaintext never decrypted; scorer v1.1 untouched; no kernel tuning",
+      "action": "NO_CHANGE",
+      "reason": "Historical preflight report of what was already executed; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "dry-run-report.md",
+      "json_path": "authorization-refusal test description",
+      "line": 72,
+      "current_value": "- **Authorization refusal**: holdback/formal split without a valid authorization",
+      "action": "NO_CHANGE",
+      "reason": "Historical test description; not on the §17 allowlist.",
+      "allowed_by_spec": false
+    },
+    {
+      "file": "N/A (no Goal 19F field)",
+      "json_path": "N/A - replacement note",
+      "line": "N/A",
+      "current_value": "absent",
+      "action": "NO_CHANGE",
+      "reason": "§17 allowlist item 6 (replacement note) is carried by the V2 manifest itself; no Goal 19F file contains a replacement-note field, so nothing to sync.",
+      "allowed_by_spec": true
+    }
+  ]
+}

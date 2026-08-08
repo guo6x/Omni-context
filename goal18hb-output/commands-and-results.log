@@ -1,0 +1,64 @@
+# Goal 18HB · Commands and Results Log
+
+生成日期：2026-08-08（Asia/Shanghai）。本日志覆盖 Goal 18HB 全流程（旧 holdback 退役 → Holdback V2 生成/审计/封存/验证/19F 同步）。raw seed 从未出现在本日志或任何命令中（只出现 seed hash）。
+
+## 阶段 0 · 旧 Holdback 退役（Goal 18HB §三）
+- 命令：`node goal18hb-output/scripts/retire/...`（退役记录落盘）
+- 结果：`legacy-holdback-retirement-record.json`；状态 `RETIRED_BEFORE_EVALUATION`；未解密/未读取 V1 plaintext/custody；V1 sealed 产物保留为审计证据。
+
+## 阶段 1 · Generator 修复与冻结（§五）
+- 根因：`builders-tt11-15.mjs` TT15 `ev002.supports=["hc1"]`（generator 级 RI-02 dangling ref，与 VALIDATION_GOLD_FREEZE_V1.1 数据修复一致）。
+- 修复：`supports` → `[]`；`generate.mjs` 增加 `--seed-file`/`--out-dir`（seed 永不上命令行）。
+- 冻结：branch `research/decision-benchmark-holdback-v2` @ `cd53eaea538ac2992012e21e94370e918b166dde`（goal18-generator/v2.1.0）。
+- 身份记录：`holdback-v2-generator-identity.json`（8 个源文件 SHA-256 + git blob hashes + schema hashes）。
+
+## 阶段 2 · Determinism（§十二）
+- 命令：`node generate.mjs --split holdback --tag holdback --seed-file work/dummy-seed-1.txt --out-dir work/dummy-hb-run{1,2,3}`（dummy seed 非正式）
+- 结果：3/3 byte-identical；SHA-256 `4a1f820ee7b651af8445da5bad967d948ba1136b30818fbd8d7d5da7e1524158`。
+
+## 阶段 3 · 正式 seed + 生成（§四/十三）
+- seed：`crypto.randomBytes(32)`，离线生成于 `C:/Users/00/.codex/goal18hb-holdback-custody/seed.txt`；从未打印/入库/入日志。seed hash `c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1`。
+- 生成（正式，仅一次）：
+  - `node generate.mjs --split holdback --tag holdback --seed-file <offline seed> --out-dir D:\ai_code\Omni-context\goal18hb-output\work`
+  - 结果：180 samples = 15×12；source types 72/54/36/18（40/30/20/10）；plaintext `work/holdback-fixtures.jsonl`（836,621 bytes）。
+- 公开记录：`holdback-v2-seed-record-public.json`（仅 hash/identifier）；`holdback-v2-run-auth.json`（seed_hash uppercase，signature pending custodian）。
+
+## 阶段 4 · Pre-seal 审计
+- RI audit（§六）：`node holdback-v2-ri-audit.mjs ...` → ERROR=0；INFO 89（RI-03 ×77、RI-04 ×12 逐条 justification）；输出 `holdback-v2-referential-integrity.json`（1:16:31）。
+- Coverage（§九）：`node holdback-v2-coverage.mjs --fixtures <formal> --out goal18hb-output` → PASS：180 = 15×12，plan mismatches 0；`holdback-v2-coverage-matrix.csv` + `holdback-v2-coverage-report.md`（1:18:12）。
+- Integrity suite pre-seal：`node --test goal18hb-output/benchmark-integrity-tests/integrity.test.mjs` → 17/18（唯一失败 T15，seal 产物未生成，符合预期）。
+- Overlap（§十）：`node holdback-v2-overlap.mjs --fixtures <formal> --spec-dir D:\ai_code\Omni-context-decision-kernel-v1\goal14-output --validation-dir D:\ai_code\Omni-context\goal18-output --out goal18hb-output`（1:27:12）→ `exact_overlap = 0`（27,900 对）；诊断：decision_question_hash 10 对（TT15 模板层）、option_set_hash 10 对（TT03/04/09）、near-dupe ≥0.5 共 6 对（max 0.529）——均为模板层身份重合，场景/时间线全部不同，非样本复制。
+- Leakage（§十一）：`node holdback-v2-leakage.mjs --fixtures <formal> --out goal18hb-output`（1:28:33）→ `gold_leakage_findings = 0`（2,817 个可见字段值）。
+- Dummy seal/decrypt（§二十）：`node scripts/seal/dummy-seal-decrypt-test.mjs` → 5/5 PASS（round-trip byte-identical + wrong-seed 拒绝）。
+
+## 阶段 5 · Seal（§十四）
+- 命令：`node scripts/seal/seal-holdback-v2.mjs --fixtures goal18hb-output\work\holdback-fixtures.jsonl --seed-file <offline> --custody-dir C:\Users\00\.codex\goal18hb-holdback-custody --out holdback-v2-sealed.bin --manifest-out holdback-v2-public-manifest.json --access-log holdback-v2-access-log.jsonl --auth holdback-v2-run-auth.json --schema-sha256 aad31f90... --generator-commit cd53eaea... --generator-version goal18-generator/v2.1.0 --ri-audit-sha256 18102ccc... --integrity-suite-sha256 47f643b1... --policy-version "decision-policy-rules-v1 (Goal 13) / invariants-v1" --actor goal18hb-seal-agent`（1:31:33）
+- 结果：SEAL_EXIT=0；plaintext `005aa51f...`、gold `80ab80ec...`、seed hash `c627039c...`、sealed `4737bc77...`；plaintext 移至离线 custody，仓库副本删除。
+- 注：首次运行暴露 seal 脚本 auth 检查逻辑反转（误把“显式禁止 run_models”当作拒绝条件），已修复并重跑；无副作用（首次运行未写任何文件）。
+
+## 阶段 6 · Post-seal 验证
+- `node benchmark-integrity-tests/verify-seal-v2.mjs --custody-dir C:\Users\00\.codex\goal18hb-holdback-custody` → **PASS（34/34）**；正式 V2 未 test-decrypt。
+- Integrity suite post-seal（`HOLDBACK_V2_FIXTURES=C:/Users/00/.codex/goal18hb-holdback-custody/holdback-v2-fixtures.jsonl`）：`node --test ...` → **18/18 PASS**。
+- `fixture-sha256.txt` 更新为 V2 哈希（V1 哈希保留注释）。
+
+## 阶段 7 · 19F 元数据同步（§十七）
+- `work/19f-holdback-refs.json`（49 条引用映射，12 UPDATE / 37 NO_CHANGE）+ `work/19f-sync-draft.md`。
+- 落地：formal-run-config-v1.json（8 处）、formal-experiment-freeze-manifest.json（2 处）、model-and-budget-owner-decision.json（1 处）、unresolved-formal-run-risks.md（1 处）。
+- 记录：`formal-config-holdback-v2-sync-report.md`（含 2 个 SPEC_GAP 的解释决策与 scope 外观察）。
+
+## 阶段 8 · 收尾
+- 本报告：`holdback-v2-integrity-report.md`、`holdback-v2-semantic-integrity.json`、`generator-determinism-report.md`、`holdback-v2-seal-report.md`、`goal20-gate-status.json`、`artifact-sha256.txt`、`holdback-v2-custody-handoff-pending.md`（TBD 已填）。
+- 结论：机器侧全部 PASS；终端状态 `HOLDBACK_V2_READY_WITH_CUSTODY_PENDING`；Goal 20 等待人工评审。
+
+## 纪律确认
+- 未运行 Kernel / A0–A5 / scorer evaluation；未访问 V1 custody；未打印 raw seed；未将 plaintext 复制进任何 markdown/聊天/报告；审计脚本只输出 counts/IDs/hashes/结构违规。
+## Phase 9 - Post-seal archival freeze (Goal 18HB-A)
+- command: node goal18hb-output/scripts/archive/secret-scan.mjs --repo-root D:\ai_code\Omni-context --seed-file <offline custody seed> --expected-seed-hash c627039c... --label commit-a --out goal18hb-output/secret-scan-result.json
+- result: PASS; findings=0; seed presence checked in-memory; raw seed never printed/staged
+- custody re-verify (hash only): seed trimmed sha256 == c627039c...; fixture 005aa51f...; gold 80ab80ec...
+- staged: explicit list only (git add -f for *.log and holdback-v2-sealed.bin); excluded dummy seed / dummy runs / proxies / duplicate RI json
+- artifact-sha256.txt: reconciled holdback-v2-custody-handoff-pending.md hash (TBD filled post-seal) -> 71ac215c...
+- commit A: benchmark(holdback-v2): post-seal evidence archival freeze (Goal 18HB-A)
+- commit B: benchmark(holdback-v2): finalize archival freeze record with evidence commit sha (Goal 18HB-A)
+- clean-checkout verification: fresh git worktree at HEAD; sealed hash identical; node --check PASS; secret scan PASS; git status --porcelain empty
+- final status: HOLDBACK_V2_ARCHIVAL_FREEZE_COMPLETE; Goal20 = WAITING_FOR_HR1_AND_VALIDATION_FREEZE; VALIDATION_GOLD_FREEZE = PENDING_VALIDATION_GOLD_FREEZE_V2

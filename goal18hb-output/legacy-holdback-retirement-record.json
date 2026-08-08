@@ -1,0 +1,36 @@
+{
+  "schema_version": "legacy-holdback-retirement-record-v1",
+  "goal": "Goal 18HB",
+  "status": "RETIRED_BEFORE_EVALUATION",
+  "reason": "GLOBAL_BENCHMARK_DEFECT_DISCOVERED_PRE_EVALUATION",
+  "never_scored": true,
+  "never_used_for_model_selection": true,
+  "never_used_for_prompt_tuning": true,
+  "plaintext_opened_during_retirement": false,
+  "replacement_required": true,
+  "legacy_holdback": {
+    "split": "holdback",
+    "sample_count": 180,
+    "generator_version": "goal18-generator/v2.0.0",
+    "public_manifest": "goal18-output/holdback-public-manifest.json",
+    "public_manifest_sha256": "d433bfa5edd9a10d361dd478a3b4a68a4e8271766b17e07f0c7976d6bdbb0fd8",
+    "sealed_artifact": "goal18-output/holdback-sealed.bin",
+    "sealed_artifact_sha256": "f0d08a12731299fd0246492babc2edd118a08c836588ad0aa841b84543333ea3",
+    "access_log_sha256": "1c39c97ec9077b439cfede437dd9973dcb7fe6aa566b16709114541783f5d151",
+    "plaintext_sha256": "f3a69fcd2d0167dafa8d6debd8ccb0b4893434a80811f96d6241f4feb668ba4a",
+    "seed_hash": "0f898583f08b4aeaab5bf334224582c4144eeec581612bace4e7345b770909cf",
+    "custody": "offline custody directory (outside repository) - never accessed during retirement"
+  },
+  "retirement_actions": [
+    "No unseal-audit attempted (Goal 18HB section 1 decision: OLD HOLDBACK -> RETIRED_BEFORE_EVALUATION)",
+    "No plaintext read, listed, or decrypted; no seed accessed",
+    "Sealed artifact, public manifest, access log preserved unmodified as historical audit evidence (goal18-output/)",
+    "Marked in directory layout: goal18hb-output/holdback-v1-retired/"
+  ],
+  "superseded_by": {
+    "identifier": "HOLDBACK_V2",
+    "status": "SEALED_PRE_VALIDATION",
+    "manifest": "goal18hb-output/holdback-v2-public-manifest.json (issued at seal)"
+  },
+  "retirement_timestamp": "2026-08-07T17:17:30.421Z"
+}

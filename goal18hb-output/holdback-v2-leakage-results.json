@@ -1,0 +1,98 @@
+{
+  "generated_at": "2026-08-07T17:28:33.504Z",
+  "command": "node holdback-v2-leakage.mjs --fixtures D:\\ai_code\\Omni-context\\goal18hb-output\\work\\holdback-fixtures.jsonl --out D:\\ai_code\\Omni-context\\goal18hb-output",
+  "fixtures": {
+    "path": "D:\\ai_code\\Omni-context\\goal18hb-output\\work\\holdback-fixtures.jsonl",
+    "count": 180
+  },
+  "scanned_fields": {
+    "scenario.prompt": {
+      "values": 180,
+      "findings": 0
+    },
+    "scenario.distractor_variables": {
+      "values": 47,
+      "findings": 0
+    },
+    "decision_question": {
+      "values": 180,
+      "findings": 0
+    },
+    "goal.text": {
+      "values": 180,
+      "findings": 0
+    },
+    "memory_timeline[].content": {
+      "values": 751,
+      "findings": 0
+    },
+    "candidates[].label": {
+      "values": 379,
+      "findings": 0
+    },
+    "candidates[].description": {
+      "values": 379,
+      "findings": 0
+    },
+    "hard_constraints[].text": {
+      "values": 36,
+      "findings": 0
+    },
+    "soft_preferences[].text": {
+      "values": 36,
+      "findings": 0
+    },
+    "evidence.qualified[].fact": {
+      "values": 402,
+      "findings": 0
+    },
+    "evidence.expired[].fact": {
+      "values": 26,
+      "findings": 0
+    },
+    "evidence.conflicting[].fact": {
+      "values": 27,
+      "findings": 0
+    },
+    "historical_decision.question": {
+      "values": 84,
+      "findings": 0
+    },
+    "historical_decision.conclusion": {
+      "values": 84,
+      "findings": 0
+    },
+    "execution_outcome.actual_outcome": {
+      "values": 24,
+      "findings": 0
+    }
+  },
+  "findings_by_category": {
+    "gold_field_name": {
+      "findings": 0
+    },
+    "action_code": {
+      "findings": 0
+    },
+    "answer_marker": {
+      "findings": 0
+    },
+    "failure_label_or_rule_id": {
+      "findings": 0
+    },
+    "scorer_metric": {
+      "findings": 0
+    },
+    "model_name": {
+      "findings": 0
+    },
+    "split_or_result_marker": {
+      "findings": 0
+    },
+    "result_hint": {
+      "findings": 0
+    }
+  },
+  "gold_leakage_findings": 0,
+  "findings": []
+}

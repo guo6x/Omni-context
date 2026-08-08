@@ -1,3 +1,8 @@
+# Decision Benchmark v2 - frozen fixture hashes (Goal 18 / Goal 18HB)
+# validation hashes: bound by VALIDATION_GOLD_FREEZE_V1.1 (goal18-output/validation-manifest.json)
 sha256  validation-set.jsonl  59e924631934a8712f05daedc269c4f27791bf86b97ed11fa5f1af0bdb3cbf34
 sha256  validation-gold.jsonl  763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed
-sha256  holdback-fixtures.jsonl  f3a69fcd2d0167dafa8d6debd8ccb0b4893434a80811f96d6241f4feb668ba4a
+# Holdback V2 (Goal 18HB): plaintext aggregate hash as bound by holdback-v2-public-manifest.json
+# (plaintext lives ONLY in offline custody: C:/Users/00/.codex/goal18hb-holdback-custody/)
+sha256  holdback-v2-fixtures.jsonl  005aa51f1d030dae2019a70f2de705ac2b2a5480a9f2ce043930eef29057050a
+# Legacy V1 holdback (RETIRED_BEFORE_EVALUATION): plaintext hash f3a69fcd2d0167dafa8d6debd8ccb0b4893434a80811f96d6241f4feb668ba4a (never used)

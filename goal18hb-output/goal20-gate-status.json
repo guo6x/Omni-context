@@ -1,0 +1,33 @@
+{
+  "schema_version": "goal20-gate-status-v1",
+  "goal": "Goal 18HB",
+  "status": "GOAL20_AUTHORIZATION = WAITING_FOR_HUMAN_REVIEW",
+  "machine_side_holdback": {
+    "legacy_holdback": "RETIRED_BEFORE_EVALUATION",
+    "holdback_v2": "SEALED_PRE_VALIDATION",
+    "sample_count": 180,
+    "task_type_layout": "15 x 12",
+    "seed_independent": true,
+    "generator": "goal18-generator/v2.1.0 @ cd53eaea538ac2992012e21e94370e918b166dde",
+    "ri_audit": "ERROR=0",
+    "integrity_suite": "18/18 post-seal",
+    "coverage": "PASS (plan mismatches 0)",
+    "overlap": "exact_overlap=0",
+    "leakage": "gold_leakage_findings=0",
+    "determinism": "3/3 dummy byte-identical",
+    "seal": "AES-256-GCM, header G18HB2, verified 34/34",
+    "plaintext_location": "offline custody only (C:/Users/00/.codex/goal18hb-holdback-custody/)",
+    "manifest": "goal18hb-output/holdback-v2-public-manifest.json",
+    "19f_metadata_sync": "SYNCED (formal-config-holdback-v2-sync-report.md)"
+  },
+  "goal20_required_human_gates": {
+    "coordinator_smoke_test": "PENDING (real human)",
+    "hr1_45_sample_blind_review": "PENDING (real human)",
+    "agreement_complete": "PENDING",
+    "adjudication_complete": "PENDING",
+    "VALIDATION_GOLD_FREEZE_V2": "NOT_ISSUED",
+    "physical_two_person_custody_handoff": "PENDING (Custodian A + Witness B)",
+    "formal_run_authorization_signed": "PENDING"
+  },
+  "note": "Goal 18HB only outputs machine-side holdback readiness; it does not self-authorize Goal 20. Even with all machine checks PASS, GOAL20_AUTHORIZATION remains WAITING_FOR_HUMAN_REVIEW. No Kernel/model/scorer evaluation has been run on holdback; no validation run has been executed."
+}

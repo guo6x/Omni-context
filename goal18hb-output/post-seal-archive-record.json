@@ -1,0 +1,100 @@
+{
+  "schema_version": "post-seal-archive-record-v1",
+  "goal": "Goal 18HB-A",
+  "title": "Post-seal evidence archival freeze - Holdback V2",
+  "status": "HOLDBACK_V2_ARCHIVAL_FREEZE_PENDING_FINALIZATION",
+  "final_status_target": "HOLDBACK_V2_ARCHIVAL_FREEZE_COMPLETE",
+  "issued_at": "2026-08-08T12:10:00+08:00",
+  "commit_scheme": {
+    "type": "TWO_COMMIT_NON_CIRCULAR",
+    "commit_a": "evidence commit (all archival files plus this record with placeholder SHAs)",
+    "commit_b": "finalization commit (this record, the freeze report and the secret-scan result gain final SHAs)"
+  },
+  "archival_commit_sha": "SEE_EVIDENCE_COMMIT_SHA",
+  "commit_a_sha": "SEE_EVIDENCE_COMMIT_SHA",
+  "commit_b_sha": "SEE_FINALIZATION_COMMIT_SHA",
+  "parent_commit": "cd53eaea538ac2992012e21e94370e918b166dde",
+  "generator": {
+    "version": "goal18-generator/v2.1.0",
+    "commit": "cd53eaea538ac2992012e21e94370e918b166dde"
+  },
+  "artifacts": {
+    "sealed_artifact": {
+      "file": "goal18hb-output/holdback-v2-sealed.bin",
+      "sha256": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3",
+      "bytes": 836656,
+      "modified_at_archival": false
+    },
+    "public_manifest": {
+      "file": "goal18hb-output/holdback-v2-public-manifest.json",
+      "sha256": "4e4239d4170b56286eb33cd832e66c3aa1c2c2ba3bb7053e050af7c7a4319d7a",
+      "modified_at_archival": false
+    },
+    "access_log": {
+      "file": "goal18hb-output/holdback-v2-access-log.jsonl",
+      "sha256": "472294af320c20d335366e4f81a6374248d15bed1a09a987c228103d5705818c"
+    },
+    "plaintext_fixture_sha256": "005aa51f1d030dae2019a70f2de705ac2b2a5480a9f2ce043930eef29057050a",
+    "gold_projection_sha256": "80ab80ecb4784f783a4ba38d5511f5f10d16452b130a006a724c39d40209e45b",
+    "seed_hash": "c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1",
+    "plaintext_staged": false,
+    "ciphertext_modified": false
+  },
+  "tool_hashes": {
+    "seal_script": {
+      "file": "goal18hb-output/scripts/seal/seal-holdback-v2.mjs",
+      "sha256": "0b09b7df88d2ed2a6d789f53a1cbce6bceeb1642e9ae6d9946158e721824ef1f"
+    },
+    "run_auth": {
+      "file": "goal18hb-output/holdback-v2-run-auth.json",
+      "sha256": "f5e4867569c62ebeb1ed1cb7e90c767fb2ce7b1155262cc73a364691d5e77117"
+    },
+    "ri_audit": {
+      "file": "goal18hb-output/holdback-v2-referential-integrity.json",
+      "sha256": "18102cccc081342ea58dacbd761b4e56bd7e80fd25c2e926eac052f468fe7cad"
+    },
+    "integrity_suite": {
+      "file": "goal18hb-output/benchmark-integrity-tests/integrity.test.mjs",
+      "sha256": "47f643b1e9f1b067faef0f296ef4c8908f375748b73252c96353f7824bb644b1"
+    },
+    "secret_scan_script": {
+      "file": "goal18hb-output/scripts/archive/secret-scan.mjs",
+      "sha256": "6bd7adbc49337b54573e29b0e6487a59f067b80aefef31d2492eae43f6b7304d"
+    }
+  },
+  "secret_scan": {
+    "result_file": "goal18hb-output/secret-scan-result.json",
+    "verdict": "PASS",
+    "findings_count": 0,
+    "seed_hash_compared": "c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1"
+  },
+  "staged": {
+    "explicit_list_only": true,
+    "excluded": [
+      "goal18hb-output/work/dummy-seed-1.txt (non-formal dummy seed)",
+      "goal18hb-output/work/dummy-hb-run1/",
+      "goal18hb-output/work/dummy-hb-run2/",
+      "goal18hb-output/work/dummy-hb-run3/",
+      "goal18hb-output/work/coverage-proxy/",
+      "goal18hb-output/work/overlap-leak-proxy/",
+      "goal18hb-output/work/holdback-v2-referential-integrity.json (duplicate of top-level file)"
+    ]
+  },
+  "validation_gold_freeze": "PENDING_VALIDATION_GOLD_FREEZE_V2",
+  "goal20_status": "WAITING_FOR_HR1_AND_VALIDATION_FREEZE",
+  "notes": [
+    "formal-experiment-freeze-manifest.json validation_fixture_sha256 (3ceddb1a...) intentionally left untouched; owned by the Goal 18H final freeze (VALIDATION_GOLD_FREEZE_V2).",
+    "Custody seed re-verified at archival time: trimmed seed sha256 equals the public seed hash c627039c... (raw seed never printed).",
+    "artifact-sha256.txt line for holdback-v2-custody-handoff-pending.md reconciled to the current file hash (TBD fields were filled after the original hash list was written).",
+    "No regeneration, no re-seal, no plaintext access, no decryption, no model/kernel/scorer run performed for this archival freeze."
+  ],
+  "clean_checkout_verification": {
+    "status": "PENDING",
+    "verified_at": null,
+    "worktree_path": null,
+    "git_status_porcelain_clean": null,
+    "sealed_hash_matches": null,
+    "node_check": null,
+    "secret_scan_worktree": null
+  }
+}

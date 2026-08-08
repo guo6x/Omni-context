@@ -1,0 +1,17 @@
+{
+  "schema_version": "dummy-seal-decrypt-test-v1",
+  "non_formal": true,
+  "material": {
+    "fixtures": "work/dummy-hb-run1/holdback-fixtures.jsonl",
+    "seed": "work/dummy-seed-1.txt"
+  },
+  "seed_hash": "9d58b898592c9cd8589673619acf30ee952f5061b5c3580dbebebc3471fec81d",
+  "plaintext_sha256": "4a1f820ee7b651af8445da5bad967d948ba1136b30818fbd8d7d5da7e1524158",
+  "checks": {
+    "header": true,
+    "roundtrip": true,
+    "wrong_seed_rejected": true
+  },
+  "passed": true,
+  "run_at": "2026-08-07T17:30:24.524Z"
+}

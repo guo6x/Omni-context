@@ -1,0 +1,78 @@
+{
+  "schema_version": "holdback-v2-generator-identity-v1",
+  "goal": "Goal 18HB",
+  "generator_version": "goal18-generator/v2.1.0",
+  "branch": "research/decision-benchmark-holdback-v2",
+  "commit": "cd53eaea538ac2992012e21e94370e918b166dde",
+  "commit_timestamp": "2026-08-08T01:16:57+08:00",
+  "generator_changes_vs_v2_0_0": [
+    "RI-02 fix: TT15 builders emit evidence[ev002].supports=[] instead of dangling [\"hc1\"] (matches VALIDATION_GOLD_FREEZE_V1.1 data fix)",
+    "CLI: --seed-file <path> (seed never on command line) and --out-dir <path> (dummy/formal runs isolated)",
+    "per-sample construction_provenance.generator_identity = goal18-generator/v2.1.0"
+  ],
+  "source_files": [
+    {
+      "path": "goal18-output/scripts/generator/generate.mjs",
+      "sha256": "68758b2029102f2fcbed723b3ab0ab9ae1028df79c5fcc2131fbb1f650806a1c",
+      "git_blob": "a221fe3e979d8f7d9b3b59e8c9e1c6e3fbfcc7d7"
+    },
+    {
+      "path": "goal18-output/scripts/generator/builders-tt01-05.mjs",
+      "sha256": "415517a210fb1e6f6a5f119a1ff39acdd774bc2b5eed414d0705636aec1831d4",
+      "git_blob": "f7fc5edc9d8dce7a5c653c14cb31382e694f07c7"
+    },
+    {
+      "path": "goal18-output/scripts/generator/builders-tt06-10.mjs",
+      "sha256": "37cdc4965ef38862d0db7be3777744b003dcd3ddc076704f403416aac2424bd3",
+      "git_blob": "64e0853b18156540d88f4e07f063c20541765a92"
+    },
+    {
+      "path": "goal18-output/scripts/generator/builders-tt11-15.mjs",
+      "sha256": "033669e8ab2162f1e0ac1418e0fff605587109db84bb2002baefee20b4be5142",
+      "git_blob": "2725f443519f9f7b165fd3685112da3cbefe2c31"
+    },
+    {
+      "path": "goal18-output/scripts/generator/common.mjs",
+      "sha256": "9a305d5c52dbff0041e4e089c6a3293fb30e22c991d9063fe46059ea5ecbbbe1",
+      "git_blob": "5a5b0f81573b9048aea743c02b83226e9d10cd3b"
+    },
+    {
+      "path": "goal18-output/scripts/generator/plans.mjs",
+      "sha256": "4899a892de658a8bcac11c72ae6ba3a814565f4913b6eb826a40193889336b41",
+      "git_blob": "b92a673f481a8fd5cf0353bd069d44bbc493c9e9"
+    },
+    {
+      "path": "goal18-output/scripts/generator/pools.mjs",
+      "sha256": "5c5a1195a8fcb3e2eab2b31e4601d20179718bf0260581a6e2cfcb34fb6e99cc",
+      "git_blob": "d3b9dffd397ca83a1b216dde21259dcaf9d4a02c"
+    },
+    {
+      "path": "goal18-output/scripts/generator/rng.mjs",
+      "sha256": "b136b6d7f40511754cd802f1ae668658ea1d532910db0f797608e09252d8fe6f",
+      "git_blob": "f22e7518cf23298a7bacdfdd0904d55243bfaa9d"
+    }
+  ],
+  "schema": {
+    "version": "decision-benchmark-v2",
+    "schema_sha256": "aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4",
+    "file": "goal18-output/schema/decision-benchmark-v2-schema.json",
+    "set_schema_sha256": "a96fec20e2ea7061c158fa3e9a1bf523f476c3f2de0184bdef412a7f8846aa84",
+    "gold_schema_sha256": "c9db51d414df56d57fe12ee2e00c8f5dea5c77c0b4c2b81f1a7ef820fb06798f"
+  },
+  "benchmark_policy_version": "decision-policy-rules-v1 (Goal 13) / invariants-v1",
+  "ri_rule_version": "ri-audit v1.1 (validation, Goal 18H-R) + holdback-v2-ri-audit v1 (RI-01..08, Goal 18HB)",
+  "integrity_suite_version": "Goal 18 integrity T1-T18 + adapted holdback-v2 suite (HOLDBACK_V2_FIXTURES mode)",
+  "based_on": {
+    "validation_freeze": "VALIDATION_GOLD_FREEZE_V1.1 (validation-set 59e924631934a8712f05daedc269c4f27791bf86b97ed11fa5f1af0bdb3cbf34)",
+    "audited_by": "Goal 18H-R (final-report.md, validation-referential-integrity-report.md, RI-01..04 semantics)",
+    "commit": "cd53eaea538ac2992012e21e94370e918b166dde"
+  },
+  "determinism": {
+    "dummy_seed_identifier": "goal18hb-dummy-determinism-seed-0001-abcdef0123456789 (NON-FORMAL)",
+    "dummy_runs": 3,
+    "byte_identical_output_sha256": "4a1f820ee7b651af8445da5bad967d948ba1136b30818fbd8d7d5da7e1524158",
+    "verified_at": "2026-08-07T17:17:30.421Z",
+    "note": "same seed + same generator -> byte-identical output (Goal 18HB section 12)"
+  },
+  "generated_at": "2026-08-07T17:17:30.421Z"
+}

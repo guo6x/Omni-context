@@ -1,0 +1,46 @@
+# Goal 18HB - artifact-sha256.txt
+# 鐢熸垚鏃ユ湡: 2026-08-08 (Asia/Shanghai)
+# 璇存槑: 浠呭叕寮€ artifacts锛沺laintext/seed 涓嶅湪浠撳簱銆俢ustody 鍓湰鍝堝笇瑙?holdback-v2-public-manifest.json 涓?verify-seal-v2 杈撳嚭銆?
+
+sha256  holdback-v2-sealed.bin  4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3
+sha256  holdback-v2-public-manifest.json  4e4239d4170b56286eb33cd832e66c3aa1c2c2ba3bb7053e050af7c7a4319d7a
+sha256  holdback-v2-access-log.jsonl  472294af320c20d335366e4f81a6374248d15bed1a09a987c228103d5705818c
+sha256  holdback-v2-referential-integrity.json  18102cccc081342ea58dacbd761b4e56bd7e80fd25c2e926eac052f468fe7cad
+sha256  holdback-v2-semantic-integrity.json  14a41fc679b19cd0c6f8f71cf9b01c7c90f1b40f470858d509c34df878f151a7
+sha256  holdback-v2-coverage-matrix.csv  bffb29ac9efcca70db23306be36e212fcd4ea570ac3b0cf710b5066f63abaf36
+sha256  holdback-v2-coverage-report.md  16350fbf5ffcefb40e423011d78495c4c5932ff3168e3857a11c015fc6290a74
+sha256  holdback-v2-overlap-report.md  c2fd2240bb69330e2c5bf909f1e68d0e3059a83e46b48014df8a95f1dfdc17e8
+sha256  holdback-v2-overlap-results.json  b15424fedb4b6bfbf5c9b51974f85825a854b86a09167bd09bcdeff4b0815c8b
+sha256  holdback-v2-leakage-audit.md  0f861438a54a4af12c8ba66705514d3bde952582590d5b4d4b585b557d52d161
+sha256  holdback-v2-leakage-results.json  8a7a8beb34c2ecddb46942b2bb42483c7b9b9e3dc22c67d84201e7777fd9bbfe
+sha256  holdback-v2-integrity-report.md  6f85e9d0e0fe412f93f687958b1ebbc263cae4a142efb822d79fc346b4fcfdb7
+sha256  holdback-v2-generator-identity.json  080930e01a96e42b1473327b471e7b20e35084a9f0da5f6621cd911977c13d78
+sha256  holdback-v2-seed-record-public.json  16b89756ba7614145d5ea81520989137bfd82ac72f7b9cf94cc4f92319d75eda
+sha256  holdback-v2-run-auth.json  f5e4867569c62ebeb1ed1cb7e90c767fb2ce7b1155262cc73a364691d5e77117
+sha256  legacy-holdback-retirement-record.json  fa257196e5ffcdae82e6d80bb69bcd4401694b97c7a1129f733b6b3ed64dc014
+sha256  holdback-v2-custody-handoff-pending.md  71ac215c0761d7fcc36b39bc035a84cb2d0950447ef9eb366a808117b4d4c5ea
+sha256  formal-config-holdback-v2-sync-report.md  423ec2b9d4e804270195da6e99c2608cbe1f1650e98905ce8b6f5f1e425b1a14
+sha256  goal20-gate-status.json  2ecd738704d05a19aa80870f9e7dfa570262ff4a5171126a88c7b8db1caaa861
+sha256  generator-determinism-report.md  329abfb4a925ec566360c3131b15571ed1bc47689e6fb800bdd1bc27a959bf93
+sha256  holdback-v2-seal-report.md  55590d405a776188fcf7fc1376ffa0c3e91e23e9abb037080460677b55bb3332
+sha256  commands-and-results.log  972eada08000ed28386eab76f0cea373aab3c8fe804069850dabd7c673706b3d
+sha256  benchmark-integrity-tests/integrity.test.mjs  47f643b1e9f1b067faef0f296ef4c8908f375748b73252c96353f7824bb644b1
+sha256  benchmark-integrity-tests/fixtures-loader.mjs  9af26e8aca2045441badc89bcb821cf133233908951a0ec7195228371ee70ac7
+sha256  benchmark-integrity-tests/verify-seal-v2.mjs  b2863a445a806f4343383d94f832712785702bb7a017af8e6ed48075748f7b52
+sha256  benchmark-integrity-tests/run.mjs  dfa651d79b726fb6ccd2fcc19e615d38f72320a7906106431d68519bcfe2ed66
+sha256  benchmark-integrity-tests/fixture-sha256.txt  98f27c88568e25a32b1427ed4c4e9d1d9d07b5ce45c3407de97414e539fe66d9
+sha256  scripts/seal/seal-holdback-v2.mjs  0b09b7df88d2ed2a6d789f53a1cbce6bceeb1642e9ae6d9946158e721824ef1f
+sha256  scripts/seal/dummy-seal-decrypt-test.mjs  894998d3c3263f3bcd3a453df63ad3aabb76ced6379f19fac34a39a614c67cf1
+sha256  scripts/audit/holdback-v2-coverage.mjs  f297e750d8d1591d3cce806a6992d6861a6a4768346a623b435fcccfdf64fc63
+sha256  scripts/audit/holdback-v2-overlap.mjs  55325d30af18eaad02b0128dcd0ab38a9c49e5ba8a09ea8a8ac99e06bcb243d8
+sha256  scripts/audit/holdback-v2-leakage.mjs  05972a4e3f9434ae469202b36f4284fd67a84c4a504df72e28965f2fbdf2ca20
+sha256  scripts/audit/holdback-v2-ri-audit.mjs  56e4ecb959291c0836bd21661fa3fc55d063de6940c6eba26cf8ce059b238c7e
+sha256  work/19f-holdback-refs.json  7ce329cd3ab1782c9f10d727d6ca4931fae5e46ba63a2b00ec549de14f9c8f40
+sha256  work/19f-sync-draft.md  a15e82d571ca509ad569d5ff7cf0a520a1c6518cca74d6f6b6957e7e58e69687
+sha256  work/custody-role-templates.md  35e0d908a6094c9bf6b71f70428ed72e7ea7d1443a3cdab7d1f97ed3d41aaa4a
+sha256  work/dummy-seal-decrypt-results.json  896a5fc3003b5d07a948a4dc9785b7be57fe75f77167309b1651a654a2849490
+
+# 绂荤嚎 custody 鍝堝笇锛堜笉鍦ㄤ粨搴撳唴锛?
+# holdback-v2-fixtures.jsonl  005aa51f1d030dae2019a70f2de705ac2b2a5480a9f2ce043930eef29057050a
+# holdback-v2-gold.jsonl      80ab80ecb4784f783a4ba38d5511f5f10d16452b130a006a724c39d40209e45b
+# seed.txt                   seed_hash c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1 (raw 涓嶅叕寮€)

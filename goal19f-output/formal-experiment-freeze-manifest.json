@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "goal": "19F",
+  "date": "2026-08-07",
+  "status": "FORMAL_EXPERIMENT_READY",
+  "status_reason": "All Goal 19P blockers B1-B5 are closed and verified. B1: owner decision OWNER_APPROVED (model-and-budget-owner-decision.json, schema_version 2, owner role PROJECT_OWNER, approval timestamp 2026-08-07T05:10:33.248Z, cryptographic signature NOT_REQUIRED). B2-B5 closed with sealed evidence. Dry-runs pass on development and regression. Every formal identity and hash is recorded.",
+  "blocker_status": {
+    "B1": {
+      "status": "CLOSED (OWNER_APPROVED)",
+      "deliverable": "model-selection-and-budget.md (DECIDED) + model-and-budget-owner-decision.json (schema_version 2, approval_status OWNER_APPROVED)",
+      "decided": {
+        "main_model": "deepseek-v4-flash (DeepSeek V4 Flash)",
+        "auxiliary_evaluator": "kimi-k2.6 (Kimi 2.6, Moonshot) - auxiliary only, never a second A0-A5 main model",
+        "budget_cny": {
+          "deepseek_maximum": 200,
+          "kimi_maximum": 20,
+          "total_hard_cap": 220
+        },
+        "remote_processing": "approved for synthetic/anonymized benchmark inputs + frozen prompt/context only; holdback custody/seal secrets never sent",
+        "run_window": {
+          "preferred_start_window_local": "20:00-02:00",
+          "run_any_time_if_operationally_preferable": true
+        }
+      },
+      "evidence": "model-and-budget-owner-decision.json approval_status=OWNER_APPROVED; owner.role=PROJECT_OWNER; signature.cryptographic_signature_status=NOT_REQUIRED"
+    },
+    "B2": {
+      "status": "CLOSED",
+      "evidence": "prompt-byte-manifest.json; shared files byte-identical across arms; system.txt differs only in arm capabilities block"
+    },
+    "B3": {
+      "status": "CLOSED",
+      "evidence": "ablation-harness-r1 committed @ 85d418e; ablation-harness-identity.json; byte-stability BYTE_STABILITY_PASS (3 serial runs byte-identical; non-overwrite enforced)"
+    },
+    "B4": {
+      "status": "CLOSED",
+      "evidence": "unified retrieval adapter; arm-information-parity-report.md; retrieval-adapter-parity-report.md; arm-component-diff.json pass on both splits"
+    },
+    "B5": {
+      "status": "CLOSED",
+      "evidence": "a5-revisit-protocol.md; a5-revisit-state-machine.json; a5-revisit-conformance-tests/ pass; 0 violations on both splits"
+    }
+  },
+  "frozen_components": {
+    "product": {
+      "commit": "e1367327121574d76e89858cf6dbc0b2843193c2",
+      "identity_hash": "2689edec1e95995ba9b72073918d685a8627f1e7ca173424ba91c67905cf3819",
+      "note": "blob-pinned; worktree has pre-existing untracked files (_audit-dump.*, experiments/decision-benchmark/ablation/) — clean-worktree requirement for formal run (see unresolved-formal-run-risks.md R-ENV-1)"
+    },
+    "runner_base": {
+      "commit": "13f21f8dd9e19a8423b331c2106f326a3ed09385",
+      "identity_hash": "8aa4fc40472a70e08e4bad2286661742f91c0019fd427cdce21bd1f0746178bf"
+    },
+    "evaluator": {
+      "commit": "85d418e95a6bac1e2912c33e32fb99d504a9cb26",
+      "identity_hash": "d9d802adee07649f1a54b7227ef5aea32a1298ffc7c99961628b9681716ab396",
+      "branch": "research/ablation-harness-r1",
+      "version": "0.2.0-formal-ready"
+    },
+    "scorer_v1_1": {
+      "commit": "5cac8ae975174efc19149996d737581df2aa33c2",
+      "identity_hash": "3b4c7a2441bed3ad1b1019b104948f93d59d53ed5bfeaabe307a6e6a5a5ddbbb",
+      "constraint": "no semantic changes",
+      "blob_identical_verified": "git rev-parse 5cac8ae:<path> == e136732:<path> for all 4 scorer/gold files (scorer.mjs 47a4217f..., conformance 6cce82b2..., contract schema a17503af..., metric-definitions acc89ef6...)"
+    },
+    "arm_matrix": {
+      "sha256": "37fb3c493266486f91175f1dae302486a082625421f59cee663318ab0d700a98",
+      "bytes": 9520,
+      "git_blob": "fccf65d4f770361384fbd5c44e2a4b7688c7836a"
+    }
+  },
+  "datasets": {
+    "development": {
+      "sha256": "e7396d702856e43bb5227f5abac6e91010bef20860353fe5c5a7247b7a1179dd",
+      "rows": 20
+    },
+    "regression": {
+      "sha256": "fb1b91e42822b1d898698703b56674204ca4ba9da709d797949124908c76ed55",
+      "rows": 15
+    },
+    "goal18": {
+      "validation": "NOT RUN",
+      "holdback": "NOT RUN; plaintext never decrypted; public manifest metadata only"
+    }
+  },
+  "dry_runs": {
+    "development": {
+      "run_id": "preflight-dev-001",
+      "status": "COMPLETED",
+      "checks": "PASS",
+      "configuration_sha256": "795ab7ba00f4d6ee4232daad16a22dd02653d3f2db549f71c9602bddc81e2613"
+    },
+    "regression": {
+      "run_id": "preflight-reg-001",
+      "status": "COMPLETED",
+      "checks": "PASS",
+      "configuration_sha256": "befb4be299038ead1ba1e1eb029295833308103d37b72d75a9dcee78d1f00945",
+      "gated_on": "preflight-dev-001"
+    },
+    "byte_stability": {
+      "result": "BYTE_STABILITY_PASS",
+      "runs": [
+        "byte-stability-001",
+        "byte-stability-002",
+        "byte-stability-003"
+      ],
+      "non_overwrite": "enforced (exit 2)"
+    },
+    "results_are": "ABLATION_PREFLIGHT / NON_CONFIRMATORY"
+  },
+  "formal_run_requirements": {
+    "authorization": "formal-run-authorization-template.json signed (B1 resolved first)",
+    "config": "formal-run-config-v1.json (model fields filled)",
+    "clean_worktree": "product worktree untracked files removed or manifest-listed before formal runs",
+    "sequence": "development formal run -> regression formal run gated on it",
+    "outputs": "sealed run dirs + this manifest re-verified; any drift = invalid run per invalid-run-policy.md"
+  },
+  "b3_acceptance": {
+    "clean_checkout": "ablation-harness-clean-check @ 85d418e, git status clean (0 uncommitted evaluator files)",
+    "runner_tests": "node --test experiments/tests/*.test.mjs -> 34/34 pass",
+    "scorer_conformance": "node --test goal16a-output/scorer-v1.1/conformance-tests/scorer-v1.1.test.mjs -> 19/19 pass",
+    "harness_tests": "node --test tests/*.test.mjs (ablation) -> 13/13 pass",
+    "legacy_19p_syntax": "node --check on all legacy-19p + harness .mjs files -> 30/30 clean",
+    "byte_stability": "3 serial dev dry-runs byte-identical (BYTE_STABILITY_PASS); non-overwrite enforced (exit 2)",
+    "no_uncommitted_evaluator": "true (branch committed at 85d418e; product worktree untracked files are NOT evaluator files and are listed in R-ENV-1)"
+  },
+  "goal18_integrity": {
+    "validation_fixture_sha256": "3ceddb1aaee51e28dfe20a930696b01065dcfae4d47bdac1f1dd5dc3c39e9667",
+    "validation_gold_sha256": "763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed",
+    "holdback_public_manifest": "goal18hb-output/holdback-v2-public-manifest.json (schema holdback-v2-seal-manifest-v1; fixture sha256 005aa51f...; sealed artifact 4737bc77...)",
+    "benchmark_schema_sha256": "aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4",
+    "note": "metadata only; validation/holdback content never loaded"
+  },
+  "authority_inputs": [
+    "goal17p-output/experimental-preregistration.md",
+    "goal17p-output/method-section-freeze-report.md (17Q)",
+    "goal19p-output/ (all reports)",
+    "goal17p-output/unresolved-paper-decisions.md"
+  ],
+  "model_identity": {
+    "main": {
+      "display_name": "DeepSeek V4 Flash",
+      "requested_model_id": "deepseek-v4-flash",
+      "temperature": 0,
+      "retry_max_attempts": 3,
+      "retry_transport_parse_only": true,
+      "max_output_tokens": "TBD recorded at provider confirmation (fixed per endpoint)",
+      "runtime_rule": "actual returned model identity recorded per response; mismatch = invalid run"
+    },
+    "auxiliary": {
+      "display_name": "Kimi 2.6",
+      "requested_model_id": "kimi-k2.6",
+      "budget_cny": 20,
+      "role": "auxiliary LLM evaluator only where the frozen protocol requires one; no calls if not needed"
+    },
+    "budget_cny": {
+      "deepseek": 200,
+      "kimi": 20,
+      "total_hard_cap": 220,
+      "overspend_rule": "stop before further calls; report gap; new owner approval required for any increase"
+    },
+    "validation_holdback_estimates": {
+      "status": "TBD provider pricing; must be finalized within ¥220 before the first formal call",
+      "validation": "120 samples x 6 arms x attempts x tokens x price",
+      "holdback": "single sealed pass; samples 180 (V2 SEALED_PRE_VALIDATION)"
+    }
+  },
+  "ready_conditions": {
+    "B1_owner_decision_signed": true,
+    "B2_prompts_frozen": true,
+    "B3_harness_committed": true,
+    "B4_information_and_retrieval_fairness": true,
+    "B5_revisit_protocol_frozen": true,
+    "dry_run_passed": true,
+    "all_formal_identities_and_hashes_recorded": true
+  }
+}

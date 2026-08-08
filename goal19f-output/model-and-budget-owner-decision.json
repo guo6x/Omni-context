@@ -1,0 +1,112 @@
+{
+  "schema_version": 2,
+  "decision_id": "model-and-budget-owner-decision-v1",
+  "status": "DECIDED",
+  "approval_status": "OWNER_APPROVED",
+  "experiment_id": "omni-context-ablation-formal-v1",
+  "preregistration_anchor": "goal17p-output/experimental-preregistration.md §4",
+  "paper_decision_anchor": "goal17p-output/unresolved-paper-decisions.md D-11 (owner: paper lead + infra owner)",
+  "approved_main_model": {
+    "display_name": "DeepSeek V4 Flash",
+    "frozen_requested_model_id": "deepseek-v4-flash",
+    "role": "primary reasoning model for formal validation (A0-A5) and the later authorized sealed holdback",
+    "provider": "deepseek",
+    "grounding": "goal12-output/cleanroom/docs/freeze-v1/omni-context-evaluation-freeze-v1.json models.answer = deepseek-v4-flash (previous experiment system); desktop-daemon/src/lib/llm-presets.ts deepseek recommendedModels includes deepseek-ai/DeepSeek-V4-Flash",
+    "runtime_identity_rule": "the actual model identity/version returned by the API MUST be recorded before/at formal run; if the returned identity differs from the frozen config, the run is invalid per invalid-run-policy.md (MODEL_IDENTITY_MISMATCH); silent model substitution is forbidden",
+    "snapshot_date": null,
+    "serving_version_hash": null
+  },
+  "auxiliary_evaluator": {
+    "display_name": "Kimi 2.6",
+    "frozen_requested_model_id": "kimi-k2.6",
+    "provider": "Moonshot",
+    "role": "auxiliary evaluation model ONLY for protocol parts that genuinely require an LLM evaluator",
+    "constraints": [
+      "must NOT be upgraded to a second A0-A5 main-experiment model without a new owner approval",
+      "must NOT be used to select the better model",
+      "auxiliary budget is reserved (¥20) but actual usage must be recorded per non-core/auxiliary evaluation",
+      "if the frozen protocol does not need Kimi 2.6 (scorer v1.1 is fully deterministic), it must NOT be called just to consume budget"
+    ],
+    "grounding": "goal12-output/v27/docs/candidate-v3.1-review/evidence/targeted-7-profile-fix-kimi-usage.json (model kimi-k2.6, judge adapter)"
+  },
+  "budget_cny": {
+    "deepseek_v4_flash_maximum": 200,
+    "kimi_2_6_maximum": 20,
+    "total_maximum_hard_cap": 220,
+    "rules": [
+      "no automatic overspend; any projected exceedance of ¥220 stops the run BEFORE further calls and is reported to the owner",
+      "validation and holdback budgets are estimated and recorded separately (see budget_estimates)",
+      "re-running or topping up requires a new owner approval; never run first and top up after"
+    ]
+  },
+  "budget_estimates": {
+    "validation": {
+      "samples": 120,
+      "arms": 6,
+      "max_attempts": 3,
+      "formula": "samples x arms x attempts x tokens_per_call x price_per_token (est. per-call tokens TBD at provider confirmation)",
+      "estimated_cost_cny": null,
+      "note": "estimate must be finalized from provider pricing BEFORE the validation run; if validation + holdback estimates exceed ¥220, stop and report the gap"
+    },
+    "holdback": {
+      "samples": 180,
+      "arms": 6,
+      "max_attempts": 3,
+      "formula": "samples x arms x attempts x tokens_per_call x price_per_token",
+      "estimated_cost_cny": null,
+      "note": "single sealed pass; estimate finalized before the holdback ceremony; must fit within the ¥220 total cap"
+    },
+    "per_call_price_status": "TBD - provider pricing confirmation required before any formal call; no spend has occurred"
+  },
+  "remote_data_processing": {
+    "approved": true,
+    "scope": [
+      "synthetic benchmark inputs",
+      "anonymized benchmark inputs",
+      "frozen prompt/context required for the formal experiment",
+      "nothing containing real user privacy data"
+    ],
+    "prohibited": [
+      "real user chat records",
+      "real personal identifiable information",
+      "passwords / API keys / tokens",
+      "local private files",
+      "real medical, financial or other sensitive personal records",
+      "project-private data unrelated to this benchmark",
+      "holdback custody secrets, seed, decryption material, or authorization keys"
+    ],
+    "holdback_rule": "when the holdback is later executed under a formal two-person ceremony, ONLY the benchmark sample content necessary for model inference may be sent; custody/seal secrets must never be sent"
+  },
+  "run_time_window": {
+    "preferred_start_window_local": "20:00-02:00",
+    "timezone": "project owner local timezone",
+    "hard_constraint": false,
+    "run_any_time_if_operationally_preferable": true,
+    "rule": "do not compromise experiment integrity to wait for evening; do not terminate a legitimate run because it crosses daytime"
+  },
+  "owner": {
+    "role": "PROJECT_OWNER",
+    "name": null,
+    "organization": null,
+    "note": "owner identity fields are intentionally not filled: no name/signature/organization was provided and none may be fabricated",
+    "approval_timestamp": "2026-08-07T05:10:33.248Z"
+  },
+  "signature": {
+    "mechanism": "owner-decision record + approval timestamp",
+    "cryptographic_signature_status": "NOT_REQUIRED",
+    "note": "the project owner has no cryptographic signing mechanism in place; per owner instruction the explicit owner-decision record and timestamp stand as the approval; no signature is forged"
+  },
+  "acceptance_criteria_met": [
+    "one main model identity for A0-A5 (deepseek-v4-flash)",
+    "temperature 0, fixed max_output_tokens, retry 3 transport/parse only",
+    "model identity recorded per response; mismatch invalidates the run",
+    "budget caps: DeepSeek ¥200, Kimi ¥20, total hard cap ¥220",
+    "remote synthetic benchmark processing approved with restrictions",
+    "preferred night execution window with unrestricted start when operationally preferable"
+  ],
+  "next_steps": [
+    "record provider pricing and finalize validation/holdback estimates within ¥220 before any formal call",
+    "seal per-split authorization files (formal-run-authorization-template.json) at run time",
+    "formal run order: validation (120) then single sealed holdback ceremony"
+  ]
+}

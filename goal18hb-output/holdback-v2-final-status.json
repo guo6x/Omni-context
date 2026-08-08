@@ -1,0 +1,34 @@
+{
+  "schema_version": "holdback-v2-final-status-v1",
+  "goal": "Goal 18HB",
+  "final_status": "HOLDBACK_V2_READY_WITH_CUSTODY_PENDING",
+  "issued_at": "2026-08-08T01:40:00+08:00",
+  "meaning": {
+    "legacy_holdback_retired": true,
+    "new_180_generated": true,
+    "15x12_strict": true,
+    "new_independent_seed": true,
+    "generator_frozen": "goal18-generator/v2.1.0 @ cd53eaea538ac2992012e21e94370e918b166dde",
+    "ri_01_04_pass": true,
+    "all_integrity_tests_pass": "18/18 post-seal; verify-seal-v2 34/34",
+    "no_data_leakage": true,
+    "no_known_dev_reg_validation_overlap": "exact_overlap=0 (template-layer diagnostics documented)",
+    "holdback_v2_encrypted_and_sealed": true,
+    "public_manifest_frozen": true,
+    "goal19f_holdback_metadata_synced": true,
+    "no_model_run": true,
+    "no_validation_run": true,
+    "old_holdback_plaintext_never_accessed": true,
+    "remaining": ["physical two-person custody handoff (Custodian A + Witness B)", "coordinator smoke test", "HR1 45-sample blind review", "agreement", "adjudication", "VALIDATION_GOLD_FREEZE_V2", "formal run authorization"]
+  },
+  "goal20": {
+    "authorization": "WAITING_FOR_HUMAN_REVIEW",
+    "blocked_reason": "human gates pending; see goal20-gate-status.json"
+  },
+  "artifacts": {
+    "sealed": "goal18hb-output/holdback-v2-sealed.bin",
+    "manifest": "goal18hb-output/holdback-v2-public-manifest.json",
+    "access_log": "goal18hb-output/holdback-v2-access-log.jsonl",
+    "custody": "C:/Users/00/.codex/goal18hb-holdback-custody/ (offline; plaintext + gold + seed)"
+  }
+}

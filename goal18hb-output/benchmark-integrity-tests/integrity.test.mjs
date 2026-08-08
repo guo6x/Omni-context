@@ -447,7 +447,7 @@ describe('decision-benchmark-v2 integrity', () => {
       ? process.env.HOLDBACK_V2_FIXTURES
       : fs.existsSync(path.join(OUT, 'holdback-v2-fixtures.jsonl'))
         ? path.join(OUT, 'holdback-v2-fixtures.jsonl')
-        : 'C:/Users/00/.codex/goal18hb-holdback-custody/holdback-fixtures.jsonl';
+        : 'C:/Users/00/.codex/goal18hb-holdback-custody/holdback-v2-fixtures.jsonl';
     assert.equal(hbManifest.sha256, sha(hbPlain), 'holdback v2 plaintext hash');
     assert.ok(hbManifest.seed_hash && /^[0-9a-f]{64}$/.test(hbManifest.seed_hash), 'seed hash format');
     assert.ok(fs.existsSync(path.join(OUT, 'holdback-v2-sealed.bin')), 'sealed artifact exists');

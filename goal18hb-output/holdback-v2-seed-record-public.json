@@ -1,0 +1,20 @@
+{
+  "schema_version": "holdback-v2-seed-record-public-v1",
+  "goal": "Goal 18HB",
+  "seed_identifier": "goal18hb-formal-seed-v1",
+  "seed_generation_method": "crypto.randomBytes(32) -> hex, generated offline directly into custody dir (never printed, never in logs/git/manifest)",
+  "seed_hash": "c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1",
+  "independence": {
+    "not_reused_from": [
+      "goal18-holdback-seed (V1, seed_hash 0f898583...)",
+      "goal18-validation-seed-7f3a9c2e",
+      "goal18h-human-review-seed-4f8e2b17",
+      "development/regression seeds"
+    ],
+    "generated_at": "2026-08-07T17:17:42.456Z"
+  },
+  "custody": {
+    "seed_location": "offline custody directory (outside repository): C:/Users/00/.codex/goal18hb-holdback-custody/seed.txt",
+    "plaintext_location": "same offline custody directory; repo keeps only ciphertext + hashes"
+  }
+}

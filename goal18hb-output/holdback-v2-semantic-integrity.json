@@ -1,0 +1,133 @@
+{
+  "schema_version": "holdback-v2-semantic-integrity-v1",
+  "goal": "Goal 18HB",
+  "scope": "Holdback V2 full semantic integrity audit (180 samples), automated, pre/post seal",
+  "generated_at": "2026-08-07T17:32:06.202Z",
+  "status": "PASS",
+  "categories": {
+    "ids_unique": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T2 (sample/event/evidence/option/constraint/decision ids unique)",
+        "integrity T3 (internal ids unique + references resolve)"
+      ]
+    },
+    "timeline_consistency": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T4 (chronological order; query_time consistency; windows/supersedes)",
+        "integrity T5 (evidence validity vs query_time)"
+      ]
+    },
+    "evidence_lifecycle": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T5 (current/stale/expired/deleted/contradicted/superseded/revalidated state transitions)",
+        "RI audit RI-01..RI-04 (ERROR=0)"
+      ]
+    },
+    "constraints": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T3 (hard_constraints/soft_preferences reference real entities)",
+        "integrity T6 (gold contract C1..C12)",
+        "integrity T18 (acceptable-action discipline)"
+      ]
+    },
+    "authority_approval": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T7 (approval consistency incl. override-supersedes-approval boundary)",
+        "integrity T8 (risk/reversibility consistency)"
+      ]
+    },
+    "decision_lineage": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T9 (lineage operation consistency; parent/relation/target existence via T3)"
+      ]
+    },
+    "authorization_boundaries": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T7 + T6 (authority boundary and execution boundary valid for approval-required gold contracts)"
+      ]
+    },
+    "gold_contract": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T6 (GOLD-C1..C12 + action/task mapping + coded reason)",
+        "integrity T14 (scorer v1.1 compatibility, commit 5cac8ae; structural/gold-contract validation only, no model scoring)",
+        "integrity T10 (P0 failure labels)"
+      ]
+    },
+    "split_isolation": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T11 (split isolation)",
+        "overlap audit (exact_overlap=0 vs dev/reg/validation; 27,900 pairs)"
+      ]
+    },
+    "near_duplicate": {
+      "status": "PASS_WITH_DIAGNOSTICS",
+      "evidence": [
+        "integrity T12 (within-split < 0.5)",
+        "overlap audit near-duplicate diagnostics: 6 flagged hb-vs-val TT15 pairs, max 8-gram Jaccard 0.529 (template-layer question/option identity; scenarios/timelines distinct; no exact/normalized overlap)"
+      ]
+    },
+    "distribution_coverage": {
+      "status": "PASS",
+      "evidence": [
+        "coverage audit (180 = 15 task types x 12; plan mismatches 0; distribution preserved)",
+        "integrity T13 (distribution coverage)"
+      ]
+    },
+    "encoding": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T1 (UTF-8 JSON parse of all 180 records + schema validation)",
+        "audit scripts read UTF-8; no BOM/NUL/lone-surrogate issues detected"
+      ]
+    },
+    "deterministic_generator": {
+      "status": "PASS",
+      "evidence": [
+        "3 dummy runs byte-identical (SHA-256 4a1f820ee7b651af8445da5bad967d948ba1136b30818fbd8d7d5da7e1524158)",
+        "see generator-determinism-report.md"
+      ]
+    },
+    "hash_seal": {
+      "status": "PASS",
+      "evidence": [
+        "integrity T15 (post-seal)",
+        "verify-seal-v2 (34/34 checks)",
+        "seal manifest holdback-v2-public-manifest.json"
+      ]
+    },
+    "access_log": {
+      "status": "PASS",
+      "evidence": [
+        "holdback-v2-access-log.jsonl (generate/seal/custody_transfer/verify; no model-run/score entries)",
+        "integrity T15 + verify-seal-v2"
+      ]
+    }
+  },
+  "ri_audit": {
+    "status": "PASS",
+    "ERROR": 0,
+    "INFO": 89,
+    "by_rule": {
+      "RI-03": 77,
+      "RI-04": 12
+    },
+    "report": "holdback-v2-referential-integrity.json",
+    "sha256": "18102cccc081342ea58dacbd761b4e56bd7e80fd25c2e926eac052f468fe7cad"
+  },
+  "integrity_suite": {
+    "pre_seal": "17/18 (T15 pending seal, expected)",
+    "post_seal": "18/18",
+    "sha256": "47f643b1e9f1b067faef0f296ef4c8908f375748b73252c96353f7824bb644b1"
+  },
+  "no_model_runs": true,
+  "note": "Structural/semantic audits only. No Kernel/model/scorer evaluation performed on Holdback V2."
+}

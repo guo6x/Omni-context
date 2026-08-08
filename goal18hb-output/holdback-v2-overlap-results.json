@@ -1,0 +1,143 @@
+{
+  "generated_at": "2026-08-07T17:27:12.386Z",
+  "command": "node holdback-v2-overlap.mjs --fixtures D:\\ai_code\\Omni-context\\goal18hb-output\\work\\holdback-fixtures.jsonl --spec-dir D:\\ai_code\\Omni-context-decision-kernel-v1\\goal14-output --out D:\\ai_code\\Omni-context\\goal18hb-output --validation-dir D:\\ai_code\\Omni-context\\goal18-output",
+  "fixtures": {
+    "path": "D:\\ai_code\\Omni-context\\goal18hb-output\\work\\holdback-fixtures.jsonl",
+    "count": 180
+  },
+  "known": {
+    "development": 20,
+    "regression": 15,
+    "validation": 120,
+    "total": 155
+  },
+  "validation_source": "D:\\ai_code\\Omni-context\\goal18-output",
+  "self_excluded_pairs": 0,
+  "self_excluded": {
+    "count": 0,
+    "pairs": [],
+    "content_mismatch_count": 0,
+    "content_mismatch": []
+  },
+  "metrics": {
+    "exact_sample_hash": {
+      "pairs": 27900,
+      "matched_pairs": 0,
+      "fixture_samples": 0,
+      "fixture_sample_ids": [],
+      "known_sample_ids": []
+    },
+    "normalized_scenario_hash": {
+      "pairs": 27900,
+      "matched_pairs": 0,
+      "fixture_samples": 0,
+      "fixture_sample_ids": [],
+      "known_sample_ids": []
+    },
+    "decision_question_hash": {
+      "pairs": 27900,
+      "matched_pairs": 10,
+      "fixture_samples": 6,
+      "fixture_sample_ids": [
+        "decision-bench-v2-holdback-tt15-002",
+        "decision-bench-v2-holdback-tt15-004",
+        "decision-bench-v2-holdback-tt15-006",
+        "decision-bench-v2-holdback-tt15-007",
+        "decision-bench-v2-holdback-tt15-009",
+        "decision-bench-v2-holdback-tt15-010"
+      ],
+      "known_sample_ids": [
+        "decision-bench-v2-val-tt15-000",
+        "decision-bench-v2-val-tt15-001",
+        "decision-bench-v2-val-tt15-002",
+        "decision-bench-v2-val-tt15-003",
+        "decision-bench-v2-val-tt15-005",
+        "decision-bench-v2-val-tt15-006"
+      ]
+    },
+    "timeline_hash": {
+      "pairs": 27900,
+      "matched_pairs": 0,
+      "fixture_samples": 0,
+      "fixture_sample_ids": [],
+      "known_sample_ids": []
+    },
+    "option_set_hash": {
+      "pairs": 27900,
+      "matched_pairs": 10,
+      "fixture_samples": 10,
+      "fixture_sample_ids": [
+        "decision-bench-v2-holdback-tt03-002",
+        "decision-bench-v2-holdback-tt03-004",
+        "decision-bench-v2-holdback-tt03-005",
+        "decision-bench-v2-holdback-tt04-003",
+        "decision-bench-v2-holdback-tt04-004",
+        "decision-bench-v2-holdback-tt04-005",
+        "decision-bench-v2-holdback-tt04-009",
+        "decision-bench-v2-holdback-tt04-011",
+        "decision-bench-v2-holdback-tt09-000",
+        "decision-bench-v2-holdback-tt09-001"
+      ],
+      "known_sample_ids": [
+        "decision-bench-v2-val-tt03-004",
+        "decision-bench-v2-val-tt03-006",
+        "decision-bench-v2-val-tt03-007",
+        "decision-bench-v2-val-tt04-001",
+        "decision-bench-v2-val-tt04-003",
+        "decision-bench-v2-val-tt04-004",
+        "decision-bench-v2-val-tt09-004",
+        "decision-bench-v2-val-tt09-005",
+        "decision-bench-v2-val-tt09-006"
+      ]
+    }
+  },
+  "exact_overlap": {
+    "pairs": 0,
+    "samples": 0,
+    "sample_ids": []
+  },
+  "near_duplicates": {
+    "threshold": 0.5,
+    "pairs_compared": 27900,
+    "max": 0.529,
+    "mean": 0.0088,
+    "best_pair": [
+      "decision-bench-v2-holdback-tt15-004",
+      "decision-bench-v2-val-tt15-003",
+      0.529
+    ],
+    "flagged": [
+      {
+        "fixture_id": "decision-bench-v2-holdback-tt15-004",
+        "known_id": "decision-bench-v2-val-tt15-003",
+        "similarity": 0.529
+      },
+      {
+        "fixture_id": "decision-bench-v2-holdback-tt15-002",
+        "known_id": "decision-bench-v2-val-tt15-005",
+        "similarity": 0.526
+      },
+      {
+        "fixture_id": "decision-bench-v2-holdback-tt15-002",
+        "known_id": "decision-bench-v2-val-tt15-001",
+        "similarity": 0.513
+      },
+      {
+        "fixture_id": "decision-bench-v2-holdback-tt15-006",
+        "known_id": "decision-bench-v2-val-tt15-006",
+        "similarity": 0.512
+      },
+      {
+        "fixture_id": "decision-bench-v2-holdback-tt15-010",
+        "known_id": "decision-bench-v2-val-tt15-002",
+        "similarity": 0.508
+      },
+      {
+        "fixture_id": "decision-bench-v2-holdback-tt15-007",
+        "known_id": "decision-bench-v2-val-tt15-006",
+        "similarity": 0.504
+      }
+    ],
+    "flagged_count": 6
+  }
+}

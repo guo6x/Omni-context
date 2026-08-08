@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "holdback-v2-seal-manifest-v1",
+  "goal": "Goal 18HB",
+  "status": "SEALED_PRE_VALIDATION",
+  "supersedes": {
+    "legacy_holdback": "RETIRED_BEFORE_EVALUATION",
+    "legacy_manifest": "goal18-output/holdback-public-manifest.json",
+    "legacy_manifest_sha256": "d433bfa5edd9a10d361dd478a3b4a68a4e8271766b17e07f0c7976d6bdbb0fd8",
+    "legacy_sealed_artifact_sha256": "f0d08a12731299fd0246492babc2edd118a08c836588ad0aa841b84543333ea3",
+    "retirement_record": "goal18hb-output/legacy-holdback-retirement-record.json"
+  },
+  "holdback_file": "holdback-v2-fixtures.jsonl (offline custody)",
+  "sample_count": 180,
+  "task_type_counts": {
+    "per_task_type_12": true,
+    "TT01": 12,
+    "TT02": 12,
+    "TT03": 12,
+    "TT04": 12,
+    "TT05": 12,
+    "TT06": 12,
+    "TT07": 12,
+    "TT08": 12,
+    "TT09": 12,
+    "TT10": 12,
+    "TT11": 12,
+    "TT12": 12,
+    "TT13": 12,
+    "TT14": 12,
+    "TT15": 12
+  },
+  "sha256": "005aa51f1d030dae2019a70f2de705ac2b2a5480a9f2ce043930eef29057050a",
+  "gold_projection_sha256": "80ab80ecb4784f783a4ba38d5511f5f10d16452b130a006a724c39d40209e45b",
+  "seed_hash": "c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1",
+  "generator": {
+    "version": "goal18-generator/v2.1.0",
+    "commit": "cd53eaea538ac2992012e21e94370e918b166dde",
+    "identity_file": "goal18hb-output/holdback-v2-generator-identity.json"
+  },
+  "schema_sha256": "aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4",
+  "ri_audit": {
+    "file": "goal18hb-output/holdback-v2-referential-integrity.json",
+    "sha256": "18102cccc081342ea58dacbd761b4e56bd7e80fd25c2e926eac052f468fe7cad",
+    "severity_counts": "ERROR=0; INFO 89 (RI-03 x77, RI-04 x12 with justifications)"
+  },
+  "integrity_suite": {
+    "file": "goal18hb-output/benchmark-integrity-tests/integrity.test.mjs",
+    "sha256": "47f643b1e9f1b067faef0f296ef4c8908f375748b73252c96353f7824bb644b1",
+    "status": "SEE holdback-v2-integrity-report.md (T1-T18)"
+  },
+  "authorized_by": "holdback-v2-run-auth.json",
+  "generated_at": "2026-08-07T17:31:33.471Z",
+  "policy_version": "decision-policy-rules-v1 (Goal 13) / invariants-v1",
+  "sealed_artifact": {
+    "file": "goal18hb-output/holdback-v2-sealed.bin",
+    "sha256": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3",
+    "cipher": "AES-256-GCM",
+    "kdf": "scrypt(N=32768,r=8,p=1)",
+    "key_derivation": "key=scrypt(seed, salt=sha256(goal18hb-holdback-seal-v2|seed_hash)[0:32])"
+  },
+  "immutability": {
+    "edits_forbidden": true,
+    "reseal_requires": [
+      "new authorization",
+      "seed custody release",
+      "full integrity suite",
+      "manifest re-seal"
+    ]
+  },
+  "access_log_ref": "holdback-v2-access-log.jsonl",
+  "custody": {
+    "plaintext_location": "offline custody directory (outside repository)",
+    "seed_location": "offline custody directory (outside repository)"
+  },
+  "invalid_run_rules": [
+    "on infrastructure failure (corrupt file, failed decryption, hash mismatch): record invalid-run entry in access log; no in-place repair; full regeneration via seed custody release + new authorization"
+  ]
+}

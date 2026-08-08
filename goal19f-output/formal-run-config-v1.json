@@ -1,0 +1,503 @@
+{
+  "schema_version": 2,
+  "config_id": "formal-run-config-v1",
+  "experiment_id": "omni-context-ablation-formal-v1",
+  "status": "FROZEN (all blockers closed; FORMAL_EXPERIMENT_READY)",
+  "freeze_manifest": "formal-experiment-freeze-manifest.json",
+  "authorization_schema": "formal-run-authorization-template.json",
+  "invalid_run_policy": "invalid-run-policy.md",
+  "configuration_sha256_sealed": {
+    "development": "795ab7ba00f4d6ee4232daad16a22dd02653d3f2db549f71c9602bddc81e2613",
+    "regression": "befb4be299038ead1ba1e1eb029295833308103d37b72d75a9dcee78d1f00945",
+    "note": "hash of the executed configuration object (includes split); the formal run must reproduce these exact hashes"
+  },
+  "arm_matrix": {
+    "file": "experiments/decision-benchmark/ablation/arm-matrix.json",
+    "sha256": "37fb3c493266486f91175f1dae302486a082625421f59cee663318ab0d700a98",
+    "bytes": 9520,
+    "git_blob": "fccf65d4f770361384fbd5c44e2a4b7688c7836a"
+  },
+  "product": {
+    "name": "omni-context-brain-server/decision-kernel-v1",
+    "commit": "e1367327121574d76e89858cf6dbc0b2843193c2",
+    "identity_hash": "2689edec1e95995ba9b72073918d685a8627f1e7ca173424ba91c67905cf3819",
+    "entrypoint": "brain-server/src/decision/kernel.ts",
+    "paths": [
+      "brain-server/src/decision/types.ts",
+      "brain-server/src/decision/errors.ts",
+      "brain-server/src/decision/schema.ts",
+      "brain-server/src/decision/context-validator.ts",
+      "brain-server/src/decision/evidence-gate.ts",
+      "brain-server/src/decision/constraint-engine.ts",
+      "brain-server/src/decision/authority-engine.ts",
+      "brain-server/src/decision/option-evaluator.ts",
+      "brain-server/src/decision/policy-engine.ts",
+      "brain-server/src/decision/state-machine.ts",
+      "brain-server/src/decision/lineage-engine.ts",
+      "brain-server/src/decision/event-ledger.ts",
+      "brain-server/src/decision/revisit-engine.ts",
+      "brain-server/src/decision/kernel.ts",
+      "brain-server/src/decision/decision-store.ts",
+      "brain-server/src/db/sqlite.ts",
+      "brain-server/src/mcp-retrieval.ts",
+      "brain-server/src/retrieval/temporal-layer.ts",
+      "brain-server/src/retrieval/evidence-selector.ts"
+    ],
+    "policy_version": "decision-policy-rules-v1",
+    "migration_version": "v30 (add_decision_kernel_v1_tables)",
+    "database_image": "in-memory sqlite, migration v30; fresh per sample; never shared across arms"
+  },
+  "runner": {
+    "name": "omni-context-experiment-runner-r1",
+    "base_commit": "13f21f8dd9e19a8423b331c2106f326a3ed09385",
+    "entrypoint": "src/runner.mjs",
+    "paths": [
+      "src/runner.mjs",
+      "src/cli.mjs",
+      "src/config.mjs",
+      "src/identity.mjs",
+      "src/git.mjs",
+      "src/metrics.mjs",
+      "src/errors.mjs",
+      "src/logging.mjs",
+      "src/paths.mjs",
+      "src/telemetry.mjs",
+      "src/dispatch.mjs",
+      "src/auth.mjs",
+      "src/scorer.mjs",
+      "src/providers/mock-provider.mjs",
+      "src/transports/http-server.mjs",
+      "src/transports/stdio-cli.mjs"
+    ],
+    "identity_hash": "8aa4fc40472a70e08e4bad2286661742f91c0019fd427cdce21bd1f0746178bf"
+  },
+  "evaluator": {
+    "name": "ablation-harness-r1",
+    "version": "0.2.0-formal-ready",
+    "branch": "research/ablation-harness-r1",
+    "commit": "85d418e95a6bac1e2912c33e32fb99d504a9cb26",
+    "identity_hash": "d9d802adee07649f1a54b7227ef5aea32a1298ffc7c99961628b9681716ab396",
+    "entrypoint": "experiments/decision-benchmark/ablation/run-ablation.mjs",
+    "paths": [
+      "decision-benchmark/ablation/run-ablation.mjs",
+      "decision-benchmark/ablation/arm-matrix.json",
+      "decision-benchmark/ablation/README.md",
+      "decision-benchmark/ablation/src/arm-runner.mjs",
+      "decision-benchmark/ablation/src/checks.mjs",
+      "decision-benchmark/ablation/src/kernel-arms.mjs",
+      "decision-benchmark/ablation/src/kernel-context.mjs",
+      "decision-benchmark/ablation/src/parity.mjs",
+      "decision-benchmark/ablation/src/planner.mjs",
+      "decision-benchmark/ablation/src/qualification.mjs",
+      "decision-benchmark/ablation/src/response-map.mjs",
+      "decision-benchmark/ablation/src/retrieval-adapter.mjs",
+      "decision-benchmark/ablation/src/revisit-protocol.mjs",
+      "decision-benchmark/ablation/src/shared-context.mjs",
+      "decision-benchmark/ablation/src/sufficiency.mjs"
+    ],
+    "requirement": "execute from the clean-check worktree at 85d418e95a6bac1e2912c33e32fb99d504a9cb26; evaluator dirty=false required"
+  },
+  "scorer": {
+    "name": "goal16a-scorer-v1.1",
+    "version": "1.1",
+    "entrypoint": "goal16a-output/scorer-v1.1/scorer.mjs",
+    "identity_hash": "3b4c7a2441bed3ad1b1019b104948f93d59d53ed5bfeaabe307a6e6a5a5ddbbb",
+    "paths": [
+      "goal16a-output/scorer-v1.1/scorer.mjs",
+      "goal16a-output/scorer-v1.1/conformance-tests/scorer-v1.1.test.mjs",
+      "goal14-output/benchmark-gold-contract.schema.json",
+      "goal14-output/metric-definitions.md"
+    ],
+    "constraint": "no semantic changes permitted; identity hash must match the sealed value",
+    "commit": "5cac8ae975174efc19149996d737581df2aa33c2",
+    "commit_note": "scorer v1.1 lives at commit 5cac8ae; all 4 scorer/gold-contract files are blob-identical to product e136732 (verified via git rev-parse 5cac8ae:<path> == e136732:<path>)"
+  },
+  "arms": {
+    "A0": {
+      "id": "A0",
+      "name": "no-memory (current input only)",
+      "flags": {
+        "memory_store_loaded": false,
+        "semantic_retrieval": false,
+        "temporal_qualification": false,
+        "provenance_qualification": false,
+        "sufficiency_gate": false,
+        "kernel": false,
+        "outcome_feedback": false,
+        "revisit": false,
+        "lineage_revision_propagation": false,
+        "evidence_invalidation_propagation": false
+      },
+      "entrypoint": "src/planner.mjs#plan",
+      "enabled_modules": [
+        "planner (sealed model / stand-in)"
+      ],
+      "disabled_modules": [
+        "retrieval-adapter",
+        "brain-server/src/retrieval/temporal-layer.ts",
+        "brain-server/src/retrieval/evidence-selector.ts",
+        "brain-server/src/decision/evidence-gate.ts",
+        "brain-server/src/decision/kernel.ts"
+      ],
+      "context_input": "current input only: scenario.prompt, goal, options, hard_constraints, soft_preferences, risk, reversibility, authority"
+    },
+    "A1": {
+      "id": "A1",
+      "name": "plain semantic relevance retrieval (unified adapter; no qualification, no gate, no kernel)",
+      "flags": {
+        "memory_store_loaded": true,
+        "semantic_retrieval": true,
+        "temporal_qualification": false,
+        "provenance_qualification": false,
+        "sufficiency_gate": false,
+        "kernel": false,
+        "outcome_feedback": false,
+        "revisit": false,
+        "lineage_revision_propagation": false,
+        "evidence_invalidation_propagation": false
+      },
+      "entrypoint": "src/retrieval-adapter.mjs#retrieveEvidence + src/planner.mjs#plan",
+      "enabled_modules": [
+        "src/retrieval-adapter.mjs (unified adapter: memoryCandidateScore historicalMode)",
+        "planner"
+      ],
+      "disabled_modules": [
+        "temporal qualification",
+        "provenance qualification",
+        "sufficiency gate",
+        "kernel.ts",
+        "outcome/revisit/lineage"
+      ],
+      "context_input": "current input + top-k relevance retrieval over the full memory pool (qualified + expired + conflicting; no temporal/provenance filtering)"
+    },
+    "A2": {
+      "id": "A2",
+      "name": "A1 + temporal/provenance qualification",
+      "flags": {
+        "memory_store_loaded": true,
+        "semantic_retrieval": true,
+        "temporal_qualification": true,
+        "provenance_qualification": true,
+        "sufficiency_gate": false,
+        "kernel": false,
+        "outcome_feedback": false,
+        "revisit": false,
+        "lineage_revision_propagation": false,
+        "evidence_invalidation_propagation": false
+      },
+      "entrypoint": "src/retrieval-adapter.mjs + src/qualification.mjs + src/planner.mjs",
+      "enabled_modules": [
+        "retrieval-adapter",
+        "temporal-layer.ts#filterAssertionsByTemporal",
+        "qualification wrapper (source_ref + writer eligibility, delete-event exclusion)"
+      ],
+      "disabled_modules": [
+        "sufficiency gate",
+        "kernel.ts",
+        "outcome/revisit/lineage"
+      ],
+      "context_input": "current input + temporal/provenance-qualified retrieval results"
+    },
+    "A3": {
+      "id": "A3",
+      "name": "A2 + evidence sufficiency gate",
+      "flags": {
+        "memory_store_loaded": true,
+        "semantic_retrieval": true,
+        "temporal_qualification": true,
+        "provenance_qualification": true,
+        "sufficiency_gate": true,
+        "kernel": false,
+        "outcome_feedback": false,
+        "revisit": false,
+        "lineage_revision_propagation": false,
+        "evidence_invalidation_propagation": false
+      },
+      "entrypoint": "src/retrieval-adapter.mjs + src/qualification.mjs + src/sufficiency.mjs + src/planner.mjs",
+      "enabled_modules": [
+        "retrieval-adapter",
+        "qualification",
+        "evidence-gate.ts#evaluateEvidenceGate/selectClarification"
+      ],
+      "disabled_modules": [
+        "kernel engines (constraint/authority/option-evaluator/policy/state/lineage)",
+        "outcome/revisit"
+      ],
+      "context_input": "current input + qualified evidence + gate route (CLARIFY/APPROVAL_REQUEST/DECIDE/REJECT)"
+    },
+    "A4": {
+      "id": "A4",
+      "name": "A3 + Decision Kernel (constraints/authority/risk/reversibility/decision action); outcome/revisit/lineage OFF",
+      "flags": {
+        "memory_store_loaded": true,
+        "semantic_retrieval": true,
+        "temporal_qualification": true,
+        "provenance_qualification": true,
+        "sufficiency_gate": true,
+        "kernel": true,
+        "outcome_feedback": false,
+        "revisit": false,
+        "lineage_revision_propagation": false,
+        "evidence_invalidation_propagation": false
+      },
+      "entrypoint": "brain-server/src/decision/kernel.ts#evaluateDecision (selection pipeline, persist=false) via src/kernel-arms.mjs",
+      "enabled_modules": [
+        "retrieval-adapter",
+        "kernel.ts selection pipeline (context-validator, evidence-gate, constraint-engine, authority-engine, option-evaluator, policy-engine, state-machine)"
+      ],
+      "disabled_modules": [
+        "outcome feedback (execution_outcome suppressed)",
+        "revisit (revisit plan never consumed)",
+        "lineage revision propagation (historical_decisions suppressed)",
+        "event-ledger/decision-store writes (persist=false)",
+        "declared_violations (gold field never read)"
+      ],
+      "context_input": "same unified retrieval evidence as A2/A3 + current input (goal/options/constraints/prefs/risk/reversibility/authority); kernel context built by src/kernel-context.mjs"
+    },
+    "A5": {
+      "id": "A5",
+      "name": "full Omni-Context: kernel + events + lineage + outcome + revisit + evidence invalidation propagation",
+      "flags": {
+        "memory_store_loaded": true,
+        "semantic_retrieval": true,
+        "temporal_qualification": true,
+        "provenance_qualification": true,
+        "sufficiency_gate": true,
+        "kernel": true,
+        "outcome_feedback": true,
+        "revisit": true,
+        "lineage_revision_propagation": true,
+        "evidence_invalidation_propagation": true
+      },
+      "entrypoint": "brain-server/src/decision/kernel.ts#evaluateDecision (full pipeline, persist=true, historical_decisions + execution_outcome enabled) via src/kernel-arms.mjs + src/revisit-protocol.mjs",
+      "enabled_modules": [
+        "retrieval-adapter",
+        "kernel.ts full pipeline",
+        "lineage-engine.ts",
+        "event-ledger.ts",
+        "decision-store.ts",
+        "revisit-engine.ts (explicit-call-only protocol; no background worker)"
+      ],
+      "disabled_modules": [],
+      "context_input": "same unified retrieval evidence as A2-A4 + current input + historical_decisions + execution_outcome (target component difference)"
+    }
+  },
+  "budgets": {
+    "retrieval_budget_top_k": 10,
+    "retrieval_budget_min_score": 1,
+    "token_budget_context_encoding": null,
+    "token_budget_plan_decoding": null,
+    "max_output_tokens": null,
+    "temperature": 0,
+    "top_p": null,
+    "seed": "SEED_N/A",
+    "retry_max_attempts": 3,
+    "retry_transport_parse_only": true,
+    "concurrency": 1,
+    "timeout_ms": null
+  },
+  "prompts": {
+    "layout": "prompts/A0..A5/",
+    "shared_across_arms": [
+      "task.txt",
+      "output-schema.json",
+      "repair.txt",
+      "timeout-recovery.txt"
+    ],
+    "shared_file_hashes": {
+      "task.txt": {
+        "sha256": "520a6d3061cdac20ad6c044daa50ebaa008b8d2c65d85e61549275069ef84d10",
+        "bytes": 1919
+      },
+      "output-schema.json": {
+        "sha256": "9a423afdb7a7d4c8c0049a860cfb1e4b992104f4ef2dab05583eb3c8b273cdcb",
+        "bytes": 2196
+      },
+      "repair.txt": {
+        "sha256": "40278a5221196284a41197c134aa4bbdc2971b59d3afec48df0d1d7e054207a4",
+        "bytes": 821
+      },
+      "timeout-recovery.txt": {
+        "sha256": "6fdecd7ab3dc4ada3e075d96d23344c81992171d24616e9b8a4ae0135a8b21f0",
+        "bytes": 818
+      }
+    },
+    "system_txt_hashes": {
+      "A0": "420a472551cca73b8e7082c78fed7c25551a9c898946ba66612222cf61ddd50d",
+      "A1": "e68118c0abb725b8ec835bf174e44cef58abd0fa6667d37c44c64e9f74c894b4",
+      "A2": "be18347ead9b9b3393604d63bee3d0ce39a0c005c2092b8e1667ff27b958b69e",
+      "A3": "3fb163f0eed291c0816dfaed1e7d3e523e6c6776de61ba1549c9bfc271f6f412",
+      "A4": "950b7a5777cfac1c75d168b96a62c150aafa082914277f5cf0591adc2f971a04",
+      "A5": "0318e511cf29140397b1578e6c5d0df9163f5e92f57d51c8108f792ad2ba8f7e"
+    },
+    "note": "system.txt differs ONLY in the arm capabilities block; full per-arm manifest in prompt-byte-manifest.json"
+  },
+  "model": {
+    "status": "FROZEN (OWNER_APPROVED)",
+    "main_model": {
+      "display_name": "DeepSeek V4 Flash",
+      "requested_model_id": "deepseek-v4-flash",
+      "provider": "deepseek"
+    },
+    "auxiliary_evaluator": {
+      "display_name": "Kimi 2.6",
+      "requested_model_id": "kimi-k2.6",
+      "provider": "moonshot",
+      "role": "auxiliary LLM evaluator only where the frozen protocol requires one"
+    },
+    "fixed": {
+      "temperature": 0,
+      "top_p": null,
+      "retry_max_attempts": 3,
+      "retry_transport_parse_only": true,
+      "seed": "SEED_N/A or provider-supported seed recorded",
+      "concurrency": 1
+    },
+    "runtime_recorded_at_run_start": [
+      "actual returned model identity per response",
+      "version/snapshot",
+      "serving version hash",
+      "API date",
+      "max_input_tokens",
+      "max_output_tokens",
+      "timeout_ms",
+      "structured output mode",
+      "unit call cost"
+    ],
+    "runtime_identity_rule": "if the actual returned model identity differs from the frozen requested id, the run is invalid (MODEL_IDENTITY_MISMATCH per invalid-run-policy.md); no silent substitution"
+  },
+  "datasets": {
+    "development": {
+      "file": "goal14-output/development-fixtures.jsonl",
+      "sha256": "e7396d702856e43bb5227f5abac6e91010bef20860353fe5c5a7247b7a1179dd",
+      "rows": 20
+    },
+    "regression": {
+      "file": "goal14-output/regression-fixtures.jsonl",
+      "sha256": "fb1b91e42822b1d898698703b56674204ca4ba9da709d797949124908c76ed55",
+      "rows": 15
+    },
+    "prohibited": [
+      "goal18 validation split",
+      "goal18 holdback (plaintext never decrypted; public manifest is metadata only)"
+    ]
+  },
+  "environment": {
+    "os": "Windows (PowerShell host)",
+    "node": "v22.23.2",
+    "device": "same machine for all arms and both splits",
+    "concurrency": 1,
+    "determinism_samples": 3,
+    "run_sequence": "development dry-run (gate) -> regression dry-run (--requires-run <dev-run-id>)"
+  },
+  "regression_gate": {
+    "rule": "regression run requires --requires-run <completed development run id> with COMPLETED marker",
+    "evidence": "preflight-reg-001 gated on preflight-dev-001"
+  },
+  "outputs_contract": "sealed run dirs under experiments/runs/ablation-dryrun-v1/<split>/<run-id>/; results are ABLATION_PREFLIGHT / NON_CONFIRMATORY until the formal protocol executes",
+  "goal18_integrity": {
+    "note": "metadata only — read from manifests; validation fixtures/holdback plaintext never loaded by this goal or the harness",
+    "validation_manifest": {
+      "file": "goal18-output/validation-manifest.json",
+      "schema": "validation-manifest-v2",
+      "sha256_of_manifest": "1cffe23134959b3f0a276360a82a99d6e91d8ccfc3f3e93b5a99c7d116a2e7d7",
+      "seed_hash": "7ed2454b19b723968dad403f0f574c08505b3a45355b77b12ae8fd0afba54cc0",
+      "counts_total": 120
+    },
+    "validation_fixture": {
+      "file": "goal18-output/validation-set.jsonl",
+      "sha256": "3ceddb1aaee51e28dfe20a930696b01065dcfae4d47bdac1f1dd5dc3c39e9667",
+      "lines": 120
+    },
+    "validation_gold": {
+      "file": "goal18-output/validation-gold.jsonl",
+      "sha256": "763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed",
+      "lines": 120
+    },
+    "holdback_public_manifest": {
+      "file": "goal18hb-output/holdback-v2-public-manifest.json",
+      "schema": "holdback-v2-seal-manifest-v1",
+      "holdback_fixture_sha256": "005aa51f1d030dae2019a70f2de705ac2b2a5480a9f2ce043930eef29057050a",
+      "sealed_artifact": {
+        "file": "goal18hb-output/holdback-v2-sealed.bin",
+        "sha256": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3",
+        "cipher": "AES-256-GCM"
+      },
+      "seed_hash": "c627039c6930c35cbc62bd256bba89f8daab6278840b4af8ac4f1e8b43a2caa1",
+      "sha256_of_manifest": "4e4239d4170b56286eb33cd832e66c3aa1c2c2ba3bb7053e050af7c7a4319d7a"
+    },
+    "benchmark_schema": {
+      "file": "goal18-output/schema/decision-benchmark-v2-schema.json",
+      "sha256": "aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4"
+    },
+    "annotation_guide": {
+      "file": "annotation-guide.md",
+      "note": "read-only reference; governs gold annotation semantics"
+    },
+    "access_policy": "formal runs never read validation fixture/gold content or holdback plaintext; only the hashes above are used for integrity gates"
+  },
+  "authority_inputs": {
+    "preregistration": "goal17p-output/experimental-preregistration.md",
+    "method_freeze_17q": "goal17p-output/method-section-freeze-report.md (METHOD_DRAFT_READY_WITH_BLOCKERS; §7 protocol frozen except model selection PLACEHOLDER-RES-05)",
+    "goal19p_reports": "goal19p-output/ (all 12 artifacts)",
+    "paper_decisions": "goal17p-output/unresolved-paper-decisions.md (D-05 scorer v1.1 @ 5cac8ae RESOLVED; D-11 model selection TBD; D-07 revisit explicit-call)"
+  },
+  "randomness_handling": {
+    "temperature": 0,
+    "seed": "SEED_N/A or provider-supported seed recorded",
+    "determinism_check": "3-sample A5 re-evaluation identical; mismatch reported and run invalidated",
+    "note": "byte-stability proven with stand-in; formal runs re-run determinism check"
+  },
+  "cost_ceiling": {
+    "status": "FROZEN (OWNER_APPROVED)",
+    "value_cny": {
+      "deepseek_v4_flash": 200,
+      "kimi_2_6": 20,
+      "total_hard_cap": 220
+    },
+    "rule": "projected exceedance stops the run BEFORE further calls; report gap; new owner approval required for any increase"
+  },
+  "authorization_requirement": "formal runs require a signed formal-run-authorization-template.json (schema v1, validates against goal19p-output/formal-run-authorization-schema.json); unsigned run = invalid",
+  "budget_estimates": {
+    "validation": {
+      "samples": 120,
+      "arms": 6,
+      "max_attempts": 3,
+      "formula": "samples x arms x attempts x tokens_per_call x price_per_token",
+      "estimated_cost_cny": null,
+      "note": "finalize from provider pricing before the run; must fit within ¥220"
+    },
+    "holdback": {
+      "samples": 180,
+      "arms": 6,
+      "max_attempts": 3,
+      "formula": "samples x arms x attempts x tokens_per_call x price_per_token",
+      "estimated_cost_cny": null,
+      "note": "single sealed pass; finalized before holdback ceremony; fits within ¥220"
+    }
+  },
+  "remote_data_processing": {
+    "approved": true,
+    "scope": [
+      "synthetic benchmark inputs",
+      "anonymized benchmark inputs",
+      "frozen prompt/context required for the experiment"
+    ],
+    "prohibited": [
+      "real user data",
+      "PII",
+      "credentials",
+      "private files",
+      "sensitive personal records",
+      "unrelated project data",
+      "holdback custody/seal secrets"
+    ],
+    "holdback_rule": "only benchmark sample content necessary for inference may be sent during the two-person ceremony"
+  },
+  "run_time_window": {
+    "preferred_start_window_local": "20:00-02:00",
+    "timezone": "owner local timezone",
+    "hard_constraint": false,
+    "run_any_time_if_operationally_preferable": true
+  }
+}

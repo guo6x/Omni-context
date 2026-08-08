@@ -1,0 +1,28 @@
+{
+  "schema_version": "holdback-v2-run-auth-v1",
+  "authorizer": "goal18hb-project-owner",
+  "authorized_at": "2026-08-07T17:17:42.456Z",
+  "purpose": "Goal 18HB Holdback V2 construction and sealing only (retire V1). Explicitly NOT authorized: running any model/kernel on holdback, reading holdback plaintext by kernel implementers, modifying fixtures after sealing, releasing seed without two-person rule.",
+  "gates": {
+    "legacy_holdback_retired": "RETIRED_BEFORE_EVALUATION",
+    "generator_frozen": "research/decision-benchmark-holdback-v2 @ cd53eaea538ac2992012e21e94370e918b166dde (goal18-generator/v2.1.0)",
+    "generator_deterministic": "3/3 dummy runs byte-identical (4a1f820e...)",
+    "schema_validation": "PASS",
+    "integrity_suite": "SEE holdback-v2-integrity-report.md (T1-T18)"
+  },
+  "scope": [
+    "holdback-v2-fixtures.jsonl (plaintext, custody only)",
+    "holdback-v2-sealed.bin",
+    "holdback-v2-public-manifest.json",
+    "holdback-v2-access-log.jsonl",
+    "decision-benchmark-v2-schema.json"
+  ],
+  "forbidden": [
+    "run_models",
+    "score_holdback",
+    "edit_fixtures_after_seal",
+    "release_seed_without_two_person_rule"
+  ],
+  "seed_hash": "C627039C6930C35CBC62BD256BBA89F8DAAB6278840B4AF8AC4F1E8B43A2CAA1",
+  "signature": "offline-signature-pending (custodian records)"
+}

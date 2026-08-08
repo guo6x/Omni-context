@@ -1,4 +1,4 @@
-﻿// Goal 18HB - Holdback V2 coverage-matrix analysis.
+// Goal 18HB - Holdback V2 coverage-matrix analysis.
 //
 // CLI:
 //   node holdback-v2-coverage.mjs --fixtures <abs path to fixtures jsonl> --out <abs output dir>
@@ -119,11 +119,13 @@ function extractFactors(sample, tt, idx, splitTag) {
   const evidenceSufficient = qualifiedIds.size >= 1 && required.every((id) => available.has(id));
   const history = sample.historical_decision ? 'present' : 'absent';
   const approvalRequired = action === 'APPROVAL_REQUEST' || action === 'PROPOSE_CONFIRM' || gold.approval_requirement?.required === true;
+  // revision factor per Goal 18 conventions (F10): only REVISE/REVERSE/INVALIDATE/SUPERSEDE
+  // (revise_family) vs KEEP/CONTINUE (keep_family) carry revision semantics when history is
+  // present; everything else is n/a by design (e.g. TT13 OVERRIDE_HONOR).
   let revisionType = 'n/a';
   if (history === 'present') {
     if (REVISION_ACTIONS.has(action)) revisionType = 'revise_family';
     else if (KEEP_ACTIONS.has(action)) revisionType = 'keep_family';
-    else revisionType = 'other';
   }
   const userOverride = action === 'OVERRIDE_HONOR';
   const plan = planFor(tt, splitTag, idx);
@@ -176,6 +178,10 @@ function analyze(fixtures, goldPath, splitTag) {
       anomalies.push(`sample_id pattern not parseable, used ordinal index: ${s.sample_id ?? '(missing sample_id)'}`);
     }
     if (!TASK_TYPES.includes(tt)) anomalies.push(`unknown task_type: ${tt} (${s.sample_id})`);
+    const action = s.expected_action?.action;
+    if (s.historical_decision && !REVISION_ACTIONS.has(action) && !KEEP_ACTIONS.has(action) && action !== 'OVERRIDE_HONOR') {
+      anomalies.push(`history present with unexpected gold action ${action}: ${s.sample_id}`);
+    }
     rows.push(extractFactors(s, tt, idx, splitTag));
   }
   if (missingGold.length) anomalies.push(`fixtures without gold (${missingGold.length}): ${missingGold.join(', ')}`);
@@ -290,7 +296,9 @@ function buildReport(ctx) {
   L.push('|---|---|---|');
   const currency = (r) => (r.conflictingCount > 0 ? 'conflicting_present' : (r.expiredCount > 0 ? 'stale_present' : 'current'));
   const riskBand = (r) => (['high', 'critical'].includes(r.risk) ? 'higher' : (r.risk === 'low' ? 'low' : (r.risk === 'medium' ? 'medium' : 'negligible')));
-  L.push(`| sufficient / insufficient evidence | evidence_sufficient | ${fmtCounts(countBy(rows, (r) => (r.evidenceSufficient ? 'sufficient' : 'insufficient')))} |`);
+  const goldSufficiency = (r) => (['CLARIFY', 'REJECT', 'DEFER'].includes(r.action) ? 'insufficient' : 'sufficient');
+  L.push(`| sufficient / insufficient evidence（可用性判定） | evidence_sufficient | ${fmtCounts(countBy(rows, (r) => (r.evidenceSufficient ? 'sufficient' : 'insufficient')))} |`);
+  L.push(`| sufficient / insufficient evidence（gold action 约定） | gold.action ∈ CLARIFY/REJECT/DEFER | ${fmtCounts(countBy(rows, goldSufficiency))} |`);
   L.push(`| history / no history | history | ${fmtCounts(countBy(rows, (r) => r.history))} |`);
   L.push(`| approval / no approval | approval_required | ${fmtCounts(countBy(rows, (r) => (r.approvalRequired ? 'approval' : 'no_approval')))} |`);
   L.push(`| stale / current / conflicting evidence | expired_count, conflicting_count | ${fmtCounts(countBy(rows, currency))} |`);
@@ -312,7 +320,7 @@ function buildReport(ctx) {
       continue;
     }
     const n = (x) => rr.filter((r) => x(r)).length;
-    L.push([
+    const cells = [
       tt, rr.length,
       n((r) => r.evidenceSufficient), n((r) => r.history === 'present'),
       n((r) => r.approvalRequired), n((r) => r.expiredCount > 0), n((r) => r.conflictingCount > 0),
@@ -321,7 +329,8 @@ function buildReport(ctx) {
       [...new Set(rr.map((r) => r.risk))].sort().join(';'),
       [...new Set(rr.map((r) => r.reversibility))].sort().join(';'),
       [...new Set(rr.map((r) => r.authority))].sort().join(';')
-    ].join(' | '));
+    ];
+    L.push(`| ${cells.join(' | ')} |`);
   }
   L.push('');
 
@@ -370,12 +379,14 @@ function buildReport(ctx) {
   L.push('- 按 Goal 18HB 规范第 9 节：**禁止为了追求完美均衡而破坏预登记分布**。本报告不执行任何平衡性调整；若分布与预登记计划存在差异，仅在上文列出，不进行修补。');
   L.push('');
 
-  if (anomalies.length > 0) {
-    L.push('## 7. 数据异常清单');
-    L.push('');
+  L.push('## 7. 数据异常清单');
+  L.push('');
+  if (anomalies.length === 0) {
+    L.push('无异常。');
+  } else {
     for (const a of anomalies) L.push(`- ${a}`);
-    L.push('');
   }
+  L.push('');
 
   L.push(`## 附：输出文件`);
   L.push('');
