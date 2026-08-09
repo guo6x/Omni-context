@@ -103,7 +103,7 @@ command: node .worktrees/runner-experiment-runner-r1/scripts/scan-secrets.mjs (t
   modified by Goal 18H-E; removing it would require unrelated repo-wide remediation outside this goal's scope.
 command: node .worktrees/runner-experiment-runner-r1/scripts/scan-secrets.mjs --staged (Goal 18H-E staged changes)
 - PASS, 0 findings (both commits).
-command: targeted path/content scan of goal18he-output (all 83 text files)
+command: targeted path/content scan of goal18he-output (all 99 text files at final verification)
 - PASS, 0 findings (private-key / API-key / token / secret-assignment patterns, secret-bearing path rules).
 
 ## 12. Holdback V2
@@ -115,8 +115,11 @@ command: targeted path/content scan of goal18he-output (all 83 text files)
 - Commit 1 (freeze package): e2df7b5c20d074b1c3e40a7c073d796054a8dd0a
   message: feat(benchmark): freeze Validation V2 after deterministic contract repair (Goal 18H-E)
   95 files: goal18he-output/ (V2 artifacts, audits, repair docs, regression tests, work evidence) + goal19f-output/formal-run-config-v1.json
-- Commit 2 (finalization): carries this log, artifact-sha256.txt, final-pre-goal20-gate.{json,md}, goal18he-status.json,
-  and the freeze-record freeze_commit update (parent of e2df7b5c20d074b1c3e40a7c073d796054a8dd0a).
+- Commit 2 (finalization): bfc9fe1c036da2092e0fcc6df0f66c52512b67e3 carries this log, artifact-sha256.txt,
+  final-pre-goal20-gate.{json,md}, goal18he-status.json, and the freeze-record freeze_commit update (parent = e2df7b5c20d074b1c3e40a7c073d796054a8dd0a).
+- Commit 3 (wording fix): 99d70cf45813a4d3d924efc3930e8af854950a85 corrects the parent wording in this log/status
+  and regenerates artifact-sha256.txt.
+- Commit 4: carries the final wording update of this line and the regenerated artifact manifest.
 - Unrelated pre-existing dirty state (goal18h-output modified files, other prior-goal untracked outputs) remains untouched.
 
 ## 14. File repairs during finalization (encoding only)

@@ -3,7 +3,7 @@
 # The manifest itself is not self-referential; verify its own hash with Get-FileHash / git blob.
 
 sha256  authority-action-audit.csv  45e706529b13a4c1609bb3abd465902802fc55c749e2bb5212556ed789bc570e
-sha256  commands-and-results.log  22068ca17504712e97844852550494851be719b2d8b6a3b773be7540f9e910c7
+sha256  commands-and-results.log  6d9a4d083506f4a7af184028c9218f2c4a085a486bc8072f4b5e88a25e7464d1
 sha256  deleted-source-provenance-audit.csv  d561a514b1fa99479b9c663025ea12ebb5b152fcd2d34448da017be386ed7a55
 sha256  final-pre-goal20-gate.json  e95b9dc236ae7b32d8bc3953eeb033315e0c462b07e30f72c0d3ee4dea0c89ba
 sha256  final-pre-goal20-gate.md  479204b0ffc7982d418fa94263c9435001d0e20d1b9bfc7a98da3280998c4683
