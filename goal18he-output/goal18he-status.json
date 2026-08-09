@@ -8,7 +8,7 @@
   "commits": {
     "generator_repair": "a17864b931fbcbd8761dd46a94fc06054f1f981e",
     "freeze_package": "e2df7b5c20d074b1c3e40a7c073d796054a8dd0a",
-    "finalization": "the Goal 18H-E finalization commit carrying this file (parent of e2df7b5c20d074b1c3e40a7c073d796054a8dd0a)"
+    "finalization": "the Goal 18H-E finalization commit (parent = e2df7b5c20d074b1c3e40a7c073d796054a8dd0a)"
   },
   "hashes": {
     "validation_v2_fixture_sha256": "e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",

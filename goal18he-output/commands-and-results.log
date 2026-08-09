@@ -9,7 +9,7 @@ Final gate re-execution: 2026-08-09
 - Pre-repair HEAD (recorded in pre-repair-state/pre-repair-integrity.json): fcbf9d22518798decf36623a5dc12f159d87c547
 - Generator repair commit: a17864b931fbcbd8761dd46a94fc06054f1f981e
 - Freeze package commit (commit 1): e2df7b5c20d074b1c3e40a7c073d796054a8dd0a
-- Finalization commit (commit 2): carries this log and the final gate records (parent of e2df7b5c20d074b1c3e40a7c073d796054a8dd0a)
+- Finalization commit (commit 2): carries this log and the final gate records (parent = e2df7b5c20d074b1c3e40a7c073d796054a8dd0a)
 
 ## 1. Protected baseline hashes (verified from disk)
 command: Get-FileHash -Algorithm SHA256 (goal18hc-output/*)

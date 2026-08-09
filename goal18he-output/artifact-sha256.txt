@@ -3,14 +3,14 @@
 # The manifest itself is not self-referential; verify its own hash with Get-FileHash / git blob.
 
 sha256  authority-action-audit.csv  45e706529b13a4c1609bb3abd465902802fc55c749e2bb5212556ed789bc570e
-sha256  commands-and-results.log  35fb6b9723eafdbeb8555035e026240c492ba7d338529e4735e8693b4f1c15fa
+sha256  commands-and-results.log  22068ca17504712e97844852550494851be719b2d8b6a3b773be7540f9e910c7
 sha256  deleted-source-provenance-audit.csv  d561a514b1fa99479b9c663025ea12ebb5b152fcd2d34448da017be386ed7a55
 sha256  final-pre-goal20-gate.json  e95b9dc236ae7b32d8bc3953eeb033315e0c462b07e30f72c0d3ee4dea0c89ba
 sha256  final-pre-goal20-gate.md  479204b0ffc7982d418fa94263c9435001d0e20d1b9bfc7a98da3280998c4683
 sha256  generator-repair-diff.md  1ebf2ff1ec3b4593302c1391437f64462516f6339b09180e1fb4523e898f3886
 sha256  generator-repair-regression-tests/generator-repair-regression.test.mjs  810a7196354294c1a0b16f4b06f88e9ccf3a72221c5deaa76fc3063e86f2f784
 sha256  generator-repair-regression-tests/README.md  4673683275af5218d6a49dc8b0850b2c0a0435d6278ed0df3812758e4e31fd39
-sha256  goal18he-status.json  8f5e577d66440aa7f0de532ee7fb5a122f4fa3d7e8661763f1174c82deadc656
+sha256  goal18he-status.json  a7a4ee04673c92d953b4a1a6a65cfef6f5d5d275cb9cb7693ebf4353c65499de
 sha256  goal19f-validation-v2-sync-record.json  25f12a4f584ef6e4b3333ae69ad5f5a11ce6300aa6170509fed240f16152d37c
 sha256  human-review-final-v2-mapping.json  3bca388a4f0cd717f4327bdd12b157b5ce944cb4fa1d5af560b3ed3b7c7e7f87
 sha256  human-review-final-v2-sensitivity.json  b6d4227710935472b679c835abaf94d8d9ad7f9e6ae3e96fef2e6ccf633c8378
