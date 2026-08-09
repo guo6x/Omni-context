@@ -117,7 +117,7 @@
     "TT15 (all 8): frozen source-lifecycle contract forbids qualified evidence sourced from deleted e001; ev001 re-expressed as evidence of the deletion (source_ref=e004, supports=[])."
   ],
   "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e",
-  "freeze_commit": "PENDING_FREEZE_PACKAGE_COMMIT",
+  "freeze_commit": "e2df7b5c20d074b1c3e40a7c073d796054a8dd0a",
   "timestamp": "2026-08-09T10:50:20.101Z",
   "no_model_evaluation_before_freeze": true,
   "holdback_touched": false,

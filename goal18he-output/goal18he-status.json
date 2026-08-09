@@ -1,0 +1,46 @@
+{
+  "schema_version": "goal18he-status-v1",
+  "goal": "18H-E",
+  "freeze_id": "VALIDATION_GOLD_FREEZE_V2",
+  "status": "VALIDATION_V2_FROZEN_GOAL20_READY",
+  "generated_at": "2026-08-09T19:05:00.000Z",
+  "branch": "research/decision-benchmark-holdback-v2",
+  "commits": {
+    "generator_repair": "a17864b931fbcbd8761dd46a94fc06054f1f981e",
+    "freeze_package": "e2df7b5c20d074b1c3e40a7c073d796054a8dd0a",
+    "finalization": "the Goal 18H-E finalization commit carrying this file (parent of e2df7b5c20d074b1c3e40a7c073d796054a8dd0a)"
+  },
+  "hashes": {
+    "validation_v2_fixture_sha256": "e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",
+    "validation_v2_gold_sha256": "7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440",
+    "validation_v2_manifest_sha256": "e0a56ef0337502ba803cb45bf0f6e1f2e22ea7518786ce1dc81b190c490a4f8d",
+    "holdback_sealed_sha256": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3"
+  },
+  "gates_summary": {
+    "validation_count": "120 = 15 x 8",
+    "schema_errors": 0,
+    "referential_errors": 0,
+    "authority_action_errors": 0,
+    "approval_confirmation_errors": 0,
+    "lineage_errors": 0,
+    "source_lifecycle_errors": 0,
+    "evidence_errors": 0,
+    "constraint_errors": 0,
+    "clarification_errors": 0,
+    "runner_scorer_harness": "PASS (34/34, 19/19, 13/13)",
+    "byte_stability": "PASS",
+    "determinism": "PASS",
+    "holdback_untouched": true,
+    "no_a0_a5_executed": true,
+    "no_formal_validation_output": true,
+    "goal19f_synchronized": true,
+    "secret_scan_goal_scope": "PASS",
+    "secret_scan_tracked_tree": "PASS_WITH_DOCUMENTED_PREEXISTING_FINDING"
+  },
+  "limitations": [
+    "Exact dev/reg overlap recompute unavailable (goal14-output absent); prior proxy evidence 0 matches; documented in split-isolation-check.json.",
+    "Tracked-tree secret scan pre-existing debug.keystore finding disclosed (out of scope for 18H-E).",
+    "Goal19F configuration_sha256_sealed must be recomputed at formal-run preflight (holds pre-sync bytes)."
+  ],
+  "next_step": "Goal 20 formal validation requires owner authorization, provider pricing confirmation, and formal-run preflight recomputation of the executed configuration hash."
+}

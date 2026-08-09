@@ -1,0 +1,129 @@
+# Goal 18H-E Command and Results Log
+
+Repository: D:\ai_code\Omni-context
+Branch: research/decision-benchmark-holdback-v2
+Goal: Validation V2 Contract Repair, Human-Review Corrigendum & Final Freeze Gate
+Final gate re-execution: 2026-08-09
+
+## 0. Baseline
+- Pre-repair HEAD (recorded in pre-repair-state/pre-repair-integrity.json): fcbf9d22518798decf36623a5dc12f159d87c547
+- Generator repair commit: a17864b931fbcbd8761dd46a94fc06054f1f981e
+- Freeze package commit (commit 1): e2df7b5c20d074b1c3e40a7c073d796054a8dd0a
+- Finalization commit (commit 2): carries this log and the final gate records (parent of e2df7b5c20d074b1c3e40a7c073d796054a8dd0a)
+
+## 1. Protected baseline hashes (verified from disk)
+command: Get-FileHash -Algorithm SHA256 (goal18hc-output/*)
+- human-review-raw-round2.jsonl           98c94917824081360247586cc99e718a1cf219d5a31069ca72c9ee9cbfd2a6dc
+- human-review-round2-agreement.json      eca1c115a5e0f9e356cf19eb706589f0c089103f7690819def384db25c840e2f
+- human-review-round2-agreement-report.md c0197678db255b15af23a277cbf4a858d84f223a3683eea10ac0810acf69d3ea
+- human-review-round2-raw-freeze.json     af3219d4aa5324e0d537e48402b2c1eb092ee302b4feee429425266d945a54a4
+- human-review-round2-raw.lock.json       c8df29d94431b89cc9bf49307fd1bc9e3814be9ecbdfc39a2790a2ddd00438c2
+- formal-human-annotation-rubric-v1.json  120315f6af19583df699b28b281f6b42d707b5d8e8d83614624bf76b570e4d92
+- formal-human-contract-crosswalk.csv     3944c353acfc118548df028da27f83f39264b4def41e9d0638f41963ac23939d
+- human-review-round2-pre-registration.json 83bb0af32d6eea3286def80741e0083d5598aae0619bb65e2e3962c442f662a7
+- human-review-round2-sampling-manifest.json 9da28bbf5e0bcc609b4c87c3f33f9c42ffefe03a61e725cd0fcde2d5ad23e3aa
+- holdback-v2-sealed.bin                 4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3 (836656 bytes)
+Pre-repair Validation (goal18-output):
+- validation-set.jsonl      59e924631934a8712f05daedc269c4f27791bf86b97ed11fa5f1af0bdb3cbf34
+- validation-gold.jsonl     763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed
+- validation-manifest.json  01e5efed8b5a1fd9062672157060cfaf2aa903d5fe8bd98fe6518df3b4353af7
+
+## 2. Model-assisted input package verification
+command: Get-FileHash -Algorithm SHA256 (goal18he-input/*) vs goal18he-input/artifact-sha256.txt
+- 4/4 files byte-identical to the manifest.
+- Package identity: MODEL_ASSISTED_NON_HUMAN (model-assisted-audit-identity.json:
+  human_adjudication_claimed=false, hr1_confirmation_fabricated=false,
+  benchmark_maintainer_human_confirmation_fabricated=false).
+
+## 3. Determinism / generator reproduction
+command: node goal18-output/scripts/generator/generate.mjs --split validation --seed goal18-validation-seed-7f3a9c2e --outDir <dir>
+- work/gen-recheck vs work/gen-repaired: fixture and gold byte-identical.
+- V2 gold (7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440) is byte-identical to the repaired generator output.
+- V2 fixture (e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b) equals the generator output under the documented provenance assembly rule (111 unchanged samples keep generator_identity v2.0.0; 9 post-review-modified samples carry v2.1.0).
+- Unpatched lineage: work/gen-repro vs pre-repair authoritative -> 0 differing lines after EOL/generator-identity normalization; gold byte-identical (reproducibility-legacy-check.json).
+
+## 4. Schema validation
+command: node (schema-validator.mjs on goal18he-output fixture/gold)
+- merged fixture+gold vs decision-benchmark-v2-schema.json: 0 errors
+- fixture vs decision-benchmark-v2-set.schema.json: 0 errors
+- gold vs validation-gold-v2.schema.json: 0 errors
+- 120 lines each; sample_id order matches between fixture and gold.
+
+## 5. Generator repair regression tests
+command: node --test generator-repair-regression.test.mjs (goal18he-output/generator-repair-regression-tests)
+- 8/8 pass (determinism, counts, gold byte-identity, provenance assembly rule, TT03 L0/L1 REJECT-only, TT15 ev001->e004, full audit ERROR=0, no HR1/model-output dependence).
+
+## 6. Full contract audit on final Validation V2
+command: node goal18he-output/scripts/audit/contract-audit.cjs --data goal18he-output --setFile validation-v2-fixture.jsonl --goldFile validation-v2-gold.jsonl --out goal18he-output/work/audit-v2-final-rerun2
+- authority_action 120 PASS / 0 FAIL; deleted_source_provenance 120/0; action_eligibility 120/0;
+  approval_confirmation 120/0; lineage 120/0; evidence 120/0; constraints 120/0; clarification 120/0;
+  referential_integrity 120/0. Overall PASS (exit 0).
+- All 9 audit CSVs byte-identical to the root authoritative CSVs.
+- Pre-repair audit (pre-repair-state/audit-pre-repair): authority 1 FAIL (tt03-002), deleted-source 8 FAIL (all TT15),
+  evidence 8 FAIL (all TT15), action-eligibility 1 FAIL (tt03-002); post-repair all 120 PASS.
+
+## 7. Runner / harness / scorer gates
+command: node --test experiments/tests/*.test.mjs (worktree runner-experiment-runner-r1)
+- 34/34 pass.
+command: node --test tests/*.test.mjs with ABLATION_PRODUCT_ROOT=D:\ai_code\Omni-context-decision-kernel-v1 (worktree ablation-harness-clean-check, experiments/decision-benchmark/ablation)
+- 13/13 pass.
+command: node --test conformance-tests/scorer-v1.1.test.mjs (product goal16a-output/scorer-v1.1)
+- 19/19 pass.
+
+## 8. Byte stability
+Evidence on disk: D:\ai_code\Omni-context-decision-kernel-v1\experiments\runs\ablation-dryrun-v1\development\byte-stability-r2-{001,002,003}
+- 49 files per run, identical total bytes; fixed time 2026-08-07T00:00:00.000Z; purpose=dryrun.
+- 39 files byte-identical across runs; 10 files differ only by embedded run_id (raw-results, run-manifest,
+  dry-run-report, lifecycle.log) and the self-referential artifact-sha256.txt.
+- After run_id normalization: 48/49 identical; only artifact-sha256.txt self-reference differs (documented convention, goal19f-output/dry-run-report.md BYTE_STABILITY_PASS).
+- COMPLETED markers for all three runs: {"pass":true,"reasons":{arms,identity,leakage,determinism,parity,component_diff,revisit,prompts:true}}.
+- Non-overwrite: same run-id refusal (exit 2) is covered by runner tests 26/27 (run-reject-overwrite.test.mjs, 34/34 pass).
+
+## 9. No formal output exists
+command: enumerate experiments/runs/**/run-manifest.json + grep purpose
+- 19 run manifests enumerated; purpose values: dryrun (8), preflight (2, ABLATION_PREFLIGHT), older decision-kernel-v1 (9, no purpose=formal).
+- 0 matches for "purpose":"formal"; no ablation-formal-v1 run root; model formal_identity remains "TBD AFTER MODEL SELECTION DECISION".
+
+## 10. Prompt / model / budget / dataset identity
+command: sha256 compare preflight-dev-001/prompts/** vs goal19f-output/prompt-byte-manifest.json
+- 30/30 sealed prompt files match the frozen manifest (LF, utf8).
+- Model: deepseek-v4-flash (main) / kimi-k2.6 (aux evaluator); OWNER_APPROVED; temperature 0; retries 3 transport/parse only; concurrency 1.
+- Budget: DeepSeek 200 CNY / Kimi 20 CNY / total hard cap 220 CNY (model-and-budget-owner-decision.json, formal-run-config-v1.json).
+- Datasets: development-fixtures.jsonl e7396d702856e43bb5227f5abac6e91010bef20860353fe5c5a7247b7a1179dd (20 rows),
+  regression-fixtures.jsonl fb1b91e42822b1d898698703b56674204ca4ba9da709d797949124908c76ed55 (15 rows) match config.
+- Goal19F sync: git diff goal19f-output/formal-run-config-v1.json shows only the goal18_integrity section changed;
+  config sha256 897ed7e91875ed0162a62d3df14a184205111fe44ba053f5b2c3bb1cb4e5b02e -> 98328ee2516f15be2e8b9b207e71d46c03cfdc26c56f6c2bd2b90a6ac3ddf318.
+- NOTE: configuration_sha256_sealed still holds the pre-sync bytes; the formal-run preflight must recompute the executed-configuration hash.
+
+## 11. Secret scan
+command: node .worktrees/runner-experiment-runner-r1/scripts/scan-secrets.mjs (tracked tree)
+- Result: 1 finding: private-key-file mobile-app/android/app/debug.keystore.
+- Classification: PRE-EXISTING and OUT OF SCOPE. The file is tracked since initial release 98bdec9, unchanged by
+  this goal; security remediation commit 205583c exists on other branches but not on this branch. Not introduced or
+  modified by Goal 18H-E; removing it would require unrelated repo-wide remediation outside this goal's scope.
+command: node .worktrees/runner-experiment-runner-r1/scripts/scan-secrets.mjs --staged (Goal 18H-E staged changes)
+- PASS, 0 findings (both commits).
+command: targeted path/content scan of goal18he-output (all 83 text files)
+- PASS, 0 findings (private-key / API-key / token / secret-assignment patterns, secret-bearing path rules).
+
+## 12. Holdback V2
+- sealed.bin sha256 4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3, 836656 bytes, unchanged.
+- Access log: only generate/seal/custody_transfer/verify on 2026-08-07; no plaintext reads.
+- Plaintext not accessed, not decrypted, not modified.
+
+## 13. Git commits (Goal 18H-E)
+- Commit 1 (freeze package): e2df7b5c20d074b1c3e40a7c073d796054a8dd0a
+  message: feat(benchmark): freeze Validation V2 after deterministic contract repair (Goal 18H-E)
+  95 files: goal18he-output/ (V2 artifacts, audits, repair docs, regression tests, work evidence) + goal19f-output/formal-run-config-v1.json
+- Commit 2 (finalization): carries this log, artifact-sha256.txt, final-pre-goal20-gate.{json,md}, goal18he-status.json,
+  and the freeze-record freeze_commit update (parent of e2df7b5c20d074b1c3e40a7c073d796054a8dd0a).
+- Unrelated pre-existing dirty state (goal18h-output modified files, other prior-goal untracked outputs) remains untouched.
+
+## 14. File repairs during finalization (encoding only)
+- human-review-round2-agreement-corrigendum.json/.md: restored Chinese question/explanation text and set-notation
+  symbols that had been written as '?'. Restoration uses the exact frozen spec wording (spec section 5) and is deterministic.
+- scripts/audit/contract-audit.cjs: removed UTF-8 BOM and normalized CRLF->LF (no semantic change; full audit rerun
+  produced byte-identical CSV outputs).
+
+## 15. Final status
+- VALIDATION_V2_FROZEN_GOAL20_READY

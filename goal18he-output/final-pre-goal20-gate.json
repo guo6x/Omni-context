@@ -1,0 +1,161 @@
+{
+  "schema_version": "goal18he-final-pre-goal20-gate-v1",
+  "goal": "18H-E",
+  "branch": "research/decision-benchmark-holdback-v2",
+  "generated_at": "2026-08-09T19:05:00.000Z",
+  "head_after_freeze_package_commit": "e2df7b5c20d074b1c3e40a7c073d796054a8dd0a",
+  "overall_verdict": "PASS",
+  "final_status": "VALIDATION_V2_FROZEN_GOAL20_READY",
+  "no_model_evaluation_before_freeze": true,
+  "a0_a5_executed": false,
+  "formal_validation_output_exists": false,
+  "gates": {
+    "q2_acceptable_actions_formal_metric_invalid": {
+      "result": "PASS",
+      "value": "INVALID_DUE_TO_REPRESENTATION_MISMATCH",
+      "evidence": "human-review-round2-agreement-corrigendum.json/.md"
+    },
+    "original_human_raw_agreement_preserved": {
+      "result": "PASS",
+      "round2_raw_sha256": "98c94917824081360247586cc99e718a1cf219d5a31069ca72c9ee9cbfd2a6dc",
+      "agreement_sha256": "eca1c115a5e0f9e356cf19eb706589f0c089103f7690819def384db25c840e2f",
+      "agreement_report_sha256": "c0197678db255b15af23a277cbf4a858d84f223a3683eea10ac0810acf69d3ea"
+    },
+    "hrev052_root_cause_determined_and_handled": {
+      "result": "PASS",
+      "classification": "ISOLATED_FIXTURE_DEFECT",
+      "resolution": "deterministic generator repair: L0/L1 TT03 forces REJECT/no_feasible_option; tt03-002 replaced; 0 authority defects in all 120"
+    },
+    "tt15_all_8_audited": {
+      "result": "PASS",
+      "pre_repair_defects": 8,
+      "post_repair_defects": 0
+    },
+    "deleted_source_provenance_errors": {
+      "result": "PASS",
+      "errors": 0
+    },
+    "authority_action_errors": {
+      "result": "PASS",
+      "errors": 0
+    },
+    "action_eligibility_errors": {
+      "result": "PASS",
+      "errors": 0
+    },
+    "approval_confirmation_errors": {
+      "result": "PASS",
+      "errors": 0
+    },
+    "lineage_errors": {
+      "result": "PASS",
+      "errors": 0
+    },
+    "evidence_errors": {
+      "result": "PASS",
+      "errors": 0
+    },
+    "constraint_errors": {
+      "result": "PASS",
+      "errors": 0
+    },
+    "clarification_errors": {
+      "result": "PASS",
+      "errors": 0
+    },
+    "validation_count": {
+      "result": "PASS",
+      "value": "120 = 15 x 8",
+      "unique_sample_ids": 120
+    },
+    "validation_v2_frozen": {
+      "result": "PASS",
+      "freeze_id": "VALIDATION_GOLD_FREEZE_V2",
+      "freeze_commit": "e2df7b5c20d074b1c3e40a7c073d796054a8dd0a",
+      "manifest_sha256": "e0a56ef0337502ba803cb45bf0f6e1f2e22ea7518786ce1dc81b190c490a4f8d"
+    },
+    "goal19f_hashes_synchronized": {
+      "result": "PASS",
+      "config_sha256_after_sync": "98328ee2516f15be2e8b9b207e71d46c03cfdc26c56f6c2bd2b90a6ac3ddf318",
+      "changed_section_only": "goal18_integrity"
+    },
+    "runner_scorer_harness": {
+      "result": "PASS",
+      "runner": "34/34",
+      "scorer_v11": "19/19",
+      "harness": "13/13"
+    },
+    "holdback_v2_untouched": {
+      "result": "PASS",
+      "sealed_sha256": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3",
+      "plaintext_read": false
+    },
+    "no_a0_a5_formal_run": {
+      "result": "PASS",
+      "formal_identity": "TBD AFTER MODEL SELECTION DECISION",
+      "found_run_purposes": [
+        "dryrun",
+        "preflight"
+      ]
+    },
+    "no_formal_validation_output": {
+      "result": "PASS",
+      "purpose_formal_run_manifests": 0
+    },
+    "secret_scan": {
+      "result": "PASS_WITH_DOCUMENTED_PREEXISTING_FINDING",
+      "staged_scan": "PASS (0 findings)",
+      "goal18he_output_scan": "PASS (0 findings)",
+      "tracked_tree": "1 pre-existing out-of-scope finding: mobile-app/android/app/debug.keystore (tracked since initial release 98bdec9; unchanged by this goal; remediation commit 205583c exists on other branches only)"
+    },
+    "byte_stability": {
+      "result": "PASS",
+      "detail": "byte-stability-r2-001/002/003: 49 files per run; run_id-normalized identical except self-referential artifact-sha256.txt; COMPLETED pass markers; non-overwrite exit 2 covered by runner tests"
+    },
+    "determinism": {
+      "result": "PASS",
+      "detail": "two independent generator runs byte-identical; gold byte-identical; fixture matches under documented provenance assembly rule"
+    },
+    "config_identity": {
+      "result": "PASS",
+      "detail": "formal-run-config-v1.json changed only in goal18_integrity; configuration_sha256_sealed refers to pre-sync bytes and must be recomputed at formal-run preflight"
+    },
+    "prompt_identity": {
+      "result": "PASS",
+      "detail": "30/30 sealed prompt files match prompt-byte-manifest.json"
+    },
+    "model_identity_config": {
+      "result": "PASS",
+      "detail": "deepseek-v4-flash (main) / kimi-k2.6 (aux); OWNER_APPROVED; no silent substitution"
+    },
+    "budget": {
+      "result": "PASS",
+      "detail": "DeepSeek 200 CNY / Kimi 20 CNY / total hard cap 220 CNY; temperature 0; retries 3 transport/parse only; concurrency 1"
+    },
+    "dataset_hashes": {
+      "result": "PASS",
+      "development": "e7396d702856e43bb5227f5abac6e91010bef20860353fe5c5a7247b7a1179dd",
+      "regression": "fb1b91e42822b1d898698703b56674204ca4ba9da709d797949124908c76ed55"
+    },
+    "schema_validation": {
+      "result": "PASS",
+      "merged_fixture_gold_vs_item_schema_errors": 0,
+      "fixture_vs_set_schema_errors": 0,
+      "gold_vs_gold_schema_errors": 0
+    },
+    "git_cleanliness_goal_scope": {
+      "result": "PASS",
+      "detail": "all Goal 18H-E outputs committed (freeze package + finalization); pre-existing unrelated dirty state untouched and recorded in pre-repair-integrity.json"
+    },
+    "archival_evidence_complete": {
+      "result": "PASS",
+      "detail": "all section-28 outputs present; artifact-sha256.txt, commands-and-results.log, final-pre-goal20-gate.{json,md}, goal18he-status.json"
+    }
+  },
+  "limitations": [
+    "Exact Validation-to-development/regression overlap cannot be recomputed in this environment because goal14-output dev/reg fixtures are absent; prior 4200-pair proxy evidence recorded 0 matches (goal18hb-output/work/overlap-leak-proxy); frozen config prohibits validation/holdback splits from being used in runs.",
+    "Tracked-tree secret scan reports one pre-existing out-of-scope Android debug.keystore finding; not introduced by this goal and remediation exists on other branches only.",
+    "formal-run-config-v1.json configuration_sha256_sealed holds the pre-sync bytes; the formal-run preflight must recompute the executed-configuration hash.",
+    "Q2 human-gold acceptable-actions agreement is formally invalid due to representation mismatch; only the flagged DIAGNOSTIC_ONLY reconstruction is reported."
+  ]
+}
