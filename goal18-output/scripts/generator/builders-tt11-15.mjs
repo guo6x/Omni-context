@@ -266,7 +266,9 @@ export function buildTT15(ctx) {
     ...(ctx.adversary ? [mkEvent('e005', madeAt + 3 * 86400000, 'agent', 'decision', `衍生决定 decision-d2（基于 decision-d1 的后续安排）`, { writerId: 'agent-alpha', derivedFrom: ['e002'] })] : [])
   ];
   const qualified = [
-    mkEvidence('ev001', 'fact', `${labA} 仍为可用选项（现行信息）`, qtMs - 5 * 86400000, ['opt-a', 'opt-b'], 0.8, 'e001'),
+    // Goal 18H-E repair: re-express ev001 as evidence of the deletion event itself (source_ref=e004,
+    // timestamp=e004.at, supports=[]); no current fact may be sourced from deleted e001 (RI-06; G:94-99).
+    mkEvidence('ev001', 'fact', `原决定依据（${factText}）已被撤回/删除`, deletedAt, [], 1, 'e004'),
     mkEvidence('ev002', 'principle', '被删除来源的派生决定必须级联失效', t0 + 1 * 86400000, [], 1, 'e003')
   ];
   const expired = [

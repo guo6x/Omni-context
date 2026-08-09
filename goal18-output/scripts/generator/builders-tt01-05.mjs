@@ -153,7 +153,9 @@ export function buildTT03(ctx) {
     : ['数据必须保留在境内', '总成本不得超过预算', '必须兼容现有系统', '交付时间不得晚于截止日'];
   const hcText = rng.pick(constraintTexts);
   const t0 = qtMs - 70 * 86400000;
-  const allViolate = variant === 1;
+  // Goal 18H-E repair: authority L0/L1 grants no AI decision right (A can_decide L0/L1 = false; K:195 DECIDE gate requires authority allows).
+  // A TT03 slot at L0/L1 can therefore only exercise the refusal/referral (REJECT, no feasible option) path, never DECIDE.
+  const allViolate = variant === 1 || ctx.authority === 'L0' || ctx.authority === 'L1';
   const compliant = allViolate ? [] : ['opt-b'];
   const violating = allViolate ? ['opt-a', 'opt-b'] : ['opt-a'];
   const events = [
