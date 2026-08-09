@@ -1,0 +1,60 @@
+{
+  "schema_version": "goal18he-split-isolation-check-v1",
+  "goal": "18H-E",
+  "checked_at": "2026-08-09T10:52:23.028Z",
+  "validation_v2": {
+    "fixture_sha256": "e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",
+    "gold_sha256": "7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440",
+    "samples": 120
+  },
+  "internal_duplicates": {
+    "check": "sample_id uniqueness over all 120 V2 samples",
+    "duplicate_ids": 0,
+    "result": "PASS"
+  },
+  "validation_vs_development_regression_exact_overlap": {
+    "status": "NOT_RERUNNABLE_FILES_UNAVAILABLE",
+    "reason": "formal-run-config-v1.json datasets reference goal14-output/development-fixtures.jsonl (sha e7396d702856e43bb5227f5abac6e91010bef20860353fe5c5a7247b7a1179dd, 20 rows) and goal14-output/regression-fixtures.jsonl (sha fb1b91e42822b1d898698703b56674204ca4ba9da709d797949124908c76ed55, 15 rows); goal14-output is not present in this worktree.",
+    "prior_evidence": {
+      "file": "goal18hb-output/work/overlap-leak-proxy/holdback-v2-overlap-results.json",
+      "date": "2026-08-07",
+      "method": "hashed proxy of validation (120) vs development/regression fixtures temporarily present in C:/Users/00/AppData/Local/Temp/omni-goal18-spec/goal14-output",
+      "exact_sample_hash_pairs": 4200,
+      "matched_pairs": 0,
+      "normalized_scenario_hash_matched_pairs": 0
+    },
+    "limitation": "Recorded as a legitimate limitation: exact overlap cannot be recomputed in this environment without the dev/reg source files; the frozen hashes in formal-run-config-v1.json remain the authoritative reference and the formal config prohibits the validation split/holdback from being used in runs."
+  },
+  "holdback_v2": {
+    "sealed_sha256": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3",
+    "verified": true,
+    "plaintext_read": false,
+    "public_manifest_sha256": "4e4239d4170b56286eb33cd832e66c3aa1c2c2ba3bb7053e050af7c7a4319d7a",
+    "public_manifest_verified": true
+  },
+  "lexical_near_duplicate_diagnostic": {
+    "method": "exact prompt hash + 8-gram Jaccard > 0.75 within V2",
+    "exact_prompt_duplicate_pairs": 2,
+    "near_duplicate_pairs": 2,
+    "pairs": [
+      {
+        "a": "decision-bench-v2-val-tt15-000",
+        "b": "decision-bench-v2-val-tt15-006",
+        "jaccard": 1,
+        "note": "identical scaffold prompt; distinct domain/authority/risk/goal/evidence content"
+      },
+      {
+        "a": "decision-bench-v2-val-tt15-001",
+        "b": "decision-bench-v2-val-tt15-005",
+        "jaccard": 1,
+        "note": "identical scaffold prompt; distinct domain/authority/risk/goal/evidence content"
+      }
+    ],
+    "pre_existing": true,
+    "note": "Both pairs pre-exist the repair in the authoritative pre-repair fixture (verified). Template-level observation within the same task type; samples are not duplicates. No generator change made (no contract defect; out of scope)."
+  },
+  "prior_holdback_leakage_audit": {
+    "file": "goal18hb-output/work/overlap-leak-proxy/holdback-v2-leakage-results.json",
+    "result": "0 findings across scanned fields (prompt, decision_question, goal, timeline contents, candidate labels/descriptions, constraints)"
+  }
+}

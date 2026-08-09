@@ -398,20 +398,20 @@
   "goal18_integrity": {
     "note": "metadata only — read from manifests; validation fixtures/holdback plaintext never loaded by this goal or the harness",
     "validation_manifest": {
-      "file": "goal18-output/validation-manifest.json",
+      "file": "goal18he-output/validation-v2-manifest.json",
       "schema": "validation-manifest-v2",
-      "sha256_of_manifest": "1cffe23134959b3f0a276360a82a99d6e91d8ccfc3f3e93b5a99c7d116a2e7d7",
+      "sha256_of_manifest": "e0a56ef0337502ba803cb45bf0f6e1f2e22ea7518786ce1dc81b190c490a4f8d",
       "seed_hash": "7ed2454b19b723968dad403f0f574c08505b3a45355b77b12ae8fd0afba54cc0",
       "counts_total": 120
     },
     "validation_fixture": {
-      "file": "goal18-output/validation-set.jsonl",
-      "sha256": "3ceddb1aaee51e28dfe20a930696b01065dcfae4d47bdac1f1dd5dc3c39e9667",
+      "file": "goal18he-output/validation-v2-fixture.jsonl",
+      "sha256": "e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",
       "lines": 120
     },
     "validation_gold": {
-      "file": "goal18-output/validation-gold.jsonl",
-      "sha256": "763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed",
+      "file": "goal18he-output/validation-v2-gold.jsonl",
+      "sha256": "7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440",
       "lines": 120
     },
     "holdback_public_manifest": {

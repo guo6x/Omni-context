@@ -1,0 +1,1095 @@
+{
+  "schema_version": "human-review-round2-agreement-corrigendum-v1",
+  "goal": "18H-E",
+  "round": "HR1-R2",
+  "subject_dimension": "acceptable_actions",
+  "status": "INVALID_DUE_TO_REPRESENTATION_MISMATCH",
+  "formal_construct_agreement": "MUST_NOT_BE_USED_AS_FORMAL_CONSTRUCT_AGREEMENT",
+  "frozen_gold_definition": {
+    "acceptable_actions": "complete full-credit action set; preferred_action ∈ acceptable_actions; disjoint from prohibited_actions (G:39-60; B:870, GOLD-C2/C3)"
+  },
+  "human_ui_question": "除了首选处理方式，还有哪些方式也能接受？",
+  "human_ui_explanation": "并明确要求与 Q1 首选不同的 action",
+  "mismatch": "Human Q2 asks for actions OTHER THAN the preferred action, but the export maps Q2 selections directly to acceptable_actions, which the frozen gold defines as the COMPLETE full-credit set including preferred_action. The two fields are different mathematical sets.",
+  "raw_evidence_disposition": {
+    "human_review_raw_round2_jsonl": "PRESERVE_BYTE_IDENTICAL",
+    "human_review_round2_agreement_json": "PRESERVE_BYTE_IDENTICAL",
+    "human_review_round2_agreement_report_md": "PRESERVE_BYTE_IDENTICAL",
+    "note": "Historical pipeline outputs are retained; they are not deleted, recomputed, or overwritten."
+  },
+  "raw_round2_acceptable_metrics": {
+    "n": 45,
+    "acceptable_exact": 1,
+    "acceptable_jaccard_mean": 0.0556,
+    "acceptable_jaccard_median": 0,
+    "acceptable_precision_mean": 0.0889,
+    "acceptable_recall_mean": 0.0556,
+    "interpretation": "HISTORICAL_PIPELINE_OUTPUT_ONLY; NOT a formal human-gold agreement metric due to representation mismatch"
+  },
+  "diagnostic_only_reconstruction": {
+    "method": "HR1_reconstructed_full_acceptable_set = {HR1 Q1 preferred_action} UNION {HR1 raw Q2 selections}",
+    "flags": [
+      "DIAGNOSTIC_ONLY",
+      "POST_HOC_REPRESENTATION_RECONSTRUCTION",
+      "NOT_PREREGISTERED_FORMAL_METRIC"
+    ],
+    "n": 45,
+    "exact_set_match": 3,
+    "exact_set_percentage": 6.67,
+    "jaccard_mean": 0.2444,
+    "jaccard_median": 0,
+    "per_task_type": {
+      "10": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0,
+        "diagnostic_jaccard_median": 0
+      },
+      "11": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0,
+        "diagnostic_jaccard_median": 0
+      },
+      "12": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0.1667,
+        "diagnostic_jaccard_median": 0
+      },
+      "13": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0,
+        "diagnostic_jaccard_median": 0
+      },
+      "14": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0,
+        "diagnostic_jaccard_median": 0
+      },
+      "15": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0,
+        "diagnostic_jaccard_median": 0
+      },
+      "01": {
+        "count": 3,
+        "diagnostic_exact": 3,
+        "diagnostic_jaccard_mean": 1,
+        "diagnostic_jaccard_median": 1
+      },
+      "02": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0.5,
+        "diagnostic_jaccard_median": 0.5
+      },
+      "03": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0.3333,
+        "diagnostic_jaccard_median": 0.5
+      },
+      "04": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0.5,
+        "diagnostic_jaccard_median": 0.5
+      },
+      "05": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0.5,
+        "diagnostic_jaccard_median": 0.5
+      },
+      "06": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0,
+        "diagnostic_jaccard_median": 0
+      },
+      "07": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0,
+        "diagnostic_jaccard_median": 0
+      },
+      "08": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0.5,
+        "diagnostic_jaccard_median": 0.5
+      },
+      "09": {
+        "count": 3,
+        "diagnostic_exact": 0,
+        "diagnostic_jaccard_mean": 0.1667,
+        "diagnostic_jaccard_median": 0
+      }
+    },
+    "interpretation": "Diagnostic only; cannot replace the raw preregistered measurement and does not constitute human-gold agreement."
+  },
+  "per_sample": [
+    {
+      "hrev_id": "HREV-046",
+      "sample_id": "decision-bench-v2-val-tt01-000",
+      "task_type": "01",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_preferred": "PROPOSE_CONFIRM",
+      "hr1_raw_q2": [
+        "DECIDE"
+      ],
+      "hr1_diagnostic_union": [
+        "PROPOSE_CONFIRM",
+        "DECIDE"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0.5,
+      "diagnostic_exact": true,
+      "diagnostic_jaccard": 1
+    },
+    {
+      "hrev_id": "HREV-047",
+      "sample_id": "decision-bench-v2-val-tt01-002",
+      "task_type": "01",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0.5,
+      "diagnostic_exact": true,
+      "diagnostic_jaccard": 1
+    },
+    {
+      "hrev_id": "HREV-048",
+      "sample_id": "decision-bench-v2-val-tt01-004",
+      "task_type": "01",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0.5,
+      "diagnostic_exact": true,
+      "diagnostic_jaccard": 1
+    },
+    {
+      "hrev_id": "HREV-049",
+      "sample_id": "decision-bench-v2-val-tt02-005",
+      "task_type": "02",
+      "gold_action": "CLARIFY",
+      "gold_acceptable": [
+        "CLARIFY"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-050",
+      "sample_id": "decision-bench-v2-val-tt02-006",
+      "task_type": "02",
+      "gold_action": "CLARIFY",
+      "gold_acceptable": [
+        "CLARIFY"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-051",
+      "sample_id": "decision-bench-v2-val-tt02-007",
+      "task_type": "02",
+      "gold_action": "CLARIFY",
+      "gold_acceptable": [
+        "CLARIFY"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-052",
+      "sample_id": "decision-bench-v2-val-tt03-002",
+      "task_type": "03",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "PROPOSE_CONFIRM",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "PROPOSE_CONFIRM",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-053",
+      "sample_id": "decision-bench-v2-val-tt03-004",
+      "task_type": "03",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-054",
+      "sample_id": "decision-bench-v2-val-tt03-006",
+      "task_type": "03",
+      "gold_action": "REJECT",
+      "gold_acceptable": [
+        "REJECT"
+      ],
+      "hr1_preferred": "REJECT",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "REJECT",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-055",
+      "sample_id": "decision-bench-v2-val-tt04-000",
+      "task_type": "04",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-056",
+      "sample_id": "decision-bench-v2-val-tt04-001",
+      "task_type": "04",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-057",
+      "sample_id": "decision-bench-v2-val-tt04-006",
+      "task_type": "04",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-058",
+      "sample_id": "decision-bench-v2-val-tt05-001",
+      "task_type": "05",
+      "gold_action": "CLARIFY",
+      "gold_acceptable": [
+        "CLARIFY"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-059",
+      "sample_id": "decision-bench-v2-val-tt05-005",
+      "task_type": "05",
+      "gold_action": "CLARIFY",
+      "gold_acceptable": [
+        "CLARIFY"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-060",
+      "sample_id": "decision-bench-v2-val-tt05-006",
+      "task_type": "05",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-061",
+      "sample_id": "decision-bench-v2-val-tt06-002",
+      "task_type": "06",
+      "gold_action": "REVISE",
+      "gold_acceptable": [
+        "REVERSE",
+        "REVISE"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-062",
+      "sample_id": "decision-bench-v2-val-tt06-003",
+      "task_type": "06",
+      "gold_action": "REVERSE",
+      "gold_acceptable": [
+        "REVERSE",
+        "REVISE"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-063",
+      "sample_id": "decision-bench-v2-val-tt06-004",
+      "task_type": "06",
+      "gold_action": "REVISE",
+      "gold_acceptable": [
+        "REVERSE",
+        "REVISE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-064",
+      "sample_id": "decision-bench-v2-val-tt07-005",
+      "task_type": "07",
+      "gold_action": "KEEP",
+      "gold_acceptable": [
+        "KEEP"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-065",
+      "sample_id": "decision-bench-v2-val-tt07-006",
+      "task_type": "07",
+      "gold_action": "KEEP",
+      "gold_acceptable": [
+        "KEEP"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-066",
+      "sample_id": "decision-bench-v2-val-tt07-007",
+      "task_type": "07",
+      "gold_action": "KEEP",
+      "gold_acceptable": [
+        "KEEP"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-067",
+      "sample_id": "decision-bench-v2-val-tt08-000",
+      "task_type": "08",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-068",
+      "sample_id": "decision-bench-v2-val-tt08-006",
+      "task_type": "08",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-069",
+      "sample_id": "decision-bench-v2-val-tt08-007",
+      "task_type": "08",
+      "gold_action": "PROPOSE_CONFIRM",
+      "gold_acceptable": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_preferred": "PROPOSE_CONFIRM",
+      "hr1_raw_q2": [
+        "DECIDE"
+      ],
+      "hr1_diagnostic_union": [
+        "PROPOSE_CONFIRM",
+        "DECIDE"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-070",
+      "sample_id": "decision-bench-v2-val-tt09-002",
+      "task_type": "09",
+      "gold_action": "APPROVAL_REQUEST",
+      "gold_acceptable": [
+        "APPROVAL_REQUEST"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-071",
+      "sample_id": "decision-bench-v2-val-tt09-005",
+      "task_type": "09",
+      "gold_action": "APPROVAL_REQUEST",
+      "gold_acceptable": [
+        "APPROVAL_REQUEST"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "APPROVAL_REQUEST"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "APPROVAL_REQUEST"
+      ],
+      "raw_acceptable_exact": true,
+      "raw_acceptable_jaccard": 1,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-072",
+      "sample_id": "decision-bench-v2-val-tt09-007",
+      "task_type": "09",
+      "gold_action": "APPROVAL_REQUEST",
+      "gold_acceptable": [
+        "APPROVAL_REQUEST"
+      ],
+      "hr1_preferred": "PROPOSE_CONFIRM",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "PROPOSE_CONFIRM",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-073",
+      "sample_id": "decision-bench-v2-val-tt10-000",
+      "task_type": "10",
+      "gold_action": "REVERSE",
+      "gold_acceptable": [
+        "REVISE",
+        "REVERSE"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-074",
+      "sample_id": "decision-bench-v2-val-tt10-001",
+      "task_type": "10",
+      "gold_action": "REVISE",
+      "gold_acceptable": [
+        "REVISE",
+        "REVERSE"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-075",
+      "sample_id": "decision-bench-v2-val-tt10-002",
+      "task_type": "10",
+      "gold_action": "REVERSE",
+      "gold_acceptable": [
+        "REVISE",
+        "REVERSE"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-076",
+      "sample_id": "decision-bench-v2-val-tt11-001",
+      "task_type": "11",
+      "gold_action": "CONTINUE",
+      "gold_acceptable": [
+        "CONTINUE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-077",
+      "sample_id": "decision-bench-v2-val-tt11-002",
+      "task_type": "11",
+      "gold_action": "CONTINUE",
+      "gold_acceptable": [
+        "CONTINUE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-078",
+      "sample_id": "decision-bench-v2-val-tt11-003",
+      "task_type": "11",
+      "gold_action": "CONTINUE",
+      "gold_acceptable": [
+        "CONTINUE"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-079",
+      "sample_id": "decision-bench-v2-val-tt12-001",
+      "task_type": "12",
+      "gold_action": "CLARIFY",
+      "gold_acceptable": [
+        "CLARIFY"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0.5
+    },
+    {
+      "hrev_id": "HREV-080",
+      "sample_id": "decision-bench-v2-val-tt12-002",
+      "task_type": "12",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-081",
+      "sample_id": "decision-bench-v2-val-tt12-007",
+      "task_type": "12",
+      "gold_action": "DECIDE",
+      "gold_acceptable": [
+        "DECIDE"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-082",
+      "sample_id": "decision-bench-v2-val-tt13-000",
+      "task_type": "13",
+      "gold_action": "OVERRIDE_HONOR",
+      "gold_acceptable": [
+        "OVERRIDE_HONOR"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-083",
+      "sample_id": "decision-bench-v2-val-tt13-001",
+      "task_type": "13",
+      "gold_action": "OVERRIDE_HONOR",
+      "gold_acceptable": [
+        "OVERRIDE_HONOR"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-084",
+      "sample_id": "decision-bench-v2-val-tt13-006",
+      "task_type": "13",
+      "gold_action": "OVERRIDE_HONOR",
+      "gold_acceptable": [
+        "OVERRIDE_HONOR"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-085",
+      "sample_id": "decision-bench-v2-val-tt14-000",
+      "task_type": "14",
+      "gold_action": "REVISE",
+      "gold_acceptable": [
+        "REVISE",
+        "REVERSE"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-086",
+      "sample_id": "decision-bench-v2-val-tt14-001",
+      "task_type": "14",
+      "gold_action": "KEEP",
+      "gold_acceptable": [
+        "KEEP"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-087",
+      "sample_id": "decision-bench-v2-val-tt14-004",
+      "task_type": "14",
+      "gold_action": "KEEP",
+      "gold_acceptable": [
+        "KEEP"
+      ],
+      "hr1_preferred": "DECIDE",
+      "hr1_raw_q2": [
+        "PROPOSE_CONFIRM"
+      ],
+      "hr1_diagnostic_union": [
+        "DECIDE",
+        "PROPOSE_CONFIRM"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-088",
+      "sample_id": "decision-bench-v2-val-tt15-000",
+      "task_type": "15",
+      "gold_action": "INVALIDATE",
+      "gold_acceptable": [
+        "INVALIDATE",
+        "REVISE"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-089",
+      "sample_id": "decision-bench-v2-val-tt15-001",
+      "task_type": "15",
+      "gold_action": "INVALIDATE",
+      "gold_acceptable": [
+        "INVALIDATE",
+        "REVISE"
+      ],
+      "hr1_preferred": "DEFER",
+      "hr1_raw_q2": [
+        "CLARIFY"
+      ],
+      "hr1_diagnostic_union": [
+        "DEFER",
+        "CLARIFY"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    },
+    {
+      "hrev_id": "HREV-090",
+      "sample_id": "decision-bench-v2-val-tt15-006",
+      "task_type": "15",
+      "gold_action": "INVALIDATE",
+      "gold_acceptable": [
+        "INVALIDATE",
+        "REVISE"
+      ],
+      "hr1_preferred": "CLARIFY",
+      "hr1_raw_q2": [
+        "DEFER"
+      ],
+      "hr1_diagnostic_union": [
+        "CLARIFY",
+        "DEFER"
+      ],
+      "raw_acceptable_exact": false,
+      "raw_acceptable_jaccard": 0,
+      "diagnostic_exact": false,
+      "diagnostic_jaccard": 0
+    }
+  ]
+}

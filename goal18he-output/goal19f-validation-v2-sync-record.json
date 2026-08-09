@@ -1,0 +1,49 @@
+{
+  "schema_version": "goal19f-validation-v2-sync-record-v1",
+  "goal": "18H-E",
+  "synced_at": "2026-08-09T10:52:52.323Z",
+  "config_file": "goal19f-output/formal-run-config-v1.json",
+  "changed_section_only": "goal18_integrity",
+  "changed_fields": [
+    "validation_manifest.file -> goal18he-output/validation-v2-manifest.json",
+    "validation_manifest.sha256_of_manifest -> e0a56ef0337502ba803cb45bf0f6e1f2e22ea7518786ce1dc81b190c490a4f8d",
+    "validation_fixture.file -> goal18he-output/validation-v2-fixture.jsonl",
+    "validation_fixture.sha256 -> e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",
+    "validation_gold.file -> goal18he-output/validation-v2-gold.jsonl",
+    "validation_gold.sha256 -> 7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440"
+  ],
+  "old_config_sha256": "897ed7e91875ed0162a62d3df14a184205111fe44ba053f5b2c3bb1cb4e5b02e",
+  "new_config_sha256": "98328ee2516f15be2e8b9b207e71d46c03cfdc26c56f6c2bd2b90a6ac3ddf318",
+  "unchanged": [
+    "model (deepseek-v4-flash / kimi-k2.6)",
+    "A0-A5 arm definitions and flags",
+    "prompts",
+    "scorer v1.1 identity and paths",
+    "token budget / retry / temperature",
+    "statistical policy",
+    "holdback public manifest and sealed artifact hash",
+    "benchmark schema hash",
+    "datasets (development/regression) section"
+  ],
+  "validation_v2_files": {
+    "fixture": {
+      "file": "goal18he-output/validation-v2-fixture.jsonl",
+      "sha256": "e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",
+      "lines": 120
+    },
+    "gold": {
+      "file": "goal18he-output/validation-v2-gold.jsonl",
+      "sha256": "7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440",
+      "lines": 120
+    },
+    "manifest": {
+      "file": "goal18he-output/validation-v2-manifest.json",
+      "sha256": "e0a56ef0337502ba803cb45bf0f6e1f2e22ea7518786ce1dc81b190c490a4f8d"
+    }
+  },
+  "notes": [
+    "Sync performed only after VALIDATION_GOLD_FREEZE_V2 package content was assembled and all contract audits passed.",
+    "formal-experiment-freeze-manifest.json remains the Goal 19F historical record and still carries the pre-repair goal18_integrity hashes; it was intentionally NOT modified (frozen archival artifact). The operative config for Goal 20 is formal-run-config-v1.json.",
+    "configuration_sha256_sealed in formal-run-config-v1.json now refers to the pre-sync config bytes; the formal-run preflight must recompute the executed-configuration hash before the run."
+  ]
+}

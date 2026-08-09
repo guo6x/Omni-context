@@ -1,0 +1,46 @@
+{
+  "goal": "18H-E",
+  "captured_at": "2026-08-09T10:30:00.645Z",
+  "git": {
+    "head": "fcbf9d22518798decf36623a5dc12f159d87c547",
+    "branch": "research/decision-benchmark-holdback-v2",
+    "status_short": "dirty worktree: 2 tracked files modified (goal18h-output/final-report.md, goal18h-output/human-review-readiness-v2.json); large set of untracked prior-goal outputs (goal11/12/17p/18c/18h/18hb/18hc/19f/19p/6/6b, experiments, scripts, docs)"
+  },
+  "protected_baselines": {
+    "round2_raw_known": "98c94917824081360247586cc99e718a1cf219d5a31069ca72c9ee9cbfd2a6dc",
+    "holdback_v2_sealed_known": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3",
+    "validation_gold_pre_repair_known_prefix": "763da3c3..."
+  },
+  "artifact_hashes_sha256": {
+    "validation_fixture": "59e924631934a8712f05daedc269c4f27791bf86b97ed11fa5f1af0bdb3cbf34",
+    "validation_gold": "763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed",
+    "validation_manifest": "01e5efed8b5a1fd9062672157060cfaf2aa903d5fe8bd98fe6518df3b4353af7",
+    "round2_raw": "98c94917824081360247586cc99e718a1cf219d5a31069ca72c9ee9cbfd2a6dc",
+    "round2_agreement": "eca1c115a5e0f9e356cf19eb706589f0c089103f7690819def384db25c840e2f",
+    "round2_raw_freeze": "af3219d4aa5324e0d537e48402b2c1eb092ee302b4feee429425266d945a54a4",
+    "round2_raw_lock": "c8df29d94431b89cc9bf49307fd1bc9e3814be9ecbdfc39a2790a2ddd00438c2",
+    "rubric": "120315f6af19583df699b28b281f6b42d707b5d8e8d83614624bf76b570e4d92",
+    "crosswalk": "3944c353acfc118548df028da27f83f39264b4def41e9d0638f41963ac23939d",
+    "pre_registration": "83bb0af32d6eea3286def80741e0083d5598aae0619bb65e2e3962c442f662a7",
+    "sampling_manifest": "9da28bbf5e0bcc609b4c87c3f33f9c42ffefe03a61e725cd0fcde2d5ad23e3aa",
+    "holdback_sealed": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3",
+    "goal19f_config": "897ed7e91875ed0162a62d3df14a184205111fe44ba053f5b2c3bb1cb4e5b02e",
+    "goal19f_freeze_manifest": "f18adcf1d3ade018cc4f9437aa69e4eb0e317a7df2eca00bb7055c905101897c",
+    "input_adjudication": "b5b90c2a35cdf4535d93fb9b902204a22e339e3ebf2619641a98361bece86db7",
+    "input_remediation": "63a219ceac16d57fd660df5bfc77ba763609fab2b585511190d3e35e8402ec8d",
+    "input_report": "6dad5e8c7f6c89b7b00f7985ab06483de876096dff0c6ac3a07f40f95b30cff1",
+    "input_summary": "9c1d2d423f520b771ad15c57ab663ac2dcd910033bdcd73b04ba9a86932dde7d",
+    "input_artifact_list": "d0d74f013deaa24efd508ba4ef5d091a94ea22887c90da96ba26a8df6957f8bc"
+  },
+  "verification": {
+    "input_package_artifact_sha256_matches_disk": {
+      "model-assisted-round2-adjudication.jsonl": true,
+      "machine-remediation-plan.json": true,
+      "model-assisted-round2-adjudication-report.md": true,
+      "model-assisted-round2-adjudication-summary.csv": true
+    },
+    "round2_raw_matches_known_hash": true,
+    "holdback_sealed_matches_known_hash": true,
+    "validation_gold_full_sha": "763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed"
+  }
+}

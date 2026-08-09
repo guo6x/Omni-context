@@ -1,0 +1,5461 @@
+{
+  "schema_version": "validation-120-contract-audit-v1",
+  "goal": "18H-E",
+  "dataset": "goal18he-output",
+  "generated_at": "2026-08-09T10:57:08.313Z",
+  "counts": {
+    "total": 120,
+    "task_types": 15,
+    "per_task_type": 8
+  },
+  "summary": {
+    "authority_action": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    },
+    "deleted_source_provenance": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    },
+    "action_eligibility": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    },
+    "approval_confirmation": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    },
+    "lineage": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    },
+    "evidence": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    },
+    "constraints": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    },
+    "clarification": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    },
+    "referential_integrity": {
+      "PASS": 120,
+      "FAIL": 0,
+      "AMBIGUOUS": 0
+    }
+  },
+  "overall_status": "PASS",
+  "per_sample": [
+    {
+      "sample_id": "decision-bench-v2-val-tt01-000",
+      "task_type": "TT01",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt01-001",
+      "task_type": "TT01",
+      "authority": "L4",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt01-002",
+      "task_type": "TT01",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt01-003",
+      "task_type": "TT01",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt01-004",
+      "task_type": "TT01",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt01-005",
+      "task_type": "TT01",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt01-006",
+      "task_type": "TT01",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt01-007",
+      "task_type": "TT01",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt02-000",
+      "task_type": "TT02",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt02-001",
+      "task_type": "TT02",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt02-002",
+      "task_type": "TT02",
+      "authority": "L3",
+      "risk": "negligible",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt02-003",
+      "task_type": "TT02",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt02-004",
+      "task_type": "TT02",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt02-005",
+      "task_type": "TT02",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt02-006",
+      "task_type": "TT02",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt02-007",
+      "task_type": "TT02",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt03-000",
+      "task_type": "TT03",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REJECT",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt03-001",
+      "task_type": "TT03",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt03-002",
+      "task_type": "TT03",
+      "authority": "L0",
+      "risk": "negligible",
+      "gold_action": "REJECT",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt03-003",
+      "task_type": "TT03",
+      "authority": "L4",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt03-004",
+      "task_type": "TT03",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt03-005",
+      "task_type": "TT03",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt03-006",
+      "task_type": "TT03",
+      "authority": "L1",
+      "risk": "negligible",
+      "gold_action": "REJECT",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt03-007",
+      "task_type": "TT03",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt04-000",
+      "task_type": "TT04",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt04-001",
+      "task_type": "TT04",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt04-002",
+      "task_type": "TT04",
+      "authority": "L5",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt04-003",
+      "task_type": "TT04",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt04-004",
+      "task_type": "TT04",
+      "authority": "L4",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt04-005",
+      "task_type": "TT04",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt04-006",
+      "task_type": "TT04",
+      "authority": "L5",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt04-007",
+      "task_type": "TT04",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt05-000",
+      "task_type": "TT05",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt05-001",
+      "task_type": "TT05",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt05-002",
+      "task_type": "TT05",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt05-003",
+      "task_type": "TT05",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt05-004",
+      "task_type": "TT05",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt05-005",
+      "task_type": "TT05",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt05-006",
+      "task_type": "TT05",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt05-007",
+      "task_type": "TT05",
+      "authority": "L5",
+      "risk": "negligible",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt06-000",
+      "task_type": "TT06",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVERSE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt06-001",
+      "task_type": "TT06",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "REVERSE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt06-002",
+      "task_type": "TT06",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt06-003",
+      "task_type": "TT06",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "REVERSE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt06-004",
+      "task_type": "TT06",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt06-005",
+      "task_type": "TT06",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "REVERSE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt06-006",
+      "task_type": "TT06",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt06-007",
+      "task_type": "TT06",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "REVERSE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt07-000",
+      "task_type": "TT07",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt07-001",
+      "task_type": "TT07",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt07-002",
+      "task_type": "TT07",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt07-003",
+      "task_type": "TT07",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt07-004",
+      "task_type": "TT07",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt07-005",
+      "task_type": "TT07",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt07-006",
+      "task_type": "TT07",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt07-007",
+      "task_type": "TT07",
+      "authority": "L5",
+      "risk": "negligible",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt08-000",
+      "task_type": "TT08",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt08-001",
+      "task_type": "TT08",
+      "authority": "L2",
+      "risk": "low",
+      "gold_action": "PROPOSE_CONFIRM",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt08-002",
+      "task_type": "TT08",
+      "authority": "L4",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt08-003",
+      "task_type": "TT08",
+      "authority": "L2",
+      "risk": "low",
+      "gold_action": "PROPOSE_CONFIRM",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt08-004",
+      "task_type": "TT08",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt08-005",
+      "task_type": "TT08",
+      "authority": "L2",
+      "risk": "low",
+      "gold_action": "PROPOSE_CONFIRM",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt08-006",
+      "task_type": "TT08",
+      "authority": "L5",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt08-007",
+      "task_type": "TT08",
+      "authority": "L2",
+      "risk": "low",
+      "gold_action": "PROPOSE_CONFIRM",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt09-000",
+      "task_type": "TT09",
+      "authority": "L3",
+      "risk": "high",
+      "gold_action": "APPROVAL_REQUEST",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt09-001",
+      "task_type": "TT09",
+      "authority": "L3",
+      "risk": "critical",
+      "gold_action": "APPROVAL_REQUEST",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt09-002",
+      "task_type": "TT09",
+      "authority": "L2",
+      "risk": "high",
+      "gold_action": "APPROVAL_REQUEST",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt09-003",
+      "task_type": "TT09",
+      "authority": "L4",
+      "risk": "high",
+      "gold_action": "APPROVAL_REQUEST",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt09-004",
+      "task_type": "TT09",
+      "authority": "L0",
+      "risk": "critical",
+      "gold_action": "APPROVAL_REQUEST",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt09-005",
+      "task_type": "TT09",
+      "authority": "L3",
+      "risk": "high",
+      "gold_action": "APPROVAL_REQUEST",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt09-006",
+      "task_type": "TT09",
+      "authority": "L5",
+      "risk": "high",
+      "gold_action": "APPROVAL_REQUEST",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt09-007",
+      "task_type": "TT09",
+      "authority": "L4",
+      "risk": "critical",
+      "gold_action": "APPROVAL_REQUEST",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt10-000",
+      "task_type": "TT10",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVERSE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt10-001",
+      "task_type": "TT10",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt10-002",
+      "task_type": "TT10",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVERSE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt10-003",
+      "task_type": "TT10",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt10-004",
+      "task_type": "TT10",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVERSE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt10-005",
+      "task_type": "TT10",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt10-006",
+      "task_type": "TT10",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt10-007",
+      "task_type": "TT10",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt11-000",
+      "task_type": "TT11",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "CONTINUE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt11-001",
+      "task_type": "TT11",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "CONTINUE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt11-002",
+      "task_type": "TT11",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "CONTINUE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt11-003",
+      "task_type": "TT11",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "CONTINUE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt11-004",
+      "task_type": "TT11",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "CONTINUE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt11-005",
+      "task_type": "TT11",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "CONTINUE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt11-006",
+      "task_type": "TT11",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "CONTINUE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt11-007",
+      "task_type": "TT11",
+      "authority": "L5",
+      "risk": "negligible",
+      "gold_action": "CONTINUE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt12-000",
+      "task_type": "TT12",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt12-001",
+      "task_type": "TT12",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt12-002",
+      "task_type": "TT12",
+      "authority": "L3",
+      "risk": "low",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt12-003",
+      "task_type": "TT12",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt12-004",
+      "task_type": "TT12",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt12-005",
+      "task_type": "TT12",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt12-006",
+      "task_type": "TT12",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "CLARIFY",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt12-007",
+      "task_type": "TT12",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "DECIDE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt13-000",
+      "task_type": "TT13",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "OVERRIDE_HONOR",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt13-001",
+      "task_type": "TT13",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "OVERRIDE_HONOR",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt13-002",
+      "task_type": "TT13",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "OVERRIDE_HONOR",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt13-003",
+      "task_type": "TT13",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "OVERRIDE_HONOR",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt13-004",
+      "task_type": "TT13",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "OVERRIDE_HONOR",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt13-005",
+      "task_type": "TT13",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "OVERRIDE_HONOR",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt13-006",
+      "task_type": "TT13",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "OVERRIDE_HONOR",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt13-007",
+      "task_type": "TT13",
+      "authority": "L5",
+      "risk": "negligible",
+      "gold_action": "OVERRIDE_HONOR",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt14-000",
+      "task_type": "TT14",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt14-001",
+      "task_type": "TT14",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt14-002",
+      "task_type": "TT14",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "REVISE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt14-003",
+      "task_type": "TT14",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt14-004",
+      "task_type": "TT14",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt14-005",
+      "task_type": "TT14",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt14-006",
+      "task_type": "TT14",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt14-007",
+      "task_type": "TT14",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "KEEP",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-000",
+      "task_type": "TT15",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "INVALIDATE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-001",
+      "task_type": "TT15",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "INVALIDATE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-002",
+      "task_type": "TT15",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "INVALIDATE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-003",
+      "task_type": "TT15",
+      "authority": "L5",
+      "risk": "medium",
+      "gold_action": "INVALIDATE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-004",
+      "task_type": "TT15",
+      "authority": "L4",
+      "risk": "negligible",
+      "gold_action": "INVALIDATE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-005",
+      "task_type": "TT15",
+      "authority": "L3",
+      "risk": "medium",
+      "gold_action": "INVALIDATE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-006",
+      "task_type": "TT15",
+      "authority": "L4",
+      "risk": "medium",
+      "gold_action": "INVALIDATE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-007",
+      "task_type": "TT15",
+      "authority": "L5",
+      "risk": "negligible",
+      "gold_action": "INVALIDATE",
+      "dimensions": {
+        "authority_action": {
+          "status": "PASS",
+          "details": []
+        },
+        "action_eligibility": {
+          "status": "PASS",
+          "details": []
+        },
+        "approval_confirmation": {
+          "status": "PASS",
+          "details": []
+        },
+        "lineage": {
+          "status": "PASS",
+          "details": []
+        },
+        "evidence": {
+          "status": "PASS",
+          "details": []
+        },
+        "constraints": {
+          "status": "PASS",
+          "details": []
+        },
+        "clarification": {
+          "status": "PASS",
+          "details": []
+        },
+        "deleted_source_provenance": {
+          "status": "PASS",
+          "details": []
+        },
+        "referential_integrity": {
+          "status": "PASS",
+          "details": []
+        }
+      }
+    }
+  ]
+}

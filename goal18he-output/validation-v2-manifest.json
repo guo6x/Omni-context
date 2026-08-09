@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "validation-manifest-v2",
+  "split": "validation",
+  "goal": "Goal 18 (Validation V2 post Goal 18H-E deterministic repair)",
+  "generated_at": "2026-08-09T10:50:20.101Z",
+  "generator_version": "goal18-generator/v2.1.0 (repaired; Goal 18H-E)",
+  "base_generator_version": "goal18-generator/v2.0.0 (frozen pre-repair lineage)",
+  "seed": "goal18-validation-seed-7f3a9c2e",
+  "seed_hash": "7ed2454b19b723968dad403f0f574c08505b3a45355b77b12ae8fd0afba54cc0",
+  "schema_sha256": "aad31f90203322b2f71c586f21379eb991b5faa1ceeddf4185b92577293264f4",
+  "counts": {
+    "total": 120,
+    "per_task_type": {
+      "TT01": 8,
+      "TT02": 8,
+      "TT03": 8,
+      "TT04": 8,
+      "TT05": 8,
+      "TT06": 8,
+      "TT07": 8,
+      "TT08": 8,
+      "TT09": 8,
+      "TT10": 8,
+      "TT11": 8,
+      "TT12": 8,
+      "TT13": 8,
+      "TT14": 8,
+      "TT15": 8
+    },
+    "per_source_type": {
+      "human_design": 48,
+      "multi_model_reconstruction": 36,
+      "anonymized_pattern_synthesis": 24,
+      "adversarial_boundary": 12
+    },
+    "per_domain": {
+      "software-dev": 7,
+      "schedule-time": 7,
+      "travel-planning": 9,
+      "longterm-project": 10,
+      "home-living": 8,
+      "legal-matters": 3,
+      "learning-courses": 9,
+      "privacy-device": 9,
+      "purchase-budget": 7,
+      "content-publishing": 8,
+      "files-knowledge": 7,
+      "medical-care": 3,
+      "health-lifestyle": 9,
+      "community-events": 7,
+      "financial-planning": 2,
+      "career-job-search": 7,
+      "team-collaboration": 8
+    },
+    "risk_levels": {
+      "low": 20,
+      "medium": 73,
+      "negligible": 19,
+      "high": 5,
+      "critical": 3
+    },
+    "authorities": {
+      "L3": 49,
+      "L4": 37,
+      "L5": 26,
+      "L0": 2,
+      "L1": 1,
+      "L2": 5
+    }
+  },
+  "files": {
+    "validation-v2-fixture.jsonl": {
+      "sha256": "e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",
+      "lines": 120
+    },
+    "validation-v2-gold.jsonl": {
+      "sha256": "7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440",
+      "lines": 120
+    }
+  },
+  "post_review_modified": {
+    "count": 9,
+    "sample_ids": [
+      "decision-bench-v2-val-tt03-002",
+      "decision-bench-v2-val-tt15-000",
+      "decision-bench-v2-val-tt15-001",
+      "decision-bench-v2-val-tt15-002",
+      "decision-bench-v2-val-tt15-003",
+      "decision-bench-v2-val-tt15-004",
+      "decision-bench-v2-val-tt15-005",
+      "decision-bench-v2-val-tt15-006",
+      "decision-bench-v2-val-tt15-007"
+    ]
+  },
+  "provenance_assembly": {
+    "rule": "Regenerated with the repaired generator (v2.1.0); the 111 human-review-unchanged samples preserve the frozen v2.0.0 generator_identity; the 9 post-review-modified samples carry v2.1.0 to mark the deterministic repair.",
+    "unchanged_samples_generator_identity": "goal18-generator/v2.0.0",
+    "modified_samples_generator_identity": "goal18-generator/v2.1.0"
+  },
+  "review_refs": {
+    "round2_agreement_corrigendum": "human-review-round2-agreement-corrigendum.json",
+    "final_v2_mapping": "human-review-final-v2-mapping.json",
+    "final_v2_sensitivity": "human-review-final-v2-sensitivity.json",
+    "note": "Q2 acceptable-actions formal metric is INVALID_DUE_TO_REPRESENTATION_MISMATCH; diagnostic reconstruction is NOT a preregistered formal metric."
+  },
+  "repair_refs": {
+    "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e",
+    "change_log": "validation-v2-change-log.md",
+    "freeze_record": "validation-v2-freeze-record.json",
+    "post_review_modified": "validation-v2-post-review-modifications.json",
+    "regression_tests": "generator-repair-regression-tests/",
+    "audit_engine": "scripts/audit/contract-audit.cjs"
+  },
+  "integrity": {
+    "suite": "goal18he-output/scripts/audit/contract-audit.cjs",
+    "status": "SEE commands-and-results.log",
+    "dimensions_expected": "120 samples x 9 dimensions ERROR=0"
+  },
+  "immutability": {
+    "edits_forbidden_after_freeze": true,
+    "note": "Validation V2 is frozen for Goal 20; any further change requires a new maintenance goal."
+  }
+}

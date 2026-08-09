@@ -1,0 +1,60 @@
+{
+  "schema_version": "human-review-final-v2-sensitivity-v1",
+  "goal": "18H-E",
+  "status": "POST_MAINTENANCE_SENSITIVITY_ANALYSIS",
+  "flags": [
+    "DIAGNOSTIC_ONLY",
+    "NOT_A_NEW_HUMAN_REVIEW",
+    "NOT_PREREGISTERED_PRIMARY_METRIC",
+    "MUST_NOT_BE_CALLED_BLIND_HUMAN_REVIEW"
+  ],
+  "scope": "41 HR1-R2 samples whose Validation V2 fixture and gold are byte/semantically unchanged after deterministic repair.",
+  "excluded": [
+    "HREV-052 (tt03-002, REPLACED)",
+    "HREV-088/089/090 (tt15-000/001/006, FIXTURE_MODIFIED)"
+  ],
+  "dimension_summary": {
+    "preferred_action_exact": {
+      "n": 41,
+      "exact": 17
+    },
+    "preferred_in_acceptable_exact": {
+      "n": 41,
+      "exact": 18
+    },
+    "acceptable_actions": {
+      "n": 41,
+      "status": "INVALID_FORMAL_METRIC_DUE_Q2_REPRESENTATION_MISMATCH",
+      "note": "raw Q2 set is not the complete full-credit set; not reportable even on the unchanged subset"
+    },
+    "user_confirmation_exact": {
+      "n": 41,
+      "exact": 22
+    },
+    "formal_approval_exact": {
+      "n": 41,
+      "exact": 40
+    },
+    "evidence_exact": {
+      "n": 41,
+      "exact": 24
+    },
+    "constraints_exact": {
+      "n": 41,
+      "exact": 40
+    },
+    "clarification_exact": {
+      "n": 41,
+      "exact": 36
+    },
+    "keyvar_match": {
+      "n": 41,
+      "exact": 35
+    },
+    "lineage_ok": {
+      "n": 18,
+      "exact": 6
+    }
+  },
+  "note": "These are sensitivity diagnostics on the unchanged subset only. They do not constitute a new human review, are not preregistered primary metrics, and cannot replace the original blind Round 2 record."
+}

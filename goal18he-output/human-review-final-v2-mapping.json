@@ -1,0 +1,328 @@
+{
+  "schema_version": "human-review-final-v2-mapping-v1",
+  "goal": "18H-E",
+  "note": "Maps the 45 original blind HR1-R2 samples onto Validation V2 after deterministic post-review benchmark maintenance.",
+  "counts": {
+    "original_blind_sample_count": 45,
+    "final_v2_unchanged_count": 41,
+    "post_review_modified_count": 3,
+    "retired_or_replaced_count": 1
+  },
+  "per_sample": [
+    {
+      "hrev_id": "HREV-046",
+      "sample_id": "decision-bench-v2-val-tt01-000",
+      "task_type": "TT01",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-047",
+      "sample_id": "decision-bench-v2-val-tt01-002",
+      "task_type": "TT01",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-048",
+      "sample_id": "decision-bench-v2-val-tt01-004",
+      "task_type": "TT01",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-049",
+      "sample_id": "decision-bench-v2-val-tt02-005",
+      "task_type": "TT02",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-050",
+      "sample_id": "decision-bench-v2-val-tt02-006",
+      "task_type": "TT02",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-051",
+      "sample_id": "decision-bench-v2-val-tt02-007",
+      "task_type": "TT02",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-052",
+      "sample_id": "decision-bench-v2-val-tt03-002",
+      "task_type": "TT03",
+      "final_v2_status": "REPLACED",
+      "change_detail": "sample retired and replaced by deterministic corrected-generator output; HR1 review no longer maps to final V2"
+    },
+    {
+      "hrev_id": "HREV-053",
+      "sample_id": "decision-bench-v2-val-tt03-004",
+      "task_type": "TT03",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-054",
+      "sample_id": "decision-bench-v2-val-tt03-006",
+      "task_type": "TT03",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-055",
+      "sample_id": "decision-bench-v2-val-tt04-000",
+      "task_type": "TT04",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-056",
+      "sample_id": "decision-bench-v2-val-tt04-001",
+      "task_type": "TT04",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-057",
+      "sample_id": "decision-bench-v2-val-tt04-006",
+      "task_type": "TT04",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-058",
+      "sample_id": "decision-bench-v2-val-tt05-001",
+      "task_type": "TT05",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-059",
+      "sample_id": "decision-bench-v2-val-tt05-005",
+      "task_type": "TT05",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-060",
+      "sample_id": "decision-bench-v2-val-tt05-006",
+      "task_type": "TT05",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-061",
+      "sample_id": "decision-bench-v2-val-tt06-002",
+      "task_type": "TT06",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-062",
+      "sample_id": "decision-bench-v2-val-tt06-003",
+      "task_type": "TT06",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-063",
+      "sample_id": "decision-bench-v2-val-tt06-004",
+      "task_type": "TT06",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-064",
+      "sample_id": "decision-bench-v2-val-tt07-005",
+      "task_type": "TT07",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-065",
+      "sample_id": "decision-bench-v2-val-tt07-006",
+      "task_type": "TT07",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-066",
+      "sample_id": "decision-bench-v2-val-tt07-007",
+      "task_type": "TT07",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-067",
+      "sample_id": "decision-bench-v2-val-tt08-000",
+      "task_type": "TT08",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-068",
+      "sample_id": "decision-bench-v2-val-tt08-006",
+      "task_type": "TT08",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-069",
+      "sample_id": "decision-bench-v2-val-tt08-007",
+      "task_type": "TT08",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-070",
+      "sample_id": "decision-bench-v2-val-tt09-002",
+      "task_type": "TT09",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-071",
+      "sample_id": "decision-bench-v2-val-tt09-005",
+      "task_type": "TT09",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-072",
+      "sample_id": "decision-bench-v2-val-tt09-007",
+      "task_type": "TT09",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-073",
+      "sample_id": "decision-bench-v2-val-tt10-000",
+      "task_type": "TT10",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-074",
+      "sample_id": "decision-bench-v2-val-tt10-001",
+      "task_type": "TT10",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-075",
+      "sample_id": "decision-bench-v2-val-tt10-002",
+      "task_type": "TT10",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-076",
+      "sample_id": "decision-bench-v2-val-tt11-001",
+      "task_type": "TT11",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-077",
+      "sample_id": "decision-bench-v2-val-tt11-002",
+      "task_type": "TT11",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-078",
+      "sample_id": "decision-bench-v2-val-tt11-003",
+      "task_type": "TT11",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-079",
+      "sample_id": "decision-bench-v2-val-tt12-001",
+      "task_type": "TT12",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-080",
+      "sample_id": "decision-bench-v2-val-tt12-002",
+      "task_type": "TT12",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-081",
+      "sample_id": "decision-bench-v2-val-tt12-007",
+      "task_type": "TT12",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-082",
+      "sample_id": "decision-bench-v2-val-tt13-000",
+      "task_type": "TT13",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-083",
+      "sample_id": "decision-bench-v2-val-tt13-001",
+      "task_type": "TT13",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-084",
+      "sample_id": "decision-bench-v2-val-tt13-006",
+      "task_type": "TT13",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-085",
+      "sample_id": "decision-bench-v2-val-tt14-000",
+      "task_type": "TT14",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-086",
+      "sample_id": "decision-bench-v2-val-tt14-001",
+      "task_type": "TT14",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-087",
+      "sample_id": "decision-bench-v2-val-tt14-004",
+      "task_type": "TT14",
+      "final_v2_status": "UNCHANGED",
+      "change_detail": null
+    },
+    {
+      "hrev_id": "HREV-088",
+      "sample_id": "decision-bench-v2-val-tt15-000",
+      "task_type": "TT15",
+      "final_v2_status": "FIXTURE_MODIFIED",
+      "change_detail": "fixture provenance repaired (qualified ev001 re-expressed with delete-event source e004); gold unchanged; HR1 review no longer maps exactly to final V2 fixture"
+    },
+    {
+      "hrev_id": "HREV-089",
+      "sample_id": "decision-bench-v2-val-tt15-001",
+      "task_type": "TT15",
+      "final_v2_status": "FIXTURE_MODIFIED",
+      "change_detail": "fixture provenance repaired (qualified ev001 re-expressed with delete-event source e004); gold unchanged; HR1 review no longer maps exactly to final V2 fixture"
+    },
+    {
+      "hrev_id": "HREV-090",
+      "sample_id": "decision-bench-v2-val-tt15-006",
+      "task_type": "TT15",
+      "final_v2_status": "FIXTURE_MODIFIED",
+      "change_detail": "fixture provenance repaired (qualified ev001 re-expressed with delete-event source e004); gold unchanged; HR1 review no longer maps exactly to final V2 fixture"
+    }
+  ]
+}

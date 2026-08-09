@@ -1,0 +1,19 @@
+{
+  "schema_version": "model-assisted-audit-identity-v1",
+  "goal": "18H-E",
+  "package_identity": "MODEL_ASSISTED_NON_HUMAN",
+  "role": "post-review benchmark maintenance diagnostic",
+  "statements": {
+    "human_adjudication_claimed": false,
+    "hr1_confirmation_fabricated": false,
+    "benchmark_maintainer_human_confirmation_fabricated": false
+  },
+  "constraints": [
+    "AI audit is NOT a second human reviewer.",
+    "AI must not be set as HR1.",
+    "AI must not be set as BENCHMARK_MAINTAINER human confirmation.",
+    "Round 1/2 raw human evidence remains authoritative and byte-preserved.",
+    "No post-hoc agreement laundering; no gold adjustment based on HR1 answers or model performance."
+  ],
+  "input_package": "goal18he-input (model-assisted round2 adjudication; verified byte-identical via artifact-sha256.txt)"
+}

@@ -1,0 +1,192 @@
+{
+  "schema_version": "validation-v2-post-review-modifications-v1",
+  "goal": "18H-E",
+  "hash_definition": {
+    "note": "Per-sample SHA-256 is computed over the exact JSONL line bytes as stored in the respective file, including the line terminator (CRLF for the pre-repair authoritative fixture; LF elsewhere).",
+    "old_fixture_source": "goal18-output/validation-set.jsonl (pre-repair authoritative, 59e92463...)",
+    "new_fixture_source": "goal18he-output/validation-v2-fixture.jsonl",
+    "old_gold_source": "goal18-output/validation-gold.jsonl",
+    "new_gold_source": "goal18he-output/validation-v2-gold.jsonl"
+  },
+  "count": 9,
+  "samples": [
+    {
+      "hrev_id": "HREV-052",
+      "sample_id": "decision-bench-v2-val-tt03-002",
+      "old_fixture_sha256": "abd78a5edd7a25cd27055150ed5b034a95b6286f0db80df78ffdb9d62f434814",
+      "new_fixture_sha256": "bcab30031aec1e6ac796f5902556773807f208373135e857d1755c4e54fa2e82",
+      "old_gold_sha256": "3ffe512be677483320f2fedf2b95ac4b9772554c2c0eff8ae7ababc130e841d9",
+      "new_gold_sha256": "44fc436a3c3ac39de3cdbba023344057713e9f26b103a22dff21ba4319b08ff9",
+      "exact_changed_fields": {
+        "fixture": [
+          "memory_timeline",
+          "candidates",
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": [
+          "expected_action.action",
+          "expected_action.preferred_action",
+          "expected_action.detail",
+          "expected_action.target_option",
+          "expected_action.coded_reason",
+          "expected_action.conditions",
+          "expected_action.prohibited_actions",
+          "expected_action.acceptable_actions",
+          "expected_action.acceptable_lineage_operations",
+          "acceptable_explanations",
+          "severe_failure_labels"
+        ]
+      },
+      "deterministic_repair_reason": "Frozen authority contract: L0/L1 can_decide=false, decision_right=user; DECIDE gate requires \"authority allows\" (EXTRACT-A §§1.3,3.2; K:195; P L2-CONFIRM-BEFORE-ACTION). TT03 at L0/L1 has no legal compliant-option branch, so the deterministic generator rule retires the slot to REJECT/no_feasible_option (all candidates violate hard constraints). Not HR1-driven.",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    },
+    {
+      "hrev_id": "HREV-088",
+      "sample_id": "decision-bench-v2-val-tt15-000",
+      "old_fixture_sha256": "a54f8121fdf839868e70f8750e74a16acc3c23bee0b0f6acc1f7625820fa3a5e",
+      "new_fixture_sha256": "ae4a790a10d8aef164c3c37afbc801c758479c6f168f5d8391ac163d706c9934",
+      "old_gold_sha256": "92d05e81e923c733d9f0f7ae86bc0ed4112025940aac1036149d9644ae67f8e4",
+      "new_gold_sha256": "92d05e81e923c733d9f0f7ae86bc0ed4112025940aac1036149d9644ae67f8e4",
+      "exact_changed_fields": {
+        "fixture": [
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": []
+      },
+      "deterministic_repair_reason": "Frozen source lifecycle contract (RI-06; G:94-99; T5; P INVALIDATE-ON-CONDITION-LOSS): qualified evidence may not source a deleted event (e001 deleted by e004). ev001 is re-expressed as evidence of the deletion itself (source_ref=e004, at=e004.at, supports=[]); ex001 remains source_deleted/prohibited; ev002 cascade-invalidation principle preserved. Gold stays INVALIDATE with lineage invalidate(parent=decision-d1).",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    },
+    {
+      "hrev_id": "HREV-089",
+      "sample_id": "decision-bench-v2-val-tt15-001",
+      "old_fixture_sha256": "1eb83f90b752e254fff76332f56795449a1557537c109c4ca7a087ff3d00ad9f",
+      "new_fixture_sha256": "9c712cff8ec2ca88efb020f1d4f6569d2609887d17c19e254fee08bd6cca867e",
+      "old_gold_sha256": "9f2a7ddde8470deaacd85e7602aeaaad02b7f2addfd47eaf22a24903bf9e980c",
+      "new_gold_sha256": "9f2a7ddde8470deaacd85e7602aeaaad02b7f2addfd47eaf22a24903bf9e980c",
+      "exact_changed_fields": {
+        "fixture": [
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": []
+      },
+      "deterministic_repair_reason": "Frozen source lifecycle contract (RI-06; G:94-99; T5; P INVALIDATE-ON-CONDITION-LOSS): qualified evidence may not source a deleted event (e001 deleted by e004). ev001 is re-expressed as evidence of the deletion itself (source_ref=e004, at=e004.at, supports=[]); ex001 remains source_deleted/prohibited; ev002 cascade-invalidation principle preserved. Gold stays INVALIDATE with lineage invalidate(parent=decision-d1).",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    },
+    {
+      "hrev_id": "NONE (full-audit extension; same systemic TT15 defect)",
+      "sample_id": "decision-bench-v2-val-tt15-002",
+      "old_fixture_sha256": "ea50fee3f45a931e176532609ec5ca82df273fc77022c5ffc6b444c1dbad6769",
+      "new_fixture_sha256": "0a616cca6cc58f1bf20cb577676e791daa361a33b33e6f83c888384bba4def15",
+      "old_gold_sha256": "3d0c10150437042176ca481921adb6adc6443d22c800562e4249cc04aaa52a95",
+      "new_gold_sha256": "3d0c10150437042176ca481921adb6adc6443d22c800562e4249cc04aaa52a95",
+      "exact_changed_fields": {
+        "fixture": [
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": []
+      },
+      "deterministic_repair_reason": "Frozen source lifecycle contract (RI-06; G:94-99; T5; P INVALIDATE-ON-CONDITION-LOSS): qualified evidence may not source a deleted event (e001 deleted by e004). ev001 is re-expressed as evidence of the deletion itself (source_ref=e004, at=e004.at, supports=[]); ex001 remains source_deleted/prohibited; ev002 cascade-invalidation principle preserved. Gold stays INVALIDATE with lineage invalidate(parent=decision-d1).",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    },
+    {
+      "hrev_id": "NONE (full-audit extension; same systemic TT15 defect)",
+      "sample_id": "decision-bench-v2-val-tt15-003",
+      "old_fixture_sha256": "29d0db8f9693d4a2e03c8396752c9a8ced6c513f2b88b66ee91c1f02bc23474e",
+      "new_fixture_sha256": "68f6117586cadbda380683f3d3e6b8a0d39ccab04f4bd9556e0699d51d164bda",
+      "old_gold_sha256": "ba43d12f0d9ad762006ee92121876738e131318a77ad2027f0656e4959fcdf37",
+      "new_gold_sha256": "ba43d12f0d9ad762006ee92121876738e131318a77ad2027f0656e4959fcdf37",
+      "exact_changed_fields": {
+        "fixture": [
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": []
+      },
+      "deterministic_repair_reason": "Frozen source lifecycle contract (RI-06; G:94-99; T5; P INVALIDATE-ON-CONDITION-LOSS): qualified evidence may not source a deleted event (e001 deleted by e004). ev001 is re-expressed as evidence of the deletion itself (source_ref=e004, at=e004.at, supports=[]); ex001 remains source_deleted/prohibited; ev002 cascade-invalidation principle preserved. Gold stays INVALIDATE with lineage invalidate(parent=decision-d1).",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    },
+    {
+      "hrev_id": "NONE (full-audit extension; same systemic TT15 defect)",
+      "sample_id": "decision-bench-v2-val-tt15-004",
+      "old_fixture_sha256": "77234c9f51116253a76e43366de25cd720458e5319ddda8fe4d2c62eddaecf62",
+      "new_fixture_sha256": "5f603bb2d9adce08483d1dffcc94761338fb61a31f87b9cf8b2bda67b364ab66",
+      "old_gold_sha256": "4df880bd4af044ed40ec9b8dc77ef6c6fa3f5a97012e1ac5b204fe8c1d1f2c23",
+      "new_gold_sha256": "4df880bd4af044ed40ec9b8dc77ef6c6fa3f5a97012e1ac5b204fe8c1d1f2c23",
+      "exact_changed_fields": {
+        "fixture": [
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": []
+      },
+      "deterministic_repair_reason": "Frozen source lifecycle contract (RI-06; G:94-99; T5; P INVALIDATE-ON-CONDITION-LOSS): qualified evidence may not source a deleted event (e001 deleted by e004). ev001 is re-expressed as evidence of the deletion itself (source_ref=e004, at=e004.at, supports=[]); ex001 remains source_deleted/prohibited; ev002 cascade-invalidation principle preserved. Gold stays INVALIDATE with lineage invalidate(parent=decision-d1).",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    },
+    {
+      "hrev_id": "NONE (full-audit extension; same systemic TT15 defect)",
+      "sample_id": "decision-bench-v2-val-tt15-005",
+      "old_fixture_sha256": "dea1796fb941c086e571e76661450c60e21870489f290502c96d420670578ec7",
+      "new_fixture_sha256": "e71e40b2a189f5a9db9b2b8b17c92a00fb11cee3da29860f5b05fe3ede0e2918",
+      "old_gold_sha256": "173bc3e4dc83bc964aeee967bf1c0a4df88e408b6f8feef694b46cf4298ce46c",
+      "new_gold_sha256": "173bc3e4dc83bc964aeee967bf1c0a4df88e408b6f8feef694b46cf4298ce46c",
+      "exact_changed_fields": {
+        "fixture": [
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": []
+      },
+      "deterministic_repair_reason": "Frozen source lifecycle contract (RI-06; G:94-99; T5; P INVALIDATE-ON-CONDITION-LOSS): qualified evidence may not source a deleted event (e001 deleted by e004). ev001 is re-expressed as evidence of the deletion itself (source_ref=e004, at=e004.at, supports=[]); ex001 remains source_deleted/prohibited; ev002 cascade-invalidation principle preserved. Gold stays INVALIDATE with lineage invalidate(parent=decision-d1).",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    },
+    {
+      "hrev_id": "HREV-090",
+      "sample_id": "decision-bench-v2-val-tt15-006",
+      "old_fixture_sha256": "9466afc9185c9f083a731ab8701d15916d18f0c073a9e3079379068a503a88b3",
+      "new_fixture_sha256": "3f20f0ae761bc1f43e51e3e124cccf6c91d7183eea130214b2eaeebfcd74e4e8",
+      "old_gold_sha256": "84899540ee15d643aab7402da273ca7b4042dfb87a5bd9c6ae1d36414ac3e46a",
+      "new_gold_sha256": "84899540ee15d643aab7402da273ca7b4042dfb87a5bd9c6ae1d36414ac3e46a",
+      "exact_changed_fields": {
+        "fixture": [
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": []
+      },
+      "deterministic_repair_reason": "Frozen source lifecycle contract (RI-06; G:94-99; T5; P INVALIDATE-ON-CONDITION-LOSS): qualified evidence may not source a deleted event (e001 deleted by e004). ev001 is re-expressed as evidence of the deletion itself (source_ref=e004, at=e004.at, supports=[]); ex001 remains source_deleted/prohibited; ev002 cascade-invalidation principle preserved. Gold stays INVALIDATE with lineage invalidate(parent=decision-d1).",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    },
+    {
+      "hrev_id": "NONE (full-audit extension; same systemic TT15 defect)",
+      "sample_id": "decision-bench-v2-val-tt15-007",
+      "old_fixture_sha256": "ace1fd38f23e28f7544d77d32978c062d2b17b65ffbd7f536876438aaf413033",
+      "new_fixture_sha256": "0d653f40e1f3e2cff0f9abce04a69349743edd8e7cf08819a57d990ae85a2046",
+      "old_gold_sha256": "d02c2dccd06cff7d199788548ee1d45df012453ad7285764014361b170ad36a0",
+      "new_gold_sha256": "d02c2dccd06cff7d199788548ee1d45df012453ad7285764014361b170ad36a0",
+      "exact_changed_fields": {
+        "fixture": [
+          "evidence.qualified",
+          "construction_provenance.generator_identity"
+        ],
+        "gold": []
+      },
+      "deterministic_repair_reason": "Frozen source lifecycle contract (RI-06; G:94-99; T5; P INVALIDATE-ON-CONDITION-LOSS): qualified evidence may not source a deleted event (e001 deleted by e004). ev001 is re-expressed as evidence of the deletion itself (source_ref=e004, at=e004.at, supports=[]); ex001 remains source_deleted/prohibited; ev002 cascade-invalidation principle preserved. Gold stays INVALIDATE with lineage invalidate(parent=decision-d1).",
+      "human_review_no_longer_exactly_maps_to_final_v2": true,
+      "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e"
+    }
+  ],
+  "package": "VALIDATION_GOLD_FREEZE_V2",
+  "note": "Formal freeze-package copy of the post-review modification record."
+}

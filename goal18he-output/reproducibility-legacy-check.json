@@ -1,0 +1,42 @@
+{
+  "schema_version": "goal18he-reproducibility-legacy-check-v1",
+  "goal": "18H-E",
+  "checked_at": "2026-08-09T10:52:23.027Z",
+  "frozen_generator_lineage": {
+    "on_disk_generator": "goal18-output/scripts/generator (identity goal18-generator/v2.1.0)",
+    "frozen_pre_repair_identity": "goal18-generator/v2.0.0",
+    "seed": "goal18-validation-seed-7f3a9c2e",
+    "seed_hash": "7ed2454b19b723968dad403f0f574c08505b3a45355b77b12ae8fd0afba54cc0"
+  },
+  "unpatched_generator_reproduction": {
+    "method": "gen-repro output (goal18he-output/work/gen-repro) vs pre-repair authoritative goal18-output/validation-set.jsonl, normalized for line endings (authoritative CRLF, generator LF) and construction_provenance.generator_identity",
+    "fixture_differing_lines_after_normalization": 0,
+    "gold_byte_identical": true,
+    "note": "Proves the on-disk generator is the frozen lineage that produced the pre-repair Validation set; only the version marker and EOL differ."
+  },
+  "archive_v1_lineage": {
+    "file": "goal18h-output/archive/v1-validation-set.jsonl",
+    "sha256": "3ceddb1aaee51e28dfe20a930696b01065dcfae4d47bdac1f1dd5dc3c39e9667",
+    "differing_lines_vs_pre_repair_authoritative": 8,
+    "differing_lines_are": "exactly the 8 TT15 samples (lines 113-120)",
+    "differing_field": "evidence (ev002.supports: [\"hc1\"] in v1 archive vs [] in pre-repair authoritative)",
+    "note": "Legacy predecessor state; both legacy states carry the same deleted-source provenance defect (ev001 sourced e001) that the deterministic repair fixes. V2 is the repaired final state."
+  },
+  "repaired_generator_reproduction": {
+    "method": "gen-recheck output vs gen-repaired: byte-identical (fixture and gold)",
+    "fixture_sha256": "242a86e6880576a120dd52e311eeacd96569866924db0cb0c9a087ea339ba555",
+    "gold_sha256": "7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440",
+    "determinism": "two independent generator runs produce identical bytes"
+  },
+  "schema_validation": {
+    "full_sample_schema": "goal18-output/schema/decision-benchmark-v2-schema.json",
+    "full_sample_errors": 0,
+    "gold_schema": "goal18-output/schema/validation-gold-v2.schema.json",
+    "gold_errors": 0,
+    "note": "Fixture files intentionally omit gold fields; full samples are validated by merging fixture+gold (same as generate.mjs pre-write validation)."
+  },
+  "regression_tests": {
+    "suite": "generator-repair-regression-tests/generator-repair-regression.test.mjs",
+    "result": "8/8 pass"
+  }
+}

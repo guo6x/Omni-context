@@ -1,0 +1,146 @@
+{
+  "schema_version": "validation-v2-freeze-record-v1",
+  "freeze_id": "VALIDATION_GOLD_FREEZE_V2",
+  "goal": "18H-E",
+  "created_at": "2026-08-09T10:50:20.101Z",
+  "old_hashes": {
+    "fixture": "59e924631934a8712f05daedc269c4f27791bf86b97ed11fa5f1af0bdb3cbf34",
+    "gold": "763da3c34446e269c9735545c8ba427910ca33d687c8fb3ed7e0ea3f7e18baed",
+    "manifest": "01e5efed8b5a1fd9062672157060cfaf2aa903d5fe8bd98fe6518df3b4353af7"
+  },
+  "new_hashes": {
+    "fixture": "e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",
+    "gold": "7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440",
+    "manifest": "e0a56ef0337502ba803cb45bf0f6e1f2e22ea7518786ce1dc81b190c490a4f8d"
+  },
+  "changed_sample_ids": [
+    "decision-bench-v2-val-tt03-002",
+    "decision-bench-v2-val-tt15-000",
+    "decision-bench-v2-val-tt15-001",
+    "decision-bench-v2-val-tt15-002",
+    "decision-bench-v2-val-tt15-003",
+    "decision-bench-v2-val-tt15-004",
+    "decision-bench-v2-val-tt15-005",
+    "decision-bench-v2-val-tt15-006",
+    "decision-bench-v2-val-tt15-007"
+  ],
+  "changed_fields_by_sample": [
+    {
+      "sample_id": "decision-bench-v2-val-tt03-002",
+      "fixture_fields": [
+        "memory_timeline",
+        "candidates",
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": [
+        "expected_action.action",
+        "expected_action.preferred_action",
+        "expected_action.detail",
+        "expected_action.target_option",
+        "expected_action.coded_reason",
+        "expected_action.conditions",
+        "expected_action.prohibited_actions",
+        "expected_action.acceptable_actions",
+        "expected_action.acceptable_lineage_operations",
+        "acceptable_explanations",
+        "severe_failure_labels"
+      ]
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-000",
+      "fixture_fields": [
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": []
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-001",
+      "fixture_fields": [
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": []
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-002",
+      "fixture_fields": [
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": []
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-003",
+      "fixture_fields": [
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": []
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-004",
+      "fixture_fields": [
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": []
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-005",
+      "fixture_fields": [
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": []
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-006",
+      "fixture_fields": [
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": []
+    },
+    {
+      "sample_id": "decision-bench-v2-val-tt15-007",
+      "fixture_fields": [
+        "evidence.qualified",
+        "construction_provenance.generator_identity"
+      ],
+      "gold_fields": []
+    }
+  ],
+  "reasons": [
+    "HREV-052 (tt03-002): frozen authority contract forbids DECIDE at L0/L1; deterministic generator repair forces the REJECT/no-feasible-option branch.",
+    "TT15 (all 8): frozen source-lifecycle contract forbids qualified evidence sourced from deleted e001; ev001 re-expressed as evidence of the deletion (source_ref=e004, supports=[])."
+  ],
+  "generator_commit": "a17864b931fbcbd8761dd46a94fc06054f1f981e",
+  "freeze_commit": "PENDING_FREEZE_PACKAGE_COMMIT",
+  "timestamp": "2026-08-09T10:50:20.101Z",
+  "no_model_evaluation_before_freeze": true,
+  "holdback_touched": false,
+  "a0_a5_executed": false,
+  "formal_validation_output_exists": false,
+  "gates": {
+    "validation_count": "120 = 15 x 8",
+    "schema_errors": 0,
+    "referential_errors": 0,
+    "authority_action_errors": 0,
+    "approval_confirmation_errors": 0,
+    "lineage_errors": 0,
+    "source_lifecycle_errors": 0,
+    "evidence_errors": 0,
+    "constraint_errors": 0,
+    "clarification_errors": 0,
+    "audit_engine": "goal18he-output/scripts/audit/contract-audit.cjs (work/audit-v2-final)"
+  },
+  "human_review": {
+    "original_blind_review_unchanged": true,
+    "q2_acceptable_actions_metric": "INVALID_DUE_TO_REPRESENTATION_MISMATCH",
+    "post_review_modified_samples": 9,
+    "human_review_no_longer_exactly_maps_to_final_v2_for_modified_samples": true
+  },
+  "goal19f_sync": "goal19f-output/formal-run-config-v1.json goal18_integrity updated (see goal19f-validation-v2-sync-record.json)"
+}
