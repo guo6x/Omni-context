@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "status": "FROZEN",
+  "blocker_code": null,
+  "model_id": "deepseek-v4-flash",
+  "frozen_parameters": {
+    "temperature": 0,
+    "retry_max_attempts": 3,
+    "transport_retry_max_attempts": 6,
+    "empty_content_retry_max_attempts": 5,
+    "retry_transport_parse_only": true,
+    "concurrency": 1,
+    "seed": "SEED_N/A",
+    "max_output_tokens": 65536,
+    "timeout_ms": 120000,
+    "top_p": null
+  },
+  "unbound_answer_affecting_parameters": [],
+  "previous_system_reference": {
+    "note": "goal12-output/cleanroom/docs/freeze-v1/omni-context-evaluation-freeze-v1.json pins thinking_mode=disabled for the PREVIOUS experiment system; that binding is not part of the Goal19F/20 launch freeze and cannot be silently inherited (spec 6: no ad-hoc decisions)",
+    "file": "goal12-output/cleanroom/docs/freeze-v1/omni-context-evaluation-freeze-v1.json",
+    "field": "models.thinking_mode = disabled"
+  },
+  "required_owner_decision": null,
+  "confirmed_parameters": {
+    "thinking": "enabled",
+    "reasoning_effort": "high",
+    "temperature": 0,
+    "temperature_semantics": "PROVIDER_IGNORED_INERT_UNDER_THINKING_MODE - official DeepSeek docs: thinking mode does not support temperature/top_p/presence_penalty/frequency_penalty (set but ignored, no error); kept bound in the frozen request body for identical serialization across arms",
+    "top_p": null,
+    "max_output_tokens": 65536,
+    "retry_max_attempts": 3,
+    "transport_retry_max_attempts": 6,
+    "empty_content_retry_max_attempts": 5,
+    "concurrency": 1,
+    "timeout_ms": 120000
+  },
+  "executor_behavior": "run-goal20-formal-validation.mjs --mode formal reads confirmed_parameters; gate G10 passes when status=FROZEN; body includes thinking={type:enabled}, reasoning_effort=high, temperature=0, max_tokens=65536 for all arms A0-A5 (identical).",
+  "owner_decision": {
+    "decision_type": "OWNER_MODEL_PARAMETER_DECISION",
+    "approval_status": "OWNER_APPROVED",
+    "owner_role": "PROJECT_OWNER",
+    "approved_at": "2026-08-10T03:46:07.238Z",
+    "approval_text": "Approved: DeepSeek V4 Flash formal parameters = thinking enabled, reasoning_effort high, temperature 0, max_output_tokens 4096, retry 3, all A0-A5 identical.",
+    "cryptographic_signature_status": "NOT_REQUIRED",
+    "note": "temperature=0 recorded as provider-ignored/inert under thinking mode per frozen provider semantics (official docs). No signature fabricated. Amended 2026-08-10 by GOAL20_PARAMETER_AMENDMENT_V2_1 (max_output_tokens 4096 -> 16384) and 2026-08-11 by GOAL20_FINAL_EXECUTION_PROTOCOL_AMENDMENT_V2_4 (max_output_tokens 16384 -> 65536)."
+  },
+  "amendments": [
+    {
+      "amendment_id": "GOAL20_PARAMETER_AMENDMENT_V2_1",
+      "from": {
+        "max_output_tokens": 4096
+      },
+      "to": {
+        "max_output_tokens": 16384
+      },
+      "scope": "uniform across A0-A5; no sample/task/arm/score dependence",
+      "approved_by": "PROJECT_OWNER",
+      "approval_status": "OWNER_APPROVED",
+      "approved_at": "2026-08-10T06:17:06.175Z",
+      "approval_text": "Approved: Goal20 pre-scoring technical protocol amendment = max_output_tokens 4096 -> 16384. All other frozen formal parameters remain unchanged (model deepseek-v4-flash, thinking enabled, reasoning_effort high, temperature 0 inert, retry 3, identical across A0-A5).",
+      "cryptographic_signature_status": "NOT_REQUIRED",
+      "evidence_scope_attestation": "The choice of 16384 is based ONLY on execution-level truncation evidence from the invalid V2 run: output-token saturation (12 ledger records at 4096 cap, 28 >= 3500), reasoning-token consumption (avg 2022/2251 completion tokens), PARSE_FAILED (33 fatal after retries), EMPTY_CONTENT, and retry diagnostics. NO formal scoring, gold-based analysis, arm ranking, hard-gate comparison, or task-performance comparison was used."
+    },
+    {
+      "amendment_id": "GOAL20_FINAL_EXECUTION_PROTOCOL_AMENDMENT_V2_4",
+      "from": {
+        "max_output_tokens": 16384
+      },
+      "to": {
+        "max_output_tokens": 65536
+      },
+      "scope": "uniform across A0-A5; no prompt change; no sample/task/arm/score dependence",
+      "approved_by": "PROJECT_OWNER",
+      "approval_status": "OWNER_APPROVED",
+      "approved_at": "2026-08-11T02:39:53.434Z",
+      "approval_text": "Approved: Goal20 V2.4 FINAL execution-protocol amendment = max_output_tokens 16384 -> 65536. All other frozen model parameters unchanged (deepseek-v4-flash, thinking enabled, reasoning_effort high, temperature 0 inert, identical across A0-A5). No prompt change authorized. finish_reason=length is NOT retryable; the increased 65536 ceiling is the sole remediation for the V2.3 EMPTY_CONTENT_LENGTH cases. If V2.4 reaches the 65536 ceiling and loses a required tuple because of finish_reason=length, fail closed; do NOT automatically increase the output limit again.",
+      "cryptographic_signature_status": "NOT_REQUIRED",
+      "evidence_scope_attestation": "The choice of 65536 is based ONLY on pre-scoring execution diagnostics from the invalid V2/V2.1/V2.2/V2.3 runs (reasoning-token saturation at 16384 producing EMPTY_CONTENT_LENGTH; no truncation on successful responses). NO gold-based score, arm ranking, hard-gate comparison, task-performance comparison, or scientific result was used.",
+      "no_further_tuning": "V2.4 is the FINAL automatically authorized execution-protocol attempt. Do NOT further increase max_output_tokens; do NOT broaden retry/error taxonomy; no automatic V2.5."
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "campaign_id": "goal20-formal-validation-v1",
+  "tuple_id": "g20-022",
+  "tuple_index": 22,
+  "sample_id": "decision-bench-v3-val-tt01-003",
+  "task_type": "TT01",
+  "arm": "A4",
+  "execution_mode": "deterministic_kernel",
+  "provider_call": false,
+  "request_sequence": 0,
+  "requested_model": null,
+  "provider_model_identity": null,
+  "generation_parameter_identity": null,
+  "prompt_sha256": "950b7a5777cfac1c75d168b96a62c150aafa082914277f5cf0591adc2f971a04",
+  "serialized_request_sha256": null,
+  "response_raw_sha256": "d77fbb0d77759f1239e417025d6ed7a72ebc53551ea512cf040c571f180d263d",
+  "response_raw_bytes": 622,
+  "parsed_structural_output": {
+    "action": "DECIDE",
+    "selected_option": "opt-a",
+    "key_questions": [],
+    "clarification_count": 0,
+    "revision_target": null,
+    "executed": false,
+    "approval_requested": false,
+    "explanation": "目标：为霁月家庭档案确定采用哪类方案。决定：选择 opt-a（个人主导），低风险可逆且证据充分。证据 mem:ev-ev001：用户偏好个人主导。证据 mem:ev-ev002：个人主导 在同场景满意程度更高。证据 mem:ev-ev003：两个方案均可行，无硬约束",
+    "cited_evidence_ids": [
+      "ev001",
+      "ev002",
+      "ev003"
+    ],
+    "reason_code": null,
+    "keep_decision": false,
+    "lineage_operation": "create",
+    "parent_decision_id": null
+  },
+  "parse_status": "ok",
+  "provider_request_id": null,
+  "usage": null,
+  "cache_usage": null,
+  "latency_ms": 52,
+  "attempt": 1,
+  "retry_count": 0,
+  "cost_cny": 0,
+  "cost_source": "no_provider_call",
+  "timestamps": {
+    "started_at": "2026-08-11T10:39:02.169Z",
+    "completed_at": "2026-08-11T10:39:02.169Z"
+  },
+  "error_state": null,
+  "kernel_trace": {
+    "input_hash": "adf22d8dbd244dfbee886c13a5158db1f98800d6e9c74c90ac1c3e565e1a0a5e",
+    "plan_action": "DECIDE",
+    "event_count": 0,
+    "persist": false,
+    "historical_used": false,
+    "outcome_used": false,
+    "lineage_operation": "create"
+  },
+  "audit": {
+    "arm": "A4",
+    "current_input_hash": "c6e562b3763a557a0f6e0c415c109f7a240a6fbb2650c541e4e67315d4a78e38",
+    "retrieval_used": true,
+    "qualification_used": true,
+    "gate_route": "DECIDE",
+    "context_ids": [
+      "ev001",
+      "ev002",
+      "ev003"
+    ]
+  }
+}

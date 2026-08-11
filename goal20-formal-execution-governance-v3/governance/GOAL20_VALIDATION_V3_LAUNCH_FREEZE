@@ -1,0 +1,34 @@
+{
+  "schema_version": 2.4,
+  "goal": "20R-V3-R1",
+  "epoch": "v3",
+  "created_at": "2026-08-11T11:00:00Z",
+  "freeze_id": "GOAL20_VALIDATION_V3_LAUNCH_FREEZE",
+  "status": "FROZEN",
+  "gates": [
+    { "id": "V3G1", "name": "Validation V3 identities exact", "status": "PASS", "detail": "fixture 78e61a15... / gold e28d37f7... / manifest 58ceee3f... (gate-verification-v3.json)" },
+    { "id": "V3G2", "name": "Prompts 30/30", "status": "PASS", "detail": "byte-verified vs sealed-prompt-byte-manifest; 0 mismatches" },
+    { "id": "V3G3", "name": "Scorer 4/4 blobs", "status": "PASS", "detail": "scorer/gold-contract blobs verified in execution-snapshot" },
+    { "id": "V3G4", "name": "Executor 49/49", "status": "PASS", "detail": "post-plumbing suite; runtime sha 6b96b3a9..., dir sha 7d82c6f9..." },
+    { "id": "V3G5", "name": "720-tuple V3 precommit", "status": "PASS", "detail": "720 rows, 720 unique; sha 8663b0c379ea..." },
+    { "id": "V3G6", "name": "V3 720/720 structural preflight", "status": "PASS", "detail": "fresh dummy run COMPLETED (v3-preflight-720-001); 720 rows unique; 0 errors; 480 dummy calls; 0 formal calls" },
+    { "id": "V3G7", "name": "Budget governor + V3 budget", "status": "PASS", "detail": "expected ~4.55 CNY, conservative-full-output 76.46, conservative-observed-max 18.87; DeepSeek 200 + total 220 caps enforceable (goal20-formal-budget-model.json)" },
+    { "id": "V3G8", "name": "Authorization", "status": "PASS", "detail": "AUTHORIZATION_DERIVED_FROM_EXISTING_SIGNED_OWNER_DECISION (Goal 19F B1 + Goal 20R-V3-R1 owner attachment)" },
+    { "id": "V3G9", "name": "Model identity", "status": "PASS", "detail": "deepseek-v4-flash; FROZEN V2.4 parameters; runtime identity check on every response" },
+    { "id": "V3G10", "name": "Formal output isolation", "status": "PASS", "detail": "V3 formal runs root empty; 0 completed formal runs" },
+    { "id": "V3G11", "name": "Secrets scan", "status": "PASS", "detail": "no credentials in V3 governance/executor artifacts; key only from environment" },
+    { "id": "V3G12", "name": "Holdback plaintext false", "status": "PASS", "detail": "sealed 4737bc77... re-verified (836656 B); access log 4 entries, last verify" }
+  ],
+  "binds": {
+    "product": { "commit": "e2c95b496b83074e0b584d201c174d731345a97c", "identity_hash": "74d2955e1f1757426b253e9f4969b98e54a472c62b4e01701a05812471810b31" },
+    "validation": { "epoch": "v3", "fixture": "78e61a152264...", "gold": "e28d37f70752...", "manifest": "58ceee3f73ce..." },
+    "config_sha256": "c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82",
+    "model_parameters": "FROZEN V2.4 (deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert)",
+    "executor": { "runtime_sha256": "6b96b3a96f9599dc6016ed48a9447251a26444288c48fa32a0aba3be56ef6b33", "dir_sha256": "7d82c6f9536f8b14e01ea8f48bf4ef42f9929e89e8abd2f171aec51b70aff53b" },
+    "precommit_sha256": "8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4",
+    "run_lineage": "same campaign goal20-formal-validation-v1; NEW immutable V3 run instance; fresh V3 runs root; 0/720; no reuse of V2 raw responses"
+  },
+  "formal_provider_calls_before_launch": 0,
+  "formal_outputs_before_launch": 0,
+  "holdback_plaintext_accessed": false
+}

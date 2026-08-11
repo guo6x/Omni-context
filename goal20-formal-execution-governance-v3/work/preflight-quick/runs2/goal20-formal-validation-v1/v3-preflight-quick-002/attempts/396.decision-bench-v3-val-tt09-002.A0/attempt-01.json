@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "campaign_id": "goal20-formal-validation-v1",
+  "tuple_id": "g20-396",
+  "tuple_index": 396,
+  "sample_id": "decision-bench-v3-val-tt09-002",
+  "task_type": "TT09",
+  "arm": "A0",
+  "execution_mode": "provider_llm",
+  "provider_call": true,
+  "request_sequence": 1,
+  "requested_model": "deepseek-v4-flash",
+  "provider_model_identity": "deepseek-v4-flash",
+  "generation_parameter_identity": null,
+  "prompt_sha256": "420a472551cca73b8e7082c78fed7c25551a9c898946ba66612222cf61ddd50d",
+  "serialized_request_sha256": "f22d5d32f2cb29e68500166f361c28485d5e71bf35c024749647a366f323645e",
+  "serialized_request_bytes": 8446,
+  "response_raw_sha256": "5940b64184869577dcdecab21b22ca9868d228252c01d6560edee5c269b72155",
+  "response_raw_bytes": 732,
+  "response_raw_text": "{\"id\":\"dummy-req-824da7fbf6ed\",\"object\":\"chat.completion\",\"model\":\"deepseek-v4-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"action\\\":\\\"DECIDE\\\",\\\"selected_option\\\":null,\\\"key_questions\\\":[],\\\"clarification_count\\\":0,\\\"revision_target\\\":null,\\\"executed\\\":false,\\\"approval_requested\\\":false,\\\"explanation\\\":\\\"dummy deterministic decision for: 请为霜华收纳在周末施工与集中施工之间做出决定。\\\",\\\"cited_evidence_ids\\\":[],\\\"reason_code\\\":null,\\\"keep_decision\\\":false,\\\"lineage_operation\\\":\\\"create\\\",\\\"parent_decision_id\\\":null}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":120,\"completion_tokens\":64,\"total_tokens\":184,\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":120}}",
+  "parsed_structural_output": {
+    "action": "DECIDE",
+    "selected_option": null,
+    "key_questions": [],
+    "clarification_count": 0,
+    "revision_target": null,
+    "executed": false,
+    "approval_requested": false,
+    "explanation": "dummy deterministic decision for: 请为霜华收纳在周末施工与集中施工之间做出决定。",
+    "cited_evidence_ids": [],
+    "reason_code": null,
+    "keep_decision": false,
+    "lineage_operation": "create",
+    "parent_decision_id": null
+  },
+  "parse_status": "ok",
+  "parse_repair_used": false,
+  "contract_errors": [],
+  "provider_request_id": "dummy-req-824da7fbf6ed",
+  "usage": {
+    "prompt_tokens": 120,
+    "completion_tokens": 64,
+    "total_tokens": 184,
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 120
+  },
+  "cache_usage": {
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 120
+  },
+  "latency_ms": 1,
+  "attempt": 1,
+  "retry_count": 0,
+  "cost_cny": 0.000248,
+  "cost_source": "frozen_pricing_snapshot_x_actual_usage",
+  "timestamps": {
+    "started_at": "2026-08-11T10:39:07.774Z",
+    "completed_at": "2026-08-11T10:39:07.774Z"
+  },
+  "error_state": null,
+  "audit": {
+    "arm": "A0",
+    "current_input_hash": "af1c3e03cff3966344b2b41d4547452b0a52945e1b6dad8f95e10510d2027a35",
+    "retrieval_used": false,
+    "qualification_used": false,
+    "gate_route": null,
+    "context_ids": [],
+    "prompt_bytes": {
+      "system": 2901,
+      "user": 4871,
+      "total": 7772
+    }
+  }
+}

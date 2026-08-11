@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "campaign_id": "goal20-formal-validation-v1",
+  "tuple_id": "g20-257",
+  "tuple_index": 257,
+  "sample_id": "decision-bench-v3-val-tt06-002",
+  "task_type": "TT06",
+  "arm": "A5",
+  "execution_mode": "deterministic_kernel",
+  "provider_call": false,
+  "request_sequence": 0,
+  "requested_model": null,
+  "provider_model_identity": null,
+  "generation_parameter_identity": null,
+  "prompt_sha256": "0318e511cf29140397b1578e6c5d0df9163f5e92f57d51c8108f792ad2ba8f7e",
+  "serialized_request_sha256": null,
+  "response_raw_sha256": "db44d4475998bd2461ef15ee75b3e12f5c8c4697b67e864beacfe53ff18647ea",
+  "response_raw_bytes": 695,
+  "parsed_structural_output": {
+    "action": "REVISE",
+    "selected_option": "opt-b",
+    "key_questions": [],
+    "clarification_count": 0,
+    "revision_target": "decision-d1",
+    "executed": false,
+    "approval_requested": false,
+    "explanation": "目标：在皓月读书上保持最优方案。修订 decision-d1 为 opt-b（先学习后运动），关键条件变化。硬约束 hc1：保持向后兼容。证据 mem:ev-ev002：先学习后运动 在新维度上明显胜过 先运动后学习。证据 mem:ev-ev001：先运动后学习 满足早期需求。证据 mem:ev-ev003：原则：保持向后兼容",
+    "cited_evidence_ids": [
+      "ev002",
+      "ev001",
+      "ev003"
+    ],
+    "reason_code": null,
+    "keep_decision": false,
+    "lineage_operation": "revise",
+    "parent_decision_id": "decision-d1"
+  },
+  "parse_status": "ok",
+  "provider_request_id": null,
+  "usage": null,
+  "cache_usage": null,
+  "latency_ms": 65,
+  "attempt": 1,
+  "retry_count": 0,
+  "cost_cny": 0,
+  "cost_source": "no_provider_call",
+  "timestamps": {
+    "started_at": "2026-08-11T10:39:02.112Z",
+    "completed_at": "2026-08-11T10:39:02.112Z"
+  },
+  "error_state": null,
+  "kernel_trace": {
+    "input_hash": "36a632be9f43ecfd283c16e254b9c19ce0bdd55f5ff990b819ffac1bc958dacd",
+    "plan_action": "REVISE",
+    "event_count": 6,
+    "persist": true,
+    "historical_used": true,
+    "outcome_used": false,
+    "lineage_operation": "revise"
+  },
+  "audit": {
+    "arm": "A5",
+    "current_input_hash": "e817d784447a4efa5ed78a2ffc189d67371039fa50bab947013c21d48d233f68",
+    "retrieval_used": true,
+    "qualification_used": true,
+    "gate_route": "DECIDE",
+    "context_ids": [
+      "ev002",
+      "ev001",
+      "ev003"
+    ]
+  }
+}

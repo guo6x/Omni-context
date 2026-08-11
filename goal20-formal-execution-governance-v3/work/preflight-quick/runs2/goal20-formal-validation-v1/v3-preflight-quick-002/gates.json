@@ -1,0 +1,70 @@
+{
+  "status": "ALL_GATES_PASS",
+  "results": [
+    {
+      "id": "G1_LAUNCH_FREEZE",
+      "status": "PASS",
+      "detail": "launch identity manifest present (goal20-validation-v3-launch-identity-manifest-v1)"
+    },
+    {
+      "id": "G2_GOVERNANCE_FREEZE",
+      "status": "PASS",
+      "detail": "GOAL20_EXECUTION_GOVERNANCE_FREEZE present"
+    },
+    {
+      "id": "G3_AUTHORIZATION",
+      "status": "PASS",
+      "detail": "authorization derived (AUTHORIZATION_DERIVED_FROM_EXISTING_SIGNED_OWNER_DECISION)"
+    },
+    {
+      "id": "G4_PRICING",
+      "status": "PASS",
+      "detail": "pricing snapshot deepseek-v4-flash retrieved_at=2026-08-09T15:56:44.308Z"
+    },
+    {
+      "id": "G5_BUDGET",
+      "status": "PASS",
+      "detail": "caps ok ({\"deepseek_v4_flash_maximum\":200,\"kimi_2_6_maximum\":20,\"total_maximum_hard_cap\":220,\"caps_intact\":true})"
+    },
+    {
+      "id": "G6_PRECOMMIT",
+      "status": "PASS",
+      "detail": "720 rows, 720 unique (sample_id, arm)"
+    },
+    {
+      "id": "G7_FINAL_ARM",
+      "status": "PASS",
+      "detail": "A5 confirmatory, frozen before first formal call"
+    },
+    {
+      "id": "G8_VALIDATION_IDENTITY",
+      "status": "PASS",
+      "detail": "fixture sha 78e61a152264..."
+    },
+    {
+      "id": "G9_PROMPT_IDENTITY",
+      "status": "PASS",
+      "detail": "30/30 prompt files byte-verified"
+    },
+    {
+      "id": "G10_MODEL_PARAMETER_IDENTITY",
+      "status": "PASS",
+      "detail": "parameter identity gate skipped (test/dummy mode)"
+    },
+    {
+      "id": "G11_FORMAL_OUTPUT_ABSENCE",
+      "status": "PASS",
+      "detail": "no completed formal run present; formal outputs before this run = 0"
+    },
+    {
+      "id": "G12_D18",
+      "status": "PASS",
+      "detail": "D-18 audit present (Minimum effect size value for significance reporting (reporting/statistics parameter; does not affect raw generation, prompts, or the executor))"
+    },
+    {
+      "id": "G13_CONFIG_IDENTITY",
+      "status": "PASS",
+      "detail": "config sha c7070189cbef..."
+    }
+  ]
+}

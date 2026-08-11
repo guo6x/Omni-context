@@ -1,0 +1,38 @@
+{
+  "rows": 720,
+  "unique_sample_arm": 720,
+  "missing": 0,
+  "duplicate": 0,
+  "unexpected": 0,
+  "per_arm": {
+    "A0": 120,
+    "A1": 120,
+    "A2": 120,
+    "A3": 120,
+    "A4": 120,
+    "A5": 120
+  },
+  "per_task_type": {
+    "TT01": 48,
+    "TT02": 48,
+    "TT03": 48,
+    "TT04": 48,
+    "TT05": 48,
+    "TT06": 48,
+    "TT07": 48,
+    "TT08": 48,
+    "TT09": 48,
+    "TT10": 48,
+    "TT11": 48,
+    "TT12": 48,
+    "TT13": 48,
+    "TT14": 48,
+    "TT15": 48
+  },
+  "provider_llm_tuples": 480,
+  "kernel_tuples": 240,
+  "sha256": "8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4",
+  "fixture_sha256": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e",
+  "formal_config_sha256": "c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82",
+  "epoch": "v3"
+}

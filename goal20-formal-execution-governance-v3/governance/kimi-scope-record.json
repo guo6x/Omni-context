@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "model": "kimi-k2.6",
+  "role": "auxiliary LLM evaluator only where the frozen protocol requires one",
+  "goal20_frozen_protocol_requires_kimi": false,
+  "rationale": "scorer v1.1 is fully deterministic (goal16a-scorer-v1.1, sealed identity 3b4c7a24...); Goal20 Stage G (generation) and Stage S (scoring) need no LLM evaluator",
+  "goal20_kimi_calls_planned": 0,
+  "goal20_kimi_cost_planned_cny": 0,
+  "reserved_budget_cny": 20,
+  "rule": "Kimi must NOT be called merely to consume budget; any future auxiliary use requires recording per non-core evaluation and a new owner approval for role changes"
+}

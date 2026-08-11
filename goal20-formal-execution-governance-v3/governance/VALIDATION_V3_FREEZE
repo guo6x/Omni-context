@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "goal": "20R-V3-R1",
+  "epoch": "v3",
+  "created_at": "2026-08-11T11:00:00Z",
+  "freeze_id": "VALIDATION_V3_FREEZE",
+  "status": "FROZEN",
+  "meaning": "Validation V3-R1 fixture/gold/manifest frozen for the Goal20 V3 formal run after all generation gates PASS.",
+  "generation": {
+    "procedure": "goal20r-output/validation-v3-r1-generation-plan.json (frozen pre-commit)",
+    "generator_commit": "871a72da52042b3ffda4a6cc157d69d79232133c",
+    "generator_version": "goal18-generator/v3.0.0",
+    "method_commit": "e2c95b496b83074e0b584d201c174d731345a97c",
+    "seed": "4e989191d8bf86975dd7c3672002f323e45845a9e2bf8b79212c61750ff14cb9",
+    "seed_hash": "9c3058190d5a439ec86b24b6f1f146745a906706c195e46916198be653758c52",
+    "generated_once": true,
+    "seed_search": false,
+    "generation_result": { "samples": 120, "per_tt": "15 x 8", "source_types": "48/36/24/12" }
+  },
+  "identities": {
+    "fixture": { "file": "goal20r-output/validation-v3-r1-fixture.jsonl", "sha256": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e", "bytes": 352410 },
+    "gold": { "file": "goal20r-output/validation-v3-r1-gold.jsonl", "sha256": "e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0", "bytes": 209490 },
+    "manifest": { "file": "goal20r-output/validation-v3-r1-manifest.json", "sha256": "58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191" },
+    "schema": { "file": "goal18-output/schema/decision-benchmark-v3-schema.json", "sha256": "c2f2e7d0d108cfbade598fc11f35b101b4cc46ec67627e8f84da7044ce1c0db1" }
+  },
+  "audits": {
+    "contract": "120 PASS / 0 FAIL / 0 AMBIGUOUS (9 dimensions; contract-audit.cjs)",
+    "overlap_leakage": "PASS; max 8-gram Jaccard v3_vs_v2=0.3564 (<0.4), 0 pairs >=0.5, 0 exact ID/scenario overlap vs v2/dev/reg, internal max 0.3119, holdback prefix leak=false",
+    "marginals": "PASS (15x8, 48/36/24/12, risk/authority distributions match V2)",
+    "anti_copy": "NO_V2_SAMPLE_SPECIFIC_GENERATOR_PATCHES=true",
+    "opaque_id": "OPAQUE_ID_AUDIT_PASS; plumbing change NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE"
+  },
+  "retired_candidate": {
+    "status": "RETIRED_PRE_FREEZE_V3_CANDIDATE",
+    "record": "goal20r-output/VALIDATION_V3_PRE_FREEZE_CANDIDATE_RETIREMENT.json",
+    "immutable": true
+  },
+  "holdback_plaintext_accessed": false
+}

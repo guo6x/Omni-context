@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "campaign_id": "goal20-formal-validation-v1",
+  "tuple_id": "g20-180",
+  "tuple_index": 180,
+  "sample_id": "decision-bench-v3-val-tt04-006",
+  "task_type": "TT04",
+  "arm": "A0",
+  "execution_mode": "provider_llm",
+  "provider_call": true,
+  "request_sequence": 1,
+  "requested_model": "deepseek-v4-flash",
+  "provider_model_identity": "deepseek-v4-flash",
+  "generation_parameter_identity": null,
+  "prompt_sha256": "420a472551cca73b8e7082c78fed7c25551a9c898946ba66612222cf61ddd50d",
+  "serialized_request_sha256": "ba05aaaafebb540f789d17bf2aa4002d7a9dc58cc60a3346ad3a512cb56729a3",
+  "serialized_request_bytes": 8398,
+  "response_raw_sha256": "f1b6064d13eef660cf7419383e41af3af4f220cd059fc21094712577321b3190",
+  "response_raw_bytes": 717,
+  "response_raw_text": "{\"id\":\"dummy-req-04ed43cbd477\",\"object\":\"chat.completion\",\"model\":\"deepseek-v4-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"action\\\":\\\"DECIDE\\\",\\\"selected_option\\\":null,\\\"key_questions\\\":[],\\\"clarification_count\\\":0,\\\"revision_target\\\":null,\\\"executed\\\":false,\\\"approval_requested\\\":false,\\\"explanation\\\":\\\"dummy deterministic decision for: 为濯缨机械键盘敲定买新款还是买旧款？\\\",\\\"cited_evidence_ids\\\":[],\\\"reason_code\\\":null,\\\"keep_decision\\\":false,\\\"lineage_operation\\\":\\\"create\\\",\\\"parent_decision_id\\\":null}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":120,\"completion_tokens\":64,\"total_tokens\":184,\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":120}}",
+  "parsed_structural_output": {
+    "action": "DECIDE",
+    "selected_option": null,
+    "key_questions": [],
+    "clarification_count": 0,
+    "revision_target": null,
+    "executed": false,
+    "approval_requested": false,
+    "explanation": "dummy deterministic decision for: 为濯缨机械键盘敲定买新款还是买旧款？",
+    "cited_evidence_ids": [],
+    "reason_code": null,
+    "keep_decision": false,
+    "lineage_operation": "create",
+    "parent_decision_id": null
+  },
+  "parse_status": "ok",
+  "parse_repair_used": false,
+  "contract_errors": [],
+  "provider_request_id": "dummy-req-04ed43cbd477",
+  "usage": {
+    "prompt_tokens": 120,
+    "completion_tokens": 64,
+    "total_tokens": 184,
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 120
+  },
+  "cache_usage": {
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 120
+  },
+  "latency_ms": 1,
+  "attempt": 1,
+  "retry_count": 0,
+  "cost_cny": 0.000248,
+  "cost_source": "frozen_pricing_snapshot_x_actual_usage",
+  "timestamps": {
+    "started_at": "2026-08-11T10:39:02.228Z",
+    "completed_at": "2026-08-11T10:39:02.228Z"
+  },
+  "error_state": null,
+  "audit": {
+    "arm": "A0",
+    "current_input_hash": "311360ed7cdb2d32dac9e1b3b27fed43b572a9120803ca133a99086d63bd684c",
+    "retrieval_used": false,
+    "qualification_used": false,
+    "gate_route": null,
+    "context_ids": [],
+    "prompt_bytes": {
+      "system": 2901,
+      "user": 4823,
+      "total": 7724
+    }
+  }
+}

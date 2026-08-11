@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "provider": "deepseek",
+  "official_source_url_en": "https://api-docs.deepseek.com/quick_start/pricing/",
+  "official_source_url_zh": "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/",
+  "retrieved_at": "2026-08-09T15:56:44.308Z",
+  "model_id": "deepseek-v4-flash",
+  "model_version": "DeepSeek-V4-Flash-0731",
+  "context_length_tokens": 1000000,
+  "max_output_tokens": 384000,
+  "currency": "CNY",
+  "per_million_tokens_cny": {
+    "input_cache_hit": 0.02,
+    "input_cache_miss": 1,
+    "output": 2
+  },
+  "per_million_tokens_usd_en_page": {
+    "input_cache_hit": 0.0028,
+    "input_cache_miss": 0.14,
+    "output": 0.28
+  },
+  "pricing_may_change": true,
+  "official_change_note": "Official page note (2): pricing raise planned in the near future with significant increase expected; specific plan subject to official notice.",
+  "source_evidence": {
+    "en_page_sha256": "b7b5819eb2eea0efab609aee5068ee10ef39216f0cab797bfbe5e02e8f807002",
+    "zh_page_sha256": "a9b97d962818fd69dfe0fd2a7bd4487e171d849ba5ff7ca8dc9982d4f47f9d94",
+    "thinking_mode_guide_sha256": "2e23762c044a85641569179f309c6d2bc5c93553ff7b9b77cfd419e37b4aa921"
+  },
+  "baseline_match": {
+    "spec_baseline_cny": {
+      "input_cache_hit": 0.02,
+      "input_cache_miss": 1,
+      "output": 2
+    },
+    "match": true
+  },
+  "usage_schema_note": "DeepSeek usage reports prompt_cache_hit_tokens / prompt_cache_miss_tokens / completion_tokens; cost = hit*0.02 + miss*1.00 + out*2.00 CNY per 1M tokens."
+}

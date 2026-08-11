@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "goal": "20R-V3-R1",
+  "manifest_id": "goal20-validation-v3-launch-identity-manifest-v1",
+  "frozen_at": "2026-08-11T10:40:00Z",
+  "authoritative": "this manifest is the authoritative Goal20 Validation V3 launch identity; the formal V3 run must reproduce every identity below",
+  "epoch": "v3",
+  "causal_source_identities": {
+    "main_repo_commit": "871a72da52042b3ffda4a6cc157d69d79232133c",
+    "product": {
+      "commit": "e2c95b496b83074e0b584d201c174d731345a97c",
+      "identity_hash": "74d2955e1f1757426b253e9f4969b98e54a472c62b4e01701a05812471810b31",
+      "identity_hash_method": "sha256 over lexicographically-sorted '<file-sha256>  <relative-path>' lines (19 product paths), joined LF + trailing LF",
+      "kernel_entrypoint": "brain-server/src/decision/kernel.ts",
+      "policy_version": "decision-policy-rules-v1",
+      "migration_version": "v30 (add_decision_kernel_v1_tables)"
+    },
+    "runner": {
+      "base_commit": "13f21f8dd9e19a8423b331c2106f326a3ed09385",
+      "identity_hash": "8aa4fc40472a70e08e4bad2286661742f91c0019fd427cdce21bd1f0746178bf",
+      "entrypoint": "src/runner.mjs"
+    },
+    "harness": {
+      "commit": "85d418e95a6bac1e2912c33e32fb99d504a9cb26",
+      "identity_hash": "d9d802adee07649f1a54b7227ef5aea32a1298ffc7c99961628b9681716ab396",
+      "entrypoint": "experiments/decision-benchmark/ablation/run-ablation.mjs",
+      "arm_matrix_sha256": "37fb3c493266486f91175f1dae302486a082625421f59cee663318ab0d700a98"
+    }
+  },
+  "formal_config": {
+    "file": "goal20r-output/formal-run-config-v3.json",
+    "final_file_sha256": "c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82",
+    "base_config": "goal19f-output/formal-run-config-v1.json (frozen protocol)"
+  },
+  "validation_v3": {
+    "fixture_sha256": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e",
+    "gold_sha256": "e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0",
+    "manifest_sha256": "58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191",
+    "manifest_file": "goal20r-output/validation-v3-r1-manifest.json",
+    "samples": 120,
+    "namespace": "decision-bench-v3-val-*"
+  },
+  "scorer_v1_1": {
+    "name": "goal16a-scorer-v1.1",
+    "version": "1.1",
+    "commit": "5cac8ae975174efc19149996d737581df2aa33c2",
+    "identity_hash": "3b4c7a2441bed3ad1b1019b104948f93d59d53ed5bfeaabe307a6e6a5a5ddbbb",
+    "entrypoint": "goal16a-output/scorer-v1.1/scorer.mjs",
+    "unchanged": true
+  },
+  "prompts": {
+    "prompt_version": "ablation-prompt-v2-formal-ready",
+    "manifest_sha256": "68a05b256ae168183e195a84918740e9704e6b04596f019cd94c61ef05685996",
+    "files_per_arm": ["system.txt", "task.txt", "output-schema.json", "repair.txt", "timeout-recovery.txt"],
+    "unchanged": true
+  },
+  "executor": {
+    "runtime_sha256": "6b96b3a96f9599dc6016ed48a9447251a26444288c48fa32a0aba3be56ef6b33",
+    "dir_sha256": "7d82c6f9536f8b14e01ea8f48bf4ef42f9929e89e8abd2f171aec51b70aff53b",
+    "tests": "49/49 PASS",
+    "plumbing_change": "NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE (gates G1/G8/G13 epoch routing; no retry/model/prompt/scorer semantics changed)"
+  },
+  "execution_protocol": "Frozen V2.4 protocol (deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert, transport retry 6 with frozen backoff/stagger, EMPTY_CONTENT 5, parse 3, concurrency 1, timeout 120s); identical across A0-A5",
+  "holdback": "sealed; not accessed"
+}

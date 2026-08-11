@@ -1,0 +1,35 @@
+{
+  "artifact": "goal20r-output/VALIDATION_V3_PRE_FREEZE_CANDIDATE_RETIREMENT.json",
+  "purpose": "Goal 20R-V3-R1 attachment sections 1-2: preserve and retire the single blocked pre-freeze V3 candidate; it must never be promoted to formal Validation.",
+  "retired_candidate_status": "RETIRED_PRE_FREEZE_V3_CANDIDATE",
+  "retired_at": "2026-08-11T10:03:23.298Z",
+  "candidate_identity": {
+    "fixture_path": "goal20r-output/validation-v3-fixture.jsonl",
+    "fixture_sha256": "26edd9dec5f7ad873db73a85300cfc0399e6dfca9c5ce78ceb005d50eb8ed4e0",
+    "fixture_bytes": 353411,
+    "fixture_lines": 120,
+    "gold_path": "goal20r-output/validation-v3-gold.jsonl",
+    "gold_sha256": "e651748aa0cba1a61bf4f1f0ce63119e80cd09417001e0150b51046e96de9426",
+    "gold_bytes": 209661,
+    "gold_lines": 120
+  },
+  "retirement_reasons": [
+    "SAMPLE_ID_NAMESPACE_COLLISION: 120/120 sample IDs byte-identical to Validation V2 (decision-bench-v2-val-*); epoch identity not distinct.",
+    "CROSS_EPOCH_SAME_SLOT_NEAR_DUPLICATE_TARGET_FAILURE: V3-vs-V2 8-gram Jaccard max 0.7695 (3 pairs >= 0.75, 32 pairs >= 0.5, all same-(tt,idx) slots) violates the frozen design target max < 0.4."
+  ],
+  "disposition": {
+    "do_not_delete": true,
+    "do_not_rewrite": true,
+    "do_not_promote_to_formal_validation": true,
+    "byte_exact_preservation": true,
+    "note": "Files preserved byte-identically on disk; no normalization, no line-ending or BOM changes; not part of any V3-R1 freeze chain."
+  },
+  "superseded_by": {
+    "procedure": "Goal 20R-V3-R1 epoch-distinct namespace (decision-bench-v3-val-*) + seed-aware same-slot diversification under a newly frozen generation procedure; single V3-R1 generation after generator commit; seed derived mechanically (SHA256(method_commit || generator_commit || \"goal20-validation-v3-r1\")) with no seed search."
+  },
+  "formal_state": {
+    "v3_provider_calls_before_retirement": 0,
+    "v3_formal_outputs_before_retirement": 0,
+    "holdback_touched": false
+  }
+}

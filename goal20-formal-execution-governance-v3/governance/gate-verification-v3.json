@@ -1,0 +1,29 @@
+{
+  "verified_at": "2026-08-11T10:58:00Z",
+  "epoch": "v3",
+  "checks": [
+    { "id": "G1", "name": "V3 fixture sha", "status": "PASS", "detail": "fixture=78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e bytes=352410 (goal20r-output/validation-v3-r1-fixture.jsonl)" },
+    { "id": "G2", "name": "V3 gold sha", "status": "PASS", "detail": "gold=e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0 bytes=209490" },
+    { "id": "G3", "name": "V3 validation manifest sha", "status": "PASS", "detail": "manifest=58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191" },
+    { "id": "G4", "name": "V3 formal config sha", "status": "PASS", "detail": "config=c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82 (formal-run-config-v3.json)" },
+    { "id": "G5", "name": "Prompts 30/30 byte-verified", "status": "PASS", "detail": "files=30 mismatches=0 (sealed-prompt-byte-manifest.json, harness snapshot)" },
+    { "id": "G6", "name": "Harness module hashes", "status": "PASS", "detail": "modules=10 mismatches=0 (sealed-harness-module-hashes.json)" },
+    { "id": "G7", "name": "720-tuple V3 precommit", "status": "PASS", "detail": "rows=720 unique=720 (sample_id|arm)" },
+    { "id": "G7b", "name": "V3 precommit sha", "status": "PASS", "detail": "sha=8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4; order sha=c021692d0e42041ea32171fad3c42cfc8905952d53b01baaf9bc7778f2f16ef4" },
+    { "id": "G8", "name": "Product worktree", "status": "PASS", "detail": "HEAD=e2c95b496b83074e0b584d201c174d731345a97c dirty=clean (D:\\ai_code\\Omni-context-decision-kernel-v1)" },
+    { "id": "G9", "name": "Snapshot ablation/runner/scorer clean for scorer paths", "status": "PASS", "detail": "scorer/gold 4/4 blob-verified in execution-snapshot; product repair applied only where sanctioned" },
+    { "id": "G10", "name": "Scorer file blobs", "status": "PASS", "detail": "4 scorer/gold files blob-verified (47a4217f..., 6cce82b2..., a17503af..., acc89ef6...)" },
+    { "id": "G11", "name": "Holdback sealed identity", "status": "PASS", "detail": "sha=4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3 bytes=836656 access_log_entries=4 (last action: verify)" },
+    { "id": "G12", "name": "Formal output isolation", "status": "PASS", "detail": "V3 formal runs root (goal20-formal-execution-governance-v3/runs) empty; completed formal runs = 0" },
+    { "id": "G13", "name": "Executor runtime sha (post-plumbing)", "status": "PASS", "detail": "runtime_sha256=6b96b3a96f9599dc6016ed48a9447251a26444288c48fa32a0aba3be56ef6b33" },
+    { "id": "G13b", "name": "Executor dir sha (post-plumbing)", "status": "PASS", "detail": "dir_sha256=7d82c6f9536f8b14e01ea8f48bf4ef42f9929e89e8abd2f171aec51b70aff53b" },
+    { "id": "G14", "name": "Model-parameter-identity V2.4 frozen", "status": "PASS", "detail": "status=FROZEN model=deepseek-v4-flash max_output_tokens=65536 file_sha=7fcc84d7dcb6ff4a603164393faac4b2861374b073bed50b29fa7f830855008f" },
+    { "id": "G15", "name": "Retry-policy-identity V3 rebind", "status": "PASS", "detail": "V2.4 taxonomy unchanged; file_sha=0fc0f1d6eaebb436a17321b07c5270923e38e743d8778f11c3f1ccc5b7cf4188; executor SHAs updated for plumbing change" },
+    { "id": "G16", "name": "Executor tests", "status": "PASS", "detail": "49/49 PASS (2026-08-11, post-plumbing; 22 retry-policy unit + 27 executor integration)" },
+    { "id": "G17", "name": "V3 720 dummy structural preflight", "status": "PASS", "detail": "COMPLETED 720/720, unique=720, 0 errors, 480 dummy provider calls, 0 formal calls (v3-preflight-720-001)" }
+  ],
+  "status": "ALL_GATES_PASS",
+  "pass_count": 17,
+  "fail_count": 0,
+  "updated_at": "2026-08-11T10:58:00Z"
+}

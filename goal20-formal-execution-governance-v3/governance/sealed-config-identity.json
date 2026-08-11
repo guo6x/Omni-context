@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "epoch": "v3",
+  "file": "goal20r-output/formal-run-config-v3.json",
+  "sha256": "c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82",
+  "bytes": 6551,
+  "base_config": "goal19f-output/formal-run-config-v1.json (sha256 b12e3287b1776d5c8c31ccaab7e062ecc9904f5acb95ea4c5594672d2d42b47c)"
+}

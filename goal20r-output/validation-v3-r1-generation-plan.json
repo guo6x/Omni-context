@@ -1,78 +1,100 @@
 {
-  "artifact": "goal20r-output/validation-v3-r1-generation-plan.json",
-  "purpose": "Owner-authorized epoch-distinct Validation V3-R1 regeneration under Goal 20R-V3-R1 (namespace repair + seed-aware diversification). Procedure is frozen BEFORE the generator commit; seed is derived mechanically from the frozen commits; generation happens exactly once.",
-  "authorization": {
-    "owner_instruction": "Goal 20R-V3-R1 attachment (5ed4d005): sections 2 (ID namespace repair), 5 (seed-aware diversification), 7 (no V2-aware candidate search), 8 (new V3-R1 seed), 9 (near-duplicate target frozen), 11 (regenerate exactly once), 17 (freeze chain).",
-    "retired_candidate": "goal20r-output/validation-v3-fixture.jsonl (sha 26edd9de...4e0) and validation-v3-gold.jsonl (sha e651748a...9426) preserved immutably as RETIRED_PRE_FREEZE_V3_CANDIDATE; see VALIDATION_V3_PRE_FREEZE_CANDIDATE_RETIREMENT.json.",
-    "schema_constraint": "V2 schemas and V2/Holdback sample IDs remain byte-identical. V3 uses new decision-benchmark-v3 schemas and decision-bench-v3-val-tt##-NNN namespace."
-  },
-  "schema": {
-    "v3_sample_schema": "goal18-output/schema/decision-benchmark-v3-schema.json",
-    "v3_set_schema": "goal18-output/schema/decision-benchmark-v3-set.schema.json",
-    "sample_id_pattern": "^decision-bench-v3-val-tt(01|02|03|04|05|06|07|08|09|10|11|12|13|14|15)-[0-9]{3}$",
-    "schema_version_const": "decision-benchmark-v3",
-    "v2_schema_unchanged": true,
-    "holdback_schema_unchanged": true
-  },
-  "generator": {
-    "entry": "goal18-output/scripts/generator/generate.mjs",
-    "version": "goal18-generator/v3.0.0",
-    "diversification_module": "goal18-output/scripts/generator/diversify-v3.mjs",
-    "epoch_flag": "--epoch v3",
-    "args": ["--split", "validation", "--epoch", "v3", "--seed", "<derived-seed>", "--outDir", "<workdir>"],
-    "outputs": ["validation-set.jsonl", "validation-gold.jsonl"],
-    "note": "tag=val derived from split=validation. Deterministic given seed + exact generator working-tree bytes."
-  },
-  "diversification_mechanism": {
-    "principle": "For each (tt, idx) slot, the slot-local RNG (derived from master seed) drives: option-surface pair selection (pools.mjs pickPair V3 branch), entity/domain realization, timeline realization, and construct-preserving phrase diversification (diversify-v3.mjs: 408 string rules + 5 anchored prompt-template regexes, per-field RNG draws).",
-    "protection": "106 protected tokens mirroring product lexical machinery (evidence-gate, option-evaluator, constraint-engine, kernel); load-time rule validation forbids protected tokens in rule/variant/regex strings; per-field protected-token count invariance; deterministic-machinery signature invariance (missing/direction/requirement/nochange/override/stale/confirmation markers, topicOf, variable topics, constraint linkage, constraint fallback, preference affinity, historical-option LCS matching). Fail closed on any violation.",
-    "excluded_fields": "hard_constraints[].text never diversified; constraint-linked evidence facts skipped; delete/override events skipped; expiry_reason untouched.",
-    "construct_invariance": "Action taxonomy, Gold semantics, authority/sufficiency/lineage semantics, task-type definitions, source-type distribution, scorer v1.1 and hard-gate thresholds unchanged."
-  },
-  "seed_rule": {
-    "formula": "SHA256(repaired_method_commit_sha || repaired_v3_generator_commit_sha || \"goal20-validation-v3-r1\")",
-    "method_commit_sha": "e2c95b496b83074e0b584d201c174d731345a97c",
-    "method_commit_repo": "D:\\ai_code\\Omni-context-decision-kernel-v1",
-    "generator_commit_sha": "<filled-after-commit>",
-    "label": "goal20-validation-v3-r1",
-    "seed_search": false,
-    "seed": "<filled-after-commit>",
-    "seed_hash": "<filled-after-commit>",
-    "recorded_inputs": ["method_commit_sha", "generator_commit_sha", "label"]
-  },
-  "generation_policy": {
-    "generate_once": true,
-    "no_seed_search": true,
-    "no_regeneration_without_owner_approval": true,
-    "no_v2_aware_candidate_search": true,
-    "no_rejection_sampling": true,
-    "byte_exact_handling": "Copy generator outputs to goal20r-output/validation-v3-r1-fixture.jsonl / validation-v3-r1-gold.jsonl with no normalization, no pretty-print, no line-ending or BOM changes.",
-    "output_dir": "goal20r-output/work/v3-r1-gen/"
-  },
-  "expected_distribution": {
-    "samples": 120,
-    "task_types": "15 TT x 8",
-    "source_types": { "human_design": 48, "multi_model_reconstruction": 36, "anonymized_pattern_synthesis": 24, "adversarial_boundary": 12 }
-  },
-  "near_duplicate_target": {
-    "max_8gram_jaccard_lt": 0.4,
-    "authority": "goal18-output/leakage-analysis.md: 'design target: full-library <0.4'; flag threshold >=0.5. Owner attachment section 9 freezes this target for V2<->new V3.",
-    "frozen": true,
-    "no_relaxation_post_hoc": true
-  },
-  "audits": [
-    "Contract audit: schema + referential integrity + authority/action + approval/confirmation + action eligibility + evidence + hard constraints + clarification + lineage + provenance/source lifecycle + temporal validity; required 120 PASS / 0 FAIL.",
-    "Overlap/leakage audit vs Validation V2 (120), development fixtures (20), regression fixtures (15): 0 exact sample_id overlap, 0 scenario identity overlap, max 8-gram Jaccard < 0.4; internal V3 duplicate audit; holdback-prefix check via sealed metadata only (no decrypt, no plaintext).",
-    "Marginals audit: 15x8 counts, source-type distribution 48/36/24/12, ID namespace decision-bench-v3-val-*."
-  ],
-  "freeze_chain": [
-    "VALIDATION_V3_FREEZE",
-    "GOAL20_VALIDATION_V3_FORMAL_METHOD_FREEZE",
-    "GOAL20_VALIDATION_V3_LAUNCH_FREEZE",
-    "GOAL20_VALIDATION_V3_GOVERNANCE_FREEZE",
-    "GOAL20_VALIDATION_V3_FORMAL_EXECUTION_READY"
-  ],
-  "execution_protocol": "Frozen V2.4 protocol (model deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert, retry policy frozen). No parameter/retry modification authorized for V3.",
-  "status": "PLAN_FROZEN_AWAITING_GENERATOR_COMMIT",
-  "provider_calls_before_generation": 0
+    "artifact":  "goal20r-output/validation-v3-r1-generation-plan.json",
+    "purpose":  "Owner-authorized epoch-distinct Validation V3-R1 regeneration under Goal 20R-V3-R1 (namespace repair + seed-aware diversification). Procedure is frozen BEFORE the generator commit; seed is derived mechanically from the frozen commits; generation happens exactly once.",
+    "authorization":  {
+                          "owner_instruction":  "Goal 20R-V3-R1 attachment (5ed4d005): sections 2 (ID namespace repair), 5 (seed-aware diversification), 7 (no V2-aware candidate search), 8 (new V3-R1 seed), 9 (near-duplicate target frozen), 11 (regenerate exactly once), 17 (freeze chain).",
+                          "retired_candidate":  "goal20r-output/validation-v3-fixture.jsonl (sha 26edd9de...4e0) and validation-v3-gold.jsonl (sha e651748a...9426) preserved immutably as RETIRED_PRE_FREEZE_V3_CANDIDATE; see VALIDATION_V3_PRE_FREEZE_CANDIDATE_RETIREMENT.json.",
+                          "schema_constraint":  "V2 schemas and V2/Holdback sample IDs remain byte-identical. V3 uses new decision-benchmark-v3 schemas and decision-bench-v3-val-tt##-NNN namespace."
+                      },
+    "schema":  {
+                   "v3_sample_schema":  "goal18-output/schema/decision-benchmark-v3-schema.json",
+                   "v3_set_schema":  "goal18-output/schema/decision-benchmark-v3-set.schema.json",
+                   "sample_id_pattern":  "^decision-bench-v3-val-tt(01|02|03|04|05|06|07|08|09|10|11|12|13|14|15)-[0-9]{3}$",
+                   "schema_version_const":  "decision-benchmark-v3",
+                   "v2_schema_unchanged":  true,
+                   "holdback_schema_unchanged":  true
+               },
+    "generator":  {
+                      "entry":  "goal18-output/scripts/generator/generate.mjs",
+                      "version":  "goal18-generator/v3.0.0",
+                      "diversification_module":  "goal18-output/scripts/generator/diversify-v3.mjs",
+                      "epoch_flag":  "--epoch v3",
+                      "args":  [
+                                   "--split",
+                                   "validation",
+                                   "--epoch",
+                                   "v3",
+                                   "--seed",
+                                   "\u003cderived-seed\u003e",
+                                   "--outDir",
+                                   "\u003cworkdir\u003e"
+                               ],
+                      "outputs":  [
+                                      "validation-set.jsonl",
+                                      "validation-gold.jsonl"
+                                  ],
+                      "note":  "tag=val derived from split=validation. Deterministic given seed + exact generator working-tree bytes."
+                  },
+    "diversification_mechanism":  {
+                                      "principle":  "For each (tt, idx) slot, the slot-local RNG (derived from master seed) drives: option-surface pair selection (pools.mjs pickPair V3 branch), entity/domain realization, timeline realization, and construct-preserving phrase diversification (diversify-v3.mjs: 408 string rules + 5 anchored prompt-template regexes, per-field RNG draws).",
+                                      "protection":  "106 protected tokens mirroring product lexical machinery (evidence-gate, option-evaluator, constraint-engine, kernel); load-time rule validation forbids protected tokens in rule/variant/regex strings; per-field protected-token count invariance; deterministic-machinery signature invariance (missing/direction/requirement/nochange/override/stale/confirmation markers, topicOf, variable topics, constraint linkage, constraint fallback, preference affinity, historical-option LCS matching). Fail closed on any violation.",
+                                      "excluded_fields":  "hard_constraints[].text never diversified; constraint-linked evidence facts skipped; delete/override events skipped; expiry_reason untouched.",
+                                      "construct_invariance":  "Action taxonomy, Gold semantics, authority/sufficiency/lineage semantics, task-type definitions, source-type distribution, scorer v1.1 and hard-gate thresholds unchanged."
+                                  },
+    "seed_rule":  {
+                      "formula":  "SHA256(repaired_method_commit_sha || repaired_v3_generator_commit_sha || \"goal20-validation-v3-r1\")",
+                      "method_commit_sha":  "e2c95b496b83074e0b584d201c174d731345a97c",
+                      "method_commit_repo":  "D:\\ai_code\\Omni-context-decision-kernel-v1",
+                      "generator_commit_sha":  "871a72da52042b3ffda4a6cc157d69d79232133c",
+                      "label":  "goal20-validation-v3-r1",
+                      "seed_search":  false,
+                      "seed":  "4e989191d8bf86975dd7c3672002f323e45845a9e2bf8b79212c61750ff14cb9",
+                      "seed_hash":  "9c3058190d5a439ec86b24b6f1f146745a906706c195e46916198be653758c52",
+                      "raw_derivation_inputs":  "e2c95b496b83074e0b584d201c174d731345a97c871a72da52042b3ffda4a6cc157d69d79232133cgoal20-validation-v3-r1",
+                      "recorded_inputs":  [
+                                              "method_commit_sha",
+                                              "generator_commit_sha",
+                                              "label"
+                                          ]
+                  },
+    "generation_policy":  {
+                              "generate_once":  true,
+                              "no_seed_search":  true,
+                              "no_regeneration_without_owner_approval":  true,
+                              "no_v2_aware_candidate_search":  true,
+                              "no_rejection_sampling":  true,
+                              "byte_exact_handling":  "Copy generator outputs to goal20r-output/validation-v3-r1-fixture.jsonl / validation-v3-r1-gold.jsonl with no normalization, no pretty-print, no line-ending or BOM changes.",
+                              "output_dir":  "goal20r-output/work/v3-r1-gen/"
+                          },
+    "expected_distribution":  {
+                                  "samples":  120,
+                                  "task_types":  "15 TT x 8",
+                                  "source_types":  {
+                                                       "human_design":  48,
+                                                       "multi_model_reconstruction":  36,
+                                                       "anonymized_pattern_synthesis":  24,
+                                                       "adversarial_boundary":  12
+                                                   }
+                              },
+    "near_duplicate_target":  {
+                                  "max_8gram_jaccard_lt":  0.4,
+                                  "authority":  "goal18-output/leakage-analysis.md: \u0027design target: full-library \u003c0.4\u0027; flag threshold \u003e=0.5. Owner attachment section 9 freezes this target for V2\u003c-\u003enew V3.",
+                                  "frozen":  true,
+                                  "no_relaxation_post_hoc":  true
+                              },
+    "audits":  [
+                   "Contract audit: schema + referential integrity + authority/action + approval/confirmation + action eligibility + evidence + hard constraints + clarification + lineage + provenance/source lifecycle + temporal validity; required 120 PASS / 0 FAIL.",
+                   "Overlap/leakage audit vs Validation V2 (120), development fixtures (20), regression fixtures (15): 0 exact sample_id overlap, 0 scenario identity overlap, max 8-gram Jaccard \u003c 0.4; internal V3 duplicate audit; holdback-prefix check via sealed metadata only (no decrypt, no plaintext).",
+                   "Marginals audit: 15x8 counts, source-type distribution 48/36/24/12, ID namespace decision-bench-v3-val-*."
+               ],
+    "freeze_chain":  [
+                         "VALIDATION_V3_FREEZE",
+                         "GOAL20_VALIDATION_V3_FORMAL_METHOD_FREEZE",
+                         "GOAL20_VALIDATION_V3_LAUNCH_FREEZE",
+                         "GOAL20_VALIDATION_V3_GOVERNANCE_FREEZE",
+                         "GOAL20_VALIDATION_V3_FORMAL_EXECUTION_READY"
+                     ],
+    "execution_protocol":  "Frozen V2.4 protocol (model deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert, retry policy frozen). No parameter/retry modification authorized for V3.",
+    "status":  "COMPLETED_GENERATED_ONCE_FROZEN_V3",
+    "provider_calls_before_generation":  0
 }

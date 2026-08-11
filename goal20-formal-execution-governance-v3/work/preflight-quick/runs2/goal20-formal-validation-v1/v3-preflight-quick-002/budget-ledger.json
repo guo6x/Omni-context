@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "limits_cny": {
+    "deepseek_v4_flash_maximum": 200,
+    "kimi_2_6_maximum": 20,
+    "total_maximum_hard_cap": 220,
+    "caps_intact": true
+  },
+  "calls": 2,
+  "spent_cny": 0.000496,
+  "records": [
+    {
+      "at": "2026-08-11T10:39:07.774Z",
+      "tuple_index": 396,
+      "sample_id": "decision-bench-v3-val-tt09-002",
+      "arm": "A0",
+      "attempt": 1,
+      "cost_cny": 0.000248,
+      "cost_source": "frozen_pricing_snapshot_x_actual_usage",
+      "usage": {
+        "prompt_tokens": 120,
+        "completion_tokens": 64,
+        "total_tokens": 184,
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 120
+      },
+      "provider_request_id": "dummy-req-824da7fbf6ed",
+      "model_identity": "deepseek-v4-flash"
+    },
+    {
+      "at": "2026-08-11T10:39:07.783Z",
+      "tuple_index": 548,
+      "sample_id": "decision-bench-v3-val-tt12-003",
+      "arm": "A2",
+      "attempt": 1,
+      "cost_cny": 0.000248,
+      "cost_source": "frozen_pricing_snapshot_x_actual_usage",
+      "usage": {
+        "prompt_tokens": 120,
+        "completion_tokens": 64,
+        "total_tokens": 184,
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 120
+      },
+      "provider_request_id": "dummy-req-84f7b29bcbf3",
+      "model_identity": "deepseek-v4-flash"
+    }
+  ],
+  "last_updated_at": "2026-08-11T10:39:07.783Z"
+}

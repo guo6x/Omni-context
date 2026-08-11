@@ -1,0 +1,88 @@
+{
+  "schema_version": 3,
+  "config_id": "formal-run-config-v3",
+  "experiment_id": "omni-context-ablation-formal-v3",
+  "epoch": "v3",
+  "status": "FROZEN (Goal 20R-V3-R1 dataset rebind; FORMAL_EXPERIMENT_READY for Validation V3)",
+  "base_config": "goal19f-output/formal-run-config-v1.json",
+  "base_config_sha256": "b12e3287b1776d5c8c31ccaab7e062ecc9904f5acb95ea4c5594672d2d42b47c",
+  "rebind_note": "NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE + dataset epoch rebind. All protocol semantics (arms A0-A5, prompts, scorer v1.1, Gold semantics, hard gates, model parameters, budgets) unchanged. Only the validation dataset epoch (v2 -> v3) and the repaired product commit (05651ab -> e2c95b4, Goal 20R repair) are rebound.",
+  "validation": {
+    "epoch": "v3",
+    "fixture_file": "goal20r-output/validation-v3-r1-fixture.jsonl",
+    "fixture_sha256": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e",
+    "gold_file": "goal20r-output/validation-v3-r1-gold.jsonl",
+    "gold_sha256": "e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0",
+    "manifest_file": "goal20r-output/validation-v3-r1-manifest.json",
+    "manifest_sha256": "58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191",
+    "samples": 120,
+    "sample_id_namespace": "decision-bench-v3-val-ttNN-NNN",
+    "schema_version": "decision-benchmark-v3"
+  },
+  "product": {
+    "name": "omni-context-brain-server/decision-kernel-v1",
+    "commit": "e2c95b496b83074e0b584d201c174d731345a97c",
+    "identity_hash": "74d2955e1f1757426b253e9f4969b98e54a472c62b4e01701a05812471810b31",
+    "identity_hash_method": "sha256 over lexicographically-sorted '<file-sha256>  <relative-path>' lines (19 product paths from formal-run-config-v1.json), joined LF + trailing LF; computed from the product worktree at e2c95b4",
+    "entrypoint": "brain-server/src/decision/kernel.ts",
+    "policy_version": "decision-policy-rules-v1",
+    "migration_version": "v30 (add_decision_kernel_v1_tables)",
+    "database_image": "in-memory sqlite, migration v30; fresh per sample; never shared across arms"
+  },
+  "runner": {
+    "name": "omni-context-experiment-runner-r1",
+    "base_commit": "13f21f8dd9e19a8423b331c2106f326a3ed09385",
+    "entrypoint": "src/runner.mjs",
+    "identity_hash": "8aa4fc40472a70e08e4bad2286661742f91c0019fd427cdce21bd1f0746178bf",
+    "note": "unchanged from base config"
+  },
+  "evaluator": {
+    "name": "ablation-harness-r1",
+    "version": "0.2.0-formal-ready",
+    "branch": "research/ablation-harness-r1",
+    "commit": "85d418e95a6bac1e2912c33e32fb99d504a9cb26",
+    "identity_hash": "d9d802adee07649f1a54b7227ef5aea32a1298ffc7c99961628b9681716ab396",
+    "entrypoint": "experiments/decision-benchmark/ablation/run-ablation.mjs",
+    "note": "unchanged from base config"
+  },
+  "scorer": {
+    "name": "goal16a-scorer-v1.1",
+    "version": "1.1",
+    "entrypoint": "goal16a-output/scorer-v1.1/scorer.mjs",
+    "identity_hash": "3b4c7a2441bed3ad1b1019b104948f93d59d53ed5bfeaabe307a6e6a5a5ddbbb",
+    "commit": "5cac8ae975174efc19149996d737581df2aa33c2",
+    "constraint": "no semantic changes permitted; frozen for Goal 20 scoring"
+  },
+  "arms": "frozen arm matrix unchanged (see base config; A0 no-memory, A1 plain retrieval, A2 +qualification, A3 +sufficiency gate, A4 kernel closed-loop, A5 full Omni-Context)",
+  "model": {
+    "requested_model_id": "deepseek-v4-flash",
+    "confirmed_parameters": {
+      "thinking": "enabled",
+      "reasoning_effort": "high",
+      "temperature": 0,
+      "temperature_semantics": "PROVIDER_IGNORED_INERT_UNDER_THINKING_MODE",
+      "top_p": null,
+      "max_output_tokens": 65536,
+      "retry_max_attempts": 3,
+      "transport_retry_max_attempts": 6,
+      "empty_content_retry_max_attempts": 5,
+      "concurrency": 1,
+      "timeout_ms": 120000
+    },
+    "identical_across_arms": true,
+    "identity_check": "runtime model-identity check on every provider response; mismatch = MODEL_IDENTITY_MISMATCH invalid-run"
+  },
+  "budget": {
+    "deepseek_v4_flash_maximum_cny": 200,
+    "kimi_2_6_maximum_cny": 20,
+    "total_maximum_hard_cap_cny": 220,
+    "note": "owner hard caps unchanged; V3 estimated cost is a small fraction of the remaining DeepSeek budget"
+  },
+  "executor": {
+    "raw_only": "goal20-formal-execution-governance-r1/executor (with NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE)",
+    "runtime_sha256": "6b96b3a96f9599dc6016ed48a9447251a26444288c48fa32a0aba3be56ef6b33",
+    "dir_sha256": "7d82c6f9536f8b14e01ea8f48bf4ef42f9929e89e8abd2f171aec51b70aff53b",
+    "tests": "49/49 PASS (2026-08-11, post-plumbing)"
+  },
+  "holdback": "sealed; plaintext not accessed; not used for V3"
+}

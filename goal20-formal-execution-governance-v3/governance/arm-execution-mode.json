@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "note": "Derived from the frozen arm entrypoints in formal-run-config-v1.json / arm-matrix.json and the frozen harness (run-ablation.mjs @ 85d418e, planner.mjs header: \"The formal run replaces this module with the sealed LLM\").",
+  "mapping": {
+    "A0": {
+      "execution_mode": "provider_llm",
+      "entrypoint": "prompts/A0 + frozen context (current input only) -> deepseek-v4-flash"
+    },
+    "A1": {
+      "execution_mode": "provider_llm",
+      "entrypoint": "prompts/A1 + unified retrieval -> deepseek-v4-flash"
+    },
+    "A2": {
+      "execution_mode": "provider_llm",
+      "entrypoint": "prompts/A2 + retrieval + qualification -> deepseek-v4-flash"
+    },
+    "A3": {
+      "execution_mode": "provider_llm",
+      "entrypoint": "prompts/A3 + retrieval + qualification + sufficiency gate -> deepseek-v4-flash"
+    },
+    "A4": {
+      "execution_mode": "deterministic_kernel",
+      "entrypoint": "brain-server/src/decision/kernel.ts#evaluateDecision (selection pipeline, persist=false) via src/kernel-arms.mjs"
+    },
+    "A5": {
+      "execution_mode": "deterministic_kernel",
+      "entrypoint": "brain-server/src/decision/kernel.ts#evaluateDecision (full pipeline, persist=true) via src/kernel-arms.mjs + src/revisit-protocol.mjs"
+    }
+  },
+  "provider_call_count": {
+    "provider_llm_tuples": 480,
+    "kernel_tuples": 240,
+    "revisit_extra_calls": 0
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "source": "goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation",
+  "sealed_at": "2026-08-09T16:04:35.645Z",
+  "modules": {
+    "shared-context.mjs": "c3a8dfdc261122b16af618cc403263938ca5e2429a239b40013fd0baa87683f6",
+    "retrieval-adapter.mjs": "7d07a34dbec85ba997e3b417f9c9b250b1aabecaa9d29185c5addd978f462d23",
+    "qualification.mjs": "fb1d01caca52347f0f183044410e36a96d92993ffd36752f3f122961938883b8",
+    "sufficiency.mjs": "79aa415d85def21c9ada95e7d08a54c03a3c69e0a53057849f1d9133e3f77393",
+    "kernel-arms.mjs": "f93f39136e1c20490666422b03d25d417fa7460caf8a8fe5349d1d420f49e0d4",
+    "kernel-context.mjs": "dea148823b511729ce9e0dad4b220b612fcece7e40f96b29815aa5b7f994f1f7",
+    "response-map.mjs": "545137d6924996a76a38b58fad4a320a4f3a2c5e5d547b31e1a5bcec5d49efcd",
+    "revisit-protocol.mjs": "04c0591d475c5eef9b7c57cfa9ec1761412d587fe94fad0d1c036f09a0c46f93",
+    "checks.mjs": "84f33966b4f20d0eab8b3abb50ebf639dedef599b38588cc785cd8414883191f",
+    "product-modules.mjs": "215c44bd0bee45b6ca63e3561fedf81c36cf238f814f0d6563cc52c91c06292f"
+  }
+}

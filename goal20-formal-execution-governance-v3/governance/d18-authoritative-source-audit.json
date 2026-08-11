@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "goal": "19G",
+  "searched_identifiers": [
+    "D-18",
+    "D18",
+    "Decision 18"
+  ],
+  "references": [
+    {
+      "file": "goal17p-output/unresolved-paper-decisions.md",
+      "line": 25,
+      "text": "D-18 | Minimum effect size value for significance reporting | [TBD AT FREEZE TIME] | Dataset freeze (must be set before results exist) | Paper lead + statistician"
+    },
+    {
+      "file": "goal17p-output/unresolved-result-placeholders.json",
+      "line": 85,
+      "section": "Section 7 significance reporting (D-18)",
+      "unblocking_condition": "Dataset freeze (D-18) with statistician sign-off"
+    },
+    {
+      "file": "goal17p-output/method-section-freeze-report.md",
+      "line": 62,
+      "placeholder": "PLACEHOLDER-RES-12 | Protocol significance reporting | Minimum effect size unset | Dataset freeze; must be fixed before results exist (D-18)"
+    },
+    {
+      "file": "goal17p-output/experimental-preregistration.md",
+      "line": 91,
+      "text": "a significant difference smaller than a pre-registered minimum effect size (0.05 absolute on rates, unless justified otherwise at freeze time) is reported as \"statistically significant but below the pre-registered minimum effect\""
+    }
+  ],
+  "source_priority": "unresolved-paper-decisions.md D-18 is the authoritative decision registry entry; preregistration provides the default value (0.05 absolute on rates)",
+  "authoritative_meaning": "Minimum effect size value for significance reporting (reporting/statistics parameter; does not affect raw generation, prompts, or the executor)",
+  "already_decided": false,
+  "status": "PLANNED_TBD_AT_DATASET_FREEZE",
+  "unsigned_unfrozen": true,
+  "owner": "Paper lead + statistician",
+  "exact_prerequisite_for_goal20": "none for Stage G (generation); must be decided at dataset freeze before significance reporting in Stage S / paper (§7). Preregistered default 0.05 absolute on rates stands unless justified otherwise at freeze time.",
+  "ordering_note": "D-18 does not define authorization/executor/budget/selection ordering (spec 20); no ordering conflict with this goal.",
+  "prohibition": "This goal does NOT invent a D-18 value; the preregistered default 0.05 is recorded as the placeholder only."
+}

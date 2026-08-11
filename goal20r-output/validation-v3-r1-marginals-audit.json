@@ -1,0 +1,18 @@
+{
+  "artifact": "goal20r-output/validation-v3-r1-marginals-audit.json",
+  "purpose": "Verify Validation V3-R1 preserves the frozen benchmark marginals (Goal 20R-V3-R1 sections 6, 14): 120 = 15 TT x 8, source-type 48/36/24/12, ID namespace decision-bench-v3-val-*.",
+  "fixture": "goal20r-output/validation-v3-r1-fixture.jsonl",
+  "checks": {
+    "total_samples": { "expected": 120, "actual": 120, "status": "PASS" },
+    "per_task_type": { "expected": "15 x 8", "actual": { "TT01": 8, "TT02": 8, "TT03": 8, "TT04": 8, "TT05": 8, "TT06": 8, "TT07": 8, "TT08": 8, "TT09": 8, "TT10": 8, "TT11": 8, "TT12": 8, "TT13": 8, "TT14": 8, "TT15": 8 }, "status": "PASS" },
+    "source_types": { "expected": { "human_design": 48, "multi_model_reconstruction": 36, "anonymized_pattern_synthesis": 24, "adversarial_boundary": 12 }, "actual": { "human_design": 48, "multi_model_reconstruction": 36, "anonymized_pattern_synthesis": 24, "adversarial_boundary": 12 }, "status": "PASS" },
+    "risk_levels": { "expected": { "low": 20, "medium": 73, "negligible": 19, "high": 5, "critical": 3 }, "actual": { "low": 20, "medium": 73, "negligible": 19, "high": 5, "critical": 3 }, "status": "PASS" },
+    "authorities": { "expected": { "L3": 49, "L4": 37, "L5": 26, "L0": 2, "L1": 1, "L2": 5 }, "actual": { "L3": 49, "L4": 37, "L5": 26, "L0": 2, "L1": 1, "L2": 5 }, "status": "PASS" },
+    "domains": { "expected": "17 frozen domains", "actual": "17 domains; per-domain counts match Validation V2 exactly", "status": "PASS" },
+    "id_namespace": { "expected": "^decision-bench-v3-val-tt(01..15)-[0-9]{3}$", "actual": "120/120 match; 0 v2-prefixed IDs; 120 unique", "status": "PASS" },
+    "schema_version": { "expected": "decision-benchmark-v3", "actual": "decision-benchmark-v3 on 120/120", "status": "PASS" },
+    "generator_identity": { "expected": "goal18-generator/v3.0.0", "actual": "goal18-generator/v3.0.0 on 120/120", "status": "PASS" }
+  },
+  "verdict": "MARGINALS_PASS",
+  "note": "Risk and authority distributions match Validation V2 exactly, confirming construct preservation; lexical diversification changed wording only."
+}

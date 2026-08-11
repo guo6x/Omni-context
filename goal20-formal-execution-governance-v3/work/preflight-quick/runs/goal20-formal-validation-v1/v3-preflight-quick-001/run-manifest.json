@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "campaign_id": "goal20-formal-validation-v1",
+  "run_id": "v3-preflight-quick-001",
+  "goal": "20",
+  "governance": "GOAL20_EXECUTION_GOVERNANCE_FREEZE",
+  "mode": "test",
+  "purpose": "test",
+  "epoch": "v3",
+  "status": "running",
+  "formal_outputs_before_run": 0,
+  "fixture": {
+    "file": "D:\\ai_code\\Omni-context\\goal20r-output\\validation-v3-r1-fixture.jsonl",
+    "sha256": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e",
+    "rows": 120
+  },
+  "precommit": {
+    "file": "D:\\ai_code\\Omni-context\\goal20-formal-execution-governance-v3\\governance\\goal20-formal-tuple-precommit.jsonl",
+    "rows": 720,
+    "sha256": "8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4"
+  },
+  "order": {
+    "file": "D:\\ai_code\\Omni-context\\goal20-formal-execution-governance-v3\\governance\\goal20-formal-execution-order.json",
+    "sha256": "c021692d0e42041ea32171fad3c42cfc8905952d53b01baaf9bc7778f2f16ef4"
+  },
+  "model": {
+    "requested_model_id": "deepseek-v4-flash",
+    "confirmed_parameters": null
+  },
+  "pricing_snapshot": "2026-08-09T15:56:44.308Z",
+  "created_at": "2026-08-11T10:39:01.574Z"
+}

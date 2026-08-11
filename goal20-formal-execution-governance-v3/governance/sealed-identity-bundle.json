@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "goal20_launch_freeze": "GOAL20_LAUNCH_FREEZE (goal19f-v2-launch-output)",
+  "formal_config_file_sha256": "b12e3287b1776d5c8c31ccaab7e062ecc9904f5acb95ea4c5594672d2d42b47c",
+  "validation_v2_fixture_sha256": "e884bf7d4e95d4ae805e0daaba22614959bf17b4f14da4f28d237a65e57ec08b",
+  "validation_v2_gold_sha256": "7bb38f4bd224f6729cf8f8761ecacefae35c1740b754abd9d65543682fd29440",
+  "validation_v2_manifest_sha256": "e0a56ef0337502ba803cb45bf0f6e1f2e22ea7518786ce1dc81b190c490a4f8d",
+  "prompt_manifest_sha256": "68a05b256ae168183e195a84918740e9704e6b04596f019cd94c61ef05685996",
+  "scorer_v1_1": {
+    "name": "goal16a-scorer-v1.1",
+    "version": "1.1",
+    "commit": "5cac8ae975174efc19149996d737581df2aa33c2",
+    "identity_hash": "3b4c7a2441bed3ad1b1019b104948f93d59d53ed5bfeaabe307a6e6a5a5ddbbb",
+    "entrypoint": "goal16a-output/scorer-v1.1/scorer.mjs",
+    "file_blobs": {
+      "goal16a-output/scorer-v1.1/scorer.mjs": "47a4217f14992e02899dddea44416571564c56de",
+      "goal16a-output/scorer-v1.1/conformance-tests/scorer-v1.1.test.mjs": "6cce82b23a90d07fd241c8a083f991f89f782297",
+      "goal14-output/benchmark-gold-contract.schema.json": "a17503af3525fa38ddc7b5949076d243f99b4b05",
+      "goal14-output/metric-definitions.md": "acc89ef6daec47f8470eff2df49bf15476fed6a8"
+    }
+  },
+  "owner_decision_id": "model-and-budget-owner-decision-v1",
+  "owner_decision_approval_status": "OWNER_APPROVED",
+  "embedded_configuration_sha256": {
+    "development": "795ab7ba00f4d6ee4232daad16a22dd02653d3f2db549f71c9602bddc81e2613",
+    "regression": "befb4be299038ead1ba1e1eb029295833308103d37b72d75a9dcee78d1f00945",
+    "semantics": "sha256(stableStringify(executed configuration object incl. split and purpose=dryrun as sealed)) per run-ablation.mjs @ 85d418e"
+  }
+}

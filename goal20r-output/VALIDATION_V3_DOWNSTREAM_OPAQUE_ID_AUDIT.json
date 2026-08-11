@@ -1,0 +1,57 @@
+{
+  "artifact": "goal20r-output/VALIDATION_V3_DOWNSTREAM_OPAQUE_ID_AUDIT.json",
+  "goal": "Goal 20R-V3-R1 attachment section 3: prove sample_id is treated as an opaque unique identifier by every downstream consumer; search for hard-coded v2 assumptions.",
+  "audited_consumers": [
+    "goal20-formal-execution-governance-r1/executor/src/run.mjs",
+    "goal20-formal-execution-governance-r1/executor/src/gates.mjs",
+    "goal20-formal-execution-governance-r1/executor/src/arm-execution.mjs",
+    "goal20-formal-execution-governance-r1/executor/src/raw-store.mjs",
+    "goal20-formal-execution-governance-r1/executor/src/retry-policy.mjs",
+    "goal20-formal-execution-governance-r1/executor/src/budget-governor.mjs",
+    "goal20-formal-execution-governance-r1/executor/run-goal20-formal-validation.mjs",
+    "goal21-output/scripts/run-scoring.mjs"
+  ],
+  "findings": [
+    {
+      "consumer": "executor/src/*.mjs",
+      "usage": "sample_id used only as opaque string: equality join (fixture.find(f => f.sample_id === tuple.sample_id)), tuple identity keys (tuple_index.sample_id.arm), file-path components, precommit uniqueness (sample_id|arm).",
+      "hard_coded_v2": "NONE in src/*.mjs"
+    },
+    {
+      "consumer": "executor/tests/*.mjs",
+      "usage": "test fixtures use decision-bench-v2-val-* sample IDs as opaque strings",
+      "hard_coded_v2": "TEST_ONLY (non-semantic; sample IDs are opaque test data)"
+    },
+    {
+      "consumer": "goal21-output/scripts/run-scoring.mjs",
+      "usage": "sample_id used as opaque Map keys (fixtureMap/goldMap) and join keys",
+      "hard_coded_v2": "NONE"
+    },
+    {
+      "consumer": "goal18he-output/scripts/audit/contract-audit.cjs",
+      "usage": "epoch-agnostic; takes --data dir with validation-set.jsonl + validation-gold.jsonl",
+      "hard_coded_v2": "NONE"
+    },
+    {
+      "consumer": "goal18he-output/generator-repair-regression-tests/generator-repair-regression.test.mjs",
+      "usage": "V2 byte-reproduction regression; asserts specific V2 sample IDs as expected outputs",
+      "hard_coded_v2": "INTENTIONAL (V2 regression tests, epoch-scoped)"
+    },
+    {
+      "consumer": "annotation-guide.md",
+      "usage": "documentation of the V2 ID format",
+      "hard_coded_v2": "DOC_ONLY (superseded by V3 schema docs)"
+    }
+  ],
+  "plumbing_changes_required": {
+    "classification": "NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE",
+    "scope": [
+      "executor/src/gates.mjs: validationEpoch option; G1 launch-manifest path (v3 -> goal20r-output/goal20-validation-v3-launch-identity-manifest.json); G8 expected fixture (launch.validation_v3 vs validation_v2); G13 config path (v3 -> goal20r-output/formal-run-config-v3.json)",
+      "executor/src/run.mjs: validationEpoch passthrough to runGates; epoch field in run-manifest.json",
+      "executor/run-goal20-formal-validation.mjs: --epoch v2|v3 argument"
+    ],
+    "semantic_impact": "NONE - no retry/model/prompt/scorer/metric/gold semantics changed; sample_id still opaque",
+    "test_evidence": "executor suite 49/49 PASS after the change; V3 test-mode preflight (limit 12) ALL_GATES_PASS with --epoch v3; V3 full 720 dummy preflight COMPLETED"
+  },
+  "verdict": "OPAQUE_ID_AUDIT_PASS"
+}

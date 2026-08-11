@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "authorization_id": "goal20-validation-v3-formal-execution-authorization-v1",
+  "epoch": "v3",
+  "status": "AUTHORIZATION_DERIVED_FROM_EXISTING_SIGNED_OWNER_DECISION",
+  "derivation_note": "Case A per Goal 19G spec 3: model-and-budget-owner-decision.json (OWNER_APPROVED, PROJECT_OWNER, cryptographic signature NOT_REQUIRED) explicitly authorizes formal Validation execution with deepseek-v4-flash within the frozen budgets on the synthetic frozen benchmark. Goal 20R-V3-R1 owner attachment (5ed4d005) additionally authorizes the epoch-distinct V3 namespace, seed-aware diversification and the V3 formal run under the frozen V2.4 execution protocol. No repeated signature required; no new human signature fabricated.",
+  "owner_decision": {
+    "file": "goal19f-output/model-and-budget-owner-decision.json",
+    "decision_id": "model-and-budget-owner-decision-v1",
+    "approval_status": "OWNER_APPROVED",
+    "approval_timestamp": "2026-08-09T11:24:49.978Z",
+    "signature_status": "NOT_REQUIRED"
+  },
+  "v3_r1_authorization": {
+    "owner_attachment": "Goal 20R-V3-R1 (5ed4d005)",
+    "approved_items": [
+      "epoch-distinct Validation V3 sample-ID namespace (decision-bench-v3-val-*)",
+      "deterministic seed-aware same-slot diversification",
+      "regenerate Validation V3 exactly once under a newly frozen generation procedure",
+      "preserve cross-epoch near-duplicate target (max 8-gram Jaccard < 0.4) without relaxation",
+      "V3 formal run with the frozen V2.4 execution protocol; new scientific run identity; 0 provider calls before READY"
+    ],
+    "forbidden": [
+      "modify V2 schema/IDs/Holdback",
+      "V2-aware candidate search / seed search / rejection sampling",
+      "reuse blocked pre-freeze V3 candidate",
+      "modify scorer/thresholds/prompts/model parameters/Gold semantics",
+      "access Holdback plaintext"
+    ]
+  },
+  "execution_scope": {
+    "campaign": "goal20-formal-validation-v1",
+    "epoch": "v3",
+    "split": "validation",
+    "samples": 120,
+    "arms": ["A0", "A1", "A2", "A3", "A4", "A5"],
+    "tuples": 720,
+    "provider_llm_arms": ["A0", "A1", "A2", "A3"],
+    "kernel_arms": ["A4", "A5"],
+    "fixture": "goal20r-output/validation-v3-r1-fixture.jsonl",
+    "gold": "goal20r-output/validation-v3-r1-gold.jsonl"
+  },
+  "budget": {
+    "deepseek_v4_flash_maximum_cny": 200,
+    "kimi_2_6_maximum_cny": 20,
+    "total_maximum_hard_cap_cny": 220,
+    "note": "Owner hard caps unchanged; V3 estimated cost is a small fraction of the remaining DeepSeek budget; governor fails before overspend."
+  },
+  "holdback_plaintext_accessed": false
+}

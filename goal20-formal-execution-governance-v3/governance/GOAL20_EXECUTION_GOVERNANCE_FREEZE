@@ -1,0 +1,18 @@
+{
+  "schema_version": 2.4,
+  "goal": "20R-V3-R1",
+  "epoch": "v3",
+  "created_at": "2026-08-11T10:52:00Z",
+  "freeze_id": "GOAL20_EXECUTION_GOVERNANCE_FREEZE",
+  "marker": "V3 governance root marker required by executor gate G2",
+  "binds": {
+    "method_freeze": "GOAL20_VALIDATION_V3_FORMAL_METHOD_FREEZE",
+    "launch_freeze": "GOAL20_VALIDATION_V3_LAUNCH_FREEZE",
+    "governance_freeze": "GOAL20_VALIDATION_V3_GOVERNANCE_FREEZE",
+    "validation_freeze": "VALIDATION_V3_FREEZE",
+    "authorization": "formal-validation-execution-authorization.json (AUTHORIZATION_DERIVED_FROM_EXISTING_SIGNED_OWNER_DECISION)",
+    "budget": "goal20-formal-budget-model.json (DeepSeek 200 / Kimi 20 / total 220 caps)",
+    "protocol": "Frozen V2.4 execution protocol; no parameter/retry modification authorized"
+  },
+  "holdback_plaintext_accessed": false
+}

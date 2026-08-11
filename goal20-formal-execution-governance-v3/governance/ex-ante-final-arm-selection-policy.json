@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_BEFORE_FIRST_FORMAL_CALL",
+  "confirmatory_final_system": "A5",
+  "ablation_arms": [
+    "A0",
+    "A1",
+    "A2",
+    "A3",
+    "A4"
+  ],
+  "rules": [
+    "A5 is the pre-specified confirmatory arm of the full Omni-Context system.",
+    "A0-A4 are ablation/causal-component arms only; they never select the final system.",
+    "Validation-driven selection is forbidden: no post-hoc selection of the highest-scoring arm, no switching to A4 if A4 scores higher than A5, no new selection objective derived from Validation results.",
+    "Holdback eligibility: A5 is the only planned Holdback method if Goal20 is valid and the frozen method needs no causal defect fix.",
+    "If A5 exposes a pre-defined invalidity/safety blocker: stop confirmatory progression with A5_CONFIRMATORY_ELIGIBILITY_FAILED; do NOT fall back to A4; report Validation results truthfully."
+  ],
+  "anchored_in": "goal17p-output/experimental-preregistration.md (analysis plan §5); Goal 19G spec 15"
+}

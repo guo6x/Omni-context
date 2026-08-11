@@ -1,0 +1,165 @@
+{
+  "artifact": "goal20r-output/validation-v3-overlap-leakage-audit.json",
+  "generated_at": "2026-08-11T10:19:11.537Z",
+  "method": "Normalized 8-gram Jaccard on sampleText (title, goal, decision_question, scenario.prompt, memory events, candidates, constraints, prefs, evidence facts, historical decision, execution outcome); exact sample_id / scenario-JSON / title overlap. Same methodology as goal18-output/leakage-analysis.md and integrity test T12. Entity prefix check imports generator pools.mjs (VAL_PREFIXES / HB_PREFIXES).",
+  "sources": {
+    "v3_fixture": "goal20r-output/validation-v3-fixture.jsonl (120)",
+    "v2_fixture": "goal18he-output/validation-v2-fixture.jsonl (120)",
+    "dev_fixture": "goal14-output/development-fixtures.jsonl (20, v1)",
+    "reg_fixture": "goal14-output/regression-fixtures.jsonl (15, v1)"
+  },
+  "thresholds": {
+    "flag": 0.5,
+    "near_duplicate_diagnostic": 0.75,
+    "design_target_max": 0.4
+  },
+  "internal": {
+    "v3": {
+      "label": "v3",
+      "samples": 120,
+      "duplicate_ids": [],
+      "duplicate_scenario_count": 0,
+      "duplicate_titles": [],
+      "internal_max_8gram_jaccard": 0.3119,
+      "internal_worst": {
+        "a": "decision-bench-v3-val-tt15-006",
+        "b": "decision-bench-v3-val-tt15-007",
+        "sim": 0.3119
+      }
+    }
+  },
+  "exact": {
+    "v3_vs_v2": {
+      "label": "v3_vs_v2",
+      "exact_sample_id_overlap_count": 0,
+      "exact_sample_id_overlap": [],
+      "exact_scenario_overlap_count": 0,
+      "exact_title_overlap": []
+    },
+    "v3_vs_dev": {
+      "label": "v3_vs_dev",
+      "exact_sample_id_overlap_count": 0,
+      "exact_sample_id_overlap": [],
+      "exact_scenario_overlap_count": 0,
+      "exact_title_overlap": []
+    },
+    "v3_vs_reg": {
+      "label": "v3_vs_reg",
+      "exact_sample_id_overlap_count": 0,
+      "exact_sample_id_overlap": [],
+      "exact_scenario_overlap_count": 0,
+      "exact_title_overlap": []
+    }
+  },
+  "similarity": {
+    "v3_vs_v2": {
+      "label": "v3_vs_v2",
+      "pairs": 14400,
+      "max": 0.3564,
+      "mean": 0.008937,
+      "flagged_count": 0,
+      "flagged_all": [],
+      "near_duplicate_count": 0,
+      "near_duplicate_all": [],
+      "worst": {
+        "a": "decision-bench-v3-val-tt15-000",
+        "b": "decision-bench-v2-val-tt15-000",
+        "sim": 0.3564
+      }
+    },
+    "v3_vs_dev": {
+      "label": "v3_vs_dev",
+      "pairs": 2400,
+      "max": 0.0276,
+      "mean": 0.00069,
+      "flagged_count": 0,
+      "flagged_all": [],
+      "near_duplicate_count": 0,
+      "near_duplicate_all": [],
+      "worst": {
+        "a": "decision-bench-v3-val-tt12-004",
+        "b": "decision-bench-v1-dev-tt12-002",
+        "sim": 0.0276
+      }
+    },
+    "v3_vs_reg": {
+      "label": "v3_vs_reg",
+      "pairs": 1800,
+      "max": 0.0184,
+      "mean": 0.000584,
+      "flagged_count": 0,
+      "flagged_all": [],
+      "near_duplicate_count": 0,
+      "near_duplicate_all": [],
+      "worst": {
+        "a": "decision-bench-v3-val-tt15-007",
+        "b": "decision-bench-v1-reg-tt15-001",
+        "sim": 0.0184
+      }
+    }
+  },
+  "entity_prefixes": {
+    "note": "V3 uses tag=val, so it draws entity names from the same 24 VAL_PREFIXES as V2 (disjoint from holdback by construction). Prefix reuse across V2/V3 is by design and is not leakage.",
+    "val_prefixes_in_pool": 24,
+    "holdback_prefixes_in_pool": 24,
+    "val_prefix_hits_in_v3": [
+      "青岚",
+      "墨渊",
+      "黛眉",
+      "湛露",
+      "霜华",
+      "霁月",
+      "沧浪",
+      "素商",
+      "玄霜",
+      "绯樱",
+      "绛雪",
+      "碧梧",
+      "琉光",
+      "皓月",
+      "晖晨",
+      "泓澄",
+      "漪澜",
+      "汐语",
+      "岫云",
+      "澄明",
+      "濯缨",
+      "泮水",
+      "洙泗",
+      "潇湘"
+    ],
+    "holdback_prefix_hits_in_v3": []
+  },
+  "verdict": {
+    "duplicate_ids_in_v3": 0,
+    "exact_sample_id_overlap_total": 0,
+    "exact_scenario_overlap_total": 0,
+    "max_8gram_jaccard": 0.3564,
+    "flagged_pairs_ge_0_5": 0,
+    "near_duplicate_diagnostic_pairs_ge_0_75": 0,
+    "holdback_prefix_leak": false,
+    "section19_checks": {
+      "zero_exact_overlap_with_v2": {
+        "status": "PASS",
+        "detail": "sample_id overlap=0, scenario overlap=0"
+      },
+      "zero_exact_overlap_with_development": {
+        "status": "PASS"
+      },
+      "zero_exact_overlap_with_regression": {
+        "status": "PASS"
+      },
+      "zero_duplicate_sample_ids": {
+        "status": "PASS"
+      },
+      "zero_scenario_identity_overlap": {
+        "status": "PASS"
+      },
+      "near_duplicate_diagnostic": {
+        "status": "PASS",
+        "detail": "0 pairs >= 0.75, max 0.3564"
+      }
+    },
+    "status": "PASS"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "campaign_id": "goal20-formal-validation-v1",
+  "tuple_id": "g20-548",
+  "tuple_index": 548,
+  "sample_id": "decision-bench-v3-val-tt12-003",
+  "task_type": "TT12",
+  "arm": "A2",
+  "execution_mode": "provider_llm",
+  "provider_call": true,
+  "request_sequence": 1,
+  "requested_model": "deepseek-v4-flash",
+  "provider_model_identity": "deepseek-v4-flash",
+  "generation_parameter_identity": null,
+  "prompt_sha256": "be18347ead9b9b3393604d63bee3d0ce39a0c005c2092b8e1667ff27b958b69e",
+  "serialized_request_sha256": "00b37d04b7f4d7f1ff10522081c0cd08bd5c0b27dc7784834b4ed13b0a9616e0",
+  "serialized_request_bytes": 9468,
+  "response_raw_sha256": "4faa93d6d8134aa29907c8f5ad90b73c95e0d50f653ed9f5734f9d03bc68ff92",
+  "response_raw_bytes": 741,
+  "response_raw_text": "{\"id\":\"dummy-req-84f7b29bcbf3\",\"object\":\"chat.completion\",\"model\":\"deepseek-v4-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"action\\\":\\\"DECIDE\\\",\\\"selected_option\\\":null,\\\"key_questions\\\":[],\\\"clarification_count\\\":0,\\\"revision_target\\\":null,\\\"executed\\\":false,\\\"approval_requested\\\":false,\\\"explanation\\\":\\\"dummy deterministic decision for: 两个智能体针对绛雪摄影展的提议互相矛盾，请给出结论。\\\",\\\"cited_evidence_ids\\\":[],\\\"reason_code\\\":null,\\\"keep_decision\\\":false,\\\"lineage_operation\\\":\\\"create\\\",\\\"parent_decision_id\\\":null}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":120,\"completion_tokens\":64,\"total_tokens\":184,\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":120}}",
+  "parsed_structural_output": {
+    "action": "DECIDE",
+    "selected_option": null,
+    "key_questions": [],
+    "clarification_count": 0,
+    "revision_target": null,
+    "executed": false,
+    "approval_requested": false,
+    "explanation": "dummy deterministic decision for: 两个智能体针对绛雪摄影展的提议互相矛盾，请给出结论。",
+    "cited_evidence_ids": [],
+    "reason_code": null,
+    "keep_decision": false,
+    "lineage_operation": "create",
+    "parent_decision_id": null
+  },
+  "parse_status": "ok",
+  "parse_repair_used": false,
+  "contract_errors": [],
+  "provider_request_id": "dummy-req-84f7b29bcbf3",
+  "usage": {
+    "prompt_tokens": 120,
+    "completion_tokens": 64,
+    "total_tokens": 184,
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 120
+  },
+  "cache_usage": {
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 120
+  },
+  "latency_ms": 1,
+  "attempt": 1,
+  "retry_count": 0,
+  "cost_cny": 0.000248,
+  "cost_source": "frozen_pricing_snapshot_x_actual_usage",
+  "timestamps": {
+    "started_at": "2026-08-11T10:39:07.783Z",
+    "completed_at": "2026-08-11T10:39:07.783Z"
+  },
+  "error_state": null,
+  "audit": {
+    "arm": "A2",
+    "current_input_hash": "22c9824fa49e711eb2a5bec36ead7deddd3b99f91d5f7c2e48383c9ec22e890c",
+    "retrieval_used": true,
+    "qualification_used": true,
+    "gate_route": null,
+    "context_ids": [
+      "ev001",
+      "ev002",
+      "cf001"
+    ],
+    "prompt_bytes": {
+      "system": 2596,
+      "user": 6076,
+      "total": 8672
+    }
+  }
+}

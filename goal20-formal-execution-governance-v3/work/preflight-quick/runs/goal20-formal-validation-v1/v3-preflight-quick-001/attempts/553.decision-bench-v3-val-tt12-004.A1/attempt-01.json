@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "campaign_id": "goal20-formal-validation-v1",
+  "tuple_id": "g20-553",
+  "tuple_index": 553,
+  "sample_id": "decision-bench-v3-val-tt12-004",
+  "task_type": "TT12",
+  "arm": "A1",
+  "execution_mode": "provider_llm",
+  "provider_call": true,
+  "request_sequence": 1,
+  "requested_model": "deepseek-v4-flash",
+  "provider_model_identity": "deepseek-v4-flash",
+  "generation_parameter_identity": null,
+  "prompt_sha256": "e68118c0abb725b8ec835bf174e44cef58abd0fa6667d37c44c64e9f74c894b4",
+  "serialized_request_sha256": "ab79d42208a7a86603ad873445692d0ae28bca66a4505f9f12d1bea06327fe2d",
+  "serialized_request_bytes": 9762,
+  "response_raw_sha256": "665880f3e68ca49c87a30d9f3c88d8559e9821b46a0a857a9ac6c2041cf77c57",
+  "response_raw_bytes": 735,
+  "response_raw_text": "{\"id\":\"dummy-req-64d1469ae584\",\"object\":\"chat.completion\",\"model\":\"deepseek-v4-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"action\\\":\\\"DECIDE\\\",\\\"selected_option\\\":null,\\\"key_questions\\\":[],\\\"clarification_count\\\":0,\\\"revision_target\\\":null,\\\"executed\\\":false,\\\"approval_requested\\\":false,\\\"explanation\\\":\\\"dummy deterministic decision for: 两个智能体就皓月债券的方案意见相左，请给出结论。\\\",\\\"cited_evidence_ids\\\":[],\\\"reason_code\\\":null,\\\"keep_decision\\\":false,\\\"lineage_operation\\\":\\\"create\\\",\\\"parent_decision_id\\\":null}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":120,\"completion_tokens\":64,\"total_tokens\":184,\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":120}}",
+  "parsed_structural_output": {
+    "action": "DECIDE",
+    "selected_option": null,
+    "key_questions": [],
+    "clarification_count": 0,
+    "revision_target": null,
+    "executed": false,
+    "approval_requested": false,
+    "explanation": "dummy deterministic decision for: 两个智能体就皓月债券的方案意见相左，请给出结论。",
+    "cited_evidence_ids": [],
+    "reason_code": null,
+    "keep_decision": false,
+    "lineage_operation": "create",
+    "parent_decision_id": null
+  },
+  "parse_status": "ok",
+  "parse_repair_used": false,
+  "contract_errors": [],
+  "provider_request_id": "dummy-req-64d1469ae584",
+  "usage": {
+    "prompt_tokens": 120,
+    "completion_tokens": 64,
+    "total_tokens": 184,
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 120
+  },
+  "cache_usage": {
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 120
+  },
+  "latency_ms": 1,
+  "attempt": 1,
+  "retry_count": 0,
+  "cost_cny": 0.000248,
+  "cost_source": "frozen_pricing_snapshot_x_actual_usage",
+  "timestamps": {
+    "started_at": "2026-08-11T10:39:02.045Z",
+    "completed_at": "2026-08-11T10:39:02.045Z"
+  },
+  "error_state": null,
+  "audit": {
+    "arm": "A1",
+    "current_input_hash": "64df5ba039205ce440da6c2c58c7fa7190a5d360b4a0e58cc6d6edca95d9997a",
+    "retrieval_used": true,
+    "qualification_used": false,
+    "gate_route": null,
+    "context_ids": [
+      "ev001",
+      "ev002",
+      "cf001"
+    ],
+    "prompt_bytes": {
+      "system": 2816,
+      "user": 6145,
+      "total": 8961
+    }
+  }
+}
