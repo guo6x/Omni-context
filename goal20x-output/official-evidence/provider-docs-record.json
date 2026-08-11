@@ -1,0 +1,403 @@
+{
+    "schema_version":  1,
+    "goal":  "20X",
+    "task":  "Official DeepSeek provider documentation evidence collection: JSON Output mode (empty content) and Thinking mode (reasoning_content / content, max_tokens semantics)",
+    "evidence_root":  "D:\\ai_code\\Omni-context\\goal20x-output\\official-evidence\\",
+    "scope":  "Official DeepSeek domains only (api-docs.deepseek.com). HTML files are raw HTTP responses saved as UTF-8 (no BOM). Quotes are verbatim from the saved HTML (tags stripped, entities decoded). Where official docs do NOT state something, absence is recorded explicitly; nothing fabricated.",
+    "pages":  [
+                  {
+                      "status":  200,
+                      "bytes":  31947,
+                      "retrieved_at":  "2026-08-11T16:22:47.467Z",
+                      "sha256":  "1b9286c62c51f040ebc635790ee33f0bdab9d51c14b3ca4592c012b46d8811dd",
+                      "page_title":  "JSON Output | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/guides/json_mode",
+                      "file":  "deepseek-json-mode-en.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  32129,
+                      "retrieved_at":  "2026-08-11T16:22:47.660Z",
+                      "sha256":  "a2c7e6ad5f2103267e618c98d5e12a850bb5e2ead4d140bb220e7763c56393e4",
+                      "page_title":  "JSON Output | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/zh-cn/guides/json_mode",
+                      "file":  "deepseek-json-mode-zh.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  108044,
+                      "retrieved_at":  "2026-08-11T16:22:47.872Z",
+                      "sha256":  "a08205df38d4452e102cf7be45aa93752557cc259d4c8021946cdc6cbd58682f",
+                      "page_title":  "Thinking Mode | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/guides/thinking_mode",
+                      "file":  "deepseek-thinking-mode-en.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  107552,
+                      "retrieved_at":  "2026-08-11T16:22:48.078Z",
+                      "sha256":  "b9c0d20a7b7207d73752c130003967796a830732a76b4e426b1867a99ec75ef2",
+                      "page_title":  "思考模式 | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/zh-cn/guides/thinking_mode",
+                      "file":  "deepseek-thinking-mode-zh.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  45020,
+                      "retrieved_at":  "2026-08-11T16:22:48.130Z",
+                      "sha256":  "42ac2223f3286709c2941b565f2a291e1b936022934d216e284faa09bcd64867",
+                      "page_title":  "Your First API Call | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/",
+                      "file":  "deepseek-api-docs-main-en.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  125506,
+                      "retrieved_at":  "2026-08-11T16:22:48.335Z",
+                      "sha256":  "f173ca3608279b1257c7aee9e24da6558fd7c5bfc20faff99d70655c670f6a27",
+                      "page_title":  "Chat Completions API | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/api/create-chat-completion",
+                      "file":  "deepseek-create-chat-completion-en.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  19845,
+                      "retrieved_at":  "2026-08-11T16:24:31.014Z",
+                      "sha256":  "eaa1e7da83c989b68a8b4d155c22cd5afabeb2458549db40f765d768072ad83f",
+                      "page_title":  "Token \u0026 Token Usage | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/quick_start/token_usage",
+                      "file":  "deepseek-token-usage-en.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  19720,
+                      "retrieved_at":  "2026-08-11T16:24:31.212Z",
+                      "sha256":  "442ed3265e69d072ef36725da7055acbcdbadc853a4530066c75470aee378edc",
+                      "page_title":  "Token 用量计算 | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/zh-cn/quick_start/token_usage",
+                      "file":  "deepseek-token-usage-zh.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  22223,
+                      "retrieved_at":  "2026-08-11T16:24:45.863Z",
+                      "sha256":  "b7b5819eb2eea0efab609aee5068ee10ef39216f0cab797bfbe5e02e8f807002",
+                      "page_title":  "Models \u0026 Pricing | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/quick_start/pricing",
+                      "file":  "deepseek-pricing-en.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  22263,
+                      "retrieved_at":  "2026-08-11T16:24:46.040Z",
+                      "sha256":  "a9b97d962818fd69dfe0fd2a7bd4487e171d849ba5ff7ca8dc9982d4f47f9d94",
+                      "page_title":  "模型 \u0026 价格 | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/zh-cn/quick_start/pricing",
+                      "file":  "deepseek-pricing-zh.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  10715,
+                      "retrieved_at":  "2026-08-11T16:25:57.952Z",
+                      "sha256":  "8246cee5c180332d72869548d957dc210b57d96699a2944d1b50bcb400899324",
+                      "page_title":  "FAQ | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/faq",
+                      "file":  "deepseek-faq-en.html"
+                  },
+                  {
+                      "status":  200,
+                      "bytes":  10795,
+                      "retrieved_at":  "2026-08-11T16:25:58.183Z",
+                      "sha256":  "2c25e9cc0e2f5d80e4ce3b5ac9b44172f4a3ea06a398dc04a3ddb9a30365fc25",
+                      "page_title":  "常见问题 | DeepSeek API Docs",
+                      "url":  "https://api-docs.deepseek.com/zh-cn/faq",
+                      "file":  "deepseek-faq-zh.html"
+                  }
+              ],
+    "topics":  {
+                   "json_mode_empty_content":  {
+                                                   "question":  "Does official DeepSeek documentation state that JSON Output (response_format json_object) may return empty content, and what handling does it recommend?",
+                                                   "finding":  "CONFIRMED. Both the English and Chinese JSON Output guides state that the API may occasionally return empty content when using JSON Output, that DeepSeek is working on it, and that you can try modifying the prompt to mitigate. The guides do NOT document a retry procedure; the word \"retry\" does not appear on either JSON Output page.",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "lang":  "en",
+                                                                        "page_file":  "deepseek-json-mode-en.html",
+                                                                        "page_title":  "JSON Output | DeepSeek API Docs",
+                                                                        "url":  "https://api-docs.deepseek.com/guides/json_mode",
+                                                                        "retrieved_at":  "2026-08-11T16:22:47.467Z",
+                                                                        "quote_verbatim":  "When using the JSON Output feature, the API may occasionally return empty content. We are actively working on optimizing this issue. You can try modifying the prompt to mitigate such problems.",
+                                                                        "context":  "4th bullet under the \"Notice\" section of the JSON Output guide. Preceding bullets: set response_format to {\"type\": \"json_object\"}; include the word \"json\" in the system or user prompt and provide an example JSON format; set max_tokens reasonably to prevent the JSON string from being truncated midway."
+                                                                    },
+                                                                    {
+                                                                        "lang":  "zh",
+                                                                        "page_file":  "deepseek-json-mode-zh.html",
+                                                                        "page_title":  "JSON Output | DeepSeek API Docs",
+                                                                        "url":  "https://api-docs.deepseek.com/zh-cn/guides/json_mode",
+                                                                        "retrieved_at":  "2026-08-11T16:22:47.660Z",
+                                                                        "quote_verbatim":  "在使用 JSON Output 功能时，API 有概率会返回空的 content。我们正在积极优化该问题，您可以尝试修改 prompt 以缓解此类问题。",
+                                                                        "context":  "注意事项（Notice）第 4 条。前几条：将 response_format 参数设为 {\"type\": \"json_object\"}；system 或 user prompt 中必须含有 json 字样并给出 JSON 格式样例；合理设置 max_tokens 参数，防止 JSON 字符串被中途截断。"
+                                                                    }
+                                                                ],
+                                                   "additional_supporting_quote":  {
+                                                                                       "lang":  "en",
+                                                                                       "page_file":  "deepseek-create-chat-completion-en.html",
+                                                                                       "page_title":  "Chat Completions API | DeepSeek API Docs",
+                                                                                       "url":  "https://api-docs.deepseek.com/api/create-chat-completion",
+                                                                                       "retrieved_at":  "2026-08-11T16:22:48.335Z",
+                                                                                       "quote_verbatim":  "Setting to { \"type\": \"json_object\" } enables JSON Output, which guarantees the message the model generates is valid JSON. Important: When using JSON Output, you must also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly \"stuck\" request. Also note that the message content may be partially cut off if finish_reason=\"length\", which indicates the generation exceeded max_tokens or the conversation exceeded the max context length.",
+                                                                                       "context":  "response_format parameter description in the Chat Completions API reference."
+                                                                                   }
+                                               },
+                   "thinking_mode_reasoning_content_vs_content":  {
+                                                                      "question":  "How does official DeepSeek documentation describe reasoning_content vs final content in thinking mode?",
+                                                                      "finding":  "CONFIRMED. In thinking mode the chain-of-thought is returned in reasoning_content (same message level as content), and the final answer is returned in content. reasoning_content is not needed in subsequent context unless a tool call occurred; if passed back without a tool call it is ignored. API reference: reasoning_content is \"For thinking mode only. The reasoning contents of the assistant message, before the final answer.\" Thinking mode is enabled by default (thinking.type default = enabled; effort default = high).",
+                                                                      "evidence":  [
+                                                                                       {
+                                                                                           "lang":  "en",
+                                                                                           "page_file":  "deepseek-thinking-mode-en.html",
+                                                                                           "page_title":  "Thinking Mode | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/guides/thinking_mode",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:47.872Z",
+                                                                                           "quote_verbatim":  "In thinking mode, the chain-of-thought content is returned via the reasoning_content parameter, at the same level as content.",
+                                                                                           "context":  "Input and Output Parameters section."
+                                                                                       },
+                                                                                       {
+                                                                                           "lang":  "en",
+                                                                                           "page_file":  "deepseek-thinking-mode-en.html",
+                                                                                           "page_title":  "Thinking Mode | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/guides/thinking_mode",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:47.872Z",
+                                                                                           "quote_verbatim":  "In each turn of the conversation, the model outputs the CoT (reasoning_content) and the final answer (content).",
+                                                                                           "context":  "Multi-turn Conversation section."
+                                                                                       },
+                                                                                       {
+                                                                                           "lang":  "en",
+                                                                                           "page_file":  "deepseek-thinking-mode-en.html",
+                                                                                           "page_title":  "Thinking Mode | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/guides/thinking_mode",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:47.872Z",
+                                                                                           "quote_verbatim":  "Between two user messages, if the model did not perform a tool call, the intermediate assistant\u0027s reasoning_content does not need to participate in the context concatenation. If passed to the API in subsequent turns, it will be ignored.",
+                                                                                           "context":  "Input and Output Parameters section, multi-turn rule without tool calls."
+                                                                                       },
+                                                                                       {
+                                                                                           "lang":  "en",
+                                                                                           "page_file":  "deepseek-thinking-mode-en.html",
+                                                                                           "page_title":  "Thinking Mode | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/guides/thinking_mode",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:47.872Z",
+                                                                                           "quote_verbatim":  "Between two user messages, if the model performed a tool call, the intermediate assistant\u0027s reasoning_content must participate in the context concatenation and must be passed back to the API in all subsequent user interaction turns.",
+                                                                                           "context":  "Input and Output Parameters section, multi-turn rule with tool calls."
+                                                                                       },
+                                                                                       {
+                                                                                           "lang":  "zh",
+                                                                                           "page_file":  "deepseek-thinking-mode-zh.html",
+                                                                                           "page_title":  "思考模式 | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/zh-cn/guides/thinking_mode",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:48.078Z",
+                                                                                           "quote_verbatim":  "在思考模式下，思维链内容通过 reasoning_content 参数返回，与 content 同级。",
+                                                                                           "context":  "输入输出参数（Input and Output Parameters）部分。"
+                                                                                       },
+                                                                                       {
+                                                                                           "lang":  "zh",
+                                                                                           "page_file":  "deepseek-thinking-mode-zh.html",
+                                                                                           "page_title":  "思考模式 | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/zh-cn/guides/thinking_mode",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:48.078Z",
+                                                                                           "quote_verbatim":  "在每一轮对话过程中，模型会输出思维链内容（ reasoning_content ）和最终回答（ content ）。",
+                                                                                           "context":  "多轮对话拼接（Multi-turn Conversation）部分。"
+                                                                                       },
+                                                                                       {
+                                                                                           "lang":  "zh",
+                                                                                           "page_file":  "deepseek-thinking-mode-zh.html",
+                                                                                           "page_title":  "思考模式 | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/zh-cn/guides/thinking_mode",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:48.078Z",
+                                                                                           "quote_verbatim":  "DeepSeek 模型支持思考模式：在输出最终回答之前，模型会先输出一段思维链内容，以提升最终答案的准确性。",
+                                                                                           "context":  "Guide opening paragraph."
+                                                                                       },
+                                                                                       {
+                                                                                           "lang":  "en",
+                                                                                           "page_file":  "deepseek-create-chat-completion-en.html",
+                                                                                           "page_title":  "Chat Completions API | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/api/create-chat-completion",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:48.335Z",
+                                                                                           "quote_verbatim":  "reasoning_content — For thinking mode only. The reasoning contents of the assistant message, before the final answer.",
+                                                                                           "context":  "reasoning_content field of the assistant message object in the Chat Completions API reference."
+                                                                                       },
+                                                                                       {
+                                                                                           "lang":  "en",
+                                                                                           "page_file":  "deepseek-create-chat-completion-en.html",
+                                                                                           "page_title":  "Chat Completions API | DeepSeek API Docs",
+                                                                                           "url":  "https://api-docs.deepseek.com/api/create-chat-completion",
+                                                                                           "retrieved_at":  "2026-08-11T16:22:48.335Z",
+                                                                                           "quote_verbatim":  "thinking — Controls the switch between thinking and non-thinking mode. type: Possible values: [enabled, disabled]. Default value: enabled. If set to enabled, then use thinking mode. If set to disabled, then use non-thinking model.",
+                                                                                           "context":  "thinking parameter in the Chat Completions API reference."
+                                                                                       }
+                                                                                   ]
+                                                                  },
+                   "thinking_mode_json_output_interaction":  {
+                                                                 "question":  "Does official DeepSeek documentation describe the interaction between thinking mode and JSON Output (e.g., whether json_object is supported in thinking mode)?",
+                                                                 "finding":  "NOT DOCUMENTED on the fetched pages. The Thinking Mode guide (EN and ZH) does not discuss JSON Output; the only JSON mention on those pages is the sidebar link to the JSON Output guide. The Models \u0026 Pricing page lists \"Json Output ✓\" for both deepseek-v4-flash and deepseek-v4-pro and \"THINKING MODE: Supports both non-thinking and thinking (default) modes\", so JSON Output is listed as a supported feature for the current models, but no page explicitly states whether json_object is supported while thinking is enabled. The JSON Output guide itself does not mention thinking mode either.",
+                                                                 "evidence":  [
+                                                                                  {
+                                                                                      "lang":  "en",
+                                                                                      "page_file":  "deepseek-pricing-en.html",
+                                                                                      "page_title":  "Models \u0026 Pricing | DeepSeek API Docs",
+                                                                                      "url":  "https://api-docs.deepseek.com/quick_start/pricing",
+                                                                                      "retrieved_at":  "2026-08-11T16:24:45.863Z",
+                                                                                      "quote_verbatim":  "THINKING MODE: Supports both non-thinking and thinking (default) modes ... FEATURES: Json Output ✓ ✓",
+                                                                                      "context":  "Model Details table: Json Output is checked for both deepseek-v4-flash and deepseek-v4-pro."
+                                                                                  },
+                                                                                  {
+                                                                                      "lang":  "en",
+                                                                                      "page_file":  "deepseek-thinking-mode-en.html",
+                                                                                      "page_title":  "Thinking Mode | DeepSeek API Docs",
+                                                                                      "url":  "https://api-docs.deepseek.com/guides/thinking_mode",
+                                                                                      "retrieved_at":  "2026-08-11T16:22:47.872Z",
+                                                                                      "quote_verbatim":  "(no JSON Output statement present on this page)",
+                                                                                      "context":  "Absence recorded: the Thinking Mode guide does not mention response_format, json_object, or JSON Output in its body."
+                                                                                  },
+                                                                                  {
+                                                                                      "lang":  "en",
+                                                                                      "page_file":  "deepseek-json-mode-en.html",
+                                                                                      "page_title":  "JSON Output | DeepSeek API Docs",
+                                                                                      "url":  "https://api-docs.deepseek.com/guides/json_mode",
+                                                                                      "retrieved_at":  "2026-08-11T16:22:47.467Z",
+                                                                                      "quote_verbatim":  "(no thinking-mode statement present on this page)",
+                                                                                      "context":  "Absence recorded: the JSON Output guide does not mention thinking mode or reasoning."
+                                                                                  }
+                                                                              ]
+                                                             },
+                   "max_tokens_with_reasoning":  {
+                                                     "question":  "What do the official docs say about max_tokens / completion tokens with reasoning (thinking mode)?",
+                                                     "finding":  "PARTIAL. The Chat Completions API reference defines max_tokens as the maximum number of tokens that can be generated in the chat completion, with total input+generated tokens limited by context length, and points to the Models \u0026 Pricing page for the value range and default. The Models \u0026 Pricing page lists MAX OUTPUT MAXIMUM: 384K but no default value, and neither the Thinking Mode guide nor the Token Usage guide states that reasoning tokens count toward max_tokens. No current official statement was found that reasoning tokens are included in max_tokens or completion_tokens (such a statement existed in earlier DeepSeek R1-era docs, but the current pages do not contain it).",
+                                                     "evidence":  [
+                                                                      {
+                                                                          "lang":  "en",
+                                                                          "page_file":  "deepseek-create-chat-completion-en.html",
+                                                                          "page_title":  "Chat Completions API | DeepSeek API Docs",
+                                                                          "url":  "https://api-docs.deepseek.com/api/create-chat-completion",
+                                                                          "retrieved_at":  "2026-08-11T16:22:48.335Z",
+                                                                          "quote_verbatim":  "max_tokens — The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated tokens is limited by the model\u0027s context length. For the value range and default value, please refer to the documentation.",
+                                                                          "context":  "max_tokens parameter description in the Chat Completions API reference; the \"documentation\" link points to /quick_start/pricing (Models \u0026 Pricing)."
+                                                                      },
+                                                                      {
+                                                                          "lang":  "en",
+                                                                          "page_file":  "deepseek-pricing-en.html",
+                                                                          "page_title":  "Models \u0026 Pricing | DeepSeek API Docs",
+                                                                          "url":  "https://api-docs.deepseek.com/quick_start/pricing",
+                                                                          "retrieved_at":  "2026-08-11T16:24:45.863Z",
+                                                                          "quote_verbatim":  "MAX OUTPUT: MAXIMUM: 384K",
+                                                                          "context":  "Model Details table for deepseek-v4-flash and deepseek-v4-pro; no per-model default max_tokens value is published on this page."
+                                                                      },
+                                                                      {
+                                                                          "lang":  "en",
+                                                                          "page_file":  "deepseek-thinking-mode-en.html",
+                                                                          "page_title":  "Thinking Mode | DeepSeek API Docs",
+                                                                          "url":  "https://api-docs.deepseek.com/guides/thinking_mode",
+                                                                          "retrieved_at":  "2026-08-11T16:22:47.872Z",
+                                                                          "quote_verbatim":  "(no max_tokens / reasoning-token statement present)",
+                                                                          "context":  "Absence recorded: the Thinking Mode guide contains no statement about max_tokens or whether reasoning tokens are counted."
+                                                                      },
+                                                                      {
+                                                                          "lang":  "en",
+                                                                          "page_file":  "deepseek-token-usage-en.html",
+                                                                          "page_title":  "Token \u0026 Token Usage | DeepSeek API Docs",
+                                                                          "url":  "https://api-docs.deepseek.com/quick_start/token_usage",
+                                                                          "retrieved_at":  "2026-08-11T16:24:31.014Z",
+                                                                          "quote_verbatim":  "(no reasoning-token statement present)",
+                                                                          "context":  "Absence recorded: the Token Usage guide contains no mention of reasoning tokens or thinking mode."
+                                                                      }
+                                                                  ]
+                                                 },
+                   "empty_content_in_thinking_mode":  {
+                                                          "question":  "Do the official docs document any note about empty content in thinking mode?",
+                                                          "finding":  "NOT DOCUMENTED. The Thinking Mode guide (EN/ZH), the FAQ (EN/ZH), and the Chat Completions API reference contain no statement about empty content in thinking mode. The empty-content statement exists only on the JSON Output guide pages. (Fetched 2026-08-11/12; the older goal19h copies from 2026-08-10 likewise contain no such note.)",
+                                                          "evidence":  [
+                                                                           {
+                                                                               "lang":  "en",
+                                                                               "page_file":  "deepseek-thinking-mode-en.html",
+                                                                               "quote_verbatim":  "(no empty-content statement present)",
+                                                                               "context":  "Searched for \"empty\", \"content\" notes, and reasoning_content-related caveats; none mention empty content."
+                                                                           },
+                                                                           {
+                                                                               "lang":  "zh",
+                                                                               "page_file":  "deepseek-thinking-mode-zh.html",
+                                                                               "quote_verbatim":  "（无空 content 相关说明）",
+                                                                               "context":  "页面中不存在“空”或 empty content 相关说明。"
+                                                                           },
+                                                                           {
+                                                                               "lang":  "en",
+                                                                               "page_file":  "deepseek-faq-en.html",
+                                                                               "quote_verbatim":  "(no empty-content statement present)",
+                                                                               "context":  "FAQ page contains no mention of empty content."
+                                                                           }
+                                                                       ]
+                                                      },
+                   "retry_recommendation":  {
+                                                "question":  "Do the official docs recommend retrying when JSON Output returns empty content?",
+                                                "finding":  "NO explicit retry recommendation. The official JSON Output guides recommend: (1) set max_tokens reasonably to avoid truncation, (2) include \"json\" and a JSON example in the prompt, and (3) for the occasional empty content, try modifying the prompt to mitigate. The word \"retry\" does not appear on the JSON Output pages, Thinking Mode pages, FAQ, or the Chat Completions API reference. (Retrying the request is a client-side strategy the docs do not explicitly document.)",
+                                                "evidence":  [
+                                                                 {
+                                                                     "lang":  "en",
+                                                                     "page_file":  "deepseek-json-mode-en.html",
+                                                                     "quote_verbatim":  "You can try modifying the prompt to mitigate such problems.",
+                                                                     "context":  "Official recommended handling for occasional empty content (same sentence as the empty-content statement)."
+                                                                 },
+                                                                 {
+                                                                     "lang":  "zh",
+                                                                     "page_file":  "deepseek-json-mode-zh.html",
+                                                                     "quote_verbatim":  "您可以尝试修改 prompt 以缓解此类问题。",
+                                                                     "context":  "官方对偶发空 content 的建议处理方式。"
+                                                                 },
+                                                                 {
+                                                                     "lang":  "en",
+                                                                     "page_file":  "deepseek-json-mode-en.html",
+                                                                     "quote_verbatim":  "(the word \"retry\" does not appear on the page)",
+                                                                     "context":  "Absence recorded after case-insensitive search of the saved HTML."
+                                                                 }
+                                                             ]
+                                            }
+               },
+    "prior_goal19h_copies":  {
+                                 "note":  "Existing copies at D:\\ai_code\\Omni-context\\goal19h-output\\official-evidence\\ were NOT modified. Retrieval timestamps taken from its fetch-record.json (retrieved_at_base 2026-08-10T03:30:00Z applies to all four pages).",
+                                 "directory":  "D:\\ai_code\\Omni-context\\goal19h-output\\official-evidence\\",
+                                 "files":  [
+                                               {
+                                                   "file":  "deepseek-thinking-mode-en.html",
+                                                   "url":  "https://api-docs.deepseek.com/guides/thinking_mode/",
+                                                   "retrieved_at":  "2026-08-10T03:30:00Z",
+                                                   "bytes":  108120,
+                                                   "sha256":  "867304f69a87f59ab78f3a6104a71695049997773fcf290714154ec372a055d4"
+                                               },
+                                               {
+                                                   "file":  "deepseek-thinking-mode-zh.html",
+                                                   "url":  "https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/",
+                                                   "retrieved_at":  "2026-08-10T03:30:00Z",
+                                                   "bytes":  111957,
+                                                   "sha256":  "bd98e6a2dbdd5911f8cc1267a11598d43619fac661f1cf5d9c9a555755a618f2"
+                                               },
+                                               {
+                                                   "file":  "deepseek-pricing-en.html",
+                                                   "url":  "https://api-docs.deepseek.com/quick_start/pricing/",
+                                                   "retrieved_at":  "2026-08-10T03:30:00Z",
+                                                   "bytes":  22293,
+                                                   "sha256":  "4433a2d3fe6b5902efe23a162d0de8b2932bdc52f1522c4f510b9deb87d69fb2"
+                                               },
+                                               {
+                                                   "file":  "deepseek-pricing-zh.html",
+                                                   "url":  "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/",
+                                                   "retrieved_at":  "2026-08-10T03:30:00Z",
+                                                   "bytes":  24892,
+                                                   "sha256":  "322bb3e2a4247a4f439042c519b4048471f6a30a774b46075cebcf9f8ed17be6"
+                                               },
+                                               {
+                                                   "file":  "fetch-record.json",
+                                                   "url":  "local",
+                                                   "retrieved_at":  "2026-08-10T03:32:35Z",
+                                                   "bytes":  1172,
+                                                   "sha256":  "335534e1c7dd23d92a74dfeb8b5fe92c4b5d326463098cc4b74570beaac9b2ab"
+                                               }
+                                           ]
+                             }
+}

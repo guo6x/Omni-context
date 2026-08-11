@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "audited_files": [
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/arm-execution.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/budget-governor.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/dummy-provider.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/gates.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/identity.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/parse-repair.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/prompt-renderer.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/provider-deepseek.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/raw-store.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/retry-policy.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/src/run.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/run-goal20-formal-validation.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/shared-context.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/retrieval-adapter.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/qualification.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/sufficiency.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/kernel-arms.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/kernel-context.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/response-map.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/revisit-protocol.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/checks.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/product-modules.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/arm-runner.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/parity.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/planner.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/fixtures-loader.mjs",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A0/system.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A0/task.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A0/output-schema.json",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A0/repair.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A0/timeout-recovery.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A1/system.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A1/task.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A1/output-schema.json",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A1/repair.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A1/timeout-recovery.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A2/system.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A2/task.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A2/output-schema.json",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A2/repair.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A2/timeout-recovery.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A3/system.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A3/task.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A3/output-schema.json",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A3/repair.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A3/timeout-recovery.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A4/system.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A4/task.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A4/output-schema.json",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A4/repair.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A4/timeout-recovery.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A5/system.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A5/task.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A5/output-schema.json",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A5/repair.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A5/timeout-recovery.txt",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/brain-server/dist/mcp-retrieval.js",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/brain-server/dist/retrieval/temporal-layer.js",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/brain-server/dist/decision/evidence-gate.js",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/tests/executor.test.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/executor/tests/retry-policy.test.mjs",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/governance/model-parameter-identity.json",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/governance/retry-policy-identity.json",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/governance/goal20-formal-budget-model.json",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/governance/budget-ledger-state.json",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/governance/goal20-formal-execution-order.json",
+    "D:/ai_code/Omni-context/goal20-formal-execution-governance-r1/governance/goal20-formal-tuple-precommit.jsonl",
+    "D:/ai_code/Omni-context/goal20-cross-machine-handoff/execution-snapshot/goal18he-output/validation-v2-fixture.jsonl"
+  ],
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "none",
+      "location": "executor/src/provider-deepseek.mjs:20-43",
+      "description": "AbortController and timeout timer are created fresh inside every provider.call invocation and the timer is cleared in finally. There is no shared AbortController, no module-level signal, and no cancellation state carried across calls or attempts.",
+      "evidence": "L20: \"async call(requestBodyString) {\"; L22: \"const controller = new AbortController();\"; L23: \"const timer = setTimeout(() => controller.abort(), timeoutMs);\"; L41-43: \"} finally { clearTimeout(timer); }\"",
+      "relevance_to_tuple_711_empties": "none - per-call lifetime; an abort would classify as TIMEOUT/transport (retryable), not as an HTTP-200 EMPTY_CONTENT response."
+    },
+    {
+      "id": "F02",
+      "severity": "none",
+      "location": "executor/src/provider-deepseek.mjs:16-34",
+      "description": "No connection/session/keep-alive state is managed by the executor: fetch() is called with global (undici) defaults, no agent, no keep-alive flags, no cookies; headers are only Content-Type and Authorization (constant per run). Pooled-socket reuse exists only inside Node/undici internals and is identical for every call.",
+      "evidence": "L26-34: \"response = await fetch(`${baseUrl}/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) }, body: requestBodyString, signal: controller.signal });\"",
+      "relevance_to_tuple_711_empties": "none - a degraded pooled connection would surface as transport-class errors (ECONNRESET, socket hang up, etc.) which are classified/retried; the 711 failures are HTTP-200 responses whose choices[0].message.content is empty - a provider-side semantic, not a connection artifact."
+    },
+    {
+      "id": "F03",
+      "severity": "none",
+      "location": "executor/src/arm-execution.mjs:196-197; executor/src/provider-deepseek.mjs:20",
+      "description": "The canonical tuple key (tuple_index.sample_id.arm) and attempt number are passed as the SECOND argument to provider.call, but the DeepSeek provider signature is \"async call(requestBodyString)\" and ignores it. Neither tuple index nor attempt number ever reaches the provider-visible payload.",
+      "evidence": "arm-execution.mjs:196-197: \"const canonicalTupleKey = `${String(tuple.tuple_index).padStart(3, '0')}.${tuple.sample_id}.${armId}`; const providerResult = await provider.call(requestBodyString, { tupleKey: canonicalTupleKey, attempt });\"",
+      "relevance_to_tuple_711_empties": "none - tuple-index and attempt metadata cannot alter the request sent to DeepSeek."
+    },
+    {
+      "id": "F04",
+      "severity": "none",
+      "location": "executor/src/prompt-renderer.mjs:87-108",
+      "description": "buildRequestBody emits a fixed field set: model, messages (system+user), temperature 0, max_tokens, stream false, response_format {type:'json_object'}, plus optional thinking/reasoning_effort/top_p copied from confirmedParams. No tuple_index, sample_id, attempt, runId, campaignId, timestamp, or user/id field exists; key order is fixed for stable serialization.",
+      "evidence": "L88-98: body object literal; L99-107: \"if (confirmedParams && confirmedParams.thinking !== undefined) { body.thinking = { type: confirmedParams.thinking }; }\" etc.; comment L84: \"The body key order is FIXED so the serialized-request SHA is stable.\"",
+      "relevance_to_tuple_711_empties": "none - there is no field in the body that could vary with call index or run progress."
+    },
+    {
+      "id": "F05",
+      "severity": "none",
+      "location": "executor/src/prompt-renderer.mjs:60-80; executor/src/identity.mjs:19-25",
+      "description": "renderPrompt is a pure function of the frozen prompt files (read fresh per call) and the fixture-derived current/evidence/route objects; structured fields are serialized with stableStringify (sorted keys). No counters, clocks, or mutable buffers. Empirical check (read-only, no provider call): 5 fresh renders of the A3/tt15-006 request produced byte-identical bodies - sha256 03b12ee6100231e3..., 9282 bytes, user message 5707 bytes, route DECIDE, evidence [ev001, ev002] - and the body contains none of the strings '711', 'tt15', 'attempt', or 'tuple_index'.",
+      "evidence": "prompt-renderer.mjs:61-70 (read + assemble); identity.mjs:22: \"return '{' + Object.keys(value).sort().map((key) => JSON.stringify(key) + ':' + stableStringify(value[key])).join(',') + '}';\"",
+      "relevance_to_tuple_711_empties": "none - the rendered payload is deterministic from (fixture sample, arm, frozen prompt bytes); repeated render at any run position yields the same bytes."
+    },
+    {
+      "id": "F06",
+      "severity": "none",
+      "location": "executor/src/run.mjs:178-188, 302-309; executor/src/arm-execution.mjs:178-197",
+      "description": "Retries re-invoke executeTuple with the same tuple/fixture/confirmedParams and re-render deterministically; attempt is metadata only. The V2.4 integration tests assert byte-identical model-visible requests across retries, including 4 EMPTY_CONTENT failures then success on attempt 5 and 5 transport failures then success on attempt 6.",
+      "evidence": "executor/tests/executor.test.mjs:595-601: \"assert.equal(entries[0].request_body, entries[1].request_body, 'model-visible request must be byte-identical on retry: ' + k);\"; L650-653: \"assert.equal(new Set(reqLog.map((e) => e.request_body)).size, 1, 'all 6 attempts must be byte-identical');\"; run.mjs:304-305 comment: \"keep looping with the SAME request bytes (deterministic renderer + frozen prompt/config/tuple)\"",
+      "relevance_to_tuple_711_empties": "none - the retry policy cannot change request bytes between attempts; observed 3x/4x/5x failure patterns are pure attempt-budget behavior (EMPTY_CONTENT budget = 5 total attempts, retry-policy.mjs:31), identical for every tuple."
+    },
+    {
+      "id": "F07",
+      "severity": "none",
+      "location": "executor/src/retry-policy.mjs:144-156; executor/src/run.mjs:302-309",
+      "description": "The only tuple-identity-dependent runtime behavior is retry timing: transportStaggerMs = parseInt(sha256(tupleKey).slice(0,8),16) % 1001 added to the frozen 2s/5s/15s/30s/60s schedule. It affects only setTimeout delays, never request bytes; EMPTY_CONTENT retries (kind 'parse') do not sleep at all.",
+      "evidence": "retry-policy.mjs:146-148: \"const digest = createHash('sha256').update(key).digest('hex'); return (parseInt(digest.slice(0, 8), 16) % (TRANSPORT_STAGGER_MAX_MS + 1));\"; run.mjs:306-309: \"if (cls.retryable && cls.kind === 'transport') { const delayMs = transportBackoffMs(attempt, tuple); await new Promise((resolve) => setTimeout(resolve, delayMs)); }\"",
+      "relevance_to_tuple_711_empties": "none - timing correlation cannot produce an empty 200 response body."
+    },
+    {
+      "id": "F08",
+      "severity": "low",
+      "location": "executor/src/budget-governor.mjs:34-63; executor/src/run.mjs:191-197, 271-281",
+      "description": "The persistent budget ledger is the ONLY run-progress-dependent mutable executor state: calls, spent_cny and records accumulate across tuples AND across failed attempts (failed EMPTY_CONTENT attempts with usage are recorded, run.mjs:271-281). checkBeforeCall gates every provider call. A stop would raise BUDGET_HARD_CAP_EXCEEDED (invalid-run, non-retryable) - it cannot produce EMPTY_CONTENT. Historical ledger data shows no budget pressure near tuple 711: the completed V2.4 run spent ~4.01 CNY against a 220 CNY hard cap.",
+      "evidence": "budget-governor.mjs:36-40: \"const remaining = hardCap - ledger.spent_cny; if (remaining <= 0 || remaining < projectedMaxCostCny) { throw new BudgetHardCapError(...) }\"; budget-governor.mjs:47-48: \"ledger.calls += 1; ledger.spent_cny = round(ledger.spent_cny + cost);\"; run.mjs:271-281; governance/budget-ledger-state.json: \"v2_4_run: calls 485, spent_cny 4.007373, status COMPLETED_720_720_RAW_OUTPUT_FROZEN\"",
+      "relevance_to_tuple_711_empties": "none - ledger state changes what is SENT to the provider in no way; its only failure mode is a budget stop, which was not observed and is not consistent with EMPTY_CONTENT responses."
+    },
+    {
+      "id": "F09",
+      "severity": "none",
+      "location": "executor/src/arm-execution.mjs:16-44, 75-83; ablation/src/product-modules.mjs:12-31",
+      "description": "Module-level caches (harnessCache, productCache, product-modules cached) hold only imported module NAMESPACES, keyed by root path and hash-checked on first load. No per-tuple or per-attempt results are cached; no mutable request/response objects are retained between calls.",
+      "evidence": "arm-execution.mjs:19: \"if (harnessCache && harnessCache.root === harnessRoot) return harnessCache.modules;\"; arm-execution.mjs:42: \"harnessCache = { root: harnessRoot, modules };\"; product-modules.mjs:29: \"cached = { root: productRoot, modules };\"",
+      "relevance_to_tuple_711_empties": "none - cached namespaces are stateless w.r.t. tuple progress."
+    },
+    {
+      "id": "F10",
+      "severity": "none",
+      "location": "entire audited corpus (executor src, entrypoint, harness src, 30 prompt files, tests)",
+      "description": "No literal '711', 'tt15', or 'A3' special-casing exists anywhere in the audited code or prompts. The only 'A3' occurrences are arm-identity lists/branch conditions and the frozen A3 capability text in prompts/A3/system.txt. No branching on tuple_index, sample_id, or task_type anywhere in the executor or harness generation path.",
+      "evidence": "negative grep result across all audited files for /711|tt15/; arm branching is by armId only, e.g. arm-execution.mjs:55, 60, 64: \"['A1','A2','A3','A4','A5'].includes(armId)\" / \"armId === 'A3' || armId === 'A4' || armId === 'A5'\"",
+      "relevance_to_tuple_711_empties": "none - tuple 711 receives exactly the same code path as every other A3 tuple."
+    },
+    {
+      "id": "F11",
+      "severity": "none",
+      "location": "executor/src/run.mjs:47, 96-111, 117-132",
+      "description": "Run-level bookkeeping (runId from Date+randomUUID slice(0,8), processed counter, completedKeys 'done' set, --limit, resume marker supersede) affects scheduling and resume behavior only; none of it is referenced when rendering the request body or building provider calls.",
+      "evidence": "run.mjs:47: \"const resolvedRunId = runId ?? `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID().slice(0, 8)}`;\"; run.mjs:125-132: \"for (const tuple of orderedTuples) { if (limit && processed >= limit) break; const key = tupleKey(tuple); if (done.has(key)) { processed++; summary.completed++; continue; }\"",
+      "relevance_to_tuple_711_empties": "none - loop position/counters never enter the provider-visible request."
+    },
+    {
+      "id": "F12",
+      "severity": "none",
+      "location": "executor/src/arm-execution.mjs:213; executor/src/gates.mjs:81-102, 144-150",
+      "description": "The output-schema.json is re-read and JSON.parsed fresh on every tuple (no cached schema object to mutate); validateAgainstSchema is stateless. Pre-launch gates hash-verify the fixture (G8), all 30 prompt files (G9) and the formal config (G13) before the first provider call, so per-tuple drift of frozen inputs is excluded.",
+      "evidence": "arm-execution.mjs:213: \"const schema = JSON.parse(await import('node:fs').then((fs) => fs.promises.readFile(path.join(promptDir, 'output-schema.json'), 'utf8')));\"; gates.mjs:98-99: \"const actual = sha256File(abs); if (actual !== meta.sha256) fail('G9_PROMPT_IDENTITY', ...)\"",
+      "relevance_to_tuple_711_empties": "none - parse/schema state is per-call and cannot influence the outbound request."
+    },
+    {
+      "id": "F13",
+      "severity": "none",
+      "location": "brain-server/dist/mcp-retrieval.js:79-86; brain-server/dist/retrieval/temporal-layer.js:224-226, 244-246 (call sites: ablation/src/retrieval-adapter.mjs:46-50, ablation/src/qualification.mjs:33-34)",
+      "description": "The frozen product modules contain wall-clock branches (new Date()): scoreCandidate applies time-based penalties only when !options.historicalMode, and filterAssertionsByTemporal falls back to new Date().toISOString() only when opts.asOf is falsy. The executor's frozen call sites always pass historicalMode:true (retrieval-adapter.mjs:49) and { asOf: current.as_of } (qualification.mjs:34), so both branches are unreachable - the A3 evidence set cannot vary with wall-clock time. Verified empirically: 5 renders at different wall-clock moments produced identical bytes.",
+      "evidence": "mcp-retrieval.js:79-80: \"if (!options.historicalMode) { const now = options.now ?? new Date(); ... }\"; retrieval-adapter.mjs:49: \"{ decisionMode: true, historicalMode: true }\"; temporal-layer.js:235: \"if (opts.asOf) { ... }\" (harness always passes asOf); qualification.mjs:34: \"filterAssertionsByTemporal(temporalInput, { asOf })\"",
+      "relevance_to_tuple_711_empties": "none - unreachable via the frozen call path; even if reachable it would change evidence content, not produce HTTP-200 empty bodies."
+    },
+    {
+      "id": "F14",
+      "severity": "none",
+      "location": "ablation/src/shared-context.mjs:15-44, 72-110; ablation/src/retrieval-adapter.mjs:24-58; ablation/src/qualification.mjs:27-54; ablation/src/kernel-context.mjs:97-182; ablation/src/kernel-arms.mjs:40-44",
+      "description": "No fixture mutation anywhere in the generation path: all harness builders map fixture fields into fresh objects (spread copies); the same sample object is shared across the six arm tuples but only read. A4/A5 kernel arms use a fresh in-memory database per sample (initDatabase({dbPath:':memory:'})), so no kernel state can cross samples.",
+      "evidence": "shared-context.mjs:19-43: buildCurrentInput returns a fresh object built from fixture fields; kernel-arms.mjs:40: \"const db = initDatabase({ dbPath: ':memory:' });\"",
+      "relevance_to_tuple_711_empties": "none - no cross-tuple contamination of the input state exists; the request for tuple 711 is a pure function of its own fixture row."
+    }
+  ],
+  "request_determinism": {
+    "verdict": "DETERMINISTIC_FROM_FIXTURE_AND_ARM",
+    "evidence": [
+      "The provider-visible payload is built ONLY from (fixture sample row, armId, frozen prompt files, frozen confirmedParameters): arm-execution.mjs:178-197 calls renderPrompt (prompt-renderer.mjs:60-80) and buildRequestBody (prompt-renderer.mjs:87-108); neither reads tuple_index, attempt, runId, loop position, counters, clocks, or any accumulated state.",
+      "tuple_index/sample_id/arm appear only in record bookkeeping (arm-execution.mjs:196, raw-store.mjs:51-53, retry-policy.mjs:139-141) and are passed to provider.call as call-metadata that the DeepSeek provider signature (provider-deepseek.mjs:20 \"async call(requestBodyString)\") ignores.",
+      "Retries re-render the same deterministic body (run.mjs:184-188); byte-identity across retries is asserted by executor/tests/executor.test.mjs:595-601 and 650-653, and independently confirmed in this audit: 5 fresh renders of A3 tuple 711 (sample decision-bench-v2-val-tt15-006, frozen A3 prompts, confirmedParameters {thinking:enabled, reasoning_effort:high, top_p:null, max_output_tokens:65536}) produced identical sha256 03b12ee6100231e3... (9282 bytes, route DECIDE, evidence [ev001, ev002]); the body contains no '711'/'tt15'/'attempt'/'tuple_index' tokens.",
+      "Frozen inputs are hash-verified before the first provider call: G8 fixture sha (gates.mjs:82-87), G9 30 prompt-file shas (gates.mjs:89-102), G13 config sha (gates.mjs:144-150); harness modules are sha256-checked against sealed hashes at load (arm-execution.mjs:30-37).",
+      "Wall-clock branches in the frozen product modules are unreachable via the executor call paths (historicalMode:true, explicit asOf) - see finding F13."
+    ],
+    "provider_visible_fields_checked": [
+      "url: {baseUrl}/chat/completions - constant per run (env DEEPSEEK_BASE_URL, provider-deepseek.mjs:16,26)",
+      "http method: POST - constant (provider-deepseek.mjs:27)",
+      "headers: Content-Type: application/json; Authorization: Bearer <env key> - constant per run; no cookies, no request-id/user-id headers (provider-deepseek.mjs:28-31)",
+      "body.model: 'deepseek-v4-flash' - constant (run.mjs:73; prompt-renderer.mjs:89)",
+      "body.messages[0] {role,content}: frozen system.txt bytes - per-arm constant (prompt-renderer.mjs:62)",
+      "body.messages[1] {role,content}: frozen task.txt + SECTION 1 (current input) + SECTION 2 (gate_route + retrieval_results) + output-schema bytes - pure function of (arm, fixture) (prompt-renderer.mjs:63-70)",
+      "body.temperature: 0 - constant (prompt-renderer.mjs:94)",
+      "body.max_tokens: confirmedParams.max_output_tokens (65536 in the frozen V2.4 model-parameter-identity.json) - constant per run (prompt-renderer.mjs:95; arm-execution.mjs:189)",
+      "body.stream: false - constant (prompt-renderer.mjs:96)",
+      "body.response_format: {type:'json_object'} - constant (prompt-renderer.mjs:97)",
+      "body.thinking: {type:'enabled'} - constant per run from confirmedParams (prompt-renderer.mjs:99-101)",
+      "body.reasoning_effort: 'high' - constant per run from confirmedParams (prompt-renderer.mjs:102-104)",
+      "body.top_p: omitted when null - constant per run (confirmedParams.top_p is null; prompt-renderer.mjs:105-107)",
+      "no user/id/request-id/cookie/session/keep-alive field exists in body or headers",
+      "retry: the same body bytes are reused across attempts (deterministic re-render; byte-identity asserted by tests and re-verified empirically)"
+    ]
+  },
+  "tuple_index_dependence": {
+    "found": false,
+    "details": [
+      "tuple_index appears only in tuple keys/labels for storage, ledger records, diagnostics and dummy-provider test injection keys (arm-execution.mjs:196, raw-store.mjs:51-53, retry-policy.mjs:139-141, budget-governor.mjs:51) - never in the provider-visible request.",
+      "The execution order is a frozen permutation of 0..719 (governance/goal20-formal-execution-order.json, 720 entries, verified unique); tuple_index 711 executes at order position 284, so the failures follow the tuple identity, not the loop position.",
+      "The only tuple-identity-dependent runtime effect is the deterministic retry-backoff stagger (retry-policy.mjs:144-148), which changes timing only, never payload bytes.",
+      "No modulo/array-index/off-by-one logic exists in request construction; parse-repair.mjs and parse-repair.validateAgainstSchema are stateless; renderMemorySection/renderCurrentInputSection build fresh arrays per call.",
+      "No late-run cleanup, rollover, or resume path modifies any object consumed by request rendering; resume only skips already-completed tuples (run.mjs:128-131) and supersedes the terminal marker (run.mjs:104-110).",
+      "The dummy provider's tupleKey-based failure injection (dummy-provider.mjs:82-127) is test-only and unreachable in formal mode (run.mjs:68-75 selects makeDeepSeekProvider when mode === 'formal')."
+    ]
+  },
+  "verdict": {
+    "state_leak_defect_found": false,
+    "summary": "No executor state that depends on call index or run progress can cause or correlate with the tuple-711 EMPTY_CONTENT failures. The provider-visible request is a pure function of (fixture sample, armId, frozen prompt files, frozen confirmed parameters): the request body has no tuple-index/attempt/run-progress field, retries reuse byte-identical bodies (asserted by tests and re-verified empirically - 5 renders of A3/tt15-006 produced identical sha256 03b12ee6100231e3...), every AbortController/timer/schema/parser object is per-call, the only mutable run-progress state is the budget ledger (which can only stop the run with BUDGET_HARD_CAP_EXCEEDED, never produce an empty 200), and no literal special-casing of '711'/'tt15'/'A3' exists anywhere. Consistent with this, the failures follow the tuple identity (which executes at order position 284, not 711) across runs. The observed 3x/4x/5x EMPTY_CONTENT patterns are exactly the frozen per-class attempt budgets (3 default / 5 EMPTY_CONTENT / 6 transport) applied uniformly to all tuples, and the repeated emptiness of this specific tuple's requests is therefore attributable to provider-side behavior on this specific frozen request content, not to executor state. Audit scope: read-only source review; no executor run and no provider calls were made."
+  }
+}

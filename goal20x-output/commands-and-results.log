@@ -1,0 +1,56 @@
+# Goal20X commands-and-results.log
+# Goal: Recurrent EMPTY_CONTENT Forensic Gate (cross-run root-cause audit before any V3 rerun)
+# Attachment: b835f60b-da99-4b3d-8221-bbfaee0f73b3
+# Provider calls during forensic phase: 0
+
+## 1. Scope / inventory
+- Runs audited: V2 (2026-08-10T03-46-57-389Z-f0d8ce6b), V2.1 (…-ae92ac4b), V2.2 (…-5c9e078d), V2.3 (…-9fbdc16a), V2.4 (2026-08-11T02-59-40-231Z-1ab5e55f), V3-R1 (2026-08-11T10-41-53-720Z-518b14f2)
+- Sources: raw-results.jsonl, retries.jsonl, errors.jsonl, budget-ledger.json, attempts/*/attempt-N.json, run-manifest.json, fixtures (V2 + V3-R1), frozen executor + harness sources
+
+## 2. Mining (artifact-only)
+command: node goal20x-output/scripts/mining.mjs
+- EMPTY_CONTENT census events: 200 total (V2:145, V2.1:14, V2.2:16, V2.3:5, V2.4:5, V3-R1:15)
+- Subtypes: E1_JSON_FINAL_EMPTY_AFTER_REASONING 25 (V2.3:5, V2.4:5, V3-R1:15; metadata-preserved era); UNKNOWN 175 (V2/V2.1/V2.2 era: provider_error_meta not preserved by executor -> classified UNKNOWN per section 5)
+- by arm: A0:25, A1:44, A2:73, A3:58
+- position 711/A3: 12 attempts (V2:1, V2.2:3, V2.4:3, V3-R1:5); runs hitting 711: 4/6
+- slot TT15-006 (any arm): 22 attempts; runs hitting: 5/6
+- outputs: tuple-711-cross-run-forensics.json, empty-content-census.jsonl, empty-content-census-summary.json
+
+## 3. Stratified analysis
+command: node goal20x-output/scripts/analysis.mjs
+- run-stratified uniform-position test for tuple 711: expected hits 0.2583, observed 4 runs -> Poisson tail 1.5e-4
+- slot TT15-006: expected 1.1386 runs, observed 5 -> Poisson tail 6.3e-3
+- neighbor structural comparison: 711/A3 is NOT a structural outlier (prompt_tokens 2241 vs TT15-A3 mean 2245.3 sd 5.5, z=-0.78; evidence 2/1, candidates 2, timeline 4, L4 — identical to siblings)
+- V3-R1: all 3 TT15-block tuples with empties are TT15-006 (A0 x3, A2 x1, A3 x5)
+- temporal: consecutive empty retries 2.1-2.7s apart (no executor backoff for EMPTY_CONTENT); events spread over hours, no single provider blip window
+- output: analysis-stratified.json
+
+## 4. Request-byte reconstruction (offline, zero provider calls)
+command: node goal20x-output/scripts/reconstruct-requests.mjs
+- 30 tuples re-rendered with frozen executor builders (V2.2/V2.4/V3-R1; 711/A3 + controls)
+- verification: 22/22 stored serialized_request_sha256 matched byte-exact
+- 711/A3 request: V2.2 sha 7477db9d… (9282 B), V2.4 sha 03b12ee6… (9282 B; identical structure, max_tokens differs 16384 vs 65536), V3-R1 sha dbe2b8af… (9279 B; V3 content, same structural family)
+- output: request-reconstruction.json
+
+## 5. Executor state-leak audit
+- main audit + independent second-opinion (executor-state-leak-audit-independent.json; 68 files, 14 findings)
+- verdict: state_leak_defect_found false; request determinism DETERMINISTIC_FROM_FIXTURE_AND_ARM
+- finding M08: EMPTY_CONTENT retries have NO backoff/jitter (run.mjs:302-309; transport-only delay) -> temporally correlated retries
+- outputs: executor-state-leak-audit.json, executor-state-leak-audit-independent.json/.md
+
+## 6. Official provider documentation
+- retrieved 2026-08-11T16:22:47Z (api-docs.deepseek.com): JSON Output guide EN/ZH states API "may occasionally return empty content" / "有概率会返回空的 content"; thinking-mode semantics (reasoning_content vs content); max_tokens; FAQ
+- outputs: official-evidence/ (13 files) + provider-docs-record.json
+
+## 7. E1 mechanism (metadata-preserved era, V2.3/V2.4/V3-R1)
+- 25/25: HTTP 200, model deepseek-v4-flash, finish_reason=stop, reasoning_content contains COMPLETE valid JSON answer, final content empty, latency 84-516 ms, reasoning tokens 186-372, high cache hits (e.g. 2176 cached / 65 miss)
+- 0 finish_reason=length (no truncation), 0 content_filter, 0 resource signals
+
+## 8. Root-cause classification
+- primary: PROVIDER_STOCHASTIC_JSON_EMPTY (confidence HIGH for mechanism)
+- residual: TT15-006 concentration (5/6 runs) - request-family interaction vs chance (MEDIUM; not resolved without diagnostic calls)
+- decision branch: A -> V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE
+- output: root-cause-classification.json, execution-only-rerun-policy-proposal.md
+
+## 9. Prohibitions honored
+- NO provider calls; NO V3-R1 scoring; NO Gold access; NO Holdback access; NO V3-R1 rerun; NO prompt/schema/parameter/retry-limit changes; NO diagnostic plan execution

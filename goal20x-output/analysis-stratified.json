@@ -1,0 +1,1571 @@
+{
+  "schema_version": 1,
+  "purpose": "GOAL20X_STRATIFIED_OUTLIER_AND_NEIGHBOR_ANALYSIS",
+  "created_at": "2026-08-11T16:26:41.211Z",
+  "provider_calls_made": 0,
+  "run_stratified_position_711": {
+    "events_by_run": {
+      "v2": 1,
+      "v21": 0,
+      "v22": 3,
+      "v23": 0,
+      "v24": 3,
+      "v3r1": 5
+    },
+    "runs_hitting_711": 4,
+    "expected_hits_per_run": {
+      "v2": 0.18252002499123954,
+      "v21": 0.019269875829411087,
+      "v22": 0.021992234333812144,
+      "v23": 0.006925181094225463,
+      "v24": 0.006925181094225463,
+      "v3r1": 0.020632001001870237
+    },
+    "expected_total_hits_uniform": 0.2583,
+    "poisson_tail_runs_hitting_711": 0.00015090697042843688,
+    "interpretation": "under uniform position null, expected <0.5 runs to ever hit position 711; observed 3 runs -> extremely unlikely by chance"
+  },
+  "slot_analysis": {
+    "rank_by_total": [
+      [
+        "TT15-006",
+        {
+          "total": 22,
+          "byRun": {
+            "v2": 4,
+            "v22": 5,
+            "v23": 1,
+            "v24": 3,
+            "v3r1": 9
+          }
+        }
+      ],
+      [
+        "TT06-000",
+        {
+          "total": 7,
+          "byRun": {
+            "v2": 7
+          }
+        }
+      ],
+      [
+        "TT15-001",
+        {
+          "total": 7,
+          "byRun": {
+            "v2": 6,
+            "v21": 1
+          }
+        }
+      ],
+      [
+        "TT06-003",
+        {
+          "total": 6,
+          "byRun": {
+            "v2": 6
+          }
+        }
+      ],
+      [
+        "TT10-007",
+        {
+          "total": 6,
+          "byRun": {
+            "v2": 5,
+            "v22": 1
+          }
+        }
+      ],
+      [
+        "TT13-005",
+        {
+          "total": 6,
+          "byRun": {
+            "v2": 6
+          }
+        }
+      ],
+      [
+        "TT15-000",
+        {
+          "total": 6,
+          "byRun": {
+            "v2": 6
+          }
+        }
+      ],
+      [
+        "TT15-005",
+        {
+          "total": 6,
+          "byRun": {
+            "v2": 6
+          }
+        }
+      ],
+      [
+        "TT04-001",
+        {
+          "total": 5,
+          "byRun": {
+            "v2": 4,
+            "v3r1": 1
+          }
+        }
+      ],
+      [
+        "TT09-004",
+        {
+          "total": 5,
+          "byRun": {
+            "v2": 5
+          }
+        }
+      ],
+      [
+        "TT02-003",
+        {
+          "total": 4,
+          "byRun": {
+            "v2": 4
+          }
+        }
+      ],
+      [
+        "TT02-007",
+        {
+          "total": 4,
+          "byRun": {
+            "v2": 2,
+            "v21": 2
+          }
+        }
+      ]
+    ],
+    "tt15_006": {
+      "total": 22,
+      "byRun": {
+        "v2": 4,
+        "v22": 5,
+        "v23": 1,
+        "v24": 3,
+        "v3r1": 9
+      },
+      "runs_hitting": 5,
+      "expected_total_hits_uniform": 1.1386,
+      "poisson_tail": 0.006259792039824687,
+      "interpretation": "under uniform slot null (120 slots), expected <0.6 runs to ever hit TT15-006; observed multiple runs -> extremely unlikely by chance"
+    }
+  },
+  "neighbor_comparison": {
+    "v2": {
+      "tuple_711_A3": {
+        "input_tokens": 2241,
+        "prompt_bytes_total": 8469,
+        "evidence_qualified": 2,
+        "evidence_expired": 1,
+        "candidates": 2,
+        "timeline_events": 4,
+        "authority": "L4",
+        "hard_constraints": 0,
+        "empty_attempts": 1,
+        "status": "completed"
+      },
+      "z_vs_same_sample_arms": {
+        "input_tokens": null,
+        "prompt_bytes_total": null
+      },
+      "z_vs_tt15_a3": {
+        "input_tokens": -1,
+        "prompt_bytes_total": -1,
+        "evidence_qualified": null,
+        "timeline_events": null
+      },
+      "refs": {
+        "same_sample_tt15_006_all_arms": {
+          "n": 3,
+          "input_tokens": {
+            "n": 1,
+            "mean": 2241,
+            "sd": 0,
+            "min": 2241,
+            "max": 2241
+          },
+          "prompt_bytes_total": {
+            "n": 1,
+            "mean": 8469,
+            "sd": 0,
+            "min": 8469,
+            "max": 8469
+          },
+          "empty_rate": 0.6666666666666666
+        },
+        "tt15_a3_arm": {
+          "n": 4,
+          "input_tokens": {
+            "n": 2,
+            "mean": 2244.5,
+            "sd": 3.5,
+            "min": 2241,
+            "max": 2248
+          },
+          "prompt_bytes_total": {
+            "n": 2,
+            "mean": 8470.5,
+            "sd": 1.5,
+            "min": 8469,
+            "max": 8472
+          },
+          "evidence_qualified": {
+            "n": 4,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "evidence_expired": {
+            "n": 4,
+            "mean": 1,
+            "sd": 0,
+            "min": 1,
+            "max": 1
+          },
+          "candidates": {
+            "n": 4,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "timeline_events": {
+            "n": 4,
+            "mean": 4,
+            "sd": 0,
+            "min": 4,
+            "max": 4
+          },
+          "empty_rate": 0.75
+        },
+        "full_tt15_block_all_arms": {
+          "n": 20,
+          "input_tokens": {
+            "n": 4,
+            "mean": 2208,
+            "sd": 153.96,
+            "min": 1960,
+            "max": 2383
+          },
+          "prompt_bytes_total": {
+            "n": 4,
+            "mean": 8402.25,
+            "sd": 394.85,
+            "min": 7784,
+            "max": 8884
+          },
+          "empty_rate": 0.5
+        }
+      }
+    },
+    "v21": {
+      "tuple_711_A3": {
+        "input_tokens": 2241,
+        "prompt_bytes_total": 8469,
+        "evidence_qualified": 2,
+        "evidence_expired": 1,
+        "candidates": 2,
+        "timeline_events": 4,
+        "authority": "L4",
+        "hard_constraints": 0,
+        "empty_attempts": 0,
+        "status": "completed"
+      },
+      "z_vs_same_sample_arms": {
+        "input_tokens": 0.32,
+        "prompt_bytes_total": 0.28
+      },
+      "z_vs_tt15_a3": {
+        "input_tokens": -0.87,
+        "prompt_bytes_total": -0.13,
+        "evidence_qualified": null,
+        "timeline_events": -0.39
+      },
+      "refs": {
+        "same_sample_tt15_006_all_arms": {
+          "n": 6,
+          "input_tokens": {
+            "n": 4,
+            "mean": 2192.5,
+            "sd": 151.07,
+            "min": 1959,
+            "max": 2378
+          },
+          "prompt_bytes_total": {
+            "n": 4,
+            "mean": 8357.75,
+            "sd": 392.73,
+            "min": 7792,
+            "max": 8886
+          },
+          "empty_rate": 0
+        },
+        "tt15_a3_arm": {
+          "n": 8,
+          "input_tokens": {
+            "n": 8,
+            "mean": 2244.38,
+            "sd": 3.9,
+            "min": 2241,
+            "max": 2253
+          },
+          "prompt_bytes_total": {
+            "n": 8,
+            "mean": 8471.38,
+            "sd": 18.28,
+            "min": 8440,
+            "max": 8507
+          },
+          "evidence_qualified": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "evidence_expired": {
+            "n": 8,
+            "mean": 1,
+            "sd": 0,
+            "min": 1,
+            "max": 1
+          },
+          "candidates": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "timeline_events": {
+            "n": 8,
+            "mean": 4.13,
+            "sd": 0.33,
+            "min": 4,
+            "max": 5
+          },
+          "empty_rate": 0
+        },
+        "full_tt15_block_all_arms": {
+          "n": 48,
+          "input_tokens": {
+            "n": 32,
+            "mean": 2195.88,
+            "sd": 151.82,
+            "min": 1957,
+            "max": 2392
+          },
+          "prompt_bytes_total": {
+            "n": 32,
+            "mean": 8359.84,
+            "sd": 392.01,
+            "min": 7766,
+            "max": 8927
+          },
+          "empty_rate": 0.020833333333333332
+        }
+      }
+    },
+    "v22": {
+      "tuple_711_A3": {
+        "input_tokens": null,
+        "prompt_bytes_total": null,
+        "evidence_qualified": 2,
+        "evidence_expired": 1,
+        "candidates": 2,
+        "timeline_events": 4,
+        "authority": "L4",
+        "hard_constraints": 0,
+        "empty_attempts": 3,
+        "status": "provider_failed"
+      },
+      "z_vs_same_sample_arms": {
+        "input_tokens": null,
+        "prompt_bytes_total": null
+      },
+      "z_vs_tt15_a3": {
+        "input_tokens": null,
+        "prompt_bytes_total": null,
+        "evidence_qualified": null,
+        "timeline_events": -0.39
+      },
+      "refs": {
+        "same_sample_tt15_006_all_arms": {
+          "n": 6,
+          "input_tokens": {
+            "n": 3,
+            "mean": 2176.33,
+            "sd": 171.41,
+            "min": 1959,
+            "max": 2378
+          },
+          "prompt_bytes_total": {
+            "n": 3,
+            "mean": 8320.67,
+            "sd": 447.38,
+            "min": 7792,
+            "max": 8886
+          },
+          "empty_rate": 0.3333333333333333
+        },
+        "tt15_a3_arm": {
+          "n": 8,
+          "input_tokens": {
+            "n": 7,
+            "mean": 2244.86,
+            "sd": 3.94,
+            "min": 2241,
+            "max": 2253
+          },
+          "prompt_bytes_total": {
+            "n": 7,
+            "mean": 8471.71,
+            "sd": 19.51,
+            "min": 8440,
+            "max": 8507
+          },
+          "evidence_qualified": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "evidence_expired": {
+            "n": 8,
+            "mean": 1,
+            "sd": 0,
+            "min": 1,
+            "max": 1
+          },
+          "candidates": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "timeline_events": {
+            "n": 8,
+            "mean": 4.13,
+            "sd": 0.33,
+            "min": 4,
+            "max": 5
+          },
+          "empty_rate": 0.125
+        },
+        "full_tt15_block_all_arms": {
+          "n": 48,
+          "input_tokens": {
+            "n": 31,
+            "mean": 2194.42,
+            "sd": 154.02,
+            "min": 1957,
+            "max": 2392
+          },
+          "prompt_bytes_total": {
+            "n": 31,
+            "mean": 8356.32,
+            "sd": 397.78,
+            "min": 7766,
+            "max": 8927
+          },
+          "empty_rate": 0.0625
+        }
+      }
+    },
+    "v23": {
+      "tuple_711_A3": {
+        "input_tokens": 2241,
+        "prompt_bytes_total": 8469,
+        "evidence_qualified": 2,
+        "evidence_expired": 1,
+        "candidates": 2,
+        "timeline_events": 4,
+        "authority": "L4",
+        "hard_constraints": 0,
+        "empty_attempts": 0,
+        "status": "completed"
+      },
+      "z_vs_same_sample_arms": {
+        "input_tokens": 0.32,
+        "prompt_bytes_total": 0.28
+      },
+      "z_vs_tt15_a3": {
+        "input_tokens": -0.87,
+        "prompt_bytes_total": -0.13,
+        "evidence_qualified": null,
+        "timeline_events": -0.39
+      },
+      "refs": {
+        "same_sample_tt15_006_all_arms": {
+          "n": 6,
+          "input_tokens": {
+            "n": 4,
+            "mean": 2192.5,
+            "sd": 151.07,
+            "min": 1959,
+            "max": 2378
+          },
+          "prompt_bytes_total": {
+            "n": 4,
+            "mean": 8357.75,
+            "sd": 392.73,
+            "min": 7792,
+            "max": 8886
+          },
+          "empty_rate": 0.16666666666666666
+        },
+        "tt15_a3_arm": {
+          "n": 8,
+          "input_tokens": {
+            "n": 8,
+            "mean": 2244.38,
+            "sd": 3.9,
+            "min": 2241,
+            "max": 2253
+          },
+          "prompt_bytes_total": {
+            "n": 8,
+            "mean": 8471.38,
+            "sd": 18.28,
+            "min": 8440,
+            "max": 8507
+          },
+          "evidence_qualified": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "evidence_expired": {
+            "n": 8,
+            "mean": 1,
+            "sd": 0,
+            "min": 1,
+            "max": 1
+          },
+          "candidates": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "timeline_events": {
+            "n": 8,
+            "mean": 4.13,
+            "sd": 0.33,
+            "min": 4,
+            "max": 5
+          },
+          "empty_rate": 0
+        },
+        "full_tt15_block_all_arms": {
+          "n": 48,
+          "input_tokens": {
+            "n": 31,
+            "mean": 2189.9,
+            "sd": 150.5,
+            "min": 1957,
+            "max": 2392
+          },
+          "prompt_bytes_total": {
+            "n": 31,
+            "mean": 8342.77,
+            "sd": 386.4,
+            "min": 7766,
+            "max": 8927
+          },
+          "empty_rate": 0.020833333333333332
+        }
+      }
+    },
+    "v24": {
+      "tuple_711_A3": {
+        "input_tokens": 2241,
+        "prompt_bytes_total": 8469,
+        "evidence_qualified": 2,
+        "evidence_expired": 1,
+        "candidates": 2,
+        "timeline_events": 4,
+        "authority": "L4",
+        "hard_constraints": 0,
+        "empty_attempts": 3,
+        "status": "completed"
+      },
+      "z_vs_same_sample_arms": {
+        "input_tokens": 0.32,
+        "prompt_bytes_total": 0.28
+      },
+      "z_vs_tt15_a3": {
+        "input_tokens": -0.87,
+        "prompt_bytes_total": -0.13,
+        "evidence_qualified": null,
+        "timeline_events": -0.39
+      },
+      "refs": {
+        "same_sample_tt15_006_all_arms": {
+          "n": 6,
+          "input_tokens": {
+            "n": 4,
+            "mean": 2192.5,
+            "sd": 151.07,
+            "min": 1959,
+            "max": 2378
+          },
+          "prompt_bytes_total": {
+            "n": 4,
+            "mean": 8357.75,
+            "sd": 392.73,
+            "min": 7792,
+            "max": 8886
+          },
+          "empty_rate": 0.16666666666666666
+        },
+        "tt15_a3_arm": {
+          "n": 8,
+          "input_tokens": {
+            "n": 8,
+            "mean": 2244.38,
+            "sd": 3.9,
+            "min": 2241,
+            "max": 2253
+          },
+          "prompt_bytes_total": {
+            "n": 8,
+            "mean": 8471.38,
+            "sd": 18.28,
+            "min": 8440,
+            "max": 8507
+          },
+          "evidence_qualified": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "evidence_expired": {
+            "n": 8,
+            "mean": 1,
+            "sd": 0,
+            "min": 1,
+            "max": 1
+          },
+          "candidates": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "timeline_events": {
+            "n": 8,
+            "mean": 4.13,
+            "sd": 0.33,
+            "min": 4,
+            "max": 5
+          },
+          "empty_rate": 0.125
+        },
+        "full_tt15_block_all_arms": {
+          "n": 48,
+          "input_tokens": {
+            "n": 32,
+            "mean": 2195.88,
+            "sd": 151.82,
+            "min": 1957,
+            "max": 2392
+          },
+          "prompt_bytes_total": {
+            "n": 32,
+            "mean": 8359.84,
+            "sd": 392.01,
+            "min": 7766,
+            "max": 8927
+          },
+          "empty_rate": 0.020833333333333332
+        }
+      }
+    },
+    "v3r1": {
+      "tuple_711_A3": {
+        "input_tokens": null,
+        "prompt_bytes_total": null,
+        "evidence_qualified": 2,
+        "evidence_expired": 1,
+        "candidates": 2,
+        "timeline_events": 4,
+        "authority": "L4",
+        "hard_constraints": 0,
+        "empty_attempts": 5,
+        "status": "provider_failed"
+      },
+      "z_vs_same_sample_arms": {
+        "input_tokens": null,
+        "prompt_bytes_total": null
+      },
+      "z_vs_tt15_a3": {
+        "input_tokens": null,
+        "prompt_bytes_total": null,
+        "evidence_qualified": null,
+        "timeline_events": -0.39
+      },
+      "refs": {
+        "same_sample_tt15_006_all_arms": {
+          "n": 6,
+          "input_tokens": {
+            "n": 3,
+            "mean": 2176.67,
+            "sd": 172.62,
+            "min": 1958,
+            "max": 2380
+          },
+          "prompt_bytes_total": {
+            "n": 3,
+            "mean": 8316.67,
+            "sd": 446.11,
+            "min": 7789,
+            "max": 8880
+          },
+          "empty_rate": 0.5
+        },
+        "tt15_a3_arm": {
+          "n": 8,
+          "input_tokens": {
+            "n": 7,
+            "mean": 2245.29,
+            "sd": 5.5,
+            "min": 2237,
+            "max": 2253
+          },
+          "prompt_bytes_total": {
+            "n": 7,
+            "mean": 8467.29,
+            "sd": 24.1,
+            "min": 8434,
+            "max": 8510
+          },
+          "evidence_qualified": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "evidence_expired": {
+            "n": 8,
+            "mean": 1,
+            "sd": 0,
+            "min": 1,
+            "max": 1
+          },
+          "candidates": {
+            "n": 8,
+            "mean": 2,
+            "sd": 0,
+            "min": 2,
+            "max": 2
+          },
+          "timeline_events": {
+            "n": 8,
+            "mean": 4.13,
+            "sd": 0.33,
+            "min": 4,
+            "max": 5
+          },
+          "empty_rate": 0.125
+        },
+        "full_tt15_block_all_arms": {
+          "n": 48,
+          "input_tokens": {
+            "n": 31,
+            "mean": 2194.81,
+            "sd": 154.8,
+            "min": 1956,
+            "max": 2400
+          },
+          "prompt_bytes_total": {
+            "n": 31,
+            "mean": 8353.1,
+            "sd": 399.96,
+            "min": 7760,
+            "max": 8936
+          },
+          "empty_rate": 0.0625
+        }
+      }
+    }
+  },
+  "temporal": {
+    "gaps": {
+      "n": 199,
+      "min_s": 2.051,
+      "median_s": 44.647,
+      "p90_s": 1330.685,
+      "max_min": 595.4623666666666
+    },
+    "multi_empty_bursts": [
+      {
+        "run": "v2",
+        "tuple": 69,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:44:37.794Z",
+          "2026-08-10T04:45:15.596Z",
+          "2026-08-10T04:45:54.135Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 92,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T05:13:00.749Z",
+          "2026-08-10T05:13:39.379Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 152,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T06:03:03.244Z",
+          "2026-08-10T06:03:38.979Z",
+          "2026-08-10T06:04:14.710Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 170,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:28:41.352Z",
+          "2026-08-10T05:29:15.610Z",
+          "2026-08-10T05:29:52.391Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 176,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T04:38:40.412Z",
+          "2026-08-10T04:39:19.874Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 199,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T05:50:11.869Z",
+          "2026-08-10T05:50:52.617Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 224,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:22:49.944Z",
+          "2026-08-10T04:23:28.880Z",
+          "2026-08-10T04:24:08.330Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 231,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:28:40.473Z",
+          "2026-08-10T04:29:23.641Z",
+          "2026-08-10T04:30:06.499Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 236,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:55:52.496Z",
+          "2026-08-10T04:56:29.955Z",
+          "2026-08-10T04:57:09.085Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 241,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:00:22.475Z",
+          "2026-08-10T04:00:56.432Z",
+          "2026-08-10T04:01:30.509Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 242,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:14:31.676Z",
+          "2026-08-10T05:15:10.295Z",
+          "2026-08-10T05:15:48.242Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 253,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:40:29.084Z",
+          "2026-08-10T04:41:08.849Z",
+          "2026-08-10T04:41:49.417Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 259,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:26:54.424Z",
+          "2026-08-10T05:27:29.999Z",
+          "2026-08-10T05:28:04.592Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 260,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:48:20.574Z",
+          "2026-08-10T05:48:55.173Z",
+          "2026-08-10T05:49:32.730Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 276,
+        "arm": "A0",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:41:53.028Z",
+          "2026-08-10T05:42:30.386Z",
+          "2026-08-10T05:43:08.238Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 285,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T05:37:12.729Z",
+          "2026-08-10T05:37:50.636Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 300,
+        "arm": "A0",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T03:56:43.943Z",
+          "2026-08-10T03:57:19.693Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 344,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T04:19:38.898Z",
+          "2026-08-10T04:20:16.588Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 345,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T04:05:31.919Z",
+          "2026-08-10T04:06:05.878Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 385,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:08:27.296Z",
+          "2026-08-10T04:09:05.641Z",
+          "2026-08-10T04:09:37.027Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 402,
+        "arm": "A0",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:08:52.920Z",
+          "2026-08-10T05:09:35.087Z",
+          "2026-08-10T05:10:17.811Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 409,
+        "arm": "A1",
+        "attempts": [
+          1,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:50:14.754Z",
+          "2026-08-10T04:51:35.745Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 410,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T06:11:28.015Z",
+          "2026-08-10T06:12:06.426Z",
+          "2026-08-10T06:12:43.104Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 423,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T05:51:26.529Z",
+          "2026-08-10T05:52:03.339Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 426,
+        "arm": "A0",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T04:02:06.897Z",
+          "2026-08-10T04:02:44.967Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 427,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T04:33:55.368Z",
+          "2026-08-10T04:34:36.876Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 474,
+        "arm": "A0",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T04:17:42.159Z",
+          "2026-08-10T04:18:22.908Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 476,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:53:16.386Z",
+          "2026-08-10T05:53:53.772Z",
+          "2026-08-10T05:54:31.108Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 578,
+        "arm": "A2",
+        "attempts": [
+          1,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:24:50.250Z",
+          "2026-08-10T05:25:56.965Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 585,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:58:01.876Z",
+          "2026-08-10T04:58:39.109Z",
+          "2026-08-10T04:59:16.195Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 589,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:31:54.830Z",
+          "2026-08-10T04:32:34.889Z",
+          "2026-08-10T04:33:13.918Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 606,
+        "arm": "A0",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T03:54:53.875Z",
+          "2026-08-10T03:55:25.294Z",
+          "2026-08-10T03:55:57.668Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 609,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T04:07:12.019Z",
+          "2026-08-10T04:07:46.620Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 644,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T06:01:10.087Z",
+          "2026-08-10T06:01:45.620Z",
+          "2026-08-10T06:02:21.082Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 657,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:03:38.980Z",
+          "2026-08-10T05:04:15.789Z",
+          "2026-08-10T05:04:54.321Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 673,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T03:52:02.693Z",
+          "2026-08-10T03:52:35.628Z",
+          "2026-08-10T03:53:09.466Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 674,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T06:08:41.212Z",
+          "2026-08-10T06:09:14.468Z",
+          "2026-08-10T06:09:51.721Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 679,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:55:39.872Z",
+          "2026-08-10T05:56:14.353Z",
+          "2026-08-10T05:56:51.906Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 681,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:18:13.289Z",
+          "2026-08-10T05:18:49.494Z",
+          "2026-08-10T05:19:27.349Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 692,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T04:13:38.749Z",
+          "2026-08-10T04:14:14.791Z",
+          "2026-08-10T04:14:47.912Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 703,
+        "arm": "A1",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:16:23.195Z",
+          "2026-08-10T05:17:01.154Z",
+          "2026-08-10T05:17:37.882Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 705,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:32:36.267Z",
+          "2026-08-10T05:33:11.678Z",
+          "2026-08-10T05:33:48.246Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 710,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T06:04:50.430Z",
+          "2026-08-10T06:04:52.580Z",
+          "2026-08-10T06:05:28.846Z"
+        ]
+      },
+      {
+        "run": "v2",
+        "tuple": 716,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T05:30:42.562Z",
+          "2026-08-10T05:31:17.553Z",
+          "2026-08-10T05:31:52.270Z"
+        ]
+      },
+      {
+        "run": "v21",
+        "tuple": 92,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T07:23:03.855Z",
+          "2026-08-10T07:23:06.480Z"
+        ]
+      },
+      {
+        "run": "v22",
+        "tuple": 573,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T15:20:46.482Z",
+          "2026-08-10T15:20:49.212Z"
+        ]
+      },
+      {
+        "run": "v22",
+        "tuple": 710,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-10T13:36:40.200Z",
+          "2026-08-10T13:36:43.588Z"
+        ]
+      },
+      {
+        "run": "v22",
+        "tuple": 711,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-10T13:38:06.478Z",
+          "2026-08-10T13:38:09.293Z",
+          "2026-08-10T13:38:11.550Z"
+        ]
+      },
+      {
+        "run": "v24",
+        "tuple": 711,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-11T04:47:01.878Z",
+          "2026-08-11T04:47:04.402Z",
+          "2026-08-11T04:47:06.453Z"
+        ]
+      },
+      {
+        "run": "v3r1",
+        "tuple": 620,
+        "arm": "A2",
+        "attempts": [
+          1,
+          2
+        ],
+        "timestamps": [
+          "2026-08-11T14:40:52.378Z",
+          "2026-08-11T14:40:55.914Z"
+        ]
+      },
+      {
+        "run": "v3r1",
+        "tuple": 708,
+        "arm": "A0",
+        "attempts": [
+          1,
+          2,
+          3
+        ],
+        "timestamps": [
+          "2026-08-11T13:25:21.423Z",
+          "2026-08-11T13:25:24.935Z",
+          "2026-08-11T13:25:28.819Z"
+        ]
+      },
+      {
+        "run": "v3r1",
+        "tuple": 711,
+        "arm": "A3",
+        "attempts": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "timestamps": [
+          "2026-08-11T12:55:53.855Z",
+          "2026-08-11T12:55:55.989Z",
+          "2026-08-11T12:55:58.607Z",
+          "2026-08-11T12:56:01.642Z",
+          "2026-08-11T12:56:04.073Z"
+        ]
+      }
+    ]
+  }
+}

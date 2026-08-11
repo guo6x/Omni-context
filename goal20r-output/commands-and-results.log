@@ -1,0 +1,122 @@
+# Goal 20R ? Commands and Results Log (Validation V3 generation phase)
+
+Date: 2026-08-11 (Asia/Shanghai)
+Status: VALIDATION_V3_GENERATION_BLOCKED
+
+## V3 seed derivation (mechanical, per section 18)
+command: node -e sha256(repair_commit_sha || "goal20-validation-v3")
+- repair_commit_sha = e2c95b496b83074e0b584d201c174d731345a97c
+- raw seed  = 98dea8531cf2b575a236096c9d78f050960750a5953b0375785de89d3f3a735f
+- seed_hash = a48f9efb0837069bf18eecfc925e7408c015e039ea274ebdc2a787c71efee59d
+
+## V3 generation (exactly once)
+command: node goal18-output/scripts/generator/generate.mjs --split validation --seed 98dea8531cf2b575a236096c9d78f050960750a5953b0375785de89d3f3a735f --outDir goal20r-output/work/v3-gen
+- split=validation tag=val count=120 per_tt=15x8
+- source_types: human_design 48 / multi_model_reconstruction 36 / anonymized_pattern_synthesis 24 / adversarial_boundary 12
+- wrote validation-set.jsonl (120 lines) + validation-gold.jsonl (120 lines)
+
+## Byte-exact promotion
+command: Copy-Item (work/v3-gen -> goal20r-output)
+- validation-v3-fixture.jsonl = 353411 bytes, 120 lines, sha256 26edd9dec5f7ad873db73a85300cfc0399e6dfca9c5ce78ceb005d50eb8ed4e0
+- validation-v3-gold.jsonl    = 209661 bytes, 120 lines, sha256 e651748aa0cba1a61bf4f1f0ce63119e80cd09417001e0150b51046e96de9426
+- source copies identical (byte-exact, no normalization)
+
+## Contract audit
+command: node goal18he-output/scripts/audit/contract-audit.cjs --data goal20r-output/work/v3-gen --setFile validation-set.jsonl --goldFile validation-gold.jsonl --out goal20r-output/audit-v3
+- authority_action 120/0/0, deleted_source_provenance 120/0/0, action_eligibility 120/0/0, approval_confirmation 120/0/0, lineage 120/0/0, evidence 120/0/0, constraints 120/0/0, clarification 120/0/0, referential_integrity 120/0/0
+- overall PASS (120 samples x 9 dimensions, 0 FAIL)
+
+## Overlap / leakage audit (section 19)
+command: node goal20r-output/scripts/v3-overlap-audit.cjs
+- method: normalized 8-gram Jaccard on sampleText (frozen T12 methodology); exact sample_id/scenario/title overlap; real pool import for prefix check
+- V3 internal: 0 duplicate ids, 0 duplicate scenarios, internal max Jaccard 0.4079
+- V3 vs V2 (14400 pairs): exact sample_id overlap 120/120 (FAIL), scenario overlap 0, max Jaccard 0.7695, >=0.5: 32 (all same-slot), >=0.75: 3 (tt15-005 0.7695, tt01-001 0.7618, tt15-004 0.7556)
+- V3 vs dev (2400 pairs): id overlap 0, scenario overlap 0, max 0.0296
+- V3 vs reg (1800 pairs): id overlap 0, scenario overlap 0, max 0.0186
+- entity prefixes: val pool 24 (by design, shared with V2), holdback prefix hits 0 (isolation intact)
+- verdict: BLOCKED (section 19 checks zero_exact_overlap_with_v2 FAIL, near_duplicate_diagnostic FAIL)
+
+## Blocker (no further steps taken)
+- No freeze chain created, no launch gates run, no GOAL20_VALIDATION_V3_FORMAL_EXECUTION_READY signed.
+- Goal20 provider calls for V3: 0. Holdback: untouched. V2.4 raw/freezes: untouched.
+- Owner decision required (see validation-v3-generation-blocker.md)
+
+================================================================================
+## V3-R1 PHASE (Goal 20R-V3-R1 owner attachment 5ed4d005; supersedes BLOCKED status)
+Date: 2026-08-11 (Asia/Shanghai)
+
+## V3-R1 generator repair + freeze
+- fixed generate.mjs: added missing import { applyV3Diversification }; fixed REGEX_RULES whole-string replacement bug (TT03/TT08 trailing text like "并执行。" was dropped -> now preserved)
+- diversify-v3.mjs: 106 protected tokens, 408 string rules + 5 regex rules, per-field protected-token count invariance + deterministic-machinery signature checks (fail closed)
+- node --check PASS on generate.mjs / diversify-v3.mjs
+- V2 byte-reproduction regression: goal18he-output/generator-repair-regression-tests -> 8/8 PASS
+- V3 trial (dev seed dev-seed-v3-trial-1): 120 samples, 15x8, 48/36/24/12; max V3-vs-V2 8-gram Jaccard 0.3952 (<0.4), 0 pairs >=0.5
+- anti-copy audit: NO_V2_SAMPLE_SPECIFIC_GENERATOR_PATCHES=true (VALIDATION_V3_ANTI_COPY_AUDIT.json)
+- generator commit: 871a72da52042b3ffda4a6cc157d69d79232133c (goal18-generator/v3.0.0 + decision-benchmark-v3 schemas + frozen plan)
+
+## V3-R1 seed derivation (mechanical, per attachment section 8)
+command: node -e sha256(method_commit || generator_commit || "goal20-validation-v3-r1")
+- method_commit   = e2c95b496b83074e0b584d201c174d731345a97c
+- generator_commit= 871a72da52042b3ffda4a6cc157d69d79232133c
+- raw inputs      = e2c95b496b83074e0b584d201c174d731345a97c871a72da52042b3ffda4a6cc157d69d79232133cgoal20-validation-v3-r1
+- seed            = 4e989191d8bf86975dd7c3672002f323e45845a9e2bf8b79212c61750ff14cb9
+- seed_hash       = 9c3058190d5a439ec86b24b6f1f146745a906706c195e46916198be653758c52
+
+## V3-R1 generation (exactly once)
+command: node goal18-output/scripts/generator/generate.mjs --split validation --epoch v3 --seed 4e989191d8bf86975dd7c3672002f323e45845a9e2bf8b79212c61750ff14cb9 --outDir goal20r-output/work/v3-r1-gen
+- split=validation tag=val epoch=v3 count=120 per_tt=15x8; source_types 48/36/24/12
+- wrote validation-set.jsonl (120) + validation-gold.jsonl (120); seed_hash matched derivation
+
+## Byte-exact promotion
+- validation-v3-r1-fixture.jsonl = 352410 bytes, sha256 78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e
+- validation-v3-r1-gold.jsonl    = 209490 bytes, sha256 e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0
+- source copies byte-exact (verified byte-for-byte)
+
+## Contract audit (V3-R1)
+command: node goal18he-output/scripts/audit/contract-audit.cjs --data goal20r-output/work/v3-r1-gen --out goal20r-output/work/v3-r1-gen/contract-audit
+- 9 dimensions all 120 PASS / 0 FAIL / 0 AMBIGUOUS; overall PASS
+
+## Overlap / leakage audit (V3-R1)
+command: node goal20r-output/scripts/v3-overlap-audit.cjs --v3 goal20r-output/validation-v3-r1-fixture.jsonl --out goal20r-output/validation-v3-r1-overlap-leakage-audit.json
+- V3 internal: dup ids 0, dup scenarios 0, internal max 0.3119
+- V3 vs V2 (14400 pairs): sample_id overlap 0, scenario overlap 0, max 8-gram Jaccard 0.3564 (<0.4), >=0.5: 0, >=0.75: 0
+- V3 vs dev: id 0, scen 0, max 0.0286; V3 vs reg: id 0, scen 0, max 0.0183
+- holdback prefix hits 0; verdict PASS
+
+## Marginals audit (V3-R1)
+- 15x8, 48/36/24/12, risk low20/med73/neg19/high5/crit3, authorities L3:49 L4:37 L5:26 L0:2 L1:1 L2:5 (identical to V2)
+- verdict MARGINALS_PASS
+
+## Downstream opaque-ID audit
+- executor src, scorer join, contract audit: sample_id opaque; no semantic v2 hard-coding
+- plumbing change (NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE): gates.mjs G1/G8/G13 epoch routing, run.mjs validationEpoch passthrough, CLI --epoch v2|v3
+- executor tests 49/49 PASS post-plumbing; executor runtime sha 6b96b3a9..., dir sha 7d82c6f9...
+
+## V3 governance + freeze chain
+- V3 720-tuple precommit (goal20-formal-execution-governance-v3/governance): sha 8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4, rows 720 unique 720
+- execution order sha c021692d0e42..., budget model: expected ~4.55 CNY, conservative-full-output 76.46, caps 200/20/220 enforceable
+- gate-verification-v3.json: 17/17 PASS
+- V3 720 dummy structural preflight: COMPLETED 720/720, 0 errors, 480 dummy calls, 0 formal calls
+- freeze chain: VALIDATION_V3_FREEZE -> GOAL20_VALIDATION_V3_FORMAL_METHOD_FREEZE -> GOAL20_VALIDATION_V3_LAUNCH_FREEZE -> GOAL20_VALIDATION_V3_GOVERNANCE_FREEZE -> GOAL20_VALIDATION_V3_FORMAL_EXECUTION_READY (formal provider calls before READY = 0)
+- governance commit: e657c2d3c0bce03e9c8aa2a5c802939964fdf909
+
+## V3 formal run (launched)
+command: node goal20-formal-execution-governance-r1/executor/run-goal20-formal-validation.mjs --mode formal --epoch v3 --fixture goal20r-output/validation-v3-r1-fixture.jsonl --harness-root goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation --product-root D:\ai_code\Omni-context-decision-kernel-v1 --governance-root goal20-formal-execution-governance-v3/governance --runs-root goal20-formal-execution-governance-v3/runs --repo-root D:\ai_code\Omni-context
+- run_id: 2026-08-11T10-41-53-720Z-518b14f2
+- gates ALL_GATES_PASS (13/13 in formal mode; G10 parameter identity FROZEN)
+- first tuple completed 18:42:14 (decision-bench-v3-val-tt09-002/A0, model deepseek-v4-flash)
+- (progress/results appended after completion)## V3 formal run COMPLETED -> FAILED (fail closed, INVALID_NON_CONFIRMATORY)
+run_id: 2026-08-11T10-41-53-720Z-518b14f2
+terminalMarker: FAILED (processed=720, completed=719, provider_failed=1, parse_failed=0, kernel_failed=0)
+failed tuple: g20-711 decision-bench-v3-val-tt15-006/A3; 5x EMPTY_CONTENT (12:55:53Z-12:56:04Z); frozen empty_content_max_attempts=5 exhausted; fatal recorded in errors.jsonl
+raw rows 720 (719 completed + 1 provider_failed); unique(sample,arm)=720; duplicate=0; MODEL_IDENTITY_MISMATCH=0; finish_reason=length=0; max completion_tokens=22997<65536
+ledger: calls=495 (479 accepted provider + 16 retries), kernel rows=240, spent_cny=4.662605; caps 200/20/220 intact
+retries.jsonl=16 (15 EMPTY_CONTENT + 1 PARSE_FAILED; 8 tuples recovered; 1 exhausted); errors.jsonl=1 (fatal EMPTY_CONTENT tuple 711/A3)
+freeze: goal20-formal-execution-governance-v3/governance/GOAL20_INVALID_RUN_V3_R1_FREEZE.json (744 files pinned byte-identically)
+record: goal20r-output/VALIDATION_V3_R1_RUN_FAILURE_RECORD.md
+FAIL-CLOSED: no scoring; no GOAL20_RAW_OUTPUT_FREEZE_V3; no second run; no reuse of 719 completed tuples; no parameter/retry-taxonomy change; Holdback untouched
+status: GOAL20_VALIDATION_V3_RUN_PROVIDER_FAILED (genuine blocker; owner decision required before any replacement run)
+raw-results.jsonl sha256: 4afa11f7c613d6767e816ebd537587c5c8ade1bd655469e6ca081e3b0c2dd374
+budget-ledger.json sha256: bf6b40b1efaf7b069541732c3be059bce4877bc708dbaae24753e045e4445618
+run finalized at 2026-08-11T15:37:39.401Z (295.8 min)
+

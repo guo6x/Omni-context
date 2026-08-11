@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "purpose": "GOAL20X_ROOT_CAUSE_CLASSIFICATION",
+  "created_at": "2026-08-12T00:35:00.000Z",
+  "provider_calls_made": 0,
+  "evidence_sources": [
+    "goal20x-output/tuple-711-cross-run-forensics.json",
+    "goal20x-output/empty-content-census.jsonl",
+    "goal20x-output/analysis-stratified.json",
+    "goal20x-output/request-reconstruction.json",
+    "goal20x-output/executor-state-leak-audit.json",
+    "goal20x-output/executor-state-leak-audit-independent.json",
+    "goal20x-output/official-evidence/provider-docs-record.json"
+  ],
+  "primary_classification": "PROVIDER_STOCHASTIC_JSON_EMPTY",
+  "confidence": {
+    "mechanism_provider_side_empty_content": "HIGH",
+    "tt15_006_concentration_driver": "MEDIUM",
+    "overall": "HIGH for mechanism; MEDIUM for the concentration driver (request-family interaction vs chance)"
+  },
+  "mechanism_evidence": {
+    "official_docs": "DeepSeek official JSON Output guide (EN/ZH, retrieved 2026-08-11T16:22:47Z): 'the API may occasionally return empty content' / 'API 有概率会返回空的 content'. Saved: goal20x-output/official-evidence/.",
+    "e1_profile": "25/25 metadata-preserved EMPTY_CONTENT events (V2.3/V2.4/V3-R1) are E1_JSON_FINAL_EMPTY_AFTER_REASONING: HTTP 200, model deepseek-v4-flash, finish_reason=stop, reasoning_content present (486-1568 chars) containing the COMPLETE valid JSON answer, final content empty, latency 84-516ms (sub-second), reasoning tokens 186-372.",
+    "not_truncation": "0 events finish_reason=length; max completion_tokens among E1 = 372 << 65536 ceiling.",
+    "not_filter": "0 events content_filter.",
+    "request_determinism": "Requests byte-exact deterministic (22/22 reconstructed shas match stored); retries re-send identical bytes; no executor state/index/order defect (two independent audits).",
+    "temporal_pattern": "EMPTY_CONTENT retries fired at 2.1-2.7s intervals with identical request bytes and high cache hits (e.g. cached=2176, miss=65) - consecutive attempts re-hit the same provider fast-empty path; not a wall-clock provider blip (events spread across 4h in V3-R1; across runs no shared time window)."
+  },
+  "concentration_evidence": {
+    "position_711": "12 EMPTY_CONTENT attempts on tuple 711/A3 across runs (V2:1, V2.2:3, V2.4:3, V3-R1:5); position 711 hit in 4/6 runs; run-stratified uniform-position Poisson tail 1.5e-4.",
+    "slot_TT15_006": "22 EMPTY_CONTENT attempts on sample slot TT15-006 (any arm) across runs; hit in 5/6 runs; Poisson tail 6.3e-3. In V3-R1, all 3 TT15-block tuples with empties are TT15-006 arms (A0 x3, A2 x1, A3 x5).",
+    "structural_non_outlier": "Tuple 711/A3 request is NOT a structural outlier: prompt_tokens 2241 vs TT15-A3 mean 2245.3 sd 5.5 (z=-0.78); evidence 2/1, candidates 2, timeline 4, authority L4 - identical to TT15 siblings; no schema/size/field anomaly.",
+    "cross_epoch": "V2 and V3 tt15-006 are different diversified content (max 8-gram Jaccard 0.3564) yet both trigger empties - consistent with shared construct family interacting with provider behavior, or with unlucky recurrence; not explained by a defect in our bytes.",
+    "not_gold": "No Gold inspection; no correctness comparison (Goal20X sections 3/9/18 respected)."
+  },
+  "ruled_out": [
+    "EXECUTOR_STATE_OR_ORDER_DEFECT (two independent audits; 22/22 byte-exact reconstructions; no index dependence)",
+    "MODEL_VISIBLE_REQUEST_DEFECT (requests valid, deterministic, structurally normal; no schema/size outlier)",
+    "truncation (finish_reason=length = 0 in V2.3/V2.4/V3-R1; V2-era empties were truncation-era, metadata not preserved -> UNKNOWN subtype, run-level cause already declared output-budget truncation)",
+    "content_filter / resource signals (0 occurrences)"
+  ],
+  "residual_uncertainty": "The empirical concentration on TT15-006 (5/6 runs) could be (a) request-content x provider interaction (some property of the delete-evidence propagation construct family raises empty probability) or (b) chance under correlated provider conditions. Existing artifacts + official docs establish the provider mechanism but cannot fully separate (a) vs (b) without diagnostic calls. Per Goal20X sections 8-11 no diagnostic provider calls were made; a frozen diagnostic plan (Conditions A/B/C on dev/reg/synthetic fixtures, never V3-R1 samples) may be proposed to the owner if resolution is required before rerun.",
+  "decision_branch": "A - V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE",
+  "branch_A_conditions": {
+    "no_model_visible_request_defect": true,
+    "no_executor_causal_bug": true,
+    "no_sample_specific_scientific_issue": true,
+    "empty_response_is_execution_provider_acquisition_failure": true,
+    "remediation_keeps_request_bytes_and_method_unchanged": true
+  },
+  "status": "V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE",
+  "not_authorized": [
+    "automatic rerun (owner decision required)",
+    "any prompt/response_format/schema/model-parameter/serialization change (would reclassify V3-R1 as POST_FAILURE_DIAGNOSTIC_SET and require UNSEEN_VALIDATION_V3_R2)",
+    "retry-limit fishing ('5 failed -> 10')",
+    "sample-specific handling",
+    "Holdback access",
+    "scoring of V3-R1"
+  ]
+}

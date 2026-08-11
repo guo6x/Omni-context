@@ -1,0 +1,233 @@
+{
+  "schema_version": 8,
+  "updated_at": "2026-08-11T16:33:59.053Z",
+  "goal": "20X (EMPTY_CONTENT forensic gate)",
+  "phase": "GOAL20X_DIAGNOSTIC_COMPLETE_V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE",
+  "machine": "D:\\ai_code\\Omni-context (sole authoritative formal execution machine)",
+  "campaign": "goal20-formal-validation-v1",
+  "formal_state": {
+    "invalid_runs": [
+      {
+        "run_id": "2026-08-10T03-46-57-389Z-f0d8ce6b",
+        "status": "INVALID_NON_CONFIRMATORY",
+        "completed": 297,
+        "provider_failed": 33,
+        "calls": 170,
+        "spent_cny": 0.915908,
+        "freeze": "GOAL20_INVALID_RUN_V2_FREEZE.json",
+        "invalidating_condition": "output-budget truncation at max_output_tokens 4096"
+      },
+      {
+        "run_id": "2026-08-10T06-20-39-825Z-ae92ac4b",
+        "status": "INVALID_NON_CONFIRMATORY",
+        "completed": 719,
+        "provider_failed": 1,
+        "calls": 480,
+        "spent_cny": 4.404549,
+        "freeze": "GOAL20_INVALID_RUN_V2_1_FREEZE.json",
+        "invalidating_condition": "1 tuple lost to unhandled transport-layer termination",
+        "note": "execution-diagnostics-only"
+      },
+      {
+        "run_id": "2026-08-10T11-42-57-026Z-5c9e078d",
+        "status": "INVALID_NON_CONFIRMATORY",
+        "completed": 719,
+        "provider_failed": 1,
+        "calls": 480,
+        "spent_cny": 3.845989,
+        "freeze": "GOAL20_INVALID_RUN_V2_2_FREEZE.json",
+        "invalidating_condition": "tuple 711/A3 EMPTY_CONTENT x3 -> provider_failed under 3-attempt policy"
+      },
+      {
+        "run_id": "2026-08-10T17-00-02-942Z-9fbdc16a",
+        "status": "INVALID_NON_CONFIRMATORY",
+        "completed": 697,
+        "provider_failed": 23,
+        "calls": 466,
+        "spent_cny": 3.935502,
+        "freeze": "GOAL20_INVALID_RUN_V2_3_FREEZE.json",
+        "invalidating_condition": "23 provider_failed: 19 TRANSPORT_ERROR (17:29:35Z blip, 3-attempt budget) + 4 EMPTY_CONTENT_LENGTH (reasoning saturated 16384 completion budget)"
+      }
+    ],
+    "v2_4_run": {
+      "status": "COMPLETED_720_720",
+      "progress": "720/720 completed; 0 provider_failed; 0 parse_failed; 0 kernel_failed",
+      "run_id": "2026-08-11T02-59-40-231Z-1ab5e55f",
+      "run_dir": "goal20-formal-execution-governance-r1/runs/goal20-formal-validation-v1/2026-08-11T02-59-40-231Z-1ab5e55f",
+      "calls": 485,
+      "spent_cny": 4.007373,
+      "retries": 5,
+      "retry_detail": "5 x EMPTY_CONTENT (4 on tuple 711/A3, 1 on tuple 512/A2), all recovered on retry; 0 EMPTY_CONTENT_LENGTH; 0 content_filter; max completion 19214 < 65536",
+      "model_identity": "deepseek-v4-flash on 480/480 provider rows",
+      "integrity_audit": "INTEGRITY_AUDIT_PASS (launch-freeze-v2-4/v24-integrity-audit.json)",
+      "raw_output_freeze": "GOAL20_RAW_OUTPUT_FREEZE_V2_4",
+      "finalized_at": "2026-08-11T07:45:33.224Z",
+      "permitted_use": "scorer v1.1 against frozen raw outputs; no scientific conclusions until result/validity freeze"
+    },
+    "formal_provider_calls_cumulative": 2081,
+    "formal_outputs_valid": 720,
+    "holdback_plaintext_accessed": false,
+    "v2_4_scoring": {
+      "status": "SCORED_AND_FROZEN",
+      "validation_status": "GOAL20_FORMAL_VALIDATION_INVALID",
+      "execution_integrity": "PASS",
+      "a5_confirmatory_eligibility": "A5_CONFIRMATORY_ELIGIBILITY_FAILED",
+      "holdback_eligibility": false,
+      "goal21_started": false,
+      "scoring_results_file": "goal21-output/goal20-scoring-results.json",
+      "scoring_results_sha256": "70cb8a36f0facb3980f1a07d5e6c5a23a373e2ed6bcb029ce6548be83f311541",
+      "scoring_report_file": "goal21-output/goal20-scoring-results.md",
+      "scoring_report_sha256": "f585e9b02c4c0f1647d827b224e2ddd86118700ce66ca0446a45adf73194ee11",
+      "validity_freeze": "GOAL20_RESULT_VALIDITY_FREEZE",
+      "validity_freeze_sha256": "14076c4f813ff6f3294834284e54791bf3a3d63e3d9475524c29c5bd13a33a4d",
+      "scored_tuples": 720,
+      "missing": 0,
+      "duplicate": 0,
+      "unexpected": 0,
+      "scorer_errors": 0,
+      "gates_all_arms_pass": false,
+      "gate_failures": "A0: unsupported 1.0000; A1: unsupported 0.1563, invalid_revision 1.0000, temporal 0.1176; A2: unsupported 0.2593, invalid_revision 1.0000; A3: P0 user_override 3, unsupported 0.2073, invalid_revision 1.0000; A4: P0 hard_constraint 3, P0 user_override 8, unsupported 0.0816; A5: P0 hard_constraint 3, unsupported 0.1200",
+      "scored_at": "2026-08-11T08:22:31Z"
+    }
+  },
+  "freeze_markers": {
+    "v2_4_current": [
+      "GOAL20_FINAL_EXECUTION_PROTOCOL_AMENDMENT_V2_4",
+      "GOAL20_FORMAL_METHOD_FREEZE_V2_4",
+      "GOAL20_LAUNCH_FREEZE_V2_4",
+      "GOAL20_EXECUTION_GOVERNANCE_FREEZE_V2_4",
+      "GOAL20_FORMAL_EXECUTION_READY_V2_4",
+      "GOAL20_RAW_OUTPUT_FREEZE_V2_4",
+      "GOAL20_RESULT_VALIDITY_FREEZE"
+    ],
+    "v2_historical": [
+      "GOAL20_LAUNCH_FREEZE",
+      "GOAL20_EXECUTION_GOVERNANCE_FREEZE",
+      "GOAL20_FORMAL_EXECUTION_AUTHORIZATION_FREEZE",
+      "GOAL20_FORMAL_METHOD_FREEZE_V2",
+      "GOAL20_LAUNCH_FREEZE_V2",
+      "GOAL20_EXECUTION_GOVERNANCE_FREEZE_V2",
+      "GOAL20_FORMAL_EXECUTION_READY_V2 (superseded)",
+      "GOAL20_INVALID_RUN_V2_FREEZE.json"
+    ],
+    "v2_1_historical": [
+      "GOAL20_PARAMETER_AMENDMENT_V2_1",
+      "GOAL20_FORMAL_METHOD_FREEZE_V2_1",
+      "GOAL20_LAUNCH_FREEZE_V2_1",
+      "GOAL20_EXECUTION_GOVERNANCE_FREEZE_V2_1",
+      "GOAL20_FORMAL_EXECUTION_READY_V2_1 (superseded)",
+      "GOAL20_INVALID_RUN_V2_1_FREEZE.json"
+    ],
+    "v2_2_historical": [
+      "GOAL20_EXECUTOR_ROBUSTNESS_AMENDMENT_V2_2",
+      "GOAL20_FORMAL_METHOD_FREEZE_V2_2",
+      "GOAL20_LAUNCH_FREEZE_V2_2",
+      "GOAL20_EXECUTION_GOVERNANCE_FREEZE_V2_2",
+      "GOAL20_FORMAL_EXECUTION_READY_V2_2 (superseded)",
+      "GOAL20_INVALID_RUN_V2_2_FREEZE.json"
+    ],
+    "v2_3_historical": [
+      "GOAL20_EXECUTOR_EMPTY_CONTENT_AMENDMENT_V2_3",
+      "GOAL20_FORMAL_METHOD_FREEZE_V2_3",
+      "GOAL20_LAUNCH_FREEZE_V2_3",
+      "GOAL20_EXECUTION_GOVERNANCE_FREEZE_V2_3",
+      "GOAL20_FORMAL_EXECUTION_READY_V2_3 (run completed INVALID)",
+      "GOAL20_INVALID_RUN_V2_3_FREEZE.json"
+    ],
+    "v3_current": [
+      "VALIDATION_V3_FREEZE",
+      "GOAL20_VALIDATION_V3_FORMAL_METHOD_FREEZE",
+      "GOAL20_VALIDATION_V3_LAUNCH_FREEZE",
+      "GOAL20_VALIDATION_V3_GOVERNANCE_FREEZE",
+      "GOAL20_VALIDATION_V3_FORMAL_EXECUTION_READY (launch freeze; run FAILED)",
+      "GOAL20_INVALID_RUN_V3_R1_FREEZE.json"
+    ]
+  },
+  "parameters": {
+    "model": "deepseek-v4-flash",
+    "thinking": "enabled",
+    "reasoning_effort": "high",
+    "temperature": 0,
+    "temperature_semantics": "PROVIDER_IGNORED_INERT_UNDER_THINKING_MODE",
+    "max_output_tokens": 65536,
+    "retry_max_attempts": 3,
+    "transport_retry_max_attempts": 6,
+    "transport_retry_delays_ms": [
+      2000,
+      5000,
+      15000,
+      30000,
+      60000
+    ],
+    "transport_stagger_max_ms": 1000,
+    "empty_content_max_attempts": 5,
+    "concurrency": 1,
+    "timeout_ms": 120000,
+    "retry_taxonomy": "V2.2 + V2.3 + V2.4 (verified transport max 6 with frozen backoff/stagger; EMPTY_CONTENT max 5; finish_reason=length/content_filter fail closed; 65536 sole ceiling remediation)"
+  },
+  "v2_3_timestamp_corrigendum": {
+    "file": "goal19h-output/v2-3-timestamp-corrigendum.md",
+    "sha256": "be1c0e515f8bd250c8ea40d13c2f72c9d0ea25411fb51b06ccf3e7839fca8cab",
+    "note": "authoritative V2.3 timeline: launch 2026-08-10T17:00:02.942Z, end 2026-08-10T22:15:00.449Z, transport blip 17:29:35.400Z-17:29:36.123Z; original logs NOT rewritten; new log entries use UTC ISO-8601"
+  },
+  "next_action": "Goal20X forensic gate COMPLETE -> V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE. Owner decision required BEFORE any rerun: (1) approve execution-only rerun under an amended frozen execution policy (uniform bounded backoff for EMPTY_CONTENT retries, e.g. 5s/15s/45s/120s/300s + stagger, max 5 attempts; model-visible bytes unchanged - see goal20x-output/execution-only-rerun-policy-proposal.md), or (2) authorize a precommitted diagnostic plan (Conditions A/B/C on dev/reg/synthetic fixtures) to resolve the TT15-006 concentration question, or (3) declare V3-R2 required. No automatic launch. Holdback sealed; V3-R1 remains INVALID_NON_CONFIRMATORY.",
+  "v3_r1_run": {
+    "status": "INVALID_NON_CONFIRMATORY",
+    "terminal_marker": "FAILED",
+    "progress": "processed 720; completed 719; provider_failed 1; parse_failed 0; kernel_failed 0",
+    "run_id": "2026-08-11T10-41-53-720Z-518b14f2",
+    "run_dir": "goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2026-08-11T10-41-53-720Z-518b14f2",
+    "launched_at": "2026-08-11T10:41:53.720Z",
+    "finalized_at": "2026-08-11T15:37:39.401Z",
+    "duration_minutes": 295.8,
+    "invalidating_condition": "1 tuple (g20-711, decision-bench-v3-val-tt15-006, arm A3) provider_failed after 5 attempts, all EMPTY_CONTENT; frozen empty_content_max_attempts=5 exhausted; fatal error recorded; executor FAILED marker",
+    "calls": 495,
+    "spent_cny": 4.662605,
+    "retries": 16,
+    "retry_detail": "15 EMPTY_CONTENT + 1 PARSE_FAILED; 8 tuples recovered; 1 exhausted (tuple 711/A3); 0 finish_reason=length; max completion 22997 < 65536",
+    "model_identity": "deepseek-v4-flash on 479/479 accepted provider rows; 0 MODEL_IDENTITY_MISMATCH",
+    "integrity": "unique(sample_id,arm)=720; duplicate=0; contract_error_rows=0; parse_not_ok=1 (the failed tuple)",
+    "invalid_run_freeze": "goal20-formal-execution-governance-v3/governance/GOAL20_INVALID_RUN_V3_R1_FREEZE.json",
+    "failure_record": "goal20r-output/VALIDATION_V3_R1_RUN_FAILURE_RECORD.md",
+    "permitted_use": "execution diagnostics ONLY; no scoring; no raw-output freeze; no reuse of the 719 completed tuples as formal evidence",
+    "raw_resources_jsonl_sha256": "4afa11f7c613d6767e816ebd537587c5c8ade1bd655469e6ca081e3b0c2dd374",
+    "budget_ledger_sha256": "bf6b40b1efaf7b069541732c3be059bce4877bc708dbaae24753e045e4445618"
+  },
+  "goal20x_diagnostic": {
+    "status": "V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE",
+    "provider_calls_made": 0,
+    "primary_classification": "PROVIDER_STOCHASTIC_JSON_EMPTY",
+    "confidence": "HIGH mechanism (official DeepSeek JSON-mode empty-content doc + E1 profile: complete JSON in reasoning_content, empty final content, HTTP 200, finish_reason stop, 84-516ms, no truncation/filter); MEDIUM on TT15-006 concentration driver (request-family interaction vs chance)",
+    "key_evidence": {
+      "census_total_empty_events": 200,
+      "e1_events": 25,
+      "position_711": "12 attempts across 4/6 runs; run-stratified Poisson tail 1.5e-4",
+      "slot_tt15_006": "22 attempts across 5/6 runs; Poisson tail 6.3e-3",
+      "request_determinism": "22/22 byte-exact offline reconstructions matched stored shas",
+      "executor_state_leak": "none found (two independent audits; DETERMINISTIC_FROM_FIXTURE_AND_ARM)",
+      "official_doc": "DeepSeek JSON Output guide: API may occasionally return empty content (retrieved 2026-08-11T16:22:47Z)",
+      "retry_mechanism": "EMPTY_CONTENT retries fired with NO backoff/jitter (run.mjs:302-309); consecutive retries re-hit the same provider fast-empty path (2.1-2.7s gaps, identical bytes, high cache hits)"
+    },
+    "artifacts": [
+      "goal20x-output/tuple-711-cross-run-forensics.json",
+      "goal20x-output/empty-content-census.jsonl",
+      "goal20x-output/analysis-stratified.json",
+      "goal20x-output/request-reconstruction.json",
+      "goal20x-output/executor-state-leak-audit.json",
+      "goal20x-output/executor-state-leak-audit-independent.json",
+      "goal20x-output/root-cause-classification.json",
+      "goal20x-output/execution-only-rerun-policy-proposal.md",
+      "goal20x-output/official-evidence/provider-docs-record.json",
+      "goal20x-output/artifact-sha256.txt"
+    ],
+    "prohibited_actions_respected": [
+      "no V3-R1 rerun",
+      "no scoring",
+      "no Gold access",
+      "no Holdback access",
+      "no prompt/schema/parameter change",
+      "no retry-limit fishing",
+      "no diagnostic provider calls"
+    ]
+  }
+}

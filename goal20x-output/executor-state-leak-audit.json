@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "purpose": "GOAL20X_EXECUTOR_STATE_LEAK_AUDIT",
+  "created_at": "2026-08-12T00:30:00.000Z",
+  "provider_calls_made": 0,
+  "scope": [
+    "executor/src/arm-execution.mjs",
+    "executor/src/budget-governor.mjs",
+    "executor/src/gates.mjs",
+    "executor/src/identity.mjs",
+    "executor/src/parse-repair.mjs",
+    "executor/src/prompt-renderer.mjs",
+    "executor/src/provider-deepseek.mjs",
+    "executor/src/raw-store.mjs",
+    "executor/src/retry-policy.mjs",
+    "executor/src/run.mjs",
+    "executor/run-goal20-formal-validation.mjs",
+    "goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/src/*.mjs",
+    "goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation/prompts/A0..A5/*"
+  ],
+  "method": [
+    "static source review of every executor/provider/harness module (main audit)",
+    "independent second-opinion source audit (executor-state-leak-audit-independent.json, 68 files, 14 findings)",
+    "offline byte-exact request reconstruction: 30 tuples across V2.2/V2.4/V3-R1 re-rendered with the frozen executor builders; serialized_request_sha256 matched stored run hashes 22/22 (all rows with stored shas)",
+    "cross-check: independent re-render of A3/tt15-006 produced identical sha 03b12ee6100231e3... (matches main reconstruction)"
+  ],
+  "main_findings": [
+    {
+      "id": "M01",
+      "severity": "none",
+      "location": "executor/src/prompt-renderer.mjs:87-108",
+      "description": "Request body is a pure function of (modelId, system, user, maxOutputTokens, confirmedParams); field order fixed; no tuple_index, attempt, run-progress, clock, or counter field exists in the body."
+    },
+    {
+      "id": "M02",
+      "severity": "none",
+      "location": "executor/src/arm-execution.mjs:113-197",
+      "description": "buildArmContext derives current/evidence/route deterministically from the fixture + frozen harness modules; no fixture mutation; retries re-render byte-identical bodies."
+    },
+    {
+      "id": "M03",
+      "severity": "none",
+      "location": "executor/src/provider-deepseek.mjs:20-43",
+      "description": "AbortController + timeout timer created fresh per provider.call; fetch uses global undici; no connection/session/keep-alive state managed by the executor."
+    },
+    {
+      "id": "M04",
+      "severity": "none",
+      "location": "executor/src/retry-policy.mjs",
+      "description": "Retry classification is content-free: based only on error code/meta; EMPTY_CONTENT with finish_reason=length/content_filter fails closed; no tuple-index or sample-specific branches; no literal 711/tt15/A3 anywhere."
+    },
+    {
+      "id": "M05",
+      "severity": "none",
+      "location": "executor/src/run.mjs",
+      "description": "The only tuple-identity-dependent runtime behavior is the frozen transport stagger/backoff (hash-derived, deterministic). Per-tuple budgets (3/5/6) are class-based and uniform across arms/samples."
+    },
+    {
+      "id": "M06",
+      "severity": "low",
+      "location": "executor/src/budget-governor.mjs / run.mjs ledger",
+      "description": "Only run-progress-mutable state is the persistent budget ledger; its only failure mode is BUDGET_HARD_CAP_EXCEEDED (invalid-run stop), which cannot produce an empty HTTP 200 response."
+    },
+    {
+      "id": "M07",
+      "severity": "none",
+      "location": "executor/src/raw-store.mjs",
+      "description": "Run dir uses wx-exclusive writes; retries keep independent attempt files; terminal marker written last; no overwrite path exists for accepted tuples."
+    },
+    {
+      "id": "M08",
+      "severity": "none",
+      "location": "executor/src/run.mjs:302-309",
+      "description": "Frozen V2.4 backoff (2s/5s/15s/30s/60s + stagger) is applied ONLY to transport-class retries. EMPTY_CONTENT retries (kind parse) are re-fired immediately with no delay/jitter (observed inter-attempt gaps ~2.1-2.7s = context rebuild + provider round trip, not backoff). This is a scheduling property of the frozen policy, not a request/state defect; it is relevant to retry-policy design (see execution-only-rerun-policy-proposal)."
+    }
+  ],
+  "request_determinism": {
+    "verdict": "DETERMINISTIC_FROM_FIXTURE_AND_ARM",
+    "evidence": [
+      "22/22 stored serialized_request_sha256 values reproduced byte-exact by offline reconstruction using the frozen executor builders (V2.2/V2.4/V3-R1; A3 targets incl. 711 and controls)",
+      "independent audit re-rendered A3/tt15-006 5 times -> identical sha 03b12ee6100231e3..., 9282 bytes, route DECIDE, evidence [ev001, ev002]",
+      "request body contains no tuple_index/attempt/progress field (prompt-renderer.mjs:87-108)"
+    ]
+  },
+  "tuple_index_dependence": {
+    "found": false,
+    "details": "No executor state depends on call index/run progress in a way that could alter model-visible request bytes or provider acquisition. Execution order runs tuple 711 at order position 284; failure follows tuple identity, not loop position."
+  },
+  "verdict": {
+    "state_leak_defect_found": false,
+    "executor_causal_bug_found": false,
+    "summary": "No executor state/index/order defect. Provider-visible requests are byte-deterministic functions of (fixture sample, arm, frozen prompts, frozen parameters), verified by 22/22 byte-exact offline reconstructions and an independent 68-file audit. EMPTY_CONTENT responses therefore originate provider-side on the given frozen request content; the only executor-side property of interest is the absence of backoff between EMPTY_CONTENT retries (frozen policy; proposal in execution-only-rerun-policy-proposal.md).",
+    "independent_audit": {
+      "file": "goal20x-output/executor-state-leak-audit-independent.json",
+      "findings": 14,
+      "verdict": "state_leak_defect_found: false; DETERMINISTIC_FROM_FIXTURE_AND_ARM"
+    }
+  }
+}

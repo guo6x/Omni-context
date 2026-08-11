@@ -1,0 +1,30 @@
+# Goal20X forensic artifact sha256 manifest
+# Status: V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE (provider stochastic JSON empty; execution-only remediation proposed; NO automatic rerun)
+# Provider calls during forensic phase: 0
+
+sha256  analysis-stratified.json  cb31a0caccb622e1fd12b7eadffe72accd866c50a9d6aa49205b1ccd6009507d  33440
+sha256  empty-content-census-summary.json  5b89709df08cea34ae45a60cf634d622140695d634c08524d585150a52f1c6e2  38208
+sha256  empty-content-census.jsonl  fef375d763df4e69c60afb8bac82e728c2c15907dd4a887a732936b936fb6b54  142378
+sha256  execution-only-rerun-policy-proposal.md  446283e214fc54da523f5361b6ab8a837a57d7a5562635d40af85af8b7110c4a  4133
+sha256  executor-state-leak-audit-independent.json  580cc3b84c80695033632274c1b8b46b7f569737fff86c07bfa87ffd8a0870bb  29538
+sha256  executor-state-leak-audit-independent.md  1f14ca6e8de118cd8835839eb9bb6d9eedabc7e41fdf83dd3815d3ad11f9dc22  8532
+sha256  executor-state-leak-audit.json  3f4f66cc838d11d699b4a842e78bd9f8c2724f1e2891b2eb2ecd97631415b3c5  5861
+sha256  official-evidence/deepseek-api-docs-main-en.html  42ac2223f3286709c2941b565f2a291e1b936022934d216e284faa09bcd64867  45020
+sha256  official-evidence/deepseek-create-chat-completion-en.html  f173ca3608279b1257c7aee9e24da6558fd7c5bfc20faff99d70655c670f6a27  125506
+sha256  official-evidence/deepseek-faq-en.html  8246cee5c180332d72869548d957dc210b57d96699a2944d1b50bcb400899324  10715
+sha256  official-evidence/deepseek-faq-zh.html  2c25e9cc0e2f5d80e4ce3b5ac9b44172f4a3ea06a398dc04a3ddb9a30365fc25  10795
+sha256  official-evidence/deepseek-json-mode-en.html  1b9286c62c51f040ebc635790ee33f0bdab9d51c14b3ca4592c012b46d8811dd  31947
+sha256  official-evidence/deepseek-json-mode-zh.html  a2c7e6ad5f2103267e618c98d5e12a850bb5e2ead4d140bb220e7763c56393e4  32129
+sha256  official-evidence/deepseek-pricing-en.html  b7b5819eb2eea0efab609aee5068ee10ef39216f0cab797bfbe5e02e8f807002  22223
+sha256  official-evidence/deepseek-pricing-zh.html  a9b97d962818fd69dfe0fd2a7bd4487e171d849ba5ff7ca8dc9982d4f47f9d94  22263
+sha256  official-evidence/deepseek-thinking-mode-en.html  a08205df38d4452e102cf7be45aa93752557cc259d4c8021946cdc6cbd58682f  108044
+sha256  official-evidence/deepseek-thinking-mode-zh.html  b9c0d20a7b7207d73752c130003967796a830732a76b4e426b1867a99ec75ef2  107552
+sha256  official-evidence/deepseek-token-usage-en.html  eaa1e7da83c989b68a8b4d155c22cd5afabeb2458549db40f765d768072ad83f  19845
+sha256  official-evidence/deepseek-token-usage-zh.html  442ed3265e69d072ef36725da7055acbcdbadc853a4530066c75470aee378edc  19720
+sha256  official-evidence/provider-docs-record.json  3831a40660ef63f6f7e731ec83c8aec736090c53ec1df487807ae4cd6b4363da  44910
+sha256  request-reconstruction.json  24699bf3f398d8d8d1b4a0714c4426d6fb90d4f982e9ee76b27f81ff44549101  254730
+sha256  root-cause-classification.json  7830cf3f14199ff0efab3f6fba1904cd78ca576b3af090e2e5d18abe8b01af1a  5159
+sha256  scripts/analysis.mjs  5b3276d306b0133eac65cbd3aea29753a748f596be1dc978dde32aed2df4f983  8837
+sha256  scripts/mining.mjs  57b74cfc91bb00e2b37ffeeb0487ce340be1d04eb22a97e3628ea9e4252882c5  22008
+sha256  scripts/reconstruct-requests.mjs  4739f62fa2fbedf8910797f2522a5c4eb26d36fd54767e9a4bdbb97ca6c50a6c  6891
+sha256  tuple-711-cross-run-forensics.json  40286e6249a266ea804ae661465874a8ff7b19c57ea8cf21d3c0a799228d8bcc  498557
