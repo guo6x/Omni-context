@@ -1,0 +1,131 @@
+{
+  "verified_at": "2026-08-11T17:45:00.000Z",
+  "epoch": "v3",
+  "rerun": 1,
+  "checks": [
+    {
+      "id": "R1-G1",
+      "name": "V3 fixture sha",
+      "status": "PASS",
+      "detail": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e bytes=352410"
+    },
+    {
+      "id": "R1-G2",
+      "name": "V3 gold sha",
+      "status": "PASS",
+      "detail": "e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0 bytes=209490 (not content-inspected)"
+    },
+    {
+      "id": "R1-G3",
+      "name": "V3 manifest sha",
+      "status": "PASS",
+      "detail": "58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191"
+    },
+    {
+      "id": "R1-G4",
+      "name": "V3 formal config sha",
+      "status": "PASS",
+      "detail": "c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82"
+    },
+    {
+      "id": "R1-G5",
+      "name": "Prompts 30/30 byte-verified",
+      "status": "PASS",
+      "detail": "sealed-prompt-byte-manifest.json; 0 mismatches"
+    },
+    {
+      "id": "R1-G6",
+      "name": "720-tuple precommit",
+      "status": "PASS",
+      "detail": "rows=720 unique=720 sha=8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4"
+    },
+    {
+      "id": "R1-G7",
+      "name": "Execution order sha",
+      "status": "PASS",
+      "detail": "c021692d0e42041ea32171fad3c42cfc8905952d53b01baaf9bc7778f2f16ef4"
+    },
+    {
+      "id": "R1-G8",
+      "name": "Product worktree",
+      "status": "PASS",
+      "detail": "HEAD=e2c95b496b83074e0b584d201c174d731345a97c dirty=0"
+    },
+    {
+      "id": "R1-G9",
+      "name": "Executor runtime sha",
+      "status": "PASS",
+      "detail": "d891d73bdf006266ad4ad34e11b832892e4165a644f31f0bde417803b038be9c (13 files)"
+    },
+    {
+      "id": "R1-G10",
+      "name": "Executor dir sha",
+      "status": "PASS",
+      "detail": "700bb5f59af2eed2f0b0436ba44b58ea5b536a0678356ae1c0d9d27bd694bfcb (15 files)"
+    },
+    {
+      "id": "R1-G11",
+      "name": "Executor deterministic tests",
+      "status": "PASS",
+      "detail": "55/55 (2026-08-11; incl. 6 RERUN-1: exact 5s/15s/45s/120s schedule, no 300s, stagger determinism, exhaust at 5, byte-identical requests, no duplicate/overwrite)"
+    },
+    {
+      "id": "R1-G12",
+      "name": "Retry-policy identity RERUN-1 rebind",
+      "status": "PASS",
+      "detail": "file_sha=994155dfbec4e4bae2dcc4a4a4595764df753d05d498f13967c6e4864bf6518f; empty_content_retry_delays_ms=[5000,15000,45000,120000]; stagger algorithm/bounds unchanged"
+    },
+    {
+      "id": "R1-G13",
+      "name": "Model parameter identity",
+      "status": "PASS",
+      "detail": "FROZEN V2.4 deepseek-v4-flash thinking high 65536 temp-0-inert; identical A0-A5"
+    },
+    {
+      "id": "R1-G14",
+      "name": "Amendment record sha",
+      "status": "PASS",
+      "detail": "1b07a16228527e1c1f1adbd647dba302f6ce118e48c917ffbbb54ce638762fee"
+    },
+    {
+      "id": "R1-G15",
+      "name": "720 dummy structural preflight",
+      "status": "PASS",
+      "detail": "v3-rerun1-preflight-720-001 COMPLETED; 720/720 unique; 0 errors; 480 dummy calls; 0 formal calls; runner gates 13/13 PASS"
+    },
+    {
+      "id": "R1-G16",
+      "name": "Formal output isolation",
+      "status": "PASS",
+      "detail": "V3 runs root contains only frozen INVALID run 518b14f2; 0 completed formal runs; 0 provider calls since"
+    },
+    {
+      "id": "R1-G17",
+      "name": "Budget governor",
+      "status": "PASS",
+      "detail": "caps 200/20/220 intact; V3 ledger calls=0 spent=0; expected ~4.55 CNY"
+    },
+    {
+      "id": "R1-G18",
+      "name": "Authorization",
+      "status": "PASS",
+      "detail": "V3_R1_EXECUTION_ONLY_RERUN_APPROVED (owner attachment 27e5675b)"
+    },
+    {
+      "id": "R1-G19",
+      "name": "Holdback sealed identity",
+      "status": "PASS",
+      "detail": "4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3 bytes=836656; plaintext not accessed"
+    },
+    {
+      "id": "R1-G20",
+      "name": "No scoring / no Gold inspection",
+      "status": "PASS",
+      "detail": "no scorer run, no Gold-based analysis, no arm ranking, no task-performance comparison used"
+    }
+  ],
+  "status": "ALL_GATES_PASS",
+  "pass_count": 20,
+  "fail_count": 0,
+  "updated_at": "2026-08-11T17:45:00.000Z"
+}

@@ -1,90 +1,118 @@
 {
-    "schema_version":  2.4,
-    "policy":  "goal19f-output/invalid-run-policy.md (Retry vs invalidation) + prompts/A0..A5/timeout-recovery.txt (frozen) + GOAL20_EXECUTOR_ROBUSTNESS_AMENDMENT_V2_2 + GOAL20_EXECUTOR_EMPTY_CONTENT_AMENDMENT_V2_3 + GOAL20_FINAL_EXECUTION_PROTOCOL_AMENDMENT_V2_4",
-    "retry_max_attempts":  3,
-    "transport_retry_max_attempts":  6,
-    "empty_content_max_attempts":  5,
-    "transport_retry_delays_ms":  [
-                                      2000,
-                                      5000,
-                                      15000,
-                                      30000,
-                                      60000
-                                  ],
-    "transport_stagger":  {
-                              "algorithm":  "stagger_ms = (parseInt(sha256(tupleKey).slice(0, 8), 16) % 1001), tupleKey = \u0027\u003ctuple_index padded to 3\u003e.\u003csample_id\u003e.\u003carm\u003e\u0027",
-                              "bounds_ms":  [
-                                                0,
-                                                1000
-                                            ],
-                              "frozen_before_v2_4":  true,
-                              "purpose":  "small deterministic tuple-id-derived stagger to prevent synchronized retry storms",
-                              "reproducibility":  "same tuple identity always yields the same stagger; stagger depends ONLY on tuple identity"
-                          },
-    "retryable":  [
-                      "transport (timeout, network, HTTP 5xx, HTTP 429) - V2.4 budget 6 TOTAL attempts incl. the initial request, with frozen backoff 2s/5s/15s/30s/60s + deterministic tuple-id-derived stagger",
-                      "RETRYABLE_TRANSPORT_ABORT (code-less abort with verified transient provider/network transport cause in the cause chain) - V2.4 budget 6 TOTAL attempts",
-                      "parse (structural repair) - 3 attempts (unchanged)",
-                      "EMPTY_CONTENT (provider returned null/empty/whitespace content without content_filter/length finish_reason) - V2.3 policy unchanged: 5 TOTAL attempts incl. the initial request, no backoff"
-                  ],
-    "never_retried":  [
-                          "content regeneration for scoring",
-                          "MODEL_IDENTITY_MISMATCH",
-                          "BUDGET_HARD_CAP_EXCEEDED",
-                          "invalid-run conditions",
-                          "OPERATOR_ABORT (operator/user abort, incl. AbortController cancellation)",
-                          "safe-stop / campaign shutdown (context.intentionalAbort)",
-                          "SIGINT / process cancellation",
-                          "UNCLASSIFIED_ABORT (code-less abort without transport evidence; fail closed)",
-                          "EMPTY_CONTENT_CONTENT_FILTER (finish_reason=content_filter; fail closed)",
-                          "EMPTY_CONTENT_LENGTH (finish_reason=length; fail closed; the 65536 output ceiling is the SOLE V2.4 remediation - no retry, no taxonomy broadening)"
-                      ],
-    "timeout_semantics":  "timeout counts as a transport error (retryable, V2.4 6-attempt budget)",
-    "abort_semantics_v2_2":  "code-less AbortError/TypeError (e.g. message \u0027terminated\u0027) is retried ONLY when cause-chain inspection establishes transient provider/network transport and no intentional abort signal caused it; classifier codes: RETRYABLE_TRANSPORT_ABORT | OPERATOR_ABORT | UNCLASSIFIED_ABORT",
-    "empty_content_semantics_v2_3":  "provider EMPTY_CONTENT (choices[0].message.content null/undefined/empty/whitespace) is retried with a total budget of 5 attempts (initial request + up to 4 retries) with byte-identical request and frozen model parameters; finish_reason=content_filter or =length with empty content is NOT the generic provider-empty case and fails closed (EMPTY_CONTENT_CONTENT_FILTER / EMPTY_CONTENT_LENGTH, non-retryable); every failed attempt persists full provider metadata (http_status, model_identity, finish_reason, content_length, reasoning_content_length, usage, provider_request_id, latency_ms, raw, raw_sha256) and records usage/cost when the provider reported usage; no attempt is ever overwritten",
-    "transport_retry_semantics_v2_4":  "verified transient transport/provider-infrastructure classes (TRANSPORT_ERROR, TIMEOUT, HTTP_5XX, HTTP_429, RETRYABLE_TRANSPORT_ABORT) get a bounded deterministic retry policy: max 6 TOTAL attempts; retry delays after qualifying failures 2s/5s/15s/30s/60s; deterministic tuple-id-derived stagger (0..1000ms) applied to retry timing; request bytes, model-visible prompt, model parameters and scientific tuple identity remain unchanged on retry; every attempt is preserved independently with backoff/stagger metadata; only already-authorized verified transient classes use this path - unknown-error classification is NOT broadened",
-    "exhausted_semantics":  "after 6 attempts for transport classes / 5 attempts for EMPTY_CONTENT / 3 attempts for parse without a valid response the sample is PROVIDER_FAILED (excluded, counted); finish_reason=length or =content_filter with empty content fails closed at the first attempt",
-    "parse_failed_semantics":  "PARSE_FAILED is fail-closed: counts as an error on every metric requiring a decision; never silently dropped",
-    "reused_by":  "executor/src/retry-policy.mjs + executor/src/run.mjs + executor/src/provider-deepseek.mjs + executor/src/dummy-provider.mjs (V2.4 rebind; no redefinition)",
-    "v2_4_rebind":  {
-                        "amendment":  "GOAL20_FINAL_EXECUTION_PROTOCOL_AMENDMENT_V2_4",
-                        "previous_identity_sha256":  "5c0630742c5062b332f697e54b0f8b1577d58b5f671c804ff1a33d716441bdc7",
-                        "executor_runtime_sha256":  "2cf80b089cd65fb01235af355d867a1de08aadfab074fad137510f2f89c56096",
-                        "executor_dir_sha256":  "64dc766b19f956523c3969b143a194683100db81357ddf398433a0854c125fc7",
-                        "changed":  [
-                                        "TRANSPORT_MAX_ATTEMPTS 3 -\u003e 6 (total, incl. initial request)",
-                                        "frozen transport backoff 2s/5s/15s/30s/60s",
-                                        "frozen deterministic tuple-id-derived stagger 0..1000ms (algorithm + bounds frozen before V2.4)",
-                                        "per-attempt backoff/stagger metadata persistence",
-                                        "EMPTY_CONTENT 5-attempt budget unchanged (V2.3)",
-                                        "finish_reason=length / content_filter fail-closed unchanged (V2.3)"
-                                    ],
-                        "unchanged":  [
-                                          "model-visible request bytes (deterministic renderer; no prompt change)",
-                                          "model parameters except max_output_tokens 16384 -\u003e 65536 (rebound in model-parameter-identity.json V2.4)",
-                                          "classifier codes and non-retryable classes",
-                                          "no broadening of unknown-error classification"
-                                      ],
-                        "no_further_taxonomy_change":  "V2.4 is the FINAL automatically authorized execution-protocol attempt. If V2.4 loses a required tuple (incl. 65536 exhaustion with finish_reason=length), hits a new unclassified fatal, model identity mismatch, causal identity drift, budget hard-stop, or raw integrity failure, fail closed and return for scientific review. Do NOT automatically create V2.5; do NOT further increase max_output_tokens; do NOT broaden retry/error taxonomy."
-                    },
-    "epoch":  "v3",
-    "v3_rebind_note":  "Same frozen V2.4 retry taxonomy for the Validation V3 formal run. Executor SHAs updated after the NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE (epoch routing in gates/run/CLI); no retry semantics changed.",
-    "v3_rebind":  {
-                      "amendment":  "Goal 20R-V3-R1 (NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE)",
-                      "policy_semantics":  "UNCHANGED - same frozen V2.4 retry taxonomy (transport 6, EMPTY_CONTENT 5, parse 3, finish_reason length/content_filter fail-closed, operator/unknown abort non-retryable)",
-                      "executor_runtime_sha256":  "6b96b3a96f9599dc6016ed48a9447251a26444288c48fa32a0aba3be56ef6b33",
-                      "executor_dir_sha256":  "7d82c6f9536f8b14e01ea8f48bf4ef42f9929e89e8abd2f171aec51b70aff53b",
-                      "changed":  [
-                                      "gates.mjs: epoch-parameterized G1 launch-manifest path, G8 fixture identity, G13 config path (validationEpoch option)",
-                                      "run.mjs: validationEpoch passthrough + manifest epoch field",
-                                      "run-goal20-formal-validation.mjs: --epoch v2|v3 argument"
-                                  ],
-                      "unchanged":  [
-                                        "retry semantics",
-                                        "model parameters",
-                                        "prompts",
-                                        "scorer",
-                                        "tuple identity semantics"
-                                    ]
-                  }
+  "schema_version": 2.4,
+  "policy": "goal19f-output/invalid-run-policy.md (Retry vs invalidation) + prompts/A0..A5/timeout-recovery.txt (frozen) + GOAL20_EXECUTOR_ROBUSTNESS_AMENDMENT_V2_2 + GOAL20_EXECUTOR_EMPTY_CONTENT_AMENDMENT_V2_3 + GOAL20_FINAL_EXECUTION_PROTOCOL_AMENDMENT_V2_4",
+  "retry_max_attempts": 3,
+  "transport_retry_max_attempts": 6,
+  "empty_content_max_attempts": 5,
+  "transport_retry_delays_ms": [
+    2000,
+    5000,
+    15000,
+    30000,
+    60000
+  ],
+  "transport_stagger": {
+    "algorithm": "stagger_ms = (parseInt(sha256(tupleKey).slice(0, 8), 16) % 1001), tupleKey = '<tuple_index padded to 3>.<sample_id>.<arm>'",
+    "bounds_ms": [
+      0,
+      1000
+    ],
+    "frozen_before_v2_4": true,
+    "purpose": "small deterministic tuple-id-derived stagger to prevent synchronized retry storms",
+    "reproducibility": "same tuple identity always yields the same stagger; stagger depends ONLY on tuple identity"
+  },
+  "retryable": [
+    "transport (timeout, network, HTTP 5xx, HTTP 429) - V2.4 budget 6 TOTAL attempts incl. the initial request, with frozen backoff 2s/5s/15s/30s/60s + deterministic tuple-id-derived stagger",
+    "RETRYABLE_TRANSPORT_ABORT (code-less abort with verified transient provider/network transport cause in the cause chain) - V2.4 budget 6 TOTAL attempts",
+    "parse (structural repair) - 3 attempts (unchanged)",
+    "EMPTY_CONTENT (provider returned null/empty/whitespace content without content_filter/length finish_reason) - V2.3 policy unchanged: 5 TOTAL attempts incl. the initial request, no backoff"
+  ],
+  "never_retried": [
+    "content regeneration for scoring",
+    "MODEL_IDENTITY_MISMATCH",
+    "BUDGET_HARD_CAP_EXCEEDED",
+    "invalid-run conditions",
+    "OPERATOR_ABORT (operator/user abort, incl. AbortController cancellation)",
+    "safe-stop / campaign shutdown (context.intentionalAbort)",
+    "SIGINT / process cancellation",
+    "UNCLASSIFIED_ABORT (code-less abort without transport evidence; fail closed)",
+    "EMPTY_CONTENT_CONTENT_FILTER (finish_reason=content_filter; fail closed)",
+    "EMPTY_CONTENT_LENGTH (finish_reason=length; fail closed; the 65536 output ceiling is the SOLE V2.4 remediation - no retry, no taxonomy broadening)"
+  ],
+  "timeout_semantics": "timeout counts as a transport error (retryable, V2.4 6-attempt budget)",
+  "abort_semantics_v2_2": "code-less AbortError/TypeError (e.g. message 'terminated') is retried ONLY when cause-chain inspection establishes transient provider/network transport and no intentional abort signal caused it; classifier codes: RETRYABLE_TRANSPORT_ABORT | OPERATOR_ABORT | UNCLASSIFIED_ABORT",
+  "empty_content_semantics_v2_3": "provider EMPTY_CONTENT (choices[0].message.content null/undefined/empty/whitespace) is retried with a total budget of 5 attempts (initial request + up to 4 retries) with byte-identical request and frozen model parameters; finish_reason=content_filter or =length with empty content is NOT the generic provider-empty case and fails closed (EMPTY_CONTENT_CONTENT_FILTER / EMPTY_CONTENT_LENGTH, non-retryable); every failed attempt persists full provider metadata (http_status, model_identity, finish_reason, content_length, reasoning_content_length, usage, provider_request_id, latency_ms, raw, raw_sha256) and records usage/cost when the provider reported usage; no attempt is ever overwritten",
+  "transport_retry_semantics_v2_4": "verified transient transport/provider-infrastructure classes (TRANSPORT_ERROR, TIMEOUT, HTTP_5XX, HTTP_429, RETRYABLE_TRANSPORT_ABORT) get a bounded deterministic retry policy: max 6 TOTAL attempts; retry delays after qualifying failures 2s/5s/15s/30s/60s; deterministic tuple-id-derived stagger (0..1000ms) applied to retry timing; request bytes, model-visible prompt, model parameters and scientific tuple identity remain unchanged on retry; every attempt is preserved independently with backoff/stagger metadata; only already-authorized verified transient classes use this path - unknown-error classification is NOT broadened",
+  "exhausted_semantics": "after 6 attempts for transport classes / 5 attempts for EMPTY_CONTENT / 3 attempts for parse without a valid response the sample is PROVIDER_FAILED (excluded, counted); finish_reason=length or =content_filter with empty content fails closed at the first attempt",
+  "parse_failed_semantics": "PARSE_FAILED is fail-closed: counts as an error on every metric requiring a decision; never silently dropped",
+  "reused_by": "executor/src/retry-policy.mjs + executor/src/run.mjs + executor/src/provider-deepseek.mjs + executor/src/dummy-provider.mjs (V2.4 rebind; no redefinition)",
+  "v2_4_rebind": {
+    "amendment": "GOAL20_FINAL_EXECUTION_PROTOCOL_AMENDMENT_V2_4",
+    "previous_identity_sha256": "5c0630742c5062b332f697e54b0f8b1577d58b5f671c804ff1a33d716441bdc7",
+    "executor_runtime_sha256": "2cf80b089cd65fb01235af355d867a1de08aadfab074fad137510f2f89c56096",
+    "executor_dir_sha256": "64dc766b19f956523c3969b143a194683100db81357ddf398433a0854c125fc7",
+    "changed": [
+      "TRANSPORT_MAX_ATTEMPTS 3 -> 6 (total, incl. initial request)",
+      "frozen transport backoff 2s/5s/15s/30s/60s",
+      "frozen deterministic tuple-id-derived stagger 0..1000ms (algorithm + bounds frozen before V2.4)",
+      "per-attempt backoff/stagger metadata persistence",
+      "EMPTY_CONTENT 5-attempt budget unchanged (V2.3)",
+      "finish_reason=length / content_filter fail-closed unchanged (V2.3)"
+    ],
+    "unchanged": [
+      "model-visible request bytes (deterministic renderer; no prompt change)",
+      "model parameters except max_output_tokens 16384 -> 65536 (rebound in model-parameter-identity.json V2.4)",
+      "classifier codes and non-retryable classes",
+      "no broadening of unknown-error classification"
+    ],
+    "no_further_taxonomy_change": "V2.4 is the FINAL automatically authorized execution-protocol attempt. If V2.4 loses a required tuple (incl. 65536 exhaustion with finish_reason=length), hits a new unclassified fatal, model identity mismatch, causal identity drift, budget hard-stop, or raw integrity failure, fail closed and return for scientific review. Do NOT automatically create V2.5; do NOT further increase max_output_tokens; do NOT broaden retry/error taxonomy."
+  },
+  "epoch": "v3",
+  "v3_rebind_note": "Same frozen V2.4 retry taxonomy for the Validation V3 formal run. Executor SHAs updated after the NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE (epoch routing in gates/run/CLI); no retry semantics changed.",
+  "v3_rebind": {
+    "amendment": "Goal 20R-V3-R1 (NON_SEMANTIC_EPOCH_IDENTITY_PLUMBING_CHANGE)",
+    "policy_semantics": "UNCHANGED - same frozen V2.4 retry taxonomy (transport 6, EMPTY_CONTENT 5, parse 3, finish_reason length/content_filter fail-closed, operator/unknown abort non-retryable)",
+    "executor_runtime_sha256": "6b96b3a96f9599dc6016ed48a9447251a26444288c48fa32a0aba3be56ef6b33",
+    "executor_dir_sha256": "7d82c6f9536f8b14e01ea8f48bf4ef42f9929e89e8abd2f171aec51b70aff53b",
+    "changed": [
+      "gates.mjs: epoch-parameterized G1 launch-manifest path, G8 fixture identity, G13 config path (validationEpoch option)",
+      "run.mjs: validationEpoch passthrough + manifest epoch field",
+      "run-goal20-formal-validation.mjs: --epoch v2|v3 argument"
+    ],
+    "unchanged": [
+      "retry semantics",
+      "model parameters",
+      "prompts",
+      "scorer",
+      "tuple identity semantics"
+    ]
+  },
+  "empty_content_retry_delays_ms": [
+    5000,
+    15000,
+    45000,
+    120000
+  ],
+  "empty_content_backoff_semantics_rerun_1": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1: qualifying provider EMPTY_CONTENT retries use a bounded deterministic schedule - after attempt 1: 5s, attempt 2: 15s, attempt 3: 45s, attempt 4: 120s (5 TOTAL attempts incl. the initial request => exactly 4 retries; NO 300s fifth-retry delay). Total delay = frozen base + the SAME frozen tuple-id-derived stagger (0..1000ms, frozen before V2.4; algorithm/bounds unchanged; not chosen adaptively from V3-R1 outcomes). Policy is uniform across every provider-dependent tuple (no TT15/tuple/sample/arm/slot-specific behavior). EMPTY_CONTENT max_attempts unchanged (5); no retry-count increase; request bytes/model-visible prompt/model parameters unchanged; per-attempt persistence now includes backoff/stagger metadata (base_delay_ms, stagger_ms, total_delay_ms, schedule_ms) plus scheduled-delay/actual-retry timing via attempt timestamps; all non-EMPTY_CONTENT retry/error semantics unchanged.",
+  "rerun_1_rebind": {
+    "amendment": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1",
+    "policy_semantics": "ONLY the EMPTY_CONTENT retry wait schedule changed (5s/15s/45s/120s + frozen stagger); all other retry/error/failure semantics byte-unchanged (transport 6, parse 3, length/content_filter fail-closed, operator/unknown abort non-retryable, budget stop)",
+    "executor_runtime_sha256": "d891d73bdf006266ad4ad34e11b832892e4165a644f31f0bde417803b038be9c",
+    "executor_dir_sha256": "700bb5f59af2eed2f0b0436ba44b58ea5b536a0678356ae1c0d9d27bd694bfcb",
+    "sha_method": "sha256 over lexicographically-sorted \"<file-sha256>  <relative-path>\" lines, joined LF + trailing LF; runtime = cli+src+package.json (13 files); dir = entire executor tree incl. tests (15 files, node_modules excluded); method re-verified byte-exact against the V3 historical values (6b96b3a9... / 7d82c6f9...) by reverting the amendment edits in a temp copy",
+    "changed": [
+      "retry-policy.mjs: EMPTY_CONTENT_RETRY_DELAYS_MS=[5000,15000,45000,120000] + emptyContentBackoffMs() (base + frozen stagger)",
+      "run.mjs: EMPTY_CONTENT retries sleep base+stagger; per-attempt backoff/stagger metadata persisted for EMPTY_CONTENT retries",
+      "tests: retry-policy.test.mjs +3 unit, executor.test.mjs +3 integration (exact schedule, success at attempts 2/5, exhaust at 5, byte-identical requests, uniform across tuples, no duplicate, no overwrite)"
+    ],
+    "unchanged": [
+      "model-visible request bytes (deterministic renderer; no prompt change)",
+      "model parameters (deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert)",
+      "EMPTY_CONTENT max_attempts=5; transport 6; parse 3",
+      "transport backoff/stagger; non-EMPTY_CONTENT retry taxonomy and fail-closed classes",
+      "scorer, Gold, fixture, manifest, prompts, hard-gate thresholds, final-arm policy",
+      "no broadening of unknown-error classification"
+    ],
+    "no_further_change": "RERUN-1 is the ONLY automatically authorized EMPTY_CONTENT scheduling amendment. No further backoff change, retry-count increase, taxonomy broadening, parameter change, or automatic second rerun. Fail closed and return for scientific owner review on any new loss."
+  }
 }

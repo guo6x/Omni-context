@@ -1,0 +1,157 @@
+{
+  "schema_version": 2.4,
+  "goal": "20R-V3-R1 (execution-only rerun 1)",
+  "epoch": "v3",
+  "created_at": "2026-08-11T17:45:00.000Z",
+  "freeze_id": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1_LAUNCH_FREEZE",
+  "status": "FROZEN",
+  "lineage": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1 (same campaign goal20-formal-validation-v1; same V3-R1 scientific epoch; NEW immutable run instance; 0/720; no reuse of invalid-run tuples)",
+  "gates": [
+    {
+      "id": "R1G1",
+      "name": "V3 fixture identity",
+      "status": "PASS",
+      "detail": "fixture 78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e bytes=352410 (goal20r-output/validation-v3-r1-fixture.jsonl)"
+    },
+    {
+      "id": "R1G2",
+      "name": "V3 gold identity",
+      "status": "PASS",
+      "detail": "gold e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0 bytes=209490 (goal20r-output/validation-v3-r1-gold.jsonl); NOT read for content"
+    },
+    {
+      "id": "R1G3",
+      "name": "V3 manifest identity",
+      "status": "PASS",
+      "detail": "manifest 58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191 (goal20r-output/validation-v3-r1-manifest.json)"
+    },
+    {
+      "id": "R1G4",
+      "name": "V3 formal config identity",
+      "status": "PASS",
+      "detail": "config c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82 (goal20r-output/formal-run-config-v3.json)"
+    },
+    {
+      "id": "R1G5",
+      "name": "Prompts 30/30 byte-verified",
+      "status": "PASS",
+      "detail": "sealed-prompt-byte-manifest.json + harness snapshot; 0 mismatches"
+    },
+    {
+      "id": "R1G6",
+      "name": "720-tuple precommit",
+      "status": "PASS",
+      "detail": "rows=720 unique=720; sha 8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4"
+    },
+    {
+      "id": "R1G7",
+      "name": "Execution order identity",
+      "status": "PASS",
+      "detail": "sha c021692d0e42041ea32171fad3c42cfc8905952d53b01baaf9bc7778f2f16ef4 (frozen, seed 76b1871b...)"
+    },
+    {
+      "id": "R1G8",
+      "name": "Product worktree",
+      "status": "PASS",
+      "detail": "HEAD=e2c95b496b83074e0b584d201c174d731345a97c dirty=0 (D:\\ai_code\\Omni-context-decision-kernel-v1)"
+    },
+    {
+      "id": "R1G9",
+      "name": "Executor runtime sha",
+      "status": "PASS",
+      "detail": "d891d73bdf006266ad4ad34e11b832892e4165a644f31f0bde417803b038be9c (13 files, cli+src+package.json)"
+    },
+    {
+      "id": "R1G10",
+      "name": "Executor dir sha",
+      "status": "PASS",
+      "detail": "700bb5f59af2eed2f0b0436ba44b58ea5b536a0678356ae1c0d9d27bd694bfcb (15 files, incl. tests)"
+    },
+    {
+      "id": "R1G11",
+      "name": "Executor deterministic tests",
+      "status": "PASS",
+      "detail": "55/55 PASS (unit 25/25 + integration 30/30; 6 RERUN-1 additions) - goal20x-output/executor-tests-rerun1.stdout.txt"
+    },
+    {
+      "id": "R1G12",
+      "name": "Retry-policy identity RERUN-1 rebind",
+      "status": "PASS",
+      "detail": "file sha 994155dfbec4e4bae2dcc4a4a4595764df753d05d498f13967c6e4864bf6518f; EMPTY_CONTENT delays [5000,15000,45000,120000]; no 300s; stagger unchanged"
+    },
+    {
+      "id": "R1G13",
+      "name": "Model parameter identity",
+      "status": "PASS",
+      "detail": "FROZEN V2.4: deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert; all A0-A5 identical; runtime identity check per response"
+    },
+    {
+      "id": "R1G14",
+      "name": "Execution-only amendment record",
+      "status": "PASS",
+      "detail": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1 sha 1b07a16228527e1c1f1adbd647dba302f6ce118e48c917ffbbb54ce638762fee"
+    },
+    {
+      "id": "R1G15",
+      "name": "720-tuple structural preflight (dummy)",
+      "status": "PASS",
+      "detail": "v3-rerun1-preflight-720-001 COMPLETED 720/720 unique; 0 errors; 480 dummy calls; 0 formal calls; runner gates 13/13 PASS (G10 skipped in test mode by design)"
+    },
+    {
+      "id": "R1G16",
+      "name": "Formal output isolation",
+      "status": "PASS",
+      "detail": "runs root contains ONLY frozen INVALID run 2026-08-11T10-41-53-720Z-518b14f2 (FAILED marker); 0 completed formal runs; 0 provider calls since READY of the invalid run"
+    },
+    {
+      "id": "R1G17",
+      "name": "Budget governor",
+      "status": "PASS",
+      "detail": "caps deepseek 200 / kimi 20 / total 220 intact; V3 fresh ledger calls=0 spent=0; expected ~4.55 CNY; governor fails before overspend"
+    },
+    {
+      "id": "R1G18",
+      "name": "Authorization",
+      "status": "PASS",
+      "detail": "V3_R1_EXECUTION_ONLY_RERUN_APPROVED (owner attachment 27e5675b); derived from existing signed owner decision; no new signature fabricated"
+    },
+    {
+      "id": "R1G19",
+      "name": "Holdback sealed identity",
+      "status": "PASS",
+      "detail": "sha 4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3 bytes=836656; plaintext NOT accessed"
+    },
+    {
+      "id": "R1G20",
+      "name": "No scoring / no Gold inspection",
+      "status": "PASS",
+      "detail": "no scorer execution, no Gold-based analysis, no arm ranking, no task-performance comparison used for this amendment or launch"
+    }
+  ],
+  "binds": {
+    "product": {
+      "commit": "e2c95b496b83074e0b584d201c174d731345a97c"
+    },
+    "validation": {
+      "epoch": "v3",
+      "fixture": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e",
+      "gold": "e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0",
+      "manifest": "58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191"
+    },
+    "config_sha256": "c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82",
+    "model_parameters": "FROZEN V2.4 (deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert; identical across A0-A5)",
+    "executor": {
+      "runtime_sha256": "d891d73bdf006266ad4ad34e11b832892e4165a644f31f0bde417803b038be9c",
+      "dir_sha256": "700bb5f59af2eed2f0b0436ba44b58ea5b536a0678356ae1c0d9d27bd694bfcb"
+    },
+    "precommit_sha256": "8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4",
+    "order_sha256": "c021692d0e42041ea32171fad3c42cfc8905952d53b01baaf9bc7778f2f16ef4",
+    "amendment": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1 (sha 1b07a16228527e1c1f1adbd647dba302f6ce118e48c917ffbbb54ce638762fee)",
+    "retry_policy_identity": "994155dfbec4e4bae2dcc4a4a4595764df753d05d498f13967c6e4864bf6518f",
+    "empty_content_schedule": "EMPTY_CONTENT 5 TOTAL attempts; retry delays after attempts 1-4: 5s / 15s / 45s / 120s + frozen tuple-id-derived stagger 0..1000ms; NO 300s delay",
+    "run_lineage": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1; NEW immutable run instance; 0/720; invalid run 518b14f2 preserved byte-identically; no tuple reuse"
+  },
+  "formal_provider_calls_before_launch": 0,
+  "formal_outputs_before_launch": 0,
+  "holdback_plaintext_accessed": false
+}

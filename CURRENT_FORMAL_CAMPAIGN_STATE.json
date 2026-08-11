@@ -1,8 +1,8 @@
 {
   "schema_version": 8,
-  "updated_at": "2026-08-11T16:33:59.053Z",
-  "goal": "20X (EMPTY_CONTENT forensic gate)",
-  "phase": "GOAL20X_DIAGNOSTIC_COMPLETE_V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE",
+  "updated_at": "2026-08-11T17:48:00.000Z",
+  "goal": "20R-V3-R1 (execution-only rerun 1)",
+  "phase": "GOAL20_VALIDATION_V3_R1_RERUN_1_RUNNING",
   "machine": "D:\\ai_code\\Omni-context (sole authoritative formal execution machine)",
   "campaign": "goal20-formal-validation-v1",
   "formal_state": {
@@ -170,7 +170,7 @@
     "sha256": "be1c0e515f8bd250c8ea40d13c2f72c9d0ea25411fb51b06ccf3e7839fca8cab",
     "note": "authoritative V2.3 timeline: launch 2026-08-10T17:00:02.942Z, end 2026-08-10T22:15:00.449Z, transport blip 17:29:35.400Z-17:29:36.123Z; original logs NOT rewritten; new log entries use UTC ISO-8601"
   },
-  "next_action": "Goal20X forensic gate COMPLETE -> V3_R1_EXECUTION_ONLY_RERUN_ELIGIBLE. Owner decision required BEFORE any rerun: (1) approve execution-only rerun under an amended frozen execution policy (uniform bounded backoff for EMPTY_CONTENT retries, e.g. 5s/15s/45s/120s/300s + stagger, max 5 attempts; model-visible bytes unchanged - see goal20x-output/execution-only-rerun-policy-proposal.md), or (2) authorize a precommitted diagnostic plan (Conditions A/B/C on dev/reg/synthetic fixtures) to resolve the TT15-006 concentration question, or (3) declare V3-R2 required. No automatic launch. Holdback sealed; V3-R1 remains INVALID_NON_CONFIRMATORY.",
+  "next_action": "Monitor RERUN-1 execution-level diagnostics only. On 720/720 COMPLETED: stop and return for scientific owner review (scoring requires owner decision). On any required-tuple loss or new unclassified fatal: fail closed and return for scientific owner review.",
   "v3_r1_run": {
     "status": "INVALID_NON_CONFIRMATORY",
     "terminal_marker": "FAILED",
@@ -229,5 +229,33 @@
       "no retry-limit fishing",
       "no diagnostic provider calls"
     ]
+  },
+  "v3_r1_rerun_1": {
+    "status": "RUNNING",
+    "lineage": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1",
+    "run_id": "2026-08-11T17-45-38-164Z-f7f19012",
+    "run_dir": "goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2026-08-11T17-45-38-164Z-f7f19012",
+    "launched_at": "2026-08-11T17:45:38.166Z",
+    "launch_gates": "ALL_GATES_PASS 13/13 (formal mode; G10 model parameter identity FROZEN)",
+    "pid": 93288,
+    "work_logs": "goal20-formal-execution-governance-v3/work/formal-v3-rerun1.stdout.txt / .stderr.txt",
+    "frozen_amendment": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1 (sha 1b07a16228527e1c1f1adbd647dba302f6ce118e48c917ffbbb54ce638762fee)",
+    "empty_content_schedule": "5 TOTAL attempts; delays 5s/15s/45s/120s + frozen stagger 0..1000ms; NO 300s",
+    "freeze_markers": [
+      "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1_LAUNCH_FREEZE",
+      "GOAL20_VALIDATION_V3_R1_EXECUTION_GOVERNANCE_FREEZE_RERUN_1",
+      "GOAL20_VALIDATION_V3_R1_EXECUTION_READY_RERUN_1"
+    ],
+    "gate_verification": "governance/gate-verification-v3-rerun-1.json (20/20 PASS)",
+    "executor": {
+      "runtime_sha256": "d891d73bdf006266ad4ad34e11b832892e4165a644f31f0bde417803b038be9c",
+      "dir_sha256": "700bb5f59af2eed2f0b0436ba44b58ea5b536a0678356ae1c0d9d27bd694bfcb",
+      "tests": "55/55"
+    },
+    "retry_policy_identity_sha256": "994155dfbec4e4bae2dcc4a4a4595764df753d05d498f13967c6e4864bf6518f",
+    "formal_provider_calls_before_launch": 0,
+    "monitoring": "EXECUTION-LEVEL DIAGNOSTICS ONLY; no scoring, no Gold inspection, no partial-score review; fail closed on FAILED/BUDGET_HARD_CAP/MODEL_IDENTITY_MISMATCH",
+    "holdback_plaintext_accessed": false,
+    "invalid_run_preserved": "2026-08-11T10-41-53-720Z-518b14f2 (byte-pinned; NOT scored; NOT reused)"
   }
 }

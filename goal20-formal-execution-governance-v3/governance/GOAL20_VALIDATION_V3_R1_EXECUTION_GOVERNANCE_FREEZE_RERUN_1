@@ -1,0 +1,27 @@
+{
+  "schema_version": 2.4,
+  "goal": "20R-V3-R1 (execution-only rerun 1)",
+  "epoch": "v3",
+  "created_at": "2026-08-11T17:45:00.000Z",
+  "freeze_id": "GOAL20_VALIDATION_V3_R1_EXECUTION_GOVERNANCE_FREEZE_RERUN_1",
+  "status": "FROZEN",
+  "additive_note": "Additive execution-only governance re-freeze for RERUN-1. All prior freezes (V1/V2/V2.1/V2.2/V2.3/V2.4/V3) remain immutable historical records. RERUN-1 changes ONLY the EMPTY_CONTENT retry wait schedule; scientific method semantics unchanged.",
+  "binds": {
+    "method_freeze": "GOAL20_VALIDATION_V3_FORMAL_METHOD_FREEZE (unchanged)",
+    "launch_freeze": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1_LAUNCH_FREEZE",
+    "validation_freeze": "VALIDATION_V3_FREEZE (unchanged)",
+    "prior_governance": "GOAL20_VALIDATION_V3_GOVERNANCE_FREEZE (unchanged, historical)",
+    "amendment": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1 (sha 1b07a16228527e1c1f1adbd647dba302f6ce118e48c917ffbbb54ce638762fee)",
+    "executor": "goal20-formal-execution-governance-r1/executor (runtime sha d891d73bdf006266ad4ad34e11b832892e4165a644f31f0bde417803b038be9c, dir sha 700bb5f59af2eed2f0b0436ba44b58ea5b536a0678356ae1c0d9d27bd694bfcb, tests 55/55)",
+    "retry_policy": "retry-policy-identity.json RERUN-1 rebind (sha 994155dfbec4e4bae2dcc4a4a4595764df753d05d498f13967c6e4864bf6518f)",
+    "tuple_precommit": "governance/goal20-formal-tuple-precommit.jsonl (720, sha 8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4)",
+    "execution_order": "governance/goal20-formal-execution-order.json (sha c021692d0e42041ea32171fad3c42cfc8905952d53b01baaf9bc7778f2f16ef4)",
+    "budget": "governance/goal20-formal-budget-model.json (DeepSeek 200 / Kimi 20 / total 220 caps; governor fails before overspend; EMPTY_CONTENT delays are wall-clock only, no cost change)",
+    "authorization": "formal-validation-execution-authorization.json + owner attachment 27e5675b (V3_R1_EXECUTION_ONLY_RERUN_APPROVED)",
+    "deepseek_parameters": "FROZEN V2.4 (model-parameter-identity.json; deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert)",
+    "run_lineage": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1; NEW immutable run instance in V3 runs root; 0/720; invalid run 518b14f2 byte-preserved; no tuple reuse"
+  },
+  "formal_provider_calls_before_freeze": 0,
+  "formal_outputs_before_freeze": 0,
+  "holdback_plaintext_accessed": false
+}

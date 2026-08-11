@@ -1,0 +1,52 @@
+{
+  "schema_version": 2.4,
+  "goal": "20R-V3-R1 (execution-only rerun 1)",
+  "created_at": "2026-08-11T17:18:00.000Z",
+  "freeze_id": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1",
+  "type": "EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT",
+  "owner_decision": {
+    "approval_status": "OWNER_APPROVED",
+    "owner_role": "PROJECT_OWNER",
+    "approved_at": "2026-08-11T17:07:16Z (owner attachment 27e5675b-f13a-4ebd-a61f-8d1eeb42022c LastWriteTime; no explicit timestamp in the approval text)",
+    "approval_text": "Approved: Goal20 Validation V3-R1 execution-only rerun. Owner decision: V3_R1_EXECUTION_ONLY_RERUN_APPROVED. Existing V3-R1 dataset remains the authoritative unseen Validation dataset; do NOT generate V3-R2. V3-R1 was INVALID/NON_CONFIRMATORY solely because one required provider tuple exhausted the frozen generic EMPTY_CONTENT acquisition policy; never scored; V3 Gold not inspected; Goal20X found no executor state/index defect, request serialization defect, model-visible request defect, or required method change; root cause PROVIDER_STOCHASTIC_JSON_EMPTY. Modify ONLY the scheduling of retries for the already-authorized qualifying generic EMPTY_CONTENT class: EMPTY_CONTENT max_attempts = 5 TOTAL ATTEMPTS INCLUDING INITIAL REQUEST; exact retry delays after attempt 1 = 5s, after attempt 2 = 15s, after attempt 3 = 45s, after attempt 4 = 120s; NO 300s fifth-retry delay (5 total attempts permit only 4 retries). Retain the already-frozen deterministic tuple-derived stagger unchanged (frozen before V2.4, 0..1000ms; no adaptive choice from V3-R1 outcomes). Uniform across every provider-dependent tuple; no TT15/tuple-711/sample-ID/arm/slot-specific behavior. All other V2.4/V3-R1 retry and failure policies unchanged (transport taxonomy/backoff, finish_reason=length, content_filter, operator/safe-stop abort, unknown/unclassified abort, model identity failure, config/causal identity failure, budget stop). Do not increase retry counts for transport or EMPTY_CONTENT. Preserve every provider attempt independently with request SHA, response/error, provider request ID, timestamps, latency, usage, reasoning/completion tokens, cost, retry classification, scheduled delay and actual retry timing. Add deterministic tests. Classify as EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT with SCIENTIFIC_METHOD_SEMANTICS_UNCHANGED / MODEL_VISIBLE_PROTOCOL_UNCHANGED / VALIDATION_DATASET_UNCHANGED. Do not create a new scientific Method V3; rebind only the minimum affected execution/launch/governance identities. Create a NEW immutable formal run instance under the same Validation V3-R1 scientific epoch, lineage GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1, 0/720. Rerun all launch-critical gates and create the necessary execution-only amendment / Launch / Governance / READY records. READY must record rerun formal calls before READY = 0, V3 fixture/gold/manifest SHAs unchanged, scorer unchanged, model-visible request protocol unchanged, Holdback untouched. Once READY is signed, immediately launch the new V3-R1 rerun without further owner confirmation. Do not inspect partial scientific scores during generation. If the rerun does NOT finish with all required tuples completed: fail closed, do NOT auto-create another rerun, do NOT increase EMPTY_CONTENT attempts, do NOT change backoff again, do NOT generate V3-R2 automatically, do NOT modify prompt/schema/model parameters; return for scientific owner review. If and only if the rerun completes validly: return for scientific owner review.",
+    "cryptographic_signature_status": "NOT_REQUIRED"
+  },
+  "scope": "EXECUTION-ONLY provider-acquisition scheduling amendment. Changes ONLY the wait schedule between already-authorized qualifying generic EMPTY_CONTENT retries (5 TOTAL attempts unchanged; delays 5s/15s/45s/120s + frozen tuple-id-derived stagger). Does NOT change Validation, Gold, manifest, schema, generator, seed, method, prompts, A0-A5, Decision Kernel, scorer, model-visible request bytes, model parameters, hard-gate thresholds, final-arm policy, retry counts, or any non-EMPTY_CONTENT retry/error semantics.",
+  "scientific_dispositions": {
+    "SCIENTIFIC_METHOD_SEMANTICS_UNCHANGED": true,
+    "MODEL_VISIBLE_PROTOCOL_UNCHANGED": true,
+    "VALIDATION_DATASET_UNCHANGED": true,
+    "evidence_basis": "Goal20X forensic gate: PROVIDER_STOCHASTIC_JSON_EMPTY (mechanism HIGH, TT15-006 concentration driver MEDIUM); 200 EMPTY_CONTENT events across V2/V2.1/V2.2/V2.3/V2.4/V3-R1; E1 profile 25/25 (HTTP 200, finish_reason=stop, reasoning_content contains the complete valid JSON answer, final content empty, latency 84-516ms); no executor state/index defect (two independent audits); no request serialization defect (22/22 byte-exact reconstruction); no model-visible request defect; no required method change; NO gold inspection, NO scoring, NO arm ranking, NO task-performance comparison used for this amendment.",
+    "invalid_run_disposition": {
+      "run_id": "2026-08-11T10-41-53-720Z-518b14f2",
+      "status": "INVALID_NON_CONFIRMATORY",
+      "freeze": "GOAL20_INVALID_RUN_V3_R1_FREEZE.json (744 files byte-pinned)",
+      "preservation": "permanently byte-frozen; not overwritten/resumed/salvaged/scored/merged; its 719 completed tuples are NOT reusable as formal evidence",
+      "allowed_use": "execution diagnostics ONLY"
+    }
+  },
+  "change": {
+    "before": "V2.3/V2.4/V3-R1: qualifying provider EMPTY_CONTENT retried with 5 TOTAL attempts and NO backoff (consecutive empty retries fired 2.1-2.7s apart; V3-R1 tuple 711/A3 lost 5 consecutive EMPTY_CONTENT attempts -> provider_failed; V2.4 recovered the same tuple on attempt 4 after a 43s incidental gap)",
+    "after": "qualifying provider EMPTY_CONTENT retries use a bounded deterministic schedule: after attempt 1 -> 5s, after attempt 2 -> 15s, after attempt 3 -> 45s, after attempt 4 -> 120s (5 TOTAL attempts => exactly 4 retries; NO 300s delay). The SAME frozen tuple-id-derived stagger (0..1000ms, frozen before V2.4) is retained unchanged: total delay = base + stagger. Attempt budget unchanged (5); no retry-count increase; request bytes / model-visible prompt / model parameters unchanged; uniform across all provider-dependent tuples.",
+    "covered": [
+      "EMPTY_CONTENT_RETRY_DELAYS_MS = [5000, 15000, 45000, 120000] (retry-policy.mjs; no 300000 entry)",
+      "emptyContentBackoffMs(attempt, tuple) = base + transportStaggerMs(tuple) (frozen stagger retained)",
+      "run.mjs: EMPTY_CONTENT retries sleep base+stagger; backoff/stagger metadata persisted per attempt (base_delay_ms, stagger_ms, total_delay_ms, schedule_ms)",
+      "retry-policy-identity.json RERUN-1 rebind; executor runtime/dir SHAs rebound",
+      "deterministic tests: exact schedule unit tests + integration (success on attempts 2/5, exhaust at 5, byte-identical requests, uniform across tuples, no duplicate, no overwrite, all attempts durable)"
+    ],
+    "unchanged": [
+      "EMPTY_CONTENT max_attempts = 5 TOTAL (initial + 4 retries)",
+      "transport retry taxonomy/backoff (6 attempts, 2s/5s/15s/30s/60s + stagger)",
+      "finish_reason=length with empty content -> EMPTY_CONTENT_LENGTH fail closed (non-retryable)",
+      "finish_reason=content_filter with empty content -> EMPTY_CONTENT_CONTENT_FILTER fail closed",
+      "operator/safe-stop abort (OPERATOR_ABORT), SIGINT, budget stop, model identity mismatch, causal/config identity failure, UNCLASSIFIED_ABORT: non-retryable",
+      "parse retry budget (3), model-visible request bytes, model parameters (deepseek-v4-flash, thinking enabled, reasoning_effort high, max_output_tokens 65536, temperature 0 inert), prompts, scorer, Gold, fixture, manifest, hard-gate thresholds, final-arm policy",
+      "per-attempt durable persistence; no duplicate accepted tuple; no overwrite of raw attempts"
+    ]
+  },
+  "deterministic_tests": "executor/tests/retry-policy.test.mjs (+3 RERUN-1 unit: exact 5s/15s/45s/120s schedule, no 300s, stagger determinism/bounds, 5-attempt budget unchanged) + executor/tests/executor.test.mjs (+3 RERUN-1 integration: success on attempt 2 with exact 5s metadata uniform across two tuples; success on attempt 5 with 4 retries at exact 5s/15s/45s/120s + byte-identical requests across 5 attempts + no duplicate + no overwrite on resume; five EMPTY_CONTENT attempts -> provider_failed after exactly 5 attempts with backoff metadata on every retry). Executor suite result appended below at gate verification.",
+  "budget_record": "goal20-formal-budget-model.json unchanged: no call-count or cost change (same 5-attempt budget; EMPTY_CONTENT delays are wall-clock only). Expected ~4.55 CNY; conservative-full-output 76.46; DeepSeek 200 + total 220 caps enforceable; budget governor pre-call check unchanged.",
+  "no_further_amendment": "RERUN-1 is the ONLY automatically authorized EMPTY_CONTENT scheduling amendment. No further backoff change, retry-count increase, taxonomy broadening, parameter change, or automatic second rerun is authorized. If RERUN-1 loses a required tuple, hits a new unclassified fatal, model identity mismatch, causal identity drift, budget hard-stop, or raw integrity failure, fail closed and return for scientific owner review.",
+  "holdback": "sealed Holdback untouched (4737bc7746825cac27938682f1a82ada28044d8122a5c2b6c35a67efb54adbd3)"
+}

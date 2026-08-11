@@ -1,6 +1,6 @@
 # Goal 20R-V3-R1 artifact sha256 manifest
 # Format: sha256  <relative path>  <sha256>
-# Status: V3_R1_RUN_FAILED_INVALID_NON_CONFIRMATORY (GOAL20_VALIDATION_V3_RUN_PROVIDER_FAILED)
+# Status: V3_R1_EXECUTION_RERUN_1_RUNNING (GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1; run 2026-08-11T17-45-38-164Z-f7f19012)
 # NOTE: run dir files pinned per-file in GOAL20_INVALID_RUN_V3_R1_FREEZE.json (744 files incl. attempts/*)
 
 sha256  goal20r-output/validation-v3-r1-generation-plan.json  a95944900e1ef28c149424ecc3e0d6d09b193f2587e0b4189c9a7891c3cafe4e
@@ -15,7 +15,6 @@ sha256  goal20r-output/VALIDATION_V3_DOWNSTREAM_OPAQUE_ID_AUDIT.json  f975895e68
 sha256  goal20r-output/VALIDATION_V3_ANTI_COPY_AUDIT.json  df791da884f2c61004c344bc64a59b76d4542725900b28a6bd44bbcc85ef5fbb
 sha256  goal20r-output/VALIDATION_V3_PRE_FREEZE_CANDIDATE_RETIREMENT.json  da59223f42cf86a7e451ed910be4f21a840b150792137020906b55441a661533
 sha256  goal20r-output/VALIDATION_V3_R1_RUN_FAILURE_RECORD.md  62460c6b32a602a70b2916a9bb537de9c95b80fcbd096ed2109872cdacb6a02b
-sha256  goal20r-output/commands-and-results.log  b24faade50bed00161d00dc4af7beaf15c426e415be880193e0a2372716fe45c
 sha256  goal20r-output/validation-v3-fixture.jsonl  26edd9dec5f7ad873db73a85300cfc0399e6dfca9c5ce78ceb005d50eb8ed4e0
 sha256  goal20r-output/validation-v3-gold.jsonl  e651748aa0cba1a61bf4f1f0ce63119e80cd09417001e0150b51046e96de9426
 sha256  goal20r-output/validation-v3-manifest.json  650ad61b25c64761a0399f444ef95ee34f122608525bcdcf38fd6e19049a0f17
@@ -44,3 +43,13 @@ sha256  goal21-output/scripts/run-scoring-v3.mjs  1ec73f21b87ef2c220cebdfc502cde
 sha256  goal21-output/scripts/generate-report-v3.mjs  d512a006220cc0c1573553b6dac9e15486c7218ce73e26f0f92bdce2337ab4ec
 sha256  goal20r-output/formal-run-config-v3.json  c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82
 sha256  goal20r-output/goal20-validation-v3-launch-identity-manifest.json  5c8a62ed1b0fcc8c512c4104ab351a8693121fb431bb361ff501db0a401cb611
+
+sha256  goal20-formal-execution-governance-v3/governance/GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1  1b07a16228527e1c1f1adbd647dba302f6ce118e48c917ffbbb54ce638762fee
+sha256  goal20-formal-execution-governance-v3/governance/GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1_LAUNCH_FREEZE  cffdcd0310d0c4207b99363974c64d8a40f8633dd892707b945c12dd5ab36c97
+sha256  goal20-formal-execution-governance-v3/governance/GOAL20_VALIDATION_V3_R1_EXECUTION_GOVERNANCE_FREEZE_RERUN_1  b1da5bc7ae85acdeac4f4db00b0a804ff174c319a4e9b9c828d76a702d40fb1f
+sha256  goal20-formal-execution-governance-v3/governance/GOAL20_VALIDATION_V3_R1_EXECUTION_READY_RERUN_1  f1a736c94237d20586974cdb1be8c96afdc8d06100f41ba787efd41504b03990
+sha256  goal20-formal-execution-governance-v3/governance/gate-verification-v3-rerun-1.json  e15d67afac732248083ca73ed8e3cf1214150c9a44a9c2c4f75fcd2883a53112
+sha256  goal20-formal-execution-governance-v3/governance/retry-policy-identity.json  994155dfbec4e4bae2dcc4a4a4595764df753d05d498f13967c6e4864bf6518f
+sha256  goal20r-output/commands-and-results.log  52f211574cc68096e545cb5307fff0f2e22c3c1ae7a87e9f9e5746be8e13c440
+sha256  goal20x-output/executor-tests-rerun1.stdout.txt  a93a3ed41eca3a4ea0ed9639da770243d363bca53b01d35794811a89231cc05f
+sha256  CURRENT_FORMAL_CAMPAIGN_STATE.json  d050ef4e6cc8bf39aa3f41fd232117d0af96af20ba946b6789a540bc693adeb9

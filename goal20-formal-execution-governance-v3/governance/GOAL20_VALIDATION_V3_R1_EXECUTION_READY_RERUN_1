@@ -1,0 +1,33 @@
+{
+  "schema_version": 2.4,
+  "goal": "20R-V3-R1 (execution-only rerun 1)",
+  "epoch": "v3",
+  "created_at": "2026-08-11T17:45:00.000Z",
+  "marker": "GOAL20_VALIDATION_V3_R1_EXECUTION_READY_RERUN_1",
+  "status": "READY",
+  "meaning": "All RERUN-1 gates PASS (20/20, gate-verification-v3-rerun-1.json; 720-tuple dummy structural preflight 13/13; executor deterministic suite 55/55) and the freeze chain is signed. Authorized to start the Goal20 Validation V3-R1 execution-only rerun immediately: same campaign goal20-formal-validation-v1, same V3-R1 scientific epoch, NEW immutable run instance, 0/720, frozen V2.4 protocol with the ONLY change being the EMPTY_CONTENT retry wait schedule (5 TOTAL attempts; delays 5s/15s/45s/120s + frozen tuple-id-derived stagger 0..1000ms; NO 300s). Model-visible request bytes, prompts, model parameters, scorer, Gold, fixture, manifest, hard gates and final-arm policy unchanged. EMPTY_CONTENT/transport/parse budgets unchanged.",
+  "binds": {
+    "validation": "VALIDATION_V3_FREEZE",
+    "method": "GOAL20_VALIDATION_V3_FORMAL_METHOD_FREEZE",
+    "launch": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1_LAUNCH_FREEZE",
+    "governance": "GOAL20_VALIDATION_V3_R1_EXECUTION_GOVERNANCE_FREEZE_RERUN_1",
+    "amendment": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1",
+    "product": "e2c95b496b83074e0b584d201c174d731345a97c",
+    "dataset": "validation-v3-r1 fixture/gold/manifest (78e61a15... / e28d37f7... / 58ceee3f...)",
+    "executor": "runtime d891d73bd..., dir 700bb5f59..., tests 55/55"
+  },
+  "rerun_record": {
+    "formal_provider_calls_before_ready": 0,
+    "formal_outputs_before_ready": 0,
+    "v3_fixture_gold_manifest_shas_unchanged": true,
+    "scorer_unchanged": true,
+    "model_visible_request_protocol_unchanged": true,
+    "holdback_plaintext_accessed": false,
+    "invalid_run_preserved": "2026-08-11T10-41-53-720Z-518b14f2 (GOAL20_INVALID_RUN_V3_R1_FREEZE.json; 744 files byte-pinned; untouched)"
+  },
+  "signature": {
+    "owner": "PROJECT_OWNER (Goal 20R-V3-R1 execution-only rerun owner attachment 27e5675b-f13a-4ebd-a61f-8d1eeb42022c; V3_R1_EXECUTION_ONLY_RERUN_APPROVED)",
+    "machine": "codex agent signed after all RERUN-1 gates PASS",
+    "cryptographic_signature_status": "NOT_REQUIRED"
+  }
+}

@@ -120,3 +120,20 @@ raw-results.jsonl sha256: 4afa11f7c613d6767e816ebd537587c5c8ade1bd655469e6ca081e
 budget-ledger.json sha256: bf6b40b1efaf7b069541732c3be059bce4877bc708dbaae24753e045e4445618
 run finalized at 2026-08-11T15:37:39.401Z (295.8 min)
 
+
+
+## V3-R1 execution-only rerun RERUN-1 (amendment + READY + launch)
+- owner: V3_R1_EXECUTION_ONLY_RERUN_APPROVED (attachment 27e5675b-f13a-4ebd-a61f-8d1eeb42022c)
+- amendment: GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1 (sha 1b07a16228527e1c1f1adbd647dba302f6ce118e48c917ffbbb54ce638762fee)
+- change: EMPTY_CONTENT retry wait schedule ONLY -> 5 TOTAL attempts; delays after attempts 1-4: 5s/15s/45s/120s + frozen tuple-id-derived stagger 0..1000ms; NO 300s; all other retry/error/model/prompt semantics unchanged
+- executor SHAs: runtime d891d73bdf006266ad4ad34e11b832892e4165a644f31f0bde417803b038be9c (13 files), dir 700bb5f59af2eed2f0b0436ba44b58ea5b536a0678356ae1c0d9d27bd694bfcb (15 files)
+- executor deterministic tests: 55/55 PASS (6 new RERUN-1 tests; goal20x-output/executor-tests-rerun1.stdout.txt)
+- retry-policy-identity.json RERUN-1 rebind sha 994155dfbec4e4bae2dcc4a4a4595764df753d05d498f13967c6e4864bf6518f
+- 720-tuple dummy structural preflight: v3-rerun1-preflight-720-001 COMPLETED 720/720 unique; 0 errors; 480 dummy calls; 0 formal calls; runner gates 13/13 PASS
+- gate-verification-v3-rerun-1.json: 20/20 PASS (identities, executor, tests, preflight, isolation, budget, authorization, holdback, no-scoring)
+- freeze chain: GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1_LAUNCH_FREEZE -> GOAL20_VALIDATION_V3_R1_EXECUTION_GOVERNANCE_FREEZE_RERUN_1 -> GOAL20_VALIDATION_V3_R1_EXECUTION_READY_RERUN_1 (formal provider calls before READY = 0; holdback untouched)
+- launch command: node goal20-formal-execution-governance-r1/executor/run-goal20-formal-validation.mjs --mode formal --epoch v3 --fixture goal20r-output/validation-v3-r1-fixture.jsonl --harness-root goal20-cross-machine-handoff/execution-snapshot/experiments/decision-benchmark/ablation --product-root D:\ai_code\Omni-context-decision-kernel-v1 --governance-root goal20-formal-execution-governance-v3/governance --runs-root goal20-formal-execution-governance-v3/runs --repo-root D:\ai_code\Omni-context
+- run_id: 2026-08-11T17-45-38-164Z-f7f19012 (lineage GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1; 0/720; invalid run 518b14f2 byte-preserved)
+- gates ALL_GATES_PASS (13/13 formal mode; G10 parameter identity FROZEN)
+- pid 93288; work logs: goal20-formal-execution-governance-v3/work/formal-v3-rerun1.{stdout,stderr}.txt
+- (progress/results appended after completion)
