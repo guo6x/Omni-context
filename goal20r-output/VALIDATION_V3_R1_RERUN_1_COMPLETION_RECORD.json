@@ -1,0 +1,73 @@
+{
+  "schema_version": 2.4,
+  "goal": "20R-V3-R1 (execution-only rerun 1)",
+  "created_at": "2026-08-11T23:20:00.000Z",
+  "record_id": "VALIDATION_V3_R1_RERUN_1_COMPLETION_RECORD",
+  "run_id": "2026-08-11T17-45-38-164Z-f7f19012",
+  "lineage": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1",
+  "status": "COMPLETED_720_720",
+  "terminal_marker": "COMPLETED",
+  "finalized_at": "2026-08-11T23:16:10.156Z",
+  "launched_at": "2026-08-11T17:45:38.166Z",
+  "duration_minutes": 330.5,
+  "execution": {
+    "rows": 720,
+    "unique": 720,
+    "completed": 720,
+    "provider_failed": 0,
+    "parse_failed": 0,
+    "kernel_failed": 0,
+    "duplicate": 0,
+    "contract_error_rows": 0,
+    "provider_calls_total": 491,
+    "provider_accepted_rows": 480,
+    "retries": 11,
+    "retry_detail": "11 x EMPTY_CONTENT, all recovered on retry with RERUN-1 schedule (5s/15s/45s/120s + frozen stagger); 0 transport retries; 0 parse-repair retries; 0 finish_reason=length; 0 content_filter",
+    "previously_fatal_tuple": {
+      "tuple_id": "g20-711",
+      "sample_id": "decision-bench-v3-val-tt15-006",
+      "arm": "A3",
+      "attempt": 2,
+      "retry_count": 1,
+      "status": "completed",
+      "backoff": "base 5000ms + stagger 50ms = 5050ms"
+    },
+    "model_identity": "deepseek-v4-flash on 480/480 provider rows; 0 MODEL_IDENTITY_MISMATCH",
+    "max_completion_tokens": 17370,
+    "max_output_tokens_ceiling": 65536
+  },
+  "budget": {
+    "calls": 491,
+    "spent_cny": 4.127935,
+    "caps_intact": true,
+    "deepseek_v4_flash_maximum_cny": 200,
+    "kimi_2_6_maximum_cny": 20,
+    "total_maximum_hard_cap_cny": 220
+  },
+  "identities": {
+    "fixture": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e",
+    "gold": "e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0",
+    "manifest": "58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191",
+    "config": "c7070189cbef5d112c386654e06fd3b6d23742f056c36a73f53ddddbb2fcae82",
+    "precommit": "8663b0c379ea01d9e80f532396dfad2c545ab81fb847386cbda9c558f6d58dd4",
+    "amendment": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1"
+  },
+  "run_artifact_shas": {
+    "raw_results_jsonl": "28a46ff11b1f8b373e4f563c6da406d636647042ee1a6d7258c6a4b7f4c8b66f",
+    "budget_ledger_json": "c36bc1b49095dd46d295fec13a574d29a7726d97d6138046be0433e242f8e104",
+    "COMPLETED": "c742c064a98493eedf48228d508e815080ddccaa2875b2bf005ddc6a3ac6fc58",
+    "retries_jsonl": "dbefd035a97b8b0bd9bf8cd69543f1e1a3e72b9fbd8b850c04d5fd2afd7b9a41",
+    "run_manifest_json": "55dff618729f162d519055471d86895c2dd94d702d9dbf7eb57c1ad2a93310e3",
+    "artifact_sha256_txt": "3caa2cbe902db5323df2815eaacfcece20dc16185aec072a718be26d1e038807"
+  },
+  "prohibited_actions_respected": [
+    "NO scoring executed",
+    "NO Gold content inspection",
+    "NO Holdback access (sealed 4737bc77... untouched)",
+    "NO partial-score review during generation",
+    "NO arm ranking / task-performance comparison",
+    "NO parameter/prompt/schema change",
+    "NO further retry/backoff amendment"
+  ],
+  "next_step": "Return for scientific owner review. Raw-output freeze and scoring require owner decision. If authorized: raw freeze -> scorer v1.1 -> Goal20 metrics and hard gates under frozen protocol."
+}

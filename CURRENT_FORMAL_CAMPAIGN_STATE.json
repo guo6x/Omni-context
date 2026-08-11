@@ -1,8 +1,8 @@
 {
   "schema_version": 8,
-  "updated_at": "2026-08-11T17:48:00.000Z",
+  "updated_at": "2026-08-11T23:20:00.000Z",
   "goal": "20R-V3-R1 (execution-only rerun 1)",
-  "phase": "GOAL20_VALIDATION_V3_R1_RERUN_1_RUNNING",
+  "phase": "GOAL20_VALIDATION_V3_R1_RERUN_1_COMPLETED_AWAITING_OWNER_REVIEW",
   "machine": "D:\\ai_code\\Omni-context (sole authoritative formal execution machine)",
   "campaign": "goal20-formal-validation-v1",
   "formal_state": {
@@ -170,7 +170,7 @@
     "sha256": "be1c0e515f8bd250c8ea40d13c2f72c9d0ea25411fb51b06ccf3e7839fca8cab",
     "note": "authoritative V2.3 timeline: launch 2026-08-10T17:00:02.942Z, end 2026-08-10T22:15:00.449Z, transport blip 17:29:35.400Z-17:29:36.123Z; original logs NOT rewritten; new log entries use UTC ISO-8601"
   },
-  "next_action": "Monitor RERUN-1 execution-level diagnostics only. On 720/720 COMPLETED: stop and return for scientific owner review (scoring requires owner decision). On any required-tuple loss or new unclassified fatal: fail closed and return for scientific owner review.",
+  "next_action": "Owner scientific review: authorize (a) GOAL20_RAW_OUTPUT_FREEZE_V3_R1_RERUN_1 and (b) scoring with frozen scorer v1.1 against frozen raw outputs and V3 Gold. No scoring / no further provider calls / no Holdback access until owner decision.",
   "v3_r1_run": {
     "status": "INVALID_NON_CONFIRMATORY",
     "terminal_marker": "FAILED",
@@ -231,30 +231,27 @@
     ]
   },
   "v3_r1_rerun_1": {
-    "status": "RUNNING",
+    "status": "COMPLETED_720_720",
     "lineage": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1",
     "run_id": "2026-08-11T17-45-38-164Z-f7f19012",
     "run_dir": "goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2026-08-11T17-45-38-164Z-f7f19012",
     "launched_at": "2026-08-11T17:45:38.166Z",
-    "launch_gates": "ALL_GATES_PASS 13/13 (formal mode; G10 model parameter identity FROZEN)",
-    "pid": 93288,
-    "work_logs": "goal20-formal-execution-governance-v3/work/formal-v3-rerun1.stdout.txt / .stderr.txt",
-    "frozen_amendment": "GOAL20_EXECUTION_ONLY_PROVIDER_ACQUISITION_SCHEDULING_AMENDMENT_RERUN_1 (sha 1b07a16228527e1c1f1adbd647dba302f6ce118e48c917ffbbb54ce638762fee)",
-    "empty_content_schedule": "5 TOTAL attempts; delays 5s/15s/45s/120s + frozen stagger 0..1000ms; NO 300s",
-    "freeze_markers": [
-      "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1_LAUNCH_FREEZE",
-      "GOAL20_VALIDATION_V3_R1_EXECUTION_GOVERNANCE_FREEZE_RERUN_1",
-      "GOAL20_VALIDATION_V3_R1_EXECUTION_READY_RERUN_1"
-    ],
-    "gate_verification": "governance/gate-verification-v3-rerun-1.json (20/20 PASS)",
-    "executor": {
-      "runtime_sha256": "d891d73bdf006266ad4ad34e11b832892e4165a644f31f0bde417803b038be9c",
-      "dir_sha256": "700bb5f59af2eed2f0b0436ba44b58ea5b536a0678356ae1c0d9d27bd694bfcb",
-      "tests": "55/55"
-    },
-    "retry_policy_identity_sha256": "994155dfbec4e4bae2dcc4a4a4595764df753d05d498f13967c6e4864bf6518f",
-    "formal_provider_calls_before_launch": 0,
-    "monitoring": "EXECUTION-LEVEL DIAGNOSTICS ONLY; no scoring, no Gold inspection, no partial-score review; fail closed on FAILED/BUDGET_HARD_CAP/MODEL_IDENTITY_MISMATCH",
+    "finalized_at": "2026-08-11T23:16:10.156Z",
+    "duration_minutes": 330.5,
+    "terminal_marker": "COMPLETED",
+    "progress": "720/720 completed; 0 provider_failed; 0 parse_failed; 0 kernel_failed",
+    "calls": 491,
+    "spent_cny": 4.127935,
+    "retries": 11,
+    "retry_detail": "11 x EMPTY_CONTENT all recovered (RERUN-1 schedule 5s/15s/45s/120s + frozen stagger); 0 transport; 0 parse-repair; 0 length/content_filter",
+    "previously_fatal_tuple_recovered": "g20-711 tt15-006/A3 attempt 2 (5050ms backoff); all 6 tt15-006 slots completed",
+    "model_identity": "deepseek-v4-flash on 480/480 provider rows; 0 MODEL_IDENTITY_MISMATCH",
+    "max_completion_tokens": 17370,
+    "raw_results_jsonl_sha256": "28a46ff11b1f8b373e4f563c6da406d636647042ee1a6d7258c6a4b7f4c8b66f",
+    "budget_ledger_sha256": "c36bc1b49095dd46d295fec13a574d29a7726d97d6138046be0433e242f8e104",
+    "completion_record": "goal20r-output/VALIDATION_V3_R1_RERUN_1_COMPLETION_RECORD.json (sha 8803670f6a08c66592c2969868a1d0c0c51659c4e0d35b62a1bf3143c0cae19a)",
+    "scored": false,
+    "raw_output_freeze": "NOT_SIGNED (requires owner decision)",
     "holdback_plaintext_accessed": false,
     "invalid_run_preserved": "2026-08-11T10-41-53-720Z-518b14f2 (byte-pinned; NOT scored; NOT reused)"
   }

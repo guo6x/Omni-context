@@ -137,3 +137,17 @@ run finalized at 2026-08-11T15:37:39.401Z (295.8 min)
 - gates ALL_GATES_PASS (13/13 formal mode; G10 parameter identity FROZEN)
 - pid 93288; work logs: goal20-formal-execution-governance-v3/work/formal-v3-rerun1.{stdout,stderr}.txt
 - (progress/results appended after completion)
+
+
+## V3-R1 execution-only rerun RERUN-1 COMPLETED (720/720)
+run_id: 2026-08-11T17-45-38-164Z-f7f19012
+terminalMarker: COMPLETED (finalized_at 2026-08-11T23:16:10.156Z; duration 330.5 min)
+rows=720 unique=720 completed=720 provider_failed=0 parse_failed=0 kernel_failed=0 duplicate=0 contract_error_rows=0
+provider calls: 491 total (480 accepted provider rows + 11 retries); spent_cny=4.127935; caps 200/20/220 intact
+retries: 11 x EMPTY_CONTENT, ALL recovered with RERUN-1 schedule (5s/15s/45s/120s + frozen stagger); 0 transport; 0 parse-repair; 0 finish_reason=length; 0 content_filter
+previously fatal tuple g20-711 (tt15-006/A3) COMPLETED on attempt 2 (base 5000ms + stagger 50ms = 5050ms); all 6 tt15-006 slots completed
+model identity: deepseek-v4-flash on 480/480 provider rows; 0 MODEL_IDENTITY_MISMATCH; max completion tokens 17370 < 65536
+run artifact shas: raw-results.jsonl 28a46ff11b1f8b373e4f563c6da406d636647042ee1a6d7258c6a4b7f4c8b66f; budget-ledger.json c36bc1b49095dd46d295fec13a574d29a7726d97d6138046be0433e242f8e104; COMPLETED c742c064a98493eedf48228d508e815080ddccaa2875b2bf005ddc6a3ac6fc58; retries.jsonl dbefd035a97b8b0bd9bf8cd69543f1e1a3e72b9fbd8b850c04d5fd2afd7b9a41
+record: goal20r-output/VALIDATION_V3_R1_RERUN_1_COMPLETION_RECORD.json (sha 8803670f6a08c66592c2969868a1d0c0c51659c4e0d35b62a1bf3143c0cae19a)
+NO scoring; NO Gold inspection; NO Holdback access; invalid run 518b14f2 byte-preserved
+status: GOAL20_VALIDATION_V3_R1_RERUN_1_COMPLETED_AWAITING_OWNER_REVIEW (raw-output freeze + scoring require owner decision)
