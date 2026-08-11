@@ -1,0 +1,777 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnicontext.local/schemas/decision-benchmark-v3-set.json",
+  "title": "Decision Benchmark v3 Validation Set Entry (no gold)",
+  "description": "Scenario-only entry of the validation split. Gold fields are withheld in the set file and provided separately in validation-gold.jsonl. V3 epoch identity: sample_id namespace decision-bench-v3-val-*; schema_version decision-benchmark-v3. Construct semantics identical to v2.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sample_id",
+    "split",
+    "task_type",
+    "title",
+    "domain",
+    "scenario",
+    "goal",
+    "memory_timeline",
+    "candidates",
+    "hard_constraints",
+    "soft_preferences",
+    "evidence",
+    "historical_decision",
+    "execution_outcome",
+    "decision_question",
+    "construction_provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "decision-benchmark-v3"
+    },
+    "sample_id": {
+      "type": "string",
+      "pattern": "^decision-bench-v3-val-tt(01|02|03|04|05|06|07|08|09|10|11|12|13|14|15)-[0-9]{3}$",
+      "description": "Epoch-distinct V3 sample id (explicit epoch identity; no seed hash embedded; readable and deterministic)."
+    },
+    "split": {
+      "type": "string",
+      "enum": [
+        "development",
+        "regression",
+        "validation",
+        "holdback"
+      ]
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "TT01",
+        "TT02",
+        "TT03",
+        "TT04",
+        "TT05",
+        "TT06",
+        "TT07",
+        "TT08",
+        "TT09",
+        "TT10",
+        "TT11",
+        "TT12",
+        "TT13",
+        "TT14",
+        "TT15"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 4
+    },
+    "domain": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Semantic domain used for split non-overlap checks (dev/reg/holdback must be disjoint)."
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "query_time",
+        "authority_level",
+        "prompt",
+        "risk_classification"
+      ],
+      "properties": {
+        "query_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The moment at which the system must answer; all temporal validity is judged against this."
+        },
+        "authority_level": {
+          "type": "string",
+          "enum": [
+            "L0",
+            "L1",
+            "L2",
+            "L3",
+            "L4",
+            "L5"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 8,
+          "description": "The decision request presented to the system under test."
+        },
+        "options_shown_in_order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Candidate ids in presentation order (position-bias control)."
+        },
+        "risk_classification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "reversibility",
+            "rationale"
+          ],
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": [
+                "negligible",
+                "low",
+                "medium",
+                "high",
+                "critical"
+              ]
+            },
+            "reversibility": {
+              "type": "string",
+              "enum": [
+                "reversible",
+                "conditionally_reversible",
+                "irreversible"
+              ]
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 4
+            }
+          }
+        },
+        "distractor_variables": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2
+          },
+          "description": "Variables present in the situation that are NOT key and must not be asked (over-questioning trap). Empty or absent when no distractors exist."
+        }
+      }
+    },
+    "goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text",
+        "source_ref"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^g[0-9]+$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 4
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "Reference into memory_timeline (event_id) or entity id."
+        }
+      }
+    },
+    "memory_timeline": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "at",
+          "writer",
+          "type",
+          "content"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "pattern": "^e[0-9]{3,}$"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "writer": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "agent",
+                  "system",
+                  "tool"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "description": "Agent id for multi-agent scenarios (e.g. agent-alpha)."
+              }
+            }
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "write",
+              "update",
+              "delete",
+              "decision",
+              "outcome",
+              "advice",
+              "override",
+              "revisit",
+              "note"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 4
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "supersedes": {
+            "type": "string",
+            "description": "Event id replaced by this event."
+          },
+          "derived_from": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Event ids this fact/decision derives from."
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Event ids this event operates on (delete/outcome/override)."
+          }
+        }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "description",
+          "violates_hard_constraint",
+          "evidence_refs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^opt-[a-z0-9-]+$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 2
+          },
+          "description": {
+            "type": "string",
+            "minLength": 2
+          },
+          "violates_hard_constraint": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "null = feasibility unknown (key variable missing)."
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "hard_constraints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "text",
+          "source_ref"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^hc[0-9]+$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 4
+          },
+          "source_ref": {
+            "type": "string"
+          },
+          "stale_after": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Hard constraints do not silently decay; expiry requires re-confirmation."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "soft_preferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "text",
+          "weight",
+          "source_ref"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^sp[0-9]+$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 2
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source_ref": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualified",
+        "expired",
+        "conflicting"
+      ],
+      "properties": {
+        "qualified": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "fact",
+              "at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^ev[0-9]{3,}$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "fact",
+                  "preference",
+                  "outcome",
+                  "advice",
+                  "principle",
+                  "constraint"
+                ]
+              },
+              "fact": {
+                "type": "string",
+                "minLength": 4
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "supports": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Candidate ids / constraint ids / decision ids this evidence supports."
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "source_ref": {
+                "type": "string",
+                "description": "Backing memory_timeline event_id."
+              }
+            }
+          }
+        },
+        "expired": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "fact",
+              "at",
+              "valid_until",
+              "expiry_reason"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^ex[0-9]{3,}$"
+              },
+              "fact": {
+                "type": "string",
+                "minLength": 4
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "valid_until": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "expiry_reason": {
+                "type": "string",
+                "enum": [
+                  "superseded",
+                  "timed_out",
+                  "retracted",
+                  "source_deleted"
+                ]
+              },
+              "superseded_by": {
+                "type": "string",
+                "description": "Event id that replaced this fact."
+              },
+              "source_ref": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "conflicting": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "fact",
+              "at",
+              "conflicts_with",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^cf[0-9]{3,}$"
+              },
+              "fact": {
+                "type": "string",
+                "minLength": 4
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "conflicts_with": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "resolved"
+                ]
+              },
+              "resolution": {
+                "type": "string",
+                "description": "Required when status == resolved."
+              },
+              "writer_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Agent ids involved in the conflict."
+              },
+              "key_variable": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null,
+                "description": "Non-null when the conflict is on a decision key variable; open key-variable conflicts require CLARIFY."
+              },
+              "source_ref": {
+                "type": "string",
+                "description": "Backing memory_timeline event_id."
+              }
+            }
+          }
+        }
+      }
+    },
+    "historical_decision": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "decision_id": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 4
+        },
+        "conclusion": {
+          "type": "string",
+          "minLength": 2
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "clarifying",
+            "evaluating",
+            "awaiting_approval",
+            "approved",
+            "rejected",
+            "deferred",
+            "in_execution",
+            "executed",
+            "outcome_recorded",
+            "revisit_due",
+            "revising",
+            "revoked",
+            "invalidated",
+            "superseded",
+            "archived"
+          ]
+        },
+        "made_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revisit_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "evidence_snapshot": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Evidence ids captured at decision time (some may now be expired)."
+        },
+        "lineage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "decision_id",
+              "relation"
+            ],
+            "properties": {
+              "decision_id": {
+                "type": "string"
+              },
+              "relation": {
+                "type": "string",
+                "enum": [
+                  "continues",
+                  "revises",
+                  "supersedes",
+                  "reverses",
+                  "invalidates"
+                ]
+              }
+            }
+          }
+        },
+        "authority_level": {
+          "type": "string",
+          "enum": [
+            "L0",
+            "L1",
+            "L2",
+            "L3",
+            "L4",
+            "L5"
+          ]
+        }
+      },
+      "required": [
+        "decision_id",
+        "question",
+        "conclusion",
+        "state",
+        "made_at",
+        "revisit_at",
+        "evidence_snapshot",
+        "lineage"
+      ]
+    },
+    "execution_outcome": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure",
+            "partial",
+            "none"
+          ]
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actual_outcome": {
+          "type": "string",
+          "minLength": 4
+        },
+        "assumption_failures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lessons_learned": {
+          "type": "string"
+        },
+        "rollback": {
+          "type": "string",
+          "description": "Rollback executed / planned when reversible."
+        }
+      },
+      "required": [
+        "status",
+        "at",
+        "actual_outcome"
+      ]
+    },
+    "decision_question": {
+      "type": "string",
+      "minLength": 8,
+      "description": "The decision question presented to the system under test. Must equal scenario.prompt (integrity-enforced); kept as a first-class field per Goal 18 sample discipline."
+    },
+    "construction_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generator_identity",
+        "prompt_hash",
+        "human_editor",
+        "edit_history",
+        "final_reviewer",
+        "source_type"
+      ],
+      "properties": {
+        "generator_identity": {
+          "type": "string",
+          "minLength": 3
+        },
+        "prompt_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "sha256 of the construction prompt / template block id used to produce this sample. Null for pure template paths where the generator code is the source of truth."
+        },
+        "human_editor": {
+          "type": "string",
+          "minLength": 2
+        },
+        "edit_history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "at",
+              "editor",
+              "change",
+              "reason"
+            ],
+            "properties": {
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "editor": {
+                "type": "string"
+              },
+              "change": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "final_reviewer": {
+          "type": "string",
+          "minLength": 2
+        },
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "human_design",
+            "multi_model_reconstruction",
+            "anonymized_pattern_synthesis",
+            "adversarial_boundary"
+          ]
+        }
+      }
+    }
+  },
+  "schemaVersion": "decision-benchmark-v2"
+}

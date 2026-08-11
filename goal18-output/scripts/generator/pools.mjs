@@ -194,6 +194,12 @@ export const TASK_TYPE_LABELS = {
 // which guarantees same-task samples across splits use different option labels.
 export function pickPair(rng, d, ctx) {
   const allPairs = d.pairs.flat();
+  if (ctx.epoch === 'v3') {
+    // V3-R1 seed-aware option-surface realization: the pair-group is drawn from the
+    // slot-local RNG so different epochs realize the same (tt, idx) slot with a
+    // different option surface. Construct semantics unchanged (same pair pools).
+    return allPairs[rng.int(allPairs.length)];
+  }
   const n = Number(ctx.tt.slice(2)) + ctx.idx;
   return allPairs[n % allPairs.length];
 }

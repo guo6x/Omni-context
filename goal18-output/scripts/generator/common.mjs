@@ -120,13 +120,15 @@ export function mkScoring(metrics, primary) {
 // Assemble the full v2 sample from builder parts.
 export function assemble(ctx, parts) {
   const { split, tag, tt, idx, domain } = ctx;
+  const epoch = ctx.epoch ?? 'v2';
   const domainDef = domainById(domain);
-  const sampleId = `decision-bench-v2-${tag}-tt${tt.slice(2).toLowerCase()}-${String(idx).padStart(3, '0')}`;
+  const ns = epoch === 'v3' ? 'decision-bench-v3' : 'decision-bench-v2';
+  const sampleId = `${ns}-${tag}-tt${tt.slice(2).toLowerCase()}-${String(idx).padStart(3, '0')}`;
   const title = parts.entityName ? `${TASK_TYPE_LABELS[tt]} · ${domainDef.label} · ${parts.entityName}` : `${TASK_TYPE_LABELS[tt]} · ${domainDef.label}`;
   const candIds = parts.candidates.map((c) => c.id);
   const optionsOrder = parts.optionsOrder && parts.optionsOrder.length === candIds.length ? parts.optionsOrder : candIds;
   return {
-    schema_version: 'decision-benchmark-v2',
+    schema_version: epoch === 'v3' ? 'decision-benchmark-v3' : 'decision-benchmark-v2',
     sample_id: sampleId,
     split,
     task_type: tt,

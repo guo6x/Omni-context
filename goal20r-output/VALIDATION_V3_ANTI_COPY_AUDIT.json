@@ -1,0 +1,54 @@
+{
+  "artifact": "goal20r-output/VALIDATION_V3_ANTI_COPY_AUDIT.json",
+  "scope": "goal18-output/scripts/generator/*.{mjs,cjs} (common.mjs, generate.mjs, pools.mjs, diversify-v3.mjs, builders-*.mjs, plans.mjs, rng.mjs)",
+  "requirement": "NO_V2_SAMPLE_SPECIFIC_GENERATOR_PATCHES = true (Goal 20R-V3-R1 attachment section 10)",
+  "checks": [
+    {
+      "id": "A1",
+      "check": "V2 sample-ID literals (decision-bench-v2-val-ttNN-NNN)",
+      "result": "PASS",
+      "detail": "Only occurrence of 'decision-bench-v2' is the epoch namespace template in common.mjs line 125 (const ns = epoch === 'v3' ? 'decision-bench-v3' : 'decision-bench-v2'), required for V2 epoch byte-reproduction. No concrete sample ID literal anywhere."
+    },
+    {
+      "id": "A2",
+      "check": "Any ttNN-NNN literal in generator sources",
+      "result": "PASS",
+      "detail": "rg 'tt\\d{2}-\\d{3}' returned zero matches."
+    },
+    {
+      "id": "A3",
+      "check": "Hand-authored fixes for high-similarity samples tt15-005 / tt01-001 / tt15-004",
+      "result": "PASS",
+      "detail": "rg for 'tt15-005','tt01-001','tt15-004' returned zero matches."
+    },
+    {
+      "id": "A4",
+      "check": "Per-sample similarity exceptions / whitelists in diversify-v3.mjs",
+      "result": "PASS",
+      "detail": "Only 'similarity' mentions are design-goal comments (lines 25-26). No exception lists, no per-sample allowances."
+    },
+    {
+      "id": "A5",
+      "check": "V2 Gold values copied into the NEW diversification module",
+      "result": "PASS",
+      "detail": "All 20-grams (length 20, CJK-bearing) from validation-v2-gold.jsonl scanned against diversify-v3.mjs: 0 hits."
+    },
+    {
+      "id": "A6",
+      "check": "Rule strings in diversify-v3.mjs that occur ONLY in high-similarity V2 samples",
+      "result": "PASS",
+      "detail": "536 extracted rule strings; 535 occur in zero V2 samples or across the general corpus. Single candidate '依据条款：' appears only in tt15-004 under V2's seed, but is one member of a general synonym family (政策依据/政策凭据/依据条款/凭据条款/定价依据/定价凭据) tied to pre-existing builder templates (builders-tt11-15.mjs:260). Not sample-specific."
+    },
+    {
+      "id": "A7",
+      "check": "V2 fixture literal lines copied into generator",
+      "result": "PASS",
+      "detail": "Generator templates are the shared origin of V2 and V3 fixture content by design; no full literal lines were added to reproduce specific V2 samples. 12-gram hits are explained by shared template scaffolds."
+    }
+  ],
+  "verdict": {
+    "NO_V2_SAMPLE_SPECIFIC_GENERATOR_PATCHES": true,
+    "all_checks_pass": true
+  },
+  "generated_at": "2026-08-11T00:00:00Z"
+}

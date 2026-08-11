@@ -14,11 +14,21 @@ import * as b0105 from './builders-tt01-05.mjs';
 import * as b0610 from './builders-tt06-10.mjs';
 import * as b1115 from './builders-tt11-15.mjs';
 import { validateSchema } from '../../benchmark-integrity-tests/schema-validator.mjs';
+import { applyV3Diversification } from './diversify-v3.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.resolve(here, '..', '..');
 let OUT_DIR = OUT;
-const SCHEMA = JSON.parse(fs.readFileSync(path.join(OUT, 'schema', 'decision-benchmark-v2-schema.json'), 'utf8'));
+// Epoch-distinct schema: V3 uses the owner-authorized decision-benchmark-v3
+// namespace/schema; V2 keeps the historical byte-identical schema.
+function epochFromArgv(argv) {
+  for (let i = 2; i < argv.length; i++) {
+    if (argv[i] === '--epoch' && argv[i + 1] && !argv[i + 1].startsWith('--')) return argv[i + 1];
+  }
+  return 'v2';
+}
+const SCHEMA_FILE = epochFromArgv(process.argv) === 'v3' ? 'decision-benchmark-v3-schema.json' : 'decision-benchmark-v2-schema.json';
+const SCHEMA = JSON.parse(fs.readFileSync(path.join(OUT, 'schema', SCHEMA_FILE), 'utf8'));
 
 const TTS = ['TT01', 'TT02', 'TT03', 'TT04', 'TT05', 'TT06', 'TT07', 'TT08', 'TT09', 'TT10', 'TT11', 'TT12', 'TT13', 'TT14', 'TT15'];
 const BUILDERS = { ...b0105, ...b0610, ...b1115 };
@@ -161,8 +171,9 @@ function applyEditPass(parts, ctx, rng) {
 
 function buildProvenance(ctx, edits) {
   const tag = `${ctx.split}|${ctx.tt}|v${ctx.variant}|${ctx.domain}|${ctx.sourceType}|${ctx.idx}`;
+  const generatorIdentity = ctx.epoch === 'v3' ? 'goal18-generator/v3.0.0' : 'goal18-generator/v2.1.0';
   return {
-    generator_identity: `goal18-generator/v2.1.0`,
+    generator_identity: generatorIdentity,
     prompt_hash: sha256(tag),
     human_editor: 'goal18-annotator-1',
     edit_history: edits,
@@ -182,6 +193,11 @@ function buildOne(ctx) {
   const parts = BUILDERS[`build${ctx.tt}`](fullCtx);
   parts.entityName = primary;
   diversifyTexts(parts, rng);
+  if (ctx.epoch === 'v3') {
+    // V3-R1 seed-aware same-slot diversification (Goal 20R-V3-R1). Fail-closed:
+    // throws if any deterministic-machinery signature changes.
+    applyV3Diversification(parts, rng);
+  }
   const edits = applyEditPass(parts, fullCtx, rng);
   parts.provenance = buildProvenance(fullCtx, edits);
   return assemble(fullCtx, parts);
@@ -191,6 +207,11 @@ function main() {
   const args = parseArgs(process.argv);
   if (args.outDir) OUT_DIR = path.resolve(args.outDir);
   const split = args.split || 'validation';
+  const epoch = args.epoch || 'v2';
+  if (!['v2', 'v3'].includes(epoch)) {
+    console.error(`unknown epoch: ${epoch} (allowed: v2, v3)`);
+    process.exit(1);
+  }
   const tag = args.tag || (split === 'validation' ? 'val' : 'holdback');
   let seed = args.seed || `goal18-${split}-seed`;
   if (args.seedFile) seed = fs.readFileSync(path.resolve(args.seedFile), 'utf8').trim();
@@ -213,7 +234,7 @@ function main() {
       const offDays = tag === 'val' ? 100 + ti * 2 + idx * 5 : 95 + ti * 2 + idx * 4;
       const qtMs = baseline + offDays * 86400000 + ((ti * 7 + idx * 11) % 24) * 3600000;
       const ctx = {
-        split, tag, tt, idx, domain,
+        split, tag, epoch, tt, idx, domain,
         variant: variantFor(sourceType),
         riskLevel: plan.risk, reversibility: plan.reversibility,
         authority: plan.authority,
@@ -236,7 +257,7 @@ function main() {
 
   const counts = countSourceTypes(samples.length);
   console.log(JSON.stringify({
-    split, tag, seed_hash: sha256(seed), count: samples.length,
+    split, tag, epoch, seed_hash: sha256(seed), count: samples.length,
     per_tt: TTS.map((tt) => `${tt}:${samples.filter((s) => s.task_type === tt).length}`).join(' '),
     source_types: counts,
     domains: [...new Set(samples.map((s) => s.domain))].sort().join(',')
