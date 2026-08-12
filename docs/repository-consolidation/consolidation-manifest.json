@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "task": "Goal23.5 Repository Consolidation & Main Promotion",
+  "timestamp": "2026-08-12T19:45:00+08:00",
+  "repository": "https://github.com/guo6x/Omni-context",
+  "old_main_sha": "960e0cf2abc0c3859a7dbb45eac2555f12035ffd",
+  "new_main_sha": "9c8d4c8397aebc9686a77bc4b6d43f510b3433ec",
+  "product_baseline_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
+  "goal24_branch_sha": "9b7d60c2ee29e6e53cacfeebecfc3f4f86f9da4e",
+  "branches_before": 23,
+  "branches_after": 4,
+  "deleted_branches": [
+    "pre-evaluation-hardening-v1",
+    "pre-evaluation-hardening-v2",
+    "pre-evaluation-hardening-v3",
+    "pre-evaluation-hardening-v3.1",
+    "pre-evaluation-hardening-v3.2",
+    "codex/pre-evaluation-hardening-v3.2.1",
+    "codex/omni-cognitive-benchmark-v1",
+    "codex/omni-cognitive-benchmark-v1.1-answer-diagnostics",
+    "codex/omni-cognitive-benchmark-v1.1-pre-run-hardening",
+    "codex/omni-context-evaluation-freeze-v1",
+    "codex/omni-evaluation-candidate-v3.1-final",
+    "codex/omni-paper-evidence-v1",
+    "codex/omni-paper-manuscript-assets-v1",
+    "benchmark/decision-v1",
+    "codex/omni-evaluation-candidate-v3",
+    "codex/omni-external-eval-and-paper-v1",
+    "codex/omni-longmemeval-s-formal-v1",
+    "codex/omni-v3.1-strict-ablations",
+    "trae/solo-agent-F9HYOB"
+  ],
+  "created_archive_tags": [
+    {
+      "tag": "archive/benchmark-decision-v1",
+      "sha": "06f9a10a8a4e91ab1f9d28876352676563ebf002"
+    },
+    {
+      "tag": "archive/omni-evaluation-candidate-v3",
+      "sha": "4e73e63ab03fda5928f4e9de0f0d12d713c65e62"
+    },
+    {
+      "tag": "archive/omni-external-eval-and-paper-v1",
+      "sha": "27bad22ec13921e0e80428192aedfd8751b8419b"
+    },
+    {
+      "tag": "archive/omni-longmemeval-s-formal-v1",
+      "sha": "9316f0dc37b02144b900d2f4612aaf92a0bd8a11"
+    },
+    {
+      "tag": "archive/omni-v3.1-strict-ablations",
+      "sha": "c02c07394c51e95143ba590975bab2f655d7ae57"
+    },
+    {
+      "tag": "archive/trae-solo-agent-F9HYOB",
+      "sha": "ae0bd1700b6ff8c39d17b4eecc81507503239856"
+    }
+  ],
+  "kept_branches": [
+    {
+      "branch": "main",
+      "sha": "9c8d4c8397aebc9686a77bc4b6d43f510b3433ec",
+      "fastforward_target": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
+      "reason": "stable product baseline (promoted) + consolidation docs"
+    },
+    {
+      "branch": "product/omni-v3-unified-r1",
+      "sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
+      "reason": "canonical named engineering baseline; authoritative in docs"
+    },
+    {
+      "branch": "dev/goal24-cli-skills",
+      "sha": "9b7d60c2ee29e6e53cacfeebecfc3f4f86f9da4e",
+      "reason": "active Goal24 development"
+    },
+    {
+      "branch": "research/decision-benchmark-holdback-v2",
+      "sha": "fd666ba9cd2ecac2bbeea69979271f82c55f66b9",
+      "reason": "protected Holdback lineage"
+    }
+  ],
+  "manual_review_branches": [],
+  "tests_run": [
+    "brain-server typecheck",
+    "brain-server build",
+    "brain-server vitest",
+    "brain-server lint",
+    "brain-server schema:check",
+    "desktop next build",
+    "desktop verify:controlled",
+    "tauri cargo test",
+    "tauri cargo fmt --check",
+    "tauri cargo check",
+    "tauri cargo clippy",
+    "browser-extension test",
+    "browser-extension build",
+    "benchmark test",
+    "repo scripts tests",
+    "mobile typecheck",
+    "mobile test:product-mode",
+    "npm audit (4 projects)"
+  ],
+  "tests_passed": 17,
+  "tests_failed": [
+    "npm audit critical gate: brain-server (1 critical), mobile-app (1 critical) ? pre-existing baseline dependency advisories"
+  ],
+  "tests_not_run": [
+    "MSI packaging (requires pinned local model + signing)",
+    "macOS / Linux builds (Windows-only environment)",
+    "gitleaks secret scan (CI-only)"
+  ],
+  "force_push_used": false,
+  "holdback_touched": false,
+  "scientific_tags_moved": false,
+  "deleted_branch_tips_reachable": true,
+  "deleted_branch_reachability_check": "19/19 PASS via git merge-base --is-ancestor against retained branches + tags",
+  "main_promotion_fastforward_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
+  "new_main_sha_note": "main tip at consolidation completion (fast-forward 960e0cf2 -> d89675a2 + consolidation commits b9a8d0e, c3398bc, 9c8d4c8). This manifest finalization commit is documentation-only and does not change the consolidation result."
+}
