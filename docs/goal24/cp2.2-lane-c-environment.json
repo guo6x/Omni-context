@@ -1,0 +1,37 @@
+﻿{
+  "schema_version": 1,
+  "goal24_checkpoint": "2.2",
+  "lane": "C",
+  "lane_title": "Rust/Tauri dependency security audit + CP3 threat model",
+  "local_branch": "local/cp2.2-rust-security-design",
+  "base_sha": "2cc35b5eed48c780ad4c1b7ef1de1bd793c6f2d4",
+  "generated_at": "2026-08-12T23:41:47+08:00",
+  "policy": "environment location policy: search D: first, then C:; new installs only under D:\\environment; never install new environment on C:",
+  "existing_tools_found_on_D": [
+    { "tool": "cargo", "path": "D:\\environment\\cargo\\bin\\cargo.exe", "version": "1.97.1 (c980f4866 2026-06-30)" },
+    { "tool": "rustc", "path": "D:\\environment\\cargo\\bin\\rustc.exe", "version": "1.97.1 (8bab26f4f 2026-07-14)" },
+    { "tool": "rustup", "path": "D:\\environment\\rustup", "version": "1.29.0 (28d1352db 2026-03-05)" },
+    { "tool": "git", "path": "D:\\environment\\Git", "version": "2.55.0.windows.3" }
+  ],
+  "existing_tools_found_on_C": [],
+  "tools_searched_not_found": ["cargo-audit", "cargo-deny"],
+  "new_tools_installed": [
+    { "tool": "cargo-audit", "version": "0.22.2", "install_method": "cargo install --locked --root", "installed_at": "2026-08-12" }
+  ],
+  "install_paths": [
+    "D:\\environment\\cargo-audit\\bin\\cargo-audit.exe"
+  ],
+  "cache_paths": {
+    "CARGO_HOME": "D:\\environment\\cargo",
+    "RUSTUP_HOME": "D:\\environment\\rustup",
+    "CARGO_TARGET_DIR": "D:\\environment\\cargo-target (session-local, used only during cargo-audit build; not persisted)",
+    "rustsec_advisory_db": "D:\\environment\\advisory-db (git clone of RustSec/advisory-db, used read-only with --no-fetch)"
+  },
+  "environment_variables_changed": {
+    "persistent": [],
+    "session_local": ["CARGO_TARGET_DIR=D:\\environment\\cargo-target"]
+  },
+  "path_changed": false,
+  "new_environment_installed_on_C": false,
+  "policy_compliant": true
+}
