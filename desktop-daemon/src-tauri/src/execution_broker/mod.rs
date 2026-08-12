@@ -16,6 +16,9 @@ mod resolver;
 mod runner;
 mod types;
 
+#[cfg(test)]
+mod tests;
+
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
