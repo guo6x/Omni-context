@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "task": "Goal24 Checkpoint 2 — Capability / Skill / ExecutionPlan Contract Foundation",
+  "timestamp": "2026-08-12T21:20:00+08:00",
+  "repository": "https://github.com/guo6x/Omni-context",
+  "development_branch": "dev/goal24-cli-skills",
+  "base_sha": "ec2e794a7eaa09e56e2f8d81bdbaf662d481d60e",
+  "final_sha": null,
+  "final_sha_note": "final_sha is filled by the docs-only manifest finalize commit (repo manifest pattern; no contracts change in that commit)",
+  "files_added": [
+    "brain-server/src/capabilities/contracts.ts",
+    "brain-server/src/skills/contracts.ts",
+    "brain-server/src/execution/contracts.ts",
+    "brain-server/tests/goal24-capability-contracts.test.ts",
+    "brain-server/tests/goal24-execution-contracts.test.ts",
+    "docs/goal24/04-checkpoint2-contract-design.md",
+    "docs/goal24/checkpoint2-manifest.json"
+  ],
+  "files_modified": [],
+  "tests": [
+    "brain-server typecheck",
+    "brain-server unit tests (vitest)",
+    "brain-server build (tsc)",
+    "brain-server eslint (new contract modules)",
+    "git diff --check"
+  ],
+  "contract_versions": {
+    "capability": "1.0.0",
+    "skill_manifest": "1.0.0",
+    "execution_plan": "1.0.0",
+    "evidence_requirement": "1.0.0",
+    "evidence_coverage": "1.0.0",
+    "approval_reference": "1.0.0",
+    "risk_snapshot": "1.0.0"
+  },
+  "validation_rules_count": 24,
+  "tests_passed": 76,
+  "mcp_behavior_changed": false,
+  "decision_kernel_behavior_changed": false,
+  "arbitrary_shell_execution_added": false,
+  "cli_runtime_added": false,
+  "github_adapter_added": false,
+  "registry_runtime_added": false,
+  "scientific_artifacts_touched": false,
+  "holdback_touched": false
+}
