@@ -7,7 +7,7 @@ Remote branches AFTER (4):
 
 | Branch | Tip SHA (12) | Role |
 |--------|--------------|------|
-| main | c3398bc (tip d89675a2) | Stable engineering product baseline (promoted from product/omni-v3-unified-r1) |
+| main | 9c8d4c8 (fast-forward target d89675a2) | Stable engineering product baseline (promoted from product/omni-v3-unified-r1) |
 | product/omni-v3-unified-r1 | d89675a2e9f6 | Canonical named engineering product baseline (kept; declared authoritative in docs/PRODUCT-BASELINE.md and Goal24 audit; main points to the same commit) |
 | dev/goal24-cli-skills | 9b7d60c2ee29 | ACTIVE Goal24 next-development line (CLI/Skill-first capability work; 4 unique doc commits) |
 | research/decision-benchmark-holdback-v2 | fd666ba9cd2e | PROTECTED Holdback / formal campaign lineage (16 unique commits; never deleted/modified/merged) |

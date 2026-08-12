@@ -38,7 +38,7 @@ main is a strict ancestor of the product baseline (0 unique / 164 ahead) → fas
 ## Old / new identity
 
 - OLD MAIN SHA: 960e0cf2abc0c3859a7dbb45eac2555f12035ffd
-- NEW MAIN SHA (final origin/main tip): c3398bc (fast-forward 960e0cf2 -> d89675a2, then two consolidation commits b9a8d0e + c3398bc)
+- NEW MAIN SHA (origin/main tip at consolidation completion): 9c8d4c8 (fast-forward 960e0cf2 -> d89675a2, then consolidation commits b9a8d0e, c3398bc, 9c8d4c8; a doc-only manifest finalization commit follows)
 - PROMOTION FAST-FORWARD TARGET SHA: d89675a2e9f60cf8b7f9221dd19ca224b9a103e9 (all 164 baseline commits preserved)
 - PRODUCT BASELINE SHA: d89675a2e9f60cf8b7f9221dd19ca224b9a103e9
 - GOAL24 HEAD SHA: 9b7d60c2ee29e6e53cacfeebecfc3f4f86f9da4e (unchanged)

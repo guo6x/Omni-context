@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "task": "Goal23.5 Repository Consolidation & Main Promotion",
-  "timestamp": "2026-08-12T19:35:00+08:00",
+  "timestamp": "2026-08-12T19:45:00+08:00",
   "repository": "https://github.com/guo6x/Omni-context",
   "old_main_sha": "960e0cf2abc0c3859a7dbb45eac2555f12035ffd",
-  "new_main_sha": "c3398bc (final origin/main tip)",
+  "new_main_sha": "9c8d4c8397aebc9686a77bc4b6d43f510b3433ec",
   "product_baseline_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
   "goal24_branch_sha": "9b7d60c2ee29e6e53cacfeebecfc3f4f86f9da4e",
   "branches_before": 23,
@@ -59,7 +59,7 @@
   "kept_branches": [
     {
       "branch": "main",
-      "sha": "c3398bc",
+      "sha": "9c8d4c8397aebc9686a77bc4b6d43f510b3433ec",
       "fastforward_target": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
       "reason": "stable product baseline (promoted) + consolidation docs"
     },
@@ -114,5 +114,6 @@
   "scientific_tags_moved": false,
   "deleted_branch_tips_reachable": true,
   "deleted_branch_reachability_check": "19/19 PASS via git merge-base --is-ancestor against retained branches + tags",
-  "main_promotion_fastforward_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9"
+  "main_promotion_fastforward_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
+  "new_main_sha_note": "main tip at consolidation completion (fast-forward 960e0cf2 -> d89675a2 + consolidation commits b9a8d0e, c3398bc, 9c8d4c8). This manifest finalization commit is documentation-only and does not change the consolidation result."
 }
