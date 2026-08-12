@@ -13,6 +13,7 @@ import {
   AUTHORITY_LEVELS,
   CapabilityDefinitionSchema,
   EvidenceRequirementSchema,
+  effectiveConflictPolicy,
   RISK_LEVELS,
   SIDE_EFFECT_CLASSES,
   type CapabilityDefinition,
@@ -543,5 +544,16 @@ describe('ProcedureStep contract — standalone', () => {
       note: 'Manual review required',
     });
     expect(result.success).toBe(true);
+  });
+});
+describe('effectiveConflictPolicy — canonical default (2.2)', () => {
+  it('defaults an undeclared conflict_policy to reject', () => {
+    expect(effectiveConflictPolicy({ class_id: 'actor.authority', mandatory: true })).toBe('reject');
+  });
+
+  it('returns the declared conflict_policy unchanged', () => {
+    expect(effectiveConflictPolicy({ class_id: 'actor.authority', mandatory: true, conflict_policy: 'warn' })).toBe('warn');
+    expect(effectiveConflictPolicy({ class_id: 'actor.authority', mandatory: true, conflict_policy: 'allow' })).toBe('allow');
+    expect(effectiveConflictPolicy({ class_id: 'actor.authority', mandatory: true, conflict_policy: 'reject' })).toBe('reject');
   });
 });

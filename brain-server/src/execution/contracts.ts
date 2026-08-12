@@ -14,6 +14,7 @@ import {
   AUTHORITY_LEVELS,
   CAPABILITY_ID_PATTERN,
   EVIDENCE_CLASS_PATTERN,
+  effectiveConflictPolicy,
   RISK_LEVELS,
   SEMVER_PATTERN,
   SIDE_EFFECT_CLASSES,
@@ -329,19 +330,25 @@ export interface CoverageAssessment {
   missing_mandatory: string[];
   blocking_reasons: string[];
   warnings: string[];
+  /** Non-blocking findings (optional-evidence gaps) that must never gate execution. */
+  non_blocking_findings: string[];
 }
 
 /**
- * Assess a coverage snapshot against evidence requirements (2.1 policy-aware).
+ * Assess a coverage snapshot against evidence requirements (2.2 fail-closed).
  *
- * Satisfaction rules:
- * - An entry satisfies its requirement when status is present (or conflicted
- *   with conflict_policy warn/allow) AND verification_level meets the
- *   requirement (verified cannot be satisfied by asserted or none).
- * - status=stale never satisfies; status=unverified satisfies only when the
- *   requirement has no verification_requirement (or 'none').
- * - conflict_policy=reject blocks conflicted status; conflict_policy=warn
- *   tolerates conflicted status but returns a warning (never silently).
+ * Fail-closed satisfaction rules:
+ * - An entry satisfies its requirement only when status is `present` AND
+ *   verification_level meets the requirement, or status is `conflicted` with
+ *   an effective conflict_policy of `warn`/`allow` (verification still met).
+ * - status=missing, stale and unverified NEVER satisfy a requirement.
+ *   In particular, status=unverified cannot satisfy a mandatory requirement
+ *   even when verification_requirement is undefined or `none` (fail-closed).
+ * - An undeclared conflict_policy defaults to `reject` through
+ *   effectiveConflictPolicy, the single canonical rule for all callers.
+ * - Optional requirements never contribute to blocking_reasons or
+ *   mandatory_satisfied; their findings land in non_blocking_findings (or
+ *   warnings when conflict_policy=warn tolerates the conflict).
  *
  * Pure function: no retrieval, no time, no registry access.
  */
@@ -353,13 +360,17 @@ export function assessEvidenceCoverage(
   const missingMandatory: string[] = [];
   const blockingReasons: string[] = [];
   const warnings: string[] = [];
+  const nonBlockingFindings: string[] = [];
 
   const entries: CoverageAssessmentEntry[] = requirements.map((requirement) => {
     const entry = byClass.get(requirement.class_id);
     if (!entry) {
+      const finding = `evidence class '${requirement.class_id}' was not checked`;
       if (requirement.mandatory) {
         missingMandatory.push(requirement.class_id);
-        blockingReasons.push(`evidence class '${requirement.class_id}' was not checked`);
+        blockingReasons.push(finding);
+      } else {
+        nonBlockingFindings.push(`${finding} (non-blocking: optional requirement)`);
       }
       return { class_id: requirement.class_id, status: 'not_checked', verification_level: 'none', satisfied: false };
     }
@@ -369,38 +380,49 @@ export function assessEvidenceCoverage(
 
     let satisfied = false;
     const describe = `evidence class '${requirement.class_id}' (status=${entry.status})`;
+    const fail = (reason: string) => {
+      if (requirement.mandatory) {
+        blockingReasons.push(reason);
+      } else {
+        nonBlockingFindings.push(`${reason} (non-blocking: optional requirement)`);
+      }
+    };
+
     switch (entry.status) {
       case 'present':
         satisfied = levelOk;
         if (!levelOk) {
-          blockingReasons.push(`${describe}: verification_requirement=${levelRequirement} not met by verification_level=${entry.verification_level}`);
+          fail(`${describe}: verification_requirement=${levelRequirement} not met by verification_level=${entry.verification_level}`);
         }
         break;
       case 'stale':
-        blockingReasons.push(`${describe}: evidence is stale`);
+        fail(`${describe}: evidence is stale`);
         break;
-      case 'conflicted':
-        if (requirement.conflict_policy === 'reject') {
-          blockingReasons.push(`${describe}: conflict_policy=reject cannot be satisfied by conflicted evidence`);
+      case 'conflicted': {
+        const policy = effectiveConflictPolicy(requirement);
+        if (policy === 'reject') {
+          fail(`${describe}: conflict_policy=reject${requirement.conflict_policy === undefined ? ' (default)' : ''} cannot be satisfied by conflicted evidence`);
+        } else if (policy === 'warn') {
+          satisfied = levelOk;
+          if (!levelOk) {
+            fail(`${describe}: verification_requirement=${levelRequirement} not met by verification_level=${entry.verification_level}`);
+          } else {
+            warnings.push(`${describe}: conflicted evidence tolerated by conflict_policy=warn`);
+          }
         } else {
           satisfied = levelOk;
           if (!levelOk) {
-            blockingReasons.push(`${describe}: verification_requirement=${levelRequirement} not met by verification_level=${entry.verification_level}`);
-          } else if (requirement.conflict_policy === 'warn') {
-            warnings.push(`${describe}: conflicted evidence tolerated by conflict_policy=warn`);
+            fail(`${describe}: verification_requirement=${levelRequirement} not met by verification_level=${entry.verification_level}`);
           }
         }
         break;
+      }
       case 'unverified':
-        if (levelRequirement === 'none') {
-          satisfied = true;
-        } else {
-          blockingReasons.push(`${describe}: unverified evidence cannot satisfy verification_requirement=${levelRequirement}`);
-        }
+        fail(`${describe}: unverified evidence cannot satisfy the requirement (verification_requirement=${levelRequirement}, fail-closed)`);
         break;
       case 'missing':
       default:
-        blockingReasons.push(`${describe}: evidence is missing`);
+        fail(`${describe}: evidence is missing`);
         break;
     }
 
@@ -416,6 +438,7 @@ export function assessEvidenceCoverage(
     missing_mandatory: missingMandatory,
     blocking_reasons: blockingReasons,
     warnings: warnings,
+    non_blocking_findings: nonBlockingFindings,
   };
 }
 

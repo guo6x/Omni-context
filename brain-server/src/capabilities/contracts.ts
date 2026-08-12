@@ -125,6 +125,17 @@ export const EvidenceRequirementSchema = z.strictObject({
   verification_requirement: z.enum(VERIFICATION_REQUIREMENTS).optional(),
 });
 export type EvidenceRequirement = z.infer<typeof EvidenceRequirementSchema>;
+/**
+ * Canonical default for an undeclared conflict_policy (2.2 fail-closed).
+ *
+ * All policy consumers (Execution validator, future Evidence Guard) must use
+ * this single helper so an undeclared conflict_policy always means `reject`,
+ * never a per-caller guess. The schema deliberately keeps conflict_policy
+ * optional so wire serialization stays explicit and unchanged.
+ */
+export function effectiveConflictPolicy(requirement: EvidenceRequirement): ConflictPolicy {
+  return requirement.conflict_policy ?? 'reject';
+}
 
 // ---------------------------------------------------------------------------
 // Capability definition

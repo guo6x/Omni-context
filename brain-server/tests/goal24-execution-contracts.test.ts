@@ -1,10 +1,13 @@
 /**
- * Goal24 Checkpoint 2.1 contract tests: ExecutionPlan, evidence coverage,
+ * Goal24 Checkpoint 2.2 contract tests: ExecutionPlan, evidence coverage,
  * approval reference and risk snapshot.
  *
- * Covers the 2.1 hardening: evidence status invariants, policy-aware coverage
+ * Covers the 2.1 hardening (evidence status invariants, policy-aware coverage
  * assessment, verification/rollback binding, JSON-safe wire values, risk
- * snapshot version chain, approval record model, and deterministic expiry.
+ * snapshot version chain, approval record model, deterministic expiry) and the
+ * 2.2 Lane A fail-closed semantics: unverified/conflicted(undefined policy)
+ * evidence never satisfies mandatory requirements, and optional evidence never
+ * gates execution.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -580,6 +583,168 @@ describe('Coverage assessment — policy aware', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Coverage assessment — fail-closed (2.2, Lane A)
+// ---------------------------------------------------------------------------
+
+describe('Coverage assessment — fail-closed (2.2)', () => {
+  const satisfiedEntry = (classId: string) =>
+    entry({ evidence_class: classId, status: 'present', verification_level: 'verified' });
+  const unverifiedEntry = (classId: string) =>
+    entry({ evidence_class: classId, status: 'unverified', verification_level: 'none' });
+  const conflictedEntry = (classId: string) =>
+    entry({ evidence_class: classId, status: 'conflicted', conflict_evidence_ids: ['evt-2'] });
+
+  it('blocks mandatory unverified when verification_requirement is undefined', () => {
+    const assessment = assessEvidenceCoverage(
+      [{ class_id: 'actor.authority', mandatory: true }],
+      { entries: [unverifiedEntry('actor.authority')] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(false);
+    expect(assessment.blocking_reasons.some((reason) => reason.includes('unverified'))).toBe(true);
+  });
+
+  it('blocks mandatory unverified even with verification_requirement=none', () => {
+    const assessment = assessEvidenceCoverage(
+      [{ class_id: 'actor.authority', mandatory: true, verification_requirement: 'none' }],
+      { entries: [unverifiedEntry('actor.authority')] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(false);
+    expect(assessment.missing_mandatory).toContain('actor.authority');
+  });
+
+  it('blocks mandatory conflicted when conflict_policy is undefined (default reject)', () => {
+    const assessment = assessEvidenceCoverage(
+      [{ class_id: 'repository.current_state', mandatory: true }],
+      { entries: [conflictedEntry('repository.current_state')] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(false);
+    expect(assessment.blocking_reasons.some((reason) => reason.includes('conflict_policy=reject'))).toBe(true);
+  });
+
+  it('blocks mandatory conflicted with conflict_policy=reject', () => {
+    const assessment = assessEvidenceCoverage(
+      [{ class_id: 'repository.current_state', mandatory: true, conflict_policy: 'reject' }],
+      { entries: [conflictedEntry('repository.current_state')] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(false);
+    expect(assessment.missing_mandatory).toContain('repository.current_state');
+  });
+
+  it('satisfies mandatory conflicted with conflict_policy=warn and emits a warning', () => {
+    const assessment = assessEvidenceCoverage(
+      [{ class_id: 'repository.current_state', mandatory: true, conflict_policy: 'warn' }],
+      { entries: [conflictedEntry('repository.current_state')] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(true);
+    expect(assessment.warnings.some((warning) => warning.includes('conflict_policy=warn'))).toBe(true);
+  });
+
+  it('satisfies mandatory conflicted with conflict_policy=allow', () => {
+    const assessment = assessEvidenceCoverage(
+      [{ class_id: 'repository.current_state', mandatory: true, conflict_policy: 'allow' }],
+      { entries: [conflictedEntry('repository.current_state')] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(true);
+    expect(assessment.blocking_reasons).toEqual([]);
+  });
+
+  it('optional missing does not affect mandatory_satisfied', () => {
+    const assessment = assessEvidenceCoverage(
+      [
+        { class_id: 'actor.authority', mandatory: true },
+        { class_id: 'branch_protection.rules', mandatory: false },
+      ],
+      {
+        entries: [
+          satisfiedEntry('actor.authority'),
+          { evidence_class: 'branch_protection.rules', status: 'missing', verification_level: 'none', evidence_ids: [], checked_at: NOW },
+        ],
+      },
+    );
+    expect(assessment.mandatory_satisfied).toBe(true);
+    expect(assessment.blocking_reasons).toEqual([]);
+    expect(assessment.non_blocking_findings.some((finding) => finding.includes('branch_protection.rules'))).toBe(true);
+  });
+
+  it('optional stale never enters blocking_reasons', () => {
+    const assessment = assessEvidenceCoverage(
+      [
+        { class_id: 'actor.authority', mandatory: true },
+        { class_id: 'branch_protection.rules', mandatory: false },
+      ],
+      {
+        entries: [
+          satisfiedEntry('actor.authority'),
+          { evidence_class: 'branch_protection.rules', status: 'stale', verification_level: 'verified', evidence_ids: ['evt-9'], checked_at: NOW, stale_since: NOW },
+        ],
+      },
+    );
+    expect(assessment.mandatory_satisfied).toBe(true);
+    expect(assessment.blocking_reasons.some((reason) => reason.includes('stale'))).toBe(false);
+    expect(assessment.non_blocking_findings.some((finding) => finding.includes('stale'))).toBe(true);
+  });
+
+  it('optional unverified does not block', () => {
+    const assessment = assessEvidenceCoverage(
+      [
+        { class_id: 'actor.authority', mandatory: true },
+        { class_id: 'branch_protection.rules', mandatory: false },
+      ],
+      { entries: [satisfiedEntry('actor.authority'), unverifiedEntry('branch_protection.rules')] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(true);
+    expect(assessment.blocking_reasons).toEqual([]);
+    expect(assessment.non_blocking_findings.some((finding) => finding.includes('unverified'))).toBe(true);
+  });
+
+  it('optional conflicted does not block the mandatory gate', () => {
+    const assessment = assessEvidenceCoverage(
+      [
+        { class_id: 'actor.authority', mandatory: true },
+        { class_id: 'branch_protection.rules', mandatory: false },
+      ],
+      { entries: [satisfiedEntry('actor.authority'), conflictedEntry('branch_protection.rules')] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(true);
+    expect(assessment.blocking_reasons).toEqual([]);
+    expect(assessment.non_blocking_findings.some((finding) => finding.includes('conflicted'))).toBe(true);
+  });
+
+  it('present asserted satisfies verification_requirement=none', () => {
+    const assessment = assessEvidenceCoverage(
+      [{ class_id: 'actor.authority', mandatory: true, verification_requirement: 'none' }],
+      { entries: [entry({ evidence_class: 'actor.authority', status: 'present', verification_level: 'asserted' })] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(true);
+  });
+
+  it('present asserted cannot satisfy verification_requirement=verified', () => {
+    const assessment = assessEvidenceCoverage(
+      [{ class_id: 'actor.authority', mandatory: true, verification_requirement: 'verified' }],
+      { entries: [entry({ evidence_class: 'actor.authority', status: 'present', verification_level: 'asserted' })] },
+    );
+    expect(assessment.mandatory_satisfied).toBe(false);
+    expect(assessment.blocking_reasons.some((reason) => reason.includes('verification_requirement=verified'))).toBe(true);
+  });
+
+  it('optional present with unmet verification level stays non-blocking', () => {
+    const assessment = assessEvidenceCoverage(
+      [
+        { class_id: 'actor.authority', mandatory: true },
+        { class_id: 'branch_protection.rules', mandatory: false, verification_requirement: 'verified' },
+      ],
+      {
+        entries: [
+          satisfiedEntry('actor.authority'),
+          { evidence_class: 'branch_protection.rules', status: 'present', verification_level: 'asserted', evidence_ids: ['evt-7'], checked_at: NOW },
+        ],
+      },
+    );
+    expect(assessment.mandatory_satisfied).toBe(true);
+    expect(assessment.blocking_reasons).toEqual([]);
+  });
+});
+// ---------------------------------------------------------------------------
 // Registry-bound validation (2.1)
 // ---------------------------------------------------------------------------
 
@@ -631,6 +796,37 @@ describe('validateExecutionPlanAgainstCapabilities', () => {
   it('does not gate evidence coverage for draft plans', () => {
     const plan = ExecutionPlanSchema.parse(
       writePlan({ state: 'draft', approval: null, evidence_coverage_snapshot: { entries: [] } }),
+    );
+    const issues = validateExecutionPlanAgainstCapabilities(plan, lookup);
+    expect(issues.some((issue) => issue.path === 'evidence_coverage_snapshot')).toBe(false);
+  });
+  it('fails an executable plan whose mandatory evidence is unverified (fail-closed)', () => {
+    const plan = ExecutionPlanSchema.parse(
+      writePlan({
+        evidence_coverage_snapshot: {
+          entries: [
+            { evidence_class: 'repository.current_state', status: 'present', verification_level: 'verified', evidence_ids: ['evt-1'], checked_at: NOW },
+            { evidence_class: 'actor.authority', status: 'unverified', verification_level: 'none', evidence_ids: ['evt-2'], checked_at: NOW },
+          ],
+        },
+      }),
+    );
+    const issues = validateExecutionPlanAgainstCapabilities(plan, lookup);
+    expect(issues.some((issue) => issue.path === 'evidence_coverage_snapshot')).toBe(true);
+  });
+
+  it('does not gate draft plans on unverified mandatory evidence', () => {
+    const plan = ExecutionPlanSchema.parse(
+      writePlan({
+        state: 'draft',
+        approval: null,
+        evidence_coverage_snapshot: {
+          entries: [
+            { evidence_class: 'repository.current_state', status: 'present', verification_level: 'verified', evidence_ids: ['evt-1'], checked_at: NOW },
+            { evidence_class: 'actor.authority', status: 'unverified', verification_level: 'none', evidence_ids: ['evt-2'], checked_at: NOW },
+          ],
+        },
+      }),
     );
     const issues = validateExecutionPlanAgainstCapabilities(plan, lookup);
     expect(issues.some((issue) => issue.path === 'evidence_coverage_snapshot')).toBe(false);
