@@ -1,11 +1,11 @@
-﻿# 07 — Verification Report
+# 07 — Verification Report
 
 Goal 23.5 — Repository Consolidation & Main Promotion
 Timestamp: 2026-08-12
 
 ## 7.1 Remote state
 
-1. `origin/main` points to the stable product baseline → **PASS** (d89675a2e9f60cf8b7f9221dd19ca224b9a103e9)
+1. `origin/main` points to the stable product baseline → **PASS** (final tip c3398bc; fast-forward target d89675a2e9f60cf8b7f9221dd19ca224b9a103e9)
 2. No force rewrite of main → **PASS** (fast-forward only; `git push` without `--force`; old main 960e0cf2 is an ancestor of new main)
 3. `dev/goal24-cli-skills` still exists → **PASS** (9b7d60c2ee29e6e53cacfeebecfc3f4f86f9da4e)
 4. `research/decision-benchmark-holdback-v2` not modified → **PASS** (tip fd666ba9cd2ecac2bbeea69979271f82c55f66b9; never checked out, merged, or content-read during this task; local working tree on that branch left byte-identical)

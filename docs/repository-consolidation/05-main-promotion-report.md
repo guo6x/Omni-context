@@ -1,4 +1,4 @@
-﻿# 05 — Main Promotion Report
+# 05 — Main Promotion Report
 
 Goal 23.5 — Repository Consolidation & Main Promotion
 Timestamp: 2026-08-12
@@ -38,8 +38,9 @@ main is a strict ancestor of the product baseline (0 unique / 164 ahead) → fas
 ## Old / new identity
 
 - OLD MAIN SHA: 960e0cf2abc0c3859a7dbb45eac2555f12035ffd
-- NEW MAIN SHA: d89675a2e9f60cf8b7f9221dd19ca224b9a103e9 (fast-forward; all 164 baseline commits preserved)
-- PRODUCT BASELINE SHA: d89675a2e9f60cf8b7f9221dd19ca224b9a103e9 (identical to new main)
+- NEW MAIN SHA (final origin/main tip): c3398bc (fast-forward 960e0cf2 -> d89675a2, then two consolidation commits b9a8d0e + c3398bc)
+- PROMOTION FAST-FORWARD TARGET SHA: d89675a2e9f60cf8b7f9221dd19ca224b9a103e9 (all 164 baseline commits preserved)
+- PRODUCT BASELINE SHA: d89675a2e9f60cf8b7f9221dd19ca224b9a103e9
 - GOAL24 HEAD SHA: 9b7d60c2ee29e6e53cacfeebecfc3f4f86f9da4e (unchanged)
 
 ## Pre-existing baseline defect found & fixed (engineering only)

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "task": "Goal23.5 Repository Consolidation & Main Promotion",
-  "timestamp": "2026-08-12T19:20:00+08:00",
+  "timestamp": "2026-08-12T19:35:00+08:00",
   "repository": "https://github.com/guo6x/Omni-context",
   "old_main_sha": "960e0cf2abc0c3859a7dbb45eac2555f12035ffd",
-  "new_main_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
+  "new_main_sha": "c3398bc (final origin/main tip)",
   "product_baseline_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
   "goal24_branch_sha": "9b7d60c2ee29e6e53cacfeebecfc3f4f86f9da4e",
   "branches_before": 23,
@@ -59,8 +59,9 @@
   "kept_branches": [
     {
       "branch": "main",
-      "sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
-      "reason": "stable product baseline (promoted)"
+      "sha": "c3398bc",
+      "fastforward_target": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
+      "reason": "stable product baseline (promoted) + consolidation docs"
     },
     {
       "branch": "product/omni-v3-unified-r1",
@@ -112,5 +113,6 @@
   "holdback_touched": false,
   "scientific_tags_moved": false,
   "deleted_branch_tips_reachable": true,
-  "deleted_branch_reachability_check": "19/19 PASS via git merge-base --is-ancestor against retained branches + tags"
+  "deleted_branch_reachability_check": "19/19 PASS via git merge-base --is-ancestor against retained branches + tags",
+  "main_promotion_fastforward_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9"
 }
