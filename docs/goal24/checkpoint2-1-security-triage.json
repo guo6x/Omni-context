@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "task": "Goal24 Checkpoint 2.1 pre-execution security triage (npm + rust)",
+  "timestamp": "2026-08-12T22:05:00+08:00",
+  "repository": "https://github.com/guo6x/Omni-context",
+  "development_branch": "dev/goal24-cli-skills",
+  "method": {
+    "npm_command": "npm audit --omit=dev --audit-level=critical --json",
+    "npm_fix_run": false,
+    "npm_fix_note": "No npm audit fix / npm audit fix --force was run (owner instruction; dependency upgrades are separate owner decisions).",
+    "rust_tool": "cargo audit",
+    "rust_tool_available": false,
+    "rust_tool_note": "cargo-audit / cargo-deny are not installed on this machine and are not configured in repository CI; no Rust dependency advisory scan exists for desktop-daemon/src-tauri. Marked TOOL_UNAVAILABLE / NOT RUN.",
+    "raw_evidence": [
+      "docs/goal24/audit-brain-server-critical.json",
+      "docs/goal24/audit-mobile-app-critical.json"
+    ]
+  },
+  "brain_server": {
+    "summary_counts": { "critical": 1, "high": 8, "moderate": 12, "low": 3, "info": 0, "total": 24 },
+    "critical": [
+      {
+        "package": "tar",
+        "advisories": ["1123940"],
+        "severity": "critical",
+        "title": "node-tar: Decompression/parse DoS via unlimited input",
+        "direct_or_transitive": "transitive",
+        "dependency_path": "sqlite3@5.1.7 -> node-gyp@8.4.1 -> make-fetch-happen@9.1.0 -> cacache@15.3.0 -> tar",
+        "installed_version": "7.5.16",
+        "installed_version_note": "pinned via package.json overrides (tar 7.5.16); advisory 1123940 affects <=7.5.18 so the pinned version is still inside the vulnerable range",
+        "patched_range": ">7.5.18",
+        "fix_available": true,
+        "breaking_change_required": true,
+        "fix_path": "sqlite3 6.0.1 (semver-major)",
+        "runtime_reachability": "install/build-time only; tar is used by node-gyp to extract native-module build inputs during npm install. brain-server runtime code does not import tar.",
+        "goal24_relevance": "none; not on the Goal24 contract/broker/adapter execution path",
+        "classification": "ACCEPTED_TEMPORARY_RISK",
+        "rationale": "Critical advisory fully explained to package/advisory 1123940. Reachability is npm-install-time only, never the Goal24 execution path. Fix requires semver-major sqlite3 upgrade (separate owner decision). Related tar advisories 1123939 (moderate), 1123941 (high), 1123942 (moderate), 1124287 (moderate) share the same path and disposition."
+      }
+    ],
+    "high": [
+      {
+        "package": "ip-address",
+        "advisories": ["1130722"],
+        "severity": "high",
+        "title": "Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
+        "direct_or_transitive": "transitive",
+        "dependency_path": "@modelcontextprotocol/sdk -> express-rate-limit@8.5.0 -> ip-address@10.1.0",
+        "installed_version": "10.1.0",
+        "patched_range": ">10.3.0",
+        "fix_available": true,
+        "breaking_change_required": false,
+        "runtime_reachability": "MCP/API HTTP surface (rate limiting) of brain-server",
+        "goal24_relevance": "the future broker runs inside brain-server, so the MCP/API surface is adjacent to the Goal24 runtime; not on the contract-validation path of this checkpoint",
+        "classification": "FIX_BEFORE_CHECKPOINT3",
+        "rationale": "Patch available without a major bump; must be resolved before Checkpoint 3 introduces local process execution. Related moderate advisories 1118827, 1130723, 1130724 share this disposition."
+      },
+      {
+        "package": "fast-uri",
+        "advisories": ["1124064", "1130720", "1138395"],
+        "severity": "high",
+        "title": "Host confusion via backslash authority delimiters / failed IDN canonicalization",
+        "direct_or_transitive": "transitive",
+        "dependency_path": "@modelcontextprotocol/sdk -> ajv@8.20.0 -> fast-uri@3.1.2",
+        "installed_version": "3.1.2",
+        "patched_range": ">=3.1.5",
+        "fix_available": true,
+        "breaking_change_required": false,
+        "runtime_reachability": "MCP SDK JSON-schema validation (URI parsing) on the MCP/API surface",
+        "goal24_relevance": "adjacent to the Goal24 runtime (same server process); not on the contract-validation path of this checkpoint",
+        "classification": "FIX_BEFORE_CHECKPOINT3",
+        "rationale": "Patch available without a major bump; resolve before Checkpoint 3 launch."
+      },
+      {
+        "package": "undici",
+        "advisories": ["1121187", "1121244", "1121247", "1130718"],
+        "severity": "high",
+        "title": "TLS cert validation bypass (SOCKS5), WebSocket DoS, cross-origin request routing (SOCKS5 pool reuse), cross-user disclosure via degenerate private cache directives",
+        "direct_or_transitive": "transitive",
+        "dependency_path": "jsdom@29.1.1 -> undici@7.26.0",
+        "installed_version": "7.26.0",
+        "patched_range": ">=7.29.0",
+        "fix_available": true,
+        "breaking_change_required": false,
+        "runtime_reachability": "jsdom fetch during HTML ingestion (html-to-md); SOCKS5/proxy features are not exercised by the app",
+        "goal24_relevance": "none directly; ingestion path only, not the Goal24 execution path",
+        "classification": "NOT_ON_EXECUTION_PATH",
+        "rationale": "jsdom is used for HTML->Markdown ingestion, not for Goal24 broker execution. Patch available; recommend upgrading undici before Checkpoint 3 as hygiene."
+      },
+      {
+        "package": "sharp",
+        "advisories": ["1124066"],
+        "severity": "high",
+        "title": "Inherited libvips vulnerabilities CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+        "direct_or_transitive": "transitive",
+        "dependency_path": "@xenova/transformers@2.17.2 -> onnxruntime-web@1.14.0 -> sharp@0.32.6",
+        "installed_version": "0.32.6",
+        "patched_range": ">=0.35.0",
+        "fix_available": true,
+        "breaking_change_required": true,
+        "fix_path": "@xenova/transformers major upgrade (npm reports fix via @xenova/transformers 1.4.2 semver-major)",
+        "runtime_reachability": "image processing for memory capture / embeddings",
+        "goal24_relevance": "none; not on the Goal24 execution path",
+        "classification": "NOT_ON_EXECUTION_PATH",
+        "rationale": "Image/embedding pipeline only. Fix requires semver-major change to @xenova/transformers; defer to an owner-approved dependency round."
+      },
+      {
+        "package": "brace-expansion",
+        "advisories": ["1123896", "1123897", "1130588", "1130589", "1130736", "1130737"],
+        "severity": "high",
+        "title": "DoS via exponential-time / unbounded expansion in glob brace patterns",
+        "direct_or_transitive": "transitive",
+        "dependency_path": "archiver@7.0.1 -> archiver-utils -> glob -> minimatch -> brace-expansion (installed 1.1.14 / 2.1.1 / 2.1.2); also eslint dev toolchain",
+        "installed_version": "1.1.14 / 2.1.1 / 2.1.2",
+        "patched_range": ">=1.1.18 / >=2.1.4",
+        "fix_available": true,
+        "breaking_change_required": false,
+        "runtime_reachability": "vault export/backup archiver glob matching; CLI binary of glob is not invoked",
+        "goal24_relevance": "none; not on the Goal24 execution path",
+        "classification": "NOT_ON_EXECUTION_PATH",
+        "rationale": "Backup/export tooling path with library-only usage (glob CLI command-injection advisory 1109842 also not reachable: the CLI binary is never invoked)."
+      },
+      {
+        "package": "glob",
+        "advisories": ["1109842"],
+        "severity": "high",
+        "title": "glob CLI: command injection via -c/--cmd executes matches with shell:true",
+        "direct_or_transitive": "transitive",
+        "dependency_path": "archiver@7.0.1 -> archiver-utils@5.0.2 -> glob@10.4.5",
+        "installed_version": "10.4.5",
+        "patched_range": ">=10.5.0",
+        "fix_available": true,
+        "breaking_change_required": false,
+        "runtime_reachability": "CLI binary only; brain-server uses the glob library API, never the glob CLI",
+        "goal24_relevance": "none",
+        "classification": "NOT_ON_EXECUTION_PATH",
+        "rationale": "Advisory affects the glob command-line executable; library usage is unaffected."
+      },
+      {
+        "package": "xlsx",
+        "advisories": ["1108110", "1108111"],
+        "severity": "high",
+        "title": "SheetJS Prototype Pollution and ReDoS",
+        "direct_or_transitive": "direct",
+        "dependency_path": "brain-server direct dependency xlsx@0.18.5",
+        "installed_version": "0.18.5",
+        "patched_range": "n/a",
+        "fix_available": false,
+        "breaking_change_required": true,
+        "fix_path": "no upstream npm fix (SheetJS distribution discontinued); replacement library is a separate owner decision",
+        "runtime_reachability": "spreadsheet ingestion via brain-server API (src/api/handlers/ingest.ts); treats user-supplied files as untrusted",
+        "goal24_relevance": "none; not on the Goal24 execution path",
+        "classification": "ACCEPTED_TEMPORARY_RISK",
+        "rationale": "No fix exists. Parsing path is brain-server API ingestion, not Goal24 broker execution. Mitigation: treat uploaded spreadsheets as untrusted input; replacement is an owner-approved dependency decision."
+      }
+    ],
+    "moderate_and_low_note": "hono@4.12.29 (advisories 1130733, 1138771, 1138772, 1138773; patch 4.12.34), @hono/node-server@1.19.14 (1124006; patch 2.0.5), qs@6.15.1 (1119502), body-parser@2.2.2 (1123976), protobufjs@7.6.3 (1123964, override-pinned; full fix via @xenova/transformers major), sqlite3/node-gyp/make-fetch-happen/cacache/http-proxy-agent/@tootallnate/once (build-time chains), onnx-proto/onnxruntime-web (embedding chain), express-rate-limit (via ip-address). hono and @hono/node-server sit on the MCP HTTP surface -> FIX_BEFORE_CHECKPOINT3 (patches available without major bump). Remaining moderate/low are NOT_ON_EXECUTION_PATH or ACCEPTED_TEMPORARY_RISK (build-time / non-Goal24 runtime chains).",
+    "goal24_path_assessment": "Checkpoint 2.1 adds contract + validation modules only (capabilities/skills/execution contracts, json-safe schema, pure validators). None of the audited vulnerable packages are imported by the new Goal24 contract code. The future broker (Checkpoint 3+) runs inside brain-server, so MCP/API-surface advisories (hono, @hono/node-server, ip-address, fast-uri) are FIX_BEFORE_CHECKPOINT3."
+  },
+  "mobile_app": {
+    "summary_counts": { "critical": 1, "high": 28, "moderate": 15, "low": 2, "info": 0, "total": 46 },
+    "critical": [
+      {
+        "package": "tar",
+        "advisories": ["1123940"],
+        "severity": "critical",
+        "title": "node-tar: Decompression/parse DoS via unlimited input",
+        "direct_or_transitive": "transitive",
+        "dependency_path": "expo toolchain -> @expo/cli -> cacache/tar",
+        "installed_version": "within Expo toolchain tree",
+        "patched_range": ">7.5.18",
+        "fix_available": true,
+        "breaking_change_required": true,
+        "fix_path": "expo 57.0.12 (semver-major)",
+        "runtime_reachability": "Expo build/dev toolchain only; not shipped in the mobile app runtime bundle",
+        "goal24_relevance": "none; mobile-app is not on the Goal24 execution path",
+        "classification": "ACCEPTED_TEMPORARY_RISK",
+        "rationale": "Explained to advisory 1123940; reachability is the Expo toolchain, not the Goal24 path. Fix requires an Expo major upgrade (owner decision)."
+      }
+    ],
+    "high_note": "28 high-severity advisories concentrate in the Expo / React Native toolchain (expo 56.x, react-native 0.8x, @expo/*, metro, @react-native-community/cli*, @xmldom/xmldom, image-size, ip, js-yaml, nanoid, postcss, semver, fast-xml-parser). All fixes require semver-major Expo 57 / React Native 0.87 upgrades. Direct axios@1.17.x carries 1123967 (high, proxy inheritance after config cloning) plus nine moderate advisories; fix available (>=1.18.0, not semver-major). expo-router / expo-splash-screen high advisories are toolchain-bundled. None of these are on the Goal24 execution path.",
+    "goal24_relevance": "none; mobile-app is not part of the Goal24 broker/adapter surface"
+  },
+  "rust": {
+    "tool_available": false,
+    "status": "NOT RUN / TOOL_UNAVAILABLE",
+    "details": "cargo-audit: not installed (cargo audit -> 'no such command'). cargo-deny: not installed. Repository CI (ci.yml desktop-rust job) runs cargo fmt/clippy/test but no cargo audit / cargo deny / advisory scan. No Rust dependency upgrades were performed.",
+    "classification": "TOOL_UNAVAILABLE",
+    "recommendation": "Install and run cargo-audit against desktop-daemon/src-tauri before Checkpoint 3 launch; add a cargo-audit CI job as part of Checkpoint 3 prep."
+  },
+  "checkpoint3_security_gate": "PASS",
+  "gate_rationale": [
+    "brain-server critical (tar 1123940) is explained to a specific package/advisory and is npm-install-time only; brain-server runtime never imports tar.",
+    "No UNKNOWN critical risk affects the future broker.",
+    "Goal24 execution path relationship is explicit: the new 2.1 contract modules import no audited package; MCP/API-surface highs with available patches are recorded as FIX_BEFORE_CHECKPOINT3 (ip-address, fast-uri, hono, @hono/node-server, undici hygiene).",
+    "All contract blockers from sections 2-13 of the 2.1 task are closed and machine-tested (118 contract tests).",
+    "Gate does not authorize Checkpoint 3 work; it only clears the pre-execution security gate for this checkpoint."
+  ],
+  "holdback_touched": false,
+  "scientific_artifacts_touched": false
+}
