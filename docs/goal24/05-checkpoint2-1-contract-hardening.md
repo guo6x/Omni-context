@@ -280,3 +280,33 @@ Modified:
 - `brain-server/tests/goal24-capability-contracts.test.ts`
 - `brain-server/tests/goal24-execution-contracts.test.ts`
 - `docs/goal24/04-checkpoint2-contract-design.md` (2.1 corrections only)
+
+---
+
+## 8. CP2.2 history correction (appended 2026-08-13)
+
+CP2.1 initially reported PASS.
+
+Independent review found:
+
+1. fail-open evidence defaults (unverified evidence could satisfy an undefined
+   `verification_requirement`; undeclared `conflict_policy` had no canonical
+   default)
+2. unresolved Node FIX_BEFORE_CP3 advisories (`ip-address`, `fast-uri`,
+   `hono`, `@hono/node-server` and the `undici`/`glob`/`brace-expansion`
+   runtime chains)
+3. `cargo-audit` had not run on the desktop Rust lockfile
+
+CP2.2 then:
+
+- Lane A fixed evidence semantics (mandatory unverified = BLOCK, default
+  `conflict_policy` = reject, optional evidence non-blocking)
+- Lane B closed Node runtime advisories (overrides incl. the
+  `@hono/node-server` major transitive override)
+- Lane C performed Rust audit / threat model (advisory gate, 8 vulnerabilities
+  classified, FIX_BEFORE_CP3 reported to integration)
+- Integration resolved/reclassified the Rust pre-CP3 gate (removed the
+  vulnerable `rustls-webpki` TLS path via direct-reqwest feature pruning;
+  `RUSTSEC-2026-0098/0099/0104` FIXED; `CHECKPOINT3_SECURITY_GATE=PASS`)
+
+No part of the original CP2.1 record above was rewritten.

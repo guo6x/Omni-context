@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "2.2",
+  "date": "2026-08-13",
+  "policy": "search D: first, then existing C:, new installs only under D:\\environment; no new full environment on C:",
+  "new_environment_installed_on_C": false,
+  "node": {
+    "node": { "version": "v22.23.2", "path": "D:\\environment\\node\\node-v22.23.2-win-x64\\node.exe" },
+    "npm": { "version": "10.9.8", "path": "D:\\environment\\node\\node-v22.23.2-win-x64\\npm.ps1" }
+  },
+  "rust": {
+    "cargo": { "version": "1.97.1", "path": "D:\\environment\\cargo\\bin\\cargo.exe" },
+    "rustc": { "version": "1.97.1", "path": "D:\\environment\\cargo\\bin\\rustc.exe" },
+    "rustup": { "version": "1.29.0", "path": "D:\\environment\\rustup" },
+    "cargo_audit": { "version": "0.22.2", "path": "D:\\environment\\cargo-audit\\bin\\cargo-audit.exe" },
+    "advisory_db": { "path": "D:\\environment\\advisory-db", "advisories": 1216, "fetch": "no-fetch (local shallow clone, git proxy honored)" }
+  },
+  "env_vars": {
+    "CARGO_HOME": "D:\\environment\\cargo",
+    "RUSTUP_HOME": "D:\\environment\\rustup",
+    "CARGO_TARGET_DIR": "D:\\environment\\cargo-target-cp22 (session-local for this integration)"
+  },
+  "large_artifacts_location": "D:\\environment\\cargo-target-cp22 (build artifacts on D: per policy)",
+  "tools_used_from_D": [
+    "D:\\environment\\node\\node-v22.23.2-win-x64",
+    "D:\\environment\\cargo\\bin",
+    "D:\\environment\\cargo-audit\\bin",
+    "D:\\environment\\advisory-db"
+  ]
+}

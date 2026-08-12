@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "2.2",
+  "name": "Goal24 Checkpoint 2.2 Integration Manifest",
+  "date": "2026-08-13",
+  "integration_base_sha": "2cc35b5eed48c780ad4c1b7ef1de1bd793c6f2d4",
+  "lanes": {
+    "lane_a": {
+      "commits": [
+        { "original": "0fc4b949abe0443fdfcb25c2e5f95d6264c73f50", "integrated": "d699ef9", "message": "fix(execution): make evidence qualification fail closed" },
+        { "original": "efc2523ca0d87849ce663204854a02b8aff8a7ef", "integrated": "889bcc0", "message": "docs(goal24): add cp2.2 lane A evidence report" }
+      ],
+      "report": "docs/goal24/cp2.2-lane-a-evidence.md",
+      "scope": "brain-server/src/capabilities/contracts.ts, brain-server/src/execution/contracts.ts, contract tests, lane A docs"
+    },
+    "lane_b": {
+      "commits": [
+        { "original": "f53bac3d39d329a2dd6d8915df3c2472ed672495", "integrated": "037ebbf", "message": "security(brain-server): close pre-execution runtime advisories" }
+      ],
+      "report": "docs/goal24/cp2.2-lane-b-node-security.md",
+      "audit": "docs/goal24/audit-brain-server-cp2-2.json",
+      "scope": "brain-server/package.json, package-lock.json, Node audit docs"
+    },
+    "lane_c": {
+      "commits": [
+        { "original": "de8d1d50a05ced48d78cfccc72e4bf599703a8ba", "integrated": "51fde10", "message": "security(tauri): establish Rust advisory gate and broker threat model" }
+      ],
+      "report": "docs/goal24/cp2.2-lane-c-rust-security.md",
+      "audit": "docs/goal24/audit-tauri-rust.json",
+      "environment": "docs/goal24/cp2.2-lane-c-environment.json",
+      "threat_model": "docs/goal24/cp3-execution-broker-threat-model.md",
+      "scope": "Goal24 Rust audit/threat-model/environment docs"
+    },
+    "rust_gate_closure": {
+      "commit": "2da7f55",
+      "message": "security(tauri): close pre-execution TLS advisory gate",
+      "files": [
+        "desktop-daemon/src-tauri/Cargo.toml",
+        "desktop-daemon/src-tauri/Cargo.lock",
+        "desktop-daemon/scripts/controlled-files.sha256.json"
+      ],
+      "change": "Removed direct reqwest rustls-tls feature (Option A feature pruning); vulnerable rustls 0.21/rustls-webpki 0.101.7 stack eliminated; updater unchanged (native-tls)"
+    }
+  },
+  "node_changes": {
+    "overrides": {
+      "hono": "4.12.34",
+      "@hono/node-server": "2.1.0",
+      "ip-address": "10.5.0",
+      "fast-uri": "3.1.5",
+      "undici": "7.29.0",
+      "glob": "10.5.0 (scoped under archiver->archiver-utils)",
+      "brace-expansion": "2.1.4 (scoped under archiver chains)",
+      "protobufjs": "7.6.3 (retained)",
+      "tar": "7.5.16 (retained)"
+    },
+    "major_transitive_override": {
+      "package": "@hono/node-server",
+      "from": "1.19.14",
+      "to": "2.1.0",
+      "value": true,
+      "note": "SemVer MAJOR transition even though transitive; Lane B MAJOR_UPGRADE_USED=NO wording corrected"
+    },
+    "mcp_api_runtime_smoke": "PASS",
+    "execution_adjacent_unresolved": { "UNKNOWN": 0, "FIX_BEFORE_CP3": 0, "BLOCKS_CP3": 0 }
+  },
+  "rust_changes": {
+    "root_cause_paths": {
+      "rustls_webpki_path": "rustls-webpki 0.101.7 <- rustls 0.21.12 <- hyper-rustls 0.24.2 / tokio-rustls 0.24.1 <- reqwest 0.11.27 <- omni-context-desktop (direct reqwest, rustls-tls) and tauri 1.8.3 (updater, default-tls)",
+      "updater_path": "tauri feature updater -> tauri reqwest (default features -> default-tls / native-tls); updater.active=true, endpoint https://github.com/guo6x/Omni-context/releases/latest/download/latest.json; prod config merge keeps updater active",
+      "direct_reqwest_path": "hardware_actions.rs -> http://127.0.0.1:3001 (DEFAULT_BRAIN_URL) only; no https:// calls in daemon src"
+    },
+    "fix": {
+      "option": "A (feature pruning)",
+      "detail": "reqwest default-features=false, features=[json] (removed rustls-tls)",
+      "updater_disabled": false
+    },
+    "rustsec": {
+      "RUSTSEC-2026-0098": "FIXED",
+      "RUSTSEC-2026-0099": "FIXED",
+      "RUSTSEC-2026-0104": "FIXED"
+    },
+    "cargo_audit_final": {
+      "vulnerabilities": 5,
+      "warnings": 17,
+      "UNKNOWN": 0,
+      "FIX_BEFORE_CP3": 0,
+      "BLOCKS_CP3": 0
+    }
+  },
+  "checkpoint3_security_gate": "PASS",
+  "regression": {
+    "brain_server": {
+      "typecheck": "PASS",
+      "vitest": "PASS (41 files / 479 tests)",
+      "build": "PASS",
+      "lint": "PASS (0 errors, 9 pre-existing warnings)",
+      "npm_audit_prod": "RAN (16 findings, all classified; execution-adjacent unresolved 0)",
+      "mcp_api_runtime_smoke": "PASS"
+    },
+    "desktop": {
+      "npm_build": "PASS",
+      "verify_controlled": "PASS (snapshot updated for intentional Cargo change)",
+      "cargo_fmt_check": "PASS",
+      "cargo_check": "PASS (1 pre-existing warning)",
+      "cargo_clippy": "PASS (11 pre-existing warnings)",
+      "cargo_test": "PASS (10/10)",
+      "cargo_audit": "RAN (5 vulnerabilities, all NOT_REACHABLE; 17 warnings)"
+    },
+    "repository": {
+      "git_diff_check": "PASS",
+      "process_execution_added": false
+    }
+  }
+}

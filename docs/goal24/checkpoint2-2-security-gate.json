@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "2.2",
+  "title": "Goal24 Checkpoint 2.2 Pre-Execution Security Gate",
+  "generatedAt": "2026-08-13",
+  "integrationBaseSha": "2cc35b5eed48c780ad4c1b7ef1de1bd793c6f2d4",
+  "checkpoint3_security_gate": "PASS",
+  "criteria": {
+    "A_evidence_fail_closed": {
+      "required": true,
+      "result": "YES",
+      "evidence": "Lane A: unverified evidence never satisfies mandatory requirements (incl. verification_requirement undefined/none); undeclared conflict_policy defaults to reject; tests in tests/goal24-execution-contracts.test.ts"
+    },
+    "B_optional_evidence_cannot_block": {
+      "required": true,
+      "result": "YES",
+      "evidence": "Optional gaps land in CoverageAssessment.non_blocking_findings / warnings only; verified by tests (optional missing/stale/unverified never enter blocking_reasons)"
+    },
+    "C_node_execution_adjacent_unresolved": {
+      "required": true,
+      "result": "CLEAR",
+      "evidence": "UNKNOWN=0, FIX_BEFORE_CP3=0, BLOCKS_CP3=0. Remaining npm audit findings are install-time (tar/node-gyp), embedding (@xenova/transformers/sharp), ingestion (xlsx), or express-transitive-not-imported chains"
+    },
+    "D_hono_node_server_major_transitive_override_smoke": {
+      "required": true,
+      "result": "PASS",
+      "evidence": "@hono/node-server 1.19.14 -> 2.1.0 (major_transitive_override=true). Real MCP/API runtime smoke: health 200, MCP initialize 200, tools/list 200, read-only get_stats 200, REST stats 200, SDK streamableHttp + hono serve 200, clean shutdown"
+    },
+    "E_cargo_audit_executed": {
+      "required": true,
+      "result": "YES",
+      "evidence": "cargo-audit 0.22.2 executed with advisory DB D:\\environment\\advisory-db (1216 advisories); results in docs/goal24/audit-tauri-rust.json (lane C) and re-run after integration fix"
+    },
+    "F_rust_execution_adjacent_unresolved": {
+      "required": true,
+      "result": "CLEAR",
+      "evidence": "UNKNOWN=0, FIX_BEFORE_CP3=0, BLOCKS_CP3=0. Remaining 5 vulnerabilities are NOT_REACHABLE on Windows (crossbeam-epoch fmt-only, quick-xml Linux/macOS-only paths, verified with cargo tree --target all)"
+    },
+    "G_rustsec_0098_0099_0104": {
+      "required": true,
+      "result": "FIXED",
+      "evidence": "rustls-webpki 0.101.7 removed from dependency graph (feature pruning of direct reqwest rustls-tls; updater keeps native-tls). cargo tree -i rustls-webpki@0.101.7 -> no match; absent from cargo audit"
+    },
+    "H_no_process_execution_added": {
+      "required": true,
+      "result": "YES",
+      "evidence": "0 commits add Command::new/spawn/child_process/GitHub CLI adapter/Execution Broker implementation (verified across all integrated diffs)"
+    }
+  },
+  "rustsecDisposition": {
+    "RUSTSEC-2026-0098": "FIXED",
+    "RUSTSEC-2026-0099": "FIXED",
+    "RUSTSEC-2026-0104": "FIXED"
+  },
+  "node": {
+    "major_transitive_override": true,
+    "execution_adjacent_unresolved": {
+      "UNKNOWN": 0,
+      "FIX_BEFORE_CP3": 0,
+      "BLOCKS_CP3": 0
+    }
+  },
+  "rust": {
+    "vulnerabilities": 5,
+    "warnings": 17,
+    "unresolved": {
+      "UNKNOWN": 0,
+      "FIX_BEFORE_CP3": 0,
+      "BLOCKS_CP3": 0
+    }
+  },
+  "note": "Checkpoint 3 must NOT start based on this gate. This gate only clears pre-execution security for the future broker design."
+}
