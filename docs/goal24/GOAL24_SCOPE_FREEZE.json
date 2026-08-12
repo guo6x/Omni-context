@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "goal": "Goal24",
+  "title": "CLI/Skill-First Capability Layer + Evidence Surface Guard",
+  "created_at": "2026-08-12T17:47:00+08:00",
+  "repository": "guo6x/Omni-context",
+  "development_branch": "dev/goal24-cli-skills",
+  "base_branch": "product/omni-v3-unified-r1",
+  "base_sha": "d89675a2e9f60cf8b7f9221dd19ca224b9a103e9",
+  "main_sha_at_freeze": "960e0cf2abc0c3859a7dbb45eac2555f12035ffd",
+  "phase": "POST_EVALUATION_PRODUCT_ENGINEERING",
+  "scientific_state": {
+    "may_modify_frozen_benchmark": false,
+    "may_modify_gold": false,
+    "may_modify_scorer": false,
+    "may_modify_formal_raw_outputs": false,
+    "may_access_holdback": false,
+    "may_claim_confirmatory_repair": false
+  },
+  "product_objective": "Make Omni-Context a transport-agnostic decision-control layer with Skills and Capabilities above CLI/API/MCP/local adapters, with desktop Tauri acting as a restricted local execution broker.",
+  "required_layers": [
+    "brain-server capability/skill/evidence/decision contracts",
+    "Tauri local execution broker",
+    "desktop adapters/skills/approvals/activity UI",
+    "GitHub CLI first vertical slice",
+    "read-back outcome verification"
+  ],
+  "forbidden_designs": [
+    "unrestricted generic shell agent",
+    "LLM-generated arbitrary shell strings executed directly",
+    "MCP removal",
+    "Decision Kernel rewrite without a separately justified contract migration",
+    "main branch movement before Goal24 verification"
+  ],
+  "first_vertical_slice": "github-cli",
+  "checkpoints": 10
+}
