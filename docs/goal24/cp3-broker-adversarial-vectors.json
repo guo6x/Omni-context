@@ -1,0 +1,3125 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "cp3-broker-adversarial-vectors",
+  "lane": "B — ADVERSARIAL SPEC",
+  "checkpoint": "Goal24 Checkpoint 3",
+  "base_sha": "93d9cf53c91e56d4c7b13e85d6197014d0a879c7",
+  "generated_at": "2026-08-13T00:00:00+08:00",
+  "status": "DESIGN ONLY — no broker implementation exists; vectors define the acceptance oracle for Lane A integration.",
+  "oracle": {
+    "gate_name": "Checkpoint 3 Integration Gate",
+    "rule": "A vector PASSES only when expected_broker_result and expected_error_code match AND no must_not_happen condition occurs. Any must_not_happen violation is a FAIL regardless of result/error match.",
+    "fail_conditions": [
+      {
+        "id": "F01",
+        "label": "generic command execution",
+        "description": "Any plan input or plan field causes execution of a generic command rather than a capability-bound executable.",
+        "threats": [
+          "T01",
+          "T03",
+          "T27"
+        ],
+        "vectors": [
+          "V006",
+          "V007",
+          "V009",
+          "V027"
+        ]
+      },
+      {
+        "id": "F02",
+        "label": "shell invocation",
+        "description": "Any execution path routes through sh/bash/cmd/powershell with a constructed string.",
+        "threats": [
+          "T03",
+          "T04",
+          "T05"
+        ],
+        "vectors": [
+          "V022",
+          "V023",
+          "V024",
+          "V025",
+          "V026",
+          "V027"
+        ]
+      },
+      {
+        "id": "F03",
+        "label": "caller-selected executable",
+        "description": "The caller (plan/inputs/IPC) selects or influences the program path.",
+        "threats": [
+          "T01",
+          "T26"
+        ],
+        "vectors": [
+          "V006",
+          "V007",
+          "V009",
+          "V011"
+        ]
+      },
+      {
+        "id": "F04",
+        "label": "caller-selected cwd",
+        "description": "The caller selects a working directory outside the adapter allowlist.",
+        "threats": [
+          "T07",
+          "T08"
+        ],
+        "vectors": [
+          "V032",
+          "V033",
+          "V034",
+          "V035",
+          "V036",
+          "V092",
+          "V094",
+          "V095",
+          "V096",
+          "V097"
+        ]
+      },
+      {
+        "id": "F05",
+        "label": "parent credential inheritance",
+        "description": "The child inherits the parent environment wholesale, including non-allowlisted secrets.",
+        "threats": [
+          "T09",
+          "T10"
+        ],
+        "vectors": [
+          "V040",
+          "V042",
+          "V043",
+          "V044",
+          "V045",
+          "V049"
+        ]
+      },
+      {
+        "id": "F06",
+        "label": "required_approval plan executable",
+        "description": "A plan with required_approval=true executes without a valid approval.",
+        "threats": [
+          "T18",
+          "T28"
+        ],
+        "vectors": [
+          "V080",
+          "V081",
+          "V082",
+          "V083",
+          "V084",
+          "V005"
+        ]
+      },
+      {
+        "id": "F07",
+        "label": "expired/replayed plan executable",
+        "description": "An expired, stale, or already-consumed plan executes.",
+        "threats": [
+          "T16",
+          "T17",
+          "T18",
+          "T27"
+        ],
+        "vectors": [
+          "V001",
+          "V002",
+          "V003",
+          "V004",
+          "V085",
+          "V086",
+          "V087"
+        ]
+      },
+      {
+        "id": "F08",
+        "label": "process tree survives timeout",
+        "description": "Any descendant of the spawned process survives timeout/cancel/broker death.",
+        "threats": [
+          "T21",
+          "T23",
+          "T24"
+        ],
+        "vectors": [
+          "V058",
+          "V066",
+          "V067",
+          "V068",
+          "V069",
+          "V070"
+        ]
+      },
+      {
+        "id": "F09",
+        "label": "unbounded stdout/stderr",
+        "description": "Output capture is unbounded in bytes or causes broker deadlock/OOM.",
+        "threats": [
+          "T19",
+          "T25",
+          "T32"
+        ],
+        "vectors": [
+          "V050",
+          "V051",
+          "V052",
+          "V053",
+          "V054"
+        ]
+      },
+      {
+        "id": "F10",
+        "label": "unknown JSON fields silently accepted",
+        "description": "Unknown or reserved JSON fields are accepted without rejection.",
+        "threats": [
+          "T29"
+        ],
+        "vectors": [
+          "V088",
+          "V089",
+          "V090",
+          "V091",
+          "V009",
+          "V006",
+          "V027",
+          "V048"
+        ]
+      },
+      {
+        "id": "F11",
+        "label": ".cmd/.bat/.ps1 executable accepted by default",
+        "description": "A script file is accepted as the plan executable.",
+        "threats": [
+          "T06"
+        ],
+        "vectors": [
+          "V028",
+          "V029",
+          "V030",
+          "V031",
+          "V013"
+        ]
+      },
+      {
+        "id": "F12",
+        "label": "PATH-selected fake binary executable",
+        "description": "A PATH/cwd-selected binary executes instead of the pinned executable.",
+        "threats": [
+          "T11",
+          "T12",
+          "T26"
+        ],
+        "vectors": [
+          "V010",
+          "V012",
+          "V013",
+          "V011"
+        ]
+      },
+      {
+        "id": "F13",
+        "label": "output/credential full persistent logging",
+        "description": "Captured output or credentials are persisted fully and unredacted.",
+        "threats": [
+          "T20",
+          "T33"
+        ],
+        "vectors": [
+          "V046",
+          "V047",
+          "V055",
+          "V056",
+          "V057",
+          "V099"
+        ]
+      }
+    ]
+  },
+  "threat_registry": [
+    {
+      "id": "T01",
+      "title": "Arbitrary executable selection"
+    },
+    {
+      "id": "T02",
+      "title": "argv injection"
+    },
+    {
+      "id": "T03",
+      "title": "Shell invocation"
+    },
+    {
+      "id": "T04",
+      "title": "cmd /C"
+    },
+    {
+      "id": "T05",
+      "title": "PowerShell -Command"
+    },
+    {
+      "id": "T06",
+      "title": ".cmd/.bat implicit shell"
+    },
+    {
+      "id": "T07",
+      "title": "cwd escape"
+    },
+    {
+      "id": "T08",
+      "title": "Symlink/path tricks"
+    },
+    {
+      "id": "T09",
+      "title": "Environment leakage"
+    },
+    {
+      "id": "T10",
+      "title": "Inherited credentials"
+    },
+    {
+      "id": "T11",
+      "title": "PATH hijacking"
+    },
+    {
+      "id": "T12",
+      "title": "Malicious local executable named gh"
+    },
+    {
+      "id": "T13",
+      "title": "Executable replacement / TOCTOU"
+    },
+    {
+      "id": "T14",
+      "title": "Executable version drift"
+    },
+    {
+      "id": "T15",
+      "title": "Adapter/capability mismatch"
+    },
+    {
+      "id": "T16",
+      "title": "Stale ExecutionPlan"
+    },
+    {
+      "id": "T17",
+      "title": "Expired ExecutionPlan"
+    },
+    {
+      "id": "T18",
+      "title": "Approval replay"
+    },
+    {
+      "id": "T19",
+      "title": "Output flooding"
+    },
+    {
+      "id": "T20",
+      "title": "stdout/stderr secret leakage"
+    },
+    {
+      "id": "T21",
+      "title": "Timeout"
+    },
+    {
+      "id": "T22",
+      "title": "Cancellation"
+    },
+    {
+      "id": "T23",
+      "title": "Orphan processes"
+    },
+    {
+      "id": "T24",
+      "title": "Child process tree termination"
+    },
+    {
+      "id": "T25",
+      "title": "Huge output / memory pressure"
+    },
+    {
+      "id": "T26",
+      "title": "Executable discovery ambiguity"
+    },
+    {
+      "id": "T27",
+      "title": "Plan state machine bypass (jump / executing replay / non-atomic transition)"
+    },
+    {
+      "id": "T28",
+      "title": "Approval reference forgery or missing approval (fake reference, replay, broken binding)"
+    },
+    {
+      "id": "T29",
+      "title": "Lenient deserialization (unknown JSON fields silently accepted)"
+    },
+    {
+      "id": "T30",
+      "title": "Unicode / path normalization confusion (homoglyphs, fullwidth forms, case, trailing dot/space)"
+    },
+    {
+      "id": "T31",
+      "title": "NUL / control character smuggling (argv, paths, env, output/display)"
+    },
+    {
+      "id": "T32",
+      "title": "Pipe deadlock / never-closing output handles (inherited handle holds pipe open)"
+    },
+    {
+      "id": "T33",
+      "title": "Credential-shaped output fully persisted unredacted (output/credential logging)"
+    }
+  ],
+  "categories": [
+    {
+      "id": "PLAN_STATE_REPLAY",
+      "label": "plan state replay"
+    },
+    {
+      "id": "EXECUTABLE_SELECTION",
+      "label": "executable selection"
+    },
+    {
+      "id": "PATH_HIJACK",
+      "label": "path hijack"
+    },
+    {
+      "id": "ARGV_INJECTION",
+      "label": "argv injection"
+    },
+    {
+      "id": "SHELL_ESCAPE",
+      "label": "shell escape"
+    },
+    {
+      "id": "WINDOWS_FILE_TYPES",
+      "label": "windows file types"
+    },
+    {
+      "id": "CWD_ESCAPE",
+      "label": "cwd escape"
+    },
+    {
+      "id": "SYMLINK_JUNCTION",
+      "label": "symlink junction"
+    },
+    {
+      "id": "ENV_LEAKAGE",
+      "label": "env leakage"
+    },
+    {
+      "id": "CREDENTIAL_LEAKAGE",
+      "label": "credential leakage"
+    },
+    {
+      "id": "OUTPUT_FLOOD",
+      "label": "output flood"
+    },
+    {
+      "id": "SECRET_OUTPUT",
+      "label": "secret output"
+    },
+    {
+      "id": "TIMEOUT",
+      "label": "timeout"
+    },
+    {
+      "id": "CANCELLATION",
+      "label": "cancellation"
+    },
+    {
+      "id": "PROCESS_TREE",
+      "label": "process tree"
+    },
+    {
+      "id": "TOCTOU",
+      "label": "toctou"
+    },
+    {
+      "id": "ADAPTER_MISMATCH",
+      "label": "adapter mismatch"
+    },
+    {
+      "id": "CAPABILITY_MISMATCH",
+      "label": "capability mismatch"
+    },
+    {
+      "id": "APPROVAL_BYPASS",
+      "label": "approval bypass"
+    },
+    {
+      "id": "EXPIRY",
+      "label": "expiry"
+    },
+    {
+      "id": "SERDE_UNKNOWN_FIELDS",
+      "label": "serde unknown fields"
+    },
+    {
+      "id": "UNICODE_NORMALIZATION",
+      "label": "unicode normalization"
+    },
+    {
+      "id": "NUL_CONTROL",
+      "label": "nul control"
+    }
+  ],
+  "enums": {
+    "expected_broker_result": [
+      "REJECTED_BEFORE_SPAWN",
+      "EXECUTED_SAFE",
+      "OUTPUT_TRUNCATED",
+      "KILLED_TIMEOUT",
+      "KILLED_CANCELLED",
+      "TREE_TERMINATED",
+      "EXECUTED_WITH_REDACTION",
+      "BLOCKED_RESOLUTION"
+    ],
+    "expected_error_code": [
+      "NONE",
+      "PLAN_REJECTED_INVALID",
+      "PLAN_REJECTED_STATE",
+      "PLAN_REJECTED_EXPIRED",
+      "PLAN_REJECTED_APPROVAL",
+      "PLAN_REJECTED_CAPABILITY",
+      "PLAN_REJECTED_ADAPTER",
+      "PLAN_REJECTED_SINGLE_USE",
+      "BROKER_BLOCKED_EXECUTABLE",
+      "BROKER_BLOCKED_EXTENSION",
+      "BROKER_BLOCKED_CWD",
+      "BROKER_BLOCKED_PATH",
+      "BROKER_BLOCKED_ARGV",
+      "BROKER_BLOCKED_ENV",
+      "BROKER_TIMEOUT",
+      "BROKER_CANCELLED",
+      "BROKER_OUTPUT_LIMIT",
+      "BROKER_CRASH"
+    ],
+    "platform": [
+      "windows",
+      "windows+posix",
+      "posix"
+    ]
+  },
+  "plan_templates": {
+    "tpl_read": {
+      "plan_id": "plan_read_0001",
+      "decision_id": "decision_read_0001",
+      "capability_id": "github.repo.inspect",
+      "capability_version": "1.0.0",
+      "adapter_id": "github-cli",
+      "normalized_inputs": {
+        "repo": "owner/repo",
+        "ref": "main"
+      },
+      "required_approval": false,
+      "approval": null,
+      "risk_snapshot": {
+        "risk_level": "low",
+        "reversible": false,
+        "side_effect_class": "read_only",
+        "required_authority": "L0",
+        "capability_version": "1.0.0"
+      },
+      "evidence_coverage_snapshot": {
+        "entries": [
+          {
+            "evidence_class": "repository.current_state",
+            "status": "present",
+            "verification_level": "verified",
+            "evidence_ids": [
+              "ev_read_0001"
+            ],
+            "checked_at": "2026-08-13T00:00:00+08:00"
+          }
+        ]
+      },
+      "timeout_ms": 15000,
+      "verification_plan": null,
+      "rollback_plan": null,
+      "state": "ready",
+      "created_at": "2026-08-13T00:00:00+08:00"
+    },
+    "tpl_write": {
+      "plan_id": "plan_write_0001",
+      "decision_id": "decision_write_0001",
+      "capability_id": "github.issue.close",
+      "capability_version": "1.1.0",
+      "adapter_id": "github-cli",
+      "normalized_inputs": {
+        "issue_number": 42,
+        "reason": "resolved"
+      },
+      "required_approval": true,
+      "approval": {
+        "approval_id": "appr_0001",
+        "plan_id": "plan_write_0001",
+        "granted_by": "user-test",
+        "granted_at": "2026-08-13T00:05:00+08:00",
+        "policy_version": "1.0.0",
+        "token_reference": "token-ref-0001",
+        "token_digest": "digest-placeholder-0001"
+      },
+      "risk_snapshot": {
+        "risk_level": "medium",
+        "reversible": true,
+        "side_effect_class": "reversible_write",
+        "required_authority": "L2",
+        "capability_version": "1.1.0"
+      },
+      "evidence_coverage_snapshot": {
+        "entries": [
+          {
+            "evidence_class": "issue.current_state",
+            "status": "present",
+            "verification_level": "verified",
+            "evidence_ids": [
+              "ev_write_0001"
+            ],
+            "checked_at": "2026-08-13T00:04:00+08:00"
+          }
+        ]
+      },
+      "timeout_ms": 30000,
+      "verification_plan": {
+        "verification_capability_id": "github.issue.read",
+        "verification_inputs": {
+          "issue_number": 42
+        },
+        "description": "read-back"
+      },
+      "rollback_plan": {
+        "rollback_capability_id": "github.issue.reopen",
+        "rollback_inputs": {
+          "issue_number": 42
+        },
+        "description": "reopen"
+      },
+      "state": "ready",
+      "created_at": "2026-08-13T00:00:00+08:00",
+      "expires_at": "2026-08-13T01:00:00+08:00"
+    }
+  },
+  "fixture_contract": {
+    "probe_executable": "The harness supplies a configurable probe executable registered as the pinned github-cli binary (gh.exe). Behaviors are selected per vector via child_behavior.",
+    "behaviors": [
+      "normal",
+      "flood_stdout_10mb",
+      "flood_stderr_10mb",
+      "infinite_stream",
+      "binary_output",
+      "invalid_utf8_output",
+      "secret_output",
+      "bearer_output",
+      "credential_url_output",
+      "control_chars_output",
+      "print_auth_token",
+      "sleep_5s",
+      "sleep_3600s",
+      "spawn_grandchild_sleep",
+      "spawn_grandchild_exit_first",
+      "exit_immediately",
+      "exit_exactly_at_deadline",
+      "breakaway_attempt"
+    ],
+    "path_fixtures": [
+      "planted fake gh.exe in PATH dir",
+      "planted gh.exe in cwd",
+      "gh.cmd / gh.bat / gh.ps1 shims",
+      "junction to user profile",
+      "symlink executable to attacker binary",
+      "junction within allowlist",
+      "symlink cycle",
+      "binary swap at sync point",
+      "junction flip at sync point",
+      "post-spawn replacement"
+    ],
+    "marker_contract": "Fake binaries write a marker file on execution; PASS requires marker absence for planted binaries and marker presence for the pinned probe.",
+    "race_iterations": "Vectors with race_iterations must be run that many times; every iteration must pass."
+  },
+  "vectors": [
+    {
+      "id": "V001",
+      "threat_id": "T27",
+      "category": "PLAN_STATE_REPLAY",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/state",
+            "value": "executing"
+          }
+        ]
+      },
+      "attack_goal": "Replay a plan that is already executing to double-execute the write.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_STATE",
+      "must_not_happen": [
+        "any process spawned",
+        "plan transitions again",
+        "side effect performed twice"
+      ]
+    },
+    {
+      "id": "V002",
+      "threat_id": "T27",
+      "category": "PLAN_STATE_REPLAY",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/state",
+            "value": "draft"
+          }
+        ]
+      },
+      "attack_goal": "Execute a plan that never reached an executable state.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_STATE",
+      "must_not_happen": [
+        "any process spawned"
+      ]
+    },
+    {
+      "id": "V003",
+      "threat_id": "T27",
+      "category": "PLAN_STATE_REPLAY",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/state",
+            "value": "succeeded"
+          }
+        ]
+      },
+      "attack_goal": "Replay a completed plan to re-run a finished write.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_STATE",
+      "must_not_happen": [
+        "any process spawned",
+        "terminal state re-opened"
+      ]
+    },
+    {
+      "id": "V004",
+      "threat_id": "T18",
+      "category": "PLAN_STATE_REPLAY",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": []
+      },
+      "attack_goal": "Submit the same ready plan twice to execute the write twice under one approval.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_SINGLE_USE",
+      "must_not_happen": [
+        "second execution",
+        "same approval_id consumed twice"
+      ]
+    },
+    {
+      "id": "V005",
+      "threat_id": "T27",
+      "category": "PLAN_STATE_REPLAY",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/state",
+            "value": "executing"
+          },
+          {
+            "op": "replace",
+            "path": "/approval",
+            "value": null
+          }
+        ]
+      },
+      "attack_goal": "Jump draft->executing with no approval to skip the approval gate.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_STATE",
+      "must_not_happen": [
+        "any process spawned",
+        "approval-less execution of required_approval plan"
+      ]
+    },
+    {
+      "id": "V006",
+      "threat_id": "T01",
+      "category": "EXECUTABLE_SELECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "add",
+            "path": "/normalized_inputs/executable",
+            "value": "C:\\evil\\tool.exe"
+          }
+        ]
+      },
+      "attack_goal": "Smuggle a caller-selected executable through normalized_inputs.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "unknown input key accepted",
+        "input-derived program executed"
+      ]
+    },
+    {
+      "id": "V007",
+      "threat_id": "T01",
+      "category": "EXECUTABLE_SELECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/repo",
+            "value": "gh.exe --help"
+          }
+        ]
+      },
+      "attack_goal": "Make a semantic value (repo) become the program or a flag sequence.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "value interpreted as program name",
+        "argv derived from repo value contains more than one element",
+        "flag injection via repo value"
+      ]
+    },
+    {
+      "id": "V008",
+      "threat_id": "T01",
+      "category": "EXECUTABLE_SELECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/adapter_id",
+            "value": "generic-exec"
+          }
+        ]
+      },
+      "attack_goal": "Bind the plan to an unregistered generic executor.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_ADAPTER",
+      "must_not_happen": [
+        "unregistered adapter executed"
+      ]
+    },
+    {
+      "id": "V009",
+      "threat_id": "T29",
+      "category": "EXECUTABLE_SELECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "add",
+            "path": "/executable",
+            "value": "C:\\evil\\tool.exe"
+          }
+        ]
+      },
+      "attack_goal": "Smuggle an executable field at plan top level.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "unknown plan field accepted",
+        "caller-selected executable spawned"
+      ]
+    },
+    {
+      "id": "V010",
+      "threat_id": "T11",
+      "category": "PATH_HIJACK",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "PATH": "C:\\fixtures\\evil;%PATH%"
+        },
+        "path_fixtures": [
+          "C:\\fixtures\\evil\\gh.exe (fake, writes marker C:\\fixtures\\marker_fake_ran)"
+        ]
+      },
+      "attack_goal": "Shadow the pinned gh.exe with a fake earlier in PATH.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "fake PATH binary executed",
+        "marker_fake_ran created",
+        "bare-name PATH resolution used"
+      ]
+    },
+    {
+      "id": "V011",
+      "threat_id": "T11",
+      "category": "PATH_HIJACK",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "request": {
+          "program": "gh",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Launch by bare name so PATH resolution picks the executable.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_EXECUTABLE",
+      "must_not_happen": [
+        "any spawn",
+        "PATH consulted for program resolution"
+      ]
+    },
+    {
+      "id": "V012",
+      "threat_id": "T12",
+      "category": "PATH_HIJACK",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "path_fixtures": [
+          "C:\\repos\\allowed\\gh.exe (planted, writes marker C:\\fixtures\\marker_cwd_ran)"
+        ]
+      },
+      "attack_goal": "Let cwd shadow the pinned binary.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "cwd binary executed",
+        "marker_cwd_ran created",
+        "cwd searched during executable resolution"
+      ]
+    },
+    {
+      "id": "V013",
+      "threat_id": "T06",
+      "category": "PATH_HIJACK",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "PATH": "C:\\fixtures\\shims;%PATH%"
+        },
+        "path_fixtures": [
+          "C:\\fixtures\\shims\\gh.cmd (writes marker C:\\fixtures\\marker_shim_ran)"
+        ]
+      },
+      "attack_goal": "Shadow gh.exe with an earlier gh.cmd shim.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "gh.cmd executed",
+        "marker_shim_ran created",
+        "shell association fallback used"
+      ]
+    },
+    {
+      "id": "V014",
+      "threat_id": "T02",
+      "category": "ARGV_INJECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "--force"
+          }
+        ]
+      },
+      "attack_goal": "Leading-dash value in a value position changes option semantics.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "value parsed as an option",
+        "flag count differs from capability spec",
+        "argv element count for reason != 1"
+      ]
+    },
+    {
+      "id": "V015",
+      "threat_id": "T02",
+      "category": "ARGV_INJECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/repo",
+            "value": "--repo evil"
+          }
+        ]
+      },
+      "attack_goal": "Inject a --repo flag pair through a repo value.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "--repo option injected",
+        "repo value split into two argv elements"
+      ]
+    },
+    {
+      "id": "V016",
+      "threat_id": "T02",
+      "category": "ARGV_INJECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/ref",
+            "value": "-R"
+          }
+        ]
+      },
+      "attack_goal": "Short-flag injection via a ref value.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "-R interpreted as an option",
+        "ref value split or prefixed"
+      ]
+    },
+    {
+      "id": "V017",
+      "threat_id": "T02",
+      "category": "ARGV_INJECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "first line\n--force"
+          }
+        ]
+      },
+      "attack_goal": "Newline splits one value into a second argument.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "value split into multiple argv elements",
+        "second argument created by newline"
+      ]
+    },
+    {
+      "id": "V018",
+      "threat_id": "T02",
+      "category": "ARGV_INJECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "line1\r\nline2"
+          }
+        ]
+      },
+      "attack_goal": "CRLF splits one value into two arguments.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "value split into multiple argv elements",
+        "CRLF treated as argument separator"
+      ]
+    },
+    {
+      "id": "V019",
+      "threat_id": "T31",
+      "category": "ARGV_INJECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "bad\u0000arg"
+          }
+        ]
+      },
+      "attack_goal": "NUL byte smuggled through a JSON string into argv.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_ARGV",
+      "must_not_happen": [
+        "NUL passed to OS argv",
+        "truncated argument executed"
+      ]
+    },
+    {
+      "id": "V020",
+      "threat_id": "T02",
+      "category": "ARGV_INJECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "a b c"
+          }
+        ]
+      },
+      "attack_goal": "Whitespace-separated payload becomes extra positional arguments.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "value split on spaces",
+        "extra positional arguments injected"
+      ]
+    },
+    {
+      "id": "V021",
+      "threat_id": "T30",
+      "category": "ARGV_INJECTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "－force"
+          }
+        ]
+      },
+      "attack_goal": "Unicode homoglyph dash (U+FF0D) normalized into a real option dash.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "homoglyph normalized to U+002D for option parsing",
+        "value treated as option"
+      ]
+    },
+    {
+      "id": "V022",
+      "threat_id": "T03",
+      "category": "SHELL_ESCAPE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "; calc.exe"
+          }
+        ]
+      },
+      "attack_goal": "Shell metacharacters in a semantic value execute an extra command.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "shell invoked",
+        "extra process spawned",
+        "value interpreted as shell text"
+      ]
+    },
+    {
+      "id": "V023",
+      "threat_id": "T03",
+      "category": "SHELL_ESCAPE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "| whoami"
+          }
+        ]
+      },
+      "attack_goal": "Pipe metacharacter redirects execution into whoami.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "shell invoked",
+        "whoami spawned",
+        "pipe operator interpreted"
+      ]
+    },
+    {
+      "id": "V024",
+      "threat_id": "T03",
+      "category": "SHELL_ESCAPE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "&& whoami"
+          }
+        ]
+      },
+      "attack_goal": "AND-operator chains a second command.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "shell invoked",
+        "second command executed",
+        "&& interpreted"
+      ]
+    },
+    {
+      "id": "V025",
+      "threat_id": "T03",
+      "category": "SHELL_ESCAPE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "`whoami`"
+          }
+        ]
+      },
+      "attack_goal": "Backtick command substitution executes whoami.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "command substitution executed",
+        "whoami spawned",
+        "backticks interpreted"
+      ]
+    },
+    {
+      "id": "V026",
+      "threat_id": "T03",
+      "category": "SHELL_ESCAPE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "$(whoami)"
+          }
+        ]
+      },
+      "attack_goal": "$() substitution executes whoami.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "command substitution executed",
+        "whoami spawned",
+        "$() interpreted"
+      ]
+    },
+    {
+      "id": "V027",
+      "threat_id": "T03",
+      "category": "SHELL_ESCAPE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "add",
+            "path": "/normalized_inputs/shell",
+            "value": "cmd /C whoami"
+          }
+        ]
+      },
+      "attack_goal": "Reserved shell key smuggled into normalized_inputs.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "shell key accepted",
+        "cmd /C executed"
+      ]
+    },
+    {
+      "id": "V028",
+      "threat_id": "T06",
+      "category": "WINDOWS_FILE_TYPES",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "C:\\fixtures\\gh.cmd",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Accept a .cmd shim as the plan executable.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_EXTENSION",
+      "must_not_happen": [
+        "gh.cmd executed",
+        "cmd.exe launched for it",
+        "shell association used"
+      ]
+    },
+    {
+      "id": "V029",
+      "threat_id": "T06",
+      "category": "WINDOWS_FILE_TYPES",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "C:\\fixtures\\gh.bat",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Accept a .bat script as the plan executable.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_EXTENSION",
+      "must_not_happen": [
+        "gh.bat executed",
+        "cmd.exe launched for it"
+      ]
+    },
+    {
+      "id": "V030",
+      "threat_id": "T06",
+      "category": "WINDOWS_FILE_TYPES",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "C:\\fixtures\\gh.ps1",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Accept a PowerShell script as the plan executable.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_EXTENSION",
+      "must_not_happen": [
+        "gh.ps1 executed",
+        "powershell.exe launched for it"
+      ]
+    },
+    {
+      "id": "V031",
+      "threat_id": "T06",
+      "category": "WINDOWS_FILE_TYPES",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "C:\\fixtures\\gh",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Extensionless script resolved via shell association.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_EXECUTABLE",
+      "must_not_happen": [
+        "script executed",
+        "shell association fallback",
+        "cmd.exe launched"
+      ]
+    },
+    {
+      "id": "V032",
+      "threat_id": "T07",
+      "category": "CWD_ESCAPE",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "..\\..\\Windows\\System32",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Parent traversal escapes the cwd allowlist into System32.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_CWD",
+      "must_not_happen": [
+        "child spawned with escaped cwd",
+        "relative traversal resolved outside allowlist"
+      ]
+    },
+    {
+      "id": "V033",
+      "threat_id": "T07",
+      "category": "CWD_ESCAPE",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\Users\\Public",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Select a user-profile directory outside the allowlist as cwd.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_CWD",
+      "must_not_happen": [
+        "child spawned outside allowed roots"
+      ]
+    },
+    {
+      "id": "V034",
+      "threat_id": "T07",
+      "category": "CWD_ESCAPE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\does-not-exist",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Nonexistent cwd silently accepted.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_CWD",
+      "must_not_happen": [
+        "spawn with nonexistent cwd",
+        "implicit cwd fallback to attacker-reachable directory"
+      ]
+    },
+    {
+      "id": "V035",
+      "threat_id": "T07",
+      "category": "CWD_ESCAPE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed\\file.txt",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "A file path accepted as a directory cwd.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_CWD",
+      "must_not_happen": [
+        "spawn with non-directory cwd"
+      ]
+    },
+    {
+      "id": "V036",
+      "threat_id": "T08",
+      "category": "SYMLINK_JUNCTION",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "path_fixtures": [
+          "C:\\repos\\allowed\\sub -> junction to C:\\Users\\Public (escape)"
+        ]
+      },
+      "attack_goal": "A junction inside an allowed repo redirects cwd to the user profile.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_PATH",
+      "must_not_happen": [
+        "canonicalization skipped",
+        "child runs with profile cwd",
+        "junction escape undetected"
+      ]
+    },
+    {
+      "id": "V037",
+      "threat_id": "T13",
+      "category": "SYMLINK_JUNCTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "request": {
+          "program": "C:\\fixtures\\gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        },
+        "path_fixtures": [
+          "C:\\fixtures\\gh.exe is a symlink/junction to C:\\evil\\attacker.exe"
+        ]
+      },
+      "attack_goal": "Executable path symlink resolves to an attacker binary.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_EXECUTABLE",
+      "must_not_happen": [
+        "attacker.exe executed",
+        "symlink target not verified"
+      ]
+    },
+    {
+      "id": "V038",
+      "threat_id": "T08",
+      "category": "SYMLINK_JUNCTION",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed\\jlink",
+          "env": "__INHERIT__"
+        },
+        "path_fixtures": [
+          "C:\\repos\\allowed\\jlink -> junction to C:\\repos\\allowed\\real (within allowlist)"
+        ]
+      },
+      "attack_goal": "Junction within allowlist must canonicalize and still pass.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "raw non-canonical path used as cwd",
+        "allowlist check performed on non-canonical form"
+      ]
+    },
+    {
+      "id": "V039",
+      "threat_id": "T08",
+      "category": "SYMLINK_JUNCTION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\loop",
+          "env": "__INHERIT__"
+        },
+        "path_fixtures": [
+          "C:\\repos\\loop -> symlink to itself (cycle)"
+        ]
+      },
+      "attack_goal": "Symlink cycle hangs canonicalization.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_PATH",
+      "must_not_happen": [
+        "canonicalization hangs",
+        "broker becomes unresponsive"
+      ]
+    },
+    {
+      "id": "V040",
+      "threat_id": "T09",
+      "category": "ENV_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "OPENAI_API_KEY": "sk-fake-123",
+          "DEEPSEEK_API_KEY": "ds-fake-123",
+          "NPM_TOKEN": "npm-fake-123",
+          "GH_TOKEN": "ghp_fake123"
+        }
+      },
+      "attack_goal": "Wholesale parent environment inheritance exposes non-allowlisted secrets.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "OPENAI_API_KEY present in child env",
+        "DEEPSEEK_API_KEY present in child env",
+        "NPM_TOKEN present in child env",
+        "non-allowlisted parent env inherited"
+      ]
+    },
+    {
+      "id": "V041",
+      "threat_id": "T09",
+      "category": "ENV_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "GH_TOKEN": "ghp_fake123"
+        }
+      },
+      "attack_goal": "Adapter-required token leaks into captured output.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "GH_TOKEN value appears in captured stdout/stderr",
+        "GH_TOKEN value appears in persisted audit output"
+      ]
+    },
+    {
+      "id": "V042",
+      "threat_id": "T09",
+      "category": "ENV_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "OPENAI_API_KEY": "sk-fake-123"
+        }
+      },
+      "attack_goal": "Non-adapter secret reaches the child via env.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "OPENAI_API_KEY present in child env"
+      ]
+    },
+    {
+      "id": "V043",
+      "threat_id": "T09",
+      "category": "ENV_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "DEEPSEEK_API_KEY": "ds-fake-123"
+        }
+      },
+      "attack_goal": "Non-adapter secret reaches the child via env.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "DEEPSEEK_API_KEY present in child env"
+      ]
+    },
+    {
+      "id": "V044",
+      "threat_id": "T09",
+      "category": "ENV_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "NPM_TOKEN": "npm-fake-123"
+        }
+      },
+      "attack_goal": "Non-adapter secret reaches the child via env.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "NPM_TOKEN present in child env"
+      ]
+    },
+    {
+      "id": "V045",
+      "threat_id": "T31",
+      "category": "ENV_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "ALLOWED_VAR": "value\nSECRET=1"
+        }
+      },
+      "attack_goal": "Newline in an env value injects an additional environment variable.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "SECRET env var injected",
+        "env passed through string parsing",
+        "child env contains SECRET"
+      ]
+    },
+    {
+      "id": "V046",
+      "threat_id": "T10",
+      "category": "CREDENTIAL_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "print_auth_token"
+      },
+      "attack_goal": "Child prints auth material (gh auth token) into output.",
+      "expected_broker_result": "EXECUTED_WITH_REDACTION",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "auth token string in captured output",
+        "auth token string persisted in audit log"
+      ]
+    },
+    {
+      "id": "V047",
+      "threat_id": "T20",
+      "category": "CREDENTIAL_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "secret_output"
+      },
+      "attack_goal": "Credential-shaped output (ghp_...) reaches persisted logs.",
+      "expected_broker_result": "EXECUTED_WITH_REDACTION",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "ghp_ token pattern persisted unredacted",
+        "secret-like output stored verbatim"
+      ]
+    },
+    {
+      "id": "V048",
+      "threat_id": "T28",
+      "category": "CREDENTIAL_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "add",
+            "path": "/approval/token",
+            "value": "raw-secret-token-123"
+          }
+        ]
+      },
+      "attack_goal": "Raw approval token smuggled into the ApprovalReference.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "raw token accepted by schema",
+        "raw token stored or transmitted"
+      ]
+    },
+    {
+      "id": "V049",
+      "threat_id": "T10",
+      "category": "CREDENTIAL_LEAKAGE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "environment": {
+          "GITHUB_TOKEN": "ghp_write_scope_fake"
+        }
+      },
+      "attack_goal": "Read-only plan executes with a write-scoped credential.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_ENV",
+      "must_not_happen": [
+        "read plan receives write-scoped credential",
+        "least-privilege credential mapping violated"
+      ]
+    },
+    {
+      "id": "V050",
+      "threat_id": "T25",
+      "category": "OUTPUT_FLOOD",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "flood_stdout_10mb"
+      },
+      "attack_goal": "10MB stdout exhausts broker memory.",
+      "expected_broker_result": "OUTPUT_TRUNCATED",
+      "expected_error_code": "BROKER_OUTPUT_LIMIT",
+      "must_not_happen": [
+        "unbounded stdout capture",
+        "broker OOM",
+        "captured bytes exceed cap + marker"
+      ]
+    },
+    {
+      "id": "V051",
+      "threat_id": "T25",
+      "category": "OUTPUT_FLOOD",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "flood_stderr_10mb"
+      },
+      "attack_goal": "10MB stderr exhausts broker memory.",
+      "expected_broker_result": "OUTPUT_TRUNCATED",
+      "expected_error_code": "BROKER_OUTPUT_LIMIT",
+      "must_not_happen": [
+        "unbounded stderr capture",
+        "broker OOM",
+        "captured bytes exceed cap + marker"
+      ]
+    },
+    {
+      "id": "V052",
+      "threat_id": "T19",
+      "category": "OUTPUT_FLOOD",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "infinite_stream"
+      },
+      "attack_goal": "Infinite output stream stalls or deadlocks the broker.",
+      "expected_broker_result": "OUTPUT_TRUNCATED",
+      "expected_error_code": "BROKER_OUTPUT_LIMIT",
+      "must_not_happen": [
+        "broker deadlocks on full pipe",
+        "process survives beyond byte cap",
+        "main loop blocked"
+      ]
+    },
+    {
+      "id": "V053",
+      "threat_id": "T25",
+      "category": "OUTPUT_FLOOD",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "binary_output"
+      },
+      "attack_goal": "Binary output (NUL/random bytes) crashes capture.",
+      "expected_broker_result": "OUTPUT_TRUNCATED",
+      "expected_error_code": "BROKER_OUTPUT_LIMIT",
+      "must_not_happen": [
+        "broker crash on binary output",
+        "capture treated as UTF-8 without lossy/bytes handling"
+      ]
+    },
+    {
+      "id": "V054",
+      "threat_id": "T25",
+      "category": "OUTPUT_FLOOD",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "invalid_utf8_output"
+      },
+      "attack_goal": "Invalid UTF-8 output panics the capture layer.",
+      "expected_broker_result": "OUTPUT_TRUNCATED",
+      "expected_error_code": "BROKER_OUTPUT_LIMIT",
+      "must_not_happen": [
+        "panic on invalid UTF-8",
+        "broker crash"
+      ]
+    },
+    {
+      "id": "V055",
+      "threat_id": "T33",
+      "category": "SECRET_OUTPUT",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "secret_output"
+      },
+      "attack_goal": "Token-shaped output fully persisted in logs.",
+      "expected_broker_result": "EXECUTED_WITH_REDACTION",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "secret pattern persisted unredacted",
+        "full raw output written to persistent log"
+      ]
+    },
+    {
+      "id": "V056",
+      "threat_id": "T33",
+      "category": "SECRET_OUTPUT",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "bearer_output"
+      },
+      "attack_goal": "Authorization header leaked into captured output and logs.",
+      "expected_broker_result": "EXECUTED_WITH_REDACTION",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "Bearer value persisted unredacted",
+        "Authorization header shape stored verbatim"
+      ]
+    },
+    {
+      "id": "V057",
+      "threat_id": "T33",
+      "category": "SECRET_OUTPUT",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "credential_url_output"
+      },
+      "attack_goal": "URL-embedded credentials leaked into output.",
+      "expected_broker_result": "EXECUTED_WITH_REDACTION",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "user:token URL persisted unredacted",
+        "credential material stored in audit record"
+      ]
+    },
+    {
+      "id": "V058",
+      "threat_id": "T21",
+      "category": "TIMEOUT",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/timeout_ms",
+            "value": 100
+          }
+        ],
+        "child_behavior": "sleep_5s"
+      },
+      "attack_goal": "Child outlives a 100ms timeout.",
+      "expected_broker_result": "KILLED_TIMEOUT",
+      "expected_error_code": "BROKER_TIMEOUT",
+      "must_not_happen": [
+        "child survives past deadline",
+        "state not marked failed(timeout)",
+        "timeout audit entry missing"
+      ]
+    },
+    {
+      "id": "V059",
+      "threat_id": "T21",
+      "category": "TIMEOUT",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/timeout_ms",
+            "value": 50
+          }
+        ]
+      },
+      "attack_goal": "Timeout below the 100ms contract minimum accepted.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "out-of-bounds timeout accepted",
+        "spawn with sub-minimum timeout"
+      ]
+    },
+    {
+      "id": "V060",
+      "threat_id": "T21",
+      "category": "TIMEOUT",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/timeout_ms",
+            "value": 86400001
+          }
+        ]
+      },
+      "attack_goal": "Timeout above the 24h contract maximum accepted.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "out-of-bounds timeout accepted"
+      ]
+    },
+    {
+      "id": "V061",
+      "threat_id": "T21",
+      "category": "TIMEOUT",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/timeout_ms",
+            "value": 100
+          }
+        ],
+        "child_behavior": "exit_exactly_at_deadline",
+        "race_iterations": 50
+      },
+      "attack_goal": "Child exits exactly at the deadline; race between exit and watchdog.",
+      "expected_broker_result": "KILLED_TIMEOUT",
+      "expected_error_code": "BROKER_TIMEOUT",
+      "must_not_happen": [
+        "state machine records both succeeded and timeout",
+        "child survives past deadline",
+        "duplicate terminal transition"
+      ]
+    },
+    {
+      "id": "V062",
+      "threat_id": "T22",
+      "category": "CANCELLATION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [],
+        "child_behavior": "sleep_3600s",
+        "cancel_at_ms": 200
+      },
+      "attack_goal": "Cancel mid-run; child keeps running after state=cancelled.",
+      "expected_broker_result": "KILLED_CANCELLED",
+      "expected_error_code": "BROKER_CANCELLED",
+      "must_not_happen": [
+        "child survives after cancel confirmed",
+        "state=cancelled while process still alive",
+        "verification skipped when process already exited"
+      ]
+    },
+    {
+      "id": "V063",
+      "threat_id": "T22",
+      "category": "CANCELLATION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [],
+        "child_behavior": "exit_immediately",
+        "cancel_at_ms": 50
+      },
+      "attack_goal": "Cancel after the child already exited; outcome must still be verified.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "verification_plan skipped",
+        "state recorded as cancelled despite successful completion",
+        "outcome unverified"
+      ]
+    },
+    {
+      "id": "V064",
+      "threat_id": "T22",
+      "category": "CANCELLATION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [],
+        "child_behavior": "sleep_3600s",
+        "cancel_at_ms": 100,
+        "timeout_ms_override": 100,
+        "race_iterations": 50
+      },
+      "attack_goal": "Cancel and timeout race to the same deadline.",
+      "expected_broker_result": "KILLED_CANCELLED",
+      "expected_error_code": "BROKER_CANCELLED",
+      "must_not_happen": [
+        "two terminal state transitions",
+        "process survives",
+        "inconsistent audit reasons"
+      ]
+    },
+    {
+      "id": "V065",
+      "threat_id": "T22",
+      "category": "CANCELLATION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [],
+        "child_behavior": "sleep_3600s",
+        "cancel_at_ms": 200
+      },
+      "attack_goal": "Cancel a reversible write without running rollback.",
+      "expected_broker_result": "KILLED_CANCELLED",
+      "expected_error_code": "BROKER_CANCELLED",
+      "must_not_happen": [
+        "rollback_plan skipped for reversible plan",
+        "state=cancelled without rollback attempt",
+        "rollback executed before tree termination confirmed"
+      ]
+    },
+    {
+      "id": "V066",
+      "threat_id": "T24",
+      "category": "PROCESS_TREE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "spawn_grandchild_sleep"
+      },
+      "attack_goal": "Child spawns a grandchild that outlives it.",
+      "expected_broker_result": "TREE_TERMINATED",
+      "expected_error_code": "BROKER_TIMEOUT",
+      "must_not_happen": [
+        "grandchild survives after plan termination",
+        "process tree not killed on timeout"
+      ]
+    },
+    {
+      "id": "V067",
+      "threat_id": "T23",
+      "category": "PROCESS_TREE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "spawn_grandchild_sleep",
+        "timeout_ms_override": 200
+      },
+      "attack_goal": "Grandchild sleeps forever, holding the tree open.",
+      "expected_broker_result": "KILLED_TIMEOUT",
+      "expected_error_code": "BROKER_TIMEOUT",
+      "must_not_happen": [
+        "grandchild survives past timeout",
+        "orphan process remains"
+      ]
+    },
+    {
+      "id": "V068",
+      "threat_id": "T23",
+      "category": "PROCESS_TREE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "spawn_grandchild_exit_first"
+      },
+      "attack_goal": "Child exits first; grandchild keeps running unattached.",
+      "expected_broker_result": "TREE_TERMINATED",
+      "expected_error_code": "BROKER_TIMEOUT",
+      "must_not_happen": [
+        "grandchild survives broker termination",
+        "orphan process remains after plan end"
+      ]
+    },
+    {
+      "id": "V069",
+      "threat_id": "T24",
+      "category": "PROCESS_TREE",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "breakaway_attempt"
+      },
+      "attack_goal": "Child requests CREATE_BREAKAWAY_FROM_JOB to escape the job object.",
+      "expected_broker_result": "TREE_TERMINATED",
+      "expected_error_code": "BROKER_TIMEOUT",
+      "must_not_happen": [
+        "child escapes job object",
+        "breakaway succeeds",
+        "process survives"
+      ]
+    },
+    {
+      "id": "V070",
+      "threat_id": "T23",
+      "category": "PROCESS_TREE",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "spawn_grandchild_sleep",
+        "broker_crash_at_ms": 150
+      },
+      "attack_goal": "Broker process dies abruptly; descendants keep running.",
+      "expected_broker_result": "TREE_TERMINATED",
+      "expected_error_code": "BROKER_TIMEOUT",
+      "must_not_happen": [
+        "descendants survive broker death",
+        "job outlives broker (KILL_ON_JOB_CLOSE)",
+        "orphans accumulate across restarts"
+      ]
+    },
+    {
+      "id": "V071",
+      "threat_id": "T13",
+      "category": "TOCTOU",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "request": {
+          "program": "C:\\fixtures\\gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        },
+        "path_fixtures": [
+          "C:\\fixtures\\gh.exe swapped for attacker.exe after hash verification, before spawn (deterministic sync point)"
+        ]
+      },
+      "attack_goal": "Binary swapped between verify and spawn.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_EXECUTABLE",
+      "must_not_happen": [
+        "swapped binary executed",
+        "pre-spawn re-verification skipped",
+        "executed hash differs from verified hash without block"
+      ]
+    },
+    {
+      "id": "V072",
+      "threat_id": "T13",
+      "category": "TOCTOU",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "C:\\fixtures\\gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        },
+        "path_fixtures": [
+          "C:\\fixtures\\gh.exe junction flipped to C:\\evil\\attacker.exe between canonicalize and spawn"
+        ]
+      },
+      "attack_goal": "Junction flipped between canonicalization and spawn.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_EXECUTABLE",
+      "must_not_happen": [
+        "flipped target executed",
+        "canonicalization result used without pre-spawn re-check"
+      ]
+    },
+    {
+      "id": "V073",
+      "threat_id": "T13",
+      "category": "TOCTOU",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "request": {
+          "program": "C:\\fixtures\\gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        },
+        "path_fixtures": [
+          "C:\\fixtures\\gh.exe replaced after spawn (post-spawn re-stat)"
+        ]
+      },
+      "attack_goal": "Binary replaced after spawn; identity mismatch silently ignored.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "post-spawn identity mismatch recorded without audit failure",
+        "mismatch silently ignored",
+        "hash/identity not recorded in audit record"
+      ]
+    },
+    {
+      "id": "V074",
+      "threat_id": "T15",
+      "category": "ADAPTER_MISMATCH",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/capability_id",
+            "value": "notion.page.update"
+          },
+          {
+            "op": "replace",
+            "path": "/capability_version",
+            "value": "1.0.0"
+          },
+          {
+            "op": "replace",
+            "path": "/adapter_id",
+            "value": "github-cli"
+          }
+        ]
+      },
+      "attack_goal": "github-cli adapter executes a notion capability it does not implement.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_ADAPTER",
+      "must_not_happen": [
+        "adapter executes undeclared capability",
+        "capability executed with wrong adapter"
+      ]
+    },
+    {
+      "id": "V075",
+      "threat_id": "T15",
+      "category": "ADAPTER_MISMATCH",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/adapter_id",
+            "value": "unknown-adapter"
+          }
+        ]
+      },
+      "attack_goal": "Unregistered adapter_id accepted.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_ADAPTER",
+      "must_not_happen": [
+        "unknown adapter executed",
+        "adapter_id ignored"
+      ]
+    },
+    {
+      "id": "V076",
+      "threat_id": "T15",
+      "category": "ADAPTER_MISMATCH",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/capability_version",
+            "value": "9.9.9"
+          }
+        ]
+      },
+      "attack_goal": "Capability version chain mismatch (plan vs registry) executed anyway.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_CAPABILITY",
+      "must_not_happen": [
+        "version mismatch executed",
+        "risk_snapshot version chain bypassed"
+      ]
+    },
+    {
+      "id": "V077",
+      "threat_id": "T15",
+      "category": "CAPABILITY_MISMATCH",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/risk_snapshot/risk_level",
+            "value": "high"
+          }
+        ]
+      },
+      "attack_goal": "Risk snapshot that disagrees with the capability declaration.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_CAPABILITY",
+      "must_not_happen": [
+        "mismatched risk snapshot executed",
+        "validation skipped"
+      ]
+    },
+    {
+      "id": "V078",
+      "threat_id": "T15",
+      "category": "CAPABILITY_MISMATCH",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/capability_id",
+            "value": "nonexistent.capability.run"
+          }
+        ]
+      },
+      "attack_goal": "Capability not present in the registry.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_CAPABILITY",
+      "must_not_happen": [
+        "unknown capability executed"
+      ]
+    },
+    {
+      "id": "V079",
+      "threat_id": "T15",
+      "category": "CAPABILITY_MISMATCH",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/verification_plan",
+            "value": null
+          }
+        ]
+      },
+      "attack_goal": "Write plan without mandatory verification plan.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "write executed without verification binding"
+      ]
+    },
+    {
+      "id": "V080",
+      "threat_id": "T28",
+      "category": "APPROVAL_BYPASS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/approval",
+            "value": null
+          }
+        ]
+      },
+      "attack_goal": "required_approval=true plan executes with no approval.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_APPROVAL",
+      "must_not_happen": [
+        "approval-less execution",
+        "spawn"
+      ]
+    },
+    {
+      "id": "V081",
+      "threat_id": "T28",
+      "category": "APPROVAL_BYPASS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/approval/approval_id",
+            "value": "fake-approval-999"
+          }
+        ]
+      },
+      "attack_goal": "Fake ApprovalReference not backed by a grant record.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_APPROVAL",
+      "must_not_happen": [
+        "fake approval accepted",
+        "approval not checked against grant store"
+      ]
+    },
+    {
+      "id": "V082",
+      "threat_id": "T28",
+      "category": "APPROVAL_BYPASS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/approval/plan_id",
+            "value": "plan_write_9999"
+          }
+        ]
+      },
+      "attack_goal": "Approval bound to a different plan_id.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "cross-plan approval accepted",
+        "binding check skipped"
+      ]
+    },
+    {
+      "id": "V083",
+      "threat_id": "T18",
+      "category": "APPROVAL_BYPASS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/plan_id",
+            "value": "plan_write_0002"
+          },
+          {
+            "op": "replace",
+            "path": "/approval/plan_id",
+            "value": "plan_write_0002"
+          }
+        ]
+      },
+      "attack_goal": "Replay an approval_id for a second plan.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_SINGLE_USE",
+      "must_not_happen": [
+        "approval_id reused across plans",
+        "seen-set bypassed"
+      ]
+    },
+    {
+      "id": "V084",
+      "threat_id": "T28",
+      "category": "APPROVAL_BYPASS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/required_approval",
+            "value": false
+          },
+          {
+            "op": "add",
+            "path": "/approval",
+            "value": {
+              "approval_id": "unneeded-1",
+              "plan_id": "plan_read_0001",
+              "granted_by": "user",
+              "granted_at": "2026-08-13T00:05:00+08:00",
+              "policy_version": "1.0.0"
+            }
+          }
+        ]
+      },
+      "attack_goal": "Approval attached to a plan that must not carry one.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "approval accepted when required_approval=false"
+      ]
+    },
+    {
+      "id": "V085",
+      "threat_id": "T17",
+      "category": "EXPIRY",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/expires_at",
+            "value": "2026-08-12T23:00:00+08:00"
+          }
+        ]
+      },
+      "attack_goal": "Expired plan executed because the expiry gate is skipped.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_EXPIRED",
+      "must_not_happen": [
+        "expired plan spawns",
+        "isExecutionPlanExpired not called",
+        "expired plan transitions to executing"
+      ]
+    },
+    {
+      "id": "V086",
+      "threat_id": "T17",
+      "category": "EXPIRY",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/expires_at",
+            "value": "2026-08-13T00:10:00+08:00"
+          }
+        ]
+      },
+      "attack_goal": "Plan whose expires_at equals broker now (boundary) executed.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_EXPIRED",
+      "must_not_happen": [
+        "boundary-expired plan spawns",
+        ">= comparison wrong"
+      ]
+    },
+    {
+      "id": "V087",
+      "threat_id": "T16",
+      "category": "EXPIRY",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/created_at",
+            "value": "2026-08-05T00:00:00+08:00"
+          }
+        ]
+      },
+      "attack_goal": "Plan without expires_at lives forever via missing default TTL.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_EXPIRED",
+      "must_not_happen": [
+        "indefinitely valid plan",
+        "default TTL missing",
+        "stale plan executed"
+      ]
+    },
+    {
+      "id": "V088",
+      "threat_id": "T29",
+      "category": "SERDE_UNKNOWN_FIELDS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "add",
+            "path": "/exec",
+            "value": "whoami"
+          }
+        ]
+      },
+      "attack_goal": "Unknown plan-level exec field silently accepted.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "unknown field accepted",
+        "exec field interpreted"
+      ]
+    },
+    {
+      "id": "V089",
+      "threat_id": "T29",
+      "category": "SERDE_UNKNOWN_FIELDS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "add",
+            "path": "/normalized_inputs/command",
+            "value": "whoami"
+          }
+        ]
+      },
+      "attack_goal": "Reserved command key inside normalized_inputs accepted.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "command key accepted",
+        "FORBIDDEN_INPUT_KEYS bypassed"
+      ]
+    },
+    {
+      "id": "V090",
+      "threat_id": "T29",
+      "category": "SERDE_UNKNOWN_FIELDS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "add",
+            "path": "/approval/scope",
+            "value": "admin"
+          }
+        ]
+      },
+      "attack_goal": "Unknown field inside ApprovalReference accepted.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "unknown approval field accepted",
+        "strict object parsing bypassed"
+      ]
+    },
+    {
+      "id": "V091",
+      "threat_id": "T29",
+      "category": "SERDE_UNKNOWN_FIELDS",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/timeout_ms",
+            "value": "30000"
+          }
+        ]
+      },
+      "attack_goal": "Type confusion: string where number expected silently coerced.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "PLAN_REJECTED_INVALID",
+      "must_not_happen": [
+        "type coercion accepted",
+        "string timeout parsed"
+      ]
+    },
+    {
+      "id": "V092",
+      "threat_id": "T30",
+      "category": "UNICODE_NORMALIZATION",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "－－force"
+          }
+        ]
+      },
+      "attack_goal": "Fullwidth hyphen (U+FF0D) normalized into an option dash.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "fullwidth dash normalized for option parsing",
+        "value treated as option"
+      ]
+    },
+    {
+      "id": "V093",
+      "threat_id": "T30",
+      "category": "UNICODE_NORMALIZATION",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C：＼repos＼allowed",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Fullwidth colon/backslash treated as path separators.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_CWD",
+      "must_not_happen": [
+        "fullwidth chars interpreted as drive/separator",
+        "path confusion bypasses allowlist"
+      ]
+    },
+    {
+      "id": "V094",
+      "threat_id": "T30",
+      "category": "UNICODE_NORMALIZATION",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed.",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Trailing-dot path variant bypasses the cwd allowlist.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "trailing-dot variant treated as different path",
+        "allowlist bypass via trailing dot"
+      ]
+    },
+    {
+      "id": "V095",
+      "threat_id": "T30",
+      "category": "UNICODE_NORMALIZATION",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed ",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Trailing-space path variant bypasses the cwd allowlist.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "trailing-space variant treated as different path",
+        "allowlist bypass via trailing space"
+      ]
+    },
+    {
+      "id": "V096",
+      "threat_id": "T30",
+      "category": "UNICODE_NORMALIZATION",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "c:\\REPOS\\ALLOWED",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Case differences bypass a case-sensitive allowlist comparison.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "case variant rejected or treated as escape",
+        "case-based allowlist bypass"
+      ]
+    },
+    {
+      "id": "V097",
+      "threat_id": "T31",
+      "category": "NUL_CONTROL",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed\u0000evil",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "NUL byte in cwd path truncates or confuses path handling.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_CWD",
+      "must_not_happen": [
+        "NUL path accepted",
+        "path truncated at NUL",
+        "spawn with NUL-containing cwd"
+      ]
+    },
+    {
+      "id": "V098",
+      "threat_id": "T31",
+      "category": "NUL_CONTROL",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/issue_number",
+            "value": 42
+          },
+          {
+            "op": "add",
+            "path": "/normalized_inputs/label",
+            "value": "x\u0000--force"
+          }
+        ]
+      },
+      "attack_goal": "NUL byte in an argv value truncates the argument.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_ARGV",
+      "must_not_happen": [
+        "NUL passed to argv",
+        "argument truncated at NUL"
+      ]
+    },
+    {
+      "id": "V099",
+      "threat_id": "T31",
+      "category": "NUL_CONTROL",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_read",
+        "mutations": [],
+        "child_behavior": "control_chars_output"
+      },
+      "attack_goal": "ANSI escape sequences in output inject terminal control into UI/logs.",
+      "expected_broker_result": "EXECUTED_WITH_REDACTION",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "escape sequences rendered in UI",
+        "control characters stored raw in logs",
+        "terminal injection"
+      ]
+    },
+    {
+      "id": "V100",
+      "threat_id": "T02",
+      "category": "NUL_CONTROL",
+      "severity": "high",
+      "platform": "windows+posix",
+      "input_shape": {
+        "template": "tpl_write",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/normalized_inputs/reason",
+            "value": "a\r\nb"
+          }
+        ]
+      },
+      "attack_goal": "CRLF in a value splits it into two argv elements.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "value split at CRLF",
+        "argv element count != 1 for reason"
+      ]
+    },
+    {
+      "id": "V101",
+      "threat_id": "T07",
+      "category": "CWD_ESCAPE",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "\\\\server\\share\\repo",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "UNC path accepted as cwd, redirecting child to a remote share.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_CWD",
+      "must_not_happen": [
+        "UNC path accepted as cwd",
+        "child spawned with remote share cwd",
+        "allowlist treats UNC as local"
+      ]
+    },
+    {
+      "id": "V102",
+      "threat_id": "T30",
+      "category": "CWD_ESCAPE",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "\\\\?\\C:\\repos\\allowed",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Verbatim \\\\?\\ prefix bypasses canonicalization and the allowlist.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_PATH",
+      "must_not_happen": [
+        "verbatim path bypasses allowlist",
+        "canonicalization skipped for \\\\?\\ prefix",
+        "child spawned with verbatim path"
+      ]
+    },
+    {
+      "id": "V103",
+      "threat_id": "T30",
+      "category": "CWD_ESCAPE",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\repos\\allowed\\evil.txt:stream",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "Alternate data stream (ADS) used as cwd or executable path.",
+      "expected_broker_result": "REJECTED_BEFORE_SPAWN",
+      "expected_error_code": "BROKER_BLOCKED_PATH",
+      "must_not_happen": [
+        "ADS path accepted as cwd",
+        "alternate data stream executed",
+        "ADS bypasses path allowlist"
+      ]
+    },
+    {
+      "id": "V104",
+      "threat_id": "T30",
+      "category": "CWD_ESCAPE",
+      "severity": "high",
+      "platform": "windows",
+      "input_shape": {
+        "request": {
+          "program": "gh.exe",
+          "argv": [
+            "issue",
+            "list"
+          ],
+          "cwd": "C:\\REPOS\\ALLOWE~1",
+          "env": "__INHERIT__"
+        }
+      },
+      "attack_goal": "8.3 short name compared without canonicalization, enabling allowlist confusion.",
+      "expected_broker_result": "EXECUTED_SAFE",
+      "expected_error_code": "NONE",
+      "must_not_happen": [
+        "short name compared without canonicalization",
+        "allowlist bypass via 8.3 short name",
+        "child spawned with non-canonical cwd"
+      ]
+    }
+  ]
+}
