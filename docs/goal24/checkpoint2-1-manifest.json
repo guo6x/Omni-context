@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "task": "Goal24 Checkpoint 2.1 - Contract Hardening + Pre-Execution Security Triage",
+  "timestamp": "2026-08-12T22:10:00+08:00",
+  "repository": "https://github.com/guo6x/Omni-context",
+  "development_branch": "dev/goal24-cli-skills",
+  "base_sha": "3a737f2f4439162814fa0165bf3f7058c984aafe",
+  "final_sha": null,
+  "final_sha_note": "final_sha is filled by the docs-only manifest finalize commit (repo manifest pattern; no contracts change in that commit)",
+  "files_added": [
+    "brain-server/src/contracts/json-safe.ts",
+    "docs/goal24/05-checkpoint2-1-contract-hardening.md",
+    "docs/goal24/checkpoint2-1-security-triage.json",
+    "docs/goal24/checkpoint2-1-manifest.json",
+    "docs/goal24/audit-brain-server-critical.json",
+    "docs/goal24/audit-mobile-app-critical.json"
+  ],
+  "files_modified": [
+    "brain-server/src/capabilities/contracts.ts",
+    "brain-server/src/skills/contracts.ts",
+    "brain-server/src/execution/contracts.ts",
+    "brain-server/tests/goal24-capability-contracts.test.ts",
+    "brain-server/tests/goal24-execution-contracts.test.ts",
+    "docs/goal24/04-checkpoint2-contract-design.md"
+  ],
+  "tests": [
+    "brain-server typecheck (tsc --noEmit)",
+    "brain-server full vitest (462 passed, 41 files; 118 contract tests)",
+    "brain-server build (tsc)",
+    "brain-server eslint on new/changed modules (0 errors)",
+    "git diff --check"
+  ],
+  "contract_breaking_changes": [
+    "CapabilityDefinition.required_evidence_classes: string[] -> required_evidence: EvidenceRequirement[] (canonical policy; legacy field rejected)",
+    "ExecutionPlan.approval_token: string -> approval: ApprovalReference | null (no raw token on wire)",
+    "RiskSnapshot.capability_version: optional -> required",
+    "EvidenceCoverageEntry.verification_level added (required)",
+    "CoverageAssessment extended with per-entry verification_level, blocking_reasons, warnings",
+    "CapabilityDefinition.input_schema constrained to JSON-safe plain object (Date/BigInt/function/cycles rejected)",
+    "freshness_policy.max_age_ms cap relaxed from 7 days to Number.MAX_SAFE_INTEGER"
+  ],
+  "migration_note": "No production Capability Registry, Skill Registry or persisted ExecutionPlan store exists yet (later checkpoints), so no persisted records require migration. Future persistence must use the 2.1 shapes: capabilities declare required_evidence; plans carry approval (never approval_token); coverage entries include verification_level; risk snapshots include capability_version.",
+  "contract_versions": {
+    "capability": "1.1.0",
+    "skill_manifest": "1.1.0",
+    "execution_plan": "1.1.0",
+    "evidence_requirement": "1.1.0",
+    "evidence_coverage": "1.1.0",
+    "approval_reference": "1.1.0",
+    "risk_snapshot": "1.1.0"
+  },
+  "contract_versions_note": "Manifest-level labels for the hardened 2.1 generation; the contracts themselves carry no in-code schema-version constant.",
+  "validation_rules_count": 118,
+  "tests_passed": 462,
+  "npm_security_triage": {
+    "brain_server": {
+      "command": "npm audit --omit=dev --audit-level=critical --json",
+      "counts": { "critical": 1, "high": 8, "moderate": 12, "low": 3, "total": 24 },
+      "critical": "tar advisory 1123940 (node-tar decompression DoS); npm-install-time only via sqlite3->node-gyp chain; not on Goal24 execution path -> ACCEPTED_TEMPORARY_RISK",
+      "fix_before_checkpoint3": ["ip-address (high, MCP API rate-limit path)", "fast-uri (high, MCP SDK ajv path)", "hono / @hono/node-server (moderate, MCP HTTP path)"],
+      "raw_evidence": "docs/goal24/audit-brain-server-critical.json"
+    },
+    "mobile_app": {
+      "command": "npm audit --omit=dev --audit-level=critical --json",
+      "counts": { "critical": 1, "high": 28, "moderate": 15, "low": 2, "total": 46 },
+      "critical": "tar advisory 1123940 via Expo toolchain; dev/build-time only; mobile not on Goal24 execution path -> ACCEPTED_TEMPORARY_RISK",
+      "note": "Fixes for the Expo/React Native toolchain advisories require semver-major Expo 57 / RN 0.87 upgrades (owner decision).",
+      "raw_evidence": "docs/goal24/audit-mobile-app-critical.json"
+    },
+    "fix_run": false,
+    "fix_note": "No npm audit fix / npm audit fix --force was run (owner instruction)."
+  },
+  "rust_security_triage": {
+    "tool": "cargo audit",
+    "status": "NOT RUN / TOOL_UNAVAILABLE",
+    "details": "cargo-audit and cargo-deny not installed locally; repository CI (ci.yml desktop-rust) runs fmt/clippy/test but no Rust advisory scan. Install and run cargo-audit on desktop-daemon/src-tauri before Checkpoint 3 launch."
+  },
+  "checkpoint3_security_gate": "PASS",
+  "gate_rationale": [
+    "brain-server critical (tar 1123940) explained to specific package/advisory; npm-install-time only; brain-server runtime never imports tar",
+    "No UNKNOWN critical risk affects the future broker",
+    "Goal24 execution path relationship explicit (2.1 contract modules import no audited package; MCP/API-surface patches recorded as FIX_BEFORE_CHECKPOINT3)",
+    "All contract blockers closed and machine-tested"
+  ],
+  "mcp_behavior_changed": false,
+  "decision_kernel_behavior_changed": false,
+  "arbitrary_shell_execution_added": false,
+  "cli_runtime_added": false,
+  "github_adapter_added": false,
+  "registry_runtime_added": false,
+  "approval_engine_runtime_added": false,
+  "evidence_retrieval_runtime_added": false,
+  "scientific_artifacts_touched": false,
+  "holdback_touched": false
+}

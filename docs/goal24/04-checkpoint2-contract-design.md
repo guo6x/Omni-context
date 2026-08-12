@@ -3,6 +3,11 @@
 Date: 2026-08-12
 Status: CHECKPOINT_2_CONTRACTS (schema + validation + contract tests; no runtime)
 
+History: Checkpoint 2 initial contract -> independent review -> Checkpoint
+2.1 hardening (`docs/goal24/05-checkpoint2-1-contract-hardening.md`). The 2.1
+corrections below are the only places this document differs from the
+original Checkpoint 2 record; the original design is not rewritten.
+
 This checkpoint implements transport-independent contracts only. It adds no
 CLI process execution, no GitHub adapter, no Skill Registry runtime, no
 Evidence Surface Guard runtime, no Approval Engine and no Tauri broker.
@@ -34,7 +39,10 @@ A capability is a semantic action ("what the system allows"), never a command
 ("how it is executed"). The contract cannot express shell strings.
 
 Fields: `id`, `version`, `description`, `input_schema`, `required_authority`,
-`risk_level`, `reversible`, `side_effect_class`, `required_evidence_classes`,
+`risk_level`, `reversible`, `side_effect_class`, `required_evidence`
+(canonical `EvidenceRequirement[]`; 2.1 hardening replaced the Checkpoint 2
+`required_evidence_classes: string[]` so the capability's safety policy is
+not lost - the legacy field is rejected as an unknown key),
 `verification_capability` (required for writes), `rollback_capability` (optional).
 
 Rules:
@@ -44,13 +52,22 @@ Rules:
   (`cli`, `mcp`, `api`, `http`, `transport`, `shell`, `exec`, `cmd`).
 - `version` is the capability semantic version (semver). Adapter
   implementation versions are a separate concern.
-- `required_evidence_classes` are unique.
+- `required_evidence` is unique by `class_id` and carries the full policy
+  (`mandatory`, `freshness_policy`, `conflict_policy`,
+  `verification_requirement`). Simple read capabilities use `[]`.
 - `rollback_capability` requires `reversible=true` and must reference a
   different capability id.
-- `side_effect_class=read_only` requires `risk_level=low` and forbids a
-  rollback capability.
+- `side_effect_class=read_only` requires `risk_level=low`,
+  `reversible=false` and forbids a rollback capability.
+- `reversible_write` requires `reversible=true`; `destructive_write`
+  requires `reversible=false`; `external_effect` reversibility is
+  capability-specific and must be declared explicitly (2.1).
 - Non-read-only capabilities must declare `verification_capability` (read-back
   verification is required for every write).
+- `input_schema` is a JSON-safe plain-object descriptor (2.1): Date, BigInt,
+  function, symbol, class instances, non-finite numbers and circular
+  objects are rejected; it is a JSON-compatible schema descriptor, not an
+  over-claimed full JSON Schema validator.
 
 Authority model (new; the repository previously had no capability-level
 authority semantics — the API server has transport scopes only, which remain
@@ -99,32 +116,47 @@ Retrieval and the Evidence Surface Guard runtime are later checkpoints.
 ## EvidenceCoverageSnapshot
 
 `EvidenceCoverageEntry`: `evidence_class`, `status`
-(`present | missing | stale | conflicted | unverified`), `evidence_ids`
-(unique), `checked_at`, optional `stale_since`, `conflict_evidence_ids`,
-`note`.
+(`present | missing | stale | conflicted | unverified`), `verification_level`
+(`none | asserted | verified`; required since 2.1), `evidence_ids` (unique),
+`checked_at`, optional `stale_since`, `conflict_evidence_ids`, `note`.
+
+Status-specific invariants (2.1, machine-enforced): `present` requires >= 1
+evidence id and forbids conflict ids / `stale_since`; `missing` requires
+empty ids and forbids conflict ids / `stale_since`; `stale` requires >= 1 id
+and `stale_since`; `conflicted` requires >= 1 id, >= 1 conflict id and
+disjoint sets; `unverified` requires >= 1 id.
 
 `EvidenceCoverageSnapshot`: entries unique by `evidence_class`.
 
 `assessEvidenceCoverage(requirements, coverage)` is pure contract logic used
-by the future guard: an entry is satisfied only when status is `present`.
+by the future guard (2.1 policy-aware): `verified` requirements cannot be
+satisfied by `asserted`/`none` evidence; `conflict_policy=reject` is never
+satisfied by `conflicted` status; `conflict_policy=warn` tolerates
+`conflicted` but returns a non-silent warning; `stale` never satisfies;
+`unverified` satisfies only when no verification requirement exists. The
+assessment reports `blocking_reasons` and `warnings`.
 
 ## Risk snapshot
 
 `RiskSnapshot`: `risk_level`, `reversible`, `side_effect_class`,
-`required_authority`, optional `capability_version`.
+`required_authority`, `capability_version` (required since 2.1).
 
 The snapshot is captured at plan creation and must equal the referenced
 capability declaration; `validateExecutionPlanAgainstCapabilities` enforces
-this so an adapter can never silently re-derive risk at execution time.
+this so an adapter can never silently re-derive risk at execution time. The
+2.1 version chain is `risk_snapshot.capability_version ==`
+`plan.capability_version == capability.version`.
 
 ## Approval reference
 
 `ApprovalReference`: `approval_id`, `plan_id`, `granted_by`,
-`granted_at`, `token`, optional `policy_version`.
+`granted_at`, `policy_version`, `token_reference`, `token_digest`.
 
-Schema only. Enforcement (token verification, cryptography) is a later
-checkpoint. `ExecutionPlan.required_approval=true` plans must carry
-`approval_token` before entering an executable state.
+2.1 hardening: the raw `approval_token` on the plan is replaced by
+`ExecutionPlan.approval: ApprovalReference | null`. No raw token travels on
+the wire; `token_digest` is a placeholder (real digest computation and token
+verification are Checkpoint 7 concerns; no cryptography here). Completed
+plans keep the reference for auditability. Schema only.
 
 ## ExecutionPlan
 
@@ -133,7 +165,7 @@ execution.
 
 Fields: `plan_id`, `decision_id`, `capability_id`, `capability_version`,
 `adapter_id`, `normalized_inputs`, `required_approval`,
-`approval_token`, `risk_snapshot`, `evidence_coverage_snapshot`,
+`approval`, `risk_snapshot`, `evidence_coverage_snapshot`,
 `timeout_ms`, `verification_plan`, `rollback_plan`, `state`,
 `created_at`, optional `expires_at`, `correlation_id`, `requested_by`.
 
@@ -150,10 +182,20 @@ Rules:
   checkpoint): `draft | awaiting_approval | ready | executing | succeeded |
   failed | blocked | cancelled`. Executable states: `ready`, `executing`.
 - Approval: `awaiting_approval` requires `required_approval=true`;
-  executable states require `approval_token` when `required_approval=true`.
+  `ready | executing | succeeded | failed` states require an `approval`
+  reference when `required_approval=true`; pre-approval states
+  (`draft | awaiting_approval | blocked | cancelled`) must not carry one;
+  `approval.plan_id` must equal `plan.plan_id` (2.1).
 - Read-only plans must not carry `rollback_plan`; any `rollback_plan`
   requires `risk_snapshot.reversible=true`; write plans must carry a
   `verification_plan`.
+- Verification / rollback binding (2.1): plan verification/rollback
+  capability ids must equal the capability declaration and must exist in
+  the registry lookup (referential integrity only).
+- `normalized_inputs`, `verification_inputs` and `rollback_inputs` are
+  JSON-safe (2.1); `expires_at` must be after `created_at`;
+  `isExecutionPlanExpired(plan, now)` is a deterministic helper the future
+  broker must call before spawning any process.
 - `validateExecutionPlanAgainstCapabilities(plan, lookup)` checks capability
   existence, version match, risk-snapshot equality and mandatory evidence
   coverage for executable states. The registry lookup is injected because no
