@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "task": "Goal24 Checkpoint 3 - Lane C: Existing Local Process Surface Audit",
+  "lane": "C — PROCESS SURFACE AUDIT",
+  "timestamp": "2026-08-13T00:00:00+08:00",
+  "repository": "https://github.com/guo6x/Omni-context",
+  "development_branch": "dev/goal24-cli-skills",
+  "base_sha": "93d9cf53c91e56d4c7b13e85d6197014d0a879c7",
+  "audit_commit_sha": "0dbd0402465118507eb93acc7984ed12ed40fe88",
+  "audit_commit_sha_note": "audit_commit_sha = the security/docs(goal24) audit commit containing the markdown report and the machine-readable surface inventory; this manifest is a documentation-only follow-up commit.",
+  "branch": "local/cp3-process-surface-audit",
+  "worktree": "D:/ai_code/Omni-context-worktrees/cp3-process-surface-audit",
+  "files_added": [
+    "docs/goal24/cp3-existing-process-surface-audit.md",
+    "docs/goal24/cp3-existing-process-surface.json",
+    "docs/goal24/checkpoint3-lane-c-manifest.json"
+  ],
+  "runtime_code_changed": false,
+  "process_execution_added": false,
+  "holdback_touched": false,
+  "remote_branch_pushed": false,
+  "counts": {
+    "total_surfaces_found": 14,
+    "LEGITIMATE_BASELINE": 6,
+    "LEGACY_RISK": 2,
+    "POTENTIAL_BROKER_BYPASS": 1,
+    "BLOCKS_CP3": 0,
+    "OUT_OF_SCOPE": 5
+  }
+  ,
+  "key_answers": {
+    "existing_generic_shell_surface": "NO",
+    "model_controlled_executable_surface": "NO (model can only trigger lifecycle of the fixed brain-server node child; executable/script/args/cwd/env are internal-fixed)",
+    "tauri_shell_open_risk": "YES - allowlist.shell.open=true exposes webview open() with unrestricted URI; app callers use fixed https URLs, but a compromised webview can open arbitrary URI or execute a local .exe/.bat/.cmd via ShellExecute. Must close before CP7 (ideally CP4).",
+    "broker_bypass_possible": "Only via S6 shell-open; no Tauri command accepts an executable path or argv"
+  },
+  "highest_risk_findings": [
+    "S6 shell-open (POTENTIAL_BROKER_BYPASS, high): webview-compromised caller can bypass any Broker gate by invoking open() with an arbitrary URI or local executable path",
+    "S2 PID-file kill (LEGACY_RISK, medium): user-writable pid file + taskkill /F allows arbitrary-PID kill by a local process attacker",
+    "S8 global shortcuts (LEGACY_RISK, medium): caller-controlled accelerators enable hotkey hijack",
+    "S10 allowlist breadth fs.readFile scope ** (OUT_OF_SCOPE, high adjacent): compromised webview can read any file",
+    "S9 process_dropped_paths (OUT_OF_SCOPE, high adjacent): caller-controlled recursive path walk"
+  ]
+  ,
+  "recommendations": {
+    "before_cp7": [
+      "S6: remove shell-open feature / restrict open() to fixed https allowlist via dedicated Rust command; remove window.open fallback; harden default CSP"
+    ],
+    "cp4_or_cp7": [
+      "S1: pin resolved node path; route lifecycle commands behind Broker policy",
+      "S2: verify PID ownership before kill; move PID state to app-owned storage",
+      "S4: pin node path in written MCP configs; gate MCP installs",
+      "S8: validate accelerators against allowlist",
+      "S9/S10: narrow fs scope and path APIs",
+      "S14: make prod CSP the shipped default"
+    ],
+    "keep": [
+      "S3/S5 folder-open helpers with fixed paths",
+      "S7 lifecycle of fixed node child",
+      "S11 signed updater",
+      "S13 UDP hardware trigger (loopback, signature-verified)"
+    ]
+  },
+  "tests": [
+    "no runtime code changed - tests not applicable; outputs validated: JSON parse of cp3-existing-process-surface.json (14 surfaces), git diff --check"
+  ]
+}
