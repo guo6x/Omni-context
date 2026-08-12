@@ -47,7 +47,26 @@
   "overrides": {
     "protobufjs": "7.6.3",
     "tar": "7.5.16",
-    "hono": "4.12.29"
+    "hono": "4.12.34",
+    "@hono/node-server": "2.1.0",
+    "ip-address": "10.5.0",
+    "fast-uri": "3.1.5",
+    "undici": "7.29.0",
+    "archiver": {
+      "archiver-utils": {
+        "glob": {
+          ".": "10.5.0",
+          "minimatch": {
+            "brace-expansion": "2.1.4"
+          }
+        }
+      },
+      "readdir-glob": {
+        "minimatch": {
+          "brace-expansion": "2.1.4"
+        }
+      }
+    }
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.21.0",
