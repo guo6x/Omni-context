@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "3",
+  "lane": "A",
+  "name": "Goal24 Checkpoint 3 Lane A — Tauri Local Execution Broker Core",
+  "date": "2026-08-13",
+  "base_sha": "93d9cf53c91e56d4c7b13e85d6197014d0a879c7",
+  "base_note": "origin/dev/goal24-cli-skills, verified exact after git fetch --all --tags --prune; main is an ancestor",
+  "local_branch": "local/cp3-broker-core",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp3-broker-core",
+  "commit_sha": "87af7884e1f43f23f85fd83016548689461bb33e",
+  "commit_sha_note": "docs commit that records this checkpoint (the manifest itself is committed as the branch tip immediately after)",
+  "commits": [
+    { "sha": "551b663", "message": "feat(tauri): add restricted execution broker core" },
+    { "sha": "6d10b0e", "message": "test(tauri): add broker security and lifecycle tests" },
+    { "sha": "87af7884e1f43f23f85fd83016548689461bb33e", "message": "docs(goal24): record checkpoint 3 broker core" }
+  ],
+  "remote_branch_pushed": false,
+  "files": {
+    "added": [
+      "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "desktop-daemon/src-tauri/src/execution_broker/types.rs",
+      "desktop-daemon/src-tauri/src/execution_broker/policy.rs",
+      "desktop-daemon/src-tauri/src/execution_broker/resolver.rs",
+      "desktop-daemon/src-tauri/src/execution_broker/runner.rs",
+      "desktop-daemon/src-tauri/src/execution_broker/output.rs",
+      "desktop-daemon/src-tauri/src/execution_broker/process_tree.rs",
+      "desktop-daemon/src-tauri/src/execution_broker/tests.rs",
+      "docs/goal24/07-checkpoint3-broker-core.md",
+      "docs/goal24/checkpoint3-lane-a-manifest.json"
+    ],
+    "modified": [
+      "desktop-daemon/src-tauri/Cargo.toml",
+      "desktop-daemon/src-tauri/Cargo.lock",
+      "desktop-daemon/src-tauri/src/main.rs",
+      "desktop-daemon/src-tauri/src/commands.rs",
+      "desktop-daemon/scripts/controlled-files.sha256.json"
+    ]
+  },
+  "public_api": {
+    "ipc": [
+      { "command": "get_broker_status", "returns": "BrokerStatus", "read_only": true },
+      { "note": "execute_ipc_enabled is always false in CP3; no generic execute IPC is exposed" }
+    ],
+    "crate_internal": [
+      "Broker::execute(plan, binding_id) — pub(crate), opened to IPC in CP4 with the GitHub adapter",
+      "Broker::cancel_execution(execution_id) — cancellation by broker-issued execution id only",
+      "Broker::register_binding(Box<dyn ExecutionBinding>) — compiled/trusted code only",
+      "ExecutionBinding trait — binding_id, adapter_id, capability_id, executable_candidates, build_argv, allowed_cwd_roots, derive_cwd, env_allowlist, output_limits"
+    ],
+    "wire_types": [
+      "ExecutionPlanWire with #[serde(deny_unknown_fields)] mirroring brain-server/src/execution/contracts.ts",
+      "RiskSnapshotWire, EvidenceCoverageSnapshotWire, ApprovalReferenceWire, VerificationPlanWire, RollbackPlanWire",
+      "ErrorCode (18 codes), BrokerError, BrokerExecutionResult"
+    ]
+  },
+  "security_invariants": [
+    "Approved semantic ExecutionPlan only; state=ready accepted once; state=executing rejected as replay guard",
+    "required_approval=true blocked with APPROVAL_ENFORCEMENT_NOT_AVAILABLE until Checkpoint 7; structural approval reference never treated as validation",
+    "No shell strings, no cmd /C, no powershell -Command, no sh -c / bash -c, no shell association",
+    "Executable, argv, cwd and env come exclusively from trusted compiled ExecutionBinding code; forbidden normalized_inputs keys rejected",
+    "No production bindings registered in CP3; test bindings are #[cfg(test)]-only",
+    "Plan identity fields (plan_id, capability_id, adapter_id, semver, expiry, timeout bounds) re-validated in Rust",
+    "No generic executor IPC; only read-only status surface"
+  ],
+  "process_containment": {
+    "windows": "Job Object with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE; spawn via CREATE_SUSPENDED, assign to job, resume primary thread; timeout/cancel/teardown terminates the whole job so grandchildren die",
+    "unix_fallback": "dedicated process group per child; SIGKILL to the whole group",
+    "taskkill_not_used": true
+  },
+  "executable_policy": {
+    "source": "trusted binding candidates only; plan can never supply a path",
+    "windows_extensions": "concrete .exe only; .cmd/.bat/.ps1 rejected by default",
+    "resolution": "absolute path, canonicalize, regular file check; concrete absolute path used for spawn (no OS PATH search at spawn time)",
+    "identity": "fingerprint records canonical path, size, mtime; re-verified immediately before spawn (EXECUTABLE_CHANGED on mismatch)",
+    "residual_risk": "TOCTOU window between verify and CreateProcess; full hashing deliberately not forced in CP3"
+  },
+  "env_policy": {
+    "inherit": false,
+    "mechanism": "env_clear() then restore minimal base (SystemRoot, TEMP, TMP on Windows) plus binding allowlist",
+    "fail_safe_strip": ["GH_TOKEN", "GITHUB_TOKEN", "OPENAI_API_KEY", "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "NPM_TOKEN", "AWS_*", "AZURE_*", "GOOGLE_*", "SSH_*"],
+    "path": "PATH not inherited on Windows; executable is a resolved absolute path"
+  },
+  "cwd_policy": {
+    "mechanism": "binding derives candidate cwd; broker canonicalizes and requires equality with or descent from an allowlisted root",
+    "escapes_rejected": [".. traversal", "symlink/junction escape via canonicalization"]
+  },
+  "output_limits": {
+    "stdout_max_bytes": 1048576,
+    "stderr_max_bytes": 1048576,
+    "clamp": "binding limits clamped into [1, 1048576]; broker never raises the cap",
+    "deadlock_prevention": "reader threads keep draining after the cap; result reports truncated flags and total bytes seen"
+  },
+  "timeout": { "supported": true, "bounds_ms": [100, 86400000] },
+  "cancellation": { "supported": true, "mechanism": "active-execution registry maps execution_id to cancel token; terminate + wait" },
+  "process_tree_kill": { "supported": true, "windows": "Job Object TerminateJobObject", "unix": "kill(-pgid, SIGKILL)" },
+  "tests": {
+    "suites": ["A plan gate", "B executable resolution", "C argv safety", "D cwd policy", "E env policy", "F lifecycle", "G process tree"],
+    "child_fixture": "test binary itself via std::env::current_exe() + #[cfg(test)]-only child protocol; no cmd.exe/powershell/sh/bash fixtures",
+    "result": { "passed": 42, "failed": 0, "ignored": 1, "note": "ignored test is the child-protocol entry spawned explicitly by parent tests" }
+  },
+  "verification": {
+    "cargo_fmt_check": "PASS",
+    "cargo_check": "PASS (only pre-existing clipboard.rs dead-code warning from base)",
+    "cargo_clippy_all_targets": "PASS (only pre-existing base warnings; none in execution_broker)",
+    "cargo_test": "42 passed, 0 failed, 1 ignored",
+    "verify_controlled": "PASS; snapshot regenerated for Cargo.toml, Cargo.lock, commands.rs, main.rs and committed",
+    "git_diff_check": "PASS",
+    "cargo_audit": {
+      "vulnerabilities": 5,
+      "warnings": 17,
+      "identical_to_base": true,
+      "UNKNOWN": 0,
+      "BLOCKS_CP3": 0,
+      "note": "verified by auditing the base Cargo.lock; only new lock entry is libc (unix-only); windows 0.52 features extended, no new crates"
+    }
+  },
+  "known_residual_risks": [
+    "TOCTOU window between pre-spawn fingerprint check and CreateProcess (metadata fingerprint, not full hash)",
+    "libtest child harness consumes leading --flag-style payload args; flag-like argv values verified at build_argv unit level",
+    "unix process-group containment is fallback-only and not exercised on this Windows host",
+    "secret stripping covers broker child environment only; other same-user surfaces are out of CP3 scope",
+    "production execute IPC opens in CP4 with the GitHub adapter"
+  ],
+  "holdback_touched": false,
+  "environment": {
+    "policy": "D: first, then existing C:; new installs only under D:\\environment",
+    "tools": {
+      "cargo": "D:\\environment\\cargo\\bin\\cargo.exe (1.97.1)",
+      "rustup": "D:\\environment\\rustup",
+      "cargo_audit": "D:\\environment\\cargo-audit\\bin\\cargo-audit.exe",
+      "advisory_db": "D:\\environment\\advisory-db"
+    },
+    "cargo_target_dir": "D:\\environment\\cargo-target"
+  }
+}
