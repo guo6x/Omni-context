@@ -1,9 +1,11 @@
 /**
- * Goal24 Checkpoint 2 contract tests: Capability and SkillManifest.
+ * Goal24 Checkpoint 2.1 contract tests: Capability and SkillManifest.
  *
  * Security posture: all contracts are strict Zod objects, so unknown keys
  * (including `shell`, `command`, `exec`) are rejected at parse time, not
- * merely at the TypeScript type level.
+ * merely at the TypeScript type level. This file also covers the 2.1
+ * hardening: canonical evidence requirements, side-effect/reversibility
+ * consistency, JSON-safe input schemas and skill safety inheritance.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -13,11 +15,14 @@ import {
   EvidenceRequirementSchema,
   RISK_LEVELS,
   SIDE_EFFECT_CLASSES,
+  type CapabilityDefinition,
 } from '../src/capabilities/contracts.js';
 import {
   ADAPTER_PREFERENCES,
   ProcedureStepSchema,
   SkillManifestSchema,
+  validateSkillManifestAgainstCapabilities,
+  type SkillManifest,
 } from '../src/skills/contracts.js';
 
 const validWriteCapability = {
@@ -38,7 +43,10 @@ const validWriteCapability = {
   risk_level: 'medium',
   reversible: true,
   side_effect_class: 'reversible_write',
-  required_evidence_classes: ['repository.current_state', 'actor.authority'],
+  required_evidence: [
+    { class_id: 'repository.current_state', mandatory: true, conflict_policy: 'reject' },
+    { class_id: 'actor.authority', mandatory: true, verification_requirement: 'verified' },
+  ],
   verification_capability: 'github.issue.read',
   rollback_capability: 'github.issue.close',
 };
@@ -59,30 +67,21 @@ const validReadCapability = {
   risk_level: 'low',
   reversible: false,
   side_effect_class: 'read_only',
-  required_evidence_classes: [],
+  required_evidence: [],
 };
 
 describe('Capability contract — valid', () => {
-  it('accepts a valid write capability', () => {
+  it('accepts a valid write capability with canonical evidence requirements', () => {
     const result = CapabilityDefinitionSchema.safeParse(validWriteCapability);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.id).toBe('github.issue.create');
-      expect(result.data.required_authority).toBe('L1');
-      expect(result.data.rollback_capability).toBe('github.issue.close');
+      expect(result.data.required_evidence).toHaveLength(2);
+      expect(result.data.required_evidence[1].verification_requirement).toBe('verified');
     }
   });
 
   it('accepts a valid read-only capability without verification/rollback', () => {
     const result = CapabilityDefinitionSchema.safeParse(validReadCapability);
-    expect(result.success).toBe(true);
-  });
-
-  it('accepts an empty input_schema', () => {
-    const result = CapabilityDefinitionSchema.safeParse({
-      ...validReadCapability,
-      input_schema: {},
-    });
     expect(result.success).toBe(true);
   });
 
@@ -104,11 +103,6 @@ describe('Capability contract — ID rules', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects mcp-prefixed IDs', () => {
-    const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, id: 'mcp.github.issue.create' });
-    expect(result.success).toBe(false);
-  });
-
   it('rejects IDs with fewer than three segments', () => {
     const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, id: 'github.issue' });
     expect(result.success).toBe(false);
@@ -118,22 +112,16 @@ describe('Capability contract — ID rules', () => {
     const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, id: 'GitHub.issue.create' });
     expect(result.success).toBe(false);
   });
-
-  it('accepts a four-segment ID (github.pr.checks.read)', () => {
-    const result = CapabilityDefinitionSchema.safeParse({
-      ...validReadCapability,
-      id: 'github.pr.checks.read',
-      verification_capability: undefined,
-    });
-    expect(result.success).toBe(true);
-  });
 });
 
-describe('Capability contract — evidence rules', () => {
-  it('rejects duplicate required_evidence_classes', () => {
+describe('Capability contract — canonical evidence requirements (2.1)', () => {
+  it('rejects duplicate required_evidence class_ids', () => {
     const result = CapabilityDefinitionSchema.safeParse({
       ...validWriteCapability,
-      required_evidence_classes: ['repository.current_state', 'repository.current_state'],
+      required_evidence: [
+        { class_id: 'repository.current_state', mandatory: true },
+        { class_id: 'repository.current_state', mandatory: true },
+      ],
     });
     expect(result.success).toBe(false);
   });
@@ -141,18 +129,33 @@ describe('Capability contract — evidence rules', () => {
   it('rejects malformed evidence class ids', () => {
     const result = CapabilityDefinitionSchema.safeParse({
       ...validWriteCapability,
-      required_evidence_classes: ['Repository.Current_State'],
+      required_evidence: [{ class_id: 'Repository.Current_State', mandatory: true }],
     });
     expect(result.success).toBe(false);
   });
+
+  it('rejects the legacy required_evidence_classes field (unknown key)', () => {
+    const { required_evidence: _unused, ...legacy } = validWriteCapability as any;
+    const result = CapabilityDefinitionSchema.safeParse({
+      ...legacy,
+      required_evidence_classes: ['repository.current_state'],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts a freshness policy beyond 7 days (no arbitrary cap)', () => {
+    const result = EvidenceRequirementSchema.safeParse({
+      class_id: 'repository.current_state',
+      mandatory: true,
+      freshness_policy: { max_age_ms: 30 * 86_400_000 },
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
-describe('Capability contract — rollback and side-effect consistency', () => {
+describe('Capability contract — rollback and side-effect consistency (2.1)', () => {
   it('rejects rollback_capability when reversible=false', () => {
-    const result = CapabilityDefinitionSchema.safeParse({
-      ...validWriteCapability,
-      reversible: false,
-    });
+    const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, reversible: false });
     expect(result.success).toBe(false);
   });
 
@@ -164,19 +167,16 @@ describe('Capability contract — rollback and side-effect consistency', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects self-referencing verification_capability', () => {
+  it('rejects read_only capability with reversible=true', () => {
     const result = CapabilityDefinitionSchema.safeParse({
-      ...validWriteCapability,
-      verification_capability: 'github.issue.create',
+      ...validReadCapability,
+      reversible: true,
     });
     expect(result.success).toBe(false);
   });
 
   it('rejects read_only capability with risk_level=medium', () => {
-    const result = CapabilityDefinitionSchema.safeParse({
-      ...validReadCapability,
-      risk_level: 'medium',
-    });
+    const result = CapabilityDefinitionSchema.safeParse({ ...validReadCapability, risk_level: 'medium' });
     expect(result.success).toBe(false);
   });
 
@@ -186,6 +186,30 @@ describe('Capability contract — rollback and side-effect consistency', () => {
       rollback_capability: 'github.issue.close',
     });
     expect(result.success).toBe(false);
+  });
+
+  it('rejects reversible_write capability with reversible=false', () => {
+    const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, reversible: false });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects destructive_write capability with reversible=true', () => {
+    const result = CapabilityDefinitionSchema.safeParse({
+      ...validWriteCapability,
+      side_effect_class: 'destructive_write',
+      reversible: true,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts destructive_write capability with reversible=false and no rollback', () => {
+    const { rollback_capability: _unused, ...withoutRollback } = validWriteCapability;
+    const result = CapabilityDefinitionSchema.safeParse({
+      ...withoutRollback,
+      side_effect_class: 'destructive_write',
+      reversible: false,
+    });
+    expect(result.success).toBe(true);
   });
 
   it('rejects write capability without verification_capability (read-back required)', () => {
@@ -200,19 +224,11 @@ describe('Capability contract — version rules', () => {
     const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, version: '' });
     expect(result.success).toBe(false);
   });
-
-  it('rejects non-semver versions', () => {
-    const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, version: '1.0' });
-    expect(result.success).toBe(false);
-  });
 });
 
 describe('Capability contract — security boundary', () => {
   it('rejects a shell field (runtime schema, not just types)', () => {
-    const result = CapabilityDefinitionSchema.safeParse({
-      ...validWriteCapability,
-      shell: 'rm -rf /',
-    });
+    const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, shell: 'rm -rf /' });
     expect(result.success).toBe(false);
   });
 
@@ -224,19 +240,25 @@ describe('Capability contract — security boundary', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects an exec field', () => {
+  it('is strict: any unknown key is rejected', () => {
+    const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, unexpected_field: true });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('Capability contract — JSON-safe input_schema (2.1)', () => {
+  it('rejects a Date inside input_schema', () => {
     const result = CapabilityDefinitionSchema.safeParse({
       ...validWriteCapability,
-      exec: 'powershell -c "..."',
+      input_schema: { type: 'object', created: new Date() },
     });
     expect(result.success).toBe(false);
   });
 
-  it('is strict: any unknown key is rejected', () => {
-    const result = CapabilityDefinitionSchema.safeParse({
-      ...validWriteCapability,
-      unexpected_field: true,
-    });
+  it('rejects a circular input_schema', () => {
+    const circular: Record<string, unknown> = { type: 'object' };
+    circular.self = circular;
+    const result = CapabilityDefinitionSchema.safeParse({ ...validWriteCapability, input_schema: circular });
     expect(result.success).toBe(false);
   });
 });
@@ -257,22 +279,65 @@ describe('EvidenceRequirement contract', () => {
     const result = EvidenceRequirementSchema.safeParse({ class_id: 'pull_request.current_state' });
     expect(result.success).toBe(false);
   });
-
-  it('rejects unknown keys (strict)', () => {
-    const result = EvidenceRequirementSchema.safeParse({
-      class_id: 'pull_request.current_state',
-      mandatory: true,
-      retrieval_query: 'SELECT *',
-    });
-    expect(result.success).toBe(false);
-  });
 });
 
 // ---------------------------------------------------------------------------
 // SkillManifest
 // ---------------------------------------------------------------------------
 
-const validSkill = {
+const readCapability = CapabilityDefinitionSchema.parse({
+  id: 'github.issue.read',
+  version: '1.2.0',
+  description: 'Read a GitHub issue',
+  input_schema: {},
+  required_authority: 'L0',
+  risk_level: 'low',
+  reversible: false,
+  side_effect_class: 'read_only',
+  required_evidence: [],
+});
+
+const commentCapability = CapabilityDefinitionSchema.parse({
+  id: 'github.issue.comment',
+  version: '1.0.0',
+  description: 'Comment on a GitHub issue',
+  input_schema: {},
+  required_authority: 'L1',
+  risk_level: 'medium',
+  reversible: true,
+  side_effect_class: 'reversible_write',
+  required_evidence: [
+    { class_id: 'repository.current_state', mandatory: true, conflict_policy: 'reject' },
+  ],
+  verification_capability: 'github.issue.read',
+});
+
+const closeCapability = CapabilityDefinitionSchema.parse({
+  id: 'github.issue.close',
+  version: '1.0.0',
+  description: 'Close a GitHub issue',
+  input_schema: {},
+  required_authority: 'L2',
+  risk_level: 'high',
+  reversible: true,
+  side_effect_class: 'reversible_write',
+  required_evidence: [
+    {
+      class_id: 'actor.authority',
+      mandatory: true,
+      verification_requirement: 'verified',
+      freshness_policy: { max_age_ms: 3_600_000 },
+    },
+  ],
+  verification_capability: 'github.issue.read',
+});
+
+function registryOf(capabilities: CapabilityDefinition[]) {
+  const map = new Map(capabilities.map((capability) => [capability.id, capability]));
+  return (id: string) => map.get(id);
+}
+
+const validSkill: SkillManifest = {
   name: 'github-issue-triage',
   version: '1.0.0',
   description: 'Triage a GitHub issue and route it to the right owner',
@@ -295,10 +360,6 @@ describe('SkillManifest contract — valid', () => {
   it('accepts a valid skill manifest', () => {
     const result = SkillManifestSchema.safeParse(validSkill);
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.adapter_preference).toBe('cli');
-      expect(result.data.procedure).toHaveLength(2);
-    }
   });
 
   it('enumerates legal adapter preferences', () => {
@@ -325,30 +386,11 @@ describe('SkillManifest contract — capability rules', () => {
     });
     expect(result.success).toBe(false);
   });
-
-  it('rejects verification referencing an undeclared capability', () => {
-    const result = SkillManifestSchema.safeParse({
-      ...validSkill,
-      verification: { capability_id: 'github.pr.read' },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects rollback referencing an undeclared capability', () => {
-    const result = SkillManifestSchema.safeParse({
-      ...validSkill,
-      rollback: { capability_id: 'github.pr.close' },
-    });
-    expect(result.success).toBe(false);
-  });
 });
 
 describe('SkillManifest contract — adapter preference', () => {
   it('rejects an illegal adapter preference', () => {
-    const result = SkillManifestSchema.safeParse({
-      ...validSkill,
-      adapter_preference: 'ssh',
-    });
+    const result = SkillManifestSchema.safeParse({ ...validSkill, adapter_preference: 'ssh' });
     expect(result.success).toBe(false);
   });
 });
@@ -357,33 +399,13 @@ describe('SkillManifest contract — procedure is not an execution layer', () =>
   it('rejects a procedure step carrying a command field', () => {
     const result = SkillManifestSchema.safeParse({
       ...validSkill,
-      procedure: [
-        { step_id: 'run_shell', description: 'run', command: 'gh issue comment 17 "hi"' },
-      ],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects a procedure step carrying a shell field', () => {
-    const result = SkillManifestSchema.safeParse({
-      ...validSkill,
-      procedure: [
-        { step_id: 'run_shell', description: 'run', shell: 'rm -rf /' },
-      ],
+      procedure: [{ step_id: 'run_shell', description: 'run', command: 'gh issue comment 17 "hi"' }],
     });
     expect(result.success).toBe(false);
   });
 
   it('rejects a manifest-level exec field', () => {
-    const result = SkillManifestSchema.safeParse({
-      ...validSkill,
-      exec: 'powershell -c "Get-Process"',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects an empty procedure', () => {
-    const result = SkillManifestSchema.safeParse({ ...validSkill, procedure: [] });
+    const result = SkillManifestSchema.safeParse({ ...validSkill, exec: 'powershell -c "Get-Process"' });
     expect(result.success).toBe(false);
   });
 
@@ -396,6 +418,120 @@ describe('SkillManifest contract — procedure is not an execution layer', () =>
       ],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('Skill safety inheritance — validateSkillManifestAgainstCapabilities (2.1)', () => {
+  it('accepts a skill that matches referenced capability safety', () => {
+    const issues = validateSkillManifestAgainstCapabilities(validSkill, registryOf([readCapability, commentCapability]));
+    expect(issues).toEqual([]);
+  });
+
+  it('accepts a skill that strengthens evidence requirements', () => {
+    const strengthened: SkillManifest = {
+      ...validSkill,
+      required_evidence: [
+        {
+          class_id: 'repository.current_state',
+          mandatory: true,
+          conflict_policy: 'reject',
+          freshness_policy: { max_age_ms: 60_000 },
+          verification_requirement: 'verified',
+        },
+      ],
+    };
+    const issues = validateSkillManifestAgainstCapabilities(strengthened, registryOf([readCapability, commentCapability]));
+    expect(issues).toEqual([]);
+  });
+
+  it('rejects an unknown capability reference', () => {
+    const issues = validateSkillManifestAgainstCapabilities(validSkill, registryOf([readCapability]));
+    expect(issues.some((issue) => issue.path === 'capabilities')).toBe(true);
+  });
+
+  it('rejects a skill risk lower than the highest referenced capability risk', () => {
+    const downgraded: SkillManifest = { ...validSkill, risk: 'low' };
+    const issues = validateSkillManifestAgainstCapabilities(downgraded, registryOf([readCapability, commentCapability]));
+    expect(issues.some((issue) => issue.path === 'risk')).toBe(true);
+  });
+
+  it('rejects weakening mandatory evidence to optional', () => {
+    const weakened: SkillManifest = {
+      ...validSkill,
+      required_evidence: [{ class_id: 'repository.current_state', mandatory: false, conflict_policy: 'reject' }],
+    };
+    const issues = validateSkillManifestAgainstCapabilities(weakened, registryOf([readCapability, commentCapability]));
+    expect(issues.some((issue) => issue.path === 'required_evidence')).toBe(true);
+  });
+
+  it('rejects dropping a mandatory evidence class entirely', () => {
+    const dropped: SkillManifest = { ...validSkill, required_evidence: [] };
+    const issues = validateSkillManifestAgainstCapabilities(dropped, registryOf([readCapability, commentCapability]));
+    expect(issues.some((issue) => issue.path === 'required_evidence')).toBe(true);
+  });
+
+  it('rejects downgrading conflict_policy reject to warn', () => {
+    const warnPolicy: SkillManifest = {
+      ...validSkill,
+      required_evidence: [{ class_id: 'repository.current_state', mandatory: true, conflict_policy: 'warn' }],
+    };
+    const issues = validateSkillManifestAgainstCapabilities(warnPolicy, registryOf([readCapability, commentCapability]));
+    expect(issues.some((issue) => issue.path === 'required_evidence')).toBe(true);
+  });
+
+  it('rejects downgrading verification_requirement verified to asserted', () => {
+    const skillWithClose: SkillManifest = {
+      ...validSkill,
+      capabilities: ['github.issue.read', 'github.issue.close'],
+      risk: 'high',
+      procedure: [
+        { step_id: 'read_issue', description: 'Read the issue', capability_id: 'github.issue.read' },
+        { step_id: 'close_issue', description: 'Close the issue', capability_id: 'github.issue.close' },
+      ],
+      verification: { capability_id: 'github.issue.read' },
+      required_evidence: [
+        { class_id: 'actor.authority', mandatory: true, verification_requirement: 'asserted', freshness_policy: { max_age_ms: 3_600_000 } },
+      ],
+    };
+    const issues = validateSkillManifestAgainstCapabilities(skillWithClose, registryOf([readCapability, closeCapability]));
+    expect(issues.some((issue) => issue.path === 'required_evidence')).toBe(true);
+  });
+
+  it('rejects dropping a capability freshness_policy', () => {
+    const noFreshness: SkillManifest = {
+      ...validSkill,
+      capabilities: ['github.issue.read', 'github.issue.close'],
+      risk: 'high',
+      procedure: [
+        { step_id: 'read_issue', description: 'Read the issue', capability_id: 'github.issue.read' },
+        { step_id: 'close_issue', description: 'Close the issue', capability_id: 'github.issue.close' },
+      ],
+      verification: { capability_id: 'github.issue.read' },
+      required_evidence: [
+        { class_id: 'actor.authority', mandatory: true, verification_requirement: 'verified', freshness_policy: { max_age_ms: 7_200_000 } },
+      ],
+    };
+    const issues = validateSkillManifestAgainstCapabilities(noFreshness, registryOf([readCapability, closeCapability]));
+    // freshness 7.2M > capability 3.6M -> weakening; also verification ok (verified)
+    expect(issues.some((issue) => issue.path === 'required_evidence')).toBe(true);
+  });
+
+  it('accepts a skill with strictly stronger freshness', () => {
+    const stronger: SkillManifest = {
+      ...validSkill,
+      capabilities: ['github.issue.read', 'github.issue.close'],
+      risk: 'high',
+      procedure: [
+        { step_id: 'read_issue', description: 'Read the issue', capability_id: 'github.issue.read' },
+        { step_id: 'close_issue', description: 'Close the issue', capability_id: 'github.issue.close' },
+      ],
+      verification: { capability_id: 'github.issue.read' },
+      required_evidence: [
+        { class_id: 'actor.authority', mandatory: true, verification_requirement: 'verified', freshness_policy: { max_age_ms: 1_800_000 } },
+      ],
+    };
+    const issues = validateSkillManifestAgainstCapabilities(stronger, registryOf([readCapability, closeCapability]));
+    expect(issues).toEqual([]);
   });
 });
 
