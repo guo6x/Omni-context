@@ -3,6 +3,10 @@
 mod brain_server;
 mod clipboard;
 mod commands;
+// CP3 wires only the read-only broker status surface; the execution core is
+// exercised by tests and opened to IPC in CP4 with the GitHub adapter.
+#[cfg_attr(not(test), allow(dead_code))]
+mod execution_broker;
 mod hardware;
 mod hardware_actions;
 mod log_writer;
@@ -315,6 +319,7 @@ async fn main() {
             commands::get_pair_code,
             commands::regenerate_pair_code,
             commands::get_local_api_token,
+            commands::get_broker_status,
             commands::regenerate_local_api_token,
             hardware::list_hardware_devices,
             hardware::pair_hardware_device,

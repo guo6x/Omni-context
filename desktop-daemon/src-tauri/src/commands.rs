@@ -463,3 +463,8 @@ pub fn get_foreground_window_info() -> Result<ForegroundWindowInfo, String> {
         })
     }
 }
+
+#[tauri::command]
+pub fn get_broker_status() -> crate::execution_broker::BrokerStatus {
+    crate::execution_broker::global_broker().status()
+}

@@ -2502,6 +2502,7 @@ dependencies = [
  "hex",
  "hmac",
  "image 0.24.9",
+ "libc",
  "local-ip-address",
  "reqwest",
  "screenshots",
