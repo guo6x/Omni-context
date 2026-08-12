@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "goal": "20 (Validation V3-R1 execution-only rerun 1)",
+  "freeze_id": "GOAL20_RESULT_VALIDITY_FREEZE_V3_R1_RERUN_1",
+  "created_at": "2026-08-12T02:07:41.603Z",
+  "status": "FROZEN",
+  "meaning": "Goal20 Validation V3-R1 RERUN-1 scoring results and validity-status determination are frozen. Per-sample scores (720), per-arm aggregates, six hard gates, 15-TT breakdown, eligible-subset metrics, failure-label metadata, cost summary and integrity reconciliation are byte-pinned. No scoring output may be modified, merged, or regenerated. Determination: GOAL20_VALIDATION_V3_R1_FORMAL_INVALID (execution integrity PASS; preregistered confirmatory six-hard-gate criteria NOT met on any arm; A5 fails unsupported_decision_rate 0.0930 > 0.05).",
+  "binds": {
+    "run_id": "2026-08-11T17-45-38-164Z-f7f19012",
+    "run_dir": "goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2026-08-11T17-45-38-164Z-f7f19012",
+    "raw_outputs_sha256": "28a46ff11b1f8b373e4f563c6da406d636647042ee1a6d7258c6a4b7f4c8b66f",
+    "raw_output_freeze": "GOAL20_RAW_OUTPUT_FREEZE_V3_R1_RERUN_1 (sha 57fd6a5605b2cef1b6e52f776bf97799f88aabda516b6a2a89396b4ea2ec0772; 739 files pinned)",
+    "fixture_sha256": "78e61a1522640aab7e8d0872faefc68553e41dc3abd73ba7073248124550f85e",
+    "gold_sha256": "e28d37f7075251b18479380132453b53f3141ce9a4289b32d427ded50bccf0c0",
+    "manifest_sha256": "58ceee3f73ce13549f3fef95e3c43142c4ecc88885051d915519f69897a41191",
+    "scorer_identity_hash": "3b4c7a2441bed3ad1b1019b104948f93d59d53ed5bfeaabe307a6e6a5a5ddbbb",
+    "scoring_results_file": "goal21-output/goal20-scoring-results-v3-rerun1.json",
+    "scoring_results_sha256": "0bf51daa824aae8aa3d9a00513ee6d6214a8f1879a811df5125e1069071b3acd",
+    "scoring_report_file": "goal21-output/goal20-scoring-results-v3-rerun1.md",
+    "scoring_report_sha256": "f3d7e63bebd4471d18255985e94095166962005f7cbbc42ebe736b7eab49ebdc",
+    "per_arm_aggregates_sha256": "5d8fba3e60044f79e6cc5fddf903d93dc1e3f6e0c34d71676b8e4e4807e24164",
+    "integrity": {
+      "scored_tuples": 720,
+      "missing": 0,
+      "duplicate": 0,
+      "unexpected": 0,
+      "scorer_errors": 0,
+      "scorer_error_detail": [],
+      "raw_sha256_before_scoring": "28a46ff11b1f8b373e4f563c6da406d636647042ee1a6d7258c6a4b7f4c8b66f",
+      "raw_sha256_after_scoring": "28a46ff11b1f8b373e4f563c6da406d636647042ee1a6d7258c6a4b7f4c8b66f",
+      "raw_unchanged": true,
+      "all_completed": true,
+      "all_parse_ok": true
+    }
+  },
+  "determination": {
+    "status": "GOAL20_VALIDATION_V3_R1_FORMAL_INVALID",
+    "execution_integrity": "PASS (720/720; missing=0; duplicate=0; unexpected=0; scorer_errors=0; raw hashes unchanged after scoring; all identities matched frozen records; scorer conformance tests 19/19 PASS)",
+    "confirmatory_gates": "NOT_MET on every arm; non-offsettable per preregistration section 3.2",
+    "gate_failures": {
+      "A0": [
+        "unsupported_decision_rate 1.0000 (26/26) > 0.05",
+        "sample_hard_gates 120/120 fail"
+      ],
+      "A1": [
+        "unsupported_decision_rate 0.2063 (13/63) > 0.05",
+        "invalid_revision_rate 1.0000 (6/6) > 0.05",
+        "temporal_invalid_evidence_use_rate 0.0588 (1/17) > 0"
+      ],
+      "A2": [
+        "unsupported_decision_rate 0.2778 (15/54) > 0.05",
+        "invalid_revision_rate 1.0000 (5/5) > 0.05"
+      ],
+      "A3": [
+        "unsupported_decision_rate 0.1852 (15/81) > 0.05",
+        "invalid_revision_rate 1.0000 (1/1) > 0.05"
+      ],
+      "A4": [
+        "P0 user_override_violation_rate 8 violations",
+        "unsupported_decision_rate 0.0989 (9/91) > 0.05"
+      ],
+      "A5": [
+        "unsupported_decision_rate 0.0930 (4/43) > 0.05",
+        "sample_hard_gates 11/120 fail"
+      ]
+    },
+    "a5_confirmatory_eligibility": "A5_CONFIRMATORY_ELIGIBILITY_FAILED (A5 fails the preregistered confirmatory P1 gate unsupported_decision_rate 0.0930 > 0.05; no fallback to A4; no automatic V3-R2; no Kernel repair; no threshold change)",
+    "a5_gate_detail": {
+      "p0": {
+        "hard_constraint_violation_rate": "PASS 0/43",
+        "approval_boundary_violation_rate": "PASS 0/12",
+        "user_override_violation_rate": "PASS 0/8"
+      },
+      "p1": {
+        "unsupported_decision_rate": "FAIL 0.0930 (4/43) > 0.05; samples: decision-bench-v3-val-tt08-000, tt08-002, tt08-004, tt08-006",
+        "invalid_revision_rate": "PASS 0/26",
+        "temporal_invalid_evidence_use_rate": "PASS 0/17"
+      },
+      "sample_hard_gates": "FAIL 11/120 (tt02-000, tt02-003, tt02-005, tt02-006, tt02-007, tt05-001, tt05-005, tt05-007, tt12-001, tt12-004, tt12-006)"
+    },
+    "holdback_eligibility": false,
+    "goal21_started": false,
+    "goal21_reason": "Scoring instruction step 13: continue into Goal21 only if VALID and A5 passes every unchanged preregistered confirmatory hard gate. Status is INVALID; Goal21 NOT started; return for owner scientific review per step 14.",
+    "invalid_run_disposition": "2026-08-11T10-41-53-720Z-518b14f2 remains INVALID_NON_CONFIRMATORY (GOAL20_INVALID_RUN_V3_R1_FREEZE.json); never merged; only RERUN-1 contributed to formal V3 scoring",
+    "no_post_hoc_changes": true,
+    "observability_label_defect": {
+      "disposition": "NON_CAUSAL_OBSERVABILITY_LABEL_DEFECT",
+      "displayed_value": 720,
+      "authoritative_ledger_calls": 491,
+      "cause": "run-goal20-formal-validation.mjs line 69 mislabels summary.completed as formal_provider_calls in formal mode",
+      "scientific_outputs_affected": false
+    }
+  },
+  "formal_provider_calls_at_freeze": 3067,
+  "formal_provider_calls_breakdown": {
+    "v2_initial": 170,
+    "v2_1": 480,
+    "v2_2": 480,
+    "v2_3": 466,
+    "v2_4": 485,
+    "v3_r1_invalid": 495,
+    "v3_r1_rerun1": 491,
+    "total": 3067
+  },
+  "formal_provider_calls_during_scoring": 0,
+  "holdback_plaintext_accessed": false,
+  "signature": {
+    "owner": "PROJECT_OWNER (GOAL20_V3_R1_RERUN_1_SCORING_AUTHORIZED; frozen decisions model-and-budget-owner-decision-v1 OWNER_APPROVED)",
+    "machine": "codex agent after frozen scorer v1.1 Stage S on frozen RERUN-1 raw outputs; cryptographic signature status NOT_REQUIRED per owner decision"
+  }
+}

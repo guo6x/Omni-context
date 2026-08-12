@@ -1,6 +1,6 @@
 # Goal 20R-V3-R1 artifact sha256 manifest
 # Format: sha256  <relative path>  <sha256>
-# Status: V3_R1_RERUN_1_COMPLETED_AWAITING_OWNER_REVIEW (720/720 COMPLETED; run 2026-08-11T17-45-38-164Z-f7f19012)
+# Status: V3_R1_RERUN_1_SCORED_FORMAL_INVALID (GOAL20_VALIDATION_V3_R1_FORMAL_INVALID; frozen results in goal21-output)
 # NOTE: run dir files pinned per-file in GOAL20_INVALID_RUN_V3_R1_FREEZE.json (744 files incl. attempts/*)
 
 sha256  goal20r-output/validation-v3-r1-generation-plan.json  a95944900e1ef28c149424ecc3e0d6d09b193f2587e0b4189c9a7891c3cafe4e
@@ -61,5 +61,14 @@ sha256  goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2
 sha256  goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2026-08-11T17-45-38-164Z-f7f19012/gates.json  7e8697bc5ba15b6b9ddd88c33d16247d3a3355af8f07c8a24b4137ab3c2d76e1
 sha256  goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2026-08-11T17-45-38-164Z-f7f19012/lifecycle.log  56c1adc054898c5f92db88d4d64b43ed5fc12dde66de2013e7914a44816c8943
 sha256  goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2026-08-11T17-45-38-164Z-f7f19012/artifact-sha256.txt  3caa2cbe902db5323df2815eaacfcece20dc16185aec072a718be26d1e038807
-sha256  goal20r-output/commands-and-results.log  d07566c97d9cf2c27ca9691d499fc7930d245ab13ba9749da4fd70a5fed5925a
 sha256  CURRENT_FORMAL_CAMPAIGN_STATE.json  93dd0224374c4b59b59b461ef215e3312ebdaf37a4c613394aa585d5f3151e96
+sha256  goal20-formal-execution-governance-v3/governance/GOAL20_RAW_OUTPUT_FREEZE_V3_R1_RERUN_1  57fd6a5605b2cef1b6e52f776bf97799f88aabda516b6a2a89396b4ea2ec0772
+sha256  goal20-formal-execution-governance-v3/governance/GOAL20_RESULT_VALIDITY_FREEZE_V3_R1_RERUN_1  6dd56e7be6193f2553940c8f0f1c2f3e34c8ac65e3a125b2098c728612eb0e3c
+sha256  goal20r-output/V3_R1_RERUN_1_PRE_FREEZE_INTEGRITY.json  c9c72d08af88d7d43ff2bc13b76ac45762fe382842fcf10eacc232768fd5cf99
+sha256  goal21-output/goal20-scoring-results-v3-rerun1.json  0bf51daa824aae8aa3d9a00513ee6d6214a8f1879a811df5125e1069071b3acd
+sha256  goal21-output/goal20-scoring-results-v3-rerun1.md  f3d7e63bebd4471d18255985e94095166962005f7cbbc42ebe736b7eab49ebdc
+sha256  goal21-output/goal20-validation-status-v3-rerun1.json  76242d5c7983abc9c2ce6e255ab33b0d30c92fa821cbbf73e244753630979822
+sha256  goal21-output/scripts/run-scoring-v3-rerun1.mjs  d6da831cdf5c819042aacd6e557603b0c20cffc7c64cf2f438356133a1a304f4
+sha256  goal21-output/scripts/generate-report-v3-rerun1.mjs  939733f10264d05fbff3195ed3f5b9995725f5b56b8322eb1952b4707c9a4137
+sha256  goal20r-output/commands-and-results.log  d07566c97d9cf2c27ca9691d499fc7930d245ab13ba9749da4fd70a5fed5925a
+sha256  CURRENT_FORMAL_CAMPAIGN_STATE.json  45be77c4504605c2adf9d05c5b12e6c9faee15f58afdc23f70ba0faec892e2b8

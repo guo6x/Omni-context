@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "purpose": "GOAL20_FORMAL_VALIDATION_STATUS",
+  "created_at": "2026-08-12T02:07:22.810Z",
+  "run_id": "2026-08-11T17-45-38-164Z-f7f19012",
+  "status": "GOAL20_VALIDATION_V3_R1_FORMAL_INVALID",
+  "execution_integrity": "PASS (720/720; missing=0; duplicate=0; unexpected=0; scorer_errors=0; raw hashes unchanged after scoring; all identities matched frozen records; raw output freeze GOAL20_RAW_OUTPUT_FREEZE_V3_R1_RERUN_1 signed)",
+  "confirmatory_gates": "NOT_MET: A5 fails the preregistered confirmatory hard gate unsupported_decision_rate (0.0930 > 0.05, 4/43 violations); sample_hard_gates fail 11/120; every arm fails its overall six-gate test (A0 UDR 1.0000; A1 UDR 0.2063 + IRR 1.0000 + TIV 0.0588; A2 UDR 0.2778 + IRR 1.0000; A3 UDR 0.1852 + IRR 1.0000; A4 UOV 8 viol + UDR 0.0989; A5 UDR 0.0930). Non-offsettable per preregistration section 3.2.",
+  "a5_confirmatory_eligibility": "A5_CONFIRMATORY_ELIGIBILITY_FAILED (ex-ante-final-arm-selection-policy: A5 fails the preregistered confirmatory P1 gate unsupported_decision_rate 0.0930 > 0.05; no fallback to A4; no automatic V3-R2)",
+  "holdback_eligibility": false,
+  "goal21_started": false,
+  "goal21_reason": "Scoring instruction step 13: continue into Goal21 only if VALID and A5 passes every unchanged preregistered confirmatory hard gate. Status is INVALID (A5 UDR 0.0930 > 0.05). Goal21 NOT started. Return for owner scientific review per step 14.",
+  "freeze_file": "goal20-formal-execution-governance-v3/governance/GOAL20_RESULT_VALIDITY_FREEZE_V3_R1_RERUN_1",
+  "evidence_files": [
+    "goal21-output/goal20-scoring-results-v3-rerun1.json",
+    "goal21-output/goal20-scoring-results-v3-rerun1.md"
+  ]
+}

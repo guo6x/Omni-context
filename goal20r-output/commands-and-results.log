@@ -151,3 +151,17 @@ run artifact shas: raw-results.jsonl 28a46ff11b1f8b373e4f563c6da406d636647042ee1
 record: goal20r-output/VALIDATION_V3_R1_RERUN_1_COMPLETION_RECORD.json (sha 8803670f6a08c66592c2969868a1d0c0c51659c4e0d35b62a1bf3143c0cae19a)
 NO scoring; NO Gold inspection; NO Holdback access; invalid run 518b14f2 byte-preserved
 status: GOAL20_VALIDATION_V3_R1_RERUN_1_COMPLETED_AWAITING_OWNER_REVIEW (raw-output freeze + scoring require owner decision)
+
+
+## V3-R1 RERUN-1 raw-output freeze + formal scoring (SCORED -> FORMAL INVALID)
+- raw output freeze: GOAL20_RAW_OUTPUT_FREEZE_V3_R1_RERUN_1 (sha 57fd6a5605b2cef1b6e52f776bf97799f88aabda516b6a2a89396b4ea2ec0772; 739 files pinned: 8 top-level + 731 attempts/*.json)
+- pre-freeze integrity: V3_R1_RERUN_1_PRE_FREEZE_INTEGRITY.json - PASS 16/16 (rows=720 unique=720 completed=720 missing=0 duplicate=0 unexpected=0 provider_failed=0 parse_failed=0 kernel_failed=0 contract_errors=0 identity_mismatch=0 marker=COMPLETED arms=120x6 no-post-finalization-calls=true)
+- pre-scoring verification: fixture 78e61a15... / gold e28d37f7... / manifest 58ceee3f... unchanged; scorer v1.1 blobs 4/4 MATCH (47a4217f..., 6cce82b2..., a17503af..., acc89ef6...); conformance tests 19/19 PASS; holdback sealed 4737bc77... untouched
+- scoring: frozen scorer v1.1 run exactly once via goal21-output/scripts/run-scoring-v3-rerun1.mjs (copy of frozen pipeline; diff = paths/run-id only) against frozen raw + V3 Gold
+- integrity: scored=720 missing=0 duplicate=0 unexpected=0 scorer_errors=0 per_arm=120x6 raw_sha_before==after=28a46ff11b1f8b373e4f563c6da406d636647042ee1a6d7258c6a4b7f4c8b66f all_completed=true all_parse_ok=true
+- results: goal21-output/goal20-scoring-results-v3-rerun1.json (sha 0bf51daa824aae8aa3d9a00513ee6d6214a8f1879a811df5125e1069071b3acd); report md sha f3d7e63b...
+- six hard gates: NO arm passes overall. A0 UDR 1.0000; A1 UDR 0.2063+IRR 1.0000+TIV 0.0588; A2 UDR 0.2778+IRR 1.0000; A3 UDR 0.1852+IRR 1.0000; A4 UOV 8 viol+UDR 0.0989; A5 UDR 0.0930 (4/43)+sample_hard_gates 11/120
+- A5 confirmatory eligibility: FAILED (unsupported_decision_rate 0.0930 > 0.05; P0 all PASS; IRR 0/26 PASS; TIV 0/17 PASS; failing samples: tt08-000/002/004/006)
+- status: GOAL20_VALIDATION_V3_R1_FORMAL_INVALID; validity freeze GOAL20_RESULT_VALIDITY_FREEZE_V3_R1_RERUN_1 (sha 6dd56e7be6193f2553940c8f0f1c2f3e34c8ac65e3a125b2098c728612eb0e3c)
+- Goal21 NOT started (step 13 requires VALID); return for owner scientific review per step 14; no V3-R2 / no kernel repair / no threshold change / no rerun; Holdback untouched
+- CLI observability defect recorded in raw freeze: NON_CAUSAL_OBSERVABILITY_LABEL_DEFECT (formal_provider_calls displayed 720 = summary.completed; authoritative ledger calls 491; executor NOT modified)

@@ -1,8 +1,8 @@
 {
   "schema_version": 8,
-  "updated_at": "2026-08-11T23:20:00.000Z",
-  "goal": "20R-V3-R1 (execution-only rerun 1)",
-  "phase": "GOAL20_VALIDATION_V3_R1_RERUN_1_COMPLETED_AWAITING_OWNER_REVIEW",
+  "updated_at": "2026-08-12T02:08:05.205Z",
+  "goal": "20R-V3-R1 (execution-only rerun 1) - SCORED",
+  "phase": "GOAL20_VALIDATION_V3_R1_FORMAL_INVALID",
   "machine": "D:\\ai_code\\Omni-context (sole authoritative formal execution machine)",
   "campaign": "goal20-formal-validation-v1",
   "formal_state": {
@@ -170,7 +170,7 @@
     "sha256": "be1c0e515f8bd250c8ea40d13c2f72c9d0ea25411fb51b06ccf3e7839fca8cab",
     "note": "authoritative V2.3 timeline: launch 2026-08-10T17:00:02.942Z, end 2026-08-10T22:15:00.449Z, transport blip 17:29:35.400Z-17:29:36.123Z; original logs NOT rewritten; new log entries use UTC ISO-8601"
   },
-  "next_action": "Owner scientific review: authorize (a) GOAL20_RAW_OUTPUT_FREEZE_V3_R1_RERUN_1 and (b) scoring with frozen scorer v1.1 against frozen raw outputs and V3 Gold. No scoring / no further provider calls / no Holdback access until owner decision.",
+  "next_action": "Owner scientific review required (scoring instruction step 14): A5 failed confirmatory hard gate unsupported_decision_rate 0.0930 > 0.05. Prohibited: automatic V3-R2, Kernel repair, threshold changes, rerun, Holdback access.",
   "v3_r1_run": {
     "status": "INVALID_NON_CONFIRMATORY",
     "terminal_marker": "FAILED",
@@ -231,28 +231,33 @@
     ]
   },
   "v3_r1_rerun_1": {
-    "status": "COMPLETED_720_720",
-    "lineage": "GOAL20_VALIDATION_V3_R1_EXECUTION_RERUN_1",
+    "status": "SCORED_AND_FROZEN",
     "run_id": "2026-08-11T17-45-38-164Z-f7f19012",
     "run_dir": "goal20-formal-execution-governance-v3/runs/goal20-formal-validation-v1/2026-08-11T17-45-38-164Z-f7f19012",
-    "launched_at": "2026-08-11T17:45:38.166Z",
-    "finalized_at": "2026-08-11T23:16:10.156Z",
-    "duration_minutes": 330.5,
-    "terminal_marker": "COMPLETED",
-    "progress": "720/720 completed; 0 provider_failed; 0 parse_failed; 0 kernel_failed",
-    "calls": 491,
-    "spent_cny": 4.127935,
-    "retries": 11,
-    "retry_detail": "11 x EMPTY_CONTENT all recovered (RERUN-1 schedule 5s/15s/45s/120s + frozen stagger); 0 transport; 0 parse-repair; 0 length/content_filter",
-    "previously_fatal_tuple_recovered": "g20-711 tt15-006/A3 attempt 2 (5050ms backoff); all 6 tt15-006 slots completed",
-    "model_identity": "deepseek-v4-flash on 480/480 provider rows; 0 MODEL_IDENTITY_MISMATCH",
-    "max_completion_tokens": 17370,
-    "raw_results_jsonl_sha256": "28a46ff11b1f8b373e4f563c6da406d636647042ee1a6d7258c6a4b7f4c8b66f",
-    "budget_ledger_sha256": "c36bc1b49095dd46d295fec13a574d29a7726d97d6138046be0433e242f8e104",
-    "completion_record": "goal20r-output/VALIDATION_V3_R1_RERUN_1_COMPLETION_RECORD.json (sha 8803670f6a08c66592c2969868a1d0c0c51659c4e0d35b62a1bf3143c0cae19a)",
-    "scored": false,
-    "raw_output_freeze": "NOT_SIGNED (requires owner decision)",
+    "raw_output_freeze": {
+      "file": "goal20-formal-execution-governance-v3/governance/GOAL20_RAW_OUTPUT_FREEZE_V3_R1_RERUN_1",
+      "sha256": "57fd6a5605b2cef1b6e52f776bf97799f88aabda516b6a2a89396b4ea2ec0772",
+      "files_pinned": 739
+    },
+    "scoring": {
+      "status": "GOAL20_VALIDATION_V3_R1_FORMAL_INVALID",
+      "execution_integrity": "PASS (scored=720; missing=0; duplicate=0; unexpected=0; scorer_errors=0; per-arm=120; raw sha unchanged after scoring)",
+      "scoring_results_file": "goal21-output/goal20-scoring-results-v3-rerun1.json",
+      "scoring_results_sha256": "0bf51daa824aae8aa3d9a00513ee6d6214a8f1879a811df5125e1069071b3acd",
+      "scoring_report_file": "goal21-output/goal20-scoring-results-v3-rerun1.md",
+      "scoring_report_sha256": "f3d7e63bebd4471d18255985e94095166962005f7cbbc42ebe736b7eab49ebdc",
+      "status_file": "goal21-output/goal20-validation-status-v3-rerun1.json",
+      "validity_freeze": {
+        "file": "goal20-formal-execution-governance-v3/governance/GOAL20_RESULT_VALIDITY_FREEZE_V3_R1_RERUN_1",
+        "sha256": "6dd56e7be6193f2553940c8f0f1c2f3e34c8ac65e3a125b2098c728612eb0e3c"
+      },
+      "calls": 491,
+      "spent_cny": 4.127935,
+      "a5_confirmatory_eligibility": "A5_CONFIRMATORY_ELIGIBILITY_FAILED (unsupported_decision_rate 0.0930 > 0.05; 4/43 violations; sample_hard_gates 11/120)",
+      "goal21_started": false,
+      "goal21_reason": "Status INVALID; step 13 requires VALID + A5 all confirmatory gates pass; return for owner scientific review per step 14"
+    },
     "holdback_plaintext_accessed": false,
-    "invalid_run_preserved": "2026-08-11T10-41-53-720Z-518b14f2 (byte-pinned; NOT scored; NOT reused)"
+    "invalid_run_preserved": "2026-08-11T10-41-53-720Z-518b14f2 (INVALID_NON_CONFIRMATORY; never merged)"
   }
 }
