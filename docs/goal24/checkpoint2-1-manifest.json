@@ -5,8 +5,8 @@
   "repository": "https://github.com/guo6x/Omni-context",
   "development_branch": "dev/goal24-cli-skills",
   "base_sha": "3a737f2f4439162814fa0165bf3f7058c984aafe",
-  "final_sha": null,
-  "final_sha_note": "final_sha is filled by the docs-only manifest finalize commit (repo manifest pattern; no contracts change in that commit)",
+  "final_sha": "b913dd4b36b0494ee63b67d8b0f2789a18b5636e",
+  "final_sha_note": "final_sha = completion tip (contracts + tests + docs). This manifest finalize commit is documentation-only and does not change any contract.",
   "files_added": [
     "brain-server/src/contracts/json-safe.ts",
     "docs/goal24/05-checkpoint2-1-contract-hardening.md",
