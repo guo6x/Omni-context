@@ -5,8 +5,8 @@
   "repository": "https://github.com/guo6x/Omni-context",
   "development_branch": "dev/goal24-cli-skills",
   "base_sha": "ec2e794a7eaa09e56e2f8d81bdbaf662d481d60e",
-  "final_sha": null,
-  "final_sha_note": "final_sha is filled by the docs-only manifest finalize commit (repo manifest pattern; no contracts change in that commit)",
+  "final_sha": "82fbf68fff55a89708af927dddab07bc4ec641f5",
+  "final_sha_note": "final_sha = completion tip (contracts + tests + docs). This manifest finalize commit is documentation-only and does not change any contract.",
   "files_added": [
     "brain-server/src/capabilities/contracts.ts",
     "brain-server/src/skills/contracts.ts",
