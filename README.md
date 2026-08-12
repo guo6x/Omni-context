@@ -2,7 +2,7 @@
 
 <p align="center"><strong>English</strong> · <a href="README.zh-CN.md">简体中文</a></p>
 
-> **Plug long-term memory into any AI client via MCP. Not just storage — a second brain that spots your blind spots and challenges your thinking. Fully local, forever yours.**
+> **A local, persistent context and decision-intelligence layer for long-lived AI agents. Your memory and decisions stay on your machine.**
 
 <p align="center">
   <img src="docs/landing/assets/social-preview.svg" alt="Omni-Context" width="720">
@@ -17,8 +17,7 @@
   <a href="https://guo6x.github.io/Omni-context/">Landing page</a>
 </p>
 
-> **Product baseline status** — `17dc1d0` is the **engineering starting point** of the product integration branch `product/omni-v3-unified-r1`. It is **NOT** an official frozen experiment product, the original Targeted-7 gate **FAILED**, and the current selector has **no formal performance proof**. See [docs/PRODUCT-BASELINE.md](docs/PRODUCT-BASELINE.md) and [docs/tag-remediation-proposal.md](docs/tag-remediation-proposal.md).
-
+> **Product baseline status** — `product/omni-v3-unified-r1` is the historical engineering baseline that was promoted into `main` during Goal 23.5 repository consolidation; `main` is now the stable development surface. The engineering starting point `17dc1d0` is **NOT** an official frozen experiment product: the original Targeted-7 gate **FAILED**, and the current selector has **no formal performance proof**. See [docs/PRODUCT-BASELINE.md](docs/PRODUCT-BASELINE.md) and [docs/tag-remediation-proposal.md](docs/tag-remediation-proposal.md).
 
 ---
 
@@ -26,35 +25,69 @@
 
 **Your AI forgets you every conversation.** ChatGPT memory is shallow. Cursor's context lasts one session. Claude doesn't remember across projects.
 
-**Cloud memory means someone else's server.** Mem0, Letta, Zep — all impressive, all cloud-first. Your second brain lives on their infrastructure.
+**Cloud memory means someone else's server.** Mem0, Letta, Zep — all impressive, all cloud-first. Your context and decisions live on their infrastructure.
 
-**Omni-Context gives every MCP-compatible AI a shared, persistent knowledge graph that lives on your machine.** Plug it into Claude Desktop, Cursor, Cline, Windsurf — they all draw from the same brain. The graph grows as you work. Forever yours.
+**Omni-Context is a local, persistent context and decision-intelligence layer for long-lived AI agents.** It keeps a knowledge graph, retrieval index, and decision history on your machine, so agents can ground their work in your actual context instead of a fresh chat window.
 
-**More than memory.** Most "AI memory" tools are fancy databases. Omni-Context actively analyzes your knowledge graph to find gaps — topics you consume but never act on, perspectives you're missing, connections you haven't noticed. It's not just storage; it's a second brain that questions you.
+**More than memory.** Most "AI memory" tools are fancy databases. Omni-Context also tracks decisions — context, reasoning, lineage, and outcomes — and surfaces evidence for the choices agents make. MCP is one integration surface for this today, not the product itself.
 
 ---
 
 ## How it works
 
 ```
-You capture anything       We build a knowledge graph     Any AI client can query it
-───────────────────       ──────────────────────────     ──────────────────────────
-Screen · Files · Web       Entities + Relationships      via MCP (standard protocol)
-Browser extension          + vectors + full-text         Claude · Cursor · Cline · ...
-                           Stored in local SQLite        12+ clients, one brain
+Capture / Sources
+       ↓
+Persistent Local Context
+       ↓
+Knowledge Graph + Retrieval
+       ↓
+Evidence / Decision Intelligence
+       ↓
+Integration Surfaces
+       ↓
+AI Agents
 ```
 
 1. **Capture** — screenshot, drag files, clip web pages, or hit a physical button. Anything.
-2. **Extract** — OCR + LLM pipeline pulls out entities and their relationships into a local knowledge graph.
-3. **Query** — any MCP-compatible AI client accesses your graph as long-term memory. Same brain, every conversation.
+2. **Extract** — OCR + LLM pipeline pulls entities, relationships, and principles into a local knowledge graph.
+3. **Reason** — decision context, lineage, and outcomes give agents evidence-qualified context instead of raw memory dumps.
+4. **Integrate** — today, AI clients access this through MCP; CLI/API adapters are in development.
+
+---
+
+## Today / Current capabilities
+
+- Persistent local memory (SQLite on your disk — no accounts, no servers)
+- Knowledge graph of entities, relationships, and core principles
+- Hybrid retrieval (full-text + vector + graph traversal)
+- Temporal / provenance-aware context
+- Decision context with principles, precedents, and conflicts
+- Saved decisions and decision lineage
+- Outcome recording (calibration, lessons, follow-ups)
+- MCP integration (current integration surface)
+- Desktop capture / local desktop application
+
+## Active development / Roadmap
+
+Under active development on `dev/goal24-cli-skills`:
+
+- Transport-agnostic capabilities
+- Skills
+- CLI adapters
+- Evidence-gated execution
+- Approval boundaries
+- Verified outcomes
+
+None of the roadmap items are available yet.
 
 ---
 
 ## What makes it different
 
-- **Not a note app** — it's an AI memory layer. Your tools don't need their own memory systems; they all share Omni.
+- **Not a note app** — it's a context and decision layer. Your tools don't need their own memory systems; they all share the same brain.
 - **Not cloud** — SQLite on your disk. No accounts, no servers, no data ever leaves your machine.
-- **Not locked to one AI** — MCP-native. Use Claude Desktop today, Cursor tomorrow, same memory.
+- **Not locked to one AI** — MCP-based today; Claude Desktop, Cursor, Cline, and other MCP clients share the same memory.
 - **Active, not passive** — the agent scans your graph for connections you've forgotten and surfaces them.
 - **Questions your thinking** — blind spot detection finds what you're missing. Anti-consensus insights challenge your assumptions. Your graph pushes back.
 
@@ -62,7 +95,7 @@ Browser extension          + vectors + full-text         Claude · Cursor · Cli
 
 ## Tools
 
-26 MCP tools, grouped by what they do. Canonical count is generated in
+Current MCP interface exposes 26 tools, grouped by what they do. Canonical count is generated in
 [`mcp_tool_manifest.json`](mcp_tool_manifest.json).
 
 ### Decision & retrieval — the "brain"
