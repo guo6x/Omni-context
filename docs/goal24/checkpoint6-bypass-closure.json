@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "artifact": "checkpoint6-bypass-closure",
+  "goal24_checkpoint": "6",
+  "generated_at": "2026-08-13T18:29:56.214Z",
+  "audit_source": "docs/goal24/cp6-evidence-guard-bypass-audit.json",
+  "principle": "Lane C original conclusions are not rewritten. This file adds the CP6 integration disposition per surface and the closure counts.",
+  "counts": {
+    "surfaces_total": 20,
+    "potential_before": 2,
+    "blocks_before": 1,
+    "potential_after": 0,
+    "blocks_after": 0,
+    "disposed": 20,
+    "closed": 3
+  },
+  "closure_summary": {
+    "forged_snapshot": "CLOSED: caller cannot pass coverage to EvidenceSurfaceRuntime or EvidenceEligibilityService; every coverage id must trace to a server-owned qualified record from a proceed guard run.",
+    "missing_runtime": "CLOSED: EvidenceSurfaceRuntime + GuardRunStore + QualifiedEvidenceStore + EvidenceEligibilityService implemented and tested.",
+    "future_hooks": "All NEEDS_CP6_INTEGRATION/LEGACY_RISK surfaces keep their original classification and are disposed by the documented eligibility-only plan of record; they remain unreachable in production and no new path was added."
+  },
+  "surfaces": [
+    {
+      "surface_id": "BRKR-EXEC-01",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "Broker::execute",
+      "classification_original": "NEEDS_CP6_INTEGRATION",
+      "severity_original": "critical",
+      "disposition": "DISPOSED",
+      "integration_disposition": "FUTURE_HOOK_DOCUMENTED_ELIGIBILITY_ONLY",
+      "detail": "No production caller reaches this surface today (Broker::execute is pub(crate) test-only and execute IPC stays disabled). CP6 establishes the plan of record: the only authorized source of executable-plan evidence coverage is EvidenceEligibilityService.materializeEvidenceForExecutablePlan, so any future caller wired to this surface must obtain its snapshot exclusively from that service. No alternative production path was added in CP6.",
+      "verification": "Static re-audit of CP6 diff: zero Rust diff; brain-server/src/evidence adds no process execution and no public MCP/REST/Tauri route; execute_ipc_enabled remains false (execution_broker/mod.rs)."
+    },
+    {
+      "surface_id": "BRKR-RUN-01",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/runner.rs",
+      "function": "runner::run",
+      "classification_original": "NEEDS_CP6_INTEGRATION",
+      "severity_original": "critical",
+      "disposition": "DISPOSED",
+      "integration_disposition": "FUTURE_HOOK_DOCUMENTED_ELIGIBILITY_ONLY",
+      "detail": "No production caller reaches this surface today (Broker::execute is pub(crate) test-only and execute IPC stays disabled). CP6 establishes the plan of record: the only authorized source of executable-plan evidence coverage is EvidenceEligibilityService.materializeEvidenceForExecutablePlan, so any future caller wired to this surface must obtain its snapshot exclusively from that service. No alternative production path was added in CP6.",
+      "verification": "Static re-audit of CP6 diff: zero Rust diff; brain-server/src/evidence adds no process execution and no public MCP/REST/Tauri route; execute_ipc_enabled remains false (execution_broker/mod.rs)."
+    },
+    {
+      "surface_id": "BRKR-RISK-01",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "Broker::execute (risk_snapshot handling)",
+      "classification_original": "LEGACY_RISK",
+      "severity_original": "high",
+      "disposition": "DISPOSED",
+      "integration_disposition": "FUTURE_HOOK_DOCUMENTED_ELIGIBILITY_ONLY",
+      "detail": "No production caller reaches this surface today (Broker::execute is pub(crate) test-only and execute IPC stays disabled). CP6 establishes the plan of record: the only authorized source of executable-plan evidence coverage is EvidenceEligibilityService.materializeEvidenceForExecutablePlan, so any future caller wired to this surface must obtain its snapshot exclusively from that service. No alternative production path was added in CP6.",
+      "verification": "Static re-audit of CP6 diff: zero Rust diff; brain-server/src/evidence adds no process execution and no public MCP/REST/Tauri route; execute_ipc_enabled remains false (execution_broker/mod.rs)."
+    },
+    {
+      "surface_id": "BRKR-IPC-01",
+      "file": "desktop-daemon/src-tauri/src/commands.rs",
+      "function": "get_broker_status",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "low",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "BRKR-IPC-02",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "Broker::status / execute_ipc_enabled",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "low",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "BRKR-ENV-01",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "Broker::execute (GITHUB_TOKEN env block)",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "low",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "TS-VALIDATE-01",
+      "file": "brain-server/src/execution/contracts.ts",
+      "function": "validateExecutionPlanAgainstCapabilities",
+      "classification_original": "NEEDS_CP6_INTEGRATION",
+      "severity_original": "critical",
+      "disposition": "DISPOSED",
+      "integration_disposition": "FUTURE_HOOK_DOCUMENTED_ELIGIBILITY_ONLY",
+      "detail": "No production caller reaches this surface today (Broker::execute is pub(crate) test-only and execute IPC stays disabled). CP6 establishes the plan of record: the only authorized source of executable-plan evidence coverage is EvidenceEligibilityService.materializeEvidenceForExecutablePlan, so any future caller wired to this surface must obtain its snapshot exclusively from that service. No alternative production path was added in CP6.",
+      "verification": "Static re-audit of CP6 diff: zero Rust diff; brain-server/src/evidence adds no process execution and no public MCP/REST/Tauri route; execute_ipc_enabled remains false (execution_broker/mod.rs)."
+    },
+    {
+      "surface_id": "TS-ASSESS-01",
+      "file": "brain-server/src/execution/contracts.ts",
+      "function": "assessEvidenceCoverage",
+      "classification_original": "NEEDS_CP6_INTEGRATION",
+      "severity_original": "critical",
+      "disposition": "DISPOSED",
+      "integration_disposition": "FUTURE_HOOK_DOCUMENTED_ELIGIBILITY_ONLY",
+      "detail": "No production caller reaches this surface today (Broker::execute is pub(crate) test-only and execute IPC stays disabled). CP6 establishes the plan of record: the only authorized source of executable-plan evidence coverage is EvidenceEligibilityService.materializeEvidenceForExecutablePlan, so any future caller wired to this surface must obtain its snapshot exclusively from that service. No alternative production path was added in CP6.",
+      "verification": "Static re-audit of CP6 diff: zero Rust diff; brain-server/src/evidence adds no process execution and no public MCP/REST/Tauri route; execute_ipc_enabled remains false (execution_broker/mod.rs)."
+    },
+    {
+      "surface_id": "TS-COVERAGE-SCHEMA-01",
+      "file": "brain-server/src/execution/contracts.ts",
+      "function": "EvidenceCoverageEntrySchema / EvidenceCoverageSnapshotSchema",
+      "classification_original": "POTENTIAL_GUARD_BYPASS",
+      "severity_original": "critical",
+      "disposition": "CLOSED",
+      "integration_disposition": "CLOSED_BY_PRODUCTION_FACADE_AND_LINEAGE",
+      "detail": "EvidenceSurfaceRuntime request schema has no coverage/snapshot field; initial and per-round coverage are rebuilt from trusted providers through Lane A qualification and the coverage builder. EvidenceEligibilityService materializes authoritative coverage only from a server-owned proceed GuardRunRecord and fails EVIDENCE_LINEAGE_MISSING for any id without a qualified record. A caller-constructed {status:present, verification_level:verified, evidence_ids:[fake]} snapshot can never obtain eligibility (dedicated test).",
+      "verification": "goal24-evidence-runtime.test.ts > initial-coverage attack: caller fake coverage is rejected; goal24-evidence-eligibility.test.ts > a digest-consistent forged guard record with fake evidence ids fails lineage / a forged snapshot with a fabricated guard run id can never materialize; cp6 adversarial oracle CP6V-EXECUTION_BYPASS-001 (COVERED_BY_EXISTING_TEST)."
+    },
+    {
+      "surface_id": "TS-FRESHNESS-GAP-01",
+      "file": "brain-server/src/execution/contracts.ts + brain-server/src/capabilities/contracts.ts",
+      "function": "EvidenceCoverageEntry (no observed_at) / EvidenceRequirement.freshness_policy",
+      "classification_original": "POTENTIAL_GUARD_BYPASS",
+      "severity_original": "high",
+      "disposition": "CLOSED",
+      "integration_disposition": "CLOSED_BY_TRUSTED_CLOCK_AND_QUALIFICATION",
+      "detail": "The production runtime injects a trusted clock at construction and the request schema rejects now/checked_at/observed time keys. Qualification rejects any candidate observed_at in the future (future_observed_at) and computes staleness from the injected clock, never from caller or provider time.",
+      "verification": "goal24-evidence-runtime.test.ts > future observed_at can never satisfy (trusted clock, never request time); cp6 adversarial oracle CP6V-FUTURE_TIME-001..004, CP6V-FRESHNESS-001/004..008."
+    },
+    {
+      "surface_id": "TS-PLAN-STATE-01",
+      "file": "brain-server/src/execution/contracts.ts",
+      "function": "EXECUTION_PLAN_STATES / ExecutionPlanSchema",
+      "classification_original": "NEEDS_CP6_INTEGRATION",
+      "severity_original": "critical",
+      "disposition": "DISPOSED",
+      "integration_disposition": "FUTURE_HOOK_DOCUMENTED_ELIGIBILITY_ONLY",
+      "detail": "No production caller reaches this surface today (Broker::execute is pub(crate) test-only and execute IPC stays disabled). CP6 establishes the plan of record: the only authorized source of executable-plan evidence coverage is EvidenceEligibilityService.materializeEvidenceForExecutablePlan, so any future caller wired to this surface must obtain its snapshot exclusively from that service. No alternative production path was added in CP6.",
+      "verification": "Static re-audit of CP6 diff: zero Rust diff; brain-server/src/evidence adds no process execution and no public MCP/REST/Tauri route; execute_ipc_enabled remains false (execution_broker/mod.rs)."
+    },
+    {
+      "surface_id": "GUARD-RUNTIME-ABSENT-01",
+      "file": "brain-server/src/execution/contracts.ts (contract only; runtime absent)",
+      "function": "(absent Evidence Guard runtime)",
+      "classification_original": "BLOCKS_CP6",
+      "severity_original": "critical",
+      "disposition": "CLOSED",
+      "integration_disposition": "CLOSED_BY_EVIDENCE_SURFACE_RUNTIME",
+      "detail": "The missing collection/qualification/retrieval/clarify/defer runtime was implemented as EvidenceSurfaceRuntime (brain-server/src/evidence/runtime.ts) composed with the Lane B Guard and Lane A qualification, with server-owned GuardRunStore/QualifiedEvidenceStore and the EvidenceEligibilityService trust boundary. Retrieval rounds, clarify, defer and block actions are covered by runtime and guard tests plus the adversarial oracle.",
+      "verification": "goal24-evidence-runtime.test.ts (33 tests), goal24-evidence-guard.test.ts (Lane B), cp6 adversarial oracle RETRIEVAL-001..011, CLARIFY-002/004, DEFER-002, BLOCK-001/004."
+    },
+    {
+      "surface_id": "SKILLS-EVID-01",
+      "file": "brain-server/src/skills/contracts.ts, brain-server/src/skills/registry.ts",
+      "function": "SkillManifestSchema.required_evidence / safety inheritance",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "medium",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "SKILLS-IMPORT-01",
+      "file": "brain-server/src/skills/importer/*",
+      "function": "package-loader / frontmatter / path-policy / package-snapshot",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "low",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "API-ABSENT-01",
+      "file": "brain-server/src/api/handlers/*",
+      "function": "all HTTP handlers",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "high",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "MCP-ABSENT-01",
+      "file": "brain-server/src/mcp/dispatch.ts",
+      "function": "MCP tool dispatch",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "high",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "DECISION-STORE-01",
+      "file": "brain-server/src/decision/decision-store.ts",
+      "function": "buildDecisionMetadata / compactDecision",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "low",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "MOBILE-ABSENT-01",
+      "file": "mobile-app/src (whole tree)",
+      "function": "(no ExecutionPlan/broker/evidence_coverage references)",
+      "classification_original": "SAFE_EXISTING_CONTRACT",
+      "severity_original": "low",
+      "disposition": "DISPOSED",
+      "integration_disposition": "PRESERVED",
+      "detail": "Existing safe contract unchanged by CP6. The evidence runtime adds no new exposure path that reaches this surface.",
+      "verification": "CP6 diff is limited to brain-server/src/evidence, evidence tests and docs/goal24."
+    },
+    {
+      "surface_id": "ADAPTER-ENTRY-01",
+      "file": "desktop-daemon/src-tauri/src/github_cli/bindings.rs, adapter.rs",
+      "function": "Capability::build_argv / GithubCliBinding",
+      "classification_original": "NEEDS_CP6_INTEGRATION",
+      "severity_original": "high",
+      "disposition": "DISPOSED",
+      "integration_disposition": "FUTURE_HOOK_DOCUMENTED_ELIGIBILITY_ONLY",
+      "detail": "No production caller reaches this surface today (Broker::execute is pub(crate) test-only and execute IPC stays disabled). CP6 establishes the plan of record: the only authorized source of executable-plan evidence coverage is EvidenceEligibilityService.materializeEvidenceForExecutablePlan, so any future caller wired to this surface must obtain its snapshot exclusively from that service. No alternative production path was added in CP6.",
+      "verification": "Static re-audit of CP6 diff: zero Rust diff; brain-server/src/evidence adds no process execution and no public MCP/REST/Tauri route; execute_ipc_enabled remains false (execution_broker/mod.rs)."
+    },
+    {
+      "surface_id": "APPROVAL-CP7-01",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "Broker::execute (required_approval gate)",
+      "classification_original": "OUT_OF_SCOPE",
+      "severity_original": "medium",
+      "disposition": "DISPOSED",
+      "integration_disposition": "OUT_OF_SCOPE_UNCHANGED",
+      "detail": "Approval enforcement remains a Checkpoint 7 concern; CP6 does not change it and does not claim it.",
+      "verification": "No Approval Engine, approval token, or approval transition was implemented in CP6."
+    }
+  ]
+}

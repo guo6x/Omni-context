@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint6-manifest",
+  "goal24_checkpoint": "6",
+  "generated_at": "2026-08-13T18:30:39.738Z",
+  "base_sha": "09147b16a284fafa3ec922c6159ac4f2c26084c4",
+  "integration_branch": "local/cp6-integration",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp6-integration",
+  "lanes": {
+    "A": {
+      "title": "Evidence Core (provider registry, model, qualification, coverage builder)",
+      "requested_commits": [
+        "7e44547",
+        "18938d0",
+        "d7bce39",
+        "1b227256d180fdc10210a253c20c7feb366bbd72"
+      ],
+      "integrated_commits": [
+        "1a0228adf5d9ea7e32f09e29d2d8b09ae656d2db",
+        "005296353ed2e6f64b8e358a23b699b3c62281f3",
+        "eb135af0bd00781124a4a1a6baaf6d4946d1da5d",
+        "1755af7d98423c5ab2be78a6740b5da6b795d09d"
+      ]
+    },
+    "B": {
+      "title": "Evidence Surface Guard (guard-types, guard-policy, guard, retrieval/clarify/defer/block control)",
+      "requested_commits": [
+        "3ec5e930f4325045d8053ce7b06a2c1c14ce73e4",
+        "363c333b0f77333ddbd71804c626dd9aa6292ccb",
+        "4c5c4dc6319d8ddb91f43634e060a44e0128a478"
+      ],
+      "integrated_commits": [
+        "a0c777f7aee1749db92f4e4563e9a50f84500c8e",
+        "ce8a3e80f4063c9e73b564881f37faf983cd90d7",
+        "88e8569b6bf0c66af5fb210faad143f6de846764"
+      ]
+    },
+    "C": {
+      "title": "Evidence Security Oracle (188 adversarial vectors, 20-surface bypass audit, threat model, fixtures)",
+      "requested_commits": [
+        "4dc3ec8465693446e3b3e6d6e8164583275e1e50"
+      ],
+      "integrated_commits": [
+        "6d7bfd80134b06d0c01939f8cd5401bfb35b08bf"
+      ]
+    }
+  },
+  "production_facade": {
+    "module": "brain-server/src/evidence/runtime.ts",
+    "entry": "EvidenceSurfaceRuntime.evaluateForCapability({ capability_id, capability_version, normalized_inputs, correlation_id? })",
+    "request_schema": "strict Zod object; unknown keys rejected; no requirements/coverage/initial_coverage/provider/now/checked_at/evidence_ids fields exist",
+    "trusted_boundaries": {
+      "capability_lookup": "constructor-injected trusted catalog; EVIDENCE_CAPABILITY_NOT_FOUND / EVIDENCE_CAPABILITY_VERSION_MISMATCH fail closed",
+      "subject_resolvers": "CapabilityEvidenceSubjectResolverRegistry; subject_key derived from (capability_id, normalized_inputs)",
+      "providers": "EvidenceProviderRegistry.providersForClass; internal registration only",
+      "clock": "constructor-injected; request can never set time",
+      "stores": "server-owned QualifiedEvidenceStore and GuardRunStore (bounded, in-memory V1)"
+    },
+    "pipeline": "trusted requirements -> subject binding -> provider collection -> Lane A qualification -> coverage builder -> Lane B Guard (proceed/retrieve_more/clarify/defer/block) -> server-owned GuardRunRecord"
+  },
+  "eligibility": {
+    "module": "brain-server/src/evidence/eligibility.ts",
+    "entry": "EvidenceEligibilityService.materializeEvidenceForExecutablePlan({ guard_run_id, capability_id, capability_version, normalized_inputs })",
+    "checks": [
+      "guard run exists in server-owned store",
+      "final_action == proceed",
+      "capability id/version match",
+      "capability still exists",
+      "current requirements digest == run requirements digest",
+      "normalized inputs digest match",
+      "trusted subject resolver output match",
+      "coverage digest recomputes",
+      "every evidence_id/conflict id traces to a qualified record",
+      "final assessment still mandatory_satisfied"
+    ],
+    "authority": "only source of executable-plan evidence coverage; no snapshot may be passed in by the caller"
+  },
+  "digests": {
+    "requirements": "canonical JSON + SHA-256 over exact required_evidence",
+    "normalized_inputs": "canonical JSON + SHA-256 over normalized_inputs",
+    "coverage": "canonical JSON + SHA-256 over final coverage snapshot",
+    "claim": "canonical JSON (sorted keys, array order preserved) + SHA-256; NaN/Infinity/undefined/BigInt/class instances/cycles rejected"
+  },
+  "evidence_id": {
+    "generated_by": "core (provider cannot pre-choose or spoof)",
+    "encoding": "length-prefixed UTF-8 tuple (32-bit big-endian byte length + bytes per field: provider_id, evidence_class, subject_key, source_item_id, claim_digest) hashed with SHA-256",
+    "delimiter_ambiguity": "NONE - length-prefixed fields cannot alias",
+    "controls": "NUL and control characters rejected in every identity component"
+  },
+  "stores": {
+    "qualified_evidence_store": "bounded in-memory ledger (default 2000); duplicate id + identical content idempotent (qualified_at is processing metadata, excluded from content equality); duplicate id + different content = EVIDENCE_LINEAGE_CONFLICT; tombstoned ids can never re-enter; overflow = EVIDENCE_COLLECTION_LIMIT_EXCEEDED",
+    "guard_run_store": "bounded in-memory FIFO store (default 100); guard_run_id core-generated via crypto.randomUUID()",
+    "restart_semantics": "V1 in-memory only: after Brain Server restart all guard runs are invalidated and eligibility fails closed; evidence must be recollected. No persistent evidence authorization is claimed."
+  },
+  "forged_coverage_closure": [
+    "caller cannot pass requirements (EVIDENCE_INPUT_INVALID, unknown key)",
+    "caller cannot pass initial coverage / coverage snapshot",
+    "caller cannot select providers or register providers through any public surface",
+    "caller cannot set now / checked_at / observed time",
+    "forged snapshots fail eligibility without server-owned guard run + traceable qualified lineage"
+  ],
+  "adversarial_oracle": {
+    "vectors_total": 188,
+    "automated": 104,
+    "covered_by_existing_test": 58,
+    "manual": 0,
+    "not_applicable": 26,
+    "unmapped": 0,
+    "failed": 0,
+    "map": "docs/goal24/checkpoint6-adversarial-execution-map.json",
+    "oracle_test": "brain-server/tests/goal24-cp6-adversarial-oracle.test.ts",
+    "map_integrity": "counts vs vector source, per-vector test-name binding, zero unmapped/manual/failed"
+  },
+  "bypass_closure": {
+    "surfaces_total": 20,
+    "potential_before": 2,
+    "blocks_before": 1,
+    "potential_after": 0,
+    "blocks_after": 0,
+    "artifact": "docs/goal24/checkpoint6-bypass-closure.json"
+  },
+  "execution_boundaries": {
+    "process_execution_added": "NO",
+    "generic_execute_ipc": false,
+    "github_write_bindings": 0,
+    "github_read_bindings": "5 (CP4, unchanged)",
+    "live_github_provider": "NONE (deterministic fake providers only)",
+    "approval_engine": "NONE (Checkpoint 7 scope)"
+  },
+  "limitations_v1": [
+    "GuardRunStore/QualifiedEvidenceStore are in-memory and do not survive Brain Server restart",
+    "No live GitHub evidence provider; github evidence class catalog is roadmap only (cp6-github-evidence-class-catalog.json)",
+    "EvidenceEligibilityService returns authoritative coverage + lineage; it does not set plan state or execute anything",
+    "Lower-level pure APIs (buildEvidenceCoverage, runEvidenceGuard, assessEvidenceCoverage) remain internal composable primitives and are not execution authority"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint6-environment",
+  "goal24_checkpoint": "6",
+  "generated_at": "2026-08-13T18:31:03.232Z",
+  "host": "windows (D:\\ai_code\\Omni-context-worktrees\\cp6-integration, branch local/cp6-integration)",
+  "base_sha": "09147b16a284fafa3ec922c6159ac4f2c26084c4",
+  "toolchain": {
+    "node": "v22.23.2 (D:\\environment)",
+    "npm": "10.9.8",
+    "npm_cache": "D:\\environment\\npm-cache",
+    "registry": "https://registry.npmjs.org/",
+    "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+    "cargo": "1.97.1 (c980f4866 2026-06-30)",
+    "cargo_audit": "0.22.2 (D:\\environment\\cargo-audit\\bin\\cargo-audit.exe)",
+    "advisory_db": "D:\\environment\\advisory-db-offline (RustSec offline, 1216 advisories loaded)"
+  },
+  "install_policy": "D: first; C: only existing; no new full environment on C:; no system PATH modification",
+  "worktree": {
+    "integration": "D:\\ai_code\\Omni-context-worktrees\\cp6-integration",
+    "lane_worktrees_to_remove": [
+      "cp6-evidence-core",
+      "cp6-evidence-guard",
+      "cp6-evidence-security"
+    ],
+    "dirty_cp21_untouched": true,
+    "note": "D:\\ai_code\\Omni-context\\.worktrees\\goal24-cp21 was never entered, reset, cleaned, stashed, checked out, deleted or modified"
+  },
+  "node_modules": {
+    "brain_server": "fresh npm ci in worktree (npm cache D:\\environment\\npm-cache)",
+    "desktop_daemon": "fresh npm ci in worktree (204 packages)"
+  },
+  "gh_cli": {
+    "note": "CP6 executes no GitHub CLI command and performs no network access; no gh auth status/login/refresh/logout/switch/token was run during CP6",
+    "auth_mutated": false,
+    "token_read": false,
+    "cp4_state": "see docs/goal24/checkpoint4-environment.json"
+  },
+  "evidence": {
+    "cargo_audit_output": "%TEMP%\\cargo-audit.txt (this host)",
+    "cargo_audit_result": "5 vulnerabilities (RUSTSEC advisories) + 17 warnings (unmaintained/unsound/yanked); pre-existing, zero Rust diff in CP6",
+    "npm_audit_result": "npm audit --omit=dev --audit-level=critical --json: 16 findings (1 critical, 4 high, 8 moderate, 3 low); pre-existing transitive findings; no dependency change in CP6; evidence runtime reachable UNKNOWN=0 FIX_BEFORE_CP6=0 BLOCKS_CP6=0",
+    "adversarial_map": "docs/goal24/checkpoint6-adversarial-execution-map.json",
+    "bypass_closure": "docs/goal24/checkpoint6-bypass-closure.json",
+    "oracle_test": "brain-server/tests/goal24-cp6-adversarial-oracle.test.ts",
+    "test_commands": {
+      "brain_server": "npm run typecheck; npx vitest run (54 files, 957 tests); npm run build; npm run lint (0 errors, 10 pre-existing warnings); npm audit --omit=dev --audit-level=critical --json",
+      "desktop": "npm run build (next build, static prerender); npm run verify:controlled (OK)",
+      "rust": "cargo fmt --check; cargo check; cargo clippy --all-targets; cargo test (124 passed, 0 failed, 6 ignored); cargo audit --db D:\\environment\\advisory-db-offline --no-fetch --stale",
+      "git": "git diff --check (clean)"
+    }
+  },
+  "scientific_firewall": {
+    "holdback_touched": false,
+    "science_refs_touched": false,
+    "note": "research/decision-benchmark-holdback-v2, science/*, formal benchmark outputs, Gold and paper artifacts were never read or modified"
+  }
+}

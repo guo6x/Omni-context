@@ -1,0 +1,179 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint6-security-gate",
+  "goal24_checkpoint": "6",
+  "generated_at": "2026-08-13T18:30:18.160Z",
+  "result": "PASS",
+  "criteria": {
+    "A": {
+      "name": "Lane A/B/C integrated",
+      "status": "PASS",
+      "evidence": "8 lane commits cherry-picked in order onto verified base 09147b16; no conflicts; Lane C runtime diff = 0."
+    },
+    "B": {
+      "name": "requirements derive only from trusted capability definition",
+      "status": "PASS",
+      "evidence": "EvidenceSurfaceRuntime resolves required_evidence exclusively via injected trusted capabilityLookup(capability_id); request carries no requirement data."
+    },
+    "C": {
+      "name": "caller cannot override requirements",
+      "status": "PASS",
+      "evidence": "Strict request schema rejects every unknown key (requirements, verification_level, conflict_policy, ...); runtime test \"rejects every caller-supplied authority key with EVIDENCE_INPUT_INVALID\"."
+    },
+    "D": {
+      "name": "production runtime accepts no caller initial coverage",
+      "status": "PASS",
+      "evidence": "Request schema has no initial_coverage/coverage field; initial coverage is built from trusted providers + Lane A qualification + coverage builder; test \"initial-coverage attack: caller fake coverage is rejected\"."
+    },
+    "E": {
+      "name": "provider selection trusted/internal",
+      "status": "PASS",
+      "evidence": "Providers are selected only through EvidenceProviderRegistry.providersForClass; request schema rejects provider ids/objects; test \"fake-provider attack: provider ids and provider objects are rejected from the request\"."
+    },
+    "F": {
+      "name": "production clock trusted/internal",
+      "status": "PASS",
+      "evidence": "Clock injected via constructor (default system clock); request schema rejects now/checked_at; tests \"future observed_at can never satisfy (trusted clock, never request time)\" and CP6V-FUTURE_TIME-001..004."
+    },
+    "G": {
+      "name": "subject bound to capability normalized inputs",
+      "status": "PASS",
+      "evidence": "CapabilityEvidenceSubjectResolverRegistry resolves subject_key from (capability_id, normalized_inputs); candidate subject must equal run subject (EVIDENCE_SUBJECT_MISMATCH otherwise)."
+    },
+    "H": {
+      "name": "cross-subject evidence blocked",
+      "status": "PASS",
+      "evidence": "Qualification rejects candidate.subject_key != requested subject; eligibility re-checks normalized-inputs digest + resolver output; test \"cross-subject replay: different normalized inputs can never reuse a run\"; CP6V-SUBJECT_MISMATCH-001..006."
+    },
+    "I": {
+      "name": "provider class mismatch blocked",
+      "status": "PASS",
+      "evidence": "Qualification rejects candidates whose class is not declared by the provider or does not match the requested class; CP6V-CLASS_SPOOF-001..005, CP6V-PROVIDER_CAPABILITY-001/005."
+    },
+    "J": {
+      "name": "verification escalation blocked",
+      "status": "PASS",
+      "evidence": "Candidate verification above provider max_verification_level is rejected (EVIDENCE_PROVIDER_VERIFICATION_ESCALATION); CP6V-VERIFICATION_ESCALATION-001..008."
+    },
+    "K": {
+      "name": "future timestamp blocked",
+      "status": "PASS",
+      "evidence": "Qualification rejects observed_at > trusted now (future_observed_at); CP6V-FUTURE_TIME-001..004, CP6V-FRESHNESS-004/005."
+    },
+    "L": {
+      "name": "mandatory missing/stale/unverified remain fail closed",
+      "status": "PASS",
+      "evidence": "assessEvidenceCoverage never satisfies missing/stale/unverified mandatory classes; CP6V-MISSING-001..006, CP6V-UNVERIFIED-001/003/004/005, CP6V-FRESHNESS-001/004..008."
+    },
+    "M": {
+      "name": "undefined conflict policy remains reject",
+      "status": "PASS",
+      "evidence": "effectiveConflictPolicy defaults to reject; CP6V-CONFLICT_POLICY-005/006, CP6V-CONFLICT-010."
+    },
+    "N": {
+      "name": "optional evidence never gates",
+      "status": "PASS",
+      "evidence": "Optional classes can never block or satisfy-by-absence; CP6V-OPTIONAL-004/005/006, CP6V-MISSING-004."
+    },
+    "O": {
+      "name": "coverage includes every required class",
+      "status": "PASS",
+      "evidence": "buildEvidenceCoverage emits one entry per requirement class (schema enforces uniqueness); CP6V-CLASS_OMISSION-001..008."
+    },
+    "P": {
+      "name": "evidence IDs unambiguous and core-generated",
+      "status": "PASS",
+      "evidence": "buildEvidenceId uses a length-prefixed UTF-8 tuple (4-byte big-endian lengths) + SHA-256; NUL/control chars rejected in every component; test \"is unambiguous: (ab, c) and (a, bc) can never alias\"."
+    },
+    "Q": {
+      "name": "all coverage IDs trace to qualified records",
+      "status": "PASS",
+      "evidence": "EvidenceEligibilityService fails EVIDENCE_LINEAGE_MISSING for any referenced id (including conflict ids) absent from the server-owned QualifiedEvidenceStore; test \"a digest-consistent forged guard record with fake evidence ids fails lineage\"."
+    },
+    "R": {
+      "name": "guard run core-generated/server-owned",
+      "status": "PASS",
+      "evidence": "guard_run_id = crypto.randomUUID() at runtime; records live only in server-owned GuardRunStore; request schema rejects guard_run_id."
+    },
+    "S": {
+      "name": "requirements/input/coverage digests validated",
+      "status": "PASS",
+      "evidence": "requirementsDigest, normalizedInputsDigest and coverageDigest (canonical JSON + SHA-256) are computed at run time and re-validated at eligibility."
+    },
+    "T": {
+      "name": "only Guard action=proceed may materialize authoritative coverage",
+      "status": "PASS",
+      "evidence": "Eligibility throws EVIDENCE_GUARD_RUN_NOT_PROCEED for any non-proceed run; test \"only proceed runs are eligible; block runs fail with NOT_PROCEED\"."
+    },
+    "U": {
+      "name": "forged caller snapshot cannot obtain eligibility",
+      "status": "PASS",
+      "evidence": "Eligibility API accepts only guard_run_id/capability identity/normalized inputs; forged run ids and fake evidence ids fail; CP6V-EXECUTION_BYPASS-001."
+    },
+    "V": {
+      "name": "fake requirements=[] cannot obtain eligibility",
+      "status": "PASS",
+      "evidence": "Request schema has no requirements field; requirements always come from the trusted capability; test \"empty-requirements attack: capability with mandatory A+B can never proceed on requirements=[]\"."
+    },
+    "W": {
+      "name": "fake initial coverage cannot obtain eligibility",
+      "status": "PASS",
+      "evidence": "See criterion D; eligibility never accepts a snapshot parameter."
+    },
+    "X": {
+      "name": "same-class cross-scope replay cannot obtain eligibility",
+      "status": "PASS",
+      "evidence": "Inputs digest + subject resolver equality; test \"cross-subject replay: different normalized inputs can never reuse a run\" and \"same-digest inputs cannot dodge the subject resolver check\"; CP6V-REPLAY-004."
+    },
+    "Y": {
+      "name": "capability policy change invalidates old run",
+      "status": "PASS",
+      "evidence": "requirementsDigest(current required_evidence) must equal run requirements_digest else EVIDENCE_REQUIREMENTS_CHANGED; test \"capability policy change (A+B -> A+B+C) invalidates old runs\"."
+    },
+    "Z": {
+      "name": "no public provider/guard/coverage trust API",
+      "status": "PASS",
+      "evidence": "No MCP/REST/Tauri/LLM route registers providers, uploads coverage or forges guard runs; evidence modules are brain-server-internal; CP6V-PROVIDER_IDENTITY-001/002, CP6V-EXECUTION_BYPASS-002."
+    },
+    "AA": {
+      "name": "188 vectors mapped",
+      "status": "PASS",
+      "evidence": "checkpoint6-adversarial-execution-map.json: total 188, automated 104, covered 58, manual 0, not_applicable 26, unmapped 0, failed 0; map-integrity tests re-verify counts and id sets at test time."
+    },
+    "AB": {
+      "name": "failed vectors = 0",
+      "status": "PASS",
+      "evidence": "Oracle runs green: all 28 canonical oracle tests plus 3 map-integrity tests pass; every AUTOMATED vector id has a registered assertion."
+    },
+    "AC": {
+      "name": "Lane C BLOCKS_CP6 closed",
+      "status": "PASS",
+      "evidence": "GUARD-RUNTIME-ABSENT-01 closed by EvidenceSurfaceRuntime + stores + eligibility (checkpoint6-bypass-closure.json)."
+    },
+    "AD": {
+      "name": "all potential bypass surfaces disposed",
+      "status": "PASS",
+      "evidence": "TS-COVERAGE-SCHEMA-01 and TS-FRESHNESS-GAP-01 closed; potential_after = 0, blocks_after = 0 (checkpoint6-bypass-closure.json)."
+    },
+    "AE": {
+      "name": "0 evidence process execution",
+      "status": "PASS",
+      "evidence": "brain-server/src/evidence contains no child_process/spawn/exec/execFile/fork; oracle CP6V-EXECUTION_BYPASS-007 scans the source tree at test time."
+    },
+    "AF": {
+      "name": "0 GitHub write bindings",
+      "status": "PASS",
+      "evidence": "Only CP4 read-only bindings remain (github-cli.repo.inspect, issue.search, issue.read, pr.read, pr.checks.read); oracle CP6V-GITHUB_MAPPING-006/007 scan evidence source; write bindings = 0."
+    },
+    "AG": {
+      "name": "full regression green",
+      "status": "PASS",
+      "evidence": "brain-server: typecheck, vitest 54 files/957 tests, build, lint (0 errors); desktop-daemon: npm build, verify:controlled; Rust: fmt --check, check, clippy --all-targets, test (124 passed/0 failed/6 ignored), audit; git diff --check clean."
+    },
+    "AH": {
+      "name": "evidence runtime reachable security UNKNOWN=0 / FIX_BEFORE_CP6=0 / BLOCKS_CP6=0",
+      "status": "PASS",
+      "evidence": "Evidence runtime uses only node:crypto + zod (repo-internal); npm audit findings are pre-existing and none is reachable from the evidence runtime; no dependency change in CP6."
+    }
+  }
+}
