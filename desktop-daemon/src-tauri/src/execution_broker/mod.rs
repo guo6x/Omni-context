@@ -24,7 +24,7 @@ mod tests;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
-pub use policy::{ExecutionBinding, DEFAULT_OUTPUT_MAX_BYTES};
+pub use policy::{ExecutionBinding, OutputLimits, DEFAULT_OUTPUT_MAX_BYTES};
 pub use types::{
     BrokerError, BrokerExecutionResult, ErrorCode, ExecutionPlanStateWire, ExecutionPlanWire,
     FORBIDDEN_INPUT_KEYS, TIMEOUT_MAX_MS, TIMEOUT_MIN_MS,

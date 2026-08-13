@@ -7,6 +7,11 @@ mod commands;
 // exercised by tests and opened to IPC in CP4 with the GitHub adapter.
 #[cfg_attr(not(test), allow(dead_code))]
 mod execution_broker;
+// CP4 adapter core: five read-only GitHub CLI bindings compiled against the
+// frozen CP3 broker. No production wiring yet; exercised by tests and wired
+// by CP4 Integration later.
+#[cfg_attr(not(test), allow(dead_code))]
+mod github_cli;
 mod hardware;
 mod hardware_actions;
 mod log_writer;
