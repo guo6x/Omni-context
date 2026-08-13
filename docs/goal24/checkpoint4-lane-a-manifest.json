@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "4",
+  "lane": "A",
+  "name": "Goal24 Checkpoint 4 Lane A - GitHub CLI Read-Only Adapter Core",
+  "date": "2026-08-13",
+  "base_sha": "8238c350e56bcbf486a2e484287bcad66fda6174",
+  "base_note": "origin/dev/goal24-cli-skills, verified exact after git fetch --all --tags --prune",
+  "local_branch": "local/cp4-github-adapter-core",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp4-github-adapter-core",
+  "commit_sha": "287cb203d85b4248f4f40372ddb6523bdeaad41e",
+  "commit_sha_note": "docs commit that records this checkpoint (the manifest itself is committed as the branch tip immediately after)",
+  "commits": [
+    { "sha": "aec2d77", "message": "feat(github-cli): add read-only execution bindings" },
+    { "sha": "8e5cb62", "message": "test(github-cli): harden argv and output parsing" },
+    { "sha": "287cb203d85b4248f4f40372ddb6523bdeaad41e", "message": "docs(goal24): record cp4 github adapter lane" }
+  ],
+  "remote_branch_pushed": false,
+  "files": {
+    "added": [
+      "desktop-daemon/src-tauri/src/github_cli/mod.rs",
+      "desktop-daemon/src-tauri/src/github_cli/adapter.rs",
+      "desktop-daemon/src-tauri/src/github_cli/bindings.rs",
+      "desktop-daemon/src-tauri/src/github_cli/inputs.rs",
+      "desktop-daemon/src-tauri/src/github_cli/outputs.rs",
+      "desktop-daemon/src-tauri/src/github_cli/discovery.rs",
+      "desktop-daemon/src-tauri/src/github_cli/tests.rs",
+      "docs/goal24/cp4-lane-a-github-cli-adapter.md",
+      "docs/goal24/checkpoint4-lane-a-manifest.json"
+    ],
+    "modified": [
+      "desktop-daemon/src-tauri/src/main.rs",
+      "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "desktop-daemon/scripts/controlled-files.sha256.json"
+    ]
+  },
+  "capabilities_implemented": [
+    { "binding_id": "github-cli.repo.inspect", "capability_id": "github.repo.inspect", "risk_class": "READ_ONLY", "argv": "gh repo view <owner/repo> --json=<hardcoded fields>" },
+    { "binding_id": "github-cli.issue.search", "capability_id": "github.issue.search", "risk_class": "READ_ONLY", "argv": "gh issue list --repo=<owner/repo> [--search=<query>] [--state=<state>] [--limit=<n>] --json=<hardcoded fields>" },
+    { "binding_id": "github-cli.issue.read", "capability_id": "github.issue.read", "risk_class": "READ_ONLY", "argv": "gh issue view <number> --repo=<owner/repo> --json=<hardcoded fields>" },
+    { "binding_id": "github-cli.pr.read", "capability_id": "github.pr.read", "risk_class": "READ_ONLY", "argv": "gh pr view <number> --repo=<owner/repo> --json=<hardcoded fields>" },
+    { "binding_id": "github-cli.pr.checks.read", "capability_id": "github.pr.checks.read", "risk_class": "READ_ONLY", "argv": "gh pr view <number> --repo=<owner/repo> --json=<hardcoded fields incl. statusCheckRollup>" }
+  ],
+  "write_capabilities_implemented": [],
+  "production_execute_ipc_added": false,
+  "adapter_id": "github-cli",
+  "executable_trust": {
+    "source": "trusted Rust bootstrap/discovery only; never from WebView, IPC caller, LLM, ExecutionPlan or normalized_inputs",
+    "constructor_validation": "absolute, canonicalizable, exists, regular file, extension exactly .exe on Windows (.cmd/.bat/.ps1 rejected)",
+    "discovery_order": ["TRUSTED_BOOTSTRAP", "STANDARD_INSTALL", "PATH_DISCOVERY"],
+    "path_discovery": "pure filesystem scan; only concrete absolute ...\\gh.exe candidates; never outranks higher-priority sources; bare gh never handed to broker",
+    "spawn_time": "broker resolver re-validates and fingerprints before every spawn; no OS PATH lookup at spawn"
+  },
+  "argv_policy": {
+    "mechanism": "compiled binding code only; Vec<OsString>; no join/split/shell parsing; no cmd /C / powershell / bash / sh",
+    "fused_values": ["--repo=<owner/repo>", "--search=<query>", "--state=<state>", "--limit=<n>", "--json=<fields>"],
+    "caller_controlled": "never: flag names, subcommands, JSON fields, --jq, --template, --web, --hostname",
+    "nul_rejection": "adapter-level for query and paths plus broker reject_nul_args before spawn"
+  },
+  "input_validation": {
+    "deny_unknown_fields": true,
+    "owner_repo": "trimmed, non-empty, max 100 chars, rejects . / .. / leading - / control / whitespace / '/' / '\\'",
+    "number": "positive integer (issue.read, pr.read, pr.checks.read)",
+    "query": "max 1024 chars, only NUL rejected; spaces, CRLF, leading dashes and Unicode remain one data value",
+    "state": "strict enum open|closed|all",
+    "limit": "1..=100; omitted means gh default 30"
+  },
+  "output_parsing": {
+    "gate": "cancelled=false, timed_out=false, success=true, exit_code=Some(0), stdout_truncated=false before any JSON parse",
+    "auth": "exit code 4 maps to GH_AUTH_NOT_READY (gh documented auth exit)",
+    "generic_failure": "other non-zero exits map to GH_CLI_FAILED; English stderr never parsed",
+    "json": "strict serde_json::from_str; partial/trailing JSON rejected; missing required fields -> GH_JSON_INVALID",
+    "error_codes": ["GH_EXECUTABLE_NOT_READY", "GH_INPUT_INVALID", "GH_CLI_FAILED", "GH_JSON_INVALID", "GH_OUTPUT_TRUNCATED", "GH_AUTH_NOT_READY", "GH_REPOSITORY_NOT_FOUND", "GH_ISSUE_NOT_FOUND", "GH_PR_NOT_FOUND"],
+    "reserved_codes_note": "GH_*_NOT_FOUND codes are declared but never emitted in CP4 (gh uses generic exit 1); reserved for a future structured probe"
+  },
+  "cwd_policy": {
+    "mechanism": "adapter-owned github_cli_work_root created and canonicalized at construction",
+    "derive_cwd": "ignores normalized_inputs entirely; always returns the work root",
+    "allowed_roots": ["work root only"],
+    "repo_selection": "explicit --repo / owner+repo; never the current git repository"
+  },
+  "env_policy": {
+    "mechanism": "broker env_clear() + minimal base (SystemRoot, TEMP, TMP on Windows) + binding allowlist",
+    "allowlist": ["USERPROFILE", "APPDATA", "LOCALAPPDATA"],
+    "excluded": ["PATH", "HTTP_PROXY", "HTTPS_PROXY", "GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN", "GH_HOST", "GH_REPO", "GH_CONFIG_DIR", "OPENAI_API_KEY", "DEEPSEEK_API_KEY", "SSH_*", "AWS_*", "AZURE_*", "GOOGLE_*"],
+    "fail_safe_strip": "broker strips forbidden secret names even if allowlisted"
+  },
+  "auth_boundary": {
+    "no_auth_login": true,
+    "no_token_handling": true,
+    "no_show_token": true,
+    "readiness": "Integration / Lane C real-environment check",
+    "note": "CP3 broker also refuses execution when GITHUB_TOKEN is present in its own environment"
+  },
+  "broker_contract_touches": [
+    "execution_broker/mod.rs: one-token additive re-export of OutputLimits so the trait's return type is nameable outside the private policy module (no semantic change)",
+    "main.rs: #[cfg_attr(not(test), allow(dead_code))] mod github_cli; declaration only, same pattern CP3 used for execution_broker (no invoke handler, no runtime effect)"
+  ],
+  "broker_core_changed": false,
+  "generic_execute_ipc_added": false,
+  "gh_executable_from_plan": false,
+  "path_bare_execution": false,
+  "arbitrary_cwd": false,
+  "gh_token_inherited": false,
+  "tests": {
+    "suite": "src/github_cli/tests.rs (pure; no process spawn, no network, no remote state changes)",
+    "new_test_count": 52,
+    "coverage": ["strict input rejection", "one-value argv safety", "exact argv snapshots for all five capabilities", "fail-closed parsers", "discovery rules", "adapter registration and binding metadata"],
+    "result": { "passed": 116, "failed": 0, "ignored": 1, "note": "ignored test is the pre-existing broker child-protocol fixture; 52 new github_cli tests all pass" }
+  },
+  "verification": {
+    "cargo_fmt": "PASS",
+    "cargo_check": "PASS (only pre-existing clipboard.rs dead-code warning from base)",
+    "cargo_clippy_all_targets": "PASS (zero warnings in github_cli; only pre-existing base warnings)",
+    "cargo_test": "116 passed, 0 failed, 1 ignored",
+    "cargo_audit": {
+      "vulnerabilities": 5,
+      "warnings": 17,
+      "identical_to_base": true,
+      "new_crates": 0,
+      "note": "Cargo.toml and Cargo.lock untouched; findings are the pre-existing CP3 baseline set"
+    },
+    "verify_controlled": "PASS; snapshot regenerated for the disclosed main.rs declaration via the repo's sanctioned snapshot workflow",
+    "git_diff_check": "PASS"
+  },
+  "known_residual_risks": [
+    "Adapter core compiles and registers but nothing executes it in production yet; execution-path integration, real-environment gh/auth checks and network behavior belong to CP4 Integration / Lane C",
+    "Not-found classification (GH_REPOSITORY_NOT_FOUND etc.) is reserved; gh exit code 1 currently maps to GH_CLI_FAILED",
+    "Discovery validation checks path shape/existence, not binary provenance; broker pre-spawn fingerprint remains the control (CP3 TOCTOU residual risk unchanged)",
+    "Broker-wide non-zero-exit semantics intentionally unchanged; gh pr checks deliberately not used (would need a broker exit-semantics change)",
+    "controlled-files snapshot hashes raw on-disk bytes and is sensitive to line-ending checkout state; regenerated and verified green in this worktree"
+  ],
+  "holdback_touched": false,
+  "environment": {
+    "policy": "D: first, then existing C:; new installs only under D:\\environment",
+    "tools": {
+      "cargo": "D:\\environment\\cargo\\bin\\cargo.exe (1.97.1)",
+      "rustup": "D:\\environment\\rustup",
+      "cargo_audit": "D:\\environment\\cargo-audit\\bin\\cargo-audit.exe",
+      "advisory_db": "D:\\environment\\advisory-db"
+    },
+    "cargo_target_dir": "D:\\environment\\cargo-target",
+    "github_cli_installed": "not installed by this lane (Lane C owns the GitHub CLI environment audit)"
+  }
+}
