@@ -1,0 +1,966 @@
+{
+    "schema_version":  "1.0.0",
+    "artifact":  "checkpoint3-adversarial-execution-map",
+    "checkpoint":  "Goal24 Checkpoint 3",
+    "generated_at":  "2026-08-13T12:14:03+08:00",
+    "base_sha":  "93d9cf53c91e56d4c7b13e85d6197014d0a879c7",
+    "vector_source":  "docs/goal24/cp3-broker-adversarial-vectors.json",
+    "test_module":  "desktop-daemon/src-tauri/src/execution_broker/adversarial.rs",
+    "counts":  {
+                   "total":  104,
+                   "automated":  41,
+                   "covered_by_existing_test":  46,
+                   "manual":  11,
+                   "not_applicable":  6,
+                   "unmapped":  0,
+                   "failed":  0
+               },
+    "adversarial_extension_threats":  [
+                                          "T27",
+                                          "T28",
+                                          "T29",
+                                          "T30",
+                                          "T31",
+                                          "T32",
+                                          "T33"
+                                      ],
+    "adversarial_extension_note":  "ADVERSARIAL_EXTENSION: T27-T33 were added by Lane B on top of the frozen T01-T26 threat model; the original threat model was not rewritten.",
+    "executions":  [
+                       {
+                           "vector_id":  "V001",
+                           "threat_id":  "T27",
+                           "category":  "PLAN_STATE_REPLAY",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_executing_is_replay_guard",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V002",
+                           "threat_id":  "T27",
+                           "category":  "PLAN_STATE_REPLAY",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_rejects_non_ready_states",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V003",
+                           "threat_id":  "T27",
+                           "category":  "PLAN_STATE_REPLAY",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_rejects_non_ready_states",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V004",
+                           "threat_id":  "T18",
+                           "category":  "PLAN_STATE_REPLAY",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "single_use_replay_blocked",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V005",
+                           "threat_id":  "T27",
+                           "category":  "PLAN_STATE_REPLAY",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_rejects_non_ready_states",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V006",
+                           "threat_id":  "T01",
+                           "category":  "EXECUTABLE_SELECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "per-capability input_schema enforcement arrives with the CP4 capability registry; CP3 ignores unknown input keys and always runs the trusted binding candidate",
+                           "result":  "NOT_APPLICABLE"
+                       },
+                       {
+                           "vector_id":  "V007",
+                           "threat_id":  "T01",
+                           "category":  "EXECUTABLE_SELECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "executable_arbitrary_input_impossible",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V008",
+                           "threat_id":  "T01",
+                           "category":  "EXECUTABLE_SELECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_binding_mismatches_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V009",
+                           "threat_id":  "T29",
+                           "category":  "EXECUTABLE_SELECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_serialization_rejects_unknown_fields",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V010",
+                           "threat_id":  "T11",
+                           "category":  "PATH_HIJACK",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "path_hijack_fake_binary_not_run",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V011",
+                           "threat_id":  "T11",
+                           "category":  "PATH_HIJACK",
+                           "platform":  "windows+posix",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "no generic raw request interface exists in the CP3 broker (ExecutionPlanWire + binding_id only); resolver accepts absolute compiled candidates only",
+                           "result":  "NOT_APPLICABLE"
+                       },
+                       {
+                           "vector_id":  "V012",
+                           "threat_id":  "T12",
+                           "category":  "PATH_HIJACK",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "path_hijack_fake_binary_not_run",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V013",
+                           "threat_id":  "T06",
+                           "category":  "PATH_HIJACK",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "path_hijack_fake_binary_not_run",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V014",
+                           "threat_id":  "T02",
+                           "category":  "ARGV_INJECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_flag_like_value_stays_single_element",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V015",
+                           "threat_id":  "T02",
+                           "category":  "ARGV_INJECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_flag_like_value_stays_single_element",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V016",
+                           "threat_id":  "T02",
+                           "category":  "ARGV_INJECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_flag_like_value_stays_single_element",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V017",
+                           "threat_id":  "T02",
+                           "category":  "ARGV_INJECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_newline_literal",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V018",
+                           "threat_id":  "T02",
+                           "category":  "ARGV_INJECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "CRLF argv literal (newline variant V017 is automated)",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V019",
+                           "threat_id":  "T31",
+                           "category":  "ARGV_INJECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_nul_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V020",
+                           "threat_id":  "T02",
+                           "category":  "ARGV_INJECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_spaces_preserved",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V021",
+                           "threat_id":  "T30",
+                           "category":  "ARGV_INJECTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "unicode_homoglyph_argv_literal",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V022",
+                           "threat_id":  "T03",
+                           "category":  "SHELL_ESCAPE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_shell_metacharacters_literal",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V023",
+                           "threat_id":  "T03",
+                           "category":  "SHELL_ESCAPE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_shell_metacharacters_literal",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V024",
+                           "threat_id":  "T03",
+                           "category":  "SHELL_ESCAPE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_shell_metacharacters_literal",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V025",
+                           "threat_id":  "T03",
+                           "category":  "SHELL_ESCAPE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_shell_metacharacters_literal",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V026",
+                           "threat_id":  "T03",
+                           "category":  "SHELL_ESCAPE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_shell_metacharacters_literal",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V027",
+                           "threat_id":  "T03",
+                           "category":  "SHELL_ESCAPE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_forbidden_input_keys_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V028",
+                           "threat_id":  "T06",
+                           "category":  "WINDOWS_FILE_TYPES",
+                           "platform":  "windows",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "executable_rejects_cmd_bat_ps1_and_missing",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V029",
+                           "threat_id":  "T06",
+                           "category":  "WINDOWS_FILE_TYPES",
+                           "platform":  "windows",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "executable_rejects_cmd_bat_ps1_and_missing",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V030",
+                           "threat_id":  "T06",
+                           "category":  "WINDOWS_FILE_TYPES",
+                           "platform":  "windows",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "executable_rejects_cmd_bat_ps1_and_missing",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V031",
+                           "threat_id":  "T06",
+                           "category":  "WINDOWS_FILE_TYPES",
+                           "platform":  "windows",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "executable_rejects_cmd_bat_ps1_and_missing",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V032",
+                           "threat_id":  "T07",
+                           "category":  "CWD_ESCAPE",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_form_rejections",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V033",
+                           "threat_id":  "T07",
+                           "category":  "CWD_ESCAPE",
+                           "platform":  "windows",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "absolute cwd outside allowlist",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V034",
+                           "threat_id":  "T07",
+                           "category":  "CWD_ESCAPE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "nonexistent cwd",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V035",
+                           "threat_id":  "T07",
+                           "category":  "CWD_ESCAPE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "file path as cwd",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V036",
+                           "threat_id":  "T08",
+                           "category":  "SYMLINK_JUNCTION",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "junction_escape_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V037",
+                           "threat_id":  "T13",
+                           "category":  "SYMLINK_JUNCTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "executable_symlink_target_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V038",
+                           "threat_id":  "T08",
+                           "category":  "SYMLINK_JUNCTION",
+                           "platform":  "windows",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "junction inside allowlist (positive canonicalization case)",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V039",
+                           "threat_id":  "T08",
+                           "category":  "SYMLINK_JUNCTION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_form_rejections",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V040",
+                           "threat_id":  "T09",
+                           "category":  "ENV_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V041",
+                           "threat_id":  "T09",
+                           "category":  "ENV_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V042",
+                           "threat_id":  "T09",
+                           "category":  "ENV_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V043",
+                           "threat_id":  "T09",
+                           "category":  "ENV_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V044",
+                           "threat_id":  "T09",
+                           "category":  "ENV_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V045",
+                           "threat_id":  "T31",
+                           "category":  "ENV_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "newline inside an env value",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V046",
+                           "threat_id":  "T10",
+                           "category":  "CREDENTIAL_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "credential_output_redacted",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V047",
+                           "threat_id":  "T20",
+                           "category":  "CREDENTIAL_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "credential_output_redacted",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V048",
+                           "threat_id":  "T28",
+                           "category":  "CREDENTIAL_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "deny_unknown_fields on ApprovalReferenceWire",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V049",
+                           "threat_id":  "T10",
+                           "category":  "CREDENTIAL_LEAKAGE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "github_token_env_blocked",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V050",
+                           "threat_id":  "T25",
+                           "category":  "OUTPUT_FLOOD",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "output_limit_error_code_reported",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V051",
+                           "threat_id":  "T25",
+                           "category":  "OUTPUT_FLOOD",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "output_limit_error_code_reported",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V052",
+                           "threat_id":  "T19",
+                           "category":  "OUTPUT_FLOOD",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "lifecycle_large_output_truncated_no_deadlock",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V053",
+                           "threat_id":  "T25",
+                           "category":  "OUTPUT_FLOOD",
+                           "platform":  "windows+posix",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "binary output capture",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V054",
+                           "threat_id":  "T25",
+                           "category":  "OUTPUT_FLOOD",
+                           "platform":  "windows+posix",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "invalid UTF-8 output capture",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V055",
+                           "threat_id":  "T33",
+                           "category":  "SECRET_OUTPUT",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "credential_output_redacted",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V056",
+                           "threat_id":  "T33",
+                           "category":  "SECRET_OUTPUT",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "bearer_output_redacted",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V057",
+                           "threat_id":  "T33",
+                           "category":  "SECRET_OUTPUT",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "credential_url_output_redacted",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V058",
+                           "threat_id":  "T21",
+                           "category":  "TIMEOUT",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "timeout_error_code_reported",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V059",
+                           "threat_id":  "T21",
+                           "category":  "TIMEOUT",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_timeout_bounds_enforced",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V060",
+                           "threat_id":  "T21",
+                           "category":  "TIMEOUT",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_timeout_bounds_enforced",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V061",
+                           "threat_id":  "T21",
+                           "category":  "TIMEOUT",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "timeout_error_code_reported",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V062",
+                           "threat_id":  "T22",
+                           "category":  "CANCELLATION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "lifecycle_cancel_by_execution_id",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V063",
+                           "threat_id":  "T22",
+                           "category":  "CANCELLATION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cancel_after_exit_success",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V064",
+                           "threat_id":  "T22",
+                           "category":  "CANCELLATION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "cancel/timeout race",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V065",
+                           "threat_id":  "T22",
+                           "category":  "CANCELLATION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "rollback enforcement is a Checkpoint 7 deliverable",
+                           "result":  "NOT_APPLICABLE"
+                       },
+                       {
+                           "vector_id":  "V066",
+                           "threat_id":  "T24",
+                           "category":  "PROCESS_TREE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "process_tree_grandchild_killed_on_cancel",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V067",
+                           "threat_id":  "T23",
+                           "category":  "PROCESS_TREE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "process_tree_grandchild_killed_on_timeout",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V068",
+                           "threat_id":  "T23",
+                           "category":  "PROCESS_TREE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "tree_drain_child_exit_first",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V069",
+                           "threat_id":  "T24",
+                           "category":  "PROCESS_TREE",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "breakaway_attempt_blocked",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V070",
+                           "threat_id":  "T23",
+                           "category":  "PROCESS_TREE",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "broker_crash_job_kill",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V071",
+                           "threat_id":  "T13",
+                           "category":  "TOCTOU",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "executable_fingerprint_change_detected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V072",
+                           "threat_id":  "T13",
+                           "category":  "TOCTOU",
+                           "platform":  "windows",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "junction flipped between canonicalization and spawn",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V073",
+                           "threat_id":  "T13",
+                           "category":  "TOCTOU",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "toctou_post_spawn_replacement_ignored",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V074",
+                           "threat_id":  "T15",
+                           "category":  "ADAPTER_MISMATCH",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_binding_mismatches_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V075",
+                           "threat_id":  "T15",
+                           "category":  "ADAPTER_MISMATCH",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_binding_mismatches_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V076",
+                           "threat_id":  "T15",
+                           "category":  "ADAPTER_MISMATCH",
+                           "platform":  "windows+posix",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "capability version-chain validation requires the CP4 capability registry",
+                           "result":  "NOT_APPLICABLE"
+                       },
+                       {
+                           "vector_id":  "V077",
+                           "threat_id":  "T15",
+                           "category":  "CAPABILITY_MISMATCH",
+                           "platform":  "windows+posix",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "risk-snapshot vs capability-declaration agreement requires the CP4 capability registry",
+                           "result":  "NOT_APPLICABLE"
+                       },
+                       {
+                           "vector_id":  "V078",
+                           "threat_id":  "T15",
+                           "category":  "CAPABILITY_MISMATCH",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_binding_mismatches_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V079",
+                           "threat_id":  "T15",
+                           "category":  "CAPABILITY_MISMATCH",
+                           "platform":  "windows+posix",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "mandatory verification-plan enforcement is a Checkpoint 7 deliverable",
+                           "result":  "NOT_APPLICABLE"
+                       },
+                       {
+                           "vector_id":  "V080",
+                           "threat_id":  "T28",
+                           "category":  "APPROVAL_BYPASS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "approval_reference_consistency_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V081",
+                           "threat_id":  "T28",
+                           "category":  "APPROVAL_BYPASS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "approval_reference_consistency_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V082",
+                           "threat_id":  "T28",
+                           "category":  "APPROVAL_BYPASS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "approval_reference_consistency_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V083",
+                           "threat_id":  "T18",
+                           "category":  "APPROVAL_BYPASS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "single_use_replay_blocked",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V084",
+                           "threat_id":  "T28",
+                           "category":  "APPROVAL_BYPASS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "approval_reference_consistency_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V085",
+                           "threat_id":  "T17",
+                           "category":  "EXPIRY",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_expired_plan_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V086",
+                           "threat_id":  "T17",
+                           "category":  "EXPIRY",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_expired_plan_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V087",
+                           "threat_id":  "T16",
+                           "category":  "EXPIRY",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "stale_plan_default_ttl_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V088",
+                           "threat_id":  "T29",
+                           "category":  "SERDE_UNKNOWN_FIELDS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_serialization_rejects_unknown_fields",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V089",
+                           "threat_id":  "T29",
+                           "category":  "SERDE_UNKNOWN_FIELDS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "gate_forbidden_input_keys_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V090",
+                           "threat_id":  "T29",
+                           "category":  "SERDE_UNKNOWN_FIELDS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "deny_unknown_fields on ApprovalReferenceWire",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V091",
+                           "threat_id":  "T29",
+                           "category":  "SERDE_UNKNOWN_FIELDS",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "serde type enforcement (timeout_ms: u64)",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V092",
+                           "threat_id":  "T30",
+                           "category":  "UNICODE_NORMALIZATION",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "unicode_homoglyph_argv_literal",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V093",
+                           "threat_id":  "T30",
+                           "category":  "UNICODE_NORMALIZATION",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_form_rejections",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V094",
+                           "threat_id":  "T30",
+                           "category":  "UNICODE_NORMALIZATION",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_unicode_variants_allowed",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V095",
+                           "threat_id":  "T30",
+                           "category":  "UNICODE_NORMALIZATION",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_unicode_variants_allowed",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V096",
+                           "threat_id":  "T30",
+                           "category":  "UNICODE_NORMALIZATION",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_unicode_variants_allowed",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V097",
+                           "threat_id":  "T31",
+                           "category":  "NUL_CONTROL",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_form_rejections",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V098",
+                           "threat_id":  "T31",
+                           "category":  "NUL_CONTROL",
+                           "platform":  "windows+posix",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "argv_nul_rejected",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V099",
+                           "threat_id":  "T31",
+                           "category":  "NUL_CONTROL",
+                           "platform":  "windows+posix",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "control_chars_output_redacted",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V100",
+                           "threat_id":  "T02",
+                           "category":  "NUL_CONTROL",
+                           "platform":  "windows+posix",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "CRLF argv literal (newline variant V017 is automated)",
+                           "result":  "MANUAL_RECORDED"
+                       },
+                       {
+                           "vector_id":  "V101",
+                           "threat_id":  "T07",
+                           "category":  "CWD_ESCAPE",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_form_rejections",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V102",
+                           "threat_id":  "T30",
+                           "category":  "CWD_ESCAPE",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_form_rejections",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V103",
+                           "threat_id":  "T30",
+                           "category":  "CWD_ESCAPE",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_form_rejections",
+                           "result":  "PASS"
+                       },
+                       {
+                           "vector_id":  "V104",
+                           "threat_id":  "T30",
+                           "category":  "CWD_ESCAPE",
+                           "platform":  "windows",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "cwd_unicode_variants_allowed",
+                           "result":  "PASS"
+                       }
+                   ]
+}

@@ -1,0 +1,121 @@
+{
+    "schema_version":  "1.0.0",
+    "artifact":  "checkpoint3-security-gate",
+    "checkpoint":  "Goal24 Checkpoint 3",
+    "status":  "CHECKPOINT3_SECURITY_GATE_PASS",
+    "base_sha":  "93d9cf53c91e56d4c7b13e85d6197014d0a879c7",
+    "generated_at":  "2026-08-13T12:14:40+08:00",
+    "criteria":  {
+                     "A":  {
+                               "label":  "Broker has no generic shell interface",
+                               "pass":  true,
+                               "evidence":  "Broker spawns resolved absolute .exe candidates only (resolver.rs); no cmd.exe/powershell/sh/bash anywhere in execution_broker/**; taskkill deliberately not used"
+                           },
+                     "B":  {
+                               "label":  "No arbitrary executable / argv / cwd / env from caller",
+                               "pass":  true,
+                               "evidence":  "execute(plan, binding_id) builds executable/argv/cwd/env from the compiled ExecutionBinding; FORBIDDEN_INPUT_KEYS reserved keys rejected; plan cannot carry executable/argv/cwd/env fields"
+                           },
+                     "C":  {
+                               "label":  "required_approval=true cannot execute",
+                               "pass":  true,
+                               "evidence":  "PlanRejectedApproval gate before any spawn; gate_required_approval_blocked_in_cp3 + approval_reference_consistency_rejected"
+                           },
+                     "D":  {
+                               "label":  "Only ready plans can first-spawn",
+                               "pass":  true,
+                               "evidence":  "state != ready rejected; gate_rejects_non_ready_states; gate_executing_is_replay_guard"
+                           },
+                     "E":  {
+                               "label":  "Expired/replay rejected",
+                               "pass":  true,
+                               "evidence":  "plan_is_expired (unparseable = expired) + T16 default TTL 24h from created_at (stale_plan_default_ttl_rejected) + single-use ledger (single_use_replay_blocked)"
+                           },
+                     "F":  {
+                               "label":  "Windows Job Object process-tree termination verified",
+                               "pass":  true,
+                               "evidence":  "KILL_ON_JOB_CLOSE job, CREATE_SUSPENDED assign-before-resume, tree drain on child exit; process_tree_grandchild_killed_on_cancel/timeout, tree_drain_child_exit_first, breakaway_attempt_blocked, broker_crash_job_kill"
+                           },
+                     "G":  {
+                               "label":  "stdout/stderr bounded",
+                               "pass":  true,
+                               "evidence":  "1 MiB default caps clamped by broker; readers drain past cap without deadlock; output_limit_error_code_reported, lifecycle_large_output_truncated_no_deadlock"
+                           },
+                     "H":  {
+                               "label":  "Parent credentials not inherited",
+                               "pass":  true,
+                               "evidence":  "build_child_env restores base vars + binding allowlist only, strips FORBIDDEN_ENV_NAMES/prefixes; GITHUB_TOKEN in broker env fail-closed; env_secrets_not_inherited_and_allowlist_present, github_token_env_blocked"
+                           },
+                     "I":  {
+                               "label":  "Test-only binding absent from production",
+                               "pass":  true,
+                               "evidence":  "execution_broker::tests gated #[cfg(test)]; no production register_binding call; execute_ipc_enabled=false in status"
+                           },
+                     "J":  {
+                               "label":  "Frontend generic shell.open removed/disabled",
+                               "pass":  true,
+                               "evidence":  "tauri.conf.json shell.open=false; shell-open cargo feature removed; SettingsPanel invokes open_trusted_external_url(target_id); commit 2d5cdba"
+                           },
+                     "K":  {
+                               "label":  "All 104 adversarial vectors mapped",
+                               "pass":  true,
+                               "evidence":  "docs/goal24/checkpoint3-adversarial-execution-map.json: 104/104 mapped, unmapped=0"
+                           },
+                     "L":  {
+                               "label":  "All automatable critical vectors PASS",
+                               "pass":  true,
+                               "evidence":  "41 AUTOMATED + 46 COVERED_BY_EXISTING_TEST all pass; cargo test execution_broker 54 passed, 1 ignored"
+                           },
+                     "M":  {
+                               "label":  "No F01-F13 oracle failure",
+                               "pass":  true,
+                               "evidence":  "failed=0 in the execution map; no must_not_happen observation recorded"
+                           },
+                     "N":  {
+                               "label":  "cargo audit UNKNOWN=0 FIX_BEFORE_CP3=0 BLOCKS_CP3=0",
+                               "pass":  true,
+                               "evidence":  "5 vulnerabilities all NOT_REACHABLE (crossbeam-epoch fmt-only usage; quick-xml xcb/plist/wayland not compiled for Windows), 17 informational warnings; CP2.2 rustls-webpki cluster absent"
+                           },
+                     "O":  {
+                               "label":  "Full regression green",
+                               "pass":  true,
+                               "evidence":  "cargo fmt/check/clippy/test green (64 passed, 1 ignored); npm verify:controlled + next build green; brain-server typecheck/vitest(479)/build/lint green"
+                           }
+                 },
+    "adversarial_oracle":  {
+                               "total":  104,
+                               "automated":  41,
+                               "covered_by_existing_test":  46,
+                               "manual":  11,
+                               "not_applicable":  6,
+                               "unmapped":  0,
+                               "failed":  0,
+                               "map":  "docs/goal24/checkpoint3-adversarial-execution-map.json",
+                               "adversarial_extension":  "T27-T33 marked ADVERSARIAL_EXTENSION (Lane B additions; frozen T01-T26 threat model unchanged)"
+                           },
+    "cargo_audit":  {
+                        "tool":  "cargo-audit 0.22.x (D:\\environment\\cargo-audit)",
+                        "database":  "D:\\environment\\advisory-db (RustSec, 1216 advisories, HEAD 69f93e1)",
+                        "vulnerabilities":  5,
+                        "warnings":  17,
+                        "UNKNOWN":  0,
+                        "FIX_BEFORE_CP3":  0,
+                        "BLOCKS_CP3":  0,
+                        "notes":  "V1 crossbeam-epoch 0.9.18 RUSTSEC-2026-0204 NOT_REACHABLE (fmt::Pointer impls never exercised); V2-V5 quick-xml 0.30.0/0.39.3 RUSTSEC-2026-0194/0195 NOT_REACHABLE (xcb build-dep + plist/wayland-scanner not compiled for the Windows target); CP2.2 rustls-webpki 0.101.7 cluster no longer in the lockfile"
+                    },
+    "environment_policy":  {
+                               "install_locations":  "D:\\environment preferred; existing C: reused; never install new tooling to C:",
+                               "cargo_target_dir":  "D:\\environment\\cargo-target\\cp3-integration",
+                               "npm_cache":  "D:\\environment\\npm-cache",
+                               "advisory_db":  "D:\\environment\\advisory-db",
+                               "declared":  true
+                           },
+    "declarations":  {
+                         "CHECKPOINT4_STARTED":  "NO",
+                         "HOLDBACK_TOUCHED":  "NO",
+                         "SCIENTIFIC_REFS_CHANGED":  "NO",
+                         "MAIN_TOUCHED":  "NO",
+                         "GENERIC_EXECUTE_IPC":  "NO",
+                         "PRODUCTION_ADAPTER_REGISTERED":  "NO"
+                     }
+}

@@ -1,0 +1,116 @@
+{
+    "schema_version":  "1.0.0",
+    "artifact":  "checkpoint3-manifest",
+    "checkpoint":  "Goal24 Checkpoint 3",
+    "status":  "CHECKPOINT3_COMPLETE",
+    "base_sha":  "93d9cf53c91e56d4c7b13e85d6197014d0a879c7",
+    "generated_at":  "2026-08-13T12:14:58+08:00",
+    "lanes":  {
+                  "A":  {
+                            "lane":  "Broker Core",
+                            "requested_shas":  [
+                                                   "551b663",
+                                                   "6d10b0e",
+                                                   "87af788",
+                                                   "db32dd07fff49e1fdd456b5ee3a2ed22b2f17d8c"
+                                               ],
+                            "integrated_shas":  [
+                                                    "26a1c1c095ae816b5c4d23a167a77b78bb9a9df4",
+                                                    "27225c4d73dde30c74678ec955a8727ea0bda0a4",
+                                                    "4f0970dce0ed61ed0c987f822348a92c8f46b467",
+                                                    "646b76a080faa36e40516769b0b9ac9813332490"
+                                                ],
+                            "note":  "requested and integrated commits are content-identical (cherry-picked onto 93d9cf53 without conflict)"
+                        },
+                  "B":  {
+                            "lane":  "Adversarial Oracle",
+                            "requested_shas":  [
+                                                   "33bf48ecbacf3f5eb85312a582a82849b00ff769"
+                                               ],
+                            "integrated_shas":  [
+                                                    "91f9d76702cee5e9c8f12df0272953e363cf49af"
+                                                ]
+                        },
+                  "C":  {
+                            "lane":  "Existing Surface Audit",
+                            "requested_shas":  [
+                                                   "0dbd0402465118507eb93acc7984ed12ed40fe88",
+                                                   "832c4cd"
+                                               ],
+                            "integrated_shas":  [
+                                                    "a2fdb8757a8d4b28408abffb984b06ec0836c149",
+                                                    "eddfd295fcc0075b0ec8bb369b5e3c74101f4552"
+                                                ]
+                        }
+              },
+    "integration_commits":  [
+                                "2d5cdba security(desktop): close generic shell-open bypass",
+                                "627c8f7 security(execution-broker): cp3 hardening and adversarial oracle"
+                            ],
+    "broker_surface":  {
+                           "ipc_commands":  [
+                                                "get_broker_status"
+                                            ],
+                           "execute_visibility":  "pub(crate)",
+                           "production_bindings":  0,
+                           "execute_ipc_enabled":  false,
+                           "generic_execute_ipc":  "NO",
+                           "test_binding_in_production":  "NO"
+                       },
+    "shell_open":  {
+                       "before":  "tauri.conf.json shell.open=true + @tauri-apps/api/shell open() + window.open fallback",
+                       "after":  "shell.open=false; shell-open feature removed; open_trusted_external_url(target_id) with hardcoded https map via ShellExecuteW",
+                       "generic_frontend_shell_open":  "NO"
+                   },
+    "hardening":  [
+                      "oracle error-code taxonomy (PlanRejected*/BrokerBlocked*/BrokerTimeout/Cancelled/OutputLimit/Crash)",
+                      "cwd validation (NUL, absolute, UNC, verbatim \\\\?\\, ADS, canonical containment)",
+                      "executable resolution (.exe only, canonical identity, symlink/junction fail-closed)",
+                      "output redaction (tokens, bearer, url userinfo, control chars) + output_redacted flag",
+                      "process-tree drain on child exit (QueryInformationJobObject ActiveProcesses)",
+                      "approval reference consistency before required_approval gate",
+                      "single-use plan ledger",
+                      "GITHUB_TOKEN fail-closed env rule",
+                      "T16 default plan TTL: 24h from created_at when expires_at absent"
+                  ],
+    "test_counts":  {
+                        "execution_broker":  "54 passed, 1 ignored (adversarial 21 + lane A 33)",
+                        "full_cargo_test":  "64 passed, 0 failed, 1 ignored",
+                        "brain_server_vitest":  "479 passed (41 files)"
+                    },
+    "adversarial_oracle":  {
+                               "total":  104,
+                               "automated":  41,
+                               "covered_by_existing_test":  46,
+                               "manual":  11,
+                               "not_applicable":  6,
+                               "unmapped":  0,
+                               "failed":  0,
+                               "adversarial_extension":  "T27-T33 ADVERSARIAL_EXTENSION"
+                           },
+    "remaining_legacy_risks":  [
+                                   "S2 kill_zombie_by_pid_file() PID-file taskkill (LEGACY_RISK; local attacker only, webview cannot write the pid file)",
+                                   "S8 register_global_shortcuts() (LEGACY_RISK)",
+                                   "S9 process_dropped_paths() (OUT_OF_SCOPE FS surface)",
+                                   "S10 broad fs.readFile ** / path-all / clipboard-all / window-all (OUT_OF_SCOPE permissions)",
+                                   "residual TOCTOU between pre-spawn fingerprint check and CreateProcess (metadata fingerprint)",
+                                   "unix process-group containment fallback not exercised on this Windows host"
+                               ],
+    "cargo_audit":  {
+                        "vulnerabilities":  5,
+                        "warnings":  17,
+                        "UNKNOWN":  0,
+                        "FIX_BEFORE_CP3":  0,
+                        "BLOCKS_CP3":  0
+                    },
+    "environment_policy":  "D: first, C: only existing, new installs to D:\\environment; cargo target D:\\environment\\cargo-target\\cp3-integration; npm cache D:\\environment\\npm-cache",
+    "gate":  "CHECKPOINT3_SECURITY_GATE_PASS",
+    "declarations":  {
+                         "PROCESS_EXECUTION_ADDED":  "NO (broker core was Lane A; integration added tests/hardening only)",
+                         "CHECKPOINT4_STARTED":  "NO",
+                         "HOLDBACK_TOUCHED":  "NO",
+                         "SCIENTIFIC_REFS_CHANGED":  "NO",
+                         "MAIN_TOUCHED":  "NO",
+                         "REMOTE_DEV_PUSHED":  "pending fast-forward push"
+                     }
+}
