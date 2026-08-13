@@ -105,6 +105,7 @@ describe('SKILL.md frontmatter rules', () => {
     expect(result.agent_skill_metadata).toEqual({
       name: 'demo-skill',
       description: 'A demo skill for import testing',
+      vendor_metadata: {},
       unknown_frontmatter_keys: [],
     });
     expect(result.omni_manifest_present).toBe(false);
@@ -578,7 +579,7 @@ describe('digest and managed snapshot', () => {
 
     const second = importIt(source);
     expect(second.import_status).toBe('IMPORT_REJECTED');
-    expect(second.failure?.code).toBe('PACKAGE_CHANGED_DURING_IMPORT');
+    expect(second.failure?.code).toBe('MANAGED_SNAPSHOT_CORRUPT');
     expect(second.managed_snapshot_root).toBeNull();
   });
 
