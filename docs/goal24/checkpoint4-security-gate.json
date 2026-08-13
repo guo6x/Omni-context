@@ -1,0 +1,142 @@
+{
+    "schema_version":  "1.0.0",
+    "artifact":  "checkpoint4-security-gate",
+    "checkpoint":  "Goal24 Checkpoint 4",
+    "generated_at":  "2026-08-13T14:34:26+08:00",
+    "base_sha":  "8238c350e56bcbf486a2e484287bcad66fda6174",
+    "integration_head_sha":  "65a9c27",
+    "checkpoint4_runtime_gate":  "AUTH_REQUIRED",
+    "checkpoint4_security_gate":  "BLOCKED",
+    "blocked_reason":  "gh authentication is not configured on this host (gh auth status --active --hostname github.com exit 1). Code-level criteria A-G and L-Q are all PASS; criteria H (auth ready), I (authenticated repo.inspect) and J (authenticated issue.search) cannot pass without owner login, which this task must not perform (AUTH_MUTATED=NO). The Broker pipeline itself was proven live: both read commands reached the pinned gh.exe and correctly surfaced GH_AUTH_NOT_READY.",
+    "not_complete_note":  "This checkpoint is NOT declared COMPLETE; final status is GOAL24_CHECKPOINT4_BLOCKED with reason AUTH_REQUIRED.",
+    "criteria":  {
+                     "A":  {
+                               "label":  "5 TS semantic capabilities valid",
+                               "pass":  true,
+                               "evidence":  "brain-server/src/capabilities/github-readonly.ts parses all 5 CapabilityDefinitions at module load (schema-checked); vitest 580 passed (42 files) including tests/goal24-github-capabilities.test.ts; version 1.0.0, authority L0, risk low, side_effect_class read_only, reversible false, required_evidence []"
+                           },
+                     "B":  {
+                               "label":  "5 Rust bindings 1:1 match",
+                               "pass":  true,
+                               "evidence":  "contract_json_conformance_matches_rust_bindings + binding_metadata_matches_contract pass; binding ids map github-cli.repo.inspect/issue.search/issue.read/pr.read/pr.checks.read to github.repo.inspect/issue.search/issue.read/pr.read/pr.checks.read; mismatches = NONE"
+                           },
+                     "C":  {
+                               "label":  "5 production bindings are READ-ONLY only",
+                               "pass":  true,
+                               "evidence":  "Capability::ALL contains exactly the five read-only shapes; argv snapshots pin gh repo view / issue list / issue view / pr view / pr view(statusCheckRollup); no write subcommand exists"
+                           },
+                     "D":  {
+                               "label":  "0 write binding",
+                               "pass":  true,
+                               "evidence":  "write_capabilities_registered = 0; static scan of the CP4 diff finds no issue create/comment/close, pr merge, repo edit, gh api, POST/PATCH/DELETE in executable argv (only doc mentions of the roadmap)"
+                           },
+                     "E":  {
+                               "label":  "gh executable resolved to concrete absolute gh.exe",
+                               "pass":  true,
+                               "evidence":  "bootstrap_production resolves via trusted config -\u003e standard install -\u003e PATH and registers a canonical absolute gh.exe; test harness injected D:\\environment\\github-cli\\bin\\gh.exe and the real Broker E2E reached it; no dev path hardcoded in product source"
+                           },
+                     "F":  {
+                               "label":  "no bare PATH spawn",
+                               "pass":  true,
+                               "evidence":  "no Command::new(\"gh\") or bare gh/gh.cmd/gh.bat/gh.ps1 anywhere; discovery_rejects_bare_gh_name, adapter_rejects_relative_or_missing_gh, discovery_rejects_non_exe_extensions pass"
+                           },
+                     "G":  {
+                               "label":  "no token env inheritance",
+                               "pass":  true,
+                               "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy passes; GH_ENV_ALLOWLIST = USERPROFILE/APPDATA/LOCALAPPDATA; broker env_clear + FORBIDDEN_ENV_NAMES strip GH_TOKEN/GITHUB_TOKEN/GH_ENTERPRISE_TOKEN/GITHUB_ENTERPRISE_TOKEN fail-safe"
+                           },
+                     "H":  {
+                               "label":  "auth ready through existing secure gh authentication",
+                               "pass":  false,
+                               "status":  "AUTH_REQUIRED",
+                               "evidence":  "gh auth status --active --hostname github.com exited 1 (\u0027not logged into any GitHub hosts\u0027) on 2026-08-13; per the task this sets CHECKPOINT4_RUNTIME_GATE = AUTH_REQUIRED; AUTH_MUTATED = NO (no login/refresh/token ever run)"
+                           },
+                     "I":  {
+                               "label":  "real github.repo.inspect through Broker PASS",
+                               "pass":  false,
+                               "status":  "AUTH_REQUIRED_PIPELINE_VERIFIED",
+                               "evidence":  "e2e_repo_inspect_real_broker reached the pinned gh.exe through the real Broker and returned GH_AUTH_NOT_READY (exit 4) with no hang/prompt/browser; an authenticated success cannot be demonstrated until the owner logs in"
+                           },
+                     "J":  {
+                               "label":  "real issue.search through Broker PASS",
+                               "pass":  false,
+                               "status":  "AUTH_REQUIRED_PIPELINE_VERIFIED",
+                               "evidence":  "e2e_issue_search_real_broker reached the pinned gh.exe through the real Broker and returned GH_AUTH_NOT_READY (exit 4); pipeline verified, authenticated success pending auth"
+                           },
+                     "K":  {
+                               "label":  "any available issue/pr fixtures PASS",
+                               "pass":  true,
+                               "status":  "VACUOUS_NO_FIXTURE",
+                               "evidence":  "guo6x/Omni-context has no fixtures configured (OMNI_CP4_E2E_ISSUE_NUMBER / OMNI_CP4_E2E_PR_NUMBER unset); no test issue/PR was created; pure adapter tests cover issue.read/pr.read/pr.checks.read parsers"
+                           },
+                     "L":  {
+                               "label":  "pr checks uses pr view/statusCheckRollup",
+                               "pass":  true,
+                               "evidence":  "pr_checks_read_argv emits gh pr view \u003cn\u003e --repo=\u003cowner/repo\u003e --json=\u003cPR_CHECKS_FIELDS incl. statusCheckRollup\u003e; pr_checks_read_argv_snapshot passes; gh pr checks never used (avoids the exit-8 pending semantics)"
+                           },
+                     "M":  {
+                               "label":  "all security vectors mapped",
+                               "pass":  true,
+                               "evidence":  "docs/goal24/cp4-adversarial-execution-map.json: 103/103 vectors mapped, unmapped=0; FAIL-01..FAIL-12 all NOT_TRIGGERED"
+                           },
+                     "N":  {
+                               "label":  "critical automatable vectors PASS",
+                               "pass":  true,
+                               "evidence":  "92 AUTOMATED + 4 COVERED_BY_EXISTING_TEST all pass (failed=0); cargo test 124 passed, 0 failed, 6 ignored; cargo test e2e --ignored 5 passed"
+                           },
+                     "O":  {
+                               "label":  "generic execute IPC remains false",
+                               "pass":  true,
+                               "evidence":  "execute_ipc_enabled=false asserted by broker tests; CP4 adds no execute_plan/run_command/run_gh IPC; get_broker_status remains the only IPC surface"
+                           },
+                     "P":  {
+                               "label":  "CP3 invariants preserved",
+                               "pass":  true,
+                               "evidence":  "generic_shell=false; arbitrary executable/cwd/env=false; required_approval blocked; ready-only first spawn; Job Object process-tree kill; 1 MiB output limits; CP4 diff touches execution_broker only additively (2 forbidden env names + test re-exports)"
+                           },
+                     "Q":  {
+                               "label":  "full regression green",
+                               "pass":  true,
+                               "evidence":  "cargo fmt --check / check / clippy --all-targets / test (124 passed) green; desktop npm build + verify:controlled green; brain-server typecheck + vitest 580 + build + lint(0 errors) green; git diff --check clean"
+                           }
+                 },
+    "adversarial_oracle":  {
+                               "total":  103,
+                               "automated":  92,
+                               "covered_by_existing_test":  4,
+                               "manual":  2,
+                               "not_applicable":  5,
+                               "unmapped":  0,
+                               "failed":  0,
+                               "map":  "docs/goal24/cp4-adversarial-execution-map.json",
+                               "fail_conditions":  "FAIL-01..FAIL-12 all NOT_TRIGGERED"
+                           },
+    "cargo_audit":  {
+                        "vulnerabilities":  5,
+                        "warnings":  17,
+                        "UNKNOWN":  0,
+                        "FIX_BEFORE_CP4":  0,
+                        "BLOCKS_CP4":  0,
+                        "note":  "all 5 NOT_REACHABLE, identical to the CP3 baseline (crossbeam-epoch RUSTSEC-2026-0204; quick-xml RUSTSEC-2026-0194/0195 xcb/plist/wayland paths not compiled for Windows)"
+                    },
+    "tests":  {
+                  "cargo_test":  "124 passed, 0 failed, 6 ignored",
+                  "cargo_test_e2e":  "5 passed, 0 failed (--ignored, real Broker)",
+                  "desktop":  "npm build PASS; verify:controlled PASS",
+                  "brain_server":  "typecheck PASS; vitest 580 passed (42 files); build PASS; lint 0 errors / 9 pre-existing warnings"
+              },
+    "declarations":  {
+                         "AUTH_MUTATED":  "NO",
+                         "TOKEN_READ":  "NO",
+                         "CHECKPOINT5_STARTED":  "NO",
+                         "HOLDBACK_TOUCHED":  "NO",
+                         "SCIENTIFIC_REFS_CHANGED":  "NO",
+                         "MAIN_TOUCHED":  "NO",
+                         "DIRTY_CP21_WORKTREE_TOUCHED":  "NO",
+                         "GENERIC_EXECUTE_IPC":  "NO",
+                         "BARE_GH_SPAWN":  "NO",
+                         "TOKEN_ENV_INHERITED":  "NO",
+                         "ARBITRARY_FLAG":  "NO",
+                         "WRITE_COMMAND_PRESENT":  "NO"
+                     }
+}

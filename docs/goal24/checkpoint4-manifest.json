@@ -1,0 +1,146 @@
+{
+    "schema_version":  "1.0.0",
+    "artifact":  "checkpoint4-manifest",
+    "checkpoint":  "Goal24 Checkpoint 4",
+    "status":  "CHECKPOINT4_BLOCKED (AUTH_REQUIRED)",
+    "generated_at":  "2026-08-13T14:33:27+08:00",
+    "base_sha":  "8238c350e56bcbf486a2e484287bcad66fda6174",
+    "integration_head_sha":  "65a9c27",
+    "lanes":  {
+                  "A":  {
+                            "lane":  "GitHub CLI Adapter Core",
+                            "requested_shas":  [
+                                                   "aec2d7752418ed96fbee748cb7946f922d56f1e8",
+                                                   "8e5cb628fcbaa4bc39274e9f1addd75c628f06da",
+                                                   "287cb203d85b4248f4f40372ddb6523bdeaad41e",
+                                                   "3895a0e25d28414067455f11050bfe9c02652d33"
+                                               ],
+                            "integrated_shas":  [
+                                                    "cc0b70f",
+                                                    "30832c1",
+                                                    "3de9010",
+                                                    "19977b2"
+                                                ],
+                            "note":  "cherry-picked in order onto 8238c35; Lane A trees are identical to the requested commits (verified tree hash equality)"
+                        },
+                  "B":  {
+                            "lane":  "GitHub Semantic Capabilities",
+                            "requested_shas":  [
+                                                   "8d0dcee",
+                                                   "9c44e05",
+                                                   "02d71f760fb05b47996754e457fd16f2a0a9af7c"
+                                               ],
+                            "integrated_shas":  [
+                                                    "8ffbb13",
+                                                    "e5425c3",
+                                                    "964525f"
+                                                ],
+                            "note":  "cherry-picked in order; lane B branched from lane A so per-commit trees differ, but the lane tip content is fully present on the integration branch"
+                        },
+                  "C":  {
+                            "lane":  "gh Compatibility / Security Audit",
+                            "requested_shas":  [
+                                                   "66db52298bb0590be7e025610936d66e617da2e1"
+                                               ],
+                            "integrated_shas":  [
+                                                    "8c88397"
+                                                ],
+                            "note":  "docs/evidence only; no runtime change in the lane commit"
+                        }
+              },
+    "integration_commits":  [
+                                "8863528 feat(github-cli): cp4 production bootstrap, conformance and read-only e2e",
+                                "65a9c27 test(github-cli): cover unc discovery, number overflow and exact adversarial payloads"
+                            ],
+    "semantic_capabilities":  {
+                                  "count":  5,
+                                  "ids":  [
+                                              "github.repo.inspect",
+                                              "github.issue.search",
+                                              "github.issue.read",
+                                              "github.pr.read",
+                                              "github.pr.checks.read"
+                                          ],
+                                  "version":  "1.0.0",
+                                  "authority":  "L0",
+                                  "risk":  "low",
+                                  "side_effect_class":  "read_only",
+                                  "reversible":  false,
+                                  "required_evidence":  [
+
+                                                        ],
+                                  "source":  "brain-server/src/capabilities/github-readonly.ts (static catalog only; no registry runtime - Checkpoint 5 concern)",
+                                  "what_not_how":  "no adapter_id, no gh, no CLI command, no argv, no executable fields anywhere in the capability definitions"
+                              },
+    "rust_bindings":  {
+                          "count":  5,
+                          "ids":  [
+                                      "github-cli.repo.inspect",
+                                      "github-cli.issue.search",
+                                      "github-cli.issue.read",
+                                      "github-cli.pr.read",
+                                      "github-cli.pr.checks.read"
+                                  ],
+                          "command_shapes":  [
+                                                 "gh repo view \u003cowner/repo\u003e --json=\u003cfixed fields\u003e",
+                                                 "gh issue list --repo=\u003cowner/repo\u003e [--search=\u003cquery\u003e] [--state=\u003cstate\u003e] [--limit=\u003cn\u003e] --json=\u003cfixed fields\u003e",
+                                                 "gh issue view \u003cnumber\u003e --repo=\u003cowner/repo\u003e --json=\u003cfixed fields\u003e",
+                                                 "gh pr view \u003cnumber\u003e --repo=\u003cowner/repo\u003e --json=\u003cfixed fields\u003e",
+                                                 "gh pr view \u003cnumber\u003e --repo=\u003cowner/repo\u003e --json=\u003cfixed fields incl. statusCheckRollup\u003e"
+                                             ],
+                          "pr_checks_implementation":  "gh pr view --json statusCheckRollup (never gh pr checks; broker exit semantics unchanged)",
+                          "registration":  "trusted Rust bootstrap only (github_cli::bootstrap::bootstrap_production); IPC callers cannot create bindings"
+                      },
+    "cross_language_conformance":  {
+                                       "contract":  "docs/goal24/cp4-github-readonly-contract.json",
+                                       "one_to_one":  true,
+                                       "mismatches":  [
+
+                                                      ],
+                                       "verified_by":  [
+                                                           "contract_json_conformance_matches_rust_bindings",
+                                                           "binding_metadata_matches_contract"
+                                                       ],
+                                       "shared_safe_subset":  "owner ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$ (max 39); repo ^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$ (max 100); no trimming; number integer \u003e= 1; limit integer 1..100 default 30; state enum open/closed/all; query max 1024 with NUL+C0 rejected; unknown keys rejected; query stays ONE argv VALUE"
+                                   },
+    "security":  {
+                     "write_capabilities_registered":  0,
+                     "generic_execute_ipc":  false,
+                     "bare_gh_spawn":  false,
+                     "token_env_inherited":  false,
+                     "arbitrary_flag_from_caller":  false,
+                     "broker_core_semantics_modified":  false,
+                     "cp3_invariants_preserved":  true,
+                     "executable":  "concrete absolute gh.exe only; UNC, relative, bare gh, .cmd/.bat/.ps1 rejected",
+                     "env":  "child env scrubbed; token/host/repo/config/proxy vars never inherited"
+                 },
+    "adversarial_oracle":  {
+                               "map":  "docs/goal24/cp4-adversarial-execution-map.json",
+                               "total":  103,
+                               "automated":  92,
+                               "covered_by_existing_test":  4,
+                               "manual":  2,
+                               "not_applicable":  5,
+                               "unmapped":  0,
+                               "failed":  0,
+                               "integration_fail_conditions":  "FAIL-01..FAIL-12 all NOT_TRIGGERED"
+                           },
+    "e2e":  {
+                "repo_inspect":  "AUTH_REQUIRED pipeline-ok: real Broker -\u003e pinned gh.exe -\u003e exit 4 -\u003e GH_AUTH_NOT_READY (no hang/prompt/browser)",
+                "issue_search":  "AUTH_REQUIRED pipeline-ok: same live pipeline result",
+                "issue_read":  "NO_EXISTING_ISSUE_FIXTURE (pure adapter test covers issue.read)",
+                "pr_read":  "NO_EXISTING_PR_FIXTURE (pure adapter test covers pr.read)",
+                "pr_checks_read":  "NO_EXISTING_PR_FIXTURE (pure adapter test covers pr.checks.read)"
+            },
+    "declarations":  {
+                         "AUTH_MUTATED":  "NO",
+                         "TOKEN_READ":  "NO",
+                         "CHECKPOINT5_STARTED":  "NO",
+                         "HOLDBACK_TOUCHED":  "NO",
+                         "SCIENTIFIC_REFS_CHANGED":  "NO",
+                         "MAIN_TOUCHED":  "NO",
+                         "DIRTY_CP21_WORKTREE_TOUCHED":  "NO",
+                         "GENERIC_EXECUTE_IPC":  "NO",
+                         "WRITE_CAPABILITIES":  0
+                     }
+}

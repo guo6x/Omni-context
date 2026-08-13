@@ -1,0 +1,73 @@
+{
+    "schema_version":  "1.0.0",
+    "artifact":  "checkpoint4-environment",
+    "checkpoint":  "Goal24 Checkpoint 4",
+    "generated_at":  "2026-08-13T14:33:27+08:00",
+    "base_sha":  "8238c350e56bcbf486a2e484287bcad66fda6174",
+    "host":  "windows (D:\\ai_code\\Omni-context-worktrees\\cp4-integration, branch local/cp4-integration)",
+    "gh_executable":  {
+                          "path":  "D:\\environment\\github-cli\\bin\\gh.exe",
+                          "version":  "2.97.0 (2026-07-31)",
+                          "resolved_as":  "canonical absolute gh.exe (strict validation: absolute, canonicalizable, regular file, exactly .exe; UNC rejected)",
+                          "version_probe_bypassed":  true,
+                          "version_state_source":  "file metadata + docs/goal24/cp4-github-cli-compatibility.json (Lane C manifest); no gh --version process probe in bootstrap",
+                          "product_source_hardcoding":  "NONE - the dev-machine D:\\ path never appears in product source; production bootstrap discovers via trusted config (OMNI_GITHUB_CLI_EXE) -\u003e standard installs -\u003e PATH; the E2E test harness injects the trusted runtime candidate explicitly (test-only)"
+                      },
+    "auth":  {
+                 "auth_ready":  false,
+                 "auth_status_command":  "gh auth status --active --hostname github.com",
+                 "auth_status_exit_code":  1,
+                 "auth_status_stderr":  "You are not logged into any GitHub hosts. To log in, run: gh auth login",
+                 "auth_mutated":  false,
+                 "token_read":  false,
+                 "notes":  "no gh auth login/refresh/logout/switch/token/show-token was ever executed by this task; no token value was read or recorded anywhere",
+                 "runtime_auth_handling":  "adapter maps gh exit 4 to GH_AUTH_NOT_READY; never prompts, opens a browser, hangs or auto-logins; Broker E2E verified this live (repo.inspect and issue.search reached gh.exe and returned GH_AUTH_NOT_READY)"
+             },
+    "env_policy":  {
+                       "install_locations":  "D: first; C: only existing; new tooling to D:\\environment; no system PATH modification",
+                       "cargo_target_dir":  "D:\\environment\\cargo-target\\cp4-integration",
+                       "child_env":  "Broker env_clear() + minimal allowlist (USERPROFILE, APPDATA, LOCALAPPDATA) so gh can find its own secure credential store; full PATH and entire parent env never inherited",
+                       "never_inherited":  [
+                                               "GH_TOKEN",
+                                               "GITHUB_TOKEN",
+                                               "GH_ENTERPRISE_TOKEN",
+                                               "GITHUB_ENTERPRISE_TOKEN",
+                                               "GH_HOST",
+                                               "GH_REPO",
+                                               "GH_CONFIG_DIR",
+                                               "GH_BROWSER",
+                                               "BROWSER",
+                                               "HTTP_PROXY",
+                                               "HTTPS_PROXY",
+                                               "NO_PROXY",
+                                               "PATH",
+                                               "OPENAI_API_KEY"
+                                           ],
+                       "token_injection":  "never (auth comes only from gh\u0027s existing secure credential/config store)"
+                   },
+    "tests":  {
+                  "cargo_fmt_check":  "PASS",
+                  "cargo_check":  "PASS (1 pre-existing dead_code warning in clipboard.rs, untouched by CP4)",
+                  "cargo_clippy_all_targets":  "PASS (warnings only in pre-existing files; zero warnings in github_cli/* or execution_broker/* CP4 code)",
+                  "cargo_test":  "124 passed, 0 failed, 6 ignored (5 CP4 E2E ignored + 1 pre-existing child-protocol fixture)",
+                  "cargo_test_e2e_ignored":  "5 passed, 0 failed (real Broker -\u003e pinned gh.exe pipeline)",
+                  "desktop_npm_build":  "PASS",
+                  "desktop_verify_controlled":  "PASS",
+                  "brain_server_typecheck":  "PASS",
+                  "brain_server_vitest":  "580 passed (42 files)",
+                  "brain_server_build":  "PASS",
+                  "brain_server_lint":  "0 errors, 9 pre-existing warnings (eslint 8.57.1)",
+                  "git_diff_check":  "clean"
+              },
+    "cargo_audit":  {
+                        "tool":  "cargo-audit 0.22.2 (D:\\environment\\cargo-audit)",
+                        "database":  "D:\\environment\\advisory-db-offline (RustSec, 1216 advisories)",
+                        "output_archived":  "D:\\environment\\tmp\\cp4-audit.txt",
+                        "vulnerabilities":  5,
+                        "warnings":  17,
+                        "UNKNOWN":  0,
+                        "FIX_BEFORE_CP4":  0,
+                        "BLOCKS_CP4":  0,
+                        "classification":  "all 5 NOT_REACHABLE and identical to the CP3 baseline: crossbeam-epoch 0.9.18 RUSTSEC-2026-0204 (fmt::Pointer impls never exercised); quick-xml 0.30.0/0.39.3 RUSTSEC-2026-0194/0195 (xcb build-dep + plist/wayland-scanner paths not compiled for Windows)"
+                    }
+}

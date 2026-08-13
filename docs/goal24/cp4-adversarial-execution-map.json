@@ -1,0 +1,1037 @@
+{
+    "schema_version":  "1.0.0",
+    "artifact":  "checkpoint4-adversarial-execution-map",
+    "checkpoint":  "Goal24 Checkpoint 4",
+    "generated_at":  "2026-08-13T14:30:17+08:00",
+    "base_sha":  "8238c350e56bcbf486a2e484287bcad66fda6174",
+    "vector_source":  "docs/goal24/cp4-github-cli-adversarial-vectors.json",
+    "test_modules":  [
+                         "desktop-daemon/src-tauri/src/github_cli/tests.rs",
+                         "desktop-daemon/src-tauri/src/execution_broker/tests.rs",
+                         "desktop-daemon/src-tauri/src/execution_broker/adversarial.rs"
+                     ],
+    "counts":  {
+                   "total":  103,
+                   "automated":  92,
+                   "covered_by_existing_test":  4,
+                   "manual":  2,
+                   "not_applicable":  5,
+                   "unmapped":  0,
+                   "failed":  0
+               },
+    "integration_fail_conditions":  [
+                                        {
+                                            "id":  "FAIL-01",
+                                            "condition":  "adapter accepts a caller-supplied executable",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-02",
+                                            "condition":  "bare PATH-based gh spawn (no pinned absolute path)",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-03",
+                                            "condition":  "caller can append arbitrary flags to the gh argv",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-04",
+                                            "condition":  "caller controls --json/--jq/--template/--web",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-05",
+                                            "condition":  "GH_TOKEN/GITHUB_TOKEN reach the gh child env",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-06",
+                                            "condition":  "normalized query split into multiple argv elements",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-07",
+                                            "condition":  "invalid owner/repo accepted by the adapter",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-08",
+                                            "condition":  "truncated JSON still treated as success",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-09",
+                                            "condition":  "any write GitHub command appears in CP4 (issue create/comment/close, pr merge/close, repo edit, api POST/PATCH/DELETE, release create, workflow run)",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-10",
+                                            "condition":  "gh auth token output or token values appear in logs/docs",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-11",
+                                            "condition":  "adapter spawns gh directly, bypassing the Broker",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        },
+                                        {
+                                            "id":  "FAIL-12",
+                                            "condition":  "a generic execute-arbitrary-command IPC is opened",
+                                            "status":  "PASS",
+                                            "result":  "NOT_TRIGGERED",
+                                            "reason":  "static and runtime audit of the CP4 diff found no such surface; see cp4-github-cli-compatibility.json and checkpoint4-security-gate.json"
+                                        }
+                                    ],
+    "executions":  [
+                       {
+                           "vector_id":  "CP4V-OWNER-001",
+                           "category":  "OWNER",
+                           "payload":  "../evil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-002",
+                           "category":  "OWNER",
+                           "payload":  "..",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-003",
+                           "category":  "OWNER",
+                           "payload":  "-evil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-004",
+                           "category":  "OWNER",
+                           "payload":  "owner/repo",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-005",
+                           "category":  "OWNER",
+                           "payload":  "owner\\repo",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-006",
+                           "category":  "OWNER",
+                           "payload":  " owner",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-007",
+                           "category":  "OWNER",
+                           "payload":  "owner ",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-008",
+                           "category":  "OWNER",
+                           "payload":  "owner\u0000evil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-009",
+                           "category":  "OWNER",
+                           "payload":  "owner\r\nevil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "owner must match ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$; separator/backslash/NUL/C0/leading-dash/whitespace/empty values are rejected before argv construction (no trimming, TS/Zod parity)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OWNER-010",
+                           "category":  "OWNER",
+                           "payload":  "owner∕evil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "U+2215 division slash is non-ASCII and rejected by the ASCII-only owner pattern; representative non-ASCII classes are exercised in the same test"
+                       },
+                       {
+                           "vector_id":  "CP4V-REPO-001",
+                           "category":  "REPO",
+                           "payload":  "../evil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "repo must match ^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$; same rejection class as owner, bounded to 100 chars"
+                       },
+                       {
+                           "vector_id":  "CP4V-REPO-002",
+                           "category":  "REPO",
+                           "payload":  "-evil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "repo must match ^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$; same rejection class as owner, bounded to 100 chars"
+                       },
+                       {
+                           "vector_id":  "CP4V-REPO-003",
+                           "category":  "REPO",
+                           "payload":  "evil\u0000repo",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "repo must match ^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$; same rejection class as owner, bounded to 100 chars"
+                       },
+                       {
+                           "vector_id":  "CP4V-REPO-004",
+                           "category":  "REPO",
+                           "payload":  "Omni-褋芯ntext",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "exact payload \u0027Omni-瑜媙text\u0027 (U+890B) is in the repo_bad fixture and rejected by the ASCII-only pattern"
+                       },
+                       {
+                           "vector_id":  "CP4V-ISSUE_NUMBER-001",
+                           "category":  "ISSUE_NUMBER",
+                           "payload":  "0",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "number is a strict positive integer (\u003e=1); zero, negatives, floats, strings and u64 overflow are rejected before argv construction"
+                       },
+                       {
+                           "vector_id":  "CP4V-ISSUE_NUMBER-002",
+                           "category":  "ISSUE_NUMBER",
+                           "payload":  "-1",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "number is a strict positive integer (\u003e=1); zero, negatives, floats, strings and u64 overflow are rejected before argv construction"
+                       },
+                       {
+                           "vector_id":  "CP4V-ISSUE_NUMBER-003",
+                           "category":  "ISSUE_NUMBER",
+                           "payload":  "1.5",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "number is a strict positive integer (\u003e=1); zero, negatives, floats, strings and u64 overflow are rejected before argv construction"
+                       },
+                       {
+                           "vector_id":  "CP4V-ISSUE_NUMBER-004",
+                           "category":  "ISSUE_NUMBER",
+                           "payload":  "abc",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "number is a strict positive integer (\u003e=1); zero, negatives, floats, strings and u64 overflow are rejected before argv construction"
+                       },
+                       {
+                           "vector_id":  "CP4V-ISSUE_NUMBER-005",
+                           "category":  "ISSUE_NUMBER",
+                           "payload":  "18446744073709551615",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "issue_and_pr_number_u64_max_stays_a_single_argv_value",
+                           "result":  "NOT_APPLICABLE",
+                           "reason":  "frozen Lane B contract defines number as positive integer with no upper bound (TS Zod int().positive(); Rust u64); the vector\u0027s suggested u32 cap is stricter than the frozen contract; u64::MAX remains one digits-only positional argv element with no flag risk; TS/Rust accept parity is asserted"
+                       },
+                       {
+                           "vector_id":  "CP4V-ISSUE_NUMBER-006",
+                           "category":  "ISSUE_NUMBER",
+                           "payload":  "18446744073709551616",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "number is a strict positive integer (\u003e=1); zero, negatives, floats, strings and u64 overflow are rejected before argv construction"
+                       },
+                       {
+                           "vector_id":  "CP4V-PR_NUMBER-001",
+                           "category":  "PR_NUMBER",
+                           "payload":  "0",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "same strict positive-integer gate as issue number; strings such as branch names or URLs are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-PR_NUMBER-002",
+                           "category":  "PR_NUMBER",
+                           "payload":  "-1",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "same strict positive-integer gate as issue number; strings such as branch names or URLs are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-PR_NUMBER-003",
+                           "category":  "PR_NUMBER",
+                           "payload":  "1.5",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "same strict positive-integer gate as issue number; strings such as branch names or URLs are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-PR_NUMBER-004",
+                           "category":  "PR_NUMBER",
+                           "payload":  "main",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_zero_is_rejected; issue_and_pr_negative_or_non_integer_number_is_rejected; issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "same strict positive-integer gate as issue number; strings such as branch names or URLs are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-PR_NUMBER-005",
+                           "category":  "PR_NUMBER",
+                           "payload":  "18446744073709551616",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_number_overflow_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "18446744073709551616 exceeds the u64 range and is rejected by serde before argv construction"
+                       },
+                       {
+                           "vector_id":  "CP4V-PR_NUMBER-006",
+                           "category":  "PR_NUMBER",
+                           "payload":  "https://github.com/guo6x/Omni-context/pull/1",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_and_pr_negative_or_non_integer_number_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "the URL form is a string and is rejected by the strict positive-integer gate; only digits are accepted for number"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-001",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "--web",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-002",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "--repo=evil/repo",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-003",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "--json=token",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-004",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "--jq=.secrets",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-005",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "-label:bug",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-006",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "foo bar",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-007",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "; calc.exe",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-008",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "| whoami",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-009",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "\u0026\u0026 echo",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-010",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "`whoami`",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-011",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "$()",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "query is semantic data: emitted only as one fused --search=\u003cquery\u003e argv value; flag-like or shell-metacharacter text stays inside the single value; NUL/C0 controls and \u003e1024 chars are rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-012",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "label:bug\r\n--web",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "the embedded newline is a C0 control and the whole query is rejected (class-covered by the C0 fixture)"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-013",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "label:bug\u0000--web",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_query_nul_is_rejected; issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "NUL inside a query is rejected before any language boundary"
+                       },
+                       {
+                           "vector_id":  "CP4V-SEARCH_QUERY-014",
+                           "category":  "SEARCH_QUERY",
+                           "payload":  "\u0027a\u0027 repeated 8192 times (very long query; not expanded in this file)",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_query_too_long_is_rejected",
+                           "result":  "PASS",
+                           "reason":  "query longer than 1024 chars is rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-LIMIT-001",
+                           "category":  "LIMIT",
+                           "payload":  "0",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_limit_zero_and_101_are_rejected; issue_search_limit_non_integer_is_rejected; issue_search_limit_bounds_are_accepted",
+                           "result":  "PASS",
+                           "reason":  "limit is a strict integer in 1..100; 0, 101, 2147483647, floats and strings are rejected before argv"
+                       },
+                       {
+                           "vector_id":  "CP4V-LIMIT-002",
+                           "category":  "LIMIT",
+                           "payload":  "101",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_limit_zero_and_101_are_rejected; issue_search_limit_non_integer_is_rejected; issue_search_limit_bounds_are_accepted",
+                           "result":  "PASS",
+                           "reason":  "limit is a strict integer in 1..100; 0, 101, 2147483647, floats and strings are rejected before argv"
+                       },
+                       {
+                           "vector_id":  "CP4V-LIMIT-003",
+                           "category":  "LIMIT",
+                           "payload":  "2147483647",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_limit_zero_and_101_are_rejected; issue_search_limit_non_integer_is_rejected; issue_search_limit_bounds_are_accepted",
+                           "result":  "PASS",
+                           "reason":  "limit is a strict integer in 1..100; 0, 101, 2147483647, floats and strings are rejected before argv"
+                       },
+                       {
+                           "vector_id":  "CP4V-LIMIT-004",
+                           "category":  "LIMIT",
+                           "payload":  "ten",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_limit_zero_and_101_are_rejected; issue_search_limit_non_integer_is_rejected; issue_search_limit_bounds_are_accepted",
+                           "result":  "PASS",
+                           "reason":  "limit is a strict integer in 1..100; 0, 101, 2147483647, floats and strings are rejected before argv"
+                       },
+                       {
+                           "vector_id":  "CP4V-STATE-001",
+                           "category":  "STATE",
+                           "payload":  "open",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_state_enum_is_strict",
+                           "result":  "PASS",
+                           "reason":  "state is enum-validated against open/closed/all; anything else (including shell text) is rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-STATE-002",
+                           "category":  "STATE",
+                           "payload":  "closed",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_state_enum_is_strict",
+                           "result":  "PASS",
+                           "reason":  "state is enum-validated against open/closed/all; anything else (including shell text) is rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-STATE-003",
+                           "category":  "STATE",
+                           "payload":  "bogus",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_state_enum_is_strict",
+                           "result":  "PASS",
+                           "reason":  "state is enum-validated against open/closed/all; anything else (including shell text) is rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-STATE-004",
+                           "category":  "STATE",
+                           "payload":  "open; calc.exe",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_state_enum_is_strict",
+                           "result":  "PASS",
+                           "reason":  "state is enum-validated against open/closed/all; anything else (including shell text) is rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-CLI_FLAG_INJECTION-001",
+                           "category":  "CLI_FLAG_INJECTION",
+                           "payload":  "--json=token",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "input_unknown_keys_are_rejected; json_field_lists_never_contain_caller_flags; adversarial_query_never_becomes_flags_or_commands",
+                           "result":  "PASS",
+                           "reason":  "--json/--jq/--template field lists are compiled constants; caller keys json/jq/template are rejected; --web/--repo text can only ride inside the fused --search value"
+                       },
+                       {
+                           "vector_id":  "CP4V-CLI_FLAG_INJECTION-002",
+                           "category":  "CLI_FLAG_INJECTION",
+                           "payload":  "--jq=.secrets",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "input_unknown_keys_are_rejected; json_field_lists_never_contain_caller_flags; adversarial_query_never_becomes_flags_or_commands",
+                           "result":  "PASS",
+                           "reason":  "--json/--jq/--template field lists are compiled constants; caller keys json/jq/template are rejected; --web/--repo text can only ride inside the fused --search value"
+                       },
+                       {
+                           "vector_id":  "CP4V-CLI_FLAG_INJECTION-003",
+                           "category":  "CLI_FLAG_INJECTION",
+                           "payload":  "--template={{.token}}",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "input_unknown_keys_are_rejected; json_field_lists_never_contain_caller_flags; adversarial_query_never_becomes_flags_or_commands",
+                           "result":  "PASS",
+                           "reason":  "--json/--jq/--template field lists are compiled constants; caller keys json/jq/template are rejected; --web/--repo text can only ride inside the fused --search value"
+                       },
+                       {
+                           "vector_id":  "CP4V-CLI_FLAG_INJECTION-004",
+                           "category":  "CLI_FLAG_INJECTION",
+                           "payload":  "--web",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; input_unknown_keys_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "\u0027--web\u0027 can only appear inside the fused --search=\u003cquery\u003e value or as an unknown key (rejected); it never becomes a flag"
+                       },
+                       {
+                           "vector_id":  "CP4V-CLI_FLAG_INJECTION-005",
+                           "category":  "CLI_FLAG_INJECTION",
+                           "payload":  "--repo=evil/repo",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected; adversarial_query_never_becomes_flags_or_commands",
+                           "result":  "PASS",
+                           "reason":  "\u0027--repo=evil/repo\u0027 fails owner/repo validation (leading dash, slash) and, as query text, stays inside the fused --search value"
+                       },
+                       {
+                           "vector_id":  "CP4V-SHELL_META-001",
+                           "category":  "SHELL_META",
+                           "payload":  "$GH_TOKEN",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; argv_shell_metacharacters_literal",
+                           "result":  "PASS",
+                           "reason":  "no shell mediation anywhere; //backtick/%VAR%/\u0026/\u003e payloads stay literal inside one argv value and never become commands"
+                       },
+                       {
+                           "vector_id":  "CP4V-SHELL_META-002",
+                           "category":  "SHELL_META",
+                           "payload":  "$(whoami)",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; argv_shell_metacharacters_literal",
+                           "result":  "PASS",
+                           "reason":  "no shell mediation anywhere; //backtick/%VAR%/\u0026/\u003e payloads stay literal inside one argv value and never become commands"
+                       },
+                       {
+                           "vector_id":  "CP4V-SHELL_META-003",
+                           "category":  "SHELL_META",
+                           "payload":  "`whoami`",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; argv_shell_metacharacters_literal",
+                           "result":  "PASS",
+                           "reason":  "no shell mediation anywhere; //backtick/%VAR%/\u0026/\u003e payloads stay literal inside one argv value and never become commands"
+                       },
+                       {
+                           "vector_id":  "CP4V-SHELL_META-004",
+                           "category":  "SHELL_META",
+                           "payload":  "%TEMP%",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; argv_shell_metacharacters_literal",
+                           "result":  "PASS",
+                           "reason":  "no shell mediation anywhere; //backtick/%VAR%/\u0026/\u003e payloads stay literal inside one argv value and never become commands"
+                       },
+                       {
+                           "vector_id":  "CP4V-SHELL_META-005",
+                           "category":  "SHELL_META",
+                           "payload":  "\u0026",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; argv_shell_metacharacters_literal",
+                           "result":  "PASS",
+                           "reason":  "no shell mediation anywhere; //backtick/%VAR%/\u0026/\u003e payloads stay literal inside one argv value and never become commands"
+                       },
+                       {
+                           "vector_id":  "CP4V-SHELL_META-006",
+                           "category":  "SHELL_META",
+                           "payload":  "\u003eout.txt",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "adversarial_query_never_becomes_flags_or_commands; issue_search_query_is_always_one_argv_value; argv_shell_metacharacters_literal",
+                           "result":  "PASS",
+                           "reason":  "no shell mediation anywhere; //backtick/%VAR%/\u0026/\u003e payloads stay literal inside one argv value and never become commands"
+                       },
+                       {
+                           "vector_id":  "CP4V-CONTROL_CHAR-001",
+                           "category":  "CONTROL_CHAR",
+                           "payload":  "a\u0000b",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_query_rejects_nul_and_c0_controls; owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "NUL and C0 controls (0x00-0x1f, 0x7f) are rejected in query; owner/repo pattern rejects tabs and controls"
+                       },
+                       {
+                           "vector_id":  "CP4V-CONTROL_CHAR-002",
+                           "category":  "CONTROL_CHAR",
+                           "payload":  "owner\tevil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "tab inside owner is rejected by the pattern (octo\u003cTAB\u003ecat fixture)"
+                       },
+                       {
+                           "vector_id":  "CP4V-CONTROL_CHAR-003",
+                           "category":  "CONTROL_CHAR",
+                           "payload":  "\u001b[31mred\u001b[0m",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_query_rejects_nul_and_c0_controls",
+                           "result":  "PASS",
+                           "reason":  "ESC (0x1b) is a C0 control and is rejected by validate_query (exact fixture a\u003cESC\u003eb)"
+                       },
+                       {
+                           "vector_id":  "CP4V-CONTROL_CHAR-004",
+                           "category":  "CONTROL_CHAR",
+                           "payload":  "a\u0007b",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "issue_search_query_rejects_nul_and_c0_controls; owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "NUL and C0 controls (0x00-0x1f, 0x7f) are rejected in query; owner/repo pattern rejects tabs and controls"
+                       },
+                       {
+                           "vector_id":  "CP4V-UNICODE-001",
+                           "category":  "UNICODE",
+                           "payload":  "guo6x／Omni-context",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "exact payload \u0027guo6x锛廜mni-context\u0027 (U+FF0F) is in the owner_bad fixture and rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-UNICODE-002",
+                           "category":  "UNICODE",
+                           "payload":  "gu芯6x",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "exact payload \u0027gu鑺?x\u0027 (U+82AF) is in the owner_bad fixture and rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-UNICODE-003",
+                           "category":  "UNICODE",
+                           "payload":  "‮⁦evil",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "exact payload with U+202E/U+2066 bidi overrides is in the owner_bad fixture and rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-UNICODE-004",
+                           "category":  "UNICODE",
+                           "payload":  "evil​repo",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "owner_repo_forbidden_values_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "exact payload with U+200B zero-width space is in the owner_bad fixture and rejected"
+                       },
+                       {
+                           "vector_id":  "CP4V-OUTPUT_JSON-001",
+                           "category":  "OUTPUT_JSON",
+                           "payload":  "caller-controlled --json field list",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "json_field_lists_never_contain_caller_flags; input_unknown_keys_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "output shaping is adapter-owned: fixed --json field lists per capability; callers can never supply --json/--jq/--template"
+                       },
+                       {
+                           "vector_id":  "CP4V-OUTPUT_JSON-002",
+                           "category":  "OUTPUT_JSON",
+                           "payload":  "caller-controlled --jq program",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "json_field_lists_never_contain_caller_flags; input_unknown_keys_are_rejected",
+                           "result":  "PASS",
+                           "reason":  "output shaping is adapter-owned: fixed --json field lists per capability; callers can never supply --json/--jq/--template"
+                       },
+                       {
+                           "vector_id":  "CP4V-OUTPUT_JSON-003",
+                           "category":  "OUTPUT_JSON",
+                           "payload":  "JSON field drift across gh versions",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "parser_rejects_missing_required_field; repo_inspect_parser_tolerates_null_description_and_missing_branch; pr_checks_parser_tolerates_null_rollup",
+                           "result":  "MANUAL_RECORDED",
+                           "reason":  "fail-closed shape validation is automated (missing required fields reject, optional nulls tolerated); the cross-gh-version field-drift matrix is reviewed manually against the pinned 2.97.0 compatibility manifest; gh version state is recorded at bootstrap from file metadata + manifest (version_probe_bypassed=true)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OUTPUT_JSON-004",
+                           "category":  "OUTPUT_JSON",
+                           "payload":  "gh auth status --active --hostname github.com --json hosts",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "parser_classifies_exit_4_as_auth_not_ready",
+                           "result":  "NOT_APPLICABLE",
+                           "reason":  "the adapter never invokes \u0027gh auth status\u0027 (no such binding exists); auth readiness is surfaced per-capability via exit-4 mapping, and the operator precondition check never trusts exit code alone (auth_ready=false recorded)"
+                       },
+                       {
+                           "vector_id":  "CP4V-OUTPUT_TRUNCATION-001",
+                           "category":  "OUTPUT_TRUNCATION",
+                           "payload":  "large JSON response (e.g. issue body \u003e 1 MiB)",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "lifecycle_large_output_truncated_no_deadlock; parser_rejects_truncated_stdout_flag",
+                           "result":  "PASS",
+                           "reason":  "broker bounds stdout/stderr (1 MiB per stream) and marks stdout_truncated; the adapter refuses to parse truncated output"
+                       },
+                       {
+                           "vector_id":  "CP4V-OUTPUT_TRUNCATION-002",
+                           "category":  "OUTPUT_TRUNCATION",
+                           "payload":  "child killed mid-stream",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "parser_rejects_truncated_stdout_flag; parser_rejects_cancelled_result; parser_rejects_timed_out_result",
+                           "result":  "PASS",
+                           "reason":  "child kill/timeout/cancel produce non-success results that the parser rejects"
+                       },
+                       {
+                           "vector_id":  "CP4V-OUTPUT_TRUNCATION-003",
+                           "category":  "OUTPUT_TRUNCATION",
+                           "payload":  "gh issue list without --json",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "parser_rejects_truncated_stdout_flag; parser_rejects_truncated_json; issue_search_argv_snapshot_with_all_options",
+                           "result":  "PASS",
+                           "reason":  "stdout_truncated/timed_out/cancelled/nonzero/invalid-JSON results never parse; --json fixed fields always requested so plain-mode truncation never applies"
+                       },
+                       {
+                           "vector_id":  "CP4V-OUTPUT_TRUNCATION-004",
+                           "category":  "OUTPUT_TRUNCATION",
+                           "payload":  "--limit 100 with huge bodies",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "parser_rejects_truncated_stdout_flag; parser_rejects_truncated_json; issue_search_argv_snapshot_with_all_options",
+                           "result":  "PASS",
+                           "reason":  "stdout_truncated/timed_out/cancelled/nonzero/invalid-JSON results never parse; --json fixed fields always requested so plain-mode truncation never applies"
+                       },
+                       {
+                           "vector_id":  "CP4V-AUTH-001",
+                           "category":  "AUTH",
+                           "payload":  "GH_TOKEN=\u003csecret\u003e inherited by gh child",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; repo_inspect_argv_snapshot",
+                           "result":  "PASS",
+                           "reason":  "token/host/repo/config env never inherited; the compiled argv surface contains no auth/token/hostname commands; runtime exit 4 maps to GH_AUTH_NOT_READY without prompting"
+                       },
+                       {
+                           "vector_id":  "CP4V-AUTH-002",
+                           "category":  "AUTH",
+                           "payload":  "GITHUB_TOKEN=\u003csecret\u003e inherited by gh child",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; repo_inspect_argv_snapshot",
+                           "result":  "PASS",
+                           "reason":  "token/host/repo/config env never inherited; the compiled argv surface contains no auth/token/hostname commands; runtime exit 4 maps to GH_AUTH_NOT_READY without prompting"
+                       },
+                       {
+                           "vector_id":  "CP4V-AUTH-003",
+                           "category":  "AUTH",
+                           "payload":  "gh auth status --show-token",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "repo_inspect_argv_snapshot; issue_search_argv_snapshot_with_all_options; issue_read_argv_snapshot; pr_read_argv_snapshot; pr_checks_read_argv_snapshot",
+                           "result":  "PASS",
+                           "reason":  "argv snapshots pin the complete compiled command surface; no --show-token argv exists anywhere (static scan + snapshot enforcement)"
+                       },
+                       {
+                           "vector_id":  "CP4V-AUTH-004",
+                           "category":  "AUTH",
+                           "payload":  "gh auth token",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "repo_inspect_argv_snapshot; issue_search_argv_snapshot_with_all_options; issue_read_argv_snapshot; pr_read_argv_snapshot; pr_checks_read_argv_snapshot",
+                           "result":  "PASS",
+                           "reason":  "the adapter never invokes \u0027gh auth token\u0027; the command surface is fixed to the five read-only shapes and snapshotted"
+                       },
+                       {
+                           "vector_id":  "CP4V-AUTH-005",
+                           "category":  "AUTH",
+                           "payload":  "gh auth status --active --hostname github.com",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "parser_classifies_exit_4_as_auth_not_ready",
+                           "result":  "NOT_APPLICABLE",
+                           "reason":  "\u0027gh auth status --active\u0027 is only run by the operator as the Checkpoint 4 precondition (observed exit 1 -\u003e auth_ready=false); it is not part of the adapter runtime"
+                       },
+                       {
+                           "vector_id":  "CP4V-AUTH-006",
+                           "category":  "AUTH",
+                           "payload":  "--hostname evil.com",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; issue_search_argv_snapshot_with_all_options",
+                           "result":  "PASS",
+                           "reason":  "GH_HOST is never inherited so gh cannot be redirected to an attacker host; the compiled argv never emits --hostname (default github.com)"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXECUTABLE_DISCOVERY-001",
+                           "category":  "EXECUTABLE_DISCOVERY",
+                           "payload":  "fake gh.cmd placed earlier in PATH",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "discovery_rejects_non_exe_extensions; path_discovery_only_produces_absolute_gh_exe_candidates; discovery_ordering_prefers_bootstrap_then_standard_then_path",
+                           "result":  "PASS",
+                           "reason":  "only an absolute regular .exe is accepted; .cmd/.bat/.ps1 and relative/bare names rejected; trusted config and standard installs outrank PATH"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXECUTABLE_DISCOVERY-002",
+                           "category":  "EXECUTABLE_DISCOVERY",
+                           "payload":  "fake gh.bat earlier in PATH",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "discovery_rejects_non_exe_extensions; path_discovery_only_produces_absolute_gh_exe_candidates; discovery_ordering_prefers_bootstrap_then_standard_then_path",
+                           "result":  "PASS",
+                           "reason":  "only an absolute regular .exe is accepted; .cmd/.bat/.ps1 and relative/bare names rejected; trusted config and standard installs outrank PATH"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXECUTABLE_DISCOVERY-003",
+                           "category":  "EXECUTABLE_DISCOVERY",
+                           "payload":  "fake gh.ps1 resolvable by PowerShell-based launcher",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "discovery_rejects_non_exe_extensions; path_discovery_only_produces_absolute_gh_exe_candidates; discovery_ordering_prefers_bootstrap_then_standard_then_path",
+                           "result":  "PASS",
+                           "reason":  "only an absolute regular .exe is accepted; .cmd/.bat/.ps1 and relative/bare names rejected; trusted config and standard installs outrank PATH"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXECUTABLE_DISCOVERY-004",
+                           "category":  "EXECUTABLE_DISCOVERY",
+                           "payload":  "fake gh.exe earlier in PATH",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "discovery_ordering_prefers_bootstrap_then_standard_then_path; discovery_accepts_exe_extension_regular_file",
+                           "result":  "PASS",
+                           "reason":  "PATH candidates are last-resort and must pass strict validation (absolute, canonicalizable, regular file, exactly .exe); trusted config and standard installs always outrank a PATH entry; optional hash pin remains a documented residual"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXECUTABLE_DISCOVERY-005",
+                           "category":  "EXECUTABLE_DISCOVERY",
+                           "payload":  "relative \u0027gh.exe\u0027 or \u0027gh\u0027",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "discovery_rejects_bare_gh_name; adapter_rejects_relative_or_missing_gh",
+                           "result":  "PASS",
+                           "reason":  "bare \u0027gh\u0027 and relative paths are rejected; only a validated absolute gh.exe is handed to the broker"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXECUTABLE_DISCOVERY-006",
+                           "category":  "EXECUTABLE_DISCOVERY",
+                           "payload":  "\\\\attacker\\share\\gh.exe",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "discovery_rejects_unc_paths",
+                           "result":  "PASS",
+                           "reason":  "UNC network paths (\\\\server\\share\\gh.exe) are rejected before canonicalization; gh must resolve to a local absolute path"
+                       },
+                       {
+                           "vector_id":  "CP4V-PATH_HIJACK-001",
+                           "category":  "PATH_HIJACK",
+                           "payload":  "user-writable directory earlier in PATH",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "discovery_ordering_prefers_bootstrap_then_standard_then_path",
+                           "result":  "PASS",
+                           "reason":  "the pinned absolute path is immune to PATH ordering; PATH discovery only runs after trusted config and standard installs fail"
+                       },
+                       {
+                           "vector_id":  "CP4V-PATH_HIJACK-002",
+                           "category":  "PATH_HIJACK",
+                           "payload":  "D:\\environment\\github-cli\\bin made attacker-writable",
+                           "automation_status":  "MANUAL",
+                           "evidence":  "host directory ACL review",
+                           "result":  "MANUAL_RECORDED",
+                           "reason":  "residual documented: no startup hash pin in CP4; broker fingerprints the executable at spawn (executable_fingerprint_change_detected) and ignores post-spawn replacement (toctou_post_spawn_replacement_ignored)"
+                       },
+                       {
+                           "vector_id":  "CP4V-PATH_HIJACK-003",
+                           "category":  "PATH_HIJACK",
+                           "payload":  "gh.exe swapped between discovery and spawn (TOCTOU)",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "toctou_post_spawn_replacement_ignored; executable_fingerprint_change_detected",
+                           "result":  "PASS",
+                           "reason":  "broker fingerprints the executable and detects changes; post-spawn replacement of the binary is ignored"
+                       },
+                       {
+                           "vector_id":  "CP4V-ENV-001",
+                           "category":  "ENV",
+                           "payload":  "GH_TOKEN",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS",
+                           "reason":  "GH_TOKEN/GITHUB_TOKEN/GH_ENTERPRISE_TOKEN/GITHUB_ENTERPRISE_TOKEN/GH_HOST/GH_REPO/GH_CONFIG_DIR and proxy vars never reach the gh child env; broker secret strip still runs fail-safe"
+                       },
+                       {
+                           "vector_id":  "CP4V-ENV-002",
+                           "category":  "ENV",
+                           "payload":  "GITHUB_TOKEN",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS",
+                           "reason":  "GH_TOKEN/GITHUB_TOKEN/GH_ENTERPRISE_TOKEN/GITHUB_ENTERPRISE_TOKEN/GH_HOST/GH_REPO/GH_CONFIG_DIR and proxy vars never reach the gh child env; broker secret strip still runs fail-safe"
+                       },
+                       {
+                           "vector_id":  "CP4V-ENV-003",
+                           "category":  "ENV",
+                           "payload":  "GH_HOST=evil.example.com",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS",
+                           "reason":  "GH_TOKEN/GITHUB_TOKEN/GH_ENTERPRISE_TOKEN/GITHUB_ENTERPRISE_TOKEN/GH_HOST/GH_REPO/GH_CONFIG_DIR and proxy vars never reach the gh child env; broker secret strip still runs fail-safe"
+                       },
+                       {
+                           "vector_id":  "CP4V-ENV-004",
+                           "category":  "ENV",
+                           "payload":  "GH_REPO=evil/repo",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS",
+                           "reason":  "GH_TOKEN/GITHUB_TOKEN/GH_ENTERPRISE_TOKEN/GITHUB_ENTERPRISE_TOKEN/GH_HOST/GH_REPO/GH_CONFIG_DIR and proxy vars never reach the gh child env; broker secret strip still runs fail-safe"
+                       },
+                       {
+                           "vector_id":  "CP4V-ENV-005",
+                           "category":  "ENV",
+                           "payload":  "GH_CONFIG_DIR=attacker-controlled dir",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS",
+                           "reason":  "GH_TOKEN/GITHUB_TOKEN/GH_ENTERPRISE_TOKEN/GITHUB_ENTERPRISE_TOKEN/GH_HOST/GH_REPO/GH_CONFIG_DIR and proxy vars never reach the gh child env; broker secret strip still runs fail-safe"
+                       },
+                       {
+                           "vector_id":  "CP4V-ENV-006",
+                           "category":  "ENV",
+                           "payload":  "HTTP_PROXY=http://attacker",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS",
+                           "reason":  "GH_TOKEN/GITHUB_TOKEN/GH_ENTERPRISE_TOKEN/GITHUB_ENTERPRISE_TOKEN/GH_HOST/GH_REPO/GH_CONFIG_DIR and proxy vars never reach the gh child env; broker secret strip still runs fail-safe"
+                       },
+                       {
+                           "vector_id":  "CP4V-ENV-007",
+                           "category":  "ENV",
+                           "payload":  "HTTPS_PROXY=http://attacker",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "gh_child_env_excludes_tokens_host_repo_config_and_proxy; env_secrets_not_inherited_and_allowlist_present",
+                           "result":  "PASS",
+                           "reason":  "GH_TOKEN/GITHUB_TOKEN/GH_ENTERPRISE_TOKEN/GITHUB_ENTERPRISE_TOKEN/GH_HOST/GH_REPO/GH_CONFIG_DIR and proxy vars never reach the gh child env; broker secret strip still runs fail-safe"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXIT_CODE-001",
+                           "category":  "EXIT_CODE",
+                           "payload":  "exit 0 (success)",
+                           "automation_status":  "COVERED_BY_EXISTING_TEST",
+                           "evidence":  "lifecycle_success_and_nonzero_exit; repo_inspect_parser_accepts_valid_json",
+                           "result":  "PASS",
+                           "reason":  "exit 0 with valid JSON reaches the typed parser and produces a typed result"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXIT_CODE-002",
+                           "category":  "EXIT_CODE",
+                           "payload":  "exit 1 (failure)",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "parser_rejects_nonzero_exit; parser_classifies_exit_4_as_auth_not_ready",
+                           "result":  "PASS",
+                           "reason":  "exit status is authoritative: only exit 0 with untruncated stdout reaches JSON parsing; exit 4 -\u003e GH_AUTH_NOT_READY; any other nonzero -\u003e GH_CLI_FAILED"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXIT_CODE-003",
+                           "category":  "EXIT_CODE",
+                           "payload":  "exit 4 (auth required)",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "parser_rejects_nonzero_exit; parser_classifies_exit_4_as_auth_not_ready",
+                           "result":  "PASS",
+                           "reason":  "exit status is authoritative: only exit 0 with untruncated stdout reaches JSON parsing; exit 4 -\u003e GH_AUTH_NOT_READY; any other nonzero -\u003e GH_CLI_FAILED"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXIT_CODE-004",
+                           "category":  "EXIT_CODE",
+                           "payload":  "exit 8 (checks pending) from gh pr checks",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "pr_checks_read_argv_snapshot",
+                           "result":  "NOT_APPLICABLE",
+                           "reason":  "the adapter uses \u0027gh pr view --json statusCheckRollup\u0027, never \u0027gh pr checks\u0027; the exit-8 pending semantics never apply and broker global exit semantics are unchanged"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXIT_CODE-005",
+                           "category":  "EXIT_CODE",
+                           "payload":  "gh auth status --json hosts exits 0 while unauthenticated",
+                           "automation_status":  "NOT_APPLICABLE",
+                           "evidence":  "parser_classifies_exit_4_as_auth_not_ready",
+                           "result":  "NOT_APPLICABLE",
+                           "reason":  "the adapter never calls \u0027gh auth status --json hosts\u0027; no exit-code-only auth readiness check exists in the runtime"
+                       },
+                       {
+                           "vector_id":  "CP4V-EXIT_CODE-006",
+                           "category":  "EXIT_CODE",
+                           "payload":  "non-zero exit with valid JSON already on stdout",
+                           "automation_status":  "AUTOMATED",
+                           "evidence":  "parser_rejects_nonzero_exit",
+                           "result":  "PASS",
+                           "reason":  "exit status is authoritative: valid-looking JSON on stdout from a nonzero exit is never parsed"
+                       }
+                   ]
+}
