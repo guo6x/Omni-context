@@ -238,8 +238,8 @@ Declarations: `CHECKPOINT4_STARTED=NO`, `HOLDBACK_TOUCHED=NO`,
 `PRODUCTION_ADAPTER_REGISTERED=NO`.
 
 Push and cleanup: a normal fast-forward push of `dev/goal24-cli-skills` to
-`origin` (no force) is executed immediately after this commit; the
-confirmation is recorded in a follow-up commit in the manifest and in the
+`origin` (no force) was executed immediately after this commit; the
+confirmation is recorded in this follow-up commit in the manifest and in the
 final checkpoint response. After the push the temporary worktrees
 `cp3-broker-core`, `cp3-adversarial-testspec`, `cp3-process-surface-audit`
 and `cp3-integration` and their local branches are removed.
