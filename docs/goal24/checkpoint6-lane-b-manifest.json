@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint6-lane-b-manifest",
+  "lane": "B - EVIDENCE GUARD",
+  "checkpoint": "Goal24 Checkpoint 6",
+  "status": "LANE_B_COMPLETE",
+  "base_sha": "09147b16a284fafa3ec922c6159ac4f2c26084c4",
+  "generated_at": "2026-08-13T23:20:00+08:00",
+  "deliverables": [
+    "brain-server/src/evidence/guard-types.ts",
+    "brain-server/src/evidence/guard-policy.ts",
+    "brain-server/src/evidence/guard.ts",
+    "brain-server/tests/goal24-evidence-guard.test.ts",
+    "docs/goal24/cp6-lane-b-evidence-guard.md",
+    "docs/goal24/checkpoint6-lane-b-manifest.json"
+  ],
+  "actions": [
+    "proceed",
+    "retrieve_more",
+    "clarify",
+    "defer",
+    "block"
+  ],
+  "action_precedence": [
+    "coverage_regression -> block",
+    "assessment_mandatory_satisfied -> proceed (optional evidence can never gate)",
+    "budget_remains_and_retryable_outcome -> retrieve_more (unsatisfied mandatory classes only)",
+    "exhausted_stage: hard_gap block > user_context clarify > temporary defer"
+  ],
+  "provider_outcome_taxonomy": [
+    "collected",
+    "not_found",
+    "temporary_unavailable",
+    "permanent_unavailable",
+    "user_context_required",
+    "provider_error",
+    "collection_limit_exceeded"
+  ],
+  "reason_codes": [
+    "EVIDENCE_SATISFIED",
+    "EVIDENCE_MISSING",
+    "EVIDENCE_STALE",
+    "EVIDENCE_UNVERIFIED",
+    "EVIDENCE_CONFLICT",
+    "RETRIEVAL_AVAILABLE",
+    "RETRIEVAL_EXHAUSTED",
+    "USER_CONTEXT_REQUIRED",
+    "PROVIDER_TEMPORARY_UNAVAILABLE",
+    "PROVIDER_PERMANENT_UNAVAILABLE",
+    "PROVIDER_ERROR",
+    "COLLECTION_LIMIT_EXCEEDED",
+    "COVERAGE_REGRESSION",
+    "GUARD_ABORTED"
+  ],
+  "retrieval_bounds": {
+    "max_retrieval_rounds_min": 0,
+    "max_retrieval_rounds_max": 10,
+    "per_round_timeout_ms_min": 100,
+    "per_round_timeout_ms_max": 86400000,
+    "max_rounds_zero_behavior": "no retrieval attempted",
+    "requested_classes_per_round": "unsatisfied mandatory classes only"
+  },
+  "optional_evidence": {
+    "can_gate": false,
+    "recorded_as": ["warnings", "non_blocking_findings"],
+    "can_change_proceed_into_other_action": false
+  },
+  "coverage_regression": {
+    "action": "block",
+    "reason_code": "COVERAGE_REGRESSION",
+    "explicit_degradation_to": ["stale", "conflicted", "unverified"],
+    "explicit_degradation_requires": "checked_at basis",
+    "explicit_degradation_flow": "retrieve_more refresh"
+  },
+  "llm_action_selection": false,
+  "boundaries": {
+    "decision_kernel_changed": false,
+    "decision_kernel_helper": "evidenceGateCleared(result) true only for action === 'proceed'",
+    "approval_changed": false,
+    "execution_added": false,
+    "guard_creates_approval_reference": false
+  },
+  "synthetic_omission_regression": {
+    "capability_requires": ["class A (mandatory)", "class B (mandatory)"],
+    "collector_returns": "class A only, always strong/verified/fresh",
+    "guaranteed_non_proceed": true,
+    "expected_flow": "retrieve_more for class B, then block/defer/clarify per structured provider outcome"
+  },
+  "validation": {
+    "typecheck": "PASS",
+    "vitest": "PASS: 48 files, 804 tests (lane: tests/goal24-evidence-guard.test.ts, 41 tests)",
+    "build": "PASS",
+    "lint": "PASS: 0 errors in lane files",
+    "git_diff_check": "PASS",
+    "dependency_changes": "NONE"
+  },
+  "declarations": {
+    "ACTIONS": ["proceed", "retrieve_more", "clarify", "defer", "block"],
+    "LLM_ACTION_SELECTION": "NO",
+    "OPTIONAL_EVIDENCE_CAN_GATE": "NO",
+    "MAX_RETRIEVAL_BOUNDED": "YES",
+    "CLARIFY_ONLY_FROM_STRUCTURED_NEED": "YES",
+    "TEMPORARY_UNAVAILABLE": "defer",
+    "PERMANENT_UNAVAILABLE": "block",
+    "COVERAGE_REGRESSION_BLOCKED": "YES",
+    "SYNTHETIC_OMISSION_PROCEEDS": "NO",
+    "EXECUTION_ADDED": "NO",
+    "DECISION_KERNEL_CHANGED": "NO",
+    "APPROVAL_CHANGED": "NO",
+    "HOLDBACK_TOUCHED": "NO",
+    "REMOTE_BRANCH_PUSHED": "NO",
+    "STALE_WORKTREE_GOAL24_CP21_TOUCHED": "NO"
+  }
+}
