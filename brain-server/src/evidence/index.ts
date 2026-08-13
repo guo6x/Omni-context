@@ -7,9 +7,46 @@
  */
 
 export {
+  GUARD_ACTIONS,
+  GUARD_REASON_CODES,
+  MAX_RETRIEVAL_ROUNDS,
+  PROVIDER_OUTCOME_KINDS,
+  ProviderOutcomeSchema,
+  type ClarificationNeed,
+  type CollectCoverage,
+  type CollectCoverageParams,
+  type CollectCoverageResult,
+  type EvidenceGuardResult,
+  type EvidenceGuardRequest,
+  type EvidenceGuardRequestWithSignal,
+  type GuardAction,
+  type GuardReasonCode,
+  type GuardTraceRound,
+  type ProviderOutcome,
+  type ProviderOutcomeKind,
+} from './guard-types.js';
+
+export {
+  chooseControlAction,
+  classifyClassControl,
+  detectCoverageRegression,
+  evidenceGateCleared,
+  type ClassDecision,
+  type ClassFinalKind,
+  type ControlChoice,
+} from './guard-policy.js';
+
+export {
+  runEvidenceGuard,
+  evidenceGateCleared as guardEvidenceGateCleared,
+} from './guard.js';
+
+export {
+  assertValidIdComponent,
   buildEvidenceId,
   canonicalJson,
   claimDigest,
+  encodeEvidenceIdTuple,
   EvidenceCandidateSchema,
   EvidenceTimestampSchema,
   isFutureTimestamp,
@@ -67,3 +104,61 @@ export {
   EvidenceError,
   type EvidenceErrorCode,
 } from './errors.js';
+
+export {
+  coverageDigest,
+  normalizedInputsDigest,
+  requirementsDigest,
+  sha256Hex,
+} from './digests.js';
+
+export {
+  assertValidSubjectKey,
+  CapabilityEvidenceSubjectResolverRegistry,
+  SUBJECT_KEY_MAX_LENGTH,
+  type CapabilityEvidenceSubjectResolver,
+} from './subject.js';
+
+export {
+  genericTestSubjectResolver,
+  githubIssueReadSubjectResolver,
+  githubIssueSearchSubjectResolver,
+  githubPrChecksReadSubjectResolver,
+  githubPrReadSubjectResolver,
+  githubRepoInspectSubjectResolver,
+  githubSubjectResolverRegistry,
+} from './subject-resolvers.js';
+
+export {
+  DEFAULT_MAX_GUARD_RUNS,
+  DEFAULT_MAX_QUALIFIED_RECORDS,
+  EvidenceGuardRunRecordSchema,
+  GuardRunStore,
+  QUALIFICATION_OUTCOMES,
+  QualifiedEvidenceRecordSchema,
+  QualifiedEvidenceStore,
+  type EvidenceGuardRunRecord,
+  type QualificationOutcome,
+  type QualifiedEvidenceRecord,
+} from './stores.js';
+
+export {
+  DEFAULT_EVIDENCE_MAX_RETRIEVAL_ROUNDS,
+  DEFAULT_EVIDENCE_PER_ROUND_TIMEOUT_MS,
+  EvaluateForCapabilityRequestSchema,
+  EvidenceSurfaceRuntime,
+  MAX_NORMALIZED_INPUT_BYTES,
+  MAX_NORMALIZED_INPUT_KEYS,
+  collectCoverageIds,
+  type EvidenceSurfaceEvaluation,
+  type EvidenceSurfaceRuntimeOptions,
+  type EvaluateForCapabilityRequest,
+} from './runtime.js';
+
+export {
+  EvidenceEligibilityService,
+  MaterializeEvidenceRequestSchema,
+  type EvidenceEligibilityRecord,
+  type EvidenceEligibilityServiceOptions,
+  type MaterializeEvidenceRequest,
+} from './eligibility.js';

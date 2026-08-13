@@ -527,7 +527,7 @@ function buildEntry(inputs: EntryInputs): EvidenceCoverageEntry {
       verification_level: highestVerification(agreeing),
       evidence_ids: sortStrings(agreeingIds),
       conflict_evidence_ids: sortStrings(conflictingIds),
-      note: `conflicted claim_key(s): ${conflictedKeys.join(', ')}`.slice(0, 2000),
+      note: `conflicted claim_key(s) for class ${classId}: ${conflictedKeys.length} of ${byClaimKey.size} claim keys disagree`.slice(0, 2000),
     };
   }
 
