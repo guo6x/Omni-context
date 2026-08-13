@@ -32,6 +32,7 @@
     "@types/pdf-parse": "^1.1.5",
     "@xenova/transformers": "^2.17.2",
     "archiver": "^7.0.1",
+    "js-yaml": "^4.3.1",
     "jsdom": "^29.1.1",
     "jszip": "^3.10.1",
     "mammoth": "^1.7.0",
