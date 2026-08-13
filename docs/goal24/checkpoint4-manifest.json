@@ -142,5 +142,33 @@
                          "DIRTY_CP21_WORKTREE_TOUCHED":  "NO",
                          "GENERIC_EXECUTE_IPC":  "NO",
                          "WRITE_CAPABILITIES":  0
-                     }
+                     },
+  "auth_unlock_verification": {
+      "performed_at":  "2026-08-13T15:46:55+08:00",
+      "note":  "CP4 initially integrated successfully but remained AUTH_REQUIRED because host GitHub CLI was unauthenticated. Owner subsequently completed authentication manually. Auth Unlock Verification then re-ran authenticated Broker E2E.",
+      "gh_auth":  {
+                      "account":  "guo6x",
+                      "store":  "keyring",
+                      "active":  true,
+                      "auth_mutated_by_task":  false,
+                      "token_read":  false
+                  },
+      "e2e":  {
+                  "repo_inspect":  "PASS (typed parser verified guo6x/Omni-context)",
+                  "issue_search":  "PASS (limit 5)",
+                  "issue_read":  "PASS (existing fixture issue #1)",
+                  "pr_read":  "NO_FIXTURE",
+                  "pr_checks_read":  "NO_FIXTURE",
+                  "result":  "5 passed, 0 failed"
+              },
+      "code_changes":  [
+
+                       ],
+      "commit":  "docs(goal24): verify authenticated github cli runtime gate",
+      "broker_env_verification":  "authenticated under env_clear() + USERPROFILE/APPDATA/LOCALAPPDATA allowlist; no token env, no full parent env",
+      "gate":  {
+                   "checkpoint4_runtime_gate":  "PASS",
+                   "checkpoint4_security_gate":  "PASS"
+               }
+  }
 }

@@ -223,3 +223,69 @@ ignored E2E tests to flip H/I/J to PASS; no code change is expected.
 Machine-readable records: `checkpoint4-security-gate.json`,
 `checkpoint4-manifest.json`, `checkpoint4-environment.json`,
 `checkpoint4-adversarial-execution-map.json`.
+
+
+## 15. Auth Unlock Verification (2026-08-13) - gate flipped to PASS
+
+> UPDATE: this section supersedes the BLOCKED conclusion of section 13. The
+> history above is preserved verbatim as the original blocked record.
+
+CP4 initially integrated successfully but remained `AUTH_REQUIRED` because the
+host GitHub CLI was unauthenticated. The owner subsequently completed GitHub
+CLI authentication manually (web device flow, stored in the Windows keyring);
+this section records the read-only verification of that unlock.
+
+### 15.1 Auth state (read-only verification)
+
+- `gh auth status --active --hostname github.com` -> exit 0:
+  `Logged in to github.com account guo6x (keyring)`, active account true,
+  git protocol https. The displayed token stayed masked (`gho_****`).
+- `TOKEN_READ = NO`; `AUTH_MUTATED_BY_TASK = NO` (the task ran no
+  login/refresh/logout/switch/token command; the owner authenticated manually
+  before verification).
+
+### 15.2 Authenticated Broker E2E
+
+`cargo test --bin omni-context-desktop e2e_ -- --ignored --nocapture` with
+`OMNI_CP4_E2E_ISSUE_NUMBER=1` -> **5 passed, 0 failed**
+(evidence: `D:\environment\tmp\cp4-auth-e2e.txt`):
+
+| Capability | Result |
+| --- | --- |
+| `github.repo.inspect` (guo6x/Omni-context) | **PASS** - typed parser verified `nameWithOwner == "guo6x/Omni-context"` |
+| `github.issue.search` (guo6x/Omni-context, limit 5) | **PASS** - typed parse success |
+| `github.issue.read` (existing fixture issue #1) | **PASS** - number round-trip verified |
+| `github.pr.read` | **NO_FIXTURE** - repository has no PRs; none created |
+| `github.pr.checks.read` | **NO_FIXTURE** - repository has no PRs |
+
+The full chain `ExecutionPlan -> Broker -> registered ExecutionBinding ->
+pinned absolute gh.exe -> GitHub -> JSON parser -> typed result` executed live
+under the Broker scrubbed environment (`env_clear()` + minimal allowlist
+`USERPROFILE`/`APPDATA`/`LOCALAPPDATA`), proving gh authenticates from its own
+secure keyring with no token env inheritance and no full parent env.
+
+### 15.3 Regression and audit re-run (fresh, at df1c090)
+
+- Rust: `cargo fmt --check` PASS; `cargo check` PASS; `cargo clippy
+  --all-targets` PASS; `cargo test` **124 passed, 0 failed, 6 ignored**;
+  authenticated E2E **5 passed, 0 failed**.
+- Desktop: `npm run build` PASS; `npm run verify:controlled` PASS.
+- Brain server: typecheck PASS; vitest **580 passed (42 files)**; build PASS;
+  lint 0 errors / 9 pre-existing warnings.
+- `cargo audit` (fresh, `D:\environment\advisory-db-offline`): 5
+  vulnerabilities (all NOT_REACHABLE, unchanged), 17 warnings; UNKNOWN=0,
+  FIX_BEFORE_CP4=0, BLOCKS_CP4=0.
+- `git diff --check` clean. No runtime code change was required:
+  docs/evidence only.
+
+### 15.4 Updated gate criteria
+
+- H: auth ready through existing secure gh authentication -> **PASS**
+- I: real github.repo.inspect through Broker -> **PASS**
+- J: real github.issue.search through Broker -> **PASS**
+- A-G and K-Q remain PASS as recorded in section 13.
+
+### 15.5 Final gate
+
+`CHECKPOINT4_RUNTIME_GATE = PASS`; `CHECKPOINT4_SECURITY_GATE = PASS`.
+Goal24 Checkpoint 4 is complete. Checkpoint 5 was not started.

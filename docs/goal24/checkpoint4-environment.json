@@ -69,5 +69,51 @@
                         "FIX_BEFORE_CP4":  0,
                         "BLOCKS_CP4":  0,
                         "classification":  "all 5 NOT_REACHABLE and identical to the CP3 baseline: crossbeam-epoch 0.9.18 RUSTSEC-2026-0204 (fmt::Pointer impls never exercised); quick-xml 0.30.0/0.39.3 RUSTSEC-2026-0194/0195 (xcb build-dep + plist/wayland-scanner paths not compiled for Windows)"
-                    }
+                    },
+  "auth_unlock_verification": {
+      "performed_at":  "2026-08-13T15:46:55+08:00",
+      "note":  "CP4 initially integrated successfully but remained AUTH_REQUIRED because host GitHub CLI was unauthenticated. Owner subsequently completed authentication manually. Auth Unlock Verification then re-ran authenticated Broker E2E.",
+      "gh_executable":  {
+                            "path":  "D:\\environment\\github-cli\\bin\\gh.exe",
+                            "version":  "2.97.0 (2026-07-31)"
+                        },
+      "auth":  {
+                   "auth_ready":  true,
+                   "auth_status_exit_code":  0,
+                   "auth_status_output":  "Logged in to github.com account guo6x (keyring); active account true; git protocol https; token displayed masked (gho_****)",
+                   "auth_mutated_by_task":  false,
+                   "token_read":  false
+               },
+      "broker_env_verification":  "authenticated Broker E2E passed with env_clear() + minimal allowlist (USERPROFILE, APPDATA, LOCALAPPDATA); gh reads owner credentials from the secure keyring; token/host/repo/config/proxy env never inherited; full parent env never inherited",
+      "e2e":  {
+                  "repo_inspect":  "PASS (guo6x/Omni-context identity verified by typed parser)",
+                  "issue_search":  "PASS (limit 5, typed parse success)",
+                  "issue_read":  "PASS (existing fixture issue #1)",
+                  "pr_read":  "NO_FIXTURE",
+                  "pr_checks_read":  "NO_FIXTURE",
+                  "result":  "5 passed, 0 failed",
+                  "evidence_file":  "D:\\environment\\tmp\\cp4-auth-e2e.txt"
+              },
+      "tests_rerun":  {
+                          "cargo_fmt_check":  "PASS",
+                          "cargo_check":  "PASS",
+                          "cargo_clippy_all_targets":  "PASS",
+                          "cargo_test":  "124 passed, 0 failed, 6 ignored",
+                          "desktop_npm_build":  "PASS",
+                          "desktop_verify_controlled":  "PASS",
+                          "brain_server_typecheck":  "PASS",
+                          "brain_server_vitest":  "580 passed (42 files)",
+                          "brain_server_build":  "PASS",
+                          "brain_server_lint":  "0 errors, 9 pre-existing warnings",
+                          "git_diff_check":  "clean"
+                      },
+      "cargo_audit_rerun":  {
+                                "vulnerabilities":  5,
+                                "warnings":  17,
+                                "UNKNOWN":  0,
+                                "FIX_BEFORE_CP4":  0,
+                                "BLOCKS_CP4":  0,
+                                "output_archived":  "D:\\environment\\tmp\\cp4-auth-audit.txt"
+                            }
+  }
 }

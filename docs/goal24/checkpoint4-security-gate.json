@@ -138,5 +138,71 @@
                          "TOKEN_ENV_INHERITED":  "NO",
                          "ARBITRARY_FLAG":  "NO",
                          "WRITE_COMMAND_PRESENT":  "NO"
-                     }
+                     },
+  "auth_unlock_verification": {
+      "performed_at":  "2026-08-13T15:46:55+08:00",
+      "note":  "CP4 initially integrated successfully but remained AUTH_REQUIRED because host GitHub CLI was unauthenticated. Owner subsequently completed authentication manually. Auth Unlock Verification then re-ran authenticated Broker E2E.",
+      "gh_auth":  {
+                      "command":  "gh auth status --active --hostname github.com",
+                      "exit_code":  0,
+                      "account":  "guo6x",
+                      "store":  "keyring",
+                      "active":  true,
+                      "token_displayed":  "masked (gho_****) - token value never read",
+                      "auth_mutated_by_task":  false,
+                      "token_read":  false
+                  },
+      "broker_env_verification":  "authenticated E2E passed under the Broker scrubbed environment (env_clear() + minimal allowlist USERPROFILE/APPDATA/LOCALAPPDATA); gh authenticated from its own secure keyring; token env inheritance NO; full parent env inheritance NO",
+      "e2e":  {
+                  "repo_inspect":  "PASS - typed parser verified nameWithOwner guo6x/Omni-context",
+                  "issue_search":  "PASS - limit 5, typed parse success",
+                  "issue_read":  "PASS - existing fixture issue #1, number round-trip verified",
+                  "pr_read":  "NO_FIXTURE - repository has no PRs, none created",
+                  "pr_checks_read":  "NO_FIXTURE - repository has no PRs",
+                  "harness":  "cargo test --bin omni-context-desktop e2e_ -- --ignored --nocapture (OMNI_CP4_E2E_ISSUE_NUMBER=1)",
+                  "result":  "5 passed, 0 failed",
+                  "evidence_file":  "D:\\environment\\tmp\\cp4-auth-e2e.txt"
+              },
+      "criteria_updated":  {
+                               "H":  {
+                                         "label":  "auth ready through existing secure gh authentication",
+                                         "pass":  true,
+                                         "evidence":  "gh auth status exit 0: Logged in to github.com account guo6x (keyring), active account true"
+                                     },
+                               "I":  {
+                                         "label":  "real github.repo.inspect through Broker PASS",
+                                         "pass":  true,
+                                         "evidence":  "CP4_E2E_REPO_INSPECT=PASS via ExecutionPlan -\u003e Broker -\u003e github-cli.repo.inspect -\u003e pinned gh.exe -\u003e GitHub -\u003e JSON parser -\u003e typed result"
+                                     },
+                               "J":  {
+                                         "label":  "real issue.search through Broker PASS",
+                                         "pass":  true,
+                                         "evidence":  "CP4_E2E_ISSUE_SEARCH=PASS via the real Broker path"
+                                     }
+                           },
+      "tests_rerun":  {
+                          "cargo_fmt_check":  "PASS",
+                          "cargo_check":  "PASS",
+                          "cargo_clippy_all_targets":  "PASS",
+                          "cargo_test":  "124 passed, 0 failed, 6 ignored",
+                          "cargo_test_e2e_authenticated":  "5 passed, 0 failed",
+                          "desktop_npm_build":  "PASS",
+                          "desktop_verify_controlled":  "PASS",
+                          "brain_server":  "typecheck PASS; vitest 580 passed (42 files); build PASS; lint 0 errors / 9 warnings",
+                          "git_diff_check":  "clean"
+                      },
+      "cargo_audit_rerun":  {
+                                "vulnerabilities":  5,
+                                "warnings":  17,
+                                "UNKNOWN":  0,
+                                "FIX_BEFORE_CP4":  0,
+                                "BLOCKS_CP4":  0,
+                                "classification":  "all 5 NOT_REACHABLE, unchanged from the BLOCKED-era baseline; output archived at D:\\environment\\tmp\\cp4-auth-audit.txt"
+                            },
+      "code_change_required":  false,
+      "gate_transition":  "BLOCKED -\u003e PASS",
+      "checkpoint4_runtime_gate_final":  "PASS",
+      "checkpoint4_security_gate_final":  "PASS",
+      "history_preserved":  "the BLOCKED-era H/I/J evaluations and blocked_reason recorded in this file remain as history; the entries above are the authenticated verification results"
+  }
 }
