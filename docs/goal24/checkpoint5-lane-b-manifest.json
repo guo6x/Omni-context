@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint5-lane-b-manifest",
+  "lane": "B — AGENT SKILL IMPORTER",
+  "checkpoint": "Goal24 Checkpoint 5",
+  "status": "LANE_B_COMPLETE",
+  "base_sha": "78400cb5bcc66147e203c22c6c2cfe55abcb2a41",
+  "generated_at": "2026-08-13T16:27:12+08:00",
+  "deliverables": [
+    "brain-server/src/skills/importer/index.ts",
+    "brain-server/src/skills/importer/frontmatter.ts",
+    "brain-server/src/skills/importer/package-loader.ts",
+    "brain-server/src/skills/importer/package-types.ts",
+    "brain-server/src/skills/importer/package-snapshot.ts",
+    "brain-server/src/skills/importer/package-digest.ts",
+    "brain-server/src/skills/importer/path-policy.ts",
+    "brain-server/tests/goal24-skill-importer.test.ts",
+    "brain-server/package.json",
+    "brain-server/package-lock.json",
+    "docs/goal24/cp5-lane-b-agent-skill-importer.md",
+    "docs/goal24/checkpoint5-lane-b-manifest.json"
+  ],
+  "pipeline": ["discover", "inspect", "snapshot", "classify"],
+  "compatibility_profile": {
+    "supports": "Agent Skills folder + SKILL.md YAML frontmatter (name, description) for discovery/import",
+    "not_promised": [
+      "executing bundled scripts",
+      "automatic trust",
+      "automatic conversion of text into authority",
+      "100% vendor-runtime behavioral parity"
+    ]
+  },
+  "omni_manifest": {
+    "file": "omni-skill.json",
+    "schema": "SkillManifestSchema (strict)",
+    "skill_md_only_status": "QUARANTINED_UNBOUND"
+  },
+  "import_statuses": [
+    "ready_for_registry_validation",
+    "QUARANTINED_UNBOUND",
+    "QUARANTINED_INVALID_MANIFEST",
+    "QUARANTINED_NAME_MISMATCH",
+    "IMPORT_REJECTED"
+  ],
+  "failure_codes": [
+    "IMPORT_REJECTED",
+    "PACKAGE_PATH_ESCAPE",
+    "PACKAGE_LIMIT_EXCEEDED",
+    "PACKAGE_CHANGED_DURING_IMPORT"
+  ],
+  "limits": {
+    "max_files": 256,
+    "skill_md_max_bytes": 262144,
+    "omni_manifest_max_bytes": 131072,
+    "single_file_max_bytes": 4194304,
+    "total_package_max_bytes": 16777216,
+    "max_depth": 8
+  },
+  "digest": {
+    "algorithm": "SHA-256",
+    "package_digest": "sorted <relative_path> <size> <sha256> lines joined by LF, hashed",
+    "manifest_digest": "SHA-256 of raw omni-skill.json bytes",
+    "deterministic_against_file_order": true
+  },
+  "dependencies": {
+    "new": [
+      {
+        "package": "js-yaml",
+        "version_range": "^4.3.1",
+        "usage": "SKILL.md YAML frontmatter parsing restricted to the JSON schema (no custom tags/constructors, no eval/Function)"
+      }
+    ],
+    "npm_audit": {
+      "total_findings": 28,
+      "breakdown": "3 low, 10 moderate, 13 high, 2 critical",
+      "new_dependency_findings": 0,
+      "notes": "All findings pre-exist in the unchanged baseline dependency tree; no npm audit fix --force was applied."
+    }
+  },
+  "validation": {
+    "typecheck": "PASS",
+    "vitest": "PASS: 43 files, 621 tests (lane: tests/goal24-skill-importer.test.ts, 41 tests)",
+    "build": "PASS",
+    "lint": "PASS: 0 errors in lane files",
+    "git_diff_check": "PASS"
+  },
+  "declarations": {
+    "SKILL_MD_SUPPORTED": "YES",
+    "YAML_FRONTMATTER": "YES",
+    "OMNI_MANIFEST": "omni-skill.json",
+    "SKILL_MD_ONLY_DEFAULT": "QUARANTINED_UNBOUND",
+    "AUTO_SAFETY_INFERENCE": "NO",
+    "AUTO_TRUST": "NO",
+    "BUNDLED_CODE_EXECUTED": "NO",
+    "SYMLINK_ESCAPE_BLOCKED": "YES",
+    "MANAGED_SNAPSHOT": "YES",
+    "TOCTOU_REHASH": "YES",
+    "PROCESS_EXECUTION_ADDED": "NO",
+    "HOLDBACK_TOUCHED": "NO",
+    "REMOTE_BRANCH_PUSHED": "NO",
+    "STALE_WORKTREE_GOAL24_CP21_TOUCHED": "NO",
+    "SKILL_REGISTRY_STARTED": "NO"
+  }
+}
