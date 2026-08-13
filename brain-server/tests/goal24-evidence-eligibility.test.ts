@@ -414,4 +414,3 @@ describe('EvidenceEligibilityService - construction boundary', () => {
     })).toThrowError(/EVIDENCE_INPUT_INVALID/);
   });
 });
-
