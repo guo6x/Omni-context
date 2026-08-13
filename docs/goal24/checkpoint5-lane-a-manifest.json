@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "5",
+  "lane": "A",
+  "name": "Goal24 Checkpoint 5 Lane A - Skill Registry V1 Core + Safety Inheritance Hardening",
+  "date": "2026-08-13",
+  "base_sha": "78400cb5bcc66147e203c22c6c2cfe55abcb2a41",
+  "base_note": "origin/dev/goal24-cli-skills, verified exact after git fetch --all --tags --prune",
+  "local_branch": "local/cp5-skill-registry-core",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp5-skill-registry-core",
+  "commit_sha": "0f067b33e44a5639b05c5780048f5d32770bd056",
+  "commit_sha_note": "docs commit that records this checkpoint; the manifest itself is committed as the branch tip immediately after",
+  "commits": [
+    { "sha": "1d14b44559717aa3e1d945f5920ae94c0fc65383", "message": "fix(skills): enforce canonical safety inheritance" },
+    { "sha": "f8a3d568cbbfaa2f9120d7b299508cc2c895b7f9", "message": "feat(skills): add persistent skill registry v1" },
+    { "sha": "60e123ff5c31eade37de146bff7257b1cbce4755", "message": "test(skills): harden registry trust and version semantics" },
+    { "sha": "0f067b33e44a5639b05c5780048f5d32770bd056", "message": "docs(goal24): record cp5 registry lane" }
+  ],
+  "remote_branch_pushed": false,
+  "files": {
+    "added": [
+      "brain-server/src/skills/registry.ts",
+      "brain-server/src/skills/registry-types.ts",
+      "brain-server/src/skills/registry-store.ts",
+      "brain-server/tests/goal24-skill-contracts.test.ts",
+      "brain-server/tests/goal24-skill-registry.test.ts",
+      "docs/goal24/cp5-lane-a-skill-registry.md",
+      "docs/goal24/checkpoint5-lane-a-manifest.json"
+    ],
+    "modified": [
+      "brain-server/src/skills/contracts.ts"
+    ]
+  },
+  "safety_inheritance_fixed": true,
+  "conflict_policy_default": "canonical effective value of an undeclared conflict_policy is reject (effectiveConflictPolicy, CP2.2); the old skill-side '?? allow' guess is removed",
+  "conflict_policy_ordering": "allow(0) < warn(1) < reject(2); effective skill policy must be >= effective capability policy (skills may strengthen, never weaken)",
+  "verification_ordering": "none(0) < asserted(1) < verified(2); canonical default undefined -> none via exported effectiveVerificationRequirement; effective skill requirement must be >= effective capability requirement",
+  "other_inheritance_preserved": [
+    "mandatory capability evidence must exist in the skill with mandatory=true",
+    "capability freshness_policy requires skill max_age_ms <= capability max_age_ms",
+    "skill risk must be >= the highest referenced capability risk"
+  ],
+  "wire_schema_changed": false,
+  "registry": {
+    "module": "brain-server/src/skills/registry.ts",
+    "types_module": "brain-server/src/skills/registry-types.ts",
+    "store_module": "brain-server/src/skills/registry-store.ts",
+    "persistent": true,
+    "persistence_model": "deterministic JSON store { schema_version: 1, updated_at, records[] }; atomic temp -> write -> fsync -> close -> rename; strict reads fail closed with SKILL_REGISTRY_CORRUPT; ENOENT = first-run empty store; path injected via constructor/open, never hardcoded",
+    "record_fields": ["name", "version", "manifest", "package_digest", "manifest_digest", "source_type", "source_id", "source_reference", "trust_status", "installed_at", "updated_at", "enabled", "revoked", "validation_status", "validation_issues", "capability_ids", "risk_snapshot", "provenance"],
+    "strict_unknown_field_rejection": true,
+    "digest_policy": "lowercase SHA-256 hex (64 chars) only; MD5 and SHA-1 rejected by schema",
+    "api": ["register", "get", "list", "listVersions", "resolveLatestTrusted", "disable", "revoke", "setTrustStatus", "validateManifest", "validateRecord", "isEligibleForUse", "open"],
+    "capability_lookup_injected": true
+  },
+  "trust_states": ["quarantined", "reviewed", "trusted", "revoked"],
+  "imported_default_trust": "quarantined",
+  "local_default_trust": "quarantined",
+  "builtin_default_trust": "quarantined unless the separately defined trusted built-in policy predicate explicitly allows trusted for that builtin",
+  "auto_trust_present": false,
+  "trusted_promotion_mechanisms": ["owner-decision", "admin-decision", "builtin-policy"],
+  "trust_transition_requires_provenance": true,
+  "public_trust_ipc_added": false,
+  "revoked_not_direct_transition_target": true,
+  "version_identity": "name@version",
+  "version_conflict_fail_closed": true,
+  "idempotent_identical_content": true,
+  "semver_comparison": "numeric major.minor.patch (1.10.0 > 1.9.0); no prerelease/range support",
+  "eligibility_gates": [
+    "manifest schema valid",
+    "validateSkillManifestAgainstCapabilities issues == 0",
+    "all referenced capabilities exist",
+    "valid SHA-256 digests",
+    "trust_status == trusted",
+    "enabled == true",
+    "revoked == false"
+  ],
+  "eligibility_is_not_execution": true,
+  "adapter_preference_authority": "preference only; never overrides capability authority, evidence, risk, executable or argv",
+  "registry_executes_nothing": true,
+  "process_execution_added": false,
+  "public_trust_ipc": false,
+  "mcp_tauri_wiring_added": false,
+  "desktop_daemon_touched": false,
+  "github_cli_adapter_touched": false,
+  "dependencies_changed": false,
+  "package_lock_touched": false,
+  "tests": {
+    "new_files": [
+      "brain-server/tests/goal24-skill-contracts.test.ts (24 tests)",
+      "brain-server/tests/goal24-skill-registry.test.ts (30 tests)"
+    ],
+    "new_test_count": 54,
+    "pure": true,
+    "coverage": [
+      "conflict ordering matrix (cap undefined+warn+reject x skill allow/warn/reject/undefined)",
+      "verification ordering matrix (asserted/verified x none/asserted/verified/undefined)",
+      "effectiveVerificationRequirement canonical default",
+      "valid register / invalid manifest / unknown input fields / missing capability / risk weakening / evidence weakening",
+      "invalid SHA digest rejection",
+      "idempotent re-registration and SKILL_VERSION_CONFLICT",
+      "numeric semver resolution 1.10.0 > 1.9.0",
+      "quarantined/reviewed/trusted/revoked/disabled eligibility",
+      "trust promotion mechanism enforcement and provenance requirements",
+      "builtin-policy trust and imported/local default quarantined",
+      "persistence reload, corrupt store fail-closed, unknown persisted fields, duplicate persisted identities, first-run empty store"
+    ],
+    "result": {
+      "suite": "brain-server npx vitest run",
+      "test_files": 44,
+      "passed": 634,
+      "failed": 0
+    }
+  },
+  "verification": {
+    "typecheck": "PASS (tsc --noEmit, exit 0)",
+    "vitest": "PASS (634 passed, 0 failed, 44 files)",
+    "build": "PASS (tsc emit, exit 0)",
+    "lint": "PASS (0 errors; only pre-existing warnings outside this lane; no warnings in CP5 files)",
+    "npm_audit": "not required; no dependency changes",
+    "git_diff_check": "PASS",
+    "static_no_execution_scan": "PASS (no child_process/exec/execFile/spawn/shell/Command/powershell/cmd.exe/bash/sh -c in the four CP5 source files)"
+  },
+  "known_residual_risks": [
+    "Registry accepts digests from the future importer; it does not read the package filesystem itself, so importer hashing correctness is a later-checkpoint concern",
+    "Stored records are registration-time snapshots; eligibility re-validates against the live capability lookup at read time",
+    "setTrustStatus is an internal service API; any later MCP/Tauri wiring requires its own security gate",
+    "builtinTrustedPolicy is applied only to source_type == builtin registrations"
+  ],
+  "holdback_touched": false,
+  "legacy_dirty_worktree_touched": false,
+  "environment": {
+    "policy": "D: first, then existing C:; new installs only under D:\\environment",
+    "node": "D:\\environment\\node\\node-v22.23.2-win-x64\\node.exe",
+    "npm_cache": "D:\\environment\\npm-cache",
+    "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp5-skill-registry-core"
+  }
+}
