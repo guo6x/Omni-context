@@ -1,0 +1,42 @@
+{
+  "fixture_id": "cp6-conflict",
+  "description": "Two providers disagree on the same claim value; conflict_policy=reject on the requirement.",
+  "expected_guard_verdict": "BLOCK",
+  "decision_context": { "capability_id": "github.pr.read", "capability_version": "1.0.0", "subject": "pr:repoA/demo#1" },
+  "requirements": [
+    { "class_id": "pull_request.current_state", "mandatory": true, "freshness_policy": { "max_age_ms": 300000 }, "conflict_policy": "reject", "verification_requirement": "verified" }
+  ],
+  "provider_records": [
+    {
+      "provider_id": "github-cli",
+      "registered_class": "pull_request.current_state",
+      "evidence_class": "pull_request.current_state",
+      "subject": "pr:repoA/demo#1",
+      "claim_value": { "number": 1, "state": "OPEN", "isDraft": false, "mergeable": "MERGEABLE", "reviewDecision": "APPROVED" },
+      "verification_level": "verified",
+      "provider_max_verification": "verified",
+      "observed_at": "2026-08-13T09:00:00Z",
+      "source_updated_at": "2026-08-13T08:59:55Z",
+      "note": "synthetic",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "provider_id": "github-api",
+      "registered_class": "pull_request.current_state",
+      "evidence_class": "pull_request.current_state",
+      "subject": "pr:repoA/demo#1",
+      "claim_value": { "number": 1, "state": "CLOSED", "isDraft": false, "mergeable": "UNKNOWN", "reviewDecision": null },
+      "verification_level": "verified",
+      "provider_max_verification": "verified",
+      "observed_at": "2026-08-13T09:00:05Z",
+      "source_updated_at": "2026-08-13T09:00:00Z",
+      "note": "synthetic",
+      "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "coverage_snapshot": {
+    "entries": [
+      { "evidence_class": "pull_request.current_state", "status": "conflicted", "verification_level": "verified", "evidence_ids": ["ev-a-0001"], "conflict_evidence_ids": ["ev-a-0002"], "checked_at": "2026-08-13T09:00:11Z" }
+    ]
+  }
+}

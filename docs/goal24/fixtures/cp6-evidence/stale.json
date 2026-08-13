@@ -1,0 +1,45 @@
+{
+  "fixture_id": "cp6-stale",
+  "description": "Mandatory B exists but its observed_at is older than its max_age (freshness evaluated against now=2026-08-13T09:01:00Z).",
+  "expected_guard_verdict": "NEVER_PROCEED",
+  "decision_context": { "capability_id": "github.pr.read", "capability_version": "1.0.0", "subject": "pr:repoA/demo#1" },
+  "now": "2026-08-13T09:01:00Z",
+  "requirements": [
+    { "class_id": "pull_request.current_state", "mandatory": true, "freshness_policy": { "max_age_ms": 300000 }, "conflict_policy": "reject", "verification_requirement": "verified" },
+    { "class_id": "pull_request.checks_status", "mandatory": true, "freshness_policy": { "max_age_ms": 60000 }, "conflict_policy": "reject", "verification_requirement": "asserted" }
+  ],
+  "provider_records": [
+    {
+      "provider_id": "github-cli",
+      "registered_class": "pull_request.current_state",
+      "evidence_class": "pull_request.current_state",
+      "subject": "pr:repoA/demo#1",
+      "claim_value": { "number": 1, "state": "OPEN", "isDraft": false, "mergeable": "MERGEABLE", "reviewDecision": "APPROVED" },
+      "verification_level": "verified",
+      "provider_max_verification": "verified",
+      "observed_at": "2026-08-13T09:00:00Z",
+      "source_updated_at": "2026-08-13T08:59:55Z",
+      "note": "synthetic",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "provider_id": "github-cli",
+      "registered_class": "pull_request.checks_status",
+      "evidence_class": "pull_request.checks_status",
+      "subject": "pr:repoA/demo#1",
+      "claim_value": { "statusCheckRollup": [ { "name": "ci", "status": "COMPLETED", "conclusion": "SUCCESS" } ] },
+      "verification_level": "asserted",
+      "provider_max_verification": "asserted",
+      "observed_at": "2026-08-13T08:50:00Z",
+      "source_updated_at": "2026-08-13T08:49:50Z",
+      "note": "synthetic",
+      "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "coverage_snapshot": {
+    "entries": [
+      { "evidence_class": "pull_request.current_state", "status": "present", "verification_level": "verified", "evidence_ids": ["ev-a-0001"], "checked_at": "2026-08-13T09:00:11Z" },
+      { "evidence_class": "pull_request.checks_status", "status": "stale", "verification_level": "asserted", "evidence_ids": ["ev-b-0001"], "checked_at": "2026-08-13T09:00:11Z", "stale_since": "2026-08-13T08:51:00Z" }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "fixture_id": "cp6-future",
+  "description": "observed_at is 1 hour in the future relative to now. Future timestamps never count fresh.",
+  "expected_guard_verdict": "REJECT",
+  "decision_context": { "capability_id": "github.pr.read", "capability_version": "1.0.0", "subject": "pr:repoA/demo#1" },
+  "now": "2026-08-13T09:00:00Z",
+  "requirements": [
+    { "class_id": "pull_request.current_state", "mandatory": true, "freshness_policy": { "max_age_ms": 300000 }, "conflict_policy": "reject", "verification_requirement": "verified" }
+  ],
+  "provider_records": [
+    {
+      "provider_id": "github-cli",
+      "registered_class": "pull_request.current_state",
+      "evidence_class": "pull_request.current_state",
+      "subject": "pr:repoA/demo#1",
+      "claim_value": { "number": 1, "state": "OPEN", "isDraft": false, "mergeable": "MERGEABLE", "reviewDecision": "APPROVED" },
+      "verification_level": "verified",
+      "provider_max_verification": "verified",
+      "observed_at": "2026-08-13T10:00:00Z",
+      "source_updated_at": "2026-08-13T10:00:00Z",
+      "note": "synthetic clock-skew fixture",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "coverage_snapshot": {
+    "entries": [
+      { "evidence_class": "pull_request.current_state", "status": "present", "verification_level": "verified", "evidence_ids": ["ev-a-0001"], "checked_at": "2026-08-13T09:00:11Z" }
+    ]
+  }
+}

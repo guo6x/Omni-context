@@ -1,0 +1,21 @@
+{
+  "fixture_id": "cp6-coverage-regression",
+  "description": "Previous snapshot covered mandatory B; the new snapshot drops class B entirely.",
+  "expected_guard_verdict": "REJECT (coverage regression)",
+  "decision_context": { "capability_id": "github.pr.read", "capability_version": "1.0.0", "subject": "pr:repoA/demo#1" },
+  "requirements": [
+    { "class_id": "pull_request.current_state", "mandatory": true, "freshness_policy": { "max_age_ms": 300000 }, "conflict_policy": "reject", "verification_requirement": "verified" },
+    { "class_id": "pull_request.checks_status", "mandatory": true, "freshness_policy": { "max_age_ms": 60000 }, "conflict_policy": "reject", "verification_requirement": "asserted" }
+  ],
+  "previous_coverage_snapshot": {
+    "entries": [
+      { "evidence_class": "pull_request.current_state", "status": "present", "verification_level": "verified", "evidence_ids": ["ev-a-0001"], "checked_at": "2026-08-13T08:58:00Z" },
+      { "evidence_class": "pull_request.checks_status", "status": "present", "verification_level": "asserted", "evidence_ids": ["ev-b-0001"], "checked_at": "2026-08-13T08:58:00Z" }
+    ]
+  },
+  "coverage_snapshot": {
+    "entries": [
+      { "evidence_class": "pull_request.current_state", "status": "present", "verification_level": "verified", "evidence_ids": ["ev-a-0001"], "checked_at": "2026-08-13T09:00:11Z" }
+    ]
+  }
+}

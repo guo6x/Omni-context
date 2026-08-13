@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "goal24_checkpoint": "6",
+  "lane": "C",
+  "purpose": "Design catalog for the first GitHub read-only evidence classes, sourced exclusively from existing CP4 read-only capabilities. No provider runtime is written here; this catalog only fixes class shapes, subject bindings, claim keys, verification caps, and freshness guidance for the future Evidence Core.",
+  "generated_at": "2026-08-13T17:05:00+08:00",
+  "design_constraints": {
+    "read_only_capabilities_only": true,
+    "no_new_write_capabilities": ["issue.create", "pr.merge", "comment", "any write capability"],
+    "pr_checks_sourcing": "pull_request.checks_status continues to source from github.pr.checks.read, whose CP4 implementation is gh pr view --json statusCheckRollup. Do NOT require gh pr checks (its pending-exit semantics would force a broker-wide exit-code change)."
+  },
+  "capabilities_available_cp4": [
+    "github.repo.inspect",
+    "github.issue.search",
+    "github.issue.read",
+    "github.pr.read",
+    "github.pr.checks.read"
+  ],
+  "evidence_classes": [
+    {
+      "evidence_class": "repository.current_state",
+      "source_capability": "github.repo.inspect",
+      "subject_key_shape": "repo:<owner>/<name>",
+      "claim_key": "repository.current_state",
+      "claim_value_shape": {
+        "nameWithOwner": "string",
+        "visibility": "enum PUBLIC|PRIVATE|INTERNAL",
+        "isPrivate": "boolean",
+        "isArchived": "boolean",
+        "defaultBranchRef": "string",
+        "viewerPermission": "string"
+      },
+      "max_verification_level_recommendation": "asserted",
+      "freshness_considerations": "Repo metadata changes slowly (visibility, archive, default branch). A 1h-24h max_age is reasonable; shorter for decisions that gate writes. Single CLI source caps verification at asserted; verified would require an independent second source."
+    },
+    {
+      "evidence_class": "issue.current_state",
+      "source_capability": "github.issue.read",
+      "subject_key_shape": "issue:<owner>/<repo>#<number>",
+      "claim_key": "issue.current_state",
+      "claim_value_shape": {
+        "number": "integer",
+        "state": "enum OPEN|CLOSED",
+        "stateReason": "enum|null",
+        "title": "string",
+        "labels": "array",
+        "updatedAt": "ISO-8601",
+        "closedAt": "ISO-8601|null"
+      },
+      "max_verification_level_recommendation": "asserted",
+      "freshness_considerations": "Issue state can change at any moment (close, reopen, label changes). Use a short max_age (minutes, e.g. 5m) for triage/close decisions; never treat a single old read as current state."
+    },
+    {
+      "evidence_class": "pull_request.current_state",
+      "source_capability": "github.pr.read",
+      "subject_key_shape": "pr:<owner>/<repo>#<number>",
+      "claim_key": "pull_request.current_state",
+      "claim_value_shape": {
+        "number": "integer",
+        "state": "enum OPEN|CLOSED|MERGED",
+        "isDraft": "boolean",
+        "baseRefName": "string",
+        "headRefName": "string",
+        "mergeable": "enum MERGEABLE|CONFLICTING|UNKNOWN|null",
+        "mergeStateStatus": "string|null",
+        "reviewDecision": "string|null"
+      },
+      "max_verification_level_recommendation": "asserted",
+      "freshness_considerations": "PR state is highly mutable (pushes, review changes, merges). Short max_age (minutes) is required for merge-eligibility decisions; mergeStateStatus is approximate and must not be presented as verified."
+    },
+    {
+      "evidence_class": "pull_request.checks_status",
+      "source_capability": "github.pr.checks.read",
+      "subject_key_shape": "pr:<owner>/<repo>#<number>",
+      "claim_key": "pull_request.checks_status",
+      "claim_value_shape": {
+        "number": "integer",
+        "statusCheckRollup": "array of { name, status, conclusion, startedAt, completedAt }"
+      },
+      "max_verification_level_recommendation": "asserted",
+      "freshness_considerations": "CI checks are the most volatile class. max_age should be minutes (e.g. 1m-5m) for gate decisions; pending checks must be represented as pending (via statusCheckRollup), never as passed. A second independent source (or provider-level confirmation) would be required before any verified classification."
+    }
+  ],
+  "subject_binding_rules": {
+    "same_class_does_not_equal_same_object": true,
+    "binding_check_points": ["qualification", "guard_gate"],
+    "canonicalization": "owner/repo lowercased per GitHub semantics; #number strictly numeric; no prefix matching; no truncation",
+    "cross_scope_rejections": ["cross_subject", "cross_repository", "cross_user"]
+  },
+  "claims": {
+    "claim_identity": "evidence_class + subject_key + content digest",
+    "claim_digest_algorithm": "sha256",
+    "verification_rank": "none < asserted < verified",
+    "provider_max_caps_claim": true
+  },
+  "write_capability_required": false
+}
