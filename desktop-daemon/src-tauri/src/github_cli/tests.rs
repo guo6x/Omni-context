@@ -208,6 +208,10 @@ fn owner_repo_forbidden_values_are_rejected() {
         "octo\u{7}cat",
         "octo\u{0}cat",
         "octo\r\ncat",
+        "guo6x\u{ff0f}Omni-context",
+        "gu\u{82af}6x",
+        "\u{202e}\u{2066}evil",
+        "evil\u{200b}repo",
         long_owner.as_str(),
     ];
     let repo_bad = [
@@ -227,6 +231,7 @@ fn owner_repo_forbidden_values_are_rejected() {
         "octo\u{7}cat",
         "octo\u{0}cat",
         "octo\r\ncat",
+        "Omni-\u{890b}ntext",
         long_repo.as_str(),
     ];
     for bad in &owner_bad {
@@ -269,7 +274,7 @@ fn owner_repo_valid_names_are_accepted_verbatim_and_bounded() {
 #[test]
 fn issue_search_query_rejects_nul_and_c0_controls() {
     for bad in [
-        "a\u{0}b", "a\u{1}b", "a\u{7}b", "a\u{1f}b", "a\u{7f}b", "a\tb", "a\nb", "a\rb",
+        "a\u{0}b", "a\u{1}b", "a\u{7}b", "a\u{1b}b", "a\u{1f}b", "a\u{7f}b", "a\tb", "a\nb", "a\rb",
     ] {
         let mut map = owner_repo_map();
         map.insert("query".to_string(), json!(bad));
@@ -303,7 +308,14 @@ fn issue_and_pr_number_zero_is_rejected() {
 
 #[test]
 fn issue_and_pr_negative_or_non_integer_number_is_rejected() {
-    for bad in [json!(-1), json!(1.5), json!("42"), json!(null)] {
+    for bad in [
+        json!(-1),
+        json!(1.5),
+        json!("42"),
+        json!("main"),
+        json!("https://github.com/guo6x/Omni-context/pull/1"),
+        json!(null),
+    ] {
         let mut map = owner_repo_map();
         map.insert("number".to_string(), bad.clone());
         assert_input_err(Capability::IssueRead, &map);
@@ -312,10 +324,46 @@ fn issue_and_pr_negative_or_non_integer_number_is_rejected() {
 }
 
 #[test]
+fn issue_and_pr_number_overflow_is_rejected() {
+    let value: Value = serde_json::from_str(
+        r#"{"owner":"octocat","repo":"Hello-World","number":18446744073709551616}"#,
+    )
+    .unwrap();
+    let map = value.as_object().unwrap().clone();
+    assert_input_err(Capability::IssueRead, &map);
+    assert_input_err(Capability::PrRead, &map);
+    assert_input_err(Capability::PrChecksRead, &map);
+}
+
+#[test]
+fn issue_and_pr_number_u64_max_stays_a_single_argv_value() {
+    let mut map = owner_repo_map();
+    map.insert("number".to_string(), json!(u64::MAX));
+    for capability in [
+        Capability::IssueRead,
+        Capability::PrRead,
+        Capability::PrChecksRead,
+    ] {
+        let argv = argv_for(capability, &map);
+        assert_eq!(argv[2], u64::MAX.to_string(), "{argv:?}");
+        assert_only_known_flags(&argv);
+    }
+}
+
+#[test]
 fn issue_search_limit_zero_and_101_are_rejected() {
-    for limit in [0u64, 101] {
+    for limit in [0u64, 101, 2_147_483_647] {
         let mut map = owner_repo_map();
         map.insert("limit".to_string(), json!(limit));
+        assert_input_err(Capability::IssueSearch, &map);
+    }
+}
+
+#[test]
+fn issue_search_limit_non_integer_is_rejected() {
+    for bad in [json!(1.5), json!("ten")] {
+        let mut map = owner_repo_map();
+        map.insert("limit".to_string(), bad);
         assert_input_err(Capability::IssueSearch, &map);
     }
 }
@@ -332,9 +380,11 @@ fn issue_search_limit_bounds_are_accepted() {
 
 #[test]
 fn issue_search_state_enum_is_strict() {
-    let mut bad_state = owner_repo_map();
-    bad_state.insert("state".to_string(), json!("OPEN"));
-    assert_input_err(Capability::IssueSearch, &bad_state);
+    for bad in ["OPEN", "bogus", "open; calc.exe"] {
+        let mut bad_state = owner_repo_map();
+        bad_state.insert("state".to_string(), json!(bad));
+        assert_input_err(Capability::IssueSearch, &bad_state);
+    }
 
     for state in ["open", "closed", "all"] {
         let mut map = owner_repo_map();
@@ -395,6 +445,13 @@ fn adversarial_query_never_becomes_flags_or_commands() {
         "--template={{.title}}",
         "--hostname evil.example.com",
         "-R other/evil",
+        "$GH_TOKEN",
+        "%TEMP%",
+        "&",
+        ">out.txt",
+        "-label:bug",
+        "foo bar",
+        "--repo=evil",
         "; calc.exe",
         "| whoami",
         "&& del C:\\Windows",
@@ -777,6 +834,12 @@ fn discovery_rejects_non_exe_extensions() {
 }
 
 #[cfg(windows)]
+#[test]
+fn discovery_rejects_unc_paths() {
+    let err = validate_trusted_gh(std::path::Path::new(r"\\attacker\share\gh.exe")).unwrap_err();
+    assert_eq!(err.code, GithubCliErrorCode::GhExecutableNotReady);
+}
+
 #[test]
 fn discovery_accepts_exe_extension_regular_file() {
     let path = std::env::temp_dir().join("omni-gh-discovery-ok.exe");

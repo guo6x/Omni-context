@@ -121,6 +121,14 @@ pub fn validate_trusted_gh(path: &Path) -> Result<PathBuf, GithubCliError> {
 
     #[cfg(windows)]
     {
+        let text = path.to_string_lossy();
+        if (text.starts_with(r"\\") && !text.starts_with(r"\\?\"))
+            || (text.starts_with("//") && !text.starts_with("//?/"))
+        {
+            return Err(reject(
+                "UNC network paths are rejected; gh must resolve to a local absolute path",
+            ));
+        }
         match path.extension().and_then(|ext| ext.to_str()) {
             Some(ext) if ext.eq_ignore_ascii_case("exe") => {}
             _ => {
