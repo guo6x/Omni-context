@@ -28,6 +28,8 @@ export interface PackageLimits {
   maxSingleFileBytes: number;
   maxTotalBytes: number;
   maxDepth: number;
+  /** Longest accepted normalized relative path (chars). Bounds Windows MAX_PATH growth under managed_skill_root/<digest>/. */
+  maxRelativePathLength: number;
 }
 
 export const DEFAULT_PACKAGE_LIMITS: PackageLimits = {
@@ -37,6 +39,7 @@ export const DEFAULT_PACKAGE_LIMITS: PackageLimits = {
   maxSingleFileBytes: 4 * 1024 * 1024,
   maxTotalBytes: 16 * 1024 * 1024,
   maxDepth: 8,
+  maxRelativePathLength: 180,
 };
 
 export function mergePackageLimits(overrides?: Partial<PackageLimits>): PackageLimits {
@@ -48,6 +51,7 @@ export function mergePackageLimits(overrides?: Partial<PackageLimits>): PackageL
     maxSingleFileBytes: overrides.maxSingleFileBytes ?? DEFAULT_PACKAGE_LIMITS.maxSingleFileBytes,
     maxTotalBytes: overrides.maxTotalBytes ?? DEFAULT_PACKAGE_LIMITS.maxTotalBytes,
     maxDepth: overrides.maxDepth ?? DEFAULT_PACKAGE_LIMITS.maxDepth,
+    maxRelativePathLength: overrides.maxRelativePathLength ?? DEFAULT_PACKAGE_LIMITS.maxRelativePathLength,
   };
 }
 
@@ -60,6 +64,8 @@ export function normalizeRelativePath(relativePath: string): string | null {
   if (typeof relativePath !== 'string') return null;
   if (relativePath.length === 0) return null;
   if (relativePath.includes('\u0000')) return null;
+  // C0/C1 control characters are never valid in a normalized relative path.
+  if (/[\u0000-\u001f\u007f-\u009f]/.test(relativePath)) return null;
   if (relativePath.includes('\\')) return null;
   if (relativePath.startsWith('/')) return null;
   if (/^[A-Za-z]:/.test(relativePath)) return null;
@@ -67,10 +73,32 @@ export function normalizeRelativePath(relativePath: string): string | null {
   if (segments.some((segment) => segment.length === 0 || segment === '.' || segment === '..')) {
     return null;
   }
-  return segments.join('/');
+  const normalized = segments.join('/');
+  if (normalized.length > DEFAULT_PACKAGE_LIMITS.maxRelativePathLength) return null;
+  return normalized;
 }
 
 /** Containment check between two absolute real paths (case-insensitive on Windows). */
+export function caseFoldedPathKey(relativePath: string): string {
+  return relativePath.toLowerCase();
+}
+
+/**
+ * Find collisions between normalized relative paths that would resolve to
+ * the same destination path on a case-insensitive filesystem (e.g. A.txt vs
+ * .txt). The caller must fail closed when this returns a non-empty list.
+ */
+export function findCaseFoldedPathCollisions(relativePaths: readonly string[]): string[][] {
+  const groups = new Map<string, string[]>();
+  for (const relativePath of relativePaths) {
+    const key = caseFoldedPathKey(relativePath);
+    const group = groups.get(key);
+    if (group) group.push(relativePath);
+    else groups.set(key, [relativePath]);
+  }
+  return [...groups.values()].filter((group) => group.length > 1);
+}
+
 export function isPathInsideRoot(canonicalRoot: string, candidate: string): boolean {
   let root = path.resolve(canonicalRoot);
   let target = path.resolve(candidate);

@@ -1,23 +1,38 @@
 /**
- * Goal24 Checkpoint 5 (Lane B) - managed immutable package snapshot.
+ * Goal24 Checkpoint 5 (Lane B) - managed content-addressed package snapshot.
  *
  * The source directory is mutable, so the Registry must never trust the
  * live folder. The snapshot materializes the inspected files under
  * `managed_skill_root/<package_digest>/` and re-hashes both the source and
  * the destination to make sure nothing changed during import. Any
- * divergence fails closed with PACKAGE_CHANGED_DURING_IMPORT.
+ * divergence fails closed.
+ *
+ * Terminology note: this is a *content-addressed managed snapshot with
+ * digest verification*, not an OS-enforced immutable store. A local attacker
+ * with filesystem access can still modify the snapshot directory, which is
+ * exactly why resolveSkillForUse() re-verifies the digest before every use.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { sha256Hex } from './package-digest.js';
+import { computePackageDigest, sha256Hex } from './package-digest.js';
 import type { SkillFileEntry } from './package-types.js';
 import { isPathInsideRoot, normalizeRelativePath } from './path-policy.js';
 
+export const SNAPSHOT_VERIFICATION_CODES = [
+  'PACKAGE_CHANGED_DURING_IMPORT',
+  'MANAGED_SNAPSHOT_CORRUPT',
+  'SKILL_PACKAGE_INTEGRITY_FAILURE',
+] as const;
+export type SnapshotVerificationCode = (typeof SNAPSHOT_VERIFICATION_CODES)[number];
+
 export class SnapshotVerificationError extends Error {
-  constructor(message: string) {
-    super(message);
+  readonly code: SnapshotVerificationCode;
+
+  constructor(code: SnapshotVerificationCode, message: string) {
+    super(`${code}: ${message}`);
     this.name = 'SnapshotVerificationError';
+    this.code = code;
   }
 }
 
@@ -37,23 +52,23 @@ function readSourceFileChecked(sourceRoot: string, entry: SkillFileEntry): Buffe
   try {
     real = fs.realpathSync(sourceFull);
   } catch {
-    throw new SnapshotVerificationError(`source file '${entry.relative_path}' disappeared during import`);
+    throw new SnapshotVerificationError('PACKAGE_CHANGED_DURING_IMPORT', `source file '${entry.relative_path}' disappeared during import`);
   }
   if (!isPathInsideRoot(sourceRoot, real)) {
-    throw new SnapshotVerificationError(`source file '${entry.relative_path}' escaped the package root during import`);
+    throw new SnapshotVerificationError('PACKAGE_CHANGED_DURING_IMPORT', `source file '${entry.relative_path}' escaped the package root during import`);
   }
   let lstat: fs.Stats;
   try {
     lstat = fs.lstatSync(real);
   } catch {
-    throw new SnapshotVerificationError(`source file '${entry.relative_path}' disappeared during import`);
+    throw new SnapshotVerificationError('PACKAGE_CHANGED_DURING_IMPORT', `source file '${entry.relative_path}' disappeared during import`);
   }
   if (lstat.isSymbolicLink() || !lstat.isFile()) {
-    throw new SnapshotVerificationError(`source file '${entry.relative_path}' is no longer a regular file`);
+    throw new SnapshotVerificationError('PACKAGE_CHANGED_DURING_IMPORT', `source file '${entry.relative_path}' is no longer a regular file`);
   }
   const bytes = fs.readFileSync(real);
   if (bytes.length !== entry.size || sha256Hex(bytes) !== entry.sha256) {
-    throw new SnapshotVerificationError(`source file '${entry.relative_path}' changed during import`);
+    throw new SnapshotVerificationError('PACKAGE_CHANGED_DURING_IMPORT', `source file '${entry.relative_path}' changed during import`);
   }
   return bytes;
 }
@@ -70,10 +85,10 @@ function walkDestination(snapshotRoot: string): DestinationFile[] {
       try {
         lstat = fs.lstatSync(full);
       } catch {
-        throw new SnapshotVerificationError(`snapshot entry '${full}' disappeared during verification`);
+        throw new SnapshotVerificationError('MANAGED_SNAPSHOT_CORRUPT', `snapshot entry '${full}' disappeared during verification`);
       }
       if (lstat.isSymbolicLink() || (!lstat.isDirectory() && !lstat.isFile())) {
-        throw new SnapshotVerificationError(`snapshot contains an unexpected non-regular entry '${full}'`);
+        throw new SnapshotVerificationError('MANAGED_SNAPSHOT_CORRUPT', `snapshot contains an unexpected non-regular entry '${full}'`);
       }
       if (lstat.isDirectory()) {
         stack.push(full);
@@ -82,7 +97,7 @@ function walkDestination(snapshotRoot: string): DestinationFile[] {
       const relative = path.relative(snapshotRoot, full).split(path.sep).join('/');
       const normalized = normalizeRelativePath(relative);
       if (normalized === null) {
-        throw new SnapshotVerificationError(`snapshot contains an invalid path '${relative}'`);
+        throw new SnapshotVerificationError('MANAGED_SNAPSHOT_CORRUPT', `snapshot contains an invalid path '${relative}'`);
       }
       const bytes = fs.readFileSync(full);
       found.push({ relativePath: normalized, size: bytes.length, sha256: sha256Hex(bytes) });
@@ -96,15 +111,15 @@ function assertDestinationMatches(expected: readonly SkillFileEntry[], snapshotR
   const actual = walkDestination(snapshotRoot);
   const actualByPath = new Map(actual.map((entry) => [entry.relativePath, entry]));
   if (actualByPath.size !== expectedByPath.size) {
-    throw new SnapshotVerificationError('snapshot file count changed during import');
+    throw new SnapshotVerificationError('MANAGED_SNAPSHOT_CORRUPT', 'snapshot file count changed after import');
   }
   for (const entry of expected) {
     const found = actualByPath.get(entry.relative_path);
     if (!found) {
-      throw new SnapshotVerificationError(`snapshot is missing '${entry.relative_path}'`);
+      throw new SnapshotVerificationError('MANAGED_SNAPSHOT_CORRUPT', `snapshot is missing '${entry.relative_path}'`);
     }
     if (found.size !== entry.size || found.sha256 !== entry.sha256) {
-      throw new SnapshotVerificationError(`snapshot file '${entry.relative_path}' does not match the source digest`);
+      throw new SnapshotVerificationError('MANAGED_SNAPSHOT_CORRUPT', `snapshot file '${entry.relative_path}' does not match the source digest`);
     }
   }
 }
@@ -117,13 +132,14 @@ function removeSnapshotTree(managedSkillRoot: string, packageDigest: string): vo
 }
 
 /**
- * Materialize (or verify) the immutable snapshot for the inspected package.
+ * Materialize (or verify) the managed snapshot for the inspected package.
  *
- * If the destination already exists it is verified in place and reused;
- * otherwise files are copied from the (re-verified) source, and both the
- * destination and the source are re-hashed before returning. Any divergence
- * throws SnapshotVerificationError and the freshly created tree is removed
- * (fail closed).
+ * If the destination already exists it is verified in place and reused when
+ * intact; a pre-existing corrupt snapshot fails closed with
+ * MANAGED_SNAPSHOT_CORRUPT and is never silently overwritten. Otherwise
+ * files are copied from the (re-verified) source, and both the destination
+ * and the source are re-hashed before returning. A freshly created tree that
+ * fails verification is removed (fail closed).
  */
 export function materializeSnapshot(
   sourceRoot: string,
@@ -133,7 +149,7 @@ export function materializeSnapshot(
 ): string {
   const snapshotRoot = managedSnapshotPath(managedSkillRoot, packageDigest);
   if (!isPathInsideRoot(managedSkillRoot, snapshotRoot)) {
-    throw new SnapshotVerificationError('snapshot root escapes the managed skill root');
+    throw new SnapshotVerificationError('MANAGED_SNAPSHOT_CORRUPT', 'snapshot root escapes the managed skill root');
   }
 
   if (fs.existsSync(snapshotRoot)) {
@@ -163,4 +179,40 @@ export function materializeSnapshot(
     removeSnapshotTree(managedSkillRoot, packageDigest);
     throw error;
   }
+}
+
+/**
+ * Re-verify a managed snapshot before use. This is the digest integrity
+ * gate every consumer of a registered skill package must pass: the snapshot
+ * directory is walked, its digest is recomputed from scratch and compared
+ * with the registry's package_digest. Any divergence (missing files, extra
+ * files, modified content, reparse points) throws
+ * SKILL_PACKAGE_INTEGRITY_FAILURE and the package must not be used.
+ */
+export function verifyManagedSnapshot(
+  managedSkillRoot: string,
+  packageDigest: string,
+): { snapshotRoot: string; files: SkillFileEntry[] } {
+  const snapshotRoot = managedSnapshotPath(managedSkillRoot, packageDigest);
+  if (!isPathInsideRoot(managedSkillRoot, snapshotRoot)) {
+    throw new SnapshotVerificationError('SKILL_PACKAGE_INTEGRITY_FAILURE', 'snapshot root escapes the managed skill root');
+  }
+  if (!fs.existsSync(snapshotRoot)) {
+    throw new SnapshotVerificationError('SKILL_PACKAGE_INTEGRITY_FAILURE', `managed snapshot for digest '${packageDigest}' does not exist`);
+  }
+  const destination = walkDestination(snapshotRoot);
+  const files: SkillFileEntry[] = destination.map((entry) => ({
+    relative_path: entry.relativePath,
+    sha256: entry.sha256,
+    size: entry.size,
+    classification: 'text',
+  }));
+  const recomputed = computePackageDigest(files);
+  if (recomputed !== packageDigest) {
+    throw new SnapshotVerificationError(
+      'SKILL_PACKAGE_INTEGRITY_FAILURE',
+      `managed snapshot digest '${recomputed}' does not match registry package_digest '${packageDigest}'`,
+    );
+  }
+  return { snapshotRoot, files };
 }

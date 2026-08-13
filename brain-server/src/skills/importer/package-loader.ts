@@ -5,14 +5,15 @@
  *
  * The importer accepts a trusted caller supplied source root, canonicalizes
  * it, requires SKILL.md at the exact root, walks the package without ever
- * following symlinks/junctions, enforces file limits, parses the SKILL.md
- * YAML frontmatter as JSON-safe data, optionally validates an omni-skill.json
- * companion manifest, and materializes an immutable digest-addressed snapshot
- * under the configured managed skill root.
+ * following symlinks/junctions, enforces file/path limits, detects
+ * case-insensitive destination collisions, parses the SKILL.md YAML
+ * frontmatter as bounded JSON-safe data, optionally validates an
+ * omni-skill.json companion manifest, and materializes a digest-addressed
+ * managed snapshot under the configured managed skill root.
  *
  * It never executes bundled code, never runs package hooks, never infers
  * safety policy from prose, and never grants trust. Trust state and
- * capability-registry wiring belong to the future Skill Registry.
+ * capability-registry wiring belong to the Skill Registry bridge.
  */
 
 import fs from 'node:fs';
@@ -26,6 +27,8 @@ import { materializeSnapshot, SnapshotVerificationError } from './package-snapsh
 import { parseSkillFrontmatter, SkillFrontmatterError } from './frontmatter.js';
 import {
   canonicalizeExistingDirectory,
+  caseFoldedPathKey,
+  findCaseFoldedPathCollisions,
   IGNORED_DIRECTORY_NAMES,
   isPathInsideRoot,
   mergePackageLimits,
@@ -74,9 +77,17 @@ interface EnumeratedFile extends SkillFileEntry {
   bytes: Buffer;
 }
 
+function isSkillMdPath(relativePath: string): boolean {
+  return caseFoldedPathKey(relativePath) === SKILL_MD_FILE_NAME.toLowerCase();
+}
+
+function isOmniManifestPath(relativePath: string): boolean {
+  return caseFoldedPathKey(relativePath) === OMNI_MANIFEST_FILE_NAME.toLowerCase();
+}
+
 function classifyFile(relativePath: string, bytes: Buffer): FileClassification {
-  if (relativePath === SKILL_MD_FILE_NAME) return 'skill_md';
-  if (relativePath === OMNI_MANIFEST_FILE_NAME) return 'omni_manifest';
+  if (isSkillMdPath(relativePath)) return 'skill_md';
+  if (isOmniManifestPath(relativePath)) return 'omni_manifest';
   const lower = relativePath.toLowerCase();
   if (SCRIPT_EXTENSIONS.some((extension) => lower.endsWith(extension))) return 'script';
   if (BINARY_EXTENSIONS.some((extension) => lower.endsWith(extension))) return 'binary';
@@ -87,7 +98,11 @@ function classifyFile(relativePath: string, bytes: Buffer): FileClassification {
 
 function relativeFrom(root: string, fullPath: string): string {
   const relative = path.relative(root, fullPath).split(path.sep).join('/');
-  return normalizeRelativePath(relative) ?? relative;
+  const normalized = normalizeRelativePath(relative);
+  if (normalized === null) {
+    throw new PackageFailure('PACKAGE_PATH_ESCAPE', `invalid package path '${relative}'`, relative);
+  }
+  return normalized;
 }
 
 function resolveCheckedEntry(root: string, fullPath: string, relativePath: string): string {
@@ -171,9 +186,9 @@ function enumerateSourceFiles(root: string, limits: PackageLimits): { files: Enu
 
       const stat = fs.statSync(real);
       const perFileLimit =
-        normalized === SKILL_MD_FILE_NAME
+        isSkillMdPath(normalized)
           ? limits.skillMdMaxBytes
-          : normalized === OMNI_MANIFEST_FILE_NAME
+          : isOmniManifestPath(normalized)
             ? limits.manifestMaxBytes
             : limits.maxSingleFileBytes;
       if (stat.size > perFileLimit) {
@@ -229,6 +244,19 @@ function enumerateSourceFiles(root: string, limits: PackageLimits): { files: Enu
   files.sort((a, b) =>
     a.relative_path < b.relative_path ? -1 : a.relative_path > b.relative_path ? 1 : 0,
   );
+
+  // Case-insensitive destination collision guard: two distinct source paths
+  // (e.g. A.txt and a.txt) would resolve to the same snapshot destination on
+  // Windows and must fail closed rather than silently overwrite one another.
+  const collisions = findCaseFoldedPathCollisions(files.map((file) => file.relative_path));
+  if (collisions.length > 0) {
+    const example = collisions[0].sort().join("', '");
+    throw new PackageFailure(
+      'PACKAGE_PATH_COLLISION',
+      `package contains paths that collide on a case-insensitive filesystem: '${example}'`,
+    );
+  }
+
   return { files, warnings };
 }
 
@@ -307,13 +335,13 @@ export function importSkillPackage(sourceRoot: string, options: SkillImporterOpt
 
   const { files, warnings } = enumerated;
   const entries: SkillFileEntry[] = files.map((file) => ({
-  relative_path: file.relative_path,
-  sha256: file.sha256,
-  size: file.size,
-  classification: file.classification,
-}));
+    relative_path: file.relative_path,
+    sha256: file.sha256,
+    size: file.size,
+    classification: file.classification,
+  }));
 
-  const skillMdFile = files.find((file) => file.relative_path === SKILL_MD_FILE_NAME);
+  const skillMdFile = files.find((file) => isSkillMdPath(file.relative_path));
   if (!skillMdFile) {
     return rejectFailure('IMPORT_REJECTED', `${SKILL_MD_FILE_NAME} is required at the package root`);
   }
@@ -324,23 +352,24 @@ export function importSkillPackage(sourceRoot: string, options: SkillImporterOpt
     metadata = {
       name: frontmatter.name,
       description: frontmatter.description,
+      vendor_metadata: frontmatter.vendorMetadata,
       unknown_frontmatter_keys: frontmatter.unknownKeys,
     };
     if (frontmatter.unknownKeys.length > 0) {
       warnings.push({
         code: 'UNKNOWN_FRONTMATTER_KEY',
         message: `SKILL.md frontmatter keys ${frontmatter.unknownKeys.join(', ')} were ignored; they cannot change Omni safety policy`,
-        path: SKILL_MD_FILE_NAME,
+        path: skillMdFile.relative_path,
       });
     }
   } catch (error) {
     if (error instanceof SkillFrontmatterError) {
-      return rejectFailure('IMPORT_REJECTED', error.message, SKILL_MD_FILE_NAME);
+      return rejectFailure('IMPORT_REJECTED', error.message, skillMdFile.relative_path);
     }
     throw error;
   }
 
-  const manifestFile = files.find((file) => file.relative_path === OMNI_MANIFEST_FILE_NAME);
+  const manifestFile = files.find((file) => isOmniManifestPath(file.relative_path));
   let manifest: SkillManifest | null = null;
   let manifestValid = false;
   let manifestDigest: string | null = null;
@@ -410,7 +439,13 @@ export function importSkillPackage(sourceRoot: string, options: SkillImporterOpt
     };
   } catch (error) {
     if (error instanceof SnapshotVerificationError) {
-      return rejectFailure('PACKAGE_CHANGED_DURING_IMPORT', error.message);
+      // materializeSnapshot only raises import-time codes; anything else
+      // (e.g. a nested integrity code) still fails closed at import.
+      const code: PackageFailureCode =
+        error.code === 'PACKAGE_CHANGED_DURING_IMPORT' || error.code === 'MANAGED_SNAPSHOT_CORRUPT'
+          ? error.code
+          : 'PACKAGE_CHANGED_DURING_IMPORT';
+      return rejectFailure(code, error.message);
     }
     throw error;
   }

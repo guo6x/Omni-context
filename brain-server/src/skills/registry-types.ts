@@ -81,7 +81,7 @@ export type SkillRiskSnapshot = z.infer<typeof SkillRiskSnapshotSchema>;
  * fail closed instead of being silently dropped.
  */
 export const SkillRegistryRecordSchema = z.strictObject({
-  name: z.string().regex(SKILL_NAME_PATTERN, 'skill name must be a lowercase identifier'),
+  name: z.string().regex(SKILL_NAME_PATTERN, 'skill name must be a lowercase identifier').max(64, 'skill name must be at most 64 characters'),
   version: z.string().regex(SEMVER_PATTERN, 'skill version must be semantic (major.minor.patch)'),
   manifest: SkillManifestSchema,
   package_digest: z.string().regex(SHA256_HEX_PATTERN, 'package_digest must be lowercase SHA-256 hex'),
@@ -125,7 +125,9 @@ export const SKILL_REGISTRY_ERROR_CODES = [
   'SKILL_VALIDATION_FAILED',
   'SKILL_VERSION_CONFLICT',
   'SKILL_NOT_FOUND',
+  'SKILL_PACKAGE_INTEGRITY_FAILURE',
   'SKILL_TRUST_TRANSITION_INVALID',
+  'SKILL_NOT_ELIGIBLE',
   'SKILL_REGISTRY_CORRUPT',
 ] as const;
 export type SkillRegistryErrorCode = (typeof SKILL_REGISTRY_ERROR_CODES)[number];

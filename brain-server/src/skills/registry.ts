@@ -100,6 +100,7 @@ export class SkillRegistry {
     return registry;
   }
 
+  /** Timestamp helper. */
   private timestamp(): string {
     return this.now().toISOString();
   }
@@ -279,7 +280,7 @@ export class SkillRegistry {
    */
   resolveLatestTrusted(name: string): SkillRegistryRecord | undefined {
     const candidates = this.listVersions(name).filter(
-      (record) => record.trust_status === 'trusted' && record.enabled && !record.revoked,
+      (record) => eligible_for_use(record, this.capabilityLookup),
     );
     if (candidates.length === 0) return undefined;
     return candidates[candidates.length - 1];
@@ -399,11 +400,29 @@ export class SkillRegistry {
     };
   }
 
-  private async persist(): Promise<void> {
-    if (!this.storePath) return;
-    await saveSkillRegistryStore(this.storePath, this.storeData());
-  }
+  /**
+   * Persist mutations through an in-process queue. Every write snapshots the
+   * current record map at execution time and is applied atomically
+   * (temp file + fsync + rename), so concurrent registrations cannot lose
+   * updates and the store always converges to the latest full state.
+   */
+  private persistTail: Promise<void> = Promise.resolve();
+
+  private persist(): Promise<void> {
+    if (!this.storePath) return Promise.resolve();
+    const storePath = this.storePath;
+    const snapshot = this.storeData();
+    const result = this.persistTail.then(
+      () => saveSkillRegistryStore(storePath, snapshot),
+      () => saveSkillRegistryStore(storePath, snapshot),
+    );
+    this.persistTail = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
 }
+  }
 
 /**
  * Pure eligibility gate (CP5): a record may only be *considered* for use

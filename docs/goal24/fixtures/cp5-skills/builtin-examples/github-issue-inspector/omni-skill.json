@@ -1,0 +1,20 @@
+{
+  "name": "github-issue-inspector",
+  "version": "1.0.0",
+  "description": "Read-only GitHub issue inspection example skill used for CP5 integration testing.",
+  "capabilities": ["github.issue.search", "github.issue.read"],
+  "procedure": [
+    {
+      "step_id": "search-issues",
+      "description": "Search issues in the target repository using the bound read-only capability.",
+      "capability_id": "github.issue.search"
+    },
+    {
+      "step_id": "read-issue",
+      "description": "Read the selected issue by number using the bound read-only capability.",
+      "capability_id": "github.issue.read"
+    }
+  ],
+  "risk": "low",
+  "adapter_preference": "any"
+}

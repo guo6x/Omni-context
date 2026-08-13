@@ -94,9 +94,10 @@ export async function saveSkillRegistryStore(
 ): Promise<void> {
   const directory = path.dirname(storePath);
   await fs.mkdir(directory, { recursive: true });
+  let temporarySequence = 0;
   const temporary = path.join(
     directory,
-    `.${path.basename(storePath)}.${process.pid}.${Date.now().toString(36)}.tmp`,
+    `.${path.basename(storePath)}.${process.pid}.${Date.now().toString(36)}.${(temporarySequence++).toString(36)}.tmp`,
   );
   const payload = `${JSON.stringify(data, null, 2)}\n`;
   const handle = await fs.open(temporary, 'w');

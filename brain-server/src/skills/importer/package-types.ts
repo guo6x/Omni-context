@@ -5,7 +5,7 @@
  * It never follows: discover -> execute. No process execution, no trust
  * decision, and no capability-registry wiring happen in this lane; the
  * result below is pure inspection/snapshot evidence. Trust state is owned
- * by the future Skill Registry, never by the importer.
+ * by the Skill Registry, never by the importer.
  */
 
 import type { SkillManifest } from '../contracts.js';
@@ -22,8 +22,10 @@ export type ImportStatus = (typeof IMPORT_STATUSES)[number];
 export const PACKAGE_FAILURE_CODES = [
   'IMPORT_REJECTED',
   'PACKAGE_PATH_ESCAPE',
+  'PACKAGE_PATH_COLLISION',
   'PACKAGE_LIMIT_EXCEEDED',
   'PACKAGE_CHANGED_DURING_IMPORT',
+  'MANAGED_SNAPSHOT_CORRUPT',
 ] as const;
 export type PackageFailureCode = (typeof PACKAGE_FAILURE_CODES)[number];
 
@@ -59,12 +61,17 @@ export interface ImportWarning {
 
 /**
  * Metadata read from the SKILL.md YAML frontmatter. Only `name` and
- * `description` become structured metadata; all other frontmatter keys are
- * ignored with a warning and can never change Omni safety policy.
+ * `description` become structured metadata; `vendor_metadata` preserves the
+ * Agent Skills compatibility keys (license, compatibility, metadata,
+ * allowed-tools) strictly as display-only vendor data - it is never mapped
+ * to authority, capability, approval, or a trusted executable. All other
+ * frontmatter keys are ignored with a warning and can never change Omni
+ * safety policy.
  */
 export interface AgentSkillMetadata {
   name: string;
   description: string;
+  vendor_metadata: Record<string, unknown>;
   unknown_frontmatter_keys: string[];
 }
 

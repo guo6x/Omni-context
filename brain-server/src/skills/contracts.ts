@@ -54,7 +54,7 @@ export type CapabilityReference = z.infer<typeof CapabilityReferenceSchema>;
 
 export const SkillManifestSchema = z
   .strictObject({
-    name: z.string().regex(SKILL_NAME_PATTERN, 'skill name must be a lowercase identifier'),
+    name: z.string().regex(SKILL_NAME_PATTERN, 'skill name must be a lowercase identifier').max(64, 'skill name must be at most 64 characters'),
     version: z.string().regex(SEMVER_PATTERN, 'skill version must be semantic (major.minor.patch)'),
     description: z.string().trim().min(1).max(2000),
     /** Capability IDs the skill uses. Unique; referential integrity is refined below. */
