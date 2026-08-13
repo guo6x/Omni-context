@@ -515,6 +515,6 @@ omni-context-release/
 
 | 组件 | 权限 | 用途 |
 |---|---|---|
-| 桌面端 | 屏幕捕获 / 剪贴板 / UDP 监听 / fs.readFile / window 控制 / shell.open | 沉淀屏幕内容、读写剪贴板、接 ESP32、拖放读文件、HUD 独立窗口、打开数据目录 |
+| 桌面端 | 屏幕捕获 / 剪贴板 / UDP 监听 / fs.readFile / window 控制 / open_trusted_external_url（仅语义化 https 目标 ID） | 沉淀屏幕内容、读写剪贴板、接 ESP32、拖放读文件、HUD 独立窗口、打开数据目录 |
 | 浏览器插件 | 标签页 / 右键菜单 / 通知 | 捕获网页、入口、HUD 提示 |
 | 移动端 | 本地网络 | 与 Brain Server 同步（只读） |

@@ -468,3 +468,76 @@ pub fn get_foreground_window_info() -> Result<ForegroundWindowInfo, String> {
 pub fn get_broker_status() -> crate::execution_broker::BrokerStatus {
     crate::execution_broker::global_broker().status()
 }
+
+// CP3 shell-open closure replacement. The generic Tauri shell.open capability
+// was removed from the WebView; the frontend can only name one of the
+// semantic targets below and never supplies a URL, path, scheme or arguments.
+// Each target maps to an exact hard-coded HTTPS URL in Rust.
+#[tauri::command]
+pub fn open_trusted_external_url(target_id: String) -> Result<(), String> {
+    const TRUSTED_HTTPS_TARGETS: &[(&str, &str)] = &[
+        ("openai", "https://platform.openai.com/api-keys"),
+        ("deepseek", "https://platform.deepseek.com/api_keys"),
+        ("siliconflow", "https://cloud.siliconflow.cn/account/ak"),
+        ("moonshot", "https://platform.moonshot.cn/console/api-keys"),
+        ("zhipu", "https://open.bigmodel.cn/usercenter/apikeys"),
+        ("qwen", "https://dashscope.console.aliyun.com/apiKey"),
+        ("volcengine", "https://console.volcengine.com/ark"),
+        ("deepinfra", "https://deepinfra.com/dash/api_keys"),
+        ("groq", "https://console.groq.com/keys"),
+        ("openrouter", "https://openrouter.ai/keys"),
+        ("gemini", "https://aistudio.google.com/app/apikey"),
+    ];
+
+    let url = TRUSTED_HTTPS_TARGETS
+        .iter()
+        .find(|(id, _)| *id == target_id.as_str())
+        .map(|(_, url)| *url)
+        .ok_or_else(|| format!("unknown trusted URL target_id: {target_id}"))?;
+
+    if !url.starts_with("https://") {
+        return Err(format!("trusted target {target_id} is not https"));
+    }
+
+    open_url_in_default_browser(url)
+}
+
+fn open_url_in_default_browser(url: &str) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::core::PCWSTR;
+        use windows::Win32::UI::Shell::ShellExecuteW;
+        use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+        let url_wide: Vec<u16> = url.encode_utf16().chain(std::iter::once(0)).collect();
+        let result = unsafe {
+            ShellExecuteW(
+                None,
+                PCWSTR::null(),
+                PCWSTR(url_wide.as_ptr()),
+                PCWSTR::null(),
+                PCWSTR::null(),
+                SW_SHOWNORMAL,
+            )
+        };
+        if result.0 <= 32 {
+            return Err(format!("ShellExecuteW failed with code {}", result.0));
+        }
+        Ok(())
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(url)
+            .spawn()
+            .map(|_| ())
+            .map_err(|e| e.to_string())
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(url)
+            .spawn()
+            .map(|_| ())
+            .map_err(|e| e.to_string())
+    }
+}

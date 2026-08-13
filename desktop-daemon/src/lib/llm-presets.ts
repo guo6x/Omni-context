@@ -14,7 +14,10 @@ export interface LlmPreset {
   recommendedModels?: string[];
 }
 
-/** 各服务商获取 API Key 的页面，供设置里「获取 API Key →」跳转 */
+/** 各服务商获取 API Key 的页面，供设置里「获取 API Key →」跳转。
+ * CP3 shell-open closure: URLs are opened only by the Rust command
+ * open_trusted_external_url (desktop-daemon/src-tauri/src/commands.rs), which
+ * maps the same target ids below to hard-coded https URLs. */
 export const LLM_API_KEY_URLS: Record<string, string> = {
   openai: 'https://platform.openai.com/api-keys',
   deepseek: 'https://platform.deepseek.com/api_keys',

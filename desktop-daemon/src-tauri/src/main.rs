@@ -320,6 +320,7 @@ async fn main() {
             commands::regenerate_pair_code,
             commands::get_local_api_token,
             commands::get_broker_status,
+            commands::open_trusted_external_url,
             commands::regenerate_local_api_token,
             hardware::list_hardware_devices,
             hardware::pair_hardware_device,

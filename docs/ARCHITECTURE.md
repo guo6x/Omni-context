@@ -88,6 +88,6 @@ omni-context-release/
 
 | Component | Permissions | Purpose |
 |---|---|---|
-| Desktop | Screen capture, clipboard, UDP, fs.readFile, window control, shell.open | Capture screen, read clipboard, receive ESP32, drag-and-drop, HUD window, open data dir |
+| Desktop | Screen capture, clipboard, UDP, fs.readFile, window control, open_trusted_external_url (semantic https target ids only) | Capture screen, read clipboard, receive ESP32, drag-and-drop, HUD window, open data dir |
 | Extension | Tabs, context menus, notifications | Capture pages, entry points, status |
 | Mobile | Local network | Sync with Brain Server (read-only) |

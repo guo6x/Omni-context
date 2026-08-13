@@ -157,13 +157,11 @@ export default function SettingsPanel({
     }
   };
 
-  const openExternal = async (url: string) => {
+  const openExternal = async (targetId: string) => {
     try {
-      const { open } = await import('@tauri-apps/api/shell');
-      await open(url);
-    } catch {
-      try { window.open(url, '_blank'); } catch { /* ignore */ }
-    }
+      const { invoke } = await import('@tauri-apps/api/tauri');
+      await invoke('open_trusted_external_url', { targetId });
+    } catch { /* ignore: opening the external browser is best-effort */ }
   };
 
   const copyText = (text: string) => {
@@ -1045,11 +1043,11 @@ export default function SettingsPanel({
                         <label className="text-sm font-medium text-white block">API Key</label>
                         {(() => {
                           const preset = LLM_PRESETS.find((p) => p.apiUrl === settings.llmProvider.apiUrl);
-                          const url = preset ? LLM_API_KEY_URLS[preset.id] : undefined;
-                          return url ? (
+                          const targetId = preset && LLM_API_KEY_URLS[preset.id] ? preset.id : undefined;
+                          return targetId ? (
                             <button
                               type="button"
-                              onClick={() => openExternal(url)}
+                              onClick={() => openExternal(targetId)}
                               className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
                             >
                               {t('settings.llm_get_api_key')}
