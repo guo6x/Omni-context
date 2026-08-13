@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "6",
+  "lane": "A",
+  "name": "Goal24 Checkpoint 6 Lane A - Evidence Core + Provider Registry + Qualification Runtime",
+  "date": "2026-08-13",
+  "base_sha": "09147b16a284fafa3ec922c6159ac4f2c26084c4",
+  "base_note": "origin/dev/goal24-cli-skills, verified exact after git fetch --all --tags --prune",
+  "local_branch": "local/cp6-evidence-core",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp6-evidence-core",
+  "commit_sha": "d7bce399da1baeca7eaf86741de515ab466b46c3",
+  "commit_sha_note": "code/test tip at the time this manifest was written; the manifest itself is committed as the branch tip immediately after",
+  "commits": [
+    { "sha": "7e44547204af40eb6972d4ecfa2b8c5a7c167fe4", "message": "feat(evidence): add provider registry and evidence model" },
+    { "sha": "18938d07bc5e3ce650dbd2af15bd565c230950eb", "message": "feat(evidence): qualify evidence into coverage snapshots" },
+    { "sha": "d7bce399da1baeca7eaf86741de515ab466b46c3", "message": "test(evidence): harden freshness provenance and conflict handling" }
+  ],
+  "remote_branch_pushed": false,
+  "files": {
+    "added": [
+      "brain-server/src/evidence/errors.ts",
+      "brain-server/src/evidence/model.ts",
+      "brain-server/src/evidence/provider.ts",
+      "brain-server/src/evidence/provider-registry.ts",
+      "brain-server/src/evidence/qualification.ts",
+      "brain-server/src/evidence/coverage-builder.ts",
+      "brain-server/src/evidence/index.ts",
+      "brain-server/tests/helpers/fake-evidence-providers.ts",
+      "brain-server/tests/goal24-evidence-core.test.ts",
+      "brain-server/tests/goal24-evidence-qualification.test.ts",
+      "docs/goal24/cp6-lane-a-evidence-core.md",
+      "docs/goal24/checkpoint6-lane-a-manifest.json"
+    ],
+    "modified": []
+  },
+  "evidence_candidate": {
+    "schema": "EvidenceCandidateSchema (z.strictObject)",
+    "required_fields": ["evidence_class", "subject_key", "claim_key", "claim_value", "source_item_id", "source_reference", "observed_at", "verification_level"],
+    "optional_fields": ["source_updated_at", "note", "metadata"],
+    "length_bounds": { "subject_key": 200, "claim_key": 200, "source_item_id": 300, "source_reference": 1000, "note": 2000 },
+    "claim_value": "JSON-safe (null/boolean/finite number/string/array/plain object); Date/BigInt/function/symbol/NaN/Infinity/cycle rejected",
+    "forbidden_authority_fields": ["shell", "command", "argv", "executable", "evidence_id", "claim_digest"],
+    "strict_unknown_field_rejection": true
+  },
+  "evidence_id_core_generated": true,
+  "evidence_id_algorithm": "SHA-256 lowercase hex over provider_id \\u0000 evidence_class \\u0000 subject_key \\u0000 source_item_id \\u0000 claim_digest; deterministic; providers cannot choose or spoof final ids; cross-provider collision impossible for same source_item_id",
+  "claim_digest_core_generated": true,
+  "claim_digest_algorithm": "canonicalJson(claim_value) with object keys stably sorted, array order preserved, primitives via canonical JSON form, non-JSON-safe input rejected -> SHA-256 lowercase hex; JSON.stringify insertion order can never change the digest",
+  "provider_contract": {
+    "interface": "EvidenceProviderV1 { metadata, collect(request) }",
+    "request": "{ evidence_class, subject_key, signal?: AbortSignal }",
+    "outcomes": ["collected", "not_found", "temporary_unavailable", "permanent_unavailable", "user_context_required"],
+    "result_shape": "strict { outcome, candidates <= 10000, diagnostics <= 1000 }; diagnostics strict { code, message }",
+    "metadata": { "provider_id": "lowercase identifier", "version": "semver major.minor.patch", "supported_classes": "1..100 unique class ids", "priority": "int 0..10000", "max_verification_level": "none|asserted|verified", "description": "optional" },
+    "provider_never_returns_coverage_entry": true,
+    "provider_never_decides_status": true,
+    "exception_normalization": "thrown non-abort errors and malformed result shapes normalize to temporary_unavailable + EVIDENCE_PROVIDER_ERROR diagnostic; original exception text withheld (no secret leak)",
+    "abort": "EVIDENCE_COLLECTION_ABORTED before start, on AbortError, and when a result lands after the signal aborted"
+  },
+  "provider_registry": {
+    "module": "brain-server/src/evidence/provider-registry.ts",
+    "api": ["register", "get", "list", "providersForClass"],
+    "internal_only": true,
+    "public_provider_registration": false,
+    "exposed_over": ["none (not MCP, not REST, not Tauri IPC, not LLM tools)"],
+    "duplicate_policy": "provider_id unique; same id with different instance/version rejected with EVIDENCE_PROVIDER_DUPLICATE",
+    "supported_classes_validated": true,
+    "deterministic_order": "priority descending, then provider_id ascending"
+  },
+  "qualification": {
+    "module": "brain-server/src/evidence/qualification.ts",
+    "pure": true,
+    "clock_injected": true,
+    "checks": ["strict schema", "class binding (requested + declared)", "subject binding", "verification cap", "observed_at parseability", "future observed_at rejection", "claim digest integrity", "staleness flag"],
+    "verification_rank": "none(0) < asserted(1) < verified(2)",
+    "verification_escalation_allowed": false,
+    "provider_max_verification_enforced": true,
+    "future_timestamp_accepted": false,
+    "freshness": {
+      "clock": "injected now; no Date.now() in qualification",
+      "uses": "observed_at only; source_updated_at is metadata",
+      "boundary": "age == max_age_ms fresh; age > max_age_ms stale; no freshness_policy -> never age-stale"
+    },
+    "verification_none_semantics": "verification_level=none with structurally/provenance-valid candidate is a legal present state when the requirement allows none; status=unverified is reserved for candidates the core cannot recognize (or collection limit failures)"
+  },
+  "coverage_builder": {
+    "module": "brain-server/src/evidence/coverage-builder.ts",
+    "entry_point": "buildEvidenceCoverage(requirements, providerResults, now, { limits })",
+    "output": "{ snapshot: EvidenceCoverageSnapshot (parsed through EvidenceCoverageSnapshotSchema), diagnostics, diagnostics_truncated }",
+    "status_precedence": ["missing (no candidates)", "unverified (only rejected/unqualified candidates)", "stale (all qualified stale)", "conflicted (fresh disagree)", "present (fresh agree)"],
+    "stale_never_overrides_fresh": true,
+    "all_requirements_get_entry": true,
+    "optional_requirements_get_entry": true,
+    "checked_at": "injected now on every entry; providers can never set checked_at",
+    "conflict_detection": "structural only: same evidence_class + subject_key + claim_key with different canonical claim digests; no LLM semantic classification",
+    "conflict_partition": "per claim_key, primary = highest provider priority (tie -> lexical evidence_id); primary plus same-digest candidates -> evidence_ids; disagreeing candidates -> conflict_evidence_ids; disjoint and sorted",
+    "corroboration": "multiple agreeing providers -> status=present with multiple evidence_ids",
+    "aggregate_verification": "highest qualified verification level among the fresh agreeing candidates",
+    "bounds": {
+      "defaults": { "maxProvidersPerClass": 16, "maxCandidatesPerProviderClass": 100, "maxCandidatesTotal": 500, "maxClaimJsonBytes": 16384, "maxDiagnostics": 100 },
+      "fail_closed": "EVIDENCE_COLLECTION_LIMIT_EXCEEDED -> class entry status=unverified, qualification blocked for that class, diagnostics truncated with explicit flag",
+      "no_silent_satisfaction": true
+    }
+  },
+  "llm_evidence_validity": false,
+  "llm_conflict_detection": false,
+  "decision_control_added": false,
+  "guard_control_flow_added": false,
+  "assess_evidence_coverage_modified": false,
+  "execution_contracts_modified": false,
+  "process_execution_added": false,
+  "live_providers_added": false,
+  "dependencies_changed": false,
+  "package_lock_touched": false,
+  "desktop_daemon_touched": false,
+  "github_cli_adapter_touched": false,
+  "mcp_tauri_wiring_added": false,
+  "tests": {
+    "new_files": [
+      "brain-server/tests/goal24-evidence-core.test.ts (29 tests)",
+      "brain-server/tests/goal24-evidence-qualification.test.ts (34 tests)",
+      "brain-server/tests/helpers/fake-evidence-providers.ts (deterministic fakes)"
+    ],
+    "new_test_count": 63,
+    "pure": true,
+    "fake_providers_deterministic": true,
+    "coverage": [
+      "valid fresh candidate -> present",
+      "verification none + requirement none -> present with verification_level none",
+      "verification none + requirement verified -> snapshot present/none and assessEvidenceCoverage blocks",
+      "candidate verification escalation -> unverified/rejected",
+      "unsupported class -> fail closed",
+      "future observed_at -> unverified",
+      "freshness age == max fresh / age == max + 1 stale",
+      "no candidate -> missing; only invalid candidates -> unverified",
+      "two agreeing providers -> present corroboration",
+      "two conflicting providers -> conflicted with disjoint partition",
+      "stale disagreement + fresh valid -> fresh valid wins",
+      "duplicate source item handling",
+      "deterministic evidence ids and claim digests",
+      "object key reordering -> same claim digest",
+      "provider priority deterministic ordering",
+      "coverage includes every requirement (mandatory and optional)",
+      "collection bounds fail closed (all five limits)",
+      "provider exception normalized; abort/cancel respected",
+      "assessEvidenceCoverage integration: mandatory missing/stale/unverified block, undeclared conflict policy reject, warn tolerated, optional missing non-blocking"
+    ],
+    "result": {
+      "suite": "brain-server npx vitest run",
+      "test_files": 49,
+      "passed": 826,
+      "failed": 0
+    }
+  },
+  "verification": {
+    "typecheck": "PASS (tsc --noEmit, exit 0)",
+    "vitest": "PASS (826 passed, 0 failed, 49 files; 63 new CP6 tests)",
+    "build": "PASS (tsc emit, exit 0)",
+    "lint": "PASS (0 errors; only pre-existing warnings outside this lane; no warnings in CP6 files)",
+    "npm_audit": "not required; no dependency changes",
+    "git_diff_check": "PASS",
+    "static_no_execution_scan": "PASS (no child_process/exec/execFile/spawn/Command/powershell/cmd.exe/bash/sh -c in brain-server/src/evidence)"
+  },
+  "known_residual_risks": [
+    "Guard-level timeout orchestration, retrieve_more/clarify/defer and Decision Kernel wiring are Lane B; CP6 exposes only the AbortSignal contract and the snapshot",
+    "The class subject is taken from the first canonical batch; collecting one class for multiple subjects requires separate builds",
+    "Provider trust is registration-time trust of application code; dynamic plugin/provider loading is a separate security checkpoint",
+    "source_reference content is provider-supplied; the core bounds its length but cannot verify its secret-free content",
+    "This lane ships only deterministic fake providers; GitHub live / HTTP / MCP providers belong to later lanes"
+  ],
+  "holdback_touched": false,
+  "legacy_dirty_worktree_touched": false,
+  "environment": {
+    "policy": "D: first, then existing C:; new installs only under D:\\environment",
+    "node": "D:\\environment\\node\\node-v22.23.2-win-x64\\node.exe",
+    "npm_cache": "D:\\environment\\npm-cache",
+    "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp6-evidence-core"
+  }
+}
