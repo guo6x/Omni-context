@@ -51,20 +51,55 @@ impl ProcessTree {
         &mut self.child
     }
 
+    /// True when no process remains inside the containment boundary.
+    /// On Windows this reads the Job Object's live process accounting;
+    /// on Unix it probes the dedicated process group.
+    pub fn is_empty(&self) -> bool {
+        #[cfg(windows)]
+        {
+            use windows::Win32::System::JobObjects::{
+                JobObjectBasicAccountingInformation, QueryInformationJobObject,
+                JOBOBJECT_BASIC_ACCOUNTING_INFORMATION,
+            };
+            let Some(job) = self.job else {
+                return true;
+            };
+            let mut info: JOBOBJECT_BASIC_ACCOUNTING_INFORMATION = unsafe { std::mem::zeroed() };
+            let ok = unsafe {
+                QueryInformationJobObject(
+                    job,
+                    JobObjectBasicAccountingInformation,
+                    &mut info as *mut JOBOBJECT_BASIC_ACCOUNTING_INFORMATION
+                        as *mut core::ffi::c_void,
+                    std::mem::size_of::<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION>() as u32,
+                    None,
+                )
+            };
+            ok.is_ok() && info.ActiveProcesses == 0
+        }
+        #[cfg(not(windows))]
+        {
+            // The direct child is reaped before this is called; the group
+            // only still exists while a descendant is alive.
+            let alive = unsafe { libc::kill(-self.pid, 0) };
+            alive != 0
+        }
+    }
+
     /// Terminate the entire process tree (all descendants included).
     pub fn terminate(&mut self) -> Result<(), BrokerError> {
         #[cfg(windows)]
         {
             let Some(job) = self.job else {
                 return Err(BrokerError::new(
-                    ErrorCode::ProcessTreeFailure,
+                    ErrorCode::BrokerCrash,
                     "job object already closed",
                 ));
             };
             unsafe {
                 windows::Win32::System::JobObjects::TerminateJobObject(job, 1).map_err(|e| {
                     BrokerError::new(
-                        ErrorCode::ProcessTreeFailure,
+                        ErrorCode::BrokerCrash,
                         format!("TerminateJobObject failed: {e}"),
                     )
                 })?;
@@ -79,7 +114,7 @@ impl ProcessTree {
                 Ok(())
             } else {
                 Err(BrokerError::new(
-                    ErrorCode::ProcessTreeFailure,
+                    ErrorCode::BrokerCrash,
                     format!(
                         "kill(-{}, SIGKILL) failed: {}",
                         self.pid,
@@ -106,7 +141,7 @@ impl ProcessTree {
         // 1. Create the job with KILL_ON_JOB_CLOSE.
         let job = unsafe { CreateJobObjectW(None, None) }.map_err(|e| {
             BrokerError::new(
-                ErrorCode::ProcessTreeFailure,
+                ErrorCode::BrokerCrash,
                 format!("CreateJobObjectW failed: {e}"),
             )
         })?;
@@ -125,7 +160,7 @@ impl ProcessTree {
             }
             .map_err(|e| {
                 BrokerError::new(
-                    ErrorCode::ProcessTreeFailure,
+                    ErrorCode::BrokerCrash,
                     format!("SetInformationJobObject failed: {e}"),
                 )
             })
@@ -158,7 +193,7 @@ impl ProcessTree {
             let _ = child.wait();
             unsafe { CloseHandle(job) }.ok();
             return Err(BrokerError::new(
-                ErrorCode::ProcessTreeFailure,
+                ErrorCode::BrokerCrash,
                 format!("AssignProcessToJobObject failed: {e}"),
             ));
         }
@@ -223,7 +258,7 @@ fn resume_primary_thread(pid: u32) -> Result<(), BrokerError> {
 
     let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) }.map_err(|e| {
         BrokerError::new(
-            ErrorCode::ProcessTreeFailure,
+            ErrorCode::BrokerCrash,
             format!("CreateToolhelp32Snapshot failed: {e}"),
         )
     })?;
@@ -246,23 +281,19 @@ fn resume_primary_thread(pid: u32) -> Result<(), BrokerError> {
 
     let thread_id = tid.ok_or_else(|| {
         BrokerError::new(
-            ErrorCode::ProcessTreeFailure,
+            ErrorCode::BrokerCrash,
             format!("primary thread not found for suspended process {pid}"),
         )
     })?;
 
-    let thread = unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) }.map_err(|e| {
-        BrokerError::new(
-            ErrorCode::ProcessTreeFailure,
-            format!("OpenThread failed: {e}"),
-        )
-    })?;
+    let thread = unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) }
+        .map_err(|e| BrokerError::new(ErrorCode::BrokerCrash, format!("OpenThread failed: {e}")))?;
 
     let previous_suspend_count = unsafe { ResumeThread(thread) };
     unsafe { CloseHandle(thread) }.ok();
     if previous_suspend_count == u32::MAX {
         return Err(BrokerError::new(
-            ErrorCode::ProcessTreeFailure,
+            ErrorCode::BrokerCrash,
             format!("ResumeThread failed: {}", std::io::Error::last_os_error()),
         ));
     }

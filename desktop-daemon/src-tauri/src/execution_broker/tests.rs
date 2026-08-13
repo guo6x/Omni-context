@@ -29,7 +29,7 @@ static CHILD_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 /// Acquire the child-test lock, recovering from a panic so one failed test
 /// cannot cascade `PoisonError` into every other spawn test.
-fn child_test_lock() -> std::sync::MutexGuard<'static, ()> {
+pub(super) fn child_test_lock() -> std::sync::MutexGuard<'static, ()> {
     CHILD_TEST_LOCK
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -63,6 +63,7 @@ impl TestSelfBinding {
                 "OMNI_BROKER_TEST_STDOUT_BYTES".to_string(),
                 "OMNI_BROKER_TEST_GRANDCHILD_PID_FILE".to_string(),
                 "OMNI_BROKER_TEST_ALLOWED".to_string(),
+                "OMNI_BROKER_TEST_MARKER_FILE".to_string(),
             ],
             output_limits: OutputLimits::default(),
         }
@@ -224,6 +225,126 @@ fn child_protocol_entry() {
             // Keep the child (and therefore the job) alive until terminated.
             std::thread::sleep(Duration::from_secs(300));
         }
+        "print-token" => {
+            println!("auth token: ghp_abcdefghijklmnopqrstuvwxyz1234567890ABCD");
+        }
+        "secret-output" => {
+            println!("credential ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcd");
+        }
+        "bearer-output" => {
+            println!("Authorization: Bearer ghp_bearertokenvalue12345678901234567890");
+        }
+        "credential-url-output" => {
+            println!("https://user:pass123@example.com/repo");
+        }
+        "control-chars-output" => {
+            println!("normal\u{1b}[31mRED\u{1b}[0m tail\u{07}");
+        }
+        "write-marker" => {
+            let marker = std::env::var("OMNI_BROKER_TEST_MARKER_FILE").unwrap_or_default();
+            if !marker.is_empty() {
+                let _ = std::fs::write(marker, "ran");
+            }
+            std::process::exit(0);
+        }
+        "spawn-grandchild-exit-first" => {
+            let pid_file = std::env::var("OMNI_BROKER_TEST_GRANDCHILD_PID_FILE")
+                .expect("grandchild pid file env missing");
+            let mut cmd = std::process::Command::new(std::env::current_exe().expect("current_exe"));
+            cmd.args(["--exact", TEST_CHILD_TEST_NAME, "--ignored", "--nocapture"])
+                .env("OMNI_BROKER_TEST_MODE", "grandchild")
+                .env("OMNI_BROKER_TEST_GRANDCHILD_PID_FILE", &pid_file)
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null());
+            let _ = cmd.spawn().expect("spawn grandchild");
+            std::process::exit(0);
+        }
+        "breakaway-attempt" => {
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                let pid_file = std::env::var("OMNI_BROKER_TEST_GRANDCHILD_PID_FILE")
+                    .expect("grandchild pid file env missing");
+                const CREATE_BREAKAWAY_FROM_JOB: u32 = 0x0100_0000;
+                let mut cmd =
+                    std::process::Command::new(std::env::current_exe().expect("current_exe"));
+                cmd.args(["--exact", TEST_CHILD_TEST_NAME, "--ignored", "--nocapture"])
+                    .env("OMNI_BROKER_TEST_MODE", "grandchild")
+                    .env("OMNI_BROKER_TEST_GRANDCHILD_PID_FILE", &pid_file)
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .creation_flags(CREATE_BREAKAWAY_FROM_JOB);
+                match cmd.spawn() {
+                    Ok(_child) => println!("BREAKAWAY_UNEXPECTEDLY_ALLOWED"),
+                    Err(e) => println!("BREAKAWAY_BLOCKED:{e}"),
+                }
+            }
+            #[cfg(not(windows))]
+            {
+                println!("BREAKAWAY_NOT_APPLICABLE");
+            }
+        }
+        "job-holder" => {
+            #[cfg(windows)]
+            {
+                use std::os::windows::io::AsRawHandle;
+                use windows::Win32::Foundation::HANDLE;
+                use windows::Win32::System::JobObjects::{
+                    AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+                    SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+                    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+                };
+                let job = unsafe { CreateJobObjectW(None, None) }.expect("create job");
+                let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
+                info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+                unsafe {
+                    SetInformationJobObject(
+                        job,
+                        JobObjectExtendedLimitInformation,
+                        &info as *const JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+                            as *const core::ffi::c_void,
+                        std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+                    )
+                }
+                .expect("set job info");
+                let pid_file = std::env::var("OMNI_BROKER_TEST_GRANDCHILD_PID_FILE")
+                    .expect("grandchild pid file env missing");
+                let mut cmd =
+                    std::process::Command::new(std::env::current_exe().expect("current_exe"));
+                cmd.args(["--exact", TEST_CHILD_TEST_NAME, "--ignored", "--nocapture"])
+                    .env("OMNI_BROKER_TEST_MODE", "grandchild")
+                    .env("OMNI_BROKER_TEST_GRANDCHILD_PID_FILE", &pid_file)
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null());
+                let child = cmd.spawn().expect("spawn grandchild");
+                unsafe {
+                    AssignProcessToJobObject(job, HANDLE(child.as_raw_handle() as isize))
+                        .expect("assign to job");
+                }
+                // Wait until the grandchild records its pid, then exit. The
+                // process exit closes the job handle and KILL_ON_JOB_CLOSE
+                // must terminate the grandchild.
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+                while std::time::Instant::now() < deadline {
+                    if std::path::Path::new(&pid_file).exists() {
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(20));
+                }
+                std::process::exit(0);
+            }
+            #[cfg(not(windows))]
+            {
+                std::process::exit(0);
+            }
+        }
+        "exit-immediately" => {
+            std::thread::sleep(Duration::from_millis(150));
+            std::process::exit(0);
+        }
         "grandchild" => {
             let pid_file = std::env::var("OMNI_BROKER_TEST_GRANDCHILD_PID_FILE")
                 .expect("grandchild pid file env missing");
@@ -240,11 +361,11 @@ fn child_protocol_entry() {
 // Plan construction helpers
 // ---------------------------------------------------------------------------
 
-fn plan(state: ExecutionPlanStateWire) -> ExecutionPlanWire {
+pub(super) fn plan(state: ExecutionPlanStateWire) -> ExecutionPlanWire {
     plan_with(state, |_| {})
 }
 
-fn plan_with(
+pub(super) fn plan_with(
     state: ExecutionPlanStateWire,
     mutate: impl FnOnce(&mut ExecutionPlanWire),
 ) -> ExecutionPlanWire {
@@ -272,7 +393,7 @@ fn plan_with(
         verification_plan: None,
         rollback_plan: None,
         state,
-        created_at: "2026-08-13T00:00:00+08:00".to_string(),
+        created_at: chrono::Utc::now().to_rfc3339(),
         expires_at: None,
         correlation_id: None,
         requested_by: Some("unit-test".to_string()),
@@ -281,22 +402,22 @@ fn plan_with(
     plan
 }
 
-fn set_inputs(plan: &mut ExecutionPlanWire, value: serde_json::Value) {
+pub(super) fn set_inputs(plan: &mut ExecutionPlanWire, value: serde_json::Value) {
     plan.normalized_inputs = value.as_object().expect("inputs must be an object").clone();
 }
 
 /// Build a broker with the test binding rooted at `root`.
-fn broker_with_root(root: &Path) -> Broker {
+pub(super) fn broker_with_root(root: &Path) -> Broker {
     let broker = Broker::new();
     broker.register_binding(Box::new(TestSelfBinding::new(root.to_path_buf())));
     broker
 }
 
 /// Temp dir helper that also cleans up on drop.
-struct TempDir(PathBuf);
+pub(super) struct TempDir(PathBuf);
 
 impl TempDir {
-    fn new(tag: &str) -> Self {
+    pub(super) fn new(tag: &str) -> Self {
         let base = std::env::temp_dir().join(format!(
             "omni-cp3-broker-{tag}-{}-{}",
             std::process::id(),
@@ -309,7 +430,7 @@ impl TempDir {
         Self(base)
     }
 
-    fn path(&self) -> &Path {
+    pub(super) fn path(&self) -> &Path {
         &self.0
     }
 }
@@ -320,7 +441,7 @@ impl Drop for TempDir {
     }
 }
 
-fn wait_until(deadline: Instant, mut check: impl FnMut() -> bool) -> bool {
+pub(super) fn wait_until(deadline: Instant, mut check: impl FnMut() -> bool) -> bool {
     while Instant::now() < deadline {
         if check() {
             return true;
@@ -400,7 +521,7 @@ fn parse_debug_string(s: &str) -> String {
 }
 
 #[cfg(windows)]
-fn process_running(pid: u32) -> bool {
+pub(super) fn process_running(pid: u32) -> bool {
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::System::Threading::{
         GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
@@ -438,16 +559,28 @@ fn gate_rejects_non_ready_states() {
     let tmp = TempDir::new("gate");
     let broker = broker_with_root(tmp.path());
     for (state, code) in [
-        (ExecutionPlanStateWire::Draft, ErrorCode::PlanNotReady),
+        (ExecutionPlanStateWire::Draft, ErrorCode::PlanRejectedState),
         (
             ExecutionPlanStateWire::AwaitingApproval,
-            ErrorCode::PlanNotReady,
+            ErrorCode::PlanRejectedState,
         ),
-        (ExecutionPlanStateWire::Executing, ErrorCode::PlanNotReady),
-        (ExecutionPlanStateWire::Succeeded, ErrorCode::PlanNotReady),
-        (ExecutionPlanStateWire::Failed, ErrorCode::PlanNotReady),
-        (ExecutionPlanStateWire::Blocked, ErrorCode::PlanNotReady),
-        (ExecutionPlanStateWire::Cancelled, ErrorCode::PlanNotReady),
+        (
+            ExecutionPlanStateWire::Executing,
+            ErrorCode::PlanRejectedState,
+        ),
+        (
+            ExecutionPlanStateWire::Succeeded,
+            ErrorCode::PlanRejectedState,
+        ),
+        (ExecutionPlanStateWire::Failed, ErrorCode::PlanRejectedState),
+        (
+            ExecutionPlanStateWire::Blocked,
+            ErrorCode::PlanRejectedState,
+        ),
+        (
+            ExecutionPlanStateWire::Cancelled,
+            ErrorCode::PlanRejectedState,
+        ),
     ] {
         let err = broker
             .execute(&plan(state), "test.self.run")
@@ -463,7 +596,7 @@ fn gate_executing_is_replay_guard() {
     let err = broker
         .execute(&plan(ExecutionPlanStateWire::Executing), "test.self.run")
         .expect_err("executing must be rejected as replay");
-    assert_eq!(err.code, ErrorCode::PlanNotReady);
+    assert_eq!(err.code, ErrorCode::PlanRejectedState);
     assert!(err.message.contains("replay"), "message: {}", err.message);
 }
 
@@ -478,7 +611,7 @@ fn gate_expired_plan_rejected() {
             "test.self.run",
         )
         .expect_err("expired plan must be rejected");
-    assert_eq!(err.code, ErrorCode::PlanExpired);
+    assert_eq!(err.code, ErrorCode::PlanRejectedExpired);
 }
 
 #[test]
@@ -493,7 +626,7 @@ fn gate_required_approval_blocked_in_cp3() {
                     approval_id: "approval-1".to_string(),
                     plan_id: p.plan_id.clone(),
                     granted_by: "user".to_string(),
-                    granted_at: "2026-08-13T00:00:00+08:00".to_string(),
+                    granted_at: chrono::Utc::now().to_rfc3339(),
                     policy_version: "1.0.0".to_string(),
                     token_reference: "ref-1".to_string(),
                     token_digest: "digest-1".to_string(),
@@ -502,7 +635,7 @@ fn gate_required_approval_blocked_in_cp3() {
             "test.self.run",
         )
         .expect_err("approval-required plans must be blocked in CP3");
-    assert_eq!(err.code, ErrorCode::ApprovalEnforcementNotAvailable);
+    assert_eq!(err.code, ErrorCode::PlanRejectedApproval);
 }
 
 #[test]
@@ -527,7 +660,7 @@ fn gate_binding_mismatches_rejected() {
             "test.self.run",
         )
         .expect_err("adapter mismatch must be rejected");
-    assert_eq!(adapter_err.code, ErrorCode::AdapterBindingMismatch);
+    assert_eq!(adapter_err.code, ErrorCode::PlanRejectedAdapter);
 
     let capability_err = broker
         .execute(
@@ -537,7 +670,7 @@ fn gate_binding_mismatches_rejected() {
             "test.self.run",
         )
         .expect_err("capability mismatch must be rejected");
-    assert_eq!(capability_err.code, ErrorCode::CapabilityBindingMismatch);
+    assert_eq!(capability_err.code, ErrorCode::PlanRejectedCapability);
 }
 
 #[test]
@@ -562,7 +695,7 @@ fn gate_forbidden_input_keys_rejected() {
                 "test.self.run",
             )
             .expect_err("forbidden input key must be rejected");
-        assert_eq!(err.code, ErrorCode::InvalidPlan, "key {key}");
+        assert_eq!(err.code, ErrorCode::PlanRejectedInvalid, "key {key}");
     }
 }
 
@@ -579,7 +712,7 @@ fn gate_invalid_plan_identity_rejected() {
             "test.self.run",
         )
         .expect_err("invalid plan_id must be rejected");
-    assert_eq!(bad_id.code, ErrorCode::InvalidPlan);
+    assert_eq!(bad_id.code, ErrorCode::PlanRejectedInvalid);
 
     let bad_cap = broker
         .execute(
@@ -589,7 +722,7 @@ fn gate_invalid_plan_identity_rejected() {
             "test.self.run",
         )
         .expect_err("reserved capability prefix must be rejected");
-    assert_eq!(bad_cap.code, ErrorCode::InvalidPlan);
+    assert_eq!(bad_cap.code, ErrorCode::PlanRejectedInvalid);
 
     let bad_adapter = broker
         .execute(
@@ -599,7 +732,7 @@ fn gate_invalid_plan_identity_rejected() {
             "test.self.run",
         )
         .expect_err("invalid adapter_id must be rejected");
-    assert_eq!(bad_adapter.code, ErrorCode::InvalidPlan);
+    assert_eq!(bad_adapter.code, ErrorCode::PlanRejectedInvalid);
 }
 
 #[test]
@@ -613,7 +746,7 @@ fn gate_timeout_bounds_enforced() {
                 "test.self.run",
             )
             .expect_err("out-of-bounds timeout must be rejected");
-        assert_eq!(err.code, ErrorCode::InvalidPlan);
+        assert_eq!(err.code, ErrorCode::PlanRejectedInvalid);
     }
 }
 
@@ -677,11 +810,11 @@ fn executable_arbitrary_input_impossible() {
 fn executable_rejects_cmd_bat_ps1_and_missing() {
     let tmp = TempDir::new("exe");
     for (name, code) in [
-        ("tool.cmd", ErrorCode::ExecutableNotAllowed),
-        ("tool.bat", ErrorCode::ExecutableNotAllowed),
-        ("tool.ps1", ErrorCode::ExecutableNotAllowed),
-        ("tool.xyz", ErrorCode::ExecutableNotAllowed),
-        ("missing.exe", ErrorCode::ExecutableNotFound),
+        ("tool.cmd", ErrorCode::BrokerBlockedExtension),
+        ("tool.bat", ErrorCode::BrokerBlockedExtension),
+        ("tool.ps1", ErrorCode::BrokerBlockedExtension),
+        ("tool.xyz", ErrorCode::BrokerBlockedExtension),
+        ("missing.exe", ErrorCode::BrokerBlockedExecutable),
     ] {
         let candidate = tmp.path().join(name);
         if !name.starts_with("missing") {
@@ -830,7 +963,7 @@ fn argv_nul_rejected() {
     let err = broker
         .execute(&p, "test.self.run")
         .expect_err("NUL argv must be rejected");
-    assert_eq!(err.code, ErrorCode::InvalidArguments);
+    assert_eq!(err.code, ErrorCode::BrokerBlockedArgv);
 }
 
 // ---------------------------------------------------------------------------
@@ -884,7 +1017,7 @@ fn cwd_dotdot_escape_rejected() {
     let err = broker
         .execute(&p, "test.self.run")
         .expect_err("cwd escape must be rejected");
-    assert_eq!(err.code, ErrorCode::CwdNotAllowed);
+    assert_eq!(err.code, ErrorCode::BrokerBlockedPath);
 }
 
 #[test]
@@ -911,7 +1044,7 @@ fn cwd_symlink_escape_rejected_where_testable() {
     let err = broker
         .execute(&p, "test.self.run")
         .expect_err("symlink escape must be rejected");
-    assert_eq!(err.code, ErrorCode::CwdNotAllowed);
+    assert_eq!(err.code, ErrorCode::BrokerBlockedPath);
 }
 
 // ---------------------------------------------------------------------------
@@ -926,7 +1059,6 @@ fn env_secrets_not_inherited_and_allowlist_present() {
 
     // Poison the parent env with secrets + an allowlisted var.
     std::env::set_var("GH_TOKEN", "gh-secret");
-    std::env::set_var("GITHUB_TOKEN", "github-secret");
     std::env::set_var("OPENAI_API_KEY", "sk-secret");
     std::env::set_var("AWS_SECRET_ACCESS_KEY", "aws-secret");
     std::env::set_var("OMNI_BROKER_TEST_ALLOWED", "allow-me");
@@ -983,9 +1115,9 @@ fn lifecycle_success_and_nonzero_exit() {
     assert_eq!(ok.exit_code, Some(0));
 
     std::env::set_var("OMNI_BROKER_TEST_EXIT_CODE", "7");
-    let failed = broker
-        .execute(&plan(ExecutionPlanStateWire::Ready), "test.self.run")
-        .expect("run");
+    let mut failed_plan = plan(ExecutionPlanStateWire::Ready);
+    failed_plan.plan_id = "plan-00000002".to_string();
+    let failed = broker.execute(&failed_plan, "test.self.run").expect("run");
     assert!(!failed.success);
     assert_eq!(failed.exit_code, Some(7));
     assert!(!failed.timed_out && !failed.cancelled);

@@ -132,21 +132,58 @@ pub fn build_child_env(
 /// resolved real path must be a directory that exists and must be equal to or
 /// a descendant of a canonicalized allowlisted root.
 pub fn validate_cwd(candidate: &Path, roots: &[PathBuf]) -> Result<PathBuf, BrokerError> {
-    let canonical = std::fs::canonicalize(candidate).map_err(|_| {
+    let cwd_err = |reason: &str| {
         BrokerError::new(
-            crate::execution_broker::types::ErrorCode::CwdNotAllowed,
-            format!(
-                "cwd does not exist or cannot be canonicalized: {}",
-                candidate.display()
-            ),
+            crate::execution_broker::types::ErrorCode::BrokerBlockedCwd,
+            reason.to_string(),
         )
-    })?;
+    };
+    let path_err = |reason: &str| {
+        BrokerError::new(
+            crate::execution_broker::types::ErrorCode::BrokerBlockedPath,
+            reason.to_string(),
+        )
+    };
+
+    // NUL bytes can never be part of a valid path (truncation hazard).
+    if candidate.to_string_lossy().contains('\u{0}') {
+        return Err(cwd_err("cwd contains a NUL byte"));
+    }
+
+    // Relative candidates resolve against the broker process cwd, which is a
+    // caller-controlled ambiguity: reject outright.
+    if !candidate.is_absolute() {
+        return Err(cwd_err("cwd must be an absolute path"));
+    }
+
+    // Windows path-form classification (UNC, verbatim prefix, ADS).
+    #[cfg(windows)]
+    {
+        let s = candidate.to_string_lossy().replace('/', "\\");
+        if s.starts_with("\\\\?\\") {
+            return Err(path_err("verbatim \\\\?\\ prefixed cwd is not allowed"));
+        }
+        if s.starts_with("\\\\") {
+            return Err(cwd_err("UNC cwd paths are not allowed"));
+        }
+        let drive_len = s
+            .find(':')
+            .filter(|&p| (1..=2).contains(&p))
+            .map(|p| p + 1)
+            .unwrap_or(0);
+        if drive_len > 0 {
+            let tail = &s[drive_len..];
+            if tail.contains(':') {
+                return Err(path_err("alternate data stream cwd paths are not allowed"));
+            }
+        }
+    }
+
+    let canonical = std::fs::canonicalize(candidate)
+        .map_err(|_| path_err("cwd does not exist or cannot be canonicalized"))?;
 
     if !canonical.is_dir() {
-        return Err(BrokerError::new(
-            crate::execution_broker::types::ErrorCode::CwdNotAllowed,
-            format!("cwd is not a directory: {}", canonical.display()),
-        ));
+        return Err(path_err("cwd is not a directory"));
     }
 
     for root in roots {
@@ -159,10 +196,7 @@ pub fn validate_cwd(candidate: &Path, roots: &[PathBuf]) -> Result<PathBuf, Brok
         }
     }
 
-    Err(BrokerError::new(
-        crate::execution_broker::types::ErrorCode::CwdNotAllowed,
-        format!("cwd escapes all allowlisted roots: {}", canonical.display()),
-    ))
+    Err(path_err("cwd escapes all allowlisted roots"))
 }
 
 // ---------------------------------------------------------------------------

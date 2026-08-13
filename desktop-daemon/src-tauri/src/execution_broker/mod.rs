@@ -1,4 +1,4 @@
-﻿//! Goal24 Checkpoint 3 — Tauri Local Execution Broker core (Lane A).
+//! Goal24 Checkpoint 3 — Tauri Local Execution Broker core (Lane A).
 //!
 //! The broker is a *restricted execution primitive*: it executes an approved
 //! semantic `ExecutionPlan` (`state=ready`, `required_approval=false` in CP3)
@@ -17,10 +17,11 @@ mod runner;
 mod types;
 
 #[cfg(test)]
+mod adversarial;
+#[cfg(test)]
 mod tests;
 
-
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
 pub use policy::{ExecutionBinding, DEFAULT_OUTPUT_MAX_BYTES};
@@ -57,6 +58,7 @@ pub struct OutputLimitsView {
 pub struct Broker {
     bindings: Mutex<HashMap<String, Arc<dyn ExecutionBinding>>>,
     registry: ExecutionRegistry,
+    executed_plans: Mutex<HashSet<String>>,
 }
 
 impl Default for Broker {
@@ -71,6 +73,7 @@ impl Broker {
         Self {
             bindings: Mutex::new(HashMap::new()),
             registry: ExecutionRegistry::default(),
+            executed_plans: Mutex::new(HashSet::new()),
         }
     }
 
@@ -88,7 +91,7 @@ impl Broker {
     /// - `state=ready` only (`executing` is rejected as a replay guard)
     /// - `required_approval=false` only in CP3
     ///   (`APPROVAL_ENFORCEMENT_NOT_AVAILABLE` until Checkpoint 7)
-    /// - `expires_at` must be absent or in the future
+    /// - `expires_at` must be absent (CP3 default TTL: 24h from `created_at`) or in the future
     /// - `timeout_ms` within contract bounds `[100, 86_400_000]`
     /// - plan identity fields must match the contract patterns
     /// - `normalized_inputs` must not carry reserved command keys
@@ -106,25 +109,50 @@ impl Broker {
             } else {
                 "only state=ready plans are accepted by the CP3 broker"
             };
-            return Err(BrokerError::new(ErrorCode::PlanNotReady, detail));
+            return Err(BrokerError::new(ErrorCode::PlanRejectedState, detail));
+        }
+
+        // Approval reference consistency (schema-only in CP3; the approval
+        // engine itself arrives in Checkpoint 7).
+        if let Some(approval) = &plan.approval {
+            if approval.plan_id != plan.plan_id {
+                return Err(BrokerError::new(
+                    ErrorCode::PlanRejectedInvalid,
+                    "approval.plan_id does not match plan.plan_id",
+                ));
+            }
+            if !plan.required_approval {
+                return Err(BrokerError::new(
+                    ErrorCode::PlanRejectedInvalid,
+                    "approval reference present on a plan that does not require approval",
+                ));
+            }
         }
 
         if plan.required_approval {
             return Err(BrokerError::new(
-                ErrorCode::ApprovalEnforcementNotAvailable,
+                ErrorCode::PlanRejectedApproval,
                 "required_approval=true is blocked in CP3 until Checkpoint 7 provides real approval enforcement",
             ));
         }
 
         if let Some(expires_at) = &plan.expires_at {
             if runner::plan_is_expired(expires_at) {
-                return Err(BrokerError::new(ErrorCode::PlanExpired, "plan has expired"));
+                return Err(BrokerError::new(
+                    ErrorCode::PlanRejectedExpired,
+                    "plan has expired",
+                ));
             }
+        } else if runner::plan_is_stale(&plan.created_at) {
+            return Err(BrokerError::new(
+                ErrorCode::PlanRejectedExpired,
+                "plan has no expires_at and exceeded the CP3 default TTL from created_at",
+            ));
         }
 
         if !(TIMEOUT_MIN_MS..=TIMEOUT_MAX_MS).contains(&plan.timeout_ms) {
             return Err(BrokerError::new(
-                ErrorCode::InvalidPlan,
+                ErrorCode::PlanRejectedInvalid,
                 format!(
                     "timeout_ms {} outside contract bounds [{TIMEOUT_MIN_MS}, {TIMEOUT_MAX_MS}]",
                     plan.timeout_ms
@@ -138,7 +166,7 @@ impl Broker {
             .find(|k| FORBIDDEN_INPUT_KEYS.contains(&k.as_str()))
         {
             return Err(BrokerError::new(
-                ErrorCode::InvalidPlan,
+                ErrorCode::PlanRejectedInvalid,
                 format!("normalized_inputs must not contain reserved top-level key '{forbidden}'"),
             ));
         }
@@ -155,7 +183,7 @@ impl Broker {
 
         if binding.adapter_id() != plan.adapter_id {
             return Err(BrokerError::new(
-                ErrorCode::AdapterBindingMismatch,
+                ErrorCode::PlanRejectedAdapter,
                 format!(
                     "binding {} adapter_id '{}' does not match plan adapter_id '{}'",
                     binding_id,
@@ -166,7 +194,7 @@ impl Broker {
         }
         if binding.capability_id() != plan.capability_id {
             return Err(BrokerError::new(
-                ErrorCode::CapabilityBindingMismatch,
+                ErrorCode::PlanRejectedCapability,
                 format!(
                     "binding {} capability_id '{}' does not match plan capability_id '{}'",
                     binding_id,
@@ -175,6 +203,36 @@ impl Broker {
                 ),
             ));
         }
+
+        // Single-use guard: a plan id may only be accepted once. CP3 keeps
+        // this ledger in memory; the durable ledger arrives with the approval
+        // engine in Checkpoint 7.
+        {
+            let executed = self.executed_plans.lock().unwrap();
+            if executed.contains(&plan.plan_id) {
+                return Err(BrokerError::new(
+                    ErrorCode::PlanRejectedSingleUse,
+                    "plan_id was already accepted for execution",
+                ));
+            }
+        }
+
+        // CP3 fail-closed environment rule: a write-scoped GitHub token in
+        // the broker's own environment would implicitly authenticate the
+        // pinned `gh` binary, so execution is refused rather than silently
+        // proceeding.
+        if std::env::var_os("GITHUB_TOKEN").is_some() {
+            return Err(BrokerError::new(
+                ErrorCode::BrokerBlockedEnv,
+                "GITHUB_TOKEN is present in the broker environment; execution is blocked in CP3",
+            ));
+        }
+
+        // Reserve the plan id only after every gate has passed.
+        self.executed_plans
+            .lock()
+            .unwrap()
+            .insert(plan.plan_id.clone());
 
         runner::run(plan, binding.as_ref(), &self.registry)
     }
@@ -210,7 +268,8 @@ impl Broker {
 /// Plan identity / structural validation mirroring the TypeScript contract
 /// patterns. All failures are `INVALID_PLAN`.
 fn validate_plan_identity(plan: &ExecutionPlanWire) -> Result<(), BrokerError> {
-    let invalid = |reason: &str| BrokerError::new(ErrorCode::InvalidPlan, reason.to_string());
+    let invalid =
+        |reason: &str| BrokerError::new(ErrorCode::PlanRejectedInvalid, reason.to_string());
 
     if !ExecutionPlanWire::valid_plan_id(&plan.plan_id) {
         return Err(invalid("plan_id does not match the contract pattern"));

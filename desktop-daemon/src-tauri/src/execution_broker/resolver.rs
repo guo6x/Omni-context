@@ -68,7 +68,7 @@ pub fn resolve_executable(
     }
     Err(last_error.unwrap_or_else(|| {
         BrokerError::new(
-            ErrorCode::ExecutableNotFound,
+            ErrorCode::BrokerBlockedExecutable,
             "no executable candidates provided",
         )
     }))
@@ -77,7 +77,7 @@ pub fn resolve_executable(
 fn resolve_single(candidate: &Path) -> Result<ExecutableFingerprint, BrokerError> {
     if !candidate.is_absolute() {
         return Err(BrokerError::new(
-            ErrorCode::ExecutableNotAllowed,
+            ErrorCode::BrokerBlockedExecutable,
             format!(
                 "executable candidate must be an absolute path: {}",
                 candidate.display()
@@ -95,7 +95,7 @@ fn resolve_single(candidate: &Path) -> Result<ExecutableFingerprint, BrokerError
             .unwrap_or_default();
         if ext != "exe" {
             return Err(BrokerError::new(
-                ErrorCode::ExecutableNotAllowed,
+                ErrorCode::BrokerBlockedExtension,
                 format!(
                     "executable candidate must be a concrete .exe on Windows (got {:?}): {}",
                     candidate
@@ -109,21 +109,54 @@ fn resolve_single(candidate: &Path) -> Result<ExecutableFingerprint, BrokerError
 
     let canonical = std::fs::canonicalize(candidate).map_err(|_| {
         BrokerError::new(
-            ErrorCode::ExecutableNotFound,
+            ErrorCode::BrokerBlockedExecutable,
             format!("executable not found: {}", candidate.display()),
         )
     })?;
 
+    // Reject candidates whose canonical on-disk identity differs from the
+    // requested path (symlink/junction indirection to another file is
+    // fail-closed for broker executables).
+    #[cfg(windows)]
+    {
+        let strip_verbatim = |s: &str| s.trim_start_matches("\\\\?\\").to_lowercase();
+        let canon_norm = strip_verbatim(&canonical.to_string_lossy());
+        let cand_norm = strip_verbatim(&candidate.to_string_lossy());
+        if canon_norm != cand_norm {
+            return Err(BrokerError::new(
+                ErrorCode::BrokerBlockedExecutable,
+                format!(
+                    "executable canonical identity differs from candidate: {} -> {}",
+                    candidate.display(),
+                    canonical.display()
+                ),
+            ));
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        if canonical != candidate {
+            return Err(BrokerError::new(
+                ErrorCode::BrokerBlockedExecutable,
+                format!(
+                    "executable canonical identity differs from candidate: {} -> {}",
+                    candidate.display(),
+                    canonical.display()
+                ),
+            ));
+        }
+    }
+
     let meta = std::fs::metadata(&canonical).map_err(|_| {
         BrokerError::new(
-            ErrorCode::ExecutableNotFound,
+            ErrorCode::BrokerBlockedExecutable,
             format!("executable metadata unavailable: {}", canonical.display()),
         )
     })?;
 
     if !meta.is_file() {
         return Err(BrokerError::new(
-            ErrorCode::ExecutableNotAllowed,
+            ErrorCode::BrokerBlockedExecutable,
             format!(
                 "resolved executable is not a regular file: {}",
                 canonical.display()

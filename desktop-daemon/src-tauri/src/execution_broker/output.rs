@@ -1,4 +1,4 @@
-﻿//! Goal24 Checkpoint 3 — bounded output capture.
+//! Goal24 Checkpoint 3 — bounded output capture.
 //!
 //! Child stdout/stderr are drained on dedicated threads into bounded buffers.
 //! Once a stream reaches its cap the reader keeps draining (so the child never
@@ -102,4 +102,169 @@ impl OutputReaders {
         let stderr = iter.next().unwrap_or_default();
         (stdout, stderr)
     }
+}
+
+/// Case-insensitive ASCII prefix check that does not allocate.
+fn prefix_eq_ignore_case(s: &str, prefix: &str) -> bool {
+    match s.get(..prefix.len()) {
+        Some(slice) => slice.eq_ignore_ascii_case(prefix),
+        None => false,
+    }
+}
+
+/// Redact credential-shaped and control-character material from captured
+/// output. Returns the redacted string and whether anything changed.
+pub fn redact(input: &str) -> (String, bool) {
+    const REDACTED: &str = "[REDACTED]";
+    const FAKE_SECRET: &str = "FAKE_SECRET_CP3_TEST_VALUE";
+    const TOKEN_PREFIXES: [&str; 5] = ["github_pat_", "ghp_", "gho_", "ghu_", "ghs_"];
+
+    let bytes = input.as_bytes();
+    let mut out = String::with_capacity(input.len());
+    let mut changed = false;
+    let mut i = 0usize;
+
+    while i < bytes.len() {
+        let rest = &input[i..];
+
+        if rest.starts_with(FAKE_SECRET) {
+            out.push_str(REDACTED);
+            changed = true;
+            i += FAKE_SECRET.len();
+            continue;
+        }
+
+        let mut token_matched = false;
+        for prefix in TOKEN_PREFIXES {
+            if prefix_eq_ignore_case(rest, prefix) {
+                let mut end = i + prefix.len();
+                let mut count = 0usize;
+                while end < bytes.len()
+                    && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'_')
+                    && count < 512
+                {
+                    end += 1;
+                    count += 1;
+                }
+                if count >= 20 {
+                    out.push_str(REDACTED);
+                    changed = true;
+                    i = end;
+                    token_matched = true;
+                }
+                break;
+            }
+        }
+        if token_matched {
+            continue;
+        }
+
+        if prefix_eq_ignore_case(rest, "bearer ") {
+            let token_start = i + 7;
+            let mut end = token_start;
+            while end < bytes.len()
+                && !bytes[end].is_ascii_whitespace()
+                && bytes[end] != b'"'
+                && bytes[end] != b','
+                && bytes[end] != b';'
+            {
+                end += 1;
+            }
+            if end > token_start {
+                out.push_str("Bearer ");
+                out.push_str(REDACTED);
+                changed = true;
+                i = end;
+                continue;
+            }
+        }
+
+        if prefix_eq_ignore_case(rest, "authorization:") {
+            let colon_end = i + "authorization:".len();
+            let mut scan = colon_end;
+            while scan < bytes.len() && bytes[scan].is_ascii_whitespace() {
+                scan += 1;
+            }
+            let scheme = &input[scan..];
+            if prefix_eq_ignore_case(scheme, "bearer") {
+                let bearer_end = scan + "bearer".len();
+                if bearer_end < bytes.len() && bytes[bearer_end].is_ascii_whitespace() {
+                    let mut end = bearer_end + 1;
+                    while end < bytes.len() && bytes[end] != b'\r' && bytes[end] != b'\n' {
+                        end += 1;
+                    }
+                    out.push_str(&input[i..bearer_end]);
+                    out.push(' ');
+                    out.push_str(REDACTED);
+                    changed = true;
+                    i = end;
+                    continue;
+                }
+            }
+            let mut end = colon_end;
+            while end < bytes.len() && bytes[end] != b'\r' && bytes[end] != b'\n' {
+                end += 1;
+            }
+            out.push_str(&input[i..colon_end]);
+            out.push(' ');
+            out.push_str(REDACTED);
+            changed = true;
+            i = end;
+            continue;
+        }
+
+        if rest.starts_with("://") {
+            let mut at = i + 3;
+            let mut found_at = false;
+            while at < bytes.len() && at - i < 4096 {
+                if bytes[at] == b'@' {
+                    found_at = true;
+                    break;
+                }
+                if bytes[at] == b'/' || bytes[at].is_ascii_whitespace() {
+                    break;
+                }
+                at += 1;
+            }
+            if found_at {
+                out.push_str("://");
+                out.push_str(REDACTED);
+                out.push('@');
+                changed = true;
+                i = at + 1;
+                continue;
+            }
+        }
+
+        let ch = rest.chars().next().unwrap_or('\0');
+        let cp = ch as u32;
+        if ch == '\u{1b}' {
+            let mut j = i + 1;
+            if j < bytes.len() && bytes[j] == b'[' {
+                j += 1;
+                while j < bytes.len()
+                    && j - i < 64
+                    && !(bytes[j].is_ascii_alphabetic() && bytes[j] != b'[')
+                {
+                    j += 1;
+                }
+                if j < bytes.len() {
+                    j += 1;
+                }
+            }
+            changed = true;
+            i = j;
+            continue;
+        }
+        let control = cp < 0x20 && ch != '\n' && ch != '\r' && ch != '\t';
+        if control || cp == 0x7f {
+            changed = true;
+            i += ch.len_utf8();
+            continue;
+        }
+        let mut buf = [0u8; 4];
+        out.push_str(ch.encode_utf8(&mut buf));
+        i += ch.len_utf8();
+    }
+    (out, changed)
 }

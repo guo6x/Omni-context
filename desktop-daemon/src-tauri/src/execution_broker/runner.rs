@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use crate::execution_broker::output::OutputReaders;
+use crate::execution_broker::output::{redact, OutputReaders};
 use crate::execution_broker::policy::{
     build_child_env, validate_cwd, ExecutionBinding, OutputLimits, BASE_ENV_VARS,
 };
@@ -39,11 +39,29 @@ pub fn now_rfc3339() -> String {
     chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
 }
 
+/// CP3 broker-side default plan TTL: a plan without `expires_at` is valid
+/// for at most 24h from `created_at` (frozen threat model T16: the policy is
+/// broker-side, not yet a contract field; specified here for the CP3 spec).
+pub const DEFAULT_PLAN_TTL_MS: i64 = 86_400_000;
+
 /// Fail-closed expiry check for an RFC3339 `expires_at` string: unparseable
 /// timestamps are treated as expired.
 pub fn plan_is_expired(expires_at: &str) -> bool {
     match chrono::DateTime::parse_from_rfc3339(expires_at) {
         Ok(dt) => chrono::Utc::now() >= dt.with_timezone(&chrono::Utc),
+        Err(_) => true,
+    }
+}
+
+/// Fail-closed staleness check for a plan without `expires_at`: the CP3
+/// default TTL is measured from `created_at`; unparseable timestamps are
+/// treated as stale.
+pub fn plan_is_stale(created_at: &str) -> bool {
+    match chrono::DateTime::parse_from_rfc3339(created_at) {
+        Ok(dt) => {
+            let age_ms = (chrono::Utc::now() - dt.with_timezone(&chrono::Utc)).num_milliseconds();
+            age_ms >= DEFAULT_PLAN_TTL_MS
+        }
         Err(_) => true,
     }
 }
@@ -121,7 +139,7 @@ pub fn run(
     // --- argv (trusted binding only) -------------------------------------
     let argv = binding.build_argv(&plan.normalized_inputs).map_err(|e| {
         BrokerError::new(
-            ErrorCode::InvalidArguments,
+            ErrorCode::BrokerBlockedArgv,
             format!("binding rejected inputs: {e}"),
         )
     })?;
@@ -131,7 +149,7 @@ pub fn run(
     let (_candidate, fingerprint) = resolve_executable(binding.executable_candidates())?;
     if !fingerprint.verify() {
         return Err(BrokerError::new(
-            ErrorCode::ExecutableChanged,
+            ErrorCode::BrokerBlockedExecutable,
             format!(
                 "executable identity changed between resolution and spawn: {}",
                 fingerprint.canonical_path.display()
@@ -143,7 +161,7 @@ pub fn run(
     // --- cwd policy -------------------------------------------------------
     let derived_cwd = binding.derive_cwd(&plan.normalized_inputs).map_err(|e| {
         BrokerError::new(
-            ErrorCode::CwdNotAllowed,
+            ErrorCode::BrokerBlockedCwd,
             format!("cwd derivation failed: {e}"),
         )
     })?;
@@ -198,7 +216,18 @@ pub fn run(
             break RunOutcome::Cancelled;
         }
         match tree.try_wait() {
-            Ok(Some(status)) => break RunOutcome::Exited(status),
+            Ok(Some(status)) => {
+                // The direct child exited; the tree is complete only when
+                // no descendant remains inside the containment boundary.
+                if tree.is_empty() {
+                    break RunOutcome::Exited(status);
+                }
+                if Instant::now() >= deadline {
+                    let _ = tree.terminate();
+                    let _ = tree.wait();
+                    break RunOutcome::TimedOut;
+                }
+            }
             Ok(None) => {}
             Err(e) => {
                 let _ = tree.terminate();
@@ -219,6 +248,9 @@ pub fn run(
 
     // --- reap + collect output --------------------------------------------
     let (stdout_out, stderr_out) = readers.finish();
+    let (stdout_text, stdout_redacted) = redact(&stdout_out.as_lossy_string());
+    let (stderr_text, stderr_redacted) = redact(&stderr_out.as_lossy_string());
+    let output_redacted = stdout_redacted || stderr_redacted;
     let exit_code = match outcome {
         RunOutcome::Exited(status) => status.code(),
         RunOutcome::TimedOut | RunOutcome::Cancelled => None,
@@ -229,10 +261,31 @@ pub fn run(
     let finished_at = now_rfc3339();
     let duration_ms = started.elapsed().as_millis() as u64;
 
-    let (timed_out, cancelled) = match outcome {
-        RunOutcome::TimedOut => (true, false),
-        RunOutcome::Cancelled => (false, true),
-        RunOutcome::Exited(_) => (false, false),
+    let (timed_out, cancelled, error_code, error_message) = match outcome {
+        RunOutcome::TimedOut => (
+            true,
+            false,
+            Some(ErrorCode::BrokerTimeout),
+            Some("execution timed out".to_string()),
+        ),
+        RunOutcome::Cancelled => (
+            false,
+            true,
+            Some(ErrorCode::BrokerCancelled),
+            Some("execution cancelled".to_string()),
+        ),
+        RunOutcome::Exited(_) => {
+            if stdout_out.truncated || stderr_out.truncated {
+                (
+                    false,
+                    false,
+                    Some(ErrorCode::BrokerOutputLimit),
+                    Some("output truncated at broker limit".to_string()),
+                )
+            } else {
+                (false, false, None, None)
+            }
+        }
     };
 
     let success = !timed_out && !cancelled && exit_code == Some(0);
@@ -251,14 +304,15 @@ pub fn run(
         success,
         timed_out,
         cancelled,
-        stdout: stdout_out.as_lossy_string(),
-        stderr: stderr_out.as_lossy_string(),
+        stdout: stdout_text,
+        stderr: stderr_text,
         stdout_truncated: stdout_out.truncated,
         stderr_truncated: stderr_out.truncated,
         stdout_bytes_seen: stdout_out.bytes_seen,
         stderr_bytes_seen: stderr_out.bytes_seen,
-        error_code: None,
-        error_message: None,
+        output_redacted,
+        error_code,
+        error_message,
     })
 }
 
@@ -271,7 +325,7 @@ pub fn reject_nul_args(args: &[OsString]) -> Result<(), BrokerError> {
             use std::os::windows::ffi::OsStrExt;
             if arg.encode_wide().any(|u| u == 0) {
                 return Err(BrokerError::new(
-                    ErrorCode::InvalidArguments,
+                    ErrorCode::BrokerBlockedArgv,
                     "argv contains a NUL character",
                 ));
             }
@@ -281,7 +335,7 @@ pub fn reject_nul_args(args: &[OsString]) -> Result<(), BrokerError> {
             use std::os::unix::ffi::OsStrExt;
             if arg.as_bytes().contains(&0) {
                 return Err(BrokerError::new(
-                    ErrorCode::InvalidArguments,
+                    ErrorCode::BrokerBlockedArgv,
                     "argv contains a NUL character",
                 ));
             }
