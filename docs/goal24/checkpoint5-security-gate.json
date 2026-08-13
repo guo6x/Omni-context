@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint5-security-gate",
+  "goal24_checkpoint": "5",
+  "generated_at": "2026-08-13T11:53:05.611Z",
+  "base_sha": "78400cb5bcc66147e203c22c6c2cfe55abcb2a41",
+  "result": "PASS",
+  "criteria": {
+    "A": {
+      "name": "lanes integrated on verified base",
+      "status": "PASS",
+      "evidence": "Lane A/B/C cherry-picked in order onto 78400cb with no conflicts; base verified exactly"
+    },
+    "B": {
+      "name": "no process execution added",
+      "status": "PASS",
+      "evidence": "base..HEAD diff contains no child_process/spawn/exec/Command::new/process.env; PROCESS_EXECUTION_ADDED=NO"
+    },
+    "C": {
+      "name": "frontmatter reject missing/empty/BOM/leading-lines",
+      "status": "PASS",
+      "evidence": "oracle frontmatter_rejects_missing_empty_bom_and_leading_lines (CP5V-FRONTMATTER-001..004)"
+    },
+    "D": {
+      "name": "yaml hardening",
+      "status": "PASS",
+      "evidence": "duplicate keys rejected; aliases bounded; 10000-deep nesting fails closed; 10MB SKILL.md fails closed; multi-document contained; custom tags rejected; proto keys rejected (CP5V-YAML-001..009)"
+    },
+    "E": {
+      "name": "name grammar",
+      "status": "PASS",
+      "evidence": "uppercase/leading/trailing/consecutive hyphens and 65-char names rejected; 64-char bound (CP5V-NAME-001..005)"
+    },
+    "F": {
+      "name": "version canonical semver",
+      "status": "PASS",
+      "evidence": "missing/invalid/noncanonical/oversized/trailing-space versions rejected by strict schema (CP5V-VERSION-001..006)"
+    },
+    "G": {
+      "name": "manifest strict schema",
+      "status": "PASS",
+      "evidence": "missing manifest inert; {} and truncated JSON quarantined; unknown keys rejected (CP5V-MANIFEST-001..004)"
+    },
+    "H": {
+      "name": "capability binding",
+      "status": "PASS",
+      "evidence": "missing/invalid/foreign/duplicate capabilities rejected or blocked (CP5V-CAPABILITY_REFERENCE-001..005, CP5V-MANIFEST-005)"
+    },
+    "I": {
+      "name": "safety inheritance",
+      "status": "PASS",
+      "evidence": "risk/evidence/conflict/verification/freshness downgrades rejected, tightening accepted, canonical defaults (reject/none) enforced"
+    },
+    "J": {
+      "name": "imported skills always quarantined",
+      "status": "PASS",
+      "evidence": "bridge REGISTERED_QUARANTINED; self-declared trust, body claims and folder names inert; promotion requires owner/admin/builtin provenance"
+    },
+    "K": {
+      "name": "version conflict semantics",
+      "status": "PASS",
+      "evidence": "same name@version different digest conflicts in both orders; trusted record protected; 1.9.0/1.10.0 coexist numerically"
+    },
+    "L": {
+      "name": "digest integrity",
+      "status": "PASS",
+      "evidence": "digests always computed on import; SHA-256 lowercase only; covers every file including scripts; unambiguous length-prefixed encoding"
+    },
+    "M": {
+      "name": "mutation TOCTOU fail closed",
+      "status": "PASS",
+      "evidence": "add/modify/remove/swap SKILL.md between inspection and snapshot all reject PACKAGE_CHANGED_DURING_IMPORT"
+    },
+    "N": {
+      "name": "path safety",
+      "status": "PASS",
+      "evidence": "traversal/absolute/UNC/extended-length rejected; 180-char path bound; case-fold collisions; symlinks/junctions never followed"
+    },
+    "O": {
+      "name": "scripts and binaries never executed",
+      "status": "PASS",
+      "evidence": "bundled-code fixture snapshotted only; no sentinel created; PE/ELF classified binary and inert"
+    },
+    "P": {
+      "name": "prose injection inert",
+      "status": "PASS",
+      "evidence": "prompt/secret/network/shell/adapter/authority/approval body text never changes policy; vendor metadata display-only"
+    },
+    "Q": {
+      "name": "registry persistence safe",
+      "status": "PASS",
+      "evidence": "atomic queue serialized writes; corrupt store fails closed; internal-looking names stay in the skill namespace"
+    },
+    "R": {
+      "name": "snapshot re-verification on use",
+      "status": "PASS",
+      "evidence": "resolveSkillForUse re-hashes the managed snapshot; divergence throws SKILL_PACKAGE_INTEGRITY_FAILURE"
+    },
+    "S": {
+      "name": "no trust mutation IPC exposure",
+      "status": "PASS",
+      "evidence": "registerSkill/trustSkill/setTrustStatus/revokeSkill absent from MCP/Tauri/HTTP surfaces"
+    },
+    "T": {
+      "name": "adversarial map complete",
+      "status": "PASS",
+      "evidence": "total 148, automated 130, covered 14, manual 0, not_applicable 4, unmapped 0, failed 0"
+    },
+    "U": {
+      "name": "oracle executable",
+      "status": "PASS",
+      "evidence": "goal24-cp5-adversarial-oracle.test.ts 67/67 PASS incl. 3 map-integrity tests"
+    },
+    "V": {
+      "name": "node security",
+      "status": "PASS",
+      "evidence": "js-yaml 4.3.1 zero advisories; importer-reachable 0; baseline 16; UNKNOWN=0 FIX_BEFORE_CP5=0 BLOCKS_CP5=0"
+    },
+    "W": {
+      "name": "cp3/cp4 invariants preserved",
+      "status": "PASS",
+      "evidence": "zero Rust diff lines; execute_ipc_enabled=false; write bindings 0; cargo test 124 passed; controlled-file snapshot refreshed"
+    },
+    "X": {
+      "name": "full regression green",
+      "status": "PASS",
+      "evidence": "brain typecheck/build/lint/vitest 763; desktop next build + verify:controlled; rust fmt/check/clippy/test/audit; git diff --check"
+    },
+    "Y": {
+      "name": "checkpoint 6 not started and firewalls intact",
+      "status": "PASS",
+      "evidence": "no Skill Registry runtime/SKILL.md runtime/discovery/persistence work; holdback/science/Gold untouched; dirty cp21 worktree untouched"
+    }
+  },
+  "gate": "CHECKPOINT5_SECURITY_GATE = PASS"
+}

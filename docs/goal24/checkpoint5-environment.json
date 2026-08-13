@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint5-environment",
+  "goal24_checkpoint": "5",
+  "generated_at": "2026-08-13T11:53:31.173Z",
+  "host": "windows (D:\\ai_code\\Omni-context-worktrees\\cp5-integration, branch local/cp5-integration)",
+  "base_sha": "78400cb5bcc66147e203c22c6c2cfe55abcb2a41",
+  "toolchain": {
+    "node": "v22.23.2 (D:\\environment)",
+    "npm_cache": "D:\\environment\\npm-cache",
+    "registry": "https://registry.npmjs.org/",
+    "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+    "cargo": "1.97.1 (c980f4866 2026-06-30)",
+    "cargo_audit": "0.22.2 (D:\\environment\\cargo-audit\\bin\\cargo-audit.exe)",
+    "advisory_db": "D:\\environment\\advisory-db-offline (RustSec offline)"
+  },
+  "install_policy": "D: first; C: only existing; no new full environment on C:; no system PATH modification",
+  "worktree": {
+    "integration": "D:\\ai_code\\Omni-context-worktrees\\cp5-integration",
+    "lane_worktrees_removed": [
+      "cp5-skill-registry-core",
+      "cp5-agent-skill-importer",
+      "cp5-skill-security"
+    ],
+    "dirty_cp21_untouched": true,
+    "note": "D:\\ai_code\\Omni-context\\.worktrees\\goal24-cp21 was never entered, reset, cleaned, stashed, checked out, deleted or modified"
+  },
+  "node_modules": "brain-server/node_modules junction -> D:\\ai_code\\Omni-context\\brain-server\\node_modules; js-yaml 4.3.1 installed (--no-save); eslint toolchain installed --no-save --no-package-lock for the lint gate",
+  "gh_cli": {
+    "note": "CP5 executes no GitHub CLI command; no gh auth status/login/refresh/logout/switch/token was run during CP5",
+    "auth_mutated": false,
+    "token_read": false,
+    "cp4_state": "see docs/goal24/checkpoint4-environment.json (auth_ready=true, CP4 E2E 5/5)"
+  },
+  "evidence": {
+    "cargo_audit_output": "D:\\environment\\tmp\\cp5-audit.txt",
+    "npm_audit_report": "docs/goal24/audit-brain-server-cp5.json",
+    "adversarial_map": "docs/goal24/checkpoint5-adversarial-execution-map.json",
+    "oracle_test": "brain-server/tests/goal24-cp5-adversarial-oracle.test.ts"
+  }
+}

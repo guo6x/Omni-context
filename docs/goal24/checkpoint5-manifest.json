@@ -1,0 +1,154 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint5-manifest",
+  "goal24_checkpoint": "5",
+  "generated_at": "2026-08-13T11:53:21.008Z",
+  "base_sha": "78400cb5bcc66147e203c22c6c2cfe55abcb2a41",
+  "code_head_sha": "3f08d88f9bdcc2afbc27bb4a279ea7c321015dd8",
+  "integration_branch": "local/cp5-integration",
+  "lanes": {
+    "A": {
+      "title": "Skill Registry V1",
+      "requested_commits": [
+        "1d14b44559717aa3e1d945f5920ae94c0fc65383",
+        "f8a3d568cbbfaa2f9120d7b299508cc2c895b7f9",
+        "60e123ff5c31eade37de146bff7257b1cbce4755",
+        "0f067b33e44a5639b05c5780048f5d32770bd056"
+      ],
+      "integrated_commits": [
+        "ea016e2",
+        "e1d583d",
+        "5805eff",
+        "c8d3579"
+      ]
+    },
+    "B": {
+      "title": "Agent Skills Importer",
+      "requested_commits": [
+        "7bfc5d13c4f568d0bc7dee22fe663990e4b72726",
+        "0cffb8ea70f952c5f1f62b75a3a4b84dd7ef2b8a",
+        "d30e6531ca147e17cd1e363085f65a3200caa2b9",
+        "df221fdc1a693f95a307fb9c05857c06b43bdf25"
+      ],
+      "integrated_commits": [
+        "6c4ebb1",
+        "0f511dc",
+        "4c8e6aa",
+        "862fd16"
+      ]
+    },
+    "C": {
+      "title": "Adversarial Oracle / Compatibility Audit",
+      "requested_commits": [
+        "c6d4e913ee1970bfebab2c3da6482cc04f271108"
+      ],
+      "integrated_commits": [
+        "c890029"
+      ]
+    }
+  },
+  "integration_commits": [
+    "ff0d18f",
+    "d08b1ac",
+    "db8f3ee",
+    "3f08d88"
+  ],
+  "safety_inheritance": {
+    "canonical_defaults": {
+      "undefined_conflict_policy": "reject",
+      "undefined_verification_requirement": "none"
+    },
+    "skill_may_only_tighten": true,
+    "downgrades_rejected": [
+      "SKILL_CONFLICT_POLICY_DOWNGRADE",
+      "SKILL_VERIFICATION_DOWNGRADE",
+      "SKILL_FRESHNESS_DOWNGRADE",
+      "SKILL_RISK_DOWNGRADE",
+      "SKILL_EVIDENCE_DOWNGRADE"
+    ]
+  },
+  "importer": {
+    "SKILL_MD": "NO executable role",
+    "OMNI_MANIFEST": "omni-skill.json",
+    "SKILL_MD_ONLY": "QUARANTINED_UNBOUND",
+    "scripts_executed": "NO",
+    "path_escape": "BLOCKED",
+    "toctou": "PACKAGE_CHANGED_DURING_IMPORT (add/modify/remove/swap)"
+  },
+  "registry": {
+    "default_trust": "quarantined (imported/local)",
+    "auto_trust": false,
+    "promotion_mechanisms": [
+      "owner-decision",
+      "admin-decision",
+      "builtin-policy"
+    ],
+    "version_conflict": "SKILL_VERSION_CONFLICT (no overwrite, both orders, trusted protected)",
+    "store": "atomic queue writes; corrupt store fails closed (SKILL_REGISTRY_CORRUPT)"
+  },
+  "snapshot": {
+    "model": "content-addressed managed snapshot with digest verification",
+    "verify_before_use": "resolveSkillForUse re-hashes and compares package_digest; SKILL_PACKAGE_INTEGRITY_FAILURE on divergence"
+  },
+  "e2e": {
+    "bridge": "PASS (importer -> managed snapshot -> registry -> trust -> resolve through SkillPackageRegistryService)",
+    "process_execution_added": "NO",
+    "cp4_github_e2e": "UNCHANGED (zero Rust diff; CP4 5/5 evidence remains valid)"
+  },
+  "oracle": {
+    "total": 148,
+    "automated": 130,
+    "covered": 14,
+    "manual": 0,
+    "not_applicable": 4,
+    "unmapped": 0,
+    "failed": 0
+  },
+  "node_security": {
+    "js_yaml": "4.3.1",
+    "js_yaml_advisories": 0,
+    "importer_reachable": 0,
+    "baseline": 16,
+    "UNKNOWN": 0,
+    "FIX_BEFORE_CP5": 0,
+    "BLOCKS_CP5": 0
+  },
+  "rust_security": {
+    "vulnerabilities": 5,
+    "warnings": 17,
+    "UNKNOWN": 0,
+    "FIX_BEFORE_CP5": 0,
+    "BLOCKS_CP5": 0,
+    "classification": "identical to CP3/CP4 baseline; all NOT_REACHABLE"
+  },
+  "process_execution": "NO new process execution path; PROCESS_EXECUTION_ADDED=NO",
+  "cp3_cp4_invariants": {
+    "generic_shell": false,
+    "generic_execute_ipc": false,
+    "execute_ipc_enabled": false,
+    "write_bindings": 0,
+    "rust_diff_lines": 0,
+    "cargo_test": "124 passed, 0 failed, 6 ignored"
+  },
+  "tests": {
+    "brain_server_typecheck": "PASS",
+    "brain_server_vitest": "763 passed (47 files)",
+    "brain_server_build": "PASS",
+    "brain_server_lint": "0 errors, 9 pre-existing warnings",
+    "desktop_npm_build": "PASS",
+    "desktop_verify_controlled": "PASS",
+    "cargo_fmt_check": "PASS",
+    "cargo_check": "PASS",
+    "cargo_clippy_all_targets": "PASS (warnings only in pre-existing files)",
+    "cargo_test": "124 passed, 0 failed, 6 ignored",
+    "cargo_audit": "5 vulnerabilities, 17 warnings, all NOT_REACHABLE baseline",
+    "git_diff_check": "clean"
+  },
+  "gate": "CHECKPOINT5_SECURITY_GATE = PASS",
+  "checkpoint6_started": "NO",
+  "holdback_touched": "NO",
+  "scientific_refs_changed": "NO",
+  "main_touched": "NO",
+  "dirty_cp21_worktree_touched": "NO",
+  "final_status": "GOAL24_CHECKPOINT5_COMPLETE"
+}
