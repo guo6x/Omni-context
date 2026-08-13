@@ -127,9 +127,9 @@
       "evidence": "brain typecheck/build/lint/vitest 763; desktop next build + verify:controlled; rust fmt/check/clippy/test/audit; git diff --check"
     },
     "Y": {
-      "name": "checkpoint 6 not started and firewalls intact",
+      "name": "checkpoint 6 runtime not started and firewalls intact",
       "status": "PASS",
-      "evidence": "no Skill Registry runtime/SKILL.md runtime/discovery/persistence work; holdback/science/Gold untouched; dirty cp21 worktree untouched"
+      "evidence": "Checkpoint 6 runtime has not started: no Evidence Surface Guard, evidence retrieval/provider orchestration, qualification runtime, CP6 evidence provider registry, or retrieve-more/clarify/defer control flow has been added, and no evidence-to-Decision-Kernel runtime gating exists beyond the existing CP2.2 assessEvidenceCoverage pure contract-level coverage assessment. Holdback/science/Gold untouched; dirty cp21 worktree untouched."
     }
   },
   "gate": "CHECKPOINT5_SECURITY_GATE = PASS"

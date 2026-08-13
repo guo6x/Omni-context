@@ -1,8 +1,11 @@
 # Goal24 Checkpoint 5 - Skill Registry / Agent Skills Importer Integration and Security Freeze
 
 Status: **GOAL24_CHECKPOINT5_COMPLETE** - all A-Y gate criteria PASS.
-Checkpoint 6 (Skill Registry runtime / SKILL.md runtime / skill discovery /
-skill persistence) was not started.
+Checkpoint 6 runtime was not started: no Evidence Surface Guard, evidence
+retrieval/provider orchestration, qualification runtime, CP6 evidence provider
+registry, or retrieve-more/clarify/defer control flow was added. The existing
+CP2.2 `assessEvidenceCoverage` pure contract-level coverage assessment remains
+unchanged (no retrieval, no time, no registry access).
 
 - Base: `78400cb5bcc66147e203c22c6c2cfe55abcb2a41` (`origin/dev/goal24-cli-skills`)
 - Integration branch: `local/cp5-integration` (worktree
@@ -206,8 +209,17 @@ importer -> registry path:
 
 ## 13. Declarations
 
-- `CHECKPOINT6_STARTED = NO` (no Skill Registry runtime, SKILL.md runtime,
-  skill discovery, or skill persistence work).
+- `CHECKPOINT6_STARTED = NO` (no Evidence Surface Guard runtime, evidence
+  retrieval/provider orchestration, qualification runtime, CP6 evidence provider
+  registry, or retrieve-more/clarify/defer control flow was added; the existing
+  CP2.2 `assessEvidenceCoverage` pure contract-level coverage assessment remains
+  unchanged).
+- CP5 itself implemented the Skill Registry V1 runtime, persistent registry
+  store, Agent Skills / SKILL.md importer, managed package snapshot, and the
+  importer-to-registry bridge with `resolveSkillForUse` integrity verification.
+- CP5 freeze documentation correction: criterion Y and the declarations above
+  were corrected (CP5.1 docs-only patch); CP5 implementation/security gate
+  remains PASS, CP5 freeze documentation corrected, CP6 NOT STARTED.
 - `HOLDBACK_TOUCHED = NO`, `SCIENTIFIC_REFS_CHANGED = NO`, `MAIN_TOUCHED = NO`.
 - `DIRTY_CP21_WORKTREE_TOUCHED = NO` - `D:\ai_code\Omni-context\.worktrees\goal24-cp21`
   was never entered, reset, cleaned, stashed, checked out, deleted or modified.
