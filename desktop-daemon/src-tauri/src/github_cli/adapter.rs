@@ -47,12 +47,27 @@ impl GitHubCliContext {
                 format!("failed to create github_cli work root: {err}"),
             )
         })?;
-        let work_root = std::fs::canonicalize(&work_root).map_err(|err| {
+        let mut work_root = std::fs::canonicalize(&work_root).map_err(|err| {
             GithubCliError::new(
                 GithubCliErrorCode::GhCliFailed,
                 format!("failed to canonicalize github_cli work root: {err}"),
             )
         })?;
+        // std::fs::canonicalize on Windows returns a verbatim `\\?\` path,
+        // which the broker cwd gate rejects by design. Strip the verbatim
+        // prefix for drive-letter paths so the adapter-owned work root stays
+        // broker-compatible (UNC roots never occur here: the work root is
+        // per-user local app data or a temp dir).
+        #[cfg(windows)]
+        {
+            let text = work_root.to_string_lossy();
+            if let Some(rest) = text.strip_prefix(r"\\?\") {
+                let bytes = rest.as_bytes();
+                if bytes.len() >= 3 && bytes[1] == b':' && bytes[2] == b'\\' {
+                    work_root = PathBuf::from(rest);
+                }
+            }
+        }
         Ok(Self {
             gh_executable: validated_gh,
             allowed_cwd_roots: vec![work_root.clone()],

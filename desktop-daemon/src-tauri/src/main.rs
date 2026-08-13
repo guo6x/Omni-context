@@ -8,8 +8,9 @@ mod commands;
 #[cfg_attr(not(test), allow(dead_code))]
 mod execution_broker;
 // CP4 adapter core: five read-only GitHub CLI bindings compiled against the
-// frozen CP3 broker. No production wiring yet; exercised by tests and wired
-// by CP4 Integration later.
+// frozen CP3 broker. Production registration is best-effort at startup via
+// github_cli::bootstrap; no generic execute IPC is exposed. The typed
+// output parsers are exercised by tests and by the E2E harness only.
 #[cfg_attr(not(test), allow(dead_code))]
 mod github_cli;
 mod hardware;
@@ -42,6 +43,24 @@ pub struct SystemStatus {
 
 #[tokio::main]
 async fn main() {
+    // CP4: best-effort production registration of the five read-only GitHub
+    // CLI bindings (trusted config -> standard install -> PATH discovery).
+    // No machine-specific path is hardcoded in product source; this dev
+    // machine pins gh.exe through the trusted OMNI_GITHUB_CLI_EXE config.
+    let gh_bootstrap =
+        github_cli::bootstrap::bootstrap_production(crate::execution_broker::global_broker());
+    if let Some(path) = &gh_bootstrap.resolved_gh {
+        println!(
+            "[Omni-Context] GitHub CLI adapter ready: {} ({} read-only bindings)",
+            path.display(),
+            gh_bootstrap.registered_bindings
+        );
+    } else {
+        println!(
+            "[Omni-Context] GitHub CLI adapter unavailable: {}",
+            gh_bootstrap.message
+        );
+    }
     println!("[Omni-Context] 启动桌面守护进程...");
 
     let show = CustomMenuItem::new("show_main".to_string(), "显示主窗口");

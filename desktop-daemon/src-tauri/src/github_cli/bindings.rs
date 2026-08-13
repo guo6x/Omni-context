@@ -16,7 +16,7 @@ use serde_json::{Map, Value};
 use crate::execution_broker::{ExecutionBinding, OutputLimits};
 use crate::github_cli::adapter::GitHubCliContext;
 use crate::github_cli::inputs::{
-    parse_inputs, validate_limit, validate_number, validate_owner_repo, validate_query,
+    parse_inputs, validate_limit, validate_number, validate_owner, validate_query, validate_repo,
     IssueReadInput, IssueSearchInput, OwnerRepoInput, PrReadInput,
 };
 use crate::github_cli::outputs::GithubCliError;
@@ -111,10 +111,9 @@ fn fused(name: &str, value: &str) -> OsString {
 /// `gh repo view <owner/repo> --json=<hardcoded fields>`
 fn repo_inspect_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, GithubCliError> {
     let input: OwnerRepoInput = parse_inputs(inputs)?;
-    let owner = validate_owner_repo(&input.owner, "owner")?;
-    let repo = validate_owner_repo(&input.repo, "repo")?;
+    let owner = validate_owner(&input.owner, "owner")?;
+    let repo = validate_repo(&input.repo, "repo")?;
     Ok(vec![
-        os("gh"),
         os("repo"),
         os("view"),
         os(&format!("{owner}/{repo}")),
@@ -125,8 +124,8 @@ fn repo_inspect_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, Githu
 /// `gh issue list --repo=<owner/repo> [--search=<query>] [--state=<state>] [--limit=<n>] --json=<hardcoded fields>`
 fn issue_search_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, GithubCliError> {
     let input: IssueSearchInput = parse_inputs(inputs)?;
-    let owner = validate_owner_repo(&input.owner, "owner")?;
-    let repo = validate_owner_repo(&input.repo, "repo")?;
+    let owner = validate_owner(&input.owner, "owner")?;
+    let repo = validate_repo(&input.repo, "repo")?;
     if let Some(query) = &input.query {
         validate_query(query)?;
     }
@@ -135,7 +134,6 @@ fn issue_search_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, Githu
     }
 
     let mut argv = vec![
-        os("gh"),
         os("issue"),
         os("list"),
         fused("repo", &format!("{owner}/{repo}")),
@@ -156,11 +154,10 @@ fn issue_search_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, Githu
 /// `gh issue view <number> --repo=<owner/repo> --json=<hardcoded fields>`
 fn issue_read_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, GithubCliError> {
     let input: IssueReadInput = parse_inputs(inputs)?;
-    let owner = validate_owner_repo(&input.owner, "owner")?;
-    let repo = validate_owner_repo(&input.repo, "repo")?;
+    let owner = validate_owner(&input.owner, "owner")?;
+    let repo = validate_repo(&input.repo, "repo")?;
     validate_number(input.number, "number")?;
     Ok(vec![
-        os("gh"),
         os("issue"),
         os("view"),
         os(&input.number.to_string()),
@@ -172,11 +169,10 @@ fn issue_read_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, GithubC
 /// `gh pr view <number> --repo=<owner/repo> --json=<hardcoded fields>`
 fn pr_read_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, GithubCliError> {
     let input: PrReadInput = parse_inputs(inputs)?;
-    let owner = validate_owner_repo(&input.owner, "owner")?;
-    let repo = validate_owner_repo(&input.repo, "repo")?;
+    let owner = validate_owner(&input.owner, "owner")?;
+    let repo = validate_repo(&input.repo, "repo")?;
     validate_number(input.number, "number")?;
     Ok(vec![
-        os("gh"),
         os("pr"),
         os("view"),
         os(&input.number.to_string()),
@@ -192,11 +188,10 @@ fn pr_read_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, GithubCliE
 /// "pending" exit semantics would require a broker-wide change).
 fn pr_checks_read_argv(inputs: &Map<String, Value>) -> Result<Vec<OsString>, GithubCliError> {
     let input: PrReadInput = parse_inputs(inputs)?;
-    let owner = validate_owner_repo(&input.owner, "owner")?;
-    let repo = validate_owner_repo(&input.repo, "repo")?;
+    let owner = validate_owner(&input.owner, "owner")?;
+    let repo = validate_repo(&input.repo, "repo")?;
     validate_number(input.number, "number")?;
     Ok(vec![
-        os("gh"),
         os("pr"),
         os("view"),
         os(&input.number.to_string()),

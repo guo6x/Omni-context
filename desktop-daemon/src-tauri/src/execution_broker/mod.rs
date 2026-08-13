@@ -24,6 +24,8 @@ mod tests;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
+#[cfg(test)]
+pub use policy::{build_child_env, validate_cwd, BASE_ENV_VARS};
 pub use policy::{ExecutionBinding, OutputLimits, DEFAULT_OUTPUT_MAX_BYTES};
 pub use types::{
     BrokerError, BrokerExecutionResult, ErrorCode, ExecutionPlanStateWire, ExecutionPlanWire,

@@ -19,6 +19,7 @@
 
 pub mod adapter;
 pub mod bindings;
+pub mod bootstrap;
 pub mod discovery;
 pub mod inputs;
 pub mod outputs;

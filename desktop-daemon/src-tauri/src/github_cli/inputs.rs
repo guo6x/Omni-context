@@ -3,13 +3,23 @@
 //! Every capability input is a `#[serde(deny_unknown_fields)]` Rust struct.
 //! Callers can only provide semantic fields (owner/repo/number/query/state/
 //! limit); they can never provide an executable, flags, argv, cwd or env.
+//!
+//! CP4 Integration aligns the validators exactly with the TypeScript runtime
+//! subset and the machine-readable contract
+//! (`docs/goal24/cp4-github-readonly-contract.json`): owner 1..=39 chars
+//! matching `^[A-Za-z0-9][A-Za-z0-9-]{0,38}$`, repo 1..=100 chars matching
+//! `^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$`, query rejects NUL and C0 control
+//! characters. No trimming: padded values are rejected, matching the Zod
+//! schemas.
 
 use serde::{Deserialize, Serialize};
 
 use crate::github_cli::outputs::{GithubCliError, GithubCliErrorCode};
 
-/// Maximum accepted length for an owner or repository name (safety subset).
-pub const OWNER_REPO_MAX_CHARS: usize = 100;
+/// Maximum accepted length for an owner name (contract: 1..=39).
+pub const OWNER_MAX_CHARS: usize = 39;
+/// Maximum accepted length for a repository name (contract: 1..=100).
+pub const REPO_MAX_CHARS: usize = 100;
 /// Maximum accepted length for an issue search query (pure data value).
 pub const SEARCH_QUERY_MAX_CHARS: usize = 1024;
 /// `gh issue list` default limit we rely on when the caller omits `limit`.
@@ -98,14 +108,19 @@ where
     })
 }
 
-/// Validate an owner or repo name against the CP4 safety subset.
+/// Reject a name that does not match an exact ASCII pattern.
 ///
-/// The name is trimmed, must be non-empty, at most 100 characters, must not
-/// equal `.` or `..`, must not start with `-` and must contain no control
-/// characters, whitespace, `/` or `\`. This is a deliberately small subset of
-/// GitHub's full naming rules; anything outside it is unsupported in CP4.
-pub fn validate_owner_repo(name: &str, field: &str) -> Result<String, GithubCliError> {
-    let trimmed = name.trim();
+/// `pattern_ok` mirrors the TypeScript/Zod regexes character by character:
+/// owner `[A-Za-z0-9][A-Za-z0-9-]*`, repo `[A-Za-z0-9][A-Za-z0-9._-]*`. No
+/// trimming and no Unicode letters are accepted (identical to the Zod
+/// subset). This automatically rejects `/`, `\`, NUL, C0 control characters,
+/// whitespace, empty values and a leading dash.
+fn validate_patterned_name(
+    name: &str,
+    field: &str,
+    max_chars: usize,
+    allow_repo_extras: bool,
+) -> Result<String, GithubCliError> {
     let reject = |reason: &str| {
         GithubCliError::new(
             GithubCliErrorCode::GhInputInvalid,
@@ -113,26 +128,46 @@ pub fn validate_owner_repo(name: &str, field: &str) -> Result<String, GithubCliE
         )
     };
 
-    if trimmed.is_empty() {
-        return Err(reject("must not be empty"));
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(first) if first.is_ascii_alphanumeric() => {}
+        Some(_) => {
+            return Err(reject("first character must be [A-Za-z0-9]"));
+        }
+        None => {
+            return Err(reject("must not be empty"));
+        }
     }
-    if trimmed.chars().count() > OWNER_REPO_MAX_CHARS {
-        return Err(reject("exceeds 100 characters"));
-    }
-    if trimmed == "." || trimmed == ".." {
-        return Err(reject("'.' and '..' are not valid names"));
-    }
-    if trimmed.starts_with('-') {
-        return Err(reject("must not start with '-'"));
-    }
-    for ch in trimmed.chars() {
-        if ch.is_control() || ch.is_whitespace() || ch == '/' || ch == '\\' {
+
+    for ch in chars {
+        let ok = if allow_repo_extras {
+            ch.is_ascii_alphanumeric() || ch == '.' || ch == '_' || ch == '-'
+        } else {
+            ch.is_ascii_alphanumeric() || ch == '-'
+        };
+        if !ok {
             return Err(reject(
-                "contains a forbidden character (control, whitespace, '/' or '\\')",
+                "contains a forbidden character (allowed: [A-Za-z0-9] plus '.', '_', '-' for repo, '-' for owner)",
             ));
         }
     }
-    Ok(trimmed.to_string())
+
+    if name.chars().count() > max_chars {
+        return Err(reject(&format!("exceeds {max_chars} characters")));
+    }
+    Ok(name.to_string())
+}
+
+/// Validate an owner against the contract subset
+/// `^[A-Za-z0-9][A-Za-z0-9-]{0,38}$` (max 39 chars, no trimming).
+pub fn validate_owner(name: &str, field: &str) -> Result<String, GithubCliError> {
+    validate_patterned_name(name, field, OWNER_MAX_CHARS, false)
+}
+
+/// Validate a repo against the contract subset
+/// `^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$` (max 100 chars, no trimming).
+pub fn validate_repo(name: &str, field: &str) -> Result<String, GithubCliError> {
+    validate_patterned_name(name, field, REPO_MAX_CHARS, true)
 }
 
 /// Validate a positive issue/PR number.
@@ -160,8 +195,9 @@ pub fn validate_limit(limit: u64) -> Result<u64, GithubCliError> {
     Ok(limit)
 }
 
-/// Validate a search query: bounded length, and only NUL is rejected so that
-/// everything else (spaces, CR/LF, leading dashes, Unicode) stays pure data.
+/// Validate a search query: bounded length, NUL and C0 control characters
+/// rejected. Everything else (spaces, leading dashes, shell metacharacters,
+/// Unicode) stays pure data and is carried as ONE argv value.
 pub fn validate_query(query: &str) -> Result<(), GithubCliError> {
     if query.chars().count() > SEARCH_QUERY_MAX_CHARS {
         return Err(GithubCliError::new(
@@ -169,11 +205,14 @@ pub fn validate_query(query: &str) -> Result<(), GithubCliError> {
             format!("query exceeds {} characters", SEARCH_QUERY_MAX_CHARS),
         ));
     }
-    if query.contains('\u{0}') {
-        return Err(GithubCliError::new(
-            GithubCliErrorCode::GhInputInvalid,
-            "query contains a NUL byte",
-        ));
+    for ch in query.chars() {
+        let code = ch as u32;
+        if code <= 0x1f || code == 0x7f {
+            return Err(GithubCliError::new(
+                GithubCliErrorCode::GhInputInvalid,
+                "query contains a NUL or C0 control character",
+            ));
+        }
     }
     Ok(())
 }

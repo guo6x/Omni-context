@@ -63,6 +63,8 @@ pub const BASE_ENV_VARS: &[&str] = &["PATH", "HOME"];
 pub const FORBIDDEN_ENV_NAMES: &[&str] = &[
     "GH_TOKEN",
     "GITHUB_TOKEN",
+    "GH_ENTERPRISE_TOKEN",
+    "GITHUB_ENTERPRISE_TOKEN",
     "OPENAI_API_KEY",
     "DEEPSEEK_API_KEY",
     "ANTHROPIC_API_KEY",
