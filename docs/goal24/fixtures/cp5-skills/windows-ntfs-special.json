@@ -1,0 +1,61 @@
+{
+  "purpose": "NTFS special-case fixtures for CP5 Lane C. These filesystem objects are unsafe or impossible to commit into a Git repository on Windows, so integration tests must synthesize them in a scratch directory at runtime. The importer must still contain or reject them per cp5-skill-adversarial-vectors.json.",
+  "synthesize_at_test_time": [
+    {
+      "id": "symlink-outside",
+      "object": "junction inside package root -> C:\\Windows\\Temp",
+      "synthesis": "New-Item -ItemType Junction -Path <pkg>\\escape -Target C:\\Windows\\Temp",
+      "expected_result": "REJECT or SKIP_LINK: importer must never follow links that escape the package root; snapshot must record the link as inert metadata",
+      "must_not_happen": "reading any file through the link outside the root"
+    },
+    {
+      "id": "junction-outside",
+      "object": "junction to a directory outside the package",
+      "synthesis": "New-Item -ItemType Junction -Path <pkg>\\outside -Target C:\\Users",
+      "expected_result": "REJECT or SKIP_LINK",
+      "must_not_happen": "traversal or snapshot of files outside the root"
+    },
+    {
+      "id": "nested-symlink",
+      "object": "symlink chain a -> b -> outside",
+      "synthesis": "dev-mode symlinks or intermediate junction chain",
+      "expected_result": "REJECT or SKIP_LINK after bounded link resolution",
+      "must_not_happen": "unbounded link chasing or escape"
+    },
+    {
+      "id": "symlink-loop",
+      "object": "a -> b, b -> a",
+      "synthesis": "two links pointing at each other",
+      "expected_result": "FAIL_CLOSED (loop detected, depth bound)",
+      "must_not_happen": "infinite loop or crash"
+    },
+    {
+      "id": "ads",
+      "object": "SKILL.md:evil.txt alternate data stream",
+      "synthesis": "Set-Content -Path <pkg>\\SKILL.md -Stream evil.txt -Value payload",
+      "expected_result": "ADS content is never read into the snapshot unless explicitly enumerated; never executed",
+      "must_not_happen": "ADS content parsed as frontmatter or executed"
+    },
+    {
+      "id": "trailing-dot-dir",
+      "object": "directory named `skill.` inside package",
+      "synthesis": "[System.IO.Directory]::CreateDirectory('\\\\?\\<pkg>\\skill.')",
+      "expected_result": "normalized handling; no alias confusion with `skill`",
+      "must_not_happen": "path alias that re-maps package files"
+    },
+    {
+      "id": "trailing-space-dir",
+      "object": "directory named `skill ` inside package",
+      "synthesis": "[System.IO.Directory]::CreateDirectory('\\\\?\\<pkg>\\skill ')",
+      "expected_result": "normalized handling; no alias confusion",
+      "must_not_happen": "path alias that re-maps package files"
+    },
+    {
+      "id": "manifest-case-collision",
+      "object": "both SKILL.md and skill.md in one directory",
+      "synthesis": "create on a case-sensitive filesystem or via \\\\?\\ prefix where supported",
+      "expected_result": "REJECT: exactly one case variant of the manifest name allowed",
+      "must_not_happen": "either file silently winning"
+    }
+  ]
+}

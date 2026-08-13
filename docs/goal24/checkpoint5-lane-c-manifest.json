@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "goal24_checkpoint": "5",
+  "lane": "C",
+  "lane_title": "Skill Registry / Agent Skills Security Oracle",
+  "generated_at": "2026-08-13T16:27:51+08:00",
+  "repository_root": "D:\\ai_code\\Omni-context",
+  "expected_base_sha": "78400cb5bcc66147e203c22c6c2cfe55abcb2a41",
+  "verified_base_sha": "78400cb5bcc66147e203c22c6c2cfe55abcb2a41",
+  "base_verification": "origin/dev/goal24-cli-skills resolves to the expected SHA; local branch created at that commit",
+  "local_branch": "local/cp5-skill-security-oracle",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp5-skill-security",
+  "dirty_worktree_avoided": {
+    "D:\\ai_code\\Omni-context\\.worktrees\\goal24-cp21": "untouched",
+    "note": "stale goal24-cp21 worktree was neither used nor cleaned"
+  },
+  "official_sources_reviewed": [
+    { "name": "Agent Skills open standard specification", "url": "https://agentskills.io/specification", "access": "fetched in full (HTML and markdown variants)", "date": "2026-08-13" },
+    { "name": "OpenAI official guide: Skills in the API", "url": "https://developers.openai.com/api/docs/guides/tools-skills", "access": "official search snippets (direct fetch HTTP 403 from this network)", "date": "2026-08-13" },
+    { "name": "OpenAI Cookbook: Skills in the API", "url": "https://developers.openai.com/cookbook/examples/skills_in_api", "access": "official search snippets (direct fetch HTTP 403 from this network)", "date": "2026-08-13" },
+    { "name": "Anthropic official docs: Agent Skills overview", "url": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview", "access": "official search snippets (domain unreachable from this network)", "date": "2026-08-13" },
+    { "name": "Anthropic official docs: Skills for enterprise (security)", "url": "https://platform.claude.com/docs/en/agents-and-tools/agent-skills/enterprise", "access": "official search snippets", "date": "2026-08-13" },
+    { "name": "Local Codex skill package (lived format example)", "url": "C:\\Users\\00\\.codex\\skills\\.system\\openai-docs\\SKILL.md", "access": "read directly", "date": "2026-08-13" }
+  ],
+  "outputs": [
+    "docs/goal24/cp5-agent-skills-compatibility.md",
+    "docs/goal24/cp5-skill-threat-model.md",
+    "docs/goal24/cp5-skill-adversarial-vectors.json",
+    "docs/goal24/checkpoint5-lane-c-manifest.json",
+    "docs/goal24/fixtures/cp5-skills/** (fixture corpus, exclusive to this lane)"
+  ],
+  "adversarial_vectors": {
+    "total": 148,
+    "minimum_required": 120,
+    "categories": 36,
+    "prompt_injection_vectors": 9,
+    "safety_inheritance_vectors": 7,
+    "categories_list": [
+      "FRONTMATTER", "YAML", "NAME", "VERSION", "MANIFEST", "CAPABILITY_REFERENCE",
+      "RISK_DOWNGRADE", "EVIDENCE_DOWNGRADE", "CONFLICT_POLICY", "VERIFICATION_POLICY",
+      "FRESHNESS", "TRUST", "VERSION_CONFLICT", "PACKAGE_DIGEST", "PACKAGE_MUTATION",
+      "PATH_TRAVERSAL", "SYMLINK", "JUNCTION", "FILE_LIMIT", "DEPTH_LIMIT",
+      "SCRIPT", "BINARY", "PROMPT_INJECTION", "SECRET_EXFILTRATION",
+      "NETWORK_INSTRUCTION", "SHELL_INSTRUCTION", "ADAPTER_OVERRIDE",
+      "AUTHORITY_OVERRIDE", "APPROVAL_BYPASS", "REGISTRY_PERSISTENCE",
+      "STORE_CORRUPTION", "DUPLICATE_VERSION", "UNICODE", "CASE",
+      "CONTROL_CHARACTER", "SAFETY_INHERITANCE"
+    ],
+    "vector_shape": [
+      "id", "category", "fixture", "attack_goal", "expected_stage",
+      "expected_result", "expected_error", "must_not_happen", "severity", "automatable"
+    ]
+  },
+  "fixture_corpus": {
+    "root": "docs/goal24/fixtures/cp5-skills",
+    "exclusive_to_lane": true,
+    "bundled_code_fixtures": ["script.py", "run.js", "run.ts", "run.sh", "run.ps1", "run.cmd", "run.bat", "tool.exe"],
+    "bundled_code_executed": false,
+    "path_fixtures_covered": ["../", "nested ../", "absolute path", "UNC", "\\\\?\\", "ADS", "symlink outside", "junction outside", "nested symlink", "symlink loop", "case alias", "trailing dots/spaces", "unicode separator"],
+    "ntfs_only_fixtures": "specified in windows-ntfs-special.json for test-time synthesis (junction/symlink/ADS/trailing dot-space dirs/manifest case-collision); never committed as live links",
+    "yaml_attacks_covered": ["duplicate keys", "anchors/aliases", "deep nesting", "huge scalar", "multi-document YAML", "custom tags", "__proto__/constructor/prototype keys", "unknown fields", "closing delimiter tricks"],
+    "version_attacks_covered": ["name@1.0.0 different digests -> SKILL_VERSION_CONFLICT", "1.9.0 vs 1.10.0 semver ordering"],
+    "trust_attacks_covered": ["self-declared trusted", "approved by owner prose", "trust=true unknown key", "source folder named trusted/", "description says official", "copied from GitHub"]
+  },
+  "fail_oracle": [
+    "external skill auto-trusted",
+    "SKILL.md changes authority / risk / evidence",
+    "script executed during import",
+    "symlink escape read",
+    "same name/version silently overwritten",
+    "capability missing but skill eligible",
+    "risk/evidence weakening accepted",
+    "conflict default treated allow",
+    "registry corrupt store silently reset",
+    "package mutation ignored",
+    "unbounded package traversal",
+    "unknown safety manifest key silently accepted",
+    "skill chooses arbitrary executable",
+    "skill directly bypasses Broker"
+  ],
+  "compatibility_matrix": {
+    "openai_agent_skills_import": "compatible (SKILL.md frontmatter subset + full package snapshot; hosted skill ids out of CP5 scope)",
+    "anthropic_agent_skills_import": "compatible (same subset plus Anthropic reserved-word and name-grammar constraints)",
+    "skill_md": "supported (exactly one case-insensitive manifest file per package)",
+    "yaml_frontmatter": "supported subset: name, description, license, compatibility, metadata (string map), allowed-tools (inspected only)",
+    "resources": "snapshot supported",
+    "scripts": "snapshot/inspection only; execution unsupported",
+    "omni_safety_manifest": "required for executable eligibility",
+    "auto_trust": "never"
+  },
+  "script_execution_cp5": "NOT_SUPPORTED",
+  "auto_trust_allowed": false,
+  "runtime_code_changed": false,
+  "process_execution_added": false,
+  "runtime_files_modified": [],
+  "holdback_touched": false,
+  "holdback_paths": ["research/decision-benchmark-holdback-v2", "science/*", "benchmark/Gold", "benchmark/paper"],
+  "remote_branch_pushed": false,
+  "status": "LANE_C_COMPLETE"
+}

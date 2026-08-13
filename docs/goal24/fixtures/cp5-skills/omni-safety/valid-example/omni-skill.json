@@ -1,0 +1,1 @@
+{"name":"safety-example","version":"1.0.0","digest":{"algorithm":"sha256","value":"0000000000000000000000000000000000000000000000000000000000000000"},"capabilities":[{"id":"github.issue.read","risk":"high","evidence":"full","conflict_policy":"reject","verification":"verified","freshness":"30m"}]}
