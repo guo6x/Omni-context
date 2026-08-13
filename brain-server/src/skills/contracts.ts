@@ -1,5 +1,5 @@
 /**
- * Machine-readable Skill Manifest contracts (Goal24 Checkpoint 2, hardened in 2.1).
+ * Machine-readable Skill Manifest contracts (Goal24 Checkpoint 2, hardened in 2.1; safety inheritance canonically ordered in Checkpoint 5).
  *
  * A skill teaches procedure, not transport. The manifest carries the
  * enforceable safety/authority/evidence fields; an optional SKILL.md may hold
@@ -13,9 +13,12 @@ import {
   EvidenceRequirementSchema,
   RISK_LEVELS,
   SEMVER_PATTERN,
+  effectiveConflictPolicy,
   type CapabilityDefinition,
+  type ConflictPolicy,
   type EvidenceRequirement,
   type RiskLevel,
+  type VerificationRequirement,
 } from '../capabilities/contracts.js';
 
 /** Skill name format: lowercase identifier with dashes, e.g. `github-issue-triage`. */
@@ -118,11 +121,47 @@ export interface SkillValidationIssue {
 const RISK_RANK: Record<RiskLevel, number> = { low: 0, medium: 1, high: 2 };
 
 /**
+ * Canonical conflict-policy strictness (Checkpoint 5): allow < warn < reject.
+ * The canonical effective value of an undeclared conflict_policy is `reject`
+ * (see `effectiveConflictPolicy` in capabilities/contracts.ts, 2.2), never a
+ * per-caller guess.
+ */
+const CONFLICT_POLICY_RANK: Record<ConflictPolicy, number> = { allow: 0, warn: 1, reject: 2 };
+
+/**
+ * Canonical verification strictness (Checkpoint 5): none < asserted < verified.
+ * The canonical effective value of an undeclared verification_requirement is
+ * `none`; see `effectiveVerificationRequirement` below.
+ */
+const VERIFICATION_RANK: Record<VerificationRequirement, number> = {
+  none: 0,
+  asserted: 1,
+  verified: 2,
+};
+
+/**
+ * Canonical effective verification requirement: an undeclared
+ * `verification_requirement` means `none` (Checkpoint 5). Every consumer of
+ * skill/capability evidence requirements must use this helper (or its rank
+ * equivalent) so an undeclared requirement is never guessed per caller.
+ */
+export function effectiveVerificationRequirement(
+  requirement: EvidenceRequirement,
+): VerificationRequirement {
+  return requirement.verification_requirement ?? 'none';
+}
+
+/**
  * Validate that a skill never weakens the safety declared by the capabilities
  * it references. Skill-level requirements may only strengthen capability
  * requirements (more classes, stricter freshness, stricter verification or
- * conflict policy); weakening is rejected. Registry lookup is injected; no
- * Registry runtime exists in this checkpoint.
+ * conflict policy); weakening is rejected. Registry lookup is injected; the
+ * registry runtime is a separate checkpoint (Checkpoint 5).
+ *
+ * Checkpoint 5 hardening: conflict policy and verification requirement are
+ * compared by canonical rank ordering with canonical defaults
+ * (`conflict_policy ?? 'reject'`, `verification_requirement ?? 'none'`), not
+ * by ad-hoc per-value special cases.
  */
 export function validateSkillManifestAgainstCapabilities(
   manifest: SkillManifest,
@@ -145,6 +184,9 @@ export function validateSkillManifestAgainstCapabilities(
     }
 
     for (const requirement of capability.required_evidence) {
+      // Only mandatory capability evidence constrains the skill: the skill
+      // must declare the class and must not weaken its policy. Optional
+      // capability evidence imposes no requirement on the skill.
       if (!requirement.mandatory) continue;
       const skillRequirement = skillReqsByClass.get(requirement.class_id);
       if (!skillRequirement) {
@@ -160,18 +202,37 @@ export function validateSkillManifestAgainstCapabilities(
           message: `skill weakens mandatory evidence '${requirement.class_id}' to optional`,
         });
       }
-      if (requirement.verification_requirement === 'verified' && (skillRequirement.verification_requirement ?? 'none') !== 'verified') {
+
+      // Canonical conflict-policy ordering (Checkpoint 5): the effective
+      // skill policy must be at least as strict as the effective capability
+      // policy. Undeclared means `reject` on both sides.
+      const capabilityConflictPolicy = effectiveConflictPolicy(requirement);
+      const skillConflictPolicy = effectiveConflictPolicy(skillRequirement);
+      if (
+        CONFLICT_POLICY_RANK[skillConflictPolicy] < CONFLICT_POLICY_RANK[capabilityConflictPolicy]
+      ) {
         issues.push({
           path: 'required_evidence',
-          message: `skill downgrades verification_requirement for '${requirement.class_id}' below verified`,
+          message:
+            `skill weakens conflict_policy for '${requirement.class_id}' from ` +
+            `'${capabilityConflictPolicy}' to '${skillConflictPolicy}'`,
         });
       }
-      if (requirement.conflict_policy === 'reject' && (skillRequirement.conflict_policy ?? 'allow') !== 'reject') {
+
+      // Canonical verification ordering (Checkpoint 5): the effective skill
+      // requirement must be at least as strict as the effective capability
+      // requirement. Undeclared means `none` on both sides.
+      const capabilityVerification = effectiveVerificationRequirement(requirement);
+      const skillVerification = effectiveVerificationRequirement(skillRequirement);
+      if (VERIFICATION_RANK[skillVerification] < VERIFICATION_RANK[capabilityVerification]) {
         issues.push({
           path: 'required_evidence',
-          message: `skill downgrades conflict_policy for '${requirement.class_id}' below reject`,
+          message:
+            `skill weakens verification_requirement for '${requirement.class_id}' from ` +
+            `'${capabilityVerification}' to '${skillVerification}'`,
         });
       }
+
       if (requirement.freshness_policy) {
         if (!skillRequirement.freshness_policy) {
           issues.push({
