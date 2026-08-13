@@ -82,6 +82,10 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  * is rejected, never serialized.
  */
 export function canonicalJson(value: unknown): string {
+  return canonicalJsonValue(value, new WeakSet<object>());
+}
+
+function canonicalJsonValue(value: unknown, seen: WeakSet<object>): string {
   if (value === null) return 'null';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (typeof value === 'string') return JSON.stringify(value);
@@ -92,13 +96,24 @@ export function canonicalJson(value: unknown): string {
     return JSON.stringify(value);
   }
   if (Array.isArray(value)) {
-    return `[${value.map((item) => canonicalJson(item)).join(',')}]`;
+    if (seen.has(value)) {
+      throw new EvidenceError('EVIDENCE_CLAIM_INVALID', 'claim_value must not contain cycles');
+    }
+    seen.add(value);
+    const encoded = `[${value.map((item) => canonicalJsonValue(item, seen)).join(',')}]`;
+    seen.delete(value);
+    return encoded;
   }
   if (isPlainObject(value)) {
+    if (seen.has(value)) {
+      throw new EvidenceError('EVIDENCE_CLAIM_INVALID', 'claim_value must not contain cycles');
+    }
+    seen.add(value);
     const keys = Object.keys(value).sort();
     const parts = keys.map(
-      (key) => `${JSON.stringify(key)}:${canonicalJson((value as Record<string, unknown>)[key])}`,
+      (key) => `${JSON.stringify(key)}:${canonicalJsonValue((value as Record<string, unknown>)[key], seen)}`,
     );
+    seen.delete(value);
     return `{${parts.join(',')}}`;
   }
   throw new EvidenceError(
@@ -129,12 +144,55 @@ export function claimDigest(value: unknown): string {
 // Core-generated evidence ID
 // ---------------------------------------------------------------------------
 
+const CONTROL_CHAR_PATTERN = /[\u0000-\u001f\u007f]/;
+
+/**
+ * Validate one identity-tuple component. Components participate in
+ * core-generated evidence ids and must be unambiguous, non-empty and free of
+ * NUL/control characters. (Delimiter-like content such as ':' or '|' is
+ * legal: the tuple encoding below is length-prefixed, so separators inside a
+ * component can never alias another tuple.)
+ */
+export function assertValidIdComponent(component: string, field: string): void {
+  if (typeof component !== 'string' || component.length === 0) {
+    throw new EvidenceError('EVIDENCE_INPUT_INVALID', `identity component '${field}' must be a non-empty string`);
+  }
+  if (component.length > 10_000) {
+    throw new EvidenceError('EVIDENCE_INPUT_INVALID', `identity component '${field}' exceeds the 10000-character bound`);
+  }
+  if (CONTROL_CHAR_PATTERN.test(component)) {
+    throw new EvidenceError(
+      'EVIDENCE_INPUT_INVALID',
+      `identity component '${field}' must not contain NUL or control characters`,
+    );
+  }
+}
+
+/**
+ * Canonical unambiguous tuple encoding: every component is emitted as its
+ * UTF-8 byte length (32-bit big-endian) followed by the UTF-8 bytes. No
+ * separator can ever be confused with field content, so ('ab','c') and
+ * ('a','bc') are provably distinct inputs.
+ */
+export function encodeEvidenceIdTuple(fields: readonly string[]): Buffer {
+  const chunks: Buffer[] = [];
+  for (const field of fields) {
+    const bytes = Buffer.from(field, 'utf8');
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(bytes.length, 0);
+    chunks.push(length, bytes);
+  }
+  return Buffer.concat(chunks);
+}
+
 /**
  * Deterministic, core-generated evidence ID. Binding the provider_id plus
  * the claim digest means:
  * - two providers observing the same source_item_id never collide;
  * - identical duplicate candidates deduplicate to the same ID;
- * - a provider cannot pre-choose or spoof the final ID.
+ * - a provider cannot pre-choose or spoof the final ID;
+ * - the length-prefixed tuple encoding has no delimiter ambiguity, so
+ *   component content can never alias a different tuple.
  */
 export function buildEvidenceId(input: {
   provider_id: string;
@@ -143,14 +201,17 @@ export function buildEvidenceId(input: {
   source_item_id: string;
   claim_digest: string;
 }): string {
-  const payload = [
+  const fields = [
     input.provider_id,
     input.evidence_class,
     input.subject_key,
     input.source_item_id,
     input.claim_digest,
-  ].join('\u0000');
-  return createHash('sha256').update(payload, 'utf8').digest('hex');
+  ];
+  for (const [index, field] of fields.entries()) {
+    assertValidIdComponent(field, ['provider_id', 'evidence_class', 'subject_key', 'source_item_id', 'claim_digest'][index]);
+  }
+  return createHash('sha256').update(encodeEvidenceIdTuple(fields)).digest('hex');
 }
 
 // ---------------------------------------------------------------------------

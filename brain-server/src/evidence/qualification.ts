@@ -31,6 +31,7 @@ import {
 import {
   buildEvidenceId,
   claimDigest,
+  encodeEvidenceIdTuple,
   EvidenceCandidateSchema,
   parseEvidenceTimestamp,
   type EvidenceCandidate,
@@ -48,6 +49,7 @@ export const QUALIFICATION_ISSUE_CODES = [
   'invalid_observed_at',
   'future_observed_at',
   'claim_invalid',
+  'invalid_identity_component',
   'stale',
 ] as const;
 export type QualificationIssueCode = (typeof QUALIFICATION_ISSUE_CODES)[number];
@@ -94,7 +96,7 @@ export function diagnosticEvidenceReference(
   requestedSubject: string,
   rawCandidate: unknown,
 ): string {
-  const payload = [
+  const fields = [
     providerId,
     requestedClass,
     requestedSubject,
@@ -103,8 +105,8 @@ export function diagnosticEvidenceReference(
     pickStringField(rawCandidate, 'claim_key'),
     pickStringField(rawCandidate, 'source_item_id'),
     'schema-invalid',
-  ].join('\u0000');
-  return `ref:${createHash('sha256').update(payload, 'utf8').digest('hex')}`;
+  ].map((field) => field.replace(/[\u0000-\u001f\u007f]/g, '\uFFFD'));
+  return `ref:${createHash('sha256').update(encodeEvidenceIdTuple(fields)).digest('hex')}`;
 }
 
 /**
@@ -231,13 +233,31 @@ export function qualifyCandidate(
     }
   }
 
-  const evidenceId = buildEvidenceId({
-    provider_id: context.provider.provider_id,
-    evidence_class: candidate.evidence_class,
-    subject_key: candidate.subject_key,
-    source_item_id: candidate.source_item_id,
-    claim_digest: digest,
-  });
+  let evidenceId: string;
+  try {
+    evidenceId = buildEvidenceId({
+      provider_id: context.provider.provider_id,
+      evidence_class: candidate.evidence_class,
+      subject_key: candidate.subject_key,
+      source_item_id: candidate.source_item_id,
+      claim_digest: digest,
+    });
+  } catch (error) {
+    issues.push({
+      code: 'invalid_identity_component',
+      message: `candidate identity fields must be unambiguous: ${(error as Error).message}`,
+    });
+    return {
+      kind: 'rejected',
+      issues,
+      referenceId: diagnosticEvidenceReference(
+        context.provider.provider_id,
+        context.evidenceClass,
+        context.subjectKey,
+        candidate,
+      ),
+    };
+  }
 
   const evidence: QualifiedEvidence = {
     evidence_id: evidenceId,
