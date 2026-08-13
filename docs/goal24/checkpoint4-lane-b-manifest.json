@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint4-lane-b-manifest",
+  "lane": "B — GITHUB CAPABILITIES",
+  "checkpoint": "Goal24 Checkpoint 4",
+  "status": "LANE_B_COMPLETE",
+  "base_sha": "8238c350e56bcbf486a2e484287bcad66fda6174",
+  "generated_at": "2026-08-13T13:00:49+08:00",
+  "deliverables": [
+    "brain-server/src/capabilities/github-readonly.ts",
+    "brain-server/src/capabilities/github-inputs.ts",
+    "brain-server/tests/goal24-github-capabilities.test.ts",
+    "docs/goal24/cp4-lane-b-github-capabilities.md",
+    "docs/goal24/cp4-github-readonly-contract.json",
+    "docs/goal24/checkpoint4-lane-b-manifest.json"
+  ],
+  "capabilities_defined": [
+    "github.repo.inspect",
+    "github.issue.search",
+    "github.issue.read",
+    "github.pr.read",
+    "github.pr.checks.read"
+  ],
+  "uniform_fields": {
+    "version": "1.0.0",
+    "required_authority": "L0",
+    "risk_level": "low",
+    "reversible": false,
+    "side_effect_class": "read_only",
+    "rollback_capability": null,
+    "verification_capability": null,
+    "required_evidence": []
+  },
+  "contract": {
+    "machine_readable": "docs/goal24/cp4-github-readonly-contract.json",
+    "purpose": "1:1 conformance check against Rust adapter bindings at integration time",
+    "contains_transport_encoding": false
+  },
+  "validation": {
+    "typecheck": "PASS",
+    "vitest": "PASS: 42 files, 580 tests",
+    "lane_tests": "PASS: tests/goal24-github-capabilities.test.ts, 101 tests",
+    "build": "PASS",
+    "lint": "PASS: 0 errors, 9 pre-existing warnings in untouched files",
+    "git_diff_check": "PASS"
+  },
+  "declarations": {
+    "WRITE_CAPABILITY_DEFINED": "NO",
+    "ADAPTER_TRANSPORT_ENCODED_IN_CAPABILITY": "NO",
+    "RUNTIME_INPUT_VALIDATION": "YES",
+    "UNKNOWN_KEYS_REJECTED": "YES",
+    "CATALOG_RUNTIME_ADDED": "NO",
+    "SKILL_REGISTRY_STARTED": "NO",
+    "HOLDBACK_TOUCHED": "NO",
+    "REMOTE_BRANCH_PUSHED": "NO",
+    "STALE_WORKTREE_GOAL24_CP21_TOUCHED": "NO"
+  }
+}

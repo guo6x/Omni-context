@@ -1,0 +1,185 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "cp4-github-readonly-contract",
+  "version": "1.0.0",
+  "lane": "B",
+  "checkpoint": "Goal24 Checkpoint 4",
+  "description": "Machine-readable semantic contract for the five Omni-Context GitHub read-only capabilities (WHAT). This file contains no transport encoding: no shell command, argv, executable, adapter id, or adapter path. Transport binding is owned by the Rust GitHub CLI adapter (Lane A). Intended for a 1:1 conformance check against the Rust bindings in the integration checkpoint.",
+  "transport_binding": null,
+  "input_safe_subset": {
+    "subset_claim": "This is the Omni-Context GitHub CP4 safe subset only; it is not a claim of complete coverage of all present and future GitHub naming rules.",
+    "unknown_keys": "reject",
+    "owner": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,38}$",
+      "min_length": 1,
+      "max_length": 39,
+      "rejected": ["/", "\\", "NUL", "C0 control characters", "leading dash", "empty", "whitespace"]
+    },
+    "repo": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$",
+      "min_length": 1,
+      "max_length": 100,
+      "rejected": ["/", "\\", "NUL", "C0 control characters", "leading dash", "empty", "whitespace"]
+    },
+    "query": {
+      "type": "string",
+      "max_length": 1024,
+      "required": false,
+      "rejected": ["NUL", "C0 control characters"],
+      "semantics": "GitHub issue search syntax carried as semantic data (for example \"-label:bug\"); never parsed as a structural field or command."
+    },
+    "state": {
+      "type": "string",
+      "enum": ["open", "closed", "all"],
+      "required": false
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 30,
+      "required": false,
+      "note": "floats and numeric strings are rejected; the Brain Server runtime materializes the default of 30 in the normalized output."
+    },
+    "number": {
+      "type": "integer",
+      "minimum": 1,
+      "required": true,
+      "note": "positive integer; zero, negatives, floats, and numeric strings are rejected."
+    }
+  },
+  "capabilities": [
+    {
+      "capability_id": "github.repo.inspect",
+      "version": "1.0.0",
+      "side_effect_class": "read_only",
+      "authority": "L0",
+      "risk": "low",
+      "reversible": false,
+      "required_evidence": [],
+      "verification_capability": null,
+      "rollback_capability": null,
+      "inputs": {
+        "unknown_keys": "reject",
+        "fields": {
+          "owner": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,38}$", "min_length": 1, "max_length": 39 },
+          "repo": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$", "min_length": 1, "max_length": 100 }
+        },
+        "required": ["owner", "repo"]
+      }
+    },
+    {
+      "capability_id": "github.issue.search",
+      "version": "1.0.0",
+      "side_effect_class": "read_only",
+      "authority": "L0",
+      "risk": "low",
+      "reversible": false,
+      "required_evidence": [],
+      "verification_capability": null,
+      "rollback_capability": null,
+      "inputs": {
+        "unknown_keys": "reject",
+        "fields": {
+          "owner": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,38}$", "min_length": 1, "max_length": 39 },
+          "repo": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$", "min_length": 1, "max_length": 100 },
+          "query": { "type": "string", "max_length": 1024, "required": false },
+          "state": { "type": "string", "enum": ["open", "closed", "all"], "required": false },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 30, "required": false }
+        },
+        "required": ["owner", "repo"]
+      }
+    },
+    {
+      "capability_id": "github.issue.read",
+      "version": "1.0.0",
+      "side_effect_class": "read_only",
+      "authority": "L0",
+      "risk": "low",
+      "reversible": false,
+      "required_evidence": [],
+      "verification_capability": null,
+      "rollback_capability": null,
+      "inputs": {
+        "unknown_keys": "reject",
+        "fields": {
+          "owner": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,38}$", "min_length": 1, "max_length": 39 },
+          "repo": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$", "min_length": 1, "max_length": 100 },
+          "number": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["owner", "repo", "number"]
+      }
+    },
+    {
+      "capability_id": "github.pr.read",
+      "version": "1.0.0",
+      "side_effect_class": "read_only",
+      "authority": "L0",
+      "risk": "low",
+      "reversible": false,
+      "required_evidence": [],
+      "verification_capability": null,
+      "rollback_capability": null,
+      "inputs": {
+        "unknown_keys": "reject",
+        "fields": {
+          "owner": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,38}$", "min_length": 1, "max_length": 39 },
+          "repo": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$", "min_length": 1, "max_length": 100 },
+          "number": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["owner", "repo", "number"]
+      }
+    },
+    {
+      "capability_id": "github.pr.checks.read",
+      "version": "1.0.0",
+      "side_effect_class": "read_only",
+      "authority": "L0",
+      "risk": "low",
+      "reversible": false,
+      "required_evidence": [],
+      "verification_capability": null,
+      "rollback_capability": null,
+      "inputs": {
+        "unknown_keys": "reject",
+        "fields": {
+          "owner": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,38}$", "min_length": 1, "max_length": 39 },
+          "repo": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$", "min_length": 1, "max_length": 100 },
+          "number": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["owner", "repo", "number"]
+      }
+    }
+  ],
+  "runtime_normalization": {
+    "module": "brain-server/src/capabilities/github-inputs.ts",
+    "function": "normalizeGitHubCapabilityInput(capabilityId, unknownInput)",
+    "output": "canonical JSON-safe plain object",
+    "exported_schemas": [
+      "GitHubRepoInspectInputSchema",
+      "GitHubIssueSearchInputSchema",
+      "GitHubIssueReadInputSchema",
+      "GitHubPrReadInputSchema",
+      "GitHubPrChecksReadInputSchema"
+    ],
+    "catalog": {
+      "module": "brain-server/src/capabilities/github-readonly.ts",
+      "export": "GITHUB_READONLY_CAPABILITIES",
+      "registry_runtime": "none"
+    }
+  },
+  "explicitly_absent": {
+    "write_capabilities_defined": false,
+    "write_capability_roadmap_only": [
+      "github.issue.create",
+      "github.issue.comment",
+      "github.issue.close",
+      "github.pr.merge"
+    ],
+    "adapter_transport_encoded_in_capability": false,
+    "skill_registry_runtime": false,
+    "evidence_guard_runtime": false
+  }
+}
