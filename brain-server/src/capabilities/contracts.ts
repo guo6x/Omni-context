@@ -25,7 +25,7 @@ export const CAPABILITY_ID_PATTERN = /^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*){2,4}$/
  * Capability semantic version. Adapter implementation versions are a separate
  * concern and must not be encoded here.
  */
-export const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
+export const SEMVER_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 /**
  * First-segment names that are reserved for transports. A capability ID must

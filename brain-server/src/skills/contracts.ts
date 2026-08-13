@@ -22,7 +22,7 @@ import {
 } from '../capabilities/contracts.js';
 
 /** Skill name format: lowercase identifier with dashes, e.g. `github-issue-triage`. */
-export const SKILL_NAME_PATTERN = /^[a-z][a-z0-9-]*$/;
+export const SKILL_NAME_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 
 /** Step identifier format inside a procedure. */
 export const STEP_ID_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;

@@ -23,7 +23,7 @@ import {
   type SkillManifest,
 } from '../contracts.js';
 import { computeManifestDigest, computePackageDigest, sha256Hex } from './package-digest.js';
-import { materializeSnapshot, SnapshotVerificationError } from './package-snapshot.js';
+import { materializeSnapshot, removeSnapshotTree, SnapshotVerificationError } from './package-snapshot.js';
 import { parseSkillFrontmatter, SkillFrontmatterError } from './frontmatter.js';
 import {
   canonicalizeExistingDirectory,
@@ -417,6 +417,23 @@ export function importSkillPackage(sourceRoot: string, options: SkillImporterOpt
   try {
     if (options.beforeSnapshotCopy) options.beforeSnapshotCopy();
     const snapshotRoot = materializeSnapshot(canonicalSource, canonicalManaged, packageDigest, entries);
+
+    // Fail closed when the source file set changed during snapshot
+    // materialization (e.g. a file added mid-import): the inspected listing
+    // must be exactly the listing that was snapshotted.
+    const recheck = enumerateSourceFiles(canonicalSource, limits);
+    const inspectedPaths = new Set(entries.map((entry) => entry.relative_path));
+    const recheckPaths = new Set(recheck.files.map((file) => file.relative_path));
+    if (
+      inspectedPaths.size !== recheckPaths.size ||
+      [...inspectedPaths].some((relativePath) => !recheckPaths.has(relativePath))
+    ) {
+      removeSnapshotTree(canonicalManaged, packageDigest);
+      return rejectFailure(
+        'PACKAGE_CHANGED_DURING_IMPORT',
+        'the package file set changed while the snapshot was being materialized',
+      );
+    }
 
     return {
       source_type: 'agent_skill_directory',

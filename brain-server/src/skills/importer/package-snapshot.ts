@@ -124,7 +124,7 @@ function assertDestinationMatches(expected: readonly SkillFileEntry[], snapshotR
   }
 }
 
-function removeSnapshotTree(managedSkillRoot: string, packageDigest: string): void {
+export function removeSnapshotTree(managedSkillRoot: string, packageDigest: string): void {
   const snapshotRoot = managedSnapshotPath(managedSkillRoot, packageDigest);
   if (!isPathInsideRoot(managedSkillRoot, snapshotRoot)) return;
   if (!fs.existsSync(snapshotRoot)) return;
