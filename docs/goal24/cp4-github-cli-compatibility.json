@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "goal24_checkpoint": "4",
+  "lane": "C",
+  "lane_title": "GitHub CLI Compatibility Matrix (CP4)",
+  "generated_at": "2026-08-13T12:55:43+08:00",
+  "gh_version": "2.97.0 (2026-07-31)",
+  "gh_version_release_url": "https://github.com/cli/cli/releases/tag/v2.97.0",
+  "gh_path": "D:\\environment\\github-cli\\bin\\gh.exe",
+  "gh_install_method": "official portable zip (gh_2.97.0_windows_amd64.zip), SHA256 verified against gh_2.97.0_checksums.txt from cli/cli releases; no MSI, no Program Files install",
+  "gh_zip_sha256": "35d7fe05c4dd1411ffda1e73dfc7c6f44b75c936ca51fa6595c657fdc0350cec",
+  "auth_ready": false,
+  "auth_ready_evidence": {
+    "command": "gh auth status --active --hostname github.com",
+    "exit_code": 1,
+    "sanitized_stderr": "You are not logged into any GitHub hosts. To log in, run: gh auth login",
+    "json_mode_trap_observed": "gh auth status --active --hostname github.com --json hosts -> exit 0 with {\"hosts\":{}} and the same stderr; JSON mode always exits 0 absent fatal error, so exit code alone must never prove AUTH_READY",
+    "decision": "AUTH_NOT_READY"
+  },
+  "global_exit_codes_documented": {
+    "0": "success",
+    "1": "failure",
+    "2": "cancelled",
+    "4": "requires authentication (observed on every capability command on this unauthenticated host)",
+    "8": "command-specific: gh pr checks only - 'Checks pending'"
+  },
+  "manual_cross_check": {
+    "method": "local gh 2.97.0 --help compared against official manual at https://cli.github.com/manual on 2026-08-13",
+    "commands_checked": ["gh_repo_view", "gh_issue_list", "gh_issue_view", "gh_pr_view", "gh_pr_checks", "gh_auth_status"],
+    "result": "PARITY_CONFIRMED: local 2.97.0 help matches official manual for the checked subcommands; no deprecated/preview flags observed on these subcommands (repo view/issue list/issue view/pr view/pr checks/auth status show no preview markers in 2.97.0)"
+  },
+  "capabilities": {
+    "github.repo.inspect": {
+      "recommended_subcommand": "gh repo view",
+      "usage": "gh repo view [<repository>] [flags]",
+      "required_flags": [
+        "positional <repository> as ONE validated OWNER/REPO argv (repo view has no -R/--repo flag; pass exactly one positional)",
+        "--json with adapter-fixed allowlisted field set"
+      ],
+      "json_fields": "archivedAt, assignableUsers, codeOfConduct, contactLinks, createdAt, defaultBranchRef, deleteBranchOnMerge, description, diskUsage, forkCount, fundingLinks, hasDiscussionsEnabled, hasIssuesEnabled, hasProjectsEnabled, hasWikiEnabled, homepageUrl, id, isArchived, isBlankIssuesEnabled, isEmpty, isFork, isInOrganization, isMirror, isPrivate, isSecurityPolicyEnabled, isTemplate, isUserConfigurationRepository, issueTemplates, issues, labels, languages, latestRelease, licenseInfo, mentionableUsers, mergeCommitAllowed, milestones, mirrorUrl, name, nameWithOwner, openGraphImageUrl, owner, parent, primaryLanguage, projects, projectsV2, pullRequestTemplates, pullRequests, pushedAt, rebaseMergeAllowed, repositoryTopics, securityPolicyUrl, squashMergeAllowed, sshUrl, stargazerCount, templateRepository, updatedAt, url, usesCustomOpenGraphImage, viewerCanAdminister, viewerDefaultCommitEmail, viewerDefaultMergeMethod, viewerHasStarred, viewerPermission, viewerPossibleCommitEmails, viewerSubscription, visibility, watchers",
+      "relevant_flags_observed": ["-b/--branch", "-q/--jq", "--json", "-t/--template", "-w/--web"],
+      "expected_success_exit": 0,
+      "special_exit_semantics": "4 = auth required (observed on this host even for public repo); 1 = failure; --web opens browser and must never be emitted by adapter",
+      "network_required": true,
+      "auth_required_observed": true,
+      "smoke_result": "SKIPPED_NO_AUTH: gh repo view guo6x/Omni-context --json name,visibility -> exit 4 (auth required); network reachable; NO_FIXTURE_AVAILABLE on this host"
+    },
+    "github.issue.search": {
+      "recommended_subcommand": "gh issue list",
+      "usage": "gh issue list [flags] (alias: gh issue ls)",
+      "required_flags": [
+        "-R/--repo <validated [HOST/]OWNER/REPO> (exactly one, adapter-owned)",
+        "-S/--search <query as exactly ONE argv element>",
+        "-s/--state <open|closed|all> (adapter enum-validated)",
+        "-L/--limit <1..100> (adapter-clamped)",
+        "--json with adapter-fixed allowlisted field set"
+      ],
+      "json_fields": "assignees, author, blockedBy, blocking, body, closed, closedAt, closedByPullRequestsReferences, comments, createdAt, id, isPinned, issueType, labels, milestone, number, parent, projectCards, projectItems, reactionGroups, state, stateReason, subIssues, subIssuesSummary, title, updatedAt, url",
+      "relevant_flags_observed": ["--app", "-a/--assignee", "-A/--author", "-q/--jq", "--json", "-l/--label", "-L/--limit", "--mention", "-m/--milestone", "-S/--search", "-s/--state", "-t/--template", "--type", "-w/--web", "-R/--repo (inherited)"],
+      "expected_success_exit": 0,
+      "special_exit_semantics": "1 = invalid flag value (observed: --state bogus, --limit ten exit 1 BEFORE auth gate); 4 = auth required (observed: --limit 0/-5/101 exit 4, auth gate precedes limit range semantics); 2 = cancelled; --web must never be emitted",
+      "network_required": true,
+      "auth_required_observed": true,
+      "smoke_result": "SKIPPED_NO_AUTH: gh issue list --repo guo6x/Omni-context --json number,title,state -> exit 4; plain mode also exit 4; NO_FIXTURE_AVAILABLE on this host"
+    },
+    "github.issue.read": {
+      "recommended_subcommand": "gh issue view",
+      "usage": "gh issue view {<number> | <url>} [flags]",
+      "required_flags": [
+        "-R/--repo <validated OWNER/REPO>",
+        "positional <number> validated as unsigned integer >= 1 (or exact https URL form)",
+        "--json with adapter-fixed allowlisted field set"
+      ],
+      "json_fields": "assignees, author, blockedBy, blocking, body, closed, closedAt, closedByPullRequestsReferences, comments, createdAt, id, isPinned, issueType, labels, milestone, number, parent, projectCards, projectItems, reactionGroups, state, stateReason, subIssues, subIssuesSummary, title, updatedAt, url",
+      "relevant_flags_observed": ["-c/--comments", "-q/--jq", "--json", "-t/--template", "-w/--web", "-R/--repo (inherited)"],
+      "expected_success_exit": 0,
+      "special_exit_semantics": "1 = not found / parse error (observed: -1 parsed as flag cluster, exit 1); 4 = auth required (observed for 0, 1.5, abc, u64 max); --web must never be emitted",
+      "network_required": true,
+      "auth_required_observed": true,
+      "smoke_result": "SKIPPED_NO_AUTH: exit 4 unauthenticated; no public fixture objects verified (NO_FIXTURE_AVAILABLE); no issue/PR created for testing"
+    },
+    "github.pr.read": {
+      "recommended_subcommand": "gh pr view",
+      "usage": "gh pr view [<number> | <url> | <branch>] [flags]",
+      "required_flags": [
+        "-R/--repo <validated OWNER/REPO>",
+        "positional <number> digits-only (never branch names)",
+        "--json with adapter-fixed allowlisted field set"
+      ],
+      "json_fields": "additions, assignees, author, autoMergeRequest, baseRefName, baseRefOid, body, changedFiles, closed, closedAt, closingIssuesReferences, comments, commits, createdAt, deletions, files, fullDatabaseId, headRefName, headRefOid, headRepository, headRepositoryOwner, id, isCrossRepository, isDraft, labels, latestReviews, maintainerCanModify, mergeCommit, mergeStateStatus, mergeable, mergedAt, mergedBy, milestone, number, potentialMergeCommit, projectCards, projectItems, reactionGroups, reviewDecision, reviewRequests, reviews, state, statusCheckRollup, title, updatedAt, url",
+      "relevant_flags_observed": ["-c/--comments", "-q/--jq", "--json", "-t/--template", "-w/--web", "-R/--repo (inherited)"],
+      "expected_success_exit": 0,
+      "special_exit_semantics": "1 = not found / parse error; 4 = auth required (observed); --web must never be emitted",
+      "network_required": true,
+      "auth_required_observed": true,
+      "smoke_result": "SKIPPED_NO_AUTH: gh pr view 1 --repo guo6x/Omni-context --json number,state -> exit 4 unauthenticated; NO_FIXTURE_AVAILABLE on this host"
+    },
+    "github.pr.checks.read": {
+      "recommended_subcommand": "gh pr view --json statusCheckRollup",
+      "alternative_subcommand": "gh pr checks",
+      "required_flags": [
+        "OPTION A (recommended): -R/--repo <validated OWNER/REPO> + positional <number> digits-only + --json statusCheckRollup (adapter-owned, fixed)",
+        "OPTION B (only with explicit broker exit-8 exception): -R/--repo <validated OWNER/REPO> + positional <number> + --json with adapter-fixed field set; --watch/--fail-fast/--interval/--required/--web must never be emitted"
+      ],
+      "json_fields": "OPTION A: statusCheckRollup (nested array; validate shape). OPTION B: bucket, completedAt, description, event, link, name, startedAt, state, workflow",
+      "recommendation": "A",
+      "recommendation_text": "Use option A: gh pr view --json statusCheckRollup. gh pr checks has documented additional exit code 8 = 'Checks pending', which collides with the Broker global non-zero = failure semantics; a single CLI command should not force binding-specific exit handling. gh pr view always exits 0 on successful read regardless of pending checks, and statusCheckRollup carries the same check states. Option B (gh pr checks) is acceptable ONLY if the binding documents binding-specific exit semantics for exit 8 and the Broker exception is explicit.",
+      "option_a": {
+        "command_shape": "gh pr view <number> --repo <OWNER/REPO> --json statusCheckRollup",
+        "json_fields": ["statusCheckRollup"],
+        "exit_semantics": "0 = read success (pending checks still exit 0); 1 = failure; 4 = auth required",
+        "notes": "statusCheckRollup is a nested array: [{name, status, conclusion, startedAt, completedAt, detailsUrl, checkSuite, ...}] per local gh 2.97.0 --help; adapter must pin gh >= 2.97.0 and validate the nested shape"
+      },
+      "option_b": {
+        "command_shape": "gh pr checks [<number>|<url>|<branch>] --repo <OWNER/REPO> [--json fields]",
+        "json_fields": "bucket, completedAt, description, event, link, name, startedAt, state, workflow",
+        "json_mode_semantics": "--json adds a bucket field categorizing state into pass|fail|pending|skipping|cancel (documented in local --help)",
+        "exit_semantics": "0 = all checks passed; 1 = failure; 2 = cancelled; 4 = auth required; 8 = checks pending (command-specific additional exit code)",
+        "watch_flags_forbidden_in_adapter": ["--watch", "--fail-fast", "--interval", "--required", "--web"]
+      },
+      "expected_success_exit": "A: 0 (always on successful read). B: 0 only when no pending checks; 8 while pending.",
+      "special_exit_semantics": "B has command-specific exit 8 = 'Checks pending' that breaks uniform non-zero = failure; B's --watch mode loops until checks finish (never use in adapter); B without --json prints terminal-width-truncated table (never parse plain output)",
+      "network_required": true,
+      "auth_required_observed": true,
+      "smoke_result": "SKIPPED_NO_AUTH: gh pr checks 1 --repo guo6x/Omni-context -> exit 4 unauthenticated; NO_FIXTURE_AVAILABLE on this host; pending-check exit-8 semantics verified from local gh 2.97.0 --help documentation only (cannot reproduce without auth + a pending-check PR)"
+    }
+  },
+  "pr_checks_recommendation": {
+    "choice": "A",
+    "summary": "CP4 github.pr.checks.read SHOULD use gh pr view --json statusCheckRollup instead of gh pr checks, so the Broker keeps uniform non-zero = failure semantics and the adapter never needs command-specific exit handling or --watch/--web flags."
+  },
+  "security_constraints_for_adapter": [
+    "no caller-supplied flags of any kind; adapter owns the full argv",
+    "no --jq/--template/--web/--watch/--fail-fast in adapter argv",
+    "child env must be sanitized (strip GH_TOKEN, GITHUB_TOKEN, GH_HOST, GH_REPO, GH_CONFIG_DIR, HTTP_PROXY, HTTPS_PROXY, GH_BROWSER, BROWSER, GH_PAGER, PAGER)",
+    "pin absolute gh path D:\\environment\\github-cli\\bin\\gh.exe; never PATH/relative/UNC resolution",
+    "all JSON parsed only after exit 0 and full stdout EOF; response size cap"
+  ],
+  "no_token_stored": true,
+  "token_read": false,
+  "auth_mutated": false
+}

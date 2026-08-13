@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "goal24_checkpoint": "4",
+  "lane": "C",
+  "lane_title": "GitHub CLI Environment Manifest (CP4)",
+  "generated_at": "2026-08-13T12:55:43+08:00",
+  "policy": "environment location policy: search D: first, then C:; new installs only under D:\\environment; never install new environment on C:; no large downloads/cache on C:",
+  "gh_found_on_D": false,
+  "gh_found_on_C": false,
+  "pre_install_search_evidence": {
+    "get_command_gh": "empty",
+    "where_exe_gh": "empty",
+    "searched_d_dirs": ["D:\\", "D:\\environment", "D:\\environment\\tools", "D:\\tools", "D:\\Program Files", "D:\\Program Files (x86)", "D:\\github", "D:\\apps", "D:\\software"],
+    "searched_c_dirs": ["C:\\Program Files", "C:\\Program Files (x86)", "C:\\ProgramData", "%LOCALAPPDATA%\\Programs", "%USERPROFILE%\\scoop", "%USERPROFILE%\\.local\\bin", "C:\\tools", "C:\\Windows\\System32"],
+    "result": "no pre-existing gh.exe found on either drive; no PATH entry for gh"
+  },
+  "new_install": true,
+  "install_method": "official portable zip from cli/cli GitHub releases (no MSI, no installer, NOT C:\\Program Files); SHA256 verified against official gh_2.97.0_checksums.txt",
+  "install_path": "D:\\environment\\github-cli\\bin\\gh.exe",
+  "install_root": "D:\\environment\\github-cli",
+  "version": "2.97.0 (2026-07-31)",
+  "version_command_output": "gh version 2.97.0 (2026-07-31)\nhttps://github.com/cli/cli/releases/tag/v2.97.0",
+  "download_source": "https://github.com/cli/cli/releases/download/v2.97.0/gh_2.97.0_windows_amd64.zip",
+  "download_path": "D:\\environment\\downloads\\gh_2.97.0_windows_amd64.zip",
+  "checksums_path": "D:\\environment\\downloads\\gh_2.97.0_checksums.txt",
+  "zip_sha256": "35d7fe05c4dd1411ffda1e73dfc7c6f44b75c936ca51fa6595c657fdc0350cec",
+  "sha256_verified": true,
+  "cache_path": "D:\\environment\\downloads",
+  "PATH_changed": false,
+  "PATH_policy_note": "gh was NOT added to PATH; the adapter/Broker must pin the absolute path D:\\environment\\github-cli\\bin\\gh.exe (auto-detected from this manifest or configured explicitly). No persistent or session PATH change was made.",
+  "new_environment_installed_on_C": false,
+  "large_downloads_or_cache_on_C": false,
+  "host_observations": [
+    "pre-existing files named .gh-token and gh-token.tmp were observed under D:\\environment during directory listing; their contents were NOT read, NOT copied, and NOT used in this lane",
+    "D:\\environment is a general-purpose tools tree shared with other toolchains; the gh install sits under D:\\environment\\github-cli as recommended"
+  ],
+  "auth_check_commands_executed": [
+    "gh auth status --active --hostname github.com (exit 1) — safe, no token output"
+  ],
+  "auth_commands_never_executed": [
+    "gh auth login", "gh auth refresh", "gh auth logout", "gh auth switch",
+    "gh auth status --show-token", "gh auth token"
+  ],
+  "token_read": false,
+  "auth_mutated": false,
+  "write_operations_executed": false,
+  "runtime_code_changed": false,
+  "policy_compliant": true
+}
