@@ -1,0 +1,249 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 7 Lane C",
+    "artifact": "cp7-approval-binding-contract.json",
+    "base_sha": "dfc666ac32c23df34ade0e612aec4e925e9f6d00",
+    "purpose": "Canonical cross-language approval binding conformance specification. Integration (CP7 Lane A/B) must verify that the TypeScript ApprovalBindingPayload and the Rust approval binding digest agree 1:1 through these fields and canonicalization rules. This document defines data contracts and rules only; it intentionally contains no implementation commands.",
+    "conformance_rule": "The Rust approval binding digest MUST be computed over exactly the canonical form defined here. The TS ApprovalBindingPayload MUST serialize to the same canonical form. Any field present on one side and absent on the other, or any canonicalization divergence, is a CP7 integration failure."
+  },
+  "canonical_binding_fields": [
+    {
+      "field": "binding_id",
+      "required": true,
+      "type_contract": "string, canonical lowercase identifier pattern (adapter + capability)",
+      "description": "Stable identity of the binding the approval covers",
+      "ts_side": "ApprovalBindingPayload.binding_id",
+      "rust_side": "approval binding digest input",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "plan_content_digest",
+      "required": true,
+      "type_contract": "string, one-way digest of the canonical plan content (excludes approval fields)",
+      "description": "Binds approval to the exact plan content; any plan mutation invalidates the approval",
+      "ts_side": "ApprovalBindingPayload.plan_content_digest",
+      "rust_side": "verified against re-computed digest at spawn",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "risk_snapshot",
+      "required": true,
+      "type_contract": "object: risk_level (low|medium|high|critical), authority_required (L0|L1|L2|L3), side_effect_class (read_only|reversible_write|external_effect|destructive_write)",
+      "description": "The exact risk the actor approved; the Authority must reject any plan whose compiled binding risk exceeds this snapshot",
+      "ts_side": "ApprovalBindingPayload.risk_snapshot",
+      "rust_side": "re-validated against the compiled binding declaration",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "capability_id",
+      "required": true,
+      "type_contract": "string, canonical provider.resource.action lowercase dotted id",
+      "description": "The specific capability being approved",
+      "ts_side": "ApprovalBindingPayload.capability_id",
+      "rust_side": "binding.capability_id comparison",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "capability_version",
+      "required": true,
+      "type_contract": "string, semver",
+      "description": "Version pin of the capability; a version mismatch invalidates the approval",
+      "ts_side": "ApprovalBindingPayload.capability_version",
+      "rust_side": "binding version comparison",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "adapter_id",
+      "required": true,
+      "type_contract": "string, canonical lowercase implementation identifier",
+      "description": "The concrete adapter implementation being approved",
+      "ts_side": "ApprovalBindingPayload.adapter_id",
+      "rust_side": "binding.adapter_id comparison",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "subject",
+      "required": true,
+      "type_contract": "string, NFC-normalized, canonical subject key (e.g. owner/repo#number)",
+      "description": "The exact decision subject; cross-subject reuse is forbidden",
+      "ts_side": "ApprovalBindingPayload.subject",
+      "rust_side": "subject binding comparison",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "normalized_inputs",
+      "required": true,
+      "type_contract": "object, JSON-safe, finite values only, arrays strictly ordered, bounded size",
+      "description": "The exact normalized inputs approved; any input mutation invalidates the approval",
+      "ts_side": "ApprovalBindingPayload.normalized_inputs",
+      "rust_side": "digest input; re-hash comparison at spawn",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "evidence_lineage",
+      "required": true,
+      "type_contract": "array of qualified evidence record ids, strictly ordered, each resolvable to Guard-run output",
+      "description": "The qualified evidence records that existed at approval time; post-approval evidence mutation or stale replacement invalidates the approval",
+      "ts_side": "ApprovalBindingPayload.evidence_lineage",
+      "rust_side": "store-backed lineage verification",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "expires_at",
+      "required": true,
+      "type_contract": "string, RFC3339 UTC (Z offset), strictly in the future at grant time and at spawn time",
+      "description": "Mandatory bounded lifetime of the grant",
+      "ts_side": "ApprovalBindingPayload.expires_at",
+      "rust_side": "expiry re-check at spawn (strictly future)",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "granted_by",
+      "required": true,
+      "type_contract": "string, exact-match actor identity, never confusable-normalized",
+      "description": "The actor who granted approval; the Authority must verify actor authority >= authority_required",
+      "ts_side": "ApprovalBindingPayload.granted_by",
+      "rust_side": "actor authority lookup",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "granted_at",
+      "required": true,
+      "type_contract": "string, RFC3339 UTC (Z offset)",
+      "description": "Instant the grant was issued; used for TTL and audit",
+      "ts_side": "ApprovalBindingPayload.granted_at",
+      "rust_side": "store record timestamp",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "policy_version",
+      "required": true,
+      "type_contract": "string, the exact policy version in force at grant time",
+      "description": "A policy downgrade after grant must be detected; the Authority re-checks against the current policy version",
+      "ts_side": "ApprovalBindingPayload.policy_version",
+      "rust_side": "policy version comparison",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "timeout_ms",
+      "required": true,
+      "type_contract": "integer, finite safe integer, within contract bounds",
+      "description": "Execution timeout bound captured in the binding",
+      "ts_side": "ApprovalBindingPayload.timeout_ms",
+      "rust_side": "bounds re-check",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "verification_plan_digest",
+      "required": false,
+      "type_contract": "string digest or null, exactly mirroring plan content",
+      "description": "If the plan carries a verification plan it is part of the bound content; swapping it invalidates the approval",
+      "ts_side": "ApprovalBindingPayload.verification_plan_digest",
+      "rust_side": "digest comparison",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "rollback_plan_digest",
+      "required": false,
+      "type_contract": "string digest or null, exactly mirroring plan content",
+      "description": "If the plan carries a rollback plan it is part of the bound content; swapping it invalidates the approval",
+      "ts_side": "ApprovalBindingPayload.rollback_plan_digest",
+      "rust_side": "digest comparison",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "approval_id",
+      "required": true,
+      "type_contract": "string, opaque, unique, bounded length, never falsy-defaulted",
+      "description": "Store key of the grant record",
+      "ts_side": "ApprovalBindingPayload.approval_id",
+      "rust_side": "durable store lookup key",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "token_reference",
+      "required": true,
+      "type_contract": "string, opaque reference to the stored token material (never the raw token)",
+      "description": "Points at the stored secret; raw token must never appear in the binding or logs",
+      "ts_side": "ApprovalBindingPayload.token_reference",
+      "rust_side": "store record reference comparison",
+      "mutation_sensitivity": "immutable"
+    },
+    {
+      "field": "token_digest",
+      "required": true,
+      "type_contract": "string, salted one-way digest of the stored token",
+      "description": "Allows validation of the referenced token without exposing it; unsalted or reversible digests are forbidden",
+      "ts_side": "ApprovalBindingPayload.token_digest",
+      "rust_side": "digest verification against store",
+      "mutation_sensitivity": "immutable"
+    }
+  ],
+  "canonicalization_rules": [
+    {
+      "rule_id": "CANON-001",
+      "rule": "Objects are canonicalized key-order insensitively at every nesting level; equivalent objects with different key order produce identical digests."
+    },
+    {
+      "rule_id": "CANON-002",
+      "rule": "Arrays are strictly ordered; array element reordering changes the digest and fails closed where schema order is meaningful."
+    },
+    {
+      "rule_id": "CANON-003",
+      "rule": "Strings are Unicode NFC-normalized before canonicalization; visually equivalent forms must not create aliases."
+    },
+    {
+      "rule_id": "CANON-004",
+      "rule": "Timestamps use exactly one canonical encoding: RFC3339 UTC with Z offset (or +00:00 normalized to Z); epoch and offset variants are rejected."
+    },
+    {
+      "rule_id": "CANON-005",
+      "rule": "Numbers must be finite JSON safe integers; NaN, Infinity, BigInt, negative zero, and values beyond 2^53 fail closed."
+    },
+    {
+      "rule_id": "CANON-006",
+      "rule": "undefined is not a JSON value: required fields must be present with explicit values, optional fields use explicit null."
+    },
+    {
+      "rule_id": "CANON-007",
+      "rule": "Control characters (NUL, CR, LF, ESC, etc.) are rejected or serialized as JSON escapes; raw control bytes never enter the digest."
+    },
+    {
+      "rule_id": "CANON-008",
+      "rule": "Booleans and strings are strictly typed: \"true\"/\"false\" strings never coerce to booleans, and numbers never coerce to strings."
+    },
+    {
+      "rule_id": "CANON-009",
+      "rule": "Number representation is single-form: 1.0 and 1 serialize identically or the non-canonical form is rejected; \"1\" never aliases 1."
+    },
+    {
+      "rule_id": "CANON-010",
+      "rule": "Unknown/extra fields fail closed: nothing may be silently dropped from the digest, and prototype-like keys (__proto__, constructor, prototype) never affect object semantics."
+    },
+    {
+      "rule_id": "CANON-011",
+      "rule": "Duplicate JSON keys fail closed before parsing semantics can diverge between TS and Rust."
+    },
+    {
+      "rule_id": "CANON-012",
+      "rule": "Empty strings are distinct values, never treated as missing, and must survive canonicalization unchanged."
+    },
+    {
+      "rule_id": "CANON-013",
+      "rule": "The digest is computed over the canonical serialized form, not over raw input text; formatting, whitespace, and key order of the raw payload must not matter."
+    },
+    {
+      "rule_id": "CANON-014",
+      "rule": "Any divergence between the TS and Rust canonical encoders for identical logical payloads is a CP7 integration failure (deterministic, byte-identical digests are required)."
+    }
+  ],
+  "security_requirements": [
+    "Schema-valid is not approved: the durable store record must exist, match all binding fields, and be live (not expired, revoked, denied, or consumed).",
+    "The Authority re-validates plan risk against the compiled binding at spawn; Brain-side risk claims are never authoritative.",
+    "Grant consumption happens atomically before spawn, never after; consume and spawn are protected against TOCTOU.",
+    "The ledger is durable and crash-safe; corrupt or partial store state fails closed and never resets silently to empty.",
+    "Actors with authority below authority_required can never grant; LLM/Skill/Provider output can never grant.",
+    "No raw token material appears in bindings, digests, logs, errors, or audit summaries.",
+    "Approval for plan A can never authorize plan B; every binding field above is compared, not just plan_id."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "fixture_id": "CP7F-002",
+  "kind": "valid write awaiting approval",
+  "synthetic": true,
+  "expected_result": "PENDING: write plan correctly parked in awaiting_approval with required_approval=true and no approval yet",
+  "payload": {
+    "plan_id": "plan-cp7-write-001",
+    "decision_id": "decision-cp7-write-001",
+    "capability_id": "github.issue.write",
+    "capability_version": "1.0.0",
+    "adapter_id": "github-cli",
+    "normalized_inputs": {
+      "owner": "guo6x",
+      "repo": "Omni-context",
+      "issue_number": 999999,
+      "action": "close"
+    },
+    "required_approval": true,
+    "approval": null,
+    "risk_snapshot": {
+      "risk_level": "medium",
+      "authority_required": "L2",
+      "side_effect_class": "reversible_write"
+    },
+    "evidence_coverage_snapshot": {
+      "evidence_ids": [
+        "ev-issue-001"
+      ]
+    },
+    "state": "awaiting_approval",
+    "timeout_ms": 30000
+  }
+}

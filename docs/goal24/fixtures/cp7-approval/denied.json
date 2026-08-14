@@ -1,0 +1,15 @@
+{
+  "fixture_id": "CP7F-009",
+  "kind": "denied grant",
+  "synthetic": true,
+  "expected_result": "NATIVE_REJECT: denied grants never execute",
+  "store_record": {
+    "approval_id": "approval-denied-001",
+    "status": "denied",
+    "denied_at": "2026-08-14T07:00:00Z",
+    "expires_at": "2026-08-15T08:00:00Z",
+    "plan_id": "plan-cp7-write-005",
+    "token_reference": "FAKE_CP7_TOKEN",
+    "token_digest": "FAKE_CP7_SECRET"
+  }
+}

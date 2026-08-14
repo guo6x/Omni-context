@@ -1,0 +1,15 @@
+{
+  "fixture_id": "CP7F-007",
+  "kind": "expired grant",
+  "synthetic": true,
+  "expected_result": "NATIVE_REJECT: expires_at in the past must never spawn",
+  "store_record": {
+    "approval_id": "approval-expired-001",
+    "status": "granted",
+    "expires_at": "2026-08-13T08:00:00Z",
+    "granted_at": "2026-08-12T08:00:00Z",
+    "plan_id": "plan-cp7-write-003",
+    "token_reference": "FAKE_CP7_TOKEN",
+    "token_digest": "FAKE_CP7_SECRET"
+  }
+}

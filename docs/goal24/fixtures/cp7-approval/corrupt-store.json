@@ -1,0 +1,14 @@
+{
+  "fixture_id": "CP7F-013",
+  "kind": "corrupt approval store",
+  "synthetic": true,
+  "expected_result": "FAIL_CLOSED: corrupt or truncated store record must reject and raise integrity error, never reset to empty",
+  "store_record": {
+    "approval_id": "approval-corrupt-001",
+    "status": "granted",
+    "truncated_note": "record was cut off during a crash",
+    "checksum": "mismatched-fake-checksum",
+    "raw": "{\"approval_id\":\"approval-corrupt-001\",\"status\":\"grant"
+  },
+  "cp7_requirement": "fail closed on integrity failure; no silent reset; admin-visible integrity error"
+}

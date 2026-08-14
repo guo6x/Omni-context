@@ -1,0 +1,47 @@
+{
+  "fixture_id": "CP7F-006",
+  "kind": "mutated evidence lineage after approval",
+  "synthetic": true,
+  "expected_result": "BINDING_MISMATCH: post-approval evidence lineage change (ev-issue-001 -> ev-issue-002) invalidates the grant",
+  "approval_binding": {
+    "approval_id": "approval-ctx-002",
+    "plan_content_digest": "digest-with-lineage-ev-issue-001",
+    "evidence_lineage": [
+      "ev-issue-001"
+    ]
+  },
+  "payload": {
+    "plan_id": "plan-cp7-write-002",
+    "capability_id": "github.issue.write",
+    "capability_version": "1.0.0",
+    "adapter_id": "github-cli",
+    "normalized_inputs": {
+      "owner": "guo6x",
+      "repo": "Omni-context",
+      "issue_number": 999999,
+      "action": "close"
+    },
+    "required_approval": true,
+    "approval": {
+      "approval_id": "approval-ctx-002",
+      "plan_id": "plan-cp7-write-002",
+      "granted_by": "owner",
+      "granted_at": "2026-08-14T08:00:00Z",
+      "policy_version": "goal24-policy-7",
+      "token_reference": "FAKE_CP7_TOKEN",
+      "token_digest": "FAKE_CP7_SECRET"
+    },
+    "risk_snapshot": {
+      "risk_level": "medium",
+      "authority_required": "L2",
+      "side_effect_class": "reversible_write"
+    },
+    "evidence_coverage_snapshot": {
+      "evidence_ids": [
+        "ev-issue-002"
+      ]
+    },
+    "state": "ready",
+    "timeout_ms": 30000
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CP7F-012",
+  "kind": "restart replay",
+  "synthetic": true,
+  "expected_result": "REJECT: durable ledger must remember consumed grants across restart; memory-only ledger would accept the replay",
+  "scenario": {
+    "first_run": {
+      "plan_id": "plan-cp7-write-008",
+      "executed": true,
+      "ledger": "memory-only in CP3 (resets on restart)"
+    },
+    "after_restart": {
+      "same_plan_id": "plan-cp7-write-008",
+      "grant_status": "consumed",
+      "replayed": true
+    },
+    "cp7_requirement": "durable store + consumed status must block the replay"
+  }
+}

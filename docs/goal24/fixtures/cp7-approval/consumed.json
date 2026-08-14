@@ -1,0 +1,20 @@
+{
+  "fixture_id": "CP7F-010",
+  "kind": "consumed grant reuse",
+  "synthetic": true,
+  "expected_result": "NATIVE_REJECT: a grant consumed by its first execution cannot authorize a second attempt",
+  "store_record": {
+    "approval_id": "approval-consumed-001",
+    "status": "consumed",
+    "consumed_at": "2026-08-14T07:30:00Z",
+    "execution_id": "execution-001",
+    "expires_at": "2026-08-15T08:00:00Z",
+    "plan_id": "plan-cp7-write-006",
+    "token_reference": "FAKE_CP7_TOKEN",
+    "token_digest": "FAKE_CP7_SECRET"
+  },
+  "replay_attempt": {
+    "same_plan_id": "plan-cp7-write-006",
+    "note": "second execute attempt with the identical plan and reference"
+  }
+}

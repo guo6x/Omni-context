@@ -1,0 +1,31 @@
+{
+  "fixture_id": "CP7F-001",
+  "kind": "valid read plan",
+  "synthetic": true,
+  "expected_result": "ACCEPT: read_only L0 with required_approval=false is the legal fast path",
+  "payload": {
+    "plan_id": "plan-cp7-read-001",
+    "decision_id": "decision-cp7-read-001",
+    "capability_id": "github.repo.inspect",
+    "capability_version": "1.0.0",
+    "adapter_id": "github-cli",
+    "normalized_inputs": {
+      "owner": "guo6x",
+      "repo": "Omni-context"
+    },
+    "required_approval": false,
+    "approval": null,
+    "risk_snapshot": {
+      "risk_level": "low",
+      "authority_required": "L0",
+      "side_effect_class": "read_only"
+    },
+    "evidence_coverage_snapshot": {
+      "evidence_ids": [
+        "ev-repo-001"
+      ]
+    },
+    "state": "ready",
+    "timeout_ms": 30000
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "fixture_id": "CP7F-003",
+  "kind": "forged low-risk write",
+  "synthetic": true,
+  "expected_result": "NATIVE_REJECT: plan risk_snapshot low/L0/read_only understates the compiled binding medium/L2/reversible_write",
+  "compiled_binding_declaration": {
+    "risk_level": "medium",
+    "authority_required": "L2",
+    "side_effect_class": "reversible_write"
+  },
+  "payload": {
+    "plan_id": "plan-cp7-forged-001",
+    "decision_id": "decision-cp7-forged-001",
+    "capability_id": "github.issue.write",
+    "capability_version": "1.0.0",
+    "adapter_id": "github-cli",
+    "normalized_inputs": {
+      "owner": "guo6x",
+      "repo": "Omni-context",
+      "issue_number": 999999,
+      "action": "close"
+    },
+    "required_approval": false,
+    "approval": null,
+    "risk_snapshot": {
+      "risk_level": "low",
+      "authority_required": "L0",
+      "side_effect_class": "read_only"
+    },
+    "evidence_coverage_snapshot": {
+      "evidence_ids": [
+        "ev-issue-001"
+      ]
+    },
+    "state": "ready",
+    "timeout_ms": 30000
+  }
+}

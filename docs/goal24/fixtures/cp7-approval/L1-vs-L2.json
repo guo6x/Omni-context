@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CP7F-011",
+  "kind": "insufficient authority actor",
+  "synthetic": true,
+  "expected_result": "REJECT: an L1 actor cannot grant an L2 reversible write",
+  "grant_attempt": {
+    "approval_id": "approval-l1-attempt-001",
+    "plan_id": "plan-cp7-write-007",
+    "granted_by": "assistant-user",
+    "actor_authority": "L1",
+    "authority_required": "L2",
+    "risk_snapshot": {
+      "risk_level": "medium",
+      "authority_required": "L2",
+      "side_effect_class": "reversible_write"
+    },
+    "expires_at": "2026-08-15T08:00:00Z"
+  }
+}

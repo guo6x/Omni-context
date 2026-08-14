@@ -1,0 +1,42 @@
+{
+  "fixture_id": "CP7F-005",
+  "kind": "mutated input after approval",
+  "synthetic": true,
+  "expected_result": "BINDING_MISMATCH: approval bound to repo Omni-context cannot authorize a plan whose normalized_inputs changed to repo other",
+  "approval_binding": {
+    "approval_id": "approval-ctx-001",
+    "plan_content_digest": "digest-of-plan-with-repo-Omni-context",
+    "normalized_inputs": {
+      "owner": "guo6x",
+      "repo": "Omni-context",
+      "issue_number": 999999,
+      "action": "close"
+    }
+  },
+  "payload": {
+    "plan_id": "plan-cp7-write-001",
+    "normalized_inputs": {
+      "owner": "guo6x",
+      "repo": "other",
+      "issue_number": 999999,
+      "action": "close"
+    },
+    "required_approval": true,
+    "approval": {
+      "approval_id": "approval-ctx-001",
+      "plan_id": "plan-cp7-write-001",
+      "granted_by": "owner",
+      "granted_at": "2026-08-14T08:00:00Z",
+      "policy_version": "goal24-policy-7",
+      "token_reference": "FAKE_CP7_TOKEN",
+      "token_digest": "FAKE_CP7_SECRET"
+    },
+    "risk_snapshot": {
+      "risk_level": "medium",
+      "authority_required": "L2",
+      "side_effect_class": "reversible_write"
+    },
+    "state": "ready",
+    "timeout_ms": 30000
+  }
+}
