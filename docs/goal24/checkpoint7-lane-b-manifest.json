@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint7-lane-b-manifest",
+  "lane": "B - NATIVE APPROVAL",
+  "checkpoint": "Goal24 Checkpoint 7",
+  "status": "LANE_B_COMPLETE",
+  "base_sha": "dfc666ac32c23df34ade0e612aec4e925e9f6d00",
+  "generated_at": "2026-08-14T12:00:00+08:00",
+  "deliverables": [
+    "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/policy.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/types.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/approval/mod.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/approval/types.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/approval/authority.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/approval/store.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/approval/ledger.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/approval/digest.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/approval/tests.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/tests.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/adversarial.rs",
+    "desktop-daemon/src-tauri/src/github_cli/bindings.rs",
+    "docs/goal24/cp7-lane-b-native-approval.md",
+    "docs/goal24/checkpoint7-lane-b-manifest.json"
+  ],
+  "native_risk_policy": {
+    "compiled_binding_fields": ["capability_version", "risk_level", "side_effect_class", "reversible", "required_authority"],
+    "github_read_bindings": {
+      "count": 5,
+      "capability_version": "1.0.0",
+      "risk_level": "low",
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "required_authority": "L0"
+    },
+    "native_minimum_approval_rule": "side_effect != read_only OR risk != low OR required_authority != L0 => native_minimum_approval_required = true",
+    "plan_can_downgrade_binding_risk": false,
+    "mismatch_error_code": "PlanRejectedRiskPolicy",
+    "fake_low_risk_plan_attack": "blocked natively by compiled binding policy"
+  },
+  "approval_authority": {
+    "grant_states": ["pending", "granted", "denied", "revoked", "consumed", "expired"],
+    "verifiable_status": "granted and not expired and not consumed and not revoked",
+    "source_of_authority": "trusted native ApprovalStore lookup; reference strings alone are never authority",
+    "token_reference": "native CSPRNG (getrandom), grant_ + 32 hex; never caller supplied",
+    "token_digest": "SHA-256(grant_material || approval_binding_digest || token_reference), computed by native authority",
+    "digest_prefix": "cp7-approval-binding-v1",
+    "binding_fields": ["plan_id", "decision_id", "capability_id", "capability_version", "adapter_id", "normalized_inputs", "risk_snapshot", "evidence_coverage_snapshot", "timeout_ms", "verification_plan", "rollback_plan", "created_at", "expires_at", "policy_version"],
+    "canonicalization": "byte-wise sorted JSON object keys; order-independent",
+    "actor_kinds_allowed": ["owner", "admin"],
+    "actor_authority_rule": "actor_authority >= binding.required_authority (L0 < L1 < L2 < L3)",
+    "max_grant_lifetime": "15 minutes",
+    "expiry_rules": [
+      "expires_at > granted_at strictly",
+      "expires_at <= plan.expires_at when plan has expiry",
+      "grant lifetime <= 15 minutes",
+      "future granted_at fails closed"
+    ]
+  },
+  "approval_store": {
+    "persistent": true,
+    "path_policy": "trusted/injected via Broker::with_persistence; callers cannot submit a store path",
+    "write_protocol": "temp file -> flush -> fsync -> rename",
+    "corrupt_store": "BROKER_APPROVAL_STORE_CORRUPT, retained degraded, never deleted, never treated as empty, execute fails closed"
+  },
+  "plan_replay_ledger": {
+    "persistent": true,
+    "replaces_cp3_memory_hashset": true,
+    "reservation_timing": "persisted before spawn; all plans including read-only",
+    "restart_replay": "same plan_id still rejected with PlanRejectedSingleUse after restart",
+    "corrupt_ledger": "BROKER_PLAN_LEDGER_CORRUPT, execute fails closed"
+  },
+  "execution_ordering": {
+    "steps": [
+      "static plan validation",
+      "binding / risk / expiry checks",
+      "approval verify against native store",
+      "atomic persist: approval consumed + plan id reserved",
+      "spawn"
+    ],
+    "consume_before_spawn": true,
+    "crash_window_policy": "crash after persist leaves approval consumed; user must approve a new plan (fail closed)",
+    "approval_single_use": true,
+    "atomic_consume": "store mutex compare-and-consume; exactly one concurrent caller succeeds"
+  },
+  "denied_revoked": {
+    "denied": "never executes",
+    "revoked_before_consume": "never executes",
+    "revoked_after_consume": "audit only; cannot roll back an executed effect"
+  },
+  "broker_status": {
+    "approvals_enforced": "true only when approval store and plan ledger are initialized and healthy",
+    "execute_ipc_enabled": false,
+    "public_approve_ipc": false,
+    "grant_deny_revoke_visibility": "crate-internal only; CP9 wires the Approval UI"
+  },
+  "production_write_bindings": 0,
+  "new_dependencies": "NONE",
+  "cargo_audit": {
+    "db": "D:\\environment\\advisory-db-offline",
+    "vulnerabilities": 5,
+    "new_advisories_introduced": 0,
+    "findings": [
+      "crossbeam-epoch 0.9.18 RUSTSEC-2026-0204 (pre-existing; via crossbeam-deque <- ignore <- tauri / tauri-plugin-autostart)",
+      "quick-xml 0.30.0 RUSTSEC-2026-0194 RUSTSEC-2026-0195 (pre-existing; Linux build dep via xcb <- screenshots)",
+      "quick-xml 0.39.3 RUSTSEC-2026-0194 RUSTSEC-2026-0195 (pre-existing; via plist <- tauri / tauri-codegen, wayland-scanner)"
+    ],
+    "allowed_warnings": 17
+  },
+  "validation": {
+    "cargo_fmt_check": "PASS",
+    "cargo_check": "PASS (pre-existing dead_code warning in src/clipboard.rs)",
+    "cargo_clippy_all_targets": "PASS (no warnings in lane files; pre-existing warnings elsewhere)",
+    "cargo_test": "PASS: 149 passed, 0 failed, 6 ignored (approval module: 27 tests)",
+    "cargo_audit": "5 pre-existing findings, none introduced (Cargo.toml/Cargo.lock unchanged)",
+    "desktop_verify_controlled": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "tests": {
+    "risk": ["read-only L0 low no approval -> pass", "write false approval -> reject", "risk downgrade -> reject", "authority downgrade -> reject", "side-effect downgrade -> reject", "version mismatch -> reject", "reversible mismatch -> reject"],
+    "approval": ["valid approval -> execute", "fake reference -> reject", "fake digest -> reject", "missing store record -> reject", "wrong plan id -> reject", "wrong binding digest -> reject", "insufficient actor authority -> reject", "expired -> reject", "future grant -> reject", "denied -> reject", "revoked -> reject", "consumed -> reject", "concurrent consume -> exactly one success"],
+    "restart": ["restart replay blocked", "corrupt approval store -> no execution", "corrupt plan ledger -> no execution"]
+  },
+  "declarations": {
+    "LANE": "B - NATIVE APPROVAL",
+    "NATIVE_RISK_POLICY": "YES",
+    "PLAN_CAN_DOWNGRADE_BINDING_RISK": "NO",
+    "REQUIRED_APPROVAL_FALSE_CAN_BYPASS_WRITE": "NO",
+    "APPROVAL_STORE_PERSISTENT": "YES",
+    "PLAN_REPLAY_LEDGER_PERSISTENT": "YES",
+    "RESTART_REPLAY_BLOCKED": "YES",
+    "APPROVAL_SINGLE_USE": "YES",
+    "ATOMIC_CONSUME": "YES",
+    "CONSUME_BEFORE_SPAWN": "YES",
+    "FAKE_APPROVAL_REFERENCE_ACCEPTED": "NO",
+    "ACTOR_AUTHORITY_ENFORCED": "YES",
+    "APPROVAL_MAX_TTL": "15 minutes, bounded by plan expiry",
+    "APPROVALS_ENFORCED_STATUS": "YES",
+    "GENERIC_EXECUTE_IPC": "NO",
+    "PUBLIC_APPROVE_IPC": "NO",
+    "PRODUCTION_WRITE_BINDINGS": "0",
+    "NEW_DEPENDENCIES": "NONE",
+    "HOLDBACK_TOUCHED": "NO",
+    "REMOTE_BRANCH_PUSHED": "NO",
+    "STALE_WORKTREE_GOAL24_CP21_TOUCHED": "NO"
+  }
+}
