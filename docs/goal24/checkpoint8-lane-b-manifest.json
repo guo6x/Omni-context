@@ -1,0 +1,238 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint8-lane-b-manifest",
+  "lane": "B - NATIVE READBACK",
+  "checkpoint": "Goal24 Checkpoint 8",
+  "status": "LANE_B_COMPLETE",
+  "base_sha": "01e1204d8d2a9b232b6745a96667a205841e6f60",
+  "generated_at": "2026-08-14T14:00:00+08:00",
+  "deliverables": [
+    "desktop-daemon/src-tauri/src/execution_broker/readback/mod.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/readback/types.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/readback/receipt.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/readback/store.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/readback/binding.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/readback/runner.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/readback/parser.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/readback/tests.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/readback/crash_tests.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/types.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/runner.rs",
+    "desktop-daemon/src-tauri/src/execution_broker/approval/mod.rs",
+    "docs/goal24/cp8-lane-b-native-readback.md",
+    "docs/goal24/checkpoint8-lane-b-manifest.json"
+  ],
+  "execution_receipt": {
+    "persistent": true,
+    "server_owned": true,
+    "receipt_id": "rcpt_ + 32 random hex via native CSPRNG; caller can never submit",
+    "identity_fields_immutable": [
+      "plan_id",
+      "decision_id",
+      "capability_id",
+      "capability_version",
+      "adapter_id",
+      "binding_id",
+      "normalized_inputs_digest",
+      "verification_plan_digest",
+      "verification_capability_id",
+      "verification_inputs",
+      "receipt_digest"
+    ],
+    "receipt_digest": "SHA-256 over canonical JSON of identity fields; validated on load and read-back",
+    "lifecycle_states": ["accepted", "spawn_started", "completed", "spawn_failed", "unknown_after_crash"],
+    "transitions": [
+      "accepted -> spawn_started -> completed",
+      "accepted -> spawn_failed",
+      "accepted -> unknown_after_crash (restart recovery)",
+      "spawn_started -> unknown_after_crash (restart recovery)"
+    ],
+    "history_rewind": "forbidden (ReceiptTransitionInvalid)",
+    "persistence_phases": {
+      "accepted": "durably written after CP7 plan reservation + approval consumption, before spawn",
+      "spawn_started": "durably written immediately after OS process creation, before waiting for exit",
+      "completed": "exit code, timeout/cancel, bounded output digests",
+      "spawn_failed": "every pre-spawn gate failure; provably no process",
+      "unknown_after_crash": "restart migration of any mid-flight receipt"
+    },
+    "crash_classification": {
+      "accepted_without_spawn_started_on_restart": "unknown_after_crash (never silently claimed as no-effect)",
+      "spawn_started_without_completion_on_restart": "unknown_after_crash (effect may exist; never auto-success or auto-no-effect)"
+    },
+    "store": {
+      "path_policy": "trusted/injected; callers cannot choose",
+      "schema_version": 1,
+      "write_protocol": "temp file -> flush -> fsync -> rename",
+      "serialization": "store mutex + exclusive OS file lock (CP7 shared lock)",
+      "corrupt_store": "BROKER_RECEIPT_STORE_CORRUPT; never deleted, never reset empty; broker execute and read-back fail closed"
+    }
+  },
+  "fundamental_rule": {
+    "exit0_equals_verified": false,
+    "broker_success_meaning": "process-level result only",
+    "original_stdout_as_truth": false,
+    "original_stdout_use": "audit only (bounded digests in receipt); locator hints never outcome truth"
+  },
+  "readback_runner": {
+    "api": "performReadback({ receipt_id }) crate-internal; no public Tauri command",
+    "authority": "receipt_id -> trusted native ReceiptStore lookup; caller JSON results are never authority",
+    "caller_can_override_verification_capability": false,
+    "caller_can_override_verification_inputs": false,
+    "caller_can_override_executable_argv_cwd_env": false,
+    "verification_linkage": "trusted copies from the approved ExecutionPlan; verification-plan digest bound by CP7 approval",
+    "capability_mismatch": "READBACK_CAPABILITY_MISMATCH",
+    "registry": "trusted compiled registry only; IPC caller, skills and LLM cannot register",
+    "binding_rule": "risk_level=low AND side_effect_class=read_only AND required_authority=L0; else READBACK_BINDING_NOT_READ_ONLY",
+    "approval_required": false,
+    "spawn_containment": "CP3 rules unchanged: no shell, trusted executable, cwd allowlist, env allowlist, output bounds, process-tree kill"
+  },
+  "retry_primitive": {
+    "one_attempt_per_call": true,
+    "attempt_id": "single-use, persisted before spawn (write-ahead), replay-proof across restart",
+    "max_attempts": 5,
+    "integration_policy_hint": "Brain policy expected 3",
+    "eligible_states": ["completed", "spawn_started (same process)", "unknown_after_crash"],
+    "readback_after_nonzero": true,
+    "readback_after_timeout": true,
+    "readback_after_cancel": true,
+    "readback_after_unknown_crash": true,
+    "never_spawned": "accepted/spawn_failed receipts are not read-back eligible (trusted lifecycle decides, not the caller)"
+  },
+  "structured_parser": {
+    "brain_parses_cli_stdout": false,
+    "parsers": ["parse_json_payload (strict JSON)", "parse_marker_json (marker-delimited strict JSON, test child)"],
+    "natural_language_success_heuristics": "forbidden",
+    "truncation_rule": "any stream truncation upgrades parser_status to truncated; never reported complete",
+    "statuses": ["parsed", "malformed", "truncated"],
+    "redaction": "CP3 redaction applies; GH_TOKEN / GITHUB_TOKEN / Authorization / cookies never enter payloads"
+  },
+  "observation_envelope": {
+    "fields": [
+      "observation_id",
+      "verification_attempt_id",
+      "origin_plan_id",
+      "origin_execution_receipt_id",
+      "verification_capability_id",
+      "subject_key (binding-derived canonical key)",
+      "observed_at",
+      "payload",
+      "payload_digest",
+      "parser_status",
+      "truncated",
+      "source_adapter",
+      "source_binding",
+      "process_exit_code",
+      "process_timed_out",
+      "process_cancelled",
+      "resolved_executable_fingerprint",
+      "process_duration_ms"
+    ],
+    "verified_field": "absent by design; semantic comparison belongs to Brain evaluator"
+  },
+  "restart_recovery": {
+    "receipt_lookup_after_restart": true,
+    "readback_after_restart": true,
+    "plan_replay_after_restart": "blocked by CP7 durable ledger (PlanRejectedSingleUse)",
+    "attempt_replay_after_restart": "blocked"
+  },
+  "no_write_no_rollback": {
+    "production_write_bindings": 0,
+    "github_read_bindings": 5,
+    "automatic_rollback": false,
+    "retry_original_write": false,
+    "gh_pr_checks_implementation": "gh pr view --json statusCheckRollup (unchanged)"
+  },
+  "cp7_regression": {
+    "approval_store": "PASS",
+    "plan_replay_ledger": "PASS",
+    "consume_before_spawn": "PASS",
+    "os_store_lock": "PASS",
+    "risk_mirror": "PASS",
+    "receipt_does_not_change_single_use_semantics": true
+  },
+  "new_dependencies": "NONE",
+  "cargo_audit": {
+    "db": "D:\\environment\\advisory-db-offline",
+    "vulnerabilities": 4,
+    "new_advisories_introduced": 0,
+    "findings": [
+      "quick-xml 0.30.0 RUSTSEC-2026-0194 + RUSTSEC-2026-0195 (pre-existing; transitive via tauri tooling)",
+      "quick-xml 0.39.3 RUSTSEC-2026-0194 + RUSTSEC-2026-0195 (pre-existing; transitive via tauri tooling)"
+    ],
+    "allowed_warnings": 16,
+    "warnings_include": [
+      "gtk-rs GTK3 stack unmaintained (atk/gdk/gtk/glib family)",
+      "fxhash, instant, proc-macro-error, proc-macro-error2, rustls-pemfile unmaintained",
+      "glib 0.15.12 RUSTSEC-2024-0429 unsound",
+      "rand 0.7.3 RUSTSEC-2026-0097 unsound"
+    ],
+    "note": "Cargo.toml and Cargo.lock content unchanged by this lane; all findings pre-existing"
+  },
+  "validation": {
+    "cargo_fmt_check": "PASS",
+    "cargo_check": "PASS (pre-existing dead_code warning in src/clipboard.rs)",
+    "cargo_clippy_all_targets": "PASS for all lane files; remaining warnings pre-existing elsewhere",
+    "cargo_test": "PASS: 199 passed, 0 failed, 7 ignored (readback module: 31 passed, 1 ignored)",
+    "npm_build": "PASS",
+    "desktop_verify_controlled": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "tests": {
+    "true_positive": "write exit 0 + state new -> structured observation of new state",
+    "false_positive": "write exit 0 + state unchanged -> observation shows old state; stdout/exit0 cannot mask mismatch",
+    "partial_effect": "state changed then exit 1 -> read-back sees new state",
+    "timeout_effect": "state changed then sleep until timeout -> read-back sees effect",
+    "cancel_effect": "state changed then cancelled -> read-back sees effect",
+    "restart": [
+      "mid-flight accepted/spawn_started migrates to unknown_after_crash and remains read-backable",
+      "full broker restart: plan replay blocked, completed receipt preserved and read-backable",
+      "attempt single-use survives restart"
+    ],
+    "corrupt_store": [
+      "truncated store fails closed",
+      "unknown schema version fails closed",
+      "duplicate receipt ids fail closed",
+      "tampered receipt digest fails closed",
+      "corrupt store blocks broker execution before spawn"
+    ],
+    "trust": [
+      "receipt store is the only execution authority",
+      "read-back binding must be read-only",
+      "unregistered verification capability -> mismatch",
+      "attempt ids single-use",
+      "6th attempt rejected (hard bound 5)",
+      "envelope never carries a verified claim",
+      "structured parser rejects natural-language stdout",
+      "truncated output marked and never complete"
+    ]
+  },
+  "declarations": {
+    "LANE": "B - NATIVE READBACK",
+    "EXECUTION_RECEIPT_PERSISTENT": "YES",
+    "RECEIPT_SERVER_OWNED": "YES",
+    "CALLER_CAN_FORGE_RESULT": "NO",
+    "SPAWN_STARTED_PERSISTED": "YES",
+    "CRASH_AFTER_SPAWN_CLASSIFICATION": "unknown_after_crash",
+    "EXIT0_EQUALS_VERIFIED": "NO",
+    "ORIGINAL_STDOUT_USED_AS_TRUTH": "NO",
+    "READBACK_BINDING_READ_ONLY_REQUIRED": "YES",
+    "READBACK_PUBLIC_IPC": "NO",
+    "CALLER_CAN_OVERRIDE_VERIFICATION_CAPABILITY": "NO",
+    "CALLER_CAN_OVERRIDE_VERIFICATION_INPUTS": "NO",
+    "STRUCTURED_PARSER": "YES",
+    "TRUNCATED_MARKED": "YES",
+    "READBACK_AFTER_NONZERO": "YES",
+    "READBACK_AFTER_TIMEOUT": "YES",
+    "READBACK_AFTER_CANCEL": "YES",
+    "READBACK_AFTER_UNKNOWN_CRASH": "YES",
+    "RESTART_RECEIPT_RECOVERY": "YES",
+    "PRODUCTION_WRITE_BINDINGS": "0",
+    "GENERIC_EXECUTE_IPC": "NO",
+    "AUTOMATIC_ROLLBACK": "NO",
+    "NEW_DEPENDENCIES": "NONE",
+    "HOLDBACK_TOUCHED": "NO",
+    "REMOTE_BRANCH_PUSHED": "NO",
+    "STALE_WORKTREE_GOAL24_CP21_TOUCHED": "NO"
+  }
+}
