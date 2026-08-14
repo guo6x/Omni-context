@@ -21,6 +21,7 @@ mod runner;
 mod types;
 
 pub(crate) mod approval;
+pub(crate) mod readback;
 
 #[cfg(test)]
 mod adversarial;
@@ -40,6 +41,7 @@ pub(crate) enum FaultPoint {
     BeforeApprovalConsume,
     AfterApprovalConsume,
     BeforeSpawn,
+    AfterReceiptAccepted,
 }
 
 #[cfg(test)]
@@ -79,7 +81,10 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use crate::execution_broker::approval::{ApprovalAuthority, GrantRequest, PlanLedger};
-use crate::execution_broker::runner::ExecutionRegistry;
+use crate::execution_broker::readback::{
+    ExecutionReceipt, ReadbackObservationEnvelope, ReadbackRunner, ReceiptStore,
+};
+use crate::execution_broker::runner::{ExecutionRegistry, RunLifecycle};
 
 #[cfg(test)]
 pub use policy::{build_child_env, validate_cwd, BASE_ENV_VARS};
@@ -120,6 +125,8 @@ pub struct Broker {
     registry: ExecutionRegistry,
     approval: Arc<ApprovalAuthority>,
     plan_ledger: PlanLedger,
+    receipts: ReceiptStore,
+    readback: ReadbackRunner,
 }
 
 impl Default for Broker {
@@ -133,7 +140,12 @@ impl Broker {
     /// the CP7 default). Production persistence is wired with
     /// `Broker::with_persistence` using trusted app-data paths.
     pub fn new() -> Self {
-        Self::with_internal(ApprovalAuthority::in_memory(), PlanLedger::in_memory())
+        Self::with_internal(
+            ApprovalAuthority::in_memory(),
+            PlanLedger::in_memory(),
+            ReceiptStore::in_memory(),
+            ReadbackRunner::new(),
+        )
     }
 
     /// Create a broker with a persistent approval store and durable plan
@@ -145,15 +157,40 @@ impl Broker {
         Self::with_internal(
             ApprovalAuthority::persistent(store_path.to_path_buf()),
             PlanLedger::persistent(ledger_path.to_path_buf()),
+            ReceiptStore::in_memory(),
+            ReadbackRunner::new(),
         )
     }
 
-    fn with_internal(approval: ApprovalAuthority, plan_ledger: PlanLedger) -> Self {
+    /// CP8: full persistence including the native execution receipt store.
+    /// All three paths are trusted/injected by this constructor; callers can
+    /// never submit a store path.
+    pub fn with_receipt_persistence(
+        store_path: &Path,
+        ledger_path: &Path,
+        receipt_store_path: &Path,
+    ) -> Self {
+        Self::with_internal(
+            ApprovalAuthority::persistent(store_path.to_path_buf()),
+            PlanLedger::persistent(ledger_path.to_path_buf()),
+            ReceiptStore::persistent(receipt_store_path.to_path_buf()),
+            ReadbackRunner::new(),
+        )
+    }
+
+    fn with_internal(
+        approval: ApprovalAuthority,
+        plan_ledger: PlanLedger,
+        receipts: ReceiptStore,
+        readback: ReadbackRunner,
+    ) -> Self {
         Self {
             bindings: Mutex::new(HashMap::new()),
             registry: ExecutionRegistry::default(),
             approval: Arc::new(approval),
             plan_ledger,
+            receipts,
+            readback,
         }
     }
 
@@ -163,6 +200,60 @@ impl Broker {
             .lock()
             .unwrap()
             .insert(binding.binding_id().to_string(), binding.into());
+    }
+
+    /// Register a trusted compiled read-back binding. The read-only / low /
+    /// L0 verifier rule is enforced natively; IPC callers, skills and LLMs
+    /// can never register one.
+    pub fn register_readback_binding(
+        &self,
+        binding: Box<dyn crate::execution_broker::readback::ReadbackBinding>,
+    ) -> Result<(), BrokerError> {
+        self.readback.register(binding)
+    }
+
+    /// Crate-internal native read-back. No public Tauri command exists; CP9
+    /// wires the bridge.
+    pub(crate) fn perform_readback(
+        &self,
+        receipt_id: &str,
+    ) -> Result<ReadbackObservationEnvelope, BrokerError> {
+        self.readback.perform_readback(&self.receipts, receipt_id)
+    }
+
+    /// Crate-internal read-back with an explicit server-owned attempt id
+    /// (single-use; used by tests and future Integration).
+    #[allow(dead_code)]
+    pub(crate) fn perform_readback_attempt(
+        &self,
+        receipt_id: &str,
+        attempt_id: &str,
+    ) -> Result<ReadbackObservationEnvelope, BrokerError> {
+        self.readback
+            .perform_readback_attempt(&self.receipts, receipt_id, Some(attempt_id))
+    }
+
+    /// Crate-internal: the native receipt store (tests / future bridge).
+    #[allow(dead_code)]
+    pub(crate) fn receipt_store(&self) -> &ReceiptStore {
+        &self.receipts
+    }
+
+    /// Crate-internal: receipt lookup by native receipt id.
+    pub(crate) fn lookup_receipt(
+        &self,
+        receipt_id: &str,
+    ) -> Result<Option<ExecutionReceipt>, BrokerError> {
+        self.receipts.get(receipt_id)
+    }
+
+    /// Crate-internal: receipts for a plan id (single-use plans have at most
+    /// one).
+    pub(crate) fn receipts_for_plan(
+        &self,
+        plan_id: &str,
+    ) -> Result<Vec<ExecutionReceipt>, BrokerError> {
+        self.receipts.by_plan(plan_id)
     }
 
     /// Crate-internal native grant entry point. Not a Tauri command; the CP9
@@ -249,6 +340,11 @@ impl Broker {
             return Err(err.clone());
         }
         if let Some(err) = self.plan_ledger.degradation() {
+            return Err(err.clone());
+        }
+        // A corrupt receipt store fails closed before any approval is
+        // consumed or any process can spawn; it is never reset to empty.
+        if let Some(err) = self.receipts.degradation() {
             return Err(err.clone());
         }
 
@@ -414,7 +510,42 @@ impl Broker {
         fault_checkpoint(FaultPoint::AfterApprovalConsume)?;
         fault_checkpoint(FaultPoint::BeforeSpawn)?;
 
-        let result = runner::run(plan, binding.as_ref(), &self.registry)?;
+        // -------------------------------------------------------------------
+        // CP8: durable execution receipt (state=accepted), created after CP7
+        // durable reservation + approval consumption and before the actual
+        // process spawn. The verification linkage is copied natively from
+        // the gated plan; a caller can never supply it later.
+        // -------------------------------------------------------------------
+        let accepted_at = runner::now_rfc3339();
+        let receipt = crate::execution_broker::readback::receipt::build_accepted_receipt(
+            plan,
+            binding_id,
+            &accepted_at,
+        )?;
+        self.receipts.insert_accepted(receipt.clone())?;
+        fault_checkpoint(FaultPoint::AfterReceiptAccepted)?;
+
+        let mut lifecycle = ReceiptLifecycle {
+            receipts: &self.receipts,
+            receipt_id: receipt.receipt_id.clone(),
+            spawn_started_recorded: false,
+        };
+        let result = match runner::run_with_observer(
+            plan,
+            binding.as_ref(),
+            &self.registry,
+            Some(&mut lifecycle),
+        ) {
+            Ok(result) => result,
+            Err(err) => {
+                if lifecycle.spawn_started_recorded() {
+                    // The OS process was created but its completion could not
+                    // be durably recorded: conservative unknown_after_crash.
+                    let _ = lifecycle.mark_unknown_after_crash();
+                }
+                return Err(err);
+            }
+        };
         if let Some(approval) = approved {
             // Audit bookkeeping; a persistence failure here can never roll
             // back an already-executed effect.
@@ -450,6 +581,48 @@ impl Broker {
             },
             approvals_enforced: self.approval.is_healthy() && self.plan_ledger.is_healthy(),
         }
+    }
+}
+
+/// Bridges `RunLifecycle` hooks to the native receipt store, keeping the
+/// durable receipt in lock-step with the real process lifecycle.
+struct ReceiptLifecycle<'a> {
+    receipts: &'a ReceiptStore,
+    receipt_id: String,
+    spawn_started_recorded: bool,
+}
+
+impl ReceiptLifecycle<'_> {
+    /// Conservative classification: the process was created but its
+    /// completion could not be durably recorded.
+    fn mark_unknown_after_crash(&self) -> Result<(), BrokerError> {
+        self.receipts
+            .mark_unknown_after_crash(&self.receipt_id)
+            .map(|_| ())
+    }
+}
+
+impl RunLifecycle for ReceiptLifecycle<'_> {
+    fn on_spawn_started(&mut self) -> Result<(), BrokerError> {
+        let now = runner::now_rfc3339();
+        self.receipts.mark_spawn_started(&self.receipt_id, &now)?;
+        self.spawn_started_recorded = true;
+        Ok(())
+    }
+
+    fn on_spawn_failed(&mut self) -> Result<(), BrokerError> {
+        self.receipts
+            .mark_spawn_failed(&self.receipt_id)
+            .map(|_| ())
+    }
+
+    fn on_completed(&mut self, result: &BrokerExecutionResult) -> Result<(), BrokerError> {
+        self.receipts.mark_completed(&self.receipt_id, result)?;
+        Ok(())
+    }
+
+    fn spawn_started_recorded(&self) -> bool {
+        self.spawn_started_recorded
     }
 }
 
