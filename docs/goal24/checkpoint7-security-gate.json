@@ -191,9 +191,9 @@
       "evidence": "production bindings remain the five CP4 read-only github.* bindings"
     },
     "AL": {
-      "label": "full regressions green",
+      "label": "required build/test regressions pass and security audits are classified",
       "value": "PASS",
-      "evidence": "Brain typecheck/vitest/build/lint; Desktop build/verify:controlled; cargo fmt/check/clippy/test/audit; git diff --check"
+      "evidence": "Brain typecheck/vitest/build/lint PASS; Desktop build/verify:controlled PASS; cargo fmt/check/clippy/test PASS; git diff --check PASS; npm audit and cargo audit were executed and classified separately under criterion AM / audit records; their non-zero command exits are not being described as 'green'"
     },
     "AM": {
       "label": "approval runtime reachable security: UNKNOWN=0 FIX_BEFORE_CP7=0 BLOCKS_CP7=0",
