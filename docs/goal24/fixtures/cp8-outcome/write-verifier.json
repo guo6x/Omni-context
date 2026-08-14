@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CP8F-013",
+  "kind": "write-verifier",
+  "synthetic": true,
+  "expected_result": "REJECT: a verification binding with write side effects can never be a readback verifier",
+  "verification_plan": {
+    "verification_capability_id": "github.issue.close",
+    "verification_inputs": {
+      "owner": "guo6x",
+      "repo": "Omni-context",
+      "number": 999993
+    }
+  },
+  "declared_binding_side_effect_class": "reversible_write",
+  "verdict": "REJECT (verifier must be read_only; verification must not create business side effects)"
+}

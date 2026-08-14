@@ -1,0 +1,29 @@
+{
+  "fixture_id": "CP8F-001",
+  "kind": "exit0-no-effect",
+  "synthetic": true,
+  "expected_result": "NOT_VERIFIED: exit 0 plus remote readback mismatch must not verify",
+  "process_receipt": {
+    "execution_id": "exec-cp8-001",
+    "plan_id": "plan-cp8-close-001",
+    "capability_id": "github.issue.write",
+    "exit_code": 0,
+    "success": true,
+    "timed_out": false,
+    "cancelled": false,
+    "stdout": "success",
+    "stdout_truncated": false,
+    "finished_at": "2026-08-14T08:00:01Z"
+  },
+  "readback_observation": {
+    "observation_id": "obs-cp8-001",
+    "subject": "guo6x/Omni-context#999999",
+    "state": "OPEN",
+    "observed_at": "2026-08-14T08:00:01Z",
+    "origin_execution_id": "readback-exec-001"
+  },
+  "expected_state": {
+    "state": "CLOSED"
+  },
+  "verdict": "NOT_VERIFIED"
+}

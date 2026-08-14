@@ -1,0 +1,28 @@
+{
+  "fixture_id": "CP8F-002",
+  "kind": "exit1-with-effect",
+  "synthetic": true,
+  "expected_result": "readback still required after exit 1; matching external state may VERIFY",
+  "process_receipt": {
+    "execution_id": "exec-cp8-002",
+    "plan_id": "plan-cp8-close-002",
+    "capability_id": "github.issue.write",
+    "exit_code": 1,
+    "success": false,
+    "timed_out": false,
+    "cancelled": false,
+    "error_code": "GhCliFailed",
+    "finished_at": "2026-08-14T08:00:01Z"
+  },
+  "readback_observation": {
+    "observation_id": "obs-cp8-002",
+    "subject": "guo6x/Omni-context#999998",
+    "state": "CLOSED",
+    "observed_at": "2026-08-14T08:00:01Z",
+    "origin_execution_id": "readback-exec-002"
+  },
+  "expected_state": {
+    "state": "CLOSED"
+  },
+  "verdict": "VERIFIED (effect confirmed by external state despite exit 1)"
+}

@@ -1,0 +1,25 @@
+{
+  "fixture_id": "CP8F-008",
+  "kind": "stale-readback",
+  "synthetic": true,
+  "expected_result": "REJECT: observation observed_at predates the effect reference time",
+  "process_receipt": {
+    "execution_id": "exec-cp8-006",
+    "plan_id": "plan-cp8-close-006",
+    "capability_id": "github.issue.write",
+    "exit_code": 0,
+    "success": true,
+    "finished_at": "2026-08-14T08:00:01Z"
+  },
+  "readback_observation": {
+    "observation_id": "obs-cp8-006",
+    "subject": "guo6x/Omni-context#999994",
+    "state": "CLOSED",
+    "observed_at": "2026-08-13T08:00:00Z",
+    "origin_execution_id": "readback-exec-006"
+  },
+  "expected_state": {
+    "state": "CLOSED"
+  },
+  "verdict": "REJECT/STALE"
+}

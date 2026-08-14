@@ -1,0 +1,29 @@
+{
+  "fixture_id": "CP8F-006",
+  "kind": "valid-readback",
+  "synthetic": true,
+  "expected_result": "VERIFIED: trusted receipt + post-effect observation + plan-bound expectation match",
+  "process_receipt": {
+    "execution_id": "exec-cp8-005",
+    "plan_id": "plan-cp8-close-005",
+    "capability_id": "github.issue.write",
+    "exit_code": 0,
+    "success": true,
+    "timed_out": false,
+    "cancelled": false,
+    "stdout_truncated": false,
+    "finished_at": "2026-08-14T08:00:01Z"
+  },
+  "readback_observation": {
+    "observation_id": "obs-cp8-005",
+    "subject": "guo6x/Omni-context#999995",
+    "state": "CLOSED",
+    "observed_at": "2026-08-14T08:00:01Z",
+    "origin_execution_id": "readback-exec-005",
+    "capability_id": "github.issue.read"
+  },
+  "expected_state": {
+    "state": "CLOSED"
+  },
+  "verdict": "VERIFIED"
+}

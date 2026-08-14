@@ -1,0 +1,15 @@
+{
+  "fixture_id": "CP8F-005",
+  "kind": "crash-unknown-effect",
+  "synthetic": true,
+  "expected_result": "crash after spawn leaves effect unknown; readback required; recovery never fabricates verified",
+  "crash_matrix": {
+    "crash_before_spawn": "NOT_STARTED (provable)",
+    "crash_after_spawn_before_effect": "INCONCLUSIVE + readback",
+    "crash_after_effect_before_exit": "INCONCLUSIVE + readback",
+    "crash_after_exit_before_receipt": "INCONCLUSIVE + readback",
+    "crash_after_receipt_before_readback": "INCONCLUSIVE + readback",
+    "crash_during_readback": "INCONCLUSIVE + bounded retry"
+  },
+  "verdict": "never VERIFIED without a post-effect readback"
+}

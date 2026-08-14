@@ -1,0 +1,34 @@
+{
+  "fixture_id": "CP8F-007",
+  "kind": "mismatch",
+  "synthetic": true,
+  "expected_result": "MISMATCH after bounded retries; no auto-rollback",
+  "attempts": [
+    {
+      "attempt": 1,
+      "observation": {
+        "state": "OPEN",
+        "observed_at": "2026-08-14T08:00:01Z"
+      }
+    },
+    {
+      "attempt": 2,
+      "observation": {
+        "state": "OPEN",
+        "observed_at": "2026-08-14T08:00:01Z"
+      }
+    },
+    {
+      "attempt": 3,
+      "observation": {
+        "state": "OPEN",
+        "observed_at": "2026-08-14T08:00:01Z"
+      }
+    }
+  ],
+  "expected_state": {
+    "state": "CLOSED"
+  },
+  "verdict": "MISMATCH",
+  "must_not_happen": "automatic rollback execution"
+}

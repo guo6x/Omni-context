@@ -1,0 +1,22 @@
+{
+  "fixture_id": "CP8F-011",
+  "kind": "cross-plan",
+  "synthetic": true,
+  "expected_result": "REJECT: observation/receipt for plan A can never verify Outcome B",
+  "receipt": {
+    "execution_id": "exec-cp8-009",
+    "plan_id": "plan-A"
+  },
+  "observation": {
+    "observation_id": "obs-cp8-007",
+    "origin_plan": "plan-A",
+    "subject": "guo6x/Omni-context#999993",
+    "state": "CLOSED",
+    "observed_at": "2026-08-14T08:00:01Z"
+  },
+  "outcome_request": {
+    "plan_id": "plan-B",
+    "subject": "guo6x/Omni-context#999993"
+  },
+  "verdict": "REJECT (plan binding mismatch)"
+}

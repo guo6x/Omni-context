@@ -1,0 +1,22 @@
+{
+  "fixture_id": "CP8F-010",
+  "kind": "truncated",
+  "synthetic": true,
+  "expected_result": "NOT_VERIFIED: truncated output whose prefix matches must not verify",
+  "process_receipt": {
+    "execution_id": "exec-cp8-008",
+    "plan_id": "plan-cp8-close-008",
+    "capability_id": "github.issue.read",
+    "exit_code": 0,
+    "success": true,
+    "timed_out": false,
+    "cancelled": false,
+    "stdout_truncated": true,
+    "stdout_bytes_seen": 1024,
+    "finished_at": "2026-08-14T08:00:01Z"
+  },
+  "readback_observation_prefix": {
+    "state": "CLOSED"
+  },
+  "verdict": "NOT_VERIFIED (truncation flag forces verification_failed)"
+}

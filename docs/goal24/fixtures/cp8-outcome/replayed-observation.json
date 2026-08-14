@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CP8F-014",
+  "kind": "replayed-observation",
+  "synthetic": true,
+  "expected_result": "REJECT: an old verified observation cannot verify a new plan",
+  "old_observation": {
+    "observation_id": "obs-cp8-009",
+    "origin_plan": "plan-cp8-old",
+    "subject": "guo6x/Omni-context#999992",
+    "state": "CLOSED",
+    "observed_at": "2026-08-14T08:00:00Z",
+    "verdict": "VERIFIED"
+  },
+  "new_outcome_request": {
+    "plan_id": "plan-cp8-close-010",
+    "subject": "guo6x/Omni-context#999992"
+  },
+  "verdict": "REJECT (plan/receipt binding blocks old observations)"
+}

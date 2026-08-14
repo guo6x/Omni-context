@@ -1,0 +1,81 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 Lane C",
+    "artifact": "cp8-github-readback-catalog.json",
+    "base_sha": "01e1204d8d2a9b232b6745a96667a205841e6f60",
+    "purpose": "Design catalog mapping future GitHub write capabilities to read-back verification using only existing CP4 read-only capabilities. Planning only: no production write capability is added in this lane (WRITE_CAPABILITY_REQUIRED=NO).",
+    "principles": [
+      "stdout is at most a locator hint; it must be validated, scope-bound, and followed by a remote readback",
+      "exit 0 never proves a remote state change",
+      "verification must not create business side effects; only read-only capabilities serve as verifiers",
+      "where no trusted read path exists, the catalog marks a gap instead of inventing a solution"
+    ]
+  },
+  "mappings": [
+    {
+      "write_capability": "github.issue.create",
+      "planned_effect": "a new issue exists in the target repository",
+      "expected_state": "issue with subject owner/repo#<new-number> exists; title/body match the plan inputs",
+      "available_read_capability": "github.issue.read (CP4)",
+      "read_verification_fields": "number, title, state, url, created_at, updated_at",
+      "subject_locator": "owner/repo from plan inputs plus issue number",
+      "locator_derivation": "gh issue create stdout URL is a locator candidate only; the number must be parsed from the validated URL and rebound to owner/repo before readback",
+      "locator_gap": "LOCATOR_GAP",
+      "locator_gap_detail": "current CP4 trusted result provides stdout text only; there is no trusted structured issue-number field for the created issue. If the number cannot be safely derived from a trusted result, the mapping is LOCATOR_GAP and must not be faked.",
+      "missing_read_capability": "none for state; number derivation is the gap",
+      "eventual_consistency": "creation is usually immediately visible; still allow the bounded retry budget",
+      "verification_limit": "bounded attempts (default evidence rounds) with backoff; constant 404/absence -> NOT_VERIFIED, never default success",
+      "structured_fields_note": "readback compares title/state via github.issue.read structured output, never stdout text",
+      "status": "MAPPED_WITH_LOCATOR_GAP"
+    },
+    {
+      "write_capability": "github.issue.comment",
+      "planned_effect": "a new comment exists on issue owner/repo#N authored by the expected identity with the expected body",
+      "expected_state": "comment list for issue includes the new comment body",
+      "available_read_capability": "github.issue.read (CP4)",
+      "read_verification_fields": "number, title, state, state_reason, url, created_at, updated_at",
+      "missing_read_capability": "read-only comment fetch (e.g. github.issue.comments.read)",
+      "readback_capability_gap": "READBACK_CAPABILITY_GAP",
+      "readback_gap_detail": "current github.issue.read output has no comments field, so issue.comment has no complete read-back verifier today. A future read-only comment fetch capability is required; stdout must never be used to prove a comment.",
+      "subject_locator": "owner/repo#N plus comment id (future comments.read output)",
+      "eventual_consistency": "comments are usually immediately visible; still allow the bounded retry budget",
+      "verification_limit": "bounded attempts; gap means verification is not claimable until comments.read exists",
+      "status": "READBACK_CAPABILITY_GAP"
+    },
+    {
+      "write_capability": "github.issue.close",
+      "planned_effect": "issue owner/repo#N state becomes CLOSED",
+      "expected_state": "github.issue.read returns state CLOSED for the exact subject owner/repo#N",
+      "available_read_capability": "github.issue.read (CP4)",
+      "read_verification_fields": "number, state, state_reason, url, updated_at",
+      "missing_read_capability": "none for state verification",
+      "subject_locator": "owner/repo#N from the approved plan inputs (exact subject identity check)",
+      "structured_fields_note": "state strings canonicalize (OPEN/CLOSED) before comparison; case/unicode variants must not alias",
+      "eventual_consistency": "state transitions are eventually consistent; bounded retries absorb convergence delay",
+      "verification_limit": "bounded attempts; final MISMATCH only after budget exhaustion",
+      "status": "MAPPED"
+    },
+    {
+      "write_capability": "github.pr.merge",
+      "planned_effect": "pull request owner/repo#N is merged",
+      "expected_state": "github.pr.read returns state MERGED for owner/repo#N; optionally merge commit metadata",
+      "available_read_capability": "github.pr.read (CP4)",
+      "read_verification_fields": "number, state, mergeable, merge_state_status, created_at, updated_at",
+      "missing_read_capability": "mergedAt/mergeCommit structured fields (pr.read extension)",
+      "partial_gap": "MAPPED_PARTIAL",
+      "partial_gap_detail": "pr.read state MERGED verifies merge state today; merge commit metadata (mergedAt, mergeCommit oid) is not in the current structured output and requires a future read field extension. gh pr merge exit 0 alone never proves a merge.",
+      "subject_locator": "owner/repo#N from the approved plan inputs",
+      "structured_fields_note": "verification predicate: state == MERGED plus subject identity; metadata predicate only after field extension",
+      "eventual_consistency": "merge visibility may lag; bounded retries required",
+      "verification_limit": "bounded attempts; MERGED observed within budget verifies; exhausted budget -> MISMATCH/INCONCLUSIVE",
+      "status": "MAPPED_PARTIAL"
+    }
+  ],
+  "catalog_constraints": {
+    "write_capability_required": "NO",
+    "production_write_bindings_expected": 0,
+    "verifiers_restricted_to": "existing CP4 read-only capabilities only",
+    "readback_authority": "trusted broker-run readback observation, not stdout, not LLM text",
+    "no_new_write_capabilities_in_cp8": true
+  }
+}

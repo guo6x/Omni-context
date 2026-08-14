@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CP8F-009",
+  "kind": "malformed",
+  "synthetic": true,
+  "expected_result": "VERIFICATION_FAILED: exit 0 with malformed machine-readable output never verifies",
+  "process_receipt": {
+    "execution_id": "exec-cp8-007",
+    "plan_id": "plan-cp8-close-007",
+    "capability_id": "github.issue.read",
+    "exit_code": 0,
+    "success": true,
+    "timed_out": false,
+    "cancelled": false,
+    "stdout_truncated": false,
+    "stdout": "{\"number\": 999994, \"state\": \"CLOS",
+    "finished_at": "2026-08-14T08:00:01Z"
+  },
+  "verdict": "VERIFICATION_FAILED (strict JSON parse rejects partial document)"
+}

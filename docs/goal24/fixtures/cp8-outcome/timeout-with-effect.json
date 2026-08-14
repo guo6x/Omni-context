@@ -1,0 +1,28 @@
+{
+  "fixture_id": "CP8F-003",
+  "kind": "timeout-with-effect",
+  "synthetic": true,
+  "expected_result": "verification must inspect external state; timeout alone proves nothing",
+  "process_receipt": {
+    "execution_id": "exec-cp8-003",
+    "plan_id": "plan-cp8-close-003",
+    "capability_id": "github.issue.write",
+    "exit_code": null,
+    "success": false,
+    "timed_out": true,
+    "cancelled": false,
+    "error_code": "BrokerTimeout",
+    "finished_at": "2026-08-14T08:00:01Z"
+  },
+  "readback_observation": {
+    "observation_id": "obs-cp8-003",
+    "subject": "guo6x/Omni-context#999997",
+    "state": "CLOSED",
+    "observed_at": "2026-08-14T08:00:01Z",
+    "origin_execution_id": "readback-exec-003"
+  },
+  "expected_state": {
+    "state": "CLOSED"
+  },
+  "verdict": "VERIFIED possible if the post-timeout observation matches; otherwise INCONCLUSIVE"
+}

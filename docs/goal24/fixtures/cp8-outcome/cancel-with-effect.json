@@ -1,0 +1,28 @@
+{
+  "fixture_id": "CP8F-004",
+  "kind": "cancel-with-effect",
+  "synthetic": true,
+  "expected_result": "cancelled does not imply no effect; readback required",
+  "process_receipt": {
+    "execution_id": "exec-cp8-004",
+    "plan_id": "plan-cp8-comment-001",
+    "capability_id": "github.issue.write",
+    "exit_code": null,
+    "success": false,
+    "timed_out": false,
+    "cancelled": true,
+    "error_code": "BrokerCancelled",
+    "finished_at": "2026-08-14T08:00:01Z"
+  },
+  "readback_observation": {
+    "observation_id": "obs-cp8-004",
+    "subject": "guo6x/Omni-context#999996",
+    "comments_seen": "READBACK_CAPABILITY_GAP",
+    "observed_at": "2026-08-14T08:00:01Z",
+    "origin_execution_id": "readback-exec-004"
+  },
+  "expected_state": {
+    "comment_present": true
+  },
+  "verdict": "INCONCLUSIVE (comment readback gap)"
+}
