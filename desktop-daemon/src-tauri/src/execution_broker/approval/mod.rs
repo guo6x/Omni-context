@@ -5,9 +5,9 @@
 //! revoke (CP9 wires the approval UI).
 
 pub(crate) mod authority;
-mod digest;
+pub(crate) mod digest;
 pub(crate) mod ledger;
-mod lock;
+pub(crate) mod lock;
 pub(crate) mod store;
 mod types;
 
@@ -24,3 +24,5 @@ mod oracle_tests;
 
 pub(crate) use authority::{ApprovalAuthority, GrantRequest};
 pub(crate) use ledger::PlanLedger;
+#[cfg(test)]
+pub(crate) use types::ActorKind;

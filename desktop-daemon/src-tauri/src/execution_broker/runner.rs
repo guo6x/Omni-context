@@ -7,6 +7,7 @@
 
 use std::collections::HashMap;
 use std::ffi::OsString;
+use std::path::PathBuf;
 use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -119,19 +120,47 @@ enum RunOutcome {
     Cancelled,
 }
 
-/// Execute one validated plan through `binding`.
-///
-/// # Gate preconditions (checked by `Broker::execute` before calling)
-/// - `plan.state == Ready`
-/// - `plan.required_approval == false`
-/// - `plan.expires_at` is `None` or in the future
-/// - `plan.timeout_ms` within contract bounds
-/// - `binding` matches `plan.adapter_id` and `plan.capability_id`
-pub fn run(
+/// Executed-process lifecycle observer hooks. The broker uses these to keep
+/// the durable execution receipt in sync with the real process lifecycle:
+/// `spawn_started` is persisted immediately after the OS process is created
+/// (before the broker waits for exit), so a crash during the wait can never
+/// be misread as "never spawned".
+pub trait RunLifecycle {
+    /// The OS process was successfully created. A failing hook aborts
+    /// fail-closed: the runner terminates the contained process tree and
+    /// returns the error without a result.
+    fn on_spawn_started(&mut self) -> Result<(), BrokerError>;
+    /// The spawn (or an earlier pre-spawn gate) failed before any OS process
+    /// was created.
+    fn on_spawn_failed(&mut self) -> Result<(), BrokerError>;
+    /// The process lifecycle finished (exit, timeout or cancel). Called after
+    /// the result object is fully built, before the caller receives it.
+    fn on_completed(&mut self, result: &BrokerExecutionResult) -> Result<(), BrokerError>;
+    /// True once `on_spawn_started` was recorded (used by the broker to pick
+    /// the fail-closed receipt classification when a later step errors).
+    fn spawn_started_recorded(&self) -> bool;
+}
+
+/// Everything the pre-spawn stage produces. Kept together so the
+/// `on_spawn_failed` hook can be applied to every pre-spawn error path.
+struct PreparedRun {
+    execution_id: String,
+    started_at: String,
+    started: Instant,
+    cancel: CancelToken,
+    command: std::process::Command,
+    resolved_exe: PathBuf,
+    fingerprint: String,
+    limits: OutputLimits,
+}
+
+/// Trusted pre-spawn assembly: argv -> executable resolution -> cwd -> env ->
+/// output limits. Any failure here proves no OS process was created, so the
+/// caller can classify it as `spawn_failed`.
+fn prepare_run(
     plan: &ExecutionPlanWire,
     binding: &dyn ExecutionBinding,
-    registry: &ExecutionRegistry,
-) -> Result<BrokerExecutionResult, BrokerError> {
+) -> Result<PreparedRun, BrokerError> {
     let execution_id = new_execution_id();
     let started_at = now_rfc3339();
     let started = Instant::now();
@@ -177,7 +206,7 @@ pub fn run(
         binding.output_limits().stderr_max_bytes,
     );
 
-    // --- spawn with containment ------------------------------------------
+    // --- spawn command with containment ----------------------------------
     let mut command = std::process::Command::new(&resolved_exe);
     command
         .args(&argv)
@@ -191,7 +220,83 @@ pub fn run(
     }
 
     let cancel = Arc::new(AtomicBool::new(false));
-    let mut tree = ProcessTree::spawn(&mut command)?;
+
+    Ok(PreparedRun {
+        execution_id,
+        started_at,
+        started,
+        cancel,
+        command,
+        resolved_exe,
+        fingerprint: fingerprint.to_string(),
+        limits,
+    })
+}
+
+/// Execute one validated plan through `binding` (CP3 entry point; unchanged
+/// semantics, no lifecycle observer).
+pub fn run(
+    plan: &ExecutionPlanWire,
+    binding: &dyn ExecutionBinding,
+    registry: &ExecutionRegistry,
+) -> Result<BrokerExecutionResult, BrokerError> {
+    run_with_observer(plan, binding, registry, None)
+}
+
+/// Execute one validated plan through `binding` with lifecycle hooks.
+///
+/// Hook ordering (CP8 receipt lifecycle):
+/// - any pre-spawn failure -> `on_spawn_failed` (provably no process existed)
+/// - process created -> `on_spawn_started`, persisted before the wait loop
+/// - lifecycle finished -> `on_completed` after the result is built
+///
+/// A failing `on_spawn_started` hook aborts fail-closed: the contained
+/// process tree is terminated and the error is returned without a result.
+pub fn run_with_observer(
+    plan: &ExecutionPlanWire,
+    binding: &dyn ExecutionBinding,
+    registry: &ExecutionRegistry,
+    mut observer: Option<&mut dyn RunLifecycle>,
+) -> Result<BrokerExecutionResult, BrokerError> {
+    let prepared = match prepare_run(plan, binding) {
+        Ok(prepared) => prepared,
+        Err(err) => {
+            if let Some(observer) = observer.as_mut() {
+                let _ = observer.on_spawn_failed();
+            }
+            return Err(err);
+        }
+    };
+    let PreparedRun {
+        execution_id,
+        started_at,
+        started,
+        cancel,
+        mut command,
+        resolved_exe,
+        fingerprint,
+        limits,
+    } = prepared;
+
+    let mut tree = match ProcessTree::spawn(&mut command) {
+        Ok(tree) => tree,
+        Err(err) => {
+            if let Some(observer) = observer.as_mut() {
+                let _ = observer.on_spawn_failed();
+            }
+            return Err(err);
+        }
+    };
+
+    // Persist the spawn marker before anything waits for the child, so a
+    // crash during the wait is never misclassified as "never spawned".
+    if let Some(observer) = observer.as_mut() {
+        if let Err(err) = observer.on_spawn_started() {
+            let _ = tree.terminate();
+            let _ = tree.wait();
+            return Err(err);
+        }
+    }
 
     registry.insert(execution_id.clone(), cancel.clone());
 
@@ -290,7 +395,7 @@ pub fn run(
 
     let success = !timed_out && !cancelled && exit_code == Some(0);
 
-    Ok(BrokerExecutionResult {
+    let result = BrokerExecutionResult {
         execution_id,
         plan_id: plan.plan_id.clone(),
         capability_id: plan.capability_id.clone(),
@@ -299,7 +404,7 @@ pub fn run(
         finished_at,
         duration_ms,
         resolved_executable: resolved_exe.display().to_string(),
-        executable_fingerprint: fingerprint.to_string(),
+        executable_fingerprint: fingerprint,
         exit_code,
         success,
         timed_out,
@@ -313,9 +418,13 @@ pub fn run(
         output_redacted,
         error_code,
         error_message,
-    })
-}
+    };
 
+    if let Some(observer) = observer.as_mut() {
+        observer.on_completed(&result)?;
+    }
+    Ok(result)
+}
 /// Reject argv elements containing a NUL character (would otherwise be
 /// truncated/ambiguous at the OS boundary).
 pub fn reject_nul_args(args: &[OsString]) -> Result<(), BrokerError> {
