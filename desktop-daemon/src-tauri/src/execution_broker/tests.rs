@@ -15,7 +15,7 @@ use std::process::Stdio;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use crate::execution_broker::policy::OutputLimits;
+use crate::execution_broker::policy::{ExecutionRiskPolicy, OutputLimits};
 use crate::execution_broker::types::{
     ApprovalReferenceWire, AuthorityLevelWire, ErrorCode, EvidenceCoverageSnapshotWire,
     RiskLevelWire, RiskSnapshotWire, SideEffectClassWire,
@@ -29,7 +29,7 @@ static CHILD_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 /// Acquire the child-test lock, recovering from a panic so one failed test
 /// cannot cascade `PoisonError` into every other spawn test.
-pub(super) fn child_test_lock() -> std::sync::MutexGuard<'static, ()> {
+pub(crate) fn child_test_lock() -> std::sync::MutexGuard<'static, ()> {
     CHILD_TEST_LOCK
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -133,6 +133,14 @@ impl ExecutionBinding for TestSelfBinding {
 
     fn output_limits(&self) -> OutputLimits {
         self.output_limits
+    }
+
+    fn capability_version(&self) -> &str {
+        "1.0.0"
+    }
+
+    fn risk_policy(&self) -> ExecutionRiskPolicy {
+        ExecutionRiskPolicy::read_only_low_l0()
     }
 }
 
@@ -361,11 +369,11 @@ fn child_protocol_entry() {
 // Plan construction helpers
 // ---------------------------------------------------------------------------
 
-pub(super) fn plan(state: ExecutionPlanStateWire) -> ExecutionPlanWire {
+pub(crate) fn plan(state: ExecutionPlanStateWire) -> ExecutionPlanWire {
     plan_with(state, |_| {})
 }
 
-pub(super) fn plan_with(
+pub(crate) fn plan_with(
     state: ExecutionPlanStateWire,
     mutate: impl FnOnce(&mut ExecutionPlanWire),
 ) -> ExecutionPlanWire {
@@ -402,22 +410,22 @@ pub(super) fn plan_with(
     plan
 }
 
-pub(super) fn set_inputs(plan: &mut ExecutionPlanWire, value: serde_json::Value) {
+pub(crate) fn set_inputs(plan: &mut ExecutionPlanWire, value: serde_json::Value) {
     plan.normalized_inputs = value.as_object().expect("inputs must be an object").clone();
 }
 
 /// Build a broker with the test binding rooted at `root`.
-pub(super) fn broker_with_root(root: &Path) -> Broker {
+pub(crate) fn broker_with_root(root: &Path) -> Broker {
     let broker = Broker::new();
     broker.register_binding(Box::new(TestSelfBinding::new(root.to_path_buf())));
     broker
 }
 
 /// Temp dir helper that also cleans up on drop.
-pub(super) struct TempDir(PathBuf);
+pub(crate) struct TempDir(PathBuf);
 
 impl TempDir {
-    pub(super) fn new(tag: &str) -> Self {
+    pub(crate) fn new(tag: &str) -> Self {
         let base = std::env::temp_dir().join(format!(
             "omni-cp3-broker-{tag}-{}-{}",
             std::process::id(),
@@ -430,7 +438,7 @@ impl TempDir {
         Self(base)
     }
 
-    pub(super) fn path(&self) -> &Path {
+    pub(crate) fn path(&self) -> &Path {
         &self.0
     }
 }
@@ -441,7 +449,7 @@ impl Drop for TempDir {
     }
 }
 
-pub(super) fn wait_until(deadline: Instant, mut check: impl FnMut() -> bool) -> bool {
+pub(crate) fn wait_until(deadline: Instant, mut check: impl FnMut() -> bool) -> bool {
     while Instant::now() < deadline {
         if check() {
             return true;
@@ -615,7 +623,7 @@ fn gate_expired_plan_rejected() {
 }
 
 #[test]
-fn gate_required_approval_blocked_in_cp3() {
+fn gate_required_approval_with_fake_reference_rejected() {
     let tmp = TempDir::new("gate");
     let broker = broker_with_root(tmp.path());
     let err = broker
@@ -634,8 +642,8 @@ fn gate_required_approval_blocked_in_cp3() {
             }),
             "test.self.run",
         )
-        .expect_err("approval-required plans must be blocked in CP3");
-    assert_eq!(err.code, ErrorCode::PlanRejectedApproval);
+        .expect_err("a fabricated approval reference must never validate");
+    assert_eq!(err.code, ErrorCode::ApprovalRecordNotFound);
 }
 
 #[test]
@@ -1359,7 +1367,10 @@ fn status_surface_is_read_only() {
         !status.execute_ipc_enabled,
         "CP3 must not expose execute IPC"
     );
-    assert!(!status.approvals_enforced);
+    assert!(
+        status.approvals_enforced,
+        "CP7 enforces approvals whenever the in-memory store and ledger are healthy"
+    );
     assert!(status.registered_bindings.is_empty());
     assert_eq!(status.active_executions, 0);
     assert_eq!(status.output_limits.stdout_max_bytes, 1024 * 1024);

@@ -132,15 +132,16 @@ fn approval_reference_consistency_rejected() {
         .expect_err("approval on approval-free plan");
     assert_eq!(err.code, ErrorCode::PlanRejectedInvalid);
 
-    // V080/V081: required_approval=true is blocked in CP3 regardless of the
-    // approval payload.
+    // V080/V081: required_approval=true with a fabricated approval payload
+    // must fail the native store lookup (CP7: the reference strings alone
+    // are never authority).
     let mut required = plan(ExecutionPlanStateWire::Ready);
     required.required_approval = true;
     required.approval = Some(approval_ref(&required.plan_id.clone()));
     let err = broker
         .execute(&required, "test.self.run")
-        .expect_err("required approval must be blocked in CP3");
-    assert_eq!(err.code, ErrorCode::PlanRejectedApproval);
+        .expect_err("fabricated approval reference must be rejected");
+    assert_eq!(err.code, ErrorCode::ApprovalRecordNotFound);
 }
 
 // ---------------------------------------------------------------------------
