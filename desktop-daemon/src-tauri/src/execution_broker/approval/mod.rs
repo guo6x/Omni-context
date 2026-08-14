@@ -7,11 +7,20 @@
 pub(crate) mod authority;
 mod digest;
 pub(crate) mod ledger;
+mod lock;
 pub(crate) mod store;
 mod types;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod crash_tests;
+#[cfg(test)]
+mod cross_language_tests;
+
+#[cfg(test)]
+mod oracle_tests;
 
 pub(crate) use authority::{ApprovalAuthority, GrantRequest};
 pub(crate) use ledger::PlanLedger;

@@ -287,7 +287,7 @@ fn fake_reference_rejected() {
         plan_id: plan.plan_id.clone(),
         granted_by: "attacker".to_string(),
         granted_at: chrono::Utc::now().to_rfc3339(),
-        policy_version: "1.0.0".to_string(),
+        policy_version: "goal24-approval-policy-v1".to_string(),
         token_reference: "grant_fake".to_string(),
         token_digest: "0".repeat(64),
     });
@@ -308,7 +308,7 @@ fn missing_store_record_rejected() {
         plan_id: plan.plan_id.clone(),
         granted_by: "owner-test".to_string(),
         granted_at: chrono::Utc::now().to_rfc3339(),
-        policy_version: "1.0.0".to_string(),
+        policy_version: "goal24-approval-policy-v1".to_string(),
         token_reference: "grant_missing".to_string(),
         token_digest: "0".repeat(64),
     });
@@ -528,7 +528,7 @@ fn concurrent_consume_exactly_one_wins() {
     );
     assert_eq!(
         failures[0].as_ref().err().map(|e| e.code),
-        Some(ErrorCode::ApprovalConsumed)
+        Some(ErrorCode::PlanRejectedSingleUse)
     );
     assert!(successes[0].as_ref().expect("ok").success);
 }

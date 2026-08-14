@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "checkpoint7-manifest",
+  "goal24_checkpoint": "7",
+  "generated_at": "2026-08-14T05:53:58.355Z",
+  "base_sha": "dfc666ac32c23df34ade0e612aec4e925e9f6d00",
+  "integration_branch": "local/cp7-integration",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp7-integration",
+  "lanes": {
+    "A": {
+      "title": "Brain Approval Policy (fail-closed risk policy, server-owned authorization lifecycle, immutable binding, lane docs)",
+      "requested_commits": [
+        "56f5dc7",
+        "7bf8437",
+        "0e9adc9",
+        "2af4f942a5a6bbd455e2d4d3b9ac7126f1a414a0"
+      ],
+      "integrated_commits": [
+        "f01e329",
+        "d85575c",
+        "6f08412",
+        "cc1aeb7"
+      ]
+    },
+    "B": {
+      "title": "Native Approval Authority (persistent store, durable single-use ledger, replay/mutation resistance, lane docs)",
+      "requested_commits": [
+        "d1e71c0",
+        "89d11d6",
+        "f3f24d7",
+        "5ce3669fc69eb52a039ca319e54af0dcd70b6216"
+      ],
+      "integrated_commits": [
+        "c71e59b",
+        "384dad0",
+        "9851ef4",
+        "4b20fab"
+      ]
+    },
+    "C": {
+      "title": "Approval Security Oracle (280 adversarial vectors, 36 categories, 17-surface bypass audit, threat model, docs-only)",
+      "requested_commits": [
+        "1a83e06fca4cd0cc71695a79e948a20fa19c8a92"
+      ],
+      "integrated_commits": [
+        "1b75ba1"
+      ]
+    }
+  },
+  "integration_fixes": {
+    "fix_approval_binding": {
+      "title": "unify cross-language approval binding contract",
+      "scope": "TS binding payload (14 canonical fields, canonical number domain, strict schema), TS fixtures (31 golden vectors + 48-row risk matrix), TS cross-language test, Rust digest canonicalizer (JS-compatible), contract.json freeze update",
+      "evidence": "docs/goal24/fixtures/cp7-approval/*; brain-server/tests/goal24-cp7-cross-language.test.ts; desktop-daemon/src-tauri/src/execution_broker/approval/{digest,cross_language_tests}.rs"
+    },
+    "security_approval": {
+      "title": "harden durable replay crash sequencing",
+      "scope": "Rust approval store/ledger v2 (write-ahead Accept/Reserve), exclusive OS lock, crash fault points, consume-before-spawn ordering, spawn-failure single-use safety",
+      "evidence": "desktop-daemon/src-tauri/src/execution_broker/approval/{lock,ledger,store,crash_tests}.rs; mod.rs execute path"
+    },
+    "test_approval": {
+      "title": "execute cross-language and cp7 adversarial oracle",
+      "scope": "280-vector adversarial execution map + machine-extracted test registry + Rust map-oracle test; type-domain tests (TS + Rust wire)",
+      "evidence": "docs/goal24/checkpoint7-adversarial-execution-map.json; approval/oracle_tests.rs"
+    },
+    "docs_approval": {
+      "title": "freeze checkpoint 7 approval and risk gate",
+      "scope": "integration doc, security gate, manifest, environment, persistence crash matrix, bypass closure",
+      "evidence": "docs/goal24/12-checkpoint7-approval-risk-integration.md; docs/goal24/checkpoint7-*.json"
+    }
+  },
+  "security_numbers": {
+    "adversarial_vectors_total": 280,
+    "categories": 36,
+    "mapped": 280,
+    "unmapped": 0,
+    "failed": 0,
+    "automated": 216,
+    "covered_by_existing_test": 61,
+    "manual": 1,
+    "not_applicable": 2,
+    "bypass_surfaces_total": 17,
+    "potential_before": 1,
+    "blocks_before": 0,
+    "potential_after": 0,
+    "blocks_after": 0,
+    "production_write_bindings": 0,
+    "generic_execute_ipc": false,
+    "public_approve_ipc": 0,
+    "execute_ipc_enabled": false
+  },
+  "cross_language_conformance": {
+    "canonical_fields": 14,
+    "golden_vectors": 31,
+    "digest_mismatches": 0,
+    "risk_policy_mismatches": 0,
+    "authority_order_mismatches": 0,
+    "policy_version_mismatches": 0,
+    "policy_version_literal": "goal24-approval-policy-v1",
+    "guard_run_id_in_cross_language_binding": false,
+    "evidence_boundary": "evidence_coverage_digest bound; Brain owns evidence qualification; native binds exact digest and does not re-prove CP6 lineage"
+  },
+  "persistence": {
+    "approval_store_persistent": true,
+    "plan_ledger_persistent": true,
+    "approval_single_use": true,
+    "plan_restart_replay_blocked": true,
+    "compiled_risk_downgrade_possible": false,
+    "reserve_before_spawn": true,
+    "consume_before_spawn": true,
+    "fault_points_tested": 5,
+    "fault_points_replayable_after_restart": 0,
+    "spawn_failure_unconsumes_approval": false,
+    "spawn_failure_unreserves_plan": false,
+    "multi_broker_same_store": "PASS (exclusive OS lock, second instance degraded)",
+    "cross_process_guarantee": "fail-closed OS lock + single-instance authority assumption, documented"
+  },
+  "production_bindings": {
+    "read_only": 5,
+    "write": 0,
+    "ids": [
+      "github-cli.repo.inspect",
+      "github-cli.issue.search",
+      "github-cli.issue.read",
+      "github-cli.pr.read",
+      "github-cli.pr.checks.read"
+    ]
+  },
+  "checkpoint8_started": false,
+  "holdback_touched": false,
+  "scientific_refs_changed": false,
+  "dirty_cp21_worktree_touched": false
+}

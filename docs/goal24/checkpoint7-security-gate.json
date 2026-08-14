@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "goal24_checkpoint": "7",
-  "generated_at": "2026-08-14T05:33:31.491Z",
+  "generated_at": "2026-08-14T05:53:58.355Z",
   "gate": "CHECKPOINT7_SECURITY_GATE",
   "status": "PASS",
   "criteria": {
@@ -198,19 +198,30 @@
     "AM": {
       "label": "approval runtime reachable security: UNKNOWN=0 FIX_BEFORE_CP7=0 BLOCKS_CP7=0",
       "value": "PASS",
-      "evidence": "cargo-audit 0.22.2 rerun found 5: crossbeam-epoch RUSTSEC-2026-0204 FIXED (0.9.18->0.9.20), anyhow RUSTSEC-2026-0190 unsound warning FIXED (1.0.102->1.0.103), quick-xml RUSTSEC-2026-0194/0195 x2 NOT_RUNTIME_REACHABLE_ON_WINDOWS (verified empty x86_64-pc-windows-msvc tree; Linux/macOS-only transitive paths); UNKNOWN=0 FIX_BEFORE_CP7=0 BLOCKS_CP7=0"
+      "evidence": "cargo-audit 0.22.2 rerun found 5: crossbeam-epoch RUSTSEC-2026-0204 FIXED (0.9.18->0.9.20), anyhow RUSTSEC-2026-0190 unsound warning FIXED (1.0.102->1.0.103), quick-xml RUSTSEC-2026-0194/0195 x2 NOT_RUNTIME_REACHABLE_ON_WINDOWS (verified empty x86_64-pc-windows-msvc tree; Linux/macOS-only transitive paths); UNKNOWN=0 FIX_BEFORE_CP7=0 BLOCKS_CP7=0 | npm audit rerun exit 1: 16 findings (1 critical / 4 high / 8 moderate / 3 low) all NOT_APPROVAL_EVIDENCE_RUNTIME_REACHABLE (approval/evidence import graph is node:crypto + zod + internal modules); UNKNOWN=0 FIX_BEFORE_CP7=0 BLOCKS_CP7=0"
     }
   },
   "audits": {
     "node_audit": {
       "summary": "npm audit --omit=dev --audit-level=critical on brain-server; approval/evidence runtime reachable HIGH/CRITICAL: UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0",
+      "rerun_at": "2026-08-14T05:53:58.355Z",
+      "command_exit": 1,
+      "findings": {
+        "total": 16,
+        "low": 3,
+        "moderate": 8,
+        "high": 4,
+        "critical": 1
+      },
       "unknown": 0,
       "fix_before_cp7": 0,
-      "blocks_cp7": 0
+      "blocks_cp7": 0,
+      "classification": "all 16 findings NOT_APPROVAL_EVIDENCE_RUNTIME_REACHABLE: src/approval/* and src/evidence/* import only node:crypto + zod + internal modules; flagged trees are embeddings (@xenova/transformers, onnxruntime-web, onnx-proto, protobufjs 7.6.3, sharp), memory DB install tooling (sqlite3, node-gyp, tar 7.5.16, cacache, make-fetch-happen, http-proxy-agent, @tootallnate/once, brace-expansion 1.1.14 under node-gyp/glob), document import (xlsx 0.18.5 prototype-pollution/ReDoS, fixAvailable=false), API server (body-parser, qs via express 5.2.1), packaging (archiver chain already at patched brace-expansion 2.1.4)"
     },
         "cargo_audit": {
       "summary": "cargo-audit 0.22.2 rerun on desktop-daemon (offline advisory DB D:\\environment\\advisory-db-offline, 1216 advisories, 563 lockfile deps); approval/evidence runtime reachable advisories: UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0",
       "rerun_at": "2026-08-14T05:33:31.491Z",
+      "command_exit": 1,
       "advisories_reported_at_rerun": 5,
       "advisories_remaining": 4,
       "unknown": 0,

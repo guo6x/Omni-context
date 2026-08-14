@@ -27,6 +27,53 @@ mod adversarial;
 #[cfg(test)]
 mod tests;
 
+// ---------------------------------------------------------------------------
+// Test-only crash fault injection (no-op in production builds)
+// ---------------------------------------------------------------------------
+
+/// Durable-replay crash checkpoints. Each checkpoint maps to a real position
+/// in the reserve -> consume -> spawn sequence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum FaultPoint {
+    BeforePlanReserve,
+    AfterPlanReserve,
+    BeforeApprovalConsume,
+    AfterApprovalConsume,
+    BeforeSpawn,
+}
+
+#[cfg(test)]
+static ACTIVE_FAULT: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+
+/// Arm a fault point (tests only).
+#[cfg(test)]
+pub(crate) fn set_fault(point: FaultPoint) {
+    ACTIVE_FAULT.store(point as u8 + 1, std::sync::atomic::Ordering::SeqCst);
+}
+
+/// Disarm all fault points (tests only).
+#[cfg(test)]
+pub(crate) fn clear_fault() {
+    ACTIVE_FAULT.store(0, std::sync::atomic::Ordering::SeqCst);
+}
+
+/// Inject the armed fault, if any, at a checkpoint. In non-test builds this
+/// always succeeds.
+fn fault_checkpoint(point: FaultPoint) -> Result<(), BrokerError> {
+    #[cfg(test)]
+    {
+        if ACTIVE_FAULT.load(std::sync::atomic::Ordering::SeqCst) == point as u8 + 1 {
+            return Err(BrokerError::new(
+                ErrorCode::InternalError,
+                format!("injected crash at fault point {point:?}"),
+            ));
+        }
+    }
+    #[cfg(not(test))]
+    let _ = point;
+    Ok(())
+}
+
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -140,6 +187,12 @@ impl Broker {
     /// Crate-internal: the native authority (used by tests and future owners).
     pub(crate) fn approval_authority(&self) -> &ApprovalAuthority {
         &self.approval
+    }
+
+    /// Test-only: the durable plan ledger (crash-matrix assertions).
+    #[cfg(test)]
+    pub(crate) fn plan_ledger(&self) -> &PlanLedger {
+        &self.plan_ledger
     }
 
     /// Execute an approved plan through a trusted binding.
@@ -331,20 +384,35 @@ impl Broker {
             None
         };
 
-        // Consume before spawn: even when the spawn itself later fails, the
-        // approval stays consumed (fail-closed against duplicate effects).
-        if let Some(approval) = approved {
-            self.approval
-                .consume(&approval.approval_id, chrono::Utc::now())?;
-        }
-
-        // Durable single-use plan reservation. Persisted before any spawn.
-        if !self.plan_ledger.reserve(&plan.plan_id)? {
+        // -------------------------------------------------------------------
+        // Crash-safe ordered reservation (write-ahead acceptance):
+        //   1. durably accept the plan id  (may-spawn path entry, single-use)
+        //   2. durably reserve the plan id (crash-safe step 1)
+        //   3. durably consume the approval (crash-safe step 2)
+        //   4. spawn                           (crash-safe step 3)
+        //
+        // A crash at ANY checkpoint after the acceptance leaves a durable
+        // record, so a restart can never accept the same plan id again. The
+        // approval stays consumed and the plan stays reserved even when the
+        // spawn itself later fails (availability loss is acceptable; a
+        // duplicate effect is not).
+        // -------------------------------------------------------------------
+        if !self.plan_ledger.accept(&plan.plan_id)? {
             return Err(BrokerError::new(
                 ErrorCode::PlanRejectedSingleUse,
                 "plan_id was already accepted for execution",
             ));
         }
+        fault_checkpoint(FaultPoint::BeforePlanReserve)?;
+        self.plan_ledger.reserve(&plan.plan_id)?;
+        fault_checkpoint(FaultPoint::AfterPlanReserve)?;
+        fault_checkpoint(FaultPoint::BeforeApprovalConsume)?;
+        if let Some(approval) = approved {
+            self.approval
+                .consume(&approval.approval_id, chrono::Utc::now())?;
+        }
+        fault_checkpoint(FaultPoint::AfterApprovalConsume)?;
+        fault_checkpoint(FaultPoint::BeforeSpawn)?;
 
         let result = runner::run(plan, binding.as_ref(), &self.registry)?;
         if let Some(approval) = approved {

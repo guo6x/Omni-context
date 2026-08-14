@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "artifact": "checkpoint7-bypass-closure",
+  "goal24_checkpoint": "7",
+  "generated_at": "2026-08-14T05:12:40.568Z",
+  "audit_source": "docs/goal24/cp7-approval-bypass-audit.json",
+  "principle": "Lane C original classifications are not rewritten. This file adds the CP7 integration disposition per surface and the closure counts. Lane C docs-only status is preserved (runtime diff of Lane C = 0).",
+  "counts": {
+    "surfaces_total": 17,
+    "potential_before": 1,
+    "blocks_before": 0,
+    "potential_after": 0,
+    "blocks_after": 0,
+    "disposed": 17,
+    "closed": 1
+  },
+  "closure_summary": {
+    "potential_surface": "CP7A-014 (forged coverage snapshot / forged ApprovalReference threat at Brain ExecutionPlan construction).",
+    "disposition": "CLOSED",
+    "closure_mechanism": [
+      "1. Eligibility for executable state comes only from the CP6 server-owned guard path: EvidenceEligibilityService materializes evidence from Guard-run output; callers can never pass coverage, guard_run_id or a guard fake (authorization-service test: caller cannot inject evidence coverage / forged guard_run_id cannot materialize coverage).",
+      "2. The cross-language ApprovalBindingPayload binds the exact evidence_coverage_digest that is part of the server-owned ExecutionPlan; it deliberately does NOT claim native re-proof of the CP6 GuardRunStore lineage (cp7-approval-binding-contract.json section 5).",
+      "3. A caller can never set required_approval, risk_snapshot or state=ready (strict request schema + server-owned lifecycle); a bare ApprovalReference can never ready a plan (verifier requires a real native grant).",
+      "4. The reference is not an authority: native approval authority comes exclusively from the persistent ApprovalStore record (approval_id + plan_id + token_reference + token_digest + policy_version + binding_digest + actor + authority + status + expiry all validated); fabricated references are rejected.",
+      "5. No public approval mutation IPC and no generic execute IPC exist (execute_ipc_enabled=false; the only broker IPC is read-only status).",
+      "6. CP9 bridge requirement recorded: any future Brain->Tauri bridge must submit the server-owned ExecutionPlan/approval lifecycle object, never a caller-constructed plan."
+    ],
+    "residual": "None. The threat is closed by authority-boundary design plus the native store authority; no code path lets a caller-constructed plan with forged coverage or a forged reference reach spawn."
+  },
+  "surfaces": [
+    {
+      "surface_id": "CP7A-001",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "Broker::execute",
+      "classification_original": "NEEDS_CP7_INTEGRATION",
+      "disposition": "DISPOSED",
+      "integration_disposition": "REAL_APPROVAL_AUTHORITY_INTEGRATED",
+      "detail": "CP7 replaced the blanket PlanRejectedApproval gate with a real Approval Authority consult: store record lookup (approval_id, plan_id, token_reference, token_digest, policy_version, binding_digest, actor, authority, status, expiry), native minimum risk policy, expiry, single-use consume, and a durable plan ledger. Crash-safe sequencing is accept -> reserve -> consume -> spawn (fault points BeforePlanReserve/AfterPlanReserve/BeforeApprovalConsume/AfterApprovalConsume/BeforeSpawn).",
+      "verification": "execution_broker::approval::tests (22 tests) + crash_tests (5 tests) all PASS in cargo test."
+    },
+    {
+      "surface_id": "CP7A-002",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/runner.rs",
+      "function": "run",
+      "classification_original": "NEEDS_CP7_INTEGRATION",
+      "disposition": "DISPOSED",
+      "integration_disposition": "CONSUME_BEFORE_SPAWN_PRIVATE_PATH",
+      "detail": "The runner remains the single private spawn path and is reached only after the approval authority accepted the plan and durably consumed the grant. Spawn failure never unconsumes the approval nor unreserves the plan.",
+      "verification": "execution_broker::approval::crash_tests::spawn_failure_keeps_approval_consumed_and_plan_reserved PASS."
+    },
+    {
+      "surface_id": "CP7A-003",
+      "file": "desktop-daemon/src-tauri/src/commands.rs",
+      "function": "get_broker_status",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "Read-only status snapshot; exposes no plan/approval/execute mutation. CP7 adds approval fields to the status but no mutation.",
+      "verification": "execution_broker::tests::status_surface_is_read_only PASS."
+    },
+    {
+      "surface_id": "CP7A-004",
+      "file": "desktop-daemon/src-tauri/src/main.rs",
+      "function": "generate_handler!",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "No approve/execute/grant command is registered; the Tauri handler set gained no approval mutation command in CP7.",
+      "verification": "Static audit of main.rs handler list during CP7 integration."
+    },
+    {
+      "surface_id": "CP7A-005",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "Broker::register_binding",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "Binding registration stays internal/trusted (Rust bootstrap only). CP7 adds no IPC registration path; production bindings remain the five read-only github.* bindings.",
+      "verification": "Static audit; production write bindings = 0."
+    },
+    {
+      "surface_id": "CP7A-006",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/bindings.rs",
+      "function": "Capability::ALL",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "Compiled capability catalog unchanged by CP7; the approval authority reads the compiled binding as the native minimum source of truth.",
+      "verification": "approval::tests::plan_cannot_downgrade_* PASS."
+    },
+    {
+      "surface_id": "CP7A-007",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/types.rs",
+      "function": "ApprovalReferenceWire",
+      "classification_original": "NEEDS_CP7_INTEGRATION",
+      "disposition": "DISPOSED",
+      "integration_disposition": "REFERENCE_IS_NOT_AUTHORITY",
+      "detail": "The wire reference carries only opaque fields; the authority is the persistent store record. Execution validates every reference field against the stored grant (constant-time digest comparison).",
+      "verification": "approval::tests::fake_reference_rejected / missing_store_record_rejected / fake_token_digest_rejected PASS."
+    },
+    {
+      "surface_id": "CP7A-008",
+      "file": "brain-server/src/execution/contracts.ts",
+      "function": "ApprovalReferenceSchema",
+      "classification_original": "NEEDS_CP7_INTEGRATION",
+      "disposition": "DISPOSED",
+      "integration_disposition": "VERIFIED_GRANT_REQUIRED",
+      "detail": "Schema validity confers no authority; the authorization service requires ApprovalGrantVerifier PASS (fake verifier success/failure covered). Bare references can never ready a plan.",
+      "verification": "goal24-authorization-service.test.ts (approval grant enforcement suite) PASS."
+    },
+    {
+      "surface_id": "CP7A-009",
+      "file": "brain-server/src/execution/contracts.ts",
+      "function": "ExecutionPlanSchema refinement",
+      "classification_original": "NEEDS_CP7_INTEGRATION",
+      "disposition": "DISPOSED",
+      "integration_disposition": "SERVER_OWNED_LIFECYCLE",
+      "detail": "required_approval, risk_snapshot, state and approval are server-owned; strict request schema rejects caller-supplied values. Plan construction goes through the authorization service.",
+      "verification": "goal24-authorization-service.test.ts (caller authority boundary suite) PASS."
+    },
+    {
+      "surface_id": "CP7A-010",
+      "file": "brain-server/src/evidence/eligibility.ts",
+      "function": "EvidenceEligibilityService",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "CP6 eligibility remains the only evidence qualification authority; CP7 binds its exact coverage digest and does not re-prove lineage natively.",
+      "verification": "CP6 regression green (goal24-evidence-*.test.ts)."
+    },
+    {
+      "surface_id": "CP7A-011",
+      "file": "brain-server/src/evidence/runtime.ts",
+      "function": "evaluateForCapability",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "Unchanged by CP7.",
+      "verification": "CP6 regression green."
+    },
+    {
+      "surface_id": "CP7A-012",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "Broker::cancel_execution",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "Cancel remains an execution-lifecycle control; it cannot undo a consumed approval or a reserved plan.",
+      "verification": "execution_broker::adversarial::cancel_after_exit_success PASS."
+    },
+    {
+      "surface_id": "CP7A-013",
+      "file": "desktop-daemon/src-tauri (Tauri command surface)",
+      "function": "public approval mutation absence",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "No public approve/grant/revoke/deny command was added in CP7; CP9 will design the owner interaction.",
+      "verification": "Static audit of generate_handler! list; approval mutation IPC = 0."
+    },
+    {
+      "surface_id": "CP7A-014",
+      "file": "brain-server/src/execution/contracts.ts",
+      "function": "EvidenceCoverageSnapshotSchema / ExecutionPlan construction",
+      "classification_original": "POTENTIAL_APPROVAL_BYPASS",
+      "severity_original": "critical",
+      "disposition": "CLOSED",
+      "integration_disposition": "CLOSED_AUTHORITY_BOUNDARY",
+      "detail": "Forged coverage snapshot / forged ApprovalReference threat. Closed by: (1) eligibility for executable state comes only from the CP6 server-owned guard path; callers cannot pass coverage, guard_run_id or a guard fake; (2) the cross-language binding binds the exact server-owned evidence_coverage_digest and does not claim native re-proof of GuardRunStore lineage (documented boundary); (3) callers cannot set required_approval / risk_snapshot / state=ready; (4) a bare ApprovalReference can never ready a plan ? the verifier requires a real native grant; (5) the reference is not an authority: execution validates every field against the persistent ApprovalStore record; (6) no public approval mutation IPC and no generic execute IPC exist.",
+      "verification": "goal24-authorization-service.test.ts (caller cannot inject evidence coverage / forged guard_run_id / caller cannot choose state=ready / bare ApprovalReference can never ready a plan) PASS; Rust approval::tests::fake_reference_rejected / missing_store_record_rejected PASS."
+    },
+    {
+      "surface_id": "CP7A-015",
+      "file": "desktop-daemon/src-tauri + brain-server IPC layer",
+      "function": "generic execute IPC absence",
+      "classification_original": "SAFE_EXISTING",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "SAFE_EXISTING_PRESERVED",
+      "detail": "execute_ipc_enabled remains false; no run/execute/generic shell command is exposed to WebView.",
+      "verification": "execution_broker/mod.rs execute_ipc_enabled: false; status_surface_is_read_only PASS."
+    },
+    {
+      "surface_id": "CP7A-016",
+      "file": "desktop-daemon/src-tauri/src/commands.rs",
+      "function": "regenerate_local_api_token / get_local_api_token",
+      "classification_original": "OUT_OF_SCOPE",
+      "disposition": "UNCHANGED",
+      "integration_disposition": "OUT_OF_SCOPE_PRESERVED",
+      "detail": "Pre-existing local pairing token surface; not part of the approval authority. Unchanged by CP7.",
+      "verification": "Lane C original classification preserved."
+    },
+    {
+      "surface_id": "CP7A-017",
+      "file": "desktop-daemon/src-tauri/src/execution_broker/mod.rs",
+      "function": "executed_plans (memory HashSet)",
+      "classification_original": "NEEDS_CP7_INTEGRATION",
+      "disposition": "DISPOSED",
+      "integration_disposition": "DURABLE_LEDGER_REPLACES_MEMORY_GUARD",
+      "detail": "The in-memory executed_plans guard was superseded by the persistent plan ledger (write-ahead Accept/Reserve phases + OS file lock). Restart replay is blocked by durable state, not memory.",
+      "verification": "approval::tests::restart_replay_blocked_by_persistent_state + crash_tests (5 tests) PASS."
+    }
+  ]
+}

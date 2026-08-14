@@ -336,14 +336,19 @@ describe('approval grant enforcement', () => {
   it('a verified native grant moves the plan to ready', async () => {
     const fixture = makeFixture();
     const result = authorizeWrite(fixture);
-    approveWith(fixture, l2Grant(fixture));
+    const grant = l2Grant(fixture);
+    approveWith(fixture, grant);
     const applied = await fixture.service.applyApproval(
       result.plan.plan_id,
       bareApprovalReference(result.plan.plan_id, APPROVAL_POLICY_VERSION),
     );
     expect(applied.plan.state).toBe('ready');
     expect(applied.plan.approval).not.toBeNull();
-    expect(applied.plan.approval?.token_digest).toBe(result.approval_binding_digest);
+    // The wire reference carries the native-issued token fields from the
+    // verified grant; the Brain never fabricates a token digest.
+    expect(applied.plan.approval?.token_digest).toMatch(/^[0-9a-f]{64}$/);
+    expect(applied.plan.approval?.token_digest).toBe(grant.token_digest);
+    expect(applied.plan.approval?.token_reference).toBe(grant.token_reference);
     expect(applied.plan.approval?.granted_by).toBe('owner-alice');
     expect(applied.plan.approval?.policy_version).toBe(APPROVAL_POLICY_VERSION);
     const record = fixture.service.getRecord(result.plan.plan_id);

@@ -15,7 +15,9 @@ use serde::{Deserialize, Serialize};
 use crate::execution_broker::types::{BrokerError, ErrorCode};
 
 use super::digest::constant_time_eq;
-use super::types::ApprovalRecord;
+use super::lock::StoreFileLock;
+use super::types::{ApprovalRecord, ApprovalStatus};
+use crate::execution_broker::types::ExecutionPlanWire;
 
 const STORE_FILE_VERSION: u32 = 1;
 
@@ -85,6 +87,7 @@ pub struct ApprovalStore {
     path: Option<PathBuf>,
     records: Mutex<BTreeMap<String, ApprovalRecord>>,
     degraded: Option<BrokerError>,
+    _lock: Option<StoreFileLock>,
 }
 
 impl ApprovalStore {
@@ -94,6 +97,7 @@ impl ApprovalStore {
             path: None,
             records: Mutex::new(BTreeMap::new()),
             degraded: None,
+            _lock: None,
         }
     }
 
@@ -107,11 +111,15 @@ impl ApprovalStore {
                 path: Some(path),
                 records: Mutex::new(BTreeMap::new()),
                 degraded: Some(err),
+                _lock: None,
             },
         }
     }
 
     fn open(path: &PathBuf) -> Result<Self, BrokerError> {
+        let lock_path = path.with_extension("lock");
+        let lock = StoreFileLock::acquire(&lock_path)
+            .map_err(|reason| corrupt(&format!("cannot acquire store lock: {reason}")))?;
         let records = match std::fs::read(path) {
             Ok(bytes) => {
                 let parsed: StoreFile = serde_json::from_slice(&bytes)
@@ -142,6 +150,34 @@ impl ApprovalStore {
                             record.approval_id
                         )));
                     }
+                    if record.approval_binding_digest.len() != 64
+                        || !record
+                            .approval_binding_digest
+                            .bytes()
+                            .all(|b| b.is_ascii_hexdigit())
+                    {
+                        return Err(corrupt(&format!(
+                            "approval {} has a malformed approval binding digest",
+                            record.approval_id
+                        )));
+                    }
+                    if !ExecutionPlanWire::valid_plan_id(&record.plan_id) {
+                        return Err(corrupt(&format!(
+                            "approval {} has an invalid plan_id",
+                            record.approval_id
+                        )));
+                    }
+                    if !record.token_reference.starts_with("grant_")
+                        || record.token_reference.len() != "grant_".len() + 32
+                        || !record.token_reference["grant_".len()..]
+                            .bytes()
+                            .all(|b| b.is_ascii_hexdigit())
+                    {
+                        return Err(corrupt(&format!(
+                            "approval {} has a malformed token reference",
+                            record.approval_id
+                        )));
+                    }
                     let granted = chrono::DateTime::parse_from_rfc3339(&record.granted_at)
                         .map_err(|err| corrupt(&format!("bad granted_at: {err}")))?;
                     let expires = chrono::DateTime::parse_from_rfc3339(&record.expires_at)
@@ -151,6 +187,31 @@ impl ApprovalStore {
                             "approval {} expires before it is granted",
                             record.approval_id
                         )));
+                    }
+                    let lifetime_ms = (expires - granted).num_milliseconds();
+                    if lifetime_ms > 15 * 60 * 1000 {
+                        return Err(corrupt(&format!(
+                            "approval {} grant lifetime exceeds the CP7 maximum",
+                            record.approval_id
+                        )));
+                    }
+                    match record.status {
+                        ApprovalStatus::Consumed => {
+                            if record.consumed_at.is_none() {
+                                return Err(corrupt(&format!(
+                                    "approval {} is consumed without consumed_at",
+                                    record.approval_id
+                                )));
+                            }
+                        }
+                        _ => {
+                            if record.consumed_at.is_some() || record.execution_id.is_some() {
+                                return Err(corrupt(&format!(
+                                    "approval {} has consumed/execution audit fields in an unconsumed state",
+                                    record.approval_id
+                                )));
+                            }
+                        }
                     }
                     map.insert(record.approval_id.clone(), record);
                 }
@@ -165,6 +226,7 @@ impl ApprovalStore {
             path: Some(path.clone()),
             records: Mutex::new(records),
             degraded: None,
+            _lock: Some(lock),
         })
     }
 

@@ -19,7 +19,7 @@ use super::store::ApprovalStore;
 use super::types::{ActorKind, ApprovalRecord, ApprovalStatus};
 
 /// Native approval policy version (compiled; callers cannot choose it).
-pub const APPROVAL_POLICY_VERSION: &str = "1.0.0";
+pub const APPROVAL_POLICY_VERSION: &str = "goal24-approval-policy-v1";
 
 /// CP7 V1 maximum grant lifetime: 15 minutes. Approvals are never unlimited.
 pub const MAX_GRANT_LIFETIME_MS: i64 = 15 * 60 * 1000;
@@ -180,7 +180,7 @@ impl ApprovalAuthority {
         }
 
         let approval_binding_digest =
-            approval_binding_digest(request.plan, APPROVAL_POLICY_VERSION);
+            approval_binding_digest(request.plan, APPROVAL_POLICY_VERSION)?;
         let token_reference = new_token_reference()?;
         let mut grant_material = [0u8; 32];
         getrandom::getrandom(&mut grant_material).map_err(|err| {
@@ -261,13 +261,22 @@ impl ApprovalAuthority {
                 "approval token fields do not match the native store record",
             ));
         }
+        if approval.policy_version != APPROVAL_POLICY_VERSION {
+            return Err(BrokerError::new(
+                ErrorCode::ApprovalBindingMismatch,
+                format!(
+                    "unsupported approval policy version \"{}\"; the native authority only supports {APPROVAL_POLICY_VERSION}",
+                    approval.policy_version
+                ),
+            ));
+        }
         if record.policy_version != approval.policy_version {
             return Err(BrokerError::new(
                 ErrorCode::ApprovalBindingMismatch,
                 "approval policy_version does not match the native record",
             ));
         }
-        let recomputed = approval_binding_digest(plan, &approval.policy_version);
+        let recomputed = approval_binding_digest(plan, &approval.policy_version)?;
         if !super::digest::constant_time_eq(&recomputed, &record.approval_binding_digest) {
             return Err(BrokerError::new(
                 ErrorCode::ApprovalBindingMismatch,

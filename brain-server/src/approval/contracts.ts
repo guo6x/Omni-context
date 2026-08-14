@@ -128,12 +128,11 @@ export const ApprovalBindingPayloadSchema = z.strictObject({
   normalized_inputs_digest: z.string().regex(SHA256_HEX_PATTERN, 'must be lowercase SHA-256 hex'),
   risk_snapshot_digest: z.string().regex(SHA256_HEX_PATTERN, 'must be lowercase SHA-256 hex'),
   evidence_coverage_digest: z.string().regex(SHA256_HEX_PATTERN, 'must be lowercase SHA-256 hex'),
-  evidence_guard_run_id: z.string().trim().min(1).max(200),
   timeout_ms: z.number().int().min(TIMEOUT_MIN_MS).max(TIMEOUT_MAX_MS),
   verification_plan_digest: z.string().regex(SHA256_HEX_PATTERN).nullable(),
   rollback_plan_digest: z.string().regex(SHA256_HEX_PATTERN).nullable(),
   created_at: IsoTimestampSchema,
-  expires_at: IsoTimestampSchema,
+  expires_at: IsoTimestampSchema.nullable(),
   policy_version: z.string().trim().min(1).max(50),
 });
 export type ApprovalBindingPayload = z.infer<typeof ApprovalBindingPayloadSchema>;
@@ -181,6 +180,10 @@ export const VerifiedGrantSchema = z.strictObject({
   granted_at: IsoTimestampSchema,
   expires_at: IsoTimestampSchema,
   native_record_id: z.string().trim().min(1).max(200),
+  /** Native-issued opaque reference to the stored grant record. */
+  token_reference: z.string().trim().min(1).max(200),
+  /** Native-computed token integrity digest; the Brain never fabricates it. */
+  token_digest: z.string().regex(SHA256_HEX_PATTERN, 'must be lowercase SHA-256 hex'),
 });
 export type VerifiedGrant = z.infer<typeof VerifiedGrantSchema>;
 
@@ -189,6 +192,10 @@ export const VerifiedGrantRecordSchema = z.strictObject({
   granted_at: IsoTimestampSchema,
   expires_at: IsoTimestampSchema,
   native_record_id: z.string().trim().min(1).max(200),
+  /** Native-issued opaque reference to the stored grant record. */
+  token_reference: z.string().trim().min(1).max(200),
+  /** Native-computed token integrity digest; the Brain never fabricates it. */
+  token_digest: z.string().regex(SHA256_HEX_PATTERN, 'must be lowercase SHA-256 hex'),
 });
 export type VerifiedGrantRecord = z.infer<typeof VerifiedGrantRecordSchema>;
 

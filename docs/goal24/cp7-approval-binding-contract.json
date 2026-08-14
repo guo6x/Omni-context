@@ -245,5 +245,141 @@
     "Actors with authority below authority_required can never grant; LLM/Skill/Provider output can never grant.",
     "No raw token material appears in bindings, digests, logs, errors, or audit summaries.",
     "Approval for plan A can never authorize plan B; every binding field above is compared, not just plan_id."
-  ]
+  ],
+  "integration_authority": {
+    "status": "INTEGRATION_FREEZE_V1",
+    "frozen_at": "2026-08-14T05:14:00.752Z",
+    "authority_statement": "This section is the CP7 integration freeze. The Lane C draft sections above remain preserved as the original design input; where the draft conflicts with this frozen section, this section is authoritative for the implemented V1. The integration explicitly did NOT execute a wire-contract migration to add evidence_guard_run_id, so the cross-language binding binds evidence_coverage_digest only.",
+    "policy_version_literal": "goal24-approval-policy-v1",
+    "evidence_boundary": {
+      "decision": "evidence_coverage_digest is bound; evidence_guard_run_id is NOT part of the cross-language binding",
+      "rationale": "CP6 Guard lineage is owned by the Brain Evidence authority. The native Approval/Broker can directly observe the authoritative coverage snapshot carried by the server-owned ExecutionPlan (evidence_coverage_snapshot), and the existing ExecutionPlan wire has no evidence_guard_run_id field. Adding it would require an explicit TS ExecutionPlanSchema + Rust ExecutionPlanWire + fixture/test migration.",
+      "brain_authority_boundary": "Brain owns evidence qualification: EvidenceEligibilityService materializes coverage exclusively from CP6 Guard-run output; callers can never pass coverage, guard_run_id or a guard fake. Brain ApprovalRequestRecord may keep evidence_guard_run_id for audit/provenance only.",
+      "native_authority_boundary": "The native Broker does NOT re-prove CP6 GuardRunStore lineage. It independently validates: compiled capability risk, the approval grant record, the exact plan semantics digest (which includes evidence_coverage_digest), expiry, and single-use ledger state."
+    },
+    "canonical_binding_fields_v1": [
+      {
+        "field": "plan_id",
+        "type": "string (PLAN_ID_PATTERN)",
+        "note": "server-generated, unique"
+      },
+      {
+        "field": "decision_id",
+        "type": "string (1..200)"
+      },
+      {
+        "field": "capability_id",
+        "type": "string (provider.resource.action pattern)"
+      },
+      {
+        "field": "capability_version",
+        "type": "string (semver)"
+      },
+      {
+        "field": "adapter_id",
+        "type": "string (lowercase implementation identifier)"
+      },
+      {
+        "field": "normalized_inputs_digest",
+        "type": "string (SHA-256 of canonical normalized_inputs)"
+      },
+      {
+        "field": "risk_snapshot_digest",
+        "type": "string (SHA-256 of canonical risk_snapshot)"
+      },
+      {
+        "field": "evidence_coverage_digest",
+        "type": "string (SHA-256 of canonical evidence_coverage_snapshot)"
+      },
+      {
+        "field": "timeout_ms",
+        "type": "integer (TIMEOUT_MIN_MS..TIMEOUT_MAX_MS)"
+      },
+      {
+        "field": "verification_plan_digest",
+        "type": "string digest or explicit JSON null"
+      },
+      {
+        "field": "rollback_plan_digest",
+        "type": "string digest or explicit JSON null"
+      },
+      {
+        "field": "created_at",
+        "type": "string (RFC3339 UTC, exact form bound verbatim)"
+      },
+      {
+        "field": "expires_at",
+        "type": "string (RFC3339 UTC, exact form bound verbatim)"
+      },
+      {
+        "field": "policy_version",
+        "type": "string literal goal24-approval-policy-v1"
+      }
+    ],
+    "excluded_fields": [
+      "state",
+      "approval",
+      "required_approval",
+      "token_reference",
+      "token_digest",
+      "evidence_guard_run_id"
+    ],
+    "excluded_rationale": "Lifecycle fields (state/approval/required_approval) are not \"the frozen execution semantics the actor approved\". token_reference/token_digest are opaque store references, not binding semantics. evidence_guard_run_id is excluded per the evidence-boundary decision above. The TS payload rejects these keys strictly; the Rust payload does not emit them.",
+    "null_semantics": "expires_at absent and verification_plan/rollback_plan null are canonically encoded as explicit JSON null in both languages (single encoding per semantic).",
+    "canonical_json_rules": {
+      "encoding": "UTF-8; SHA-256 over the canonical serialized form",
+      "key_order": "object keys sorted by UTF-16 code unit order (JS-compatible, matches JSON.stringify + explicit sort); arrays keep order",
+      "string_escaping": "JS JSON.stringify-compatible escaping (including U+2028/U+2029 and control characters)",
+      "unicode": "NO normalization. Combining and precomposed forms digest differently (documented, tested). This supersedes draft CANON-003.",
+      "numbers": "strict subset: JSON-safe finite numbers, |value| <= Number.MAX_SAFE_INTEGER, no exponent notation, at most 6 fractional digits, fixed-point only; -0 canonicalizes to 0; 1 and 1.0 both canonicalize to \"1\"; NaN/Infinity rejected fail-closed. This supersedes draft CANON-005/CANON-009 details.",
+      "duplicate_keys": "rejected at the typed parse layer (strict serialization); duplicate JSON object keys cannot reach the digest",
+      "timestamps": "bound as exact RFC3339 strings with no normalization; two encodings of the same instant digest differently (documented, tested). This supersedes draft CANON-004.",
+      "unknown_fields": "rejected strictly (TS strictObject; Rust deny_unknown_fields)"
+    },
+    "golden_vectors": {
+      "fixture": "docs/goal24/fixtures/cp7-approval/binding-golden-vectors.json",
+      "total_vectors": 31,
+      "baseline_digest": "aca32e8fd6c7ae61a63ec54d421de0886091ff94a6bab0bfbe5f2357355d5f6d",
+      "ts_pass": 15,
+      "rust_pass": 5,
+      "digest_mismatches": 0,
+      "risk_policy_fixture": "docs/goal24/fixtures/cp7-approval/risk-policy-vectors.json (48-row matrix + authority order/satisfies)",
+      "risk_policy_mismatches": 0,
+      "authority_order_mismatches": 0,
+      "policy_version_mismatches": 0
+    },
+    "durable_replay_semantics": {
+      "model": "write-ahead fail-closed ordered reservation: 1. accept (approval record validated, binding digest re-computed) -> 2. durably reserve plan_id -> 3. durably consume approval -> 4. spawn. Availability loss is acceptable; double effect is not.",
+      "approval_store": "persistent JSON store with strict record validation (hex digests, plan_id format, token format, lifetime <= 15m, state consistency); lock acquired at open",
+      "plan_ledger": "persistent write-ahead ledger (Accepted/Reserved phases); corrupt ledger => degraded fail-closed, never reset empty",
+      "cross_process": "exclusive OS file lock (LockFileEx on Windows, flock on unix) taken for the store lifetime; a second broker on the same store opens degraded. Documented enforceability: single-instance authority plus fail-closed lock.",
+      "crash_sequencing": "fault points: BeforePlanReserve, AfterPlanReserve, BeforeApprovalConsume, AfterApprovalConsume, BeforeSpawn. Every fault point tested: after restart the same plan can never spawn again (replayable_after_restart = 0).",
+      "spawn_failure": "never unconsumes the approval and never unreserves the plan; a retry requires a new plan + new approval",
+      "single_use": "approval single-use (consume once), plan single-use across restart (reserved/executed ledger state)",
+      "audit": "consumed/denied/revoked grants are retained as audit records with who/when/authority/policy/binding_digest/status/consumed_at"
+    },
+    "concurrency": {
+      "same_plan_concurrent_attempts": "8/16/32 concurrent attempts => exactly 1 accepted",
+      "multi_broker_same_store": "second broker instance on the same store opens degraded (OS lock); cross-process guarantee is the fail-closed lock, not lock-free coordination"
+    },
+    "approval_ttl": {
+      "max_ttl": "15 minutes",
+      "exact_15m": "allowed",
+      "15m_plus_1ms": "rejected",
+      "boundary": "now >= expires_at is expired",
+      "plan_expiry": "approval expiry must not exceed plan expiry; plans without explicit expires_at follow the native broker default TTL with no conflict documented"
+    },
+    "brain_restart_semantics": {
+      "authorization_store": "memory-only (Lane A); Brain restart invalidates its pending/ready authorization state",
+      "native_grants": "unused native grants remain in the durable store until expiry/revoke/consume; they cannot be used externally because generic execute IPC=false and no public plan submission path exists in CP7",
+      "limitation": "Brain restart does not automatically revoke native durable grants (not implemented); recorded as CP7 limitation / CP9 integration requirement"
+    },
+    "cp9_bridge_requirement": "The CP9 trusted Brain<->Tauri bridge must submit the server-owned current ExecutionPlan/approval lifecycle object; it must never forward an arbitrary WebView-constructed plan to the Broker. No such public bridge is implemented in CP7.",
+    "remaining_limitations": [
+      "Brain AuthorizationStore is memory-only (restart semantics above).",
+      "Cross-process coordination relies on the fail-closed OS lock + single-instance authority assumption, documented rather than a lock-free distributed protocol.",
+      "No Approval UI / owner interaction surface exists until CP9.",
+      "Approval authority is the local native ApprovalStore; no network crypto protocol (no JWT/asymmetric signatures) is introduced by design."
+    ]
+  }
 }

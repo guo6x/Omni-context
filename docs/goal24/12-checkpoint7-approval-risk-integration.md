@@ -185,9 +185,16 @@ object, never an arbitrary WebView-constructed plan.
 
 ## 11. Regressions and security audits
 
-- Brain: typecheck, full vitest, build, lint, `npm audit --omit=dev
-  --audit-level=critical` - green at freeze time.
-- Desktop/Rust: `npm run build`, `verify:controlled`, `cargo fmt --check`,
+- Brain: typecheck, build, lint (0 errors, 10 pre-existing warnings) - all
+  exit 0; full vitest at freeze time: 57 test files, 1059 passed, 0 failed;
+  `npm audit --omit=dev --audit-level=critical` exit 1: 16 findings
+  (3 low, 8 moderate, 4 high, 1 critical), all classified
+  NOT_APPROVAL_EVIDENCE_RUNTIME_REACHABLE (approval/evidence import graph is
+  node:crypto + zod + internal modules only); Node approval/evidence runtime
+  UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0.
+- Desktop/Rust: `npm run build` PASS, `verify:controlled` PASS (controlled
+  manifest re-snapshot for the intentional Cargo.lock audit bumps),
+  `cargo fmt --check`,
   `cargo check`, `cargo clippy --all-targets`, `cargo test` (168 passed,
   0 failed, 6 ignored = 174 listed, re-run at freeze time), `cargo audit`
   (offline advisory DB) - re-run at freeze time: 5 advisories reported;

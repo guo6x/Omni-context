@@ -1248,7 +1248,7 @@ fn e2e_plan(plan_id: &str, capability_id: &str, inputs: serde_json::Value) -> Ex
             "risk_level": "low",
             "reversible": false,
             "side_effect_class": "read_only",
-            "required_authority": "l0",
+            "required_authority": "L0",
             "capability_version": "1.0.0"
         },
         "evidence_coverage_snapshot": { "entries": [] },

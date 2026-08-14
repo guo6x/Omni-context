@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "goal24_checkpoint": "7",
-  "generated_at": "2026-08-14T05:33:31.491Z",
+  "generated_at": "2026-08-14T05:53:58.355Z",
   "worktree": {
     "path": "D:\\ai_code\\Omni-context-worktrees\\cp7-integration",
     "branch": "local/cp7-integration",
@@ -33,9 +33,10 @@
     "note": "CP7 does not run GitHub smoke tests; gh is recorded only for environment completeness."
   },
   "test_runs": {
-    "brain": "node v22.23.2; vitest 1.6.1; goal24 suites collected via --reporter=json (540 tests, all PASS at collection time)",
+    "brain": "node v22.23.2; vitest 1.6.1; full vitest run at freeze time: 57 test files, 1059 passed, 0 failed (includes CP5/CP6/CP7 goal24 suites and both adversarial oracles)",
     "rust": "cargo 1.97.1; cargo test at freeze time: 168 passed, 0 failed, 6 ignored (174 listed); crossbeam-epoch 0.9.18->0.9.20 and anyhow 1.0.102->1.0.103 patch bumps",
-    "cargo_audit": "cargo-audit 0.22.2 (offline DB D:\\environment\\advisory-db-offline, 1216 advisories, 563 lockfile deps): 5 reported at re-run; crossbeam-epoch RUSTSEC-2026-0204 fixed (0.9.18->0.9.20), anyhow RUSTSEC-2026-0190 unsound warning fixed (1.0.102->1.0.103), 4 remaining quick-xml RUSTSEC-2026-0194/0195 classified NOT_RUNTIME_REACHABLE_ON_WINDOWS; UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0",
-    "desktop": "npm ci + npm run build (for distDir); verify:controlled at freeze time"
+    "cargo_audit": "cargo-audit 0.22.2 (offline DB D:\\environment\\advisory-db-offline, 1216 advisories, 563 lockfile deps): command exit 1; 5 reported at re-run; crossbeam-epoch RUSTSEC-2026-0204 fixed (0.9.18->0.9.20), anyhow RUSTSEC-2026-0190 unsound warning fixed (1.0.102->1.0.103), 4 remaining quick-xml RUSTSEC-2026-0194/0195 classified NOT_RUNTIME_REACHABLE_ON_WINDOWS; UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0",
+    "npm_audit": "npm audit --omit=dev --audit-level=critical --json: command exit 1; 16 findings (3 low, 8 moderate, 4 high, 1 critical); all 16 NOT_APPROVAL_EVIDENCE_RUNTIME_REACHABLE (approval/evidence import graph is node:crypto + zod + internal modules only); UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0",
+    "desktop": "npm run build (next build) PASS; verify:controlled PASS (re-snapshot of controlled-files.sha256.json performed after the intentional Cargo.lock crossbeam-epoch/anyhow audit bumps)"
   }
 }

@@ -262,7 +262,6 @@ describe('approval binding digest', () => {
       normalized_inputs: { repo: 'repo-a' },
       risk_snapshot: deriveRiskSnapshot(TEST_WRITE_CAPABILITY),
       evidence_coverage_snapshot: { entries: [] },
-      evidence_guard_run_id: 'run-1',
       timeout_ms: 5000,
       verification_plan: {
         verification_capability_id: TEST_READ_CAPABILITY.id,
@@ -290,7 +289,6 @@ describe('approval binding digest', () => {
         'created_at',
         'decision_id',
         'evidence_coverage_digest',
-        'evidence_guard_run_id',
         'expires_at',
         'normalized_inputs_digest',
         'plan_id',

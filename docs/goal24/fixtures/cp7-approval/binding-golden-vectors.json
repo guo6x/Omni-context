@@ -1,0 +1,1945 @@
+{
+  "schema_version": 1,
+  "artifact": "cp7-approval-binding-golden-vectors",
+  "contract": "docs/goal24/cp7-approval-binding-contract.json",
+  "digest_algorithm": "SHA-256 over canonical JSON of the 14-field binding payload object (key-sorted, explicit nulls, strict number domain)",
+  "policy_version_literal": "goal24-approval-policy-v1",
+  "baseline_vector_id": "golden-001",
+  "total_vectors": 31,
+  "vectors": [
+    {
+      "id": "golden-001",
+      "kind": "baseline",
+      "description": "Baseline write plan (medium / L2 / reversible_write) with verification and rollback plans.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "aca32e8fd6c7ae61a63ec54d421de0886091ff94a6bab0bfbe5f2357355d5f6d"
+    },
+    {
+      "id": "golden-num-000",
+      "kind": "number-domain",
+      "description": "number 0",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "number": 0
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "53a7325f627a2c64effd818fc6c8724040e2c4ed18a858ccf2ad9bbb9e8918e9",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "148cf6c39900c92d03a5c1fcd476476cbdd541d1a543ebd5a8e5693a50f62c1d"
+    },
+    {
+      "id": "golden-num-negzero",
+      "kind": "number-domain",
+      "description": "number -0 (canonicalizes to 0; the plan JSON text carries the literal -0)",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "number": -0
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "53a7325f627a2c64effd818fc6c8724040e2c4ed18a858ccf2ad9bbb9e8918e9",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "148cf6c39900c92d03a5c1fcd476476cbdd541d1a543ebd5a8e5693a50f62c1d"
+    },
+    {
+      "id": "golden-num-001",
+      "kind": "number-domain",
+      "description": "number 1",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "number": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "c7c24809a7b22332d9a8c73d815657a77364442244dbaac2a64c6f8e41994fa0",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "7582399e86aac4646cfe6b1f58cdd9684f4aff198d4fea825cf2703b1cbe1931"
+    },
+    {
+      "id": "golden-num-neg1",
+      "kind": "number-domain",
+      "description": "number -1",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "number": -1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "032e1afd3dadf00c8048f6f933a46b58bc6c58eb4516d223c2738d8275bf585c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "57e7ea4fa32026e45cfa9385fe49a19f1fb54d3062466ec182557f791e25a9a1"
+    },
+    {
+      "id": "golden-num-15",
+      "kind": "number-domain",
+      "description": "number 1.5",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "number": 1.5
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "c7953c63eed80e9fb559ad5a3f69b33093cd4dd27240c292750f57fbee2fd7a3",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "0e2fafa428220e7b1033fe51544a3cbf64f31d589052170179cf1931366ddfb9"
+    },
+    {
+      "id": "golden-num-large",
+      "kind": "number-domain",
+      "description": "large safe integer 123456789",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "number": 123456789
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "dd18053facc54c8daf1cb52aee157d254a3afe9eaf0fed3f73accb68b0260d06",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "1fe39c9abd6953a50f402f286de33c08fac446d1a3e0436f8ca61c76f50dbec6"
+    },
+    {
+      "id": "golden-num-maxsafe",
+      "kind": "number-domain",
+      "description": "Number.MAX_SAFE_INTEGER",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "number": 9007199254740991
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "30072ef2c40800b9dfca3ccb8af4a93786b2d18267f2d46279fb7b2892d5c4f7",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "70c4f702a8ee7624abbc7454a48207f7caaf95e9595d3070cfa4f64cfeb405c0"
+    },
+    {
+      "id": "golden-uni-ascii",
+      "kind": "unicode",
+      "description": "ASCII string",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "text": "plain ascii"
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "85af2ff353fa309d868195f469ee0d1051cd1806894fad7dd17df45db1497525",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "468f137a863eaba2c7aba69fde8f4b7f5fb33aa80418ee780721b04829edcf90"
+    },
+    {
+      "id": "golden-uni-cjk",
+      "kind": "unicode",
+      "description": "CJK string",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "text": "中文"
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "6901c24c7277d6951653d4a197035de7a957d0d703579cfa47cc45b0dc9efec3",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "7897985ee7f754c0c7c6adc1de86a67bf3e061d43d22e95f946a7824f3ca49cc"
+    },
+    {
+      "id": "golden-uni-emoji",
+      "kind": "unicode",
+      "description": "emoji string",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "text": "🚀"
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "3ad9baac1a1213b2285c3f314ee7d30f7bfdcff9a38838bcaf746ba845e867af",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "8436a13ae4adaa0784f5d055cefefe0dd4227ff022c6fadcfeaf939b08fda680"
+    },
+    {
+      "id": "golden-uni-combining",
+      "kind": "unicode",
+      "description": "combining sequence e + U+0301 (not normalized)",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "text": "é"
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "28e3d497b1090c5531585e8377836d00bbbf79ee99b454ebabf7d02121db7902",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "6f94f1f3e588349804ccb11835162ff5a4afbe63526087b3c70ff71989911b1e"
+    },
+    {
+      "id": "golden-uni-precomposed",
+      "kind": "unicode",
+      "description": "precomposed U+00E9 (not normalized; digest differs from the combining form)",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "text": "é"
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "52bb8735d845d208d6530e411678ebb8aa820aa3ccfeb8593f5161baccc11945",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "fd8d571d1a21ef102491f5d77f703d2d14c087f147e377d2457dc6f8d5b5a10d"
+    },
+    {
+      "id": "golden-null-plans",
+      "kind": "null-semantics",
+      "description": "verification_plan and rollback_plan are explicit JSON null (never omitted).",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.read",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": false,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "low",
+          "reversible": false,
+          "side_effect_class": "read_only",
+          "required_authority": "L0",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": null,
+        "rollback_plan": null,
+        "state": "ready",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.read",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "46729f7cdccc660f0fc0f3b3e5255d41ccbc77045340974591d34fa2f830d7cb",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": null,
+        "rollback_plan_digest": null,
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "ddb6c3f52bc87352a13822c7ec2b27759f74a88095fffc47d86b685249e676ed"
+    },
+    {
+      "id": "golden-null-expiry",
+      "kind": "null-semantics",
+      "description": "expires_at absent on the plan encodes as explicit JSON null in the binding payload.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.read",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": false,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "low",
+          "reversible": false,
+          "side_effect_class": "read_only",
+          "required_authority": "L0",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": null,
+        "rollback_plan": null,
+        "state": "ready",
+        "created_at": "2026-08-14T00:00:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.read",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "46729f7cdccc660f0fc0f3b3e5255d41ccbc77045340974591d34fa2f830d7cb",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": null,
+        "rollback_plan_digest": null,
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": null,
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "b89f7bfa0cce6b1d91e6c394b5b10b824c8474d1541ffec257dd31ddc41147cc"
+    },
+    {
+      "id": "golden-read-only-baseline",
+      "kind": "baseline",
+      "description": "Read-only / low / L0 baseline (approval-free class of plan).",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.read",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": false,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "low",
+          "reversible": false,
+          "side_effect_class": "read_only",
+          "required_authority": "L0",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": null,
+        "rollback_plan": null,
+        "state": "ready",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.read",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "46729f7cdccc660f0fc0f3b3e5255d41ccbc77045340974591d34fa2f830d7cb",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": null,
+        "rollback_plan_digest": null,
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "ddb6c3f52bc87352a13822c7ec2b27759f74a88095fffc47d86b685249e676ed"
+    },
+    {
+      "id": "golden-mut-plan_id",
+      "kind": "mutation",
+      "description": "Single-field mutation of plan_id; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000002",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000002",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "aac904c445397bc772a17030dcf59f70f6584ef5e3fe1f1de92fcd82b8688313",
+      "mutates": "plan_id",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-decision_id",
+      "kind": "mutation",
+      "description": "Single-field mutation of decision_id; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-mutated",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-mutated",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "5aaf9638f134431fdbc83a29abb5df701c80898df478c7fa55f4fee332273228",
+      "mutates": "decision_id",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-capability_id",
+      "kind": "mutation",
+      "description": "Single-field mutation of capability_id; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.destroy",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.destroy",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "9b588d23b0ca9d90eb67903db24d09f44f1a0909fbde690e00c9fe61c3aa350c",
+      "mutates": "capability_id",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-capability_version",
+      "kind": "mutation",
+      "description": "Single-field mutation of capability_version; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.1",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.1",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "f549564348f29ea42328d092bb7807856d7566703cc2b7696a91a816f3cc017f",
+      "mutates": "capability_version",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-adapter_id",
+      "kind": "mutation",
+      "description": "Single-field mutation of adapter_id; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "other-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "other-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "2a03722c6d1cb76d1ad87c7e807f17a4faf48e814842096aafd622da0f11ca25",
+      "mutates": "adapter_id",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-normalized_inputs",
+      "kind": "mutation",
+      "description": "Single-field mutation of normalized_inputs; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-b"
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "0eb9ff15248e4bb8799fe58fff25f22745020a4a67764f1b733ce923c2f0531e",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "addabbd96de9b25ec8e2c40dd4bdfc355c8c785c491915316cafbb658cf76dde",
+      "mutates": "normalized_inputs",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-risk_snapshot",
+      "kind": "mutation",
+      "description": "Single-field mutation of risk_snapshot; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "high",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "6c5c00a5d6d216b13bc2205d0bf3daa0d906f0e966d79b32274437f405d78446",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "406504602c34ab365ed95dbf634cd891d02108c1e7a0da489da44db82b809503",
+      "mutates": "risk_snapshot",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-evidence_coverage_snapshot",
+      "kind": "mutation",
+      "description": "Single-field mutation of evidence_coverage_snapshot; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": [
+            {
+              "evidence_class": "issue.current_state",
+              "status": "missing",
+              "verification_level": "none",
+              "evidence_ids": [],
+              "checked_at": "2026-08-14T00:00:00.000Z"
+            }
+          ]
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "a5230adfeb11cd5df1d5c44ea4b0d718cd580cfcaee0ad29e83cead442180345",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "ee16593d310c6805cc6cf27ac802d3bb27a2c00469fa85fa0c2877ee72ebb700",
+      "mutates": "evidence_coverage_snapshot",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-timeout_ms",
+      "kind": "mutation",
+      "description": "Single-field mutation of timeout_ms; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5001,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5001,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "f6758eea731398eed1e4c93fd4f5c9e6e7d2e75f4aa10943286042425d0a4920",
+      "mutates": "timeout_ms",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-verification_plan",
+      "kind": "mutation",
+      "description": "Single-field mutation of verification_plan; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-2"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "ba2c1105430ecca4ef98b464638eb3acd766f11f6eaf70c949980dad3cec35c8",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "0e20179666bfcfed72a2b7c28f15b208190bea0adc2136ec7577187a5524f94d",
+      "mutates": "verification_plan",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-rollback_plan",
+      "kind": "mutation",
+      "description": "Single-field mutation of rollback_plan; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-2"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "4e88073b0e6daf9f88ce4b368b64f53fbb6d004749abffd4aa051eb841456998",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "3ffc720b9ef01830f8e5d85d098902fe763f5207269f7a49e691a8256335a379",
+      "mutates": "rollback_plan",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-created_at",
+      "kind": "mutation",
+      "description": "Single-field mutation of created_at; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:01.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:01.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "1e3d8e9322b165536f944eeb12a3d102575536b361f5eb58447e893914654481",
+      "mutates": "created_at",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-expires_at",
+      "kind": "mutation",
+      "description": "Single-field mutation of expires_at; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:16:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:16:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "a5f860f80cfba3c5700a3da840e30aeef5ba635fa4a9d4d407a8a5afb0afebe4",
+      "mutates": "expires_at",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-mut-policy_version",
+      "kind": "mutation",
+      "description": "Single-field mutation of policy_version; the binding digest MUST change versus golden-001.",
+      "policy_version": "goal24-approval-policy-v2",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": null,
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "awaiting_approval",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v2"
+      },
+      "expected_digest": "a448f66a100b7f02a4fb48c2d53dba664b2bd9d751741b4c46213af54f0b846a",
+      "mutates": "policy_version",
+      "differs_from": "golden-001"
+    },
+    {
+      "id": "golden-excluded-fields",
+      "kind": "excluded-fields",
+      "description": "state/approval/required_approval are lifecycle fields, not approved execution semantics: digest equals golden-001.",
+      "policy_version": "goal24-approval-policy-v1",
+      "plan": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs": {
+          "repo": "repo-a",
+          "count": 1
+        },
+        "required_approval": true,
+        "approval": {
+          "approval_id": "approval-native-1",
+          "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+          "granted_by": "owner-alice",
+          "granted_at": "2026-08-14T00:00:00.000Z",
+          "policy_version": "goal24-approval-policy-v1",
+          "token_reference": "grant_0123456789abcdef0123456789abcdef",
+          "token_digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "risk_snapshot": {
+          "risk_level": "medium",
+          "reversible": true,
+          "side_effect_class": "reversible_write",
+          "required_authority": "L2",
+          "capability_version": "1.0.0"
+        },
+        "evidence_coverage_snapshot": {
+          "entries": []
+        },
+        "timeout_ms": 5000,
+        "verification_plan": {
+          "verification_capability_id": "test.resource.read",
+          "verification_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "rollback_plan": {
+          "rollback_capability_id": "test.resource.rollback",
+          "rollback_inputs": {
+            "id": "resource-1"
+          }
+        },
+        "state": "ready",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z"
+      },
+      "expected_payload": {
+        "plan_id": "plan-00000000-0000-4000-8000-000000000001",
+        "decision_id": "decision-golden-001",
+        "capability_id": "test.resource.update",
+        "capability_version": "1.0.0",
+        "adapter_id": "test-adapter",
+        "normalized_inputs_digest": "f74e08e5b70f12c58f214055247ba8531d814d8a96f19b93c1b7e868f59e6b8c",
+        "risk_snapshot_digest": "459b9dd0e27a3e50381c767a4e85a795c396b33ba25b2c52b45205e636ca1d34",
+        "evidence_coverage_digest": "d801aa1fb7ddcc330a5e3173372ea6af4a3d08ec58074478e85aa5603e926658",
+        "timeout_ms": 5000,
+        "verification_plan_digest": "af6a5496432136d5325200d024f60834d2ba3e203e1dbe415f7ba2d768a84cfe",
+        "rollback_plan_digest": "0fe00229e6f7da168d4a689b45e5a4cf3c45e40b62fdc1f44d7679217d54413f",
+        "created_at": "2026-08-14T00:00:00.000Z",
+        "expires_at": "2026-08-14T00:15:00.000Z",
+        "policy_version": "goal24-approval-policy-v1"
+      },
+      "expected_digest": "aca32e8fd6c7ae61a63ec54d421de0886091ff94a6bab0bfbe5f2357355d5f6d"
+    }
+  ]
+}

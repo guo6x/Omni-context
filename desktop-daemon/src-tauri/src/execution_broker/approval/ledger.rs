@@ -1,11 +1,18 @@
-//! Goal24 Checkpoint 7 (Lane B) - durable accepted-plan replay ledger.
+//! Goal24 Checkpoint 7 (Integration) - durable accepted-plan replay ledger
+//! with write-ahead acceptance.
 //!
-//! Every plan id accepted into the spawn phase is durably reserved here
-//! (read-only plans included). After a restart the same plan id is still
-//! rejected with `PlanRejectedSingleUse`. The CP3 in-memory `HashSet` is
-//! replaced by this ledger.
+//! The ledger is the write-ahead journal of the may-spawn path. A plan id is
+//! first durably marked `accepted` (the broker accepted it into the may-spawn
+//! path) and then durably `reserved` before any spawn. A crash at ANY
+//! checkpoint after the acceptance leaves a durable record, so a restart can
+//! never accept the same plan id again (`PlanRejectedSingleUse`). Read-only
+//! plans are included: every accepted plan id is single-use.
+//!
+//! The backing file is protected by an exclusive OS lock (see `lock.rs`):
+//! a second broker instance pointing at the same ledger opens degraded and
+//! every execute fails closed.
 
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
@@ -13,12 +20,30 @@ use serde::{Deserialize, Serialize};
 
 use crate::execution_broker::types::{BrokerError, ErrorCode, ExecutionPlanWire};
 
-const LEDGER_FILE_VERSION: u32 = 1;
+use super::lock::StoreFileLock;
+
+const LEDGER_FILE_VERSION: u32 = 2;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LedgerPhase {
+    /// Write-ahead: the broker accepted the plan into the may-spawn path.
+    Accepted,
+    /// Durable reservation taken right before the spawn (step 1 of the
+    /// crash-safe sequence).
+    Reserved,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct LedgerEntry {
+    plan_id: String,
+    phase: LedgerPhase,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct LedgerFile {
     version: u32,
-    reserved_plan_ids: Vec<String>,
+    entries: Vec<LedgerEntry>,
 }
 
 fn corrupt(reason: &str) -> BrokerError {
@@ -75,11 +100,12 @@ fn atomic_write(path: &PathBuf, bytes: &[u8]) -> Result<(), BrokerError> {
     Ok(())
 }
 
-/// Durable single-use reservation ledger for accepted plan ids.
+/// Durable single-use ledger for accepted plan ids.
 pub struct PlanLedger {
     path: Option<PathBuf>,
-    reserved: Mutex<HashSet<String>>,
+    entries: Mutex<HashMap<String, LedgerPhase>>,
     degraded: Option<BrokerError>,
+    _lock: Option<StoreFileLock>,
 }
 
 impl PlanLedger {
@@ -87,26 +113,32 @@ impl PlanLedger {
     pub fn in_memory() -> Self {
         Self {
             path: None,
-            reserved: Mutex::new(HashSet::new()),
+            entries: Mutex::new(HashMap::new()),
             degraded: None,
+            _lock: None,
         }
     }
 
     /// Open (or create) a persistent ledger at a trusted injected path. A
-    /// missing file is a healthy empty ledger; corruption fails closed.
+    /// missing file is a healthy empty ledger; corruption or a failed
+    /// single-instance lock acquisition degrades the ledger and fails closed.
     pub fn persistent(path: PathBuf) -> Self {
         match Self::open(&path) {
             Ok(ledger) => ledger,
             Err(err) => Self {
                 path: Some(path),
-                reserved: Mutex::new(HashSet::new()),
+                entries: Mutex::new(HashMap::new()),
                 degraded: Some(err),
+                _lock: None,
             },
         }
     }
 
     fn open(path: &PathBuf) -> Result<Self, BrokerError> {
-        let reserved = match std::fs::read(path) {
+        let lock_path = path.with_extension("lock");
+        let lock = StoreFileLock::acquire(&lock_path)
+            .map_err(|reason| corrupt(&format!("cannot acquire ledger lock: {reason}")))?;
+        let entries = match std::fs::read(path) {
             Ok(bytes) => {
                 let parsed: LedgerFile = serde_json::from_slice(&bytes)
                     .map_err(|err| corrupt(&format!("cannot parse ledger json: {err}")))?;
@@ -116,26 +148,34 @@ impl PlanLedger {
                         parsed.version
                     )));
                 }
-                let mut set = HashSet::new();
-                for plan_id in parsed.reserved_plan_ids {
-                    if !ExecutionPlanWire::valid_plan_id(&plan_id) {
-                        return Err(corrupt(&format!("invalid reserved plan_id {plan_id}")));
+                let mut map = HashMap::new();
+                for entry in parsed.entries {
+                    if !ExecutionPlanWire::valid_plan_id(&entry.plan_id) {
+                        return Err(corrupt(&format!(
+                            "invalid ledger plan_id {}",
+                            entry.plan_id
+                        )));
                     }
-                    if !set.insert(plan_id.clone()) {
-                        return Err(corrupt(&format!("duplicate reserved plan_id {plan_id}")));
+                    if map.contains_key(&entry.plan_id) {
+                        return Err(corrupt(&format!(
+                            "duplicate ledger plan_id {}",
+                            entry.plan_id
+                        )));
                     }
+                    map.insert(entry.plan_id, entry.phase);
                 }
-                set
+                map
             }
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => HashSet::new(),
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => HashMap::new(),
             Err(err) => {
                 return Err(corrupt(&format!("cannot read ledger file: {err}")));
             }
         };
         Ok(Self {
             path: Some(path.clone()),
-            reserved: Mutex::new(reserved),
+            entries: Mutex::new(entries),
             degraded: None,
+            _lock: Some(lock),
         })
     }
 
@@ -149,21 +189,46 @@ impl PlanLedger {
         self.degraded.clone()
     }
 
-    /// Reserve a plan id exactly once; returns `false` when already reserved.
-    /// The reservation is persisted before the broker spawns anything.
-    pub fn reserve(&self, plan_id: &str) -> Result<bool, BrokerError> {
+    /// Current phase of a plan id (used by tests to prove crash checkpoints).
+    pub fn phase(&self, plan_id: &str) -> Option<LedgerPhase> {
+        self.entries.lock().unwrap().get(plan_id).copied()
+    }
+
+    /// Write-ahead acceptance: durably mark the plan id as accepted into the
+    /// may-spawn path. Returns `false` when the plan id was already accepted
+    /// (single-use). This is the first durable step of the execute path.
+    pub fn accept(&self, plan_id: &str) -> Result<bool, BrokerError> {
         if let Some(err) = self.degraded.clone() {
             return Err(err);
         }
         {
-            let mut guard = self.reserved.lock().unwrap();
-            if guard.contains(plan_id) {
+            let mut guard = self.entries.lock().unwrap();
+            if guard.contains_key(plan_id) {
                 return Ok(false);
             }
-            guard.insert(plan_id.to_string());
+            guard.insert(plan_id.to_string(), LedgerPhase::Accepted);
         }
         self.persist()?;
         Ok(true)
+    }
+
+    /// Durable reservation: transition an accepted plan id to `reserved`
+    /// (crash-safe step 1 of reserve -> consume -> spawn). A missing
+    /// acceptance is an internal invariant violation and fails closed.
+    pub fn reserve(&self, plan_id: &str) -> Result<(), BrokerError> {
+        if let Some(err) = self.degraded.clone() {
+            return Err(err);
+        }
+        {
+            let mut guard = self.entries.lock().unwrap();
+            let Some(phase) = guard.get_mut(plan_id) else {
+                return Err(corrupt(&format!(
+                    "plan {plan_id} was reserved without a write-ahead acceptance"
+                )));
+            };
+            *phase = LedgerPhase::Reserved;
+        }
+        self.persist()
     }
 
     fn persist(&self) -> Result<(), BrokerError> {
@@ -171,11 +236,18 @@ impl PlanLedger {
             Some(path) => path,
             None => return Ok(()),
         };
-        let mut ids: Vec<String> = self.reserved.lock().unwrap().iter().cloned().collect();
-        ids.sort();
+        let guard = self.entries.lock().unwrap();
+        let mut entries: Vec<LedgerEntry> = guard
+            .iter()
+            .map(|(plan_id, phase)| LedgerEntry {
+                plan_id: plan_id.clone(),
+                phase: *phase,
+            })
+            .collect();
+        entries.sort_by(|a, b| a.plan_id.cmp(&b.plan_id));
         let bytes = serde_json::to_vec_pretty(&LedgerFile {
             version: LEDGER_FILE_VERSION,
-            reserved_plan_ids: ids,
+            entries,
         })
         .map_err(|err| corrupt(&format!("cannot serialize ledger: {err}")))?;
         atomic_write(path, &bytes)

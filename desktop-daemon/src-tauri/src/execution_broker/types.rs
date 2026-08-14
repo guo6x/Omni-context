@@ -74,11 +74,14 @@ pub enum SideEffectClassWire {
 
 /// `RiskSnapshot.required_authority` (TypeScript `AUTHORITY_LEVELS`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
 pub enum AuthorityLevelWire {
+    #[serde(rename = "L0")]
     L0,
+    #[serde(rename = "L1")]
     L1,
+    #[serde(rename = "L2")]
     L2,
+    #[serde(rename = "L3")]
     L3,
 }
 
@@ -151,11 +154,11 @@ pub struct EvidenceCoverageEntryWire {
     pub verification_level: VerificationLevelWire,
     pub evidence_ids: Vec<String>,
     pub checked_at: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stale_since: Option<String>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub conflict_evidence_ids: Option<Vec<String>>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
 }
 
@@ -172,7 +175,7 @@ pub struct EvidenceCoverageSnapshotWire {
 pub struct VerificationPlanWire {
     pub verification_capability_id: String,
     pub verification_inputs: serde_json::Map<String, serde_json::Value>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
@@ -182,7 +185,7 @@ pub struct VerificationPlanWire {
 pub struct RollbackPlanWire {
     pub rollback_capability_id: String,
     pub rollback_inputs: serde_json::Map<String, serde_json::Value>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 

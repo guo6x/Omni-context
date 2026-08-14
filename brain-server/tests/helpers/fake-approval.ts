@@ -166,12 +166,15 @@ export interface FakeGrantOptions {
 
 export function fakeGrant(options: FakeGrantOptions): VerifiedGrant {
   const grantedAt = options.grantedAt ?? TEST_NOW;
+  const nativeRecordId = options.nativeRecordId ?? `native-${randomUUID()}`;
   return {
     actor: options.actor,
     authority: options.actor.authority_level,
     granted_at: grantedAt.toISOString(),
     expires_at: (options.expiresAt ?? new Date(grantedAt.getTime() + 60_000)).toISOString(),
-    native_record_id: options.nativeRecordId ?? `native-${randomUUID()}`,
+    native_record_id: nativeRecordId,
+    token_reference: `grant_${randomUUID().replaceAll('-', '').slice(0, 32)}`,
+    token_digest: randomUUID().replaceAll('-', '') + randomUUID().replaceAll('-', ''),
   };
 }
 

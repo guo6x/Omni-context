@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "goal24_checkpoint": "7",
+  "generated_at": "2026-08-14T05:53:58.355Z",
+  "persistence_model": "Two durable files (approval store + plan ledger) with write-ahead ordered reservation under an exclusive OS file lock. Ordering: accept (validate approval record + recompute binding digest) -> fault(BeforePlanReserve) -> durably reserve plan_id (Reserved phase) -> fault(AfterPlanReserve) -> fault(BeforeApprovalConsume) -> durably consume approval -> fault(AfterApprovalConsume) -> fault(BeforeSpawn) -> spawn.",
+  "atomicity_analysis": "Two atomic renames are not one transaction, so the implementation uses fail-closed ordered reservation instead: after step 1 a crash leaves the plan reserved (no replay); after step 2 the plan stays reserved and the approval stays consumed; the ledger write-ahead records the phase before the next step. Availability loss is accepted; double effect is not possible.",
+  "fault_points": [
+    {
+      "id": "BeforePlanReserve",
+      "phase": "after acceptance validation, before durable reservation",
+      "crash_result": "no durable reservation, no consumption; approval remains usable only for the exact same plan; a replay attempt re-enters the same fail-closed path",
+      "replayable_after_restart": false,
+      "test": "execution_broker::approval::crash_tests::crash_at_every_fault_checkpoint_blocks_replay_after_restart"
+    },
+    {
+      "id": "AfterPlanReserve",
+      "phase": "after durable reservation, before consumption",
+      "crash_result": "plan durably reserved; restart rejects any second execution of the same plan",
+      "replayable_after_restart": false,
+      "test": "execution_broker::approval::crash_tests::crash_at_every_fault_checkpoint_blocks_replay_after_restart"
+    },
+    {
+      "id": "BeforeApprovalConsume",
+      "phase": "reserved, before durable consumption",
+      "crash_result": "plan reserved; approval not yet consumed but cannot be used by any other plan (binding digest + plan_id match required)",
+      "replayable_after_restart": false,
+      "test": "execution_broker::approval::crash_tests::crash_at_every_fault_checkpoint_blocks_replay_after_restart"
+    },
+    {
+      "id": "AfterApprovalConsume",
+      "phase": "durably consumed, before spawn",
+      "crash_result": "plan reserved + approval consumed; restart blocks replay",
+      "replayable_after_restart": false,
+      "test": "execution_broker::approval::crash_tests::crash_at_every_fault_checkpoint_blocks_replay_after_restart"
+    },
+    {
+      "id": "BeforeSpawn",
+      "phase": "durable state committed, spawn about to start",
+      "crash_result": "plan reserved + approval consumed; spawn failure or crash never unreserves/unconsumes; retry requires a new plan and a new approval",
+      "replayable_after_restart": false,
+      "test": "execution_broker::approval::crash_tests::spawn_failure_keeps_approval_consumed_and_plan_reserved"
+    }
+  ],
+  "replay_properties": {
+    "plan_single_use_across_restart": true,
+    "approval_single_use": true,
+    "replayable_after_restart_fault_points": 0,
+    "spawn_failure_unconsumes_approval": false,
+    "spawn_failure_unreserves_plan": false
+  },
+  "concurrency": {
+    "same_plan_concurrent_attempts": "8/16/32 threads => exactly 1 accepted (counter assertion), others rejected",
+    "test": "execution_broker::approval::crash_tests::concurrent_attempts_accept_exactly_one",
+    "multi_broker_same_store": "second Broker instance on the same store opens degraded; exclusive OS lock (LockFileEx/flock) serializes writers",
+    "test_multi_broker": "execution_broker::approval::crash_tests::second_broker_instance_on_same_store_opens_degraded",
+    "cross_process_guarantee": "Fail-closed exclusive OS lock + single-instance authority assumption. Documented enforceability: no lock-free cross-process claim is made beyond the fail-closed lock."
+  },
+  "corruption_matrix": [
+    {
+      "target": "approval store",
+      "attack": "malformed JSON",
+      "result": "FAIL_CLOSED degraded, execution disabled",
+      "test": "execution_broker::approval::tests::corrupt_approval_store_fails_closed"
+    },
+    {
+      "target": "plan ledger",
+      "attack": "malformed JSON",
+      "result": "FAIL_CLOSED degraded, execution disabled",
+      "test": "execution_broker::approval::tests::corrupt_plan_ledger_fails_closed"
+    },
+    {
+      "target": "approval store",
+      "attack": "truncated JSON",
+      "result": "FAIL_CLOSED",
+      "test": "execution_broker::approval::crash_tests::store_corruption_variants_fail_closed"
+    },
+    {
+      "target": "approval store",
+      "attack": "unknown schema version",
+      "result": "FAIL_CLOSED",
+      "test": "execution_broker::approval::crash_tests::store_corruption_variants_fail_closed"
+    },
+    {
+      "target": "approval store",
+      "attack": "unknown fields",
+      "result": "FAIL_CLOSED",
+      "test": "execution_broker::approval::crash_tests::store_corruption_variants_fail_closed"
+    },
+    {
+      "target": "approval store",
+      "attack": "duplicate records",
+      "result": "FAIL_CLOSED",
+      "test": "execution_broker::approval::crash_tests::store_corruption_variants_fail_closed"
+    },
+    {
+      "target": "approval store",
+      "attack": "impossible state",
+      "result": "FAIL_CLOSED",
+      "test": "execution_broker::approval::crash_tests::store_corruption_variants_fail_closed"
+    },
+    {
+      "target": "approval store",
+      "attack": "invalid digest",
+      "result": "FAIL_CLOSED",
+      "test": "execution_broker::approval::crash_tests::store_corruption_variants_fail_closed"
+    },
+    {
+      "target": "approval store",
+      "attack": "invalid timestamp/lifetime ordering (negative TTL)",
+      "result": "FAIL_CLOSED record validation",
+      "test": "execution_broker::approval::crash_tests::store_corruption_variants_fail_closed"
+    },
+    {
+      "target": "plan ledger",
+      "attack": "truncated mid-record / torn write",
+      "result": "FAIL_CLOSED, never reset empty",
+      "test": "execution_broker::approval::crash_tests::store_corruption_variants_fail_closed"
+    },
+    {
+      "target": "plan ledger",
+      "attack": "duplicate reservations",
+      "result": "FAIL_CLOSED (exactly one reservation wins under lock)",
+      "test": "execution_broker::approval::crash_tests::concurrent_attempts_accept_exactly_one"
+    },
+    {
+      "target": "plan ledger",
+      "attack": "silent reset to empty",
+      "result": "IMPOSSIBLE: corrupt ledger degrades, never resets",
+      "test": "execution_broker::approval::tests::corrupt_plan_ledger_fails_closed"
+    }
+  ],
+  "store_policy": {
+    "production_path": "Tauri app-data / trusted configured root (not the repository working tree); caller cannot choose the path",
+    "test_path": "injected temp dir (tests only)",
+    "permissions_note": "No store file is written inside the repository; all tests use temp dirs"
+  },
+  "ttl": {
+    "max_ttl": "15 minutes",
+    "exact_15m": "ALLOWED",
+    "15m_plus_1ms": "REJECTED",
+    "boundary": "now >= expires_at is expired",
+    "tests": [
+      "execution_broker::approval::tests::expired_approval_rejected",
+      "execution_broker::approval::tests::future_grant_rejected",
+      "goal24-authorization-service.test.ts (rejects a grant that expires after the plan expiry / policy cap, rejects an expired grant)"
+    ]
+  }
+}

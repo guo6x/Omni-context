@@ -242,7 +242,6 @@ export class AuthorizationService {
       normalized_inputs: plan.normalized_inputs,
       risk_snapshot: plan.risk_snapshot,
       evidence_coverage_snapshot: plan.evidence_coverage_snapshot,
-      evidence_guard_run_id: eligibility.guard_run_id,
       timeout_ms: plan.timeout_ms,
       verification_plan: plan.verification_plan,
       rollback_plan: plan.rollback_plan,
@@ -347,7 +346,7 @@ export class AuthorizationService {
     // Binding integrity: recompute the digest from the stored plan semantics.
     // Input swap, coverage swap, risk downgrade, adapter/timeout/verification/
     // rollback/decision/expiry mutation all break this equality.
-    const recomputedPayload = bindingPayloadForPlan(plan, record.guard_run_id, approvalRequest.policy_version);
+    const recomputedPayload = bindingPayloadForPlan(plan, approvalRequest.policy_version);
     const recomputedDigest = approvalBindingDigest(recomputedPayload);
     if (recomputedDigest !== record.approval_binding_digest) {
       throw new ApprovalError(
@@ -434,8 +433,8 @@ export class AuthorizationService {
       granted_by: grant.actor.actor_id,
       granted_at: grant.granted_at,
       policy_version: this.policyVersion,
-      token_reference: reference.token_reference,
-      token_digest: record.approval_binding_digest,
+      token_reference: grant.token_reference,
+      token_digest: grant.token_digest,
     };
     const readyPlan = this.validatePlan({ ...plan, state: 'ready', approval: wireReference });
 
@@ -448,6 +447,8 @@ export class AuthorizationService {
         granted_at: grant.granted_at,
         expires_at: grant.expires_at,
         native_record_id: grant.native_record_id,
+        token_reference: grant.token_reference,
+        token_digest: grant.token_digest,
       }),
       blocked_reason: null,
     });

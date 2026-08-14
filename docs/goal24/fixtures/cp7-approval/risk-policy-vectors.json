@@ -1,0 +1,488 @@
+{
+  "schema_version": 1,
+  "artifact": "cp7-approval-risk-policy-vectors",
+  "policy_version_literal": "goal24-approval-policy-v1",
+  "native_minimum_rule": "approval required unless side_effect_class=read_only AND risk_level=low AND required_authority=L0",
+  "native_minimum_matrix": [
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L0",
+      "approval_required": false
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "read_only",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "low",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "low",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "low",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "low",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "medium",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "medium",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "medium",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "medium",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "high",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "high",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "high",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "reversible_write",
+      "reversible": true,
+      "risk_level": "high",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "destructive_write",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "low",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "medium",
+      "required_authority": "L3",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L0",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L1",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L2",
+      "approval_required": true
+    },
+    {
+      "side_effect_class": "external_effect",
+      "reversible": false,
+      "risk_level": "high",
+      "required_authority": "L3",
+      "approval_required": true
+    }
+  ],
+  "authority_order": [
+    {
+      "lower": "L0",
+      "higher": "L1",
+      "ordered": true
+    },
+    {
+      "lower": "L0",
+      "higher": "L2",
+      "ordered": true
+    },
+    {
+      "lower": "L0",
+      "higher": "L3",
+      "ordered": true
+    },
+    {
+      "lower": "L1",
+      "higher": "L0",
+      "ordered": false
+    },
+    {
+      "lower": "L1",
+      "higher": "L2",
+      "ordered": true
+    },
+    {
+      "lower": "L1",
+      "higher": "L3",
+      "ordered": true
+    },
+    {
+      "lower": "L2",
+      "higher": "L0",
+      "ordered": false
+    },
+    {
+      "lower": "L2",
+      "higher": "L1",
+      "ordered": false
+    },
+    {
+      "lower": "L2",
+      "higher": "L3",
+      "ordered": true
+    },
+    {
+      "lower": "L3",
+      "higher": "L0",
+      "ordered": false
+    },
+    {
+      "lower": "L3",
+      "higher": "L1",
+      "ordered": false
+    },
+    {
+      "lower": "L3",
+      "higher": "L2",
+      "ordered": false
+    }
+  ],
+  "authority_satisfies": [
+    {
+      "actor": "L0",
+      "required": "L0",
+      "satisfies": true
+    },
+    {
+      "actor": "L0",
+      "required": "L1",
+      "satisfies": false
+    },
+    {
+      "actor": "L0",
+      "required": "L2",
+      "satisfies": false
+    },
+    {
+      "actor": "L0",
+      "required": "L3",
+      "satisfies": false
+    },
+    {
+      "actor": "L1",
+      "required": "L0",
+      "satisfies": true
+    },
+    {
+      "actor": "L1",
+      "required": "L1",
+      "satisfies": true
+    },
+    {
+      "actor": "L1",
+      "required": "L2",
+      "satisfies": false
+    },
+    {
+      "actor": "L1",
+      "required": "L3",
+      "satisfies": false
+    },
+    {
+      "actor": "L2",
+      "required": "L0",
+      "satisfies": true
+    },
+    {
+      "actor": "L2",
+      "required": "L1",
+      "satisfies": true
+    },
+    {
+      "actor": "L2",
+      "required": "L2",
+      "satisfies": true
+    },
+    {
+      "actor": "L2",
+      "required": "L3",
+      "satisfies": false
+    },
+    {
+      "actor": "L3",
+      "required": "L0",
+      "satisfies": true
+    },
+    {
+      "actor": "L3",
+      "required": "L1",
+      "satisfies": true
+    },
+    {
+      "actor": "L3",
+      "required": "L2",
+      "satisfies": true
+    },
+    {
+      "actor": "L3",
+      "required": "L3",
+      "satisfies": true
+    }
+  ]
+}
