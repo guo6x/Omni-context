@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "goal24_checkpoint": "7",
+  "generated_at": "2026-08-14T05:33:31.491Z",
+  "gate": "CHECKPOINT7_SECURITY_GATE",
+  "status": "PASS",
+  "criteria": {
+    "A": {
+      "label": "Lane A/B/C integrated",
+      "value": "PASS",
+      "evidence": "9 lane commits cherry-picked in order on local/cp7-integration; base dfc666ac32c23df34ade0e612aec4e925e9f6d00 verified; Lane C runtime diff = 0 (docs-only)"
+    },
+    "B": {
+      "label": "all write/elevated capabilities require approval V1",
+      "value": "PASS",
+      "evidence": "TS approval policy (goal24-approval-policy.test.ts) + Rust native minimum (approval::tests::write_binding_without_approval_rejected)"
+    },
+    "C": {
+      "label": "caller cannot set required_approval",
+      "value": "PASS",
+      "evidence": "authorization-service caller cannot force required_approval=false; strict request schema rejects caller-supplied 'required_approval'"
+    },
+    "D": {
+      "label": "caller cannot set risk snapshot",
+      "value": "PASS",
+      "evidence": "authorization-service caller cannot supply risk_snapshot; strict schema rejects caller-supplied 'risk_snapshot'"
+    },
+    "E": {
+      "label": "caller cannot set ready state",
+      "value": "PASS",
+      "evidence": "authorization-service caller cannot choose state=ready"
+    },
+    "F": {
+      "label": "CP6 authoritative evidence only",
+      "value": "PASS",
+      "evidence": "EvidenceEligibilityService remains the only coverage source; caller cannot inject evidence coverage / forged guard_run_id cannot materialize coverage"
+    },
+    "G": {
+      "label": "bare ApprovalReference cannot grant authority",
+      "value": "PASS",
+      "evidence": "approval grant enforcement: a bare ApprovalReference can never ready a plan; Rust fake_reference_rejected / missing_store_record_rejected"
+    },
+    "H": {
+      "label": "Brain requires verified native grant",
+      "value": "PASS",
+      "evidence": "ApprovalGrantVerifier (fake verifier success/failure tests); verified native grant moves the plan to ready"
+    },
+    "I": {
+      "label": "actor authority ordering enforced",
+      "value": "PASS",
+      "evidence": "L0<L1<L2<L3 shared fixture; TS/Rust authority-order tests; insufficient_actor_authority_rejected_at_grant"
+    },
+    "J": {
+      "label": "no system/LLM/Skill/Provider auto approval",
+      "value": "PASS",
+      "evidence": "only owner/admin actors with source trusted_local; LLM/SKILL/PROVIDER bypass vectors mapped and covered"
+    },
+    "K": {
+      "label": "TS/Rust canonical binding contract identical",
+      "value": "PASS",
+      "evidence": "14 canonical fields, shared fixtures, cp7-approval-binding-contract.json integration_authority"
+    },
+    "L": {
+      "label": "cross-language golden digest mismatches=0",
+      "value": "PASS",
+      "evidence": "31/31 golden vectors match in both languages (TS 15 tests, Rust 5 tests)"
+    },
+    "M": {
+      "label": "risk policy TS/Rust mismatches=0",
+      "value": "PASS",
+      "evidence": "48-row shared matrix matches; risk_policy_native_minimum_matrix_matches_ts"
+    },
+    "N": {
+      "label": "plan mutation invalidates approval",
+      "value": "PASS",
+      "evidence": "mutation_after_grant_rejected (Rust) + mutation vectors change digest (TS)"
+    },
+    "O": {
+      "label": "evidence mutation invalidates approval",
+      "value": "PASS",
+      "evidence": "immutable approval binding coverage swap invalidates the approval binding digest"
+    },
+    "P": {
+      "label": "input mutation invalidates approval",
+      "value": "PASS",
+      "evidence": "immutable approval binding input swap + mutation_after_grant_rejected"
+    },
+    "Q": {
+      "label": "native compiled risk cannot be downgraded",
+      "value": "PASS",
+      "evidence": "plan_cannot_downgrade_risk_level / _authority / _side_effect_class / plan_cannot_flip_reversibility"
+    },
+    "R": {
+      "label": "required_approval=false cannot bypass native minimum",
+      "value": "PASS",
+      "evidence": "write_binding_without_approval_rejected"
+    },
+    "S": {
+      "label": "approval store persistent",
+      "value": "PASS",
+      "evidence": "persistent approval-store.json + crash_tests"
+    },
+    "T": {
+      "label": "plan replay ledger persistent",
+      "value": "PASS",
+      "evidence": "persistent plan-ledger.json (write-ahead Accepted/Reserved) + crash_tests"
+    },
+    "U": {
+      "label": "approval single-use",
+      "value": "PASS",
+      "evidence": "consumed_approval_rejected; concurrent_consume_exactly_one_wins"
+    },
+    "V": {
+      "label": "plan single-use across restart",
+      "value": "PASS",
+      "evidence": "restart_replay_blocked_by_persistent_state; crash_at_every_fault_checkpoint_blocks_replay_after_restart"
+    },
+    "W": {
+      "label": "consume/reserve happens before spawn",
+      "value": "PASS",
+      "evidence": "Broker::execute ordering accept -> reserve -> consume -> spawn with fault points"
+    },
+    "X": {
+      "label": "all crash fault points fail closed after restart",
+      "value": "PASS",
+      "evidence": "5 fault points; replayable_after_restart = 0"
+    },
+    "Y": {
+      "label": "concurrent same approval yields exactly one acceptance",
+      "value": "PASS",
+      "evidence": "8/16/32 concurrent => exactly 1 accepted"
+    },
+    "Z": {
+      "label": "multi-Broker same-store race cannot double accept",
+      "value": "PASS",
+      "evidence": "exclusive OS lock; second instance opens degraded"
+    },
+    "AA": {
+      "label": "store corruption fails closed",
+      "value": "PASS",
+      "evidence": "8 store-corruption variants fail closed; corrupt store/ledger degrade, never reset empty"
+    },
+    "AB": {
+      "label": "denied/revoked/expired/consumed stay blocked after restart",
+      "value": "PASS",
+      "evidence": "denied/revoked/expired/consumed tests + persistent state after restart"
+    },
+    "AC": {
+      "label": "policy version mismatch fails closed",
+      "value": "PASS",
+      "evidence": "stale policy version rejected (TS + native verify); policy literal goal24-approval-policy-v1 shared"
+    },
+    "AD": {
+      "label": "approval TTL <=15m",
+      "value": "PASS",
+      "evidence": "exact 15m allowed, 15m+1ms rejected, now >= expires_at expired"
+    },
+    "AE": {
+      "label": "Lane C potential_after=0",
+      "value": "PASS",
+      "evidence": "checkpoint7-bypass-closure.json: potential_after=0 (CP7A-014 CLOSED)"
+    },
+    "AF": {
+      "label": "Lane C blocks_after=0",
+      "value": "PASS",
+      "evidence": "checkpoint7-bypass-closure.json: blocks_after=0"
+    },
+    "AG": {
+      "label": "280 vectors mapped",
+      "value": "PASS",
+      "evidence": "checkpoint7-adversarial-execution-map.json: 280/280 mapped, unmapped=0"
+    },
+    "AH": {
+      "label": "failed vectors=0",
+      "value": "PASS",
+      "evidence": "failed=0; every automated/covered test PASS in the full regression"
+    },
+    "AI": {
+      "label": "generic execute IPC=false",
+      "value": "PASS",
+      "evidence": "execute_ipc_enabled=false; no execute command registered"
+    },
+    "AJ": {
+      "label": "public approval mutation IPC=0",
+      "value": "PASS",
+      "evidence": "no approve/grant/revoke/deny Tauri command or REST route"
+    },
+    "AK": {
+      "label": "production GitHub write bindings=0",
+      "value": "PASS",
+      "evidence": "production bindings remain the five CP4 read-only github.* bindings"
+    },
+    "AL": {
+      "label": "full regressions green",
+      "value": "PASS",
+      "evidence": "Brain typecheck/vitest/build/lint; Desktop build/verify:controlled; cargo fmt/check/clippy/test/audit; git diff --check"
+    },
+    "AM": {
+      "label": "approval runtime reachable security: UNKNOWN=0 FIX_BEFORE_CP7=0 BLOCKS_CP7=0",
+      "value": "PASS",
+      "evidence": "cargo-audit 0.22.2 rerun found 5: crossbeam-epoch RUSTSEC-2026-0204 FIXED (0.9.18->0.9.20), anyhow RUSTSEC-2026-0190 unsound warning FIXED (1.0.102->1.0.103), quick-xml RUSTSEC-2026-0194/0195 x2 NOT_RUNTIME_REACHABLE_ON_WINDOWS (verified empty x86_64-pc-windows-msvc tree; Linux/macOS-only transitive paths); UNKNOWN=0 FIX_BEFORE_CP7=0 BLOCKS_CP7=0"
+    }
+  },
+  "audits": {
+    "node_audit": {
+      "summary": "npm audit --omit=dev --audit-level=critical on brain-server; approval/evidence runtime reachable HIGH/CRITICAL: UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0",
+      "unknown": 0,
+      "fix_before_cp7": 0,
+      "blocks_cp7": 0
+    },
+        "cargo_audit": {
+      "summary": "cargo-audit 0.22.2 rerun on desktop-daemon (offline advisory DB D:\\environment\\advisory-db-offline, 1216 advisories, 563 lockfile deps); approval/evidence runtime reachable advisories: UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0",
+      "rerun_at": "2026-08-14T05:33:31.491Z",
+      "advisories_reported_at_rerun": 5,
+      "advisories_remaining": 4,
+      "unknown": 0,
+      "fix_before_cp7": 0,
+      "blocks_cp7": 0,
+      "fixed_during_cp7": [
+        {
+          "advisory": "RUSTSEC-2026-0204",
+          "crate": "crossbeam-epoch",
+          "from": "0.9.18",
+          "to": "0.9.20",
+          "reachability": "runtime (Windows tree: tauri->ignore->crossbeam-deque; image->rayon->crossbeam-deque)",
+          "action": "cargo update -p crossbeam-epoch --precise 0.9.20"
+        },
+        {
+          "advisory": "RUSTSEC-2026-0190",
+          "crate": "anyhow",
+          "from": "1.0.102",
+          "to": "1.0.103",
+          "reachability": "runtime (Error::downcast_mut unsoundness; informational warning)",
+          "action": "cargo update -p anyhow --precise 1.0.103"
+        }
+      ],
+      "not_runtime_reachable_on_windows": [
+        {
+          "advisory": "RUSTSEC-2026-0194",
+          "crate": "quick-xml",
+          "version": "0.30.0",
+          "severity": "7.5 high (quadratic attribute-dup check DoS)",
+          "evidence": "cargo tree -i quick-xml@0.30.0 --target x86_64-pc-windows-msvc => empty; only path is [build-dependencies] xcb (Linux/X11) <- display-info <- screenshots"
+        },
+        {
+          "advisory": "RUSTSEC-2026-0195",
+          "crate": "quick-xml",
+          "version": "0.30.0",
+          "severity": "7.5 high (unbounded namespace-declaration allocation DoS)",
+          "evidence": "cargo tree -i quick-xml@0.30.0 --target x86_64-pc-windows-msvc => empty; only path is [build-dependencies] xcb (Linux/X11) <- display-info <- screenshots"
+        },
+        {
+          "advisory": "RUSTSEC-2026-0194",
+          "crate": "quick-xml",
+          "version": "0.39.3",
+          "severity": "7.5 high (quadratic attribute-dup check DoS)",
+          "evidence": "cargo tree -i quick-xml@0.39.3 --target x86_64-pc-windows-msvc => empty; only paths are plist (macOS-only tauri/tauri-codegen) and wayland-scanner (Linux proc-macro)"
+        },
+        {
+          "advisory": "RUSTSEC-2026-0195",
+          "crate": "quick-xml",
+          "version": "0.39.3",
+          "severity": "7.5 high (unbounded namespace-declaration allocation DoS)",
+          "evidence": "cargo tree -i quick-xml@0.39.3 --target x86_64-pc-windows-msvc => empty; only paths are plist (macOS-only tauri/tauri-codegen) and wayland-scanner (Linux proc-macro)"
+        }
+      ],
+      "warnings_remaining": 16,
+      "warnings_classification": "informational only, no vulnerability: Windows-runtime unmaintained warnings rustls-pemfile (reqwest TLS PEM parsing), fxhash (screenshots/selectors), instant (tao); Linux-only unmaintained gtk-rs family + glib unsound; build-time/proc-macro rand 0.7.3 (phf), proc-macro-error, proc-macro-error2"
+    }
+  },
+  "limitations": [
+    "Brain AuthorizationStore is memory-only; Brain restart invalidates pending/ready state while native grants persist until expiry/revoke/consume (documented CP7 limitation, CP9 integration requirement).",
+    "Cross-process coordination relies on the fail-closed OS lock + single-instance authority assumption (documented enforceability).",
+    "No Approval UI or public approval bridge in CP7 (CP9 scope)."
+  ]
+}

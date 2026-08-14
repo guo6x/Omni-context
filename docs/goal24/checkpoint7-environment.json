@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "goal24_checkpoint": "7",
+  "generated_at": "2026-08-14T05:33:31.491Z",
+  "worktree": {
+    "path": "D:\\ai_code\\Omni-context-worktrees\\cp7-integration",
+    "branch": "local/cp7-integration",
+    "base_sha": "dfc666ac32c23df34ade0e612aec4e925e9f6d00",
+    "main_repo_path": "D:\\ai_code\\Omni-context",
+    "dirty_legacy_worktree": "D:\\ai_code\\Omni-context\\.worktrees\\goal24-cp21 (NOT TOUCHED)"
+  },
+  "toolchain": {
+    "node": "v22.23.2",
+    "npm": "10.9.8",
+    "cargo": "1.97.1 (c980f4866 2026-06-30)",
+    "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+    "gh": {
+      "path": "D:\\environment\\github-cli\\bin\\gh.exe",
+      "version": "2.97.0 (2026-07-31)"
+    },
+    "npm_cache": "D:\\environment\\npm-cache",
+    "cargo_advisory_db": "D:\\environment\\advisory-db-offline",
+    "cargo_network": "cargo audit uses offline advisory DB D:\\environment\\advisory-db-offline; one online cargo update was required at freeze time for crossbeam-epoch/anyhow patch bumps"
+  },
+  "environment_policy": {
+    "rule": "D: first; reuse existing C: tooling; new installs go to D:\\environment; no new full environment installed to C:",
+    "path_mutation": "no system PATH modification performed"
+  },
+  "auth": {
+    "gh_auth_check": "not applicable to CP7 integration (no gh execution required; CP4 gate already established)",
+    "token_read": "NO",
+    "auth_mutated": "NO",
+    "note": "CP7 does not run GitHub smoke tests; gh is recorded only for environment completeness."
+  },
+  "test_runs": {
+    "brain": "node v22.23.2; vitest 1.6.1; goal24 suites collected via --reporter=json (540 tests, all PASS at collection time)",
+    "rust": "cargo 1.97.1; cargo test at freeze time: 168 passed, 0 failed, 6 ignored (174 listed); crossbeam-epoch 0.9.18->0.9.20 and anyhow 1.0.102->1.0.103 patch bumps",
+    "cargo_audit": "cargo-audit 0.22.2 (offline DB D:\\environment\\advisory-db-offline, 1216 advisories, 563 lockfile deps): 5 reported at re-run; crossbeam-epoch RUSTSEC-2026-0204 fixed (0.9.18->0.9.20), anyhow RUSTSEC-2026-0190 unsound warning fixed (1.0.102->1.0.103), 4 remaining quick-xml RUSTSEC-2026-0194/0195 classified NOT_RUNTIME_REACHABLE_ON_WINDOWS; UNKNOWN=0, FIX_BEFORE_CP7=0, BLOCKS_CP7=0",
+    "desktop": "npm ci + npm run build (for distDir); verify:controlled at freeze time"
+  }
+}
