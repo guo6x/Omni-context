@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "8",
+  "lane": "A",
+  "name": "Goal24 Checkpoint 8 Lane A - Brain Outcome Core + Trusted Verification Evaluation + Outcome Persistence",
+  "date": "2026-08-14",
+  "base_sha": "01e1204d8d2a9b232b6745a96667a205841e6f60",
+  "base_note": "origin/dev/goal24-cli-skills, verified exact after git fetch --all --tags --prune",
+  "local_branch": "local/cp8-outcome-core",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp8-outcome-core",
+  "commit_sha": "060f7eddda79b01b6f6408335e32e7f4ff8c7e61",
+  "commit_sha_note": "code/test tip at the time this manifest was written; the manifest itself is committed as the branch tip immediately after",
+  "commits": [
+    { "sha": "51296f5", "message": "feat(outcome): add outcome and verification contracts" },
+    { "sha": "b3b32a4", "message": "feat(outcome): add trusted deterministic evaluator runtime" },
+    { "sha": "df7350e", "message": "feat(outcome): persist verification lifecycle and history" },
+    { "sha": "060f7ed", "message": "test(outcome): separate process success from verified outcome" }
+  ],
+  "remote_branch_pushed": false,
+  "files": {
+    "added": [
+      "brain-server/src/outcome/errors.ts",
+      "brain-server/src/outcome/contracts.ts",
+      "brain-server/src/outcome/digests.ts",
+      "brain-server/src/outcome/evaluator.ts",
+      "brain-server/src/outcome/evaluator-registry.ts",
+      "brain-server/src/outcome/lifecycle.ts",
+      "brain-server/src/outcome/store.ts",
+      "brain-server/src/outcome/service.ts",
+      "brain-server/src/outcome/index.ts",
+      "brain-server/tests/helpers/fake-outcome.ts",
+      "brain-server/tests/goal24-outcome-contracts.test.ts",
+      "brain-server/tests/goal24-outcome-evaluator.test.ts",
+      "brain-server/tests/goal24-outcome-store.test.ts",
+      "brain-server/tests/goal24-outcome-lifecycle.test.ts",
+      "docs/goal24/cp8-lane-a-outcome-core.md",
+      "docs/goal24/checkpoint8-lane-a-manifest.json"
+    ],
+    "modified": []
+  },
+  "execution_vs_outcome": {
+    "execution_success_equals_verified_outcome": false,
+    "execution_effect_states": ["not_started", "spawn_started", "process_succeeded", "process_failed", "timed_out", "cancelled", "unknown_after_crash"],
+    "write_success_rule": "side_effect_class != read_only stays pending until verification_status=verified (read-back + trusted evaluator)",
+    "ambiguous_execution_rule": "timed_out / cancelled / process_failed after spawn / unknown_after_crash default to pending and require read-back",
+    "not_started_rule": "trusted native receipt proving no spawn -> not_required (no external effect)"
+  },
+  "verification_statuses": ["not_required", "pending", "verified", "mismatch", "inconclusive", "verification_failed"],
+  "verification_status_semantics": {
+    "not_required": "read-only action or trusted policy says no post-state verification",
+    "pending": "execution occurred / may have occurred and verification尚未完成",
+    "verified": "trusted read-back observation satisfies expected postcondition",
+    "mismatch": "read-back succeeded but external state does not match expectation",
+    "inconclusive": "observation exists but cannot establish truth sufficiently",
+    "verification_failed": "read-back itself failed / malformed / unavailable"
+  },
+  "llm_judge_used": false,
+  "evaluator_boundary": {
+    "registry": "OutcomeEvaluatorRegistry (internal trusted application code only)",
+    "public_registration": false,
+    "expectation_derived_from": "approved ExecutionPlan (capability + approved normalized_inputs + verification_plan) via trusted OutcomeEvaluatorV1.deriveExpectation",
+    "caller_can_supply_expectation": false,
+    "rejected_expectation_keys": ["expected", "predicate", "jsonpath", "regex", "success_condition", "result", "comparison_prompt", "judge_prompt"],
+    "evaluator_result_statuses": ["verified", "mismatch", "inconclusive"],
+    "verification_failed_decided_by": "parser / read-back runtime before the evaluator"
+  },
+  "caller_authority_boundary": {
+    "caller_can_finalize_outcome": false,
+    "caller_can_forge_receipt": false,
+    "caller_can_handcraft_observation": false,
+    "open_outcome_inputs": ["plan (server-internal trusted)", "receipt_id"],
+    "complete_attempt_inputs": ["outcome_id", "attempt_id", "observation_id"],
+    "receipt_resolution": "injected TrustedReceiptResolver by receipt_id only; receipt source must be native_broker; receipt_digest recomputed and matched",
+    "observation_resolution": "injected TrustedObservationResolver by observation_id only"
+  },
+  "subject_binding": true,
+  "plan_receipt_binding": true,
+  "binding_checks": [
+    "origin_plan_id == outcome.plan_id (OUTCOME_PLAN_MISMATCH)",
+    "origin_execution_receipt_id == outcome.execution_receipt_id (OUTCOME_RECEIPT_MISMATCH)",
+    "verification_capability_id == plan verification capability and trusted evaluator metadata (OUTCOME_VERIFICATION_CAPABILITY_MISMATCH)",
+    "verification_attempt_id == core-generated in-flight attempt id (OUTCOME_ATTEMPT_MISMATCH)",
+    "subject_key == expectation.subject_key (OUTCOME_SUBJECT_MISMATCH)",
+    "payload_digest == core-recomputed payload digest (OUTCOME_OBSERVATION_INVALID)"
+  ],
+  "payload_bounds": {
+    "max_payload_bytes": 262144,
+    "json_safe_only": true,
+    "rejected": ["class instances", "BigInt", "NaN", "Infinity", "undefined", "cycles"]
+  },
+  "truncated_can_verify": false,
+  "parser_gate": {
+    "parsed": "may enter the semantic evaluator",
+    "malformed": "verification_failed + READBACK_MALFORMED",
+    "unsupported": "verification_failed + READBACK_UNSUPPORTED",
+    "truncated": "verification_failed + READBACK_TRUNCATED (fail closed)"
+  },
+  "outcome_ids": {
+    "outcome_id": "core-generated 'out-' + crypto.randomUUID()",
+    "attempt_id": "core-generated 'att-' + crypto.randomUUID()",
+    "caller_can_choose": false
+  },
+  "retry_policy": {
+    "max_attempts_bound": 5,
+    "default_max_attempts": 3,
+    "eventual_consistency": "pending -> mismatch attempt -> pending retry -> verified (bounded)",
+    "exhausted_statuses": ["mismatch", "inconclusive", "verification_failed"]
+  },
+  "revisit_signal": {
+    "verified": false,
+    "not_required": false,
+    "pending": false,
+    "mismatch": true,
+    "inconclusive": true,
+    "verification_failed": true
+  },
+  "rollback": {
+    "candidate_only": true,
+    "candidate_condition": "verification_status=mismatch AND plan.rollback_plan exists AND risk_snapshot.reversible=true",
+    "automatic_rollback": false,
+    "rollback_executed": false,
+    "rollback_plan_created": false
+  },
+  "outcome_store": {
+    "interface": "OutcomeStore",
+    "implementations": ["InMemoryOutcomeStore", "FileOutcomeStore (V1)"],
+    "persistent": true,
+    "schema_version": 1,
+    "write_strategy": "temp file + fsync + atomic rename + serialized mutation queue",
+    "corruption_fail_closed": true,
+    "corruption_never_resets": true,
+    "verification_history_preserved": true,
+    "history_immutable": true,
+    "restart_persistence": "statuses and attempt history survive restart; in-flight plan/expectation context is memory-only (fail closed, documented)"
+  },
+  "reason_codes": [
+    "OUTCOME_VERIFIED",
+    "OUTCOME_MISMATCH",
+    "OUTCOME_INCONCLUSIVE",
+    "READBACK_NOT_AVAILABLE",
+    "READBACK_MALFORMED",
+    "READBACK_TRUNCATED",
+    "READBACK_UNSUPPORTED",
+    "OUTCOME_SUBJECT_MISMATCH",
+    "OUTCOME_PLAN_MISMATCH",
+    "OUTCOME_RECEIPT_MISMATCH",
+    "OUTCOME_VERIFICATION_CAPABILITY_MISMATCH",
+    "OUTCOME_EVALUATOR_NOT_FOUND",
+    "OUTCOME_EXPECTATION_CHANGED",
+    "OUTCOME_STORE_CORRUPT"
+  ],
+  "production_write_capability_added": false,
+  "process_execution_added": false,
+  "static_no_execution_scan": "PASS (no child_process/spawn/exec/execFile/Command/powershell/cmd.exe/sh -c in brain-server/src/outcome)",
+  "tests": {
+    "typecheck": "PASS (tsc --noEmit)",
+    "build": "PASS (tsc)",
+    "lint": "PASS (0 errors; only pre-existing warnings outside src/outcome)",
+    "outcome_contracts": "27 PASS",
+    "outcome_evaluator": "22 PASS",
+    "outcome_store": "20 PASS",
+    "outcome_lifecycle": "45 PASS",
+    "full_vitest": "61 files / 1173 tests PASS (CP6/CP7 regression included)",
+    "npm_audit": "not required; no dependency changes",
+    "git_diff_check": "PASS"
+  },
+  "cp6_cp7_regression": {
+    "approval_binding_unchanged": true,
+    "execution_eligibility_unchanged": true,
+    "risk_policy_unchanged": true,
+    "execution_contracts_untouched": true,
+    "note": "verification_plan / rollback_plan wire contract untouched; CP7 semantics unchanged"
+  },
+  "known_residual_risks": [
+    "The plan snapshot + derived expectation used during verification live in service memory: Brain restart invalidates in-flight verification (fail closed, documented); the native replay ledger is Lane B's responsibility",
+    "Trusted receipt / observation resolvers are injected Lane A abstractions; integration with the native Broker / read-back bridge is Lane B",
+    "Synthetic test capability test.item.update exists only in test fixtures; no production write capability was added",
+    "read_only outcomes default to not_required in V1; a trusted evaluator policy requiring read-back for reads is a future checkpoint decision"
+  ],
+  "holdback_touched": false,
+  "legacy_dirty_worktree_touched": false,
+  "environment": {
+    "policy": "D: first, then existing C:; new installs only under D:\\environment",
+    "node": "D:\\environment\\node\\node-v22.23.2-win-x64\\node.exe",
+    "npm_cache": "D:\\environment\\npm-cache",
+    "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp8-outcome-core"
+  }
+}
