@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "checkpoint": "7",
+  "lane": "A",
+  "name": "Goal24 Checkpoint 7 Lane A - Brain Approval Policy + Risk Enforcement + Plan Authorization Lifecycle",
+  "date": "2026-08-14",
+  "base_sha": "dfc666ac32c23df34ade0e612aec4e925e9f6d00",
+  "base_note": "origin/dev/goal24-cli-skills, verified exact after git fetch --all --tags --prune (network fetch retried; the local origin ref already resolved exactly to the required SHA)",
+  "local_branch": "local/cp7-brain-approval",
+  "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp7-brain-approval",
+  "commit_sha": "0e9adc96baf5c2d2a94a26b96da719082bafdd2b",
+  "commit_sha_note": "code/test tip at the time this manifest was written; the manifest itself is committed as the branch tip immediately after",
+  "commits": [
+    { "sha": "56f5dc7", "message": "feat(approval): add fail-closed risk approval policy" },
+    { "sha": "7bf8437", "message": "feat(approval): add server-owned plan authorization lifecycle" },
+    { "sha": "0e9adc9", "message": "test(approval): bind grants to immutable plan semantics" }
+  ],
+  "remote_branch_pushed": false,
+  "files": {
+    "added": [
+      "brain-server/src/approval/errors.ts",
+      "brain-server/src/approval/contracts.ts",
+      "brain-server/src/approval/policy.ts",
+      "brain-server/src/approval/binding.ts",
+      "brain-server/src/approval/authorization-store.ts",
+      "brain-server/src/approval/authorization-service.ts",
+      "brain-server/src/approval/index.ts",
+      "brain-server/tests/helpers/fake-approval.ts",
+      "brain-server/tests/goal24-approval-policy.test.ts",
+      "brain-server/tests/goal24-authorization-service.test.ts",
+      "docs/goal24/cp7-lane-a-brain-approval.md",
+      "docs/goal24/checkpoint7-lane-a-manifest.json"
+    ],
+    "modified": []
+  },
+  "approval_policy": {
+    "policy_version": "goal24-approval-policy-v1",
+    "approval_not_required_only_when": "side_effect_class == read_only && risk_level == low && required_authority == L0",
+    "all_writes_require_approval_v1": true,
+    "write_auto_approval": false,
+    "system_auto_approval": false,
+    "llm_approval": false,
+    "policy_predicate": "approvalRequired(capability) in brain-server/src/approval/policy.ts"
+  },
+  "caller_authority_boundary": {
+    "request_schema": "ExecutionAuthorizationRequestSchema (z.strictObject)",
+    "allowed_caller_fields": ["decision_id", "capability_id", "capability_version", "adapter_id", "normalized_inputs", "guard_run_id", "timeout_ms", "verification_plan", "rollback_plan", "requested_by?", "correlation_id?", "expires_at?"],
+    "rejected_caller_keys": ["required_approval", "risk_snapshot", "state", "approval", "evidence_coverage_snapshot", "plan_id", "now", "granted_at", "any unknown key"],
+    "reserved_input_keys_rejected": ["shell", "command", "exec", "bash", "powershell", "cmd", "cmdline", "script"],
+    "caller_can_set_required_approval": false,
+    "caller_can_set_risk_snapshot": false,
+    "caller_can_set_plan_state": false,
+    "caller_can_set_plan_id": false,
+    "caller_can_set_clock": false
+  },
+  "risk_snapshot": {
+    "derived_from": "trusted CapabilityDefinition only (deriveRiskSnapshot)",
+    "fields": ["risk_level", "reversible", "side_effect_class", "required_authority", "capability_version"]
+  },
+  "evidence_from_cp6_only": true,
+  "evidence_bridge": "EvidenceEligibilityService.materializeEvidenceForExecutablePlan({ guard_run_id, capability_id, capability_version, normalized_inputs }) before plan authorization; forged coverage cannot enter CP7 (APPROVAL_EVIDENCE_INELIGIBLE)",
+  "plan_id": {
+    "core_generated": true,
+    "algorithm": "'plan-' + crypto.randomUUID(), validated against PLAN_ID_PATTERN"
+  },
+  "plan_states": {
+    "approval_not_required": "ready",
+    "approval_required": "awaiting_approval",
+    "caller_ready_forbidden": true
+  },
+  "approval_request_record": {
+    "fields": ["approval_request_id", "plan_id", "decision_id", "capability_id", "capability_version", "risk_snapshot", "side_effect_summary", "reversible", "evidence_summary", "coverage_digest", "normalized_inputs_digest", "approval_binding_digest", "required_authority", "policy_version", "created_at", "expires_at", "status"],
+    "initial_status": "pending",
+    "secrets_stored": false
+  },
+  "approval_binding": {
+    "payload_fields": ["plan_id", "decision_id", "capability_id", "capability_version", "adapter_id", "normalized_inputs_digest", "risk_snapshot_digest", "evidence_coverage_digest", "evidence_guard_run_id", "timeout_ms", "verification_plan_digest", "rollback_plan_digest", "created_at", "expires_at", "policy_version"],
+    "excluded_fields": ["state", "approval"],
+    "digest_algorithm": "canonical deterministic JSON (object keys stably sorted, array order preserved) + SHA-256 lowercase hex, reusing CP6 canonicalJson/sha256Hex primitives",
+    "non_json_safe_rejected": ["NaN", "Infinity", "undefined", "BigInt", "class instances", "cycles"],
+    "insertion_order_not_canonicalization": true,
+    "digest_fields_core_computed": true,
+    "mutation_invalidates": ["capability", "version", "adapter", "normalized inputs", "risk snapshot", "coverage", "timeout", "verification plan", "rollback plan", "decision identity", "expiry"],
+    "apply_recomputes_and_compares": true
+  },
+  "actor_authority": {
+    "schema": "TrustedApprovalActorSchema (strict): actor_id, actor_kind owner|admin, authority_level L0..L3, source literal trusted_local",
+    "forbidden_actors": ["model", "skill", "provider", "untrusted API caller"],
+    "ordering": "L0 < L1 < L2 < L3",
+    "grant_requires": "actor.authority_level >= capability.required_authority",
+    "insufficient_code": "APPROVAL_AUTHORITY_INSUFFICIENT"
+  },
+  "grant_verifier": {
+    "abstraction": "ApprovalGrantVerifier.verifyGrant({ plan, approval_reference, approval_binding_digest })",
+    "verified_metadata": ["valid", "actor", "authority", "granted_at", "expires_at", "native_record_id"],
+    "bare_reference_can_ready": false,
+    "lane_a_verifier": "deterministic fakes in tests; Lane B wires the native authority"
+  },
+  "apply_approval_checks": [
+    "state == awaiting_approval",
+    "approval request pending",
+    "request policy_version == current runtime policy",
+    "request not expired (trusted clock)",
+    "binding digest recomputes unchanged",
+    "reference plan_id exact match",
+    "reference policy_version exact match",
+    "native verifier valid",
+    "grant authority == actor authority level",
+    "actor authority sufficient",
+    "granted_at not future",
+    "grant not expired",
+    "grant expiry <= plan expiry / policy TTL cap",
+    "transitioned plan re-passes ExecutionPlanSchema"
+  ],
+  "lifecycle_statuses": ["pending", "granted", "denied", "revoked", "expired"],
+  "denied_never_ready": true,
+  "revoked_before_execution_blocks": true,
+  "grant_expired_never_ready": true,
+  "store": {
+    "type": "server-owned bounded in-memory AuthorizationStore (default 200)",
+    "restart_semantics": "restart invalidates pending/ready records; re-materialize and re-approve (fail closed); documented honestly, not persistent",
+    "full_store": "APPROVAL_STORE_FULL (fail closed, no silent eviction)",
+    "duplicate_plan_id": "APPROVAL_STORE_CONFLICT",
+    "native_replay_ledger": "Lane B"
+  },
+  "public_approval_mutation_api": false,
+  "read_only_flow": {
+    "cp4_read_capabilities": ["github.repo.inspect", "github.issue.search", "github.issue.read", "github.pr.read", "github.pr.checks.read"],
+    "required_approval": false,
+    "post_cp6_state": "ready without ApprovalReference"
+  },
+  "synthetic_test_capabilities": [
+    "test.resource.read (read_only, low, L0)",
+    "test.resource.rollback (read_only, low, L0)",
+    "test.resource.update (reversible_write, medium, L2, verification+rollback bound)",
+    "test.resource.destroy (destructive_write, high, L3)"
+  ],
+  "production_write_capability_added": false,
+  "expiry": {
+    "default_max_approval_ttl_ms": 900000,
+    "plan_expiry": "created_at + TTL bounded; caller expires_at may only shorten and must be > created_at",
+    "grant_expiry_bound": "must not exceed min(plan expiry, policy TTL)",
+    "boundary": "inclusive: now >= expires_at is expired (matches isExecutionPlanExpired)",
+    "clock": "trusted injected clock; caller cannot submit now/granted_at/expires_at override as authority"
+  },
+  "approval_reference_wire": {
+    "kept_compatible": true,
+    "token_digest": "now filled with the core-computed approval binding digest (CP2.1 deferred computation completed)",
+    "execution_contracts_modified": false
+  },
+  "process_execution_added": false,
+  "broker_called": false,
+  "gh_called": false,
+  "dependencies_changed": false,
+  "package_lock_touched": false,
+  "desktop_daemon_touched": false,
+  "github_write_bindings_touched": false,
+  "mcp_tauri_wiring_added": false,
+  "tests": {
+    "new_files": [
+      "brain-server/tests/goal24-approval-policy.test.ts (33 tests)",
+      "brain-server/tests/goal24-authorization-service.test.ts (48 tests)",
+      "brain-server/tests/helpers/fake-approval.ts (deterministic fixtures)"
+    ],
+    "new_test_count": 81,
+    "pure": true,
+    "coverage": [
+      "read-only -> ready with no approval",
+      "all five CP4 read capabilities stay approval-free",
+      "write -> awaiting_approval with pending request",
+      "medium/L2 write cannot force required_approval=false",
+      "caller risk_snapshot / state / approval / plan_id / coverage rejected",
+      "forged guard_run_id cannot materialize coverage",
+      "bare ApprovalReference cannot ready; verified native grant can",
+      "wrong plan id / wrong binding digest rejected",
+      "L1 vs L2 rejected; L2 vs L2 accepted; L2 vs L3 rejected; L3 owner accepted",
+      "expired grant rejected; future granted_at rejected; grant past policy cap rejected",
+      "denied / revoked / expired can never ready",
+      "policy version mismatch (request, reference, runtime change) fails closed",
+      "input / coverage / risk / adapter / timeout / verification-plan / rollback-plan / decision / expiry mutations invalidate the binding digest",
+      "bounded store fail-closed; duplicate plan id conflict",
+      "expiry sweep transitions pending/grants to blocked",
+      "caller expires_at can shorten but never extend the policy bound"
+    ],
+    "result": {
+      "suite": "brain-server npx vitest run",
+      "test_files": 56,
+      "passed": 1038,
+      "failed": 0
+    }
+  },
+  "verification": {
+    "typecheck": "PASS (tsc --noEmit, exit 0)",
+    "vitest": "PASS (1038 passed, 0 failed, 56 files; 81 new CP7 tests)",
+    "build": "PASS (tsc emit, exit 0)",
+    "lint": "PASS (0 errors; only pre-existing warnings outside src/approval; eslint src/approval clean)",
+    "npm_audit": "not required; no dependency changes",
+    "git_diff_check": "PASS",
+    "static_no_execution_scan": "PASS (no child_process/spawn/exec/execFile/Command/powershell/cmd.exe/sh -c in brain-server/src/approval)"
+  },
+  "known_residual_risks": [
+    "The grant verifier is injected Lane A; native approval validation is Lane B and approval UI is Checkpoint 9",
+    "The authorization store is memory-only: Brain restart invalidates pending/ready records (fail closed, documented, not persistent)",
+    "Plan expiry is uniformly bounded by the 15-minute V1 TTL; long-running approvals require an explicit future policy change",
+    "verification_plan / rollback_plan content correctness is verified at outcome-verification time (Checkpoint 8); mutations invalidate approvals via the binding digest",
+    "No production write capability exists yet; the write path is exercised with test-only capabilities"
+  ],
+  "holdback_touched": false,
+  "legacy_dirty_worktree_touched": false,
+  "environment": {
+    "policy": "D: first, then existing C:; new installs only under D:\\environment",
+    "node": "D:\\environment\\node\\node-v22.23.2-win-x64\\node.exe",
+    "npm_cache": "D:\\environment\\npm-cache",
+    "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp7-brain-approval"
+  }
+}
