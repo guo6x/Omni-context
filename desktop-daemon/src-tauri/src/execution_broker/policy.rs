@@ -6,7 +6,9 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::execution_broker::types::BrokerError;
+use crate::execution_broker::types::{
+    AuthorityLevelWire, BrokerError, RiskLevelWire, SideEffectClassWire,
+};
 
 // ---------------------------------------------------------------------------
 // Output limits
@@ -245,4 +247,58 @@ pub trait ExecutionBinding: Send + Sync {
 
     /// Output limits for this binding (broker clamps them).
     fn output_limits(&self) -> OutputLimits;
+
+    /// Compiled capability version. The plan's `capability_version` and its
+    /// `risk_snapshot.capability_version` must both equal this value.
+    fn capability_version(&self) -> &str;
+
+    /// Compiled, trusted risk policy for this capability. This metadata is
+    /// the only native source of risk truth; a plan can never downgrade it.
+    fn risk_policy(&self) -> ExecutionRiskPolicy;
+}
+
+// ---------------------------------------------------------------------------
+// Compiled native risk policy
+// ---------------------------------------------------------------------------
+
+/// Trusted risk metadata compiled into a binding. Plans carry a
+/// `RiskSnapshotWire` mirror, but the broker enforces this compiled policy
+/// instead: any mismatch (risk level, side-effect class, reversibility,
+/// authority or capability version) fails closed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ExecutionRiskPolicy {
+    pub risk_level: RiskLevelWire,
+    pub side_effect_class: SideEffectClassWire,
+    pub reversible: bool,
+    pub required_authority: AuthorityLevelWire,
+}
+
+impl ExecutionRiskPolicy {
+    /// Native minimum approval rule (CP7 V1): approval is required unless the
+    /// capability is read-only, low risk and L0 authority.
+    pub fn native_minimum_approval_required(&self) -> bool {
+        self.side_effect_class != SideEffectClassWire::ReadOnly
+            || self.risk_level != RiskLevelWire::Low
+            || self.required_authority != AuthorityLevelWire::L0
+    }
+
+    /// Read-only / low / L0 compiled policy for the GitHub read bindings.
+    pub fn read_only_low_l0() -> Self {
+        Self {
+            risk_level: RiskLevelWire::Low,
+            side_effect_class: SideEffectClassWire::ReadOnly,
+            reversible: false,
+            required_authority: AuthorityLevelWire::L0,
+        }
+    }
+}
+
+/// Authority ordering used by the approval authority (L0 < L1 < L2 < L3).
+pub fn authority_rank(level: AuthorityLevelWire) -> u8 {
+    match level {
+        AuthorityLevelWire::L0 => 0,
+        AuthorityLevelWire::L1 => 1,
+        AuthorityLevelWire::L2 => 2,
+        AuthorityLevelWire::L3 => 3,
+    }
 }

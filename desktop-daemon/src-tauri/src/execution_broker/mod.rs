@@ -1,13 +1,17 @@
-//! Goal24 Checkpoint 3 — Tauri Local Execution Broker core (Lane A).
+//! Goal24 Checkpoint 7 - Tauri Local Execution Broker core with native
+//! approval enforcement (Lane B).
 //!
-//! The broker is a *restricted execution primitive*: it executes an approved
-//! semantic `ExecutionPlan` (`state=ready`, `required_approval=false` in CP3)
-//! through a trusted compiled `ExecutionBinding`. It never accepts an
-//! executable, argv, cwd or env from a plan or from an IPC caller.
+//! The broker is a *restricted execution primitive*: it executes a semantic
+//! `ExecutionPlan` (`state=ready`) through a trusted compiled
+//! `ExecutionBinding`. It never accepts an executable, argv, cwd or env from
+//! a plan or from an IPC caller.
 //!
-//! CP3 exposes only a read-only status surface over Tauri IPC; the `execute`
-//! entry point is `pub(crate)` and will be opened to production IPC in CP4
-//! together with the GitHub CLI adapter.
+//! CP7 replaces the CP3 unconditional
+//! `required_approval=true -> PlanRejectedApproval` fail-closed with a real
+//! native approval authority: verify a store-backed grant, atomically consume
+//! it, durably reserve the plan id, then spawn. The broker also enforces the
+//! compiled binding risk policy independently: a plan can never downgrade the
+//! native risk metadata or bypass the native minimum approval rule.
 
 mod output;
 mod policy;
@@ -16,36 +20,43 @@ mod resolver;
 mod runner;
 mod types;
 
+pub(crate) mod approval;
+
 #[cfg(test)]
 mod adversarial;
 #[cfg(test)]
 mod tests;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
+
+use crate::execution_broker::approval::{ApprovalAuthority, GrantRequest, PlanLedger};
+use crate::execution_broker::runner::ExecutionRegistry;
 
 #[cfg(test)]
 pub use policy::{build_child_env, validate_cwd, BASE_ENV_VARS};
-pub use policy::{ExecutionBinding, OutputLimits, DEFAULT_OUTPUT_MAX_BYTES};
+pub use policy::{ExecutionBinding, ExecutionRiskPolicy, OutputLimits, DEFAULT_OUTPUT_MAX_BYTES};
 pub use types::{
     BrokerError, BrokerExecutionResult, ErrorCode, ExecutionPlanStateWire, ExecutionPlanWire,
     FORBIDDEN_INPUT_KEYS, TIMEOUT_MAX_MS, TIMEOUT_MIN_MS,
 };
 
-use crate::execution_broker::runner::ExecutionRegistry;
-
 /// Broker version reported by the status IPC surface.
-pub const BROKER_VERSION: &str = "0.1.0-cp3";
+pub const BROKER_VERSION: &str = "0.1.0-cp7";
 
-/// Read-only broker status view (the only CP3 Tauri IPC surface).
+/// Read-only broker status view (the only Tauri IPC surface).
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct BrokerStatus {
     pub broker_version: String,
-    /// Always false in CP3: no generic execute IPC is exposed.
+    /// Always false: no generic execute IPC is exposed.
     pub execute_ipc_enabled: bool,
     pub registered_bindings: Vec<String>,
     pub active_executions: usize,
     pub output_limits: OutputLimitsView,
+    /// True only while both the ApprovalStore and the durable plan ledger are
+    /// initialized and healthy. A corrupt store/ledger reports false and every
+    /// execute fails closed.
     pub approvals_enforced: bool,
 }
 
@@ -56,11 +67,12 @@ pub struct OutputLimitsView {
 }
 
 /// The broker core. `execute` is `pub(crate)`: only trusted compiled code in
-/// this crate can run plans until a production adapter (CP4) is registered.
+/// this crate can run plans; no generic execute IPC exists.
 pub struct Broker {
     bindings: Mutex<HashMap<String, Arc<dyn ExecutionBinding>>>,
     registry: ExecutionRegistry,
-    executed_plans: Mutex<HashSet<String>>,
+    approval: Arc<ApprovalAuthority>,
+    plan_ledger: PlanLedger,
 }
 
 impl Default for Broker {
@@ -70,12 +82,31 @@ impl Default for Broker {
 }
 
 impl Broker {
-    /// Create an empty broker. CP3 registers no production bindings.
+    /// Create a broker with volatile in-memory approval state (unit tests and
+    /// the CP7 default). Production persistence is wired with
+    /// `Broker::with_persistence` using trusted app-data paths.
     pub fn new() -> Self {
+        Self::with_internal(ApprovalAuthority::in_memory(), PlanLedger::in_memory())
+    }
+
+    /// Create a broker with a persistent approval store and durable plan
+    /// replay ledger. The paths are trusted/injected by this constructor;
+    /// callers can never submit a store path over IPC. A corrupt store or
+    /// ledger is retained as a degraded state: status reports
+    /// `approvals_enforced=false` and every execute fails closed.
+    pub fn with_persistence(store_path: &Path, ledger_path: &Path) -> Self {
+        Self::with_internal(
+            ApprovalAuthority::persistent(store_path.to_path_buf()),
+            PlanLedger::persistent(ledger_path.to_path_buf()),
+        )
+    }
+
+    fn with_internal(approval: ApprovalAuthority, plan_ledger: PlanLedger) -> Self {
         Self {
             bindings: Mutex::new(HashMap::new()),
             registry: ExecutionRegistry::default(),
-            executed_plans: Mutex::new(HashSet::new()),
+            approval: Arc::new(approval),
+            plan_ledger,
         }
     }
 
@@ -87,17 +118,45 @@ impl Broker {
             .insert(binding.binding_id().to_string(), binding.into());
     }
 
+    /// Crate-internal native grant entry point. Not a Tauri command; the CP9
+    /// Approval UI will wire it to an owner/admin-facing surface later.
+    pub(crate) fn grant_approval(
+        &self,
+        request: &GrantRequest<'_>,
+    ) -> Result<types::ApprovalReferenceWire, BrokerError> {
+        self.approval.grant(request)
+    }
+
+    /// Crate-internal revoke entry point (audit-only after consume).
+    pub(crate) fn revoke_approval(&self, approval_id: &str) -> Result<(), BrokerError> {
+        self.approval.revoke(approval_id)
+    }
+
+    /// Crate-internal deny entry point.
+    pub(crate) fn deny_approval(&self, approval_id: &str) -> Result<(), BrokerError> {
+        self.approval.deny(approval_id)
+    }
+
+    /// Crate-internal: the native authority (used by tests and future owners).
+    pub(crate) fn approval_authority(&self) -> &ApprovalAuthority {
+        &self.approval
+    }
+
     /// Execute an approved plan through a trusted binding.
     ///
     /// Gate (all enforced here, never delegated to the TypeScript layer):
     /// - `state=ready` only (`executing` is rejected as a replay guard)
-    /// - `required_approval=false` only in CP3
-    ///   (`APPROVAL_ENFORCEMENT_NOT_AVAILABLE` until Checkpoint 7)
-    /// - `expires_at` must be absent (CP3 default TTL: 24h from `created_at`) or in the future
+    /// - `expires_at` must be absent (default TTL: 24h from `created_at`) or in the future
     /// - `timeout_ms` within contract bounds `[100, 86_400_000]`
     /// - plan identity fields must match the contract patterns
     /// - `normalized_inputs` must not carry reserved command keys
     /// - `binding_id` must exist and match `adapter_id` + `capability_id`
+    /// - the plan risk snapshot must exactly match the compiled binding policy
+    ///   (`capability_version` + risk level + side effect + reversible + authority)
+    /// - the native minimum approval rule cannot be bypassed
+    /// - `required_approval=true` requires a real store-backed grant which is
+    ///   atomically consumed (single-use) before the plan id is durably
+    ///   reserved and the process is spawned (consume-before-spawn)
     pub fn execute(
         &self,
         plan: &ExecutionPlanWire,
@@ -109,13 +168,13 @@ impl Broker {
             let detail = if plan.state == ExecutionPlanStateWire::Executing {
                 "replay guard: state=executing cannot trigger a new spawn; only state=ready is accepted once"
             } else {
-                "only state=ready plans are accepted by the CP3 broker"
+                "only state=ready plans are accepted by the broker"
             };
             return Err(BrokerError::new(ErrorCode::PlanRejectedState, detail));
         }
 
-        // Approval reference consistency (schema-only in CP3; the approval
-        // engine itself arrives in Checkpoint 7).
+        // Approval reference consistency (schema-level). The real authority
+        // is the native store lookup below, never these strings.
         if let Some(approval) = &plan.approval {
             if approval.plan_id != plan.plan_id {
                 return Err(BrokerError::new(
@@ -131,11 +190,13 @@ impl Broker {
             }
         }
 
-        if plan.required_approval {
-            return Err(BrokerError::new(
-                ErrorCode::PlanRejectedApproval,
-                "required_approval=true is blocked in CP3 until Checkpoint 7 provides real approval enforcement",
-            ));
+        // Fail closed on a degraded approval store or plan ledger. A corrupt
+        // store is never deleted and never treated as an empty database.
+        if let Some(err) = self.approval.degradation() {
+            return Err(err.clone());
+        }
+        if let Some(err) = self.plan_ledger.degradation() {
+            return Err(err.clone());
         }
 
         if let Some(expires_at) = &plan.expires_at {
@@ -148,7 +209,7 @@ impl Broker {
         } else if runner::plan_is_stale(&plan.created_at) {
             return Err(BrokerError::new(
                 ErrorCode::PlanRejectedExpired,
-                "plan has no expires_at and exceeded the CP3 default TTL from created_at",
+                "plan has no expires_at and exceeded the broker default TTL from created_at",
             ));
         }
 
@@ -170,6 +231,17 @@ impl Broker {
             return Err(BrokerError::new(
                 ErrorCode::PlanRejectedInvalid,
                 format!("normalized_inputs must not contain reserved top-level key '{forbidden}'"),
+            ));
+        }
+
+        // Fail-closed environment rule: a write-scoped GitHub token in the
+        // broker's own environment would implicitly authenticate the pinned
+        // `gh` binary, so execution is refused rather than silently
+        // proceeding.
+        if std::env::var_os("GITHUB_TOKEN").is_some() {
+            return Err(BrokerError::new(
+                ErrorCode::BrokerBlockedEnv,
+                "GITHUB_TOKEN is present in the broker environment; execution is blocked",
             ));
         }
 
@@ -206,37 +278,83 @@ impl Broker {
             ));
         }
 
-        // Single-use guard: a plan id may only be accepted once. CP3 keeps
-        // this ledger in memory; the durable ledger arrives with the approval
-        // engine in Checkpoint 7.
+        // -------------------------------------------------------------------
+        // Native risk enforcement (independent of any Brain-side validation).
+        // -------------------------------------------------------------------
+        let compiled_policy = binding.risk_policy();
+        if binding.capability_version() != plan.capability_version
+            || plan.risk_snapshot.capability_version != binding.capability_version()
         {
-            let executed = self.executed_plans.lock().unwrap();
-            if executed.contains(&plan.plan_id) {
-                return Err(BrokerError::new(
-                    ErrorCode::PlanRejectedSingleUse,
-                    "plan_id was already accepted for execution",
-                ));
-            }
-        }
-
-        // CP3 fail-closed environment rule: a write-scoped GitHub token in
-        // the broker's own environment would implicitly authenticate the
-        // pinned `gh` binary, so execution is refused rather than silently
-        // proceeding.
-        if std::env::var_os("GITHUB_TOKEN").is_some() {
             return Err(BrokerError::new(
-                ErrorCode::BrokerBlockedEnv,
-                "GITHUB_TOKEN is present in the broker environment; execution is blocked in CP3",
+                ErrorCode::PlanRejectedRiskPolicy,
+                format!(
+                    "capability_version mismatch: plan '{}', risk snapshot '{}', compiled binding '{}'",
+                    plan.capability_version,
+                    plan.risk_snapshot.capability_version,
+                    binding.capability_version()
+                ),
+            ));
+        }
+        let snapshot = &plan.risk_snapshot;
+        if snapshot.risk_level != compiled_policy.risk_level
+            || snapshot.side_effect_class != compiled_policy.side_effect_class
+            || snapshot.reversible != compiled_policy.reversible
+            || snapshot.required_authority != compiled_policy.required_authority
+        {
+            return Err(BrokerError::new(
+                ErrorCode::PlanRejectedRiskPolicy,
+                "plan risk snapshot does not match the compiled binding risk policy",
             ));
         }
 
-        // Reserve the plan id only after every gate has passed.
-        self.executed_plans
-            .lock()
-            .unwrap()
-            .insert(plan.plan_id.clone());
+        // -------------------------------------------------------------------
+        // Native minimum approval rule + real grant verification.
+        // -------------------------------------------------------------------
+        let approved = if plan.required_approval {
+            let approval = plan.approval.as_ref().ok_or_else(|| {
+                BrokerError::new(
+                    ErrorCode::PlanRejectedApproval,
+                    "required_approval=true but no approval reference is present",
+                )
+            })?;
+            // The native store is the only source of approval authority. The
+            // reference strings alone prove nothing.
+            self.approval
+                .verify(approval, plan, &compiled_policy, chrono::Utc::now())?;
+            Some(approval)
+        } else if compiled_policy.native_minimum_approval_required() {
+            return Err(BrokerError::new(
+                ErrorCode::PlanRejectedApprovalPolicy,
+                "the compiled binding risk policy requires approval; a plan cannot opt out",
+            ));
+        } else {
+            None
+        };
 
-        runner::run(plan, binding.as_ref(), &self.registry)
+        // Consume before spawn: even when the spawn itself later fails, the
+        // approval stays consumed (fail-closed against duplicate effects).
+        if let Some(approval) = approved {
+            self.approval
+                .consume(&approval.approval_id, chrono::Utc::now())?;
+        }
+
+        // Durable single-use plan reservation. Persisted before any spawn.
+        if !self.plan_ledger.reserve(&plan.plan_id)? {
+            return Err(BrokerError::new(
+                ErrorCode::PlanRejectedSingleUse,
+                "plan_id was already accepted for execution",
+            ));
+        }
+
+        let result = runner::run(plan, binding.as_ref(), &self.registry)?;
+        if let Some(approval) = approved {
+            // Audit bookkeeping; a persistence failure here can never roll
+            // back an already-executed effect.
+            let _ = self
+                .approval
+                .record_execution_id(&approval.approval_id, &result.execution_id);
+        }
+        Ok(result)
     }
 
     /// Cancel a broker-created execution by `execution_id`. Callers cannot
@@ -262,7 +380,7 @@ impl Broker {
                 stdout_max_bytes: DEFAULT_OUTPUT_MAX_BYTES,
                 stderr_max_bytes: DEFAULT_OUTPUT_MAX_BYTES,
             },
-            approvals_enforced: false,
+            approvals_enforced: self.approval.is_healthy() && self.plan_ledger.is_healthy(),
         }
     }
 }

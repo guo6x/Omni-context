@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use serde_json::{Map, Value};
 
-use crate::execution_broker::{ExecutionBinding, OutputLimits};
+use crate::execution_broker::{ExecutionBinding, ExecutionRiskPolicy, OutputLimits};
 use crate::github_cli::adapter::GitHubCliContext;
 use crate::github_cli::inputs::{
     parse_inputs, validate_limit, validate_number, validate_owner, validate_query, validate_repo,
@@ -21,6 +21,15 @@ use crate::github_cli::inputs::{
 };
 use crate::github_cli::outputs::GithubCliError;
 use crate::github_cli::ADAPTER_ID;
+
+/// Compiled capability version shared by all five GitHub read bindings.
+pub const GITHUB_READONLY_CAPABILITY_VERSION: &str = "1.0.0";
+
+/// Native risk policy for every GitHub read binding: low, read-only, L0,
+/// non-reversible. Plans can never downgrade or upgrade this policy.
+pub fn github_readonly_risk_policy() -> ExecutionRiskPolicy {
+    ExecutionRiskPolicy::read_only_low_l0()
+}
 
 /// The five CP4 read-only capabilities. No write capability exists here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -257,5 +266,13 @@ impl ExecutionBinding for GithubCliBinding {
 
     fn output_limits(&self) -> OutputLimits {
         self.context.output_limits()
+    }
+
+    fn capability_version(&self) -> &str {
+        GITHUB_READONLY_CAPABILITY_VERSION
+    }
+
+    fn risk_policy(&self) -> ExecutionRiskPolicy {
+        github_readonly_risk_policy()
     }
 }
