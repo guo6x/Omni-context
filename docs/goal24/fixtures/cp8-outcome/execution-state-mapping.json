@@ -1,0 +1,346 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "execution-state-mapping.json",
+    "purpose": "Shared machine-readable golden vectors for mapping native receipt lifecycle states to Brain ExecutionEffectState. Validated by BOTH the Rust test suite (desktop-daemon/src-tauri/src/execution_broker/readback/cross_language_tests.rs) and the Brain test suite (brain-server/tests/goal24-outcome-cross-language.test.ts). Cross-language mismatch must be 0.",
+    "native_states": [
+      "accepted",
+      "spawn_started",
+      "completed",
+      "spawn_failed",
+      "unknown_after_crash"
+    ],
+    "effect_states": [
+      "not_started",
+      "spawn_started",
+      "process_succeeded",
+      "process_failed",
+      "timed_out",
+      "cancelled",
+      "unknown_after_crash"
+    ],
+    "error_codes": [
+      "invalid_flags",
+      "missing_exit_code",
+      "inconsistent_spawn_failed",
+      "inconsistent_accepted",
+      "inconsistent_live_spawn",
+      "inconsistent_crash",
+      "in_flight"
+    ],
+    "semantics": {
+      "completed_exit0": "process_succeeded",
+      "completed_nonzero": "process_failed",
+      "completed_timeout": "timed_out (precedence over exit code)",
+      "completed_cancel": "cancelled (precedence over exit code)",
+      "spawn_failed": "not_started (strict proof the child was never created)",
+      "recovered_accepted": "unknown_after_crash (never not_started)",
+      "recovered_spawn_started": "unknown_after_crash",
+      "live_spawn_started": "spawn_started (in-flight, read-back eligible)",
+      "live_accepted": "in_flight (not materializable yet)",
+      "unknown_after_crash": "unknown_after_crash (no exit/flags may ride on it)"
+    },
+    "vector_schema": [
+      "id",
+      "state",
+      "recovered",
+      "exit_code",
+      "timed_out",
+      "cancelled",
+      "spawn_started_at_present",
+      "expected_effect_state",
+      "expected_error"
+    ]
+  },
+  "vectors": [
+    {
+      "id": "esm-001",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "process_succeeded",
+      "expected_error": null
+    },
+    {
+      "id": "esm-002",
+      "state": "completed",
+      "recovered": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "process_succeeded",
+      "expected_error": null
+    },
+    {
+      "id": "esm-003",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": 7,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "process_failed",
+      "expected_error": null
+    },
+    {
+      "id": "esm-004",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": 255,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "process_failed",
+      "expected_error": null
+    },
+    {
+      "id": "esm-005",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": -1,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "process_failed",
+      "expected_error": null
+    },
+    {
+      "id": "esm-006",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": null,
+      "timed_out": true,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "timed_out",
+      "expected_error": null
+    },
+    {
+      "id": "esm-007",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": 0,
+      "timed_out": true,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "timed_out",
+      "expected_error": null
+    },
+    {
+      "id": "esm-008",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": true,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "cancelled",
+      "expected_error": null
+    },
+    {
+      "id": "esm-009",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": true,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "cancelled",
+      "expected_error": null
+    },
+    {
+      "id": "esm-010",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": null,
+      "expected_error": "missing_exit_code"
+    },
+    {
+      "id": "esm-011",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": 0,
+      "timed_out": true,
+      "cancelled": true,
+      "spawn_started_at_present": true,
+      "expected_effect_state": null,
+      "expected_error": "invalid_flags"
+    },
+    {
+      "id": "esm-012",
+      "state": "spawn_failed",
+      "recovered": false,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": false,
+      "expected_effect_state": "not_started",
+      "expected_error": null
+    },
+    {
+      "id": "esm-013",
+      "state": "spawn_failed",
+      "recovered": false,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": null,
+      "expected_error": "inconsistent_spawn_failed"
+    },
+    {
+      "id": "esm-014",
+      "state": "spawn_failed",
+      "recovered": false,
+      "exit_code": 3,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": false,
+      "expected_effect_state": null,
+      "expected_error": "inconsistent_spawn_failed"
+    },
+    {
+      "id": "esm-015",
+      "state": "accepted",
+      "recovered": true,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": false,
+      "expected_effect_state": "unknown_after_crash",
+      "expected_error": null
+    },
+    {
+      "id": "esm-016",
+      "state": "accepted",
+      "recovered": false,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": false,
+      "expected_effect_state": null,
+      "expected_error": "in_flight"
+    },
+    {
+      "id": "esm-017",
+      "state": "accepted",
+      "recovered": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": false,
+      "expected_effect_state": null,
+      "expected_error": "inconsistent_crash"
+    },
+    {
+      "id": "esm-018",
+      "state": "spawn_started",
+      "recovered": true,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "unknown_after_crash",
+      "expected_error": null
+    },
+    {
+      "id": "esm-019",
+      "state": "spawn_started",
+      "recovered": false,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "spawn_started",
+      "expected_error": null
+    },
+    {
+      "id": "esm-020",
+      "state": "spawn_started",
+      "recovered": false,
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": null,
+      "expected_error": "inconsistent_live_spawn"
+    },
+    {
+      "id": "esm-021",
+      "state": "unknown_after_crash",
+      "recovered": true,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "unknown_after_crash",
+      "expected_error": null
+    },
+    {
+      "id": "esm-022",
+      "state": "unknown_after_crash",
+      "recovered": true,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": false,
+      "expected_effect_state": "unknown_after_crash",
+      "expected_error": null
+    },
+    {
+      "id": "esm-023",
+      "state": "unknown_after_crash",
+      "recovered": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": null,
+      "expected_error": "inconsistent_crash"
+    },
+    {
+      "id": "esm-024",
+      "state": "unknown_after_crash",
+      "recovered": true,
+      "exit_code": null,
+      "timed_out": true,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": null,
+      "expected_error": "inconsistent_crash"
+    },
+    {
+      "id": "esm-025",
+      "state": "accepted",
+      "recovered": false,
+      "exit_code": null,
+      "timed_out": false,
+      "cancelled": false,
+      "spawn_started_at_present": true,
+      "expected_effect_state": null,
+      "expected_error": "inconsistent_accepted"
+    },
+    {
+      "id": "esm-026",
+      "state": "completed",
+      "recovered": false,
+      "exit_code": 1,
+      "timed_out": false,
+      "cancelled": true,
+      "spawn_started_at_present": true,
+      "expected_effect_state": "cancelled",
+      "expected_error": null
+    }
+  ],
+  "totals": {
+    "vectors": 26
+  }
+}

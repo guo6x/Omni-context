@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Goal24 Checkpoint 8 (Lane A) - Outcome error taxonomy.
  *
  * Outcome errors are stable, machine-readable codes. They deliberately never
@@ -26,6 +26,8 @@ export const OUTCOME_ERROR_CODES = [
   'OUTCOME_TRANSITION_INVALID',
   'OUTCOME_STORE_CORRUPT',
   'OUTCOME_DUPLICATE_RECORD',
+  'OUTCOME_DUPLICATE_OBSERVATION',
+  'OUTCOME_FRESHNESS_INVALID',
 ] as const;
 export type OutcomeErrorCode = (typeof OUTCOME_ERROR_CODES)[number];
 

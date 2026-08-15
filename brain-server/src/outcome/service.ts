@@ -47,9 +47,11 @@ import {
   type VerificationAttemptRecord,
 } from './contracts.js';
 import {
+  normalizedInputsDigest,
   observationDigest,
   outcomeExpectationDigest,
   validateObservationEnvelope,
+  verificationPlanDigest,
   verifyReceiptIntegrity,
 } from './digests.js';
 import { OutcomeError } from './errors.js';
@@ -72,7 +74,12 @@ import {
   nextVerificationStatus,
 } from './lifecycle.js';
 import type { OutcomeStore } from './store.js';
-import type { OutcomeExpectation } from './contracts.js';
+import {
+  ATTEMPT_ID_PATTERN,
+  IsoTimestampSchema,
+  MAX_OBSERVATION_CLOCK_SKEW_MS,
+  type OutcomeExpectation,
+} from './contracts.js';
 
 export type TrustedReceiptResolver = (receiptId: string) => TrustedExecutionReceipt | null;
 export type TrustedObservationResolver = (observationId: string) => ReadbackObservationEnvelope | null;
@@ -94,6 +101,7 @@ export interface OutcomeServiceOptions {
 
 interface OutcomeRuntimeContext {
   plan: ExecutionPlan;
+  receipt: TrustedExecutionReceipt;
   expectation: OutcomeExpectation;
   evaluator: OutcomeEvaluatorV1;
 }
@@ -211,7 +219,7 @@ export class OutcomeService {
       }
       expectation = validateExpectationFromEvaluator(evaluator, evaluator.deriveExpectation(plan));
       expectedDigest = outcomeExpectationDigest(expectation);
-      evaluationContext = { plan, expectation, evaluator };
+      evaluationContext = { plan, receipt: verifiedReceipt, expectation, evaluator };
     }
 
     const record = OutcomeRecordSchema.parse({
@@ -241,8 +249,21 @@ export class OutcomeService {
     return record;
   }
 
-  /** Begin a bounded verification attempt (memory-only until finalized). */
-  async beginVerificationAttempt(outcomeId: string): Promise<BeginVerificationAttemptResult> {
+  /**
+   * Begin a bounded verification attempt (memory-only until finalized).
+   *
+   * The optional injected attempt is the trusted internal bridge contract:
+   * the native layer can reserve a durable single-use attempt id BEFORE it
+   * spawns the read-back process and hand that reservation to the service
+   * (server-owned internal injection, never caller JSON). Without an
+   * injected attempt the core generates its own id/clock pair. In both
+   * cases the attempt slot is server-owned memory until a trusted
+   * observation finalizes it.
+   */
+  async beginVerificationAttempt(
+    outcomeId: string,
+    injected?: { attempt_id: string; started_at: string },
+  ): Promise<BeginVerificationAttemptResult> {
     assertValidOutcomeId(outcomeId);
     const outcome = this.store.getOutcome(outcomeId);
     if (!outcome) {
@@ -263,8 +284,38 @@ export class OutcomeService {
     if (this.pendingAttempts.has(outcomeId)) {
       throw new OutcomeError('OUTCOME_TRANSITION_INVALID', `outcome '${outcomeId}' already has an in-flight verification attempt`);
     }
-    const attemptId = generateAttemptId();
-    const startedAt = this.clock().toISOString();
+    const attemptId = injected?.attempt_id ?? generateAttemptId();
+    if (!ATTEMPT_ID_PATTERN.test(attemptId)) {
+      throw new OutcomeError('OUTCOME_INPUT_INVALID', 'attempt_id must be a valid attempt identifier');
+    }
+    const context = this.contextByOutcome.get(outcomeId);
+    if (context && context.receipt.spawn_started_at) {
+      const spawnStarted = Date.parse(context.receipt.spawn_started_at);
+      if (injected?.started_at) {
+        const started = Date.parse(injected.started_at);
+        if (Number.isNaN(started)) {
+          throw new OutcomeError('OUTCOME_INPUT_INVALID', 'started_at must be a valid timestamp');
+        }
+        if (started < spawnStarted) {
+          throw new OutcomeError(
+            'OUTCOME_FRESHNESS_INVALID',
+            'attempt must not start before the execution receipt spawned',
+          );
+        }
+        if (started > this.clock().getTime() + MAX_OBSERVATION_CLOCK_SKEW_MS) {
+          throw new OutcomeError('OUTCOME_FRESHNESS_INVALID', 'attempt started_at is in the future beyond allowed clock skew');
+        }
+      }
+    }
+    const startedAt = injected?.started_at ?? this.clock().toISOString();
+    if (!IsoTimestampSchema.safeParse(startedAt).success) {
+      throw new OutcomeError('OUTCOME_INPUT_INVALID', 'started_at must be an ISO-8601 timestamp with offset');
+    }
+    for (const attempt of outcome.verification_attempts) {
+      if (attempt.attempt_id === attemptId) {
+        throw new OutcomeError('OUTCOME_ATTEMPT_MISMATCH', 'attempt_id was already finalized for this outcome');
+      }
+    }
     this.pendingAttempts.set(outcomeId, { attempt_id: attemptId, started_at: startedAt });
     return { outcome_id: outcomeId, attempt_id: attemptId, started_at: startedAt };
   }
@@ -309,7 +360,20 @@ export class OutcomeService {
         throw new OutcomeError('OUTCOME_OBSERVATION_UNAVAILABLE', `no trusted observation for '${input.observation_id}'`);
       }
       const verifiedObservation = validateObservationEnvelope(observation);
-      this.bindObservationToOutcome(verifiedObservation, outcome, input.attempt_id, context);
+      this.bindObservationToOutcome(verifiedObservation, outcome, input.attempt_id, context, pending);
+      this.assertObservationFreshness(verifiedObservation, outcome, context);
+
+      // Replay defense: one observation id can never finalize two attempts
+      // of the same outcome (cross-outcome reuse is rejected by the store's
+      // global observation index).
+      for (const attempt of outcome.verification_attempts) {
+        if (attempt.observation_id === verifiedObservation.observation_id) {
+          throw new OutcomeError(
+            'OUTCOME_DUPLICATE_OBSERVATION',
+            `observation '${verifiedObservation.observation_id}' was already consumed by this outcome`,
+          );
+        }
+      }
 
       // Expectation stability: the expectation derived today must hash to
       // the digest captured at openOutcome.
@@ -319,7 +383,7 @@ export class OutcomeService {
       // Parser / truncation gate (fail closed, BEFORE any evaluator runs).
       let attemptStatus: VerificationAttemptRecord['status'];
       let reasonCodes: EvaluationResult['reason_codes'];
-      if (verifiedObservation.truncated) {
+      if (verifiedObservation.truncated || verifiedObservation.parser_status === 'truncated') {
         attemptStatus = 'verification_failed';
         reasonCodes = ['READBACK_TRUNCATED'];
       } else if (verifiedObservation.parser_status !== 'parsed') {
@@ -380,15 +444,74 @@ export class OutcomeService {
     return this.store.listOutcomes();
   }
 
+  /**
+   * Freshness / replay defense. Timestamps only ever come from the trusted
+   * native receipt and the trusted native observation; a caller can never
+   * declare observed_at. Enforced here:
+   * - attempt_started_at must equal the server-owned reservation (binding);
+   * - attempt_started_at must not precede the receipt spawn marker;
+   * - observed_at must not precede attempt_started_at;
+   * - observed_at must not be in the future beyond the allowed clock skew;
+   * - the observation's native clock must not precede the receipt's
+   *   accepted_at (a stale observation can never verify).
+   */
+  private assertObservationFreshness(
+    observation: ReadbackObservationEnvelope,
+    outcome: OutcomeRecord,
+    context: OutcomeRuntimeContext,
+  ): void {
+    const receipt = context.receipt;
+    const now = this.clock().getTime();
+    const attemptStarted = Date.parse(observation.attempt_started_at);
+    const observedAt = Date.parse(observation.observed_at);
+    if (receipt.spawn_started_at) {
+      const spawnStarted = Date.parse(receipt.spawn_started_at);
+      if (attemptStarted < spawnStarted) {
+        throw new OutcomeError(
+          'OUTCOME_FRESHNESS_INVALID',
+          'observation attempt_started_at precedes the execution receipt spawn_started_at',
+        );
+      }
+    }
+    if (observedAt < attemptStarted) {
+      throw new OutcomeError('OUTCOME_FRESHNESS_INVALID', 'observation observed_at precedes attempt_started_at');
+    }
+    if (observedAt > now + MAX_OBSERVATION_CLOCK_SKEW_MS) {
+      throw new OutcomeError('OUTCOME_FRESHNESS_INVALID', 'observation observed_at is in the future beyond allowed clock skew');
+    }
+    const acceptedAt = Date.parse(receipt.accepted_at);
+    if (observedAt < acceptedAt) {
+      throw new OutcomeError('OUTCOME_FRESHNESS_INVALID', 'observation observed_at precedes the receipt accepted_at');
+    }
+    void outcome;
+  }
+
   private bindReceiptToPlan(receipt: TrustedExecutionReceipt, plan: ExecutionPlan): void {
     if (receipt.plan_id !== plan.plan_id) {
       throw new OutcomeError('OUTCOME_PLAN_MISMATCH', 'receipt plan_id does not match the plan');
+    }
+    if (receipt.decision_id !== plan.decision_id) {
+      throw new OutcomeError('OUTCOME_RECEIPT_INVALID', 'receipt decision_id does not match the plan');
     }
     if (receipt.capability_id !== plan.capability_id || receipt.capability_version !== plan.capability_version) {
       throw new OutcomeError('OUTCOME_RECEIPT_INVALID', 'receipt capability identity does not match the plan');
     }
     if (receipt.adapter_id !== plan.adapter_id) {
       throw new OutcomeError('OUTCOME_RECEIPT_INVALID', 'receipt adapter_id does not match the plan');
+    }
+    const recomputedInputsDigest = normalizedInputsDigest(plan.normalized_inputs);
+    if (receipt.normalized_inputs_digest !== recomputedInputsDigest) {
+      throw new OutcomeError(
+        'OUTCOME_RECEIPT_INVALID',
+        'receipt normalized_inputs_digest does not match the approved plan inputs',
+      );
+    }
+    const recomputedVerificationDigest = verificationPlanDigest(plan);
+    if ((receipt.verification_plan_digest ?? null) !== recomputedVerificationDigest) {
+      throw new OutcomeError(
+        'OUTCOME_RECEIPT_INVALID',
+        'receipt verification_plan_digest does not match the approved verification plan',
+      );
     }
   }
 
@@ -397,9 +520,16 @@ export class OutcomeService {
     outcome: OutcomeRecord,
     attemptId: string,
     context: OutcomeRuntimeContext,
+    pending?: PendingAttempt,
   ): void {
     if (observation.verification_attempt_id !== attemptId) {
       throw new OutcomeError('OUTCOME_ATTEMPT_MISMATCH', 'observation verification_attempt_id does not match the in-flight attempt');
+    }
+    if (pending && observation.attempt_started_at !== pending.started_at) {
+      throw new OutcomeError(
+        'OUTCOME_ATTEMPT_MISMATCH',
+        'observation attempt_started_at does not match the server-owned attempt reservation',
+      );
     }
     if (observation.origin_plan_id !== outcome.plan_id) {
       throw new OutcomeError('OUTCOME_PLAN_MISMATCH', 'observation origin_plan_id does not match the outcome plan');

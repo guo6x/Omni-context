@@ -10,6 +10,7 @@ mod binding;
 mod parser;
 pub(crate) mod receipt;
 pub(crate) mod runner;
+pub(crate) mod state_map;
 pub(crate) mod store;
 pub(crate) mod types;
 
@@ -18,6 +19,9 @@ mod tests;
 
 #[cfg(test)]
 mod crash_tests;
+
+#[cfg(test)]
+mod cross_language_tests;
 
 pub(crate) use binding::ReadbackBinding;
 pub(crate) use runner::ReadbackRunner;

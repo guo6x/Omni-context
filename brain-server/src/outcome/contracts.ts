@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Goal24 Checkpoint 8 (Lane A) - Outcome / verification contracts.
  *
  * The fundamental rule: a PROCESS EXECUTION RESULT and a VERIFIED OUTCOME are
@@ -75,7 +75,14 @@ export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number];
 export const ATTEMPT_STATUSES = ['verified', 'mismatch', 'inconclusive', 'verification_failed'] as const;
 export type AttemptStatus = (typeof ATTEMPT_STATUSES)[number];
 
-export const PARSER_STATUSES = ['parsed', 'malformed', 'unsupported'] as const;
+/**
+ * Unified parser status vocabulary. The native layer emits 'parsed',
+ * 'malformed' or 'truncated' (truncated output is never reported as a
+ * complete parse); the Brain adds 'unsupported' for a trusted binding that
+ * cannot represent the payload in the V1 structured format. A truncated
+ * observation can never verify.
+ */
+export const PARSER_STATUSES = ['parsed', 'malformed', 'unsupported', 'truncated'] as const;
 export type ParserStatus = (typeof PARSER_STATUSES)[number];
 
 /** Trusted read-back sources. Production bridges emit `native_readback`; lane A tests use `synthetic_test`. */
@@ -87,6 +94,13 @@ export const ATTEMPT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{7,199}$/;
 
 /** Observation payload size cap (256 KiB of canonical JSON). */
 export const MAX_OBSERVATION_PAYLOAD_BYTES = 262_144;
+
+/**
+ * Maximum tolerated native-clock lead over the Brain clock when accepting
+ * trusted observation timestamps (future-time observations beyond this skew
+ * are rejected as replay/forgery candidates).
+ */
+export const MAX_OBSERVATION_CLOCK_SKEW_MS = 60_000;
 
 // ---------------------------------------------------------------------------
 // Trusted execution receipt
@@ -102,10 +116,23 @@ export const TrustedExecutionReceiptSchema = z
   .strictObject({
     receipt_id: z.string().trim().min(1).max(200),
     plan_id: z.string().regex(PLAN_ID_PATTERN, 'plan_id must be a valid plan identifier'),
+    decision_id: z.string().trim().min(1).max(200),
     capability_id: z.string().regex(CAPABILITY_ID_PATTERN, 'capability_id must be provider.resource.action'),
     capability_version: z.string().regex(SEMVER_PATTERN, 'capability_version must be semantic'),
     adapter_id: z.string().regex(ADAPTER_ID_PATTERN, 'adapter_id must be a lowercase implementation identifier'),
+    /** SHA-256 over the canonical JSON of the approved normalized_inputs. */
+    normalized_inputs_digest: z.string().regex(SHA256_HEX_PATTERN, 'normalized_inputs_digest must be lowercase SHA-256 hex'),
+    /**
+     * SHA-256 over the canonical JSON of the approved verification_plan
+     * object (same definition as the CP7 approval binding), or absent for
+     * plans without a verification plan.
+     */
+    verification_plan_digest: z
+      .string()
+      .regex(SHA256_HEX_PATTERN, 'verification_plan_digest must be lowercase SHA-256 hex')
+      .optional(),
     execution_state: z.enum(EXECUTION_EFFECT_STATES),
+    accepted_at: IsoTimestampSchema,
     spawn_started_at: IsoTimestampSchema.optional(),
     finished_at: IsoTimestampSchema.optional(),
     exit_code: z.number().int().min(0).max(4_294_967_295).optional(),
@@ -120,25 +147,61 @@ export const TrustedExecutionReceiptSchema = z
     if (receipt.timed_out && receipt.cancelled) {
       addIssue('timed_out and cancelled cannot both be true', ['timed_out']);
     }
-    if (receipt.execution_state === 'not_started') {
-      if (receipt.spawn_started_at) addIssue('not_started receipts must not carry spawn_started_at', ['spawn_started_at']);
-      if (receipt.finished_at) addIssue('not_started receipts must not carry finished_at', ['finished_at']);
-      if (receipt.exit_code !== undefined) addIssue('not_started receipts must not carry exit_code', ['exit_code']);
-    } else {
-      if (!receipt.spawn_started_at) addIssue(`execution_state=${receipt.execution_state} requires spawn_started_at`, ['spawn_started_at']);
-      if (!receipt.finished_at) addIssue(`execution_state=${receipt.execution_state} requires finished_at`, ['finished_at']);
+    if (receipt.spawn_started_at && Date.parse(receipt.spawn_started_at) < Date.parse(receipt.accepted_at)) {
+      addIssue('spawn_started_at must not precede accepted_at', ['spawn_started_at']);
     }
-    if (receipt.execution_state === 'process_succeeded' && receipt.exit_code === undefined) {
-      addIssue('process_succeeded receipts require exit_code', ['exit_code']);
+    if (receipt.finished_at && Date.parse(receipt.finished_at) < Date.parse(receipt.accepted_at)) {
+      addIssue('finished_at must not precede accepted_at', ['finished_at']);
     }
-    if (receipt.execution_state === 'process_failed' && receipt.exit_code === undefined) {
-      addIssue('process_failed receipts require exit_code', ['exit_code']);
+    if (
+      receipt.spawn_started_at &&
+      receipt.finished_at &&
+      Date.parse(receipt.finished_at) < Date.parse(receipt.spawn_started_at)
+    ) {
+      addIssue('finished_at must not precede spawn_started_at', ['finished_at']);
     }
-    if (receipt.execution_state === 'timed_out' && !receipt.timed_out) {
-      addIssue('execution_state=timed_out requires timed_out=true', ['timed_out']);
-    }
-    if (receipt.execution_state === 'cancelled' && !receipt.cancelled) {
-      addIssue('execution_state=cancelled requires cancelled=true', ['cancelled']);
+    switch (receipt.execution_state) {
+      case 'not_started':
+        // Only a provably-never-spawned receipt (native spawn_failed) maps
+        // here; a recovered accepted receipt must be unknown_after_crash.
+        if (receipt.spawn_started_at) addIssue('not_started receipts must not carry spawn_started_at', ['spawn_started_at']);
+        if (receipt.finished_at) addIssue('not_started receipts must not carry finished_at', ['finished_at']);
+        if (receipt.exit_code !== undefined) addIssue('not_started receipts must not carry exit_code', ['exit_code']);
+        if (receipt.timed_out) addIssue('not_started receipts must not carry timed_out=true', ['timed_out']);
+        if (receipt.cancelled) addIssue('not_started receipts must not carry cancelled=true', ['cancelled']);
+        break;
+      case 'spawn_started':
+        if (!receipt.spawn_started_at) addIssue('spawn_started receipts require spawn_started_at', ['spawn_started_at']);
+        if (receipt.finished_at) addIssue('spawn_started receipts must not carry finished_at', ['finished_at']);
+        if (receipt.exit_code !== undefined) addIssue('spawn_started receipts must not carry exit_code', ['exit_code']);
+        if (receipt.timed_out) addIssue('spawn_started receipts must not carry timed_out=true', ['timed_out']);
+        if (receipt.cancelled) addIssue('spawn_started receipts must not carry cancelled=true', ['cancelled']);
+        break;
+      case 'process_succeeded':
+      case 'process_failed':
+        if (!receipt.spawn_started_at) addIssue(`${receipt.execution_state} receipts require spawn_started_at`, ['spawn_started_at']);
+        if (!receipt.finished_at) addIssue(`${receipt.execution_state} receipts require finished_at`, ['finished_at']);
+        if (receipt.exit_code === undefined) addIssue(`${receipt.execution_state} receipts require exit_code`, ['exit_code']);
+        break;
+      case 'timed_out':
+        if (!receipt.spawn_started_at) addIssue('timed_out receipts require spawn_started_at', ['spawn_started_at']);
+        if (!receipt.finished_at) addIssue('timed_out receipts require finished_at', ['finished_at']);
+        if (!receipt.timed_out) addIssue('execution_state=timed_out requires timed_out=true', ['timed_out']);
+        break;
+      case 'cancelled':
+        if (!receipt.spawn_started_at) addIssue('cancelled receipts require spawn_started_at', ['spawn_started_at']);
+        if (!receipt.finished_at) addIssue('cancelled receipts require finished_at', ['finished_at']);
+        if (!receipt.cancelled) addIssue('execution_state=cancelled requires cancelled=true', ['cancelled']);
+        break;
+      case 'unknown_after_crash':
+        // Recovered receipts have no completion markers. A spawn marker may
+        // exist (recovered from spawn_started) or not (recovered from
+        // accepted); exit/flags prove nothing either way and must be absent.
+        if (receipt.finished_at) addIssue('unknown_after_crash receipts must not carry finished_at', ['finished_at']);
+        if (receipt.exit_code !== undefined) addIssue('unknown_after_crash receipts must not carry exit_code', ['exit_code']);
+        if (receipt.timed_out) addIssue('unknown_after_crash receipts must not carry timed_out=true', ['timed_out']);
+        if (receipt.cancelled) addIssue('unknown_after_crash receipts must not carry cancelled=true', ['cancelled']);
+        break;
     }
   });
 export type TrustedExecutionReceipt = z.infer<typeof TrustedExecutionReceiptSchema>;
@@ -156,11 +219,19 @@ export type TrustedExecutionReceipt = z.infer<typeof TrustedExecutionReceiptSche
 export const ReadbackObservationEnvelopeSchema = z
   .strictObject({
     observation_id: z.string().trim().min(1).max(200),
+    /**
+     * Canonical attempt binding id. The native layer names the same id
+     * `native_attempt_id`; the two names denote the exact same value and
+     * namespace (see docs/goal24/cp8-readback-observation-contract.json).
+     */
     verification_attempt_id: z.string().trim().min(1).max(200),
     origin_plan_id: z.string().regex(PLAN_ID_PATTERN, 'origin_plan_id must be a valid plan identifier'),
     origin_execution_receipt_id: z.string().trim().min(1).max(200),
     verification_capability_id: z.string().regex(CAPABILITY_ID_PATTERN, 'verification_capability_id must be a capability id'),
     subject_key: z.string().trim().min(1).max(200),
+    /** Trusted native clock: the durable attempt reservation timestamp. */
+    attempt_started_at: IsoTimestampSchema,
+    /** Trusted native clock: when the observation payload was acquired. */
     observed_at: IsoTimestampSchema,
     verification_source: z.enum(VERIFICATION_SOURCES),
     verification_level: z.enum(VERIFICATION_REQUIREMENTS),
@@ -168,13 +239,36 @@ export const ReadbackObservationEnvelopeSchema = z
     payload_digest: z.string().regex(SHA256_HEX_PATTERN, 'payload_digest must be lowercase SHA-256 hex'),
     truncated: z.boolean(),
     parser_status: z.enum(PARSER_STATUSES),
+    /** Trusted native source identity: adapter that produced the payload. */
+    source_adapter: z.string().trim().min(1).max(200),
+    /** Trusted native source identity: binding that produced the payload. */
+    source_binding: z.string().trim().min(1).max(200),
+    process_exit_code: z.number().int().min(0).max(4_294_967_295).optional(),
+    process_timed_out: z.boolean(),
+    process_cancelled: z.boolean(),
+    resolved_executable_fingerprint: z.string().trim().min(1).max(500),
+    process_duration_ms: z.number().int().min(0).max(2_147_483_647),
   })
   .superRefine((observation, ctx) => {
-    if (observation.truncated && observation.parser_status !== 'parsed') {
+    if (observation.truncated && observation.parser_status !== 'parsed' && observation.parser_status !== 'truncated') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'a truncated observation cannot be reported as malformed/unsupported at the same time',
         path: ['parser_status'],
+      });
+    }
+    if (observation.process_timed_out && observation.process_cancelled) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'process_timed_out and process_cancelled cannot both be true',
+        path: ['process_timed_out'],
+      });
+    }
+    if (Date.parse(observation.observed_at) < Date.parse(observation.attempt_started_at)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'observed_at must not precede attempt_started_at',
+        path: ['observed_at'],
       });
     }
   });

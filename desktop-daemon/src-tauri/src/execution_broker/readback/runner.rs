@@ -208,7 +208,17 @@ impl ReadbackRunner {
         let parsed = binding.parse(&raw);
         let truncated = raw.truncated();
         let parser_status = final_parser_status(parsed.status, truncated);
-        let payload_digest = payload_digest(&parsed.payload)?;
+        // A failed parse can never report partial truth: the unified V1
+        // contract requires the payload to remain a JSON object, so a null
+        // parse result becomes an empty object (the Brain envelope schema
+        // rejects non-object payloads; malformed observations fail closed on
+        // the parser gate before any evaluator sees them).
+        let payload = if parsed.payload.is_null() {
+            serde_json::json!({})
+        } else {
+            parsed.payload
+        };
+        let payload_digest = payload_digest(&payload)?;
         let observed_at = runner::now_rfc3339();
         let subject_key = binding.subject_key(&verification_inputs).map_err(|err| {
             BrokerError::new(
@@ -233,13 +243,14 @@ impl ReadbackRunner {
 
         Ok(ReadbackObservationEnvelope {
             observation_id,
-            verification_attempt_id: attempt_id,
+            verification_attempt_id: attempt_id.clone(),
             origin_plan_id: receipt.plan_id.clone(),
             origin_execution_receipt_id: receipt.receipt_id.clone(),
             verification_capability_id: binding.capability_id().to_string(),
             subject_key,
+            attempt_started_at: started_at.clone(),
             observed_at,
-            payload: parsed.payload,
+            payload,
             payload_digest,
             parser_status,
             truncated,

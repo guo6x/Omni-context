@@ -117,6 +117,7 @@ fn identity_object(receipt: &ExecutionReceipt) -> Value {
         "verification_capability_id": receipt.verification_capability_id,
         "verification_inputs": receipt.verification_inputs,
         "accepted_at": receipt.accepted_at,
+        "source": receipt.source,
     })
 }
 
@@ -172,6 +173,7 @@ pub fn build_accepted_receipt(
         receipt_id,
         plan_id: plan.plan_id.clone(),
         decision_id: plan.decision_id.clone(),
+        source: "native_broker".to_string(),
         capability_id: plan.capability_id.clone(),
         capability_version: plan.capability_version.clone(),
         adapter_id: plan.adapter_id.clone(),
@@ -205,6 +207,9 @@ pub fn build_accepted_receipt(
 pub fn validate_receipt_structure(receipt: &ExecutionReceipt) -> Result<(), BrokerError> {
     if !valid_receipt_id(&receipt.receipt_id) {
         return Err(structural_error("invalid receipt_id"));
+    }
+    if receipt.source != "native_broker" {
+        return Err(structural_error("receipt source must be native_broker"));
     }
     if !ExecutionPlanWire::valid_plan_id(&receipt.plan_id) {
         return Err(structural_error("invalid plan_id"));

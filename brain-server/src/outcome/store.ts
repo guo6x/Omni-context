@@ -59,6 +59,36 @@ export function validateCreateOutcome(record: OutcomeRecord): OutcomeRecord {
   return parsed.data;
 }
 
+/** Canonical execution instance identity: one OutcomeRecord per receipt. */
+export function executionInstanceKey(record: OutcomeRecord): string {
+  return `${record.plan_id}|${record.execution_receipt_id}`;
+}
+
+/**
+ * All observation ids currently claimed by stored outcomes. An observation
+ * is single-use: it can only finalize exactly one verification attempt of
+ * exactly one outcome (replay defense).
+ */
+export function collectObservationClaims(
+  outcomes: readonly OutcomeRecord[],
+): Map<string, string> {
+  const claims = new Map<string, string>();
+  for (const record of outcomes) {
+    for (const attempt of record.verification_attempts) {
+      if (!attempt.observation_id) continue;
+      const existing = claims.get(attempt.observation_id);
+      if (existing !== undefined && existing !== record.outcome_id) {
+        throw new OutcomeError(
+          'OUTCOME_STORE_CORRUPT',
+          `observation '${attempt.observation_id}' is claimed by more than one outcome`,
+        );
+      }
+      claims.set(attempt.observation_id, record.outcome_id);
+    }
+  }
+  return claims;
+}
+
 export class InMemoryOutcomeStore implements OutcomeStore {
   private readonly outcomes = new Map<string, OutcomeRecord>();
 
@@ -66,8 +96,9 @@ export class InMemoryOutcomeStore implements OutcomeStore {
     if (this.outcomes.has(record.outcome_id)) {
       throw new OutcomeError('OUTCOME_DUPLICATE_RECORD', `outcome '${record.outcome_id}' already exists`);
     }
-    validateCreateOutcome(record);
-    this.outcomes.set(record.outcome_id, record);
+    const parsed = validateCreateOutcome(record);
+    this.assertCanonicalInstanceFree(parsed);
+    this.outcomes.set(parsed.outcome_id, parsed);
   }
 
   getOutcome(outcomeId: string): OutcomeRecord | undefined {
@@ -79,8 +110,35 @@ export class InMemoryOutcomeStore implements OutcomeStore {
     if (!existing) {
       throw new OutcomeError('OUTCOME_NOT_FOUND', `outcome '${record.outcome_id}' does not exist`);
     }
-    validateOutcomeTransition(existing, record);
-    this.outcomes.set(record.outcome_id, record);
+    const after = validateOutcomeTransition(existing, record);
+    this.assertObservationClaimsFree(after);
+    this.outcomes.set(after.outcome_id, after);
+  }
+
+  private assertCanonicalInstanceFree(record: OutcomeRecord): void {
+    const key = executionInstanceKey(record);
+    for (const existing of this.outcomes.values()) {
+      if (executionInstanceKey(existing) === key) {
+        throw new OutcomeError(
+          'OUTCOME_DUPLICATE_RECORD',
+          `an outcome already exists for plan '${record.plan_id}' / receipt '${record.execution_receipt_id}' (one canonical outcome per execution instance)`,
+        );
+      }
+    }
+  }
+
+  private assertObservationClaimsFree(record: OutcomeRecord): void {
+    const claims = collectObservationClaims([...this.outcomes.values()]);
+    for (const attempt of record.verification_attempts) {
+      if (!attempt.observation_id) continue;
+      const owner = claims.get(attempt.observation_id);
+      if (owner !== undefined && owner !== record.outcome_id) {
+        throw new OutcomeError(
+          'OUTCOME_DUPLICATE_OBSERVATION',
+          `observation '${attempt.observation_id}' was already consumed by another outcome`,
+        );
+      }
+    }
   }
 
   listOutcomes(): readonly OutcomeRecord[] {
@@ -88,6 +146,28 @@ export class InMemoryOutcomeStore implements OutcomeStore {
       left.outcome_id.localeCompare(right.outcome_id),
     );
   }
+}
+
+/**
+ * Strip undefined-valued optional keys before canonical serialization:
+ * optional zod fields parse as `key: undefined` and canonicalJson fails
+ * closed on undefined. JSON.stringify semantics (undefined keys dropped)
+ * are the canonical form; this mirrors what a JSON round-trip produces.
+ */
+function stripUndefined(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripUndefined(item));
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      if (item !== undefined) {
+        out[key] = stripUndefined(item);
+      }
+    }
+    return out;
+  }
+  return value;
 }
 
 function serializeStoreFile(outcomes: readonly OutcomeRecord[], updatedAt: string): string {
@@ -99,7 +179,7 @@ function serializeStoreFile(outcomes: readonly OutcomeRecord[], updatedAt: strin
     updated_at: updatedAt,
     outcomes: sorted,
   });
-  return `${canonicalJson(file)}\n`;
+  return `${canonicalJson(stripUndefined(file))}\n`;
 }
 
 function parseStoreFile(contents: string): OutcomeRecord[] {
@@ -152,6 +232,31 @@ export class FileOutcomeStore implements OutcomeStore {
     for (const record of records) {
       this.outcomes.set(record.outcome_id, record);
     }
+    // Rebuild the canonical-instance and observation-claim indexes from the
+    // persisted history. A file carrying two outcomes for one receipt, one
+    // receipt bound to two different plans, or one observation claimed twice
+    // is corrupt and fails closed (never resets).
+    const instances = new Set<string>();
+    const planByReceipt = new Map<string, string>();
+    for (const record of records) {
+      const key = executionInstanceKey(record);
+      if (instances.has(key)) {
+        throw new OutcomeError(
+          'OUTCOME_STORE_CORRUPT',
+          `outcome store carries more than one outcome for plan/receipt '${key}'`,
+        );
+      }
+      instances.add(key);
+      const existingPlan = planByReceipt.get(record.execution_receipt_id);
+      if (existingPlan !== undefined && existingPlan !== record.plan_id) {
+        throw new OutcomeError(
+          'OUTCOME_STORE_CORRUPT',
+          `receipt '${record.execution_receipt_id}' is bound to more than one plan`,
+        );
+      }
+      planByReceipt.set(record.execution_receipt_id, record.plan_id);
+    }
+    collectObservationClaims(records);
     // Only mark loaded after a fully successful parse: a corrupt file keeps
     // failing closed on every access instead of silently looking empty.
     this.loaded = true;
@@ -176,6 +281,15 @@ export class FileOutcomeStore implements OutcomeStore {
         throw new OutcomeError('OUTCOME_DUPLICATE_RECORD', `outcome '${record.outcome_id}' already exists`);
       }
       const parsed = validateCreateOutcome(record);
+      const key = executionInstanceKey(parsed);
+      for (const existing of this.outcomes.values()) {
+        if (executionInstanceKey(existing) === key) {
+          throw new OutcomeError(
+            'OUTCOME_DUPLICATE_RECORD',
+            `an outcome already exists for plan '${parsed.plan_id}' / receipt '${parsed.execution_receipt_id}' (one canonical outcome per execution instance)`,
+          );
+        }
+      }
       this.outcomes.set(parsed.outcome_id, parsed);
       this.persist();
     });
@@ -193,6 +307,17 @@ export class FileOutcomeStore implements OutcomeStore {
         throw new OutcomeError('OUTCOME_NOT_FOUND', `outcome '${record.outcome_id}' does not exist`);
       }
       const after = validateOutcomeTransition(existing, record);
+      const claims = collectObservationClaims([...this.outcomes.values()]);
+      for (const attempt of after.verification_attempts) {
+        if (!attempt.observation_id) continue;
+        const owner = claims.get(attempt.observation_id);
+        if (owner !== undefined && owner !== after.outcome_id) {
+          throw new OutcomeError(
+            'OUTCOME_DUPLICATE_OBSERVATION',
+            `observation '${attempt.observation_id}' was already consumed by another outcome`,
+          );
+        }
+      }
       this.outcomes.set(after.outcome_id, after);
       this.persist();
     });

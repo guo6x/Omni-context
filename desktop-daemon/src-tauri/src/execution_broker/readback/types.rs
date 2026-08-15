@@ -97,6 +97,10 @@ pub struct VerificationAttemptRecord {
     pub error_code: Option<ErrorCode>,
 }
 
+fn default_receipt_source() -> String {
+    "native_broker".to_string()
+}
+
 /// Native-owned persistent execution receipt.
 ///
 /// Identity fields (plan / capability / digests / verification linkage) are
@@ -107,6 +111,11 @@ pub struct ExecutionReceipt {
     pub receipt_id: String,
     pub plan_id: String,
     pub decision_id: String,
+    /// Authority marker: receipts can only ever originate from the native
+    /// broker. The Brain contract requires this literal and rejects anything
+    /// else.
+    #[serde(default = "default_receipt_source")]
+    pub source: String,
     pub capability_id: String,
     pub capability_version: String,
     pub adapter_id: String,
@@ -186,11 +195,15 @@ pub struct ReadbackParseResult {
 #[derive(Debug, Clone, Serialize)]
 pub struct ReadbackObservationEnvelope {
     pub observation_id: String,
+    /// Canonical attempt binding id (the Brain contract's native_attempt_id
+    /// alias denotes this exact value).
     pub verification_attempt_id: String,
     pub origin_plan_id: String,
     pub origin_execution_receipt_id: String,
     pub verification_capability_id: String,
     pub subject_key: String,
+    /// Trusted native clock: the durable attempt reservation timestamp.
+    pub attempt_started_at: String,
     pub observed_at: String,
     pub payload: Value,
     pub payload_digest: String,

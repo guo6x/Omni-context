@@ -1,0 +1,142 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "cp8-execution-receipt-transfer-contract.json",
+    "purpose": "Machine-readable unified TrustedExecutionReceipt contract. The native ExecutionReceipt (Rust ExecutionReceipt in desktop-daemon/src-tauri/src/execution_broker/readback/types.rs) is the process lifecycle authority; the Brain narrow TrustedExecutionReceipt (brain-server/src/outcome/contracts.ts) consumes exactly the fields declared here through the trusted NativeReceiptResolver. A caller can never construct a receipt: production path is receipt_id -> trusted internal NativeReceiptResolver -> native persistent ReceiptStore -> validated narrow TrustedExecutionReceipt snapshot -> OutcomeService.",
+    "digest_authority": "receipt_digest is a NATIVE integrity/audit field. Real trust comes from the NativeReceiptResolver resolving against the persistent native ReceiptStore, NOT from a caller-provided digest. The Brain core recomputes receipt_digest over the canonical content (sorted keys, strict number domain, SHA-256 lowercase hex) and rejects on mismatch - mutation detection, not authority transfer.",
+    "digest_canonicalization": "SHA-256 lowercase hex over canonical JSON: object keys sorted, arrays order-preserving, JSON.stringify string escaping, strict shared number domain (finite, abs <= 9007199254740991, fixed-point, <= 6 fractional digits). Both languages share this definition (Brain evidence/model.ts canonicalJson, Rust execution_broker/approval/digest.rs).",
+    "cross_language": {
+      "brain_schema": "brain-server/src/outcome/contracts.ts TrustedExecutionReceiptSchema",
+      "rust_struct": "desktop-daemon/src-tauri/src/execution_broker/readback/types.rs ExecutionReceipt",
+      "golden_vectors": "docs/goal24/fixtures/cp8-outcome/execution-state-mapping.json (state mapping) - both suites validate, mismatch = 0"
+    }
+  },
+  "fields": {
+    "receipt_id": {
+      "type": "string",
+      "required": true,
+      "authority": "native-generated (rcpt_ + 32 random hex); caller can never submit one",
+      "digest_covered": true,
+      "semantic": "primary key of the persistent native ReceiptStore"
+    },
+    "plan_id": {
+      "type": "string (PLAN_ID_PATTERN)",
+      "required": true,
+      "authority": "copied from the approved ExecutionPlan at accept time; immutable",
+      "digest_covered": true,
+      "semantic": "exactly one approved plan per receipt"
+    },
+    "decision_id": {
+      "type": "string",
+      "required": true,
+      "authority": "copied from the approved plan; immutable",
+      "digest_covered": true,
+      "semantic": "decision lineage binding"
+    },
+    "capability_id": {
+      "type": "string (CAPABILITY_ID_PATTERN)",
+      "required": true,
+      "authority": "copied from the approved plan; immutable",
+      "digest_covered": true,
+      "semantic": "executed capability identity"
+    },
+    "capability_version": {
+      "type": "string (semver)",
+      "required": true,
+      "authority": "copied from the approved plan; immutable",
+      "digest_covered": true,
+      "semantic": "executed capability version"
+    },
+    "adapter_id": {
+      "type": "string (ADAPTER_ID_PATTERN)",
+      "required": true,
+      "authority": "copied from the approved plan; immutable",
+      "digest_covered": true,
+      "semantic": "implementation identity"
+    },
+    "normalized_inputs_digest": {
+      "type": "string (sha256 hex)",
+      "required": true,
+      "authority": "native-computed over the approved normalized_inputs; Brain recomputes and compares",
+      "digest_covered": true,
+      "semantic": "the executed inputs can never drift after approval"
+    },
+    "verification_plan_digest": {
+      "type": "string (sha256 hex) | null",
+      "required": false,
+      "authority": "native-computed over the full approved verification_plan object (CP7 approval-binding definition); absent for plans without a verification plan; Brain recomputes and compares",
+      "digest_covered": true,
+      "semantic": "verification capability + verification inputs are frozen at execution time"
+    },
+    "execution_state": {
+      "type": "enum not_started|spawn_started|process_succeeded|process_failed|timed_out|cancelled|unknown_after_crash",
+      "required": true,
+      "authority": "derived ONLY via the shared execution-state mapping from the native receipt lifecycle (accepted/spawn_started/completed/spawn_failed/unknown_after_crash + exit_code/timed_out/cancelled flags)",
+      "digest_covered": false,
+      "semantic": "process lifecycle knowledge; NEVER business outcome truth"
+    },
+    "accepted_at": {
+      "type": "ISO-8601 timestamp",
+      "required": true,
+      "authority": "trusted native clock at durable accepted write",
+      "digest_covered": true,
+      "semantic": "receipt creation instant; all later timestamps must be >= accepted_at"
+    },
+    "spawn_started_at": {
+      "type": "ISO-8601 timestamp | null",
+      "required": false,
+      "authority": "trusted native clock at durable spawn marker",
+      "digest_covered": false,
+      "semantic": "proof the OS process was created; absent for not_started and recovered-from-accepted unknown_after_crash"
+    },
+    "finished_at": {
+      "type": "ISO-8601 timestamp | null",
+      "required": false,
+      "authority": "trusted native clock at completion write",
+      "digest_covered": false,
+      "semantic": "lifecycle completion instant; absent for in-flight and crash states"
+    },
+    "exit_code": {
+      "type": "uint32 | null",
+      "required": false,
+      "authority": "observed child exit code",
+      "digest_covered": false,
+      "semantic": "spawn fact only; exit 0 can NEVER verify an external effect"
+    },
+    "timed_out": {
+      "type": "boolean",
+      "required": true,
+      "authority": "native lifecycle observation",
+      "digest_covered": false,
+      "semantic": "broker timeout; effect may still have occurred"
+    },
+    "cancelled": {
+      "type": "boolean",
+      "required": true,
+      "authority": "native lifecycle observation",
+      "digest_covered": false,
+      "semantic": "broker cancellation; effect may still have occurred"
+    },
+    "receipt_digest": {
+      "type": "string (sha256 hex)",
+      "required": true,
+      "authority": "native integrity/audit field over the digest_covered fields; Brain recomputes for mutation detection only",
+      "digest_covered": false,
+      "semantic": "see digest_authority: never caller-provided trust"
+    },
+    "source": {
+      "type": "literal native_broker",
+      "required": true,
+      "authority": "constant; any other value is rejected",
+      "digest_covered": true,
+      "semantic": "receipts can only originate from the native broker"
+    }
+  },
+  "trust_rules": [
+    "exit_code == 0, BrokerExecutionResult.success == true, ExecutionPlan.state == succeeded, stdout containing 'success', stderr absence, approval granted, LLM claims, skill claims and evidence notes can NEVER produce Outcome.verification_status = verified",
+    "only a trusted native read-back observation + a trusted deterministic Brain evaluator can produce verified",
+    "BrokerExecutionResult has NO Deserialize implementation (compile-time enforced, CP8A-002): caller JSON can never be deserialized into a receipt-looking value",
+    "no public submitReceipt / registerReceipt / POST /receipt / MCP receipt tool / WebView receipt import exists",
+    "ExecutionPlan.succeeded = process/execution lifecycle succeeded (NOT business outcome verified); ExecutionPlan.failed = lifecycle failed (NOT external effect definitely absent) - frozen with regression tests"
+  ]
+}

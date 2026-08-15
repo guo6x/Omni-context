@@ -1,0 +1,130 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "cp8-readback-observation-contract.json",
+    "purpose": "Machine-readable unified ReadbackObservationEnvelope contract. The native ReadbackObservationEnvelope (Rust) reports ONLY what was observed; the Brain ReadbackObservationEnvelopeSchema validates the same fields and the deterministic evaluator decides whether the observation matches the expectation. Native observations must never carry verified / business_success / expected_match as authority.",
+    "cross_language": {
+      "brain_schema": "brain-server/src/outcome/contracts.ts ReadbackObservationEnvelopeSchema",
+      "rust_struct": "desktop-daemon/src-tauri/src/execution_broker/readback/types.rs ReadbackObservationEnvelope",
+      "golden_vectors": "docs/goal24/fixtures/cp8-outcome/readback-observation-vectors.json (35 vectors) - both suites validate, contract mismatch = 0"
+    },
+    "attempt_id_alias": "verification_attempt_id is the canonical attempt binding id. native_attempt_id denotes the exact same value and namespace; the two names are interchangeable and MUST carry the same value (single-use, durably reserved before the read-back spawn)."
+  },
+  "fields": {
+    "observation_id": {
+      "type": "string (1..200)",
+      "producer": "native (obs_ + 32 random hex)",
+      "semantic": "single-use observation identity; one observation can finalize exactly one attempt of one outcome"
+    },
+    "verification_attempt_id": {
+      "type": "string (1..200)",
+      "producer": "native reservation (rbattempt_ + 32 hex) or server-owned bridge id",
+      "semantic": "binds the observation to the in-flight attempt; alias native_attempt_id"
+    },
+    "origin_plan_id": {
+      "type": "string (PLAN_ID_PATTERN)",
+      "producer": "copied from the trusted receipt",
+      "semantic": "binding 1/4: cross-plan observations are rejected"
+    },
+    "origin_execution_receipt_id": {
+      "type": "string (1..200)",
+      "producer": "copied from the trusted receipt",
+      "semantic": "binding 2/4: cross-receipt observations are rejected"
+    },
+    "verification_capability_id": {
+      "type": "string (CAPABILITY_ID_PATTERN)",
+      "producer": "trusted binding identity registered in the compiled registry",
+      "semantic": "binding 3/4: cross-capability observations are rejected; must equal the approved plan verification capability"
+    },
+    "subject_key": {
+      "type": "string (1..200)",
+      "producer": "derived by the trusted binding from the frozen verification_inputs (callers can never supply it)",
+      "semantic": "binding 4/4: cross-subject observations are rejected"
+    },
+    "attempt_started_at": {
+      "type": "ISO-8601 timestamp",
+      "producer": "trusted native clock at the durable attempt reservation",
+      "semantic": "freshness anchor: must be >= receipt.spawn_started_at and <= observed_at"
+    },
+    "observed_at": {
+      "type": "ISO-8601 timestamp",
+      "producer": "trusted native clock when the payload was acquired; callers can never declare it",
+      "semantic": "must be >= attempt_started_at, >= receipt.accepted_at and within the clock-skew window"
+    },
+    "verification_source": {
+      "type": "enum native_readback|synthetic_test",
+      "producer": "brain-bridge annotation (native emits neither; the trusted bridge sets native_readback; tests use synthetic_test)",
+      "semantic": "documented production/test provenance"
+    },
+    "verification_level": {
+      "type": "enum none|asserted|verified",
+      "producer": "brain-bridge annotation",
+      "semantic": "evidence-style level annotation; NEVER a semantic verdict authority"
+    },
+    "payload": {
+      "type": "JSON-safe plain object, <= 262144 bytes canonical JSON",
+      "producer": "trusted binding parser (strict JSON / marker-delimited JSON; never natural-language regex)",
+      "semantic": "the observed post-state; oversized or non-JSON-safe payloads are rejected before any evaluation"
+    },
+    "payload_digest": {
+      "type": "string (sha256 hex)",
+      "producer": "native-computed; Brain recomputes and rejects on mismatch",
+      "semantic": "mutation detection over the payload"
+    },
+    "truncated": {
+      "type": "boolean",
+      "producer": "native (either output stream hit the broker cap)",
+      "semantic": "truncated = true can NEVER verify (verification_failed / READBACK_TRUNCATED)"
+    },
+    "parser_status": {
+      "type": "enum parsed|malformed|unsupported|truncated",
+      "producer": "native emits parsed|malformed|truncated; unsupported is a Brain-visible binding status",
+      "semantic": "!= parsed can NEVER verify: malformed -> READBACK_MALFORMED, unsupported -> READBACK_UNSUPPORTED, truncated -> READBACK_TRUNCATED"
+    },
+    "source_adapter": {
+      "type": "string (1..200)",
+      "producer": "trusted binding adapter id",
+      "semantic": "native source identity for audit"
+    },
+    "source_binding": {
+      "type": "string (1..200)",
+      "producer": "trusted binding id",
+      "semantic": "native source identity for audit"
+    },
+    "process_exit_code": {
+      "type": "uint32 | null",
+      "producer": "observed read-back child exit",
+      "semantic": "process metadata only, never a verdict"
+    },
+    "process_timed_out": {
+      "type": "boolean",
+      "producer": "native",
+      "semantic": "read-back process metadata; timed_out && cancelled together is structurally invalid"
+    },
+    "process_cancelled": {
+      "type": "boolean",
+      "producer": "native",
+      "semantic": "read-back process metadata"
+    },
+    "resolved_executable_fingerprint": {
+      "type": "string (1..500)",
+      "producer": "native resolved executable identity",
+      "semantic": "audit"
+    },
+    "process_duration_ms": {
+      "type": "non-negative integer",
+      "producer": "native",
+      "semantic": "audit"
+    }
+  },
+  "trust_rules": [
+    "caller can only ever present an observation_id; the trusted observation resolver (TrustedObservationResolver) resolves it against the native trusted observation source",
+    "no public readback IPC, no REST observation import, no MCP 'mark verified' tool",
+    "verification inputs are immutable: read-back capability, inputs, subject, argv, executable, cwd, env all come from the approved ExecutionPlan.verification_plan frozen into the receipt; verification_plan_digest must match",
+    "verifier bindings must declare side_effect_class=read_only, risk_level=low, required_authority=L0; write / external-effect / elevated verifiers are rejected at registration (READBACK_BINDING_NOT_READ_ONLY)",
+    "expectations come only from the trusted OutcomeEvaluatorRegistry derived from the approved plan + normalized inputs + verification plan; callers can never supply expected_state / expected_result / success_condition / predicate / JSONPath / regex / comparison_prompt / judge_prompt",
+    "LLM Judge is FORBIDDEN in CP8 V1",
+    "each native read-back call performs exactly one attempt; no while-true retry; native hard maximum = 5 attempts per receipt (MAX_VERIFICATION_ATTEMPTS); Brain default = 3",
+    "old observations can never be reused: freshness + identity binding + single-use observation ids defeat replay"
+  ]
+}
