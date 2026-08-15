@@ -1,0 +1,85 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "cp8-write-enablement-prerequisites.json",
+    "purpose": "Machine-readable prerequisite gate for ANY future production write capability. A write capability can never be registered in production until every prerequisite below is PASS; otherwise the write must not be registered. This is the frozen CP8 gate for future CP9+ write enablement."
+  },
+  "prerequisites": [
+    {
+      "id": "PR-APPROVAL",
+      "name": "approval policy PASS",
+      "requirement": "the write capability passes the CP7 fail-closed risk approval policy (binding digest, durable single-use grants, consume-before-spawn)",
+      "verification": "CP7 regression suite + native approval store tests"
+    },
+    {
+      "id": "PR-NATIVE-EXEC",
+      "name": "native execution binding PASS",
+      "requirement": "a compiled native ExecutionBinding exists behind the CP3 containment runner (trusted executable candidates, cwd/env allowlists, output bounds, process-tree kill, secret redaction)",
+      "verification": "Rust execution_broker tests"
+    },
+    {
+      "id": "PR-RECEIPT",
+      "name": "trusted receipt PASS",
+      "requirement": "every execution persists a native receipt (accepted -> spawn_started -> completed lifecycle, digest integrity, crash recovery to unknown_after_crash)",
+      "verification": "Rust readback receipt/crash tests"
+    },
+    {
+      "id": "PR-READBACK",
+      "name": "complete readback mapping PASS",
+      "requirement": "the write capability has a mapped read-only verification capability and a registered read_only/low/L0 verifier binding whose outputs parse into the structured observation envelope",
+      "verification": "readback binding registry + parser tests"
+    },
+    {
+      "id": "PR-EVALUATOR",
+      "name": "deterministic evaluator PASS",
+      "requirement": "a trusted deterministic OutcomeEvaluatorV1 is registered that derives the expectation from the approved plan and evaluates the observation without LLM/predicates",
+      "verification": "Brain evaluator tests + expectation vectors"
+    },
+    {
+      "id": "PR-LOCATOR",
+      "name": "subject locator PASS",
+      "requirement": "the observation subject_key is derivable from trusted inputs and the post-state can be located exactly; stdout URLs are locator candidates at most",
+      "verification": "cross-subject observation rejection + catalog mapping"
+    },
+    {
+      "id": "PR-NO-GAP",
+      "name": "no unresolved verification gap",
+      "requirement": "no LOCATOR_GAP / READBACK_CAPABILITY_GAP / structured-field gap remains for the planned effect (see cp8-github-readback-catalog.json)",
+      "verification": "readback catalog status per capability"
+    }
+  ],
+  "github_future_catalog": {
+    "github.issue.create": {
+      "status": "LOCATOR_GAP",
+      "reason": "gh issue create stdout URL is at most a locator candidate, never verified truth; a trusted structured issue-number field is required before enablement",
+      "can_register_now": false
+    },
+    "github.issue.comment": {
+      "status": "READBACK_CAPABILITY_GAP",
+      "reason": "current github.issue.read cannot completely verify a comment; a read-only comments.fetch capability is required",
+      "can_register_now": false
+    },
+    "github.issue.close": {
+      "status": "MAPPED",
+      "future_requirement": "exact issue identity + state CLOSED via github.issue.read",
+      "can_register_now": true,
+      "note": "enablement still requires ALL prerequisites above"
+    },
+    "github.pr.merge": {
+      "status": "MAPPED_PARTIAL",
+      "reason": "pr.read state MERGED verifies merge state today; merge metadata (mergedAt/mergeCommit oid) remains a structured-field gap",
+      "can_register_now": false,
+      "future_requirement": "exact PR identity + MERGED; metadata after read field extension"
+    }
+  },
+  "cp8_facts": {
+    "production_write_bindings": 0,
+    "production_github_write_capabilities": [
+      "github.issue.create",
+      "github.issue.comment",
+      "github.issue.close",
+      "github.pr.merge"
+    ],
+    "note": "all four remain UNREGISTERED in production; CP8 does not add github.issue.create / github.issue.comment / github.issue.close / github.pr.merge bindings"
+  }
+}

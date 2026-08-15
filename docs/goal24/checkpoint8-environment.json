@@ -1,0 +1,67 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "checkpoint8-environment.json",
+    "policy": "Runtime/SDK/toolchain rule: use existing D: environments first, then C: installed environments, and only install to D:\\environment if neither exists. Nothing new was installed to C: during CP8."
+  },
+  "toolchains": [
+    {
+      "name": "node",
+      "version": "v22.23.2",
+      "location": "D:\\environment\\node (existing)",
+      "note": "used for brain-server and desktop-daemon npm scripts"
+    },
+    {
+      "name": "pnpm",
+      "version": "11.20.0",
+      "location": "existing",
+      "note": "store at D:\\.pnpm-store\\v11"
+    },
+    {
+      "name": "npm",
+      "version": "10.9.8",
+      "location": "existing (bundled with node)"
+    },
+    {
+      "name": "cargo",
+      "version": "1.97.1",
+      "location": "existing (CARGO_HOME=D:\\environment\\cargo)"
+    },
+    {
+      "name": "rustc",
+      "version": "1.97.1",
+      "location": "existing"
+    },
+    {
+      "name": "cargo-audit",
+      "version": "binary at D:\\environment\\cargo-audit\\bin\\cargo-audit.exe",
+      "location": "existing",
+      "note": "offline advisory db D:\\environment\\advisory-db-offline"
+    }
+  ],
+  "build_state": {
+    "cargo_target_dir": "D:\\environment\\cargo-target (shared, existing)",
+    "node_modules": "fresh npm ci per worktree (brain-server, desktop-daemon)",
+    "new_toolchains_installed_to_c": "NONE",
+    "new_sdks_installed_to_c": "NONE",
+    "new_dependencies": {
+      "brain_server": "NONE (package.json unchanged)",
+      "desktop_daemon": "NONE (package.json unchanged)",
+      "rust": "NONE (Cargo.toml/Cargo.lock unchanged - verified by git diff)"
+    }
+  },
+  "security_tools": {
+    "npm_audit": {
+      "exit": 1,
+      "findings": 28,
+      "summary": "3 low, 10 moderate, 13 high, 2 critical; node-tar (via cacache) + xlsx; all pre-existing (not introduced by CP8); verified zero direct src imports of tar/cacache/xlsx in brain-server"
+    },
+    "cargo_audit": {
+      "exit": 1,
+      "error_class": 4,
+      "warning_class": 16,
+      "quick_xml_windows_runtime_reachable": false,
+      "detail": "4 quick-xml advisories (RUSTSEC-2026-0194/0195 on 0.30.0 and 0.39.3) are absent from the x86_64-pc-windows-msvc dependency graph (verified with cargo tree -i on the default target AND --target all: 0.30.0 is a build-dependency of the X11-only xcb crate; 0.39.3 comes via plist/tauri-codegen/wayland-scanner proc-macro + macOS/Linux paths). 16 warning-class advisories are unmaintained/unsound warnings in Linux-only GUI stacks (gtk*/atk*/glib), build-time proc-macros (proc-macro-error*), or non-receipt runtime stacks (rustls-pemfile via reqwest HTTP client, fxhash via screenshots, instant via tao/wry). None of them is in the receipt/readback runtime."
+    }
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "checkpoint8-manifest.json",
+    "base_sha": "01e1204d8d2a9b232b6745a96667a205841e6f60",
+    "integration_branch": "local/cp8-integration",
+    "worktree": "D:\\ai_code\\Omni-context-worktrees\\cp8-integration",
+    "lane_policy": "lane commits preserved as atomic cherry-picks; no squash; integration fixes as separate atomic commits"
+  },
+  "lanes": {
+    "A": {
+      "name": "Outcome Core (Brain)",
+      "commits": [
+        "51296f5",
+        "b3b32a4",
+        "df7350e",
+        "060f7ed",
+        "3ae0bdae599a8e57c27215ba8adf9797e8abe072"
+      ],
+      "cherry_picked_as": [
+        "ea7be26",
+        "18bf4b4",
+        "d0a4d20",
+        "c7b3641",
+        "e284ea4"
+      ]
+    },
+    "B": {
+      "name": "Native Readback (Rust)",
+      "commits": [
+        "75b9095e30bb44606bc5b35076c1611bcf14e3cc",
+        "d73b974cbb73d2b1376bcd80d03caf0e6fcf0af6",
+        "0b22ba3af1bc8dddcf623ee1a2751951dcbebab9",
+        "26d911c3dbf32d199f9a0b5146784b3336ec1d30"
+      ],
+      "cherry_picked_as": [
+        "c205eb3",
+        "4c70af4",
+        "43394ce",
+        "613fb8e"
+      ]
+    },
+    "C": {
+      "name": "Security Oracle (docs)",
+      "commits": [
+        "b10d74813854978a497b760826b1d30380f602cc"
+      ],
+      "cherry_picked_as": [
+        "09aa253"
+      ]
+    }
+  },
+  "artifacts": {
+    "contracts": [
+      "docs/goal24/cp8-execution-receipt-transfer-contract.json",
+      "docs/goal24/cp8-readback-observation-contract.json",
+      "docs/goal24/cp8-write-enablement-prerequisites.json"
+    ],
+    "shared_fixtures": [
+      "docs/goal24/fixtures/cp8-outcome/execution-state-mapping.json (26 vectors)",
+      "docs/goal24/fixtures/cp8-outcome/readback-observation-vectors.json (35 vectors)",
+      "docs/goal24/fixtures/cp8-outcome/expectation-vectors.json (23 vectors)"
+    ],
+    "checkpoint_docs": [
+      "docs/goal24/13-checkpoint8-outcome-readback-integration.md",
+      "docs/goal24/checkpoint8-security-gate.json",
+      "docs/goal24/checkpoint8-manifest.json",
+      "docs/goal24/checkpoint8-environment.json",
+      "docs/goal24/checkpoint8-adversarial-execution-map.json",
+      "docs/goal24/checkpoint8-bypass-closure.json",
+      "docs/goal24/checkpoint8-e2e-matrix.json",
+      "docs/goal24/checkpoint8-store-recovery-matrix.json"
+    ]
+  },
+  "code_changes": {
+    "brain": [
+      "brain-server/src/outcome/contracts.ts (unified receipt + observation schemas; clock skew; parser status vocabulary)",
+      "brain-server/src/outcome/digests.ts (normalizedInputsDigest / verificationPlanDigest; observation digest fields)",
+      "brain-server/src/outcome/errors.ts (OUTCOME_DUPLICATE_OBSERVATION, OUTCOME_FRESHNESS_INVALID)",
+      "brain-server/src/outcome/execution-state-map.ts (NEW: cross-language state mapping)",
+      "brain-server/src/outcome/service.ts (receipt digest/decision binding; freshness/replay; bridge attempt injection)",
+      "brain-server/src/outcome/store.ts (canonical outcome per receipt; global observation index; undefined-strip serialization; corrupt shapes)",
+      "brain-server/src/outcome/index.ts (exports)",
+      "brain-server/src/decision/decision-store.ts (CP8A-013 journal markers)"
+    ],
+    "rust": [
+      "desktop-daemon/src-tauri/src/execution_broker/readback/types.rs (source=native_broker; attempt_started_at)",
+      "desktop-daemon/src-tauri/src/execution_broker/readback/receipt.rs (source in identity digest + validation)",
+      "desktop-daemon/src-tauri/src/execution_broker/readback/runner.rs (attempt_started_at; empty-object payload for failed parses)",
+      "desktop-daemon/src-tauri/src/execution_broker/readback/state_map.rs (NEW: cross-language state mapping + eligibility)",
+      "desktop-daemon/src-tauri/src/execution_broker/readback/cross_language_tests.rs (NEW: shared fixture validation)",
+      "desktop-daemon/src-tauri/src/execution_broker/readback/mod.rs (module registration)",
+      "desktop-daemon/src-tauri/src/execution_broker/readback/tests.rs (readback timeout/nonzero-exit failure modes)",
+      "desktop-daemon/src-tauri/src/execution_broker/types.rs (CP8A-002: Deserialize removed from BrokerExecutionResult)",
+      "desktop-daemon/src-tauri/src/commands.rs (ipc_surface_tests: no execute/readback/outcome/approval commands)"
+    ],
+    "desktop_meta": [
+      "desktop-daemon/scripts/controlled-files.sha256.json (snapshot refresh for intentional changes; CP7's lockfile audit-fix was never re-snapshotted)"
+    ]
+  },
+  "tests": {
+    "brain": {
+      "suite": "vitest",
+      "result": "1279 passed / 0 failed (64 files)",
+      "new_test_files": [
+        "goal24-outcome-cross-language.test.ts (84)",
+        "goal24-outcome-e2e.test.ts (8)",
+        "goal24-outcome-hardening.test.ts (15)"
+      ]
+    },
+    "rust": {
+      "suite": "cargo test --bin omni-context-desktop -- --test-threads 1",
+      "result": "206 passed / 0 failed / 7 ignored (includes 2 new cross-language + 1 eligibility + 2 failure-mode + 2 ipc-surface tests)"
+    },
+    "cross_language": {
+      "state_mapping_vectors": 26,
+      "observation_vectors": 35,
+      "mismatches": 0
+    },
+    "regressions": {
+      "cp6": "PASS (296 evidence+approval Brain tests; Rust CP6 tests green)",
+      "cp7": "PASS (approval binding/durable replay/single-use tests green in both suites)"
+    }
+  },
+  "security": {
+    "gate": "CHECKPOINT8_SECURITY_GATE=PASS (docs/goal24/checkpoint8-security-gate.json)"
+  }
+}

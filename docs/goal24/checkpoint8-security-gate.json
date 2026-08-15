@@ -1,0 +1,202 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "checkpoint8-security-gate.json",
+    "gate_status": "CHECKPOINT8_SECURITY_GATE=PASS",
+    "drg1": "DRG1_TECHNICAL_PREREQUISITE=SATISFIED",
+    "checkpoint9_started": "NO",
+    "note": "Every number below comes from a real command or test run in this integration worktree; nothing is asserted from memory."
+  },
+  "core_proposition": {
+    "execution_success_equals_verified": "NO",
+    "executionplan_succeeded_equals_business_success": "NO",
+    "llm_judge": "NO",
+    "caller_can_finalize_outcome": "NO",
+    "caller_can_submit_receipt_json": "NO",
+    "caller_can_submit_observation": "NO"
+  },
+  "receipts": {
+    "native_receipt_persistent": "YES (FileExecutionReceiptStore, atomic writes, OS lock)",
+    "trusted_receipt_resolver": "YES (receipt_id -> ReceiptStore -> narrow TrustedExecutionReceipt; OutcomeService accepts ids only)",
+    "receipt_digest_semantics": "native integrity/audit field; trust comes from the resolver + persistent store, never from a caller-provided digest (Brain recomputes for mutation detection)",
+    "caller_submit_surfaces": 0
+  },
+  "execution_state_mapping": {
+    "spawn_failed": "not_started (strict proof child never created)",
+    "recovered_accepted": "unknown_after_crash (never not_started)",
+    "recovered_spawn_started": "unknown_after_crash",
+    "nonzero_after_spawn": "process_failed -> read-back required",
+    "timeout_after_spawn": "timed_out -> read-back required",
+    "cancel_after_spawn": "cancelled -> read-back required",
+    "cross_language_state_vectors": 26,
+    "state_mismatches": 0
+  },
+  "observations": {
+    "trusted_observation_resolver": "YES (observation_id -> trusted native observation; tests fake the resolver)",
+    "observation_fields": "unified (contract json: ids, 4 identity bindings, attempt_started_at/observed_at, payload + digest, parser_status, truncated, source_adapter/binding, process metadata); native carries NO verified/business_success/expected_match authority",
+    "cross_language_vectors": 35,
+    "contract_mismatches": 0
+  },
+  "freshness_replay": {
+    "stale_can_verify": "NO",
+    "old_observation_new_plan": "BLOCKED (OUTCOME_PLAN_MISMATCH)",
+    "duplicate_observation": "BLOCKED (OUTCOME_DUPLICATE_OBSERVATION, same-outcome and cross-outcome)",
+    "cross_receipt": "BLOCKED (OUTCOME_RECEIPT_MISMATCH)",
+    "cross_subject": "BLOCKED (OUTCOME_SUBJECT_MISMATCH)"
+  },
+  "expectation": {
+    "caller_can_override_expectation": "NO",
+    "predicate_language": "NO",
+    "trusted_evaluator_registry": "YES (OutcomeEvaluatorRegistry, internal registration only)",
+    "expectation_vectors": 23
+  },
+  "retry": {
+    "brain_default_max": 3,
+    "native_hard_max": 5,
+    "infinite_retry": "NO",
+    "first_mismatch_with_budget": "pending (retry allowed)",
+    "exhausted_without_verified_defaults_success": "NO (final = last trusted result: mismatch/inconclusive/verification_failed)"
+  },
+  "synthetic_e2e": {
+    "exit0_effect_verified": "PASS (VERIFIED)",
+    "exit0_no_effect_verified": "NO (MISMATCH after bounded retries)",
+    "nonzero_with_effect": "VERIFIED",
+    "timeout_with_effect": "VERIFIED",
+    "cancel_with_effect": "VERIFIED",
+    "unknown_crash_readback": "PASS (resolved VERIFIED / MISMATCH)"
+  },
+  "outcome_store": {
+    "persistent": "YES",
+    "restart": "PASS",
+    "corruption_fail_closed": "YES",
+    "history_preserved": "YES",
+    "one_outcome_per_receipt": "YES (store-level canonical instance; corrupt files rejected)"
+  },
+  "rollback": {
+    "rollback_candidate_supported": "boolean eligibility flag only",
+    "automatic_rollback": "NO"
+  },
+  "bypass_closure": {
+    "surfaces_total": 16,
+    "potential_before": 2,
+    "blocks_before": 0,
+    "potential_after": 0,
+    "blocks_after": 0
+  },
+  "adversarial_oracle": {
+    "total": 265,
+    "automated": 50,
+    "covered": 201,
+    "manual": 4,
+    "not_applicable": 10,
+    "unmapped": 0,
+    "failed": 0
+  },
+  "github_future_readback": {
+    "issue_create": "LOCATOR_GAP",
+    "issue_comment": "READBACK_CAPABILITY_GAP",
+    "issue_close": "MAPPED",
+    "pr_merge": "MAPPED_PARTIAL",
+    "production_write_bindings": 0
+  },
+  "execution_surface": {
+    "generic_execute_ipc": "NO",
+    "public_readback_ipc": "NO",
+    "public_outcome_finalize_api": 0,
+    "public_approval_mutation_ipc": 0,
+    "llm_judge": "NO",
+    "automatic_rollback": "NO"
+  },
+  "node_security": {
+    "npm_audit_exit": 1,
+    "findings": 28,
+    "classification": "pre-existing (3 low / 10 moderate / 13 high / 2 critical): node-tar via cacache (transitive) + xlsx (no fix). Verified: zero direct src imports of tar/cacache/xlsx in brain-server; none reach the outcome/evidence/approval runtime.",
+    "outcome_runtime": {
+      "UNKNOWN": 0,
+      "FIX_BEFORE_CP8": 0,
+      "BLOCKS_CP8": 0
+    }
+  },
+  "rust_security": {
+    "cargo_audit_exit": 1,
+    "advisories_remaining": {
+      "error_class": 4,
+      "warning_class": 16
+    },
+    "quick_xml_windows_runtime_reachable": "NO (verified fresh: cargo tree -i on the default x86_64-pc-windows-msvc target prints nothing for both quick-xml versions; 0.30.0 is a build-dependency of the X11-only xcb crate, 0.39.3 comes via plist/tauri-codegen/wayland-scanner (macOS/Linux/proc-macro) paths)",
+    "receipt_readback_runtime": {
+      "UNKNOWN": 0,
+      "FIX_BEFORE_CP8": 0,
+      "BLOCKS_CP8": 0
+    },
+    "new_dependencies": "NONE (Cargo.toml/Cargo.lock unchanged - git diff empty)"
+  },
+  "tests": {
+    "brain": "1279 passed / 0 failed",
+    "desktop": "Next.js build PASS; verify:controlled PASS",
+    "rust": "206 passed / 0 failed / 7 ignored (final)",
+    "cross_language": "state 26 + observation 35 vectors, mismatch 0 on both suites",
+    "synthetic_e2e": "6 cases automated (Rust native halves + Brain pipeline halves)",
+    "FAIL": "NONE",
+    "NOT_RUN": "NONE"
+  },
+  "regressions": {
+    "cp6_evidence_guard": "PASS (296 Brain evidence+approval tests incl. cp6 adversarial oracle; Rust CP6 tests green in the full suite)",
+    "cp7_approval_risk": "PASS (approval binding, durable replay, plan/approval single-use, consume-before-spawn, risk downgrade defense; Brain + Rust suites green)"
+  },
+  "false_success_audit": {
+    "method": "full-repo grep for success/succeeded/exit_code/BrokerExecutionResult/Outcome/verification/verification_plan across runtime sources (src only, not docs/tests); every runtime surface that could promote process success to business/task/goal/outcome success was classified",
+    "surfaces": [
+      {
+        "surface": "execution_broker/runner.rs run()",
+        "classification": "EXECUTION_ONLY (BrokerExecutionResult.success = process lifecycle only; feeds receipts, never verdicts)"
+      },
+      {
+        "surface": "execution_broker/types.rs BrokerExecutionResult",
+        "classification": "EXECUTION_ONLY + CP8A-002 CLOSED (no Deserialize)"
+      },
+      {
+        "surface": "execution_broker/readback/** (runner/store/receipt/parser)",
+        "classification": "OBSERVATION_ONLY (no verified field; structured envelope)"
+      },
+      {
+        "surface": "github_cli/outputs.rs precheck/parse_*",
+        "classification": "SAFE_EXISTING (exit-0-gated machine parsing, fail closed, no verdicts)"
+      },
+      {
+        "surface": "commands.rs get_broker_status",
+        "classification": "SAFE_EXISTING (read-only aggregate; ipc_surface_tests freeze the registry)"
+      },
+      {
+        "surface": "brain-server/src/outcome/**",
+        "classification": "OUTCOME_GUARDED (ids only; parser/truncation gate; deterministic evaluator)"
+      },
+      {
+        "surface": "brain-server/src/decision/decision-store.ts recordDecisionOutcome",
+        "classification": "JOURNAL (CP8A-013 CLOSED: outcome_authority=journal + verified=false markers)"
+      },
+      {
+        "surface": "brain-server/src/agent/agent-loop.ts LLM review step",
+        "classification": "JOURNAL (LLM reflection never marks outcomes verified)"
+      },
+      {
+        "surface": "brain-server/src/evidence/**",
+        "classification": "EVIDENCE_LAYER (evidence verification_level is evidence-scoped, never outcome authority)"
+      },
+      {
+        "surface": "brain-server/src/approval/**",
+        "classification": "APPROVAL_LAYER (grants are consumed before spawn; approval never verifies outcomes)"
+      },
+      {
+        "surface": "brain-server/src/execution/contracts.ts ExecutionPlan.state",
+        "classification": "LIFECYCLE (succeeded/failed semantics frozen with regression tests)"
+      },
+      {
+        "surface": "mcp/dispatch.ts decision outcome recording",
+        "classification": "JOURNAL (routes to recordDecisionOutcome with the CP8A-013 markers)"
+      }
+    ],
+    "promotion_found": 0,
+    "unknown": 0
+  }
+}
