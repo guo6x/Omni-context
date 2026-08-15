@@ -1,0 +1,281 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "expectation-vectors.json",
+    "purpose": "Deterministic expectation golden vectors. Same authoritative inputs (approved plan normalized_inputs + capability + verification capability + subject) must produce the same expectation digest; changing any of those must change the digest or reject. Execution-plan state, approval, rollback, timeout and timestamps must NEVER change the expectation. Validated by brain-server/tests/goal24-outcome-cross-language.test.ts.",
+    "base_plan": {
+      "capability_id": "test.item.update",
+      "capability_version": "1.0.0",
+      "item_id": "item-1",
+      "value": "new-value",
+      "verification_capability_id": "test.item.read",
+      "verification_inputs": {
+        "item_id": "item-1"
+      },
+      "state": "executing"
+    },
+    "vector_schema": [
+      "id",
+      "category",
+      "description",
+      "variation",
+      "expected_relation",
+      "expected_verdict",
+      "expected_reason"
+    ]
+  },
+  "vectors": [
+    {
+      "id": "exp-001",
+      "category": "determinism",
+      "description": "base expectation",
+      "variation": {},
+      "expected_relation": "BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "establishes the base digest"
+    },
+    {
+      "id": "exp-002",
+      "category": "determinism",
+      "description": "recompute over identical inputs",
+      "variation": {},
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "same authoritative inputs -> same digest"
+    },
+    {
+      "id": "exp-003",
+      "category": "canonicalization",
+      "description": "reordered normalized input keys",
+      "variation": {
+        "reorderInputs": true
+      },
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "canonical JSON sorts keys; insertion order can never change the digest"
+    },
+    {
+      "id": "exp-004",
+      "category": "inputs",
+      "description": "changed value",
+      "variation": {
+        "value": "other-value"
+      },
+      "expected_relation": "DIFFERENT_FROM_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "any approved input change must change the expectation"
+    },
+    {
+      "id": "exp-005",
+      "category": "subject",
+      "description": "changed subject (item_id)",
+      "variation": {
+        "itemId": "item-2"
+      },
+      "expected_relation": "DIFFERENT_FROM_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "subject change must change the expectation digest"
+    },
+    {
+      "id": "exp-006",
+      "category": "verification-capability",
+      "description": "verification capability changed on the plan",
+      "variation": {
+        "verificationCapabilityId": "test.item.read.v2"
+      },
+      "expected_relation": "NONE",
+      "expected_verdict": "REJECT:OUTCOME_EVALUATOR_NOT_FOUND",
+      "expected_reason": "the evaluator registry binds the approved verification capability; a changed one rejects at openOutcome"
+    },
+    {
+      "id": "exp-007",
+      "category": "capability",
+      "description": "unknown write capability",
+      "variation": {
+        "capabilityId": "test.unknown.update"
+      },
+      "expected_relation": "NONE",
+      "expected_verdict": "REJECT:OUTCOME_EVALUATOR_NOT_FOUND",
+      "expected_reason": "no trusted evaluator exists for the capability"
+    },
+    {
+      "id": "exp-008",
+      "category": "read-only",
+      "description": "read_only capability needs no verification",
+      "variation": {
+        "readOnlyPlan": true
+      },
+      "expected_relation": "NONE",
+      "expected_verdict": "NOT_REQUIRED",
+      "expected_reason": "read_only outcomes default to not_required with no expectation digest"
+    },
+    {
+      "id": "exp-009",
+      "category": "missing-verification-plan",
+      "description": "write plan without a verification plan",
+      "variation": {
+        "verificationPlan": null
+      },
+      "expected_relation": "NONE",
+      "expected_verdict": "REJECT:OUTCOME_INPUT_INVALID",
+      "expected_reason": "a write plan must carry an approved verification_plan"
+    },
+    {
+      "id": "exp-010",
+      "category": "unicode",
+      "description": "Unicode value digests deterministically",
+      "variation": {
+        "value": "新值 🚀"
+      },
+      "expected_relation": "DIGEST_STABLE_WITHIN_VECTOR",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "Unicode is JSON-safe and digest-stable"
+    },
+    {
+      "id": "exp-011",
+      "category": "nested-inputs",
+      "description": "nested input object with reordered keys",
+      "variation": {
+        "nestedInputs": true
+      },
+      "expected_relation": "DIGEST_STABLE_WITHIN_VECTOR",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "nested key order can never change the digest"
+    },
+    {
+      "id": "exp-012",
+      "category": "types",
+      "description": "number 5 vs string '5'",
+      "variation": {
+        "valueAsNumber": true
+      },
+      "expected_relation": "DIFFERENT_FROM_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "type changes are semantic changes"
+    },
+    {
+      "id": "exp-013",
+      "category": "evaluator-identity",
+      "description": "different trusted evaluator for the same capability",
+      "variation": {
+        "alternateEvaluator": true
+      },
+      "expected_relation": "DIFFERENT_FROM_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "the evaluator_id is part of the expectation digest"
+    },
+    {
+      "id": "exp-014",
+      "category": "verification-inputs",
+      "description": "verification inputs target a different subject",
+      "variation": {
+        "verificationInputs": {
+          "item_id": "item-2"
+        }
+      },
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "RECEIPT_VERIFICATION_PLAN_DIGEST_DIFFERS",
+      "expected_reason": "verification inputs ride on the receipt's verification_plan_digest (which must change or reject); the expectation subject itself derives from normalized_inputs and is guarded by the cross-subject observation rejection"
+    },
+    {
+      "id": "exp-015",
+      "category": "empty-inputs",
+      "description": "empty normalized inputs",
+      "variation": {
+        "emptyInputs": true
+      },
+      "expected_relation": "NONE",
+      "expected_verdict": "REJECT:OUTCOME_INPUT_INVALID",
+      "expected_reason": "the evaluator cannot derive a well-formed expectation from empty inputs"
+    },
+    {
+      "id": "exp-016",
+      "category": "state-independence",
+      "description": "execution plan state changed (executing -> succeeded)",
+      "variation": {
+        "state": "succeeded"
+      },
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "ExecutionPlan.state is process lifecycle only and must never change the expectation"
+    },
+    {
+      "id": "exp-017",
+      "category": "approval-independence",
+      "description": "approval reference changed",
+      "variation": {
+        "approvalDifferent": true
+      },
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "approval state can never change the expectation"
+    },
+    {
+      "id": "exp-018",
+      "category": "rollback-independence",
+      "description": "rollback_plan removed",
+      "variation": {
+        "rollbackPlan": false
+      },
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "rollback eligibility can never change the expectation"
+    },
+    {
+      "id": "exp-019",
+      "category": "timeout-independence",
+      "description": "timeout_ms changed",
+      "variation": {
+        "timeoutMs": 90000
+      },
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "timeouts are lifecycle policy, not expectation authority"
+    },
+    {
+      "id": "exp-020",
+      "category": "time-independence",
+      "description": "created_at changed",
+      "variation": {
+        "createdAtShift": 3600000
+      },
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "timestamps can never change the expectation"
+    },
+    {
+      "id": "exp-021",
+      "category": "version",
+      "description": "plan capability_version changed",
+      "variation": {
+        "capabilityVersion": "1.1.0"
+      },
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "version binding is enforced on the receipt, not inside the expectation digest"
+    },
+    {
+      "id": "exp-022",
+      "category": "invalid-inputs",
+      "description": "missing item_id",
+      "variation": {
+        "missingItemId": true
+      },
+      "expected_relation": "NONE",
+      "expected_verdict": "REJECT:OUTCOME_INPUT_INVALID",
+      "expected_reason": "malformed inputs can never derive an expectation"
+    },
+    {
+      "id": "exp-023",
+      "category": "instance-independence",
+      "description": "fresh service instance derives the same digest",
+      "variation": {},
+      "expected_relation": "SAME_AS_BASE",
+      "expected_verdict": "DIGEST",
+      "expected_reason": "expectations are pure functions of the approved plan"
+    }
+  ],
+  "totals": {
+    "vectors": 23
+  }
+}

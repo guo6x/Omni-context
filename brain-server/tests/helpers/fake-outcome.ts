@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Goal24 Checkpoint 8 (Lane A) - deterministic fake outcome fixtures.
  *
  * Synthetic test.item.update / test.item.read / test.item.restore capability
@@ -23,9 +23,10 @@ import {
 } from '../../src/execution/contracts.js';
 import { canonicalJson } from '../../src/evidence/model.js';
 import {
+  normalizedInputsDigest,
   observationPayloadDigest,
-  recomputeReceiptDigest,
   sha256Hex,
+  verificationPlanDigest,
   type OutcomeEvaluatorV1,
   type ReadbackObservationEnvelope,
   type TrustedExecutionReceipt,
@@ -183,13 +184,18 @@ export interface BuildReceiptOptions {
   timedOut?: boolean;
   cancelled?: boolean;
   tamperDigest?: boolean;
+  /** Omit the spawn marker (recovered-from-accepted crash shape). */
+  omitSpawnMarker?: boolean;
+  /** Omit the accepted timestamp (schema must reject). */
+  omitAcceptedAt?: boolean;
 }
 
 export function buildReceipt(options: BuildReceiptOptions): TrustedExecutionReceipt {
   const receiptId = options.receiptId ?? `receipt-${randomUUID().slice(0, 8)}`;
   const state = options.executionState ?? 'process_succeeded';
-  const spawnStartedAt = new Date(TEST_OUTCOME_NOW.getTime() + 1_000).toISOString();
-  const finishedAt = new Date(TEST_OUTCOME_NOW.getTime() + 2_000).toISOString();
+  const acceptedAt = new Date(TEST_OUTCOME_NOW.getTime() - 4_000).toISOString();
+  const spawnStartedAt = new Date(TEST_OUTCOME_NOW.getTime() - 3_000).toISOString();
+  const finishedAt = new Date(TEST_OUTCOME_NOW.getTime() - 2_000).toISOString();
   const timedOut = options.timedOut ?? state === 'timed_out';
   const cancelled = options.cancelled ?? state === 'cancelled';
   const exitCode =
@@ -201,25 +207,41 @@ export function buildReceipt(options: BuildReceiptOptions): TrustedExecutionRece
   const receipt: Record<string, unknown> = {
     receipt_id: receiptId,
     plan_id: options.plan.plan_id,
+    decision_id: options.plan.decision_id,
     capability_id: options.plan.capability_id,
     capability_version: options.plan.capability_version,
     adapter_id: options.plan.adapter_id,
+    normalized_inputs_digest: normalizedInputsDigest(options.plan.normalized_inputs),
     execution_state: state,
     timed_out: timedOut,
     cancelled,
     receipt_digest: '0'.repeat(64),
     source: 'native_broker',
   };
+  const verificationDigest = verificationPlanDigest(options.plan);
+  if (verificationDigest !== null) {
+    receipt.verification_plan_digest = verificationDigest;
+  }
+  if (!options.omitAcceptedAt) {
+    receipt.accepted_at = acceptedAt;
+  }
   if (state !== 'not_started') {
-    receipt.spawn_started_at = spawnStartedAt;
-    receipt.finished_at = finishedAt;
+    if (state !== 'unknown_after_crash' || !options.omitSpawnMarker) {
+      receipt.spawn_started_at = spawnStartedAt;
+    }
+    if (state !== 'spawn_started' && state !== 'unknown_after_crash') {
+      receipt.finished_at = finishedAt;
+    }
   }
   if (exitCode !== undefined) {
     receipt.exit_code = exitCode;
   }
-  const content: Record<string, unknown> = { ...receipt };
-  delete content.receipt_digest;
-  receipt.receipt_digest = sha256Hex(canonicalJson(content));
+  const digestContent: Record<string, unknown> = { ...receipt };
+  delete digestContent.receipt_digest;
+  // Compute manually (same canonical rule as recomputeReceiptDigest) so that
+  // intentionally-schema-invalid receipts can still be constructed for
+  // schema rejection tests.
+  receipt.receipt_digest = sha256Hex(canonicalJson(digestContent));
   if (options.tamperDigest) {
     receipt.receipt_digest = sha256Hex(canonicalJson({ tampered: true }));
   }
@@ -234,6 +256,7 @@ export function buildReceipt(options: BuildReceiptOptions): TrustedExecutionRece
 export interface BuildObservationOptions {
   observationId?: string;
   attemptId: string;
+  attemptStartedAt?: Date;
   plan: ExecutionPlan;
   receiptId: string;
   payload?: JsonObject;
@@ -258,6 +281,7 @@ export function buildObservation(options: BuildObservationOptions): ReadbackObse
     origin_execution_receipt_id: options.originReceiptId ?? options.receiptId,
     verification_capability_id: options.verificationCapabilityId ?? 'test.item.read',
     subject_key: options.subjectKey ?? TEST_ITEM_SUBJECT,
+    attempt_started_at: (options.attemptStartedAt ?? TEST_OUTCOME_NOW).toISOString(),
     observed_at: (options.observedAt ?? new Date(TEST_OUTCOME_NOW.getTime() + 3_000)).toISOString(),
     verification_source: 'synthetic_test',
     verification_level: options.verificationLevel ?? 'verified',
@@ -265,6 +289,13 @@ export function buildObservation(options: BuildObservationOptions): ReadbackObse
     payload_digest: options.tamperPayloadDigest ? sha256Hex('tampered') : payloadDigest,
     truncated: options.truncated ?? false,
     parser_status: options.parserStatus ?? 'parsed',
+    source_adapter: 'test-item-adapter',
+    source_binding: 'test.item.read.binding',
+    process_exit_code: 0,
+    process_timed_out: false,
+    process_cancelled: false,
+    resolved_executable_fingerprint: 'test-readback-exe',
+    process_duration_ms: 42,
   };
 }
 
