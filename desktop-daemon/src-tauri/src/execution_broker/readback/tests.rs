@@ -332,6 +332,15 @@ fn child_protocol_entry() {
             println!("{line}");
             println!("OMNI_READBACK_JSON_END");
         }
+        // Read-back child that hangs: the broker timeout must surface as
+        // process_timed_out with a malformed payload, never as success.
+        "read-hang" => {
+            std::thread::sleep(Duration::from_secs(300));
+        }
+        // Read-back child that exits nonzero without emitting JSON.
+        "read-exit7" => {
+            std::process::exit(7);
+        }
         _ => {
             println!("OMNI_READBACK_CHILD_UNKNOWN_MODE");
         }
@@ -689,6 +698,72 @@ fn cancel_after_effect_still_readback() {
 }
 
 // ---------------------------------------------------------------------------
+// Read-back process failure modes (never a default success)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn readback_timeout_is_never_success() {
+    let tmp = TempDir::new("cp8-readback-timeout");
+    let state_file = tmp.path().join("state.txt");
+    std::fs::write(&state_file, "new").expect("fixture");
+    let broker = broker_with_fixture(tmp.path());
+
+    let receipt_id = execute_write(&broker, state_file.to_str().unwrap(), "write-new");
+
+    let _guard = child_test_lock();
+    std::env::set_var("OMNI_READBACK_TEST_MODE", "read-hang");
+    std::env::set_var("OMNI_READBACK_STATE_FILE", state_file.to_str().unwrap());
+    // READBACK_TIMEOUT_MS (30s) is the compiled read-back bound; the child
+    // hangs for 300s so the broker timeout must win.
+    let envelope = broker
+        .perform_readback(&receipt_id)
+        .expect("a timed-out read-back still produces an observation envelope");
+    assert!(
+        envelope.process_timed_out,
+        "a hanging read-back must be reported as timed out"
+    );
+    assert_eq!(
+        envelope.payload,
+        json!({}),
+        "a timed-out read-back can never report partial truth"
+    );
+    assert_eq!(envelope.parser_status, ReadbackParserStatus::Malformed);
+    assert!(!envelope.truncated);
+    // The envelope carries process metadata only; there is no success /
+    // verified field anywhere in the native observation shape.
+    let serialized = serde_json::to_value(&envelope).expect("serialize");
+    assert!(serialized.get("verified").is_none());
+    assert!(serialized.get("success").is_none());
+    assert!(serialized.get("business_success").is_none());
+}
+
+#[test]
+fn readback_nonzero_exit_is_never_success() {
+    let tmp = TempDir::new("cp8-readback-exit7");
+    let state_file = tmp.path().join("state.txt");
+    std::fs::write(&state_file, "new").expect("fixture");
+    let broker = broker_with_fixture(tmp.path());
+
+    let receipt_id = execute_write(&broker, state_file.to_str().unwrap(), "write-new");
+
+    let _guard = child_test_lock();
+    std::env::set_var("OMNI_READBACK_TEST_MODE", "read-exit7");
+    std::env::set_var("OMNI_READBACK_STATE_FILE", state_file.to_str().unwrap());
+    let envelope = broker
+        .perform_readback(&receipt_id)
+        .expect("a nonzero-exit read-back still produces an observation envelope");
+    assert_eq!(envelope.process_exit_code, Some(7));
+    assert_eq!(
+        envelope.payload,
+        json!({}),
+        "a failing read-back can never report partial truth"
+    );
+    assert_eq!(envelope.parser_status, ReadbackParserStatus::Malformed);
+    let serialized = serde_json::to_value(&envelope).expect("serialize");
+    assert!(serialized.get("verified").is_none());
+}
+
+// ---------------------------------------------------------------------------
 // Authority / eligibility / binding rules
 // ---------------------------------------------------------------------------
 
@@ -956,7 +1031,10 @@ fn structured_parser_rejects_natural_language_stdout() {
         ReadbackParserStatus::Malformed,
         "natural-language stdout must never be parsed into a structured observation"
     );
-    assert_eq!(envelope.payload, Value::Null);
+    // The unified V1 contract keeps the payload a JSON object even for a
+    // failed parse: malformed observations report an empty object, never
+    // partial truth (Brain rejects malformed on the parser gate anyway).
+    assert_eq!(envelope.payload, json!({}));
 }
 
 #[test]

@@ -1,0 +1,99 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "checkpoint8-e2e-matrix.json",
+    "purpose": "The six mandatory CP8 synthetic end-to-end cases with their native (Rust) and Brain (TypeScript) halves. Both halves run as automated tests; the shared contracts (cp8-execution-receipt-transfer-contract.json, cp8-readback-observation-contract.json) plus the shared golden fixtures are the test-only trusted internal bridge. No public IPC was added for E2E (ipc_surface_tests freeze the command registry).",
+    "infrastructure": {
+      "synthetic_write": "test-only #[cfg(test)] synthetic write binding (test.cp8.write, medium/L2/reversible_write) mutating a real fixture state file through the hardened CP3 runner; never a production binding",
+      "read_only_verifier": "test-only ReadbackBinding (test.cp8.readback) with read_only/low/L0 policy observing the fixture via the child protocol; never a production binding",
+      "bridge": "shared receipt/observation contracts + shared golden fixtures validated by BOTH test suites (cross-language mismatch = 0)",
+      "brain_evaluator": "deterministic TEST_ITEM_EVALUATOR (test.item.update -> test.item.read), expectations derived only from the approved plan"
+    },
+    "cases": [
+      {
+        "case": 1,
+        "name": "exit0 with real effect -> VERIFIED",
+        "native_half": {
+          "test": "write_then_readback_true_positive",
+          "asserts": "write mutates fixture; receipt Completed exit0; read-back payload reflects the real new state"
+        },
+        "brain_half": {
+          "test": "Case 1: exit0 with real effect -> VERIFIED",
+          "asserts": "pending -> verified with OUTCOME_VERIFIED; revisit_required=false"
+        },
+        "final_verdict": "VERIFIED"
+      },
+      {
+        "case": 2,
+        "name": "exit0 but external state unchanged -> bounded retries then MISMATCH",
+        "native_half": {
+          "test": "false_positive_exit0_stdout_is_not_truth",
+          "asserts": "exit 0 + fake stdout, fixture unchanged; read-back payload reflects the real OLD state"
+        },
+        "brain_half": {
+          "test": "Case 2: exit0 but external state unchanged -> bounded retries then MISMATCH (never verified)",
+          "asserts": "attempt1/2 pending, attempt3 mismatch; 3-attempt history preserved; budget exhausted -> OUTCOME_ATTEMPTS_EXHAUSTED; never default success"
+        },
+        "final_verdict": "MISMATCH (never verified)"
+      },
+      {
+        "case": 3,
+        "name": "write changes external state then exit1 -> VERIFIED",
+        "native_half": {
+          "test": "partial_effect_exit_nonzero_still_readback",
+          "asserts": "receipt Completed exit 7; read-back payload reflects the real new state"
+        },
+        "brain_half": {
+          "test": "Case 3: exit1 with real effect -> VERIFIED (nonzero exit never means no effect)",
+          "asserts": "process_failed receipt opens pending; read-back verifies"
+        },
+        "final_verdict": "VERIFIED"
+      },
+      {
+        "case": 4,
+        "name": "write changes state then timeout -> VERIFIED",
+        "native_half": {
+          "test": "timeout_after_effect_still_readback",
+          "asserts": "child exceeds plan timeout; receipt timed_out; read-back payload reflects the real new state"
+        },
+        "brain_half": {
+          "test": "Case 4: timeout after effect -> VERIFIED",
+          "asserts": "timed_out receipt opens pending; read-back verifies"
+        },
+        "final_verdict": "VERIFIED"
+      },
+      {
+        "case": 5,
+        "name": "write changes state then cancel -> VERIFIED",
+        "native_half": {
+          "test": "cancel_after_effect_still_readback",
+          "asserts": "child cancelled mid-flight; receipt cancelled; read-back payload reflects the real new state"
+        },
+        "brain_half": {
+          "test": "Case 5: cancel after effect -> VERIFIED",
+          "asserts": "cancelled receipt opens pending; read-back verifies"
+        },
+        "final_verdict": "VERIFIED"
+      },
+      {
+        "case": 6,
+        "name": "unknown_after_crash -> readback actual state -> Outcome resolved",
+        "native_half": {
+          "test": "restart_migrates_accepted_to_unknown_after_crash_and_allows_readback / restart_migrates_spawn_started_to_unknown_after_crash_and_allows_readback",
+          "asserts": "mid-flight receipts migrate to unknown_after_crash; read-back remains eligible and reflects the real state"
+        },
+        "brain_half": {
+          "test": "Case 6a/6b: unknown_after_crash (recovered accepted)",
+          "asserts": "opens pending (never not_required); read-back new state -> verified; old state -> mismatch after budget"
+        },
+        "final_verdict": "VERIFIED (effect present) / MISMATCH (effect absent)"
+      }
+    ],
+    "totals": {
+      "cases": 6,
+      "all_automated": true,
+      "public_ipc_added": false,
+      "production_synthetic_write_registered": false
+    }
+  }
+}

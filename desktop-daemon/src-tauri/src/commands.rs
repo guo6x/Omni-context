@@ -541,3 +541,54 @@ fn open_url_in_default_browser(url: &str) -> Result<(), String> {
             .map_err(|e| e.to_string())
     }
 }
+
+#[cfg(test)]
+mod ipc_surface_tests {
+    //! CP8 security surface regression: the WebView-visible Tauri command
+    //! registry (main.rs generate_handler!) must never expose generic
+    //! execution, read-back, outcome-finalize or approval-mutation commands.
+    //! This is a structural source-level assertion over the real registry.
+
+    const MAIN_SRC: &str = include_str!("main.rs");
+
+    #[test]
+    fn no_generic_execute_or_readback_ipc() {
+        for forbidden in [
+            "commands::execute_plan",
+            "commands::executePlan",
+            "commands::readback",
+            "commands::readback_plan",
+            "commands::readbackPlan",
+            "commands::verify_plan",
+            "commands::verifyPlan",
+            "commands::run_readback",
+            "commands::runReadback",
+        ] {
+            assert!(
+                !MAIN_SRC.contains(forbidden),
+                "forbidden command surface present: {forbidden}"
+            );
+        }
+    }
+
+    #[test]
+    fn no_public_outcome_finalize_or_approval_mutation_ipc() {
+        for forbidden in [
+            "commands::submit_outcome",
+            "commands::submitOutcome",
+            "commands::finalize_outcome",
+            "commands::outcome",
+            "commands::receipt",
+            "commands::approve_plan",
+            "commands::approvePlan",
+            "commands::grant_approval",
+            "commands::revoke_approval",
+            "commands::consume_approval",
+        ] {
+            assert!(
+                !MAIN_SRC.contains(forbidden),
+                "forbidden command surface present: {forbidden}"
+            );
+        }
+    }
+}

@@ -1,0 +1,2676 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "checkpoint8-adversarial-execution-map.json",
+    "source": "docs/goal24/cp8-outcome-adversarial-vectors.json (Lane C oracle, 265 vectors)",
+    "purpose": "Every CP8 adversarial vector is mapped to AUTOMATED (integration test added in CP8), COVERED_BY_EXISTING_TEST (lane A/B/C or pre-CP8 suite), MANUAL (source-reviewed absence/design invariant) or NOT_APPLICABLE (attack surface does not exist in CP8). unmapped and failed must both be 0.",
+    "mapping_values": [
+      "AUTOMATED",
+      "COVERED_BY_EXISTING_TEST",
+      "MANUAL",
+      "NOT_APPLICABLE"
+    ],
+    "safety_policy": "all CRITICAL vectors are AUTOMATED or COVERED_BY_EXISTING_TEST except GITHUB_MAPPING catalog-semantics vectors (NOT_APPLICABLE: the production GitHub write surface they attack does not exist; write bindings remain 0 and the absence is test-covered via GITHUB_MAPPING-009).",
+    "totals": {
+      "vectors": 265,
+      "automated": 50,
+      "covered": 201,
+      "manual": 4,
+      "not_applicable": 10,
+      "unmapped": 0,
+      "failed": 0
+    }
+  },
+  "vectors": [
+    {
+      "id": "CP8V-EXIT_CODE-001",
+      "category": "EXIT_CODE",
+      "severity": "critical",
+      "attack_goal": "exit 0 promoted to verified despite wrong state",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server tests/goal24-outcome-lifecycle.test.ts (execution success is NOT a verified outcome); rust readback tests (exit0/exit1 semantics)"
+    },
+    {
+      "id": "CP8V-EXIT_CODE-002",
+      "category": "EXIT_CODE",
+      "severity": "critical",
+      "attack_goal": "stdout success promoted to verified",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server tests/goal24-outcome-lifecycle.test.ts (execution success is NOT a verified outcome); rust readback tests (exit0/exit1 semantics)"
+    },
+    {
+      "id": "CP8V-EXIT_CODE-003",
+      "category": "EXIT_CODE",
+      "severity": "high",
+      "attack_goal": "empty success becomes verified",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server tests/goal24-outcome-lifecycle.test.ts (execution success is NOT a verified outcome); rust readback tests (exit0/exit1 semantics)"
+    },
+    {
+      "id": "CP8V-EXIT_CODE-004",
+      "category": "EXIT_CODE",
+      "severity": "critical",
+      "attack_goal": "truncated success parsed as match",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server tests/goal24-outcome-lifecycle.test.ts (execution success is NOT a verified outcome); rust readback tests (exit0/exit1 semantics)"
+    },
+    {
+      "id": "CP8V-EXIT_CODE-005",
+      "category": "EXIT_CODE",
+      "severity": "high",
+      "attack_goal": "redacted output still used as truth",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server tests/goal24-outcome-lifecycle.test.ts (execution success is NOT a verified outcome); rust readback tests (exit0/exit1 semantics)"
+    },
+    {
+      "id": "CP8V-EXIT_CODE-006",
+      "category": "EXIT_CODE",
+      "severity": "critical",
+      "attack_goal": "cross-capability success reuse",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server tests/goal24-outcome-lifecycle.test.ts (execution success is NOT a verified outcome); rust readback tests (exit0/exit1 semantics)"
+    },
+    {
+      "id": "CP8V-EXIT_CODE-007",
+      "category": "EXIT_CODE",
+      "severity": "high",
+      "attack_goal": "missing exit code treated as success",
+      "expected_stage": "RECEIPT_CONSTRUCTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server tests/goal24-outcome-lifecycle.test.ts (execution success is NOT a verified outcome); rust readback tests (exit0/exit1 semantics)"
+    },
+    {
+      "id": "CP8V-EXIT_CODE-008",
+      "category": "EXIT_CODE",
+      "severity": "high",
+      "attack_goal": "no-op execution claims an outcome",
+      "expected_stage": "RECEIPT_CONSTRUCTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server tests/goal24-outcome-lifecycle.test.ts (execution success is NOT a verified outcome); rust readback tests (exit0/exit1 semantics)"
+    },
+    {
+      "id": "CP8V-STDOUT_TRUST-001",
+      "category": "STDOUT_TRUST",
+      "severity": "critical",
+      "attack_goal": "locator hint promoted to truth",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false_positive_exit0_stdout_is_not_truth"
+    },
+    {
+      "id": "CP8V-STDOUT_TRUST-002",
+      "category": "STDOUT_TRUST",
+      "severity": "high",
+      "attack_goal": "text success claimed as evidence",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false_positive_exit0_stdout_is_not_truth"
+    },
+    {
+      "id": "CP8V-STDOUT_TRUST-003",
+      "category": "STDOUT_TRUST",
+      "severity": "critical",
+      "attack_goal": "stdout JSON as observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false_positive_exit0_stdout_is_not_truth"
+    },
+    {
+      "id": "CP8V-STDOUT_TRUST-004",
+      "category": "STDOUT_TRUST",
+      "severity": "critical",
+      "attack_goal": "pre-write output verifies post-write state",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false_positive_exit0_stdout_is_not_truth"
+    },
+    {
+      "id": "CP8V-STDOUT_TRUST-005",
+      "category": "STDOUT_TRUST",
+      "severity": "high",
+      "attack_goal": "echoed input matches expectation trivially",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false_positive_exit0_stdout_is_not_truth"
+    },
+    {
+      "id": "CP8V-STDOUT_TRUST-006",
+      "category": "STDOUT_TRUST",
+      "severity": "high",
+      "attack_goal": "partial match claimed full match",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false_positive_exit0_stdout_is_not_truth"
+    },
+    {
+      "id": "CP8V-STDOUT_TRUST-007",
+      "category": "STDOUT_TRUST",
+      "severity": "critical",
+      "attack_goal": "secret material enters outcome pipeline",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "SANITIZED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false_positive_exit0_stdout_is_not_truth"
+    },
+    {
+      "id": "CP8V-STDOUT_TRUST-008",
+      "category": "STDOUT_TRUST",
+      "severity": "high",
+      "attack_goal": "timestamp in stdout used as freshness",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false_positive_exit0_stdout_is_not_truth"
+    },
+    {
+      "id": "CP8V-PROCESS_RESULT_FORGERY-001",
+      "category": "PROCESS_RESULT_FORGERY",
+      "severity": "critical",
+      "attack_goal": "caller-built result becomes trusted receipt",
+      "expected_stage": "RECEIPT_CONSTRUCTION",
+      "expected_result": "INERT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt_store_is_the_only_execution_authority; BrokerExecutionResult has no Deserialize (compile-time, CP8A-002)"
+    },
+    {
+      "id": "CP8V-PROCESS_RESULT_FORGERY-002",
+      "category": "PROCESS_RESULT_FORGERY",
+      "severity": "critical",
+      "attack_goal": "external JSON becomes a receipt",
+      "expected_stage": "IPC_SURFACE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt_store_is_the_only_execution_authority; BrokerExecutionResult has no Deserialize (compile-time, CP8A-002)"
+    },
+    {
+      "id": "CP8V-PROCESS_RESULT_FORGERY-003",
+      "category": "PROCESS_RESULT_FORGERY",
+      "severity": "high",
+      "attack_goal": "test scaffolding escapes to production",
+      "expected_stage": "RECEIPT_CONSTRUCTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt_store_is_the_only_execution_authority; BrokerExecutionResult has no Deserialize (compile-time, CP8A-002)"
+    },
+    {
+      "id": "CP8V-PROCESS_RESULT_FORGERY-004",
+      "category": "PROCESS_RESULT_FORGERY",
+      "severity": "critical",
+      "attack_goal": "post-build mutation changes facts",
+      "expected_stage": "RECEIPT_CONSTRUCTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt_store_is_the_only_execution_authority; BrokerExecutionResult has no Deserialize (compile-time, CP8A-002)"
+    },
+    {
+      "id": "CP8V-PROCESS_RESULT_FORGERY-005",
+      "category": "PROCESS_RESULT_FORGERY",
+      "severity": "critical",
+      "attack_goal": "injected exit code trusted",
+      "expected_stage": "RECEIPT_CONSTRUCTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt_store_is_the_only_execution_authority; BrokerExecutionResult has no Deserialize (compile-time, CP8A-002)"
+    },
+    {
+      "id": "CP8V-PROCESS_RESULT_FORGERY-006",
+      "category": "PROCESS_RESULT_FORGERY",
+      "severity": "high",
+      "attack_goal": "future timestamp accepted",
+      "expected_stage": "RECEIPT_CONSTRUCTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt_store_is_the_only_execution_authority; BrokerExecutionResult has no Deserialize (compile-time, CP8A-002)"
+    },
+    {
+      "id": "CP8V-RECEIPT_FORGERY-001",
+      "category": "RECEIPT_FORGERY",
+      "severity": "critical",
+      "attack_goal": "caller receipt creates an Outcome",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INERT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback receipt tests (native-generated ids; store as only authority)"
+    },
+    {
+      "id": "CP8V-RECEIPT_FORGERY-002",
+      "category": "RECEIPT_FORGERY",
+      "severity": "critical",
+      "attack_goal": "cross-plan receipt use",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback receipt tests (native-generated ids; store as only authority)"
+    },
+    {
+      "id": "CP8V-RECEIPT_FORGERY-003",
+      "category": "RECEIPT_FORGERY",
+      "severity": "high",
+      "attack_goal": "approval binding mismatch ignored",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback receipt tests (native-generated ids; store as only authority)"
+    },
+    {
+      "id": "CP8V-RECEIPT_FORGERY-004",
+      "category": "RECEIPT_FORGERY",
+      "severity": "critical",
+      "attack_goal": "receipt replay",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback receipt tests (native-generated ids; store as only authority)"
+    },
+    {
+      "id": "CP8V-RECEIPT_FORGERY-005",
+      "category": "RECEIPT_FORGERY",
+      "severity": "high",
+      "attack_goal": "receipt capability swap",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback receipt tests (native-generated ids; store as only authority)"
+    },
+    {
+      "id": "CP8V-RECEIPT_FORGERY-006",
+      "category": "RECEIPT_FORGERY",
+      "severity": "high",
+      "attack_goal": "anonymous receipt accepted",
+      "expected_stage": "RECEIPT_CONSTRUCTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback receipt tests (native-generated ids; store as only authority)"
+    },
+    {
+      "id": "CP8V-RECEIPT_FORGERY-007",
+      "category": "RECEIPT_FORGERY",
+      "severity": "high",
+      "attack_goal": "restart erases receipt history",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback receipt tests (native-generated ids; store as only authority)"
+    },
+    {
+      "id": "CP8V-RECEIPT_REPLAY-001",
+      "category": "RECEIPT_REPLAY",
+      "severity": "critical",
+      "attack_goal": "double outcome from one execution",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust attempt replay across restart tests"
+    },
+    {
+      "id": "CP8V-RECEIPT_REPLAY-002",
+      "category": "RECEIPT_REPLAY",
+      "severity": "critical",
+      "attack_goal": "restart replay",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust attempt replay across restart tests"
+    },
+    {
+      "id": "CP8V-RECEIPT_REPLAY-003",
+      "category": "RECEIPT_REPLAY",
+      "severity": "critical",
+      "attack_goal": "cross-subject receipt replay",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust attempt replay across restart tests"
+    },
+    {
+      "id": "CP8V-RECEIPT_REPLAY-004",
+      "category": "RECEIPT_REPLAY",
+      "severity": "critical",
+      "attack_goal": "mutated replay accepted",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust attempt replay across restart tests"
+    },
+    {
+      "id": "CP8V-RECEIPT_REPLAY-005",
+      "category": "RECEIPT_REPLAY",
+      "severity": "high",
+      "attack_goal": "stale version receipt verifies new capability",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust attempt replay across restart tests"
+    },
+    {
+      "id": "CP8V-RECEIPT_REPLAY-006",
+      "category": "RECEIPT_REPLAY",
+      "severity": "high",
+      "attack_goal": "read receipt used as effect observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust attempt replay across restart tests"
+    },
+    {
+      "id": "CP8V-RECEIPT_MUTATION-001",
+      "category": "RECEIPT_MUTATION",
+      "severity": "critical",
+      "attack_goal": "failure history rewritten",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest tamper tests (verify_receipt_digest)"
+    },
+    {
+      "id": "CP8V-RECEIPT_MUTATION-002",
+      "category": "RECEIPT_MUTATION",
+      "severity": "critical",
+      "attack_goal": "post-hoc stdout injection",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest tamper tests (verify_receipt_digest)"
+    },
+    {
+      "id": "CP8V-RECEIPT_MUTATION-003",
+      "category": "RECEIPT_MUTATION",
+      "severity": "critical",
+      "attack_goal": "receipt reassigned to another plan",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest tamper tests (verify_receipt_digest)"
+    },
+    {
+      "id": "CP8V-RECEIPT_MUTATION-004",
+      "category": "RECEIPT_MUTATION",
+      "severity": "high",
+      "attack_goal": "timeline forged after the fact",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest tamper tests (verify_receipt_digest)"
+    },
+    {
+      "id": "CP8V-RECEIPT_MUTATION-005",
+      "category": "RECEIPT_MUTATION",
+      "severity": "high",
+      "attack_goal": "failure marker stripped",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest tamper tests (verify_receipt_digest)"
+    },
+    {
+      "id": "CP8V-RECEIPT_MUTATION-006",
+      "category": "RECEIPT_MUTATION",
+      "severity": "high",
+      "attack_goal": "partial receipt parsed as valid",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest tamper tests (verify_receipt_digest)"
+    },
+    {
+      "id": "CP8V-RECEIPT_MUTATION-007",
+      "category": "RECEIPT_MUTATION",
+      "severity": "critical",
+      "attack_goal": "unsigned receipt trusted",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest tamper tests (verify_receipt_digest)"
+    },
+    {
+      "id": "CP8V-PLAN_BINDING-001",
+      "category": "PLAN_BINDING",
+      "severity": "critical",
+      "attack_goal": "cross-plan observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server goal24-outcome-lifecycle.test.ts binding rejections; service bindReceiptToPlan (decision_id + input/verification digests)"
+    },
+    {
+      "id": "CP8V-PLAN_BINDING-002",
+      "category": "PLAN_BINDING",
+      "severity": "critical",
+      "attack_goal": "cross-receipt observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server goal24-outcome-lifecycle.test.ts binding rejections; service bindReceiptToPlan (decision_id + input/verification digests)"
+    },
+    {
+      "id": "CP8V-PLAN_BINDING-003",
+      "category": "PLAN_BINDING",
+      "severity": "high",
+      "attack_goal": "orphan observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server goal24-outcome-lifecycle.test.ts binding rejections; service bindReceiptToPlan (decision_id + input/verification digests)"
+    },
+    {
+      "id": "CP8V-PLAN_BINDING-004",
+      "category": "PLAN_BINDING",
+      "severity": "high",
+      "attack_goal": "weak binding aliases plans",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server goal24-outcome-lifecycle.test.ts binding rejections; service bindReceiptToPlan (decision_id + input/verification digests)"
+    },
+    {
+      "id": "CP8V-PLAN_BINDING-005",
+      "category": "PLAN_BINDING",
+      "severity": "critical",
+      "attack_goal": "post-approval verification swap",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "BINDING_MISMATCH",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server goal24-outcome-lifecycle.test.ts binding rejections; service bindReceiptToPlan (decision_id + input/verification digests)"
+    },
+    {
+      "id": "CP8V-PLAN_BINDING-006",
+      "category": "PLAN_BINDING",
+      "severity": "critical",
+      "attack_goal": "post-approval input swap",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "BINDING_MISMATCH",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server goal24-outcome-lifecycle.test.ts binding rejections; service bindReceiptToPlan (decision_id + input/verification digests)"
+    },
+    {
+      "id": "CP8V-PLAN_BINDING-007",
+      "category": "PLAN_BINDING",
+      "severity": "high",
+      "attack_goal": "non-executed plan gains outcome",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "brain-server goal24-outcome-lifecycle.test.ts binding rejections; service bindReceiptToPlan (decision_id + input/verification digests)"
+    },
+    {
+      "id": "CP8V-SUBJECT_BINDING-001",
+      "category": "SUBJECT_BINDING",
+      "severity": "critical",
+      "attack_goal": "cross-subject verification",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts OUTCOME_SUBJECT_MISMATCH; cross-language vectors obsv-005/030"
+    },
+    {
+      "id": "CP8V-SUBJECT_BINDING-002",
+      "category": "SUBJECT_BINDING",
+      "severity": "critical",
+      "attack_goal": "subjectless observation matches anything",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts OUTCOME_SUBJECT_MISMATCH; cross-language vectors obsv-005/030"
+    },
+    {
+      "id": "CP8V-SUBJECT_BINDING-003",
+      "category": "SUBJECT_BINDING",
+      "severity": "high",
+      "attack_goal": "normalization aliases subjects",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts OUTCOME_SUBJECT_MISMATCH; cross-language vectors obsv-005/030"
+    },
+    {
+      "id": "CP8V-SUBJECT_BINDING-004",
+      "category": "SUBJECT_BINDING",
+      "severity": "medium",
+      "attack_goal": "case variant aliases subject",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts OUTCOME_SUBJECT_MISMATCH; cross-language vectors obsv-005/030"
+    },
+    {
+      "id": "CP8V-SUBJECT_BINDING-005",
+      "category": "SUBJECT_BINDING",
+      "severity": "high",
+      "attack_goal": "unvalidated locator becomes subject",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts OUTCOME_SUBJECT_MISMATCH; cross-language vectors obsv-005/030"
+    },
+    {
+      "id": "CP8V-SUBJECT_BINDING-006",
+      "category": "SUBJECT_BINDING",
+      "severity": "critical",
+      "attack_goal": "cross-repository observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts OUTCOME_SUBJECT_MISMATCH; cross-language vectors obsv-005/030"
+    },
+    {
+      "id": "CP8V-CROSS_SCOPE-001",
+      "category": "CROSS_SCOPE",
+      "severity": "critical",
+      "attack_goal": "cross-repository observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "cross-plan/cross-receipt/cross-capability/cross-subject binding rejections (cross-language vectors obsv-003..006)"
+    },
+    {
+      "id": "CP8V-CROSS_SCOPE-002",
+      "category": "CROSS_SCOPE",
+      "severity": "critical",
+      "attack_goal": "cross-user observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "cross-plan/cross-receipt/cross-capability/cross-subject binding rejections (cross-language vectors obsv-003..006)"
+    },
+    {
+      "id": "CP8V-CROSS_SCOPE-003",
+      "category": "CROSS_SCOPE",
+      "severity": "critical",
+      "attack_goal": "cross-capability outcome",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "cross-plan/cross-receipt/cross-capability/cross-subject binding rejections (cross-language vectors obsv-003..006)"
+    },
+    {
+      "id": "CP8V-CROSS_SCOPE-004",
+      "category": "CROSS_SCOPE",
+      "severity": "high",
+      "attack_goal": "unscoped locator resolves wrong object",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "cross-plan/cross-receipt/cross-capability/cross-subject binding rejections (cross-language vectors obsv-003..006)"
+    },
+    {
+      "id": "CP8V-CROSS_SCOPE-005",
+      "category": "CROSS_SCOPE",
+      "severity": "critical",
+      "attack_goal": "sibling object confusion",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "cross-plan/cross-receipt/cross-capability/cross-subject binding rejections (cross-language vectors obsv-003..006)"
+    },
+    {
+      "id": "CP8V-CROSS_SCOPE-006",
+      "category": "CROSS_SCOPE",
+      "severity": "high",
+      "attack_goal": "cross product confusion",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "cross-plan/cross-receipt/cross-capability/cross-subject binding rejections (cross-language vectors obsv-003..006)"
+    },
+    {
+      "id": "CP8V-VERIFICATION_CAPABILITY-001",
+      "category": "VERIFICATION_CAPABILITY",
+      "severity": "critical",
+      "attack_goal": "verification capability spoof",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback runner capability lookup + Brain OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "id": "CP8V-VERIFICATION_CAPABILITY-002",
+      "category": "VERIFICATION_CAPABILITY",
+      "severity": "critical",
+      "attack_goal": "unknown verifier",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback runner capability lookup + Brain OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "id": "CP8V-VERIFICATION_CAPABILITY-003",
+      "category": "VERIFICATION_CAPABILITY",
+      "severity": "high",
+      "attack_goal": "self-verification loop",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback runner capability lookup + Brain OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "id": "CP8V-VERIFICATION_CAPABILITY-004",
+      "category": "VERIFICATION_CAPABILITY",
+      "severity": "critical",
+      "attack_goal": "write-like verifier",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback runner capability lookup + Brain OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "id": "CP8V-VERIFICATION_CAPABILITY-005",
+      "category": "VERIFICATION_CAPABILITY",
+      "severity": "critical",
+      "attack_goal": "reversible write as readback",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback runner capability lookup + Brain OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "id": "CP8V-VERIFICATION_CAPABILITY-006",
+      "category": "VERIFICATION_CAPABILITY",
+      "severity": "critical",
+      "attack_goal": "destructive verifier",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback runner capability lookup + Brain OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "id": "CP8V-VERIFICATION_CAPABILITY-007",
+      "category": "VERIFICATION_CAPABILITY",
+      "severity": "high",
+      "attack_goal": "mapping skipped at plan construction",
+      "expected_stage": "PLAN_CONSTRUCTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback runner capability lookup + Brain OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "id": "CP8V-VERIFICATION_CAPABILITY-008",
+      "category": "VERIFICATION_CAPABILITY",
+      "severity": "high",
+      "attack_goal": "version-drift verifier",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback runner capability lookup + Brain OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "id": "CP8V-VERIFICATION_INPUTS-001",
+      "category": "VERIFICATION_INPUTS",
+      "severity": "critical",
+      "attack_goal": "caller-controlled verification",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest binds verification inputs (receipt_digest_binds_verification_inputs); runner accepts only the receipt-frozen inputs"
+    },
+    {
+      "id": "CP8V-VERIFICATION_INPUTS-002",
+      "category": "VERIFICATION_INPUTS",
+      "severity": "high",
+      "attack_goal": "unvalidated locator into inputs",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest binds verification inputs (receipt_digest_binds_verification_inputs); runner accepts only the receipt-frozen inputs"
+    },
+    {
+      "id": "CP8V-VERIFICATION_INPUTS-003",
+      "category": "VERIFICATION_INPUTS",
+      "severity": "critical",
+      "attack_goal": "scope swap in inputs",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest binds verification inputs (receipt_digest_binds_verification_inputs); runner accepts only the receipt-frozen inputs"
+    },
+    {
+      "id": "CP8V-VERIFICATION_INPUTS-004",
+      "category": "VERIFICATION_INPUTS",
+      "severity": "high",
+      "attack_goal": "reserved keys in verification",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest binds verification inputs (receipt_digest_binds_verification_inputs); runner accepts only the receipt-frozen inputs"
+    },
+    {
+      "id": "CP8V-VERIFICATION_INPUTS-005",
+      "category": "VERIFICATION_INPUTS",
+      "severity": "critical",
+      "attack_goal": "subjectless verification",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest binds verification inputs (receipt_digest_binds_verification_inputs); runner accepts only the receipt-frozen inputs"
+    },
+    {
+      "id": "CP8V-VERIFICATION_INPUTS-006",
+      "category": "VERIFICATION_INPUTS",
+      "severity": "critical",
+      "attack_goal": "post-receipt input swap",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust receipt digest binds verification inputs (receipt_digest_binds_verification_inputs); runner accepts only the receipt-frozen inputs"
+    },
+    {
+      "id": "CP8V-VERIFIER_RISK-001",
+      "category": "VERIFIER_RISK",
+      "severity": "critical",
+      "attack_goal": "verification mutates state",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback_binding_must_be_read_only (read_only/low/L0 enforced at registration)"
+    },
+    {
+      "id": "CP8V-VERIFIER_RISK-002",
+      "category": "VERIFIER_RISK",
+      "severity": "critical",
+      "attack_goal": "destructive verification",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback_binding_must_be_read_only (read_only/low/L0 enforced at registration)"
+    },
+    {
+      "id": "CP8V-VERIFIER_RISK-003",
+      "category": "VERIFIER_RISK",
+      "severity": "critical",
+      "attack_goal": "external effect during verification",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback_binding_must_be_read_only (read_only/low/L0 enforced at registration)"
+    },
+    {
+      "id": "CP8V-VERIFIER_RISK-004",
+      "category": "VERIFIER_RISK",
+      "severity": "high",
+      "attack_goal": "unrated verifier",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback_binding_must_be_read_only (read_only/low/L0 enforced at registration)"
+    },
+    {
+      "id": "CP8V-VERIFIER_RISK-005",
+      "category": "VERIFIER_RISK",
+      "severity": "high",
+      "attack_goal": "verification needs a second approval",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback_binding_must_be_read_only (read_only/low/L0 enforced at registration)"
+    },
+    {
+      "id": "CP8V-VERIFIER_RISK-006",
+      "category": "VERIFIER_RISK",
+      "severity": "critical",
+      "attack_goal": "truncated readback output",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback_binding_must_be_read_only (read_only/low/L0 enforced at registration)"
+    },
+    {
+      "id": "CP8V-VERIFIER_RISK-007",
+      "category": "VERIFIER_RISK",
+      "severity": "critical",
+      "attack_goal": "flag injection into verifier",
+      "expected_stage": "VERIFICATION_SELECTION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust readback_binding_must_be_read_only (read_only/low/L0 enforced at registration)"
+    },
+    {
+      "id": "CP8V-OBSERVATION_FORGERY-001",
+      "category": "OBSERVATION_FORGERY",
+      "severity": "critical",
+      "attack_goal": "caller observation becomes evidence",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INERT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts trusted resolver authority boundaries; observation ids only"
+    },
+    {
+      "id": "CP8V-OBSERVATION_FORGERY-002",
+      "category": "OBSERVATION_FORGERY",
+      "severity": "critical",
+      "attack_goal": "lineage-less observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts trusted resolver authority boundaries; observation ids only"
+    },
+    {
+      "id": "CP8V-OBSERVATION_FORGERY-003",
+      "category": "OBSERVATION_FORGERY",
+      "severity": "high",
+      "attack_goal": "future observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts trusted resolver authority boundaries; observation ids only"
+    },
+    {
+      "id": "CP8V-OBSERVATION_FORGERY-004",
+      "category": "OBSERVATION_FORGERY",
+      "severity": "high",
+      "attack_goal": "orphan observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts trusted resolver authority boundaries; observation ids only"
+    },
+    {
+      "id": "CP8V-OBSERVATION_FORGERY-005",
+      "category": "OBSERVATION_FORGERY",
+      "severity": "critical",
+      "attack_goal": "wrong signer observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts trusted resolver authority boundaries; observation ids only"
+    },
+    {
+      "id": "CP8V-OBSERVATION_FORGERY-006",
+      "category": "OBSERVATION_FORGERY",
+      "severity": "critical",
+      "attack_goal": "LLM prose as provider",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INERT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts trusted resolver authority boundaries; observation ids only"
+    },
+    {
+      "id": "CP8V-OBSERVATION_FORGERY-007",
+      "category": "OBSERVATION_FORGERY",
+      "severity": "high",
+      "attack_goal": "echoed expectation matches",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts trusted resolver authority boundaries; observation ids only"
+    },
+    {
+      "id": "CP8V-OBSERVATION_REPLAY-001",
+      "category": "OBSERVATION_REPLAY",
+      "severity": "critical",
+      "attack_goal": "stale observation replay",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts single-use observation ids + freshness; cross-language vectors obsv-016/032"
+    },
+    {
+      "id": "CP8V-OBSERVATION_REPLAY-002",
+      "category": "OBSERVATION_REPLAY",
+      "severity": "high",
+      "attack_goal": "observation double use",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts single-use observation ids + freshness; cross-language vectors obsv-016/032"
+    },
+    {
+      "id": "CP8V-OBSERVATION_REPLAY-003",
+      "category": "OBSERVATION_REPLAY",
+      "severity": "critical",
+      "attack_goal": "cross-plan observation replay",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts single-use observation ids + freshness; cross-language vectors obsv-016/032"
+    },
+    {
+      "id": "CP8V-OBSERVATION_REPLAY-004",
+      "category": "OBSERVATION_REPLAY",
+      "severity": "critical",
+      "attack_goal": "timestamp-only replay",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts single-use observation ids + freshness; cross-language vectors obsv-016/032"
+    },
+    {
+      "id": "CP8V-OBSERVATION_REPLAY-005",
+      "category": "OBSERVATION_REPLAY",
+      "severity": "high",
+      "attack_goal": "version-stale observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts single-use observation ids + freshness; cross-language vectors obsv-016/032"
+    },
+    {
+      "id": "CP8V-OBSERVATION_REPLAY-006",
+      "category": "OBSERVATION_REPLAY",
+      "severity": "high",
+      "attack_goal": "stale cache verified",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts single-use observation ids + freshness; cross-language vectors obsv-016/032"
+    },
+    {
+      "id": "CP8V-OBSERVATION_TRUNCATION-001",
+      "category": "OBSERVATION_TRUNCATION",
+      "severity": "critical",
+      "attack_goal": "truncated observation verified",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "AUTOMATED",
+      "coverage": "cross-language vectors obsv-007/008/009/035 (truncated can never verify); rust truncation tests"
+    },
+    {
+      "id": "CP8V-OBSERVATION_TRUNCATION-002",
+      "category": "OBSERVATION_TRUNCATION",
+      "severity": "critical",
+      "attack_goal": "flag suppressed",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "cross-language vectors obsv-007/008/009/035 (truncated can never verify); rust truncation tests"
+    },
+    {
+      "id": "CP8V-OBSERVATION_TRUNCATION-003",
+      "category": "OBSERVATION_TRUNCATION",
+      "severity": "critical",
+      "attack_goal": "partial array accepted",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "cross-language vectors obsv-007/008/009/035 (truncated can never verify); rust truncation tests"
+    },
+    {
+      "id": "CP8V-OBSERVATION_TRUNCATION-004",
+      "category": "OBSERVATION_TRUNCATION",
+      "severity": "high",
+      "attack_goal": "redaction masks truncation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "cross-language vectors obsv-007/008/009/035 (truncated can never verify); rust truncation tests"
+    },
+    {
+      "id": "CP8V-OBSERVATION_TRUNCATION-005",
+      "category": "OBSERVATION_TRUNCATION",
+      "severity": "medium",
+      "attack_goal": "boundary output accepted",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "cross-language vectors obsv-007/008/009/035 (truncated can never verify); rust truncation tests"
+    },
+    {
+      "id": "CP8V-OBSERVATION_TRUNCATION-006",
+      "category": "OBSERVATION_TRUNCATION",
+      "severity": "medium",
+      "attack_goal": "stderr truncation ignored",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "AUTOMATED",
+      "coverage": "cross-language vectors obsv-007/008/009/035 (truncated can never verify); rust truncation tests"
+    },
+    {
+      "id": "CP8V-PARSER-001",
+      "category": "PARSER",
+      "severity": "critical",
+      "attack_goal": "malformed output verified",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust parser tests (strict JSON / marker JSON; malformed fail closed)"
+    },
+    {
+      "id": "CP8V-PARSER-002",
+      "category": "PARSER",
+      "severity": "high",
+      "attack_goal": "trailing garbage accepted",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust parser tests (strict JSON / marker JSON; malformed fail closed)"
+    },
+    {
+      "id": "CP8V-PARSER-003",
+      "category": "PARSER",
+      "severity": "critical",
+      "attack_goal": "duplicate key shadowing",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust parser tests (strict JSON / marker JSON; malformed fail closed)"
+    },
+    {
+      "id": "CP8V-PARSER-004",
+      "category": "PARSER",
+      "severity": "high",
+      "attack_goal": "type ambiguity aliases subjects",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust parser tests (strict JSON / marker JSON; malformed fail closed)"
+    },
+    {
+      "id": "CP8V-PARSER-005",
+      "category": "PARSER",
+      "severity": "medium",
+      "attack_goal": "case variance breaks comparison",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust parser tests (strict JSON / marker JSON; malformed fail closed)"
+    },
+    {
+      "id": "CP8V-PARSER-006",
+      "category": "PARSER",
+      "severity": "high",
+      "attack_goal": "confusable value matches",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust parser tests (strict JSON / marker JSON; malformed fail closed)"
+    },
+    {
+      "id": "CP8V-PARSER-007",
+      "category": "PARSER",
+      "severity": "high",
+      "attack_goal": "parser resource exhaustion",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust parser tests (strict JSON / marker JSON; malformed fail closed)"
+    },
+    {
+      "id": "CP8V-PARSER-008",
+      "category": "PARSER",
+      "severity": "high",
+      "attack_goal": "human table parsed as structure",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust parser tests (strict JSON / marker JSON; malformed fail closed)"
+    },
+    {
+      "id": "CP8V-EXPECTATION_OVERRIDE-001",
+      "category": "EXPECTATION_OVERRIDE",
+      "severity": "critical",
+      "attack_goal": "expectation follows reality",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-contracts.test.ts rejects every caller expectation authority key"
+    },
+    {
+      "id": "CP8V-EXPECTATION_OVERRIDE-002",
+      "category": "EXPECTATION_OVERRIDE",
+      "severity": "critical",
+      "attack_goal": "caller success claim",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-contracts.test.ts rejects every caller expectation authority key"
+    },
+    {
+      "id": "CP8V-EXPECTATION_OVERRIDE-003",
+      "category": "EXPECTATION_OVERRIDE",
+      "severity": "critical",
+      "attack_goal": "vacuous predicate",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-contracts.test.ts rejects every caller expectation authority key"
+    },
+    {
+      "id": "CP8V-EXPECTATION_OVERRIDE-004",
+      "category": "EXPECTATION_OVERRIDE",
+      "severity": "critical",
+      "attack_goal": "prompt injection into verifier",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-contracts.test.ts rejects every caller expectation authority key"
+    },
+    {
+      "id": "CP8V-EXPECTATION_OVERRIDE-005",
+      "category": "EXPECTATION_OVERRIDE",
+      "severity": "high",
+      "attack_goal": "weakened expectation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-contracts.test.ts rejects every caller expectation authority key"
+    },
+    {
+      "id": "CP8V-EXPECTATION_OVERRIDE-006",
+      "category": "EXPECTATION_OVERRIDE",
+      "severity": "critical",
+      "attack_goal": "post-hoc expectation deletion",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-contracts.test.ts rejects every caller expectation authority key"
+    },
+    {
+      "id": "CP8V-EXPECTATION_OVERRIDE-007",
+      "category": "EXPECTATION_OVERRIDE",
+      "severity": "critical",
+      "attack_goal": "post-receipt expectation rewrite",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-contracts.test.ts rejects every caller expectation authority key"
+    },
+    {
+      "id": "CP8V-PREDICATE_INJECTION-001",
+      "category": "PREDICATE_INJECTION",
+      "severity": "critical",
+      "attack_goal": "path injection reads arbitrary fields",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "OutcomeExpectationSchema strict keys; deterministic evaluator only"
+    },
+    {
+      "id": "CP8V-PREDICATE_INJECTION-002",
+      "category": "PREDICATE_INJECTION",
+      "severity": "critical",
+      "attack_goal": "regex spoofs success",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "OutcomeExpectationSchema strict keys; deterministic evaluator only"
+    },
+    {
+      "id": "CP8V-PREDICATE_INJECTION-003",
+      "category": "PREDICATE_INJECTION",
+      "severity": "high",
+      "attack_goal": "evaluation order changes verdict",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "OutcomeExpectationSchema strict keys; deterministic evaluator only"
+    },
+    {
+      "id": "CP8V-PREDICATE_INJECTION-004",
+      "category": "PREDICATE_INJECTION",
+      "severity": "high",
+      "attack_goal": "input controls predicate target",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "OutcomeExpectationSchema strict keys; deterministic evaluator only"
+    },
+    {
+      "id": "CP8V-PREDICATE_INJECTION-005",
+      "category": "PREDICATE_INJECTION",
+      "severity": "critical",
+      "attack_goal": "code execution in evaluator",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "OutcomeExpectationSchema strict keys; deterministic evaluator only"
+    },
+    {
+      "id": "CP8V-PREDICATE_INJECTION-006",
+      "category": "PREDICATE_INJECTION",
+      "severity": "high",
+      "attack_goal": "negation flips verdict",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "OutcomeExpectationSchema strict keys; deterministic evaluator only"
+    },
+    {
+      "id": "CP8V-PREDICATE_INJECTION-007",
+      "category": "PREDICATE_INJECTION",
+      "severity": "high",
+      "attack_goal": "unknown operator passes",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "OutcomeExpectationSchema strict keys; deterministic evaluator only"
+    },
+    {
+      "id": "CP8V-LLM_JUDGE-001",
+      "category": "LLM_JUDGE",
+      "severity": "critical",
+      "attack_goal": "LLM verdict as truth",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts: unknown observation id including LLM text -> OUTCOME_OBSERVATION_UNAVAILABLE"
+    },
+    {
+      "id": "CP8V-LLM_JUDGE-002",
+      "category": "LLM_JUDGE",
+      "severity": "critical",
+      "attack_goal": "LLM does the predicate",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "FORBIDDEN",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts: unknown observation id including LLM text -> OUTCOME_OBSERVATION_UNAVAILABLE"
+    },
+    {
+      "id": "CP8V-LLM_JUDGE-003",
+      "category": "LLM_JUDGE",
+      "severity": "critical",
+      "attack_goal": "prompt softens the verdict",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts: unknown observation id including LLM text -> OUTCOME_OBSERVATION_UNAVAILABLE"
+    },
+    {
+      "id": "CP8V-LLM_JUDGE-004",
+      "category": "LLM_JUDGE",
+      "severity": "critical",
+      "attack_goal": "LLM authorship in outcome store",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "INERT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts: unknown observation id including LLM text -> OUTCOME_OBSERVATION_UNAVAILABLE"
+    },
+    {
+      "id": "CP8V-LLM_JUDGE-005",
+      "category": "LLM_JUDGE",
+      "severity": "high",
+      "attack_goal": "content injection into the evaluator",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INERT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts: unknown observation id including LLM text -> OUTCOME_OBSERVATION_UNAVAILABLE"
+    },
+    {
+      "id": "CP8V-LLM_JUDGE-006",
+      "category": "LLM_JUDGE",
+      "severity": "critical",
+      "attack_goal": "LLM mismatch laundering",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "FORBIDDEN",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts: unknown observation id including LLM text -> OUTCOME_OBSERVATION_UNAVAILABLE"
+    },
+    {
+      "id": "CP8V-LLM_JUDGE-007",
+      "category": "LLM_JUDGE",
+      "severity": "critical",
+      "attack_goal": "LLM rollback authority",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "FORBIDDEN",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts: unknown observation id including LLM text -> OUTCOME_OBSERVATION_UNAVAILABLE"
+    },
+    {
+      "id": "CP8V-NONZERO_EFFECT-001",
+      "category": "NONZERO_EFFECT",
+      "severity": "critical",
+      "attack_goal": "nonzero assumed no effect",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "READBACK_REQUIRED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial_effect_exit_nonzero_still_readback; E2E Case 3"
+    },
+    {
+      "id": "CP8V-NONZERO_EFFECT-002",
+      "category": "NONZERO_EFFECT",
+      "severity": "high",
+      "attack_goal": "legitimate effect with failing exit",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial_effect_exit_nonzero_still_readback; E2E Case 3"
+    },
+    {
+      "id": "CP8V-NONZERO_EFFECT-003",
+      "category": "NONZERO_EFFECT",
+      "severity": "high",
+      "attack_goal": "stdout claim after failure",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial_effect_exit_nonzero_still_readback; E2E Case 3"
+    },
+    {
+      "id": "CP8V-NONZERO_EFFECT-004",
+      "category": "NONZERO_EFFECT",
+      "severity": "high",
+      "attack_goal": "auth failure assumed no effect",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial_effect_exit_nonzero_still_readback; E2E Case 3"
+    },
+    {
+      "id": "CP8V-NONZERO_EFFECT-005",
+      "category": "NONZERO_EFFECT",
+      "severity": "medium",
+      "attack_goal": "provable not started",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_STARTED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial_effect_exit_nonzero_still_readback; E2E Case 3"
+    },
+    {
+      "id": "CP8V-NONZERO_EFFECT-006",
+      "category": "NONZERO_EFFECT",
+      "severity": "critical",
+      "attack_goal": "effect stage guessed",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "READBACK_REQUIRED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial_effect_exit_nonzero_still_readback; E2E Case 3"
+    },
+    {
+      "id": "CP8V-TIMEOUT_EFFECT-001",
+      "category": "TIMEOUT_EFFECT",
+      "severity": "critical",
+      "attack_goal": "timeout assumed no effect",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "READBACK_REQUIRED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust timeout_after_effect_still_readback; E2E Case 4"
+    },
+    {
+      "id": "CP8V-TIMEOUT_EFFECT-002",
+      "category": "TIMEOUT_EFFECT",
+      "severity": "high",
+      "attack_goal": "effect verified after timeout",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust timeout_after_effect_still_readback; E2E Case 4"
+    },
+    {
+      "id": "CP8V-TIMEOUT_EFFECT-003",
+      "category": "TIMEOUT_EFFECT",
+      "severity": "critical",
+      "attack_goal": "timeout defaults success",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust timeout_after_effect_still_readback; E2E Case 4"
+    },
+    {
+      "id": "CP8V-TIMEOUT_EFFECT-004",
+      "category": "TIMEOUT_EFFECT",
+      "severity": "medium",
+      "attack_goal": "pre-spawn timeout",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_STARTED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust timeout_after_effect_still_readback; E2E Case 4"
+    },
+    {
+      "id": "CP8V-TIMEOUT_EFFECT-005",
+      "category": "TIMEOUT_EFFECT",
+      "severity": "high",
+      "attack_goal": "post-timeout mismatch",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "MISMATCH",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust timeout_after_effect_still_readback; E2E Case 4"
+    },
+    {
+      "id": "CP8V-TIMEOUT_EFFECT-006",
+      "category": "TIMEOUT_EFFECT",
+      "severity": "high",
+      "attack_goal": "verification timeout",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust timeout_after_effect_still_readback; E2E Case 4"
+    },
+    {
+      "id": "CP8V-CANCEL_EFFECT-001",
+      "category": "CANCEL_EFFECT",
+      "severity": "critical",
+      "attack_goal": "cancel assumed no effect",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "READBACK_REQUIRED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust cancel_after_effect_still_readback; E2E Case 5"
+    },
+    {
+      "id": "CP8V-CANCEL_EFFECT-002",
+      "category": "CANCEL_EFFECT",
+      "severity": "high",
+      "attack_goal": "effect verified after cancel",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust cancel_after_effect_still_readback; E2E Case 5"
+    },
+    {
+      "id": "CP8V-CANCEL_EFFECT-003",
+      "category": "CANCEL_EFFECT",
+      "severity": "medium",
+      "attack_goal": "pre-spawn cancel",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_STARTED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust cancel_after_effect_still_readback; E2E Case 5"
+    },
+    {
+      "id": "CP8V-CANCEL_EFFECT-004",
+      "category": "CANCEL_EFFECT",
+      "severity": "high",
+      "attack_goal": "readback cancelled",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust cancel_after_effect_still_readback; E2E Case 5"
+    },
+    {
+      "id": "CP8V-CANCEL_EFFECT-005",
+      "category": "CANCEL_EFFECT",
+      "severity": "high",
+      "attack_goal": "caller cancels at will",
+      "expected_stage": "EXECUTION_CONTROL",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust cancel_after_effect_still_readback; E2E Case 5"
+    },
+    {
+      "id": "CP8V-CRASH_EFFECT-001",
+      "category": "CRASH_EFFECT",
+      "severity": "high",
+      "attack_goal": "pre-spawn crash",
+      "expected_stage": "CRASH_RECOVERY",
+      "expected_result": "NOT_STARTED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust crash_tests (accepted/spawn_started -> unknown_after_crash + read-back); E2E Case 6"
+    },
+    {
+      "id": "CP8V-CRASH_EFFECT-002",
+      "category": "CRASH_EFFECT",
+      "severity": "critical",
+      "attack_goal": "mid-run crash",
+      "expected_stage": "CRASH_RECOVERY",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust crash_tests (accepted/spawn_started -> unknown_after_crash + read-back); E2E Case 6"
+    },
+    {
+      "id": "CP8V-CRASH_EFFECT-003",
+      "category": "CRASH_EFFECT",
+      "severity": "critical",
+      "attack_goal": "effect then crash",
+      "expected_stage": "CRASH_RECOVERY",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust crash_tests (accepted/spawn_started -> unknown_after_crash + read-back); E2E Case 6"
+    },
+    {
+      "id": "CP8V-CRASH_EFFECT-004",
+      "category": "CRASH_EFFECT",
+      "severity": "critical",
+      "attack_goal": "receipt lost",
+      "expected_stage": "CRASH_RECOVERY",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust crash_tests (accepted/spawn_started -> unknown_after_crash + read-back); E2E Case 6"
+    },
+    {
+      "id": "CP8V-CRASH_EFFECT-005",
+      "category": "CRASH_EFFECT",
+      "severity": "high",
+      "attack_goal": "readback never ran",
+      "expected_stage": "CRASH_RECOVERY",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust crash_tests (accepted/spawn_started -> unknown_after_crash + read-back); E2E Case 6"
+    },
+    {
+      "id": "CP8V-CRASH_EFFECT-006",
+      "category": "CRASH_EFFECT",
+      "severity": "high",
+      "attack_goal": "partial readback",
+      "expected_stage": "CRASH_RECOVERY",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust crash_tests (accepted/spawn_started -> unknown_after_crash + read-back); E2E Case 6"
+    },
+    {
+      "id": "CP8V-CRASH_EFFECT-007",
+      "category": "CRASH_EFFECT",
+      "severity": "medium",
+      "attack_goal": "post-verification crash",
+      "expected_stage": "CRASH_RECOVERY",
+      "expected_result": "VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust crash_tests (accepted/spawn_started -> unknown_after_crash + read-back); E2E Case 6"
+    },
+    {
+      "id": "CP8V-CRASH_EFFECT-008",
+      "category": "CRASH_EFFECT",
+      "severity": "critical",
+      "attack_goal": "recovery invents evidence",
+      "expected_stage": "CRASH_RECOVERY",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust crash_tests (accepted/spawn_started -> unknown_after_crash + read-back); E2E Case 6"
+    },
+    {
+      "id": "CP8V-READBACK_TIMEOUT-001",
+      "category": "READBACK_TIMEOUT",
+      "severity": "high",
+      "attack_goal": "verification timeout",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_timeout_is_never_success (compiled 30s bound; process_timed_out + malformed, no success field)"
+    },
+    {
+      "id": "CP8V-READBACK_TIMEOUT-002",
+      "category": "READBACK_TIMEOUT",
+      "severity": "critical",
+      "attack_goal": "timeout default success",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_timeout_is_never_success (compiled 30s bound; process_timed_out + malformed, no success field)"
+    },
+    {
+      "id": "CP8V-READBACK_TIMEOUT-003",
+      "category": "READBACK_TIMEOUT",
+      "severity": "medium",
+      "attack_goal": "bounded retry after timeout",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "RETRY",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_timeout_is_never_success (compiled 30s bound; process_timed_out + malformed, no success field)"
+    },
+    {
+      "id": "CP8V-READBACK_TIMEOUT-004",
+      "category": "READBACK_TIMEOUT",
+      "severity": "medium",
+      "attack_goal": "recovery within budget",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFIED",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_timeout_is_never_success (compiled 30s bound; process_timed_out + malformed, no success field)"
+    },
+    {
+      "id": "CP8V-READBACK_TIMEOUT-005",
+      "category": "READBACK_TIMEOUT",
+      "severity": "high",
+      "attack_goal": "timeout plus unknown effect",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_timeout_is_never_success (compiled 30s bound; process_timed_out + malformed, no success field)"
+    },
+    {
+      "id": "CP8V-READBACK_TIMEOUT-006",
+      "category": "READBACK_TIMEOUT",
+      "severity": "critical",
+      "attack_goal": "timeout disguised as success",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_timeout_is_never_success (compiled 30s bound; process_timed_out + malformed, no success field)"
+    },
+    {
+      "id": "CP8V-READBACK_FAILURE-001",
+      "category": "READBACK_FAILURE",
+      "severity": "medium",
+      "attack_goal": "rate limited readback",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "RETRY",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_nonzero_exit_is_never_success + parser fail-closed gate"
+    },
+    {
+      "id": "CP8V-READBACK_FAILURE-002",
+      "category": "READBACK_FAILURE",
+      "severity": "high",
+      "attack_goal": "auth failure readback",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_nonzero_exit_is_never_success + parser fail-closed gate"
+    },
+    {
+      "id": "CP8V-READBACK_FAILURE-003",
+      "category": "READBACK_FAILURE",
+      "severity": "high",
+      "attack_goal": "target not found",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_nonzero_exit_is_never_success + parser fail-closed gate"
+    },
+    {
+      "id": "CP8V-READBACK_FAILURE-004",
+      "category": "READBACK_FAILURE",
+      "severity": "medium",
+      "attack_goal": "unreadable target",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_nonzero_exit_is_never_success + parser fail-closed gate"
+    },
+    {
+      "id": "CP8V-READBACK_FAILURE-005",
+      "category": "READBACK_FAILURE",
+      "severity": "critical",
+      "attack_goal": "network exhaustion",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_nonzero_exit_is_never_success + parser fail-closed gate"
+    },
+    {
+      "id": "CP8V-READBACK_FAILURE-006",
+      "category": "READBACK_FAILURE",
+      "severity": "high",
+      "attack_goal": "empty observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_nonzero_exit_is_never_success + parser fail-closed gate"
+    },
+    {
+      "id": "CP8V-READBACK_FAILURE-007",
+      "category": "READBACK_FAILURE",
+      "severity": "high",
+      "attack_goal": "error/mismatch conflation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "rust readback_nonzero_exit_is_never_success + parser fail-closed gate"
+    },
+    {
+      "id": "CP8V-READBACK_STALE-001",
+      "category": "READBACK_STALE",
+      "severity": "critical",
+      "attack_goal": "stale observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts freshness boundary; cross-language vectors obsv-012/013/014"
+    },
+    {
+      "id": "CP8V-READBACK_STALE-002",
+      "category": "READBACK_STALE",
+      "severity": "high",
+      "attack_goal": "boundary staleness",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts freshness boundary; cross-language vectors obsv-012/013/014"
+    },
+    {
+      "id": "CP8V-READBACK_STALE-003",
+      "category": "READBACK_STALE",
+      "severity": "critical",
+      "attack_goal": "stale match",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts freshness boundary; cross-language vectors obsv-012/013/014"
+    },
+    {
+      "id": "CP8V-READBACK_STALE-004",
+      "category": "READBACK_STALE",
+      "severity": "high",
+      "attack_goal": "cross-plan cache hit",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts freshness boundary; cross-language vectors obsv-012/013/014"
+    },
+    {
+      "id": "CP8V-READBACK_STALE-005",
+      "category": "READBACK_STALE",
+      "severity": "high",
+      "attack_goal": "future source timestamp",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts freshness boundary; cross-language vectors obsv-012/013/014"
+    },
+    {
+      "id": "CP8V-READBACK_STALE-006",
+      "category": "READBACK_STALE",
+      "severity": "high",
+      "attack_goal": "clock rollback hides age",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts freshness boundary; cross-language vectors obsv-012/013/014"
+    },
+    {
+      "id": "CP8V-EVENTUAL_CONSISTENCY-001",
+      "category": "EVENTUAL_CONSISTENCY",
+      "severity": "medium",
+      "attack_goal": "convergent observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts eventual consistency: mismatch -> retry -> verified (bounded)"
+    },
+    {
+      "id": "CP8V-EVENTUAL_CONSISTENCY-002",
+      "category": "EVENTUAL_CONSISTENCY",
+      "severity": "critical",
+      "attack_goal": "infinite retry",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts eventual consistency: mismatch -> retry -> verified (bounded)"
+    },
+    {
+      "id": "CP8V-EVENTUAL_CONSISTENCY-003",
+      "category": "EVENTUAL_CONSISTENCY",
+      "severity": "medium",
+      "attack_goal": "retry storm",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts eventual consistency: mismatch -> retry -> verified (bounded)"
+    },
+    {
+      "id": "CP8V-EVENTUAL_CONSISTENCY-004",
+      "category": "EVENTUAL_CONSISTENCY",
+      "severity": "high",
+      "attack_goal": "non-monotonic flapping",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "MISMATCH",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts eventual consistency: mismatch -> retry -> verified (bounded)"
+    },
+    {
+      "id": "CP8V-EVENTUAL_CONSISTENCY-005",
+      "category": "EVENTUAL_CONSISTENCY",
+      "severity": "high",
+      "attack_goal": "TOCTOU on observation",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts eventual consistency: mismatch -> retry -> verified (bounded)"
+    },
+    {
+      "id": "CP8V-EVENTUAL_CONSISTENCY-006",
+      "category": "EVENTUAL_CONSISTENCY",
+      "severity": "medium",
+      "attack_goal": "wrong convergence model",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts eventual consistency: mismatch -> retry -> verified (bounded)"
+    },
+    {
+      "id": "CP8V-EVENTUAL_CONSISTENCY-007",
+      "category": "EVENTUAL_CONSISTENCY",
+      "severity": "low",
+      "attack_goal": "fast path verification",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts eventual consistency: mismatch -> retry -> verified (bounded)"
+    },
+    {
+      "id": "CP8V-MISMATCH-001",
+      "category": "MISMATCH",
+      "severity": "high",
+      "attack_goal": "final mismatch",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "MISMATCH",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts mismatch attempts finalize as mismatch; E2E Case 2"
+    },
+    {
+      "id": "CP8V-MISMATCH-002",
+      "category": "MISMATCH",
+      "severity": "high",
+      "attack_goal": "stale mismatch",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts mismatch attempts finalize as mismatch; E2E Case 2"
+    },
+    {
+      "id": "CP8V-MISMATCH-003",
+      "category": "MISMATCH",
+      "severity": "critical",
+      "attack_goal": "mismatch auto rollback",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NO_ROLLBACK",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts mismatch attempts finalize as mismatch; E2E Case 2"
+    },
+    {
+      "id": "CP8V-MISMATCH-004",
+      "category": "MISMATCH",
+      "severity": "high",
+      "attack_goal": "evidence-less mismatch",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts mismatch attempts finalize as mismatch; E2E Case 2"
+    },
+    {
+      "id": "CP8V-MISMATCH-005",
+      "category": "MISMATCH",
+      "severity": "medium",
+      "attack_goal": "optional field overreach",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "WARNING_ONLY",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts mismatch attempts finalize as mismatch; E2E Case 2"
+    },
+    {
+      "id": "CP8V-MISMATCH-006",
+      "category": "MISMATCH",
+      "severity": "critical",
+      "attack_goal": "LLM resolves mismatch",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts mismatch attempts finalize as mismatch; E2E Case 2"
+    },
+    {
+      "id": "CP8V-INCONCLUSIVE-001",
+      "category": "INCONCLUSIVE",
+      "severity": "critical",
+      "attack_goal": "final inconclusive",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "INCONCLUSIVE",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts inconclusive retries then finalize inconclusive"
+    },
+    {
+      "id": "CP8V-INCONCLUSIVE-002",
+      "category": "INCONCLUSIVE",
+      "severity": "critical",
+      "attack_goal": "inconclusive laundering",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts inconclusive retries then finalize inconclusive"
+    },
+    {
+      "id": "CP8V-INCONCLUSIVE-003",
+      "category": "INCONCLUSIVE",
+      "severity": "high",
+      "attack_goal": "revisit path",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REVISION",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts inconclusive retries then finalize inconclusive"
+    },
+    {
+      "id": "CP8V-INCONCLUSIVE-004",
+      "category": "INCONCLUSIVE",
+      "severity": "high",
+      "attack_goal": "clarification path",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "CLARIFY",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts inconclusive retries then finalize inconclusive"
+    },
+    {
+      "id": "CP8V-INCONCLUSIVE-005",
+      "category": "INCONCLUSIVE",
+      "severity": "medium",
+      "attack_goal": "unexplained inconclusive",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts inconclusive retries then finalize inconclusive"
+    },
+    {
+      "id": "CP8V-INCONCLUSIVE-006",
+      "category": "INCONCLUSIVE",
+      "severity": "critical",
+      "attack_goal": "exit 0 promotes inconclusive",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts inconclusive retries then finalize inconclusive"
+    },
+    {
+      "id": "CP8V-FALSE_POSITIVE-001",
+      "category": "FALSE_POSITIVE",
+      "severity": "critical",
+      "attack_goal": "vacuous predicate pass",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false positive write/read-back tests; E2E Case 2 never verifies"
+    },
+    {
+      "id": "CP8V-FALSE_POSITIVE-002",
+      "category": "FALSE_POSITIVE",
+      "severity": "critical",
+      "attack_goal": "echoed expectation pass",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false positive write/read-back tests; E2E Case 2 never verifies"
+    },
+    {
+      "id": "CP8V-FALSE_POSITIVE-003",
+      "category": "FALSE_POSITIVE",
+      "severity": "critical",
+      "attack_goal": "truncated pass",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false positive write/read-back tests; E2E Case 2 never verifies"
+    },
+    {
+      "id": "CP8V-FALSE_POSITIVE-004",
+      "category": "FALSE_POSITIVE",
+      "severity": "critical",
+      "attack_goal": "cross-subject pass",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false positive write/read-back tests; E2E Case 2 never verifies"
+    },
+    {
+      "id": "CP8V-FALSE_POSITIVE-005",
+      "category": "FALSE_POSITIVE",
+      "severity": "high",
+      "attack_goal": "ambiguous parser pass",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false positive write/read-back tests; E2E Case 2 never verifies"
+    },
+    {
+      "id": "CP8V-FALSE_POSITIVE-006",
+      "category": "FALSE_POSITIVE",
+      "severity": "high",
+      "attack_goal": "correction of a wrong verdict",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REVISION",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust false positive write/read-back tests; E2E Case 2 never verifies"
+    },
+    {
+      "id": "CP8V-FALSE_NEGATIVE-001",
+      "category": "FALSE_NEGATIVE",
+      "severity": "high",
+      "attack_goal": "stale false negative",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial/timeout/cancel effect tests; E2E Cases 3-5 verify despite process failure"
+    },
+    {
+      "id": "CP8V-FALSE_NEGATIVE-002",
+      "category": "FALSE_NEGATIVE",
+      "severity": "medium",
+      "attack_goal": "parse false negative",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "RETRY",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial/timeout/cancel effect tests; E2E Cases 3-5 verify despite process failure"
+    },
+    {
+      "id": "CP8V-FALSE_NEGATIVE-003",
+      "category": "FALSE_NEGATIVE",
+      "severity": "medium",
+      "attack_goal": "consistency false negative",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "RETRY",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial/timeout/cancel effect tests; E2E Cases 3-5 verify despite process failure"
+    },
+    {
+      "id": "CP8V-FALSE_NEGATIVE-004",
+      "category": "FALSE_NEGATIVE",
+      "severity": "critical",
+      "attack_goal": "rollback on false negative",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NO_ROLLBACK",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial/timeout/cancel effect tests; E2E Cases 3-5 verify despite process failure"
+    },
+    {
+      "id": "CP8V-FALSE_NEGATIVE-005",
+      "category": "FALSE_NEGATIVE",
+      "severity": "medium",
+      "attack_goal": "case false negative",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial/timeout/cancel effect tests; E2E Cases 3-5 verify despite process failure"
+    },
+    {
+      "id": "CP8V-FALSE_NEGATIVE-006",
+      "category": "FALSE_NEGATIVE",
+      "severity": "medium",
+      "attack_goal": "immutable false negative",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REVISION",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust partial/timeout/cancel effect tests; E2E Cases 3-5 verify despite process failure"
+    },
+    {
+      "id": "CP8V-OUTCOME_STORE-001",
+      "category": "OUTCOME_STORE",
+      "severity": "critical",
+      "attack_goal": "corrupt store",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts cardinality + observation index + corrupt shapes; goal24-outcome-store.test.ts fail-closed corruption"
+    },
+    {
+      "id": "CP8V-OUTCOME_STORE-002",
+      "category": "OUTCOME_STORE",
+      "severity": "critical",
+      "attack_goal": "silent reset",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts cardinality + observation index + corrupt shapes; goal24-outcome-store.test.ts fail-closed corruption"
+    },
+    {
+      "id": "CP8V-OUTCOME_STORE-003",
+      "category": "OUTCOME_STORE",
+      "severity": "high",
+      "attack_goal": "duplicate outcomes",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts cardinality + observation index + corrupt shapes; goal24-outcome-store.test.ts fail-closed corruption"
+    },
+    {
+      "id": "CP8V-OUTCOME_STORE-004",
+      "category": "OUTCOME_STORE",
+      "severity": "high",
+      "attack_goal": "torn outcome write",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts cardinality + observation index + corrupt shapes; goal24-outcome-store.test.ts fail-closed corruption"
+    },
+    {
+      "id": "CP8V-OUTCOME_STORE-005",
+      "category": "OUTCOME_STORE",
+      "severity": "critical",
+      "attack_goal": "caller authorship",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "INERT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts cardinality + observation index + corrupt shapes; goal24-outcome-store.test.ts fail-closed corruption"
+    },
+    {
+      "id": "CP8V-OUTCOME_STORE-006",
+      "category": "OUTCOME_STORE",
+      "severity": "high",
+      "attack_goal": "cross-plan overwrite",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts cardinality + observation index + corrupt shapes; goal24-outcome-store.test.ts fail-closed corruption"
+    },
+    {
+      "id": "CP8V-OUTCOME_STORE-007",
+      "category": "OUTCOME_STORE",
+      "severity": "critical",
+      "attack_goal": "lineage-less verified",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts cardinality + observation index + corrupt shapes; goal24-outcome-store.test.ts fail-closed corruption"
+    },
+    {
+      "id": "CP8V-HISTORY-001",
+      "category": "HISTORY",
+      "severity": "critical",
+      "attack_goal": "history deletion",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-store.test.ts transition validation (append-only history, illegal transitions)"
+    },
+    {
+      "id": "CP8V-HISTORY-002",
+      "category": "HISTORY",
+      "severity": "critical",
+      "attack_goal": "observation rewrite",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-store.test.ts transition validation (append-only history, illegal transitions)"
+    },
+    {
+      "id": "CP8V-HISTORY-003",
+      "category": "HISTORY",
+      "severity": "high",
+      "attack_goal": "sequence tampering",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-store.test.ts transition validation (append-only history, illegal transitions)"
+    },
+    {
+      "id": "CP8V-HISTORY-004",
+      "category": "HISTORY",
+      "severity": "high",
+      "attack_goal": "evidence loss",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-store.test.ts transition validation (append-only history, illegal transitions)"
+    },
+    {
+      "id": "CP8V-HISTORY-005",
+      "category": "HISTORY",
+      "severity": "critical",
+      "attack_goal": "revisit rewrite",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REVISION",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-store.test.ts transition validation (append-only history, illegal transitions)"
+    },
+    {
+      "id": "CP8V-HISTORY-006",
+      "category": "HISTORY",
+      "severity": "medium",
+      "attack_goal": "anonymous history",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-store.test.ts transition validation (append-only history, illegal transitions)"
+    },
+    {
+      "id": "CP8V-RETRY-001",
+      "category": "RETRY",
+      "severity": "high",
+      "attack_goal": "mismatch exhaustion",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "MISMATCH",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts bounded retry only + exhausted budget never defaults success; lifecycle budget bounds"
+    },
+    {
+      "id": "CP8V-RETRY-002",
+      "category": "RETRY",
+      "severity": "critical",
+      "attack_goal": "unavailability exhaustion",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "VERIFICATION_FAILED",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts bounded retry only + exhausted budget never defaults success; lifecycle budget bounds"
+    },
+    {
+      "id": "CP8V-RETRY-003",
+      "category": "RETRY",
+      "severity": "critical",
+      "attack_goal": "exhaustion default success",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts bounded retry only + exhausted budget never defaults success; lifecycle budget bounds"
+    },
+    {
+      "id": "CP8V-RETRY-004",
+      "category": "RETRY",
+      "severity": "critical",
+      "attack_goal": "infinite retry",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts bounded retry only + exhausted budget never defaults success; lifecycle budget bounds"
+    },
+    {
+      "id": "CP8V-RETRY-005",
+      "category": "RETRY",
+      "severity": "medium",
+      "attack_goal": "retry storm",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts bounded retry only + exhausted budget never defaults success; lifecycle budget bounds"
+    },
+    {
+      "id": "CP8V-RETRY-006",
+      "category": "RETRY",
+      "severity": "critical",
+      "attack_goal": "retry without re-read",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts bounded retry only + exhausted budget never defaults success; lifecycle budget bounds"
+    },
+    {
+      "id": "CP8V-RETRY-007",
+      "category": "RETRY",
+      "severity": "high",
+      "attack_goal": "caller retry budget",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "goal24-outcome-hardening.test.ts bounded retry only + exhausted budget never defaults success; lifecycle budget bounds"
+    },
+    {
+      "id": "CP8V-SECRET-001",
+      "category": "SECRET",
+      "severity": "critical",
+      "attack_goal": "secret in logs",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "SANITIZED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust execution_broker/adversarial.rs credential_output_redacted (V046/V047/V055); receipts store digests only"
+    },
+    {
+      "id": "CP8V-SECRET-002",
+      "category": "SECRET",
+      "severity": "critical",
+      "attack_goal": "token in URLs",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "SANITIZED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust execution_broker/adversarial.rs credential_output_redacted (V046/V047/V055); receipts store digests only"
+    },
+    {
+      "id": "CP8V-SECRET-003",
+      "category": "SECRET",
+      "severity": "critical",
+      "attack_goal": "secret in reason codes",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "SANITIZED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust execution_broker/adversarial.rs credential_output_redacted (V046/V047/V055); receipts store digests only"
+    },
+    {
+      "id": "CP8V-SECRET-004",
+      "category": "SECRET",
+      "severity": "high",
+      "attack_goal": "secret in display names",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "SANITIZED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust execution_broker/adversarial.rs credential_output_redacted (V046/V047/V055); receipts store digests only"
+    },
+    {
+      "id": "CP8V-SECRET-005",
+      "category": "SECRET",
+      "severity": "critical",
+      "attack_goal": "token persisted in receipt",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "SANITIZED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust execution_broker/adversarial.rs credential_output_redacted (V046/V047/V055); receipts store digests only"
+    },
+    {
+      "id": "CP8V-LOGGING-001",
+      "category": "LOGGING",
+      "severity": "high",
+      "attack_goal": "verbose secret dump",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "SANITIZED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "bounded output caps + credential_output_redacted apply to both streams"
+    },
+    {
+      "id": "CP8V-LOGGING-002",
+      "category": "LOGGING",
+      "severity": "medium",
+      "attack_goal": "log injection",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "SANITIZED",
+      "mapping": "MANUAL",
+      "coverage": "output bounds + redaction are test-covered; no runtime logging of observation payloads exists (source-reviewed absence)"
+    },
+    {
+      "id": "CP8V-LOGGING-003",
+      "category": "LOGGING",
+      "severity": "medium",
+      "attack_goal": "misleading log verdict",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "REJECT",
+      "mapping": "MANUAL",
+      "coverage": "output bounds + redaction are test-covered; no runtime logging of observation payloads exists (source-reviewed absence)"
+    },
+    {
+      "id": "CP8V-LOGGING-004",
+      "category": "LOGGING",
+      "severity": "high",
+      "attack_goal": "stderr token leak",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "SANITIZED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "stderr is redacted by the same CP3 redaction (credential_output_redacted)"
+    },
+    {
+      "id": "CP8V-LOGGING-005",
+      "category": "LOGGING",
+      "severity": "medium",
+      "attack_goal": "evidence loss in logs",
+      "expected_stage": "LOGGING_SURFACE",
+      "expected_result": "FAIL_CLOSED",
+      "mapping": "MANUAL",
+      "coverage": "output bounds + redaction are test-covered; no runtime logging of observation payloads exists (source-reviewed absence)"
+    },
+    {
+      "id": "CP8V-ROLLBACK-001",
+      "category": "ROLLBACK",
+      "severity": "critical",
+      "attack_goal": "auto rollback",
+      "expected_stage": "ROLLBACK_GATE",
+      "expected_result": "NO_ROLLBACK",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts rollback_candidate boolean-only; hardening: no outcome source file can spawn"
+    },
+    {
+      "id": "CP8V-ROLLBACK-002",
+      "category": "ROLLBACK",
+      "severity": "critical",
+      "attack_goal": "candidate promoted to authority",
+      "expected_stage": "ROLLBACK_GATE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts rollback_candidate boolean-only; hardening: no outcome source file can spawn"
+    },
+    {
+      "id": "CP8V-ROLLBACK-003",
+      "category": "ROLLBACK",
+      "severity": "critical",
+      "attack_goal": "unapproved destructive rollback",
+      "expected_stage": "ROLLBACK_GATE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts rollback_candidate boolean-only; hardening: no outcome source file can spawn"
+    },
+    {
+      "id": "CP8V-ROLLBACK-004",
+      "category": "ROLLBACK",
+      "severity": "critical",
+      "attack_goal": "stale-triggered rollback",
+      "expected_stage": "ROLLBACK_GATE",
+      "expected_result": "NO_ROLLBACK",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts rollback_candidate boolean-only; hardening: no outcome source file can spawn"
+    },
+    {
+      "id": "CP8V-ROLLBACK-005",
+      "category": "ROLLBACK",
+      "severity": "critical",
+      "attack_goal": "rollback swap",
+      "expected_stage": "ROLLBACK_GATE",
+      "expected_result": "BINDING_MISMATCH",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts rollback_candidate boolean-only; hardening: no outcome source file can spawn"
+    },
+    {
+      "id": "CP8V-ROLLBACK-006",
+      "category": "ROLLBACK",
+      "severity": "critical",
+      "attack_goal": "rollback disguised as verification",
+      "expected_stage": "ROLLBACK_GATE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "goal24-outcome-lifecycle.test.ts rollback_candidate boolean-only; hardening: no outcome source file can spawn"
+    },
+    {
+      "id": "CP8V-ROLLBACK-007",
+      "category": "ROLLBACK",
+      "severity": "medium",
+      "attack_goal": "scope creep",
+      "expected_stage": "ROLLBACK_GATE",
+      "expected_result": "OUT_OF_SCOPE",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "the oracle itself expects OUT_OF_SCOPE for rollback scope creep in CP8 (no rollback engine exists)"
+    },
+    {
+      "id": "CP8V-IPC-001",
+      "category": "IPC",
+      "severity": "critical",
+      "attack_goal": "public readback surface",
+      "expected_stage": "IPC_SURFACE",
+      "expected_result": "BLOCKS_CP8",
+      "mapping": "AUTOMATED",
+      "coverage": "rust commands.rs ipc_surface_tests (no execute/readback/verify/approve/submit/outcome commands in the WebView registry)"
+    },
+    {
+      "id": "CP8V-IPC-002",
+      "category": "IPC",
+      "severity": "critical",
+      "attack_goal": "execute IPC resurrection",
+      "expected_stage": "IPC_SURFACE",
+      "expected_result": "BLOCKS_CP8",
+      "mapping": "AUTOMATED",
+      "coverage": "rust commands.rs ipc_surface_tests (no execute/readback/verify/approve/submit/outcome commands in the WebView registry)"
+    },
+    {
+      "id": "CP8V-IPC-003",
+      "category": "IPC",
+      "severity": "high",
+      "attack_goal": "status surface leak",
+      "expected_stage": "IPC_SURFACE",
+      "expected_result": "REJECT",
+      "mapping": "MANUAL",
+      "coverage": "get_broker_status is a read-only aggregate exposing no receipts/outcomes/observations (audit CP8A-005); verified by source review"
+    },
+    {
+      "id": "CP8V-IPC-004",
+      "category": "IPC",
+      "severity": "critical",
+      "attack_goal": "caller receipt ingestion",
+      "expected_stage": "IPC_SURFACE",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "rust commands.rs ipc_surface_tests (no execute/readback/verify/approve/submit/outcome commands in the WebView registry)"
+    },
+    {
+      "id": "CP8V-IPC-005",
+      "category": "IPC",
+      "severity": "critical",
+      "attack_goal": "deserialize accepts receipts",
+      "expected_stage": "IPC_SURFACE",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "rust commands.rs ipc_surface_tests (no execute/readback/verify/approve/submit/outcome commands in the WebView registry)"
+    },
+    {
+      "id": "CP8V-IPC-006",
+      "category": "IPC",
+      "severity": "critical",
+      "attack_goal": "caller observation command",
+      "expected_stage": "IPC_SURFACE",
+      "expected_result": "REJECT",
+      "mapping": "AUTOMATED",
+      "coverage": "rust commands.rs ipc_surface_tests (no execute/readback/verify/approve/submit/outcome commands in the WebView registry)"
+    },
+    {
+      "id": "CP8V-EXECUTION-001",
+      "category": "EXECUTION",
+      "severity": "critical",
+      "attack_goal": "success laundering",
+      "expected_stage": "EXECUTION_ENTRY",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "CP3 broker containment suite (trusted executable, cwd/env allowlists, bounds, process-tree kill)"
+    },
+    {
+      "id": "CP8V-EXECUTION-002",
+      "category": "EXECUTION",
+      "severity": "critical",
+      "attack_goal": "missing readback",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "CP3 broker containment suite (trusted executable, cwd/env allowlists, bounds, process-tree kill)"
+    },
+    {
+      "id": "CP8V-EXECUTION-003",
+      "category": "EXECUTION",
+      "severity": "critical",
+      "attack_goal": "receipt-less verified",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "CP3 broker containment suite (trusted executable, cwd/env allowlists, bounds, process-tree kill)"
+    },
+    {
+      "id": "CP8V-EXECUTION-004",
+      "category": "EXECUTION",
+      "severity": "high",
+      "attack_goal": "state transition without outcome",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "CP3 broker containment suite (trusted executable, cwd/env allowlists, bounds, process-tree kill)"
+    },
+    {
+      "id": "CP8V-EXECUTION-005",
+      "category": "EXECUTION",
+      "severity": "critical",
+      "attack_goal": "unverified succeeded",
+      "expected_stage": "OUTCOME_STORE",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "CP3 broker containment suite (trusted executable, cwd/env allowlists, bounds, process-tree kill)"
+    },
+    {
+      "id": "CP8V-EXECUTION-006",
+      "category": "EXECUTION",
+      "severity": "critical",
+      "attack_goal": "verifier side effect",
+      "expected_stage": "EXECUTION_ENTRY",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "CP3 broker containment suite (trusted executable, cwd/env allowlists, bounds, process-tree kill)"
+    },
+    {
+      "id": "CP8V-EXECUTION-007",
+      "category": "EXECUTION",
+      "severity": "low",
+      "attack_goal": "read-only outcome noise",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "N_A",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "CP3 broker containment suite (trusted executable, cwd/env allowlists, bounds, process-tree kill)"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-001",
+      "category": "GITHUB_MAPPING",
+      "severity": "critical",
+      "attack_goal": "URL as truth",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "LOCATOR_ONLY",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-002",
+      "category": "GITHUB_MAPPING",
+      "severity": "high",
+      "attack_goal": "number derivation gap",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "LOCATOR_GAP",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-003",
+      "category": "GITHUB_MAPPING",
+      "severity": "critical",
+      "attack_goal": "comment verification gap",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "READBACK_CAPABILITY_GAP",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-004",
+      "category": "GITHUB_MAPPING",
+      "severity": "high",
+      "attack_goal": "close readback mapping",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "MAPPED",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-005",
+      "category": "GITHUB_MAPPING",
+      "severity": "medium",
+      "attack_goal": "state case mismatch",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "REJECT",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-006",
+      "category": "GITHUB_MAPPING",
+      "severity": "high",
+      "attack_goal": "merge readback mapping",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "MAPPED_PARTIAL",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-007",
+      "category": "GITHUB_MAPPING",
+      "severity": "critical",
+      "attack_goal": "exit 0 merge proof",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "NOT_VERIFIED",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-008",
+      "category": "GITHUB_MAPPING",
+      "severity": "high",
+      "attack_goal": "metadata field gap",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "FUTURE_EXTENSION",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-009",
+      "category": "GITHUB_MAPPING",
+      "severity": "critical",
+      "attack_goal": "write binding appears",
+      "expected_stage": "BINDING_REGISTRY",
+      "expected_result": "REJECT",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "coverage": "rust github_cli contract test asserts exactly 5 production capabilities, all read_only/low/L0"
+    },
+    {
+      "id": "CP8V-GITHUB_MAPPING-010",
+      "category": "GITHUB_MAPPING",
+      "severity": "medium",
+      "attack_goal": "readback catalog constraint",
+      "expected_stage": "OUTCOME_EVALUATION",
+      "expected_result": "ALLOW",
+      "mapping": "NOT_APPLICABLE",
+      "coverage": "no production GitHub write capability exists (production write bindings = 0); catalog semantics frozen in cp8-github-readback-catalog.json + cp8-write-enablement-prerequisites.json"
+    }
+  ]
+}

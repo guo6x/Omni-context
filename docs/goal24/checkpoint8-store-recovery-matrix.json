@@ -1,0 +1,154 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "checkpoint8-store-recovery-matrix.json",
+    "purpose": "Verification evidence for the two persistent stores: native ReceiptStore (Rust) and Brain OutcomeStore (TypeScript). Every row maps to a real automated test. Corruption always fails closed; a corrupt store is never reset to empty."
+  },
+  "outcome_store": {
+    "owner": "Brain (brain-server/src/outcome/store.ts FileOutcomeStore V1)",
+    "rows": [
+      {
+        "property": "persistent",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-store.test.ts: creates, lists and reads outcomes from disk"
+      },
+      {
+        "property": "restart persistence",
+        "requirement": "PASS",
+        "verdict": "PASS",
+        "test": "goal24-outcome-store.test.ts: preserves status and full attempt history across a store restart"
+      },
+      {
+        "property": "corruption fail closed",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-store.test.ts corruption block: malformed/truncated/unknown schema/unknown fields/duplicate ids/invalid records -> OUTCOME_STORE_CORRUPT"
+      },
+      {
+        "property": "corruption never resets empty",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-store.test.ts: corruption never resets the store to an empty state"
+      },
+      {
+        "property": "history append-only / preserved",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-store.test.ts transition validation: rejects rewriting existing attempt history; illegal transitions rejected"
+      },
+      {
+        "property": "duplicate attempt rejected",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-store.test.ts: duplicate attempt_id fails closed"
+      },
+      {
+        "property": "duplicate observation rejected (same outcome)",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-hardening.test.ts + cross-language obsv-032: OUTCOME_DUPLICATE_OBSERVATION"
+      },
+      {
+        "property": "duplicate observation rejected (cross outcome)",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-hardening.test.ts single-use observation ids + cross-language obsv-016"
+      },
+      {
+        "property": "one canonical outcome per (plan_id, receipt_id)",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-hardening.test.ts: InMemory + File stores reject a second outcome; a file carrying two outcomes for one receipt is OUTCOME_STORE_CORRUPT"
+      },
+      {
+        "property": "invalid transition rejected",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-store.test.ts: rejects illegal verification_status transitions and identity mutation"
+      },
+      {
+        "property": "in-flight context fail-closed after restart",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "goal24-outcome-lifecycle.test.ts: Brain restart invalidates in-flight verification context (OUTCOME_CONTEXT_UNAVAILABLE)"
+      }
+    ]
+  },
+  "receipt_store": {
+    "owner": "Native (desktop-daemon/src-tauri/src/execution_broker/readback/store.rs FileExecutionReceiptStore)",
+    "rows": [
+      {
+        "property": "persistent",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "rust restart_migrates_* tests reopen the persistent store and recover receipts"
+      },
+      {
+        "property": "restart recovery",
+        "requirement": "PASS",
+        "verdict": "PASS",
+        "test": "rust crash_tests.rs: full_broker_restart_blocks_plan_replay_and_preserves_readback"
+      },
+      {
+        "property": "accepted recovery",
+        "requirement": "unknown_after_crash",
+        "verdict": "PASS",
+        "test": "rust restart_migrates_accepted_to_unknown_after_crash_and_allows_readback"
+      },
+      {
+        "property": "spawn_started recovery",
+        "requirement": "unknown_after_crash",
+        "verdict": "PASS",
+        "test": "rust restart_migrates_spawn_started_to_unknown_after_crash_and_allows_readback"
+      },
+      {
+        "property": "completed persists across restart",
+        "requirement": "PASS",
+        "verdict": "PASS",
+        "test": "rust full_broker_restart_blocks_plan_replay_and_preserves_readback (completed receipt survives + read-back works)"
+      },
+      {
+        "property": "spawn_failed",
+        "requirement": "provably no process; not read-back eligible",
+        "verdict": "PASS",
+        "test": "rust accepted_and_spawn_failed_receipts_are_not_readback_eligible"
+      },
+      {
+        "property": "corruption fail closed",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "rust store tests: truncated file / unknown schema / duplicate receipt ids / tampered digest -> BROKER_RECEIPT_STORE_CORRUPT and broker execution blocks"
+      },
+      {
+        "property": "corruption never reset empty",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "rust store corruption tests: store is never deleted or reset; Broker::execute fails closed while degraded"
+      },
+      {
+        "property": "cannot pretend not_started after crash",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "rust restart_migrates_* assert UnknownAfterCrash classification (never a no-effect claim)"
+      },
+      {
+        "property": "cannot re-execute plan from a receipt",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "rust full_broker_restart...: plan replay blocked (PlanRejectedSingleUse); a receipt is never an approval or a re-executable plan"
+      },
+      {
+        "property": "cannot create verified Outcome from a degraded store",
+        "requirement": "YES",
+        "verdict": "PASS",
+        "test": "runner degradation gate (store.degradation() blocks perform_readback); Brain can only consume receipts through the trusted resolver"
+      }
+    ]
+  },
+  "totals": {
+    "outcome_store_rows": 11,
+    "receipt_store_rows": 11,
+    "all_verdicts": "PASS"
+  }
+}
