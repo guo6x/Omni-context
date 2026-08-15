@@ -1,0 +1,124 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Checkpoint 8 (Integration)",
+    "artifact": "checkpoint8-bypass-closure.json",
+    "source": "docs/goal24/cp8-outcome-bypass-audit.json (Lane C docs-only audit, 16 surfaces, base 01e1204d8d2a9b232b6745a96667a205841e6f60)",
+    "final_state": {
+      "surfaces_total": 16,
+      "potential_before": 2,
+      "blocks_before": 0,
+      "potential_after": 0,
+      "blocks_after": 0
+    },
+    "policy": "POTENTIAL_OUTCOME_BYPASS findings can never be closed via OUT_OF_SCOPE; both were closed with real code changes and regression tests."
+  },
+  "surfaces_summary": [
+    {
+      "surface_id": "CP8A-001",
+      "classification": "NEEDS_CP8_INTEGRATION",
+      "disposition": "integrated: runner receipts feed the outcome pipeline; success field is never promoted (Brain receipt contract + cross-language tests)"
+    },
+    {
+      "surface_id": "CP8A-002",
+      "classification": "POTENTIAL_OUTCOME_BYPASS",
+      "disposition": "CLOSED (see closure entries below)"
+    },
+    {
+      "surface_id": "CP8A-003",
+      "classification": "SAFE_EXISTING",
+      "disposition": "unchanged: gh output parsing remains exit-0-gated, fail-closed"
+    },
+    {
+      "surface_id": "CP8A-004",
+      "classification": "SAFE_EXISTING",
+      "disposition": "unchanged: read outputs are raw material only; gaps cataloged"
+    },
+    {
+      "surface_id": "CP8A-005",
+      "classification": "SAFE_EXISTING",
+      "disposition": "unchanged: get_broker_status stays read-only; new ipc_surface_tests freeze the registry"
+    },
+    {
+      "surface_id": "CP8A-006",
+      "classification": "SAFE_EXISTING",
+      "disposition": "unchanged: no execute/readback/outcome commands; ipc_surface_tests asserts it"
+    },
+    {
+      "surface_id": "CP8A-007",
+      "classification": "NEEDS_CP8_INTEGRATION",
+      "disposition": "integrated: Broker::execute persists receipts; OutcomeService consumes receipt ids only"
+    },
+    {
+      "surface_id": "CP8A-008",
+      "classification": "SAFE_EXISTING",
+      "disposition": "unchanged: production write bindings remain 0 (github_cli contract test asserts exactly 5 read-only capabilities)"
+    },
+    {
+      "surface_id": "CP8A-009",
+      "classification": "SAFE_EXISTING",
+      "disposition": "unchanged: CP7 approval binding digest seals the verification plan; CP8 receipt verification_plan_digest reuses the same definition"
+    },
+    {
+      "surface_id": "CP8A-010",
+      "classification": "NEEDS_CP8_INTEGRATION",
+      "disposition": "integrated: verification plan becomes a broker-run readback via the read-only binding registry (Lane B runner)"
+    },
+    {
+      "surface_id": "CP8A-011",
+      "classification": "NEEDS_CP8_INTEGRATION",
+      "disposition": "integrated: runtime enforcement added - verifiers resolve from the trusted catalog and must be read_only/low/L0 (READBACK_BINDING_NOT_READ_ONLY)"
+    },
+    {
+      "surface_id": "CP8A-012",
+      "classification": "NEEDS_CP8_INTEGRATION",
+      "disposition": "integrated: OutcomeService consumes the approved verification plan (digest-bound); callers can never override verification inputs"
+    },
+    {
+      "surface_id": "CP8A-013",
+      "classification": "POTENTIAL_OUTCOME_BYPASS",
+      "disposition": "CLOSED (see closure entries below)"
+    },
+    {
+      "surface_id": "CP8A-014",
+      "classification": "NEEDS_CP8_INTEGRATION",
+      "disposition": "integrated: LLM review is journaling only; LLM text can never mark an outcome verified (OUTCOME_OBSERVATION_UNAVAILABLE for non-observation input; no LLM judge)"
+    },
+    {
+      "surface_id": "CP8A-015",
+      "classification": "NEEDS_CP8_INTEGRATION",
+      "disposition": "integrated: durable append-only native ReceiptStore (Lane B) + Brain OutcomeStore V1, both fail closed on corruption"
+    },
+    {
+      "surface_id": "CP8A-016",
+      "classification": "SAFE_EXISTING",
+      "disposition": "unchanged: no receipt/observation ingestion IPC; execute IPC stays disabled; ipc_surface_tests freeze it"
+    }
+  ],
+  "closures": [
+    {
+      "potential_id": "CP8A-002",
+      "title": "BrokerExecutionResult deserialization as a receipt ingestion path",
+      "surface": "desktop-daemon/src-tauri/src/execution_broker/types.rs",
+      "function": "BrokerExecutionResult (receipt wire struct)",
+      "call_path": "any future serde_json::from_str::<BrokerExecutionResult>(caller JSON) or generic DeserializeOwned bound over the type",
+      "external_reachability": "none today (no production deserialization call site exists - verified by grep); the risk was latent capability",
+      "risk": "a caller-shaped { success: true, exit_code: 0, plan_id: ... } JSON could be deserialized into a receipt-looking value and treated as execution authority by future code",
+      "fix": "removed the Deserialize derive from BrokerExecutionResult. The type is Serialize-only; any attempt to deserialize it fails at COMPILE TIME in every cargo check/clippy/test build. The doc comment freezes the rationale and forbids re-adding the derive without a CP-level security review.",
+      "tests": "compile-time enforcement (no runtime test possible by design: the negative property is that compilation fails); the existing receipt authority tests (receipt_store_is_the_only_execution_authority) keep asserting the runtime boundary",
+      "final_disposition": "CLOSED - compile-time, no runtime bypass possible"
+    },
+    {
+      "potential_id": "CP8A-013",
+      "title": "recordDecisionOutcome free-text journal read as verified execution outcomes",
+      "surface": "brain-server/src/decision/decision-store.ts",
+      "function": "recordDecisionOutcome",
+      "call_path": "MCP dispatch (dispatch.ts:2214) -> decision journal metadata.outcomes + event entity; risk was any future consumer promoting these records into CP8 verified outcomes",
+      "external_reachability": "MCP tool surface (decision outcome recording); the journal itself is a legitimate product feature",
+      "risk": "caller/LLM-authored free-text actual_outcome could be silently read as a verified outcome by future code, creating a parallel outcome authority",
+      "fix": "every journaled record is now stamped with machine-readable markers outcome_authority: 'journal' and verified: false (both in the decision metadata outcomes array and on the outcome event entity). The outcome layer has no import of decision-store (structurally asserted in goal24-outcome-hardening.test.ts) and consumes only trusted receipt/observation ids.",
+      "tests": "goal24-outcome-hardening.test.ts: (a) journaled records carry outcome_authority=journal + verified=false at both storage sites; (b) no brain-server/src/outcome/** file imports decision-store",
+      "final_disposition": "CLOSED - journal is typed non-authoritative and structurally unreachable from the outcome layer"
+    }
+  ],
+  "closure_method_policy": "Neither potential was closed via OUT_OF_SCOPE. Both were closed with real code changes (derive removal + typed journal markers) and automated regression tests. blocks_before = 0 and blocks_after = 0: nothing blocked CP8 and nothing remains blocking."
+}

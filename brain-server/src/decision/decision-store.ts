@@ -107,6 +107,16 @@ export async function getRecursiveDecisionLineage(db: Database, decisionId: stri
   return { current: compactDecision(root), sources, chain, recursive: true };
 }
 
+/**
+ * CP8 bypass closure CP8A-013: this is a FREE-TEXT DECISION JOURNAL, not an
+ * execution outcome authority. The recorded entries are caller/LLM-authored
+ * narrative and must NEVER be read as verified outcomes. Every journaled
+ * record is stamped with the machine-readable markers
+ * `outcome_authority: "journal"` and `verified: false` so a downstream
+ * consumer can never silently mistake it for a CP8 verified outcome. The
+ * CP8 outcome layer (brain-server/src/outcome/**) has no import of this
+ * module and accepts only trusted receipt/observation ids.
+ */
 export async function recordDecisionOutcome(db: Database, input: DecisionOutcomeInput) {
   const decision = await db.getEntity(input.decision_id);
   if (!decision || decision.type !== 'decision') return null;
@@ -123,6 +133,9 @@ export async function recordDecisionOutcome(db: Database, input: DecisionOutcome
     follow_up_actions: input.follow_up_actions,
     provenance: input.provenance,
     recorded_at: new Date().toISOString(),
+    // CP8 closure markers: journal-only, never verified authority.
+    outcome_authority: 'journal',
+    verified: false,
   };
   const previousOutcomes = Array.isArray(decision.metadata?.outcomes) ? decision.metadata.outcomes : [];
   await db.updateEntity(decision.id, {

@@ -377,7 +377,20 @@ impl std::error::Error for BrokerError {}
 /// Structured result of one broker execution. Returned for every completed
 /// spawn (including timeout and cancellation); gate failures return
 /// `Err(BrokerError)` instead.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+///
+/// SECURITY (CP8 bypass closure CP8A-002): this type intentionally does NOT
+/// implement `Deserialize`. A caller-shaped
+/// `{ success: true, exit_code: 0, plan_id: ... }` JSON object can
+/// therefore never be deserialized into a receipt-looking value by any
+/// production code path - the only execution authority is the persistent
+/// native ReceiptStore record resolved by receipt_id. The missing derive is
+/// the compile-time enforcement itself: any code that attempts
+/// `serde_json::from_str::<BrokerExecutionResult>` (or a generic
+/// `DeserializeOwned` bound over this type) simply fails to compile. This
+/// crate is bin-only (no doctest target), so the guarantee is enforced by
+/// the compiler during every `cargo check --all-targets`, never by a
+/// runtime test.
+#[derive(Debug, Clone, Serialize)]
 pub struct BrokerExecutionResult {
     pub execution_id: String,
     pub plan_id: String,
