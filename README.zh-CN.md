@@ -2,7 +2,8 @@
 
 <p align="center"><a href="README.md">English</a> · <strong>简体中文</strong></p>
 
-> **Omni-Context 是面向长期运行 AI Agent 的本地持久上下文与决策智能层。你的记忆与决策只留在你的机器上。**
+> **面向长期运行 AI Agent 的证据底座化决策控制（Evidence-grounded decision control）。**
+> **本地优先、经读回核验、归你所有（Local-first, read-back verified, and owned by you）。**
 
 <p align="center">
   <img src="docs/landing/assets/social-preview.svg" alt="Omni-Context" width="720">
@@ -13,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/guo6x/Omni-context/releases/latest"><strong>下载 Windows 版</strong></a> ·
-  <a href="#工作原理">工作原理</a> ·
+  <a href="#当前状态">当前状态</a> ·
   <a href="https://guo6x.github.io/Omni-context/">介绍页</a>
 </p>
 
@@ -21,81 +22,129 @@
 
 ---
 
-## 为什么需要 Omni-Context
+## Omni-Context 是什么
 
-**你的 AI 每次对话都把你忘干净了。** ChatGPT 的记忆很浅，Cursor 的上下文只活一个会话，Claude 跨项目不记得你。
+**Omni-Context 是面向长期运行 AI Agent 的证据底座化决策控制。**
 
-**云端记忆意味着把数据放在别人的服务器上。** Mem0、Letta、Zep —— 都很出色，但都云优先。你的上下文与决策跑在他们的基础设施上。
+> 让长期运行的 AI Agent
+> 在行动前有证据资格，
+> 行动时有明确授权，
+> 行动后有现实核验；
+> 现实不符合原判断时，
+> 重新打开那次决策。
 
-**Omni-Context 是面向长期运行 AI Agent 的本地持久上下文与决策智能层。** 它在你的机器上维护知识图谱、检索索引与决策历史，让 Agent 可以基于你的真实上下文工作，而不是从一个空白对话窗口开始。
+判断闭环：
 
-**不止是记忆存储。** 大多数"AI 记忆"工具只是高级数据库。Omni-Context 还记录决策 —— 上下文、推理、谱系与结果 —— 并为 Agent 的选择提供证据支持。MCP 只是当前的一种集成面，而不是产品本身。
+```
+证据资格 → 绑定 → 读回 → 重开
+Qualify → Bind → Read-back → Reopen
+```
+
+Agent 已经会行动——写代码、开 issue、跑命令。但**记忆不是证据**（Agent 记住的只是
+关于世界的陈述，不是经过验证的事实），**工具成功不等于结果真实**（退出码 0 不代表
+世界真的按你的意图改变了）。Omni-Context 补上的就是这个缺口：行动前审定证据资格，
+把执行绑定到为之负责的那次精确决策上，行动后读回现实，现实不符时重新打开那次决策。
+
+- **记忆与知识图谱**是长期**证据底座（Evidence Substrate）**——回答"Agent 知道什么"。
+  它们是产品的重要组成部分，被重新安置到判断闭环的底部，**没有被删除**。
+- **MCP 只是接口面之一**，不是产品本身。
+- **桌面端**是人类控制面：检查、批准、审计，并在必要时重新打开决策。
+
+完整论点：[docs/goal24/narrative/thesis-note.zh-CN.md](docs/goal24/narrative/thesis-note.zh-CN.md) ·
+产品愿景：[docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)
+
+---
+
+## 当前状态
+
+能力状态只用三种标签：**CURRENTLY_VERIFIED**（用户今天可直接使用）、**TARGET**（目标架构）、
+**FUTURE**（未来规划）。"开发分支 runtime 已验证"不等于"今天可用"。治理语言冻结在
+[docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)（第 14 章）。
+
+### A. 当前用户可直接使用（CURRENTLY_VERIFIED）
+
+- 本地持久记忆——你硬盘上的 SQLite，无账号、无服务器
+- 由实体、关系与核心原则构成的知识图谱
+- 混合检索（全文 + 向量 + 图谱遍历）
+- 时间 / 来源感知的上下文
+- 包含原则、先例与冲突的决策上下文
+- 已保存的决策、决策谱系与结果记录
+- MCP 集成——26 个工具，数量以 [mcp_tool_manifest.json](mcp_tool_manifest.json) 为准
+- 桌面捕获 / 本地桌面应用（GitHub Releases 提供 Windows 安装包）
+
+### B. 开发分支 runtime 已验证（CP3–CP8 内部工程 Gate）
+
+正在 `dev/goal24-cli-skills` 上开发。以下各项均有工程 Gate 证据，**但尚无任何
+公开调用入口**——状态是 **runtime verified on development branch（开发分支 runtime 已验证）**，
+不是 "available today"：
+
+| 组件 | Gate 证据 |
+|---|---|
+| 受限执行 broker（spawn/kill/timeout、进程约束、输出上限） | [checkpoint3-security-gate.json](docs/goal24/checkpoint3-security-gate.json) — PASS |
+| GitHub 只读 CLI 适配器（5 个语义能力、可执行文件钉定、零写绑定） | [checkpoint4-security-gate.json](docs/goal24/checkpoint4-security-gate.json) — PASS |
+| Skills registry + importer（默认隔离、完整性校验） | [checkpoint5-security-gate.json](docs/goal24/checkpoint5-security-gate.json) — PASS |
+| 证据资格 + surface guard（服务器自有资格、防伪造覆盖闭合） | [checkpoint6-security-gate.json](docs/goal24/checkpoint6-security-gate.json) — PASS |
+| 批准绑定 + 风险策略（单次授权、重放防御） | [checkpoint7-security-gate.json](docs/goal24/checkpoint7-security-gate.json) — PASS |
+| 结果读回 + 确定性 evaluator（受信 resolver、跨语言状态/观测向量） | [checkpoint8-security-gate.json](docs/goal24/checkpoint8-security-gate.json) — PASS（DRG1 前置已满足） |
+
+CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 failed / 7 ignored；
+跨语言向量 26（状态）+ 35（观测），mismatch 0。
+
+### C. TARGET / FUTURE —— 尚不可用
+
+- `omctx` CLI（`ask` / `inspect` / `approve` / `verify` / `history`）
+  —— **TARGET**。详见 [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md)。
+  二进制尚不存在，也没有可安装的 npm 包。
+- `omctx reopen` 用户 UX —— **FUTURE**（runtime 未实现）。
+- 真实、非 synthetic 的端到端流程 —— **FUTURE**。
+- 外部记忆适配器（如 MindMemOS、basic-memory）—— **FUTURE**，只能经
+  EvidenceProvider Adapter → 资格审定 → Evidence Guard 接入；外部 Memory 不会自动
+  成为证据权威。
+- 多 runtime 适配器（如 OpenClaw、NemoClaw、Claude Code）—— **FUTURE**，仅作为
+  capability transport；runtime 不得获得决策 / 批准 / 结果权威。
+
+> **DRG v2**：在至少一个真实、非 synthetic、用户能理解的 E2E 成立之前，
+> 对外 capability 声明冻结为「有 repo + Gate 证据支持的当前事实」。
+> 其余一律显式标注 **TARGET** / **FUTURE** / **DESIGNED TO**。
+> Omni 是 *designed to* 站在异构记忆/证据源与异构 Agent runtime 之间——
+> **不**宣称今天就能对接任意 memory OS 或任意 runtime。
 
 ---
 
 ## 工作原理
 
 ```
-捕获 / 来源
+证据获取（捕获 / 浏览器插件 / 桌面捕获 / 导入）
        ↓
-本地持久上下文
+证据底座（本地知识图谱 + 记忆 + 检索）
        ↓
-知识图谱 + 检索
+判断与权威核心（资格 → 决策 → 批准）
        ↓
-证据 / 决策智能
+受控执行（受限 broker → 能力适配器）
        ↓
-集成面
-       ↓
-AI Agent
+读回 → 结果 → 重开 / 修订
 ```
 
 1. **捕获** —— 截图、拖入文件、剪藏网页，或按一个物理按钮。任何东西都行。
 2. **抽取** —— OCR + LLM 流水线把实体、关系与核心原则抽取进本地知识图谱。
-3. **推理** —— 决策上下文、谱系与结果让 Agent 获得带证据限定的上下文，而不是原始记忆倾倒。
-4. **集成** —— 当前 AI 客户端通过 MCP 访问；CLI/API 适配器正在开发中。
-
----
-
-## 当前能力（Today）
-
-- 本地持久记忆（你硬盘上的 SQLite —— 无账号、无服务器）
-- 由实体、关系与核心原则构成的知识图谱
-- 混合检索（全文 + 向量 + 图谱遍历）
-- 时间 / 来源感知的上下文
-- 包含原则、先例与冲突的决策上下文
-- 已保存的决策与决策谱系
-- 结果记录（校准、教训、后续行动）
-- MCP 集成（当前的集成面）
-- 桌面捕获 / 本地桌面应用
-
-## 开发中（Active development / Roadmap）
-
-正在 `dev/goal24-cli-skills` 上积极开发：
-
-- 传输无关的能力
-- Skills
-- CLI 适配器
-- 证据门控执行
-- 审批边界
-- 已验证的结果
-
-以上路线图项目目前**均不可用**。
+3. **资格与决策** —— 证据资格审定判断"这些信息现在还能不能信、够不够格支撑行动"。
+4. **执行与核验** —— 被批准的语义能力经受限 broker 执行，然后读回现实、与当初支撑决策的预期比对。
 
 ---
 
 ## 它有什么不一样
 
-- **不是笔记应用** —— 它是上下文与决策层。你的工具不需要各自的记忆系统，它们共享同一个大脑。
+- **不是笔记应用** —— 它是决策控制层。工具不需要各自的记忆系统，共享同一份证据底座与同一个权威核心。
 - **不是云端** —— 数据存在你硬盘上的 SQLite 里。无需账号、无服务器，数据永不离开你的机器。
-- **不绑定单一 AI** —— 目前基于 MCP；Claude Desktop、Cursor、Cline 等 MCP 客户端共享同一份记忆。
+- **不绑定单一 AI** —— 目前基于 MCP；MCP 客户端共享同一份记忆。MCP 是接口面，不是产品。
 - **主动而非被动** —— 智能体会主动扫描你的图谱，找出你已经遗忘的关联并主动浮现。
-- **会质疑你的认知** —— 盲区检测告诉你漏了什么，反共识洞见挑战你的已有假设。你的图谱会反问你。
+- **会质疑你的认知** —— 盲区检测告诉你漏了什么，反共识洞见挑战你的已有假设。
 
 ---
 
 ## 工具
 
-当前 MCP 接口暴露 26 个工具，按用途分组。权威数量由 [`mcp_tool_manifest.json`](`mcp_tool_manifest.json`) 生成。
+当前 MCP 接口暴露 26 个工具，按用途分组。权威数量由 [`mcp_tool_manifest.json`](mcp_tool_manifest.json) 生成。
 
 ### 决策与检索 —— "大脑"
 
@@ -135,7 +184,7 @@ AI Agent
 - `get_stats` —— 实体 / 关系数量、类型分布
 - `get_decay_report` —— 哪些记忆已越过衰减阈值（清理候选）
 
-完整参数 schema：见 [`docs/MCP-INTEGRATION.md`](docs/MCP-INTEGRATION.md)。
+完整参数 schema：见 [docs/MCP-INTEGRATION.md](docs/MCP-INTEGRATION.md)。
 
 ---
 
@@ -158,18 +207,16 @@ npm run install:all
 npm run package
 ```
 
+> 今天**没有**可安装的 `omctx` npm 包——它是 TARGET。命名与 registry 状态：
+> [docs/goal24/narrative/naming-audit.json](docs/goal24/narrative/naming-audit.json)。
+
 ---
 
-## Omni 与其他方案对比
+## 为什么不是"光有记忆"？为什么不是"光有可观测性"？为什么不是"通用 runtime"？
 
-|                    | Omni | ChatGPT Memory | Mem0 | Letta | Obsidian |
-|--------------------|------|----------------|------|-------|----------|
-| 本地运行           | ✓    | ✗              | ✗    | ✓     | ✓        |
-| 原生 MCP           | ✓    | ✗              | ✗    | ✗     | ✗        |
-| 知识图谱           | ✓    | ✗              | 部分 | ✓     | 手动     |
-| 跨 AI 共享         | ✓    | ✗              | ✓    | ✗     | ✗        |
-| 数据归你所有       | ✓    | ✗              | ✗    | ✓     | ✓        |
-| 离线优先           | ✓    | ✗              | ✗    | ✗     | ✓        |
+- **光有记忆**：记得住，但分不清哪些记忆现在还够格支撑行动。Omni 在行动前先做证据资格。
+- **光有可观测性**：事后告诉你发生了什么，但不能把执行绑定到决策、也不能在事前拒绝一次坏行动。Omni 在事前与事中做绑定和闸门，事后做核验。
+- **通用 agent runtime**：你说什么它执行什么，快，但没有权威。Omni 的执行面只承载被批准的语义能力，绝不把自由意图翻译成任意 shell 命令。
 
 ---
 
@@ -181,4 +228,4 @@ npm run package
 
 ---
 
-MIT 许可证。为想让 AI 真正了解自己的人而造。
+MIT 许可证。真正属于你的，是一部会被现实纠错的判断史。
