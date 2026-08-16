@@ -86,9 +86,12 @@ development branch**, not "available today":
 | Evidence qualification + surface guard (server-owned eligibility, forged-coverage closure) | [checkpoint6-security-gate.json](docs/goal24/checkpoint6-security-gate.json) — PASS |
 | Approval binding + risk policy (single-use grants, replay defense) | [checkpoint7-security-gate.json](docs/goal24/checkpoint7-security-gate.json) — PASS |
 | Outcome read-back + deterministic evaluator (trusted resolvers, cross-language state/observation vectors) | [checkpoint8-security-gate.json](docs/goal24/checkpoint8-security-gate.json) — PASS (DRG1 prerequisite satisfied) |
+| Real non-synthetic E2E: one approval-gated GitHub issue-close closed loop against real GitHub with independent read-back (exit 0 => PENDING => read-back CLOSED => VERIFIED) | [drg2-authoritative-gate.json](docs/goal24/real-e2e/drg2-authoritative-gate.json) — PASS (DRG2 satisfied) |
 
 CP8 full-suite evidence: Brain 1279 passed / 0 failed; Rust 206 passed / 0 failed / 7 ignored;
 cross-language vectors 26 (state) + 35 (observation), 0 mismatches.
+
+**Post-CP8 real E2E (development branch verified):** one real, non-synthetic, approval-gated GitHub issue-close closed-loop E2E has been demonstrated against real GitHub with independent read-back. Exit 0 was NOT treated as success — the outcome stayed PENDING until the trusted `github.issue.read` read-back observed CLOSED and the deterministic evaluator returned VERIFIED. This is **internal runtime** evidence: there is **no public CLI feature** for GitHub automation today. See [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json).
 
 ### C. Target / Future — not available
 
@@ -96,15 +99,16 @@ cross-language vectors 26 (state) + 35 (observation), 0 mismatches.
   See [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md).
   The binary does not exist for users yet; there is no npm package to install.
 - `omctx reopen` user UX — **FUTURE** (runtime not implemented).
-- Real, non-synthetic end-to-end flow — **FUTURE**.
 - External memory adapters (e.g. MindMemOS, basic-memory) — **FUTURE**, via
   EvidenceProvider Adapter → qualification → Evidence Guard. External memory never becomes
   an evidence authority on its own.
 - Multi-runtime adapters (e.g. OpenClaw, NemoClaw, Claude Code) — **FUTURE**, as capability
   transport only; runtimes never receive decision, approval, or outcome authority.
 
-> **DRG v2**: before at least one real, non-synthetic, user-understandable E2E flow exists,
-> public capability claims are frozen to what repo + gate evidence supports. Anything else
+> **DRG v2**: a real, non-synthetic, user-understandable E2E flow now exists and is verified
+> (see the Post-CP8 table row above and
+> [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json)).
+> Public capability claims remain frozen to what repo + gate evidence supports; anything else
 > is explicitly labeled **TARGET** / **FUTURE** / **DESIGNED TO**. Omni is *designed to* sit
 > between heterogeneous memory/evidence sources and heterogeneous agent runtimes — it does
 > **not** claim today that it works with any memory OS or any runtime.

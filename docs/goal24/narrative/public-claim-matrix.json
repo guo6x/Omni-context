@@ -20,7 +20,7 @@
     "Thesis",
     "ProductVision"
   ],
-  "generated_at": "2026-08-16T01:50:00Z",
+  "generated_at": "2026-08-16T12:10:00Z",
   "claims": [
     {
       "claim_id": "C-01",
@@ -248,12 +248,12 @@
     },
     {
       "claim_id": "I-08",
-      "claim_text": "CP3–CP8 runtime has no public invocation surface (execute_ipc_enabled=false, no public approval/readback IPC, production write bindings = 0).",
+      "claim_text": "CP3-CP8 runtime has no public invocation surface (execute_ipc_enabled=false, no public approval/readback IPC); production write bindings = 1 (github.issue.close, Post-CP8).",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
       "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (execution_surface block)",
-        "docs/goal24/checkpoint3-security-gate.json"
+        "docs/goal24/post-cp8-integration-gate.json (execution_surface block)",
+        "docs/goal24/checkpoint8-security-gate.json (CP8-time snapshot: production_write_bindings=0; superseded by the Post-CP8 state)"
       ],
       "surface": [
         "README",
@@ -269,6 +269,24 @@
       "evidence": [
         "docs/goal24/checkpoint8-security-gate.json (tests block)",
         "docs/goal24/checkpoint8-manifest.json"
+      ],
+      "surface": [
+        "README",
+        "Landing",
+        "ProductVision"
+      ]
+    },
+    {
+      "claim_id": "I-10",
+      "claim_text": "github.issue.close exists as an approval-gated production semantic binding with independent github.issue.read verification (no public generic invocation surface).",
+      "status": "CURRENTLY_VERIFIED_INTERNAL",
+      "availability": "internal_runtime",
+      "evidence": [
+        "brain-server/src/capabilities/github-write.ts (reversible_write / medium / L2, approval required)",
+        "desktop-daemon/src-tauri/src/github_cli/close_binding.rs (restricted binding, fixed fused argv)",
+        "desktop-daemon/src-tauri/src/github_cli/readback.rs (trusted github.issue.read read-back binding)",
+        "docs/goal24/real-e2e/authoritative-real-e2e-proof.json (real E2E: exit 0 -> PENDING -> read-back CLOSED -> VERIFIED)",
+        "docs/goal24/real-e2e/drg2-authoritative-gate.json"
       ],
       "surface": [
         "README",
@@ -379,9 +397,13 @@
     {
       "claim_id": "F-02",
       "claim_text": "Real, non-synthetic, user-understandable E2E flow (DRG-2 requirement).",
-      "status": "FUTURE",
-      "availability": "target",
-      "evidence": null,
+      "status": "CURRENTLY_VERIFIED_INTERNAL",
+      "availability": "internal_runtime",
+      "evidence": [
+        "docs/goal24/real-e2e/authoritative-real-e2e-proof.json (real non-synthetic GitHub issue-close E2E, runtime candidate e8befb3)",
+        "docs/goal24/real-e2e/drg2-authoritative-gate.json (DRG2_AUTHORITATIVE_GATE=PASS)",
+        "docs/goal24/post-cp8-integration-gate.json (POST_CP8_INTEGRATION_GATE=PASS)"
+      ],
       "surface": [
         "README",
         "Landing",
@@ -414,11 +436,12 @@
     },
     {
       "claim_id": "F-05",
-      "claim_text": "GitHub write capabilities with read-back (issue create/comment, PR merge).",
+      "claim_text": "Additional GitHub write capabilities with read-back (issue create/comment, PR merge) - issue.close is already verified and excluded from this FUTURE claim.",
       "status": "FUTURE",
       "availability": "target",
       "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (github_future_readback: issue_create LOCATOR_GAP, issue_comment READBACK_CAPABILITY_GAP, pr_merge MAPPED_PARTIAL, production_write_bindings 0)"
+        "docs/goal24/checkpoint8-security-gate.json (github_future_readback: issue_create LOCATOR_GAP, issue_comment READBACK_CAPABILITY_GAP, pr_merge MAPPED_PARTIAL)",
+        "docs/goal24/real-e2e/01-github-issue-close-contract.md (issue.close is MAPPED and integrated; this claim covers only the remaining writes)"
       ],
       "surface": [
         "ProductVision"
@@ -527,5 +550,6 @@
         "Landing"
       ]
     }
-  ]
+  ],
+  "schema_note": "Post-CP8 authoritative integration reconciliation: F-02 promoted to CURRENTLY_VERIFIED_INTERNAL; F-05 clarified as additional GitHub writes; new internal claim I-10 added for github.issue.close."
 }

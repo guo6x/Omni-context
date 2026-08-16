@@ -86,9 +86,12 @@ Agent 已经会行动——写代码、开 issue、跑命令。但**记忆不是
 | 证据资格 + surface guard（服务器自有资格、防伪造覆盖闭合） | [checkpoint6-security-gate.json](docs/goal24/checkpoint6-security-gate.json) — PASS |
 | 批准绑定 + 风险策略（单次授权、重放防御） | [checkpoint7-security-gate.json](docs/goal24/checkpoint7-security-gate.json) — PASS |
 | 结果读回 + 确定性 evaluator（受信 resolver、跨语言状态/观测向量） | [checkpoint8-security-gate.json](docs/goal24/checkpoint8-security-gate.json) — PASS（DRG1 前置已满足） |
+| 真实非 synthetic E2E：一次经批准门控的 GitHub issue-close 闭环，针对真实 GitHub 且独立读回（exit 0 ⇒ PENDING ⇒ 读回 CLOSED ⇒ VERIFIED） | [drg2-authoritative-gate.json](docs/goal24/real-e2e/drg2-authoritative-gate.json) — PASS（DRG2 已满足） |
 
 CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 failed / 7 ignored；
 跨语言向量 26（状态）+ 35（观测），mismatch 0。
+
+**Post-CP8 真实 E2E（开发分支已验证）：** 已在真实 GitHub 上演示一次真实、非 synthetic、经批准门控的 issue-close 闭环，并带独立读回——exit 0 不被当作成功（Outcome 保持 PENDING），直到受信的 `github.issue.read` 读回观测到 CLOSED、确定性 evaluator 返回 VERIFIED。这是 **internal runtime（内部运行时）** 证据：目前 **没有面向用户的 GitHub 自动化 CLI 功能**。详见 [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json)。
 
 ### C. TARGET / FUTURE —— 尚不可用
 
@@ -96,7 +99,6 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
   —— **TARGET**。详见 [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md)。
   二进制尚不存在，也没有可安装的 npm 包。
 - `omctx reopen` 用户 UX —— **FUTURE**（runtime 未实现）。
-- 真实、非 synthetic 的端到端流程 —— **FUTURE**。
 - 外部记忆适配器（如 MindMemOS、basic-memory）—— **FUTURE**，只能经
   EvidenceProvider Adapter → 资格审定 → Evidence Guard 接入；外部 Memory 不会自动
   成为证据权威。
