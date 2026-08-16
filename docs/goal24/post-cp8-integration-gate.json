@@ -1,0 +1,58 @@
+{
+  "header": {
+    "artifact": "post-cp8-integration-gate.json",
+    "gate_status": "POST_CP8_INTEGRATION_GATE=PASS",
+    "runtime_candidate_sha": "e8befb3882b7bc672235fed3fba5503bb5603d7d"
+  },
+  "checks": {
+    "narrative_integrated": true,
+    "real_e2e_integrated": true,
+    "product_vision_aligned": true,
+    "claim_matrix_aligned": true,
+    "ledger_aligned": true,
+    "runtime_candidate_verified": true,
+    "authoritative_real_e2e_pass": true,
+    "drg1": "SATISFIED",
+    "drg2": "SATISFIED",
+    "checkpoint9_started": "NO",
+    "public_cli_available": "NO",
+    "production_write_count": 1,
+    "production_write_list": [
+      "github.issue.close"
+    ],
+    "execution_surface": {
+      "generic_execute_ipc": "NO",
+      "public_readback_ipc": "NO",
+      "public_outcome_finalize_api": 0,
+      "public_arbitrary_approval_api": 0,
+      "generic_shell": "NO",
+      "caller_argv": "NO",
+      "caller_executable": "NO",
+      "caller_env": "NO",
+      "caller_cwd": "NO",
+      "llm_judge": "NO",
+      "automatic_rollback": "NO",
+      "automatic_write_retry": "NO"
+    }
+  },
+  "audits": {
+    "npm_audit_exit": 1,
+    "npm_findings": 28,
+    "cargo_audit_exit": 1,
+    "cargo_advisories": {
+      "error_class": 4,
+      "warning_class": 16
+    },
+    "runtime_classification": {
+      "UNKNOWN": 0,
+      "FIX_BEFORE_DRG2": 0,
+      "BLOCKS_DRG2": 0
+    },
+    "note": "audit exits are recorded honestly; the pre-existing findings do not touch the github.issue.close runtime path and quick-xml stays absent from the Windows target graph (CP8 re-verified)."
+  },
+  "verification_levels": {
+    "narrative": "REMOTE_INTEGRATED (docs lane; no independent runtime gate - not GATE_VERIFIED)",
+    "real_e2e": "GATE_VERIFIED",
+    "overall": "GATE_VERIFIED"
+  }
+}

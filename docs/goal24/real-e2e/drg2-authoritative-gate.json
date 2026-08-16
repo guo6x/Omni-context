@@ -1,0 +1,56 @@
+{
+  "header": {
+    "artifact": "drg2-authoritative-gate.json",
+    "gate_status": "DRG2_AUTHORITATIVE_GATE=PASS",
+    "runtime_candidate_sha": "e8befb3882b7bc672235fed3fba5503bb5603d7d",
+    "note": "Every criterion below is backed by a real command run or the recorded authoritative E2E proof; nothing is asserted from memory."
+  },
+  "criteria": {
+    "feature_branches_integrated": true,
+    "real_committed_runtime_candidate": true,
+    "clean_working_tree_before_run": true,
+    "new_real_disposable_issue": true,
+    "pre_state_open": true,
+    "cp6_evidence_proceed": true,
+    "decision_bound": true,
+    "approval_required": true,
+    "approval_consumed": true,
+    "restricted_broker": true,
+    "real_github_side_effect": true,
+    "receipt_persistent": true,
+    "exit0_not_verified": true,
+    "before_readback_pending": true,
+    "independent_readback_closed": true,
+    "trusted_evaluator_verified": true,
+    "outcome_persisted": true,
+    "revisit_required": false,
+    "synthetic": false,
+    "production_writes_exactly_1": true,
+    "no_generic_execute": true,
+    "no_public_readback_ipc": true,
+    "no_llm_judge": true,
+    "no_automatic_rollback": true,
+    "no_auto_write_retry": true,
+    "cp6_regression": "PASS",
+    "cp7_regression": "PASS",
+    "cp8_regression": "PASS",
+    "brain_full": "PASS (1297/1297)",
+    "rust_full": "PASS (218/0/8)",
+    "desktop": "PASS (Next build, verify:controlled, fmt, diff-check)",
+    "security": {
+      "UNKNOWN": 0,
+      "FIX_BEFORE_DRG2": 0,
+      "BLOCKS_DRG2": 0
+    },
+    "runtime_unchanged_after_proof": true,
+    "cross_subject_tests": {
+      "same_number_different_repo": "PASS (OUTCOME_SUBJECT_MISMATCH, automated)",
+      "same_number_different_owner": "PASS (OUTCOME_SUBJECT_MISMATCH, automated)"
+    }
+  },
+  "drg": {
+    "drg1": "SATISFIED",
+    "drg2": "SATISFIED"
+  },
+  "semantics": "Public Launch is no longer blocked by missing real E2E; this is NOT an automatic release. Next stages (Packaging / Public CLI alpha / Demo / Launch package / Release claim audit) remain future work."
+}
