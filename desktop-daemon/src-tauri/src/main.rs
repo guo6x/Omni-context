@@ -43,17 +43,21 @@ pub struct SystemStatus {
 
 #[tokio::main]
 async fn main() {
-    // CP4: best-effort production registration of the five read-only GitHub
-    // CLI bindings (trusted config -> standard install -> PATH discovery).
-    // No machine-specific path is hardcoded in product source; this dev
-    // machine pins gh.exe through the trusted OMNI_GITHUB_CLI_EXE config.
+    // CP4 + Post-CP8: best-effort production registration of the five
+    // read-only GitHub CLI bindings plus the single production write binding
+    // github.issue.close and the github.issue.read read-back binding
+    // (trusted config -> standard install -> PATH discovery). No
+    // machine-specific path is hardcoded in product source; this dev machine
+    // pins gh.exe through the trusted OMNI_GITHUB_CLI_EXE config.
     let gh_bootstrap =
         github_cli::bootstrap::bootstrap_production(crate::execution_broker::global_broker());
     if let Some(path) = &gh_bootstrap.resolved_gh {
         println!(
-            "[Omni-Context] GitHub CLI adapter ready: {} ({} read-only bindings)",
+            "[Omni-Context] GitHub CLI adapter ready: {} ({} read-only, {} write, {} read-back)",
             path.display(),
-            gh_bootstrap.registered_bindings
+            gh_bootstrap.read_only_bindings,
+            gh_bootstrap.write_bindings,
+            gh_bootstrap.readback_bindings
         );
     } else {
         println!(

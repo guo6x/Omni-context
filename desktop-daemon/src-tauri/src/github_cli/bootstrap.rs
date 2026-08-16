@@ -33,8 +33,16 @@ pub struct GithubCliBootstrapReport {
     pub resolved_gh: Option<PathBuf>,
     /// Discovery source that won (TRUSTED_CONFIG / STANDARD_INSTALL / PATH).
     pub source: Option<String>,
-    /// Number of read-only bindings registered (0 or 5).
+    /// Total execution bindings registered (read-only + write; 0, 5 or 6).
     pub registered_bindings: usize,
+    /// Number of read-only bindings registered (0 or 5).
+    pub read_only_bindings: usize,
+    /// Post-CP8: number of production write bindings (0 or 1:
+    /// github.issue.close).
+    pub write_bindings: usize,
+    /// Post-CP8: number of trusted read-back bindings (0 or 1:
+    /// github.issue.read).
+    pub readback_bindings: usize,
     /// True: no `gh --version` process probe was performed (task 20).
     pub version_probe_bypassed: bool,
     /// Human-readable bootstrap outcome (no tokens).
@@ -65,11 +73,14 @@ pub fn trusted_config_candidates() -> Vec<PathBuf> {
     }
 }
 
-/// Best-effort production registration of the five read-only bindings.
+/// Best-effort production registration: the five CP4 read-only bindings,
+/// the Post-CP8 write binding github.issue.close and the trusted
+/// github.issue.read read-back binding.
 ///
 /// Failure to discover a trusted gh executable never aborts app startup; the
 /// broker simply reports zero registered bindings and the status surface
-/// stays read-only.
+/// stays read-only. The write binding is registered but has NO IPC execution
+/// surface: broker.execute stays crate-internal.
 pub fn bootstrap_production(broker: &Broker) -> GithubCliBootstrapReport {
     let adapter =
         GitHubCliAdapter::discover_and_new(&trusted_config_candidates(), local_work_root());
@@ -77,6 +88,8 @@ pub fn bootstrap_production(broker: &Broker) -> GithubCliBootstrapReport {
         Ok(adapter) => {
             let gh = adapter.context().gh_executable_candidates()[0].clone();
             adapter.register_all(broker);
+            adapter.register_issue_close(broker);
+            adapter.register_issue_readback(broker);
             let registered = broker.status().registered_bindings.len();
             GithubCliBootstrapReport {
                 source: Some(
@@ -84,9 +97,12 @@ pub fn bootstrap_production(broker: &Broker) -> GithubCliBootstrapReport {
                 ),
                 resolved_gh: Some(gh),
                 registered_bindings: registered,
+                read_only_bindings: 5,
+                write_bindings: 1,
+                readback_bindings: 1,
                 version_probe_bypassed: true,
                 message: format!(
-                    "GitHub CLI adapter ready: {registered} read-only bindings registered"
+                    "GitHub CLI adapter ready: {registered} bindings (5 read-only, 1 write github.issue.close, 1 read-back)"
                 ),
             }
         }
@@ -94,6 +110,9 @@ pub fn bootstrap_production(broker: &Broker) -> GithubCliBootstrapReport {
             resolved_gh: None,
             source: None,
             registered_bindings: 0,
+            read_only_bindings: 0,
+            write_bindings: 0,
+            readback_bindings: 0,
             version_probe_bypassed: true,
             message: format!("GitHub CLI adapter unavailable: {err}"),
         },

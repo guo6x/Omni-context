@@ -158,6 +158,26 @@ impl GitHubCliAdapter {
         }
     }
 
+    /// Post-CP8 Real E2E (DRG-2 candidate): register the single production
+    /// semantic write binding github.issue.close. Compiled code only; the
+    /// broker still has no IPC execute surface.
+    pub fn register_issue_close(&self, broker: &Broker) {
+        broker.register_binding(Box::new(
+            crate::github_cli::close_binding::GithubIssueCloseBinding::new(self.context.clone()),
+        ));
+    }
+
+    /// Post-CP8 Real E2E (DRG-2 candidate): register the trusted read-back
+    /// binding for github.issue.read (read_only / low / L0 enforced by the
+    /// CP8 runner at registration). Compiled code only.
+    pub fn register_issue_readback(&self, broker: &Broker) {
+        broker
+            .register_readback_binding(Box::new(
+                crate::github_cli::readback::GithubIssueReadbackBinding::new(self.context.clone()),
+            ))
+            .expect("github.issue.read read-back binding must satisfy the read-only verifier rule");
+    }
+
     /// Shared execution context (used by tests and future integration code).
     pub fn context(&self) -> Arc<GitHubCliContext> {
         self.context.clone()

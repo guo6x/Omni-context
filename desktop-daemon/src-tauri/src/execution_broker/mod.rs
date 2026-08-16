@@ -28,6 +28,10 @@ mod adversarial;
 #[cfg(test)]
 mod tests;
 
+/// Post-CP8 Real E2E native operator harness (dev-only, #[ignore] test).
+#[cfg(test)]
+pub(crate) mod real_e2e_harness;
+
 // ---------------------------------------------------------------------------
 // Test-only crash fault injection (no-op in production builds)
 // ---------------------------------------------------------------------------
@@ -89,9 +93,16 @@ use crate::execution_broker::runner::{ExecutionRegistry, RunLifecycle};
 #[cfg(test)]
 pub use policy::{build_child_env, validate_cwd, BASE_ENV_VARS};
 pub use policy::{ExecutionBinding, ExecutionRiskPolicy, OutputLimits, DEFAULT_OUTPUT_MAX_BYTES};
+/// Harness/test-only plan wire types (the production bin never constructs a
+/// plan; only the dev-only harness and tests do).
+#[cfg(test)]
 pub use types::{
-    BrokerError, BrokerExecutionResult, ErrorCode, ExecutionPlanStateWire, ExecutionPlanWire,
-    FORBIDDEN_INPUT_KEYS, TIMEOUT_MAX_MS, TIMEOUT_MIN_MS,
+    ApprovalReferenceWire, EvidenceCoverageSnapshotWire, RiskSnapshotWire, VerificationPlanWire,
+};
+pub use types::{
+    AuthorityLevelWire, BrokerError, BrokerExecutionResult, ErrorCode, ExecutionPlanStateWire,
+    ExecutionPlanWire, RiskLevelWire, SideEffectClassWire, FORBIDDEN_INPUT_KEYS, TIMEOUT_MAX_MS,
+    TIMEOUT_MIN_MS,
 };
 
 /// Broker version reported by the status IPC surface.
