@@ -1,55 +1,496 @@
-# Omni-Context 产品最终形态文档
+# Omni-Context 产品愿景（vNext）
 
 > 这份文档是整个项目的「北极星」。所有规划、任务拆分、验收都以它为准。
 > 当现实和这份文档冲突时——要么改代码对齐文档，要么改文档对齐新决定，二选一，不允许含糊。
-> 最后更新：2026-06-07
+>
+> **本版为 O1 定位迁移后的 vNext**（Owner Decision 已批准，不再重新讨论）：
+> 产品核心从「一张持续生长的知识图谱 / Personal Second Brain」
+> 迁移为 **Judgment / Authority Core（判断与权威核心）**。
+> 旧的 Memory / Knowledge Graph 资产**没有删除、也不是失败路线**，
+> 而是被重新归位为 Judgment Core 的长期 **Evidence Substrate（证据底座）**。
+>
+> 本版对应 Narrative Lane（O3）产物；相关配套：
+> `docs/goal24/narrative/thesis-note.{en,zh-CN}.md`、
+> `docs/goal24/narrative/cli-product-surface.md`、
+> `docs/goal24/narrative/naming-audit.json`、
+> `docs/goal24/narrative/public-claim-matrix.json`、
+> `docs/goal24/narrative/claim-audit.md`、
+> `docs/goal24/execution-ledger.json`。
 
 ---
 
-## 0. 怎么用这份文档
+## 0. 文档治理：状态语言冻结
 
-- **规划锚点**：要做什么、做到什么程度，先看第 4 章的特性表。
-- **状态真相**：每个特性都有状态标记，✅ 完成 / 🟡 部分 / ⬜ 未开始 / ❌ 明确不做。
-- **协作约定**：见第 8 章。代码由外部 AI 写，它写完后产出一份进度文档，我读文档而不是读长总结。
+治理状态统一使用四级（见第 14 章）：
 
----
+> `REPORT_ONLY` → `VERIFIED_LOCAL_EVIDENCE` → `REMOTE_INTEGRATED` → `GATE_VERIFIED`
 
-## 1. 一句话定位
-
-**Omni-Context 的内核是一张持续生长的知识图谱——它把你在任何设备上捕获的信息结构化成「实体 + 关系」，形成一个可被推理、可被检索、可被外部 AI 接入的「数字大脑」。**
-
-这张图谱有两种用法，缺一不可：
-- **对你**：它是你的第二大脑。主动智能引擎会挖掘其中被你遗忘的关联，帮你基于历史做判断。
-- **对其他 AI**：通过标准 MCP / HTTP API 把这张图谱挂上去，任何 AI 产品都能获得一个有长期记忆、能基于历史信息做决策判断的「脑子」。换句话说——**Omni-Context 卖的不是又一个笔记软件，是一个可即插即用的 AI 记忆/决策层。**
-
-核心价值四条：
-1. **捕获无摩擦** —— 桌面快捷键 / 浏览器插件 / 手机 / 物理按钮，四个入口都能一键沉淀。
-2. **记忆会生长** —— 不只是存储，存进去的东西会被抽取成实体+关系，并随时间衰减/归档，图谱本身在演化。
-3. **洞见会主动来找你** —— Proactive Agent 定期扫描图谱，发现跨记忆的关联后主动推送。
-4. **可被任何 AI 接入** —— 图谱通过标准 MCP 协议对外开放，是其他 AI 产品的即插即用记忆/决策层。
-5. **不止记录，更能拷问** —— 盲区检测会告诉你"你可能漏了什么"，反共识洞见会挑战你的已有认知。不是又一个笔记工具，而是一个会质疑你的第二大脑。
-
-数据全部在本地 SQLite，无云端、无账号、无公网鉴权。这是刻意的设计，不是缺陷。
-
-> **战略判断**：知识图谱 + 对外接口（MCP/API）是这个产品真正的护城河。捕获入口、可视化、HUD 都是「让图谱长起来」的手段。规划取舍时，凡是增强「图谱质量」和「对外可接入性」的事项，优先级天然更高。
+- **只有 `GATE_VERIFIED` 允许画正式绿色 ✅。**
+- 产品 capability 文档另外使用三类：`CURRENTLY_VERIFIED`（用户今天可直接使用）、
+  `TARGET`（目标架构）、`FUTURE`（未来规划）。
+- **不得混淆**「内部 runtime 已验证」与「用户今天可以直接使用」：
+  内部验证（如 Goal24 CP3–CP8 gate）若没有 public invocation surface，
+  只能写 "runtime verified on development branch"，不能写 "available today"。
 
 ---
 
-## 2. 目标用户与场景
+## 1. Product thesis（产品论点）
 
-- **用户**：开发者、研究者、知识工作者——信息输入量大、且在意数据主权的人。
-- **典型场景**：
-  - 看技术文章/代码时按快捷键沉淀 → 自动进图谱。
-  - 一周后 Proactive Agent 提示「你上周看的 A 和今天的 B 其实是同一个问题」。
-  - 手机上随手记一条想法 → 回到电脑图谱里已经在了。
-  - 桌上的物理按钮一按 → 触发截图沉淀。
-  - 在 Cursor / Claude Desktop / Cherry Studio 里问 AI 时，AI 通过 MCP 自动调用你的图谱做依据。
+### 正式 category headline
+
+> **Evidence-grounded decision control for long-lived AI agents.**
+
+### Trust anchor
+
+> **Local-first, read-back verified, and owned by you.**
+
+### Mechanism sentence
+
+> **Qualify the evidence before an agent acts,**
+> **bind execution to the decision that justified it,**
+> **then read the world back and reopen the decision**
+> **when reality disagrees.**
+
+### 中文主解释
+
+> 让长期运行的 AI Agent
+> 在行动前有证据资格，
+> 行动时有明确授权，
+> 行动后有现实核验；
+> 现实不符合原判断时，
+> 重新打开那次决策。
+
+### 产品核心
+
+Omni-Context 的产品核心是 **Judgment / Authority Core（判断与权威核心）**。
+完整长期闭环：
+
+> Memory
+> → Evidence Qualification
+> → Decision
+> → Approval
+> → Execution
+> → Read-back
+> → Outcome
+> → Reopen / Revision
+
+### Moat 语言（机制护城河）
+
+不再把 Memory、Knowledge Graph、MCP、Portable、Sandbox、Policy、
+或单独的 Read-back 描述为独立 moat。
+
+产品机制 moat 是四个动词的闭环：
+
+> **qualify + bind + read-back + reopen**
+
+传播资产句：
+
+> **Own the judgment history — especially the decisions reality proved wrong.**
+
+中文：
+
+> 真正属于你的，不只是记忆，而是一部会被现实纠错的判断史。
+
+> 注意：这是 category / product **thesis**，不是 DRG-2 前的
+> capability completeness claim。在 Public Launch 之前，capability 声明受
+> DRG v2 冻结约束（见第 11 章）。
 
 ---
 
-## 3. 系统架构总览
+## 2. Target user / wedge（目标用户与切入点）
 
-五个组件，一个中心：
+**优先用户（wedge）：**
+
+- technical individuals（技术个人用户）
+- developers
+- agent builders
+- automation builders
+- small AI-native teams（小型 AI 原生团队）
+- 以上人群中**正在运营长期运行 Agent** 的人
+
+**定位边界：**
+
+- **Personal Second Brain 保留**为 deployment / use case 之一，
+  **不是 master category**。
+- **Enterprise governance 不是当前唯一目标**：本产品不强行写成
+  大企业多 Agent governance suite。
+- 第一价值主张是：给长期 Agent 装上「行动前有资格、行动后有核验、
+  错了能重开」的决策控制，而不是又一个记忆仓库。
+
+---
+
+## 3. Judgment Core（判断与权威核心）
+
+```
+                     Omni-Context
+                Judgment / Authority Core
+   Evidence → Decision → Approval → Outcome → Reopen
+                           │
+          ┌────────────────┼────────────────┐
+          ▼                ▼                ▼
+ Agent Interface      Controlled         Human Control
+    Surface          Execution Surface      Surface
+```
+
+- **Judgment / Authority Core 才是产品核心**，三面都是它的边缘接口。
+- 核心职责：证据资格（qualify）、决策（decide）、绑定（bind）、
+  结果评估（evaluate）、纠错历史（reopen / revision）。
+- 权威单向流动：外部系统可以向 Core 提供证据与请求，
+  但 **authority 只属于 Core 与用户**。
+
+---
+
+## 4. Three Surfaces（三面）
+
+### 4.1 Agent Interface Surface（Agent 接口面）
+
+- **MCP-first**；Skills / API 辅助。
+- 作用：Agent 进入 Judgment Core 的接口。
+- **MCP 不是 authority。Skills 不是 authority。**
+- 现有 26 个 MCP 工具（数量以 `mcp_tool_manifest.json` 为准）
+  重新归位为 evidence + decision access surface。
+
+### 4.2 Controlled Execution Surface（受控执行面）
+
+- 组成：**CLI · Capability Adapter · Restricted Broker · Read-back**。
+- 作用：被批准的 semantic capability 以受限方式触达外部世界。
+- **CLI 不等于 shell。CLI 不获得 decision authority。**
+- 详细定义见 `docs/goal24/narrative/cli-product-surface.md`。
+
+### 4.3 Human Control Surface（人类控制面）
+
+- 组成：**Desktop Console（桌面控制台）**。
+- 作用：inspect / approve / audit / history / reopen。
+- **Desktop 不重新实现 Decision Kernel**，它只是 Judgment Core 的人类窗口。
+
+### 三面一句话（TARGET architecture copy）
+
+> MCP lets agents ask.
+> CLI lets approved decisions touch the world.
+> Desktop lets you inspect, approve, and reopen decisions.
+
+中文：
+
+> MCP 让 Agent 发起判断，
+> CLI 让被授权的决策触达现实，
+> Desktop 让人检查、批准，并在必要时重新打开决策。
+
+> ⚠ 状态标注：以上为 **TARGET architecture** copy。
+> `reopen` 目前尚无 user-facing verified 实现，
+> 因此这句话**不能放进 CURRENT capability claim**。
+
+---
+
+## 5. Evidence Substrate（证据底座）
+
+**Memory / Knowledge Graph 的新角色 = Evidence Substrate。**
+
+记忆解决一个问题：**AI 知道什么。**
+
+| 环节 | 解决什么问题 |
+|---|---|
+| Memory / Knowledge Graph | AI 知道什么（what the agent knows） |
+| Evidence Qualification | 这些信息**现在还能不能信**（can it be trusted right now） |
+| Decision Control | 基于这些信息**现在有没有资格行动**（is action authorized right now） |
+| Outcome / Reopen | 做完以后**现实是否支持当时判断**、判断是否需要重开 |
+
+- 不删除现有 Memory / Graph 资产。
+- 不把它写成失败的旧路线。
+- 正确表达：旧资产被**重新归位**为 Judgment Core 的长期 evidence substrate。
+- 现有 26 个 MCP 工具 → Agent Interface / evidence + decision access surface。
+- Capture、Browser Extension、Desktop capture → **evidence acquisition surfaces**。
+- Skills → **procedural knowledge**（程序性知识），NOT authority。
+- CLI / Capability Adapters → Controlled Execution Surface。
+- Desktop → Human Control Surface。
+- Decision Timeline → **Judgment History / audit surface**。
+- Insights / Blind Spots → decision-quality enhancement（决策质量增强）。
+- MCP → **one interface surface，NOT the product itself**。
+
+---
+
+## 6. Authority model（权威模型）
+
+### 战略原则
+
+> **Memory-source agnostic.**
+> **Runtime-agnostic.**
+> **Pluggable edges, centralized authority.**
+
+### 完整设计原则（designed to）
+
+> Omni-Context is **designed to** sit between
+> heterogeneous memory/evidence sources
+> and heterogeneous agent runtimes,
+> while keeping evidence qualification,
+> decision authority,
+> outcome evaluation,
+> and correction history
+> under one user-owned control plane.
+
+### 禁止书写的 claim（claim integrity）
+
+- ❌ 禁止写：Omni currently supports **any memory OS**。
+- ❌ 禁止写：Omni currently works with **any runtime**。
+- 上面的表述一律只能是 "designed to / target architecture"，
+  不得把未来目标写成当前 capability。
+
+### 外部证据源通路（FUTURE / designed to）
+
+- 未来 external evidence source：**MindMemOS、basic-memory、other memory systems**。
+- 只能通过：
+
+> External source → **EvidenceProvider Adapter**
+> → provenance / freshness / verification qualification
+> → **Evidence Guard**
+
+- **外部 Memory 不自动变成 evidence authority。**
+
+### 未来 runtime 通路（FUTURE / designed to）
+
+- 未来 runtime：**OpenClaw、NemoClaw、Claude Code、other runtimes**。
+- 只能作为 **Capability Transport**。
+- 不得获得：decision authority / approval authority / outcome authority。
+
+---
+
+## 7. Outcome / Reopen lifecycle（结果与重开生命周期）
+
+全闭环：
+
+```
+Memory → Evidence Qualification → Decision → Approval
+   → Execution → Read-back → Outcome → Reopen / Revision
+```
+
+逐段语义：
+
+1. **Memory**：积累与检索，回答「知道什么」。
+2. **Evidence Qualification**：来源 / 新鲜度 / 验证状态，回答「现在还能不能信」。
+3. **Decision**：明确的能力、输入、证据集、预期改变、验证方法。
+4. **Approval**：按风险级别的人工或策略批准，批准绑定到具体 plan（单次授权）。
+5. **Execution**：经 Restricted Broker 的受限执行，只执行被批准且绑定的语义能力。
+6. **Read-back**：通过独立于执行动作的通道重新观察现实。
+7. **Outcome**：把观察到的现实与当时的预期比对，产出 VERIFIED / MISMATCH / INCONCLUSIVE。
+8. **Reopen / Revision**：现实不符时重开决策——重查证据、修正预期、重新决策或记录维持原判。
+
+铁律：
+
+> Process exit 0 ≠ semantic success
+> ≠ external state changed
+> ≠ user-intended outcome verified.
+
+- **reopen 不是 retry command**：绝不暗示 reopen 会自动 re-execute 原始动作。
+- **自动回滚不存在**（CP8 gate：`automatic_rollback = NO`，
+  `rollback_candidate` 仅为资格标记）；不把 rollback 写成当前能力。
+
+---
+
+## 8. Local-first / data sovereignty（本地优先与数据主权）
+
+- 数据全部在本地 SQLite，无云端、无账号、无公网鉴权。这是刻意设计，不是缺陷。
+- 桌面端本地内嵌 Brain Server；外部客户端经本机 HTTP / MCP 接入。
+- 信任锚保持：**Local-first, read-back verified, and owned by you.**
+- 旧 v1.2 的数据主权原则全部保留（详见附录 A 历史组件盘点）。
+
+---
+
+## 9. Pluggable edges（可插拔边缘）
+
+- **边缘可插拔，权威集中**：任何新的证据源或 runtime 都通过适配器接入，
+  不改变 Judgment Core 的权威结构。
+- 外部 Memory（FUTURE）：EvidenceProvider Adapter → qualification → Evidence Guard。
+- 外部 Runtime（FUTURE）：作为 Capability Transport 使用，不获得任何 authority。
+- 三面（MCP / CLI / Desktop）本身就是「可插拔边缘」的三种标准形态：
+  面可以增加，权威不分散。
+
+---
+
+## 10. Current / Target / Future capability map（能力地图）
+
+### A. CURRENTLY_VERIFIED（用户今天可直接使用）
+
+- 本地持久记忆（SQLite；无账号、无服务器）
+- 知识图谱（实体 / 关系 / 核心原则）
+- 混合检索（全文 + 向量 + 图谱遍历）
+- 时间 / 来源感知上下文
+- 决策上下文、已保存决策与决策谱系、结果记录（校准 / 教训 / 后续）
+- MCP 接口（26 个工具，数量以 `mcp_tool_manifest.json` 为准）
+- 桌面应用：捕获、图谱可视化、时间线、问大脑、MCP 接入面板、设置等
+- 浏览器插件（页面 / 选区捕获、popup 问大脑）
+- 移动端只读搜索 MVP（实验性，未完整真机验证）
+
+### B. 开发分支 runtime 已验证（内部 / 工程 Gate 证据；无 public user surface）
+
+以下为 `dev/goal24-cli-skills` 上 CP3–CP8 的 gate 证据，**不代表用户今天可用**：
+
+| 组件 | Gate 证据 | 说明 |
+|---|---|---|
+| Restricted execution broker | `checkpoint3-security-gate.json` PASS | spawn/kill/timeout、Job Object 约束、输出上限、环境清洗、cwd 约束；`execute_ipc_enabled=false` |
+| GitHub 只读 CLI 适配器（5 个语义能力） | `checkpoint4-security-gate.json` PASS | 可执行文件钉定、无写能力（write bindings = 0） |
+| Skills registry + importer | `checkpoint5-security-gate.json` PASS | 纯 TS、隔离默认、无公开信任变更面 |
+| Evidence qualification + surface guard | `checkpoint6-security-gate.json` PASS | 服务器自有资格、防伪造覆盖、无公开注册面 |
+| Approval binding + risk policy | `checkpoint7-security-gate.json` PASS | 单次授权、重放防御、无公开批准 IPC |
+| Outcome read-back + deterministic evaluator | `checkpoint8-security-gate.json` PASS（DRG1 SATISFIED） | 受信 resolver、跨语言状态映射 26 + 观测 35 向量 mismatch 0、synthetic E2E 6 例；无公开 readback IPC |
+
+- 测试证据（CP8 全量）：Brain 1279 passed / 0 failed；Rust 206 passed / 0 failed / 7 ignored。
+- 状态表述必须是：**runtime verified on development branch**，
+  而不是 "available today"。
+
+### C. TARGET（目标架构）
+
+- `omctx` CLI：`ask / inspect / approve / verify / history`（信息架构见
+  `cli-product-surface.md`；**二进制本身 = TARGET**，npm 全局安装 = TARGET）
+- 三面完整成型（MCP 接口面 + 受控执行面 + 人类控制面）
+- Desktop 升级为 Human Control Surface（inspect / approve / audit / history / reopen）
+
+### D. FUTURE（未来规划）
+
+- `omctx reopen` 用户 UX（runtime 未实现）
+- 真实（非 synthetic、用户能理解的）E2E
+- 外部 memory adapters（MindMemOS / basic-memory / 其他）
+- 多 runtime adapters（OpenClaw / NemoClaw / Claude Code / 其他，仅作 Capability Transport）
+- GitHub write 能力及其 read-back（CP8 现状：`issue_create=LOCATOR_GAP`、
+  `issue_comment=READBACK_CAPABILITY_GAP`、`pr_merge=MAPPED_PARTIAL`、
+  production write bindings = 0）
+
+### E. DO_NOT_CLAIM（禁止对外宣称）
+
+- "works with any memory OS / any runtime"（只能是 designed to）
+- `omctx` 今天可安装
+- github writes 为当前 public feature
+- Reopen 已实现
+- LLM judge 或自动回滚（两者在 CP8 gate 中均为 NO）
+
+---
+
+## 11. DRG v2（发布治理规则）
+
+以下规则属于 narrative governance 的一部分，写入本文档以冻结：
+
+**DRG-1**：CP8 PASS 后，Packaging preparation 解除阻塞。
+
+- 当前 CP8 已有历史 Gate PASS。以下从真实 Gate artifact 读取，
+  不是从提示词复制：
+  - `docs/goal24/checkpoint8-security-gate.json`：
+    `"gate_status": "CHECKPOINT8_SECURITY_GATE=PASS"`、
+    `"drg1": "DRG1_TECHNICAL_PREREQUISITE=SATISFIED"`。
+- 因此 DRG-1 的技术前置**已满足**（依据上述 artifact）。
+
+**DRG-2**：至少一个**真实、非 synthetic、用户能理解**的 E2E 成立后，
+才允许 Public Launch。
+
+- DRG-2 前：**public capability claims = FREEZE**。
+  只能陈述有 repo + Gate 证据支持的当前事实。
+- 可以讨论：target architecture、thesis、future CLI UX、future ecosystem strategy，
+  但必须显式标 `TARGET` / `FUTURE` / `DESIGNED TO`。
+- CP8 的 synthetic E2E（6 例）**不满足** DRG-2 的「真实、非 synthetic」要求。
+
+---
+
+## 12. Product non-goals（明确不做，防止范围蔓延）
+
+- ❌ 多用户 / 账号体系 / 密码
+- ❌ 云端存储 / 云同步
+- ❌ 公网部署 / 公网鉴权
+- ❌ 落盘加密
+- ❌ Safari 插件
+- ❌ ESP32 双向通信
+- ❌ 移动端写入能力（移动端定位为只读）
+- ❌ LLM judge（判定成功与否不由 LLM 说了算；CP8 gate: `llm_judge=NO`）
+- ❌ 自动回滚（CP8 gate: `automatic_rollback=NO`；
+  `rollback_candidate` 仅资格标记）
+- ❌ 无约束的通用 shell agent（GOAL24_SCOPE_FREEZE.json 的 forbidden_designs）
+- ❌ 把 Enterprise governance suite 写成唯一目标（positioning non-goal）
+- ❌ npm 占位包（0.0.0）与任何形式的先占式发布
+
+这些不是「以后做」，是这个产品形态**刻意不要**。
+要加需先改本文件第 1 章的定位，并过 Owner Decision。
+
+---
+
+## 13. Distribution strategy（分发策略）
+
+**现状（CURRENTLY_VERIFIED 分发路径）：**
+
+- 桌面应用：Windows 安装包经 GitHub Releases 分发；macOS / Linux 社区构建；
+  从源码构建（`npm run install:all` + `npm run package`）。
+- Landing：GitHub Pages（`docs/index.html`，中英双语）。
+- MCP：桌面接入面板 + `mcp-proxy.js` stdio 转发。
+
+**`omctx` CLI 分发（TARGET，未发布）：**
+
+- 命名：`omctx`（npm registry 当前 CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED；
+  `omni-context` / `mcp-omni-context` / `omni-context-cli` 均为第三方占用，
+  详见 `docs/goal24/narrative/naming-audit.json`）。
+- 发布门槛（全部满足才允许发 alpha）：真实 CLI skeleton、真实 `--help`、
+  真实 version、真实 README、真实 repository metadata、
+  至少一个真实 non-dangerous command。
+- **禁止**：0.0.0 占位包、Narrative Lane 内 npm publish。
+
+**纪律：**
+
+- 不直接 push main；不直接覆盖 `dev/goal24-cli-skills`。
+- Narrative 产物经 feature branch `docs/goal24-narrative-vnext` 走正常流程。
+
+---
+
+## 14. Governance / verification language（治理与验证语言）
+
+### 治理四级状态
+
+> `REPORT_ONLY` → `VERIFIED_LOCAL_EVIDENCE` → `REMOTE_INTEGRATED` → `GATE_VERIFIED`
+
+- 只有 `GATE_VERIFIED` 允许画正式绿色 ✅。
+- feature branch push **不能叫** REMOTE_INTEGRATED；
+  可另记 `remote_feature_pushed=true`。
+- 只有 authoritative dev branch 真实集成并 Gate PASS 才允许 GATE_VERIFIED。
+
+### 产品能力三类状态
+
+- `CURRENTLY_VERIFIED`：用户今天可直接使用（需 repo / release 证据）。
+- `TARGET`：目标架构（design）。
+- `FUTURE`：未来规划。
+- 禁止把"内部 runtime 已验证"与"用户今天可以直接使用"混为一谈。
+
+### 证据权威链（truth precedence）
+
+> **remote SHA / protected refs**
+> **> checkpoint gate + manifest**
+> **> execution ledger**
+> **> executor report**
+> **> chat memory**
+
+- remote SHA 是 remote integration authority，**不是**本地 worktree existence authority。
+- 本 Narrative Lane 的最高验证级别：`VERIFIED_LOCAL_EVIDENCE`
+  （即便 feature branch 已 push；authoritative branch 仍是 `dev/goal24-cli-skills`）。
+
+---
+
+## 15. Legacy asset re-mapping（旧资产重新安置）
+
+| 旧资产 / 旧说法 | 新角色 |
+|---|---|
+| Knowledge Graph | Evidence Substrate |
+| 现有 26 MCP tools | Agent Interface / evidence + decision access surface |
+| Capture / Browser Extension / Desktop capture | Evidence acquisition surfaces |
+| Skills | Procedural knowledge，NOT authority |
+| CLI / Capability Adapters | Controlled Execution Surface |
+| Desktop | Human Control Surface |
+| Decision Timeline | Judgment History / audit surface |
+| Insights / Blind Spots | Decision-quality enhancement |
+| MCP | one interface surface，NOT the product itself |
+
+---
+
+## 附录 A：历史组件盘点（v1.2 基线快照，2026-06-07）
+
+> 本附录保留旧版 PRODUCT-VISION.md 的组件明细，防止信息丢失。
+> 表中的 ✅/🟡/⬜/❌ 是**旧基线的历史状态标记**（当时已实现 = 用户面可用），
+> 与本文档第 0 / 14 章的新治理语言是两套体系：
+> 旧标记**不构成** `GATE_VERIFIED`，产品对外状态一律以第 10 章能力地图为准。
+> 快照时间：2026-06-07；对应旧文档最后更新。
+
+### A.1 旧系统架构总览（五个组件，一个中心）
 
 ```
         [浏览器插件]   [移动端 App]   [ESP32 物理按钮]
@@ -67,7 +508,6 @@
                           | 内嵌启动 / HTTP
                           v
                   [桌面端 Tauri App]   ← 主控台 + 系统级捕获
-
                           ↑
                           | mcp-proxy.js (stdio↔HTTP)
                           |
@@ -75,446 +515,152 @@
                 12+ 款 MCP 客户端共享同一份图谱
 ```
 
-- **Brain Server 是唯一数据权威**，其余四个都是它的「感官」或「界面」。
-- 桌面端会内嵌启动 Brain Server（打包时一起带 node.exe）。
-- 移动端/插件/硬件通过网络连到 Brain Server，不自带数据库。
-- 外部 AI 客户端通过 `mcp-proxy.js` 走 stdio 接入，背后转发到本机 brain-server——保证所有客户端共享同一份 DB + LLM 配置。
+- Brain Server 是唯一数据权威，其余四个都是它的「感官」或「界面」。
+  （vNext 注：此句在新架构中被「Judgment / Authority Core 集中权威」吸收。）
 
----
-
-## 4. 各组件最终形态与当前状态
-
-### 4.1 Brain Server（后台大脑）
+### A.2 Brain Server（后台大脑）历史明细
 
 技术栈：Node.js + 自实现 HTTP 路由 + SQLite（FTS5 + sqlite-vec）
 
-| 特性 | 最终形态 | 状态 | 备注 |
+| 特性 | 最终形态 | 旧状态 | 备注 |
 |---|---|---|---|
 | HTTP API 服务 | 实体/关系/图谱/导入导出全套 REST | ✅ | `api-server.ts` |
 | SQLite 存储 | 实体·关系·记忆·通知，FTS5 全文索引 | ✅ | `db/sqlite.ts` |
 | 向量检索 | sqlite-vec 原生 KNN | ✅ | 未做大数据量压测 |
 | 三层融合检索 | 向量+全文+图谱关联，一次查询穿透 | ✅ | 三层均已验证 |
-| Embedding 服务 | 本地 Xenova transformers 生成向量 | ✅ | 模型内置仓库；降级到 hash-fallback 时通过 `/api/admin/embedding/status` 暴露状态（task 18） |
+| Embedding 服务 | 本地 Xenova transformers 生成向量 | ✅ | 模型内置仓库；hash-fallback 状态经 `/api/admin/embedding/status` 暴露 |
 | GraphRAG 抽取 | 从文本抽实体+关系 | ✅ | 云端 DeepSeek 实测良好 |
-| 截图 → OCR → 抽取 | 沉淀流程真的解析截图文字 | ✅ | task 09：extractor.combineInputs 接入 OCRPipeline + 10s 超时兜底 |
-| 文件上传（含 Office/EPUB/HTML/代码） | 拖文件 → 自动解析对应格式 → 抽取 | ✅ | task-01/13：支持 30+ 扩展名，docx/xlsx/pptx/epub/html + 各种代码文件 |
-| 上传异步 job + 进度 | POST 立刻返 jobId，前端轮询阶段 | ✅ | task 13：parsing/ocr/extracting/resolving/storing 五阶段，5min TTL |
-| 记忆分层 + 衰减 | core / archival + decay-scheduler + 衰减洞见 | ✅ | task 14：anchor 纳入 updated_at，每 6 cycle 检查 decay_warning |
-| Proactive Agent | 定期扫图谱、生成 Insights 推送 | ✅ | 桌面 App 入口也已正确传入 decayScheduler |
-| MCP Server | 14 个工具（含 get_decision_context、unified_memory_search 等） | ✅ | `mcp-server.ts`（stdio + HTTP 双模） |
-| MCP HTTP 代理 | mcp-proxy.js 薄壳，将各客户端 stdio 转 HTTP 到本机 brain-server | ✅ | task 08：彻底解决 DB 隔离 + LLM 配置不共享 + 并发问题 |
-| 数据导入/导出 | 整库 JSON 备份/恢复（merge/replace） | ✅ | API 已有，桌面 UI 入口待补 |
-| 认知盲区检测 | 消费不行动/来源同质化/搜索未捕获 三种盲区定期推送 | ⬜ | task 35-1 |
-| 图分析驱动洞见 | statistical/latent_connection/anti_consensus，LLM 只润色 | ⬜ | task 35-2 |
+| 截图 → OCR → 抽取 | 沉淀流程真解析截图文字 | ✅ | OCRPipeline + 10s 超时兜底 |
+| 文件上传（Office/EPUB/HTML/代码） | 拖文件 → 自动解析 → 抽取 | ✅ | 30+ 扩展名 |
+| 上传异步 job + 进度 | POST 返 jobId，前端轮询 | ✅ | 五阶段，5min TTL |
+| 记忆分层 + 衰减 | core / archival + decay-scheduler | ✅ | 每 6 cycle 检查 decay_warning |
+| Proactive Agent | 定期扫图谱、生成 Insights 推送 | ✅ | |
+| MCP Server | 14 个工具（旧计数；现 26，以 `mcp_tool_manifest.json` 为准） | ✅ | stdio + HTTP 双模 |
+| MCP HTTP 代理 | `mcp-proxy.js` 薄壳 | ✅ | 解决 DB 隔离 + LLM 配置共享 |
+| 数据导入/导出 | 整库 JSON 备份/恢复 | ✅ | 桌面 UI 入口待补 |
+| 认知盲区检测 | 三种盲区定期推送 | ⬜ | task 35-1 |
+| 图分析驱动洞见 | statistical/latent_connection/anti_consensus | ⬜ | task 35-2 |
 
-### 4.2 桌面端（主控台）
+### A.3 桌面端（主控台）历史明细
 
 技术栈：Tauri 1.x + Next.js 14（静态导出）+ Tailwind
 
-| 特性 | 最终形态 | 状态 | 备注 |
-|---|---|---|---|
-| 知识图谱可视化 | 2D/3D 力导向图 + size/关系线/Legend 三件套 | ✅ | task 21：size 按 access_count 归一、principle +2；关系线按 type 区分颜色/线型（冲突红、依赖蓝、取代虚线灰）；右上 Legend 可折叠 + 点击高亮筛选 |
-| 图谱 · MST 骨架视图 | 裁冗余边只留最强骨架 | ✅ | |
-| 图谱 · 时间轴 | 按创建时间回放图谱演化 | ✅ | |
-| 节点 编辑/删除/合并 | 详情面板内直接操作 | ✅ | |
-| 全窗口拖放上传 | 主窗口任意位置接收文件/文件夹 | ✅ | task 01：Tauri file-drop + Rust 递归扫描（支持 50+ 文件确认弹窗） |
-| 常驻上传入口 | header 区固定「上传文件」按钮 | ✅ | task 03 |
-| 悬浮 HUD | 独立置顶 Tauri 窗口，主窗口最小化也常驻 | ✅ | task 04：从 DOM 浮层切换到独立窗口 |
-| Spotlight 搜索浮层 | Ctrl+K，并发三路搜索 + 跨类别按相关性排序 + 跳图谱聚焦 | ✅ | task 05 + 15 |
-| 决策助手独立页面 | Ctrl+Shift+K，5 行输入框 + 三列结果（原则/历史/冲突） | ✅ | task 22：从 SearchPalette 拆出独立全屏覆盖层 |
-| 洞见通知中心 | 毛玻璃 Insights 收件箱（含 decay_warning） | ✅ | |
-| 系统托盘 + 后台常驻 | 托盘图标 + 关 X 默认最小化 + 菜单（重启 BS / 打开数据目录 / 退出） | ✅ | task 06 |
-| MCP 接入面板 | 12 个客户端卡片 + 一键写入（Claude Desktop/Cursor 等）+ 复制 JSON 兜底 + 能力预览（5 个使用场景） | ✅ | task 02 + 20；2026-05-29 诚实化：仅验证过的客户端归「一键（已验证）」，其余归「手动（复制参数）」，不再假装全可一键 |
-| Agent Skills 支持 | `skills/omni-context-memory/SKILL.md` 教 AI 正确的 omni-context 工具名 | ✅ | 2026-05-29：避免 AI 猜标准 memory-server 工具名（read_graph 等）导致调用失败 |
-| 首启 Wizard + LLM 预设 | 11 家服务商预设（OpenAI/DeepSeek/Moonshot/智谱/通义/火山/Groq/OpenRouter/Ollama 等）+ 测试连接 + LLM 未配横幅引流 | ✅ | task 07 |
-| 沉淀真反馈 | HUD 等待真实 await，三分支显示（成功 N 实体 / 0 内容 / 失败原因） | ✅ | task 09 + 10：截图真 OCR + 防重 ref |
-| 离线横幅文案 | 简短文案 + 折叠"详细信息"展开技术原因 | ✅ | task 17 |
-| 系统自检 Tab | embedding 引擎状态（hash-fallback 时红色警告）+ LLM / OCR / BS 真实状态 | ✅ | task 18 |
-| 国际化 | zh/en 全量覆盖（130+ key，UI 0 硬编码中文残留） | ✅ | task 16 |
-| 空状态新手引导 | 「加载 Demo 为主 + 逐功能导览」替代平级四按钮，接入 AI 客户端入口置顶 | ✅ | 2026-05-29：EmptyState 重构，降低新手认知负担 |
-| 决策复盘时间线 | 按时间线翻历史决策 + 展开看来由/证据链 + 点击跳图谱聚焦 | ✅ | 2026-05-29：DecisionTimeline，补齐 §6 旧口子 |
-| 问大脑 · 答案卡多轮 | 右栏答案卡多轮续聊，每轮独立富文本（结论/依据/可点来源 chip）；追问即时占位 + 自动滚到底 | ✅ | 2026-06-05：turns[] 重构，历史轮不再降级成灰色折叠块 |
-| 答案卡/洞察 复制·收藏 | 每轮与每条洞察可复制、可收藏（存 archival 打「收藏」标签，幂等去重） | ✅ | 2026-06-05 |
-| 记忆管理 · 收藏夹 | 新增「收藏」标签页：看 / 点开放大 / 复制 / 取消收藏 | ✅ | 2026-06-05 |
-| 决策续聊 + 决策链 | 存决策后不关闭、可继续做下一个；同会话后续决策挂成 A→B→C 链 | ✅ | 2026-06-05：save_decision 加 previous_decision_id |
-| 会话历史（可续聊） | 每轮自动存 discussions 表，命令栏「历史」入口重开旧会话接着聊 | ✅ | 2026-06-05：独立存储，不进记忆召回 |
-| 聊天记录导入（JSON/HTML） | ChatGPT/Claude/Gemini，含 HTML（chat.html / Gemini My Activity，提问+完整答案） | ✅ | 2026-06-05 |
-| 单文件上传上限 30MB | 前端与 brain-server（MAX_INGEST/MAX_BODY）对齐 | ✅ | 2026-06-04 |
-| 设置面板 | 快捷键/外观/行为/LLM/MCP/数据管理/启动行为/常驻 | ✅ | |
-| 浅色主题 | 完整 light 主题适配 | ✅ | |
-| 屏幕/剪贴板捕获 | 系统级捕获后入库 | ✅ | task 09 接通后端 OCR，捕获→图谱链路打通 |
-| 开机自启 | 跟随系统启动 | ✅ | tauri-plugin-autostart |
-| Tauri allowlist + Cargo features | fs.readFile / window / shell / clipboard 全部正确开启 | ✅ | 拖放、HUD、托盘都依赖 |
-| Windows 打包 | msi + nsis 安装包 | ✅ | |
-| macOS / Linux 打包 | 同等安装包 | ✅ | task 29 + 2026-05-29：CI matrix 全绿，实测产出 Win(msi+nsis) / macOS-arm(dmg) / Linux(deb)。Intel mac（免费 runner 长期分配不到）+ AppImage（runner webkit 过新）走源码构建 |
-| 自动更新 | Tauri updater + GitHub Release | 🟡 | task 28：代码就绪，pubkey/endpoint 已填，私钥本地保存待配 GitHub Secret |
-| 抓屏隐私控制 | 暂停 toggle + 敏感应用 blocklist | ✅ | task 24 |
-| 日志落盘 | %LOCALAPPDATA%\omni-context\logs\ + 轮转 | ✅ | task 25 |
-
-### 4.3 移动端 App 📦 暂搁（Experimental）
-
-技术栈：React Native + Expo + NativeWind
-
-| 特性 | 最终形态 | 状态 | 备注 |
-|---|---|---|---|
-| 只读搜索 MVP | 搜索框 + 三 API 并发 + 实体/记忆详情 | 🟡 | 代码完成，已出 APK，**未完整真机验证** |
-| 设置页 | 配置 Brain Server 地址 + 配对码（必填）+ 扫码配对 | ✅ | task 27 + 本轮修复 |
-| 实体详情 + 邻居 | 调 /api/graph/context 显示关联 | 🟡 | 代码完成，未完整真机验证 |
-| LAN 同步 + 鉴权 | 配对码 + Authorization Bearer + HOST=0.0.0.0 | ✅ | 本轮修复：127.0.0.1→0.0.0.0 解决手机连不上 |
-| Android 打包 | 可安装 APK | ✅ | `npx expo run:android` 出包成功 |
-| 扫码配对 | 扫桌面端二维码一键配置服务器地址+配对码 | ✅ | PairScanScreen + expo-barcode-scanner |
-| iOS 打包 | 可安装 IPA | ⬜ | 连 `ios/` 工程都没有 |
-| 截屏沉淀 / 上传 | —— | ❌ | 移动端定位为只读，写入留给桌面 |
-
-### 4.4 浏览器插件
-
-技术栈：原生 Manifest V3（Chrome/Edge）
-
-| 特性 | 最终形态 | 状态 | 备注 |
-|---|---|---|---|
-| 一键沉淀当前页 / 选区 | popup 捕获页面/选区，当场注入执行（不依赖预注入的 content script，扩展重载后也稳） | ✅ | 2026-06-05：改 chrome.scripting.executeScript，支持 textarea/input 选区 |
-| popup 内「问大脑」 | 任意标签页直接问本地记忆 | ✅ | 2026-06-05 |
-| 品牌一致 | popup 换成品牌 logo（非占位脑子图标） | ✅ | 2026-06-05 |
-| 后台与 Brain Server 通信 | HTTP 调用 | ✅ | |
-| 打包产物 | unpacked + zip | ✅ | |
-| Firefox 适配 | MV2/兼容版本 | 🟡 | 标称兼容 109+，未实测 |
-| 与 task 13 异步 job 协议同步 | 适配 `POST /api/ingest/file` 返回 jobId 的新格式 | ✅ | task 26：chrome.alarms 持久化轮询，SW unload 后恢复 |
-| Safari 适配 | —— | ❌ | 明确不做 |
-
-### 4.5 ESP32 物理硬件 📦 暂搁（Experimental）
-
-| 特性 | 最终形态 | 状态 | 备注 |
-|---|---|---|---|
-| 固件源码 | 按钮触发发 UDP 命令 | 🟡 | `main.ino` 在，未编译验证 |
-| 接线/BOM/装配文档 | 完整可复现 | ✅ | |
-| 与桌面端联动 | UDP:9090 单向触发 | 🟡 | 桌面侧已就绪，硬件侧未实测 |
-| 双向通信 | 硬件显示状态回执 | ❌ | 当前设计就是单向，不做 |
-
-### 4.6 对外 AI 接入接口（「数字脑子」交付层）
-
-这是产品的护城河所在——把知识图谱作为能力开放给其他 AI。
-
-| 特性 | 最终形态 | 状态 | 备注 |
-|---|---|---|---|
-| MCP Server | 14 个工具（含决策上下文 / 衰减报告 / 统一记忆搜索） | ✅ | |
-| MCP HTTP 代理 | mcp-proxy.js 把 stdio 转发到本机 brain-server HTTP | ✅ | task 08：客户端无感，但服务端单点。彻底解决多客户端 DB 隔离 + LLM 配置不共享 + 并发风险 |
-| 多客户端一键 / 半自动接入 | Claude Desktop / Cursor / Windsurf / Cline / Continue / Roo Code / Trae / LM Studio / Cherry Studio / ChatBox / Zed / Goose + 兜底 | ✅ | task 02：12 + 1 张卡片在设置面板 |
-| 决策支持能力 | `get_decision_context` 工具 + 桌面端独立 UI（Ctrl+Shift+K）+ 保存决策结果回图谱 | ✅ | task 22+33：独立助手页面 + "我已决定"按钮把决策沉淀为 decision 实体；2026-05-29：信息不足时主动反问（questions）+ agentic 自主检索本地图谱补证据；修复深度讨论 500（situation 透传）。联网搜索经评估明确不做 |
-| 决策复盘视图 | 按时间线翻历史决策 + 来由/证据链 | ✅ | 2026-05-29：DecisionTimeline，兑现 §6 旧候选 |
-| AI 大脑三件套 | MCP instructions 引导 + save_conclusion 工具 + 隐式 access_count | ✅ | task 23：让接入的 AI 主动调记忆、把对话结论写回图谱、被引用的记忆自动加权 |
-| HTTP API 对外开放 | 非 MCP 的 AI 产品也能 HTTP 接入 | 🟡 | MCP 为对外主通道；HTTP API 维持产品内部客户端用，暂不作为第三方契约对外 |
-| 接入文档 | 第三方「如何把 Omni-Context 当脑子用」指南 | ✅ | `docs/MCP-INTEGRATION.md` |
-| 能力预览 UI | 5 个使用场景示例（在 Claude 里怎么说 → 触发什么工具） | ✅ | task 20 |
-
----
-
-## 5. 当前总体状态快照（2026-06-07）
-
-**本轮增量（2026-06-07）—— 认知深度：盲区检测 + 洞见升级**
-
-从"记录你的信息"到"拷问你的认知"。本轮启动两件新事：
-
-- **认知盲区检测**（task 35-1，外部 AI 执行中）：定期扫描图谱，找到你遗漏的信息维度——你反复浏览但从未行动的、信息来源高度同质的、搜索了但从未捕获的。生成 `blindspot` 类型通知。
-- **洞见质量升级**（task 35-2，外部 AI 执行中）：旧的洞察是"扔实体给 LLM 让它编关联"，新的是"图算法先扫出模式，LLM 只把模式翻译成人话"。新增统计型洞见（不调 LLM）、潜伏关联（路径发现）和反共识洞见（挑战已有认知）。
-
-核心理念：Omni-Context 不该只是你的外接硬盘，应该是一个会质疑你的第二大脑。
-
----
-
-## 5b. 历史快照（2026-06-05）
-
-**本轮增量（2026-06-05）——导入 / 收藏 / 决策续聊 / 会话历史 + 真实库数据治理**
-
-- **HTML 聊天记录导入**：导入器从只吃 JSON 扩展到 HTML —— ChatGPT `chat.html`（抠内嵌 jsonData 取完整对话）、Gemini Google Takeout「My Activity」HTML（时间戳锚点切出"提问 + 完整答案"，中文/英文时间都认，结构不固定时整段当答案、绝不丢正文）。实测用户 835 段 Gemini 对话导入，822 段带完整答案。
-- **收藏 + 复制**：洞察通知卡、问大脑答案卡（每轮）加「复制」「收藏」；记忆管理新增「收藏」标签页（点开放大 / 复制 / 取消）。收藏**幂等去重**（已收藏当场标记 + 跨会话按内容去重）。
-- **决策续聊 + 决策链**：`save_decision` 存完**不再关闭**答案卡，标「✓ 已存为决策」，可继续追问 / 做下一个决策；同会话后续决策经 `previous_decision_id` 显式挂成 A→B→C 链。
-- **会话历史（可续聊）**：新增 `discussions` 表 + `/api/discussions` 增删查；问大脑每轮自动 upsert；命令栏「历史」入口重开旧会话接着聊。**独立存储，不进记忆召回**（守住"非聊天记录管理"定位）。
-- **上传上限 10MB→30MB**：前端与 brain-server（`MAX_INGEST_BYTES` 30MB / `MAX_BODY_BYTES` 45MB）三层对齐。
-- **浏览器扩展**：换品牌 logo、删无效「打开桌面图谱」、抓取/选区改 `chrome.scripting` 当场注入（扩展重载后也稳）、popup 加「问大脑」。
-- **merge bug 修复**：`softMergeEntities` 转挂关系改 `UPDATE OR IGNORE` + 清自环/残留重复关系，合并不再撞 `UNIQUE(source_id,target_id,type)` 报 500。
-- **真实库数据治理（dogfood）**：用户导入全部历史对话后，连 live brain-server 逐条核对，删除 **105 条**低质量实体（时间戳 / 工作流节点碎片 / 文生图视觉碎片 / 故事角色 / 通用文件名）+ 合并 **51 条**同名重复，全程保住真实知识与同名异物（如 LoRa 微调技术 vs 无线模块）。
-
-> 提醒：本会话密集开发 + 真实 dogfood（用户已装包、导入自己全部历史对话并清理）。
-
----
-
-## 5c. 历史快照（2026-05-31）
-
-**本轮增量（2026-05-31）——交互大改：命令栏统一「问 / 搜 / 决策」**
-
-把原来分散的三个入口（Ctrl+K 搜索 / 问大脑 / 决策助手三个按钮+弹层）**合并成图谱顶部一条命令栏**，回答出现在右栏（图谱概览的第三态「答案卡」），核心是让体验从"又一个聊天框"变成"看得见来龙去脉的脑子"：
-
-- **命令栏**：亲切占位；聚焦弹下拉——空着给「来自你图谱的示例问题」，输入时给「匹配节点（点了跳转）」；Ctrl+K 聚焦。
-- **答案卡（右栏第三态，复用概览容器）**：结论 + 依据（每条依据的节点是可点 chip，点了在图上聚焦）+ 多轮继续讨论；问到抉择类问题时自动转「决策态」：先给澄清问题 + ＋/－权衡 + 「我已决定·存回图谱」。
-- **图谱原生回答**：新增 `graph_answer` 接口——把命中节点**之间的关系**也喂给 LLM 做推理、结构化输出（结论/依据/引用节点/子图边），答案旁的图谱**高亮命中子图、压暗其余**。这是和大厂记忆/NotebookLM 拉开差距的点（它们没有显式关系图）。
-- **清理**：删除搜索/问大脑/决策助手三个旧按钮+快捷键+组件文件，命令栏一步到位。
-
-> 提醒：以上为本会话密集开发，多为「编译通过 + 抽测几轮」，稳定性待真实 dogfood。旧组件已删，命令栏出问题没有后路——发现 bug 直接修命令栏。
-
----
-
-## 5d. 历史快照（2026-05-29）
-
-**本轮增量（2026-05-29）——产品打磨 + 可发布性**
-
-- **新手引导重构**：空状态从「平级四按钮」改为「加载 Demo 为主 + 逐功能导览」，接入 AI 客户端入口置顶，降低"不知道主次"的认知负担（真实用户反馈驱动）。
-- **决策助手补全**：信息不足主动反问 + agentic 自主检索本地图谱补证据 + 修复深度讨论 500；新增决策复盘时间线（兑现 §6 旧候选）。联网搜索评估后明确不做。
-- **MCP 接入诚实化**：一键仅保留验证过的客户端，其余转手动；新增 Agent Skill 教 AI 正确工具名，避免猜标准 memory-server 工具名导致调用失败。
-- **可发布性**：CI matrix 修绿，实测三平台出包（Win msi+nsis / macOS-arm dmg / Linux deb）；GitHub Pages 落地页重做为中英双语；README 中英双语；文档合并去冗余。
-- **桌面端 bug**：右上角 More 菜单被图谱概览遮挡修复（header stacking context）。
-
-> 仍在"卡口"的：Tauri 自动更新私钥待注入 GitHub Secret；移动端 / Intel mac / ESP32 待真机；以及"宣传/分发"这件没人替你写代码的事（见 §6 新增「分发与宣传」）。
-
----
-
-
-
-**当前交付形态：桌面端 v1.2（"AI 大脑"产品化 + 隐私 + 自动更新就绪） + 浏览器插件（异步 job 适配） + 移动端 LAN 鉴权 + 数字脑子（MCP + 代理 + AI 主动调用三件套）对外接口。**
-
-这一轮（task 01-34）把产品从"功能能用"逐步提升到"AI 用得起来的脑子"：
-
-**用户体验**
-- 全窗口拖放 + 文件夹递归 + Office/EPUB/HTML/代码文件
-- Ctrl+K 搜索 + Ctrl+Shift+K 决策助手 + "我已决定"沉淀
-- 系统托盘 + 关 X 最小化 + 抓屏暂停 / 敏感应用排除
-- 首启 Wizard + 11 家 LLM 预设
-- 沉淀真反馈（截图 OCR 接通 + HUD 等真实结果）+ 异步 job 取消
-- 全量 i18n + 离线横幅 + Embedding 降级重载按钮
-- 节点视觉三件套（size 映射 + 关系线 + Legend）+ 聚焦脉冲动画 + 时间新鲜度光环
-- 图谱节点编辑/删除/合并/批量打标签 + 10 秒撤销
-
-**MCP 接入产品化（"AI 大脑"差异化）**
-- 12+ 客户端一键 / 半自动接入卡片
-- mcp-proxy 解决 DB 隔离根本问题
-- **MCP instructions 引导 AI 主动调记忆**（task 23A）
-- **save_conclusion 工具让对话结论写回图谱**（task 23B）
-- **隐式 access_count 给被引用记忆加权**（task 23C）
-- 设置面板能力预览
-
-**工程基础**
-- brain-server 日志落盘 + 轮转 + 一键打开日志目录
-- Tauri auto-update 框架 + GitHub Release CI（pubkey 已配，私钥待 Secret）
-- macOS / Linux 打包脚本 + matrix CI 就绪（无设备实测）
-- 移动端 LAN 鉴权（6 位配对码 + 127.0.0.1 免鉴权）
-
-**仍为实验性 / 暂缓**
-- 移动端 task 19/27 仅 typecheck 通过，未真机验证（无设备）
-- macOS / Linux 打包等社区贡献者实测
-- ESP32 真机仍暂缓
-- 屏幕抓取首启默认关闭（capturePaused=true），用户可在设置面板手动开启
-
----
-
-## 6. 仍欠的事（v1.2 后的路线）
-
-task 01-34 完成后，原 P1/P2/P3 清单（除社区贡献类）全部消化。剩下的口子按价值/迫切度排：
-
-### 待真机验证（无设备阻塞）
-
-- **移动端真机**（Android / iOS）：task 19 + 27 代码就绪 + 配对码鉴权就绪，等社区在真机/模拟器跑通沉淀→搜索全链路。
-- **macOS / Linux 打包**：task 29 脚本 + matrix CI 就绪，等社区在真机出包 + 安装验证。
-- **ESP32 物理按钮真机**：固件源码 + 桌面 UDP 监听都在，等焊板验证。
-
-### 待外部配置（私钥 / Secret）
-
-- **Tauri auto-update 私钥注入 GitHub Secret**：本地 `desktop-daemon/.tauri-signing/omni.key` 已生成（gitignored），需手动到 GitHub repo Settings → Secrets 设置 `TAURI_PRIVATE_KEY` + `TAURI_KEY_PASSWORD`（空字符串）。完成后下次打 tag 即触发 CI 签名发版。
-
-### 看市场反馈再决定
-
-- **桌面 v1.3+ 主要候选**：图谱时间轴回放、节点笔记附件、Letta 风格的多层 memory tiering 在 UI 暴露、批量重建 embedding 进度条。
-- **HTTP API 对外契约化**：当前 MCP 为主、HTTP 内部用；若有第三方需要 HTTP 直连，再补稳定契约文档。
-- ~~**决策审计 / 复盘视图**~~ ✅ 2026-05-29 完成（DecisionTimeline）。
-
-### 分发与宣传（1→100 的真正战场，非开发量）
-
-> 产品本身 0→1 已基本完成。继续往前不是堆功能，而是"让人看得到、用得上、留得下"。这部分没人能替你写代码，但有方法可循。下面是按"低成本→高投入"排的可执行项，不是必须全做，是给自己一张清单别再空想。
-
-- **一句话价值主张**：对外只说一句——"给任何 AI 装一个有长期记忆、能基于你历史做判断的本地大脑"。落地页 / README / 发帖标题都用这一句，不要罗列功能。
-- **首发渠道**（开发者向产品的典型路径）：GitHub README 打磨（截图 + 30s GIF + 一键安装）→ 发 Show HN / Reddit (r/LocalLLaMA, r/selfhosted) / V2EX / 即刻 → MCP 生态目录收录（Claude/Cursor 社区的 MCP server 列表）。
-- **宣传文案的写法**：先痛点（"和 AI 聊过的东西它转头就忘"）→ 再反差（"换成有记忆的脑子会怎样"）→ 给一个可复现的 30 秒 demo（在 Cursor 里问，它自动调出你上周的笔记）→ 强调本地/无云/数据主权这条差异化。**别一上来列 MCP 工具清单**，没人关心；当前清单由 `mcp_tool_manifest.json` 生成。
-- **降低首用门槛**：安装包要无脑（已就绪）、首启即有 Demo（已就绪）、接入第一个 AI 客户端三步内完成（接入面板已就绪）。这三点是转化率命门，比加功能重要。
-- **可信度素材**：一个 90 秒录屏（脚本已有 `docs/DEMO_SCRIPT.md`）、几张真实图谱截图、一句"为什么我做这个"的故事。
-
-### 明确暂缓（不在 v1.x 范围）
-
-- 多用户 / 账号体系
-- 云同步
-- 公网部署 / 鉴权
-- 落盘加密
-- Safari 插件
-- ESP32 双向通信
-- 移动端写入（截屏沉淀、上传）—— 定位为只读
-
----
-
-## 7. 通往最终形态的历史路线图
-
-> 排序原则（2026-05-21 定）：知识图谱 + 对外接口是护城河，路线图围绕它排。
-> 先保证图谱「抽得准」，再把它打磨成能对外的「数字脑子」；桌面收尾类小活穿插进行。
-
-### 阶段 1 —— 图谱地基：抽得准 ✅（2026-05-21 完成）
-- ✅ 1.1 LLM 抽取管线端到端验证。
-- ✅ 1.2 OCR → 入图谱链路。
-- ✅ 1.3 Embedding 模型内置 + 离线加载。
-
-### 阶段 2 —— 数字脑子：可对外的决策层 ✅（2026-05-21）
-- ✅ 2.1 MCP 工具集按决策支持视角打磨。
-- ✅ 2.2 MCP 定为对外主通道。
-- ✅ 2.3 接入文档 `docs/MCP-INTEGRATION.md`。
-
-### 阶段 3 —— 主动智能引擎验证 ✅（2026-05-21）
-
-### 阶段 4 / 5 —— 暂缓（2026-05-21 范围决定）
-当前交付形态锁定为 **桌面端 + 浏览器插件 + 数字脑子（MCP）对外接口**。
-
-### 阶段 6 —— 产品深化（审查驱动）✅（2026-05-22 完成）
-- ✅ 6.1 时序知识图谱
-- ✅ 6.2 自动冲突检测
-- ✅ 6.3 检索 token 效率
-- ✅ 6.4 系统可观测性（自检 Tab）
-- ✅ 6.5 工程治理（配置收敛）
-- ✅ 6.6 首次体验（demo 图谱）
-- ✅ 6.7 README 据实重写
-
-### 阶段 7 —— 用户体验产品化（2026-05-25 → 2026-05-26 完成）
-
-34 个 task 让产品从"功能能用"升级到"AI 用得起来的脑子"。
-
-**第一批：基础 UX 修复（task 01-08）**
-- ✅ 01 拖放修复 + 全窗口 + 文件夹递归
-- ✅ 02 12+ MCP 客户端接入卡片
-- ✅ 03 header 常驻上传按钮
-- ✅ 04 HUD 独立窗口
-- ✅ 05 Spotlight 搜索浮层 + 真实 API 接通
-- ✅ 06 系统托盘 + 后台常驻
-- ✅ 07 LLM 预设 + 首启 Wizard
-- ✅ 08 MCP HTTP 代理薄壳
-
-**第二批：产品最大 bug 修复 + 体验深化（task 09-20）**
-- ✅ 09 截图真 OCR（产品最大功能 bug fix）
-- ✅ 10 沉淀反馈对齐真实结果
-- ✅ 11 triggerReset 实装
-- ✅ 12 决策上下文接入（后被 22 重构）
-- ✅ 13 文件上传异步 job + 进度
-- ✅ 14 AgentLoop 锚点纳入 updated_at + 衰减洞见
-- ✅ 15 搜索结果跨类别按分数排序
-- ✅ 16 i18n 全量扫描（130+ key）
-- ✅ 17 离线横幅文案友好化
-- ✅ 18 Embedding 降级状态在 UI 暴露
-- ✅ 19 移动端只读搜索 MVP（typecheck 通过）
-- ✅ 20 MCP 接入页能力预览
-
-**第三批：视觉 + 决策助手独立化（task 21-22）**
-- ✅ 21 图谱节点视觉三件套
-- ✅ 22 决策助手独立页面 + Ctrl+Shift+K
-
-**第四批：AI 大脑产品化 + 工程基础（task 23-34）**
-- ✅ 23 AI 大脑三件套（instructions + save_conclusion + access_count）
-- ✅ 24 抓屏隐私控制（暂停 + 敏感应用 blocklist）
-- ✅ 25 brain-server 日志落盘 + 轮转
-- ✅ 26 浏览器扩展适配 task 13 异步 job 协议（chrome.alarms）
-- ✅ 27 移动端真机配套 + LAN 配对码鉴权
-- ✅ 28 Tauri 自动更新（pubkey 已配，私钥待 Secret）
-- ✅ 29 macOS / Linux 打包脚本 + matrix CI（待真机验证）
-- ✅ 30 图谱节点编辑/删除/批量/10 秒撤销 UX
-- ✅ 31 图谱聚焦脉冲动画 + 时间新鲜度光环
-- ✅ 32 快捷键冲突检测 + Embedding 模型重载按钮
-- ✅ 33 决策助手"我已决定"沉淀回图谱
-- ✅ 34 异步 job 协作式取消
-
-### 阶段 7.5 —— 打磨 + 可发布性（2026-05-29）
-
-真实用户（含非技术用户）试用反馈驱动的一轮收尾，把产品从"能用"推向"敢发"：
-
-- ✅ CI matrix 修绿，三平台实测出包（Win/macOS-arm/Linux）
-- ✅ GitHub Pages 落地页中英双语重做 + README 中英双语 + 文档合并去冗余
-- ✅ MCP 接入诚实化（一键仅限验证客户端）+ Agent Skill 教正确工具名
-- ✅ 决策助手：主动反问 + agentic 自主检索 + 深度讨论 500 修复 + 复盘时间线
-- ✅ 空状态新手引导重构（加载 Demo 为主 + 逐功能导览）
-- ✅ 桌面端 More 菜单遮挡修复
-
-### 阶段 9 —— 认知深度：从"记录"走向"拷问"（2026-06-07 启动）
-
-用户反馈 + 外部视角驱动的一轮升级。核心洞察：
-
-- **Omni-Context 当前只记录消费行为，不记录决策过程。** 你在两个网页之间反复切换、犹豫不决——这个过程比最终点开的那个链接更有价值，但我们没抓。
-- **AI 洞见依赖 LLM 常识推断，而非图谱分析。** LLM 没有足够上下文，只能用自己的通用知识去脑补"这两个实体可能相关因为…"——这个"因为"后面的内容往往是编的。
-- **系统只会确认已有认知，从不挑战用户。** 你的图谱是你已有知识的映射，用久了会陷入信息茧房。一个真正的"第二大脑"应该在你说"A 是对的"时反问"你确定看过 B 的观点吗？"
-- **结构化、可传播的技能在 AI 面前快速贬值（Diskill），真正值钱的是那些不在纸上的认知——决策过程、博弈取舍、口头传承的判断力。** Omni-Context 的方向是对的（本地、私密、不依赖公开网络），但产品能力还远远够不到那些"值钱的东西"。
-
-本轮具体事项：
-
-- ⬜ 9.1 认知盲区检测 Agent（task 35-1）：三种盲区（消费但不行动 / 来源同质化 / 搜索但未捕获）→ 生成 blindspot 通知
-- ⬜ 9.2 洞见质量升级（task 35-2）：图分析驱动 → statistical（统计型，不调 LLM）/ latent_connection（路径发现）/ anti_consensus（反共识）。LLM 只做润色不做编造
-- ⬜ 9.3 文档全面更新（task 35-3）：PRODUCT-VISION / README / MARKETING / ARCHITECTURE 反映新方向
-
-### 阶段 8 —— 见 § 6 路线图
-
-剩下的事按"真机验证 / 外部配置 / 市场反馈"三类拆分。
-
----
-
-## 8. 明确不做的（防止范围蔓延）
-
-- ❌ 多用户 / 账号体系 / 密码
-- ❌ 云端存储 / 云同步
-- ❌ 公网部署 / 公网鉴权
-- ❌ 落盘加密
-- ❌ Safari 插件
-- ❌ ESP32 双向通信
-- ❌ 移动端写入能力（移动端定位为只读）
-
-这些不是「以后做」，是这个产品形态**刻意不要**。要加需先改这份文档第 1 章的定位。
-
----
-
-## 9. 附：技术参考
-
-> 本节整合自旧的 `ECOSYSTEM.md`（已删除）。只保留与现状一致的事实性内容。
-
-### 9.1 组件间通信协议（实际实现）
+| 特性 | 旧状态 | 备注 |
+|---|---|---|
+| 知识图谱可视化 | ✅ | 2D/3D 力导向 + size/Legend 三件套 |
+| 图谱 MST 骨架视图 | ✅ | 裁冗余边只留最强骨架 |
+| 图谱时间轴 | ✅ | 按创建时间回放图谱演化 |
+| 节点编辑/删除/合并 | ✅ | 详情面板内直接操作 |
+| 全窗口拖放上传 | ✅ | Tauri file-drop + Rust 递归扫描 |
+| 常驻上传入口 | ✅ | header 区固定按钮 |
+| 悬浮 HUD | ✅ | 独立置顶窗口 |
+| Spotlight 搜索浮层 | ✅ | Ctrl+K，三路并发搜索 |
+| 决策助手独立页面 | ✅ | Ctrl+Shift+K，三列结果 |
+| 洞见通知中心 | ✅ | 毛玻璃 Insights 收件箱 |
+| 系统托盘 + 后台常驻 | ✅ | 关 X 最小化 + 菜单 |
+| MCP 接入面板 | ✅ | 12 个客户端卡片 + 一键写入（仅验证过的客户端）+ 复制 JSON 兜底 |
+| Agent Skills 支持 | ✅ | `skills/omni-context-memory/SKILL.md` |
+| 首启 Wizard + LLM 预设 | ✅ | 11 家服务商预设 |
+| 沉淀真反馈 | ✅ | HUD 等待真实 await，三分支显示 |
+| 离线横幅文案 | ✅ | 简短文案 + 详细信息折叠 |
+| 系统自检 Tab | ✅ | embedding / LLM / OCR / BS 真实状态 |
+| 国际化 | ✅ | zh/en 全量覆盖（130+ key） |
+| 空状态新手引导 | ✅ | 加载 Demo + 逐功能导览 |
+| 决策复盘时间线 | ✅ | DecisionTimeline（vNext: Judgment History 前身） |
+| 问大脑答案卡多轮 | ✅ | 右栏多轮续聊 |
+| 答案卡/洞察复制·收藏 | ✅ | 存 archival「收藏」标签 |
+| 记忆管理收藏夹 | ✅ | |
+| 决策续聊 + 决策链 | ✅ | previous_decision_id 挂 A→B→C 链 |
+| 会话历史（可续聊） | ✅ | discussions 表 |
+| 聊天记录导入（JSON/HTML） | ✅ | ChatGPT/Claude/Gemini |
+| 单文件上传上限 30MB | ✅ | 前端与 brain-server 对齐 |
+| 设置面板 | ✅ | |
+| 浅色主题 | ✅ | |
+| 屏幕/剪贴板捕获 | ✅ | 捕获→图谱链路打通 |
+| 开机自启 | ✅ | tauri-plugin-autostart |
+| Tauri allowlist + Cargo features | ✅ | |
+| Windows 打包 | ✅ | msi + nsis |
+| macOS / Linux 打包 | ✅ | CI matrix 全绿；Intel mac / AppImage 走源码构建 |
+| 自动更新 | 🟡 | 代码就绪，私钥待配 GitHub Secret |
+| 抓屏隐私控制 | ✅ | 暂停 toggle + 敏感应用 blocklist |
+| 日志落盘 | ✅ | %LOCALAPPDATA%\omni-context\logs\ + 轮转 |
+
+### A.4 移动端 App（实验性，暂搁）
+
+| 特性 | 旧状态 | 备注 |
+|---|---|---|
+| 只读搜索 MVP | 🟡 | 代码完成，已出 APK，未完整真机验证 |
+| 设置页（服务器地址 + 配对码） | ✅ | |
+| 实体详情 + 邻居 | 🟡 | 未完整真机验证 |
+| LAN 同步 + 鉴权 | ✅ | 127.0.0.1→0.0.0.0 |
+| Android 打包 | ✅ | |
+| 扫码配对 | ✅ | |
+| iOS 打包 | ⬜ | 连 ios/ 工程都没有 |
+| 截屏沉淀 / 上传 | ❌ | 移动端定位为只读 |
+
+### A.5 浏览器插件
+
+| 特性 | 旧状态 | 备注 |
+|---|---|---|
+| 一键沉淀当前页 / 选区 | ✅ | chrome.scripting.executeScript |
+| popup 内「问大脑」 | ✅ | |
+| 品牌一致 | ✅ | 品牌 logo |
+| 与 Brain Server 通信 | ✅ | HTTP |
+| 打包产物 | ✅ | unpacked + zip |
+| Firefox 适配 | 🟡 | 标称兼容 109+，未实测 |
+| 异步 job 协议同步 | ✅ | chrome.alarms 持久化轮询 |
+| Safari 适配 | ❌ | 明确不做 |
+
+### A.6 ESP32 物理硬件（实验性，暂搁）
+
+| 特性 | 旧状态 | 备注 |
+|---|---|---|
+| 固件源码 | 🟡 | main.ino 在，未编译验证 |
+| 接线/BOM/装配文档 | ✅ | |
+| 与桌面端联动 | 🟡 | UDP:9090 单向触发 |
+| 双向通信 | ❌ | 当前设计单向 |
+
+### A.7 对外 AI 接入接口（旧「数字脑子」交付层）
+
+| 特性 | 旧状态 | 备注 |
+|---|---|---|
+| MCP Server | ✅ | 旧计数 14；现 26（以 manifest 为准） |
+| MCP HTTP 代理 | ✅ | mcp-proxy.js |
+| 多客户端接入卡片 | ✅ | 12 + 1 张卡片；一键仅限已验证客户端 |
+| 决策支持能力 | ✅ | get_decision_context + Ctrl+Shift+K |
+| 决策复盘视图 | ✅ | DecisionTimeline |
+| AI 大脑三件套 | ✅ | instructions + save_conclusion + access_count |
+| HTTP API 对外开放 | 🟡 | MCP 为对外主通道；HTTP 内部用 |
+| 接入文档 | ✅ | docs/MCP-INTEGRATION.md |
+| 能力预览 UI | ✅ | 5 个使用场景示例 |
+
+### A.8 组件间通信协议（旧实现，保留事实）
 
 | From → To | 协议 | 说明 |
 |---|---|---|
 | 桌面端 UI → Brain Server | HTTP (3001) | fetch 调用 |
 | 浏览器插件 → Brain Server | HTTP (3001) | 同 LAN，CORS 允许 |
-| 移动端 → Brain Server | HTTP (3001) | LAN 内可达即可，无鉴权 |
-| ESP32 → 桌面端 | UDP (9090) | 单向触发；远程需设 `OMNI_UDP_BIND=0.0.0.0:9090` |
-| MCP 客户端（IDE）→ mcp-proxy.js → Brain Server | stdio + HTTP (3001) | 代理转发，所有客户端共享同一份 DB |
+| 移动端 → Brain Server | HTTP (3001) | LAN 内可达即可 |
+| ESP32 → 桌面端 | UDP (9090) | 单向触发；默认仅 127.0.0.1 |
+| MCP 客户端 → mcp-proxy.js → Brain Server | stdio + HTTP (3001) | 共享同一份 DB |
 
-> 不存在跨进程 WebSocket 推送通道。旧文档里的 `WebSocket 9999` / `mDNS` 只是早期草稿，从未实现。各客户端是各自轮询 Brain Server 的 HTTP API。UDP 9090 默认仅监听 `127.0.0.1`。
+> 不存在跨进程 WebSocket 推送通道；各客户端轮询 HTTP API。
 
-### 9.2 项目结构
+### A.9 旧路线图节点（历史留存）
 
-```
-omni-context-release/
-├── brain-server/        # 后台大脑：HTTP API + MCP + MCP 代理 + SQLite + Agent
-│   ├── src/mcp-server.ts    # MCP stdio + HTTP 双模（桌面 App 内嵌入口）
-│   ├── src/mcp-proxy.ts     # MCP 代理薄壳（各客户端 spawn 这个）
-│   ├── src/mcp-tools.ts     # MCP 工具共享定义；数量由 /mcp_tool_manifest.json 生成
-│   └── src/api/handlers/    # 所有 HTTP 端点
-├── desktop-daemon/      # 桌面端：Tauri(Rust) + Next.js 前端
-│   └── src-tauri/       # Rust 侧：屏幕/剪贴板捕获、UDP、硬件、内嵌 Brain Server、托盘、MCP 配置写入
-├── browser-extension/   # 浏览器插件（Manifest V3）
-├── mobile-app/          # 移动端 React Native（只读搜索 MVP）
-├── hardware/esp32-firmware/  # ESP32 固件源码 + 接线/BOM 文档
-├── shared/              # 跨端共享的 types / constants
-├── scripts/             # 打包脚本（build-desktop-only.js 等）
-└── docs/
-    ├── PRODUCT-VISION.md      # 本文档（北极星）
-    ├── ARCHITECTURE.md        # 详细技术架构（README 不再展开）
-    ├── MCP-INTEGRATION.md     # 第三方接入指南
-    ├── BUILDING.md            # 打包、运行与发布（合并自原 PACKAGE/RELEASING）
-    ├── EXPERIMENTAL.md        # 移动端 / ESP32 / 抓屏现状
-    ├── DEMO_SCRIPT.md         # 90 秒 demo 拍摄脚本
-    ├── index.html            # GitHub Pages 首页（landing，中英双语）
-    └── landing/assets/        # 首页素材（social-preview 等）
-```
+- 阶段 1 图谱地基 ✅（2026-05-21）；阶段 2 数字脑子 ✅（2026-05-21）；
+  阶段 3 主动智能引擎 ✅（2026-05-21）；阶段 6 产品深化 ✅（2026-05-22）；
+  阶段 7 用户体验产品化 ✅（task 01-34）；阶段 7.5 打磨 + 可发布性 ✅（2026-05-29）；
+  阶段 9 认知深度（2026-06-07 启动，task 35 盲区检测 / 洞见升级）。
+- 旧路线图「知识图谱 + 对外接口是护城河」的排序原则已被本文件第 1 章 moat 语言取代。
 
-### 9.3 权限用途
+### A.10 旧「仍欠的事」清单（v1.2 后，历史留存）
 
-| 组件 | 权限 | 用途 |
-|---|---|---|
-| 桌面端 | 屏幕捕获 / 剪贴板 / UDP 监听 / fs.readFile / window 控制 / open_trusted_external_url（仅语义化 https 目标 ID） | 沉淀屏幕内容、读写剪贴板、接 ESP32、拖放读文件、HUD 独立窗口、打开数据目录 |
-| 浏览器插件 | 标签页 / 右键菜单 / 通知 | 捕获网页、入口、HUD 提示 |
-| 移动端 | 本地网络 | 与 Brain Server 同步（只读） |
+- 待真机验证：移动端真机、macOS/Linux 打包实测、ESP32 真机。
+- 待外部配置：Tauri auto-update 私钥注入 GitHub Secret。
+- 看市场反馈再决定：桌面 v1.3+ 候选、HTTP API 对外契约化。
+- 分发与宣传：一句话价值主张、首发渠道、可信度素材（90 秒录屏、
+  `docs/DEMO_SCRIPT.md`）。
+- 明确暂缓：多用户/账号、云同步、公网部署、落盘加密、Safari、ESP32 双向、移动端写入。
+
+> 本附录为历史基线留存。凡与第 1–15 章冲突处，以第 1–15 章为准。
