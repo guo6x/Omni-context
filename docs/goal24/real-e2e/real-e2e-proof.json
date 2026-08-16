@@ -1,0 +1,50 @@
+{
+  "run_id": "real-e2e-c5979966",
+  "started_at": "2026-08-16T02:17:38.514Z",
+  "finished_at": "2026-08-16T02:17:45.407Z",
+  "repo": "guo6x/Omni-context",
+  "issue_number": 2,
+  "issue_url": "https://github.com/guo6x/Omni-context/issues/2",
+  "fixture_origin": {
+    "policy": "B (owned-repo disposable fixture; policy A had no existing disposable test issue)",
+    "created_outside_omni": true,
+    "setup_classification": "TEST_SETUP_OUTSIDE_OMNI",
+    "title": "[DRG2-E2E] Disposable issue-close verification fixture",
+    "body": "This issue exists only to verify the Omni-Context real read-back E2E. Safe to close.",
+    "created_at": "2026-08-16 (UTC+8, gh issue create via pinned gh.exe)",
+    "created_by": "guo6x (ADMIN on guo6x/Omni-context, gh auth repo scope, HTTPS)",
+    "notes": "Existing real issue #1 was never touched. After a harness-export fix the fixture was reopened once by the owner OUTSIDE Omni (manual recovery/test setup) and re-closed by the verified run recorded here. The earlier native-phase rehearsal runs are not part of this proof."
+  },
+  "pre_state": "OPEN (verified live by gh issue view + the Omni Evidence Guard before authorization)",
+  "decision_id": "c3a2c692-c6ba-4861-8651-4a8e46002d81",
+  "plan_id": "plan-ee6447d9-71c4-43ee-9b60-93adbda58e24",
+  "approval_id_or_reference": "appr_6c4826c520dc008800a8988d0d0ee475",
+  "capability_id": "github.issue.close",
+  "capability_version": "1.0.0",
+  "receipt_id": "rcpt_45c2518c8e4724f830f178cc63a0a32d",
+  "process_state": "process_succeeded",
+  "exit_code": 0,
+  "outcome_before_readback": "pending",
+  "observation_id": "obs_6b20a5c1affebd4f99b0edfd78077206",
+  "readback_state": "CLOSED",
+  "final_outcome": "verified",
+  "revisit_required": false,
+  "guard_action": "proceed",
+  "final_github_state": {
+    "number": 2,
+    "state": "CLOSED",
+    "stateReason": "COMPLETED",
+    "closedAt": "2026-08-16T02:17:42Z",
+    "witness": "gh issue view 2 --repo guo6x/Omni-context (independent, outside Omni)"
+  },
+  "all_ids_redacted_if_sensitive": false,
+  "git_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098",
+  "environment": {
+    "gh": "D:\\environment\\github-cli\\bin\\gh.exe (gh 2.97.0)",
+    "gh_auth": "guo6x (repo scope, HTTPS; token never read/printed/inherited)",
+    "node": "v22.23.2",
+    "cargo": "1.97.1",
+    "os": "Windows (x86_64-pc-windows-msvc)"
+  },
+  "git_note": "Run executed on the feature-branch worktree at base 2e0b665 plus this lane's uncommitted changes (the lane commits were created after the verified run)."
+}

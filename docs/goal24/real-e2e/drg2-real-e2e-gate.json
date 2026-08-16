@@ -1,0 +1,86 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Post-CP8 Real E2E (DRG-2 candidate)",
+    "artifact": "drg2-real-e2e-gate.json",
+    "gate_status": "DRG2_REAL_E2E_GATE=PASS",
+    "drg2_semantics": "DRG2_REAL_NON_SYNTHETIC_E2E=SATISFIED (technical prerequisite only; no release/npm/landing/launch is claimed by this lane)",
+    "checkpoint9_started": "NO",
+    "verification_level": "VERIFIED_LOCAL_EVIDENCE (feature branch dev/goal24-real-e2e; authoritative integration remains with the commander)",
+    "cp8_history_untouched": "docs/goal24/checkpoint8-security-gate.json was NOT modified; it remains the CP8-time snapshot with production_write_bindings=0. This lane's new state is recorded here."
+  },
+  "criteria": {
+    "real_external_system": "GitHub (github.com/guo6x/Omni-context)",
+    "synthetic": "NO",
+    "real_issue": "YES (guo6x/Omni-context#2, disposable fixture)",
+    "pre_state_open_observed": "YES (live gh read qualified by the Omni Evidence Guard before authorization)",
+    "evidence_qualification": "PASS (CP6 Evidence Surface Runtime, guard action=proceed, EVIDENCE_SATISFIED)",
+    "decision_bound": "YES (decision c3a2c692-c6ba-4861-8651-4a8e46002d81 -> plan-ee6447d9-71c4-43ee-9b60-93adbda58e24)",
+    "approval_required": "YES (reversible_write/medium/L2 under the fixed CP7 V1 policy)",
+    "approval_consumed": "YES (native grant appr_6c4826c520dc008800a8988d0d0ee475, single-use, consume-before-spawn)",
+    "restricted_broker": "YES (pinned gh.exe, fixed fused argv, no shell, allowlisted env/cwd, secret strip)",
+    "real_external_side_effect": "YES (GitHub issue state OPEN -> CLOSED, closedAt 2026-08-16T02:17:42Z)",
+    "native_receipt_persistent": "YES (rcpt_45c2518c8e4724f830f178cc63a0a32d, FileExecutionReceiptStore)",
+    "exit0_not_equal_verified": "YES (PROCESS EXIT=0 recorded as process_succeeded; OUTCOME=PENDING until read-back)",
+    "independent_readback": "YES (github.issue.read through the CP8 ReadbackRunner -> state CLOSED)",
+    "exact_subject_binding": "YES (issue:guo6x/Omni-context#2; plan/receipt/subject/capability digests verified cross-side)",
+    "final_github_state_closed": "YES (independent gh issue view outside Omni: state=CLOSED, stateReason=COMPLETED)",
+    "trusted_evaluator": "YES (github-issue-close-evaluator, deterministic, no LLM judge)",
+    "final_outcome_verified": "YES",
+    "outcome_persisted": "YES (out-19d9bfdf-3a35-4b9a-bf63-89c7dc19103d, attempt history preserved)",
+    "revisit_required": false,
+    "automatic_write_retry": "NO",
+    "automatic_rollback": "NO",
+    "generic_execute": "NO",
+    "public_arbitrary_readback": "NO",
+    "production_writes": 1,
+    "production_write_list": [
+      "github.issue.close"
+    ]
+  },
+  "regressions": {
+    "cp6": "PASS (evidence suites green; 296-targeted + full 1297)",
+    "cp7": "PASS (approval suites green; native single-use/expiry/replay green)",
+    "cp8": "PASS (outcome/readback/cross-language suites green, mismatch=0)",
+    "brain_full": "1297 passed / 0 failed",
+    "rust_full": "218 passed / 0 failed / 8 ignored",
+    "desktop_checks": "Next build PASS; verify:controlled PASS (snapshot refreshed for intentional changes)",
+    "cross_language": "mismatch=0 (CP8 suites unchanged and green)",
+    "git_diff_check": "PASS"
+  },
+  "security": {
+    "npm_audit_exit": 1,
+    "npm_findings": 28,
+    "cargo_audit_exit": 1,
+    "cargo_advisories": {
+      "error_class": 4,
+      "warning_class": 16
+    },
+    "new_capability_advisory_paths": "NONE (github.issue.close touches no npm dependency and no advisory-flagged crate; quick-xml remains absent from the x86_64-pc-windows-msvc graph as verified in CP8)",
+    "real_e2e_runtime": {
+      "UNKNOWN": 0,
+      "FIX_BEFORE_DRG2": 0,
+      "BLOCKS_DRG2": 0
+    },
+    "new_dependencies": "NONE (package.json / Cargo.toml / Cargo.lock unchanged)"
+  },
+  "adversarial": {
+    "total_vectors": 26,
+    "automated": 24,
+    "covered_by_existing_test": 2,
+    "failed": 0,
+    "brain_close_tests": "17 passed",
+    "rust_close_tests": "9 passed",
+    "rust_readback_tests": "3 passed"
+  },
+  "parallel_ownership": {
+    "narrative_files_touched": "NONE",
+    "readme_touched": false,
+    "product_vision_touched": false,
+    "landing_touched": false,
+    "execution_ledger_touched": false,
+    "holdback_touched": false,
+    "scientific_refs_touched": false,
+    "dirty_cp21_touched": false,
+    "omctx_implemented": false
+  }
+}
