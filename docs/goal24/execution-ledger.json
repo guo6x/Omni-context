@@ -1,6 +1,7 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "ledger_purpose": "Goal24 execution ledger: authoritative task record. Frozen governance rule and truth precedence documented below.",
+  "schema_change_note": "v1.1: the ambiguous local_final_sha field is replaced by content_final_sha (last content commit before self-referential stamping), feature_branch_head_sha (pushed feature branch head) and authoritative_integration_sha (dev/goal24-cli-skills HEAD after authoritative integration).",
   "governance_rules": [
     "remote SHA / protected refs > checkpoint gate + manifest > execution ledger > executor report > chat memory",
     "remote SHA is the remote integration authority, NOT local worktree existence authority.",
@@ -30,19 +31,15 @@
       "executor": "owner",
       "status": "APPROVED",
       "verification_level": "REPORT_ONLY",
-      "base_sha": null,
-      "local_final_sha": null,
-      "authoritative_remote_sha": null,
-      "worktree": null,
-      "local_branch": null,
-      "remote_feature_branch": null,
+      "content_final_sha": null,
+      "feature_branch_head_sha": null,
+      "authoritative_integration_sha": null,
       "started_at": "2026-08-16T01:56:21.827Z",
       "completed_at": "2026-08-16T01:56:21.827Z",
       "remote_feature_pushed": false,
       "authoritative_remote_integrated": false,
       "gate_status": "APPROVED (owner decision, recorded in this ledger)",
       "blockers": [],
-      "last_verified_at": "2026-08-16T01:56:21.827Z",
       "verification_evidence": [
         "Owner decision text captured in the Narrative Track assignment: old positioning (Personal Second Brain / AI Memory-Decision Layer / Knowledge Graph as moat) migrated to evidence-grounded decision control for long-lived AI agents; Judgment / Authority Core as product core; full loop Memory -> Evidence Qualification -> Decision -> Approval -> Execution -> Read-back -> Outcome -> Reopen / Revision."
       ],
@@ -55,31 +52,21 @@
       "owner_decision": "ASSIGNED",
       "executor": "narrative lane (docs-only)",
       "status": "COMPLETE",
-      "verification_level": "VERIFIED_LOCAL_EVIDENCE",
-      "base_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098",
-      "local_final_sha": "c3378cef032031ff946d6addb0cbe0f3e1fef27d",
-      "authoritative_remote_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098 (origin/dev/goal24-cli-skills)",
-      "worktree": "D:\\ai_code\\Omni-context-worktrees\\goal24-narrative-vnext",
-      "local_branch": "local/goal24-narrative-vnext",
+      "verification_level": "REMOTE_INTEGRATED",
+      "content_final_sha": "c3378cef032031ff946d6addb0cbe0f3e1fef27d",
+      "feature_branch_head_sha": "771335f00618b9f176d898fedf7e2754c1d78e03",
+      "authoritative_integration_sha": null,
+      "authoritative_integration_sha_note": "stamped by the final docs commit after remote push verification",
       "remote_feature_branch": "docs/goal24-narrative-vnext",
-      "started_at": "2026-08-16T01:56:21.827Z",
-      "completed_at": "2026-08-16T01:57:41.254Z",
       "remote_feature_pushed": true,
-      "authoritative_remote_integrated": false,
-      "gate_status": "NOT_GATEABLE (docs lane; diff ownership gate + docs verification passed locally; authoritative dev branch untouched)",
+      "authoritative_remote_integrated": true,
+      "gate_status": "NOT_GATEABLE (docs lane carries no independent runtime gate; verification level is REMOTE_INTEGRATED, never GATE_VERIFIED)",
       "blockers": [],
-      "last_verified_at": "2026-08-16T01:57:41.254Z",
       "verification_evidence": [
-        "BASE_SHA verified: git fetch --all; origin/dev/goal24-cli-skills == 2e0b665b00c25b180fd2c7a1824ed22f56a1b098 (exact match; no NARRATIVE_BASE_MOVED)",
-        "Deliverables: PRODUCT-VISION vNext, thesis notes EN/ZH, cli-product-surface.md, naming-audit.json (live registry checks 2026-08-16), public-claim-matrix.json, claim-audit.md, README x2, landing docs/index.html, execution-ledger.json (this file)",
-        "CP3-CP8 gate facts read from gate artifacts (checkpoint3..8-security-gate.json, checkpoint8-manifest.json), not from prompts",
-        "git diff --check clean; diff ownership gate passes (see final verification)",
-        "naming audit: omctx CONFIRMED_CLEAR_ON_REGISTRY/NOT_RESERVED; omni-context THIRD_PARTY (zheeeng); mcp-omni-context UNRELATED_NAME_COLLISION (nurw3b); omni-context-cli active third-party conflict",
-        "Diff ownership gate PASS: git diff --name-only 2e0b665b...HEAD lists only README.md, README.zh-CN.md, docs/PRODUCT-VISION.md, docs/goal24/execution-ledger.json, docs/goal24/narrative/* (6 files), docs/index.html, docs/landing/assets/README.md",
-        "git diff --check clean; doc link sanity checked (only pre-existing ./LICENSE reference missing, out of lane ownership); HTML tag balance verified; headline consistency EN/ZH verified",
-        "Feature branch pushed: origin/docs/goal24-narrative-vnext (normal push, no force)"
+        "7 narrative commits cherry-picked in original order onto dev/goal24-cli-skills during POST-CP8 AUTHORITATIVE INTEGRATION (no squash, no merge commit)",
+        "Deliverables: PRODUCT-VISION vNext, thesis notes EN/ZH, cli-product-surface.md, naming-audit.json, public-claim-matrix.json, claim-audit.md, README x2, landing docs/index.html, execution-ledger.json"
       ],
-      "next_owner_action": "review feature branch docs/goal24-narrative-vnext; decide merge path into dev/goal24-cli-skills (not executed in this lane)"
+      "next_owner_action": null
     },
     {
       "task_id": "REAL_E2E_TRACK",
@@ -87,32 +74,36 @@
       "checkpoint_or_goal": "DRG-2",
       "owner_decision": "ASSIGNED",
       "executor": "parallel E2E lane",
-      "status": "ASSIGNED",
-      "verification_level": "REPORT_ONLY",
-      "base_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098 (assumed dev base at assignment; verify from E2E lane artifacts)",
-      "local_final_sha": null,
-      "authoritative_remote_sha": null,
-      "worktree": null,
-      "local_branch": null,
-      "remote_feature_branch": null,
-      "started_at": "2026-08-16T01:56:21.827Z",
-      "completed_at": null,
-      "remote_feature_pushed": false,
-      "authoritative_remote_integrated": false,
-      "gate_status": "NOT_STARTED_FROM_NARRATIVE_LANE_VIEW",
-      "blockers": [
-        "Narrative lane holds no machine-verifiable E2E gate artifact; CP8 synthetic E2E (6 cases) does not satisfy DRG-2's real, non-synthetic, user-understandable requirement."
-      ],
-      "last_verified_at": "2026-08-16T01:56:21.827Z",
+      "status": "COMPLETE",
+      "verification_level": "GATE_VERIFIED",
+      "content_final_sha": "c9a91573deb5e7afaa5d26a44e2d43324f27452d",
+      "feature_branch_head_sha": "c9a91573deb5e7afaa5d26a44e2d43324f27452d",
+      "authoritative_integration_sha": null,
+      "authoritative_integration_sha_note": "stamped by the final docs commit after remote push verification",
+      "remote_feature_branch": "dev/goal24-real-e2e",
+      "remote_feature_pushed": true,
+      "authoritative_remote_integrated": true,
+      "feature_candidate_gate": "PASS",
+      "feature_candidate_verification": "VERIFIED_LOCAL_EVIDENCE",
+      "runtime_candidate_sha": "e8befb3882b7bc672235fed3fba5503bb5603d7d",
+      "authoritative_real_e2e_gate": "PASS",
+      "gate_status": "DRG2_AUTHORITATIVE_GATE=PASS (real non-synthetic GitHub close E2E re-run on the clean committed runtime candidate)",
+      "blockers": [],
       "verification_evidence": [
-        "This lane does NOT fabricate E2E completion. Status will only change when the authoritative remote or a machine-verifiable E2E gate proves it."
+        "feature branch dev/goal24-real-e2e integrated fast-forward onto dev/goal24-cli-skills (5 commits preserved)",
+        "authoritative real E2E re-run on runtime_candidate_sha e8befb3 with a NEW disposable fixture (guo6x/Omni-context#3): pre-state OPEN -> evidence proceed -> decision -> approval (single-use, human artifact) -> restricted broker gh issue close -> PROCESS EXIT 0 with OUTCOME=PENDING -> independent read-back CLOSED -> deterministic evaluator VERIFIED -> revisit_required=false",
+        "independent witness outside Omni: gh issue view 3 -> state=CLOSED, stateReason=COMPLETED, closedAt=2026-08-16T12:06:17Z",
+        "proof artifact: docs/goal24/real-e2e/authoritative-real-e2e-proof.json; gate: docs/goal24/real-e2e/drg2-authoritative-gate.json",
+        "runtime unchanged after proof (git status --porcelain empty); production writes exactly 1 (github.issue.close)"
       ],
-      "next_owner_action": "E2E lane must produce its own gate artifact; ledger update by that lane"
+      "next_owner_action": null
     }
   ],
-  "last_verified_at": "2026-08-16T01:57:41.254Z",
+  "last_verified_at": "2026-08-16T12:06:21.158Z",
   "notes": [
-    "authoritative branch remains dev/goal24-cli-skills; this lane's max verification level is VERIFIED_LOCAL_EVIDENCE.",
-    "CP8 gate artifact status read from repo: CHECKPOINT8_SECURITY_GATE=PASS, DRG1_TECHNICAL_PREREQUISITE=SATISFIED, checkpoint9_started=NO."
+    "authoritative branch is dev/goal24-cli-skills; the Post-CP8 integration pushed it to the runtime candidate + docs commits.",
+    "CP8 gate artifact status read from repo: CHECKPOINT8_SECURITY_GATE=PASS, DRG1_TECHNICAL_PREREQUISITE=SATISFIED, checkpoint9_started=NO.",
+    "DRG1=SATISFIED, DRG2=SATISFIED: Public Launch is no longer blocked by missing real E2E; this is not an automatic release.",
+    "checkpoint9_started=NO; public_cli_available=NO; omctx not published."
   ]
 }
