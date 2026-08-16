@@ -1,0 +1,155 @@
+{
+  "header": {
+    "checkpoint": "Goal24 Post-CP8 Real E2E (DRG-2 candidate)",
+    "artifact": "security-test-matrix.json",
+    "purpose": "Every adversarial vector required by the lane is mapped to an automated test. Offline tests never touch real GitHub; the real run (docs/goal24/real-e2e/real-e2e-proof.json) provides the live witnesses.",
+    "statuses": [
+      "AUTOMATED",
+      "COVERED_BY_EXISTING_TEST",
+      "REAL_RUN_WITNESS"
+    ]
+  },
+  "vectors": [
+    {
+      "vector": "wrong repo",
+      "mapping": "AUTOMATED",
+      "evidence": "close_binding.rs rejects malformed identifiers (pattern/whitespace/separators); wrong-shape targets can never build argv; a correct-shape wrong target fails at gh level in the real run and the evaluator can never match its subject"
+    },
+    {
+      "vector": "wrong issue",
+      "mapping": "AUTOMATED",
+      "evidence": "cross-subject rejection (goal24-real-e2e-github-close.test.ts OUTCOME_SUBJECT_MISMATCH); evaluator mismatch on number!=expected"
+    },
+    {
+      "vector": "negative issue",
+      "mapping": "AUTOMATED",
+      "evidence": "close_binding.rs rejects_invalid_issue_numbers (-1, 1.5, '1')"
+    },
+    {
+      "vector": "zero issue",
+      "mapping": "AUTOMATED",
+      "evidence": "close_binding.rs rejects_invalid_issue_numbers (0)"
+    },
+    {
+      "vector": "huge issue number",
+      "mapping": "AUTOMATED",
+      "evidence": "close_binding.rs: u64::MAX structurally valid input; gh fails at process level, never converted into success"
+    },
+    {
+      "vector": "option injection",
+      "mapping": "AUTOMATED",
+      "evidence": "close_binding.rs rejects_option_injection_inside_owner_and_repo (--repo, -R, -lead) + unknown keys argv/executable/cwd/env/flags/shell"
+    },
+    {
+      "vector": "newline",
+      "mapping": "AUTOMATED",
+      "evidence": "close_binding.rs rejects_option_injection_inside_owner_and_repo (a\\nb)"
+    },
+    {
+      "vector": "NUL",
+      "mapping": "AUTOMATED",
+      "evidence": "close_binding.rs rejects_option_injection_inside_owner_and_repo (a\\u{0}b)"
+    },
+    {
+      "vector": "cross-plan",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts OUTCOME_PLAN_MISMATCH"
+    },
+    {
+      "vector": "cross-receipt",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts OUTCOME_RECEIPT_MISMATCH"
+    },
+    {
+      "vector": "cross-subject",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts OUTCOME_SUBJECT_MISMATCH"
+    },
+    {
+      "vector": "forged approval",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts verifier rejects forged token digest / wrong plan / wrong policy; native store is the only grant authority (CP7)"
+    },
+    {
+      "vector": "expired approval",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "evidence": "CP7 approval suite (expiry enforced at grant + verify; 15-minute cap)"
+    },
+    {
+      "vector": "replayed approval",
+      "mapping": "COVERED_BY_EXISTING_TEST",
+      "evidence": "CP7 native suite: consumed grants reject (ApprovalConsumed); plan replay rejected across restart (PlanRejectedSingleUse)"
+    },
+    {
+      "vector": "forged receipt",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts trusted bridge tamper detection (identity mutation + digest mutation fail materialization); CP8 receipt authority suite"
+    },
+    {
+      "vector": "forged observation",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts forged payload digest never resolves; CP8 observation authority suite"
+    },
+    {
+      "vector": "stdout says closed but readback OPEN",
+      "mapping": "AUTOMATED",
+      "evidence": "evaluator ignores close stdout entirely (never parsed; receipt stores digests only); exit0 + OPEN -> MISMATCH (goal24-real-e2e-github-close.test.ts)"
+    },
+    {
+      "vector": "exit0 but readback OPEN",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts 'exit0 but read-back OPEN -> MISMATCH'"
+    },
+    {
+      "vector": "nonzero but readback CLOSED",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts evaluator ignores process metadata (exit 7 + CLOSED -> verified); CP8 partial-effect suite"
+    },
+    {
+      "vector": "timeout but readback CLOSED",
+      "mapping": "AUTOMATED",
+      "evidence": "evaluator ignores process metadata (timed_out + CLOSED -> verified); CP8 timeout-with-effect suite"
+    },
+    {
+      "vector": "cancel but readback CLOSED",
+      "mapping": "AUTOMATED",
+      "evidence": "evaluator ignores process metadata (cancelled + CLOSED -> verified); CP8 cancel-with-effect suite"
+    },
+    {
+      "vector": "stale observation",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts future observed_at -> OUTCOME_FRESHNESS_INVALID"
+    },
+    {
+      "vector": "duplicate observation",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts OUTCOME_DUPLICATE_OBSERVATION (same-outcome replay)"
+    },
+    {
+      "vector": "wrong verification capability",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts OUTCOME_VERIFICATION_CAPABILITY_MISMATCH"
+    },
+    {
+      "vector": "caller expectation override",
+      "mapping": "AUTOMATED",
+      "evidence": "goal24-real-e2e-github-close.test.ts strict plan schema rejects expected_state/predicate/judge_prompt"
+    },
+    {
+      "vector": "write retry attempt",
+      "mapping": "AUTOMATED",
+      "evidence": "one outcome per (plan, receipt) (OUTCOME_DUPLICATE_RECORD); plan ids single-use (CP7 durable ledger + full_broker_restart_blocks_plan_replay); the harness executes exactly once and has no retry loop"
+    },
+    {
+      "vector": "generic argv injection",
+      "mapping": "AUTOMATED",
+      "evidence": "close_binding.rs fused argv exactness (valid_inputs_build_exact_fused_argv) + unknown-keys rejection; broker reserved-key gate (CP3)"
+    }
+  ],
+  "totals": {
+    "vectors": 26,
+    "automated": 24,
+    "covered_by_existing_test": 2,
+    "real_run_witness": "the real run witnesses stdout-vs-readback and exit0-vs-verified live"
+  }
+}
