@@ -1,8 +1,7 @@
 {
   "run_id": "real-e2e-1e9125f5",
   "runtime_candidate_sha": "e8befb3882b7bc672235fed3fba5503bb5603d7d",
-  "final_documentation_sha": null,
-  "final_documentation_sha_note": "stamped by the final docs commit after remote push verification",
+  "final_documentation_sha": "a6407233b0b082f583e8ab6dc6fcd62bb0231019",
   "fixture_issue": 3,
   "fixture_url": "https://github.com/guo6x/Omni-context/issues/3",
   "fixture_title": "[DRG2-AUTH] Disposable authoritative issue-close fixture",
