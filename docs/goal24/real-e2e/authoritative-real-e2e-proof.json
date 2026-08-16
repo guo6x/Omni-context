@@ -1,0 +1,51 @@
+{
+  "run_id": "real-e2e-1e9125f5",
+  "runtime_candidate_sha": "e8befb3882b7bc672235fed3fba5503bb5603d7d",
+  "final_documentation_sha": null,
+  "final_documentation_sha_note": "stamped by the final docs commit after remote push verification",
+  "fixture_issue": 3,
+  "fixture_url": "https://github.com/guo6x/Omni-context/issues/3",
+  "fixture_title": "[DRG2-AUTH] Disposable authoritative issue-close fixture",
+  "fixture_created_at": "2026-08-16 (UTC+8)",
+  "pre_state": "OPEN",
+  "decision_id": "605acf50-50d1-476c-a042-f3689b737eb9",
+  "plan_id": "plan-53f9f20b-df3d-483c-9f59-862c63a00476",
+  "approval_id": "appr_d5ebeee9fea02eb6ccbad5d0b56cc778",
+  "capability_id": "github.issue.close",
+  "capability_version": "1.0.0",
+  "receipt_id": "rcpt_a94ec457de54f0f61ae5f1b666c09e18",
+  "process_state": "process_succeeded",
+  "exit_code": 0,
+  "outcome_before_readback": "pending",
+  "observation_id": "obs_13b856bae1e698fab310fbe40d66afb5",
+  "readback_state": "CLOSED",
+  "final_outcome": "verified",
+  "outcome_id": "out-cbfd8fa6-5ad7-4071-96a3-0ea18b15cd47",
+  "revisit_required": false,
+  "independent_witness": {
+    "source": "gh issue view 3 --repo guo6x/Omni-context (outside Omni)",
+    "number": 3,
+    "state": "CLOSED",
+    "stateReason": "COMPLETED",
+    "closedAt": "2026-08-16T12:06:17Z",
+    "role": "external audit only; never Outcome authority"
+  },
+  "demo_sequence": [
+    "PROCESS EXIT = 0",
+    "OUTCOME = PENDING (NOT verified)",
+    "INDEPENDENT READ-BACK = CLOSED",
+    "OUTCOME = VERIFIED"
+  ],
+  "synthetic": false,
+  "test_setup_outside_omni": true,
+  "historical_issues_untouched": {
+    "issue_1": "OPEN (untouched)",
+    "issue_2": "CLOSED (historical feature-lane proof, untouched)"
+  },
+  "environment": {
+    "gh": "gh 2.97.0 (pinned)",
+    "gh_auth": "guo6x (repo scope, HTTPS; token never read/printed/inherited)",
+    "node": "v22.23.2",
+    "cargo": "1.97.1"
+  }
+}
