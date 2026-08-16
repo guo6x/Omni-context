@@ -1,0 +1,176 @@
+{
+  "schema_version": "1.0",
+  "audit_scope": "npm registry naming audit — Omni-Context product brand + target CLI binary (Narrative Lane N0)",
+  "product_brand": "Omni-Context",
+  "target_cli_binary": "omctx",
+  "registry": "https://registry.npmjs.org",
+  "checked_at": "2026-08-16T01:46:27.595Z",
+  "who_owns_npm_omni_context": "THIRD_PARTY",
+  "who_owns_npm_omni_context_detail": {
+    "owner": "zheeeng",
+    "package_version": "0.0.1",
+    "package_purpose": "performant state management for mono store (unrelated product)",
+    "last_publish": "2022-05-12T04:08:49.695Z",
+    "evidence_url_or_reference": "https://registry.npmjs.org/omni-context"
+  },
+  "candidates": [
+    {
+      "candidate": "omctx",
+      "registry": "https://registry.npmjs.org/omctx",
+      "checked_at": "2026-08-16T01:46:27.595Z",
+      "availability": "CONFIRMED_CLEAR_ON_REGISTRY",
+      "owner": null,
+      "package_version": null,
+      "last_publish": null,
+      "collision_type": "NONE",
+      "severity": "none",
+      "recommended_action": "Adopt as target CLI binary name. Reserve only at first real publish (real CLI skeleton + --help + version + README + repository metadata + at least one real non-dangerous command). No 0.0.0 placeholder publish.",
+      "reservation_status": "NOT_RESERVED",
+      "evidence_url_or_reference": "https://registry.npmjs.org/omctx (HTTP 404 at checked_at)"
+    },
+    {
+      "candidate": "omni-context",
+      "registry": "https://registry.npmjs.org/omni-context",
+      "checked_at": "2026-08-16T01:46:27.595Z",
+      "availability": "TAKEN",
+      "owner": "zheeeng",
+      "package_version": "0.0.1",
+      "last_publish": "2022-05-12T04:08:49.695Z",
+      "collision_type": "EXACT_NAME_TAKEN_THIRD_PARTY",
+      "severity": "high",
+      "recommended_action": "Do not use as npm package name. Product brand remains Omni-Context (brand and npm package name are separate namespaces); document this distinction in public claims.",
+      "reservation_status": "THIRD_PARTY",
+      "evidence_url_or_reference": "https://registry.npmjs.org/omni-context"
+    },
+    {
+      "candidate": "mcp-omni-context",
+      "registry": "https://registry.npmjs.org/mcp-omni-context",
+      "checked_at": "2026-08-16T01:46:27.595Z",
+      "availability": "TAKEN",
+      "owner": "nurw3b",
+      "package_version": "1.2.0",
+      "last_publish": "2026-08-02T20:27:46.692Z",
+      "collision_type": "THIRD_PARTY_UNRELATED_NAME_COLLISION",
+      "severity": "medium",
+      "recommended_action": "Monitor only. Do not contact publisher, do not file reports. Avoid publishing under this name. Classification: UNRELATED_NAME_COLLISION (see mcp_omni_context_investigation).",
+      "reservation_status": "THIRD_PARTY",
+      "evidence_url_or_reference": "https://registry.npmjs.org/mcp-omni-context"
+    },
+    {
+      "candidate": "omni-context-cli",
+      "registry": "https://registry.npmjs.org/omni-context-cli",
+      "checked_at": "2026-08-16T01:46:27.595Z",
+      "availability": "TAKEN",
+      "owner": "bluenoah1991",
+      "package_version": "0.0.107",
+      "last_publish": "2026-08-13T03:07:59.723Z",
+      "collision_type": "ACTIVE_THIRD_PARTY_CONFLICT",
+      "severity": "critical",
+      "recommended_action": "FORBIDDEN by owner decision. Never publish under this name. Note: package is actively updated and described as an unrelated coding assistant ('Omx').",
+      "reservation_status": "THIRD_PARTY",
+      "evidence_url_or_reference": "https://registry.npmjs.org/omni-context-cli"
+    },
+    {
+      "candidate": "omni",
+      "registry": "https://registry.npmjs.org/omni",
+      "checked_at": "2026-08-16T01:46:27.595Z",
+      "availability": "TAKEN",
+      "owner": "mashlol",
+      "package_version": "0.2.6",
+      "last_publish": "2022-06-22T21:12:06.289Z",
+      "collision_type": "TAKEN_AND_FORBIDDEN_BY_OWNER_DECISION",
+      "severity": "critical",
+      "recommended_action": "FORBIDDEN by owner decision. Never use.",
+      "reservation_status": "THIRD_PARTY",
+      "evidence_url_or_reference": "https://registry.npmjs.org/omni"
+    },
+    {
+      "candidate": "octl",
+      "registry": "https://registry.npmjs.org/octl",
+      "checked_at": "2026-08-16T01:46:27.595Z",
+      "availability": "CONFIRMED_CLEAR_ON_REGISTRY",
+      "owner": null,
+      "package_version": null,
+      "last_publish": null,
+      "collision_type": "FORBIDDEN_BY_OWNER_DECISION",
+      "severity": "critical",
+      "recommended_action": "FORBIDDEN by owner decision regardless of registry state. Do not reserve.",
+      "reservation_status": "NOT_RESERVED",
+      "evidence_url_or_reference": "https://registry.npmjs.org/octl (HTTP 404 at checked_at)"
+    },
+    {
+      "candidate": "omnic",
+      "registry": "https://registry.npmjs.org/omnic",
+      "checked_at": "2026-08-16T01:46:27.595Z",
+      "availability": "TAKEN",
+      "owner": "raiondesu",
+      "package_version": "0.0.1",
+      "last_publish": "2022-05-12T04:11:23.615Z",
+      "collision_type": "TAKEN_AND_FORBIDDEN_BY_OWNER_DECISION",
+      "severity": "critical",
+      "recommended_action": "FORBIDDEN by owner decision. Never use.",
+      "reservation_status": "THIRD_PARTY",
+      "evidence_url_or_reference": "https://registry.npmjs.org/omnic"
+    }
+  ],
+  "mcp_omni_context_investigation": {
+    "classification": "UNRELATED_NAME_COLLISION",
+    "checked_at": "2026-08-16T01:46:27.595Z",
+    "package": {
+      "name": "mcp-omni-context",
+      "latest_version": "1.2.0",
+      "publisher": "nurw3b (author: Nur; email nurrabby01.bd@gmail.com)",
+      "first_publish": "2026-08-02T15:23:17.150Z",
+      "latest_publish": "2026-08-02T20:27:46.692Z",
+      "description": "Universal vision & file processor MCP server for LLMs: OCR screenshots, read code/text files, and dump zip archives as a clean sequential file-tree dump.",
+      "repository_url": "https://github.com/0xnurrabby/mcp-omni-context",
+      "homepage": "https://github.com/0xnurrabby/mcp-omni-context",
+      "keywords": [
+        "mcp",
+        "model-context-protocol",
+        "llm",
+        "ocr",
+        "tesseract",
+        "vision",
+        "screenshot",
+        "zip",
+        "archive",
+        "file-tree",
+        "deepseek",
+        "claude"
+      ],
+      "license": "MIT",
+      "binaries": [
+        "mcp-omni-context"
+      ],
+      "dependencies": [
+        "zod",
+        "glob",
+        "sharp",
+        "adm-zip",
+        "tesseract.js",
+        "@modelcontextprotocol/sdk"
+      ]
+    },
+    "checks": {
+      "links_guo6x_or_omni_context_repo": "NO (README + package metadata reference only 0xnurrabby/mcp-omni-context)",
+      "copies_unique_omni_context_readme_statements": "NO (zero matches for guo6x / Omni-Context / omni-context markers in README)",
+      "impersonates_official": "NO",
+      "uses_branding_implying_official_association": "NO",
+      "plain_name_collision": "YES — package and its MCP server config key use the generic string 'omni-context'; product domain is different (vision/OCR MCP server vs evidence-grounded decision control)",
+      "overlap_note": "Generic capabilities (OCR screenshots, file reading) also exist in Omni-Context's capture pipeline, but no evidence of copying unique statements, logos, or branding."
+    },
+    "evidence": [
+      "https://registry.npmjs.org/mcp-omni-context",
+      "https://unpkg.com/mcp-omni-context@1.2.0/README.md",
+      "https://api.github.com/repos/0xnurrabby/mcp-omni-context"
+    ],
+    "owner_action": "NONE_REQUIRED (no copying or impersonation evidence; monitor name collision only)"
+  },
+  "governance_notes": [
+    "CLEAR != RESERVED: omctx being 404 on the registry means the name is clear, not reserved. Reservation happens only at first real publish.",
+    "Per DRG v2, no placeholder (0.0.0) publish and no npm publish of any kind in the Narrative Lane.",
+    "omni-context npm package is owned by a third party (zheeeng). Product brand Omni-Context is a separate namespace; public copy must not imply ownership of the npm package name.",
+    "omni-context-cli / omni / octl / omnic are forbidden by owner decision regardless of registry state."
+  ]
+}
