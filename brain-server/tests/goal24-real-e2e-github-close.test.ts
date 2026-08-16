@@ -268,6 +268,10 @@ describe('close outcome loop (fake resolvers, no network)', () => {
       [observation({ originPlanId: 'plan-close-9999' }), 'OUTCOME_PLAN_MISMATCH'],
       [observation({ originReceiptId: 'rcpt-close-9999' }), 'OUTCOME_RECEIPT_MISMATCH'],
       [observation({ subjectKey: 'issue:guo6x/Omni-context#99' }), 'OUTCOME_SUBJECT_MISMATCH'],
+      // Same issue number, different repository: must never verify.
+      [observation({ subjectKey: 'issue:guo6x/OtherRepo#2' }), 'OUTCOME_SUBJECT_MISMATCH'],
+      // Same issue number, different owner: must never verify.
+      [observation({ subjectKey: 'issue:other-owner/Omni-context#2' }), 'OUTCOME_SUBJECT_MISMATCH'],
       [observation({ capabilityId: 'github.pr.read' }), 'OUTCOME_VERIFICATION_CAPABILITY_MISMATCH'],
     ];
     for (const [obs, code] of cases) {
