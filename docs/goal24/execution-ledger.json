@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.0",
+  "ledger_purpose": "Goal24 execution ledger: authoritative task record. Frozen governance rule and truth precedence documented below.",
+  "governance_rules": [
+    "remote SHA / protected refs > checkpoint gate + manifest > execution ledger > executor report > chat memory",
+    "remote SHA is the remote integration authority, NOT local worktree existence authority.",
+    "Verification levels freeze: REPORT_ONLY -> VERIFIED_LOCAL_EVIDENCE -> REMOTE_INTEGRATED -> GATE_VERIFIED. Only GATE_VERIFIED may be drawn as formal green.",
+    "A feature branch push is not REMOTE_INTEGRATED; it is recorded separately as remote_feature_pushed=true.",
+    "REAL_E2E_TRACK status must come from the authoritative remote or a machine-verifiable E2E gate; chat-level completion claims are never sufficient."
+  ],
+  "truth_precedence": [
+    "remote SHA / protected refs",
+    "checkpoint gate + manifest",
+    "execution ledger",
+    "executor report",
+    "chat memory"
+  ],
+  "verification_levels_frozen": [
+    "REPORT_ONLY",
+    "VERIFIED_LOCAL_EVIDENCE",
+    "REMOTE_INTEGRATED",
+    "GATE_VERIFIED"
+  ],
+  "tasks": [
+    {
+      "task_id": "O1_POSITIONING_MIGRATION",
+      "track": "OWNER_DECISION",
+      "checkpoint_or_goal": "O1",
+      "owner_decision": "APPROVED",
+      "executor": "owner",
+      "status": "APPROVED",
+      "verification_level": "REPORT_ONLY",
+      "base_sha": null,
+      "local_final_sha": null,
+      "authoritative_remote_sha": null,
+      "worktree": null,
+      "local_branch": null,
+      "remote_feature_branch": null,
+      "started_at": "2026-08-16T01:56:21.827Z",
+      "completed_at": "2026-08-16T01:56:21.827Z",
+      "remote_feature_pushed": false,
+      "authoritative_remote_integrated": false,
+      "gate_status": "APPROVED (owner decision, recorded in this ledger)",
+      "blockers": [],
+      "last_verified_at": "2026-08-16T01:56:21.827Z",
+      "verification_evidence": [
+        "Owner decision text captured in the Narrative Track assignment: old positioning (Personal Second Brain / AI Memory-Decision Layer / Knowledge Graph as moat) migrated to evidence-grounded decision control for long-lived AI agents; Judgment / Authority Core as product core; full loop Memory -> Evidence Qualification -> Decision -> Approval -> Execution -> Read-back -> Outcome -> Reopen / Revision."
+      ],
+      "next_owner_action": null
+    },
+    {
+      "task_id": "NARRATIVE_TRACK",
+      "track": "Narrative (O3)",
+      "checkpoint_or_goal": "O3",
+      "owner_decision": "ASSIGNED",
+      "executor": "narrative lane (docs-only)",
+      "status": "COMPLETE",
+      "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+      "base_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098",
+      "local_final_sha": "TBD_STAMPED_IN_FINAL_COMMIT",
+      "authoritative_remote_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098 (origin/dev/goal24-cli-skills)",
+      "worktree": "D:\\ai_code\\Omni-context-worktrees\\goal24-narrative-vnext",
+      "local_branch": "local/goal24-narrative-vnext",
+      "remote_feature_branch": "docs/goal24-narrative-vnext",
+      "started_at": "2026-08-16T01:56:21.827Z",
+      "completed_at": "2026-08-16T01:56:21.827Z",
+      "remote_feature_pushed": false,
+      "authoritative_remote_integrated": false,
+      "gate_status": "NOT_GATEABLE (docs lane; diff ownership gate + docs verification passed locally; authoritative dev branch untouched)",
+      "blockers": [],
+      "last_verified_at": "2026-08-16T01:56:21.827Z",
+      "verification_evidence": [
+        "BASE_SHA verified: git fetch --all; origin/dev/goal24-cli-skills == 2e0b665b00c25b180fd2c7a1824ed22f56a1b098 (exact match; no NARRATIVE_BASE_MOVED)",
+        "Deliverables: PRODUCT-VISION vNext, thesis notes EN/ZH, cli-product-surface.md, naming-audit.json (live registry checks 2026-08-16), public-claim-matrix.json, claim-audit.md, README x2, landing docs/index.html, execution-ledger.json (this file)",
+        "CP3-CP8 gate facts read from gate artifacts (checkpoint3..8-security-gate.json, checkpoint8-manifest.json), not from prompts",
+        "git diff --check clean; diff ownership gate passes (see final verification)",
+        "naming audit: omctx CONFIRMED_CLEAR_ON_REGISTRY/NOT_RESERVED; omni-context THIRD_PARTY (zheeeng); mcp-omni-context UNRELATED_NAME_COLLISION (nurw3b); omni-context-cli active third-party conflict"
+      ],
+      "next_owner_action": "review feature branch docs/goal24-narrative-vnext; decide merge path into dev/goal24-cli-skills (not executed in this lane)"
+    },
+    {
+      "task_id": "REAL_E2E_TRACK",
+      "track": "Post-CP8 Real E2E",
+      "checkpoint_or_goal": "DRG-2",
+      "owner_decision": "ASSIGNED",
+      "executor": "parallel E2E lane",
+      "status": "ASSIGNED",
+      "verification_level": "REPORT_ONLY",
+      "base_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098 (assumed dev base at assignment; verify from E2E lane artifacts)",
+      "local_final_sha": null,
+      "authoritative_remote_sha": null,
+      "worktree": null,
+      "local_branch": null,
+      "remote_feature_branch": null,
+      "started_at": "2026-08-16T01:56:21.827Z",
+      "completed_at": null,
+      "remote_feature_pushed": false,
+      "authoritative_remote_integrated": false,
+      "gate_status": "NOT_STARTED_FROM_NARRATIVE_LANE_VIEW",
+      "blockers": [
+        "Narrative lane holds no machine-verifiable E2E gate artifact; CP8 synthetic E2E (6 cases) does not satisfy DRG-2's real, non-synthetic, user-understandable requirement."
+      ],
+      "last_verified_at": "2026-08-16T01:56:21.827Z",
+      "verification_evidence": [
+        "This lane does NOT fabricate E2E completion. Status will only change when the authoritative remote or a machine-verifiable E2E gate proves it."
+      ],
+      "next_owner_action": "E2E lane must produce its own gate artifact; ledger update by that lane"
+    }
+  ],
+  "last_verified_at": "2026-08-16T01:56:21.827Z",
+  "notes": [
+    "authoritative branch remains dev/goal24-cli-skills; this lane's max verification level is VERIFIED_LOCAL_EVIDENCE.",
+    "CP8 gate artifact status read from repo: CHECKPOINT8_SECURITY_GATE=PASS, DRG1_TECHNICAL_PREREQUISITE=SATISFIED, checkpoint9_started=NO."
+  ]
+}
