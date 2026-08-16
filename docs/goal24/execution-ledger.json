@@ -57,24 +57,27 @@
       "status": "COMPLETE",
       "verification_level": "VERIFIED_LOCAL_EVIDENCE",
       "base_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098",
-      "local_final_sha": "TBD_STAMPED_IN_FINAL_COMMIT",
+      "local_final_sha": "c3378cef032031ff946d6addb0cbe0f3e1fef27d",
       "authoritative_remote_sha": "2e0b665b00c25b180fd2c7a1824ed22f56a1b098 (origin/dev/goal24-cli-skills)",
       "worktree": "D:\\ai_code\\Omni-context-worktrees\\goal24-narrative-vnext",
       "local_branch": "local/goal24-narrative-vnext",
       "remote_feature_branch": "docs/goal24-narrative-vnext",
       "started_at": "2026-08-16T01:56:21.827Z",
-      "completed_at": "2026-08-16T01:56:21.827Z",
-      "remote_feature_pushed": false,
+      "completed_at": "2026-08-16T01:57:41.254Z",
+      "remote_feature_pushed": true,
       "authoritative_remote_integrated": false,
       "gate_status": "NOT_GATEABLE (docs lane; diff ownership gate + docs verification passed locally; authoritative dev branch untouched)",
       "blockers": [],
-      "last_verified_at": "2026-08-16T01:56:21.827Z",
+      "last_verified_at": "2026-08-16T01:57:41.254Z",
       "verification_evidence": [
         "BASE_SHA verified: git fetch --all; origin/dev/goal24-cli-skills == 2e0b665b00c25b180fd2c7a1824ed22f56a1b098 (exact match; no NARRATIVE_BASE_MOVED)",
         "Deliverables: PRODUCT-VISION vNext, thesis notes EN/ZH, cli-product-surface.md, naming-audit.json (live registry checks 2026-08-16), public-claim-matrix.json, claim-audit.md, README x2, landing docs/index.html, execution-ledger.json (this file)",
         "CP3-CP8 gate facts read from gate artifacts (checkpoint3..8-security-gate.json, checkpoint8-manifest.json), not from prompts",
         "git diff --check clean; diff ownership gate passes (see final verification)",
-        "naming audit: omctx CONFIRMED_CLEAR_ON_REGISTRY/NOT_RESERVED; omni-context THIRD_PARTY (zheeeng); mcp-omni-context UNRELATED_NAME_COLLISION (nurw3b); omni-context-cli active third-party conflict"
+        "naming audit: omctx CONFIRMED_CLEAR_ON_REGISTRY/NOT_RESERVED; omni-context THIRD_PARTY (zheeeng); mcp-omni-context UNRELATED_NAME_COLLISION (nurw3b); omni-context-cli active third-party conflict",
+        "Diff ownership gate PASS: git diff --name-only 2e0b665b...HEAD lists only README.md, README.zh-CN.md, docs/PRODUCT-VISION.md, docs/goal24/execution-ledger.json, docs/goal24/narrative/* (6 files), docs/index.html, docs/landing/assets/README.md",
+        "git diff --check clean; doc link sanity checked (only pre-existing ./LICENSE reference missing, out of lane ownership); HTML tag balance verified; headline consistency EN/ZH verified",
+        "Feature branch pushed: origin/docs/goal24-narrative-vnext (normal push, no force)"
       ],
       "next_owner_action": "review feature branch docs/goal24-narrative-vnext; decide merge path into dev/goal24-cli-skills (not executed in this lane)"
     },
@@ -107,7 +110,7 @@
       "next_owner_action": "E2E lane must produce its own gate artifact; ledger update by that lane"
     }
   ],
-  "last_verified_at": "2026-08-16T01:56:21.827Z",
+  "last_verified_at": "2026-08-16T01:57:41.254Z",
   "notes": [
     "authoritative branch remains dev/goal24-cli-skills; this lane's max verification level is VERIFIED_LOCAL_EVIDENCE.",
     "CP8 gate artifact status read from repo: CHECKPOINT8_SECURITY_GATE=PASS, DRG1_TECHNICAL_PREREQUISITE=SATISFIED, checkpoint9_started=NO."
