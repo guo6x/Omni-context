@@ -2,7 +2,8 @@
 
 <p align="center"><strong>English</strong> · <a href="README.zh-CN.md">简体中文</a></p>
 
-> **A local, persistent context and decision-intelligence layer for long-lived AI agents. Your memory and decisions stay on your machine.**
+> **Evidence-grounded decision control for long-lived AI agents.**
+> **Local-first, read-back verified, and owned by you.**
 
 <p align="center">
   <img src="docs/landing/assets/social-preview.svg" alt="Omni-Context" width="720">
@@ -13,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/guo6x/Omni-context/releases/latest"><strong>Download for Windows</strong></a> ·
-  <a href="#how-it-works">How it works</a> ·
+  <a href="#current-state">Current state</a> ·
   <a href="https://guo6x.github.io/Omni-context/">Landing page</a>
 </p>
 
@@ -21,75 +22,123 @@
 
 ---
 
-## Why Omni-Context
+## What is Omni-Context
 
-**Your AI forgets you every conversation.** ChatGPT memory is shallow. Cursor's context lasts one session. Claude doesn't remember across projects.
+**Omni-Context is evidence-grounded decision control for long-lived AI agents.**
 
-**Cloud memory means someone else's server.** Mem0, Letta, Zep — all impressive, all cloud-first. Your context and decisions live on their infrastructure.
+> Qualify the evidence before an agent acts,
+> bind execution to the decision that justified it,
+> then read the world back and reopen the decision when reality disagrees.
 
-**Omni-Context is a local, persistent context and decision-intelligence layer for long-lived AI agents.** It keeps a knowledge graph, retrieval index, and decision history on your machine, so agents can ground their work in your actual context instead of a fresh chat window.
+The judgment loop:
 
-**More than memory.** Most "AI memory" tools are fancy databases. Omni-Context also tracks decisions — context, reasoning, lineage, and outcomes — and surfaces evidence for the choices agents make. MCP is one integration surface for this today, not the product itself.
+```
+Qualify → Bind → Read-back → Reopen
+```
+
+Agents can already act — write code, open issues, run commands. But **memory is not evidence**
+(what an agent remembers is a claim, not a verified fact), and **tool success is not outcome truth**
+(exit code 0 says nothing about whether the world actually changed the way you intended).
+Omni-Context closes that gap: it qualifies evidence before action, binds execution to the exact
+decision that justified it, reads the world back afterwards, and reopens the decision when
+reality disagrees.
+
+- **Memory and the knowledge graph** are the long-term **evidence substrate** — they answer
+  "what the agent knows". They are a core part of the product, re-placed at the base of the
+  judgment loop, not deleted.
+- **MCP is one interface surface**, not the product itself.
+- **Desktop** is the human control surface: inspect, approve, audit, and reopen decisions.
+
+Read the full thesis: [docs/goal24/narrative/thesis-note.en.md](docs/goal24/narrative/thesis-note.en.md) ·
+product vision: [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)
+
+---
+
+## Current state
+
+Capability status uses exactly three labels: **CURRENTLY_VERIFIED** (user-facing today),
+**TARGET** (target architecture), **FUTURE** (planned). "Runtime verified on the development
+branch" is not the same as "available today". Governance language is frozen in
+[docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md) (§ 14).
+
+### A. Current user-facing — usable today
+
+- Persistent local memory — SQLite on your disk, no accounts, no servers
+- Knowledge graph of entities, relationships, and core principles
+- Hybrid retrieval (full-text + vector + graph traversal)
+- Temporal / provenance-aware context
+- Decision context with principles, precedents, and conflicts
+- Saved decisions, decision lineage, and outcome recording
+- MCP integration — 26 tools, counted from [mcp_tool_manifest.json](mcp_tool_manifest.json)
+- Desktop capture / local desktop application (Windows installer via GitHub Releases)
+
+### B. Development-branch runtime verified (CP3–CP8 internal gates)
+
+Under active development on `dev/goal24-cli-skills`. Each item below has engineering
+gate evidence, **but no public invocation surface yet** — it is **runtime verified on the
+development branch**, not "available today":
+
+| Component | Gate evidence |
+|---|---|
+| Restricted execution broker (spawn/kill/timeout, containment, output caps) | [checkpoint3-security-gate.json](docs/goal24/checkpoint3-security-gate.json) — PASS |
+| GitHub read-only CLI adapter (5 semantic capabilities, pinned executable, zero write bindings) | [checkpoint4-security-gate.json](docs/goal24/checkpoint4-security-gate.json) — PASS |
+| Skills registry + importer (quarantine-by-default, integrity-verified) | [checkpoint5-security-gate.json](docs/goal24/checkpoint5-security-gate.json) — PASS |
+| Evidence qualification + surface guard (server-owned eligibility, forged-coverage closure) | [checkpoint6-security-gate.json](docs/goal24/checkpoint6-security-gate.json) — PASS |
+| Approval binding + risk policy (single-use grants, replay defense) | [checkpoint7-security-gate.json](docs/goal24/checkpoint7-security-gate.json) — PASS |
+| Outcome read-back + deterministic evaluator (trusted resolvers, cross-language state/observation vectors) | [checkpoint8-security-gate.json](docs/goal24/checkpoint8-security-gate.json) — PASS (DRG1 prerequisite satisfied) |
+
+CP8 full-suite evidence: Brain 1279 passed / 0 failed; Rust 206 passed / 0 failed / 7 ignored;
+cross-language vectors 26 (state) + 35 (observation), 0 mismatches.
+
+### C. Target / Future — not available
+
+- `omctx` CLI (`ask` / `inspect` / `approve` / `verify` / `history`) — **TARGET**.
+  See [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md).
+  The binary does not exist for users yet; there is no npm package to install.
+- `omctx reopen` user UX — **FUTURE** (runtime not implemented).
+- Real, non-synthetic end-to-end flow — **FUTURE**.
+- External memory adapters (e.g. MindMemOS, basic-memory) — **FUTURE**, via
+  EvidenceProvider Adapter → qualification → Evidence Guard. External memory never becomes
+  an evidence authority on its own.
+- Multi-runtime adapters (e.g. OpenClaw, NemoClaw, Claude Code) — **FUTURE**, as capability
+  transport only; runtimes never receive decision, approval, or outcome authority.
+
+> **DRG v2**: before at least one real, non-synthetic, user-understandable E2E flow exists,
+> public capability claims are frozen to what repo + gate evidence supports. Anything else
+> is explicitly labeled **TARGET** / **FUTURE** / **DESIGNED TO**. Omni is *designed to* sit
+> between heterogeneous memory/evidence sources and heterogeneous agent runtimes — it does
+> **not** claim today that it works with any memory OS or any runtime.
 
 ---
 
 ## How it works
 
 ```
-Capture / Sources
+Evidence acquisition (capture / browser extension / desktop capture / imports)
        ↓
-Persistent Local Context
+Evidence Substrate (local knowledge graph + memory + retrieval)
        ↓
-Knowledge Graph + Retrieval
+Judgment / Authority Core (qualify → decide → approve)
        ↓
-Evidence / Decision Intelligence
+Controlled Execution (restricted broker → capability adapters)
        ↓
-Integration Surfaces
-       ↓
-AI Agents
+Read-back → Outcome → Reopen / Revision
 ```
 
 1. **Capture** — screenshot, drag files, clip web pages, or hit a physical button. Anything.
 2. **Extract** — OCR + LLM pipeline pulls entities, relationships, and principles into a local knowledge graph.
-3. **Reason** — decision context, lineage, and outcomes give agents evidence-qualified context instead of raw memory dumps.
-4. **Integrate** — today, AI clients access this through MCP; CLI/API adapters are in development.
-
----
-
-## Today / Current capabilities
-
-- Persistent local memory (SQLite on your disk — no accounts, no servers)
-- Knowledge graph of entities, relationships, and core principles
-- Hybrid retrieval (full-text + vector + graph traversal)
-- Temporal / provenance-aware context
-- Decision context with principles, precedents, and conflicts
-- Saved decisions and decision lineage
-- Outcome recording (calibration, lessons, follow-ups)
-- MCP integration (current integration surface)
-- Desktop capture / local desktop application
-
-## Active development / Roadmap
-
-Under active development on `dev/goal24-cli-skills`:
-
-- Transport-agnostic capabilities
-- Skills
-- CLI adapters
-- Evidence-gated execution
-- Approval boundaries
-- Verified outcomes
-
-None of the roadmap items are available yet.
+3. **Qualify & decide** — evidence qualification gates whether remembered information is trustworthy enough to act on right now.
+4. **Execute & verify** — approved semantic capabilities run through a restricted broker, then the world is read back and compared to the expectation that justified the decision.
 
 ---
 
 ## What makes it different
 
-- **Not a note app** — it's a context and decision layer. Your tools don't need their own memory systems; they all share the same brain.
+- **Not a note app** — it is a decision-control layer. Tools don't need their own memory systems; they share one evidence substrate and one authority core.
 - **Not cloud** — SQLite on your disk. No accounts, no servers, no data ever leaves your machine.
-- **Not locked to one AI** — MCP-based today; Claude Desktop, Cursor, Cline, and other MCP clients share the same memory.
+- **Not locked to one AI** — MCP-based today; MCP clients share the same memory. MCP is an interface surface, not the product.
 - **Active, not passive** — the agent scans your graph for connections you've forgotten and surfaces them.
-- **Questions your thinking** — blind spot detection finds what you're missing. Anti-consensus insights challenge your assumptions. Your graph pushes back.
+- **Questions your thinking** — blind spot detection finds what you're missing. Anti-consensus insights challenge your assumptions.
 
 ---
 
@@ -136,7 +185,7 @@ Current MCP interface exposes 26 tools, grouped by what they do. Canonical count
 - `get_stats` — entity / relationship counts, type distribution
 - `get_decay_report` — which memories have crossed the decay threshold (cleanup candidates)
 
-Full parameter schemas: see [`docs/MCP-INTEGRATION.md`](docs/MCP-INTEGRATION.md).
+Full parameter schemas: see [docs/MCP-INTEGRATION.md](docs/MCP-INTEGRATION.md).
 
 ---
 
@@ -159,18 +208,16 @@ npm run install:all
 npm run package
 ```
 
+> There is **no** `omctx` npm package to install today — it is a TARGET. Naming and
+> registry status: [docs/goal24/narrative/naming-audit.json](docs/goal24/narrative/naming-audit.json).
+
 ---
 
-## Omni vs alternatives
+## Why not memory alone? Why not observability alone? Why not a generic runtime?
 
-|                    | Omni | ChatGPT Memory | Mem0 | Letta | Obsidian |
-|--------------------|------|----------------|------|-------|----------|
-| Runs locally       | ✓    | ✗              | ✗    | ✓     | ✓        |
-| MCP-native         | ✓    | ✗              | ✗    | ✗     | ✗        |
-| Knowledge graph    | ✓    | ✗              | partial | ✓  | manual   |
-| Cross-AI shared    | ✓    | ✗              | ✓    | ✗     | ✗        |
-| Own your data      | ✓    | ✗              | ✗    | ✓     | ✓        |
-| Offline-first      | ✓    | ✗              | ✗    | ✗     | ✓        |
+- **Memory alone** remembers, but cannot tell which memories are still trustworthy enough to act on. Omni qualifies evidence before action.
+- **Observability alone** tells you what happened after the fact, but does not bind execution to a decision or refuse a bad action. Omni binds and gates before and during, then verifies.
+- **A generic agent runtime** executes whatever it is told, fast. Omni's execution surface only carries approved semantic capabilities and never converts free-form intent into arbitrary shell commands.
 
 ---
 
@@ -182,4 +229,4 @@ npm run package
 
 ---
 
-MIT License. Built for people who want their AI to actually know them.
+MIT License. Own the judgment history — especially the decisions reality proved wrong.
