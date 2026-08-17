@@ -1,0 +1,25 @@
+{
+  "header": {
+    "artifact": "omctx-control-surface-status.json",
+    "note": "Deliberate staged rollout: public control is NOT implemented in D1A. This is not a failure - mutation surfaces open only after their own security gate."
+  },
+  "control_surface": {
+    "approve": "TARGET_LOCKED",
+    "verify": "TARGET_LOCKED",
+    "reopen": "FUTURE",
+    "public_mutation_gateway": "NOT_IMPLEMENTED",
+    "public_execution_gateway": "NOT_IMPLEMENTED",
+    "control_surface_gate": "NOT_STARTED"
+  },
+  "existing_internal_surfaces_unchanged": {
+    "generic_execute_ipc": "NO",
+    "public_readback_ipc": "NO",
+    "public_outcome_finalize_api": 0,
+    "public_arbitrary_approval_api": 0,
+    "production_write_count": 1,
+    "production_write_list": [
+      "github.issue.close"
+    ],
+    "public_write_availability": "NO"
+  }
+}

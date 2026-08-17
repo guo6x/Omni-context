@@ -1,0 +1,43 @@
+{
+  "header": {
+    "artifact": "omctx-alpha-candidate-gate.json",
+    "gate_status": "OMCTX_ALPHA_CANDIDATE_GATE=PASS",
+    "note": "Candidate PASS does NOT mean PUBLIC_CLI_AVAILABLE=YES: the package is private and not published."
+  },
+  "criteria": {
+    "binary_exists": true,
+    "package_name": "omctx",
+    "version": "PASS",
+    "private": true,
+    "registry_exact_name_clear_at_check": true,
+    "npm_published": false,
+    "help": "PASS",
+    "doctor": "PASS",
+    "ask_read_only": "PASS",
+    "inspect_read_only": "PASS",
+    "history_read_only": "PASS",
+    "approve_fail_closed": "PASS",
+    "verify_fail_closed": "PASS",
+    "reopen_future": "PASS",
+    "loopback_only": "PASS",
+    "auth_required": "PASS",
+    "token_not_cli_arg": "PASS",
+    "secret_leak_tests": "PASS",
+    "direct_db_access": "NO",
+    "child_process_runtime": "NO",
+    "arbitrary_http_path": "NO",
+    "arbitrary_mcp_tool": "NO",
+    "write_tool_calls": 0,
+    "generic_execute": "NO",
+    "public_broker_surface": "NO",
+    "full_cli_tests": "PASS (34/34)",
+    "brain_regressions": "PASS (full suite incl. new /api/decisions tests)",
+    "rust_regressions": "PASS",
+    "desktop_relevant_checks": "PASS",
+    "security_blockers": 0,
+    "runtime_dependencies": 0,
+    "pack_dry_run": "PASS (omctx-0.1.0-alpha.0.tgz dry-run, no file written)",
+    "npm_link_smoke": "PASS (omctx --help / version via real PATH; unlinked after)",
+    "real_local_smoke": "NOT_RUN_WITH_REASON (no Desktop local token file on this machine; the service on 127.0.0.1:3001 is not the Omni Brain - /health returned 404 from an unrelated service; no mutations performed)"
+  }
+}

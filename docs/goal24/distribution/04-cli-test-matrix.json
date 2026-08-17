@@ -1,0 +1,120 @@
+{
+  "header": {
+    "artifact": "04-cli-test-matrix.json",
+    "purpose": "Every D1A CLI test requirement mapped to an automated test (node:test, zero dependencies, local mock HTTP server).",
+    "suite": "packages/omctx/test/*.test.js (34 tests)"
+  },
+  "vectors": [
+    {
+      "area": "parser",
+      "cases": [
+        "help",
+        "version",
+        "unknown command",
+        "unknown flag",
+        "missing args",
+        "extra args",
+        "--json",
+        "shell-like flags rejected",
+        "--token argument rejected"
+      ],
+      "file": "cli-parser.test.js"
+    },
+    {
+      "area": "locked commands",
+      "cases": [
+        "approve fail closed exit 3",
+        "verify fail closed exit 3",
+        "verify caller verdict flags rejected",
+        "reopen FUTURE exit 3"
+      ],
+      "file": "cli-parser.test.js"
+    },
+    {
+      "area": "no process execution",
+      "cases": [
+        "CLI package source contains zero child_process/exec/spawn usage"
+      ],
+      "file": "cli-parser.test.js (structural scan)"
+    },
+    {
+      "area": "auth / transport",
+      "cases": [
+        "valid token",
+        "missing token (fail closed before network)",
+        "401",
+        "403",
+        "500",
+        "malformed JSON",
+        "timeout",
+        "connection refused",
+        "remote URL rejected",
+        "loopback accepted",
+        "redirect-to-remote rejected",
+        "Bearer + X-Omni-Client headers"
+      ],
+      "file": "client.test.js"
+    },
+    {
+      "area": "read allowlist",
+      "cases": [
+        "save_decision / record_decision_outcome / update_entity / delete_entity / unknown tool all rejected locally with zero network calls"
+      ],
+      "file": "client.test.js"
+    },
+    {
+      "area": "secret leakage",
+      "cases": [
+        "bearer/token/authorization/GH_TOKEN/GITHUB_TOKEN/OMNI_LOCAL_API_TOKEN never survive stdout or stderr"
+      ],
+      "file": "secret.test.js"
+    },
+    {
+      "area": "ask",
+      "cases": [
+        "exactly one get_decision_context call",
+        "ACTION_AUTHORITY=NONE printed"
+      ],
+      "file": "commands.test.js"
+    },
+    {
+      "area": "inspect",
+      "cases": [
+        "malformed/path-like ids rejected",
+        "not-found fail closed"
+      ],
+      "file": "commands.test.js"
+    },
+    {
+      "area": "history",
+      "cases": [
+        "limit clamped to 1..100",
+        "newest-first order",
+        "malformed response shape rejected"
+      ],
+      "file": "commands.test.js"
+    },
+    {
+      "area": "version",
+      "cases": [
+        "no network access"
+      ],
+      "file": "cli-parser.test.js"
+    },
+    {
+      "area": "Brain endpoint",
+      "cases": [
+        "GET /api/decisions requires auth",
+        "newest-first bounded fields",
+        "limit bounds rejected",
+        "listEntitiesByType type filter"
+      ],
+      "file": "brain-server/tests/goal24-omctx-decisions.test.ts"
+    }
+  ],
+  "totals": {
+    "cli_tests": 34,
+    "brain_endpoint_tests": 4,
+    "all_automated": true
+  }
+}
