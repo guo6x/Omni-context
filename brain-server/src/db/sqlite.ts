@@ -1190,6 +1190,21 @@ export class Database {
   }
 
   /**
+   * List entities of one type, newest first (deterministic). Used by the
+   * read-only decision history endpoint (GET /api/decisions). The limit is
+   * bounded by the caller; no offset/pagination surface exists.
+   */
+  async listEntitiesByType(type: string, limit: number): Promise<Entity[]> {
+    const rows = await this.all<any>(
+      `SELECT * FROM entities
+       WHERE type = ? AND json_extract(metadata, '$.merged_into') IS NULL
+       ORDER BY updated_at DESC, id ASC LIMIT ?`,
+      [type, limit]
+    );
+    return rows.map(row => this.rowToEntity(row));
+  }
+
+  /**
    * 把任意用户输入转成 FTS5 安全查询：按空白拆词，每个词作为带引号的 phrase
    * （内部 " 翻倍转义），词间隐式 AND。这样 - ( ) * 和 AND/OR/NOT 等 FTS5
    * 操作符都被当字面量，不会触发语法错误或意外布尔逻辑。空输入返回空串。

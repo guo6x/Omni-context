@@ -421,6 +421,15 @@ pub fn regenerate_local_token() -> String {
 fn generate_and_save_local_token(file: &std::path::Path) -> String {
     let token = generate_local_token();
     let _ = std::fs::write(file, &token);
+    // Token file permission hardening (omctx D1A audit): on Unix restrict to
+    // the owning user (0600). On Windows the default user-scoped ACL of
+    // %LOCALAPPDATA% applies (no large security dependency is introduced to
+    // rewrite ACLs; see docs/goal24/distribution/03-cli-secret-threat-model.md).
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(file, std::fs::Permissions::from_mode(0o600));
+    }
     token
 }
 

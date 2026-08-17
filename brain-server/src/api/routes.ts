@@ -20,7 +20,8 @@ import {
   handleAdminRoutes,
   handleIngestRoutes,
   handleSettingsRoutes,
-  handleMcpRoutes
+  handleMcpRoutes,
+  handleDecisionHistoryRoutes
 } from './handlers/index.js';
 
 export interface RequestContext {
@@ -134,6 +135,7 @@ export class ApiRouter {
       ...handleIngestRoutes,
       ...handleSettingsRoutes,
       ...handleMcpRoutes,
+      ...handleDecisionHistoryRoutes,
     ];
   }
 
