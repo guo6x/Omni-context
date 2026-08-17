@@ -1,0 +1,36 @@
+{
+  "name": "omctx",
+  "version": "0.1.0-alpha.0",
+  "description": "Omni-Context judgment CLI: authenticated read-only decision context surface (alpha candidate; not published).",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "omctx": "./bin/omctx.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guo6x/Omni-context.git",
+    "directory": "packages/omctx"
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "smoke": "node bin/omctx.js --help >/dev/null && node bin/omctx.js version >/dev/null && node bin/omctx.js version --json >/dev/null",
+    "pack:dry": "npm pack --dry-run"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md"
+  ],
+  "keywords": [
+    "omni-context",
+    "decision-control",
+    "cli"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}
