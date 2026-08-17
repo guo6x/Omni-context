@@ -20,7 +20,7 @@
     "Thesis",
     "ProductVision"
   ],
-  "generated_at": "2026-08-16T12:10:00Z",
+  "generated_at": "2026-08-16T11:40:00Z",
   "claims": [
     {
       "claim_id": "C-01",
@@ -295,6 +295,22 @@
       ]
     },
     {
+      "claim_id": "I-11",
+      "claim_text": "omctx CLI package candidate exists on the development branch: authenticated read-only judgment surface (doctor / ask / inspect / history), loopback-only, approve & verify fail closed.",
+      "status": "CURRENTLY_VERIFIED_INTERNAL",
+      "availability": "internal_runtime",
+      "evidence": [
+        "packages/omctx/ (private:true, version 0.1.0-alpha.0, zero runtime dependencies)",
+        "docs/goal24/distribution/omctx-alpha-candidate-gate.json (OMCTX_ALPHA_CANDIDATE_GATE=PASS)",
+        "docs/goal24/distribution/omctx-control-surface-status.json (approve/verify TARGET_LOCKED)"
+      ],
+      "surface": [
+        "README",
+        "Landing",
+        "ProductVision"
+      ]
+    },
+    {
       "claim_id": "T-01",
       "claim_text": "omctx CLI binary: the portable execution surface of the decision-control layer.",
       "status": "TARGET",
@@ -551,5 +567,5 @@
       ]
     }
   ],
-  "schema_note": "Post-CP8 authoritative integration reconciliation: F-02 promoted to CURRENTLY_VERIFIED_INTERNAL; F-05 clarified as additional GitHub writes; new internal claim I-10 added for github.issue.close."
+  "schema_note": "D1A reconciliation: omctx package candidate added as CURRENTLY_VERIFIED_INTERNAL (private, unpublished); 'installable from npm today' stays DO_NOT_CLAIM."
 }

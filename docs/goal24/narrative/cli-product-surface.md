@@ -36,9 +36,14 @@ CLI 属于三面架构中的 **Controlled Execution Surface**：
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| `omctx` 二进制 | **TARGET** | 尚未发布任何可安装二进制；npm 名称审计见 `naming-audit.json`（registry 上 `omctx` 目前为 CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED） |
+| `omctx` 二进制（package candidate） | **CURRENTLY_VERIFIED_INTERNAL** | `packages/omctx` private package candidate（0.1.0-alpha.0），`node bin/omctx.js` 可运行；未发布、无用户安装面；npm 名称审计 `CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED` |
 | npm 全局安装（`npm i -g omctx`） | **TARGET** | 未发布；禁止 0.0.0 占位包；真实发布需满足第 6 节门槛 |
-| 命令 `ask / inspect / approve / verify / history` | **TARGET** | 目标信息架构（IA）；无用户可调用实现 |
+| `doctor` | **CURRENTLY_VERIFIED_INTERNAL** | 本地 Brain 健康 / 鉴权 / loopback 传输检查；只读 |
+| `ask` | **CURRENTLY_VERIFIED_INTERNAL** | 只读 judgment 查询（get_decision_context）；ACTION_AUTHORITY=NONE；不是 TARGET 语义的 Intent→Execution |
+| `inspect` | **CURRENTLY_VERIFIED_INTERNAL** | 只读决策查看（get_decision_lineage） |
+| `history` | **CURRENTLY_VERIFIED_INTERNAL** | 只读 judgment history（GET /api/decisions） |
+| `version` / `help` | **CURRENTLY_VERIFIED_INTERNAL** | 本地命令，无网络 |
+| `approve` / `verify` | **TARGET / LOCKED** | parser 识别但 FAIL CLOSED（exit 3，OMCTX_CONTROL_SURFACE_LOCKED）；public mutation gateway 未实现 |
 | 命令 `reopen` | **FUTURE** | runtime 尚未实现；不得暗示 reopen 会自动重放原动作 |
 | 内部 runtime 对应物（broker / adapters / evidence guard / approval / read-back） | **开发分支 runtime 已验证** | 见 Goal24 CP3–CP8 gate 证据（`docs/goal24/checkpoint*-security-gate.json`）；**没有 public invocation surface**，不属于 CURRENTLY_VERIFIED 用户面 |
 

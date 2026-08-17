@@ -95,9 +95,58 @@
         "runtime unchanged after proof (git status --porcelain empty); production writes exactly 1 (github.issue.close)"
       ],
       "next_owner_action": null
+    },
+    {
+      "task_id": "OMCTX_CLI_ALPHA_CANDIDATE",
+      "track": "Goal24 Distribution (D1A)",
+      "checkpoint_or_goal": "D1A",
+      "owner_decision": "ASSIGNED",
+      "executor": "omctx alpha lane",
+      "status": "COMPLETE",
+      "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+      "base_sha": "78c8c90ec63fd3eb7fed33b882b60e8ca4738a16",
+      "content_final_sha": null,
+      "content_final_sha_note": "stamped at the final docs commit of this lane",
+      "feature_branch_head_sha": null,
+      "feature_branch_head_sha_note": "stamped after feature push",
+      "authoritative_integration_sha": null,
+      "remote_feature_branch": "dev/goal24-omctx-alpha",
+      "remote_feature_pushed": false,
+      "authoritative_remote_integrated": false,
+      "package_version": "0.1.0-alpha.0",
+      "registry_status": "CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED (npm view omctx -> E404 at 2026-08-16)",
+      "npm_published": false,
+      "binary_status": "implemented (packages/omctx/bin/omctx.js)",
+      "read_commands": [
+        "doctor",
+        "ask",
+        "inspect",
+        "history",
+        "version",
+        "help"
+      ],
+      "locked_commands": [
+        "approve (TARGET_LOCKED, fail closed)",
+        "verify (TARGET_LOCKED, fail closed)",
+        "reopen (FUTURE)"
+      ],
+      "gate_status": "OMCTX_ALPHA_CANDIDATE_GATE=PASS",
+      "blockers": [],
+      "verification_evidence": [
+        "private:true package at packages/omctx, zero runtime dependencies, node:test suite 34/34",
+        "registry exact-name query: npm view omctx -> E404 (clear, not reserved)",
+        "real binary smoke: --help / version / version --json pass; pack dry-run passes; npm link global smoke passes (unlinked after)",
+        "approve/verify fail closed (exit 3), reopen FUTURE (exit 3); --token rejected as CLI argument; remote API URLs rejected before auth",
+        "read-only MCP allowlist enforced locally (CLI_READ_TOOL_NOT_ALLOWED with zero network calls for writes)",
+        "secret leakage tests: bearer/token/authorization/GH_TOKEN/GITHUB_TOKEN/OMNI_LOCAL_API_TOKEN never survive stdout/stderr",
+        "Brain: new narrow read-only GET /api/decisions endpoint (decision:read scope) + 4 tests; full Brain suite 1301 passed",
+        "real local Brain smoke NOT_RUN_WITH_REASON: no Desktop local token file on this machine and 127.0.0.1:3001 is not the Omni Brain; no mutations performed",
+        "no GitHub external state touched (issues #1/#2/#3 untouched)"
+      ],
+      "next_owner_action": "review feature branch dev/goal24-omctx-alpha; future D1B control-surface gate is NOT started"
     }
   ],
-  "last_verified_at": "2026-08-16T12:10:00Z",
+  "last_verified_at": "2026-08-17T03:24:24.759Z",
   "notes": [
     "authoritative branch is dev/goal24-cli-skills; the Post-CP8 integration pushed it to the runtime candidate + docs commits.",
     "CP8 gate artifact status read from repo: CHECKPOINT8_SECURITY_GATE=PASS, DRG1_TECHNICAL_PREREQUISITE=SATISFIED, checkpoint9_started=NO.",
