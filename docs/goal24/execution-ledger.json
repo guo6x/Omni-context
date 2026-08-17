@@ -105,13 +105,12 @@
       "status": "COMPLETE",
       "verification_level": "VERIFIED_LOCAL_EVIDENCE",
       "base_sha": "78c8c90ec63fd3eb7fed33b882b60e8ca4738a16",
-      "content_final_sha": null,
-      "content_final_sha_note": "stamped at the final docs commit of this lane",
-      "feature_branch_head_sha": null,
-      "feature_branch_head_sha_note": "stamped after feature push",
+      "content_final_sha": "8ec83b402094fcf19bc309e8a80306c99d75a241",
+      "feature_branch_head_sha": "8ec83b402094fcf19bc309e8a80306c99d75a241",
+      "feature_branch_head_sha_note": "content SHA; the metadata-only stamp commit follows and the final branch head is reported in the lane report",
       "authoritative_integration_sha": null,
       "remote_feature_branch": "dev/goal24-omctx-alpha",
-      "remote_feature_pushed": false,
+      "remote_feature_pushed": true,
       "authoritative_remote_integrated": false,
       "package_version": "0.1.0-alpha.0",
       "registry_status": "CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED (npm view omctx -> E404 at 2026-08-16)",
@@ -146,7 +145,7 @@
       "next_owner_action": "review feature branch dev/goal24-omctx-alpha; future D1B control-surface gate is NOT started"
     }
   ],
-  "last_verified_at": "2026-08-17T03:24:24.759Z",
+  "last_verified_at": "2026-08-17T03:29:36.492Z",
   "notes": [
     "authoritative branch is dev/goal24-cli-skills; the Post-CP8 integration pushed it to the runtime candidate + docs commits.",
     "CP8 gate artifact status read from repo: CHECKPOINT8_SECURITY_GATE=PASS, DRG1_TECHNICAL_PREREQUISITE=SATISFIED, checkpoint9_started=NO.",
