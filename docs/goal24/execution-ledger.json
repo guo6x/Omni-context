@@ -212,7 +212,7 @@
         "native bridge binds loopback with startup secret and persistent single-grant replay guard",
         "verify remains TARGET_LOCKED and approve never starts execution"
       ],
-      "next_owner_action": "run fresh D1B1 adversarial/E2E suites, then push dev/goal24-d1b1-public-approve"
+      "next_owner_action": "authoritative review only; do not integrate D1B1 or begin D1B-2 from this branch"
     }
   ],
   "last_verified_at": "2026-08-25T14:18:43.682Z",
