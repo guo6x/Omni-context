@@ -39,7 +39,7 @@
   },
   "freshness": {
     "authoritative_d1b0_sha": "a902ac4fc804459f07a09b84494a68c8bd7f618b",
-    "feature_branch": "local/d1b1-public-approve",
+    "feature_branch": "dev/goal24-d1b1-public-approve",
     "generated_at": "2026-08-26T00:00:00.000Z"
   }
 }
