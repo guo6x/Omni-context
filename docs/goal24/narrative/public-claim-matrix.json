@@ -20,7 +20,7 @@
     "Thesis",
     "ProductVision"
   ],
-  "generated_at": "2026-08-25T10:38:52Z",
+  "generated_at": "2026-08-25T14:18:43.682Z",
   "claims": [
     {
       "claim_id": "C-01",
@@ -304,6 +304,23 @@
         "docs/goal24/distribution/omctx-alpha-candidate-gate.json (OMCTX_ALPHA_CANDIDATE_GATE=PASS)",
         "docs/goal24/distribution/omctx-alpha-authoritative-gate.json (OMCTX_ALPHA_AUTHORITATIVE_GATE=PASS; real temporary Brain smoke)",
         "docs/goal24/distribution/omctx-control-surface-status.json (approve/verify TARGET_LOCKED)"
+      ],
+      "surface": [
+        "README",
+        "Landing",
+        "ProductVision"
+      ]
+    },
+    {
+      "claim_id": "I-12",
+      "claim_text": "D1B public control threat model, dependency freshness classification, trust boundaries, and attack-surface inventory are currently verified internally; approve and verify remain locked and no public control endpoint is available.",
+      "status": "CURRENTLY_VERIFIED_INTERNAL",
+      "availability": "internal_runtime",
+      "evidence": [
+        "docs/goal24/distribution/d1b0/public-control-threat-model.md",
+        "docs/goal24/distribution/d1b0/dependency-audit-classification.json",
+        "docs/goal24/distribution/d1b0/public-control-attack-surface.json",
+        "docs/goal24/distribution/d1b0/d1b0-readiness-gate.json"
       ],
       "surface": [
         "README",

@@ -1,0 +1,64 @@
+
+> omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+  ├── anyhow feature "default"
+  │   ├── anyhow v1.0.103
+  │   └── anyhow feature "std"
+  │       └── anyhow v1.0.103
+  ├── arboard feature "default"
+  │   │   │       └── encoding_rs v0.8.35 (*)
+  │   │   ├── pin-project-lite feature "default" (*)
+  │   │   ├── h2 feature "default"
+> │   │   │   └── h2 v0.3.27
+  │   │   │       ├── futures-core v0.3.32
+  │   │   │       ├── futures-sink v0.3.32
+  │   │   │       ├── futures-util v0.3.32 (*)
+  │   │   │       ├── bytes feature "default" (*)
+  │   │   │       ├── slab feature "default"
+  │   │   │       ├── pin-project-lite feature "default" (*)
+  │   │   │       └── http feature "default" (*)
+  │   │   ├── hyper feature "client"
+> │   │   │   └── hyper v0.14.32
+  │   │   │       ├── futures-core v0.3.32
+  │   │   │       ├── futures-util v0.3.32 (*)
+  │   │   │       ├── bytes feature "default" (*)
+  │   │   │       ├── pin-project-lite feature "default" (*)
+  │   │   │       ├── h2 feature "default" (*)
+  │   │   │               └── try-lock feature "default"
+  │   │   │                   └── try-lock v0.2.5
+  │   │   ├── hyper feature "http1"
+> │   │   │   └── hyper v0.14.32 (*)
+  │   │   ├── hyper feature "http2"
+> │   │   │   ├── hyper v0.14.32 (*)
+  │   │   │   └── hyper feature "h2"
+> │   │   │       └── hyper v0.14.32 (*)
+  │   │   ├── hyper feature "runtime"
+> │   │   │   ├── hyper v0.14.32 (*)
+  │   │   │   ├── tokio feature "rt"
+  │   │   │   │   └── tokio v1.52.2 (*)
+  │   │   │   ├── tokio feature "time" (*)
+  │   │   │   └── hyper feature "tcp"
+> │   │   │       ├── hyper v0.14.32 (*)
+  │   │   │       ├── tokio feature "net" (*)
+  │   │   │       ├── tokio feature "rt" (*)
+  │   │   │       ├── tokio feature "time" (*)
+  │   │   │       └── hyper feature "socket2"
+> │   │   │           └── hyper v0.14.32 (*)
+  │   │   ├── hyper feature "tcp" (*)
+  │   │   ├── tower-service feature "default" (*)
+> │   │   ├── hyper-tls feature "default"
+> │   │   │   └── hyper-tls v0.5.0
+  │   │   │       ├── bytes feature "default" (*)
+  │   │   │       ├── tokio feature "default" (*)
+  │   │   │       ├── hyper feature "client" (*)
+  │   │   │       ├── hyper feature "tcp" (*)
+  │   │   │       ├── native-tls feature "default"
+  │   │   │       ├── reqwest v0.11.27 (*)
+  │   │   │       ├── reqwest feature "__tls"
+  │   │   │       │   └── reqwest v0.11.27 (*)
+> │   │   │       ├── reqwest feature "hyper-tls"
+  │   │   │       │   └── reqwest v0.11.27 (*)
+  │   │   │       ├── reqwest feature "native-tls-crate"
+  │   │   │       │   └── reqwest v0.11.27 (*)
+  │   │   │       └── reqwest feature "tokio-native-tls"
+  │   │   │           └── reqwest v0.11.27 (*)
+

@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0",
+  "decision_status": "FROZEN_FOR_D1B_ENGINEERING_ONLY",
+  "implementation_started": false,
+  "control_transport": {
+    "selected": "AUTHENTICATED_LOOPBACK_HTTP_FIXED_ROUTES",
+    "routes": ["POST /api/control/approve", "POST /api/control/verify"],
+    "methods": ["POST"],
+    "loopback_only": true,
+    "bearer_auth": true,
+    "redirects": "REJECT",
+    "cors": "NO_WILDCARD",
+    "generic_routes": false,
+    "arbitrary_body_passthrough": false,
+    "arbitrary_capability_execution": false
+  },
+  "transport_options": {
+    "A_authenticated_localhost_http": {"decision":"SELECTED","reason":"Stable CLI/Desktop interoperability with fixed HTTP semantics and explicit auth/origin gates."},
+    "B_tauri_ipc_desktop_only": {"decision":"REJECTED_FOR_D1B1","reason":"CLI would need a privileged helper and browser/WebView origin handling would be coupled to Desktop."},
+    "C_named_pipe_or_unix_socket": {"decision":"DEFERRED","reason":"Strong OS boundary is platform-specific; Windows-first product needs a separately verified ACL contract."},
+    "D_cli_invokes_desktop_helper": {"decision":"REJECTED","reason":"Adds process-launch and inherited-environment attack surface and obscures actor/audit identity."},
+    "E_direct_store_access": {"decision":"FORBIDDEN","reason":"Storage bytes are not authority APIs; bypasses invariants, replay ledgers, and trusted resolvers."}
+  },
+  "approval_auth_model": {
+    "selected": "SEPARATE_CONTROL_SCOPE_PLUS_ACTOR_CONFIRMATION",
+    "token_scope": "control:approve",
+    "desktop_mediated_authorization": "RECOMMENDED_FOR_HUMAN_GRANT",
+    "actor_identity_required": true,
+    "authority_level_required": true,
+    "server_owned_bindings": ["decision_id","capability_id","normalized_inputs_digest","risk_snapshot_digest","evidence_coverage_digest","verification_plan_digest","created_at","expires_at","policy_version"],
+    "caller_supplied_bindings": [],
+    "request_body": {"plan_id":"<id>"},
+    "optional_ack_nonce": false
+  },
+  "verify_auth_model": {
+    "selected": "SEPARATE_CONTROL_SCOPE_TRUSTED_READBACK",
+    "token_scope": "control:verify",
+    "locator": {"plan_id":"<id>"},
+    "locator_resolution": "exactly one trusted outcome/receipt/verification-plan tuple; ambiguity fails closed",
+    "caller_supplied_fields": [],
+    "trusted_resolvers": ["ReceiptStore resolver","trusted observation resolver","deterministic evaluator"]
+  },
+  "read_token_can_approve": false,
+  "read_token_can_verify": false,
+  "browser_origin_policy": {
+    "selected": "REJECT_ORIGIN_BY_DEFAULT",
+    "origin_present": "reject CONTROL_ORIGIN_REJECTED unless a separately frozen trusted Desktop origin policy is enabled",
+    "referer": "not an authorization signal; reject browser-shaped control requests by default",
+    "preflight": "no control CORS preflight; OPTIONS does not grant access",
+    "simple_post": "reject without control token and non-browser actor context",
+    "dns_rebinding": "loopback bind plus Origin rejection plus exact Host/route checks"
+  },
+  "approval_request_schema": {
+    "exact": {"plan_id":"string"},
+    "additional_properties": false,
+    "forbidden_fields": ["capability_id","argv","executable","risk","approval_required","authority","inputs","expected_outcome","receipt","decision_id","any_digest"]
+  },
+  "verify_request_schema": {
+    "exact": {"plan_id":"string"},
+    "additional_properties": false,
+    "forbidden_fields": ["success","verified","expected_state","receipt","observation","predicate","regex","jsonpath","prompt","judge_result","verdict"]
+  },
+  "approval_replay_policy": {
+    "selected": "STRICT_SINGLE_USE_PER_PLAN",
+    "first_valid": "GRANTED",
+    "repeat": "ALREADY_CONSUMED or REPLAY_BLOCKED",
+    "concurrency": "atomic compare-and-set; at most one grant",
+    "token_burst_limit": "required"
+  },
+  "verify_retry_policy": {
+    "selected": "READBACK_ONLY_BOUNDED_RETRY",
+    "brain_default_max": 3,
+    "native_hard_max": 5,
+    "process_failure_states": ["nonzero","timeout","cancel","unknown_after_crash"],
+    "original_write_retry": false
+  },
+  "audit_log_policy": {
+    "fields": ["request_timestamp","actor_id_or_scope","plan_id","decision_id","action","result","failure_reason","transport_context"],
+    "never_log": ["Authorization header","raw token","full sensitive input","GitHub token","approval secret"]
+  },
+  "rate_limit_policy": {
+    "approve": "per-plan strict single-use + per-token burst limit + global local guard",
+    "verify": "per-plan bounded retry budget + per-token limit + global local guard"
+  },
+  "same_user_threat_limit": "A token held by a process with complete control of the same OS account is not an OS-level isolation boundary; D1B controls web-origin abuse, forging, replay, authority escalation, and generic execution bypass.",
+  "public_error_taxonomy": ["CONTROL_AUTH_REQUIRED","CONTROL_SCOPE_INSUFFICIENT","PLAN_NOT_FOUND","PLAN_EXPIRED","PLAN_NOT_APPROVABLE","PLAN_ALREADY_CONSUMED","APPROVAL_REPLAY_BLOCKED","APPROVAL_AUTHORITY_INSUFFICIENT","VERIFICATION_NOT_AVAILABLE","RECEIPT_NOT_FOUND","VERIFICATION_SUBJECT_MISMATCH","OUTCOME_ALREADY_FINALIZED","READBACK_FAILED","CONTROL_ORIGIN_REJECTED","CONTROL_RATE_LIMITED"],
+  "direct_store_access": false,
+  "d1b1_ready": true,
+  "d1b2_ready": false,
+  "d1b2_prerequisites_defined": true,
+  "implementation_split": {
+    "d1b1": "Public Approval Control Path: approve only; verify remains locked.",
+    "d1b2": "Public Verification/Read-back Path: only after D1B-1 authoritative PASS."
+  }
+}

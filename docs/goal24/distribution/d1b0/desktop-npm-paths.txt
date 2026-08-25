@@ -1,0 +1,3 @@
+omni-context-desktop@0.1.1 D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon
+└── (empty)
+

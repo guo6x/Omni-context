@@ -1,0 +1,18 @@
+quick-xml v0.39.3
+└── wayland-scanner v0.31.10 (proc-macro)
+    ├── wayland-client v0.31.14
+    │   ├── wayland-protocols v0.32.12
+    │   │   ├── wayland-protocols-wlr v0.3.12
+    │   │   │   └── wl-clipboard-rs v0.9.3
+    │   │   │       └── arboard v3.6.1
+    │   │   │           ├── omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+    │   │   │           └── tauri-runtime-wry v0.14.11
+    │   │   │               └── tauri v1.8.3
+    │   │   │                   ├── omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+    │   │   │                   └── tauri-plugin-autostart v0.0.0 (https://github.com/tauri-apps/plugins-workspace?branch=v1#1e407ed5)
+    │   │   │                       └── omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+    │   │   └── wl-clipboard-rs v0.9.3 (*)
+    │   ├── wayland-protocols-wlr v0.3.12 (*)
+    │   └── wl-clipboard-rs v0.9.3 (*)
+    ├── wayland-protocols v0.32.12 (*)
+    └── wayland-protocols-wlr v0.3.12 (*)

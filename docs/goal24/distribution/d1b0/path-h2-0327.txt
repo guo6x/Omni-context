@@ -1,0 +1,11 @@
+h2 v0.3.27
+├── hyper v0.14.32
+│   ├── hyper-tls v0.5.0
+│   │   └── reqwest v0.11.27
+│   │       ├── omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+│   │       └── tauri v1.8.3
+│   │           ├── omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+│   │           └── tauri-plugin-autostart v0.0.0 (https://github.com/tauri-apps/plugins-workspace?branch=v1#1e407ed5)
+│   │               └── omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+│   └── reqwest v0.11.27 (*)
+└── reqwest v0.11.27 (*)

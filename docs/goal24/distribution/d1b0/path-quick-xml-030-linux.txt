@@ -1,0 +1,7 @@
+quick-xml v0.30.0
+[build-dependencies]
+└── xcb v1.7.0
+    ├── display-info v0.4.8
+    │   └── screenshots v0.6.0
+    │       └── omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+    └── screenshots v0.6.0 (*)

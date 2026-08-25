@@ -1,0 +1,989 @@
+omni-context-desktop v0.1.1 (D:\ai_code\Omni-context-worktrees\d1b0-control-threat-audit\desktop-daemon\src-tauri)
+├── anyhow v1.0.103
+├── arboard v3.6.1
+│   ├── clipboard-win v5.4.1
+│   │   └── error-code v3.3.2
+│   ├── image v0.25.10
+│   │   ├── bytemuck v1.25.0
+│   │   ├── byteorder-lite v0.1.0
+│   │   ├── moxcms v0.8.1
+│   │   │   ├── num-traits v0.2.19
+│   │   │   │   [build-dependencies]
+│   │   │   │   └── autocfg v1.5.0
+│   │   │   └── pxfm v0.1.29
+│   │   ├── num-traits v0.2.19 (*)
+│   │   └── png v0.18.1
+│   │       ├── bitflags v2.11.1
+│   │       ├── crc32fast v1.5.0
+│   │       │   └── cfg-if v1.0.4
+│   │       ├── fdeflate v0.3.7
+│   │       │   └── simd-adler32 v0.3.9
+│   │       ├── flate2 v1.1.9
+│   │       │   ├── crc32fast v1.5.0 (*)
+│   │       │   └── miniz_oxide v0.8.9
+│   │       │       ├── adler2 v2.0.1
+│   │       │       └── simd-adler32 v0.3.9
+│   │       └── miniz_oxide v0.8.9 (*)
+│   ├── log v0.4.29
+│   └── windows-sys v0.60.2
+│       └── windows-targets v0.53.5
+│           └── windows_x86_64_msvc v0.53.1
+├── base64 v0.21.7
+├── chrono v0.4.44
+│   ├── num-traits v0.2.19 (*)
+│   └── windows-link v0.2.1
+├── getrandom v0.2.17
+│   └── cfg-if v1.0.4
+├── hex v0.4.3
+├── hmac v0.12.1
+│   └── digest v0.10.7
+│       ├── block-buffer v0.10.4
+│       │   └── generic-array v0.14.7
+│       │       └── typenum v1.20.0
+│       │       [build-dependencies]
+│       │       └── version_check v0.9.5
+│       ├── crypto-common v0.1.7
+│       │   ├── generic-array v0.14.7 (*)
+│       │   └── typenum v1.20.0
+│       └── subtle v2.6.1
+├── image v0.24.9
+│   ├── bytemuck v1.25.0
+│   ├── byteorder v1.5.0
+│   ├── color_quant v1.1.0
+│   ├── exr v1.74.0
+│   │   ├── bit_field v0.10.3
+│   │   ├── half v2.7.1
+│   │   │   ├── cfg-if v1.0.4
+│   │   │   └── zerocopy v0.8.48
+│   │   │       └── zerocopy-derive v0.8.48 (proc-macro)
+│   │   │           ├── proc-macro2 v1.0.106
+│   │   │           │   └── unicode-ident v1.0.24
+│   │   │           ├── quote v1.0.45
+│   │   │           │   └── proc-macro2 v1.0.106 (*)
+│   │   │           └── syn v2.0.117
+│   │   │               ├── proc-macro2 v1.0.106 (*)
+│   │   │               ├── quote v1.0.45 (*)
+│   │   │               └── unicode-ident v1.0.24
+│   │   ├── lebe v0.5.3
+│   │   ├── miniz_oxide v0.8.9 (*)
+│   │   ├── rayon-core v1.13.0
+│   │   │   ├── crossbeam-deque v0.8.6
+│   │   │   │   ├── crossbeam-epoch v0.9.20
+│   │   │   │   │   └── crossbeam-utils v0.8.21
+│   │   │   │   └── crossbeam-utils v0.8.21
+│   │   │   └── crossbeam-utils v0.8.21
+│   │   ├── smallvec v1.15.1
+│   │   └── zune-inflate v0.2.54
+│   │       └── simd-adler32 v0.3.9
+│   ├── gif v0.13.3
+│   │   ├── color_quant v1.1.0
+│   │   └── weezl v0.1.12
+│   ├── jpeg-decoder v0.3.2
+│   │   └── rayon v1.12.0
+│   │       ├── either v1.15.0
+│   │       └── rayon-core v1.13.0 (*)
+│   ├── num-traits v0.2.19 (*)
+│   ├── png v0.17.16
+│   │   ├── bitflags v1.3.2
+│   │   ├── crc32fast v1.5.0 (*)
+│   │   ├── fdeflate v0.3.7 (*)
+│   │   ├── flate2 v1.1.9 (*)
+│   │   └── miniz_oxide v0.8.9 (*)
+│   ├── qoi v0.4.1
+│   │   └── bytemuck v1.25.0
+│   └── tiff v0.9.1
+│       ├── flate2 v1.1.9 (*)
+│       ├── jpeg-decoder v0.3.2 (*)
+│       └── weezl v0.1.12
+├── local-ip-address v0.6.13
+│   └── windows-sys v0.61.2
+│       └── windows-link v0.2.1
+├── reqwest v0.11.27
+│   ├── base64 v0.21.7
+│   ├── bytes v1.11.1
+│   │   └── serde v1.0.228
+│   │       ├── serde_core v1.0.228
+│   │       └── serde_derive v1.0.228 (proc-macro)
+│   │           ├── proc-macro2 v1.0.106 (*)
+│   │           ├── quote v1.0.45 (*)
+│   │           └── syn v2.0.117 (*)
+│   ├── encoding_rs v0.8.35
+│   │   └── cfg-if v1.0.4
+│   ├── futures-core v0.3.32
+│   ├── futures-util v0.3.32
+│   │   ├── futures-core v0.3.32
+│   │   ├── futures-macro v0.3.32 (proc-macro)
+│   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   ├── quote v1.0.45 (*)
+│   │   │   └── syn v2.0.117 (*)
+│   │   ├── futures-task v0.3.32
+│   │   ├── pin-project-lite v0.2.17
+│   │   └── slab v0.4.12
+│   ├── h2 v0.3.27
+│   │   ├── bytes v1.11.1 (*)
+│   │   ├── fnv v1.0.7
+│   │   ├── futures-core v0.3.32
+│   │   ├── futures-sink v0.3.32
+│   │   ├── futures-util v0.3.32 (*)
+│   │   ├── http v0.2.12
+│   │   │   ├── bytes v1.11.1 (*)
+│   │   │   ├── fnv v1.0.7
+│   │   │   └── itoa v1.0.18
+│   │   ├── indexmap v2.14.0
+│   │   │   ├── equivalent v1.0.2
+│   │   │   └── hashbrown v0.17.0
+│   │   ├── slab v0.4.12
+│   │   ├── tokio v1.52.2
+│   │   │   ├── bytes v1.11.1 (*)
+│   │   │   ├── mio v1.2.0
+│   │   │   │   └── windows-sys v0.61.2 (*)
+│   │   │   ├── parking_lot v0.12.5
+│   │   │   │   ├── lock_api v0.4.14
+│   │   │   │   │   └── scopeguard v1.2.0
+│   │   │   │   └── parking_lot_core v0.9.12
+│   │   │   │       ├── cfg-if v1.0.4
+│   │   │   │       ├── smallvec v1.15.1
+│   │   │   │       └── windows-link v0.2.1
+│   │   │   ├── pin-project-lite v0.2.17
+│   │   │   ├── socket2 v0.6.3
+│   │   │   │   └── windows-sys v0.61.2 (*)
+│   │   │   ├── tokio-macros v2.7.0 (proc-macro)
+│   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   └── syn v2.0.117 (*)
+│   │   │   └── windows-sys v0.61.2 (*)
+│   │   ├── tokio-util v0.7.18
+│   │   │   ├── bytes v1.11.1 (*)
+│   │   │   ├── futures-core v0.3.32
+│   │   │   ├── futures-sink v0.3.32
+│   │   │   ├── pin-project-lite v0.2.17
+│   │   │   └── tokio v1.52.2 (*)
+│   │   └── tracing v0.1.44
+│   │       ├── pin-project-lite v0.2.17
+│   │       └── tracing-core v0.1.36
+│   │           └── once_cell v1.21.4
+│   ├── http v0.2.12 (*)
+│   ├── http-body v0.4.6
+│   │   ├── bytes v1.11.1 (*)
+│   │   ├── http v0.2.12 (*)
+│   │   └── pin-project-lite v0.2.17
+│   ├── hyper v0.14.32
+│   │   ├── bytes v1.11.1 (*)
+│   │   ├── futures-channel v0.3.32
+│   │   │   └── futures-core v0.3.32
+│   │   ├── futures-core v0.3.32
+│   │   ├── futures-util v0.3.32 (*)
+│   │   ├── h2 v0.3.27 (*)
+│   │   ├── http v0.2.12 (*)
+│   │   ├── http-body v0.4.6 (*)
+│   │   ├── httparse v1.10.1
+│   │   ├── httpdate v1.0.3
+│   │   ├── itoa v1.0.18
+│   │   ├── pin-project-lite v0.2.17
+│   │   ├── socket2 v0.5.10
+│   │   │   └── windows-sys v0.52.0
+│   │   │       └── windows-targets v0.52.6
+│   │   │           └── windows_x86_64_msvc v0.52.6
+│   │   ├── tokio v1.52.2 (*)
+│   │   ├── tower-service v0.3.3
+│   │   ├── tracing v0.1.44 (*)
+│   │   └── want v0.3.1
+│   │       └── try-lock v0.2.5
+│   ├── hyper-tls v0.5.0
+│   │   ├── bytes v1.11.1 (*)
+│   │   ├── hyper v0.14.32 (*)
+│   │   ├── native-tls v0.2.18
+│   │   │   └── schannel v0.1.29
+│   │   │       └── windows-sys v0.61.2 (*)
+│   │   ├── tokio v1.52.2 (*)
+│   │   └── tokio-native-tls v0.3.1
+│   │       ├── native-tls v0.2.18 (*)
+│   │       └── tokio v1.52.2 (*)
+│   ├── ipnet v2.12.0
+│   ├── log v0.4.29
+│   ├── mime v0.3.17
+│   ├── native-tls v0.2.18 (*)
+│   ├── once_cell v1.21.4
+│   ├── percent-encoding v2.3.2
+│   ├── pin-project-lite v0.2.17
+│   ├── rustls-pemfile v1.0.4
+│   │   └── base64 v0.21.7
+│   ├── serde v1.0.228 (*)
+│   ├── serde_json v1.0.149
+│   │   ├── indexmap v2.14.0 (*)
+│   │   ├── itoa v1.0.18
+│   │   ├── memchr v2.8.0
+│   │   ├── serde_core v1.0.228
+│   │   └── zmij v1.0.21
+│   ├── serde_urlencoded v0.7.1
+│   │   ├── form_urlencoded v1.2.2
+│   │   │   └── percent-encoding v2.3.2
+│   │   ├── itoa v1.0.18
+│   │   ├── ryu v1.0.23
+│   │   └── serde v1.0.228 (*)
+│   ├── sync_wrapper v0.1.2
+│   ├── tokio v1.52.2 (*)
+│   ├── tokio-native-tls v0.3.1 (*)
+│   ├── tokio-util v0.7.18 (*)
+│   ├── tower-service v0.3.3
+│   ├── url v2.5.8
+│   │   ├── form_urlencoded v1.2.2 (*)
+│   │   ├── idna v1.1.0
+│   │   │   ├── idna_adapter v1.2.2
+│   │   │   │   ├── icu_normalizer v2.2.0
+│   │   │   │   │   ├── icu_collections v2.2.0
+│   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro)
+│   │   │   │   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   │   │   └── syn v2.0.117 (*)
+│   │   │   │   │   │   ├── potential_utf v0.1.5
+│   │   │   │   │   │   │   └── zerovec v0.11.6
+│   │   │   │   │   │   │       ├── yoke v0.8.2
+│   │   │   │   │   │   │       │   ├── stable_deref_trait v1.2.1
+│   │   │   │   │   │   │       │   ├── yoke-derive v0.8.2 (proc-macro)
+│   │   │   │   │   │   │       │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   │   │       │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   │   │       │   │   ├── syn v2.0.117 (*)
+│   │   │   │   │   │   │       │   │   └── synstructure v0.13.2
+│   │   │   │   │   │   │       │   │       ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   │   │       │   │       ├── quote v1.0.45 (*)
+│   │   │   │   │   │   │       │   │       └── syn v2.0.117 (*)
+│   │   │   │   │   │   │       │   └── zerofrom v0.1.7
+│   │   │   │   │   │   │       │       └── zerofrom-derive v0.1.7 (proc-macro)
+│   │   │   │   │   │   │       │           ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   │   │       │           ├── quote v1.0.45 (*)
+│   │   │   │   │   │   │       │           ├── syn v2.0.117 (*)
+│   │   │   │   │   │   │       │           └── synstructure v0.13.2 (*)
+│   │   │   │   │   │   │       ├── zerofrom v0.1.7 (*)
+│   │   │   │   │   │   │       └── zerovec-derive v0.11.3 (proc-macro)
+│   │   │   │   │   │   │           ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   │   │           ├── quote v1.0.45 (*)
+│   │   │   │   │   │   │           └── syn v2.0.117 (*)
+│   │   │   │   │   │   ├── utf8_iter v1.0.4
+│   │   │   │   │   │   ├── yoke v0.8.2 (*)
+│   │   │   │   │   │   ├── zerofrom v0.1.7 (*)
+│   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   ├── icu_normalizer_data v2.2.0
+│   │   │   │   │   ├── icu_provider v2.2.0
+│   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   ├── icu_locale_core v2.2.0
+│   │   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   │   ├── litemap v0.8.2
+│   │   │   │   │   │   │   ├── tinystr v0.8.3
+│   │   │   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   │   │   ├── writeable v0.6.3
+│   │   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   │   ├── writeable v0.6.3
+│   │   │   │   │   │   ├── yoke v0.8.2 (*)
+│   │   │   │   │   │   ├── zerofrom v0.1.7 (*)
+│   │   │   │   │   │   ├── zerotrie v0.2.4
+│   │   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   │   ├── yoke v0.8.2 (*)
+│   │   │   │   │   │   │   └── zerofrom v0.1.7 (*)
+│   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   ├── smallvec v1.15.1
+│   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   └── icu_properties v2.2.0
+│   │   │   │       ├── icu_collections v2.2.0 (*)
+│   │   │   │       ├── icu_locale_core v2.2.0 (*)
+│   │   │   │       ├── icu_properties_data v2.2.0
+│   │   │   │       ├── icu_provider v2.2.0 (*)
+│   │   │   │       ├── zerotrie v0.2.4 (*)
+│   │   │   │       └── zerovec v0.11.6 (*)
+│   │   │   ├── smallvec v1.15.1
+│   │   │   └── utf8_iter v1.0.4
+│   │   ├── percent-encoding v2.3.2
+│   │   ├── serde v1.0.228 (*)
+│   │   └── serde_derive v1.0.228 (proc-macro) (*)
+│   └── winreg v0.50.0
+│       ├── cfg-if v1.0.4
+│       └── windows-sys v0.48.0
+│           └── windows-targets v0.48.5
+│               └── windows_x86_64_msvc v0.48.5
+├── screenshots v0.6.0
+│   ├── anyhow v1.0.103
+│   ├── display-info v0.4.8
+│   │   ├── anyhow v1.0.103
+│   │   ├── fxhash v0.2.1
+│   │   │   └── byteorder v1.5.0
+│   │   ├── widestring v1.2.1
+│   │   └── windows v0.52.0
+│   │       ├── windows-core v0.52.0
+│   │       │   └── windows-targets v0.52.6 (*)
+│   │       └── windows-targets v0.52.6 (*)
+│   ├── fxhash v0.2.1 (*)
+│   ├── png v0.17.16 (*)
+│   ├── widestring v1.2.1
+│   └── windows v0.48.0
+│       └── windows-targets v0.48.5 (*)
+├── serde v1.0.228 (*)
+├── serde_json v1.0.149 (*)
+├── sha2 v0.10.9
+│   ├── cfg-if v1.0.4
+│   ├── cpufeatures v0.2.17
+│   └── digest v0.10.7 (*)
+├── tauri v1.8.3
+│   ├── anyhow v1.0.103
+│   ├── base64 v0.22.1
+│   ├── bytes v1.11.1 (*)
+│   ├── dirs-next v2.0.0
+│   │   ├── cfg-if v1.0.4
+│   │   └── dirs-sys-next v0.1.2
+│   │       └── winapi v0.3.9
+│   ├── dunce v1.0.5
+│   ├── encoding_rs v0.8.35 (*)
+│   ├── flate2 v1.1.9 (*)
+│   ├── futures-util v0.3.32 (*)
+│   ├── getrandom v0.2.17 (*)
+│   ├── glob v0.3.3
+│   ├── http v0.2.12 (*)
+│   ├── ignore v0.4.25
+│   │   ├── crossbeam-deque v0.8.6 (*)
+│   │   ├── globset v0.4.18
+│   │   │   ├── aho-corasick v1.1.4
+│   │   │   │   └── memchr v2.8.0
+│   │   │   ├── bstr v1.12.1
+│   │   │   │   └── memchr v2.8.0
+│   │   │   ├── log v0.4.29
+│   │   │   ├── regex-automata v0.4.14
+│   │   │   │   ├── aho-corasick v1.1.4 (*)
+│   │   │   │   ├── memchr v2.8.0
+│   │   │   │   └── regex-syntax v0.8.10
+│   │   │   └── regex-syntax v0.8.10
+│   │   ├── log v0.4.29
+│   │   ├── memchr v2.8.0
+│   │   ├── regex-automata v0.4.14 (*)
+│   │   ├── same-file v1.0.6
+│   │   │   └── winapi-util v0.1.11
+│   │   │       └── windows-sys v0.61.2 (*)
+│   │   ├── walkdir v2.5.0
+│   │   │   ├── same-file v1.0.6 (*)
+│   │   │   └── winapi-util v0.1.11 (*)
+│   │   └── winapi-util v0.1.11 (*)
+│   ├── indexmap v1.9.3
+│   │   ├── hashbrown v0.12.3
+│   │   └── serde v1.0.228 (*)
+│   │   [build-dependencies]
+│   │   └── autocfg v1.5.0
+│   ├── infer v0.13.0
+│   │   └── cfb v0.7.3
+│   │       ├── byteorder v1.5.0
+│   │       ├── fnv v1.0.7
+│   │       └── uuid v1.23.1
+│   │           └── getrandom v0.4.2
+│   │               └── cfg-if v1.0.4
+│   ├── log v0.4.29
+│   ├── minisign-verify v0.2.5
+│   ├── once_cell v1.21.4
+│   ├── percent-encoding v2.3.2
+│   ├── rand v0.8.6
+│   │   ├── rand_chacha v0.3.1
+│   │   │   ├── ppv-lite86 v0.2.21
+│   │   │   │   └── zerocopy v0.8.48 (*)
+│   │   │   └── rand_core v0.6.4
+│   │   │       └── getrandom v0.2.17 (*)
+│   │   └── rand_core v0.6.4 (*)
+│   ├── raw-window-handle v0.5.2
+│   ├── reqwest v0.11.27 (*)
+│   ├── rfd v0.10.0
+│   │   ├── log v0.4.29
+│   │   ├── raw-window-handle v0.5.2
+│   │   └── windows v0.37.0
+│   │       └── windows_x86_64_msvc v0.37.0
+│   ├── semver v1.0.28
+│   │   └── serde_core v1.0.228
+│   ├── serde v1.0.228 (*)
+│   ├── serde_json v1.0.149 (*)
+│   ├── serde_repr v0.1.20 (proc-macro)
+│   │   ├── proc-macro2 v1.0.106 (*)
+│   │   ├── quote v1.0.45 (*)
+│   │   └── syn v2.0.117 (*)
+│   ├── serialize-to-javascript v0.1.2
+│   │   ├── serde v1.0.228 (*)
+│   │   ├── serde_json v1.0.149 (*)
+│   │   └── serialize-to-javascript-impl v0.1.2 (proc-macro)
+│   │       ├── proc-macro2 v1.0.106 (*)
+│   │       ├── quote v1.0.45 (*)
+│   │       └── syn v2.0.117 (*)
+│   ├── state v0.5.3
+│   ├── tar v0.4.45
+│   │   └── filetime v0.2.27
+│   │       └── cfg-if v1.0.4
+│   ├── tauri-macros v1.4.7 (proc-macro)
+│   │   ├── heck v0.5.0
+│   │   ├── proc-macro2 v1.0.106 (*)
+│   │   ├── quote v1.0.45 (*)
+│   │   ├── syn v1.0.109
+│   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   ├── quote v1.0.45 (*)
+│   │   │   └── unicode-ident v1.0.24
+│   │   ├── tauri-codegen v1.4.6
+│   │   │   ├── base64 v0.21.7
+│   │   │   ├── brotli v7.0.0
+│   │   │   │   ├── alloc-no-stdlib v2.0.4
+│   │   │   │   ├── alloc-stdlib v0.2.2
+│   │   │   │   │   └── alloc-no-stdlib v2.0.4
+│   │   │   │   └── brotli-decompressor v4.0.3
+│   │   │   │       ├── alloc-no-stdlib v2.0.4
+│   │   │   │       └── alloc-stdlib v0.2.2 (*)
+│   │   │   ├── ico v0.4.0
+│   │   │   │   ├── byteorder v1.5.0
+│   │   │   │   └── png v0.17.16
+│   │   │   │       ├── bitflags v1.3.2
+│   │   │   │       ├── crc32fast v1.5.0
+│   │   │   │       │   └── cfg-if v1.0.4
+│   │   │   │       ├── fdeflate v0.3.7
+│   │   │   │       │   └── simd-adler32 v0.3.9
+│   │   │   │       ├── flate2 v1.1.9
+│   │   │   │       │   ├── crc32fast v1.5.0 (*)
+│   │   │   │       │   └── miniz_oxide v0.8.9
+│   │   │   │       │       ├── adler2 v2.0.1
+│   │   │   │       │       └── simd-adler32 v0.3.9
+│   │   │   │       └── miniz_oxide v0.8.9 (*)
+│   │   │   ├── json-patch v2.0.0
+│   │   │   │   ├── jsonptr v0.4.7
+│   │   │   │   │   ├── serde v1.0.228
+│   │   │   │   │   │   ├── serde_core v1.0.228
+│   │   │   │   │   │   └── serde_derive v1.0.228 (proc-macro) (*)
+│   │   │   │   │   └── serde_json v1.0.149
+│   │   │   │   │       ├── itoa v1.0.18
+│   │   │   │   │       ├── memchr v2.8.0
+│   │   │   │   │       ├── serde_core v1.0.228
+│   │   │   │   │       └── zmij v1.0.21
+│   │   │   │   ├── serde v1.0.228 (*)
+│   │   │   │   ├── serde_json v1.0.149 (*)
+│   │   │   │   └── thiserror v1.0.69
+│   │   │   │       └── thiserror-impl v1.0.69 (proc-macro)
+│   │   │   │           ├── proc-macro2 v1.0.106 (*)
+│   │   │   │           ├── quote v1.0.45 (*)
+│   │   │   │           └── syn v2.0.117 (*)
+│   │   │   ├── png v0.17.16 (*)
+│   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   ├── quote v1.0.45 (*)
+│   │   │   ├── semver v1.0.28
+│   │   │   ├── serde v1.0.228 (*)
+│   │   │   ├── serde_json v1.0.149 (*)
+│   │   │   ├── sha2 v0.10.9
+│   │   │   │   ├── cfg-if v1.0.4
+│   │   │   │   ├── cpufeatures v0.2.17
+│   │   │   │   └── digest v0.10.7
+│   │   │   │       ├── block-buffer v0.10.4
+│   │   │   │       │   └── generic-array v0.14.7
+│   │   │   │       │       └── typenum v1.20.0
+│   │   │   │       │       [build-dependencies]
+│   │   │   │       │       └── version_check v0.9.5
+│   │   │   │       └── crypto-common v0.1.7
+│   │   │   │           ├── generic-array v0.14.7 (*)
+│   │   │   │           └── typenum v1.20.0
+│   │   │   ├── tauri-utils v1.6.2
+│   │   │   │   ├── brotli v7.0.0 (*)
+│   │   │   │   ├── ctor v0.2.9 (proc-macro)
+│   │   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   └── syn v2.0.117 (*)
+│   │   │   │   ├── dunce v1.0.5
+│   │   │   │   ├── glob v0.3.3
+│   │   │   │   ├── html5ever v0.26.0
+│   │   │   │   │   ├── log v0.4.29
+│   │   │   │   │   ├── mac v0.1.1
+│   │   │   │   │   └── markup5ever v0.11.0
+│   │   │   │   │       ├── log v0.4.29
+│   │   │   │   │       ├── phf v0.10.1
+│   │   │   │   │       │   └── phf_shared v0.10.0
+│   │   │   │   │       │       └── siphasher v0.3.11
+│   │   │   │   │       ├── string_cache v0.8.9
+│   │   │   │   │       │   ├── new_debug_unreachable v1.0.6
+│   │   │   │   │       │   ├── parking_lot v0.12.5
+│   │   │   │   │       │   │   ├── lock_api v0.4.14
+│   │   │   │   │       │   │   │   └── scopeguard v1.2.0
+│   │   │   │   │       │   │   └── parking_lot_core v0.9.12
+│   │   │   │   │       │   │       ├── cfg-if v1.0.4
+│   │   │   │   │       │   │       ├── smallvec v1.15.1
+│   │   │   │   │       │   │       └── windows-link v0.2.1
+│   │   │   │   │       │   ├── phf_shared v0.11.3
+│   │   │   │   │       │   │   └── siphasher v1.0.3
+│   │   │   │   │       │   ├── precomputed-hash v0.1.1
+│   │   │   │   │       │   └── serde v1.0.228 (*)
+│   │   │   │   │       └── tendril v0.4.3
+│   │   │   │   │           ├── futf v0.1.5
+│   │   │   │   │           │   ├── mac v0.1.1
+│   │   │   │   │           │   └── new_debug_unreachable v1.0.6
+│   │   │   │   │           ├── mac v0.1.1
+│   │   │   │   │           └── utf-8 v0.7.6
+│   │   │   │   │       [build-dependencies]
+│   │   │   │   │       ├── phf_codegen v0.10.0
+│   │   │   │   │       │   ├── phf_generator v0.10.0
+│   │   │   │   │       │   │   ├── phf_shared v0.10.0 (*)
+│   │   │   │   │       │   │   └── rand v0.8.6
+│   │   │   │   │       │   │       ├── rand_chacha v0.3.1
+│   │   │   │   │       │   │       │   ├── ppv-lite86 v0.2.21
+│   │   │   │   │       │   │       │   │   └── zerocopy v0.8.48
+│   │   │   │   │       │   │       │   └── rand_core v0.6.4
+│   │   │   │   │       │   │       │       └── getrandom v0.2.17
+│   │   │   │   │       │   │       │           └── cfg-if v1.0.4
+│   │   │   │   │       │   │       └── rand_core v0.6.4 (*)
+│   │   │   │   │       │   └── phf_shared v0.10.0 (*)
+│   │   │   │   │       └── string_cache_codegen v0.5.4
+│   │   │   │   │           ├── phf_generator v0.11.3
+│   │   │   │   │           │   ├── phf_shared v0.11.3 (*)
+│   │   │   │   │           │   └── rand v0.8.6 (*)
+│   │   │   │   │           ├── phf_shared v0.11.3 (*)
+│   │   │   │   │           ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │           └── quote v1.0.45 (*)
+│   │   │   │   │   [build-dependencies]
+│   │   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   └── syn v1.0.109 (*)
+│   │   │   │   ├── infer v0.13.0
+│   │   │   │   │   └── cfb v0.7.3
+│   │   │   │   │       ├── byteorder v1.5.0
+│   │   │   │   │       ├── fnv v1.0.7
+│   │   │   │   │       └── uuid v1.23.1
+│   │   │   │   │           └── getrandom v0.4.2
+│   │   │   │   │               └── cfg-if v1.0.4
+│   │   │   │   ├── json-patch v2.0.0 (*)
+│   │   │   │   ├── kuchikiki v0.8.2
+│   │   │   │   │   ├── cssparser v0.27.2
+│   │   │   │   │   │   ├── cssparser-macros v0.6.1 (proc-macro)
+│   │   │   │   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   │   │   └── syn v2.0.117 (*)
+│   │   │   │   │   │   ├── dtoa-short v0.3.5
+│   │   │   │   │   │   │   └── dtoa v1.0.11
+│   │   │   │   │   │   ├── itoa v0.4.8
+│   │   │   │   │   │   ├── matches v0.1.10
+│   │   │   │   │   │   ├── phf v0.8.0
+│   │   │   │   │   │   │   ├── phf_macros v0.8.0 (proc-macro)
+│   │   │   │   │   │   │   │   ├── phf_generator v0.8.0
+│   │   │   │   │   │   │   │   │   ├── phf_shared v0.8.0
+│   │   │   │   │   │   │   │   │   │   └── siphasher v0.3.11
+│   │   │   │   │   │   │   │   │   └── rand v0.7.3
+│   │   │   │   │   │   │   │   │       ├── getrandom v0.1.16
+│   │   │   │   │   │   │   │   │       │   └── cfg-if v1.0.4
+│   │   │   │   │   │   │   │   │       ├── rand_chacha v0.2.2
+│   │   │   │   │   │   │   │   │       │   ├── ppv-lite86 v0.2.21 (*)
+│   │   │   │   │   │   │   │   │       │   └── rand_core v0.5.1
+│   │   │   │   │   │   │   │   │       │       └── getrandom v0.1.16 (*)
+│   │   │   │   │   │   │   │   │       ├── rand_core v0.5.1 (*)
+│   │   │   │   │   │   │   │   │       └── rand_pcg v0.2.1
+│   │   │   │   │   │   │   │   │           └── rand_core v0.5.1 (*)
+│   │   │   │   │   │   │   │   ├── phf_shared v0.8.0 (*)
+│   │   │   │   │   │   │   │   ├── proc-macro-hack v0.5.20+deprecated (proc-macro)
+│   │   │   │   │   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   │   │   │   └── syn v1.0.109 (*)
+│   │   │   │   │   │   │   ├── phf_shared v0.8.0 (*)
+│   │   │   │   │   │   │   └── proc-macro-hack v0.5.20+deprecated (proc-macro)
+│   │   │   │   │   │   └── smallvec v1.15.1
+│   │   │   │   │   │   [build-dependencies]
+│   │   │   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   │   └── syn v1.0.109 (*)
+│   │   │   │   │   ├── html5ever v0.26.0 (*)
+│   │   │   │   │   ├── indexmap v1.9.3
+│   │   │   │   │   │   └── hashbrown v0.12.3
+│   │   │   │   │   │   [build-dependencies]
+│   │   │   │   │   │   └── autocfg v1.5.0
+│   │   │   │   │   ├── matches v0.1.10
+│   │   │   │   │   └── selectors v0.22.0
+│   │   │   │   │       ├── bitflags v1.3.2
+│   │   │   │   │       ├── cssparser v0.27.2 (*)
+│   │   │   │   │       ├── derive_more v0.99.20 (proc-macro)
+│   │   │   │   │       │   ├── convert_case v0.4.0
+│   │   │   │   │       │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │       │   ├── quote v1.0.45 (*)
+│   │   │   │   │       │   └── syn v2.0.117 (*)
+│   │   │   │   │       │   [build-dependencies]
+│   │   │   │   │       │   └── rustc_version v0.4.1
+│   │   │   │   │       │       └── semver v1.0.28
+│   │   │   │   │       ├── fxhash v0.2.1
+│   │   │   │   │       │   └── byteorder v1.5.0
+│   │   │   │   │       ├── log v0.4.29
+│   │   │   │   │       ├── matches v0.1.10
+│   │   │   │   │       ├── phf v0.8.0 (*)
+│   │   │   │   │       ├── precomputed-hash v0.1.1
+│   │   │   │   │       ├── servo_arc v0.1.1
+│   │   │   │   │       │   ├── nodrop v0.1.14
+│   │   │   │   │       │   └── stable_deref_trait v1.2.1
+│   │   │   │   │       ├── smallvec v1.15.1
+│   │   │   │   │       └── thin-slice v0.1.1
+│   │   │   │   │       [build-dependencies]
+│   │   │   │   │       └── phf_codegen v0.8.0
+│   │   │   │   │           ├── phf_generator v0.8.0 (*)
+│   │   │   │   │           └── phf_shared v0.8.0 (*)
+│   │   │   │   ├── log v0.4.29
+│   │   │   │   ├── memchr v2.8.0
+│   │   │   │   ├── phf v0.11.3
+│   │   │   │   │   ├── phf_macros v0.11.3 (proc-macro)
+│   │   │   │   │   │   ├── phf_generator v0.11.3 (*)
+│   │   │   │   │   │   ├── phf_shared v0.11.3 (*)
+│   │   │   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   │   └── syn v2.0.117 (*)
+│   │   │   │   │   └── phf_shared v0.11.3 (*)
+│   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   ├── semver v1.0.28
+│   │   │   │   ├── serde v1.0.228 (*)
+│   │   │   │   ├── serde_json v1.0.149 (*)
+│   │   │   │   ├── serde_with v3.19.0
+│   │   │   │   │   ├── serde_core v1.0.228
+│   │   │   │   │   └── serde_with_macros v3.19.0 (proc-macro)
+│   │   │   │   │       ├── darling v0.23.0
+│   │   │   │   │       │   ├── darling_core v0.23.0
+│   │   │   │   │       │   │   ├── ident_case v1.0.1
+│   │   │   │   │       │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │       │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │       │   │   ├── strsim v0.11.1
+│   │   │   │   │       │   │   └── syn v2.0.117 (*)
+│   │   │   │   │       │   └── darling_macro v0.23.0 (proc-macro)
+│   │   │   │   │       │       ├── darling_core v0.23.0 (*)
+│   │   │   │   │       │       ├── quote v1.0.45 (*)
+│   │   │   │   │       │       └── syn v2.0.117 (*)
+│   │   │   │   │       ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │       ├── quote v1.0.45 (*)
+│   │   │   │   │       └── syn v2.0.117 (*)
+│   │   │   │   ├── thiserror v1.0.69 (*)
+│   │   │   │   ├── url v2.5.8
+│   │   │   │   │   ├── form_urlencoded v1.2.2
+│   │   │   │   │   │   └── percent-encoding v2.3.2
+│   │   │   │   │   ├── idna v1.1.0
+│   │   │   │   │   │   ├── idna_adapter v1.2.2
+│   │   │   │   │   │   │   ├── icu_normalizer v2.2.0
+│   │   │   │   │   │   │   │   ├── icu_collections v2.2.0
+│   │   │   │   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   │   │   │   ├── potential_utf v0.1.5
+│   │   │   │   │   │   │   │   │   │   └── zerovec v0.11.6
+│   │   │   │   │   │   │   │   │   │       ├── yoke v0.8.2
+│   │   │   │   │   │   │   │   │   │       │   ├── stable_deref_trait v1.2.1
+│   │   │   │   │   │   │   │   │   │       │   ├── yoke-derive v0.8.2 (proc-macro) (*)
+│   │   │   │   │   │   │   │   │   │       │   └── zerofrom v0.1.7
+│   │   │   │   │   │   │   │   │   │       │       └── zerofrom-derive v0.1.7 (proc-macro) (*)
+│   │   │   │   │   │   │   │   │   │       ├── zerofrom v0.1.7 (*)
+│   │   │   │   │   │   │   │   │   │       └── zerovec-derive v0.11.3 (proc-macro) (*)
+│   │   │   │   │   │   │   │   │   ├── utf8_iter v1.0.4
+│   │   │   │   │   │   │   │   │   ├── yoke v0.8.2 (*)
+│   │   │   │   │   │   │   │   │   ├── zerofrom v0.1.7 (*)
+│   │   │   │   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   │   │   │   ├── icu_normalizer_data v2.2.0
+│   │   │   │   │   │   │   │   ├── icu_provider v2.2.0
+│   │   │   │   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   │   │   │   ├── icu_locale_core v2.2.0
+│   │   │   │   │   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   │   │   │   │   ├── litemap v0.8.2
+│   │   │   │   │   │   │   │   │   │   ├── tinystr v0.8.3
+│   │   │   │   │   │   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   │   │   │   │   │   ├── writeable v0.6.3
+│   │   │   │   │   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   │   │   │   │   ├── writeable v0.6.3
+│   │   │   │   │   │   │   │   │   ├── yoke v0.8.2 (*)
+│   │   │   │   │   │   │   │   │   ├── zerofrom v0.1.7 (*)
+│   │   │   │   │   │   │   │   │   ├── zerotrie v0.2.4
+│   │   │   │   │   │   │   │   │   │   ├── displaydoc v0.2.5 (proc-macro) (*)
+│   │   │   │   │   │   │   │   │   │   ├── yoke v0.8.2 (*)
+│   │   │   │   │   │   │   │   │   │   └── zerofrom v0.1.7 (*)
+│   │   │   │   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   │   │   │   ├── smallvec v1.15.1
+│   │   │   │   │   │   │   │   └── zerovec v0.11.6 (*)
+│   │   │   │   │   │   │   └── icu_properties v2.2.0
+│   │   │   │   │   │   │       ├── icu_collections v2.2.0 (*)
+│   │   │   │   │   │   │       ├── icu_locale_core v2.2.0 (*)
+│   │   │   │   │   │   │       ├── icu_properties_data v2.2.0
+│   │   │   │   │   │   │       ├── icu_provider v2.2.0 (*)
+│   │   │   │   │   │   │       ├── zerotrie v0.2.4 (*)
+│   │   │   │   │   │   │       └── zerovec v0.11.6 (*)
+│   │   │   │   │   │   ├── smallvec v1.15.1
+│   │   │   │   │   │   └── utf8_iter v1.0.4
+│   │   │   │   │   ├── percent-encoding v2.3.2
+│   │   │   │   │   ├── serde v1.0.228 (*)
+│   │   │   │   │   └── serde_derive v1.0.228 (proc-macro) (*)
+│   │   │   │   ├── walkdir v2.5.0
+│   │   │   │   │   ├── same-file v1.0.6
+│   │   │   │   │   │   └── winapi-util v0.1.11
+│   │   │   │   │   │       └── windows-sys v0.61.2
+│   │   │   │   │   │           └── windows-link v0.2.1
+│   │   │   │   │   └── winapi-util v0.1.11 (*)
+│   │   │   │   └── windows-version v0.1.7
+│   │   │   │       └── windows-link v0.2.1
+│   │   │   ├── thiserror v1.0.69 (*)
+│   │   │   ├── uuid v1.23.1 (*)
+│   │   │   └── walkdir v2.5.0 (*)
+│   │   └── tauri-utils v1.6.2 (*)
+│   ├── tauri-runtime v0.14.6
+│   │   ├── http v0.2.12 (*)
+│   │   ├── http-range v0.1.5
+│   │   ├── rand v0.8.6 (*)
+│   │   ├── raw-window-handle v0.5.2
+│   │   ├── serde v1.0.228 (*)
+│   │   ├── serde_json v1.0.149 (*)
+│   │   ├── tauri-utils v1.6.2
+│   │   │   ├── brotli v7.0.0
+│   │   │   │   ├── alloc-no-stdlib v2.0.4
+│   │   │   │   ├── alloc-stdlib v0.2.2
+│   │   │   │   │   └── alloc-no-stdlib v2.0.4
+│   │   │   │   └── brotli-decompressor v4.0.3
+│   │   │   │       ├── alloc-no-stdlib v2.0.4
+│   │   │   │       └── alloc-stdlib v0.2.2 (*)
+│   │   │   ├── ctor v0.2.9 (proc-macro) (*)
+│   │   │   ├── dunce v1.0.5
+│   │   │   ├── glob v0.3.3
+│   │   │   ├── html5ever v0.26.0
+│   │   │   │   ├── log v0.4.29
+│   │   │   │   ├── mac v0.1.1
+│   │   │   │   └── markup5ever v0.11.0
+│   │   │   │       ├── log v0.4.29
+│   │   │   │       ├── phf v0.10.1
+│   │   │   │       │   └── phf_shared v0.10.0
+│   │   │   │       │       └── siphasher v0.3.11
+│   │   │   │       ├── string_cache v0.8.9
+│   │   │   │       │   ├── new_debug_unreachable v1.0.6
+│   │   │   │       │   ├── parking_lot v0.12.5 (*)
+│   │   │   │       │   ├── phf_shared v0.11.3
+│   │   │   │       │   │   └── siphasher v1.0.3
+│   │   │   │       │   ├── precomputed-hash v0.1.1
+│   │   │   │       │   └── serde v1.0.228 (*)
+│   │   │   │       └── tendril v0.4.3
+│   │   │   │           ├── futf v0.1.5
+│   │   │   │           │   ├── mac v0.1.1
+│   │   │   │           │   └── new_debug_unreachable v1.0.6
+│   │   │   │           ├── mac v0.1.1
+│   │   │   │           └── utf-8 v0.7.6
+│   │   │   │       [build-dependencies]
+│   │   │   │       ├── phf_codegen v0.10.0 (*)
+│   │   │   │       └── string_cache_codegen v0.5.4 (*)
+│   │   │   │   [build-dependencies]
+│   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   └── syn v1.0.109 (*)
+│   │   │   ├── infer v0.13.0 (*)
+│   │   │   ├── json-patch v2.0.0
+│   │   │   │   ├── jsonptr v0.4.7
+│   │   │   │   │   ├── serde v1.0.228 (*)
+│   │   │   │   │   └── serde_json v1.0.149 (*)
+│   │   │   │   ├── serde v1.0.228 (*)
+│   │   │   │   ├── serde_json v1.0.149 (*)
+│   │   │   │   └── thiserror v1.0.69
+│   │   │   │       └── thiserror-impl v1.0.69 (proc-macro) (*)
+│   │   │   ├── kuchikiki v0.8.2
+│   │   │   │   ├── cssparser v0.27.2
+│   │   │   │   │   ├── cssparser-macros v0.6.1 (proc-macro) (*)
+│   │   │   │   │   ├── dtoa-short v0.3.5
+│   │   │   │   │   │   └── dtoa v1.0.11
+│   │   │   │   │   ├── itoa v0.4.8
+│   │   │   │   │   ├── matches v0.1.10
+│   │   │   │   │   ├── phf v0.8.0
+│   │   │   │   │   │   ├── phf_macros v0.8.0 (proc-macro) (*)
+│   │   │   │   │   │   ├── phf_shared v0.8.0
+│   │   │   │   │   │   │   └── siphasher v0.3.11
+│   │   │   │   │   │   └── proc-macro-hack v0.5.20+deprecated (proc-macro)
+│   │   │   │   │   └── smallvec v1.15.1
+│   │   │   │   │   [build-dependencies]
+│   │   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   │   └── syn v1.0.109 (*)
+│   │   │   │   ├── html5ever v0.26.0 (*)
+│   │   │   │   ├── indexmap v1.9.3 (*)
+│   │   │   │   ├── matches v0.1.10
+│   │   │   │   └── selectors v0.22.0
+│   │   │   │       ├── bitflags v1.3.2
+│   │   │   │       ├── cssparser v0.27.2 (*)
+│   │   │   │       ├── derive_more v0.99.20 (proc-macro) (*)
+│   │   │   │       ├── fxhash v0.2.1 (*)
+│   │   │   │       ├── log v0.4.29
+│   │   │   │       ├── matches v0.1.10
+│   │   │   │       ├── phf v0.8.0 (*)
+│   │   │   │       ├── precomputed-hash v0.1.1
+│   │   │   │       ├── servo_arc v0.1.1
+│   │   │   │       │   ├── nodrop v0.1.14
+│   │   │   │       │   └── stable_deref_trait v1.2.1
+│   │   │   │       ├── smallvec v1.15.1
+│   │   │   │       └── thin-slice v0.1.1
+│   │   │   │       [build-dependencies]
+│   │   │   │       └── phf_codegen v0.8.0 (*)
+│   │   │   ├── log v0.4.29
+│   │   │   ├── memchr v2.8.0
+│   │   │   ├── phf v0.11.3
+│   │   │   │   ├── phf_macros v0.11.3 (proc-macro) (*)
+│   │   │   │   └── phf_shared v0.11.3 (*)
+│   │   │   ├── semver v1.0.28 (*)
+│   │   │   ├── serde v1.0.228 (*)
+│   │   │   ├── serde_json v1.0.149 (*)
+│   │   │   ├── serde_with v3.19.0
+│   │   │   │   ├── serde_core v1.0.228
+│   │   │   │   └── serde_with_macros v3.19.0 (proc-macro) (*)
+│   │   │   ├── thiserror v1.0.69 (*)
+│   │   │   ├── url v2.5.8 (*)
+│   │   │   ├── walkdir v2.5.0 (*)
+│   │   │   └── windows-version v0.1.7
+│   │   │       └── windows-link v0.2.1
+│   │   ├── thiserror v1.0.69 (*)
+│   │   ├── url v2.5.8 (*)
+│   │   ├── uuid v1.23.1 (*)
+│   │   ├── webview2-com v0.19.1
+│   │   │   ├── webview2-com-macros v0.6.0 (proc-macro)
+│   │   │   │   ├── proc-macro2 v1.0.106 (*)
+│   │   │   │   ├── quote v1.0.45 (*)
+│   │   │   │   └── syn v1.0.109 (*)
+│   │   │   ├── webview2-com-sys v0.19.0
+│   │   │   │   └── windows v0.39.0
+│   │   │   │       ├── windows-implement v0.39.0 (proc-macro)
+│   │   │   │       │   ├── syn v1.0.109 (*)
+│   │   │   │       │   └── windows-tokens v0.39.0
+│   │   │   │       └── windows_x86_64_msvc v0.39.0
+│   │   │   │   [build-dependencies]
+│   │   │   │   ├── regex v1.12.3
+│   │   │   │   │   ├── aho-corasick v1.1.4
+│   │   │   │   │   │   └── memchr v2.8.0
+│   │   │   │   │   ├── memchr v2.8.0
+│   │   │   │   │   ├── regex-automata v0.4.14
+│   │   │   │   │   │   ├── aho-corasick v1.1.4 (*)
+│   │   │   │   │   │   ├── memchr v2.8.0
+│   │   │   │   │   │   └── regex-syntax v0.8.10
+│   │   │   │   │   └── regex-syntax v0.8.10
+│   │   │   │   ├── serde v1.0.228 (*)
+│   │   │   │   ├── serde_json v1.0.149 (*)
+│   │   │   │   ├── thiserror v1.0.69 (*)
+│   │   │   │   ├── windows-bindgen v0.39.0
+│   │   │   │   │   ├── windows-metadata v0.39.0
+│   │   │   │   │   └── windows-tokens v0.39.0
+│   │   │   │   └── windows-metadata v0.39.0
+│   │   │   ├── windows v0.39.0 (*)
+│   │   │   └── windows-implement v0.39.0 (proc-macro) (*)
+│   │   └── windows v0.39.0 (*)
+│   ├── tauri-runtime-wry v0.14.11
+│   │   ├── arboard v3.6.1 (*)
+│   │   ├── rand v0.8.6 (*)
+│   │   ├── raw-window-handle v0.5.2
+│   │   ├── tauri-runtime v0.14.6 (*)
+│   │   ├── tauri-utils v1.6.2 (*)
+│   │   ├── uuid v1.23.1 (*)
+│   │   ├── webview2-com v0.19.1 (*)
+│   │   ├── windows v0.39.0 (*)
+│   │   └── wry v0.24.12
+│   │       ├── dunce v1.0.5
+│   │       ├── http v0.2.12 (*)
+│   │       ├── libc v0.2.186
+│   │       ├── log v0.4.29
+│   │       ├── once_cell v1.21.4
+│   │       ├── serde v1.0.228 (*)
+│   │       ├── serde_json v1.0.149 (*)
+│   │       ├── tao v0.16.11
+│   │       │   ├── bitflags v1.3.2
+│   │       │   ├── crossbeam-channel v0.5.15
+│   │       │   │   └── crossbeam-utils v0.8.21
+│   │       │   ├── image v0.24.9 (*)
+│   │       │   ├── instant v0.1.13
+│   │       │   │   └── cfg-if v1.0.4
+│   │       │   ├── lazy_static v1.5.0
+│   │       │   ├── libc v0.2.186
+│   │       │   ├── log v0.4.29
+│   │       │   ├── parking_lot v0.12.5 (*)
+│   │       │   ├── raw-window-handle v0.5.2
+│   │       │   ├── serde v1.0.228 (*)
+│   │       │   ├── unicode-segmentation v1.13.2
+│   │       │   ├── windows v0.39.0 (*)
+│   │       │   └── windows-implement v0.39.0 (proc-macro) (*)
+│   │       │   [build-dependencies]
+│   │       │   └── cc v1.2.61
+│   │       │       ├── find-msvc-tools v0.1.9
+│   │       │       └── shlex v1.3.0
+│   │       ├── thiserror v1.0.69 (*)
+│   │       ├── url v2.5.8 (*)
+│   │       ├── webview2-com v0.19.1 (*)
+│   │       ├── windows v0.39.0 (*)
+│   │       └── windows-implement v0.39.0 (proc-macro) (*)
+│   ├── tauri-utils v1.6.2 (*)
+│   ├── tempfile v3.27.0
+│   │   ├── fastrand v2.4.1
+│   │   ├── getrandom v0.4.2 (*)
+│   │   ├── once_cell v1.21.4
+│   │   └── windows-sys v0.61.2 (*)
+│   ├── thiserror v1.0.69 (*)
+│   ├── time v0.3.47
+│   │   ├── deranged v0.5.8
+│   │   │   └── powerfmt v0.2.0
+│   │   ├── itoa v1.0.18
+│   │   ├── num-conv v0.2.1
+│   │   ├── powerfmt v0.2.0
+│   │   └── time-core v0.1.8
+│   ├── tokio v1.52.2 (*)
+│   ├── url v2.5.8 (*)
+│   ├── uuid v1.23.1 (*)
+│   ├── webview2-com v0.19.1 (*)
+│   ├── windows v0.39.0 (*)
+│   └── zip v0.6.6
+│       ├── byteorder v1.5.0
+│       └── crc32fast v1.5.0 (*)
+│   [build-dependencies]
+│   ├── heck v0.5.0
+│   └── once_cell v1.21.4
+├── tauri-plugin-autostart v0.0.0 (https://github.com/tauri-apps/plugins-workspace?branch=v1#1e407ed5)
+│   ├── auto-launch v0.5.0
+│   │   ├── thiserror v1.0.69 (*)
+│   │   └── winreg v0.10.1
+│   │       └── winapi v0.3.9
+│   ├── log v0.4.29
+│   ├── serde v1.0.228 (*)
+│   ├── serde_json v1.0.149 (*)
+│   ├── tauri v1.8.3 (*)
+│   └── thiserror v1.0.69 (*)
+├── thiserror v1.0.69 (*)
+├── tokio v1.52.2 (*)
+└── windows v0.52.0 (*)
+[build-dependencies]
+└── tauri-build v1.5.6
+    ├── anyhow v1.0.103
+    ├── cargo_toml v0.15.3
+    │   ├── serde v1.0.228 (*)
+    │   └── toml v0.7.8
+    │       ├── serde v1.0.228 (*)
+    │       ├── serde_spanned v0.6.9
+    │       │   └── serde v1.0.228 (*)
+    │       ├── toml_datetime v0.6.11
+    │       │   └── serde v1.0.228 (*)
+    │       └── toml_edit v0.19.15
+    │           ├── indexmap v2.14.0
+    │           │   ├── equivalent v1.0.2
+    │           │   └── hashbrown v0.17.0
+    │           ├── serde v1.0.228 (*)
+    │           ├── serde_spanned v0.6.9 (*)
+    │           ├── toml_datetime v0.6.11 (*)
+    │           └── winnow v0.5.40
+    ├── dirs-next v2.0.0
+    │   ├── cfg-if v1.0.4
+    │   └── dirs-sys-next v0.1.2
+    │       └── winapi v0.3.9
+    ├── heck v0.5.0
+    ├── json-patch v2.0.0 (*)
+    ├── semver v1.0.28
+    ├── serde v1.0.228 (*)
+    ├── serde_json v1.0.149 (*)
+    ├── tauri-utils v1.6.2 (*)
+    ├── tauri-winres v0.1.1
+    │   ├── embed-resource v2.5.2
+    │   │   ├── cc v1.2.61 (*)
+    │   │   ├── rustc_version v0.4.1 (*)
+    │   │   ├── toml v0.8.23
+    │   │   │   ├── serde v1.0.228 (*)
+    │   │   │   ├── serde_spanned v0.6.9 (*)
+    │   │   │   ├── toml_datetime v0.6.11 (*)
+    │   │   │   └── toml_edit v0.22.27
+    │   │   │       ├── indexmap v2.14.0 (*)
+    │   │   │       ├── serde v1.0.228 (*)
+    │   │   │       ├── serde_spanned v0.6.9 (*)
+    │   │   │       ├── toml_datetime v0.6.11 (*)
+    │   │   │       ├── toml_write v0.1.2
+    │   │   │       └── winnow v0.7.15
+    │   │   ├── vswhom v0.1.0
+    │   │   │   ├── libc v0.2.186
+    │   │   │   └── vswhom-sys v0.1.3
+    │   │   │       └── libc v0.2.186
+    │   │   │       [build-dependencies]
+    │   │   │       └── cc v1.2.61 (*)
+    │   │   └── winreg v0.52.0
+    │   │       ├── cfg-if v1.0.4
+    │   │       └── windows-sys v0.48.0
+    │   │           └── windows-targets v0.48.5
+    │   │               └── windows_x86_64_msvc v0.48.5
+    │   └── toml v0.7.8 (*)
+    └── walkdir v2.5.0 (*)

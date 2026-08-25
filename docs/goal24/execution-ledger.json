@@ -151,9 +151,44 @@
         "no GitHub external state touched (issues #1/#2/#3 untouched)"
       ],
       "next_owner_action": "none; D1B control-surface gate remains NOT_STARTED and npm distribution remains NOT_PUBLISHED"
+    },
+    {
+      "task_id": "OMCTX_D1B0_CONTROL_THREAT_GATE",
+      "track": "Goal24 Distribution (D1B-0)",
+      "checkpoint_or_goal": "D1B-0",
+      "owner_decision": "ASSIGNED",
+      "executor": "d1b0 control threat audit lane",
+      "status": "COMPLETE",
+      "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+      "base_sha": "fb80b7513a58b7fc095ab90240892cedad0e8be9",
+      "audit_sha": "e67895217b06cc6686c455e9dd771136303ab8505457ab5e63f402f8c1963166",
+      "cargo_audit_status": "COMPLETED_EXIT_1_ADVISORIES_CLASSIFIED",
+      "rustsec_db_fresh": true,
+      "npm_brain_status": "COMPLETED_EXIT_1_28_FINDINGS_CLASSIFIED",
+      "npm_desktop_status": "COMPLETED_EXIT_1_9_FINDINGS_CLASSIFIED",
+      "unknown_count": 0,
+      "fix_before_d1b": 0,
+      "blocks_d1b": 0,
+      "transport_decision": "AUTHENTICATED_LOOPBACK_HTTP_FIXED_ROUTES",
+      "auth_scope_decision": "SEPARATE_CONTROL_SCOPES; READ_TOKEN_CAN_APPROVE=NO; READ_TOKEN_CAN_VERIFY=NO",
+      "d1b1_ready": true,
+      "d1b2_ready": false,
+      "gate_status": "D1B0_READINESS_GATE=PASS / READY_FOR_D1B1_ENGINEERING",
+      "feature_branch": "dev/d1b0-control-threat-audit",
+      "remote_feature_pushed": false,
+      "authoritative_remote_integrated": false,
+      "blockers": [],
+      "verification_evidence": [
+        "Fresh RustSec database refresh succeeded; cargo audit JSON and Windows target tree retained.",
+        "Fresh Brain npm audit (28 findings) and Desktop npm audit (9 findings) retained with machine classification.",
+        "Threat model covers A1-A12, trust boundaries, browser origin, token theft, replay, cross-subject, and compromised tool output.",
+        "Attack surface inventory and generic escape search found no current public approval/verify or arbitrary execution/receipt/observation/outcome surfaces.",
+        "Runtime files were not modified; approve and verify remain TARGET_LOCKED."
+      ],
+      "next_owner_action": "authoritative review before D1B-1 implementation; D1B-2 waits for D1B-1 authoritative PASS"
     }
   ],
-  "last_verified_at": "2026-08-25T10:38:52Z",
+  "last_verified_at": "2026-08-25T14:18:43.682Z",
   "notes": [
     "authoritative branch is dev/goal24-cli-skills; the Post-CP8 integration pushed it to the runtime candidate + docs commits.",
     "CP8 gate artifact status read from repo: CHECKPOINT8_SECURITY_GATE=PASS, DRG1_TECHNICAL_PREREQUISITE=SATISFIED, checkpoint9_started=NO.",

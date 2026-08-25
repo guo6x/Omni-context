@@ -1,0 +1,1250 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-25T14:20:33.338Z",
+  "tool_versions": {
+    "cargo_audit": "cargo-audit-audit 0.22.2",
+    "npm": "10.9.8"
+  },
+  "rustsec_db": {
+    "refresh": "SUCCESS",
+    "revision": "a7bfe16948bf6f3ee25bdee4822209f87da21b80",
+    "updated": "2026-08-24T22:42:17-04:00"
+  },
+  "cargo_audit": {
+    "completed": true,
+    "exit_code": 1,
+    "target": "x86_64-pc-windows-msvc",
+    "advisory_count": 5
+  },
+  "npm_audits": {
+    "brain": {
+      "completed": true,
+      "exit_code": 1,
+      "findings": 28
+    },
+    "desktop": {
+      "completed": true,
+      "exit_code": 1,
+      "findings": 9
+    }
+  },
+  "counts": {
+    "NOT_CONTROL_SURFACE_REACHABLE": 1,
+    "NOT_RUNTIME_REACHABLE": 4,
+    "RUNTIME_REACHABLE_NON_CONTROL": 10,
+    "DEV_ONLY": 13,
+    "BUILD_ONLY": 14
+  },
+  "unknown_count": 0,
+  "fix_before_d1b": 0,
+  "blocks_d1b": 0,
+  "entries": [
+    {
+      "source": "rustsec",
+      "advisory_id": "RUSTSEC-2026-0258",
+      "crate": "h2",
+      "installed_version": "0.3.27",
+      "patched_versions": [
+        ">=0.4.16"
+      ],
+      "severity": "low",
+      "type": "denial-of-service",
+      "dependency_path": [
+        "cargo-tree-windows.txt",
+        "path-hyper-014-windows.txt",
+        "public-control-threat-model.md §4"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "NOT_CONTROL_SURFACE_REACHABLE",
+      "action": "Track for h2 upgrade; current Windows reqwest client is not a public control facade."
+    },
+    {
+      "source": "rustsec",
+      "advisory_id": "RUSTSEC-2026-0194",
+      "crate": "quick-xml",
+      "installed_version": "0.30.0",
+      "patched_versions": [
+        ">=0.41.0"
+      ],
+      "severity": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "type": "denial-of-service",
+      "dependency_path": [
+        "path-quick-xml-030.txt",
+        "path-quick-xml-030-linux.txt",
+        "cargo-tree-windows.txt"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "NOT_RUNTIME_REACHABLE",
+      "action": "No Windows target path; retain evidence and re-evaluate for non-Windows builds."
+    },
+    {
+      "source": "rustsec",
+      "advisory_id": "RUSTSEC-2026-0195",
+      "crate": "quick-xml",
+      "installed_version": "0.30.0",
+      "patched_versions": [
+        ">=0.41.0"
+      ],
+      "severity": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "type": "denial-of-service",
+      "dependency_path": [
+        "path-quick-xml-030.txt",
+        "path-quick-xml-030-linux.txt",
+        "cargo-tree-windows.txt"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "NOT_RUNTIME_REACHABLE",
+      "action": "No Windows target path; retain evidence and re-evaluate for non-Windows builds."
+    },
+    {
+      "source": "rustsec",
+      "advisory_id": "RUSTSEC-2026-0194",
+      "crate": "quick-xml",
+      "installed_version": "0.39.3",
+      "patched_versions": [
+        ">=0.41.0"
+      ],
+      "severity": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "type": "denial-of-service",
+      "dependency_path": [
+        "path-quick-xml-039.txt",
+        "path-quick-xml-039-linux.txt",
+        "cargo-tree-windows.txt"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "NOT_RUNTIME_REACHABLE",
+      "action": "No Windows target path; retain evidence and re-evaluate for non-Windows builds."
+    },
+    {
+      "source": "rustsec",
+      "advisory_id": "RUSTSEC-2026-0195",
+      "crate": "quick-xml",
+      "installed_version": "0.39.3",
+      "patched_versions": [
+        ">=0.41.0"
+      ],
+      "severity": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "type": "denial-of-service",
+      "dependency_path": [
+        "path-quick-xml-039.txt",
+        "path-quick-xml-039-linux.txt",
+        "cargo-tree-windows.txt"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "NOT_RUNTIME_REACHABLE",
+      "action": "No Windows target path; retain evidence and re-evaluate for non-Windows builds."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "@tootallnate/once",
+      "installed_nodes": [
+        "node_modules/@tootallnate/once"
+      ],
+      "direct": false,
+      "severity": "low",
+      "advisories": [
+        {
+          "source": 1119438,
+          "title": "@tootallnate/once vulnerable to Incorrect Control Flow Scoping",
+          "url": "https://github.com/advisories/GHSA-vpq2-c234-7xj6",
+          "severity": "low",
+          "range": "<2.0.1"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "@typescript-eslint/eslint-plugin",
+      "installed_nodes": [
+        "node_modules/@typescript-eslint/eslint-plugin"
+      ],
+      "direct": true,
+      "severity": "high",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "@typescript-eslint/parser",
+      "installed_nodes": [
+        "node_modules/@typescript-eslint/parser"
+      ],
+      "direct": true,
+      "severity": "high",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "@typescript-eslint/type-utils",
+      "installed_nodes": [
+        "node_modules/@typescript-eslint/type-utils"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "@typescript-eslint/typescript-estree",
+      "installed_nodes": [
+        "node_modules/@typescript-eslint/typescript-estree"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "@typescript-eslint/utils",
+      "installed_nodes": [
+        "node_modules/@typescript-eslint/utils"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "@xenova/transformers",
+      "installed_nodes": [
+        "node_modules/@xenova/transformers"
+      ],
+      "direct": true,
+      "severity": "high",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "body-parser",
+      "installed_nodes": [
+        "node_modules/body-parser"
+      ],
+      "direct": false,
+      "severity": "low",
+      "advisories": [
+        {
+          "source": 1123976,
+          "title": "body-parser vulnerable to denial of service when invalid limit value silently disables size enforcement",
+          "url": "https://github.com/advisories/GHSA-v422-hmwv-36x6",
+          "severity": "low",
+          "range": ">=2.0.0 <2.3.0"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "brace-expansion",
+      "installed_nodes": [
+        "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion",
+        "node_modules/brace-expansion"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1123897,
+          "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+          "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp",
+          "severity": "high",
+          "range": "<1.1.16"
+        },
+        {
+          "source": 1130588,
+          "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+          "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+          "severity": "high",
+          "range": "<1.1.17"
+        },
+        {
+          "source": 1130589,
+          "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+          "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+          "severity": "high",
+          "range": ">=2.0.0 <2.1.3"
+        },
+        {
+          "source": 1130736,
+          "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+          "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+          "severity": "high",
+          "range": ">=2.0.0 <2.1.4"
+        },
+        {
+          "source": 1130737,
+          "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+          "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+          "severity": "high",
+          "range": "<1.1.18"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "cacache",
+      "installed_nodes": [
+        "node_modules/cacache"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Install/build chain only; not loaded by the production control path."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "esbuild",
+      "installed_nodes": [
+        "node_modules/esbuild",
+        "node_modules/vite/node_modules/esbuild"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [
+        {
+          "source": 1102341,
+          "title": "esbuild enables any website to send any requests to the development server and read the response",
+          "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99",
+          "severity": "moderate",
+          "range": "<=0.24.2"
+        },
+        {
+          "source": 1120680,
+          "title": "esbuild allows arbitrary file read when running the development server on Windows",
+          "url": "https://github.com/advisories/GHSA-g7r4-m6w7-qqqr",
+          "severity": "low",
+          "range": ">=0.27.3 <0.28.1"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "http-proxy-agent",
+      "installed_nodes": [
+        "node_modules/http-proxy-agent"
+      ],
+      "direct": false,
+      "severity": "low",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Install/build chain only; not loaded by the production control path."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "make-fetch-happen",
+      "installed_nodes": [
+        "node_modules/make-fetch-happen"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Install/build chain only; not loaded by the production control path."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "minimatch",
+      "installed_nodes": [
+        "node_modules/@typescript-eslint/typescript-estree/node_modules/minimatch"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1113465,
+          "title": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+          "url": "https://github.com/advisories/GHSA-3ppc-4f35-3m26",
+          "severity": "high",
+          "range": ">=9.0.0 <9.0.6"
+        },
+        {
+          "source": 1113544,
+          "title": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+          "url": "https://github.com/advisories/GHSA-7r86-cg39-jmmj",
+          "severity": "high",
+          "range": ">=9.0.0 <9.0.7"
+        },
+        {
+          "source": 1113552,
+          "title": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+          "url": "https://github.com/advisories/GHSA-23c5-xmqv-rm74",
+          "severity": "high",
+          "range": ">=9.0.0 <9.0.7"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "nanoid",
+      "installed_nodes": [
+        "node_modules/nanoid"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1138811,
+          "title": "nanoid: non-secure generators can loop indefinitely with negative size",
+          "url": "https://github.com/advisories/GHSA-28wg-ghj8-5hjv",
+          "severity": "high",
+          "range": "<3.3.16"
+        },
+        {
+          "source": 1139427,
+          "title": "nanoid: custom generators can loop indefinitely when size is zero",
+          "url": "https://github.com/advisories/GHSA-2v37-7h3g-55p8",
+          "severity": "high",
+          "range": "<3.3.18"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "node-gyp",
+      "installed_nodes": [
+        "node_modules/node-gyp"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Install/build chain only; not loaded by the production control path."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "onnx-proto",
+      "installed_nodes": [
+        "node_modules/onnx-proto"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "onnxruntime-web",
+      "installed_nodes": [
+        "node_modules/onnxruntime-web"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "postcss",
+      "installed_nodes": [
+        "node_modules/postcss"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1130709,
+          "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+          "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp",
+          "severity": "moderate",
+          "range": "<=8.5.22"
+        },
+        {
+          "source": 1139510,
+          "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+          "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849",
+          "severity": "high",
+          "range": "<=8.5.17"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "protobufjs",
+      "installed_nodes": [
+        "node_modules/protobufjs"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [
+        {
+          "source": 1123964,
+          "title": "protobufjs: Denial of Service via infinite loop in .proto option parsing",
+          "url": "https://github.com/advisories/GHSA-j3f2-48v5-ccww",
+          "severity": "moderate",
+          "range": ">=7.5.0 <=7.6.4"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "qs",
+      "installed_nodes": [
+        "node_modules/qs"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [
+        {
+          "source": 1119502,
+          "title": "qs has a remotely triggerable DoS: qs.stringify crashes with TypeError on null/undefined entries in comma-format arrays when encodeValuesOnly is set",
+          "url": "https://github.com/advisories/GHSA-q8mj-m7cp-5q26",
+          "severity": "moderate",
+          "range": ">=6.11.1 <=6.15.1"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "sharp",
+      "installed_nodes": [
+        "node_modules/sharp"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1124066,
+          "title": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+          "url": "https://github.com/advisories/GHSA-f88m-g3jw-g9cj",
+          "severity": "high",
+          "range": "<0.35.0"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "sqlite3",
+      "installed_nodes": [
+        "node_modules/sqlite3"
+      ],
+      "direct": true,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "tar",
+      "installed_nodes": [
+        "node_modules/tar"
+      ],
+      "direct": false,
+      "severity": "critical",
+      "advisories": [
+        {
+          "source": 1123939,
+          "title": "node-tar: Process crash via PAX numeric path type confusion",
+          "url": "https://github.com/advisories/GHSA-w8wr-v893-vjvp",
+          "severity": "moderate",
+          "range": "<=7.5.17"
+        },
+        {
+          "source": 1123940,
+          "title": "node-tar: Decompression/parse DoS via unlimited input",
+          "url": "https://github.com/advisories/GHSA-23hp-3jrh-7fpw",
+          "severity": "critical",
+          "range": "<=7.5.18"
+        },
+        {
+          "source": 1123941,
+          "title": "node-tar: Negative tar entry size causes infinite loop in archive replace",
+          "url": "https://github.com/advisories/GHSA-8x88-c5mf-7j5w",
+          "severity": "high",
+          "range": "<=7.5.17"
+        },
+        {
+          "source": 1123942,
+          "title": "node-tar: Uncaught Exception DoS via NUL byte in PAX path/linkpath records",
+          "url": "https://github.com/advisories/GHSA-gvwx-54wh-qm9j",
+          "severity": "moderate",
+          "range": "<=7.5.16"
+        },
+        {
+          "source": 1145647,
+          "title": "node-tar: Uncontrolled recursion in mapHas/filesFilter allows uncatchable stack-overflow DoS via crafted long-path tar with member selection",
+          "url": "https://github.com/advisories/GHSA-r292-9mhp-454m",
+          "severity": "high",
+          "range": "<=7.5.20"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Install/build chain only; not loaded by the production control path."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "vite",
+      "installed_nodes": [
+        "node_modules/vite"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1116229,
+          "title": "Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling",
+          "url": "https://github.com/advisories/GHSA-4w7w-66w2-5vf9",
+          "severity": "moderate",
+          "range": "<=6.4.1"
+        },
+        {
+          "source": 1120784,
+          "title": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+          "url": "https://github.com/advisories/GHSA-v6wh-96g9-6wx3",
+          "severity": "moderate",
+          "range": "<=6.4.2"
+        },
+        {
+          "source": 1123525,
+          "title": "vite: `server.fs.deny` bypass on Windows alternate paths",
+          "url": "https://github.com/advisories/GHSA-fx2h-pf6j-xcff",
+          "severity": "high",
+          "range": "<=6.4.2"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "vite-node",
+      "installed_nodes": [
+        "node_modules/vite-node"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "vitest",
+      "installed_nodes": [
+        "node_modules/vitest"
+      ],
+      "direct": true,
+      "severity": "critical",
+      "advisories": [
+        {
+          "source": 1139528,
+          "title": "When Vitest UI server is listening, arbitrary file can be read and executed",
+          "url": "https://github.com/advisories/GHSA-5xrq-8626-4rwp",
+          "severity": "critical",
+          "range": "<3.2.6"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "DEV_ONLY",
+      "action": "Developer/test/tooling dependency; not shipped as a control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "brain-server",
+      "package": "xlsx",
+      "installed_nodes": [
+        "node_modules/xlsx"
+      ],
+      "direct": true,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1108110,
+          "title": "Prototype Pollution in sheetJS",
+          "url": "https://github.com/advisories/GHSA-4r6h-8v6p-xvw6",
+          "severity": "high",
+          "range": "<0.19.3"
+        },
+        {
+          "source": 1108111,
+          "title": "SheetJS Regular Expression Denial of Service (ReDoS)",
+          "url": "https://github.com/advisories/GHSA-5pgg-2g8v-p4x9",
+          "severity": "high",
+          "range": "<0.20.2"
+        }
+      ],
+      "dependency_path_evidence": [
+        "brain-server/package-lock.json parent/dependency path",
+        "static control-surface search: no approve/verify route"
+      ],
+      "runtime_reachable": true,
+      "control_surface_reachable": false,
+      "classification": "RUNTIME_REACHABLE_NON_CONTROL",
+      "action": "Track separately; package is outside approve/verify control routes."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "autoprefixer",
+      "installed_nodes": [
+        "node_modules/autoprefixer"
+      ],
+      "direct": true,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "nanoid",
+      "installed_nodes": [
+        "node_modules/nanoid"
+      ],
+      "direct": false,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1138811,
+          "title": "nanoid: non-secure generators can loop indefinitely with negative size",
+          "url": "https://github.com/advisories/GHSA-28wg-ghj8-5hjv",
+          "severity": "high",
+          "range": "<3.3.16"
+        },
+        {
+          "source": 1139427,
+          "title": "nanoid: custom generators can loop indefinitely when size is zero",
+          "url": "https://github.com/advisories/GHSA-2v37-7h3g-55p8",
+          "severity": "high",
+          "range": "<3.3.18"
+        }
+      ],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "next",
+      "installed_nodes": [
+        "node_modules/next"
+      ],
+      "direct": true,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1112593,
+          "title": "Next.js self-hosted applications vulnerable to DoS via Image Optimizer remotePatterns configuration",
+          "url": "https://github.com/advisories/GHSA-9g9p-9gw9-jx7f",
+          "severity": "moderate",
+          "range": ">=10.0.0 <15.5.10"
+        },
+        {
+          "source": 1112653,
+          "title": "Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components",
+          "url": "https://github.com/advisories/GHSA-h25m-26qc-wcjf",
+          "severity": "high",
+          "range": ">=13.0.0 <15.0.8"
+        },
+        {
+          "source": 1114897,
+          "title": "Next.js: HTTP request smuggling in rewrites",
+          "url": "https://github.com/advisories/GHSA-ggv3-7p47-pfv8",
+          "severity": "moderate",
+          "range": ">=9.5.0 <15.5.13"
+        },
+        {
+          "source": 1114940,
+          "title": "Next.js: Unbounded next/image disk cache growth can exhaust storage",
+          "url": "https://github.com/advisories/GHSA-3x4c-7xq6-9pq8",
+          "severity": "moderate",
+          "range": ">=10.0.0 <15.5.14"
+        },
+        {
+          "source": 1116376,
+          "title": "Next.js has a Denial of Service with Server Components",
+          "url": "https://github.com/advisories/GHSA-q4gf-8mx6-v5v3",
+          "severity": "high",
+          "range": ">=13.0.0 <15.5.15"
+        },
+        {
+          "source": 1117931,
+          "title": "Next.js Vulnerable to Denial of Service with Server Components",
+          "url": "https://github.com/advisories/GHSA-8h8q-6873-q5fj",
+          "severity": "high",
+          "range": ">=13.0.0 <15.5.16"
+        },
+        {
+          "source": 1118942,
+          "title": "Next.js's Middleware / Proxy redirects can be cache-poisoned",
+          "url": "https://github.com/advisories/GHSA-3g8h-86w9-wvmq",
+          "severity": "low",
+          "range": ">=12.2.0 <15.5.16"
+        },
+        {
+          "source": 1118944,
+          "title": "Next.js vulnerable to cross-site scripting in App Router applications using CSP nonces",
+          "url": "https://github.com/advisories/GHSA-ffhc-5mcf-pf4q",
+          "severity": "moderate",
+          "range": ">=13.4.0 <15.5.16"
+        },
+        {
+          "source": 1118946,
+          "title": "Next.js vulnerable to cache poisoning via collisions in React Server Component cache-busting",
+          "url": "https://github.com/advisories/GHSA-vfv6-92ff-j949",
+          "severity": "low",
+          "range": ">=13.4.6 <15.5.16"
+        },
+        {
+          "source": 1118948,
+          "title": "Next.js has cross-site scripting in beforeInteractive scripts with untrusted input",
+          "url": "https://github.com/advisories/GHSA-gx5p-jg67-6x7h",
+          "severity": "moderate",
+          "range": ">=13.0.0 <15.5.16"
+        },
+        {
+          "source": 1118952,
+          "title": "Next.js has a Denial of Service in the Image Optimization API",
+          "url": "https://github.com/advisories/GHSA-h64f-5h5j-jqjh",
+          "severity": "moderate",
+          "range": ">=10.0.0 <15.5.16"
+        },
+        {
+          "source": 1118954,
+          "title": "Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades",
+          "url": "https://github.com/advisories/GHSA-c4j6-fc7j-m34r",
+          "severity": "high",
+          "range": ">=13.4.13 <15.5.16"
+        },
+        {
+          "source": 1118958,
+          "title": "Next.js vulnerable to cache poisoning in React Server Component responses",
+          "url": "https://github.com/advisories/GHSA-wfc6-r584-vfw7",
+          "severity": "moderate",
+          "range": ">=14.2.0 <15.5.16"
+        },
+        {
+          "source": 1118962,
+          "title": "Next.js has a Middleware / Proxy bypass in Pages Router applications using i18n",
+          "url": "https://github.com/advisories/GHSA-36qx-fr4f-26g5",
+          "severity": "high",
+          "range": ">=12.2.0 <15.5.16"
+        },
+        {
+          "source": 1124172,
+          "title": "Next.js: Denial of Service in App Router using Server Actions",
+          "url": "https://github.com/advisories/GHSA-m99w-x7hq-7vfj",
+          "severity": "high",
+          "range": ">=13.0.0 <15.5.21"
+        },
+        {
+          "source": 1124185,
+          "title": "Next.js: Server-Side Request Forgery in Server Actions on custom servers",
+          "url": "https://github.com/advisories/GHSA-89xv-2m56-2m9x",
+          "severity": "high",
+          "range": ">=14.1.1 <15.5.21"
+        },
+        {
+          "source": 1124187,
+          "title": "Next.js: Cache confusion of response bodies for requests with bodies",
+          "url": "https://github.com/advisories/GHSA-68g3-v927-f742",
+          "severity": "moderate",
+          "range": ">=13.0.0 <15.5.21"
+        },
+        {
+          "source": 1124189,
+          "title": "Next.js: Cache confusion of response bodies for requests with bodies containing invalid UTF-8 byte sequences",
+          "url": "https://github.com/advisories/GHSA-4633-3j49-mh5q",
+          "severity": "moderate",
+          "range": ">=13.0.0 <15.5.21"
+        },
+        {
+          "source": 1124191,
+          "title": "Next.js: Unbounded Server Action payload in Edge runtime",
+          "url": "https://github.com/advisories/GHSA-4c39-4ccg-62r3",
+          "severity": "moderate",
+          "range": ">=13.0.0 <15.5.21"
+        },
+        {
+          "source": 1124193,
+          "title": "Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname",
+          "url": "https://github.com/advisories/GHSA-p9j2-gv94-2wf4",
+          "severity": "high",
+          "range": ">=12.0.0 <15.5.21"
+        },
+        {
+          "source": 1124197,
+          "title": "Next.js: Unauthenticated disclosure of internal Server Function endpoints",
+          "url": "https://github.com/advisories/GHSA-955p-x3mx-jcvp",
+          "severity": "moderate",
+          "range": ">=13.0.0 <15.5.21"
+        }
+      ],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "postcss",
+      "installed_nodes": [
+        "node_modules/postcss"
+      ],
+      "direct": true,
+      "severity": "high",
+      "advisories": [
+        {
+          "source": 1130709,
+          "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+          "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp",
+          "severity": "moderate",
+          "range": "<=8.5.22"
+        },
+        {
+          "source": 1139510,
+          "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+          "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849",
+          "severity": "high",
+          "range": "<=8.5.17"
+        }
+      ],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "postcss-import",
+      "installed_nodes": [
+        "node_modules/postcss-import"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "postcss-js",
+      "installed_nodes": [
+        "node_modules/postcss-js"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "postcss-load-config",
+      "installed_nodes": [
+        "node_modules/postcss-load-config"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "postcss-nested",
+      "installed_nodes": [
+        "node_modules/postcss-nested"
+      ],
+      "direct": false,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    },
+    {
+      "source": "npm",
+      "project": "desktop-daemon",
+      "package": "tailwindcss",
+      "installed_nodes": [
+        "node_modules/tailwindcss"
+      ],
+      "direct": true,
+      "severity": "moderate",
+      "advisories": [],
+      "dependency_path_evidence": [
+        "desktop-daemon/package-lock.json",
+        "desktop-daemon/next.config.js output: export"
+      ],
+      "runtime_reachable": false,
+      "control_surface_reachable": false,
+      "classification": "BUILD_ONLY",
+      "action": "Desktop uses Next output: export; finding is in the build toolchain, not the shipped control runtime."
+    }
+  ]
+}

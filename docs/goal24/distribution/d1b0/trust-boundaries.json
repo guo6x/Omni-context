@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "purpose": "D1B-0 frozen trust-boundary contract; descriptive only, no runtime endpoint implementation.",
+  "nodes": [
+    {"id":"cli","label":"omctx CLI","authority":"caller", "current_surface":"doctor/ask/inspect/history; approve and verify locked"},
+    {"id":"transport","label":"loopback control transport","authority":"transport boundary", "future_contract":"authenticated fixed-route HTTP; loopback only"},
+    {"id":"brain_facade","label":"Brain control facade","authority":"adapter", "future_contract":"schema validation, origin rejection, scope checks, rate limits"},
+    {"id":"decision_kernel","label":"Decision Kernel","authority":"decision", "current_state":"trusted internal authority"},
+    {"id":"approval_authority","label":"Approval/Authorization authority","authority":"approval", "current_state":"trusted internal stores and services"},
+    {"id":"native_broker","label":"Native Broker","authority":"execution", "current_state":"restricted fixed capability bindings"},
+    {"id":"external_tool","label":"External tool (for example gh)","authority":"external", "current_state":"untrusted output"},
+    {"id":"receipt_store","label":"ReceiptStore","authority":"outcome input", "current_state":"trusted internal persistence"},
+    {"id":"readback","label":"Trusted read-back resolver","authority":"observation", "current_state":"trusted internal resolver"},
+    {"id":"evaluator","label":"Deterministic outcome evaluator","authority":"outcome", "current_state":"trusted internal evaluator"}
+  ],
+  "edges": [
+    {"from":"cli","to":"transport","trusted":false,"authenticated":true,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":true,"mutation_capable":false,"note":"Caller requests only fixed contracts; token is not authority."},
+    {"from":"transport","to":"brain_facade","trusted":false,"authenticated":true,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":false,"mutation_capable":true,"note":"Loopback is not an OS same-user isolation boundary."},
+    {"from":"brain_facade","to":"decision_kernel","trusted":true,"authenticated":true,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":true,"mutation_capable":false},
+    {"from":"brain_facade","to":"approval_authority","trusted":true,"authenticated":true,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":false,"mutation_capable":true},
+    {"from":"approval_authority","to":"native_broker","trusted":true,"authenticated":true,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":false,"mutation_capable":true},
+    {"from":"native_broker","to":"external_tool","trusted":false,"authenticated":false,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":false,"mutation_capable":true,"note":"Fixed semantic binding; external output is untrusted."},
+    {"from":"external_tool","to":"receipt_store","trusted":false,"authenticated":false,"authorized":false,"integrity_bound":true,"replay_protected":true,"read_only":false,"mutation_capable":true,"note":"Only broker-issued, identity-bound receipts may enter authority pipeline."},
+    {"from":"receipt_store","to":"readback","trusted":true,"authenticated":true,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":true,"mutation_capable":false},
+    {"from":"readback","to":"evaluator","trusted":true,"authenticated":true,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":true,"mutation_capable":false},
+    {"from":"evaluator","to":"brain_facade","trusted":true,"authenticated":true,"authorized":true,"integrity_bound":true,"replay_protected":true,"read_only":true,"mutation_capable":false}
+  ],
+  "forbidden_direct_edges": [
+    "cli->ApprovalStore", "cli->AuthorizationStore", "cli->ExecutionLedger", "cli->ReceiptStore", "cli->OutcomeStore", "cli->SQLite", "cli->native replay ledger",
+    "MCP->authority stores", "skills->authority stores", "LLM output->authority stores", "external runtime->authority stores"
+  ]
+}
