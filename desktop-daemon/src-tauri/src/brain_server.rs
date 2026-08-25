@@ -222,7 +222,7 @@ fn start_inner() -> Result<(), String> {
         let pair_code = regenerate_pair_code();
         let pair_code_path = pair_code_file();
         let lan_ip = get_lan_ip().unwrap_or_default();
-        let local_token = ensure_local_token();
+        let local_token = ensure_local_token()?;
 
         let mut cmd = Command::new(&node_exe);
         cmd.arg(path)
@@ -396,47 +396,144 @@ fn local_token_file() -> PathBuf {
     local_token_dir().join("local-token.txt")
 }
 
-pub fn ensure_local_token() -> String {
+pub fn ensure_local_token() -> Result<String, String> {
     let dir = local_token_dir();
-    let _ = std::fs::create_dir_all(&dir);
+    std::fs::create_dir_all(&dir)
+        .map_err(|error| format!("unable to create local API token directory: {error}"))?;
     let file = local_token_file();
+    ensure_local_token_at(&file)
+}
 
-    if let Ok(existing) = std::fs::read_to_string(&file) {
+fn ensure_local_token_at(file: &std::path::Path) -> Result<String, String> {
+    if let Ok(existing) = std::fs::read_to_string(file) {
         let trimmed = existing.trim().to_string();
         if !trimmed.is_empty() {
-            return trimmed;
+            harden_local_token_permissions(file)?;
+            return Ok(trimmed);
         }
     }
 
-    generate_and_save_local_token(&file)
+    generate_and_save_local_token(file)
 }
 
-pub fn regenerate_local_token() -> String {
+pub fn regenerate_local_token() -> Result<String, String> {
     let dir = local_token_dir();
-    let _ = std::fs::create_dir_all(&dir);
+    std::fs::create_dir_all(&dir)
+        .map_err(|error| format!("unable to create local API token directory: {error}"))?;
     let file = local_token_file();
     generate_and_save_local_token(&file)
 }
 
-fn generate_and_save_local_token(file: &std::path::Path) -> String {
+fn generate_and_save_local_token(file: &std::path::Path) -> Result<String, String> {
     let token = generate_local_token();
-    let _ = std::fs::write(file, &token);
-    // Token file permission hardening (omctx D1A audit): on Unix restrict to
-    // the owning user (0600). On Windows the default user-scoped ACL of
-    // %LOCALAPPDATA% applies (no large security dependency is introduced to
-    // rewrite ACLs; see docs/goal24/distribution/03-cli-secret-threat-model.md).
+    // For an existing file, establish restrictive permissions before its new
+    // secret is written. A hardening failure is an error and never returns the
+    // token to callers.
+    #[cfg(unix)]
+    if file.exists() {
+        harden_local_token_permissions(file)?;
+    }
+    write_local_token(file, &token)?;
+    harden_local_token_permissions(file)?;
+    Ok(token)
+}
+
+fn write_local_token(file: &std::path::Path, token: &str) -> Result<(), String> {
+    #[cfg(unix)]
+    {
+        use std::fs::OpenOptions;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut handle = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .mode(0o600)
+            .open(file)
+            .map_err(|error| format!("unable to create local API token file: {error}"))?;
+        handle
+            .write_all(token.as_bytes())
+            .map_err(|error| format!("unable to write local API token file: {error}"))?;
+        return Ok(());
+    }
+    #[cfg(not(unix))]
+    {
+        std::fs::write(file, token)
+            .map_err(|error| format!("unable to write local API token file: {error}"))
+    }
+}
+
+fn harden_local_token_permissions(file: &std::path::Path) -> Result<(), String> {
+    // On Windows the file lives under user-scoped LOCALAPPDATA. Explicit ACL
+    // rewriting is deliberately deferred until the application has a shared,
+    // reviewed helper; do not claim it is hardened here.
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        let _ = std::fs::set_permissions(file, std::fs::Permissions::from_mode(0o600));
+        std::fs::set_permissions(file, std::fs::Permissions::from_mode(0o600))
+            .map_err(|error| format!("local API token permission hardening failed: {error}"))?;
     }
-    token
+    #[cfg(not(unix))]
+    let _ = file;
+    Ok(())
 }
 
 fn generate_local_token() -> String {
     let mut bytes = [0u8; 32];
     getrandom::getrandom(&mut bytes).expect("getrandom failed");
     URL_SAFE_NO_PAD.encode(&bytes)
+}
+
+#[cfg(all(test, unix))]
+#[allow(clippy::items_after_test_module)]
+mod local_token_tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn test_token_file(label: &str) -> PathBuf {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock before Unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!("omctx-{label}-{}-{unique}", std::process::id()))
+    }
+
+    #[test]
+    fn existing_local_token_is_hardened_to_owner_only() {
+        let directory = test_token_file("existing-token");
+        std::fs::create_dir_all(&directory).expect("create temporary token directory");
+        let file = directory.join("local-token.txt");
+        std::fs::write(&file, "existing-test-token").expect("write token fixture");
+        std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o644))
+            .expect("make token fixture overly permissive");
+
+        let token = ensure_local_token_at(&file).expect("harden existing token");
+        let mode = std::fs::metadata(&file)
+            .expect("stat token file")
+            .permissions()
+            .mode()
+            & 0o777;
+        assert_eq!(token, "existing-test-token");
+        assert_eq!(mode, 0o600);
+        std::fs::remove_dir_all(&directory).expect("remove temporary token directory");
+    }
+
+    #[test]
+    fn new_local_token_is_created_owner_only() {
+        let directory = test_token_file("new-token");
+        std::fs::create_dir_all(&directory).expect("create temporary token directory");
+        let file = directory.join("local-token.txt");
+
+        let token = ensure_local_token_at(&file).expect("create secure token");
+        let mode = std::fs::metadata(&file)
+            .expect("stat token file")
+            .permissions()
+            .mode()
+            & 0o777;
+        assert!(!token.is_empty());
+        assert_eq!(mode, 0o600);
+        std::fs::remove_dir_all(&directory).expect("remove temporary token directory");
+    }
 }
 
 /// 获取本机 LAN IP，失败返回 None

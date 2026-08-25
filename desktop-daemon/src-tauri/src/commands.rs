@@ -197,12 +197,12 @@ pub fn regenerate_pair_code() -> PairCodeInfo {
 
 #[tauri::command]
 pub fn get_local_api_token() -> Result<String, String> {
-    Ok(brain_server::ensure_local_token())
+    brain_server::ensure_local_token()
 }
 
 #[tauri::command]
 pub fn regenerate_local_api_token() -> Result<String, String> {
-    Ok(brain_server::regenerate_local_token())
+    brain_server::regenerate_local_token()
 }
 
 #[tauri::command]

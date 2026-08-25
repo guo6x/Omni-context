@@ -79,7 +79,7 @@ pub async fn execute_precipitate() -> Result<Vec<String>, String> {
         .map_err(|error| format!("clipboard read failed: {error}"))?;
     let base_url =
         std::env::var("OMNI_BRAIN_URL").unwrap_or_else(|_| DEFAULT_BRAIN_URL.to_string());
-    let token = brain_server::ensure_local_token();
+    let token = brain_server::ensure_local_token()?;
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(70))
         .build()
