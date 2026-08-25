@@ -5,8 +5,10 @@
 > `CURRENTLY_VERIFIED` / `TARGET` / `FUTURE`，不得混淆"内部 runtime 已验证"
 > 与"用户今天可直接使用"。
 >
-> 当前没有任何 `omctx` 二进制对用户可用。凡下文出现命令示例，
-> 均属于 **TARGET（目标信息架构）** 或 **FUTURE** 范畴，不是当前 capability。
+> 当前没有任何 `omctx` 二进制作为公开 npm 分发或用户安装面可用。D1A 已在
+> `dev/goal24-cli-skills` 上对 **read-only alpha**（`doctor` / `ask` / `inspect` /
+> `history`）完成 authoritative internal verification；这不是公开发布，也不等于
+> `npm i -g omctx` 今天可用。下文的 TARGET 语义只描述尚未开放的控制面。
 
 ---
 
@@ -36,7 +38,7 @@ CLI 属于三面架构中的 **Controlled Execution Surface**：
 
 | 项 | 状态 | 说明 |
 |---|---|---|
-| `omctx` 二进制（package candidate） | **CURRENTLY_VERIFIED_INTERNAL** | `packages/omctx` private package candidate（0.1.0-alpha.0），`node bin/omctx.js` 可运行；未发布、无用户安装面；npm 名称审计 `CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED` |
+| `omctx` 二进制（private alpha） | **IMPLEMENTED + AUTHORITATIVELY VERIFIED INTERNAL** | `packages/omctx` private package（0.1.0-alpha.0），真实临时 Brain smoke 已验证；未发布、无用户安装面；npm 名称审计 `CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED` |
 | npm 全局安装（`npm i -g omctx`） | **TARGET** | 未发布；禁止 0.0.0 占位包；真实发布需满足第 6 节门槛 |
 | `doctor` | **CURRENTLY_VERIFIED_INTERNAL** | 本地 Brain 健康 / 鉴权 / loopback 传输检查；只读 |
 | `ask` | **CURRENTLY_VERIFIED_INTERNAL** | 只读 judgment 查询（get_decision_context）；ACTION_AUTHORITY=NONE；不是 TARGET 语义的 Intent→Execution |
@@ -53,7 +55,9 @@ CLI 属于三面架构中的 **Controlled Execution Surface**：
 
 ## 3. 命令目标信息架构（Target IA）
 
-所有命令示例均为 **TARGET（planned）**，无一是今天可运行的能力。
+`doctor` / `ask` / `inspect` / `history` 的 D1A **read-only** 行为已是
+**CURRENTLY_VERIFIED_INTERNAL**。本节余下内容只描述这些命令未来可能承载的
+执行/批准语义，以及 `approve` / `verify` / `reopen`；它们不是今天公开可用的能力。
 
 ### 3.1 `omctx ask` — TARGET
 

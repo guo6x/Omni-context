@@ -2,7 +2,7 @@
   "header": {
     "artifact": "04-cli-test-matrix.json",
     "purpose": "Every D1A CLI test requirement mapped to an automated test (node:test, zero dependencies, local mock HTTP server).",
-    "suite": "packages/omctx/test/*.test.js (34 tests)"
+    "suite": "packages/omctx/test/*.test.js (37 tests)"
   },
   "vectors": [
     {
@@ -102,6 +102,15 @@
       "file": "cli-parser.test.js"
     },
     {
+      "area": "doctor identity",
+      "cases": [
+        "health = {} fails closed with OMCTX_WRONG_SERVICE",
+        "reachable HTTP 200 health = { ok: true, service: not-omni } fails closed before an MCP ping",
+        "exact health = { ok: true, service: omni-context-brain-server } plus authenticated MCP ping passes"
+      ],
+      "file": "doctor-identity.test.js"
+    },
+    {
       "area": "Brain endpoint",
       "cases": [
         "GET /api/decisions requires auth",
@@ -113,7 +122,7 @@
     }
   ],
   "totals": {
-    "cli_tests": 34,
+    "cli_tests": 37,
     "brain_endpoint_tests": 4,
     "all_automated": true
   }
