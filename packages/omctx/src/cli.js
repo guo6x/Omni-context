@@ -126,7 +126,7 @@ function buildContext(flags, json) {
   const resolved = resolveLocalToken();
   if (!resolved) throw errorFor.authMissing();
   const client = new OmniLocalClient({ apiUrl: flags.apiUrl, token: resolved.token });
-  return { client, tokenSource: resolved.source, json };
+  return { client, tokenSource: resolved.source, json, apiUrl: flags.apiUrl || DEFAULT_API_URL };
 }
 
 export async function main(argv) {

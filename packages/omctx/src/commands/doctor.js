@@ -36,8 +36,13 @@ export async function cmdDoctor({ client, tokenSource, json, apiUrl }) {
   if (!client) throw errorFor.authMissing();
 
   const health = await client.health();
+  if (health?.ok !== true || health?.service !== 'omni-context-brain-server') {
+    // A reachable HTTP endpoint is not sufficient evidence of Brain identity.
+    // Do not infer a service name when /health omits or changes this contract.
+    throw errorFor.wrongService();
+  }
   checks.brain_health = 'OK';
-  checks.server_identity = health?.service || 'omni-context-brain-server';
+  checks.server_identity = health.service;
   await client.mcpPing();
   checks.auth = 'OK';
 

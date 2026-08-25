@@ -3,7 +3,8 @@ import http from 'node:http';
 /**
  * Tiny local mock Brain HTTP server for CLI transport tests.
  * mode: 'ok' | 'unauthorized' | 'forbidden' | 'error500' | 'malformed' |
- * 'redirect-remote' | 'slow' | 'notfound'
+ * 'redirect-remote' | 'slow' | 'notfound' | 'health-missing-service' |
+ * 'wrong-service'
  */
 export function startMockServer(mode, onRequest) {
   const server = http.createServer((req, res) => {
@@ -31,6 +32,16 @@ export function startMockServer(mode, onRequest) {
     if (req.url === '/health') {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
+      if (mode === 'health-missing-service') {
+        res.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (mode === 'wrong-service') {
+        // Deliberately valid, reachable, unrelated HTTP service. Doctor must
+        // reject this before accepting an authenticated MCP ping.
+        res.end(JSON.stringify({ ok: true, service: 'not-omni' }));
+        return;
+      }
       res.end(JSON.stringify({ ok: true, service: 'omni-context-brain-server', timestamp: new Date().toISOString() }));
       return;
     }

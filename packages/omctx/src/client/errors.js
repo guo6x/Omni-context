@@ -30,6 +30,7 @@ export const errorFor = {
   brainOffline: (detail) => new OmctxError('OMCTX_BRAIN_OFFLINE', `Brain Server is not reachable: ${detail}`, EXIT.SERVICE_UNAVAILABLE),
   authMissing: () => new OmctxError('OMCTX_AUTH_MISSING', 'no local API token found (set OMNI_LOCAL_API_TOKEN or run the Omni Desktop app once)', EXIT.AUTH_ERROR),
   authRejected: () => new OmctxError('OMCTX_AUTH_REJECTED', 'Brain Server rejected authentication', EXIT.AUTH_ERROR),
+  wrongService: () => new OmctxError('OMCTX_WRONG_SERVICE', 'the reachable service did not prove it is the Omni-Context Brain Server', EXIT.CONTRACT_OR_DATA_ERROR),
   remoteApi: () => new OmctxError('OMCTX_REMOTE_API_NOT_SUPPORTED_IN_ALPHA', 'the Alpha CLI only talks to loopback (127.0.0.1 / localhost / ::1)', EXIT.USAGE_ERROR),
   invalidDecisionId: (id) => new OmctxError('OMCTX_INVALID_DECISION_ID', `'${id}' is not a valid decision id`, EXIT.USAGE_ERROR),
   decisionNotFound: (id) => new OmctxError('OMCTX_DECISION_NOT_FOUND', `decision '${id}' was not found`, EXIT.CONTRACT_OR_DATA_ERROR),
