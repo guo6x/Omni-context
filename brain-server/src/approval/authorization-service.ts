@@ -20,8 +20,8 @@
  * does not outlive the plan expiry / policy TTL cap.
  *
  * deny / revoke / expiry are internal lifecycle transitions (blocked state).
- * None of these mutation methods are exposed to REST / MCP / Tauri IPC /
- * LLM tools; approval UI/wiring is Checkpoint 9.
+ * None of these mutation methods are exposed to REST / MCP / LLM tools; the
+ * D1B-1 control facade invokes only the fixed approval transition.
  *
  * No process execution and no Broker / gh calls exist in this lane.
  */
@@ -152,6 +152,12 @@ export class AuthorizationService {
 
   get currentPolicyVersion(): string {
     return this.policyVersion;
+  }
+
+  /** Server-owned lookup used by the fixed control facade. Callers receive a
+   * validated record, never a storage handle or raw persistence bytes. */
+  getAuthorizationRecord(planId: string): PlanAuthorizationRecord | undefined {
+    return this.store.get(planId);
   }
 
   /**

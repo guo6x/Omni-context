@@ -24,5 +24,4 @@ mod oracle_tests;
 
 pub(crate) use authority::{ApprovalAuthority, GrantRequest};
 pub(crate) use ledger::PlanLedger;
-#[cfg(test)]
-pub(crate) use types::ActorKind;
+pub(crate) use types::{ActorKind, ApprovalRecord};

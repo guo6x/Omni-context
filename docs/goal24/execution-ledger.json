@@ -186,6 +186,33 @@
         "Runtime files were not modified; approve and verify remain TARGET_LOCKED."
       ],
       "next_owner_action": "authoritative review before D1B-1 implementation; D1B-2 waits for D1B-1 authoritative PASS"
+    },
+    {
+      "task_id": "OMCTX_D1B1_PUBLIC_APPROVAL",
+      "track": "Goal24 Distribution (D1B-1)",
+      "checkpoint_or_goal": "D1B-1",
+      "owner_decision": "ASSIGNED",
+      "executor": "d1b1 public approve lane",
+      "status": "FEATURE_BRANCH_COMPLETE",
+      "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+      "base_sha": "a902ac4fc804459f07a09b84494a68c8bd7f618b",
+      "feature_branch": "dev/goal24-d1b1-public-approve",
+      "remote_feature_pushed": false,
+      "authoritative_remote_integrated": false,
+      "approve_status": "CURRENTLY_VERIFIED_INTERNAL",
+      "verify_status": "TARGET_LOCKED",
+      "public_execution_gateway": "NOT_IMPLEMENTED",
+      "npm_published": false,
+      "gate_status": "D1B1_FEATURE_BRANCH_VERIFIED_LOCAL_EVIDENCE",
+      "blockers": [],
+      "verification_evidence": [
+        "D1B0 authoritative base a902ac4fc804459f07a09b84494a68c8bd7f618b",
+        "loopback-only fixed Brain control routes with browser Origin and LAN rejection",
+        "ephemeral Desktop-minted control:approve session and CLI approve transport",
+        "native bridge binds loopback with startup secret and persistent single-grant replay guard",
+        "verify remains TARGET_LOCKED and approve never starts execution"
+      ],
+      "next_owner_action": "run fresh D1B1 adversarial/E2E suites, then push dev/goal24-d1b1-public-approve"
     }
   ],
   "last_verified_at": "2026-08-25T14:18:43.682Z",

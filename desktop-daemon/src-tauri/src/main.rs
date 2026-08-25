@@ -43,6 +43,23 @@ pub struct SystemStatus {
 
 #[tokio::main]
 async fn main() {
+    // Native approval authority is initialized before Brain and uses durable
+    // app-data paths so replay protection survives a restart. The bridge
+    // secret is process-local and inherited only by the Brain child.
+    let broker_data = brain_server::user_data_dir();
+    std::fs::create_dir_all(&broker_data).expect("create native broker data directory");
+    execution_broker::configure_global_broker_with_persistence(
+        &broker_data.join("approval-store.json"),
+        &broker_data.join("plan-ledger.json"),
+        &broker_data.join("execution-receipts.json"),
+    );
+    let native_bridge = execution_broker::native_control::start();
+    std::env::set_var("NATIVE_BRIDGE_SECRET", &native_bridge.secret);
+    std::env::set_var(
+        "NATIVE_BRIDGE_URL",
+        format!("http://127.0.0.1:{}", native_bridge.port),
+    );
+
     // CP4 + Post-CP8: best-effort production registration of the five
     // read-only GitHub CLI bindings plus the single production write binding
     // github.issue.close and the github.issue.read read-back binding
@@ -350,6 +367,8 @@ async fn main() {
             commands::get_broker_status,
             commands::open_trusted_external_url,
             commands::regenerate_local_api_token,
+            commands::enable_cli_approvals,
+            commands::disable_cli_approvals,
             hardware::list_hardware_devices,
             hardware::pair_hardware_device,
             hardware::unpair_hardware_device,

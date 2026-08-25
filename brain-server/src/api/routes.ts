@@ -9,6 +9,9 @@ import { EmbeddingService } from '../embedding/service.js';
 import { MemoryDecayScheduler } from '../memory/decay-scheduler.js';
 import { AuthPrincipal, AuthService } from '../security/auth.js';
 import { McpBusinessDispatcher } from '../mcp/dispatch.js';
+import { ControlApprovalFacade, type ControlApprovalRuntime } from '../control/approval-facade.js';
+import { HttpNativeApprovalClient } from '../control/native-bridge.js';
+import { ControlSessionManager, readBearerToken } from '../control/session.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -301,6 +304,34 @@ function checkRateLimit(req: http.IncomingMessage, res: http.ServerResponse): bo
   return true;
 }
 
+function isLoopbackAddress(address: string | undefined): boolean {
+  return address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1';
+}
+
+function controlHostAllowed(req: http.IncomingMessage): boolean {
+  const host = String(req.headers.host || '').toLowerCase();
+  return /^(localhost|127\.0\.0\.1|\[::1\])(?::\d{1,5})?$/.test(host);
+}
+
+function controlBoundaryFailure(req: http.IncomingMessage): string | null {
+  if (!isLoopbackAddress(req.socket.remoteAddress)) return 'CONTROL_REMOTE_ADDRESS_REJECTED';
+  if (!controlHostAllowed(req)) return 'CONTROL_HOST_REJECTED';
+  if (req.headers.origin) return 'CONTROL_ORIGIN_REJECTED';
+  return null;
+}
+
+function isControlApproveRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/api/control/approve';
+}
+
+function isControlSessionMintRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/session';
+}
+
+function isControlSessionRevokeRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/session/revoke';
+}
+
 export function createDefaultEmbeddingService(): EmbeddingService {
   return new EmbeddingService({
     mode: (process.env.EMBEDDING_MODE as 'local' | 'api') || 'local',
@@ -337,6 +368,7 @@ export function createServer(
   embeddingService?: EmbeddingService,
   decayScheduler?: MemoryDecayScheduler,
   mcpDispatcher?: McpBusinessDispatcher,
+  controlRuntime?: ControlApprovalRuntime,
 ): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
   db.attachEmbeddingService(finalEmbeddingService);
@@ -358,13 +390,91 @@ export function createServer(
     pairCodeFile: (process.env.PAIR_CODE_FILE || '').trim() || undefined,
     pairCodeTtlMs: Number(process.env.PAIR_CODE_TTL_MS || 10 * 60 * 1000),
   });
+  const controlSessions = new ControlSessionManager();
+  const controlFacade = new ControlApprovalFacade(controlRuntime, new HttpNativeApprovalClient());
 
   const server = http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);
 
     if (req.method === 'OPTIONS') {
+      const optionsPath = new URL(req.url || '/', 'http://localhost').pathname;
+      if (optionsPath === '/api/control/approve' || optionsPath.startsWith('/internal/control/session')) {
+        sendError(res, 405, 'CONTROL_OPTIONS_REJECTED');
+        return;
+      }
       res.statusCode = 204;
       res.end();
+      return;
+    }
+
+    if (isControlSessionMintRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) {
+        sendError(res, 403, boundaryError);
+        return;
+      }
+      const expected = (process.env.NATIVE_BRIDGE_SECRET || '').trim();
+      const supplied = readBearerToken(req);
+      if (!expected || supplied !== expected) {
+        sendError(res, 401, 'CONTROL_AUTH_REQUIRED');
+        return;
+      }
+      const issued = controlSessions.mint();
+      // Raw token is returned only to the trusted native Desktop caller. It
+      // is never logged, persisted by Brain, or accepted by the public CLI as
+      // an argument.
+      sendResponse(res, 201, { data: issued });
+      return;
+    }
+
+    if (isControlSessionRevokeRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) { sendError(res, 403, boundaryError); return; }
+      const expected = (process.env.NATIVE_BRIDGE_SECRET || '').trim();
+      if (!expected || readBearerToken(req) !== expected) { sendError(res, 401, 'CONTROL_AUTH_REQUIRED'); return; }
+      controlSessions.revokeAll();
+      sendResponse(res, 204, null);
+      return;
+    }
+
+    if (isControlApproveRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) {
+        sendError(res, 403, boundaryError);
+        return;
+      }
+      const supplied = readBearerToken(req);
+      const session = controlSessions.authenticate(supplied);
+      if (!session) {
+        const readPrincipal = await authService.authenticate(req);
+        sendError(res, readPrincipal ? 403 : 401, readPrincipal
+          ? 'CONTROL_SCOPE_INSUFFICIENT'
+          : 'CONTROL_AUTH_REQUIRED');
+        return;
+      }
+      if (!controlSessions.consumeBurst(session.session_id)) {
+        sendError(res, 429, 'CONTROL_RATE_LIMITED');
+        return;
+      }
+      try {
+        const body = await parseBody<unknown>(req);
+        const result = await controlFacade.approve(body, session);
+        sendResponse(res, 200, { data: result });
+      } catch (error) {
+        const code = error instanceof Error ? error.message.split(':', 1)[0] : 'INTERNAL_CONTROL_ERROR';
+        const mapping: Record<string, [number, string]> = {
+          APPROVAL_INPUT_INVALID: [400, 'PLAN_NOT_APPROVABLE'],
+          APPROVAL_PLAN_NOT_FOUND: [404, 'PLAN_NOT_FOUND'],
+          APPROVAL_REQUEST_EXPIRED: [409, 'PLAN_EXPIRED'],
+          APPROVAL_STATE_CONFLICT: [409, 'PLAN_NOT_APPROVABLE'],
+          APPROVAL_GRANT_INVALID: [502, 'NATIVE_APPROVAL_UNAVAILABLE'],
+          APPROVAL_GRANT_EXPIRED: [409, 'PLAN_EXPIRED'],
+          APPROVAL_AUTHORITY_INSUFFICIENT: [403, 'APPROVAL_AUTHORITY_INSUFFICIENT'],
+          APPROVAL_STORE_CONFLICT: [409, 'PLAN_ALREADY_CONSUMED'],
+        };
+        const [status, publicCode] = mapping[code] || [500, 'INTERNAL_CONTROL_ERROR'];
+        sendError(res, status, publicCode);
+      }
       return;
     }
 
@@ -407,6 +517,7 @@ export function createServer(
   if (ownsDecayScheduler) {
     server.once('close', () => finalDecayScheduler.stop());
   }
+  server.once('close', () => controlSessions.revokeAll());
   return server;
 }
 

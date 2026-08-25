@@ -296,14 +296,14 @@
     },
     {
       "claim_id": "I-11",
-      "claim_text": "omctx CLI alpha implementation is authoritatively verified internally on the development branch: authenticated read-only doctor / ask / inspect / history, loopback-only, with approve and verify fail closed.",
+      "claim_text": "omctx CLI alpha implementation is internally verified on the development branch: authenticated read-only doctor / ask / inspect / history plus an explicit Desktop-session approve path; verify remains locked and no execution starts.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
       "evidence": [
         "packages/omctx/ (private:true, version 0.1.0-alpha.0, zero runtime dependencies)",
         "docs/goal24/distribution/omctx-alpha-candidate-gate.json (OMCTX_ALPHA_CANDIDATE_GATE=PASS)",
         "docs/goal24/distribution/omctx-alpha-authoritative-gate.json (OMCTX_ALPHA_AUTHORITATIVE_GATE=PASS; real temporary Brain smoke)",
-        "docs/goal24/distribution/omctx-control-surface-status.json (approve/verify TARGET_LOCKED)"
+        "docs/goal24/distribution/omctx-control-surface-status.json (approve CURRENTLY_VERIFIED_INTERNAL; verify TARGET_LOCKED; execution not implemented)"
       ],
       "surface": [
         "README",
@@ -313,7 +313,7 @@
     },
     {
       "claim_id": "I-12",
-      "claim_text": "D1B public control threat model, dependency freshness classification, trust boundaries, and attack-surface inventory are currently verified internally; approve and verify remain locked and no public control endpoint is available.",
+      "claim_text": "D1B-0 public control threat model, dependency freshness classification, trust boundaries, and attack-surface inventory are currently verified internally.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
       "evidence": [
@@ -325,6 +325,22 @@
       "surface": [
         "README",
         "Landing",
+        "ProductVision"
+      ]
+    },
+    {
+      "claim_id": "I-13",
+      "claim_text": "D1B-1 feature-branch approval gateway: explicit local Desktop control:approve session, loopback-only fixed route, server-owned awaiting plan, native single-use grant, and execution not started.",
+      "status": "CURRENTLY_VERIFIED_INTERNAL",
+      "availability": "internal_runtime",
+      "evidence": [
+        "docs/goal24/distribution/d1b1/d1b1-approval-gate.json",
+        "brain-server/src/control/",
+        "desktop-daemon/src-tauri/src/execution_broker/native_control.rs",
+        "packages/omctx/src/commands/locked.js"
+      ],
+      "surface": [
+        "README",
         "ProductVision"
       ]
     },

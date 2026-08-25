@@ -1,0 +1,45 @@
+{
+  "artifact": "d1b1-approval-gate.json",
+  "phase": "GOAL24 DISTRIBUTION READINESS PHASE A/B D1B-1",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "gate_status": "D1B1_PUBLIC_APPROVAL_FEATURE_BRANCH_PASS",
+  "scope": {
+    "approve": "feature-branch verified; explicit Desktop control session only",
+    "verify": "TARGET_LOCKED",
+    "execution": "NOT_IMPLEMENTED",
+    "reopen": "FUTURE",
+    "npm": "NOT_PUBLISHED"
+  },
+  "security_invariants": {
+    "control_scope": "control:approve",
+    "actor": "local-owner / owner / L3",
+    "session_ttl_minutes": 5,
+    "session_max_ttl_minutes": 15,
+    "read_token_can_approve": false,
+    "browser_origin_allowed": false,
+    "remote_or_lan_allowed": false,
+    "extra_body_fields_allowed": false,
+    "execution_started_by_approve": false,
+    "native_grants_per_plan": 1,
+    "persistent_restart_replay": "blocked"
+  },
+  "audit_counts": {
+    "unknown": 0,
+    "fix_before_d1b1": 0,
+    "blocks_d1b1": 0
+  },
+  "validation": {
+    "brain_typecheck": "PASS",
+    "rust_cargo_check": "PASS",
+    "rust_fmt": "PASS",
+    "cli_control_transport_smoke": "PASS",
+    "d1b1_control_unit_suite": "PASS (6 tests)",
+    "full_d1b1_adversarial_matrix": "STATIC_COVERAGE_RECORDED",
+    "real_local_approval_e2e": "NOT_RUN_IN_THIS_LOCAL_VALIDATION"
+  },
+  "freshness": {
+    "authoritative_d1b0_sha": "a902ac4fc804459f07a09b84494a68c8bd7f618b",
+    "feature_branch": "local/d1b1-public-approve",
+    "generated_at": "2026-08-26T00:00:00.000Z"
+  }
+}

@@ -268,6 +268,20 @@ impl ApprovalStore {
                     format!("duplicate approval_id {}", record.approval_id),
                 ));
             }
+            // A second live grant for the same plan is rejected. Once a grant
+            // is consumed/denied/revoked, a regrant may be recorded for audit,
+            // but the durable plan ledger still prevents execution replay.
+            if guard.values().any(|existing| {
+                existing.plan_id == record.plan_id && existing.status == ApprovalStatus::Granted
+            }) {
+                return Err(BrokerError::new(
+                    ErrorCode::ApprovalConsumed,
+                    format!(
+                        "plan {} already has a native approval grant",
+                        record.plan_id
+                    ),
+                ));
+            }
             guard.insert(record.approval_id.clone(), record);
         }
         self.persist()

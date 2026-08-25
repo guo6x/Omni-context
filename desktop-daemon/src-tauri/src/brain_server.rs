@@ -176,6 +176,8 @@ pub fn start() -> Result<(), String> {
 }
 
 fn start_inner() -> Result<(), String> {
+    // A Brain/Desktop restart invalidates any previously persisted CLI session.
+    clear_control_session();
     // 先杀掉上一次遗留的 zombie 进程（防止端口 3001 被占用）
     kill_zombie_by_pid_file();
 
@@ -301,6 +303,7 @@ pub fn stop() -> Result<(), String> {
         let _ = child.wait();
         // 清理 PID 文件
         let _ = std::fs::remove_file(pid_file_path());
+        clear_control_session();
         println!("[Brain Server] 已停止");
         Ok(())
     } else {
@@ -349,6 +352,15 @@ fn pair_code_dir() -> PathBuf {
 
 fn pair_code_file() -> PathBuf {
     pair_code_dir().join("pair-code.txt")
+}
+
+/// Ephemeral CLI approval session minted by Brain for the native Desktop.
+pub fn control_session_file() -> PathBuf {
+    pair_code_dir().join("control-session.json")
+}
+
+pub fn clear_control_session() {
+    let _ = std::fs::remove_file(control_session_file());
 }
 
 pub fn ensure_pair_code() -> String {

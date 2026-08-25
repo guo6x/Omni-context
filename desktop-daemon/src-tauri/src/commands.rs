@@ -5,6 +5,116 @@ use crate::SystemStatus;
 use base64::{engine::general_purpose::STANDARD, Engine};
 use tauri::Manager;
 
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct ControlSessionFile {
+    token: String,
+    expires_at: String,
+    scope: String,
+}
+
+/// Explicit human-confirmation action. This is the only Desktop path that
+/// mints a CLI approval session; startup never enables it automatically.
+#[tauri::command]
+pub async fn enable_cli_approvals() -> Result<ControlSessionFile, String> {
+    if !brain_server::is_ready() {
+        return Err("Brain Server is not ready".to_string());
+    }
+    let secret = std::env::var("NATIVE_BRIDGE_SECRET")
+        .map_err(|_| "native control bridge is unavailable".to_string())?;
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| format!("control client unavailable: {e}"))?;
+    let response = client
+        .post("http://127.0.0.1:3001/internal/control/session")
+        .header(reqwest::header::AUTHORIZATION, format!("Bearer {secret}"))
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .body("{}")
+        .send()
+        .await
+        .map_err(|e| format!("cannot reach Brain Server: {e}"))?;
+    let status = response.status();
+    let payload: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("invalid Brain response: {e}"))?;
+    if !status.is_success() {
+        return Err(payload
+            .get("error")
+            .and_then(|v| v.as_str())
+            .unwrap_or("control session mint rejected")
+            .to_string());
+    }
+    let session = payload
+        .get("data")
+        .and_then(|v| v.get("session"))
+        .ok_or_else(|| "Brain response omitted control session".to_string())?;
+    let issued_token = payload
+        .get("data")
+        .and_then(|v| v.get("token"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "Brain response omitted control token".to_string())?;
+    let file = ControlSessionFile {
+        token: issued_token.to_string(),
+        expires_at: session
+            .get("expires_at")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "Brain response omitted expiry".to_string())?
+            .to_string(),
+        scope: session
+            .get("scope")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "Brain response omitted scope".to_string())?
+            .to_string(),
+    };
+    if file.scope != "control:approve" {
+        return Err("Brain returned an unexpected control scope".to_string());
+    }
+    let path = brain_server::control_session_file();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("cannot create session directory: {e}"))?;
+    }
+    let bytes = serde_json::to_vec(&file).map_err(|e| format!("cannot encode session: {e}"))?;
+    #[cfg(unix)]
+    {
+        use std::fs::OpenOptions;
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut handle = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .mode(0o600)
+            .open(&path)
+            .map_err(|e| format!("cannot create control session file: {e}"))?;
+        handle
+            .write_all(&bytes)
+            .map_err(|e| format!("cannot write control session file: {e}"))?;
+        handle
+            .sync_all()
+            .map_err(|e| format!("cannot flush control session file: {e}"))?;
+    }
+    #[cfg(not(unix))]
+    std::fs::write(&path, &bytes).map_err(|e| format!("cannot write control session file: {e}"))?;
+    Ok(file)
+}
+
+#[tauri::command]
+pub async fn disable_cli_approvals() -> Result<(), String> {
+    if let Ok(secret) = std::env::var("NATIVE_BRIDGE_SECRET") {
+        if let Ok(client) = reqwest::Client::builder().no_proxy().build() {
+            let _ = client
+                .post("http://127.0.0.1:3001/internal/control/session/revoke")
+                .header(reqwest::header::AUTHORIZATION, format!("Bearer {secret}"))
+                .send()
+                .await;
+        }
+    }
+    brain_server::clear_control_session();
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn start_listening() -> Result<String, String> {
     Ok("监听已启动".to_string())

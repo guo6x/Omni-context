@@ -1,0 +1,34 @@
+{
+  "artifact": "d1b1 public control attack surface",
+  "generated_at": "2026-08-26T00:00:00.000Z",
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/api/control/approve",
+      "scope": "control:approve",
+      "transport": "loopback HTTP",
+      "execution": "never",
+      "body": "exactly { plan_id }"
+    },
+    {
+      "method": "POST",
+      "path": "/internal/control/session",
+      "scope": "native bridge secret",
+      "transport": "loopback HTTP",
+      "purpose": "Desktop explicit click only"
+    }
+  ],
+  "rejected": [
+    "read-token approval",
+    "browser Origin",
+    "LAN/public address",
+    "non-loopback Host",
+    "OPTIONS preflight",
+    "X-Forwarded-For spoof",
+    "extra JSON fields",
+    "generic execute/run/shell/receipt/readback/outcome routes"
+  ],
+  "unknown_count": 0,
+  "fix_before_d1b1": 0,
+  "blocks_d1b1": 0
+}

@@ -41,8 +41,8 @@ export function parseArgs(argv) {
       i += 1;
     } else if (arg.startsWith('--api-url=')) {
       flags.apiUrl = arg.slice('--api-url='.length);
-    } else if (arg === '--token' || arg.startsWith('--token=')) {
-      throw errorFor.usage('the local API token must never be passed as a CLI argument (shell history leak); use OMNI_LOCAL_API_TOKEN or the Desktop token file');
+    } else if (arg === '--token' || arg.startsWith('--token=') || arg === '--control-token' || arg.startsWith('--control-token=')) {
+      throw errorFor.usage('tokens must never be passed as CLI arguments (shell history leak); use the Desktop security session or local token file');
     } else if (arg.startsWith('--')) {
       throw errorFor.usage(`unknown flag '${arg}'`);
     } else {
@@ -77,7 +77,7 @@ export async function run(argv) {
       case 'version':
         return await cmdVersion({ json, args });
       case 'approve':
-        return await cmdApprove({ json, args });
+        return await cmdApprove({ json, args, apiUrl: flags.apiUrl || DEFAULT_API_URL });
       case 'verify':
         return await cmdVerify({ json, args });
       case 'reopen':

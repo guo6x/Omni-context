@@ -21,6 +21,7 @@ mod runner;
 mod types;
 
 pub(crate) mod approval;
+pub(crate) mod native_control;
 pub(crate) mod readback;
 
 #[cfg(test)]
@@ -95,15 +96,14 @@ pub use policy::{build_child_env, validate_cwd, BASE_ENV_VARS};
 pub use policy::{ExecutionBinding, ExecutionRiskPolicy, OutputLimits, DEFAULT_OUTPUT_MAX_BYTES};
 /// Harness/test-only plan wire types (the production bin never constructs a
 /// plan; only the dev-only harness and tests do).
-#[cfg(test)]
-pub use types::{
-    ApprovalReferenceWire, EvidenceCoverageSnapshotWire, RiskSnapshotWire, VerificationPlanWire,
-};
+pub use types::ApprovalReferenceWire;
 pub use types::{
     AuthorityLevelWire, BrokerError, BrokerExecutionResult, ErrorCode, ExecutionPlanStateWire,
     ExecutionPlanWire, RiskLevelWire, SideEffectClassWire, FORBIDDEN_INPUT_KEYS, TIMEOUT_MAX_MS,
     TIMEOUT_MIN_MS,
 };
+#[cfg(test)]
+pub use types::{EvidenceCoverageSnapshotWire, RiskSnapshotWire, VerificationPlanWire};
 
 /// Broker version reported by the status IPC surface.
 pub const BROKER_VERSION: &str = "0.1.0-cp7";
@@ -274,6 +274,101 @@ impl Broker {
         request: &GrantRequest<'_>,
     ) -> Result<types::ApprovalReferenceWire, BrokerError> {
         self.approval.grant(request)
+    }
+
+    /// Native-only plan-bound grant entry point used by the private Brain
+    /// bridge. The bridge cannot provide an arbitrary policy: the broker
+    /// resolves the compiled binding and recomputes the CP7 binding digest
+    /// before minting a grant.
+    pub(crate) fn grant_approval_for_plan(
+        &self,
+        plan: &ExecutionPlanWire,
+        approval_request_id: Option<String>,
+        actor_id: String,
+        actor_kind: approval::ActorKind,
+        actor_authority: AuthorityLevelWire,
+        expires_at: String,
+        expected_binding_digest: &str,
+    ) -> Result<types::ApprovalReferenceWire, BrokerError> {
+        validate_plan_identity(plan)?;
+        let binding = {
+            let bindings = self.bindings.lock().unwrap();
+            bindings
+                .values()
+                .find(|binding| {
+                    binding.adapter_id() == plan.adapter_id
+                        && binding.capability_id() == plan.capability_id
+                        && binding.capability_version() == plan.capability_version
+                })
+                .map(|binding| binding.risk_policy())
+        }
+        .ok_or_else(|| {
+            BrokerError::new(
+                ErrorCode::UnknownBinding,
+                "no compiled binding matches the plan",
+            )
+        })?;
+        let recomputed = approval::digest::approval_binding_digest(
+            plan,
+            approval::authority::APPROVAL_POLICY_VERSION,
+        )?;
+        if recomputed != expected_binding_digest {
+            return Err(BrokerError::new(
+                ErrorCode::ApprovalBindingMismatch,
+                "Brain binding digest does not match native recomputation",
+            ));
+        }
+        self.grant_approval(&GrantRequest {
+            plan,
+            approval_request_id,
+            actor_id,
+            actor_kind,
+            actor_authority,
+            expires_at,
+            binding_policy: &binding,
+        })
+    }
+
+    /// Native-only verification entry point used by the private Brain bridge.
+    /// The returned record is read from the native store and is never inferred
+    /// from caller-supplied approval metadata.
+    pub(crate) fn verify_approval_for_plan(
+        &self,
+        approval: &types::ApprovalReferenceWire,
+        plan: &ExecutionPlanWire,
+    ) -> Result<approval::ApprovalRecord, BrokerError> {
+        validate_plan_identity(plan)?;
+        if !plan.required_approval {
+            return Err(BrokerError::new(
+                ErrorCode::PlanRejectedApproval,
+                "approval verification requires required_approval=true",
+            ));
+        }
+        if approval.plan_id != plan.plan_id {
+            return Err(BrokerError::new(
+                ErrorCode::ApprovalWrongPlan,
+                "approval plan_id does not match plan_id",
+            ));
+        }
+        let binding_policy = {
+            let bindings = self.bindings.lock().unwrap();
+            bindings
+                .values()
+                .find(|binding| {
+                    binding.adapter_id() == plan.adapter_id
+                        && binding.capability_id() == plan.capability_id
+                        && binding.capability_version() == plan.capability_version
+                })
+                .map(|binding| binding.risk_policy())
+        }
+        .ok_or_else(|| {
+            BrokerError::new(
+                ErrorCode::UnknownBinding,
+                "no compiled binding matches the plan",
+            )
+        })?;
+        self.approval
+            .verify(approval, plan, &binding_policy, chrono::Utc::now())
     }
 
     /// Crate-internal revoke entry point (audit-only after consume).
@@ -683,6 +778,18 @@ fn validate_plan_identity(plan: &ExecutionPlanWire) -> Result<(), BrokerError> {
 
 /// Process-wide broker instance used by the read-only status IPC command.
 static GLOBAL_BROKER: std::sync::OnceLock<Broker> = std::sync::OnceLock::new();
+
+pub fn configure_global_broker_with_persistence(
+    approval_store: &Path,
+    plan_ledger: &Path,
+    receipt_store: &Path,
+) {
+    let _ = GLOBAL_BROKER.set(Broker::with_receipt_persistence(
+        approval_store,
+        plan_ledger,
+        receipt_store,
+    ));
+}
 
 pub fn global_broker() -> &'static Broker {
     GLOBAL_BROKER.get_or_init(Broker::new)

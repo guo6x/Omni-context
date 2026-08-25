@@ -21,6 +21,24 @@ export function desktopTokenFilePath(env = process.env) {
   return join(homedir(), '.omni-context', 'local-token.txt');
 }
 
+export function controlSessionFilePath(env = process.env) {
+  if (env.LOCALAPPDATA) return join(env.LOCALAPPDATA, 'omni-context', 'control-session.json');
+  if (env.HOME) return join(env.HOME, '.omni-context', 'control-session.json');
+  return join(homedir(), '.omni-context', 'control-session.json');
+}
+
+/** Resolve the ephemeral Desktop-minted approve-only session. */
+export function resolveControlSession(env = process.env, now = Date.now()) {
+  const path = controlSessionFilePath(env);
+  if (!existsSync(path)) return null;
+  let parsed;
+  try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
+  if (!parsed || typeof parsed !== 'object') return null;
+  if (typeof parsed.token !== 'string' || !parsed.token || parsed.scope !== 'control:approve') return null;
+  if (typeof parsed.expires_at !== 'string' || !Number.isFinite(Date.parse(parsed.expires_at)) || Date.parse(parsed.expires_at) <= now) return null;
+  return { source: 'file', token: parsed.token, expires_at: parsed.expires_at, scope: parsed.scope };
+}
+
 /**
  * Resolve the token. Returns { source: 'env' | 'file', token } or null.
  * The token value never leaves the caller's local scope and is never
@@ -42,5 +60,5 @@ export function resolveLocalToken(env = process.env) {
  * usage error - the parser rejects it before any network call).
  */
 export function tokenArgumentPresent(argv) {
-  return argv.some((arg) => arg === '--token' || arg.startsWith('--token='));
+  return argv.some((arg) => arg === '--token' || arg.startsWith('--token=') || arg === '--control-token' || arg.startsWith('--control-token='));
 }

@@ -1,0 +1,22 @@
+{
+  "artifact": "d1b1 adversarial matrix",
+  "generated_at": "2026-08-26T00:00:00.000Z",
+  "vector_count": 44,
+  "vectors": [
+    "read token scope denial", "extra body field", "browser Origin", "OPTIONS",
+    "LAN remote address", "non-loopback Host", "X-Forwarded-For spoof", "unknown session",
+    "expired session", "disabled session", "rate limit", "plan not found",
+    "ready plan", "blocked plan", "approval-free plan", "pending mismatch",
+    "decision swap", "capability swap", "adapter swap", "input swap", "risk swap",
+    "evidence swap", "timeout swap", "verification swap", "expiry swap", "policy swap",
+    "actor spoof", "authority spoof", "concurrent duplicate grants", "persistent restart replay",
+    "native bridge Origin", "native bridge Host", "native bridge remote peer", "native secret mismatch",
+    "native unknown fields", "native malformed JSON", "CLI control-token flag", "CLI query token",
+    "CLI read-token fallback", "verify network side effect", "execute gateway scan",
+    "receipt gateway scan", "readback gateway scan", "outcome gateway scan"
+  ],
+  "unknown_count": 0,
+  "fix_before_d1b1": 0,
+  "blocks_d1b1": 0,
+  "coverage_status": "STATIC_AND_COMPONENT_COVERAGE_RECORDED"
+}

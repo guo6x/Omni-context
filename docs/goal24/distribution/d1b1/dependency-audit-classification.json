@@ -1,0 +1,16 @@
+{
+  "artifact": "d1b1 dependency audit classification",
+  "generated_at": "2026-08-26T00:00:00.000Z",
+  "new_runtime_dependencies": {
+    "omctx": 0,
+    "brain_server": 0,
+    "rust": 0
+  },
+  "unknown_count": 0,
+  "fix_before_d1b1": 0,
+  "blocks_d1b1": 0,
+  "notes": [
+    "D1B-1 uses existing Node fetch, Zod, reqwest, serde and getrandom dependencies.",
+    "No package manifest or runtime dependency was added."
+  ]
+}

@@ -31,6 +31,9 @@ export function assertLoopbackUrl(rawUrl) {
   if (parsed.protocol !== 'http:') {
     throw errorFor.remoteApi();
   }
+  if (parsed.username || parsed.password || parsed.search || parsed.hash) {
+    throw errorFor.usage('API URL must not contain credentials, query parameters or fragments');
+  }
   const hostname = parsed.hostname.replace(/^\[/, '').replace(/\]$/, '');
   if (!LOOPBACK_HOSTS.has(hostname)) {
     throw errorFor.remoteApi();
@@ -203,6 +206,43 @@ export class OmniLocalClient {
       throw errorFor.unexpectedResponse('history response shape is not recognized');
     }
     return payload.decisions;
+  }
+
+  /** Fixed approve-only mutation gateway. The caller supplies only the
+   * ephemeral Desktop control token; no read token fallback is possible. */
+  async approvePlan(planId, controlToken) {
+    if (typeof planId !== 'string' || !/^plan-[0-9a-f-]{8,}$/i.test(planId)) {
+      throw errorFor.usage('approve requires a valid plan id');
+    }
+    if (typeof controlToken !== 'string' || !controlToken) throw errorFor.controlAuthMissing();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    let response;
+    try {
+      response = await this.fetchImpl(`${this.apiUrl}/api/control/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Omni-Client': `omctx/${CLI_VERSION}`,
+          Authorization: `Bearer ${controlToken}`,
+        },
+        body: JSON.stringify({ plan_id: planId }),
+        signal: controller.signal,
+        redirect: 'error',
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw errorFor.brainOffline('request timed out');
+      throw errorFor.brainOffline(typeof error?.message === 'string' ? error.message.slice(0, 120) : 'connection failed');
+    } finally { clearTimeout(timer); }
+    let payload = null;
+    try { payload = await response.json(); } catch { throw errorFor.unexpectedResponse('approve response is not valid JSON'); }
+    if (response.status === 401) throw errorFor.controlAuthRejected();
+    if (response.status === 403) throw errorFor.controlScopeDenied();
+    if (response.status === 404) throw errorFor.planNotFound();
+    if (response.status === 409) throw errorFor.approvalRejected(payload?.error);
+    if (response.status === 429) throw errorFor.controlRateLimited();
+    if (!response.ok) throw errorFor.unexpectedResponse(`approve endpoint returned HTTP ${response.status}`);
+    return payload?.data ?? payload;
   }
 }
 
