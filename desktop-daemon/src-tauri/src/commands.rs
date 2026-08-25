@@ -6,8 +6,14 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use tauri::Manager;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct ControlSessionFile {
+struct ControlSessionFile {
     token: String,
+    expires_at: String,
+    scope: String,
+}
+
+#[derive(serde::Serialize)]
+pub struct ControlSessionInfo {
     expires_at: String,
     scope: String,
 }
@@ -15,7 +21,7 @@ pub struct ControlSessionFile {
 /// Explicit human-confirmation action. This is the only Desktop path that
 /// mints a CLI approval session; startup never enables it automatically.
 #[tauri::command]
-pub async fn enable_cli_approvals() -> Result<ControlSessionFile, String> {
+pub async fn enable_cli_approvals() -> Result<ControlSessionInfo, String> {
     if !brain_server::is_ready() {
         return Err("Brain Server is not ready".to_string());
     }
@@ -97,7 +103,10 @@ pub async fn enable_cli_approvals() -> Result<ControlSessionFile, String> {
     }
     #[cfg(not(unix))]
     std::fs::write(&path, &bytes).map_err(|e| format!("cannot write control session file: {e}"))?;
-    Ok(file)
+    Ok(ControlSessionInfo {
+        expires_at: file.expires_at,
+        scope: file.scope,
+    })
 }
 
 #[tauri::command]
