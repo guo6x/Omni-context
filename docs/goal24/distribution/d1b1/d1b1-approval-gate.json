@@ -1,48 +1,37 @@
 {
   "artifact": "d1b1-approval-gate.json",
-  "phase": "GOAL24 DISTRIBUTION READINESS PHASE A/B D1B-1",
+  "phase": "GOAL24 DISTRIBUTION READINESS PHASE A/B D1B-1 CLOSURE",
   "verification_level": "VERIFIED_LOCAL_EVIDENCE",
-  "gate_status": "D1B1_PUBLIC_APPROVAL_FEATURE_BRANCH_PASS",
-  "scope": {
-    "approve": "feature-branch verified; explicit Desktop control session only",
-    "verify": "TARGET_LOCKED",
-    "execution": "NOT_IMPLEMENTED",
-    "reopen": "FUTURE",
-    "npm": "NOT_PUBLISHED"
-  },
-  "security_invariants": {
-    "control_scope": "control:approve",
-    "actor": "local-owner / owner / L3",
-    "session_ttl_minutes": 5,
-    "session_max_ttl_minutes": 15,
-    "read_token_can_approve": false,
-    "browser_origin_allowed": false,
-    "remote_or_lan_allowed": false,
-    "extra_body_fields_allowed": false,
-    "execution_started_by_approve": false,
-    "native_grants_per_plan": 1,
-    "persistent_restart_replay": "blocked"
-  },
-  "audit_counts": {
-    "unknown": 0,
-    "fix_before_d1b1": 0,
-    "blocks_d1b1": 0
-  },
+  "gate_status": "D1B1_CLOSURE_BLOCKED",
+  "final_status": "D1B1_CLOSURE_BLOCKED",
+  "pre_closure_sha": "e987a21135a28758d1dad8c6ad62e01e4f3e89f7",
+  "feature_head_observed": "e987a21135a28758d1dad8c6ad62e01e4f3e89f7",
+  "scope": {"approve":"IMPLEMENTED_FEATURE_CANDIDATE; closure not verified","verify":"TARGET_LOCKED","execution":"NOT_IMPLEMENTED_PUBLICLY","reopen":"FUTURE","npm":"NOT_PUBLISHED"},
+  "blockers": [
+    {"code":"D1B1_PRODUCTION_RUNTIME_NOT_WIRED","detail":"Real Brain HTTP server starts createServer(...) without ControlApprovalRuntime. Real /api/control/approve returns 404 PLAN_NOT_FOUND before a server-owned awaiting_approval plan can exist; no private route, direct store mutation, fake native authority, Broker.execute, or GitHub write was used."},
+    {"code":"D1B1_CARGO_AUDIT_REFRESH_UNKNOWN","detail":"cargo audit could not refresh RustSec advisory DB; result is SECURITY_UNKNOWN and blocks closure."},
+    {"code":"DESKTOP_FROZEN_CHECKS_PREEXISTING","detail":"verify:controlled fails against the pre-feature committed snapshot for intentional D1B1 Rust files; clippy -D warnings reports pre-existing warnings."}
+  ],
+  "security_invariants": {"control_scope":"control:approve","actor":"local-owner / owner / L3","session_ttl_minutes":5,"session_max_ttl_minutes":15,"read_token_can_approve":false,"browser_origin_allowed":false,"remote_or_lan_allowed":false,"extra_body_fields_allowed":false,"execution_started_by_approve":false,"native_grants_per_plan":1,"persistent_restart_replay":"blocked"},
   "validation": {
-    "brain_typecheck": "PASS",
-    "rust_cargo_check": "PASS",
-    "rust_fmt": "PASS",
-    "cli_full_suite": "PASS (37 tests)",
-    "rust_broker_suite": "PASS (218 passed / 8 ignored)",
-    "brain_approval_regressions": "PASS (84 tests)",
-    "cli_control_transport_smoke": "PASS",
-    "d1b1_control_unit_suite": "PASS (6 tests)",
-    "full_d1b1_adversarial_matrix": "STATIC_COVERAGE_RECORDED",
-    "real_local_approval_e2e": "NOT_RUN_IN_THIS_LOCAL_VALIDATION"
+    "real_local_approval_e2e":"BLOCKED_PRODUCTION_RUNTIME_NOT_WIRED",
+    "real_e2e_blocker_probe":{"brain_http":"PASS","control_session_mint":"PASS (raw token not retained in evidence)","approve_result":"404 PLAN_NOT_FOUND","native_grant":"NOT_STARTED","broker_executions":0,"github_writes":0,"receipts_created":0},
+    "full_brain_regression":"PASS (67 files; 1307 passed; 0 failed)",
+    "full_cli_regression":"PASS (37 passed; 0 failed)",
+    "full_rust_regression":"PASS (218 passed; 0 failed; 8 ignored; one initial concurrency assertion was transient and passed on rerun)",
+    "desktop_next_build":"PASS",
+    "desktop_verify_controlled":"BLOCKED (pre-existing snapshot mismatch for intentional D1B1 files)",
+    "desktop_cargo_fmt":"PASS",
+    "desktop_cargo_check":"PASS",
+    "desktop_cargo_clippy":"BLOCKED (pre-existing warnings under -D warnings)",
+    "git_diff_check":"PASS",
+    "targeted_cp6_cp7_cp8_post_cp8_d1a":"PASS (396 Brain tests; CLI 37; Rust covered in full suite)",
+    "targeted_d1b0":"BLOCKED (historical validator rejects newly present D1B1 control route by design)",
+    "adversarial_matrix":{"total":44,"dynamic":0,"static":44,"real_e2e":0,"failed":0,"unknown":0,"blocked":44,"artifact":"d1b1-adversarial-matrix.json"}
   },
-  "freshness": {
-    "authoritative_d1b0_sha": "a902ac4fc804459f07a09b84494a68c8bd7f618b",
-    "feature_branch": "dev/goal24-d1b1-public-approve",
-    "generated_at": "2026-08-26T00:00:00.000Z"
-  }
+  "real_e2e": {"plan_before_state":"NOT_CREATED_BY_PRODUCTION_RUNTIME","plan_after_state":"NOT_REACHED","approval_request_before":"NOT_REACHED","approval_request_after":"NOT_REACHED","native_grants_created":0,"second_approve_result":"NOT_REACHED","restart_replay_result":"NOT_REACHED","broker_executions":0,"github_writes":0,"receipts_created":0,"readback_started":false,"outcome_finalized":false,"verify_status":"TARGET_LOCKED (CLI implementation; no plan available for side-effect probe)","verify_network_calls":0,"concurrency_attempts":0,"concurrency_grants_created":0,"native_authority":"NOT_STARTED; no approval token/store evidence created","desktop_session_issuer":"NOT_INVOKED; production runtime blocker precedes owner click","omctx_binary":"packages/omctx/bin/omctx.js used for CLI regression; real approve invocation not reached"},
+  "audits": {"brain_npm_audit":{"exit_code":1,"vulnerabilities":28,"classification":"EXISTING_DEPENDENCY_FINDINGS_NOT_D1B1_CONTROL_SURFACE"},"desktop_npm_audit":{"exit_code":1,"vulnerabilities":9,"classification":"EXISTING_BUILD_DEPENDENCY_FINDINGS_NOT_D1B1_CONTROL_SURFACE"},"cargo_audit":{"exit_code":1,"classification":"SECURITY_UNKNOWN","rustsec_refresh":"FAILED_NETWORK"},"security_unknown":1,"fix_before_d1b1":0,"blocks_d1b1":1},
+  "generic_escape_surfaces":{"blocking_surfaces":0,"secret_leaks":0,"notes":"Static scan found only typed broker bindings, trusted process-management utilities, and test-only execute paths; no public arbitrary execute/argv/receipt/readback/outcome gateway."},
+  "truth_flags":{"approval_executes_plan":false,"public_execution_gateway":false,"public_verify_gateway":false,"npm_published":false,"private":true,"runtime_changed_after_real_e2e":"NO_REAL_E2E_COMPLETED","main_touched":false,"holdback_touched":false,"scientific_refs_touched":false,"dirty_cp21_touched":false},
+  "freshness":{"authoritative_d1b0_sha":"a902ac4fc804459f07a09b84494a68c8bd7f618b","feature_branch":"dev/goal24-d1b1-public-approve","generated_at":"2026-08-26T01:25:00.000Z"}
 }
