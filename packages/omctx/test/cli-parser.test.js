@@ -50,10 +50,10 @@ test('parser: --token rejected as CLI argument', () => {
   assert.throws(() => parseArgs(['doctor', '--token=secret']), /shell history/);
 });
 
-test('approve is locked (fail closed, exit 3)', async () => {
+test('approve requires an ephemeral Desktop control session', async () => {
   const { run } = await import('../src/cli.js');
-  const code = await run(['approve', 'plan-123']);
-  assert.equal(code, EXIT.FEATURE_LOCKED);
+  const code = await run(['approve', 'plan-12345678']);
+  assert.equal(code, EXIT.AUTH_ERROR);
 });
 
 test('verify is locked (fail closed, exit 3)', async () => {
