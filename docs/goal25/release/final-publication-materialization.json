@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "status": "FINAL_PUBLICATION_MATERIALIZED",
+  "next_state": "AWAITING_PUBLISH_NOW",
+  "source_release_sha": "23a2fbdf6cf85cf0fce3c4d597028157260769c1",
+  "publication_patch_sha": "ec2e200d8228eaf1faf1030dfc5a670d72a748d4114befd5d9435e28d2d13bb1",
+  "publication_patch_sha_kind": "sha256_of_packages/omctx/package.json_unified_diff",
+  "package_name": "omctx",
+  "package_version": "0.1.0-alpha.0",
+  "private": false,
+  "publish_config": {
+    "access": "public",
+    "tag": "alpha",
+    "reason": "freeze public visibility and alpha distribution tag for the first publish"
+  },
+  "final_tarball_filename": "omctx-0.1.0-alpha.0.tgz",
+  "final_tarball_sha256": "fb0ae61d887985fb25bbe0cbb7c526529af0f010119e2518fb5eaa09043b0bb2",
+  "final_tarball_sha512": "228b8a4a9d9188cdfaf07abb23594d851eb272f71997a62d84dd5ade90d3c25e6990b7f84d3a75a41a97992b8bca8c4eb6244bfbd641669e6010afc5f52b52cb",
+  "final_tarball_size_bytes": 15671,
+  "packed_file_count": 20,
+  "tarball_security": {
+    "allowlist_check": "PASS",
+    "unexpected_files": 0,
+    "secret_leaks": 0,
+    "absolute_paths": 0,
+    "env_files": 0,
+    "token_or_store_files": 0,
+    "git_or_worktree_metadata": 0,
+    "symlink_or_path_traversal": 0
+  },
+  "tarball_diff_from_candidate": {
+    "candidate_tarball_sha256": "c2077f8c6cd9164cbf720161ac4c694cf5330b97536496edea8b616b240dfbbd",
+    "candidate_tarball_isolated_at": "packages/omctx/.goal25-previous-candidate/omctx-0.1.0-alpha.0.tgz",
+    "changed_packed_files": ["package.json"],
+    "package_metadata_changes": [
+      "private: true -> false",
+      "publishConfig.access: absent -> public",
+      "publishConfig.tag: absent -> alpha"
+    ],
+    "runtime_files_byte_identical": true,
+    "unexpected_changes": 0
+  },
+  "tarball_install": {
+    "status": "PASS",
+    "fresh_prefix": ".goal25-p0-final-install-4a3b047042904ccbb5fec1f47ec9ff04",
+    "npm_install_exit": 0,
+    "help_exit": 0,
+    "version_exit": 0,
+    "doctor_exit": 4,
+    "doctor_expected": "AUTH_REQUIRED / no local token in isolated prefix",
+    "version_json_exit": 0
+  },
+  "publish_dry_run": {
+    "status": "PASS",
+    "exit_code": 0,
+    "command": "npm publish ./omctx-0.1.0-alpha.0.tgz --tag alpha --access public --dry-run"
+  },
+  "registry_status": {
+    "registry": "https://registry.npmjs.org/",
+    "command": "npm view omctx --json",
+    "result": "E404_NOT_FOUND",
+    "npm_published": false,
+    "checked_at": "2026-08-26T21:38:11+08:00"
+  },
+  "recommended_publish_mode": "MODE_A_MANUAL_FIRST_PUBLISH",
+  "provenance_strategy": {
+    "mode_a": {
+      "name": "MANUAL_FIRST_PUBLISH",
+      "authentication": "Owner local authenticated publish with 2FA or valid npm auth",
+      "command": "npm publish ./omctx-0.1.0-alpha.0.tgz --tag alpha --access public",
+      "provenance_claim": "none"
+    },
+    "mode_b": {
+      "name": "CI_PROVENANCE_FIRST_PUBLISH",
+      "requirements": ["GitHub-hosted Actions runner", "id-token: write", "contents: read", "valid first-publish npm authentication strategy"],
+      "command": "npm publish ./omctx-0.1.0-alpha.0.tgz --tag alpha --access public --provenance",
+      "provenance_claim": "only after the CI trusted-publishing/authentication path is validated; local provenance is not claimed"
+    }
+  },
+  "exact_recommended_publish_command": "npm publish ./omctx-0.1.0-alpha.0.tgz --tag alpha --access public",
+  "npm_published": false,
+  "runtime_source_changes": false,
+  "protected_refs_touched": false,
+  "main_touched": false,
+  "release_notes_and_incident_plan": "docs/goal25/release/omctx-0.1.0-alpha.0-release-notes.md and docs/goal25/release/rollback-incident-plan.md",
+  "owner_boundary": "OWNER_PUBLISH_APPROVAL_REQUIRED",
+  "public_state_change_if_approved": "omctx@0.1.0-alpha.0 becomes downloadable from npm under the alpha dist-tag"
+}

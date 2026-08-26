@@ -2,7 +2,11 @@
   "name": "omctx",
   "version": "0.1.0-alpha.0",
   "description": "Omni-Context evidence-grounded decision control CLI (public alpha candidate; not published).",
-  "private": true,
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
+  },
   "type": "module",
   "bin": {
     "omctx": "bin/omctx.js"

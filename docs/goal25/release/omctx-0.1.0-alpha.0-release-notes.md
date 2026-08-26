@@ -1,7 +1,9 @@
 # omctx 0.1.0-alpha.0
 
-This is the first public-alpha candidate for the Omni-Context judgment CLI. It
-is currently held private and has not been published to npm.
+This is the first public-alpha candidate for the Omni-Context judgment CLI. Its
+publication metadata is materialized (`private: false`, public `alpha` tag),
+but it has not been published to npm and remains awaiting explicit Owner
+approval.
 
 ## Included
 
@@ -42,5 +44,6 @@ protocol is missing or unsupported.
 
 ## Publication status
 
-`private: true`, `npm_published: false`. Publication requires a separate,
-explicit owner approval after review of the release candidate.
+`private: false`, `publishConfig.access: public`, `publishConfig.tag: alpha`,
+`npm_published: false`. Publication requires a separate, explicit Owner
+approval after review of the final tarball and its SHA256.

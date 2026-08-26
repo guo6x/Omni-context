@@ -1,14 +1,28 @@
 {
   "schema_version": 1,
-  "status": "PREPARED_NOT_APPLIED",
+  "status": "APPLIED_TO_FINAL_MATERIALIZATION_ONLY",
   "precondition": "OWNER_PUBLISH_APPROVAL",
   "files_changed": [
-    {"path":"packages/omctx/package.json","changes":[{"field":"private","from":true,"to":false}],"reason":"npm refuses publication of a private package"}],
+    {"path":"packages/omctx/package.json","changes":[{"field":"private","from":true,"to":false}],"reason":"npm refuses publication of a private package"},
+    {"path":"packages/omctx/package.json","changes":[{"field":"publishConfig.access","from":"absent","to":"public"},{"field":"publishConfig.tag","from":"absent","to":"alpha"}],"reason":"freeze public visibility and alpha dist-tag so a first publish cannot default to ambiguous visibility or latest"}],
   "invariants": ["name remains omctx","version remains 0.1.0-alpha.0","files allowlist remains unchanged","runtime dependencies remain 0","no source/runtime changes","no credentials in files"],
+  "publish_modes": {
+    "MODE_A_MANUAL_FIRST_PUBLISH": {
+      "authentication": "Owner local authenticated publish with 2FA or valid npm auth",
+      "command": "npm publish ./omctx-0.1.0-alpha.0.tgz --tag alpha --access public",
+      "provenance_claim": "none"
+    },
+    "MODE_B_CI_PROVENANCE_FIRST_PUBLISH": {
+      "runner_requirements": ["GitHub-hosted Actions runner", "id-token: write", "contents: read", "valid first-publish npm authentication strategy"],
+      "command": "npm publish ./omctx-0.1.0-alpha.0.tgz --tag alpha --access public --provenance",
+      "provenance_claim": "only when the configured CI trusted-publishing/authentication path is actually validated"
+    }
+  },
   "exact_publish_commands": [
     "npm pack --json --ignore-scripts",
-    "npm publish omctx-0.1.0-alpha.0.tgz --tag alpha --provenance"
+    "npm publish ./omctx-0.1.0-alpha.0.tgz --tag alpha --access public",
+    "npm publish ./omctx-0.1.0-alpha.0.tgz --tag alpha --access public --provenance"
   ],
-  "recommended_auth": "Owner authenticates in their own trusted environment (npm login or configured trusted publisher); credentials are never placed in this plan.",
+  "recommended_auth": "Owner chooses MODE_A or a validated MODE_B in a trusted environment; credentials are never placed in this plan.",
   "public_state_change": "The package named omctx at version 0.1.0-alpha.0 becomes downloadable from the npm registry under the alpha dist-tag; this is irreversible publication state and is not performed by Goal25."
 }
