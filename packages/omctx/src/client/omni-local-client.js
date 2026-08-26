@@ -16,6 +16,7 @@ import { errorFor, OmctxError } from './errors.js';
 import { isReadToolAllowed } from '../read-tool-allowlist.js';
 
 export const CLI_VERSION = '0.1.0-alpha.0';
+export const EXPECTED_CONTROL_PROTOCOL_VERSION = '1.0';
 export const DEFAULT_API_URL = 'http://127.0.0.1:3001';
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
@@ -41,6 +42,19 @@ export function assertLoopbackUrl(rawUrl) {
   return parsed;
 }
 
+/** Validate the small public health identity/compatibility contract. */
+export function assertCompatibleHealth(payload) {
+  if (!payload || typeof payload !== 'object' || payload.ok !== true || payload.service !== 'omni-context-brain-server') {
+    throw errorFor.wrongService();
+  }
+  if (payload.product_version === undefined || payload.control_protocol_version !== EXPECTED_CONTROL_PROTOCOL_VERSION) {
+    throw errorFor.unsupportedControlProtocol(
+      `unsupported control protocol '${String(payload.control_protocol_version ?? 'missing')}' (expected ${EXPECTED_CONTROL_PROTOCOL_VERSION})`,
+    );
+  }
+  return payload;
+}
+
 function redactUrl(raw) {
   try {
     const url = new URL(raw);
@@ -58,6 +72,7 @@ export class OmniLocalClient {
     this.token = options.token; // never logged
     this.fetchImpl = options.fetchImpl || fetch;
     this.timeoutMs = options.timeoutMs || REQUEST_TIMEOUT_MS;
+    this._healthPayload = null;
   }
 
   _headers() {
@@ -136,7 +151,17 @@ export class OmniLocalClient {
     } catch {
       throw errorFor.unexpectedResponse('health response is not valid JSON');
     }
+    if (!payload || typeof payload !== 'object') {
+      throw errorFor.unexpectedResponse('health response shape is not an object');
+    }
+    this._healthPayload = payload;
     return payload;
+  }
+
+  /** Fail-closed compatibility handshake used by public CLI commands. */
+  async ensureCompatibility() {
+    const health = this._healthPayload || await this.health();
+    return assertCompatibleHealth(health);
   }
 
   /** Authenticated MCP ping. */

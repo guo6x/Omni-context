@@ -23,6 +23,9 @@ Flags:
   --limit <n>       history page size (1..100, default 20)
 
 This CLI does not execute arbitrary shell commands.
+Before network commands it requires the Brain /health identity and control
+protocol handshake. Doctor reports SERVICE_OK, UNSUPPORTED_CONTROL_PROTOCOL,
+WRONG_SERVICE, or AUTH_REQUIRED without exposing credentials.
 Reads require the local Brain API token. Approve requires an ephemeral
 approve-only session explicitly enabled in Omni Desktop. Verify requires a
 separate ephemeral verify-only session explicitly enabled in Omni Desktop;

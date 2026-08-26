@@ -125,3 +125,32 @@ test('verify uses the separate bearer session and fixed plan-only body', async (
   assert.equal(capturedAuth, 'Bearer verify-session-secret');
   assert.deepEqual(JSON.parse(capturedBody), { plan_id: 'plan-12345678' });
 });
+
+test('compatibility handshake fails closed on an unsupported protocol', async () => {
+  current = await startMockServer('unsupported-protocol');
+  const client = new OmniLocalClient({ apiUrl: current.url, token: 't' });
+  await assert.rejects(
+    () => client.ensureCompatibility(),
+    (error) => error.code === 'OMCTX_UNSUPPORTED_CONTROL_PROTOCOL',
+  );
+});
+
+test('hostile proxy environment cannot divert loopback traffic', async () => {
+  const keys = ['HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'NO_PROXY'];
+  const before = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  process.env.HTTP_PROXY = 'http://192.0.2.1:6553';
+  process.env.HTTPS_PROXY = 'http://192.0.2.1:6553';
+  process.env.ALL_PROXY = 'http://192.0.2.1:6553';
+  delete process.env.NO_PROXY;
+  current = await startMockServer('ok');
+  try {
+    const client = new OmniLocalClient({ apiUrl: current.url, token: 't' });
+    await client.ensureCompatibility();
+    await client.mcpPing();
+  } finally {
+    for (const key of keys) {
+      if (before[key] === undefined) delete process.env[key];
+      else process.env[key] = before[key];
+    }
+  }
+});

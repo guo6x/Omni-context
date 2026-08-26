@@ -53,3 +53,16 @@ test('doctor passes only after exact Omni health identity and authenticated MCP 
     server.server.close();
   }
 });
+
+test('doctor fails closed on an unsupported control protocol', async () => {
+  const server = await startMockServer('unsupported-protocol');
+  try {
+    const client = new OmniLocalClient({ apiUrl: server.url, token: 'test-token' });
+    await assert.rejects(
+      () => cmdDoctor({ client, tokenSource: 'environment', json: true, apiUrl: server.url }),
+      (error) => error.code === 'OMCTX_UNSUPPORTED_CONTROL_PROTOCOL',
+    );
+  } finally {
+    server.server.close();
+  }
+});

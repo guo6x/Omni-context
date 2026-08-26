@@ -88,14 +88,17 @@ export async function run(argv) {
       }
       case 'ask': {
         const ctx = buildContext(flags, json);
+        await ctx.client.ensureCompatibility();
         return await cmdAsk(ctx, args);
       }
       case 'inspect': {
         const ctx = buildContext(flags, json);
+        await ctx.client.ensureCompatibility();
         return await cmdInspect(ctx, args);
       }
       case 'history': {
         const ctx = buildContext(flags, json);
+        await ctx.client.ensureCompatibility();
         return await cmdHistory(ctx, flags.limit);
       }
       default:

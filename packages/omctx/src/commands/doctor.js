@@ -7,7 +7,7 @@
 import { EXIT, errorFor } from '../client/errors.js';
 import { printResult, humanKeyValue } from '../client/output.js';
 import { resolveLocalToken } from '../client/token.js';
-import { assertLoopbackUrl, DEFAULT_API_URL, OmniLocalClient } from '../client/omni-local-client.js';
+import { assertCompatibleHealth, assertLoopbackUrl, DEFAULT_API_URL, OmniLocalClient } from '../client/omni-local-client.js';
 
 function nodeOk() {
   const major = Number(process.versions.node.split('.')[0]);
@@ -36,11 +36,7 @@ export async function cmdDoctor({ client, tokenSource, json, apiUrl }) {
   if (!client) throw errorFor.authMissing();
 
   const health = await client.health();
-  if (health?.ok !== true || health?.service !== 'omni-context-brain-server') {
-    // A reachable HTTP endpoint is not sufficient evidence of Brain identity.
-    // Do not infer a service name when /health omits or changes this contract.
-    throw errorFor.wrongService();
-  }
+  assertCompatibleHealth(health);
   checks.brain_health = 'OK';
   checks.server_identity = health.service;
   await client.mcpPing();
@@ -54,10 +50,11 @@ export async function cmdDoctor({ client, tokenSource, json, apiUrl }) {
     authentication: 'OK',
     token_source: checks.token_source,
     server_service: checks.server_identity,
-    server_version: null,
+    server_version: health.product_version,
+    control_protocol_version: health.control_protocol_version,
     execution_surface: 'LOCKED',
     public_writes: 'DISABLED',
-    notes: ['server_version is not exposed by the Brain /health endpoint; recorded as null'],
+    notes: ['control protocol compatibility was checked before authenticated MCP ping'],
   };
   const human = [
     'omctx doctor',

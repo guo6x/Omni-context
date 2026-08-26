@@ -41,6 +41,7 @@ export const errorFor = {
   planNotFound: () => new OmctxError('OMCTX_PLAN_NOT_FOUND', 'the requested authorization plan was not found', EXIT.CONTRACT_OR_DATA_ERROR),
   approvalRejected: (detail) => new OmctxError('OMCTX_APPROVAL_REJECTED', `approval was rejected${detail ? `: ${detail}` : ''}`, EXIT.CONTRACT_OR_DATA_ERROR),
   wrongService: () => new OmctxError('OMCTX_WRONG_SERVICE', 'the reachable service did not prove it is the Omni-Context Brain Server', EXIT.CONTRACT_OR_DATA_ERROR),
+  unsupportedControlProtocol: (detail = 'the Brain Server did not advertise a supported control protocol') => new OmctxError('OMCTX_UNSUPPORTED_CONTROL_PROTOCOL', detail, EXIT.CONTRACT_OR_DATA_ERROR),
   remoteApi: () => new OmctxError('OMCTX_REMOTE_API_NOT_SUPPORTED_IN_ALPHA', 'the Alpha CLI only talks to loopback (127.0.0.1 / localhost / ::1)', EXIT.USAGE_ERROR),
   invalidDecisionId: (id) => new OmctxError('OMCTX_INVALID_DECISION_ID', `'${id}' is not a valid decision id`, EXIT.USAGE_ERROR),
   decisionNotFound: (id) => new OmctxError('OMCTX_DECISION_NOT_FOUND', `decision '${id}' was not found`, EXIT.CONTRACT_OR_DATA_ERROR),

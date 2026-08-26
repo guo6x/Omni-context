@@ -25,6 +25,7 @@ export async function cmdApprove({ json, args, apiUrl, fetchImpl }) {
   }
   const { OmniLocalClient } = await import('../client/omni-local-client.js');
   const client = new OmniLocalClient({ apiUrl, fetchImpl, token: undefined });
+  await client.ensureCompatibility();
   const result = await client.approvePlan(args[0], session.token);
   printResult({
     command: 'approve',
@@ -56,6 +57,7 @@ export async function cmdVerify({ json, args, apiUrl, fetchImpl }) {
   }
   const { OmniLocalClient } = await import('../client/omni-local-client.js');
   const client = new OmniLocalClient({ apiUrl, fetchImpl, token: undefined });
+  await client.ensureCompatibility();
   const result = await client.verifyPlan(args[0], session.token);
   printResult({
     command: 'verify',

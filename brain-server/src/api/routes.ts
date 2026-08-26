@@ -16,6 +16,7 @@ import { SqliteControlApprovalAuditStore } from '../control/audit.js';
 import { ControlVerificationFacade } from '../control/verification-facade.js';
 import type { ControlVerificationRuntime } from '../control/verification-facade.js';
 import { CONTROL_VERIFY_SCOPE } from '../control/session.js';
+import { BRAIN_PRODUCT_VERSION, CONTROL_PROTOCOL_VERSION } from './protocol.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -560,6 +561,8 @@ export function createServer(
       sendResponse(res, 200, {
         ok: true,
         service: 'omni-context-brain-server',
+        product_version: BRAIN_PRODUCT_VERSION,
+        control_protocol_version: CONTROL_PROTOCOL_VERSION,
         timestamp: new Date().toISOString(),
       });
       return;

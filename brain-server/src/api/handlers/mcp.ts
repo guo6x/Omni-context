@@ -1,6 +1,7 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
 import { scopeForMcpTool, AuthPrincipal } from '../../security/auth.js';
+import { BRAIN_PRODUCT_VERSION } from '../protocol.js';
 import { McpBusinessDispatcher } from '../../mcp/dispatch.js';
 import { BusinessError, businessErrorToHttpStatus, formatToolResult } from '../../mcp/errors.js';
 import { tools as mcpToolDefs } from '../../mcp-tools.js';
@@ -94,7 +95,7 @@ async function handleMcpRpcMessage(msg: any, principal: AuthPrincipal, dispatche
       return rpcResult(id, {
         protocolVersion: typeof params.protocolVersion === 'string' ? params.protocolVersion : '2025-06-18',
         capabilities: { tools: {} },
-        serverInfo: { name: 'omni-context', version: '0.1.1' },
+        serverInfo: { name: 'omni-context', version: BRAIN_PRODUCT_VERSION },
         instructions: MCP_HTTP_INSTRUCTIONS,
       });
     }

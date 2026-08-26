@@ -4,7 +4,7 @@ import http from 'node:http';
  * Tiny local mock Brain HTTP server for CLI transport tests.
  * mode: 'ok' | 'unauthorized' | 'forbidden' | 'error500' | 'malformed' |
  * 'redirect-remote' | 'slow' | 'notfound' | 'health-missing-service' |
- * 'wrong-service'
+ * 'wrong-service' | 'unsupported-protocol'
  */
 export function startMockServer(mode, onRequest) {
   const server = http.createServer((req, res) => {
@@ -42,7 +42,13 @@ export function startMockServer(mode, onRequest) {
         res.end(JSON.stringify({ ok: true, service: 'not-omni' }));
         return;
       }
-      res.end(JSON.stringify({ ok: true, service: 'omni-context-brain-server', timestamp: new Date().toISOString() }));
+      res.end(JSON.stringify({
+        ok: true,
+        service: 'omni-context-brain-server',
+        product_version: '0.1.1',
+        control_protocol_version: mode === 'unsupported-protocol' ? '2.0' : '1.0',
+        timestamp: new Date().toISOString(),
+      }));
       return;
     }
     if (req.url === '/mcp') {

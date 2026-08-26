@@ -108,6 +108,8 @@ describe('API smoke: /health', () => {
     expect(status).toBe(200);
     expect(body.ok).toBe(true);
     expect(body.service).toBe('omni-context-brain-server');
+    expect(body.product_version).toBe('0.1.1');
+    expect(body.control_protocol_version).toBe('1.0');
   });
 
   it('sets baseline security headers', async () => {
