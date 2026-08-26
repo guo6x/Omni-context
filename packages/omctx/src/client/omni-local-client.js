@@ -47,7 +47,7 @@ export function assertCompatibleHealth(payload) {
   if (!payload || typeof payload !== 'object' || payload.ok !== true || payload.service !== 'omni-context-brain-server') {
     throw errorFor.wrongService();
   }
-  if (payload.product_version === undefined || payload.control_protocol_version !== EXPECTED_CONTROL_PROTOCOL_VERSION) {
+  if (typeof payload.product_version !== 'string' || payload.product_version.trim() === '' || payload.control_protocol_version !== EXPECTED_CONTROL_PROTOCOL_VERSION) {
     throw errorFor.unsupportedControlProtocol(
       `unsupported control protocol '${String(payload.control_protocol_version ?? 'missing')}' (expected ${EXPECTED_CONTROL_PROTOCOL_VERSION})`,
     );
