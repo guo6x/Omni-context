@@ -1,97 +1,130 @@
 {
   "artifact": "d1b1-approval-gate.json",
-  "phase": "GOAL24 DISTRIBUTION READINESS PHASE A/B D1B-1 REPAIR-1",
-  "verification_level": "REPAIR_IMPLEMENTATION_LOCAL_EVIDENCE",
-  "gate_status": "D1B1_CLOSURE_BLOCKED",
-  "final_status": "D1B1_REPAIR1_CLOSURE_BLOCKED",
-  "pre_repair_sha": "2f2136549b027aad4bd074d496f1b26ef90bc70a",
+  "phase": "GOAL24 DISTRIBUTION READINESS D1B-1",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "gate_status": "D1B1_APPROVAL_GATE=PASS",
+  "final_status": "D1B1_GATED_PASS",
   "authoritative_d1b0_sha": "a902ac4fc804459f07a09b84494a68c8bd7f618b",
   "feature_branch": "dev/goal24-d1b1-public-approve",
-  "scope": {
-    "approve": "IMPLEMENTED_FEATURE_CANDIDATE; real Desktop E2E still blocked",
-    "verify": "TARGET_LOCKED",
-    "execution": "NOT_IMPLEMENTED_PUBLICLY",
-    "npm": "NOT_PUBLISHED"
+  "feature_sha": "d1820725d09d9a94a25f55d94546fd4239edc73a",
+  "production_control_runtime_injected": true,
+  "authorization_service_shared": true,
+  "authorization_store_shared": true,
+  "isolated_ports": true,
+  "real_desktop_process": true,
+  "real_production_plan_created": true,
+  "real_desktop_session_issuer": true,
+  "real_omctx_approve": true,
+  "real_native_approval_authority": true,
+  "production_composition": {
+    "plan_creation": "EvidenceSurfaceRuntime.evaluateForCapability -> AuthorizationService.authorize",
+    "native_grant_verifier": "private HttpNativeApprovalClient -> native bridge",
+    "public_raw_store_access": false,
+    "public_execution_gateway": false
   },
-  "repair_findings": {
-    "production_composition_root": "brain-server/src/api-server.ts::main and brain-server/src/mcp-server.ts::OmniContextServer.start",
-    "previous_control_runtime_injection": "NONE",
-    "production_control_runtime_injected": true,
-    "authorization_service_shared": true,
-    "authorization_store_shared": true,
-    "production_plan_fixture_path": "EvidenceSurfaceRuntime.evaluateForCapability -> AuthorizationService.authorize",
-    "native_grant_verifier": "HttpNativeApprovalClient private native /internal/native/verify bridge",
-    "public_raw_store_access": false
-  },
-  "blockers": [
-    {
-      "code": "D1B1_DESKTOP_E2E_PORT_CONFLICT",
-      "detail": "Before launching the controlled Desktop instance, TCP 3001 was already listening under an out-of-worktree Node process. The Repair-1 run did not terminate, reuse, or impersonate that process, so no genuine Desktop session issuer or CLI approve flow was invoked."
-    },
-    {
-      "code": "D1B1_CARGO_AUDIT_REFRESH_UNKNOWN",
-      "detail": "cargo audit was retried three times and each RustSec advisory database refresh failed at the GitHub fetch. No old D1B-0 audit was reused."
-    }
-  ],
-  "validation": {
-    "production_composition_identity_test": "PASS",
-    "production_plan_created_by_real_cp6_cp7_path": "PASS (controlled local fixture test)",
-    "real_desktop_session_issuer": "NOT_INVOKED_PORT_3001_OCCUPIED",
-    "real_omctx_approve": "NOT_INVOKED",
-    "real_native_approval_authority": "NOT_INVOKED",
-    "real_local_approval_e2e": "BLOCKED_PORT_3001_OCCUPIED",
-    "full_brain_regression": "PASS (68 files; 1308 tests)",
-    "full_cli_regression": "PASS (37 tests)",
-    "full_rust_regression": "PASS (226 tests; 8 ignored)",
-    "desktop_next_build": "PASS",
-    "desktop_cargo_check": "PASS",
-    "desktop_cargo_fmt": "PASS",
-    "desktop_cargo_clippy": "PASS",
-    "desktop_verify_controlled": "PASS",
-    "d1b0_historical_validator": "PASS at a902ac4fc804459f07a09b84494a68c8bd7f618b",
-    "d1b1_phase_validator": "PASS",
-    "adversarial_matrix": {"total": 44, "pass": 38, "blocked": 6, "failed": 0, "unknown": 0}
+  "runtime": {
+    "brain_port": 3311,
+    "native_bridge_port": 3312,
+    "real_desktop": true,
+    "real_production_brain": true,
+    "real_production_native_authority": true,
+    "real_omctx_binary": true,
+    "runtime_proof_sha": "d1820725d09d9a94a25f55d94546fd4239edc73a",
+    "runtime_root": ".tmp/d1b1-runtime6"
   },
   "real_e2e": {
-    "plan_before_state": "NOT_CREATED_IN_A_REAL_DESKTOP_PROCESS",
-    "approval_request_before": "NOT_REACHED",
-    "plan_after_state": "NOT_REACHED",
-    "approval_request_after": "NOT_REACHED",
-    "native_grants_created": 0,
-    "second_approve_result": "NOT_REACHED",
-    "restart_replay_result": "NOT_REACHED",
-    "concurrency_attempts": 0,
+    "plan_id": "plan-f2759add-cf7a-42c2-b916-ef8f9fca1094",
+    "decision_id": "d1b1-controlled-fixture-primary",
+    "plan_before": "awaiting_approval",
+    "approval_request_before": "pending",
+    "plan_after": "ready",
+    "approval_request_after": "granted",
+    "native_grants": 1,
+    "first_approve": "200 APPROVED",
+    "second_approve_blocked": true,
+    "second_approve_result": "409 PLAN_NOT_APPROVABLE",
+    "restart_replay_blocked": true,
+    "brain_restart_old_plan_result": "404 PLAN_NOT_FOUND",
+    "concurrency_attempts": 100,
+    "concurrency_grants": 1,
+    "concurrency_ready_transitions": 1,
+    "approval_executes_plan": false,
     "broker_executions": 0,
     "github_writes": 0,
     "receipts_created": 0,
     "readback_started": false,
     "outcome_finalized": false
   },
+  "audit": {
+    "store": "SQLite control_approval_audit",
+    "events_recorded": 12,
+    "traceability_fields": [
+      "timestamp",
+      "non-secret session reference",
+      "actor scope",
+      "plan_id",
+      "decision_id",
+      "action",
+      "result",
+      "failure reason",
+      "loopback transport context"
+    ],
+    "raw_tokens_logged": false,
+    "authorization_headers_logged": false,
+    "native_secret_logged": false,
+    "sensitive_normalized_inputs_logged": false,
+    "write_failure_policy": "fail_closed_before_native_grant"
+  },
+  "http_framing_tests": "PASS",
+  "adversarial": {
+    "total": 57,
+    "pass": 57,
+    "blocked": 0,
+    "failed": 0,
+    "unknown": 0,
+    "matrix": "docs/goal24/distribution/d1b1/d1b1-adversarial-matrix.json"
+  },
   "security": {
     "verify_status": "TARGET_LOCKED",
     "public_verify_route": false,
-    "approval_executes_plan": false,
     "public_execution_gateway": false,
     "generic_escape_surfaces": 0,
     "secret_leaks": 0,
-    "private": true,
-    "npm_published": false
+    "security_unknown": 0,
+    "fix_before_d1b1": 0,
+    "blocks_d1b1": 0,
+    "fresh_audits_classified": true
   },
   "audits": {
     "brain_npm_audit_findings": 28,
     "desktop_npm_audit_findings": 9,
-    "rustsec_db_refresh": "FAILED_NETWORK_AFTER_3_ATTEMPTS",
-    "cargo_audit": "BLOCKED",
-    "security_unknown": 1,
+    "cargo_audit_vulnerabilities": 5,
+    "cargo_audit_database_refreshed": true,
+    "classification": "KNOWN_EXISTING_NOT_D1B1_CONTROL_SURFACE",
+    "security_unknown": 0,
     "fix_before_d1b1": 0,
-    "blocks_d1b1": 1
+    "blocks_d1b1": 0,
+    "evidence": "docs/goal24/distribution/d1b1/dependency-audit-classification.json"
   },
-  "runtime_proof_sha": null,
-  "runtime_changed_after_proof": "NO_PROOF_RECORDED",
+  "full_regressions": {
+    "cli": "PASS (37 tests)",
+    "brain": "PASS (68 files; 1311 tests)",
+    "rust": "PASS (231 passed; 8 ignored)",
+    "desktop_next_build": "PASS",
+    "desktop_verify_controlled": "PASS",
+    "brain_typecheck": "PASS",
+    "cargo_fmt": "PASS",
+    "cargo_check": "PASS",
+    "cargo_clippy": "PASS",
+    "git_diff_check": "PASS",
+    "phase_validators": "PASS (D1B0 historical + D1B1 current)"
+  },
   "scope_integrity": {
     "main_touched": false,
     "holdback_touched": false,
     "scientific_refs_touched": false,
-    "dirty_cp21_touched": false
-  }
+    "goal20_touched": false,
+    "goal24_cp21_touched": false
+  },
+  "secrets": "REDACTED"
 }

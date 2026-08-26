@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-26T04:27:37.115Z",
+  "generatedAt": "2026-08-26T09:26:25.455Z",
   "files": {
     "package.json": "c8bb58ced87292eafce1e50db80102a33ad17890fb72ba0c512e188903b8d711",
     "next.config.js": "815ce424664eb36ff4a6d5b0807cedf0bea2939248545b1129780f5f0396d0c4",
@@ -19,7 +19,7 @@
     "src-tauri/src/hardware.rs": "af8a5139d4f1ad104df09647bbcc7be283cccc311aaf4a23e81d0a9fe3737ec8",
     "src-tauri/src/hardware_actions.rs": "c5eab8507e79767c73c524f61fcb32b861d34ef6c64bd541a9e877ace353c65d",
     "src-tauri/src/log_writer.rs": "f8a3da9b9cd953238353d6dc67c263e67cb7f78969690aeb25452c2b4b78a5be",
-    "src-tauri/src/main.rs": "905fddd66c8b2c65dcf6e0b3106a639f51d23bf2d6fdd0d0ed321e3eed588cd4",
+    "src-tauri/src/main.rs": "efbf8d7c3f6e97211d7356dd8eba7e3b88dcb4eae12324bd6ba852e69ddf12e5",
     "src-tauri/src/mcp_helper.rs": "737eb4fb8b80cdf5935dd0705ca56748c358773553e5dfdf15ed1a1db02809a9",
     "src-tauri/src/screen_capture.rs": "077a61927c47a6b01308011e265524b0a986bb2977066d3f55de09aa4e9e9b24",
     "src-tauri/src/udp_listener.rs": "17d671a8042e9305b8994426d5e8cd22c0d1655affb6bcf14ef14ef4eba5d794"

@@ -394,6 +394,6 @@ describe('Task 5: current schema verification', () => {
     const row = await db.get<{ version: number }>(
       "SELECT MAX(id) AS version FROM migrations",
     );
-    expect(row?.version).toBe(28);
+    expect(row?.version).toBe(29);
   });
 });

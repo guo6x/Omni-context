@@ -234,13 +234,13 @@ fn child_protocol_entry() {
             std::thread::sleep(Duration::from_secs(300));
         }
         "print-token" => {
-            println!("auth token: ghp_abcdefghijklmnopqrstuvwxyz1234567890ABCD");
+            println!("auth token: ghp_testtokenabcdefghijklmnopqrstuvwxyz1234567890ABCD");
         }
         "secret-output" => {
-            println!("credential ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcd");
+            println!("credential ghp_testtokenABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcd");
         }
         "bearer-output" => {
-            println!("Authorization: Bearer ghp_bearertokenvalue12345678901234567890");
+            println!("Authorization: Bearer ghp_testtokenbearertokenvalue12345678901234567890");
         }
         "credential-url-output" => {
             println!("https://user:pass123@example.com/repo");

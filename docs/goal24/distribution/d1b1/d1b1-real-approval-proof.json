@@ -1,0 +1,81 @@
+{
+  "artifact": "D1B-1 real approval runtime proof",
+  "feature_sha": "d1820725d09d9a94a25f55d94546fd4239edc73a",
+  "runtime": {
+    "brain_port": 3311,
+    "native_bridge_port": 3312,
+    "webview_cdp_port": 9923,
+    "real_desktop_process": true,
+    "real_production_brain": true,
+    "real_production_native_authority": true,
+    "real_omctx_binary": true,
+    "fixture_mode": "D1B1_CONTROLLED_LOCAL_ONLY",
+    "runtime_root": ".tmp/d1b1-runtime6",
+    "secrets": "REDACTED"
+  },
+  "human_control": {
+    "desktop_command": "enable_cli_approvals",
+    "scope": "control:approve",
+    "explicit_owner_action_reused": true,
+    "raw_control_token": "REDACTED",
+    "native_bridge_secret": "REDACTED"
+  },
+  "primary": {
+    "plan_id": "plan-f2759add-cf7a-42c2-b916-ef8f9fca1094",
+    "decision_id": "d1b1-controlled-fixture-primary",
+    "plan_before_state": "awaiting_approval",
+    "approval_request_before": "pending",
+    "plan_after_state": "ready",
+    "approval_request_after": "granted",
+    "native_grants_created": 1,
+    "approval_executes_plan": false,
+    "broker_executions": 0,
+    "github_writes": 0,
+    "receipts_created": 0,
+    "readback_started": false,
+    "outcome_finalized": false,
+    "first_approve": "200 APPROVED",
+    "second_approve": "409 PLAN_NOT_APPROVABLE",
+    "second_approve_blocked": true
+  },
+  "restart_replay": {
+    "desktop_and_brain_restarted": true,
+    "old_plan_result": "404 PLAN_NOT_FOUND",
+    "brain_restart_fail_closed": true,
+    "native_store_persisted": true,
+    "grants_for_primary_after_restart": 1,
+    "second_native_grant_created": false,
+    "restart_replay_blocked": true
+  },
+  "concurrency": {
+    "plan_id": "plan-318c11f0-f580-427f-8196-9113205960af",
+    "attempts": 100,
+    "http_200": 1,
+    "http_409_plan_already_consumed": 7,
+    "http_429_rate_limited": 92,
+    "native_grants_created": 1,
+    "ready_transitions": 1,
+    "broker_executions": 0,
+    "github_writes": 0
+  },
+  "audit": {
+    "sqlite_store": "control_approval_audit",
+    "events_recorded": 12,
+    "approved_events": 2,
+    "rejected_events": 10,
+    "contains_raw_tokens": false,
+    "contains_authorization_headers": false,
+    "contains_native_secret": false,
+    "contains_sensitive_normalized_inputs": false,
+    "loopback_context_recorded": true,
+    "audit_failure_policy": "fail_closed_before_native_grant"
+  },
+  "evidence": [
+    "runtime6/fixture6.json",
+    "runtime6/fixture6-restart.json",
+    "runtime6/omni-context/data/approval-store.json",
+    "runtime6/omni-context/data/omni-context.db",
+    "cargo test native_control (13 passed)",
+    "D1B1 real Desktop/Brain/native/omctx E2E"
+  ]
+}

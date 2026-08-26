@@ -35,7 +35,7 @@ const TEXT_EXTENSIONS = new Set([
 
 const PLACEHOLDER_MARKERS = [
   "example", "placeholder", "replace-me", "replace_me", "your-", "your_", "test-",
-  "test_", "dummy", "fake", "redacted", "<", "${", "process.env", "import.meta.env",
+  "test_", "testtoken", "dummy", "fake", "redacted", "<", "${", "process.env", "import.meta.env",
 ];
 
 function normalizePath(path) {

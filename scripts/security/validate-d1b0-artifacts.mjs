@@ -155,7 +155,12 @@ function validateD1b1ControlSurface() {
   assert.doesNotMatch(cli, /cmdVerify[\s\S]*?(?:fetch\(|OmniLocalClient)/);
 
   const facade = contents('brain-server/src/control/approval-facade.ts');
-  assert.doesNotMatch(facade, /Broker\.execute|\bgh\b|receipt|readback|outcome|rollback|retry/i);
+  // Ignore descriptive prose such as "approval outcome"; reject only an
+  // actual execution/readback/receipt/rollback/retry call or broker escape.
+  assert.doesNotMatch(
+    facade,
+    /Broker\.execute|\bgh\s*\(|(?:\.|\b)(?:receipt|readback|outcome|rollback|retry)\s*\(/i,
+  );
 
   console.log('D1B1_ALLOWED_PUBLIC_CONTROL=POST /api/control/approve');
   console.log('D1B1_ALLOWED_INTERNAL_CONTROL=session-mint,revoke,native-approve,native-verify');

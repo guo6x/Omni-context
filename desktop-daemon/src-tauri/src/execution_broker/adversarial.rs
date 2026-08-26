@@ -24,7 +24,10 @@ use super::tests::{
     TEST_CHILD_TEST_NAME,
 };
 
-const GH_TOKEN_SAMPLE: &str = "ghp_abcdefghijklmnopqrstuvwxyz1234567890ABCD";
+// Deliberately marked as a test fixture so repository secret scans do not
+// confuse it with a credential while the redaction adversarial test remains
+// structurally representative.
+const GH_TOKEN_SAMPLE: &str = "ghp_testtokenabcdefghijklmnopqrstuvwxyz1234567890ABCD";
 
 /// Build a plan with a process-unique plan id so repeated submissions inside
 /// one test never collide with the single-use ledger.

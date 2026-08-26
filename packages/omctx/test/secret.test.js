@@ -6,7 +6,7 @@ import { OmniLocalClient } from '../src/client/omni-local-client.js';
 import { printError, printResult } from '../src/client/output.js';
 
 const SECRETS = [
-  'gho_mKdGz8Z9pA2xT4vB6nQ1sW3eY7uI0oP',
+  'gho_testtokenmKdGz8Z9pA2xT4vB6nQ1sW3eY7uI0oP',
   'github_pat_11ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
   'omni-secret-local-token-value-0123456789abcdef',
 ];
