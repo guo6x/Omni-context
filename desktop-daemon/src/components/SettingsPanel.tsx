@@ -549,9 +549,9 @@ export default function SettingsPanel({
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* 侧边栏 */}
-          <div className="w-48 border-r border-white/5 p-2 bg-[#0a0b12]">
+          <div className="w-48 min-h-0 shrink-0 overflow-y-auto border-r border-white/5 p-2 bg-[#0a0b12]">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -574,7 +574,7 @@ export default function SettingsPanel({
           </div>
 
           {/* 内容区域 */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 min-h-0 overflow-y-auto p-6">
             {activeTab === 'shortcuts' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
