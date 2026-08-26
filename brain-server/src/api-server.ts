@@ -4,11 +4,34 @@ import initDatabase from './db/sqlite.js';
 import { createServer } from './api/routes.js';
 import { AgentLoop } from './agent/agent-loop.js';
 import { MemoryDecayScheduler } from './memory/decay-scheduler.js';
+import { createProductionAuthorizationRuntime } from './approval/production-runtime.js';
+import {
+  createD1b1ControlledFixture,
+  createD1b1ControlledFixtureProviders,
+} from './approval/d1b1-controlled-fixture.js';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const HOST = process.env.HOST || '127.0.0.1';
 const DB_PATH = process.env.DB_PATH || './data/omni-context.db';
+
+async function maybeCreateD1b1ControlledFixture() {
+  if (process.env.OMNI_D1B1_E2E_FIXTURE !== '1') return null;
+  const outputPath = process.env.OMNI_D1B1_E2E_FIXTURE_OUTPUT;
+  if (!outputPath) throw new Error('D1B1 controlled fixture requires OMNI_D1B1_E2E_FIXTURE_OUTPUT');
+  const clock = () => new Date();
+  const runtime = createProductionAuthorizationRuntime({
+    providers: createD1b1ControlledFixtureProviders(clock),
+    clock,
+  });
+  const fixture = await createD1b1ControlledFixture(runtime);
+  await mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
+  // The file intentionally contains only plan/request ids and state; it never
+  // contains a control session, native bridge secret, grant secret, or token.
+  await writeFile(outputPath, `${JSON.stringify(fixture, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+  return runtime;
+}
 
 async function main() {
   const evaluationMode = process.env.OMNI_EVALUATION_MODE === '1';
@@ -38,7 +61,19 @@ async function main() {
   // so a long interval alone does not prevent evaluation contamination.
   if (!evaluationMode) agentLoop.start(insightIntervalMs);
 
-  const server = createServer(db, agentLoop, undefined, decayScheduler);
+  // One server-owned authorization runtime serves both plan creation and the
+  // fixed control facade. The facade receives this exact service as its
+  // narrow ControlApprovalRuntime; it never receives a raw store.
+  const authorizationRuntime = await maybeCreateD1b1ControlledFixture()
+    ?? createProductionAuthorizationRuntime();
+  const server = createServer(
+    db,
+    agentLoop,
+    undefined,
+    decayScheduler,
+    undefined,
+    authorizationRuntime.controlRuntime,
+  );
 
   server.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {

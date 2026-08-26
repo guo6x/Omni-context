@@ -72,3 +72,9 @@ export {
   type AuthorizationServiceOptions,
   type PlanAuthorizationResult,
 } from './authorization-service.js';
+
+export {
+  createProductionAuthorizationRuntime,
+  type ProductionAuthorizationRuntime,
+  type ProductionAuthorizationRuntimeOptions,
+} from './production-runtime.js';

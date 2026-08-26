@@ -72,6 +72,11 @@ export const githubIssueReadSubjectResolver: CapabilityEvidenceSubjectResolver =
   return `github:issue:${owner}/${repo}${numberSuffix(inputs)}`;
 };
 
+// Closing an issue is bound to the same exact issue identity as reading it.
+// The action differs, but evidence and authorization must never be able to
+// drift to a repository-wide or caller-supplied subject.
+export const githubIssueCloseSubjectResolver: CapabilityEvidenceSubjectResolver = githubIssueReadSubjectResolver;
+
 export const githubIssueSearchSubjectResolver: CapabilityEvidenceSubjectResolver = (_capabilityId, inputs) => {
   const { owner, repo } = ownerRepo(inputs);
   return `github:issue-search:${owner}/${repo}`;
@@ -93,6 +98,7 @@ export function githubSubjectResolverRegistry(): CapabilityEvidenceSubjectResolv
   const registry = new CapabilityEvidenceSubjectResolverRegistry();
   registry.register('github.repo.inspect', githubRepoInspectSubjectResolver);
   registry.register('github.issue.read', githubIssueReadSubjectResolver);
+  registry.register('github.issue.close', githubIssueCloseSubjectResolver);
   registry.register('github.issue.search', githubIssueSearchSubjectResolver);
   registry.register('github.pr.read', githubPrReadSubjectResolver);
   registry.register('github.pr.checks.read', githubPrChecksReadSubjectResolver);

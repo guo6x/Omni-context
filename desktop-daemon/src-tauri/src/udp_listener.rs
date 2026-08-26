@@ -162,7 +162,7 @@ mod tests {
 
     #[tokio::test]
     async fn signed_packet_dispatches_action_and_returns_completion() {
-        let _guard = hardware::HARDWARE_TEST_LOCK.lock().unwrap();
+        let _guard = hardware::HARDWARE_TEST_LOCK.lock().await;
         let path = std::env::temp_dir().join(format!("omni-udp-e2e-{}.json", std::process::id()));
         let _ = fs::remove_file(&path);
         hardware::initialize_registry(path.clone()).unwrap();
@@ -206,7 +206,7 @@ mod tests {
 
     #[tokio::test]
     async fn simulator_roundtrip_covers_acceptance_actions_and_rejections() {
-        let _guard = hardware::HARDWARE_TEST_LOCK.lock().unwrap();
+        let _guard = hardware::HARDWARE_TEST_LOCK.lock().await;
         let path = std::env::temp_dir().join(format!(
             "omni-udp-simulator-e2e-{}.json",
             std::process::id()

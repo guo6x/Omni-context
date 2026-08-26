@@ -82,12 +82,3 @@ pub async fn clear_clipboard() -> Result<()> {
 
     Ok(())
 }
-
-pub async fn has_clipboard_content() -> Result<bool> {
-    let mut clipboard = Clipboard::new().map_err(|e| anyhow::anyhow!("无法访问剪贴板: {}", e))?;
-
-    let has_text = clipboard.get_text().is_ok();
-    let has_image = clipboard.get_image().is_ok();
-
-    Ok(has_text || has_image)
-}

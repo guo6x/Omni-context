@@ -203,10 +203,7 @@ fn find_proxy_js_path() -> String {
     paths.push(PathBuf::from("./brain-server/dist/mcp-proxy.js"));
     paths.push(PathBuf::from("../brain-server/dist/mcp-proxy.js"));
 
-    if let Some(home) = std::env::var("USERPROFILE")
-        .or_else(|_| std::env::var("HOME"))
-        .ok()
-    {
+    if let Ok(home) = std::env::var("USERPROFILE").or_else(|_| std::env::var("HOME")) {
         paths.push(PathBuf::from(format!(
             "{}/omni-context/brain-server/dist/mcp-proxy.js",
             home

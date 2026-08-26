@@ -14,7 +14,10 @@ use serde::{Deserialize, Serialize};
 
 use super::approval::digest::constant_time_eq;
 use super::approval::{ActorKind, ApprovalRecord};
-use super::{global_broker, ApprovalReferenceWire, AuthorityLevelWire, ExecutionPlanWire};
+use super::{
+    global_broker, ApprovalReferenceWire, AuthorityLevelWire, ExecutionPlanWire,
+    PlanApprovalGrantRequest,
+};
 
 pub const DEFAULT_PORT: u16 = 3002;
 
@@ -231,16 +234,15 @@ fn handle(mut stream: TcpStream, peer: SocketAddr, secret: &str, port: u16) {
             );
             return;
         };
-        let actor_kind = request.actor_kind;
-        let result = global_broker().grant_approval_for_plan(
-            &request.plan,
-            Some(request.approval_request_id),
-            request.actor_id,
-            actor_kind,
-            request.actor_authority,
-            request.expires_at,
-            &request.approval_binding_digest,
-        );
+        let result = global_broker().grant_approval_for_plan(PlanApprovalGrantRequest {
+            plan: &request.plan,
+            approval_request_id: Some(request.approval_request_id),
+            actor_id: request.actor_id,
+            actor_kind: request.actor_kind,
+            actor_authority: request.actor_authority,
+            expires_at: request.expires_at,
+            expected_binding_digest: &request.approval_binding_digest,
+        });
         match result {
             Ok(reference) => response(
                 &mut stream,

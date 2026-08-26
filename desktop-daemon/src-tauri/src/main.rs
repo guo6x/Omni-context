@@ -323,12 +323,10 @@ async fn main() {
                     }
                 }
             }
-            tauri::WindowEvent::Destroyed => {
-                if event.window().label() == "main" {
-                    println!("[Omni-Context] 主窗口销毁，清理中...");
-                    if let Err(e) = brain_server::stop() {
-                        eprintln!("[Omni-Context] Brain Server 停止失败: {}", e);
-                    }
+            tauri::WindowEvent::Destroyed if event.window().label() == "main" => {
+                println!("[Omni-Context] 主窗口销毁，清理中...");
+                if let Err(e) = brain_server::stop() {
+                    eprintln!("[Omni-Context] Brain Server 停止失败: {}", e);
                 }
             }
             _ => {}

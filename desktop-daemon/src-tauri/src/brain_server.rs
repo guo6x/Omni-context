@@ -492,7 +492,7 @@ fn harden_local_token_permissions(file: &std::path::Path) -> Result<(), String> 
 fn generate_local_token() -> String {
     let mut bytes = [0u8; 32];
     getrandom::getrandom(&mut bytes).expect("getrandom failed");
-    URL_SAFE_NO_PAD.encode(&bytes)
+    URL_SAFE_NO_PAD.encode(bytes)
 }
 
 #[cfg(all(test, unix))]

@@ -25,6 +25,7 @@ import { AgentLoop } from './agent/agent-loop.js';
 import { createServer } from './api/routes.js';
 import { McpBusinessDispatcher } from './mcp/dispatch.js';
 import { BusinessError, formatToolResult, formatResourceResult } from './mcp/errors.js';
+import { createProductionAuthorizationRuntime } from './approval/production-runtime.js';
 
 // Backward-compatible re-export: `toCompactEntity` moved to the unified
 // business dispatch layer (mcp/dispatch.ts).
@@ -156,7 +157,17 @@ Use memory selectively:
     this.agentLoop = new AgentLoop(this.db, this.decayScheduler);
     this.agentLoop.start(insightIntervalMs);
 
-    const httpServer = createServer(this.db, this.agentLoop, this.embeddingService, this.decayScheduler, this.dispatcher);
+    // The MCP process also hosts the HTTP API. Keep its plan-creation and
+    // control approval paths on one authorization service instance.
+    const authorizationRuntime = createProductionAuthorizationRuntime();
+    const httpServer = createServer(
+      this.db,
+      this.agentLoop,
+      this.embeddingService,
+      this.decayScheduler,
+      this.dispatcher,
+      authorizationRuntime.controlRuntime,
+    );
     // 端口冲突场景：用户既开桌面应用、又通过 MCP 接 Claude Desktop / Cursor，
     // 第二个实例无法绑定 3001，但 MCP stdio 仍可工作。这里捕获 EADDRINUSE 让进程
     // 不会因 listen 错误未处理而 crash。

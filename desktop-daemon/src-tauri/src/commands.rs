@@ -207,7 +207,7 @@ pub fn get_system_status() -> SystemStatus {
 
 #[tauri::command]
 pub async fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(|| brain_server::start())
+    tauri::async_runtime::spawn_blocking(brain_server::start)
         .await
         .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
@@ -225,7 +225,7 @@ pub async fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, 
 
 #[tauri::command]
 pub async fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(|| brain_server::stop())
+    tauri::async_runtime::spawn_blocking(brain_server::stop)
         .await
         .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
@@ -243,7 +243,7 @@ pub async fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, S
 
 #[tauri::command]
 pub async fn restart_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(|| brain_server::restart())
+    tauri::async_runtime::spawn_blocking(brain_server::restart)
         .await
         .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
 
@@ -404,6 +404,20 @@ pub fn process_dropped_paths(
         }
     }
 
+    fn supported_file(path: &Path, extensions: &[String]) -> Option<SupportedFile> {
+        if !path.is_file() || !is_supported(path, extensions) {
+            return None;
+        }
+        let metadata = fs::metadata(path).ok()?;
+        let path_str = path.to_str()?;
+        let name_str = path.file_name()?.to_str()?;
+        Some(SupportedFile {
+            path: path_str.to_string(),
+            name: name_str.to_string(),
+            size: metadata.len(),
+        })
+    }
+
     fn visit_dirs(
         dir: &Path,
         extensions: &[String],
@@ -424,20 +438,8 @@ pub fn process_dropped_paths(
                         }
                     }
                     visit_dirs(&path, extensions, files, depth + 1)?;
-                } else if path.is_file() {
-                    if is_supported(&path, extensions) {
-                        if let Ok(metadata) = entry.metadata() {
-                            if let Some(path_str) = path.to_str() {
-                                if let Some(name_str) = path.file_name().and_then(|n| n.to_str()) {
-                                    files.push(SupportedFile {
-                                        path: path_str.to_string(),
-                                        name: name_str.to_string(),
-                                        size: metadata.len(),
-                                    });
-                                }
-                            }
-                        }
-                    }
+                } else if let Some(file) = supported_file(&path, extensions) {
+                    files.push(file);
                 }
             }
         }
@@ -448,20 +450,8 @@ pub fn process_dropped_paths(
         let path = Path::new(&p);
         if path.is_dir() {
             let _ = visit_dirs(path, &lower_extensions, &mut files, 0);
-        } else if path.is_file() {
-            if is_supported(path, &lower_extensions) {
-                if let Ok(metadata) = fs::metadata(path) {
-                    if let Some(path_str) = path.to_str() {
-                        if let Some(name_str) = path.file_name().and_then(|n| n.to_str()) {
-                            files.push(SupportedFile {
-                                path: path_str.to_string(),
-                                name: name_str.to_string(),
-                                size: metadata.len(),
-                            });
-                        }
-                    }
-                }
-            }
+        } else if let Some(file) = supported_file(path, &lower_extensions) {
+            files.push(file);
         }
     }
 

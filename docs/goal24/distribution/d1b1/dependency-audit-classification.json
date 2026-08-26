@@ -1,19 +1,36 @@
 {
-  "artifact": "d1b1 dependency audit classification",
-  "generated_at": "2026-08-26T01:20:00.000Z",
-  "freshness": "FRESH_THIS_CLOSURE_RUN",
-  "new_runtime_dependencies": {"omctx": 0, "brain_server": 0, "rust": 0},
-  "audits": {
-    "brain_npm_audit": {"completed": true, "exit_code": 1, "vulnerability_count": 28, "classification": "EXISTING_DEPENDENCY_FINDINGS_NOT_D1B1_CONTROL_SURFACE"},
-    "desktop_npm_audit": {"completed": true, "exit_code": 1, "vulnerability_count": 9, "classification": "EXISTING_BUILD_DEPENDENCY_FINDINGS_NOT_D1B1_CONTROL_SURFACE"},
-    "cargo_audit": {"completed": false, "exit_code": 1, "classification": "SECURITY_UNKNOWN", "reason": "RustSec advisory DB refresh failed due network error"}
+  "artifact": "D1B-1 Repair-1 fresh dependency audit classification",
+  "generated_at": "2026-08-26T02:20:00.000Z",
+  "feature_sha_before_repair_commit": "2f2136549b027aad4bd074d496f1b26ef90bc70a",
+  "brain_npm_audit": {"completed": true, "exit_code": 1, "findings": 28},
+  "desktop_npm_audit": {"completed": true, "exit_code": 1, "findings": 9},
+  "cargo_audit": {
+    "completed": false,
+    "attempts": 3,
+    "rustsec_db_refresh": "FAILED_NETWORK",
+    "last_error": "could not fetch https://github.com/RustSec/advisory-db.git/info/refs?service=git-upload-pack"
   },
-  "security_unknown": 1,
-  "fix_before_d1b1": 0,
-  "blocks_d1b1": 1,
-  "classification_notes": [
-    "npm audits were run fresh in brain-server and desktop-daemon; nonzero exits are not treated as green.",
-    "No D1B-1 package manifest or runtime dependency was added.",
-    "cargo audit is BLOCKS_D1B1 until RustSec refresh succeeds; the stale D1B-0 result was not reused."
-  ]
+  "entries": [
+    {
+      "source": "brain npm audit",
+      "package": "28 reported dependency findings",
+      "classification": "KNOWN_EXISTING_NOT_D1B1_CONTROL_SURFACE",
+      "rationale": "Fresh report reviewed. No changed D1B-1 control-runtime dependency path or public control transport is introduced by these existing Brain dependency findings."
+    },
+    {
+      "source": "desktop npm audit",
+      "package": "9 reported dependency findings",
+      "classification": "KNOWN_EXISTING_NOT_D1B1_CONTROL_SURFACE",
+      "rationale": "Fresh report reviewed. No changed D1B-1 native bridge, explicit issuer, or CLI session path depends on a newly introduced package."
+    },
+    {
+      "source": "cargo audit",
+      "package": "RustSec advisory database",
+      "classification": "UNKNOWN_BLOCKS_D1B1",
+      "rationale": "All three required fresh refresh attempts failed at the advisory database network fetch; no cached or D1B-0 result is substituted."
+    }
+  ],
+  "unknown_count": 1,
+  "fix_before_d1b1_count": 0,
+  "blocks_d1b1_count": 1
 }

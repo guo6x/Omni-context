@@ -140,6 +140,19 @@ pub struct Broker {
     readback: ReadbackRunner,
 }
 
+/// Private native-bridge input for one plan-bound approval grant. Grouping
+/// this semantic request keeps the bridge call narrow without creating a
+/// generic approval or execution surface.
+pub(crate) struct PlanApprovalGrantRequest<'a> {
+    pub(crate) plan: &'a ExecutionPlanWire,
+    pub(crate) approval_request_id: Option<String>,
+    pub(crate) actor_id: String,
+    pub(crate) actor_kind: approval::ActorKind,
+    pub(crate) actor_authority: AuthorityLevelWire,
+    pub(crate) expires_at: String,
+    pub(crate) expected_binding_digest: &'a str,
+}
+
 impl Default for Broker {
     fn default() -> Self {
         Self::new()
@@ -282,23 +295,17 @@ impl Broker {
     /// before minting a grant.
     pub(crate) fn grant_approval_for_plan(
         &self,
-        plan: &ExecutionPlanWire,
-        approval_request_id: Option<String>,
-        actor_id: String,
-        actor_kind: approval::ActorKind,
-        actor_authority: AuthorityLevelWire,
-        expires_at: String,
-        expected_binding_digest: &str,
+        request: PlanApprovalGrantRequest<'_>,
     ) -> Result<types::ApprovalReferenceWire, BrokerError> {
-        validate_plan_identity(plan)?;
+        validate_plan_identity(request.plan)?;
         let binding = {
             let bindings = self.bindings.lock().unwrap();
             bindings
                 .values()
                 .find(|binding| {
-                    binding.adapter_id() == plan.adapter_id
-                        && binding.capability_id() == plan.capability_id
-                        && binding.capability_version() == plan.capability_version
+                    binding.adapter_id() == request.plan.adapter_id
+                        && binding.capability_id() == request.plan.capability_id
+                        && binding.capability_version() == request.plan.capability_version
                 })
                 .map(|binding| binding.risk_policy())
         }
@@ -309,22 +316,22 @@ impl Broker {
             )
         })?;
         let recomputed = approval::digest::approval_binding_digest(
-            plan,
+            request.plan,
             approval::authority::APPROVAL_POLICY_VERSION,
         )?;
-        if recomputed != expected_binding_digest {
+        if recomputed != request.expected_binding_digest {
             return Err(BrokerError::new(
                 ErrorCode::ApprovalBindingMismatch,
                 "Brain binding digest does not match native recomputation",
             ));
         }
         self.grant_approval(&GrantRequest {
-            plan,
-            approval_request_id,
-            actor_id,
-            actor_kind,
-            actor_authority,
-            expires_at,
+            plan: request.plan,
+            approval_request_id: request.approval_request_id,
+            actor_id: request.actor_id,
+            actor_kind: request.actor_kind,
+            actor_authority: request.actor_authority,
+            expires_at: request.expires_at,
             binding_policy: &binding,
         })
     }

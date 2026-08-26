@@ -1,37 +1,97 @@
 {
   "artifact": "d1b1-approval-gate.json",
-  "phase": "GOAL24 DISTRIBUTION READINESS PHASE A/B D1B-1 CLOSURE",
-  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "phase": "GOAL24 DISTRIBUTION READINESS PHASE A/B D1B-1 REPAIR-1",
+  "verification_level": "REPAIR_IMPLEMENTATION_LOCAL_EVIDENCE",
   "gate_status": "D1B1_CLOSURE_BLOCKED",
-  "final_status": "D1B1_CLOSURE_BLOCKED",
-  "pre_closure_sha": "e987a21135a28758d1dad8c6ad62e01e4f3e89f7",
-  "feature_head_observed": "e987a21135a28758d1dad8c6ad62e01e4f3e89f7",
-  "scope": {"approve":"IMPLEMENTED_FEATURE_CANDIDATE; closure not verified","verify":"TARGET_LOCKED","execution":"NOT_IMPLEMENTED_PUBLICLY","reopen":"FUTURE","npm":"NOT_PUBLISHED"},
-  "blockers": [
-    {"code":"D1B1_PRODUCTION_RUNTIME_NOT_WIRED","detail":"Real Brain HTTP server starts createServer(...) without ControlApprovalRuntime. Real /api/control/approve returns 404 PLAN_NOT_FOUND before a server-owned awaiting_approval plan can exist; no private route, direct store mutation, fake native authority, Broker.execute, or GitHub write was used."},
-    {"code":"D1B1_CARGO_AUDIT_REFRESH_UNKNOWN","detail":"cargo audit could not refresh RustSec advisory DB; result is SECURITY_UNKNOWN and blocks closure."},
-    {"code":"DESKTOP_FROZEN_CHECKS_PREEXISTING","detail":"verify:controlled fails against the pre-feature committed snapshot for intentional D1B1 Rust files; clippy -D warnings reports pre-existing warnings."}
-  ],
-  "security_invariants": {"control_scope":"control:approve","actor":"local-owner / owner / L3","session_ttl_minutes":5,"session_max_ttl_minutes":15,"read_token_can_approve":false,"browser_origin_allowed":false,"remote_or_lan_allowed":false,"extra_body_fields_allowed":false,"execution_started_by_approve":false,"native_grants_per_plan":1,"persistent_restart_replay":"blocked"},
-  "validation": {
-    "real_local_approval_e2e":"BLOCKED_PRODUCTION_RUNTIME_NOT_WIRED",
-    "real_e2e_blocker_probe":{"brain_http":"PASS","control_session_mint":"PASS (raw token not retained in evidence)","approve_result":"404 PLAN_NOT_FOUND","native_grant":"NOT_STARTED","broker_executions":0,"github_writes":0,"receipts_created":0},
-    "full_brain_regression":"PASS (67 files; 1307 passed; 0 failed)",
-    "full_cli_regression":"PASS (37 passed; 0 failed)",
-    "full_rust_regression":"PASS (218 passed; 0 failed; 8 ignored; one initial concurrency assertion was transient and passed on rerun)",
-    "desktop_next_build":"PASS",
-    "desktop_verify_controlled":"BLOCKED (pre-existing snapshot mismatch for intentional D1B1 files)",
-    "desktop_cargo_fmt":"PASS",
-    "desktop_cargo_check":"PASS",
-    "desktop_cargo_clippy":"BLOCKED (pre-existing warnings under -D warnings)",
-    "git_diff_check":"PASS",
-    "targeted_cp6_cp7_cp8_post_cp8_d1a":"PASS (396 Brain tests; CLI 37; Rust covered in full suite)",
-    "targeted_d1b0":"BLOCKED (historical validator rejects newly present D1B1 control route by design)",
-    "adversarial_matrix":{"total":44,"dynamic":22,"static":16,"real_e2e":6,"failed":0,"unknown":0,"blocked":44,"artifact":"d1b1-adversarial-matrix.json"}
+  "final_status": "D1B1_REPAIR1_CLOSURE_BLOCKED",
+  "pre_repair_sha": "2f2136549b027aad4bd074d496f1b26ef90bc70a",
+  "authoritative_d1b0_sha": "a902ac4fc804459f07a09b84494a68c8bd7f618b",
+  "feature_branch": "dev/goal24-d1b1-public-approve",
+  "scope": {
+    "approve": "IMPLEMENTED_FEATURE_CANDIDATE; real Desktop E2E still blocked",
+    "verify": "TARGET_LOCKED",
+    "execution": "NOT_IMPLEMENTED_PUBLICLY",
+    "npm": "NOT_PUBLISHED"
   },
-  "real_e2e": {"plan_before_state":"NOT_CREATED_BY_PRODUCTION_RUNTIME","plan_after_state":"NOT_REACHED","approval_request_before":"NOT_REACHED","approval_request_after":"NOT_REACHED","native_grants_created":0,"second_approve_result":"NOT_REACHED","restart_replay_result":"NOT_REACHED","broker_executions":0,"github_writes":0,"receipts_created":0,"readback_started":false,"outcome_finalized":false,"verify_status":"TARGET_LOCKED (CLI implementation; no plan available for side-effect probe)","verify_network_calls":0,"concurrency_attempts":0,"concurrency_grants_created":0,"native_authority":"NOT_STARTED; no approval token/store evidence created","desktop_session_issuer":"NOT_INVOKED; production runtime blocker precedes owner click","omctx_binary":"packages/omctx/bin/omctx.js used for CLI regression; real approve invocation not reached"},
-  "audits": {"brain_npm_audit":{"exit_code":1,"vulnerabilities":28,"classification":"EXISTING_DEPENDENCY_FINDINGS_NOT_D1B1_CONTROL_SURFACE"},"desktop_npm_audit":{"exit_code":1,"vulnerabilities":9,"classification":"EXISTING_BUILD_DEPENDENCY_FINDINGS_NOT_D1B1_CONTROL_SURFACE"},"cargo_audit":{"exit_code":1,"classification":"SECURITY_UNKNOWN","rustsec_refresh":"FAILED_NETWORK"},"security_unknown":1,"fix_before_d1b1":0,"blocks_d1b1":1},
-  "generic_escape_surfaces":{"blocking_surfaces":0,"secret_leaks":0,"notes":"Static scan found only typed broker bindings, trusted process-management utilities, and test-only execute paths; no public arbitrary execute/argv/receipt/readback/outcome gateway."},
-  "truth_flags":{"approval_executes_plan":false,"public_execution_gateway":false,"public_verify_gateway":false,"npm_published":false,"private":true,"runtime_changed_after_real_e2e":"NO","main_touched":false,"holdback_touched":false,"scientific_refs_touched":false,"dirty_cp21_touched":false},
-  "freshness":{"authoritative_d1b0_sha":"a902ac4fc804459f07a09b84494a68c8bd7f618b","feature_branch":"dev/goal24-d1b1-public-approve","generated_at":"2026-08-26T01:25:00.000Z"}
+  "repair_findings": {
+    "production_composition_root": "brain-server/src/api-server.ts::main and brain-server/src/mcp-server.ts::OmniContextServer.start",
+    "previous_control_runtime_injection": "NONE",
+    "production_control_runtime_injected": true,
+    "authorization_service_shared": true,
+    "authorization_store_shared": true,
+    "production_plan_fixture_path": "EvidenceSurfaceRuntime.evaluateForCapability -> AuthorizationService.authorize",
+    "native_grant_verifier": "HttpNativeApprovalClient private native /internal/native/verify bridge",
+    "public_raw_store_access": false
+  },
+  "blockers": [
+    {
+      "code": "D1B1_DESKTOP_E2E_PORT_CONFLICT",
+      "detail": "Before launching the controlled Desktop instance, TCP 3001 was already listening under an out-of-worktree Node process. The Repair-1 run did not terminate, reuse, or impersonate that process, so no genuine Desktop session issuer or CLI approve flow was invoked."
+    },
+    {
+      "code": "D1B1_CARGO_AUDIT_REFRESH_UNKNOWN",
+      "detail": "cargo audit was retried three times and each RustSec advisory database refresh failed at the GitHub fetch. No old D1B-0 audit was reused."
+    }
+  ],
+  "validation": {
+    "production_composition_identity_test": "PASS",
+    "production_plan_created_by_real_cp6_cp7_path": "PASS (controlled local fixture test)",
+    "real_desktop_session_issuer": "NOT_INVOKED_PORT_3001_OCCUPIED",
+    "real_omctx_approve": "NOT_INVOKED",
+    "real_native_approval_authority": "NOT_INVOKED",
+    "real_local_approval_e2e": "BLOCKED_PORT_3001_OCCUPIED",
+    "full_brain_regression": "PASS (68 files; 1308 tests)",
+    "full_cli_regression": "PASS (37 tests)",
+    "full_rust_regression": "PASS (226 tests; 8 ignored)",
+    "desktop_next_build": "PASS",
+    "desktop_cargo_check": "PASS",
+    "desktop_cargo_fmt": "PASS",
+    "desktop_cargo_clippy": "PASS",
+    "desktop_verify_controlled": "PASS",
+    "d1b0_historical_validator": "PASS at a902ac4fc804459f07a09b84494a68c8bd7f618b",
+    "d1b1_phase_validator": "PASS",
+    "adversarial_matrix": {"total": 44, "pass": 38, "blocked": 6, "failed": 0, "unknown": 0}
+  },
+  "real_e2e": {
+    "plan_before_state": "NOT_CREATED_IN_A_REAL_DESKTOP_PROCESS",
+    "approval_request_before": "NOT_REACHED",
+    "plan_after_state": "NOT_REACHED",
+    "approval_request_after": "NOT_REACHED",
+    "native_grants_created": 0,
+    "second_approve_result": "NOT_REACHED",
+    "restart_replay_result": "NOT_REACHED",
+    "concurrency_attempts": 0,
+    "broker_executions": 0,
+    "github_writes": 0,
+    "receipts_created": 0,
+    "readback_started": false,
+    "outcome_finalized": false
+  },
+  "security": {
+    "verify_status": "TARGET_LOCKED",
+    "public_verify_route": false,
+    "approval_executes_plan": false,
+    "public_execution_gateway": false,
+    "generic_escape_surfaces": 0,
+    "secret_leaks": 0,
+    "private": true,
+    "npm_published": false
+  },
+  "audits": {
+    "brain_npm_audit_findings": 28,
+    "desktop_npm_audit_findings": 9,
+    "rustsec_db_refresh": "FAILED_NETWORK_AFTER_3_ATTEMPTS",
+    "cargo_audit": "BLOCKED",
+    "security_unknown": 1,
+    "fix_before_d1b1": 0,
+    "blocks_d1b1": 1
+  },
+  "runtime_proof_sha": null,
+  "runtime_changed_after_proof": "NO_PROOF_RECORDED",
+  "scope_integrity": {
+    "main_touched": false,
+    "holdback_touched": false,
+    "scientific_refs_touched": false,
+    "dirty_cp21_touched": false
+  }
 }
