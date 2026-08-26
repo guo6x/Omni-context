@@ -666,6 +666,11 @@ fn cancel_after_effect_still_readback() {
             wait_until(deadline, || !broker.active_executions().is_empty()),
             "write execution never became active"
         );
+        assert!(
+            wait_until(deadline, || std::fs::read_to_string(&state_file)
+                .is_ok_and(|value| value == "new")),
+            "external write effect was not observed before cancellation"
+        );
         let execution_id = broker.active_executions()[0].clone();
         broker
             .cancel_execution(&execution_id)

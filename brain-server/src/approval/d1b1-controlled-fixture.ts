@@ -38,6 +38,12 @@ export interface D1b1ControlledFixtureResult {
 
 /** Trusted application fixture provider for the closure process only. */
 export function createD1b1ControlledFixtureProviders(clock: () => Date): EvidenceProviderRegistry {
+  // Capture one trusted observation instant before the Evidence runtime starts
+  // qualification. Calling the real wall clock from inside collect() can put
+  // observed_at a few milliseconds after the runtime's qualification instant,
+  // causing the candidate to be correctly rejected as future-dated while its
+  // coverage still references an unqualified evidence id.
+  const observedAt = clock().toISOString();
   // Each controlled collection is a fresh trusted observation. The evidence
   // ledger intentionally rejects reusing one source id with a changed
   // observed_at, so the fixture gives each observation a server-owned,
@@ -66,7 +72,7 @@ export function createD1b1ControlledFixtureProviders(clock: () => Date): Evidenc
           claim_value: claim,
           source_item_id: `fixture:${request.evidence_class}:${++collectionSequence}`,
           source_reference: 'd1b1-controlled-local-fixture',
-          observed_at: clock().toISOString(),
+          observed_at: observedAt,
           verification_level: 'asserted',
         }],
       };

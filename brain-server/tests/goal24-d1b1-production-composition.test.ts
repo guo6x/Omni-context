@@ -33,4 +33,19 @@ describe('Goal24 D1B-1 production authorization composition', () => {
       approval_request: { status: 'pending' },
     });
   });
+
+  it('keeps real-clock fixture evidence qualified and traceable', async () => {
+    const epoch = Date.parse('2026-08-26T00:00:00.000Z');
+    let tick = 0;
+    const clock = () => new Date(epoch + tick++);
+    const runtime = createProductionAuthorizationRuntime({
+      providers: createD1b1ControlledFixtureProviders(clock),
+      clock,
+    });
+
+    const fixture = await createD1b1ControlledFixture(runtime);
+
+    expect(fixture.primary.plan_state).toBe('awaiting_approval');
+    expect(fixture.concurrency.plan_state).toBe('awaiting_approval');
+  });
 });

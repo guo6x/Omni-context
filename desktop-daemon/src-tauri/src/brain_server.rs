@@ -221,7 +221,17 @@ fn start_inner() -> Result<(), String> {
     let node_exe = find_node_executable();
     println!("[Brain Server] 使用 node: {}", node_exe);
 
-    let candidates = brain_server_paths();
+    let mut candidates = brain_server_paths();
+    if std::env::var("OMNI_D1B1_E2E_FIXTURE").as_deref() == Ok("1") {
+        // The closure fixture is composed only by api-server. Falling back to
+        // mcp-server after fixture creation fails would report /health as ready
+        // while silently replacing the shared authorization runtime with an
+        // empty one, recreating PLAN_NOT_FOUND. Fail closed in this explicit
+        // local-only mode instead.
+        candidates.retain(|path| {
+            path.file_name().and_then(|name| name.to_str()) == Some("api-server.js")
+        });
+    }
     let mut tried: Vec<String> = Vec::new();
 
     // 直接 node <path>。spawn 成功不代表 HTTP API 已经就绪，所以必须等 /health。
