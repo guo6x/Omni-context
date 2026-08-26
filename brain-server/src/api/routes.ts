@@ -12,6 +12,7 @@ import { McpBusinessDispatcher } from '../mcp/dispatch.js';
 import { ControlApprovalFacade, type ControlApprovalRuntime } from '../control/approval-facade.js';
 import { HttpNativeApprovalClient } from '../control/native-bridge.js';
 import { ControlSessionManager, readBearerToken } from '../control/session.js';
+import { SqliteControlApprovalAuditStore } from '../control/audit.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -391,7 +392,8 @@ export function createServer(
     pairCodeTtlMs: Number(process.env.PAIR_CODE_TTL_MS || 10 * 60 * 1000),
   });
   const controlSessions = new ControlSessionManager();
-  const controlFacade = new ControlApprovalFacade(controlRuntime, new HttpNativeApprovalClient());
+  const controlAudit = new SqliteControlApprovalAuditStore(db);
+  const controlFacade = new ControlApprovalFacade(controlRuntime, new HttpNativeApprovalClient(), () => new Date(), controlAudit);
 
   const server = http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);
@@ -471,6 +473,7 @@ export function createServer(
           APPROVAL_GRANT_EXPIRED: [409, 'PLAN_EXPIRED'],
           APPROVAL_AUTHORITY_INSUFFICIENT: [403, 'APPROVAL_AUTHORITY_INSUFFICIENT'],
           APPROVAL_STORE_CONFLICT: [409, 'PLAN_ALREADY_CONSUMED'],
+          APPROVAL_AUDIT_UNAVAILABLE: [503, 'CONTROL_AUDIT_UNAVAILABLE'],
         };
         const [status, publicCode] = mapping[code] || [500, 'INTERNAL_CONTROL_ERROR'];
         sendError(res, status, publicCode);

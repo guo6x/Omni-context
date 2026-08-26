@@ -26,6 +26,7 @@ export const APPROVAL_ERROR_CODES = [
   'APPROVAL_PLAN_NOT_FOUND',
   'APPROVAL_STORE_CONFLICT',
   'APPROVAL_STORE_FULL',
+  'APPROVAL_AUDIT_UNAVAILABLE',
 ] as const;
 export type ApprovalErrorCode = (typeof APPROVAL_ERROR_CODES)[number];
 

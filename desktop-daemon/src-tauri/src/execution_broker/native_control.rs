@@ -20,6 +20,8 @@ use super::{
 };
 
 pub const DEFAULT_PORT: u16 = 3002;
+const MAX_CONTROL_HEADER_BYTES: usize = 64 * 1024;
+const MAX_CONTROL_BODY_BYTES: usize = 512 * 1024;
 
 #[derive(Debug, Clone)]
 pub struct NativeBridgeHandle {
@@ -136,8 +138,6 @@ fn authorized(headers: &str, secret: &str) -> bool {
 /// while waiting for the response, so `read_to_end` would deadlock until the
 /// socket timeout and surface as a misleading approval 502.
 fn read_http_request(stream: &mut TcpStream) -> Result<Vec<u8>, &'static str> {
-    const HEADER_LIMIT: usize = 64 * 1024;
-    const BODY_LIMIT: usize = 512 * 1024;
     const DELIMITER: &[u8] = b"\r\n\r\n";
 
     let mut bytes = Vec::with_capacity(4096);
@@ -148,7 +148,7 @@ fn read_http_request(stream: &mut TcpStream) -> Result<Vec<u8>, &'static str> {
             return Err("CONTROL_REQUEST_TRUNCATED");
         }
         bytes.extend_from_slice(&chunk[..read]);
-        if bytes.len() > HEADER_LIMIT {
+        if bytes.len() > MAX_CONTROL_HEADER_BYTES {
             return Err("CONTROL_HEADERS_TOO_LARGE");
         }
         if let Some(index) = bytes
@@ -161,25 +161,13 @@ fn read_http_request(stream: &mut TcpStream) -> Result<Vec<u8>, &'static str> {
 
     let headers = String::from_utf8(bytes[..header_end - DELIMITER.len()].to_vec())
         .map_err(|_| "CONTROL_HEADERS_INVALID")?;
-    let content_length = headers
-        .lines()
-        .find_map(|line| {
-            let (name, value) = line.split_once(':')?;
-            name.trim()
-                .eq_ignore_ascii_case("content-length")
-                .then_some(value.trim())
-        })
-        .map(|value| {
-            value
-                .parse::<usize>()
-                .map_err(|_| "CONTROL_CONTENT_LENGTH_INVALID")
-        })
-        .transpose()?
-        .unwrap_or(0);
-    if content_length > BODY_LIMIT {
+    let content_length = parse_request_framing(&headers)?;
+    if content_length > MAX_CONTROL_BODY_BYTES {
         return Err("CONTROL_BODY_TOO_LARGE");
     }
-    let target = header_end + content_length;
+    let target = header_end
+        .checked_add(content_length)
+        .ok_or("CONTROL_BODY_TOO_LARGE")?;
     while bytes.len() < target {
         let read = stream.read(&mut chunk).map_err(|_| "CONTROL_READ_FAILED")?;
         if read == 0 {
@@ -195,6 +183,78 @@ fn read_http_request(stream: &mut TcpStream) -> Result<Vec<u8>, &'static str> {
     }
     bytes.truncate(target);
     Ok(bytes)
+}
+
+fn parse_request_framing(headers: &str) -> Result<usize, &'static str> {
+    let mut content_length = None;
+    for (index, line) in headers.lines().enumerate() {
+        if index == 0 {
+            if line.trim().is_empty() {
+                return Err("CONTROL_REQUEST_LINE_INVALID");
+            }
+            continue;
+        }
+        if line.is_empty()
+            || line
+                .as_bytes()
+                .first()
+                .is_some_and(|byte| *byte == b' ' || *byte == b'\t')
+        {
+            return Err("CONTROL_HEADERS_INVALID");
+        }
+        let Some((name, value)) = line.split_once(':') else {
+            return Err("CONTROL_HEADERS_INVALID");
+        };
+        if name.is_empty()
+            || name.trim() != name
+            || !name.bytes().all(|byte| {
+                byte.is_ascii_alphanumeric()
+                    || matches!(
+                        byte,
+                        b'!' | b'#'
+                            | b'$'
+                            | b'%'
+                            | b'&'
+                            | b'\''
+                            | b'*'
+                            | b'+'
+                            | b'-'
+                            | b'.'
+                            | b'^'
+                            | b'_'
+                            | b'`'
+                            | b'|'
+                            | b'~'
+                    )
+            })
+        {
+            return Err("CONTROL_HEADERS_INVALID");
+        }
+        if name.eq_ignore_ascii_case("transfer-encoding") {
+            return Err("CONTROL_TRANSFER_ENCODING_UNSUPPORTED");
+        }
+        if !name.eq_ignore_ascii_case("content-length") {
+            continue;
+        }
+        let value = value.trim();
+        if value.is_empty()
+            || !value.bytes().all(|byte| byte.is_ascii_digit())
+            || (value.len() > 1 && value.starts_with('0'))
+        {
+            return Err("CONTROL_CONTENT_LENGTH_INVALID");
+        }
+        let parsed = value
+            .parse::<usize>()
+            .map_err(|_| "CONTROL_CONTENT_LENGTH_INVALID")?;
+        if let Some(previous) = content_length {
+            if previous != parsed {
+                return Err("CONTROL_CONTENT_LENGTH_CONFLICT");
+            }
+        } else {
+            content_length = Some(parsed);
+        }
+    }
+    content_length.ok_or("CONTROL_CONTENT_LENGTH_REQUIRED")
 }
 
 fn host_allowed(headers: &str, port: u16) -> bool {
@@ -395,4 +455,159 @@ pub fn start() -> NativeBridgeHandle {
         }
     });
     NativeBridgeHandle { secret, port }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::TcpListener;
+
+    fn read_from_chunks(chunks: Vec<Vec<u8>>) -> Result<Vec<u8>, &'static str> {
+        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind framing test listener");
+        let address = listener.local_addr().expect("test listener address");
+        let client = std::thread::spawn(move || {
+            let mut stream = TcpStream::connect(address).expect("connect framing test listener");
+            for chunk in chunks {
+                stream.write_all(&chunk).expect("write framing test chunk");
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+        });
+        let (mut server, _) = listener.accept().expect("accept framing test client");
+        server
+            .set_read_timeout(Some(std::time::Duration::from_secs(1)))
+            .expect("set framing test timeout");
+        let result = read_http_request(&mut server);
+        client.join().expect("join framing test client");
+        result
+    }
+
+    fn framed_request(body: &str) -> Vec<u8> {
+        format!(
+            "POST /internal/native/approve HTTP/1.1\r\nHost: 127.0.0.1:3312\r\nContent-Length: {}\r\n\r\n{}",
+            body.len(), body
+        )
+        .into_bytes()
+    }
+
+    #[test]
+    fn valid_json_request_is_read_to_declared_length() {
+        let request = framed_request("{}");
+        assert_eq!(read_from_chunks(vec![request.clone()]).unwrap(), request);
+    }
+
+    #[test]
+    fn header_and_body_split_across_reads_are_supported() {
+        let request = framed_request("{\"ok\":true}");
+        let split = request
+            .windows(4)
+            .position(|window| window == b"\r\n\r\n")
+            .expect("request delimiter")
+            + 4;
+        let result = read_from_chunks(vec![request[..split].to_vec(), request[split..].to_vec()]);
+        assert_eq!(result.unwrap(), request);
+    }
+
+    #[test]
+    fn body_must_match_content_length_exactly() {
+        let request = framed_request("{\"x\":1}");
+        assert_eq!(read_from_chunks(vec![request]).unwrap().last(), Some(&b'}'));
+    }
+
+    #[test]
+    fn truncated_body_is_rejected() {
+        let request = b"POST /internal/native/approve HTTP/1.1\r\nHost: 127.0.0.1:3312\r\nContent-Length: 5\r\n\r\n{}";
+        assert_eq!(
+            read_from_chunks(vec![request.to_vec()]),
+            Err("CONTROL_REQUEST_TRUNCATED")
+        );
+    }
+
+    #[test]
+    fn oversized_body_is_rejected() {
+        let headers = format!(
+            "POST /internal/native/approve HTTP/1.1\r\nContent-Length: {}\r\n\r\n",
+            MAX_CONTROL_BODY_BYTES + 1
+        );
+        assert_eq!(
+            read_from_chunks(vec![headers.into_bytes()]),
+            Err("CONTROL_BODY_TOO_LARGE")
+        );
+    }
+
+    #[test]
+    fn oversized_headers_are_rejected() {
+        let mut request = vec![b'a'; MAX_CONTROL_HEADER_BYTES + 1];
+        request.extend_from_slice(b"\r\n\r\n");
+        assert_eq!(
+            read_from_chunks(vec![request]),
+            Err("CONTROL_HEADERS_TOO_LARGE")
+        );
+    }
+
+    #[test]
+    fn missing_content_length_is_rejected() {
+        let headers = "POST /internal/native/approve HTTP/1.1\r\nHost: 127.0.0.1:3312";
+        assert_eq!(
+            parse_request_framing(headers),
+            Err("CONTROL_CONTENT_LENGTH_REQUIRED")
+        );
+    }
+
+    #[test]
+    fn invalid_and_negative_content_length_are_rejected() {
+        for value in ["nope", "-1", "+1", "1,1", "", "02"] {
+            let headers =
+                format!("POST /internal/native/approve HTTP/1.1\r\nContent-Length: {value}");
+            assert_eq!(
+                parse_request_framing(&headers),
+                Err("CONTROL_CONTENT_LENGTH_INVALID")
+            );
+        }
+    }
+
+    #[test]
+    fn duplicate_equal_content_lengths_are_accepted() {
+        let headers =
+            "POST /internal/native/approve HTTP/1.1\r\nContent-Length: 2\r\nContent-Length: 2";
+        assert_eq!(parse_request_framing(headers), Ok(2));
+    }
+
+    #[test]
+    fn duplicate_conflicting_content_lengths_are_rejected() {
+        let headers =
+            "POST /internal/native/approve HTTP/1.1\r\nContent-Length: 2\r\nContent-Length: 3";
+        assert_eq!(
+            parse_request_framing(headers),
+            Err("CONTROL_CONTENT_LENGTH_CONFLICT")
+        );
+    }
+
+    #[test]
+    fn transfer_encoding_and_te_content_length_smuggling_are_rejected() {
+        for headers in [
+            "POST /internal/native/approve HTTP/1.1\r\nTransfer-Encoding: chunked\r\nContent-Length: 2",
+            "POST /internal/native/approve HTTP/1.1\r\nTransfer-Encoding: identity\r\nContent-Length: 2",
+        ] {
+            assert_eq!(parse_request_framing(headers), Err("CONTROL_TRANSFER_ENCODING_UNSUPPORTED"));
+        }
+    }
+
+    #[test]
+    fn malformed_headers_are_rejected() {
+        let headers = "POST /internal/native/approve HTTP/1.1\r\nX-Bad-Header\r\nContent-Length: 2";
+        assert_eq!(
+            parse_request_framing(headers),
+            Err("CONTROL_HEADERS_INVALID")
+        );
+    }
+
+    #[test]
+    fn pipelined_bytes_cannot_change_current_body() {
+        let request = framed_request("{}");
+        let mut pipelined = request.clone();
+        pipelined.extend_from_slice(
+            b"POST /internal/native/approve HTTP/1.1\r\nContent-Length: 9\r\n\r\nforged!!!",
+        );
+        assert_eq!(read_from_chunks(vec![pipelined]).unwrap(), request);
+    }
 }

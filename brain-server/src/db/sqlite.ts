@@ -856,6 +856,30 @@ const MIGRATIONS: Migration[] = [
         CHECK(normalized IN (0, 1));
     `,
   },
+  {
+    version: 29,
+    name: 'add_control_approval_audit',
+    up: `
+      CREATE TABLE IF NOT EXISTS control_approval_audit (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_timestamp TEXT NOT NULL,
+        session_reference TEXT NOT NULL,
+        actor_id_or_scope TEXT NOT NULL,
+        scope TEXT NOT NULL,
+        plan_id TEXT,
+        decision_id TEXT,
+        action TEXT NOT NULL CHECK(action = 'approve'),
+        result TEXT NOT NULL CHECK(result IN ('approved', 'rejected', 'failed')),
+        failure_reason TEXT,
+        transport_context TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_control_approval_audit_plan
+        ON control_approval_audit(plan_id, id DESC);
+      CREATE INDEX IF NOT EXISTS idx_control_approval_audit_timestamp
+        ON control_approval_audit(request_timestamp DESC, id DESC);
+    `,
+  },
 ];
 
 interface Migration {

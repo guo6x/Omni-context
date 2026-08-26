@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ControlSessionManager } from '../src/control/session.js';
 import { ControlApprovalFacade } from '../src/control/approval-facade.js';
+import { InMemoryControlApprovalAuditStore, type ControlApprovalAuditStore } from '../src/control/audit.js';
 
 function sessionAt(manager: ControlSessionManager, now = Date.now()) {
   return manager.mint(now);
@@ -65,5 +66,67 @@ describe('Goal24 D1B-1 fixed approval facade', () => {
     const manager = new ControlSessionManager();
     const issued = sessionAt(manager);
     await expect(facade.approve({ plan_id: 'plan-12345678' }, issued.session)).rejects.toThrow('APPROVAL_PLAN_NOT_FOUND');
+  });
+
+  it('writes a non-secret loopback audit event for a native approval', async () => {
+    const audit = new InMemoryControlApprovalAuditStore();
+    const plan = {
+      plan_id: 'plan-12345678',
+      decision_id: 'decision-123',
+      capability_id: 'github.issue.create',
+      state: 'awaiting_approval',
+      expires_at: new Date(Date.now() + 60_000).toISOString(),
+    } as any;
+    const facade = new ControlApprovalFacade({
+      getAuthorizationRecord: () => ({
+        plan,
+        approval_request_id: 'approval-request-123',
+        approval_request: { status: 'pending', approval_request_id: 'approval-request-123' },
+      } as any),
+      applyApproval: async () => ({ plan: { ...plan, state: 'ready' }, approval_request: { status: 'granted' } }),
+    }, {
+      grant: async () => ({ approval_id: 'native-123', plan_id: plan.plan_id, token_reference: 'opaque-ref', token_digest: 'a'.repeat(64) }) as any,
+      verify: async () => ({ valid: false }),
+    }, () => new Date(), audit);
+    const manager = new ControlSessionManager();
+    const issued = sessionAt(manager);
+
+    await expect(facade.approve({ plan_id: plan.plan_id }, issued.session)).resolves.toMatchObject({ status: 'APPROVED' });
+    expect(audit.list()).toEqual([expect.objectContaining({
+      session_reference: issued.session.session_id,
+      actor_id_or_scope: 'local-owner:control:approve',
+      scope: 'control:approve',
+      plan_id: plan.plan_id,
+      decision_id: plan.decision_id,
+      action: 'approve',
+      result: 'approved',
+      failure_reason: null,
+      transport_context: { channel: 'public-control', loopback: true, origin: 'absent', host: 'validated' },
+    })]);
+    expect(JSON.stringify(audit.list())).not.toMatch(/Authorization|Bearer|token_digest|opaque-ref/i);
+  });
+
+  it('fails closed before native grant when audit persistence is unavailable', async () => {
+    let grants = 0;
+    const failingAudit: ControlApprovalAuditStore = {
+      ensureWritable: () => { throw new Error('disk unavailable'); },
+      append: () => undefined,
+    };
+    const facade = new ControlApprovalFacade({
+      getAuthorizationRecord: () => ({
+        plan: { plan_id: 'plan-12345678', decision_id: 'decision-123', state: 'awaiting_approval', expires_at: new Date(Date.now() + 60_000).toISOString() },
+        approval_request_id: 'approval-request-123',
+        approval_request: { status: 'pending', approval_request_id: 'approval-request-123' },
+      } as any),
+      applyApproval: async () => { throw new Error('must not apply'); },
+    }, {
+      grant: async () => { grants += 1; throw new Error('must not grant'); },
+      verify: async () => ({ valid: false }),
+    }, () => new Date(), failingAudit);
+    const manager = new ControlSessionManager();
+    const issued = sessionAt(manager);
+
+    await expect(facade.approve({ plan_id: 'plan-12345678' }, issued.session)).rejects.toThrow('APPROVAL_AUDIT_UNAVAILABLE');
+    expect(grants).toBe(0);
   });
 });
