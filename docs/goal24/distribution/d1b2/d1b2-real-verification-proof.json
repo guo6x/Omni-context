@@ -1,6 +1,7 @@
 {
   "artifact": "D1B-2 trusted verification proof",
   "runtime_proof_sha": "7d245877b9d62168a5bf3c89503b366bc8570a80",
+  "authoritative_integration_sha": "d41b99cc71a4b714772aa0d815fcb83ce12fa85a",
   "runtime": {
     "public_route": "POST /api/control/verify",
     "human_scope": "control:verify",
