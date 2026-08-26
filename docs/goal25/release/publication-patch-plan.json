@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "status": "PREPARED_NOT_APPLIED",
+  "precondition": "OWNER_PUBLISH_APPROVAL",
+  "files_changed": [
+    {"path":"packages/omctx/package.json","changes":[{"field":"private","from":true,"to":false}],"reason":"npm refuses publication of a private package"}],
+  "invariants": ["name remains omctx","version remains 0.1.0-alpha.0","files allowlist remains unchanged","runtime dependencies remain 0","no source/runtime changes","no credentials in files"],
+  "exact_publish_commands": [
+    "npm pack --json --ignore-scripts",
+    "npm publish omctx-0.1.0-alpha.0.tgz --tag alpha --provenance"
+  ],
+  "recommended_auth": "Owner authenticates in their own trusted environment (npm login or configured trusted publisher); credentials are never placed in this plan.",
+  "public_state_change": "The package named omctx at version 0.1.0-alpha.0 becomes downloadable from the npm registry under the alpha dist-tag; this is irreversible publication state and is not performed by Goal25."
+}

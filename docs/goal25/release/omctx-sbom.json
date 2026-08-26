@@ -1,0 +1,13 @@
+{
+  "bomFormat": "minimal-omctx-inventory",
+  "specVersion": "1.0",
+  "component": {"name":"omctx","version":"0.1.0-alpha.0","type":"application","runtime_dependencies":0},
+  "engine": {"node": ">=20"},
+  "direct_runtime_dependencies": [],
+  "development_dependencies": [],
+  "separate_components": [
+    {"name":"omni-context-brain-server","version":"0.1.1","relationship":"local prerequisite; not bundled or an npm omctx dependency"},
+    {"name":"omni-context-desktop","version":"0.1.1","relationship":"local prerequisite; not bundled or an npm omctx dependency"}
+  ],
+  "method": "package.json files allowlist plus npm pack manifest; Brain/Desktop lockfiles audited separately"
+}

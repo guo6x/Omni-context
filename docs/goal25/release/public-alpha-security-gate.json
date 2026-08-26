@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "gate": "GOAL25_SECURITY_GATE",
+  "status": "PASS",
+  "evaluated_at": "2026-08-26T20:42:13+08:00",
+  "fresh_rustsec": true,
+  "rustsec_database": {"last_updated":"2026-08-24T22:42:17-04:00","last_commit":"a7bfe16948bf6f3ee25bdee4822209f87da21b80","dependency_count":563},
+  "rustsec_findings": 5,
+  "rustsec_unknown": 0,
+  "rustsec_fix_before_release": 0,
+  "rustsec_blocks_release": 0,
+  "rustsec_classification": {
+    "RUSTSEC-2026-0258:h2@0.3.27": {"classification":"NOT_RELEASE_PATH_REACHABLE","path":"desktop Tauri reqwest 0.11 -> hyper 0.14 -> h2 0.3.27","windows_runtime":true,"unix_runtime":true,"control_path_reachable":true,"execution_broker_reachable":false,"readback_path_reachable":false,"package_inclusion":false,"exploit_precondition":"attacker must control a local HTTP/2 peer; npm CLI never opens this client","required_action":"track for Desktop dependency refresh; do not claim npm CLI remediation"},
+    "RUSTSEC-2026-0194:quick-xml@0.30.0": {"classification":"TARGET_SPECIFIC_NOT_REACHABLE","path":"build-dependency xcb -> quick-xml","windows_runtime":false,"unix_runtime":false,"control_path_reachable":false,"execution_broker_reachable":false,"readback_path_reachable":false,"package_inclusion":false,"exploit_precondition":"Unix build tooling only","required_action":"no npm release action"},
+    "RUSTSEC-2026-0195:quick-xml@0.30.0": {"classification":"TARGET_SPECIFIC_NOT_REACHABLE","path":"build-dependency xcb -> quick-xml","windows_runtime":false,"unix_runtime":false,"control_path_reachable":false,"execution_broker_reachable":false,"readback_path_reachable":false,"package_inclusion":false,"exploit_precondition":"Unix build tooling only","required_action":"no npm release action"},
+    "RUSTSEC-2026-0194:quick-xml@0.39.3": {"classification":"NOT_RELEASE_PATH_REACHABLE","path":"Desktop Tauri/plist and Unix wayland-scanner -> quick-xml","windows_runtime":false,"unix_runtime":true,"control_path_reachable":false,"execution_broker_reachable":false,"readback_path_reachable":false,"package_inclusion":false,"exploit_precondition":"untrusted XML must reach a Desktop/Unix parser; npm CLI has no XML parser","required_action":"track for Desktop dependency refresh"},
+    "RUSTSEC-2026-0195:quick-xml@0.39.3": {"classification":"NOT_RELEASE_PATH_REACHABLE","path":"Desktop Tauri/plist and Unix wayland-scanner -> quick-xml","windows_runtime":false,"unix_runtime":true,"control_path_reachable":false,"execution_broker_reachable":false,"readback_path_reachable":false,"package_inclusion":false,"exploit_precondition":"untrusted XML must reach a Desktop/Unix parser; npm CLI has no XML parser","required_action":"track for Desktop dependency refresh"}
+  },
+  "npm_audits": {
+    "brain": {"command":"npm audit --json","exit_code":1,"total":28,"high":13,"critical":2,"unknown":0,"classification":"SEPARATE_COMPONENT_NOT_IN_OMCTX_TARBALL","high_critical_paths":"Brain runtime and dev/test toolchain; none are imported or packed by omctx"},
+    "desktop": {"command":"npm audit --json","exit_code":1,"total":9,"high":3,"critical":0,"unknown":0,"classification":"SEPARATE_COMPONENT_NOT_IN_OMCTX_TARBALL","high_critical_paths":"Next/PostCSS/nanoid in Desktop UI; Desktop prerequisite is documented and same-user limitation remains"},
+    "root": {"command":"npm audit --json","exit_code":1,"code":"ENOLOCK","classification":"NOT_APPLICABLE_NO_ROOT_LOCKFILE","unknown":0}
+  },
+  "npm_unknown": 0,
+  "fix_before_release": 0,
+  "blocks_release": 0,
+  "package_unexpected_files": 0,
+  "secret_leaks": 0,
+  "proxy_escape": 0,
+  "redirect_escape": 0,
+  "generic_execute": false,
+  "arbitrary_approval": false,
+  "arbitrary_receipt": false,
+  "arbitrary_observation": false,
+  "arbitrary_outcome": false,
+  "version_fail_closed": true,
+  "windows_control_file_status": "USER_SCOPED_LOCALAPPDATA_ONLY_LIMITATION_DOCUMENTED",
+  "notes": ["RustSec records are retained in desktop-daemon/src-tauri/rustsec-goal25.json.","No advisory is silently called green; classifications are path- and package-boundary based."]
+}
