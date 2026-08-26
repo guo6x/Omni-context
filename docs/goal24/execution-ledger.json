@@ -159,7 +159,7 @@
       "owner_decision": "ASSIGNED",
       "executor": "d1b0 control threat audit lane",
       "status": "COMPLETE",
-      "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+      "verification_level": "GATE_VERIFIED",
       "base_sha": "fb80b7513a58b7fc095ab90240892cedad0e8be9",
       "audit_sha": "e67895217b06cc6686c455e9dd771136303ab8505457ab5e63f402f8c1963166",
       "cargo_audit_status": "COMPLETED_EXIT_1_ADVISORIES_CLASSIFIED",
@@ -194,7 +194,7 @@
       "owner_decision": "ASSIGNED",
       "executor": "d1b1 public approve lane",
       "status": "GATE_VERIFIED",
-      "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+      "verification_level": "GATE_VERIFIED",
       "base_sha": "a902ac4fc804459f07a09b84494a68c8bd7f618b",
       "feature_branch": "dev/goal24-d1b1-public-approve",
       "remote_feature_pushed": true,
@@ -222,9 +222,14 @@
       "owner_decision": "ASSIGNED",
       "executor": "d1b2 public verify lane",
       "status": "GATE_VERIFIED",
-      "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+      "verification_level": "GATE_VERIFIED",
       "base_sha": "719034f2c5727511ad462f05efa5775c7da7d465",
       "feature_branch": "dev/goal24-d1b2-public-verify",
+      "feature_branch_head_sha": "d41b99cc71a4b714772aa0d815fcb83ce12fa85a",
+      "content_final_sha": "7d245877b9d62168a5bf3c89503b366bc8570a80",
+      "authoritative_integration_sha": "d41b99cc71a4b714772aa0d815fcb83ce12fa85a",
+      "remote_feature_pushed": true,
+      "authoritative_remote_integrated": true,
       "public_verify_route": true,
       "approve_session_can_verify": false,
       "read_token_can_verify": false,
@@ -238,14 +243,16 @@
       "automatic_rollback": false,
       "gate_status": "D1B2_VERIFICATION_GATE=PASS",
       "blockers": [],
-      "next_owner_action": "distribution readiness candidate"
+      "next_owner_action": "none; distribution readiness candidate recorded"
     }
   ],
-  "last_verified_at": "2026-08-25T14:18:43.682Z",
+  "last_verified_at": "2026-08-26T11:05:00.000Z",
   "notes": [
     "authoritative branch is dev/goal24-cli-skills; the Post-CP8 integration pushed it to the runtime candidate + docs commits.",
     "CP8 gate artifact status read from repo: CHECKPOINT8_SECURITY_GATE=PASS, DRG1_TECHNICAL_PREREQUISITE=SATISFIED, checkpoint9_started=NO.",
     "DRG1=SATISFIED, DRG2=SATISFIED: Public Launch is no longer blocked by missing real E2E; this is not an automatic release.",
-    "checkpoint9_started=NO; public_cli_available=NO; omctx not published."
+    "checkpoint9_started=NO; public_cli_available=NO; omctx not published.",
+    "D1B-1 and D1B-2 are GATE_VERIFIED on authoritative dev/goal24-cli-skills at d41b99cc71a4b714772aa0d815fcb83ce12fa85a.",
+    "D1B-2 controlled verification fixtures are local-only evidence; external_world_claim=false."
   ]
 }
