@@ -1,0 +1,65 @@
+{
+  "artifact": "D1B-2 trusted verification proof",
+  "runtime_proof_sha": "PENDING_FINAL_RUNTIME_SHA",
+  "runtime": {
+    "public_route": "POST /api/control/verify",
+    "human_scope": "control:verify",
+    "read_token_can_verify": false,
+    "approve_session_can_verify": false,
+    "fixture_mode": "D1B2_CONTROLLED_LOCAL_ONLY",
+    "secrets": "REDACTED",
+    "http_route_e2e": true,
+    "brain_port": 3321,
+    "fixture_output": ".tmp-d1b2-http/fixture.json"
+  },
+  "contract": {
+    "request_body": {"plan_id": "<server-owned plan locator>"},
+    "caller_receipt_fields": 0,
+    "caller_observation_fields": 0,
+    "caller_verdict_fields": 0,
+    "caller_expected_state_fields": 0
+  },
+  "verified_case": {
+    "plan_id": "plan-d1b2-verified",
+    "before_readback": "PENDING",
+    "trusted_receipt": true,
+    "independent_readback": true,
+    "observed_state": {"number": 101, "state": "CLOSED"},
+    "deterministic_result": "VERIFIED",
+    "execution_started": false,
+    "write_retries": 0,
+    "github_writes": 0
+  },
+  "mismatch_case": {
+    "plan_id": "plan-d1b2-mismatch",
+    "expected_state": "CLOSED",
+    "observed_state": {"number": 102, "state": "OPEN"},
+    "deterministic_result": "MISMATCH",
+    "revisit_required": true,
+    "execution_started": false,
+    "write_retries": 0,
+    "automatic_rollback": false
+  },
+  "inconclusive_case": {
+    "plan_id": "plan-d1b2-inconclusive",
+    "trusted_readback": "unavailable",
+    "deterministic_result": "INCONCLUSIVE",
+    "never_verified": true,
+    "execution_started": false
+  },
+  "http_observed": {
+    "verified": "HTTP 200 / VERIFIED",
+    "mismatch": "HTTP 200 / MISMATCH / revisit_required=true",
+    "inconclusive": "HTTP 200 / INCONCLUSIVE",
+    "readback_attempts": {"verified": 1, "mismatch": 1, "inconclusive": 1},
+    "write_executions": 0,
+    "github_writes": 0
+  },
+  "evidence": [
+    "brain-server/tests/goal24-d1b2-control.test.ts",
+    "brain-server/src/control/verification-facade.ts",
+    "brain-server/src/control/verification-runtime.ts",
+    "brain-server/src/outcome/service.ts",
+    "docs/goal24/distribution/d1b2/d1b2-adversarial-matrix.json"
+  ]
+}

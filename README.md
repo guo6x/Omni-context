@@ -93,11 +93,13 @@ cross-language vectors 26 (state) + 35 (observation), 0 mismatches.
 
 **Post-CP8 real E2E (development branch verified):** one real, non-synthetic, approval-gated GitHub issue-close closed-loop E2E has been demonstrated against real GitHub with independent read-back. Exit 0 was NOT treated as success — the outcome stayed PENDING until the trusted `github.issue.read` read-back observed CLOSED and the deterministic evaluator returned VERIFIED. This is **internal runtime** evidence: there is **no public CLI feature** for GitHub automation today. See [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json).
 
-### C. Target / Future — not available
+### C. Internal control / Future — not published
 
-- `omctx` CLI (`ask` / `inspect` / `approve` / `verify` / `history`) — **TARGET**.
+- `omctx` CLI (`ask` / `inspect` / `approve` / `verify` / `history`) —
+  **CURRENTLY_VERIFIED_INTERNAL**. `approve` and `verify` require separate
+  short-lived Desktop control sessions; they never start execution, retry
+  writes or rollback. The package remains private and is not an npm user install.
   See [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md).
-  The binary does not exist for users yet; there is no npm package to install.
 - `omctx reopen` user UX — **FUTURE** (runtime not implemented).
 - External memory adapters (e.g. MindMemOS, basic-memory) — **FUTURE**, via
   EvidenceProvider Adapter → qualification → Evidence Guard. External memory never becomes

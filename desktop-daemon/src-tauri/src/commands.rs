@@ -112,6 +112,100 @@ pub async fn enable_cli_approvals() -> Result<ControlSessionInfo, String> {
     })
 }
 
+/// Explicit human-confirmation action for the separate D1B-2 verify scope.
+/// It never reuses or broadens the approve session token.
+#[tauri::command]
+pub async fn enable_cli_verification() -> Result<ControlSessionInfo, String> {
+    if !brain_server::is_ready() {
+        return Err("Brain Server is not ready".to_string());
+    }
+    let secret = std::env::var("NATIVE_BRIDGE_SECRET")
+        .map_err(|_| "native control bridge is unavailable".to_string())?;
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| format!("control client unavailable: {e}"))?;
+    let response = client
+        .post(format!(
+            "{}/internal/control/session/verify",
+            brain_server::brain_api_url()
+        ))
+        .header(reqwest::header::AUTHORIZATION, format!("Bearer {secret}"))
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .body("{}")
+        .send()
+        .await
+        .map_err(|e| format!("cannot reach Brain Server: {e}"))?;
+    let status = response.status();
+    let payload: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("invalid Brain response: {e}"))?;
+    if !status.is_success() {
+        return Err(payload
+            .get("error")
+            .and_then(|v| v.as_str())
+            .unwrap_or("verification session mint rejected")
+            .to_string());
+    }
+    let session = payload
+        .get("data")
+        .and_then(|v| v.get("session"))
+        .ok_or_else(|| "Brain response omitted verification session".to_string())?;
+    let issued_token = payload
+        .get("data")
+        .and_then(|v| v.get("token"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "Brain response omitted verification token".to_string())?;
+    let expires_at = session
+        .get("expires_at")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "Brain response omitted expiry".to_string())?
+        .to_string();
+    let scope = session
+        .get("scope")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "Brain response omitted scope".to_string())?
+        .to_string();
+    if scope != "control:verify" {
+        return Err("Brain returned an unexpected verification scope".to_string());
+    }
+    let path = brain_server::verification_session_file();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("cannot create session directory: {e}"))?;
+    }
+    let file = ControlSessionFile {
+        token: issued_token.to_string(),
+        expires_at: expires_at.clone(),
+        scope: scope.clone(),
+    };
+    let bytes = serde_json::to_vec(&file)
+        .map_err(|e| format!("cannot encode verification session: {e}"))?;
+    #[cfg(unix)]
+    {
+        use std::fs::OpenOptions;
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut handle = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .mode(0o600)
+            .open(&path)
+            .map_err(|e| format!("cannot create verification session file: {e}"))?;
+        handle
+            .write_all(&bytes)
+            .map_err(|e| format!("cannot write verification session: {e}"))?;
+        handle
+            .sync_all()
+            .map_err(|e| format!("cannot flush verification session: {e}"))?;
+    }
+    #[cfg(not(unix))]
+    std::fs::write(&path, &bytes).map_err(|e| format!("cannot write verification session: {e}"))?;
+    Ok(ControlSessionInfo { expires_at, scope })
+}
+
 #[tauri::command]
 pub async fn disable_cli_approvals() -> Result<(), String> {
     if let Ok(secret) = std::env::var("NATIVE_BRIDGE_SECRET") {
@@ -127,7 +221,15 @@ pub async fn disable_cli_approvals() -> Result<(), String> {
         }
     }
     brain_server::clear_control_session();
+    brain_server::clear_verification_session();
     Ok(())
+}
+
+#[tauri::command]
+pub async fn disable_cli_verification() -> Result<(), String> {
+    // Revoking all short-lived control sessions is intentional: disabling one
+    // explicit human control surface must not leave another active by surprise.
+    disable_cli_approvals().await
 }
 
 #[tauri::command]

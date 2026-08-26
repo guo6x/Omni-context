@@ -3,7 +3,7 @@ Omni-Context - Evidence-grounded decision control for long-lived AI agents.
 Usage:
   omctx <command> [args] [flags]
 
-Commands (Current Alpha - read-only plus explicit local approval):
+Commands (Current Alpha - read-only plus explicit local control):
   doctor            Check local Brain Server health, auth and transport
   ask <situation>   Read-only judgment query: principles, precedents, conflicts
   inspect <id>      Inspect one decision by id
@@ -12,9 +12,7 @@ Commands (Current Alpha - read-only plus explicit local approval):
 
 Control (Desktop session required):
   approve <plan-id> Approve one awaiting plan (execution is never started)
-
-Locked (TARGET - fail closed in this Alpha):
-  verify            Control surface not enabled (exit 3)
+  verify <plan-id> Verify through trusted read-back (never writes or retries)
 
 Future:
   reopen            Not implemented (exit 3)
@@ -26,5 +24,7 @@ Flags:
 
 This CLI does not execute arbitrary shell commands.
 Reads require the local Brain API token. Approve requires an ephemeral
-approve-only session explicitly enabled in Omni Desktop; no read token fallback
-or token CLI argument is accepted. Approval never starts execution.
+approve-only session explicitly enabled in Omni Desktop. Verify requires a
+separate ephemeral verify-only session explicitly enabled in Omni Desktop;
+neither command accepts a read token fallback or token CLI argument. Approval
+and verification never start execution, retry writes, or perform rollback.

@@ -394,8 +394,16 @@ pub fn control_session_file() -> PathBuf {
     pair_code_dir().join("control-session.json")
 }
 
+pub fn verification_session_file() -> PathBuf {
+    pair_code_dir().join("verification-session.json")
+}
+
 pub fn clear_control_session() {
     let _ = std::fs::remove_file(control_session_file());
+}
+
+pub fn clear_verification_session() {
+    let _ = std::fs::remove_file(verification_session_file());
 }
 
 pub fn ensure_pair_code() -> String {

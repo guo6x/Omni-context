@@ -1,6 +1,9 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
 export const CONTROL_APPROVE_SCOPE = 'control:approve' as const;
+export const CONTROL_VERIFY_SCOPE = 'control:verify' as const;
+export const CONTROL_SCOPES = [CONTROL_APPROVE_SCOPE, CONTROL_VERIFY_SCOPE] as const;
+export type ControlScope = (typeof CONTROL_SCOPES)[number];
 export const CONTROL_SESSION_TTL_MS = 5 * 60 * 1000;
 export const CONTROL_SESSION_MAX_TTL_MS = 15 * 60 * 1000;
 export const CONTROL_SESSION_BURST_MAX = 10;
@@ -8,7 +11,7 @@ export const CONTROL_SESSION_BURST_WINDOW_MS = 60_000;
 
 export interface ControlSession {
   session_id: string;
-  scope: typeof CONTROL_APPROVE_SCOPE;
+  scope: ControlScope;
   actor_id: 'local-owner';
   actor_kind: 'owner';
   authority: 'L3';
@@ -33,13 +36,17 @@ function equalDigest(left: Buffer, right: Buffer): boolean {
 export class ControlSessionManager {
   private readonly sessions = new Map<string, StoredSession>();
 
-  mint(now = Date.now()): { token: string; session: ControlSession } {
-    const issued = new Date(now);
-    const expires = new Date(now + CONTROL_SESSION_TTL_MS);
+  mint(scopeOrNow: ControlScope | number = CONTROL_APPROVE_SCOPE, now = Date.now()): { token: string; session: ControlSession } {
+    // Preserve the D1B-1 test/application call shape mint(now) while adding
+    // the explicit verify scope in D1B-2.
+    const scope: ControlScope = typeof scopeOrNow === 'number' ? CONTROL_APPROVE_SCOPE : scopeOrNow;
+    const issuedNow = typeof scopeOrNow === 'number' ? scopeOrNow : now;
+    const issued = new Date(issuedNow);
+    const expires = new Date(issuedNow + CONTROL_SESSION_TTL_MS);
     const token = `ocs_${randomBytes(32).toString('base64url')}`;
     const session: StoredSession = {
       session_id: `cs_${randomBytes(16).toString('hex')}`,
-      scope: CONTROL_APPROVE_SCOPE,
+      scope,
       actor_id: 'local-owner',
       actor_kind: 'owner',
       authority: 'L3',
@@ -47,7 +54,7 @@ export class ControlSessionManager {
       expires_at: expires.toISOString(),
       token_digest: digestToken(token).toString('hex'),
       request_count: 0,
-      reset_at_ms: now + CONTROL_SESSION_BURST_WINDOW_MS,
+      reset_at_ms: issuedNow + CONTROL_SESSION_BURST_WINDOW_MS,
     };
     this.sessions.set(session.session_id, session);
     return { token, session: this.publicSession(session) };

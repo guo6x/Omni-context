@@ -45,7 +45,8 @@ CLI 属于三面架构中的 **Controlled Execution Surface**：
 | `inspect` | **CURRENTLY_VERIFIED_INTERNAL** | 只读决策查看（get_decision_lineage） |
 | `history` | **CURRENTLY_VERIFIED_INTERNAL** | 只读 judgment history（GET /api/decisions） |
 | `version` / `help` | **CURRENTLY_VERIFIED_INTERNAL** | 本地命令，无网络 |
-| `approve` / `verify` | **TARGET / LOCKED** | parser 识别但 FAIL CLOSED（exit 3，OMCTX_CONTROL_SURFACE_LOCKED）；public mutation gateway 未实现 |
+| `approve` | **CURRENTLY_VERIFIED_INTERNAL** | 独立 Desktop `control:approve` 会话；仅推进 server-owned approval，绝不启动执行 |
+| `verify` | **CURRENTLY_VERIFIED_INTERNAL** | 独立 Desktop `control:verify` 会话；仅消费 server-owned receipt + trusted read-back，确定性输出 VERIFIED / MISMATCH / INCONCLUSIVE |
 | 命令 `reopen` | **FUTURE** | runtime 尚未实现；不得暗示 reopen 会自动重放原动作 |
 | 内部 runtime 对应物（broker / adapters / evidence guard / approval / read-back） | **开发分支 runtime 已验证** | 见 Goal24 CP3–CP8 gate 证据（`docs/goal24/checkpoint*-security-gate.json`）；**没有 public invocation surface**，不属于 CURRENTLY_VERIFIED 用户面 |
 
@@ -57,7 +58,8 @@ CLI 属于三面架构中的 **Controlled Execution Surface**：
 
 `doctor` / `ask` / `inspect` / `history` 的 D1A **read-only** 行为已是
 **CURRENTLY_VERIFIED_INTERNAL**。本节余下内容只描述这些命令未来可能承载的
-执行/批准语义，以及 `approve` / `verify` / `reopen`；它们不是今天公开可用的能力。
+执行/批准语义，以及 `approve` / `verify` / `reopen`；approve/verify 仍是
+private alpha 的本地 internal surface，不是公开 npm 用户面，reopen 仍未实现。
 
 ### 3.1 `omctx ask` — TARGET
 

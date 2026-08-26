@@ -244,6 +244,42 @@ export class OmniLocalClient {
     if (!response.ok) throw errorFor.unexpectedResponse(`approve endpoint returned HTTP ${response.status}`);
     return payload?.data ?? payload;
   }
+
+  /** Fixed verify-only gateway. The server resolves receipt/read-back state. */
+  async verifyPlan(planId, verificationToken) {
+    if (typeof planId !== 'string' || !/^plan-[A-Za-z0-9_-]{8,}$/i.test(planId)) {
+      throw errorFor.usage('verify requires a valid plan id');
+    }
+    if (typeof verificationToken !== 'string' || !verificationToken) throw errorFor.verificationAuthMissing();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    let response;
+    try {
+      response = await this.fetchImpl(`${this.apiUrl}/api/control/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Omni-Client': `omctx/${CLI_VERSION}`,
+          Authorization: `Bearer ${verificationToken}`,
+        },
+        body: JSON.stringify({ plan_id: planId }),
+        signal: controller.signal,
+        redirect: 'error',
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw errorFor.brainOffline('request timed out');
+      throw errorFor.brainOffline(typeof error?.message === 'string' ? error.message.slice(0, 120) : 'connection failed');
+    } finally { clearTimeout(timer); }
+    let payload = null;
+    try { payload = await response.json(); } catch { throw errorFor.unexpectedResponse('verify response is not valid JSON'); }
+    if (response.status === 401) throw errorFor.verificationAuthRejected();
+    if (response.status === 403) throw errorFor.verificationScopeDenied();
+    if (response.status === 404) throw errorFor.planNotFound();
+    if (response.status === 409) throw errorFor.verificationRejected(payload?.error);
+    if (response.status === 429) throw errorFor.controlRateLimited();
+    if (!response.ok) throw errorFor.unexpectedResponse(`verify endpoint returned HTTP ${response.status}`);
+    return payload?.data ?? payload;
+  }
 }
 
 export { OmctxError };

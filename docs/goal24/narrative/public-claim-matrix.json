@@ -296,14 +296,14 @@
     },
     {
       "claim_id": "I-11",
-      "claim_text": "omctx CLI alpha implementation is internally verified on the development branch: authenticated read-only doctor / ask / inspect / history plus an explicit Desktop-session approve path; verify remains locked and no execution starts.",
+      "claim_text": "omctx CLI alpha implementation is internally verified: authenticated read-only doctor / ask / inspect / history plus separate explicit Desktop-session approve and verify paths; neither starts execution or retries writes.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
       "evidence": [
         "packages/omctx/ (private:true, version 0.1.0-alpha.0, zero runtime dependencies)",
         "docs/goal24/distribution/omctx-alpha-candidate-gate.json (OMCTX_ALPHA_CANDIDATE_GATE=PASS)",
         "docs/goal24/distribution/omctx-alpha-authoritative-gate.json (OMCTX_ALPHA_AUTHORITATIVE_GATE=PASS; real temporary Brain smoke)",
-        "docs/goal24/distribution/omctx-control-surface-status.json (approve CURRENTLY_VERIFIED_INTERNAL; verify TARGET_LOCKED; execution not implemented)"
+        "docs/goal24/distribution/omctx-control-surface-status.json (approve and verify CURRENTLY_VERIFIED_INTERNAL; execution not implemented)"
       ],
       "surface": [
         "README",
@@ -338,6 +338,22 @@
         "brain-server/src/control/",
         "desktop-daemon/src-tauri/src/execution_broker/native_control.rs",
         "packages/omctx/src/commands/locked.js"
+      ],
+      "surface": [
+        "README",
+        "ProductVision"
+      ]
+    },
+    {
+      "claim_id": "I-14",
+      "claim_text": "D1B-2 verification gateway: a separate local Desktop control:verify session resolves server-owned receipt and trusted read-back state through a deterministic evaluator; caller verdicts, receipts and observations are rejected.",
+      "status": "CURRENTLY_VERIFIED_INTERNAL",
+      "availability": "internal_runtime",
+      "evidence": [
+        "docs/goal24/distribution/d1b2/d1b2-verification-gate.json",
+        "docs/goal24/distribution/d1b2/d1b2-adversarial-matrix.json",
+        "brain-server/src/control/verification-facade.ts",
+        "brain-server/src/control/verification-runtime.ts"
       ],
       "surface": [
         "README",

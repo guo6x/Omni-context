@@ -1,17 +1,17 @@
 {
   "header": {
     "artifact": "omctx-control-surface-status.json",
-    "note": "D1B-1 feature-branch implementation is limited to the explicit local approve path. verify remains TARGET_LOCKED and no public execution gateway exists."
+    "note": "D1B-2 adds a separate explicit local verify path backed by server-owned receipt/read-back resolution; execution, write retry, rollback and reopen remain unavailable."
   },
   "control_surface": {
     "approve": "CURRENTLY_VERIFIED_INTERNAL",
-    "verify": "TARGET_LOCKED",
+    "verify": "CURRENTLY_VERIFIED_INTERNAL",
     "reopen": "FUTURE",
-    "public_mutation_gateway": "IMPLEMENTED_ON_FEATURE_BRANCH",
+    "public_mutation_gateway": "IMPLEMENTED_ON_AUTHORITATIVE_BRANCH",
     "public_execution_gateway": "NOT_IMPLEMENTED",
-    "public_approval_gateway": "IMPLEMENTED_ON_FEATURE_BRANCH",
-    "public_verify_gateway": "NOT_IMPLEMENTED",
-    "control_surface_gate": "D1B1_FEATURE_BRANCH_VERIFIED_LOCAL_EVIDENCE",
+    "public_approval_gateway": "IMPLEMENTED_ON_AUTHORITATIVE_BRANCH",
+    "public_verify_gateway": "IMPLEMENTED_ON_AUTHORITATIVE_BRANCH",
+    "control_surface_gate": "D1B2_VERIFICATION_GATE_PASS",
     "npm": "NOT_PUBLISHED"
   },
   "existing_internal_surfaces_unchanged": {

@@ -17,7 +17,7 @@
     "directory": "packages/omctx"
   },
   "scripts": {
-    "test": "node --test test/",
+    "test": "node --test test/*.test.js",
     "smoke": "node bin/omctx.js --help >/dev/null && node bin/omctx.js version >/dev/null && node bin/omctx.js version --json >/dev/null",
     "pack:dry": "npm pack --dry-run"
   },

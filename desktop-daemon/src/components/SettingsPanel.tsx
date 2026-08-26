@@ -91,6 +91,7 @@ export default function SettingsPanel({
   const [pairCodeInfo, setPairCodeInfo] = useState<{ code: string; lan_ip: string; port: number } | null>(null);
   const [localApiToken, setLocalApiToken] = useState<string | null>(null);
   const [cliApprovalSession, setCliApprovalSession] = useState<{ expires_at: string; scope: string } | null>(null);
+  const [cliVerificationSession, setCliVerificationSession] = useState<{ expires_at: string; scope: string } | null>(null);
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'available' | 'no-update' | 'error'>('idle');
   const [updateVersion, setUpdateVersion] = useState('');
@@ -1354,6 +1355,38 @@ export default function SettingsPanel({
                       >Disable</button>
                     </div>
                     {cliApprovalSession && <div className="text-xs text-emerald-400">Enabled until {new Date(cliApprovalSession.expires_at).toLocaleTimeString()}</div>}
+                  </div>
+
+                  <div className="p-4 bg-violet-950/20 rounded-lg border border-violet-800/50 space-y-3">
+                    <div>
+                      <div className="text-white font-medium">CLI verification</div>
+                      <div className="text-xs text-gray-400 mt-1">Scope: verify only · Expires in: 5 minutes · Read-back only, no writes</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { invoke } = await import('@tauri-apps/api/tauri');
+                            const session = await invoke<{ expires_at: string; scope: string }>('enable_cli_verification');
+                            setCliVerificationSession(session);
+                            toast.success('CLI verification enabled for 5 minutes');
+                          } catch (e) { toast.error('Unable to enable CLI verification', String(e)); }
+                        }}
+                        className="px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm"
+                      >Enable CLI verification</button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { invoke } = await import('@tauri-apps/api/tauri');
+                            await invoke('disable_cli_verification');
+                            setCliVerificationSession(null);
+                            toast.success('CLI verification disabled');
+                          } catch (e) { toast.error('Unable to disable CLI verification', String(e)); }
+                        }}
+                        className="px-3 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 text-sm"
+                      >Disable</button>
+                    </div>
+                    {cliVerificationSession && <div className="text-xs text-emerald-400">Enabled until {new Date(cliVerificationSession.expires_at).toLocaleTimeString()}</div>}
                   </div>
 
                   {/* 暂停抓取 */}

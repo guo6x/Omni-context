@@ -24,6 +24,7 @@ import {
 } from '../evidence/index.js';
 import type { ApprovalGrantVerifier } from './contracts.js';
 import { AuthorizationService } from './authorization-service.js';
+import { ServerVerificationRuntime } from '../control/verification-runtime.js';
 
 const PRODUCTION_CAPABILITIES: readonly CapabilityDefinition[] = [
   ...GITHUB_READONLY_CAPABILITIES,
@@ -53,6 +54,8 @@ export interface ProductionAuthorizationRuntime {
   readonly evidenceRuntime: EvidenceSurfaceRuntime;
   /** Narrow interface consumed by the fixed public approval facade. */
   readonly controlRuntime: ControlApprovalRuntime;
+  /** Narrow server-owned verifier consumed by the fixed D1B-2 route. */
+  readonly verificationRuntime: ServerVerificationRuntime;
 }
 
 function productionCapabilityLookup(capabilityId: string): CapabilityDefinition | undefined {
@@ -108,9 +111,14 @@ export function createProductionAuthorizationRuntime(
     clock,
   });
 
+  const verificationRuntime = new ServerVerificationRuntime(
+    (planId) => authorizationService.getAuthorizationRecord(planId),
+    clock,
+  );
   return {
     authorizationService,
     evidenceRuntime,
     controlRuntime: authorizationService,
+    verificationRuntime,
   };
 }

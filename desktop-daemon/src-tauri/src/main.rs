@@ -367,6 +367,8 @@ async fn main() {
             commands::regenerate_local_api_token,
             commands::enable_cli_approvals,
             commands::disable_cli_approvals,
+            commands::enable_cli_verification,
+            commands::disable_cli_verification,
             hardware::list_hardware_devices,
             hardware::pair_hardware_device,
             hardware::unpair_hardware_device,

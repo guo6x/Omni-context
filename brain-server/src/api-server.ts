@@ -9,6 +9,7 @@ import {
   createD1b1ControlledFixture,
   createD1b1ControlledFixtureProviders,
 } from './approval/d1b1-controlled-fixture.js';
+import { registerD1b2ControlledCases } from './control/verification-runtime.js';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -31,6 +32,19 @@ async function maybeCreateD1b1ControlledFixture() {
   // contains a control session, native bridge secret, grant secret, or token.
   await writeFile(outputPath, `${JSON.stringify(fixture, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
   return runtime;
+}
+
+async function maybeCreateD1b2ControlledFixture(runtime: ReturnType<typeof createProductionAuthorizationRuntime>) {
+  if (process.env.OMNI_D1B2_E2E_FIXTURE !== '1') return;
+  const fixture = registerD1b2ControlledCases(runtime.verificationRuntime);
+  const outputPath = process.env.OMNI_D1B2_E2E_FIXTURE_OUTPUT;
+  if (!outputPath) return;
+  await mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify({
+    fixture_mode: 'D1B2_CONTROLLED_LOCAL_ONLY',
+    ...fixture,
+    secrets: 'REDACTED',
+  }, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
 }
 
 async function main() {
@@ -66,6 +80,7 @@ async function main() {
   // narrow ControlApprovalRuntime; it never receives a raw store.
   const authorizationRuntime = await maybeCreateD1b1ControlledFixture()
     ?? createProductionAuthorizationRuntime();
+  await maybeCreateD1b2ControlledFixture(authorizationRuntime);
   const server = createServer(
     db,
     agentLoop,
@@ -73,6 +88,7 @@ async function main() {
     decayScheduler,
     undefined,
     authorizationRuntime.controlRuntime,
+    authorizationRuntime.verificationRuntime,
   );
 
   server.on('error', (err: NodeJS.ErrnoException) => {

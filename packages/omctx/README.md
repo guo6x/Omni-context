@@ -5,8 +5,9 @@ a private, unpublishable package that exposes an **authenticated read-only**
 judgment surface against a local Brain Server.
 
 > This package is NOT published to npm (`private: true`). There is no
-> `npm i -g omctx` yet. Do not treat `approve` / `verify` as usable: they
-> fail closed until a future control-surface gate passes.
+> `npm i -g omctx` yet. `approve` and `verify` require separate, short-lived
+> Desktop control sessions and remain local internal surfaces; they never
+> start execution, retry writes or perform rollback.
 
 ## What works in this Alpha
 
@@ -19,10 +20,13 @@ judgment surface against a local Brain Server.
 - `omctx history [--limit 1..100]` - judgment history via the fixed
   `GET /api/decisions` endpoint
 
-## Locked / future
+## Control / future
 
-- `omctx approve` - TARGET_LOCKED (fail closed, exit 3)
-- `omctx verify` - TARGET_LOCKED (fail closed, exit 3)
+- `omctx approve <plan-id>` - explicit Desktop `control:approve` session;
+  approval only, execution is not started
+- `omctx verify <plan-id>` - explicit separate Desktop `control:verify` session;
+  trusted read-back and deterministic `VERIFIED` / `MISMATCH` /
+  `INCONCLUSIVE`, never caller-supplied verdicts
 - `omctx reopen` - FUTURE (exit 3)
 
 ## Safety boundaries

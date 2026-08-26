@@ -77,6 +77,12 @@ export function startMockServer(mode, onRequest) {
       ], count: 2, limit: 20 }));
       return;
     }
+    if (req.url === '/api/control/verify') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ data: { plan_id: 'plan-12345678', status: 'VERIFIED', execution_started: false } }));
+      return;
+    }
     res.statusCode = 404;
     res.end(JSON.stringify({ error: 'Not Found' }));
   });

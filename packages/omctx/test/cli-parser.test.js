@@ -56,10 +56,10 @@ test('approve requires an ephemeral Desktop control session', async () => {
   assert.equal(code, EXIT.AUTH_ERROR);
 });
 
-test('verify is locked (fail closed, exit 3)', async () => {
+test('verify requires a separate ephemeral Desktop verification session', async () => {
   const { run } = await import('../src/cli.js');
-  const code = await run(['verify']);
-  assert.equal(code, EXIT.FEATURE_LOCKED);
+  const code = await run(['verify', 'plan-12345678']);
+  assert.equal(code, EXIT.AUTH_ERROR);
 });
 
 test('verify rejects caller verdict flags', () => {

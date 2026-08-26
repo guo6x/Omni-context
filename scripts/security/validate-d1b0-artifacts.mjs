@@ -12,13 +12,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const D1B0_HISTORICAL_REF = 'a902ac4fc804459f07a09b84494a68c8bd7f618b';
+// D1B-1 is frozen at the authoritative integration commit immediately before
+// D1B-2.  Keep its phase validator pointed at that immutable snapshot so a
+// later D1B-2 verify route does not make the historical D1B-1 oracle fail.
+const D1B1_HISTORICAL_REF = '719034f2c5727511ad462f05efa5775c7da7d465';
 const root = process.cwd();
 const phaseFlagIndex = process.argv.indexOf('--phase');
 const requestedPhase = process.argv.find((argument) => argument.startsWith('--phase='))?.slice('--phase='.length)
   ?? (phaseFlagIndex >= 0 ? process.argv[phaseFlagIndex + 1] : undefined)
   ?? 'd1b0';
 const phase = requestedPhase.toLowerCase();
-assert.ok(['d1b0', 'd1b1'].includes(phase), '--phase must be d1b0 or d1b1');
+assert.ok(['d1b0', 'd1b1', 'd1b2'].includes(phase), '--phase must be d1b0, d1b1 or d1b2');
 
 function historicalContents(relativePath) {
   return execFileSync('git', ['show', `${D1B0_HISTORICAL_REF}:${relativePath}`], {
@@ -29,15 +33,22 @@ function historicalContents(relativePath) {
 }
 
 function contents(relativePath) {
-  return phase === 'd1b0'
-    ? historicalContents(relativePath)
-    : fs.readFileSync(path.join(root, relativePath), 'utf8');
+  if (phase === 'd1b0') return historicalContents(relativePath);
+  if (phase === 'd1b1') {
+    return execFileSync('git', ['show', `${D1B1_HISTORICAL_REF}:${relativePath}`], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  }
+  return fs.readFileSync(path.join(root, relativePath), 'utf8');
 }
 
 function exists(relativePath) {
-  if (phase === 'd1b0') {
+  if (phase === 'd1b0' || phase === 'd1b1') {
+    const ref = phase === 'd1b0' ? D1B0_HISTORICAL_REF : D1B1_HISTORICAL_REF;
     try {
-      execFileSync('git', ['cat-file', '-e', `${D1B0_HISTORICAL_REF}:${relativePath}`], {
+      execFileSync('git', ['cat-file', '-e', `${ref}:${relativePath}`], {
         cwd: root,
         stdio: 'ignore',
       });
@@ -167,5 +178,38 @@ function validateD1b1ControlSurface() {
   console.log('D1B1_PHASE_VALIDATOR=PASS');
 }
 
+function validateD1b2ControlSurface() {
+  const routePaths = scanControlPaths([
+    'brain-server/src/api/routes.ts',
+    'brain-server/src/control/verification-facade.ts',
+    'brain-server/src/control/verification-runtime.ts',
+    'desktop-daemon/src-tauri/src/commands.rs',
+    'packages/omctx/src/client/omni-local-client.js',
+  ]);
+  const allowed = [
+    '/api/control/approve',
+    '/api/control/verify',
+    '/internal/control/session',
+    '/internal/control/session/revoke',
+    '/internal/control/session/verify',
+  ].sort();
+  // D1B-2 is evaluated on top of the already-authoritative D1B-1 surface.
+  assert.deepEqual(routePaths, allowed, `unexpected D1B-2 control route(s): ${routePaths.join(', ')}`);
+  const routes = contents('brain-server/src/api/routes.ts');
+  assert.match(routes, /req\.method === 'POST'.+?pathname === '\/api\/control\/verify'/s);
+  assert.match(routes, /session\.scope !== CONTROL_VERIFY_SCOPE/);
+  assert.match(contents('brain-server/src/control/verification-facade.ts'), /z\.strictObject\(\{\s*plan_id:/s);
+  assert.match(contents('brain-server/src/control/verification-runtime.ts'), /OutcomeService/);
+  assert.match(contents('brain-server/src/control/verification-runtime.ts'), /trusted_receipt_and_readback/);
+  const cli = contents('packages/omctx/src/commands/locked.js');
+  assert.match(cli, /cmdVerify[\s\S]*?verifyPlan/);
+  assert.doesNotMatch(cli, /expected_state|predicate|jsonpath|regex|prompt|receipt|observation/);
+  assert.match(contents('packages/omctx/src/client/token.js'), /resolveVerificationSession/);
+  console.log('D1B2_ALLOWED_PUBLIC_CONTROL=POST /api/control/verify');
+  console.log('D1B2_ALLOWED_INTERNAL_CONTROL=verify-session-mint');
+  console.log('D1B2_PHASE_VALIDATOR=PASS');
+}
+
 if (phase === 'd1b0') validateD1b0HistoricalArtifacts();
-else validateD1b1ControlSurface();
+else if (phase === 'd1b1') validateD1b1ControlSurface();
+else validateD1b2ControlSurface();

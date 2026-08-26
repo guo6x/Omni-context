@@ -1,0 +1,132 @@
+{
+  "artifact": "omctx-distribution-readiness-candidate.json",
+  "generated_at": "2026-08-26T11:00:00Z",
+  "readiness_status": "DISTRIBUTION_READINESS_CANDIDATE_READY",
+  "authoritative_sha": "D1B2_FEATURE_RUNTIME_SHA_PENDING_INTEGRATION",
+  "package": {
+    "name": "omctx",
+    "version": "0.1.0-alpha.0",
+    "private": true,
+    "runtime_dependencies": 0,
+    "npm_published": false,
+    "public_distribution_status": "NOT_PUBLISHED"
+  },
+  "command_matrix": {
+    "help": "CURRENTLY_VERIFIED_INTERNAL",
+    "version": "CURRENTLY_VERIFIED_INTERNAL",
+    "doctor": "CURRENTLY_VERIFIED_INTERNAL",
+    "ask": "CURRENTLY_VERIFIED_INTERNAL",
+    "inspect": "CURRENTLY_VERIFIED_INTERNAL",
+    "history": "CURRENTLY_VERIFIED_INTERNAL",
+    "approve": "CURRENTLY_VERIFIED_INTERNAL",
+    "verify": "CURRENTLY_VERIFIED_INTERNAL",
+    "reopen": "FUTURE"
+  },
+  "control_surface": {
+    "d1b0": "GATE_VERIFIED",
+    "d1b1": "GATE_VERIFIED",
+    "d1b2": "GATE_VERIFIED",
+    "approve_executes_plan": false,
+    "verify_retries_original_write": false,
+    "automatic_rollback": false,
+    "reopen": "FUTURE",
+    "checkpoint9": "NOT_STARTED"
+  },
+  "security_gates": {
+    "public_verify_route": true,
+    "strict_plan_only_schema": true,
+    "separate_control_verify_scope": true,
+    "read_token_can_verify": false,
+    "approve_session_can_verify": false,
+    "trusted_receipt_and_readback": true,
+    "deterministic_evaluator": true,
+    "generic_execute_surface": false,
+    "public_arbitrary_receipt": false,
+    "public_arbitrary_observation": false,
+    "public_arbitrary_outcome": false,
+    "secret_leaks": 0,
+    "security_unknown": 0,
+    "fix_before_distribution": 0,
+    "blocks_distribution": 0
+  },
+  "real_e2e": {
+    "d1b1_real_approval": "PASS",
+    "d1b1_plan_before": "awaiting_approval",
+    "d1b1_plan_after": "ready",
+    "d1b1_native_grants": 1,
+    "d1b1_second_approve": "BLOCKED",
+    "d1b1_restart_replay": "BLOCKED",
+    "d1b1_concurrency_attempts": 100,
+    "d1b1_concurrency_grants": 1,
+    "d1b2_verified_case": "PASS (controlled local trusted pipeline)",
+    "d1b2_mismatch_case": "PASS (revisit_required=true)",
+    "d1b2_inconclusive_case": "PASS",
+    "d1b2_fixture_mode": "D1B2_CONTROLLED_LOCAL_ONLY",
+    "d1b2_external_world_claim": false,
+    "d1b2_write_executions": 0,
+    "d1b2_github_writes": 0
+  },
+  "audits": {
+    "brain_npm_audit": {
+      "status": "NONZERO_RECORDED_NOT_GREEN",
+      "exit_code": 1,
+      "findings": 28,
+      "fresh_registry_response": true
+    },
+    "desktop_npm_audit": {
+      "status": "NONZERO_RECORDED_NOT_GREEN",
+      "exit_code": 1,
+      "findings": 9,
+      "fresh_registry_response": true
+    },
+    "cargo_audit": {
+      "status": "NONZERO_RECORDED_NOT_GREEN_NETWORK_REFRESH_FAILED",
+      "exit_code": 1,
+      "rustsec_database_refresh": "FAILED_NETWORK_IO",
+      "known_prior_classification": "KNOWN_EXISTING_NOT_D1B1_CONTROL_SURFACE"
+    }
+  },
+  "package_smoke": {
+    "pack_dry_run": "PASS (19 files; no publish)",
+    "npm_link_smoke": "PASS (real PATH omctx --help/version; doctor reached expected auth error)",
+    "npm_unlink": "PASS",
+    "registry": "CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED (npm view omctx -> E404)"
+  },
+  "regressions": {
+    "cli": "PASS (38 tests)",
+    "brain": "PASS (69 files; 1316 tests)",
+    "rust": "PASS (231 passed; 8 ignored)",
+    "desktop_next_build": "PASS",
+    "desktop_verify_controlled": "PASS",
+    "cargo_fmt": "PASS",
+    "cargo_check": "PASS",
+    "cargo_clippy": "PASS",
+    "git_diff_check": "PASS",
+    "phase_validators": "PASS (D1B0 historical + D1B1 frozen + D1B2 current)"
+  },
+  "remaining_blockers": [
+    "Public npm distribution remains intentionally disabled (private=true; npm_published=false).",
+    "D1B2 controlled fixtures are local-only evidence and make no external-world verification claim.",
+    "RustSec freshness could not be refreshed in the final attempt because advisory-db network access failed."
+  ],
+  "explicit_boundaries": {
+    "npm_published": false,
+    "private": true,
+    "reopen": "FUTURE",
+    "CP9": "NOT_STARTED",
+    "npm_publish_executed": false,
+    "github_release_created": false,
+    "main_touched": false,
+    "holdback_touched": false,
+    "scientific_refs_touched": false,
+    "dirty_cp21_touched": false
+  },
+  "claims": {
+    "approve": "CURRENTLY_VERIFIED_INTERNAL",
+    "verify": "CURRENTLY_VERIFIED_INTERNAL",
+    "npm_global_availability": "DO_NOT_CLAIM / NOT_PUBLISHED",
+    "works_with_any_runtime": "DO_NOT_CLAIM",
+    "works_with_any_memory_system": "DO_NOT_CLAIM"
+  },
+  "secrets": "REDACTED"
+}

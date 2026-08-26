@@ -109,3 +109,19 @@ test('non-allowlisted tool is rejected locally and never sent', async () => {
   );
   assert.equal(requestCount, 0, 'no request may leave the CLI for disallowed tools');
 });
+
+test('verify uses the separate bearer session and fixed plan-only body', async () => {
+  let capturedAuth = null;
+  let capturedBody = '';
+  current = await startMockServer('ok', (req) => {
+    if (req.url === '/api/control/verify') {
+      capturedAuth = req.headers.authorization;
+      req.on('data', (chunk) => { capturedBody += chunk; });
+    }
+  });
+  const client = new OmniLocalClient({ apiUrl: current.url });
+  const result = await client.verifyPlan('plan-12345678', 'verify-session-secret');
+  assert.equal(result.status, 'VERIFIED');
+  assert.equal(capturedAuth, 'Bearer verify-session-secret');
+  assert.deepEqual(JSON.parse(capturedBody), { plan_id: 'plan-12345678' });
+});

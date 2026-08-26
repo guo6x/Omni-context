@@ -79,7 +79,7 @@ export async function run(argv) {
       case 'approve':
         return await cmdApprove({ json, args, apiUrl: flags.apiUrl || DEFAULT_API_URL });
       case 'verify':
-        return await cmdVerify({ json, args });
+        return await cmdVerify({ json, args, apiUrl: flags.apiUrl || DEFAULT_API_URL });
       case 'reopen':
         return await cmdReopen({ json, args });
       case 'doctor': {

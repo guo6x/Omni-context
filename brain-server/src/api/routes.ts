@@ -13,6 +13,9 @@ import { ControlApprovalFacade, type ControlApprovalRuntime } from '../control/a
 import { HttpNativeApprovalClient } from '../control/native-bridge.js';
 import { ControlSessionManager, readBearerToken } from '../control/session.js';
 import { SqliteControlApprovalAuditStore } from '../control/audit.js';
+import { ControlVerificationFacade } from '../control/verification-facade.js';
+import type { ControlVerificationRuntime } from '../control/verification-facade.js';
+import { CONTROL_VERIFY_SCOPE } from '../control/session.js';
 import {
   handleMemoryRoutes,
   handleEntityRoutes,
@@ -325,8 +328,16 @@ function isControlApproveRequest(req: http.IncomingMessage): boolean {
   return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/api/control/approve';
 }
 
+function isControlVerifyRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/api/control/verify';
+}
+
 function isControlSessionMintRequest(req: http.IncomingMessage): boolean {
   return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/session';
+}
+
+function isControlVerifySessionMintRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/session/verify';
 }
 
 function isControlSessionRevokeRequest(req: http.IncomingMessage): boolean {
@@ -370,6 +381,7 @@ export function createServer(
   decayScheduler?: MemoryDecayScheduler,
   mcpDispatcher?: McpBusinessDispatcher,
   controlRuntime?: ControlApprovalRuntime,
+  controlVerificationRuntime?: ControlVerificationRuntime,
 ): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
   db.attachEmbeddingService(finalEmbeddingService);
@@ -394,13 +406,14 @@ export function createServer(
   const controlSessions = new ControlSessionManager();
   const controlAudit = new SqliteControlApprovalAuditStore(db);
   const controlFacade = new ControlApprovalFacade(controlRuntime, new HttpNativeApprovalClient(), () => new Date(), controlAudit);
+  const verificationFacade = new ControlVerificationFacade(controlVerificationRuntime);
 
   const server = http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);
 
     if (req.method === 'OPTIONS') {
       const optionsPath = new URL(req.url || '/', 'http://localhost').pathname;
-      if (optionsPath === '/api/control/approve' || optionsPath.startsWith('/internal/control/session')) {
+      if (optionsPath === '/api/control/approve' || optionsPath === '/api/control/verify' || optionsPath.startsWith('/internal/control/session')) {
         sendError(res, 405, 'CONTROL_OPTIONS_REJECTED');
         return;
       }
@@ -425,6 +438,23 @@ export function createServer(
       // Raw token is returned only to the trusted native Desktop caller. It
       // is never logged, persisted by Brain, or accepted by the public CLI as
       // an argument.
+      sendResponse(res, 201, { data: issued });
+      return;
+    }
+
+    if (isControlVerifySessionMintRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) {
+        sendError(res, 403, boundaryError);
+        return;
+      }
+      const expected = (process.env.NATIVE_BRIDGE_SECRET || '').trim();
+      const supplied = readBearerToken(req);
+      if (!expected || supplied !== expected) {
+        sendError(res, 401, 'CONTROL_AUTH_REQUIRED');
+        return;
+      }
+      const issued = controlSessions.mint(CONTROL_VERIFY_SCOPE);
       sendResponse(res, 201, { data: issued });
       return;
     }
@@ -474,6 +504,47 @@ export function createServer(
           APPROVAL_AUTHORITY_INSUFFICIENT: [403, 'APPROVAL_AUTHORITY_INSUFFICIENT'],
           APPROVAL_STORE_CONFLICT: [409, 'PLAN_ALREADY_CONSUMED'],
           APPROVAL_AUDIT_UNAVAILABLE: [503, 'CONTROL_AUDIT_UNAVAILABLE'],
+        };
+        const [status, publicCode] = mapping[code] || [500, 'INTERNAL_CONTROL_ERROR'];
+        sendError(res, status, publicCode);
+      }
+      return;
+    }
+
+    if (isControlVerifyRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) {
+        sendError(res, 403, boundaryError);
+        return;
+      }
+      const supplied = readBearerToken(req);
+      const session = controlSessions.authenticate(supplied);
+      if (!session) {
+        const readPrincipal = await authService.authenticate(req);
+        sendError(res, readPrincipal ? 403 : 401, readPrincipal
+          ? 'CONTROL_SCOPE_INSUFFICIENT'
+          : 'CONTROL_AUTH_REQUIRED');
+        return;
+      }
+      if (session.scope !== CONTROL_VERIFY_SCOPE) {
+        sendError(res, 403, 'VERIFY_SCOPE_INSUFFICIENT');
+        return;
+      }
+      if (!controlSessions.consumeBurst(session.session_id)) {
+        sendError(res, 429, 'CONTROL_RATE_LIMITED');
+        return;
+      }
+      try {
+        const body = await parseBody<unknown>(req);
+        const result = await verificationFacade.verify(body, session);
+        sendResponse(res, 200, { data: result });
+      } catch (error) {
+        const code = error instanceof Error ? error.message.split(':', 1)[0] : 'INTERNAL_CONTROL_ERROR';
+        const mapping: Record<string, [number, string]> = {
+          VERIFY_INPUT_INVALID: [400, 'VERIFY_INPUT_INVALID'],
+          VERIFY_PLAN_NOT_FOUND: [404, 'PLAN_NOT_FOUND'],
+          VERIFY_SCOPE_INSUFFICIENT: [403, 'VERIFY_SCOPE_INSUFFICIENT'],
+          VERIFY_RUNTIME_UNAVAILABLE: [503, 'VERIFY_RUNTIME_UNAVAILABLE'],
         };
         const [status, publicCode] = mapping[code] || [500, 'INTERNAL_CONTROL_ERROR'];
         sendError(res, status, publicCode);
