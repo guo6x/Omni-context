@@ -32,7 +32,10 @@ pub async fn enable_cli_approvals() -> Result<ControlSessionInfo, String> {
         .build()
         .map_err(|e| format!("control client unavailable: {e}"))?;
     let response = client
-        .post("http://127.0.0.1:3001/internal/control/session")
+        .post(format!(
+            "{}/internal/control/session",
+            brain_server::brain_api_url()
+        ))
         .header(reqwest::header::AUTHORIZATION, format!("Bearer {secret}"))
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body("{}")
@@ -114,7 +117,10 @@ pub async fn disable_cli_approvals() -> Result<(), String> {
     if let Ok(secret) = std::env::var("NATIVE_BRIDGE_SECRET") {
         if let Ok(client) = reqwest::Client::builder().no_proxy().build() {
             let _ = client
-                .post("http://127.0.0.1:3001/internal/control/session/revoke")
+                .post(format!(
+                    "{}/internal/control/session/revoke",
+                    brain_server::brain_api_url()
+                ))
                 .header(reqwest::header::AUTHORIZATION, format!("Bearer {secret}"))
                 .send()
                 .await;
@@ -299,7 +305,7 @@ pub fn get_pair_code() -> PairCodeInfo {
     PairCodeInfo {
         code,
         lan_ip,
-        port: 3001,
+        port: brain_server::brain_port(),
     }
 }
 
@@ -310,7 +316,7 @@ pub fn regenerate_pair_code() -> PairCodeInfo {
     PairCodeInfo {
         code,
         lan_ip,
-        port: 3001,
+        port: brain_server::brain_port(),
     }
 }
 

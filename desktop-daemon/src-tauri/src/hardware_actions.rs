@@ -4,8 +4,6 @@ use std::time::Duration;
 
 use crate::{brain_server, clipboard, screen_capture};
 
-const DEFAULT_BRAIN_URL: &str = "http://127.0.0.1:3001";
-
 #[derive(Debug, Deserialize)]
 struct SubmitResponse {
     #[serde(rename = "jobId")]
@@ -77,8 +75,22 @@ pub async fn execute_precipitate() -> Result<Vec<String>, String> {
     let clipboard = clipboard::get_clipboard_content()
         .await
         .map_err(|error| format!("clipboard read failed: {error}"))?;
-    let base_url =
-        std::env::var("OMNI_BRAIN_URL").unwrap_or_else(|_| DEFAULT_BRAIN_URL.to_string());
+    // Keep hardware ingestion on the same loopback Brain selected by the
+    // Desktop process. A legacy URL override is accepted only when it is a
+    // loopback URL; test ports are configured with OMNI_BRAIN_PORT instead.
+    let base_url = std::env::var("OMNI_BRAIN_URL")
+        .ok()
+        .filter(|value| {
+            reqwest::Url::parse(value)
+                .map(|url| {
+                    url.scheme() == "http"
+                        && matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "::1"))
+                        && url.query().is_none()
+                        && url.fragment().is_none()
+                })
+                .unwrap_or(false)
+        })
+        .unwrap_or_else(brain_server::brain_api_url);
     let token = brain_server::ensure_local_token()?;
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(70))
@@ -177,6 +189,6 @@ mod tests {
     fn reset_contract_is_non_destructive_by_design() {
         // Reset is implemented by the caller as a UI event only. This module exposes
         // no database deletion, credential revocation, or registry mutation operation.
-        assert_eq!(DEFAULT_BRAIN_URL, "http://127.0.0.1:3001");
+        assert_eq!(brain_server::DEFAULT_BRAIN_PORT, 3001);
     }
 }

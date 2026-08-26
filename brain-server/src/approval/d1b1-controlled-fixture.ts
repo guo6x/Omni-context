@@ -38,6 +38,11 @@ export interface D1b1ControlledFixtureResult {
 
 /** Trusted application fixture provider for the closure process only. */
 export function createD1b1ControlledFixtureProviders(clock: () => Date): EvidenceProviderRegistry {
+  // Each controlled collection is a fresh trusted observation. The evidence
+  // ledger intentionally rejects reusing one source id with a changed
+  // observed_at, so the fixture gives each observation a server-owned,
+  // monotonic source id rather than weakening lineage conflict detection.
+  let collectionSequence = 0;
   const provider: EvidenceProviderV1 = {
     metadata: {
       provider_id: 'd1b1-controlled-cp6-fixture',
@@ -59,7 +64,7 @@ export function createD1b1ControlledFixtureProviders(clock: () => Date): Evidenc
           subject_key: FIXTURE_SUBJECT,
           claim_key: request.evidence_class,
           claim_value: claim,
-          source_item_id: `fixture:${request.evidence_class}`,
+          source_item_id: `fixture:${request.evidence_class}:${++collectionSequence}`,
           source_reference: 'd1b1-controlled-local-fixture',
           observed_at: clock().toISOString(),
           verification_level: 'asserted',

@@ -22,6 +22,31 @@ static BRAIN_SERVER_PROCESS: std::sync::LazyLock<Mutex<Option<Child>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 static BRAIN_SERVER_STARTING: AtomicBool = AtomicBool::new(false);
 
+/// The production Brain transport is loopback-only. D1B1's real Desktop
+/// harness may select an isolated loopback port through `OMNI_BRAIN_PORT` so
+/// it never has to claim an unrelated application's listener. The value is
+/// deliberately a port number rather than a URL/host override.
+pub const DEFAULT_BRAIN_PORT: u16 = 3001;
+
+pub fn brain_port() -> u16 {
+    match std::env::var("OMNI_BRAIN_PORT") {
+        Ok(raw) => match raw.parse::<u16>() {
+            Ok(port) if port != 0 => port,
+            _ => {
+                eprintln!(
+                    "[Brain Server] ignoring invalid OMNI_BRAIN_PORT={raw:?}; using {DEFAULT_BRAIN_PORT}"
+                );
+                DEFAULT_BRAIN_PORT
+            }
+        },
+        Err(_) => DEFAULT_BRAIN_PORT,
+    }
+}
+
+pub fn brain_api_url() -> String {
+    format!("http://127.0.0.1:{}", brain_port())
+}
+
 pub fn is_running() -> bool {
     let mut guard = match BRAIN_SERVER_PROCESS.lock() {
         Ok(g) => g,
@@ -52,7 +77,7 @@ pub fn is_ready() -> bool {
 }
 
 fn health_check(timeout: Duration) -> bool {
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
+    let addr = SocketAddr::from(([127, 0, 0, 1], brain_port()));
     let mut stream = match TcpStream::connect_timeout(&addr, timeout) {
         Ok(stream) => stream,
         Err(_) => return false,
@@ -178,7 +203,7 @@ pub fn start() -> Result<(), String> {
 fn start_inner() -> Result<(), String> {
     // A Brain/Desktop restart invalidates any previously persisted CLI session.
     clear_control_session();
-    // 先杀掉上一次遗留的 zombie 进程（防止端口 3001 被占用）
+    // 先杀掉上一次遗留的 zombie 进程（防止配置的回环端口被占用）
     kill_zombie_by_pid_file();
 
     if is_ready() {
@@ -229,8 +254,8 @@ fn start_inner() -> Result<(), String> {
         let mut cmd = Command::new(&node_exe);
         cmd.arg(path)
             .current_dir(&data_dir)
-            .env("HOST", "0.0.0.0")
-            .env("PORT", "3001")
+            .env("HOST", "127.0.0.1")
+            .env("PORT", brain_port().to_string())
             .env("DB_PATH", &db_path)
             .env("EMBEDDING_MODE", "local")
             .env("EMBEDDING_LOCAL_MODEL", "Xenova/multilingual-e5-large")
