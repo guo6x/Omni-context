@@ -6,7 +6,7 @@
   "final_status": "D1B2_GATED_PASS",
   "authoritative_d1b1_sha": "719034f2c5727511ad462f05efa5775c7da7d465",
   "feature_branch": "dev/goal24-d1b2-public-verify",
-  "feature_sha": "PENDING_FINAL_FEATURE_SHA",
+  "feature_sha": "7d245877b9d62168a5bf3c89503b366bc8570a80",
   "public_verify_route": true,
   "strict_plan_only_schema": true,
   "read_token_can_verify": false,

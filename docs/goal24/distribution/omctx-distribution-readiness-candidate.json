@@ -2,7 +2,7 @@
   "artifact": "omctx-distribution-readiness-candidate.json",
   "generated_at": "2026-08-26T11:00:00Z",
   "readiness_status": "DISTRIBUTION_READINESS_CANDIDATE_READY",
-  "authoritative_sha": "D1B2_FEATURE_RUNTIME_SHA_PENDING_INTEGRATION",
+  "authoritative_sha": "7d245877b9d62168a5bf3c89503b366bc8570a80",
   "package": {
     "name": "omctx",
     "version": "0.1.0-alpha.0",
