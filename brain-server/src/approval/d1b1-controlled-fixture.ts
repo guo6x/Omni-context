@@ -103,7 +103,10 @@ async function createAwaitingPlan(
     adapter_id: 'github-cli',
     normalized_inputs: FIXTURE_INPUTS,
     guard_run_id: evidence.guard_run_id,
-    timeout_ms: 60_000,
+    // The controlled fixture is manually approved through the Desktop. Give
+    // the owner the full policy window; the production approval policy still
+    // caps plan/grant lifetime at 15 minutes.
+    timeout_ms: 15 * 60_000,
     verification_plan: {
       verification_capability_id: 'github.issue.read',
       verification_inputs: FIXTURE_INPUTS,

@@ -131,6 +131,72 @@ fn authorized(headers: &str, secret: &str) -> bool {
     })
 }
 
+/// Read exactly one HTTP request without waiting for the peer to close the
+/// connection. HTTP clients (including Node's fetch) keep the connection open
+/// while waiting for the response, so `read_to_end` would deadlock until the
+/// socket timeout and surface as a misleading approval 502.
+fn read_http_request(stream: &mut TcpStream) -> Result<Vec<u8>, &'static str> {
+    const HEADER_LIMIT: usize = 64 * 1024;
+    const BODY_LIMIT: usize = 512 * 1024;
+    const DELIMITER: &[u8] = b"\r\n\r\n";
+
+    let mut bytes = Vec::with_capacity(4096);
+    let mut chunk = [0_u8; 4096];
+    let header_end = loop {
+        let read = stream.read(&mut chunk).map_err(|_| "CONTROL_READ_FAILED")?;
+        if read == 0 {
+            return Err("CONTROL_REQUEST_TRUNCATED");
+        }
+        bytes.extend_from_slice(&chunk[..read]);
+        if bytes.len() > HEADER_LIMIT {
+            return Err("CONTROL_HEADERS_TOO_LARGE");
+        }
+        if let Some(index) = bytes
+            .windows(DELIMITER.len())
+            .position(|window| window == DELIMITER)
+        {
+            break index + DELIMITER.len();
+        }
+    };
+
+    let headers = String::from_utf8(bytes[..header_end - DELIMITER.len()].to_vec())
+        .map_err(|_| "CONTROL_HEADERS_INVALID")?;
+    let content_length = headers
+        .lines()
+        .find_map(|line| {
+            let (name, value) = line.split_once(':')?;
+            name.trim()
+                .eq_ignore_ascii_case("content-length")
+                .then_some(value.trim())
+        })
+        .map(|value| {
+            value
+                .parse::<usize>()
+                .map_err(|_| "CONTROL_CONTENT_LENGTH_INVALID")
+        })
+        .transpose()?
+        .unwrap_or(0);
+    if content_length > BODY_LIMIT {
+        return Err("CONTROL_BODY_TOO_LARGE");
+    }
+    let target = header_end + content_length;
+    while bytes.len() < target {
+        let read = stream.read(&mut chunk).map_err(|_| "CONTROL_READ_FAILED")?;
+        if read == 0 {
+            return Err("CONTROL_REQUEST_TRUNCATED");
+        }
+        bytes.extend_from_slice(&chunk[..read]);
+        if bytes.len() > target {
+            // One request per connection; ignore pipelined bytes rather than
+            // allowing them to alter the parsed body.
+            bytes.truncate(target);
+            break;
+        }
+    }
+    bytes.truncate(target);
+    Ok(bytes)
+}
+
 fn host_allowed(headers: &str, port: u16) -> bool {
     let expected = [
         format!("localhost:{port}"),
@@ -168,11 +234,11 @@ fn handle(mut stream: TcpStream, peer: SocketAddr, secret: &str, port: u16) {
         );
         return;
     }
-    let mut bytes = Vec::new();
     let _ = stream.set_read_timeout(Some(std::time::Duration::from_secs(3)));
-    if stream.read_to_end(&mut bytes).is_err() {
-        return;
-    }
+    let bytes = match read_http_request(&mut stream) {
+        Ok(bytes) => bytes,
+        Err(_) => return,
+    };
     let text = String::from_utf8_lossy(&bytes);
     let Some((headers, body)) = text.split_once("\r\n\r\n") else {
         return;
