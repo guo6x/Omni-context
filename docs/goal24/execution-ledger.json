@@ -185,7 +185,7 @@
         "Attack surface inventory and generic escape search found no current public approval/verify or arbitrary execution/receipt/observation/outcome surfaces.",
         "Runtime files were not modified; approve and verify remain TARGET_LOCKED."
       ],
-      "next_owner_action": "authoritative review before D1B-1 implementation; D1B-2 waits for D1B-1 authoritative PASS"
+      "next_owner_action": "none; D1B0 historical gate retained"
     },
     {
       "task_id": "OMCTX_D1B1_PUBLIC_APPROVAL",
@@ -213,7 +213,7 @@
         "native bridge binds loopback with startup secret and persistent single-grant replay guard",
         "approve never starts execution; D1B1 authoritative remote fast-forward verified"
       ],
-      "next_owner_action": "D1B2 verification gate"
+      "next_owner_action": "none; D1B1 authoritative gate verified"
     },
     {
       "task_id": "OMCTX_D1B2_PUBLIC_VERIFY",
