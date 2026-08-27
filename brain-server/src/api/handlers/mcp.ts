@@ -1,10 +1,22 @@
 import http from 'http';
 import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
-import { scopeForMcpTool, AuthPrincipal } from '../../security/auth.js';
+import { AGENT_PILOT_MCP_ALLOWLIST, isAgentPilotPrincipal, scopeForMcpTool, AuthPrincipal } from '../../security/auth.js';
+import type { AgentPilotAdapter } from '../../agent/pilot.js';
 import { BRAIN_PRODUCT_VERSION } from '../protocol.js';
 import { McpBusinessDispatcher } from '../../mcp/dispatch.js';
 import { BusinessError, businessErrorToHttpStatus, formatToolResult } from '../../mcp/errors.js';
 import { tools as mcpToolDefs } from '../../mcp-tools.js';
+
+// Agent tools are a separate profile surface, intentionally excluded from the
+// legacy 26-tool manifest so existing memory clients cannot discover them by
+// accident. They are advertised only after an AGENT_PILOT credential passes
+// authentication.
+const AGENT_PILOT_TOOL_DEFS = [
+  { name: 'agent_ask', description: 'Ask Omni-Context to evaluate a capability using trusted evidence.', inputSchema: { type: 'object', additionalProperties: false, properties: { question: { type: 'string' }, capability_id: { type: 'string' }, capability_version: { type: 'string' }, normalized_inputs: { type: 'object' }, create_plan: { type: 'boolean' } }, required: ['question', 'capability_id', 'capability_version', 'normalized_inputs'] } },
+  { name: 'agent_inspect', description: 'Read safe status for a server-owned plan; grants and secrets are omitted.', inputSchema: { type: 'object', additionalProperties: false, properties: { plan_id: { type: 'string' } }, required: ['plan_id'] } },
+  { name: 'agent_history', description: 'Read safe judgment and plan history.', inputSchema: { type: 'object', additionalProperties: false, properties: {} } },
+  { name: 'agent_outcome', description: 'Observe an outcome without triggering verification or read-back.', inputSchema: { type: 'object', additionalProperties: false, properties: { plan_id: { type: 'string' } }, required: ['plan_id'] } },
+] as const;
 
 /**
  * HTTP adapter for the unified MCP business dispatch layer.
@@ -83,7 +95,28 @@ function rpcError(id: any, code: number, message: string) {
  * request, performs per-tool scope checks, delegates to the shared business
  * dispatcher, and formats JSON-RPC responses.
  */
-async function handleMcpRpcMessage(msg: any, principal: AuthPrincipal, dispatcher: McpBusinessDispatcher): Promise<any | null> {
+async function callAgentTool(adapter: AgentPilotAdapter | undefined, name: string, args: unknown): Promise<unknown> {
+  if (!adapter) throw new Error('AGENT_PILOT_UNAVAILABLE');
+  switch (name) {
+    case 'agent_ask': return adapter.ask(args);
+    case 'agent_inspect': {
+      const planId = (args as any)?.plan_id;
+      const result = typeof planId === 'string' ? adapter.inspect(planId) : null;
+      if (!result) throw new Error('PLAN_NOT_FOUND');
+      return result;
+    }
+    case 'agent_history': return { decisions: adapter.history() };
+    case 'agent_outcome': {
+      const planId = (args as any)?.plan_id;
+      const result = typeof planId === 'string' ? adapter.outcome(planId) : null;
+      if (!result) throw new Error('PLAN_NOT_FOUND');
+      return result;
+    }
+    default: throw new Error('AGENT_TOOL_UNKNOWN');
+  }
+}
+
+async function handleMcpRpcMessage(msg: any, principal: AuthPrincipal, dispatcher: McpBusinessDispatcher, agentPilot?: AgentPilotAdapter): Promise<any | null> {
   const id = msg?.id;
   const method = msg?.method;
   const params = msg?.params || {};
@@ -101,14 +134,19 @@ async function handleMcpRpcMessage(msg: any, principal: AuthPrincipal, dispatche
     }
     if (method === 'ping') return rpcResult(id, {});
     if (method === 'tools/list') {
+      const visibleTools = isAgentPilotPrincipal(principal) ? AGENT_PILOT_TOOL_DEFS : mcpToolDefs;
       return rpcResult(id, {
-        tools: mcpToolDefs.map((t: any) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema })),
+        tools: visibleTools.map((t: any) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema })),
       });
     }
     if (method === 'tools/call') {
       const name = params.name;
-      if (!mcpToolDefs.some((t: any) => t.name === name)) {
+      const known = mcpToolDefs.some((t: any) => t.name === name) || AGENT_PILOT_TOOL_DEFS.some((t) => t.name === name);
+      if (!known) {
         return rpcError(id, -32602, `Unknown tool: ${name}`);
+      }
+      if (isAgentPilotPrincipal(principal) && !AGENT_PILOT_MCP_ALLOWLIST.has(name)) {
+        return rpcError(id, -32602, 'Permission denied: AGENT_PILOT allowlist');
       }
       // Per-tool scope 检查（鉴权属于协议层）
       const requiredScope = scopeForMcpTool(name);
@@ -116,7 +154,9 @@ async function handleMcpRpcMessage(msg: any, principal: AuthPrincipal, dispatche
         return rpcError(id, -32602, `Permission denied: missing scope ${requiredScope}`);
       }
       try {
-        const data = await dispatcher.callTool(name, params.arguments || {});
+        const data = AGENT_PILOT_MCP_ALLOWLIST.has(name)
+          ? await callAgentTool(agentPilot, name, params.arguments || {})
+          : await dispatcher.callTool(name, params.arguments || {});
         return rpcResult(id, formatToolResult(data));
       } catch (e: any) {
         return rpcResult(id, { content: [{ type: 'text', text: `Error: ${e?.message || String(e)}` }], isError: true });
@@ -136,10 +176,10 @@ export const handleMcpRoutes = [
       const body = await parseBody<any>(req);
       let payload: any;
       if (Array.isArray(body)) {
-        const results = (await Promise.all(body.map((m) => handleMcpRpcMessage(m, ctx.auth, ctx.mcpDispatcher)))).filter((r) => r !== null);
+        const results = (await Promise.all(body.map((m) => handleMcpRpcMessage(m, ctx.auth, ctx.mcpDispatcher, ctx.agentPilot)))).filter((r) => r !== null);
         payload = results.length ? results : null;
       } else {
-        payload = await handleMcpRpcMessage(body, ctx.auth, ctx.mcpDispatcher);
+        payload = await handleMcpRpcMessage(body, ctx.auth, ctx.mcpDispatcher, ctx.agentPilot);
       }
       if (payload === null) {
         res.statusCode = 202; // 仅通知，无响应体
@@ -173,7 +213,12 @@ export const handleMcpRoutes = [
 
       try {
         // 业务执行：全部委托给统一 dispatch 层（与 stdio 同一实现）
-        const result = await ctx.mcpDispatcher.callTool(toolName, args);
+        if (isAgentPilotPrincipal(ctx.auth) && !AGENT_PILOT_MCP_ALLOWLIST.has(toolName)) {
+          return sendError(res, 403, 'AGENT_PILOT_ALLOWLIST_DENIED');
+        }
+        const result = AGENT_PILOT_MCP_ALLOWLIST.has(toolName)
+          ? await callAgentTool(ctx.agentPilot, toolName, args)
+          : await ctx.mcpDispatcher.callTool(toolName, args);
         const matchedEntities = collectMatchedEntities(result);
 
         // ── 协议层日志与埋点 ──

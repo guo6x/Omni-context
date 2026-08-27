@@ -189,6 +189,12 @@ function validateD1b2ControlSurface() {
   const allowed = [
     '/api/control/approve',
     '/api/control/verify',
+    // Goal26 adds these loopback-only native bridge paths. They are not
+    // public control APIs: routes.ts requires the process-local bridge secret
+    // and rejects non-loopback/origin-bearing requests before dispatch.
+    '/internal/control/native-receipt',
+    '/internal/control/native-verification',
+    '/internal/control/plan/',
     '/internal/control/session',
     '/internal/control/session/revoke',
     '/internal/control/session/verify',

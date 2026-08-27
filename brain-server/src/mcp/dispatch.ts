@@ -2227,6 +2227,15 @@ ${gaConnBlock}`;
             }
             break;
           }
+          // Agent Pilot tools are implemented by the authenticated HTTP
+          // adapter. Keeping explicit cases here prevents the shared manifest
+          // contract from treating them as an unimplemented METHOD_NOT_FOUND
+          // when a legacy stdio dispatcher enumerates every tool.
+          case 'agent_ask':
+          case 'agent_inspect':
+          case 'agent_history':
+          case 'agent_outcome':
+            throw new BusinessError('INVALID_PARAMS', 'AGENT_PILOT tools require the authenticated Agent Pilot adapter');
           default:
             throw new BusinessError('METHOD_NOT_FOUND', `未知工具: ${name}`);
         }

@@ -12,6 +12,7 @@ import {
 import { registerD1b2ControlledCases } from './control/verification-runtime.js';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { AgentPilotAdapter } from './agent/pilot.js';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -80,6 +81,11 @@ async function main() {
   // narrow ControlApprovalRuntime; it never receives a raw store.
   const authorizationRuntime = await maybeCreateD1b1ControlledFixture()
     ?? createProductionAuthorizationRuntime();
+  const agentPilot = new AgentPilotAdapter({
+    evidenceRuntime: authorizationRuntime.evidenceRuntime,
+    authorizationService: authorizationRuntime.authorizationService,
+    verificationRuntime: authorizationRuntime.verificationRuntime,
+  });
   await maybeCreateD1b2ControlledFixture(authorizationRuntime);
   const server = createServer(
     db,
@@ -89,6 +95,7 @@ async function main() {
     undefined,
     authorizationRuntime.controlRuntime,
     authorizationRuntime.verificationRuntime,
+    agentPilot,
   );
 
   server.on('error', (err: NodeJS.ErrnoException) => {

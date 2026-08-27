@@ -32,6 +32,10 @@ export interface ControlVerificationResult {
 
 export interface ControlVerificationRuntime {
   verifyPlan(planId: string): Promise<ControlVerificationResult>;
+  /** Private native bridge hooks. These are deliberately absent from the
+   * public facade and are reached only after loopback + bridge-secret checks. */
+  registerNativeReceipt?(planId: string, receipt: unknown): Promise<Record<string, unknown>>;
+  completeNativeVerification?(planId: string, body: unknown): Promise<ControlVerificationResult>;
 }
 
 export class VerificationError extends Error {

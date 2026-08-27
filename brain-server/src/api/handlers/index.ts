@@ -1022,3 +1022,4 @@ export { handleAdminRoutes } from './admin.js';
 export { handleIngestRoutes } from './ingest.js';
 export { handleMcpRoutes } from './mcp.js';
 export { handleDecisionHistoryRoutes } from './decisions.js';
+export { handleAgentRoutes } from './agent.js';

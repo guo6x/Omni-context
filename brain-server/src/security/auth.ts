@@ -11,16 +11,23 @@ export const AUTH_SCOPES = [
   'memory:write',
   'decision:read',
   'decision:write',
+  // Goal26 least-authority external Agent Pilot scopes. These are deliberately
+  // separate from the broad device scopes above so a pilot credential can
+  // never inherit memory/decision mutation authority.
+  'agent:ask',
+  'agent:inspect',
+  'agent:history',
+  'agent:outcome:read',
   'admin:export',
   'admin:import',
   'admin:delete',
 ] as const;
 
 export type AuthScope = typeof AUTH_SCOPES[number];
-export type DeviceType = 'mobile' | 'browser_extension' | 'esp32';
+export type DeviceType = 'mobile' | 'browser_extension' | 'esp32' | 'agent_pilot';
 
 export interface AuthPrincipal {
-  kind: 'local_desktop' | 'device';
+  kind: 'local_desktop' | 'device' | 'agent_pilot';
   deviceId: string;
   scopes: ReadonlySet<AuthScope>;
 }
@@ -44,7 +51,7 @@ interface PairingCodeSnapshot {
 
 const PairingRequestSchema = z.object({
   device_id: z.string().trim().min(8).max(128).regex(/^[A-Za-z0-9._:-]+$/),
-  device_type: z.enum(['mobile', 'browser_extension', 'esp32']),
+  device_type: z.enum(['mobile', 'browser_extension', 'esp32', 'agent_pilot']),
   requested_scopes: z.array(z.enum(AUTH_SCOPES)).max(AUTH_SCOPES.length).optional(),
 }).strict();
 
@@ -52,6 +59,7 @@ const DEVICE_SCOPE_POLICY: Record<DeviceType, readonly AuthScope[]> = {
   mobile: ['memory:read', 'decision:read'],
   browser_extension: ['memory:read', 'memory:write', 'decision:read'],
   esp32: ['memory:write', 'decision:write'],
+  agent_pilot: ['agent:ask', 'agent:inspect', 'agent:history', 'agent:outcome:read'],
 };
 
 const ALL_SCOPES = new Set<AuthScope>(AUTH_SCOPES);
@@ -146,7 +154,27 @@ const MCP_TOOL_SCOPE_MAP: Record<string, AuthScope> = {
   discuss_decision: "decision:read",
   get_decision_lineage: "decision:read",
   record_decision_outcome: "decision:write",
+  agent_ask: 'agent:ask',
+  agent_inspect: 'agent:inspect',
+  agent_history: 'agent:history',
+  agent_outcome: 'agent:outcome:read',
 };
+
+/**
+ * Explicit Goal26 Agent Pilot MCP allowlist. The normal MCP manifest contains
+ * legacy memory/decision mutation tools; they are intentionally not inherited
+ * by an agent credential even when a future scope is added to the manifest.
+ */
+export const AGENT_PILOT_MCP_ALLOWLIST = new Set([
+  'agent_ask',
+  'agent_inspect',
+  'agent_history',
+  'agent_outcome',
+]);
+
+export function isAgentPilotPrincipal(principal: AuthPrincipal): boolean {
+  return principal.kind === 'agent_pilot' || principal.deviceId.startsWith('agent-pilot:');
+}
 
 export function scopeForMcpTool(toolName: string): AuthScope | null {
   return MCP_TOOL_SCOPE_MAP[toolName] || null;
@@ -163,6 +191,10 @@ export function requiredScope(req: http.IncomingMessage): AuthScope | null {
   if (pathname === '/mcp') {
     return null;
   }
+  if (pathname === '/api/agent/ask') return 'agent:ask';
+  if (pathname.startsWith('/api/agent/inspect')) return 'agent:inspect';
+  if (pathname.startsWith('/api/agent/history')) return 'agent:history';
+  if (pathname.startsWith('/api/agent/outcome')) return 'agent:outcome:read';
   // Per-tool MCP scope resolution
   // REST 入口 /api/mcp/tool/:name：只用 path 中的 tool name，忽略 query 参数，
   // 防止攻击者用 ?tool=<read-only-tool> 绕过 write/admin scope。
@@ -239,7 +271,7 @@ export class AuthService {
     }
 
     return {
-      kind: 'device',
+      kind: row.device_type === 'agent_pilot' ? 'agent_pilot' : 'device',
       deviceId: row.device_id,
       scopes: new Set(parseScopes(row.scopes)),
     };

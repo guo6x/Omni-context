@@ -721,6 +721,11 @@ fn brain_server_paths() -> Vec<PathBuf> {
             paths.push(exe_dir.join("../../../../brain-server/dist/mcp-server.js"));
             paths.push(exe_dir.join("../../../brain-server/dist/api-server.js"));
             paths.push(exe_dir.join("../../../brain-server/dist/mcp-server.js"));
+            // cargo test/debug executables live at
+            // <repo>/desktop-daemon/src-tauri/target/debug/deps; the source
+            // Brain is five parents above that directory.
+            paths.push(exe_dir.join("../../../../../brain-server/dist/api-server.js"));
+            paths.push(exe_dir.join("../../../../../brain-server/dist/mcp-server.js"));
         }
     }
 

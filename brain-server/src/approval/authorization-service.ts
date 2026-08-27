@@ -160,6 +160,11 @@ export class AuthorizationService {
     return this.store.get(planId);
   }
 
+  /** Read-only server-owned snapshot for Desktop/Agent observation surfaces. */
+  listAuthorizationRecords(): PlanAuthorizationRecord[] {
+    return this.store.list();
+  }
+
   /**
    * Authorize an execution request. All authority values are server-derived;
    * the strict request schema rejects caller `required_approval`,

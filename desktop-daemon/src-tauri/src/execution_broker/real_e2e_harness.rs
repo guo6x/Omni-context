@@ -328,3 +328,466 @@ fn goal24_real_e2e_native_phase() {
         "[real-e2e] OUTCOME AUTHORITY: NONE on this side - awaiting the Brain trusted evaluator"
     );
 }
+
+/// Goal26 controlled local closed-loop proof. This is deliberately ignored:
+/// it starts a real Brain process and a real native Broker, but uses a
+/// disposable `cmd.exe` resolver instead of GitHub so no external mutation is
+/// possible. Run after building Brain with:
+/// `cargo test --bin omni-context-desktop goal26_controlled_local_loop -- --ignored --nocapture`.
+#[cfg(test)]
+mod goal26_controlled_local_loop {
+    use crate::execution_broker::readback::types::{
+        ReadbackParseResult, ReadbackParserStatus, ReadbackRawOutput,
+    };
+    use crate::execution_broker::readback::ReadbackBinding;
+    use crate::execution_broker::{
+        ExecutionBinding, ExecutionRiskPolicy, OutputLimits, RiskLevelWire, SideEffectClassWire,
+    };
+    use serde_json::{json, Map, Value};
+    use std::ffi::OsString;
+    use std::net::TcpListener;
+    use std::path::PathBuf;
+    use std::sync::Once;
+
+    const OWNER: &str = "fixture-owner";
+    const REPO: &str = "fixture-repo";
+    const NUMBER: u64 = 1;
+
+    #[derive(Debug)]
+    struct ControlledCloseBinding {
+        executable: PathBuf,
+        root: PathBuf,
+        env: Vec<String>,
+    }
+
+    impl ExecutionBinding for ControlledCloseBinding {
+        fn binding_id(&self) -> &str {
+            "github-cli.issue.close"
+        }
+        fn adapter_id(&self) -> &str {
+            "github-cli"
+        }
+        fn capability_id(&self) -> &str {
+            "github.issue.close"
+        }
+        fn executable_candidates(&self) -> &[PathBuf] {
+            std::slice::from_ref(&self.executable)
+        }
+        fn build_argv(&self, _inputs: &Map<String, Value>) -> Result<Vec<OsString>, String> {
+            Ok(vec![
+                OsString::from("/C"),
+                OsString::from("exit"),
+                OsString::from("0"),
+            ])
+        }
+        fn allowed_cwd_roots(&self) -> &[PathBuf] {
+            std::slice::from_ref(&self.root)
+        }
+        fn derive_cwd(&self, _inputs: &Map<String, Value>) -> Result<PathBuf, String> {
+            Ok(self.root.clone())
+        }
+        fn env_allowlist(&self) -> &[String] {
+            &self.env
+        }
+        fn output_limits(&self) -> OutputLimits {
+            OutputLimits::default()
+        }
+        fn capability_version(&self) -> &str {
+            "1.0.0"
+        }
+        fn risk_policy(&self) -> ExecutionRiskPolicy {
+            ExecutionRiskPolicy {
+                // Match the production github.issue.close declaration exactly;
+                // the native broker intentionally rejects risk downgrades or
+                // policy substitutions even in a controlled fixture.
+                risk_level: RiskLevelWire::Medium,
+                side_effect_class: SideEffectClassWire::ReversibleWrite,
+                reversible: true,
+                required_authority: crate::execution_broker::AuthorityLevelWire::L2,
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    struct ControlledReadbackBinding {
+        executable: PathBuf,
+        root: PathBuf,
+        env: Vec<String>,
+    }
+
+    impl ReadbackBinding for ControlledReadbackBinding {
+        fn binding_id(&self) -> &str {
+            "github-cli.issue.read.readback"
+        }
+        fn adapter_id(&self) -> &str {
+            "github-cli"
+        }
+        fn capability_id(&self) -> &str {
+            "github.issue.read"
+        }
+        fn capability_version(&self) -> &str {
+            "1.0.0"
+        }
+        fn risk_policy(&self) -> ExecutionRiskPolicy {
+            ExecutionRiskPolicy::read_only_low_l0()
+        }
+        fn executable_candidates(&self) -> &[PathBuf] {
+            std::slice::from_ref(&self.executable)
+        }
+        fn build_argv(&self, inputs: &Map<String, Value>) -> Result<Vec<OsString>, String> {
+            let number = inputs
+                .get("number")
+                .and_then(Value::as_u64)
+                .ok_or("number")?;
+            let payload = format!(r#"{{"number":{number},"state":"CLOSED"}}"#);
+            Ok(vec![
+                OsString::from("/C"),
+                OsString::from("echo"),
+                OsString::from(payload),
+            ])
+        }
+        fn allowed_cwd_roots(&self) -> &[PathBuf] {
+            std::slice::from_ref(&self.root)
+        }
+        fn derive_cwd(&self, _inputs: &Map<String, Value>) -> Result<PathBuf, String> {
+            Ok(self.root.clone())
+        }
+        fn env_allowlist(&self) -> &[String] {
+            &self.env
+        }
+        fn output_limits(&self) -> OutputLimits {
+            OutputLimits::default()
+        }
+        fn subject_key(&self, inputs: &Map<String, Value>) -> Result<String, String> {
+            let owner = inputs.get("owner").and_then(Value::as_str).ok_or("owner")?;
+            let repo = inputs.get("repo").and_then(Value::as_str).ok_or("repo")?;
+            let number = inputs
+                .get("number")
+                .and_then(Value::as_u64)
+                .ok_or("number")?;
+            Ok(format!("issue:{owner}/{repo}#{number}"))
+        }
+        fn parse(&self, raw: &ReadbackRawOutput) -> ReadbackParseResult {
+            let text = raw.stdout.trim();
+            // `cmd.exe` receives an argument vector through the Windows C
+            // quoting rules and may echo embedded JSON quotes with a leading
+            // backslash (or as one quoted JSON string).  Normalize only
+            // those two deterministic fixture forms before strict parsing;
+            // arbitrary text remains malformed and can never be VERIFIED.
+            let candidates = [
+                text.to_string(),
+                serde_json::from_str::<String>(text).unwrap_or_default(),
+                text.replace("\\\"", "\""),
+            ];
+            for candidate in candidates {
+                if candidate.is_empty() {
+                    continue;
+                }
+                if let Ok(value) = serde_json::from_str::<Value>(&candidate) {
+                    if value.is_object() {
+                        return ReadbackParseResult {
+                            payload: value,
+                            status: ReadbackParserStatus::Parsed,
+                        };
+                    }
+                }
+            }
+            ReadbackParseResult {
+                payload: Value::Null,
+                status: ReadbackParserStatus::Malformed,
+            }
+        }
+    }
+
+    fn free_port() -> u16 {
+        TcpListener::bind(("127.0.0.1", 0))
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port()
+    }
+
+    async fn request(
+        client: &reqwest::Client,
+        method: reqwest::Method,
+        url: String,
+        token: Option<&str>,
+        body: Option<Value>,
+    ) -> (u16, Value) {
+        let mut builder = client.request(method, url);
+        if let Some(token) = token {
+            builder = builder.bearer_auth(token);
+        }
+        if let Some(body) = body {
+            builder = builder.json(&body);
+        }
+        let response = builder.send().await.expect("HTTP request");
+        let status = response.status().as_u16();
+        let payload = response.json::<Value>().await.expect("JSON response");
+        (status, payload)
+    }
+
+    fn mcp_tool_payload(response: &Value) -> Value {
+        let text = response["result"]["content"][0]["text"]
+            .as_str()
+            .expect("MCP tool text payload");
+        serde_json::from_str(text).expect("MCP tool JSON payload")
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    #[ignore]
+    async fn goal26_controlled_local_loop() {
+        static ENV_LOCK: Once = Once::new();
+        let _ = &ENV_LOCK;
+        let root =
+            std::env::temp_dir().join(format!("omctx-goal26-controlled-{}", std::process::id()));
+        std::fs::create_dir_all(&root).expect("controlled root");
+        let bridge_port = free_port();
+        let brain_port = free_port();
+        let local_appdata = root.join("localappdata");
+        std::fs::create_dir_all(&local_appdata).expect("local appdata");
+        std::env::set_var("LOCALAPPDATA", &local_appdata);
+        std::env::set_var("OMNI_BRAIN_PORT", brain_port.to_string());
+        std::env::set_var("OMNI_D1B1_E2E_FIXTURE", "1");
+        let fixture_path = root.join("fixture.json");
+        std::env::set_var("OMNI_D1B1_E2E_FIXTURE_OUTPUT", &fixture_path);
+        std::env::set_var("OMNI_EVALUATION_MODE", "1");
+        std::env::set_var("NATIVE_BRIDGE_PORT", bridge_port.to_string());
+        let broker_dir = root.join("broker");
+        std::fs::create_dir_all(&broker_dir).unwrap();
+        crate::execution_broker::configure_global_broker_with_persistence(
+            &broker_dir.join("approvals.json"),
+            &broker_dir.join("ledger.json"),
+            &broker_dir.join("receipts.json"),
+        );
+        let broker = crate::execution_broker::global_broker();
+        let comspec = PathBuf::from(
+            std::env::var("COMSPEC")
+                .unwrap_or_else(|_| "C:\\Windows\\System32\\cmd.exe".to_string()),
+        );
+        assert!(
+            comspec.is_absolute() && comspec.exists(),
+            "COMSPEC must be an absolute executable"
+        );
+        broker.register_binding(Box::new(ControlledCloseBinding {
+            executable: comspec.clone(),
+            root: root.clone(),
+            env: Vec::new(),
+        }));
+        broker
+            .register_readback_binding(Box::new(ControlledReadbackBinding {
+                executable: comspec,
+                root: root.clone(),
+                env: Vec::new(),
+            }))
+            .expect("readback registration");
+        let native = crate::execution_broker::native_control::start();
+        std::env::set_var("NATIVE_BRIDGE_SECRET", &native.secret);
+        std::env::set_var(
+            "NATIVE_BRIDGE_URL",
+            format!("http://127.0.0.1:{}", native.port),
+        );
+        // Start the same Brain process manager used by Desktop commands. This
+        // makes the controlled loop exercise the real `is_ready()` gate and
+        // the native command session-file flow.
+        crate::brain_server::start().expect("start Brain through Desktop manager");
+        let client = reqwest::Client::new();
+        let base = format!("http://127.0.0.1:{brain_port}");
+        let pair_code_path = local_appdata.join("omni-context").join("pair-code.txt");
+        let pair_code =
+            std::fs::read_to_string(&pair_code_path).expect("Desktop-generated pairing code");
+        let (status, pair) = request(
+            &client,
+            reqwest::Method::POST,
+            format!("{base}/api/auth/pair/exchange"),
+            Some(pair_code.trim()),
+            Some(json!({"device_id":"agent-pilot-goal26","device_type":"agent_pilot"})),
+        )
+        .await;
+        assert_eq!(status, 201, "pair exchange: {pair}");
+        let agent_token = pair["device_token"].as_str().unwrap().to_string();
+        let ask = json!({
+            "question":"Given the controlled evidence, is closing the disposable issue eligible?",
+            "capability_id":"github.issue.close","capability_version":"1.0.0",
+            "normalized_inputs":{"owner":OWNER,"repo":REPO,"number":NUMBER},
+            "create_plan":true,"adapter_id":"github-cli","timeout_ms":5000,
+            "verification_plan":{"verification_capability_id":"github.issue.read","verification_inputs":{"owner":OWNER,"repo":REPO,"number":NUMBER}},
+            "rollback_plan":null
+        });
+        let (status, asked) = request(
+            &client,
+            reqwest::Method::POST,
+            format!("{base}/api/agent/ask"),
+            Some(&agent_token),
+            Some(ask),
+        )
+        .await;
+        assert_eq!(status, 200, "agent ask: {asked}");
+        assert_eq!(asked["disposition"], "DECIDE");
+        let plan_id = asked["plan"]["plan"]["plan_id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let decision_id = asked["decision_id"].as_str().unwrap().to_string();
+
+        let (status, _denied) = request(
+            &client,
+            reqwest::Method::POST,
+            format!("{base}/api/control/approve"),
+            Some(&agent_token),
+            Some(json!({"plan_id":plan_id})),
+        )
+        .await;
+        assert_eq!(status, 403, "agent must not approve");
+        let (status, _denied) = request(
+            &client,
+            reqwest::Method::POST,
+            format!("{base}/api/control/verify"),
+            Some(&agent_token),
+            Some(json!({"plan_id":plan_id})),
+        )
+        .await;
+        assert_eq!(status, 403, "agent must not control verification");
+        let (status, _denied) = request(
+            &client,
+            reqwest::Method::POST,
+            format!("{base}/api/control/execute"),
+            Some(&agent_token),
+            Some(json!({"plan_id":plan_id})),
+        )
+        .await;
+        assert_eq!(status, 403, "agent must not reach an execution route");
+        let (status, _denied) = request(
+            &client,
+            reqwest::Method::GET,
+            format!("{base}/internal/control/plan/{plan_id}"),
+            Some(&agent_token),
+            None,
+        )
+        .await;
+        assert!(
+            matches!(status, 401 | 403),
+            "agent must not inspect native plan internals"
+        );
+        let (status, _denied) = request(
+            &client,
+            reqwest::Method::POST,
+            format!("{base}/internal/control/session"),
+            Some(&agent_token),
+            Some(json!({})),
+        )
+        .await;
+        assert!(
+            matches!(status, 401 | 403),
+            "agent must not mint a control session"
+        );
+        let (status, denied_write) = request(&client, reqwest::Method::POST, format!("{base}/mcp"), Some(&agent_token), Some(json!({"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"add_entity","arguments":{"name":"forbidden","type":"concept"}}}))).await;
+        assert_eq!(status, 200);
+        assert!(denied_write["error"]["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("allowlist"));
+        // The human Desktop command mints the short-lived approval session
+        // into its protected native file and then calls the canonical
+        // approval authority.  Approval must not execute anything.
+        crate::commands::enable_cli_approvals()
+            .await
+            .expect("enable Desktop approvals");
+        let approved = crate::commands::approve_pending_plan(plan_id.clone())
+            .await
+            .expect("Desktop approval command");
+        assert_eq!(approved["data"]["execution_started"], false);
+
+        let (status, internal) = request(
+            &client,
+            reqwest::Method::GET,
+            format!("{base}/internal/control/plan/{plan_id}"),
+            Some(&native.secret),
+            None,
+        )
+        .await;
+        assert_eq!(status, 200, "plan lookup: {internal}");
+        let ready: crate::execution_broker::ExecutionPlanWire =
+            serde_json::from_value(internal["data"]["plan"].clone()).expect("ready plan");
+        assert_eq!(
+            ready.state,
+            crate::execution_broker::ExecutionPlanStateWire::Ready
+        );
+        let executed = crate::commands::execute_ready_plan(plan_id.clone())
+            .await
+            .expect("Desktop execute command");
+        assert_eq!(executed["execution"]["success"], true);
+        assert_eq!(executed["execution"]["exit_code"], 0);
+        let receipt = broker
+            .receipts_for_plan(&plan_id)
+            .expect("receipt lookup")
+            .into_iter()
+            .next()
+            .expect("one receipt");
+        let (status, pending) = request(&client, reqwest::Method::POST, format!("{base}/mcp"), Some(&agent_token), Some(json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"agent_outcome","arguments":{"plan_id":plan_id}}}))).await;
+        assert_eq!(status, 200);
+        let pending_payload = mcp_tool_payload(&pending);
+        assert_eq!(pending_payload["status"], "PENDING");
+
+        crate::commands::enable_cli_verification()
+            .await
+            .expect("enable Desktop verification");
+        let completed = crate::commands::verify_pending_plan(plan_id.clone())
+            .await
+            .expect("Desktop verify command");
+        assert_eq!(completed["data"]["status"], "VERIFIED");
+        let verified_receipt = broker
+            .receipts_for_plan(&plan_id)
+            .expect("verified receipt lookup")
+            .into_iter()
+            .next()
+            .expect("verified receipt");
+        assert_eq!(
+            verified_receipt.verification_attempts.len(),
+            1,
+            "one native readback attempt"
+        );
+        let (status, final_outcome) = request(&client, reqwest::Method::POST, format!("{base}/mcp"), Some(&agent_token), Some(json!({"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"agent_outcome","arguments":{"plan_id":plan_id}}}))).await;
+        assert_eq!(status, 200);
+        let final_payload = mcp_tool_payload(&final_outcome);
+        assert_eq!(final_payload["status"], "VERIFIED");
+        let duplicate = broker
+            .execute(&ready, "github-cli.issue.close")
+            .expect_err("duplicate execution must be blocked");
+        // A required-approval replay is rejected at the consumed-grant gate
+        // before the ledger replay gate.  Either native error is fail-closed;
+        // the durable reserved phase proves this plan can never spawn again.
+        assert!(matches!(
+            duplicate.code,
+            crate::execution_broker::ErrorCode::ApprovalConsumed
+                | crate::execution_broker::ErrorCode::PlanRejectedSingleUse
+        ));
+        assert_eq!(
+            broker.plan_ledger().phase(&plan_id),
+            Some(crate::execution_broker::approval::ledger::LedgerPhase::Reserved)
+        );
+
+        let proof = json!({
+            "status":"PASS","verification_level":"CONTROLLED_LOCAL",
+            "agent_runtime":"protocol-real-mcp-client-harness","agent_identity_scope":["agent:ask","agent:inspect","agent:history","agent:outcome:read"],
+            "decision_id":decision_id,"plan_id":plan_id,"evidence_status":asked["evidence_status"],"human_approval":true,
+            "execution_trigger_source":"desktop_controlled_native_path","adapter":"github-cli","receipt":{"receipt_id":receipt.receipt_id,"source":"native_broker","execution_state":format!("{:?}",receipt.execution_state),"exit_code":receipt.exit_code},
+            "readback":{"attempts":verified_receipt.verification_attempts.len(),"state":"CLOSED"},"outcome":"VERIFIED","revisit_required":false,
+            "authority_invariants":{"agent_approval_authority":"NONE","agent_execution_authority":"NONE","agent_outcome_authority":"NONE","approve_executions":0,"desktop_explicit_execution":1,"process_success_direct_verified":false},
+            "negative_authority_attempts":{"approve":"BLOCKED","verify":"BLOCKED","execute":"BLOCKED","control_session":"BLOCKED","native_plan_lookup":"BLOCKED","arbitrary_mcp_write":"BLOCKED"},
+            "write_counts":{"github.issue.close":1},"duplicate_execution":"BLOCKED","notes":["CODEX_RUNTIME_E2E_NOT_EXECUTED","CODEX_RUNTIME_DETECTED_AUTH_REQUIRED","CONTROLLED_LOCAL_EXTERNAL_STATE_RESOLVER"]
+        });
+        let proof_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/goal26/pilot/first-agent-control-loop-proof.json");
+        std::fs::write(
+            &proof_path,
+            format!("{}\n", serde_json::to_string_pretty(&proof).unwrap()),
+        )
+        .expect("write Goal26 proof");
+        crate::brain_server::stop().expect("stop Brain");
+        println!(
+            "GOAL26_CONTROLLED_LOCAL_LOOP_PASS plan={plan_id} receipt={} outcome=VERIFIED",
+            receipt.receipt_id
+        );
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "gate": "DESKTOP_CONTROL_CENTER_GATE",
+  "status": "PASS",
+  "pending_decisions_visible": true,
+  "evidence_coverage_visible": true,
+  "risk_visible": true,
+  "side_effects_visible": true,
+  "approval_expiry_visible": true,
+  "approval_does_not_execute": true,
+  "ready_plan_explicit_execution": true,
+  "execution_plan_server_owned": true,
+  "native_broker_revalidation": true,
+  "receipt_visible": true,
+  "readback_visible": true,
+  "outcome_states_distinct": true,
+  "revisit_required_visible": true,
+  "generic_execute_surface": false
+}

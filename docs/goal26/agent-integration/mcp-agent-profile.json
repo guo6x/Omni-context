@@ -1,0 +1,8 @@
+{
+  "profile": "AGENT_PILOT",
+  "credential": "scoped_device_token",
+  "scopes": ["agent:ask", "agent:inspect", "agent:history", "agent:outcome:read"],
+  "mcp_allowlist": ["agent_ask", "agent_inspect", "agent_history", "agent_outcome"],
+  "forbidden": ["approve", "execute", "verify", "native_bridge", "ReceiptStore", "OutcomeStore", "SQLite", "generic_mcp_write"],
+  "token_storage": "environment variable or protected local token file; never committed"
+}

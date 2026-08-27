@@ -13,8 +13,9 @@ import { ControlApprovalFacade, type ControlApprovalRuntime } from '../control/a
 import { HttpNativeApprovalClient } from '../control/native-bridge.js';
 import { ControlSessionManager, readBearerToken } from '../control/session.js';
 import { SqliteControlApprovalAuditStore } from '../control/audit.js';
-import { ControlVerificationFacade } from '../control/verification-facade.js';
+import { ControlVerificationFacade, VerificationError } from '../control/verification-facade.js';
 import type { ControlVerificationRuntime } from '../control/verification-facade.js';
+import type { AgentPilotAdapter } from '../agent/pilot.js';
 import { CONTROL_VERIFY_SCOPE } from '../control/session.js';
 import { BRAIN_PRODUCT_VERSION, CONTROL_PROTOCOL_VERSION } from './protocol.js';
 import {
@@ -29,7 +30,8 @@ import {
   handleIngestRoutes,
   handleSettingsRoutes,
   handleMcpRoutes,
-  handleDecisionHistoryRoutes
+  handleDecisionHistoryRoutes,
+  handleAgentRoutes,
 } from './handlers/index.js';
 
 export interface RequestContext {
@@ -42,6 +44,7 @@ export interface RequestContext {
   decayScheduler?: MemoryDecayScheduler;
   mcpDispatcher: McpBusinessDispatcher;
   auth: AuthPrincipal;
+  agentPilot?: AgentPilotAdapter;
 }
 
 type BaseRequestContext = Omit<RequestContext, 'auth'>;
@@ -103,6 +106,7 @@ export class ApiRouter {
     embeddingService: EmbeddingService,
     decayScheduler?: MemoryDecayScheduler,
     mcpDispatcher?: McpBusinessDispatcher,
+    agentPilot?: AgentPilotAdapter,
   ) {
     const extractor = new GraphRAGExtractor();
     const finalDecayScheduler = decayScheduler || new MemoryDecayScheduler(db, {
@@ -129,6 +133,7 @@ export class ApiRouter {
         decayScheduler: finalDecayScheduler,
         agentLoop,
       }),
+      agentPilot,
     };
 
     this.routes = [
@@ -144,6 +149,7 @@ export class ApiRouter {
       ...handleSettingsRoutes,
       ...handleMcpRoutes,
       ...handleDecisionHistoryRoutes,
+      ...handleAgentRoutes,
     ];
   }
 
@@ -345,6 +351,18 @@ function isControlSessionRevokeRequest(req: http.IncomingMessage): boolean {
   return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/session/revoke';
 }
 
+function isInternalPlanLookupRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'GET' && /^\/internal\/control\/plan\/[^/]+$/.test(new URL(req.url || '/', 'http://localhost').pathname);
+}
+
+function isInternalNativeReceiptRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/native-receipt';
+}
+
+function isInternalNativeVerificationRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/native-verification';
+}
+
 export function createDefaultEmbeddingService(): EmbeddingService {
   return new EmbeddingService({
     mode: (process.env.EMBEDDING_MODE as 'local' | 'api') || 'local',
@@ -383,6 +401,7 @@ export function createServer(
   mcpDispatcher?: McpBusinessDispatcher,
   controlRuntime?: ControlApprovalRuntime,
   controlVerificationRuntime?: ControlVerificationRuntime,
+  agentPilot?: AgentPilotAdapter,
 ): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
   db.attachEmbeddingService(finalEmbeddingService);
@@ -393,7 +412,7 @@ export function createServer(
     intervalMs: 60 * 60 * 1000,
     autoStart: true,
   });
-  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, finalDecayScheduler, mcpDispatcher);
+  const router = new ApiRouter(db, agentLoop ?? null, finalEmbeddingService, finalDecayScheduler, mcpDispatcher, agentPilot);
 
   void auditEmbeddingIndexCompatibility(db, finalEmbeddingService);
 
@@ -414,7 +433,10 @@ export function createServer(
 
     if (req.method === 'OPTIONS') {
       const optionsPath = new URL(req.url || '/', 'http://localhost').pathname;
-      if (optionsPath === '/api/control/approve' || optionsPath === '/api/control/verify' || optionsPath.startsWith('/internal/control/session')) {
+      if (optionsPath === '/api/control/approve' || optionsPath === '/api/control/verify'
+        || optionsPath === '/internal/control/native-receipt'
+        || optionsPath === '/internal/control/native-verification'
+        || optionsPath.startsWith('/internal/control/session')) {
         sendError(res, 405, 'CONTROL_OPTIONS_REJECTED');
         return;
       }
@@ -467,6 +489,72 @@ export function createServer(
       if (!expected || readBearerToken(req) !== expected) { sendError(res, 401, 'CONTROL_AUTH_REQUIRED'); return; }
       controlSessions.revokeAll();
       sendResponse(res, 204, null);
+      return;
+    }
+
+    // Native Desktop execution resolves the complete server-owned plan by
+    // plan_id. This loopback + bridge-secret endpoint is not a public API and
+    // is the only place where the native command may receive the opaque
+    // approval reference needed by the broker's store-backed replay checks.
+    if (isInternalPlanLookupRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) { sendError(res, 403, boundaryError); return; }
+      const expected = (process.env.NATIVE_BRIDGE_SECRET || '').trim();
+      if (!expected || readBearerToken(req) !== expected) { sendError(res, 401, 'CONTROL_AUTH_REQUIRED'); return; }
+      const planId = decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname.split('/').pop() || '');
+      const record = controlRuntime?.getAuthorizationRecord(planId);
+      if (!record) { sendError(res, 404, 'PLAN_NOT_FOUND'); return; }
+      sendResponse(res, 200, { data: record });
+      return;
+    }
+
+    // Native receipt/read-back ingress is a private bridge, not an API or MCP
+    // surface.  It accepts only loopback traffic carrying the process-local
+    // bridge secret, and the runtime validates native digests/bindings before
+    // any OutcomeService mutation.
+    if (isInternalNativeReceiptRequest(req) || isInternalNativeVerificationRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) { sendError(res, 403, boundaryError); return; }
+      const expected = (process.env.NATIVE_BRIDGE_SECRET || '').trim();
+      if (!expected || readBearerToken(req) !== expected) { sendError(res, 401, 'CONTROL_AUTH_REQUIRED'); return; }
+      if (!controlVerificationRuntime) { sendError(res, 503, 'VERIFY_RUNTIME_UNAVAILABLE'); return; }
+      try {
+        const body = await parseBody<unknown>(req);
+        if (isInternalNativeReceiptRequest(req)) {
+          const value = body as Record<string, unknown>;
+          const planId = typeof value?.plan_id === 'string' ? value.plan_id : '';
+          if (!planId || !controlVerificationRuntime.registerNativeReceipt) { sendError(res, 400, 'NATIVE_RECEIPT_INVALID'); return; }
+          const result = await controlVerificationRuntime.registerNativeReceipt(planId, value.receipt);
+          sendResponse(res, 200, { data: result });
+          return;
+        }
+        const value = body as Record<string, unknown>;
+        const planId = typeof value?.plan_id === 'string' ? value.plan_id : '';
+        if (!planId || !controlVerificationRuntime.completeNativeVerification) { sendError(res, 400, 'NATIVE_OBSERVATION_INVALID'); return; }
+        // `plan_id` is only the private bridge locator.  Keep it out of the
+        // strict observation envelope passed to the verification runtime so
+        // the runtime can reject any extra observation fields fail-closed.
+        const result = await controlVerificationRuntime.completeNativeVerification(planId, { observation: value.observation });
+        sendResponse(res, 200, { data: result });
+      } catch (error) {
+        const code = error instanceof VerificationError
+          ? error.code
+          : error instanceof Error ? error.message.split(':', 1)[0] : 'INTERNAL_CONTROL_ERROR';
+        const mapping: Record<string, [number, string]> = {
+          VERIFY_PLAN_NOT_FOUND: [404, 'PLAN_NOT_FOUND'],
+          NATIVE_RECEIPT_INVALID: [400, 'NATIVE_RECEIPT_INVALID'],
+          NATIVE_RECEIPT_IN_FLIGHT: [409, 'NATIVE_RECEIPT_IN_FLIGHT'],
+          NATIVE_RECEIPT_DUPLICATE: [409, 'NATIVE_RECEIPT_DUPLICATE'],
+          NATIVE_OBSERVATION_INVALID: [400, 'NATIVE_OBSERVATION_INVALID'],
+          VERIFY_RUNTIME_UNAVAILABLE: [503, 'VERIFY_RUNTIME_UNAVAILABLE'],
+          OUTCOME_INPUT_INVALID: [400, 'NATIVE_OBSERVATION_INVALID'],
+          OUTCOME_FRESHNESS_INVALID: [409, 'NATIVE_OBSERVATION_INVALID'],
+          OUTCOME_ATTEMPTS_EXHAUSTED: [409, 'VERIFY_ALREADY_FINAL'],
+          OUTCOME_ATTEMPT_MISMATCH: [409, 'NATIVE_OBSERVATION_INVALID'],
+        };
+        const [status, publicCode] = mapping[code] || [500, 'INTERNAL_CONTROL_ERROR'];
+        sendError(res, status, publicCode);
+      }
       return;
     }
 

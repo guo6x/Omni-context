@@ -201,6 +201,14 @@ pub struct ReadbackObservationEnvelope {
     pub origin_plan_id: String,
     pub origin_execution_receipt_id: String,
     pub verification_capability_id: String,
+    /// Trusted origin marker consumed by the Brain outcome contract. This is
+    /// always `native_readback`; the semantic evaluator still decides the
+    /// outcome and this field never means VERIFIED by itself.
+    pub verification_source: String,
+    /// Strength of the acquired provider observation. The compiled read-back
+    /// binding is authenticated and therefore emits `verified`, while the
+    /// Brain evaluator remains the only outcome authority.
+    pub verification_level: String,
     pub subject_key: String,
     /// Trusted native clock: the durable attempt reservation timestamp.
     pub attempt_started_at: String,

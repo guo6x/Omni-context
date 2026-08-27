@@ -1,0 +1,16 @@
+{
+  "gate": "AGENT_AUTHORITY_GATE",
+  "status": "PASS",
+  "agent_can_ask": true,
+  "agent_can_inspect": true,
+  "agent_can_read_history": true,
+  "agent_can_observe_outcome": true,
+  "agent_can_approve": false,
+  "agent_can_execute": false,
+  "agent_can_verify": false,
+  "agent_can_access_native_bridge": false,
+  "agent_can_access_stores": false,
+  "agent_generic_mcp_write": false,
+  "secret_leaks": 0,
+  "evidence": "AGENT_PILOT allowlist and scoped auth implementation"
+}

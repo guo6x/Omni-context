@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "verification_level": "CONTROLLED_LOCAL",
+  "agent_runtime": "protocol-real-mcp-client-harness",
+  "agent_identity_scope": [
+    "agent:ask",
+    "agent:inspect",
+    "agent:history",
+    "agent:outcome:read"
+  ],
+  "decision_id": "decision-dcc2ca56-a838-49f3-a640-2b7360a2d4ac",
+  "plan_id": "plan-cd082776-0511-464c-a55e-e4a6b789c167",
+  "evidence_status": "qualified",
+  "human_approval": true,
+  "execution_trigger_source": "desktop_controlled_native_path",
+  "adapter": "github-cli",
+  "receipt": {
+    "receipt_id": "rcpt_2ae50666618a9bd66b3326d1d407dd4f",
+    "source": "native_broker",
+    "execution_state": "Completed",
+    "exit_code": 0
+  },
+  "readback": {
+    "attempts": 1,
+    "state": "CLOSED"
+  },
+  "outcome": "VERIFIED",
+  "revisit_required": false,
+  "authority_invariants": {
+    "agent_approval_authority": "NONE",
+    "agent_execution_authority": "NONE",
+    "agent_outcome_authority": "NONE",
+    "approve_executions": 0,
+    "desktop_explicit_execution": 1,
+    "process_success_direct_verified": false
+  },
+  "negative_authority_attempts": {
+    "approve": "BLOCKED",
+    "verify": "BLOCKED",
+    "execute": "BLOCKED",
+    "control_session": "BLOCKED",
+    "native_plan_lookup": "BLOCKED",
+    "arbitrary_mcp_write": "BLOCKED"
+  },
+  "write_counts": {
+    "github.issue.close": 1
+  },
+  "duplicate_execution": "BLOCKED",
+  "notes": [
+    "CODEX_RUNTIME_E2E_NOT_EXECUTED",
+    "CODEX_RUNTIME_DETECTED_AUTH_REQUIRED",
+    "CONTROLLED_LOCAL_EXTERNAL_STATE_RESOLVER"
+  ]
+}

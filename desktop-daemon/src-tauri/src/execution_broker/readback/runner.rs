@@ -247,6 +247,8 @@ impl ReadbackRunner {
             origin_plan_id: receipt.plan_id.clone(),
             origin_execution_receipt_id: receipt.receipt_id.clone(),
             verification_capability_id: binding.capability_id().to_string(),
+            verification_source: "native_readback".to_string(),
+            verification_level: "verified".to_string(),
             subject_key,
             attempt_started_at: started_at.clone(),
             observed_at,

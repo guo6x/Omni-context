@@ -22,6 +22,7 @@ import { useOmniContext } from "@/hooks/useOmniContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import DecisionTimeline from "@/components/DecisionTimeline";
+import ControlCenter from "@/components/ControlCenter";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
 import { resolveNodeCap } from '@/lib/device';
@@ -133,6 +134,7 @@ function MainApp() {
   const [emptyDismissed, setEmptyDismissed] = useState(false);
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
   const [showDecisionLog, setShowDecisionLog] = useState(false);
+  const [showControlCenter, setShowControlCenter] = useState(false);
   const [showMemoryManager, setShowMemoryManager] = useState(false);
   const [memoryManagerFilter, setMemoryManagerFilter] = useState<{ type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }>({});
   // 启动遮罩兜底：brain-server 长时间起不来时也要放行进 App（由离线横幅接管），避免遮罩锁死 UI
@@ -803,6 +805,13 @@ function MainApp() {
                     {t('nav.decision_log')}
                   </button>
                   <button
+                    onClick={() => { setShowControlCenter(true); setShowMoreMenu(false); }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Scale className="w-4 h-4 text-emerald-400" />
+                    Control Center
+                  </button>
+                  <button
                     onClick={() => { setShowMemoryManager(true); setShowMoreMenu(false); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                   >
@@ -1047,6 +1056,8 @@ function MainApp() {
             setFocusEntityId(id);
           }}
         />
+
+        <ControlCenter isOpen={showControlCenter} onClose={() => setShowControlCenter(false)} />
 
         {/* [通用] 首次启动引导 */}
         {(!settings.behavior.onboarded || showWizardForce) && (

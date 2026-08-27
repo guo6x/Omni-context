@@ -427,6 +427,214 @@ pub fn get_local_api_token() -> Result<String, String> {
     brain_server::ensure_local_token()
 }
 
+/// Private native -> Brain bridge helper. The bridge secret is process-local
+/// and never enters renderer state, command arguments or logs. Endpoints are
+/// loopback-only and accept only fixed semantic payloads.
+async fn post_native_bridge(
+    path: &str,
+    body: serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    let secret = std::env::var("NATIVE_BRIDGE_SECRET")
+        .map_err(|_| "native control bridge is unavailable".to_string())?;
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| format!("control client unavailable: {e}"))?;
+    let response = client
+        .post(format!("{}{path}", brain_server::brain_api_url()))
+        .header(reqwest::header::AUTHORIZATION, format!("Bearer {secret}"))
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("cannot reach Brain Server: {e}"))?;
+    let status = response.status();
+    let payload: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("invalid Brain response: {e}"))?;
+    if !status.is_success() {
+        return Err(payload
+            .get("error")
+            .and_then(|value| value.as_str())
+            .unwrap_or("NATIVE_BRIDGE_REJECTED")
+            .to_string());
+    }
+    Ok(payload)
+}
+
+/// Execute exactly one already-approved, server-owned ready plan. The UI
+/// supplies only `plan_id`; capability, adapter, inputs and approval material
+/// are resolved by the loopback Brain endpoint and revalidated by the native
+/// broker before spawn. There is intentionally no generic execute IPC.
+#[tauri::command]
+pub async fn execute_ready_plan(plan_id: String) -> Result<serde_json::Value, String> {
+    if !crate::brain_server::is_ready() {
+        return Err("Brain Server is not ready".to_string());
+    }
+    if !crate::execution_broker::ExecutionPlanWire::valid_plan_id(&plan_id) {
+        return Err("PLAN_ID_INVALID".to_string());
+    }
+    let secret = std::env::var("NATIVE_BRIDGE_SECRET")
+        .map_err(|_| "native control bridge is unavailable".to_string())?;
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| format!("control client unavailable: {e}"))?;
+    let response = client
+        .get(format!(
+            "{}/internal/control/plan/{}",
+            brain_server::brain_api_url(),
+            plan_id
+        ))
+        .header(reqwest::header::AUTHORIZATION, format!("Bearer {secret}"))
+        .send()
+        .await
+        .map_err(|e| format!("cannot reach Brain Server: {e}"))?;
+    let status = response.status();
+    let payload: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("invalid Brain response: {e}"))?;
+    if !status.is_success() {
+        return Err(payload
+            .get("error")
+            .and_then(|v| v.as_str())
+            .unwrap_or("PLAN_LOOKUP_FAILED")
+            .to_string());
+    }
+    let plan_value = payload
+        .get("data")
+        .and_then(|record| record.get("plan"))
+        .ok_or_else(|| "Brain response omitted server-owned plan".to_string())?;
+    let plan: crate::execution_broker::ExecutionPlanWire =
+        serde_json::from_value(plan_value.clone())
+            .map_err(|e| format!("PLAN_CONTRACT_INVALID: {e}"))?;
+    // Fixed semantic binding map. No caller-controlled binding_id is accepted.
+    let binding_id = match (plan.capability_id.as_str(), plan.adapter_id.as_str()) {
+        ("github.issue.close", "github-cli") => "github-cli.issue.close",
+        _ => return Err("CAPABILITY_NOT_DESKTOP_EXECUTABLE".to_string()),
+    };
+    let result = crate::execution_broker::global_broker()
+        .execute(&plan, binding_id)
+        .map_err(|e| e.to_string())?;
+    // The native receipt is the authority handed to Brain. The renderer gets
+    // only the receipt id and bounded process result, never the receipt's
+    // approval/verification internals.
+    let receipts = crate::execution_broker::global_broker()
+        .receipts_for_plan(&plan_id)
+        .map_err(|e| e.to_string())?;
+    let receipt = receipts
+        .into_iter()
+        .next()
+        .ok_or_else(|| "EXECUTION_RECEIPT_MISSING".to_string())?;
+    let receipt_id = receipt.receipt_id.clone();
+    let brain_sync = post_native_bridge(
+        "/internal/control/native-receipt",
+        serde_json::json!({ "plan_id": plan_id, "receipt": receipt }),
+    )
+    .await?;
+    Ok(serde_json::json!({
+        "execution": result,
+        "receipt_id": receipt_id,
+        "brain_sync": brain_sync.get("data").cloned().unwrap_or(serde_json::Value::Null),
+    }))
+}
+
+/// Desktop-only approval action. The short-lived control session token stays
+/// in the protected native file; the renderer supplies only the plan id.
+#[tauri::command]
+pub async fn approve_pending_plan(plan_id: String) -> Result<serde_json::Value, String> {
+    if !crate::brain_server::is_ready() {
+        return Err("Brain Server is not ready".to_string());
+    }
+    if !crate::execution_broker::ExecutionPlanWire::valid_plan_id(&plan_id) {
+        return Err("PLAN_ID_INVALID".to_string());
+    }
+    let file = std::fs::read_to_string(brain_server::control_session_file())
+        .map_err(|_| "CONTROL_APPROVAL_SESSION_REQUIRED".to_string())?;
+    let session: ControlSessionFile =
+        serde_json::from_str(&file).map_err(|_| "CONTROL_SESSION_INVALID".to_string())?;
+    if session.scope != "control:approve" {
+        return Err("CONTROL_SCOPE_INSUFFICIENT".to_string());
+    }
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| format!("control client unavailable: {e}"))?;
+    let response = client
+        .post(format!(
+            "{}/api/control/approve",
+            brain_server::brain_api_url()
+        ))
+        .header(
+            reqwest::header::AUTHORIZATION,
+            format!("Bearer {}", session.token),
+        )
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .json(&serde_json::json!({"plan_id": plan_id}))
+        .send()
+        .await
+        .map_err(|e| format!("cannot reach Brain Server: {e}"))?;
+    let status = response.status();
+    let payload: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("invalid Brain response: {e}"))?;
+    if !status.is_success() {
+        return Err(payload
+            .get("error")
+            .and_then(|v| v.as_str())
+            .unwrap_or("APPROVAL_FAILED")
+            .to_string());
+    }
+    Ok(payload)
+}
+
+/// Desktop-only read-back verification action. It uses the separately scoped
+/// verification session and never retries the original write.
+#[tauri::command]
+pub async fn verify_pending_plan(plan_id: String) -> Result<serde_json::Value, String> {
+    if !crate::brain_server::is_ready() {
+        return Err("Brain Server is not ready".to_string());
+    }
+    if !crate::execution_broker::ExecutionPlanWire::valid_plan_id(&plan_id) {
+        return Err("PLAN_ID_INVALID".to_string());
+    }
+    let file = std::fs::read_to_string(brain_server::verification_session_file())
+        .map_err(|_| "CONTROL_VERIFICATION_SESSION_REQUIRED".to_string())?;
+    let session: ControlSessionFile =
+        serde_json::from_str(&file).map_err(|_| "CONTROL_SESSION_INVALID".to_string())?;
+    if session.scope != "control:verify" {
+        return Err("VERIFY_SCOPE_INSUFFICIENT".to_string());
+    }
+    // Reserve and execute the read-back through the native runner first. It
+    // derives verification capability/inputs from the native receipt and
+    // emits a single-use observation; no caller can supply either.
+    let receipts = crate::execution_broker::global_broker()
+        .receipts_for_plan(&plan_id)
+        .map_err(|e| e.to_string())?;
+    let receipt = receipts
+        .into_iter()
+        .next()
+        .ok_or_else(|| "RECEIPT_NOT_FOUND".to_string())?;
+    let observation = crate::execution_broker::global_broker()
+        .perform_readback(&receipt.receipt_id)
+        .map_err(|e| e.to_string())?;
+    // The verification control session remains a separate human-enabled
+    // scope. The native bridge carries the observation to Brain, where the
+    // deterministic evaluator alone may decide VERIFIED/MISMATCH.
+    let payload = post_native_bridge(
+        "/internal/control/native-verification",
+        serde_json::json!({ "plan_id": plan_id, "observation": observation }),
+    )
+    .await?;
+    // Keep the session token intentionally unused beyond scope validation;
+    // verification data travels only over the process-local bridge.
+    let _ = session.token;
+    Ok(payload)
+}
+
 #[tauri::command]
 pub fn regenerate_local_api_token() -> Result<String, String> {
     brain_server::regenerate_local_token()
