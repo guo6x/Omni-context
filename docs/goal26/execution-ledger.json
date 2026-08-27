@@ -1,12 +1,13 @@
 {
   "goal": "GOAL26",
+  "status": "GATE_VERIFIED",
   "truth_precedence": ["remote refs", "gate artifacts", "execution ledger", "reports"],
-  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "verification_level": "GATE_VERIFIED",
   "entries": [
     {"id":"GOAL25_RUNTIME_REINTEGRATION","status":"AUTHORITATIVE_INTEGRATED","sha":"804ba1a6149c843dbeb0b5d00955fa5d96a5316c"},
     {"id":"GOAL26_AGENT_PILOT","status":"VERIFIED_CONTROLLED","proof":"docs/goal26/pilot/first-agent-control-loop-proof.json"},
     {"id":"GOAL26_DESKTOP_CONTROL_CENTER","status":"VERIFIED"},
-    {"id":"GOAL26_FIRST_AGENT_LOOP","status":"VERIFIED_CONTROLLED","proof":"docs/goal26/pilot/first-agent-control-loop-proof.json"}
+    {"id":"GOAL26_FIRST_AGENT_LOOP","status":"GATE_VERIFIED","proof":"docs/goal26/pilot/first-agent-control-loop-proof.json"}
   ],
   "npm_published": false,
   "release_candidate_touched": false,
