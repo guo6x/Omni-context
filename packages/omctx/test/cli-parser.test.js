@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { parseArgs } from '../src/cli.js';
@@ -30,8 +31,21 @@ test('parser: unknown flag is a usage error', () => {
 
 test('parser: missing args - ask requires a situation', async () => {
   const { run } = await import('../src/cli.js');
-  const code = await run(['ask']);
-  assert.equal(code, EXIT.AUTH_ERROR); // auth resolved first, then usage - acceptable: fails closed
+  const originalLocalAppData = process.env.LOCALAPPDATA;
+  const originalToken = process.env.OMNI_LOCAL_API_TOKEN;
+  const isolatedLocalAppData = mkdtempSync(join(tmpdir(), 'omctx-cli-no-auth-'));
+  try {
+    delete process.env.OMNI_LOCAL_API_TOKEN;
+    process.env.LOCALAPPDATA = isolatedLocalAppData;
+    const code = await run(['ask']);
+    assert.equal(code, EXIT.AUTH_ERROR); // auth resolved first, then usage - acceptable: fails closed
+  } finally {
+    if (originalToken === undefined) delete process.env.OMNI_LOCAL_API_TOKEN;
+    else process.env.OMNI_LOCAL_API_TOKEN = originalToken;
+    if (originalLocalAppData === undefined) delete process.env.LOCALAPPDATA;
+    else process.env.LOCALAPPDATA = originalLocalAppData;
+    rmSync(isolatedLocalAppData, { recursive: true, force: true });
+  }
 });
 
 test('parser: extra args rejected', () => {

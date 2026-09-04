@@ -17,7 +17,7 @@
     "security:install-hooks": "git config core.hooksPath .githooks",
     "test:security-scanner": "node --test scripts/scan-secrets.test.mjs",
     "cli:test": "node --test packages/omctx/test/*.test.js",
-    "cli:smoke": "node packages/omctx/bin/omctx.js --help >/dev/null && node packages/omctx/bin/omctx.js version >/dev/null && node packages/omctx/bin/omctx.js version --json >/dev/null",
+    "cli:smoke": "node packages/omctx/bin/omctx.js --help && node packages/omctx/bin/omctx.js version && node packages/omctx/bin/omctx.js version --json",
     "cli:pack:dry": "npm --prefix packages/omctx pack --dry-run"
   },
   "keywords": [

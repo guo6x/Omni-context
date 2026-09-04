@@ -799,6 +799,7 @@ fn gate_serialization_rejects_unknown_fields() {
 #[test]
 fn executable_arbitrary_input_impossible() {
     let _guard = child_test_lock();
+    std::env::set_var("OMNI_BROKER_TEST_MODE", "echo");
     let tmp = TempDir::new("exe");
     let broker = broker_with_root(tmp.path());
     // A plan tries to smuggle an executable path via inputs; the broker must
@@ -842,6 +843,7 @@ fn executable_rejects_cmd_bat_ps1_and_missing() {
 #[test]
 fn executable_fingerprint_change_detected() {
     let _guard = child_test_lock();
+    std::env::set_var("OMNI_BROKER_TEST_MODE", "echo");
     let tmp = TempDir::new("exe");
     let copied = tmp.path().join("tool.exe");
     std::fs::copy(std::env::current_exe().expect("current_exe"), &copied).expect("copy test exe");

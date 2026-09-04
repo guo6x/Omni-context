@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "proof": "WINDOWS_BASELINE_PORTABILITY_REPAIR",
+  "evaluated_at": "2026-09-04T11:47:20.2369140Z",
+  "base_sha": "566252ca532788d949c508680d0258107c17a390",
+  "feature_branch": "dev/workstation-windows-baseline-repair",
+  "actual_windows_identity": {
+    "runtime_product": "Windows 11-family runtime",
+    "registry_product_name": "Windows 10 Home China",
+    "build": "26200",
+    "display_version": "25H2",
+    "ubr": 9278,
+    "edition": "CoreCountrySpecific",
+    "installation_type": "Client",
+    "architecture": "x64",
+    "identity_note": "Native runtime/CIM reports Windows 11 家庭版 中文版 while the registry ProductName retains Windows 10 Home China."
+  },
+  "original_failures": [
+    {
+      "name": "CLI parser missing ask argument",
+      "command": "packages/omctx: npm.cmd test",
+      "before": "40 passed, 1 failed, exit 1",
+      "root_cause": "The test inherited the workstation LOCALAPPDATA token, so run(['ask']) reached the offline Brain compatibility check before validating the missing argument.",
+      "classification": "TEST_DEFECT",
+      "change": "Isolate LOCALAPPDATA and OMNI_LOCAL_API_TOKEN for this test.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "name": "Rust execution broker process tests",
+      "command": "cargo test --locked --manifest-path desktop-daemon/src-tauri/Cargo.toml",
+      "before": "230 passed, 1 failed, 9 ignored",
+      "root_cause": "Child-process tests held the shared lock but did not set their required echo mode, so process-global test environment state leaked across test order.",
+      "classification": "TEST_DEFECT",
+      "change": "Set OMNI_BROKER_TEST_MODE=echo in the two affected tests while holding the existing lock.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "name": "Rust concurrent approval assertion",
+      "command": "execution_broker::approval::tests::concurrent_consume_exactly_one_wins",
+      "before": "Intermittent failure when loser returned ApprovalConsumed instead of the single hard-coded PlanRejectedSingleUse.",
+      "root_cause": "The concurrent loser can fail closed at either the approval compare-and-consume or the plan-ledger single-use boundary, depending on race order.",
+      "classification": "TEST_DEFECT",
+      "change": "Accept either documented fail-closed error code while retaining exactly-one-success assertions.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "name": "Desktop controlled-file verifier",
+      "command": "desktop-daemon: npm.cmd run verify:controlled",
+      "before": "Exit 1; controlled Rust files reported as changed.",
+      "root_cause": "The verifier hashed CRLF working-tree bytes directly; two committed snapshot entries were also stale relative to the authoritative Git blobs.",
+      "classification": "WINDOWS_PORTABILITY_DEFECT + STALE_CONTROLLED_BASELINE",
+      "change": "Hash canonical LF UTF-8 text and update the manifest to independently verified authoritative Git-blob hashes.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "name": "Windows CLI smoke",
+      "command": "repository root: npm.cmd run cli:smoke",
+      "before": "Exit 1; cmd.exe could not resolve /dev/null.",
+      "root_cause": "Two npm scripts used POSIX-only output redirection under Windows cmd.exe.",
+      "classification": "WINDOWS_PORTABILITY_DEFECT",
+      "change": "Remove output-only /dev/null redirection from the root and package smoke scripts; preserve POSIX shell scripts.",
+      "semantic_behavior_changed": false
+    }
+  ],
+  "changed_files": [
+    { "path": "packages/omctx/test/cli-parser.test.js", "classification": "TEST_FIX" },
+    { "path": "desktop-daemon/src-tauri/src/execution_broker/tests.rs", "classification": "TEST_FIX" },
+    { "path": "desktop-daemon/src-tauri/src/execution_broker/approval/tests.rs", "classification": "TEST_FIX" },
+    { "path": "package.json", "classification": "WINDOWS_PORTABILITY_FIX" },
+    { "path": "packages/omctx/package.json", "classification": "WINDOWS_PORTABILITY_FIX" },
+    { "path": "desktop-daemon/scripts/verify-controlled-files.mjs", "classification": "CONTROLLED_VERIFIER_FIX" },
+    { "path": "desktop-daemon/scripts/controlled-files.sha256.json", "classification": "BASELINE_METADATA_FIX" },
+    { "path": "docs/workstation-baseline-repair/00-failure-reproduction.md", "classification": "REPAIR_EVIDENCE" },
+    { "path": "docs/workstation-baseline-repair/windows-baseline-repair-proof.json", "classification": "REPAIR_EVIDENCE" },
+    { "path": "docs/workstation-baseline-repair/windows-portability-gate.json", "classification": "REPAIR_GATE" }
+  ],
+  "semantic_behavior_changed": false,
+  "results": {
+    "cli": { "tests": "41/41 PASS", "help": "PASS", "version": "PASS", "doctor": "PASS", "smoke": "PASS" },
+    "rust": { "check": "PASS", "tests": "231 passed, 0 failed, 9 ignored" },
+    "desktop": {
+      "frontend_build": "PASS",
+      "controlled_verifier": "PASS",
+      "tauri_desktop_brain_smoke": "PASS",
+      "desktop_js_test_script": "NOT_DEFINED"
+    },
+    "brain": { "build": "PASS", "typecheck": "PASS", "tests": "70 files, 1319 tests PASS", "health": "PASS" },
+    "control_protocol": "1.0 PASS",
+    "mcp": "PASS; agent ask/inspect/history/outcome surfaces available; write probe blocked",
+    "agent_pilot": "PASS; new local identity; scopes agent:ask, agent:inspect, agent:history, agent:outcome:read",
+    "d1b": { "d1b0": "PASS", "d1b1": "PASS", "d1b2": "PASS" },
+    "goal26_regressions": "PASS; 4 files, 18 tests",
+    "secret_scan": "PASS; 0 leaks",
+    "null_device": {
+      "fixed_locations": ["package.json:20", "packages/omctx/package.json:21"],
+      "preserved_posix_locations": [".github/workflows/build.yml:79", "mobile-app/android/gradlew:136", "mobile-app/android/gradlew:209"],
+      "posix_runtime_verification": "NOT_EXECUTED"
+    }
+  },
+  "authority_invariants": {
+    "agent_can_approve": false,
+    "agent_can_execute": false,
+    "agent_can_control_verify": false,
+    "agent_can_reopen": false,
+    "generic_execute_surface": false,
+    "public_execution_gateway": false,
+    "approval_executes": false,
+    "process_exit_direct_outcome": false,
+    "authority_relaxation": false
+  },
+  "protected_state": {
+    "main_touched": false,
+    "release_touched": false,
+    "holdback_touched": false,
+    "scientific_refs_touched": false,
+    "old_clone_touched": false,
+    "goal27_started": false,
+    "npm_published": false,
+    "real_external_writes": 0
+  },
+  "secret_leaks": 0,
+  "status": "PASS"
+}

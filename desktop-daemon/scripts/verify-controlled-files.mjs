@@ -37,7 +37,10 @@ const CONTROLLED = [
 ];
 
 function sha256File(file) {
-  return createHash('sha256').update(readFileSync(resolve(root, file))).digest('hex');
+  // Controlled files are text. Hash canonical LF content so source-integrity
+  // verification is independent of the checkout's Windows line endings.
+  const canonicalText = readFileSync(resolve(root, file), 'utf8').replace(/\r\n/g, '\n');
+  return createHash('sha256').update(canonicalText, 'utf8').digest('hex');
 }
 
 function snapshot() {

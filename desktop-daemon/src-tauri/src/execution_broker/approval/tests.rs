@@ -526,9 +526,13 @@ fn concurrent_consume_exactly_one_wins() {
         1,
         "exactly one concurrent consume must lose"
     );
-    assert_eq!(
-        failures[0].as_ref().err().map(|e| e.code),
-        Some(ErrorCode::PlanRejectedSingleUse)
+    let failure_code = failures[0].as_ref().err().map(|e| e.code);
+    assert!(
+        matches!(
+            failure_code,
+            Some(ErrorCode::PlanRejectedSingleUse | ErrorCode::ApprovalConsumed)
+        ),
+        "the losing concurrent attempt must fail closed, got {failure_code:?}"
     );
     assert!(successes[0].as_ref().expect("ok").success);
 }
