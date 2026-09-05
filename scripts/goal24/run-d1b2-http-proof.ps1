@@ -7,7 +7,14 @@ $env:NATIVE_BRIDGE_SECRET = 'd1b2-test-native-secret'
 $env:OMNI_D1B2_E2E_FIXTURE = '1'
 $env:OMNI_D1B2_E2E_FIXTURE_OUTPUT = Join-Path $runtimeRoot 'fixture.json'
 $brainRoot = Join-Path $PSScriptRoot '..\..\brain-server'
-$process = Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'api') -WorkingDirectory $brainRoot -WindowStyle Hidden -PassThru `
+$apiEntry = Join-Path $brainRoot 'dist\api-server.js'
+if (-not (Test-Path -LiteralPath $apiEntry)) {
+  throw "Brain API build is missing: $apiEntry"
+}
+$node = (Get-Command node -ErrorAction Stop).Source
+# Start the built Node entry directly. npm.cmd is a Windows wrapper and its
+# tsx child survives Stop-Process on the wrapper, leaking the fixture port.
+$process = Start-Process -FilePath $node -ArgumentList @($apiEntry) -WorkingDirectory $brainRoot -WindowStyle Hidden -PassThru `
   -RedirectStandardOutput (Join-Path $runtimeRoot 'server.out.log') `
   -RedirectStandardError (Join-Path $runtimeRoot 'server.err.log')
 try {

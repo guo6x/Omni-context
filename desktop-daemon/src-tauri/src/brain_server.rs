@@ -27,6 +27,11 @@ static BRAIN_SERVER_STARTING: AtomicBool = AtomicBool::new(false);
 /// it never has to claim an unrelated application's listener. The value is
 /// deliberately a port number rather than a URL/host override.
 pub const DEFAULT_BRAIN_PORT: u16 = 3001;
+// A first-run Windows instance may spend more than one minute opening the
+// SQLite store and applying forward-only migrations.  The health probe must
+// wait for the real server instead of killing a healthy cold start at the
+// exact 60-second boundary.
+const BRAIN_STARTUP_TIMEOUT: Duration = Duration::from_secs(120);
 
 pub fn brain_port() -> u16 {
     match std::env::var("OMNI_BRAIN_PORT") {
@@ -186,7 +191,7 @@ pub fn start() -> Result<(), String> {
         .is_err()
     {
         let started = Instant::now();
-        while started.elapsed() < Duration::from_secs(65) {
+        while started.elapsed() < BRAIN_STARTUP_TIMEOUT + Duration::from_secs(5) {
             if is_ready() {
                 return Ok(());
             }
@@ -201,8 +206,11 @@ pub fn start() -> Result<(), String> {
 }
 
 fn start_inner() -> Result<(), String> {
-    // A Brain/Desktop restart invalidates any previously persisted CLI session.
+    // A Brain/Desktop restart invalidates every previously persisted CLI
+    // control session, including Goal27's separate reopen-only session.
     clear_control_session();
+    clear_verification_session();
+    clear_reopen_session();
     // 先杀掉上一次遗留的 zombie 进程（防止配置的回环端口被占用）
     kill_zombie_by_pid_file();
 
@@ -288,7 +296,7 @@ fn start_inner() -> Result<(), String> {
                 let stderr = child.stderr.take();
                 pipe_output_to_log(stdout, stderr);
 
-                match wait_for_health(&mut child, Duration::from_secs(60)) {
+                match wait_for_health(&mut child, BRAIN_STARTUP_TIMEOUT) {
                     Ok(()) => {
                         println!("[Brain Server] 已启动: {}", path.display());
 
@@ -339,6 +347,8 @@ pub fn stop() -> Result<(), String> {
         // 清理 PID 文件
         let _ = std::fs::remove_file(pid_file_path());
         clear_control_session();
+        clear_verification_session();
+        clear_reopen_session();
         println!("[Brain Server] 已停止");
         Ok(())
     } else {
@@ -398,12 +408,22 @@ pub fn verification_session_file() -> PathBuf {
     pair_code_dir().join("verification-session.json")
 }
 
+/// Ephemeral Goal27 revision session. It is distinct from approve and verify
+/// sessions so no existing control token can be broadened into reopen.
+pub fn reopen_session_file() -> PathBuf {
+    pair_code_dir().join("reopen-session.json")
+}
+
 pub fn clear_control_session() {
     let _ = std::fs::remove_file(control_session_file());
 }
 
 pub fn clear_verification_session() {
     let _ = std::fs::remove_file(verification_session_file());
+}
+
+pub fn clear_reopen_session() {
+    let _ = std::fs::remove_file(reopen_session_file());
 }
 
 pub fn ensure_pair_code() -> String {

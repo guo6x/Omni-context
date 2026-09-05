@@ -3,7 +3,7 @@
 
 import { EXIT, errorFor } from '../client/errors.js';
 import { printError, printResult } from '../client/output.js';
-import { resolveControlSession, resolveVerificationSession } from '../client/token.js';
+import { resolveControlSession, resolveReopenSession, resolveVerificationSession } from '../client/token.js';
 
 export async function cmdApprove({ json, args, apiUrl, fetchImpl }) {
   if (args.length === 0) {
@@ -69,11 +69,30 @@ export async function cmdVerify({ json, args, apiUrl, fetchImpl }) {
   return EXIT.SUCCESS;
 }
 
-export async function cmdReopen({ json, args }) {
-  if (args.length > 0) {
-    printError('reopen', errorFor.usage('reopen takes no arguments'), json);
+export async function cmdReopen({ json, args, reason, outcome, apiUrl, fetchImpl }) {
+  if (args.length === 0) {
+    printError('reopen', errorFor.usage('reopen requires a decision id'), json);
     return EXIT.USAGE_ERROR;
   }
-  printError('reopen', errorFor.featureNotAvailable('reopen'), json);
-  return EXIT.FEATURE_LOCKED;
+  if (args.length !== 1) {
+    printError('reopen', errorFor.usage('reopen takes exactly one decision id'), json);
+    return EXIT.USAGE_ERROR;
+  }
+  const session = resolveReopenSession();
+  if (!session) {
+    printError('reopen', errorFor.reopenAuthMissing(), json);
+    return EXIT.AUTH_ERROR;
+  }
+  const { OmniLocalClient } = await import('../client/omni-local-client.js');
+  const client = new OmniLocalClient({ apiUrl, fetchImpl, token: undefined });
+  await client.ensureCompatibility();
+  const result = await client.reopenDecision(args[0], session.token, { reason, outcome });
+  printResult({
+    command: 'reopen',
+    status: result?.status || 'DECIDED',
+    data: result,
+    human: `REOPENED\nExecution: NOT STARTED`,
+    json,
+  });
+  return EXIT.SUCCESS;
 }

@@ -67,6 +67,27 @@ export class AuthorizationStore {
     return this.records.has(planId);
   }
 
+  /**
+   * Remove a freshly prepared, still-unapproved record after its enclosing
+   * server-owned transaction loses an idempotency race.  This is deliberately
+   * narrower than a general delete operation: records carrying a grant or an
+   * execution-capable state can never be removed through this method.
+   */
+  discardUncommitted(planId: string, expectedDecisionId: string): boolean {
+    const record = this.records.get(planId);
+    if (!record) return false;
+    if (
+      record.plan.decision_id !== expectedDecisionId
+      || record.plan.state !== 'awaiting_approval'
+      || record.plan.approval !== null
+      || record.grant !== null
+      || record.approval_request?.status !== 'pending'
+    ) {
+      return false;
+    }
+    return this.records.delete(planId);
+  }
+
   /** Deterministic snapshot: sorted by plan_id ascending. */
   list(): PlanAuthorizationRecord[] {
     return [...this.records.values()].sort((a, b) => (a.plan.plan_id < b.plan.plan_id ? -1 : 1));

@@ -390,10 +390,10 @@ describe('Task 5: current schema verification', () => {
     expect(colNames).toContain('idempotency_key');
   });
 
-  it('schema version includes embedding index migrations', async () => {
+  it('schema version includes current migrations', async () => {
     const row = await db.get<{ version: number }>(
       "SELECT MAX(id) AS version FROM migrations",
     );
-    expect(row?.version).toBe(29);
+    expect(row?.version).toBe(30);
   });
 });

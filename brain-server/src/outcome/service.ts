@@ -111,6 +111,18 @@ interface PendingAttempt {
   started_at: string;
 }
 
+/**
+ * Server-internal, bounded context used only to construct an immutable
+ * DecisionRevision snapshot.  It intentionally contains no native bridge
+ * handles, raw process output, grant material or mutable store reference.
+ */
+export interface TrustedOutcomeRevisionContext {
+  outcome: OutcomeRecord;
+  expected_state: import('../contracts/json-safe.js').JsonObject | null;
+  trusted_observed_state: import('../contracts/json-safe.js').JsonObject | null;
+  observation_id: string | null;
+}
+
 export function generateOutcomeId(): string {
   return `out-${randomUUID()}`;
 }
@@ -442,6 +454,29 @@ export class OutcomeService {
 
   listOutcomes(): readonly OutcomeRecord[] {
     return this.store.listOutcomes();
+  }
+
+  /**
+   * Return a detached, trusted projection of the expectation and most recent
+   * observation for a finalized outcome.  This is not a public API: callers
+   * cannot choose an outcome id from the network and it does not expose the
+   * evaluator, receipt resolver, observation resolver or any capability to
+   * verify/retry/rewrite an outcome.
+   */
+  getTrustedRevisionContext(outcomeId: string): TrustedOutcomeRevisionContext | null {
+    const outcome = this.store.getOutcome(outcomeId);
+    const context = this.contextByOutcome.get(outcomeId);
+    if (!outcome || !context) return null;
+    const finalAttempt = outcome.verification_attempts[outcome.verification_attempts.length - 1];
+    const observation = finalAttempt?.observation_id
+      ? this.observationResolver(finalAttempt.observation_id)
+      : null;
+    return {
+      outcome: structuredClone(outcome),
+      expected_state: structuredClone(context.expectation.assertions),
+      trusted_observed_state: observation ? structuredClone(observation.payload) : null,
+      observation_id: finalAttempt?.observation_id ?? null,
+    };
   }
 
   /**

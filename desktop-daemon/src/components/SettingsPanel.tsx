@@ -92,6 +92,7 @@ export default function SettingsPanel({
   const [localApiToken, setLocalApiToken] = useState<string | null>(null);
   const [cliApprovalSession, setCliApprovalSession] = useState<{ expires_at: string; scope: string } | null>(null);
   const [cliVerificationSession, setCliVerificationSession] = useState<{ expires_at: string; scope: string } | null>(null);
+  const [cliReopenSession, setCliReopenSession] = useState<{ expires_at: string; scope: string } | null>(null);
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'available' | 'no-update' | 'error'>('idle');
   const [updateVersion, setUpdateVersion] = useState('');
@@ -1387,6 +1388,38 @@ export default function SettingsPanel({
                       >Disable</button>
                     </div>
                     {cliVerificationSession && <div className="text-xs text-emerald-400">Enabled until {new Date(cliVerificationSession.expires_at).toLocaleTimeString()}</div>}
+                  </div>
+
+                  <div className="p-4 bg-cyan-950/20 rounded-lg border border-cyan-800/50 space-y-3">
+                    <div>
+                      <div className="text-white font-medium">CLI reopen</div>
+                      <div className="text-xs text-gray-400 mt-1">Scope: reopen only · Expires in: 5 minutes · Creates a new judgment, never executes or undoes an action</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { invoke } = await import('@tauri-apps/api/tauri');
+                            const session = await invoke<{ expires_at: string; scope: string }>('enable_cli_reopen');
+                            setCliReopenSession(session);
+                            toast.success('CLI reopen enabled for 5 minutes');
+                          } catch (e) { toast.error('Unable to enable CLI reopen', String(e)); }
+                        }}
+                        className="px-3 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm"
+                      >Enable CLI reopen</button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { invoke } = await import('@tauri-apps/api/tauri');
+                            await invoke('disable_cli_reopen');
+                            setCliReopenSession(null);
+                            toast.success('CLI reopen disabled');
+                          } catch (e) { toast.error('Unable to disable CLI reopen', String(e)); }
+                        }}
+                        className="px-3 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 text-sm"
+                      >Disable</button>
+                    </div>
+                    {cliReopenSession && <div className="text-xs text-emerald-400">Enabled until {new Date(cliReopenSession.expires_at).toLocaleTimeString()}</div>}
                   </div>
 
                   {/* 暂停抓取 */}

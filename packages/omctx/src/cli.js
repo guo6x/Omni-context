@@ -5,7 +5,7 @@
 
 import { errorFor, EXIT, OmctxError } from './client/errors.js';
 import { printError } from './client/output.js';
-import { tokenArgumentPresent, resolveLocalToken } from './client/token.js';
+import { resolveLocalToken } from './client/token.js';
 import { assertLoopbackUrl, DEFAULT_API_URL, OmniLocalClient } from './client/omni-local-client.js';
 import { cmdHelp, cmdVersion, cmdDoctor, cmdAsk, cmdInspect, cmdHistory, cmdApprove, cmdVerify, cmdReopen } from './commands/index.js';
 
@@ -13,11 +13,14 @@ const COMMANDS = new Set(['--help', 'help', 'version', 'doctor', 'ask', 'inspect
 
 /**
  * Split argv into command + flags. Only a fixed flag set exists:
- * --json, --limit <n>, --api-url <url>. Everything else is a usage error.
+ * --json, --limit <n>, --api-url <url>, and the reopen-only --reason / --outcome
+ * flags. Everything else is a usage error.  Reopen flags stay deliberately
+ * narrow: callers cannot smuggle a parent, revision index, evidence, retry,
+ * force, execution, or arbitrary JSON mutation through the CLI.
  */
 export function parseArgs(argv) {
   const args = [...argv];
-  const flags = { json: false, limit: 20, apiUrl: null };
+  const flags = { json: false, limit: 20, apiUrl: null, reason: undefined, outcome: undefined };
   const positionals = [];
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
@@ -41,6 +44,24 @@ export function parseArgs(argv) {
       i += 1;
     } else if (arg.startsWith('--api-url=')) {
       flags.apiUrl = arg.slice('--api-url='.length);
+    } else if (arg === '--reason') {
+      const next = args[i + 1];
+      if (next === undefined || next.startsWith('--')) throw errorFor.usage('--reason requires a value');
+      flags.reason = next;
+      i += 1;
+    } else if (arg.startsWith('--reason=')) {
+      const value = arg.slice('--reason='.length);
+      if (!value) throw errorFor.usage('--reason requires a value');
+      flags.reason = value;
+    } else if (arg === '--outcome') {
+      const next = args[i + 1];
+      if (next === undefined || next.startsWith('--')) throw errorFor.usage('--outcome requires a value');
+      flags.outcome = next;
+      i += 1;
+    } else if (arg.startsWith('--outcome=')) {
+      const value = arg.slice('--outcome='.length);
+      if (!value) throw errorFor.usage('--outcome requires a value');
+      flags.outcome = value;
     } else if (arg === '--token' || arg.startsWith('--token=') || arg === '--control-token' || arg.startsWith('--control-token=')) {
       throw errorFor.usage('tokens must never be passed as CLI arguments (shell history leak); use the Desktop security session or local token file');
     } else if (arg.startsWith('--')) {
@@ -71,6 +92,10 @@ export async function run(argv) {
     printError(command, errorFor.usage(`unknown command '${command}'`), json);
     return EXIT.USAGE_ERROR;
   }
+  if (command !== 'reopen' && (flags.reason !== undefined || flags.outcome !== undefined)) {
+    printError(command, errorFor.usage('--reason and --outcome are valid only with reopen'), json);
+    return EXIT.USAGE_ERROR;
+  }
 
   try {
     switch (command) {
@@ -81,7 +106,13 @@ export async function run(argv) {
       case 'verify':
         return await cmdVerify({ json, args, apiUrl: flags.apiUrl || DEFAULT_API_URL });
       case 'reopen':
-        return await cmdReopen({ json, args });
+        return await cmdReopen({
+          json,
+          args,
+          reason: flags.reason,
+          outcome: flags.outcome,
+          apiUrl: flags.apiUrl || DEFAULT_API_URL,
+        });
       case 'doctor': {
         const ctx = buildContext(flags, json);
         return await cmdDoctor(ctx);

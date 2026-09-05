@@ -33,6 +33,12 @@ export function verificationSessionFilePath(env = process.env) {
   return join(homedir(), '.omni-context', 'verification-session.json');
 }
 
+export function reopenSessionFilePath(env = process.env) {
+  if (env.LOCALAPPDATA) return join(env.LOCALAPPDATA, 'omni-context', 'reopen-session.json');
+  if (env.HOME) return join(env.HOME, '.omni-context', 'reopen-session.json');
+  return join(homedir(), '.omni-context', 'reopen-session.json');
+}
+
 /** Resolve the ephemeral Desktop-minted approve-only session. */
 export function resolveControlSession(env = process.env, now = Date.now()) {
   const path = controlSessionFilePath(env);
@@ -53,6 +59,18 @@ export function resolveVerificationSession(env = process.env, now = Date.now()) 
   try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
   if (!parsed || typeof parsed !== 'object') return null;
   if (typeof parsed.token !== 'string' || !parsed.token || parsed.scope !== 'control:verify') return null;
+  if (typeof parsed.expires_at !== 'string' || !Number.isFinite(Date.parse(parsed.expires_at)) || Date.parse(parsed.expires_at) <= now) return null;
+  return { source: 'file', token: parsed.token, expires_at: parsed.expires_at, scope: parsed.scope };
+}
+
+/** Resolve the separate, short-lived Desktop-minted reopen-only session. */
+export function resolveReopenSession(env = process.env, now = Date.now()) {
+  const path = reopenSessionFilePath(env);
+  if (!existsSync(path)) return null;
+  let parsed;
+  try { parsed = JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
+  if (!parsed || typeof parsed !== 'object') return null;
+  if (typeof parsed.token !== 'string' || !parsed.token || parsed.scope !== 'control:reopen') return null;
   if (typeof parsed.expires_at !== 'string' || !Number.isFinite(Date.parse(parsed.expires_at)) || Date.parse(parsed.expires_at) <= now) return null;
   return { source: 'file', token: parsed.token, expires_at: parsed.expires_at, scope: parsed.scope };
 }

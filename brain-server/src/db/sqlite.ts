@@ -880,6 +880,73 @@ const MIGRATIONS: Migration[] = [
         ON control_approval_audit(request_timestamp DESC, id DESC);
     `,
   },
+  {
+    version: 30,
+    name: 'add_decision_revision_lifecycle',
+    up: `
+      -- Goal27: an immutable, forward-only revision chain.  A revision row
+      -- stores a complete serialised context and its indexes make cycles,
+      -- duplicate indices, forks and duplicate idempotency impossible at the
+      -- storage boundary as well as in the service layer.
+      CREATE TABLE IF NOT EXISTS decision_revisions (
+        revision_id TEXT PRIMARY KEY,
+        root_decision_id TEXT NOT NULL,
+        parent_decision_id TEXT NOT NULL,
+        revision_index INTEGER NOT NULL CHECK(revision_index > 0),
+        status TEXT NOT NULL CHECK(status IN ('OPEN', 'DECIDED', 'ABANDONED')),
+        idempotency_digest TEXT NOT NULL,
+        new_decision_id TEXT,
+        record_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_decision_revisions_root_index
+        ON decision_revisions(root_decision_id, revision_index);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_decision_revisions_parent
+        ON decision_revisions(parent_decision_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_decision_revisions_idempotency
+        ON decision_revisions(idempotency_digest);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_decision_revisions_new_decision
+        ON decision_revisions(new_decision_id) WHERE new_decision_id IS NOT NULL;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_decision_revisions_one_open_root
+        ON decision_revisions(root_decision_id) WHERE status = 'OPEN';
+
+      CREATE TABLE IF NOT EXISTS decision_revision_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        revision_id TEXT NOT NULL,
+        event_type TEXT NOT NULL CHECK(event_type IN (
+          'REOPEN_REQUESTED', 'REOPEN_AUTHORIZED', 'REVISION_CREATED',
+          'EVIDENCE_REQUALIFIED', 'REVISION_DECIDED', 'REVISION_ABANDONED'
+        )),
+        event_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(revision_id) REFERENCES decision_revisions(revision_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_decision_revision_events_revision
+        ON decision_revision_events(revision_id, id ASC);
+
+      -- Historical judgment records and their audit log are append-only.
+      CREATE TRIGGER IF NOT EXISTS prevent_decision_revision_update
+      BEFORE UPDATE ON decision_revisions
+      BEGIN
+        SELECT RAISE(ABORT, 'decision revisions are append-only');
+      END;
+      CREATE TRIGGER IF NOT EXISTS prevent_decision_revision_delete
+      BEFORE DELETE ON decision_revisions
+      BEGIN
+        SELECT RAISE(ABORT, 'decision revisions are append-only');
+      END;
+      CREATE TRIGGER IF NOT EXISTS prevent_decision_revision_event_update
+      BEFORE UPDATE ON decision_revision_events
+      BEGIN
+        SELECT RAISE(ABORT, 'decision revision events are append-only');
+      END;
+      CREATE TRIGGER IF NOT EXISTS prevent_decision_revision_event_delete
+      BEFORE DELETE ON decision_revision_events
+      BEGIN
+        SELECT RAISE(ABORT, 'decision revision events are append-only');
+      END;
+    `,
+  },
 ];
 
 interface Migration {

@@ -12,10 +12,10 @@ export const handleAgentRoutes = [
     method: 'GET' as const,
     path: '/api/control/plans',
     handler: async (_req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      // Desktop Control Center receives the same sanitized server-owned view
-      // as an Agent inspector; opaque approval/native fields never cross this
-      // renderer-facing route.
-      sendResponse(res, 200, { plans: adapterOf(ctx).history() });
+      // Desktop receives a dedicated local decision-read projection, including
+      // bounded expected-vs-observed facts. Agent inspect/history remain more
+      // constrained and never receive those state payloads.
+      sendResponse(res, 200, { plans: await adapterOf(ctx).desktopHistory() });
     },
   },
   {
@@ -37,7 +37,7 @@ export const handleAgentRoutes = [
     method: 'GET' as const,
     path: '/api/agent/inspect/:planId',
     handler: async (_req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
-      const result = adapterOf(ctx).inspect(params.planId);
+      const result = await adapterOf(ctx).inspect(params.planId);
       if (!result) return sendError(res, 404, 'PLAN_NOT_FOUND');
       sendResponse(res, 200, result);
     },
@@ -46,7 +46,7 @@ export const handleAgentRoutes = [
     method: 'GET' as const,
     path: '/api/agent/history',
     handler: async (_req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      sendResponse(res, 200, { decisions: adapterOf(ctx).history() });
+      sendResponse(res, 200, { decisions: await adapterOf(ctx).history() });
     },
   },
   {
@@ -56,6 +56,18 @@ export const handleAgentRoutes = [
       const result = adapterOf(ctx).outcome(params.planId);
       if (!result) return sendError(res, 404, 'PLAN_NOT_FOUND');
       sendResponse(res, 200, result);
+    },
+  },
+  {
+    method: 'GET' as const,
+    path: '/api/control/revisions/:decisionId',
+    handler: async (_req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
+      // This is a fixed, read-only bounded projection for the Desktop. It is
+      // not a generic control mutation and cannot reveal revision context,
+      // approvals, grants, receipt internals, or native bridge material.
+      const result = await adapterOf(ctx).revisionProjection(params.decisionId);
+      if (!result) return sendError(res, 404, 'REVISION_NOT_FOUND');
+      sendResponse(res, 200, { revision: result });
     },
   },
 ];

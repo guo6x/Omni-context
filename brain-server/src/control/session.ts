@@ -2,7 +2,8 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
 export const CONTROL_APPROVE_SCOPE = 'control:approve' as const;
 export const CONTROL_VERIFY_SCOPE = 'control:verify' as const;
-export const CONTROL_SCOPES = [CONTROL_APPROVE_SCOPE, CONTROL_VERIFY_SCOPE] as const;
+export const CONTROL_REOPEN_SCOPE = 'control:reopen' as const;
+export const CONTROL_SCOPES = [CONTROL_APPROVE_SCOPE, CONTROL_VERIFY_SCOPE, CONTROL_REOPEN_SCOPE] as const;
 export type ControlScope = (typeof CONTROL_SCOPES)[number];
 export const CONTROL_SESSION_TTL_MS = 5 * 60 * 1000;
 export const CONTROL_SESSION_MAX_TTL_MS = 15 * 60 * 1000;

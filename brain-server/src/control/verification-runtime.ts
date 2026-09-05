@@ -155,6 +155,60 @@ interface RegisteredCase {
   outcomeId?: string;
 }
 
+/**
+ * Narrow server-internal source for a revision.  It is intentionally not a
+ * public control response and carries only the immutable judgment context
+ * needed for a new decision: no broker command, raw output, approval grant or
+ * mutable store handle can cross this boundary.
+ */
+export interface TrustedRevisionOutcomeContext {
+  outcome_id: string;
+  verification_status: 'not_required' | 'pending' | 'verified' | 'mismatch' | 'inconclusive' | 'verification_failed';
+  revisit_required: boolean;
+  execution_receipt_id: string;
+  receipt_digest: string;
+  expected_outcome_digest: string | null;
+  latest_observation_digest: string | null;
+  observation_id: string | null;
+  expected_state: JsonObject | null;
+  trusted_observed_state: JsonObject | null;
+  reason_codes: string[];
+}
+
+/**
+ * Desktop renderer-safe read-only outcome projection. This intentionally omits
+ * receipt digests, bridge handles, approval/grant data, process output and
+ * mutable runtime objects while retaining the expected-vs-observed facts a
+ * human needs before deciding whether to reopen.
+ */
+export interface BoundedOutcomeProjection {
+  outcome_id: string;
+  verification_status: TrustedRevisionOutcomeContext['verification_status'];
+  revisit_required: boolean;
+  expected_state: JsonObject | null;
+  trusted_observed_state: JsonObject | null;
+  reason_codes: string[];
+}
+
+const MAX_BOUNDED_OUTCOME_STATE_BYTES = 8 * 1024;
+const MAX_BOUNDED_OUTCOME_REASON_CODES = 50;
+
+function boundedOutcomeState(state: JsonObject | null): JsonObject | null {
+  if (state === null) return null;
+  const canonical = canonicalJson(state);
+  if (Buffer.byteLength(canonical, 'utf8') <= MAX_BOUNDED_OUTCOME_STATE_BYTES) {
+    return structuredClone(state);
+  }
+  // Preserve verifiability without sending a large or unreviewed payload to
+  // the renderer/agent. This is a display projection, never a substitute for
+  // the trusted state retained inside the verification runtime.
+  return {
+    projection: 'TRUNCATED',
+    canonical_sha256: sha256Hex(canonical),
+    max_bytes: MAX_BOUNDED_OUTCOME_STATE_BYTES,
+  };
+}
+
 export type VerificationPlanLookup = (planId: string) => PlanAuthorizationRecord | undefined;
 
 export class ServerVerificationRuntime {
@@ -389,6 +443,47 @@ export class ServerVerificationRuntime {
     }
     const current = this.service.getOutcome(registered.outcomeId);
     return current ? this.toPublic(planId, current) : null;
+  }
+
+  /**
+   * Resolve only the trusted outcome bound to a server-owned plan.  A
+   * DecisionRevision uses this internal method to snapshot historical
+   * expectation/read-back context before it requalifies evidence.  No caller
+   * can supply a receipt, observation, or alternate outcome id.
+   */
+  getTrustedRevisionContext(planId: string): TrustedRevisionOutcomeContext | null {
+    const registered = this.cases.get(planId);
+    if (!registered?.outcomeId) return null;
+    const context = this.service.getTrustedRevisionContext(registered.outcomeId);
+    if (!context) return null;
+    const finalAttempt = context.outcome.verification_attempts[context.outcome.verification_attempts.length - 1];
+    return {
+      outcome_id: context.outcome.outcome_id,
+      verification_status: context.outcome.verification_status,
+      revisit_required: context.outcome.revisit_required,
+      execution_receipt_id: context.outcome.execution_receipt_id,
+      receipt_digest: registered.receipt.receipt_digest,
+      expected_outcome_digest: context.outcome.expected_outcome_digest ?? null,
+      latest_observation_digest: context.outcome.latest_observation_digest ?? null,
+      observation_id: context.observation_id,
+      expected_state: context.expected_state,
+      trusted_observed_state: context.trusted_observed_state,
+      reason_codes: [...(finalAttempt?.reason_codes ?? [])],
+    };
+  }
+
+  /** Read-only bounded facts for Desktop/Agent display; no control authority. */
+  getBoundedOutcomeProjection(planId: string): BoundedOutcomeProjection | null {
+    const context = this.getTrustedRevisionContext(planId);
+    if (!context) return null;
+    return {
+      outcome_id: context.outcome_id,
+      verification_status: context.verification_status,
+      revisit_required: context.revisit_required,
+      expected_state: boundedOutcomeState(context.expected_state),
+      trusted_observed_state: boundedOutcomeState(context.trusted_observed_state),
+      reason_codes: context.reason_codes.slice(0, MAX_BOUNDED_OUTCOME_REASON_CODES),
+    };
   }
 
   private toPublic(planId: string, record: OutcomeRecord): ControlVerificationResult {

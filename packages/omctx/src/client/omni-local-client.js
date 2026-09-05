@@ -305,6 +305,53 @@ export class OmniLocalClient {
     if (!response.ok) throw errorFor.unexpectedResponse(`verify endpoint returned HTTP ${response.status}`);
     return payload?.data ?? payload;
   }
+
+  /**
+   * Fixed reopen-only gateway. This is intentionally not a generic control
+   * request: the CLI can submit only the source decision, optional audit
+   * reason, and an optional already-recorded outcome id. The server derives
+   * parent/root/index/evidence and never receives a caller-selected plan or
+   * execution instruction.
+   */
+  async reopenDecision(decisionId, reopenToken, options = {}) {
+    if (typeof decisionId !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/.test(decisionId)) {
+      throw errorFor.invalidDecisionId(decisionId);
+    }
+    if (typeof reopenToken !== 'string' || !reopenToken) throw errorFor.reopenAuthMissing();
+    const body = { decision_id: decisionId };
+    if (options.reason !== undefined) body.reason = options.reason;
+    if (options.outcome !== undefined) body.outcome_id = options.outcome;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    let response;
+    try {
+      response = await this.fetchImpl(`${this.apiUrl}/api/control/reopen`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Omni-Client': `omctx/${CLI_VERSION}`,
+          Authorization: `Bearer ${reopenToken}`,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+        redirect: 'error',
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw errorFor.brainOffline('request timed out');
+      throw errorFor.brainOffline(typeof error?.message === 'string' ? error.message.slice(0, 120) : 'connection failed');
+    } finally { clearTimeout(timer); }
+    let payload = null;
+    try { payload = await response.json(); } catch { throw errorFor.unexpectedResponse('reopen response is not valid JSON'); }
+    if (response.status === 401) throw errorFor.reopenAuthRejected();
+    if (response.status === 403) throw errorFor.reopenScopeDenied();
+    if (response.status === 404) throw errorFor.decisionNotFound(decisionId);
+    if (response.status === 409) throw errorFor.reopenRejected(typeof payload?.error === 'string' ? payload.error : undefined);
+    if (response.status === 422) throw errorFor.reopenEvidenceRejected();
+    if (response.status === 429) throw errorFor.controlRateLimited();
+    if (response.status >= 500) throw errorFor.brainOffline(`Brain Server error (HTTP ${response.status})`);
+    if (!response.ok) throw errorFor.unexpectedResponse(`reopen endpoint returned HTTP ${response.status}`);
+    return payload?.data ?? payload;
+  }
 }
 
 export { OmctxError };

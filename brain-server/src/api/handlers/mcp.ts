@@ -101,11 +101,11 @@ async function callAgentTool(adapter: AgentPilotAdapter | undefined, name: strin
     case 'agent_ask': return adapter.ask(args);
     case 'agent_inspect': {
       const planId = (args as any)?.plan_id;
-      const result = typeof planId === 'string' ? adapter.inspect(planId) : null;
+      const result = typeof planId === 'string' ? await adapter.inspect(planId) : null;
       if (!result) throw new Error('PLAN_NOT_FOUND');
       return result;
     }
-    case 'agent_history': return { decisions: adapter.history() };
+    case 'agent_history': return { decisions: await adapter.history() };
     case 'agent_outcome': {
       const planId = (args as any)?.plan_id;
       const result = typeof planId === 'string' ? adapter.outcome(planId) : null;

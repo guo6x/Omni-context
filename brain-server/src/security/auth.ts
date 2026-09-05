@@ -195,6 +195,10 @@ export function requiredScope(req: http.IncomingMessage): AuthScope | null {
   if (pathname.startsWith('/api/agent/inspect')) return 'agent:inspect';
   if (pathname.startsWith('/api/agent/history')) return 'agent:history';
   if (pathname.startsWith('/api/agent/outcome')) return 'agent:outcome:read';
+  // Bounded revision history is decision context, never a public control
+  // mutation. Agent Pilot receives it only through its existing inspect/
+  // history projections, not by gaining this desktop route's broad scope.
+  if (pathname.startsWith('/api/control/revisions/')) return 'decision:read';
   // Per-tool MCP scope resolution
   // REST 入口 /api/mcp/tool/:name：只用 path 中的 tool name，忽略 query 参数，
   // 防止攻击者用 ?tool=<read-only-tool> 绕过 write/admin scope。

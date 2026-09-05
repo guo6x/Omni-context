@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-04T03:00:09.687Z",
+  "generatedAt": "2026-09-05T16:04:17.946Z",
   "files": {
     "package.json": "660e90cca72346a52f6e9fdb086851b97dd6b8419eeb154c8d70a949db4f6353",
     "next.config.js": "36d83548dafb510e0b1934e337566ed9bc946613e1fa5699e3639389d5027f6a",
@@ -13,13 +13,13 @@
     "src-tauri/tauri.conf.json": "ef26b519b8b3a277a69315d8a63afb59c13a96d8d923c2ac56dfcd1b07a42f88",
     "src-tauri/tauri.prod.conf.json": "2df5066bb0e18fb89a6f00aea7dc237edd5679a20323f9f4d0389b6a5c20ccc0",
     "src-tauri/tauri.ci.conf.json": "fb3be915ae6a9ca3c53217a62ca77de3d01924780360171b5cf7d32c74249b58",
-    "src-tauri/src/brain_server.rs": "f25dc00861c90dc65aab4129c52afed33add49224a413e9976cf981d96632a14",
+    "src-tauri/src/brain_server.rs": "3740daf24055cbf1a300159ec2af279760105a68dddb1bd008c489f283cd5542",
     "src-tauri/src/clipboard.rs": "b987b57d92d39723593ee7369ea1404a263bd31b375e19fc946204f13ad49b38",
-    "src-tauri/src/commands.rs": "ec2a2c9483358efd1ce88aa812e0f6c180503e086369749d5003c892f86bd26d",
+    "src-tauri/src/commands.rs": "fc9b96ae341fe1a13ca05572470b563e69e667e04e56368cee2f61f05efa5f50",
     "src-tauri/src/hardware.rs": "26f70b6837f2f715657f89a16f9baf0baab2f8f84d5cb0f2f5a698ab4dce5239",
     "src-tauri/src/hardware_actions.rs": "6b97913abf9f91dd5edeeaa3b24e6ce32e4aef3767b02ae6c01620502e6475a3",
     "src-tauri/src/log_writer.rs": "c129e3ed97b142b92c3276c924e3b6520403d8f03fef606e068fe28f8c9aa95d",
-    "src-tauri/src/main.rs": "92f70bdb842f3cd028ce086ed108efc231578c5301ddbf90537c565e58454c80",
+    "src-tauri/src/main.rs": "d443c696fccc36a46aeaa4eee28509a6e5f43a02bbeb9da609753b90c5c7b46a",
     "src-tauri/src/mcp_helper.rs": "737eb4fb8b80cdf5935dd0705ca56748c358773553e5dfdf15ed1a1db02809a9",
     "src-tauri/src/screen_capture.rs": "31325d14cce361b57364304f40e43d2e9bd5d0f76a5e54770f4433f36eff05e1",
     "src-tauri/src/udp_listener.rs": "d6f783b27f4838fa30d0057fc790504b255f06f81dbb1b01d318b5a217c55507"

@@ -18,11 +18,12 @@ It does not claim compatibility with arbitrary runtimes or memory systems.
 The architecture separates Decision Authority from Execution Authority:
 
 ```
-QUALIFY BEFORE  ->  BIND  ->  READ BACK AFTER  ->  REOPEN (future)
+QUALIFY BEFORE  ->  BIND  ->  READ BACK AFTER  ->  REOPEN
 ```
 
-The lifecycle is an architectural model. In this alpha, `reopen` is still a
-future command and is intentionally unavailable.
+Reopen is a separate human-authorized control step. It creates a new immutable
+judgment after current evidence is requalified; it does not undo, retry, replay,
+or execute the historical action.
 
 ## Available commands
 
@@ -35,7 +36,7 @@ omctx inspect <decision-id> [--json]
 omctx history [--limit 1..100] [--json]
 omctx approve <plan-id> [--json]
 omctx verify <plan-id> [--json]
-omctx reopen                 # FUTURE; exit code 3
+omctx reopen <decision-id> [--reason "..."] [--outcome <outcome-id>] [--json]
 ```
 
 `ask`, `inspect`, and `history` are read-only decision queries. `approve`
@@ -45,6 +46,10 @@ only: **execution has NOT started**. `verify` requires a separate
 `VERIFIED`, `MISMATCH`, or `INCONCLUSIVE`; a mismatch includes
 `revisit_required=true`. Neither command retries a write, executes a process,
 or performs rollback.
+`reopen` requires a distinct short-lived Desktop `control:reopen` session;
+a read, approve, or verify token cannot be used for it. The server derives the
+revision lineage, evidence delta, and any fresh plan. A revised `DECIDE` has a
+new plan and must receive a new approval; no command starts execution.
 
 ## Prerequisites and local security model
 
@@ -80,8 +85,8 @@ Human output is sent to stdout for successful commands and stderr for errors.
 
 - A Desktop + local Brain installation is required; no remote Brain is
   supported.
-- The control surface is intentionally limited to approval and trusted
-  read-back. There is no generic execution gateway and no `reopen` command.
+- The control surface is intentionally limited to approval, trusted read-back,
+  and human-authorized reopen. There is no generic execution gateway.
 - Verification evidence is limited to the server's trusted local receipt and
   read-back scope.
 - Windows ACL hardening beyond user-scoped storage is not asserted; same-user

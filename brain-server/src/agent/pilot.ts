@@ -11,6 +11,8 @@ import type { AuthorizationService } from '../approval/authorization-service.js'
 import type { PlanAuthorizationRecord } from '../approval/contracts.js';
 import type { EvidenceSurfaceRuntime } from '../evidence/runtime.js';
 import type { ServerVerificationRuntime } from '../control/verification-runtime.js';
+import type { DecisionRevisionService } from '../revision/service.js';
+import { runDecisionKernel, type DecisionDisposition } from '../decision/kernel.js';
 import { JsonObjectSchema } from '../contracts/json-safe.js';
 import { CAPABILITY_ID_PATTERN, SEMVER_PATTERN } from '../capabilities/contracts.js';
 import { ADAPTER_ID_PATTERN, RollbackPlanSchema, VerificationPlanSchema, TIMEOUT_MAX_MS, TIMEOUT_MIN_MS } from '../execution/contracts.js';
@@ -32,21 +34,14 @@ export const AgentAskSchema = z.strictObject({
 export const AgentPlanIdSchema = z.strictObject({ plan_id: z.string().trim().min(8).max(200) });
 export type AgentAskRequest = z.infer<typeof AgentAskSchema>;
 
-export type AgentDisposition = 'DECIDE' | 'CLARIFY' | 'DEFER' | 'BLOCK';
+export type AgentDisposition = DecisionDisposition;
 
 export interface AgentPilotAdapterOptions {
   evidenceRuntime: EvidenceSurfaceRuntime;
   authorizationService: AuthorizationService;
   verificationRuntime?: ServerVerificationRuntime;
-}
-
-function disposition(action: string): AgentDisposition {
-  switch (action) {
-    case 'proceed': return 'DECIDE';
-    case 'clarify': return 'CLARIFY';
-    case 'defer': return 'DEFER';
-    default: return 'BLOCK';
-  }
+  /** Read-only projection only. Agent Pilot never receives the reopen writer. */
+  revisionRuntime?: Pick<DecisionRevisionService, 'projectionForDecision'>;
 }
 
 function sanitizePlanRecord(record: PlanAuthorizationRecord) {
@@ -88,10 +83,19 @@ export class AgentPilotAdapter {
       normalized_inputs: parsed.normalized_inputs,
       ...(parsed.correlation_id ? { correlation_id: parsed.correlation_id } : {}),
     });
+    // Goal27 shares this exact pure kernel with the human-authorized revision
+    // lifecycle. The Agent can observe its result but never select a different
+    // revision-specific disposition or invoke a reopen control operation.
+    const judgment = runDecisionKernel({
+      evidence_action: evidence.action,
+      mandatory_satisfied: evidence.final_assessment.mandatory_satisfied,
+      reason_codes: evidence.reason_codes,
+    });
     const result: Record<string, unknown> = {
       decision_id: parsed.decision_id ?? `decision-${randomUUID()}`,
-      disposition: disposition(evidence.action),
-      reason: evidence.reason_codes[0] ?? (evidence.final_assessment.mandatory_satisfied ? 'EVIDENCE_SATISFIED' : 'EVIDENCE_MISSING'),
+      disposition: judgment.disposition,
+      reason: judgment.reason,
+      decision_kernel_id: judgment.kernel_id,
       evidence_status: evidence.final_assessment.mandatory_satisfied ? 'qualified' : 'insufficient',
       missing_evidence: evidence.final_assessment.missing_mandatory,
       conflicts: evidence.final_coverage.entries.filter((entry) => entry.status === 'conflicted').map((entry) => entry.evidence_class),
@@ -139,21 +143,50 @@ export class AgentPilotAdapter {
     return result;
   }
 
-  inspect(planId: string) {
+  async inspect(planId: string) {
     const record = this.options.authorizationService.getAuthorizationRecord(planId);
     if (!record) return null;
-    return sanitizePlanRecord(record);
+    return this.projectRecord(record, false);
   }
 
-  history() {
-    return this.options.authorizationService.listAuthorizationRecords().map((record) => ({
-      ...sanitizePlanRecord(record),
-      outcome: this.options.verificationRuntime?.observePlan(record.plan.plan_id) ?? null,
-    }));
+  async history() {
+    return Promise.all(this.options.authorizationService.listAuthorizationRecords()
+      .map((record) => this.projectRecord(record, false)));
+  }
+
+  /**
+   * Desktop Control Center gets expected-vs-observed display facts through
+   * its local decision-read route. Agent Pilot deliberately does not: its
+   * inspect/history surface is limited to the bounded revision projection and
+   * existing status-only outcome record.
+   */
+  async desktopHistory() {
+    return Promise.all(this.options.authorizationService.listAuthorizationRecords()
+      .map((record) => this.projectRecord(record, true)));
   }
 
   outcome(planId: string) {
     if (!this.options.verificationRuntime) return null;
     return this.options.verificationRuntime.observePlan(planId);
+  }
+
+  async revisionProjection(decisionId: string) {
+    return this.revisionProjectionForDecision(decisionId);
+  }
+
+  private async revisionProjectionForDecision(decisionId: string) {
+    if (!this.options.revisionRuntime) return null;
+    return this.options.revisionRuntime.projectionForDecision(decisionId);
+  }
+
+  private async projectRecord(record: PlanAuthorizationRecord, includeOutcomeContext: boolean) {
+    return {
+      ...sanitizePlanRecord(record),
+      outcome: this.options.verificationRuntime?.observePlan(record.plan.plan_id) ?? null,
+      ...(includeOutcomeContext ? {
+        outcome_context: this.options.verificationRuntime?.getBoundedOutcomeProjection(record.plan.plan_id) ?? null,
+      } : {}),
+      revision: await this.revisionProjection(record.plan.decision_id),
+    };
   }
 }

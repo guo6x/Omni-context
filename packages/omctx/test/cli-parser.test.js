@@ -85,10 +85,30 @@ test('verify rejects caller verdict flags', () => {
   assert.throws(() => parseArgs(['verify', '--jsonpath']), /unknown flag/);
 });
 
-test('reopen is FUTURE (exit 3)', async () => {
+test('reopen accepts only its narrow audit flags', () => {
+  const parsed = parseArgs([
+    'reopen', 'decision-goal27-1', '--reason', 'owner reconsideration', '--outcome', 'outcome-goal27-1', '--json',
+  ]);
+  assert.equal(parsed.command, 'reopen');
+  assert.deepEqual(parsed.args, ['decision-goal27-1']);
+  assert.equal(parsed.flags.reason, 'owner reconsideration');
+  assert.equal(parsed.flags.outcome, 'outcome-goal27-1');
+  assert.equal(parsed.flags.json, true);
+  for (const flag of ['--force', '--execute', '--retry', '--parent-decision-id', '--revision-index', '--evidence', '--data']) {
+    assert.throws(() => parseArgs(['reopen', 'decision-goal27-1', flag, 'forged']), /unknown flag/, flag);
+  }
+});
+
+test('reopen requires its own ephemeral Desktop session', async () => {
   const { run } = await import('../src/cli.js');
-  const code = await run(['reopen']);
-  assert.equal(code, EXIT.FEATURE_LOCKED);
+  const code = await run(['reopen', 'decision-goal27-1']);
+  assert.equal(code, EXIT.AUTH_ERROR);
+});
+
+test('reopen-only flags are not accepted by other commands', async () => {
+  const { run } = await import('../src/cli.js');
+  const code = await run(['history', '--reason', 'forged']);
+  assert.equal(code, EXIT.USAGE_ERROR);
 });
 
 test('help runs and prints without network', async () => {

@@ -606,7 +606,11 @@ fn timeout_after_effect_still_readback() {
         std::env::set_var("OMNI_READBACK_TEST_MODE", "write-then-sleep");
         std::env::set_var("OMNI_READBACK_STATE_FILE", state_file.to_str().unwrap());
         let mut plan = write_plan(state_file.to_str().unwrap());
-        plan.timeout_ms = 1_000;
+        // The child writes before sleeping for five minutes.  A one-second
+        // budget is too close to Windows process-start scheduling under the
+        // full parallel suite and can kill the child before that write. Keep
+        // the timeout well below the sleep while leaving startup headroom.
+        plan.timeout_ms = 5_000;
         let plan_id = plan.plan_id.clone();
         plan.approval = Some(grant_write(&broker, &plan));
         let result = broker

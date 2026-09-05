@@ -172,6 +172,21 @@ export class AuthorizationService {
    * `plan_id`.
    */
   authorize(rawRequest: unknown): PlanAuthorizationResult {
+    return this.authorizeInternal(rawRequest, false);
+  }
+
+  /**
+   * Internal Goal27 materialisation path. A revised DECIDE judgment always
+   * starts a fresh owner-approval lifecycle, even when the ordinary policy
+   * would classify a read-only capability as approval-free. This method is
+   * intentionally absent from every REST, MCP, Agent and Desktop command
+   * surface; DecisionRevisionService is its only production caller.
+   */
+  authorizeRevision(rawRequest: unknown): PlanAuthorizationResult {
+    return this.authorizeInternal(rawRequest, true);
+  }
+
+  private authorizeInternal(rawRequest: unknown, forceFreshApproval: boolean): PlanAuthorizationResult {
     const requestParse = ExecutionAuthorizationRequestSchema.safeParse(rawRequest);
     if (!requestParse.success) {
       throw new ApprovalError(
@@ -217,7 +232,7 @@ export class AuthorizationService {
     }
 
     const riskSnapshot = deriveRiskSnapshot(capability);
-    const requiredApproval = approvalRequired(capability);
+    const requiredApproval = forceFreshApproval || approvalRequired(capability);
     const planId = generateAuthorizationPlanId();
     const createdAt = now.toISOString();
     const expiresAt = computePlanExpiry(now, request.expires_at, this.maxApprovalTtlMs);
@@ -592,6 +607,15 @@ export class AuthorizationService {
 
   getPlan(planId: string): ExecutionPlan | undefined {
     return this.store.get(planId)?.plan;
+  }
+
+  /**
+   * Internal compensation for a revision transaction that did not commit.
+   * It cannot delete an approved, ready, executed or otherwise transitioned
+   * plan, and is not wired to any REST, MCP, Desktop or Agent surface.
+   */
+  discardUncommittedRevisionPlan(planId: string, expectedDecisionId: string): boolean {
+    return this.store.discardUncommitted(planId, expectedDecisionId);
   }
 
   private trustedNow(): Date {

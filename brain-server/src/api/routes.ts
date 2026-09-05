@@ -15,8 +15,11 @@ import { ControlSessionManager, readBearerToken } from '../control/session.js';
 import { SqliteControlApprovalAuditStore } from '../control/audit.js';
 import { ControlVerificationFacade, VerificationError } from '../control/verification-facade.js';
 import type { ControlVerificationRuntime } from '../control/verification-facade.js';
+import { ControlReopenFacade } from '../control/reopen-facade.js';
+import type { ControlReopenRuntime } from '../control/reopen-facade.js';
+import { RevisionError } from '../revision/errors.js';
 import type { AgentPilotAdapter } from '../agent/pilot.js';
-import { CONTROL_VERIFY_SCOPE } from '../control/session.js';
+import { CONTROL_REOPEN_SCOPE, CONTROL_VERIFY_SCOPE } from '../control/session.js';
 import { BRAIN_PRODUCT_VERSION, CONTROL_PROTOCOL_VERSION } from './protocol.js';
 import {
   handleMemoryRoutes,
@@ -339,12 +342,20 @@ function isControlVerifyRequest(req: http.IncomingMessage): boolean {
   return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/api/control/verify';
 }
 
+function isControlReopenRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/api/control/reopen';
+}
+
 function isControlSessionMintRequest(req: http.IncomingMessage): boolean {
   return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/session';
 }
 
 function isControlVerifySessionMintRequest(req: http.IncomingMessage): boolean {
   return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/session/verify';
+}
+
+function isControlReopenSessionMintRequest(req: http.IncomingMessage): boolean {
+  return req.method === 'POST' && new URL(req.url || '/', 'http://localhost').pathname === '/internal/control/session/reopen';
 }
 
 function isControlSessionRevokeRequest(req: http.IncomingMessage): boolean {
@@ -402,6 +413,7 @@ export function createServer(
   controlRuntime?: ControlApprovalRuntime,
   controlVerificationRuntime?: ControlVerificationRuntime,
   agentPilot?: AgentPilotAdapter,
+  controlReopenRuntime?: ControlReopenRuntime,
 ): http.Server {
   const finalEmbeddingService = embeddingService ?? createDefaultEmbeddingService();
   db.attachEmbeddingService(finalEmbeddingService);
@@ -427,13 +439,14 @@ export function createServer(
   const controlAudit = new SqliteControlApprovalAuditStore(db);
   const controlFacade = new ControlApprovalFacade(controlRuntime, new HttpNativeApprovalClient(), () => new Date(), controlAudit);
   const verificationFacade = new ControlVerificationFacade(controlVerificationRuntime);
+  const reopenFacade = new ControlReopenFacade(controlReopenRuntime);
 
   const server = http.createServer(async (req, res) => {
     setSecurityHeaders(req, res);
 
     if (req.method === 'OPTIONS') {
       const optionsPath = new URL(req.url || '/', 'http://localhost').pathname;
-      if (optionsPath === '/api/control/approve' || optionsPath === '/api/control/verify'
+      if (optionsPath === '/api/control/approve' || optionsPath === '/api/control/verify' || optionsPath === '/api/control/reopen'
         || optionsPath === '/internal/control/native-receipt'
         || optionsPath === '/internal/control/native-verification'
         || optionsPath.startsWith('/internal/control/session')) {
@@ -478,6 +491,26 @@ export function createServer(
         return;
       }
       const issued = controlSessions.mint(CONTROL_VERIFY_SCOPE);
+      sendResponse(res, 201, { data: issued });
+      return;
+    }
+
+    if (isControlReopenSessionMintRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) {
+        sendError(res, 403, boundaryError);
+        return;
+      }
+      const expected = (process.env.NATIVE_BRIDGE_SECRET || '').trim();
+      const supplied = readBearerToken(req);
+      if (!expected || supplied !== expected) {
+        sendError(res, 401, 'CONTROL_AUTH_REQUIRED');
+        return;
+      }
+      // This token is dedicated to the one fixed reopen operation. It is not
+      // an Agent, generic MCP, approval, verification, execution or native
+      // bridge credential.
+      const issued = controlSessions.mint(CONTROL_REOPEN_SCOPE);
       sendResponse(res, 201, { data: issued });
       return;
     }
@@ -634,6 +667,60 @@ export function createServer(
           VERIFY_PLAN_NOT_FOUND: [404, 'PLAN_NOT_FOUND'],
           VERIFY_SCOPE_INSUFFICIENT: [403, 'VERIFY_SCOPE_INSUFFICIENT'],
           VERIFY_RUNTIME_UNAVAILABLE: [503, 'VERIFY_RUNTIME_UNAVAILABLE'],
+        };
+        const [status, publicCode] = mapping[code] || [500, 'INTERNAL_CONTROL_ERROR'];
+        sendError(res, status, publicCode);
+      }
+      return;
+    }
+
+    if (isControlReopenRequest(req)) {
+      const boundaryError = controlBoundaryFailure(req);
+      if (boundaryError) {
+        sendError(res, 403, boundaryError);
+        return;
+      }
+      const supplied = readBearerToken(req);
+      const session = controlSessions.authenticate(supplied);
+      if (!session) {
+        const readPrincipal = await authService.authenticate(req);
+        sendError(res, readPrincipal ? 403 : 401, readPrincipal
+          ? 'CONTROL_SCOPE_INSUFFICIENT'
+          : 'CONTROL_AUTH_REQUIRED');
+        return;
+      }
+      if (session.scope !== CONTROL_REOPEN_SCOPE) {
+        sendError(res, 403, 'REOPEN_SCOPE_INSUFFICIENT');
+        return;
+      }
+      if (!controlSessions.consumeBurst(session.session_id)) {
+        sendError(res, 429, 'CONTROL_RATE_LIMITED');
+        return;
+      }
+      try {
+        const body = await parseBody<unknown>(req);
+        const result = await reopenFacade.reopen(body, session);
+        sendResponse(res, 200, { data: result });
+      } catch (error) {
+        const code = error instanceof RevisionError
+          ? error.code
+          : error instanceof Error ? error.message.split(':', 1)[0] : 'INTERNAL_CONTROL_ERROR';
+        const mapping: Record<string, [number, string]> = {
+          REVISION_INPUT_INVALID: [400, 'REOPEN_INPUT_INVALID'],
+          REVISION_REASON_REQUIRED: [400, 'REOPEN_REASON_REQUIRED'],
+          REVISION_DECISION_NOT_FOUND: [404, 'DECISION_NOT_FOUND'],
+          REVISION_OUTCOME_NOT_BOUND: [409, 'REOPEN_OUTCOME_NOT_BOUND'],
+          REVISION_NOT_ELIGIBLE: [409, 'REOPEN_NOT_ELIGIBLE'],
+          REVISION_ACTIVE_EXISTS: [409, 'REOPEN_ALREADY_ACTIVE'],
+          REVISION_FORK_BLOCKED: [409, 'REOPEN_FORK_BLOCKED'],
+          REVISION_CYCLE_BLOCKED: [409, 'REOPEN_CHAIN_INVALID'],
+          REVISION_INDEX_INVALID: [409, 'REOPEN_CHAIN_INVALID'],
+          REVISION_CONTEXT_INVALID: [409, 'REOPEN_CONTEXT_INVALID'],
+          REVISION_EVIDENCE_REQUALIFICATION_FAILED: [422, 'REOPEN_EVIDENCE_REQUALIFICATION_FAILED'],
+          REVISION_AUTHORITY_REQUIRED: [403, 'REOPEN_AUTHORITY_REQUIRED'],
+          REVISION_SCOPE_INSUFFICIENT: [403, 'REOPEN_SCOPE_INSUFFICIENT'],
+          REVISION_RUNTIME_UNAVAILABLE: [503, 'REOPEN_RUNTIME_UNAVAILABLE'],
+          REVISION_PERSISTENCE_FAILURE: [503, 'REOPEN_PERSISTENCE_UNAVAILABLE'],
         };
         const [status, publicCode] = mapping[code] || [500, 'INTERNAL_CONTROL_ERROR'];
         sendError(res, status, publicCode);

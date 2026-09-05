@@ -206,6 +206,102 @@ pub async fn enable_cli_verification() -> Result<ControlSessionInfo, String> {
     Ok(ControlSessionInfo { expires_at, scope })
 }
 
+/// Explicit human-confirmation action for Goal27's separate reopen scope.
+/// Issuing this session creates no revision and cannot execute anything; it
+/// merely permits one later local control request to ask Brain for a new
+/// judgment.
+#[tauri::command]
+pub async fn enable_cli_reopen() -> Result<ControlSessionInfo, String> {
+    if !brain_server::is_ready() {
+        return Err("Brain Server is not ready".to_string());
+    }
+    let secret = std::env::var("NATIVE_BRIDGE_SECRET")
+        .map_err(|_| "native control bridge is unavailable".to_string())?;
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| format!("control client unavailable: {e}"))?;
+    let response = client
+        .post(format!(
+            "{}/internal/control/session/reopen",
+            brain_server::brain_api_url()
+        ))
+        .header(reqwest::header::AUTHORIZATION, format!("Bearer {secret}"))
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .body("{}")
+        .send()
+        .await
+        .map_err(|e| format!("cannot reach Brain Server: {e}"))?;
+    let status = response.status();
+    let payload: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("invalid Brain response: {e}"))?;
+    if !status.is_success() {
+        return Err(payload
+            .get("error")
+            .and_then(|v| v.as_str())
+            .unwrap_or("reopen session mint rejected")
+            .to_string());
+    }
+    let session = payload
+        .get("data")
+        .and_then(|v| v.get("session"))
+        .ok_or_else(|| "Brain response omitted reopen session".to_string())?;
+    let issued_token = payload
+        .get("data")
+        .and_then(|v| v.get("token"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "Brain response omitted reopen token".to_string())?;
+    let expires_at = session
+        .get("expires_at")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "Brain response omitted expiry".to_string())?
+        .to_string();
+    let scope = session
+        .get("scope")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "Brain response omitted scope".to_string())?
+        .to_string();
+    if scope != "control:reopen" {
+        return Err("Brain returned an unexpected reopen scope".to_string());
+    }
+    let path = brain_server::reopen_session_file();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("cannot create session directory: {e}"))?;
+    }
+    let file = ControlSessionFile {
+        token: issued_token.to_string(),
+        expires_at: expires_at.clone(),
+        scope: scope.clone(),
+    };
+    let bytes =
+        serde_json::to_vec(&file).map_err(|e| format!("cannot encode reopen session: {e}"))?;
+    #[cfg(unix)]
+    {
+        use std::fs::OpenOptions;
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut handle = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .mode(0o600)
+            .open(&path)
+            .map_err(|e| format!("cannot create reopen session file: {e}"))?;
+        handle
+            .write_all(&bytes)
+            .map_err(|e| format!("cannot write reopen session: {e}"))?;
+        handle
+            .sync_all()
+            .map_err(|e| format!("cannot flush reopen session: {e}"))?;
+    }
+    #[cfg(not(unix))]
+    std::fs::write(&path, &bytes).map_err(|e| format!("cannot write reopen session: {e}"))?;
+    Ok(ControlSessionInfo { expires_at, scope })
+}
+
 #[tauri::command]
 pub async fn disable_cli_approvals() -> Result<(), String> {
     if let Ok(secret) = std::env::var("NATIVE_BRIDGE_SECRET") {
@@ -222,6 +318,7 @@ pub async fn disable_cli_approvals() -> Result<(), String> {
     }
     brain_server::clear_control_session();
     brain_server::clear_verification_session();
+    brain_server::clear_reopen_session();
     Ok(())
 }
 
@@ -229,6 +326,14 @@ pub async fn disable_cli_approvals() -> Result<(), String> {
 pub async fn disable_cli_verification() -> Result<(), String> {
     // Revoking all short-lived control sessions is intentional: disabling one
     // explicit human control surface must not leave another active by surprise.
+    disable_cli_approvals().await
+}
+
+#[tauri::command]
+pub async fn disable_cli_reopen() -> Result<(), String> {
+    // Revoking all control sessions is intentional: the native bridge owns
+    // the session family and never leaves a related authority active by
+    // surprise when the owner disables one control surface.
     disable_cli_approvals().await
 }
 
@@ -635,6 +740,107 @@ pub async fn verify_pending_plan(plan_id: String) -> Result<serde_json::Value, S
     Ok(payload)
 }
 
+fn valid_reopen_identifier(value: &str) -> bool {
+    if value.is_empty() || value.len() > 200 {
+        return false;
+    }
+    let mut chars = value.chars();
+    match chars.next() {
+        Some(first) if first.is_ascii_alphanumeric() => {}
+        _ => return false,
+    }
+    chars.all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '.' | '_' | ':' | '-'))
+}
+
+fn validate_reopen_reason(reason: Option<String>) -> Result<Option<String>, String> {
+    match reason {
+        None => Ok(None),
+        Some(value) => {
+            if value.trim().is_empty()
+                || value.len() > 4096
+                || value.chars().any(|ch| ch.is_control())
+            {
+                return Err("REOPEN_REASON_INVALID".to_string());
+            }
+            Ok(Some(value))
+        }
+    }
+}
+
+/// Desktop-only Goal27 reopen action. The renderer supplies only a decision
+/// locator plus optional audit reason/outcome locator. Root/parent/index,
+/// evidence, plan, approval, execution and rollback fields are deliberately
+/// absent: Brain derives them from its trusted immutable records.
+#[tauri::command]
+pub async fn reopen_decision(
+    decision_id: String,
+    reason: Option<String>,
+    outcome_id: Option<String>,
+) -> Result<serde_json::Value, String> {
+    if !crate::brain_server::is_ready() {
+        return Err("Brain Server is not ready".to_string());
+    }
+    if !valid_reopen_identifier(&decision_id) {
+        return Err("DECISION_ID_INVALID".to_string());
+    }
+    if outcome_id
+        .as_ref()
+        .is_some_and(|value| !valid_reopen_identifier(value))
+    {
+        return Err("OUTCOME_ID_INVALID".to_string());
+    }
+    let reason = validate_reopen_reason(reason)?;
+    let file = std::fs::read_to_string(brain_server::reopen_session_file())
+        .map_err(|_| "CONTROL_REOPEN_SESSION_REQUIRED".to_string())?;
+    let session: ControlSessionFile =
+        serde_json::from_str(&file).map_err(|_| "CONTROL_SESSION_INVALID".to_string())?;
+    if session.scope != "control:reopen" {
+        return Err("REOPEN_SCOPE_INSUFFICIENT".to_string());
+    }
+    let mut body = serde_json::Map::new();
+    body.insert(
+        "decision_id".to_string(),
+        serde_json::Value::String(decision_id),
+    );
+    if let Some(value) = reason {
+        body.insert("reason".to_string(), serde_json::Value::String(value));
+    }
+    if let Some(value) = outcome_id {
+        body.insert("outcome_id".to_string(), serde_json::Value::String(value));
+    }
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| format!("control client unavailable: {e}"))?;
+    let response = client
+        .post(format!(
+            "{}/api/control/reopen",
+            brain_server::brain_api_url()
+        ))
+        .header(
+            reqwest::header::AUTHORIZATION,
+            format!("Bearer {}", session.token),
+        )
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .json(&serde_json::Value::Object(body))
+        .send()
+        .await
+        .map_err(|e| format!("cannot reach Brain Server: {e}"))?;
+    let status = response.status();
+    let payload: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("invalid Brain response: {e}"))?;
+    if !status.is_success() {
+        return Err(payload
+            .get("error")
+            .and_then(|v| v.as_str())
+            .unwrap_or("REOPEN_FAILED")
+            .to_string());
+    }
+    Ok(payload)
+}
+
 #[tauri::command]
 pub fn regenerate_local_api_token() -> Result<String, String> {
     brain_server::regenerate_local_token()
@@ -662,6 +868,42 @@ pub async fn trigger_reset(app: tauri::AppHandle) -> Result<String, String> {
     app.emit_all("hardware-reset-transient-ui", ())
         .map_err(|error| error.to_string())?;
     Ok("已清理临时捕获/决策界面；记忆和设备凭据未更改".to_string())
+}
+
+#[cfg(test)]
+mod goal27_reopen_input_tests {
+    use super::{valid_reopen_identifier, validate_reopen_reason};
+
+    #[test]
+    fn reopen_accepts_only_bounded_identifier_locators() {
+        assert!(valid_reopen_identifier("decision-goal27-1"));
+        assert!(valid_reopen_identifier("outcome:goal27_1.0"));
+        for invalid in [
+            "",
+            "../decision",
+            "decision/other",
+            "decision space",
+            "-decision",
+            "decision\nother",
+        ] {
+            assert!(
+                !valid_reopen_identifier(invalid),
+                "{invalid:?} must not be a reopen locator"
+            );
+        }
+    }
+
+    #[test]
+    fn reopen_reason_cannot_be_a_hidden_control_channel() {
+        assert_eq!(
+            validate_reopen_reason(Some("owner reconsideration after mismatch".to_string()))
+                .unwrap(),
+            Some("owner reconsideration after mismatch".to_string()),
+        );
+        assert!(validate_reopen_reason(Some("\n".to_string())).is_err());
+        assert!(validate_reopen_reason(Some("owner\u{0000}override".to_string())).is_err());
+        assert!(validate_reopen_reason(Some("x".repeat(4097))).is_err());
+    }
 }
 
 #[derive(serde::Deserialize)]
