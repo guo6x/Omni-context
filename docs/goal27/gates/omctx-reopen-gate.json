@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "OMCTX_REOPEN_GATE",
+  "status": "PASS",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "base_sha": "4659d16637bdff8b07cb135abaa12419e3fd6647",
+  "runtime_proof_sha": "b3f8adca0cb12c3ff57b5d96629c8758ddb71c83",
+  "feature_branch_sha": null,
+  "cli_tests": "44/44 PASS",
+  "cli_smoke": "PASS",
+  "commands": {
+    "reopen": "implemented",
+    "help": "PASS",
+    "version": "PASS",
+    "doctor": "PASS in controlled CLI fixture; live doctor requires a running local Brain instance"
+  },
+  "reopen_request_shape": ["decision_id", "reason", "outcome_id"],
+  "rejected_flags": ["--force", "--execute", "--retry", "--rollback", "--plan-id", "--approval-id", "--token"],
+  "agent_route": "DENIED",
+  "execution": {
+    "starts_execution": false,
+    "retries_original_write": false,
+    "rolls_back": false,
+    "reuses_approval": false,
+    "reuses_grant": false,
+    "reuses_plan": false
+  },
+  "npm_published": false,
+  "protected_refs_touched": false
+}

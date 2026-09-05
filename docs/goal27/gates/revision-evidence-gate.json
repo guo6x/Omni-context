@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "REVISION_EVIDENCE_GATE",
+  "status": "PASS",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "base_sha": "4659d16637bdff8b07cb135abaa12419e3fd6647",
+  "runtime_proof_sha": "b3f8adca0cb12c3ff57b5d96629c8758ddb71c83",
+  "feature_branch_sha": null,
+  "requalification": {
+    "original_evidence_reused_as_current": false,
+    "qualification_rerun": true,
+    "coverage_rerun": true,
+    "historical_evidence_visible": true,
+    "missing_current_evidence_fails_closed": true,
+    "same_canonical_decision_kernel": "omni-context-evidence-decision-kernel-v1"
+  },
+  "evidence_delta_categories": ["UNCHANGED", "NEW", "STALE_NOW", "CONFLICTED_NOW", "MISSING_NOW", "QUALIFICATION_CHANGED"],
+  "context_binding": ["original_decision", "original_evidence", "original_coverage", "original_plan", "original_outcome", "trigger", "current_qualification", "current_coverage", "evidence_delta", "decision_kernel"],
+  "proof_case": {
+    "root_decision_id": "decision-goal27-mismatch-0",
+    "revision_id": "rev-67e14d63-7f70-4b8f-8c32-1f0af3bb7901",
+    "revision_index": 1,
+    "trigger_type": "OUTCOME_MISMATCH",
+    "trigger_outcome_id": "out-1b9982c1-5f7c-474b-a159-3ab3b8c20cb3",
+    "revised_disposition": "DECIDE",
+    "reopen_execution_count": 0
+  },
+  "mismatch_and_inconclusive_rule": "Only revisit_required is set or preserved; no automatic reopen occurs.",
+  "verified_rule": "OWNER_RECONSIDERATION with a non-empty owner reason is required.",
+  "protected_refs_touched": false
+}

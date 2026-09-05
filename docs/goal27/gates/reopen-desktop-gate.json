@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "REOPEN_DESKTOP_GATE",
+  "status": "PASS",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "base_sha": "4659d16637bdff8b07cb135abaa12419e3fd6647",
+  "runtime_proof_sha": "b3f8adca0cb12c3ff57b5d96629c8758ddb71c83",
+  "feature_branch_sha": null,
+  "frontend_build": "PASS",
+  "controlled_verifier": "PASS",
+  "tauri_rust_checks": "PASS",
+  "ui_requirements": {
+    "expected_vs_observed_state": true,
+    "revisit_required": true,
+    "recommendation_and_reopen_action": true,
+    "bounded_revision_history": true,
+    "bounded_evidence_delta": true,
+    "current_judgment_view": true,
+    "confirmation_copy": "Reopening creates a new judgment. It does not undo the previous action."
+  },
+  "native_boundary": {
+    "dedicated_enable_command": "enable_cli_reopen",
+    "dedicated_scope": "control:reopen",
+    "reopen_command_accepts_only": ["decision_id", "reason", "outcome_id"],
+    "native_bridge_access": false,
+    "execution_started": false,
+    "retry_started": false,
+    "rollback_started": false
+  },
+  "windows_portability": {
+    "cold_start_fix": "Brain health wait expanded from 60s to 120s for first-run migration headroom",
+    "controlled_hash_contract": "canonical LF text bytes",
+    "runtime_snapshot_updated_after_review": true,
+    "d1b2_fixture_child_leak_fixed": true
+  },
+  "protected_refs_touched": false
+}

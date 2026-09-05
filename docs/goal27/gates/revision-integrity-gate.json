@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "REVISION_INTEGRITY_GATE",
+  "status": "PASS",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "base_sha": "4659d16637bdff8b07cb135abaa12419e3fd6647",
+  "runtime_proof_sha": "b3f8adca0cb12c3ff57b5d96629c8758ddb71c83",
+  "feature_branch_sha": null,
+  "persistence": {
+    "schema_migration": "decision_revision_lifecycle",
+    "migration_version": 30,
+    "forward_only": true,
+    "idempotent": true,
+    "non_destructive": true,
+    "transactional_revision_commit": true,
+    "append_only_events": true,
+    "append_only_revision_rows": true,
+    "restart_row_and_event_readback": "PASS"
+  },
+  "chain_rules": {
+    "root_index": 0,
+    "derived_indices": "strictly increasing by one",
+    "root_link": "PASS",
+    "parent_link": "PASS",
+    "cycle_protection": "PASS",
+    "fork_protection": "PASS",
+    "one_open_revision_per_root": "PASS",
+    "latest_parent_only": "PASS",
+    "duplicate_retry_idempotent": "PASS",
+    "concurrent_reopen_serialized": "PASS",
+    "new_decision_per_revision": "PASS"
+  },
+  "immutable_historical_objects": ["decision", "evidence", "coverage", "execution_plan", "approval", "receipt", "readback", "outcome"],
+  "test_evidence": [
+    "brain-server/tests/goal27-reopen-revision.test.ts",
+    "brain-server/tests/fixtures/goal27-reopen-adversarial-vectors.json",
+    "72 adversarial vectors blocked",
+    "bounded projection history remains capped at 50 entries"
+  ],
+  "restart_limitation": "SQLite revision rows/events survive restart. The in-memory source authorization/outcome runtime fails closed after restart until the source runtime is restored; no false full-reopen-after-restart claim is made.",
+  "protected_refs_touched": false
+}

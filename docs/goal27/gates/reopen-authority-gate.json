@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "REOPEN_AUTHORITY_GATE",
+  "status": "PASS",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "base_sha": "4659d16637bdff8b07cb135abaa12419e3fd6647",
+  "runtime_proof_sha": "b3f8adca0cb12c3ff57b5d96629c8758ddb71c83",
+  "feature_branch_sha": null,
+  "feature_branch_sha_note": "The final feature SHA is recorded by the post-commit integration report.",
+  "control_scope": "control:reopen",
+  "human_authorization_required": true,
+  "human_can_reopen": true,
+  "agent_can_reopen": false,
+  "agent_can_request_reconsideration": true,
+  "agent_scopes": ["agent:ask", "agent:inspect", "agent:history", "agent:outcome:read"],
+  "agent_forbidden_authorities": ["approve", "execute", "control:verify", "control:reopen", "native_bridge", "store"],
+  "auto_reopen": false,
+  "generic_write_gateway": false,
+  "public_execution_gateway": false,
+  "reopen_execution_count": 0,
+  "external_write_count": 0,
+  "tests": {
+    "goal27_target": "11/11 PASS",
+    "adversarial_vectors": "72/72 BLOCKED",
+    "cli_tests": "44/44 PASS",
+    "d1b0": "PASS",
+    "d1b1": "PASS",
+    "d1b2": "PASS"
+  },
+  "npm_published": false,
+  "protected_refs_touched": false,
+  "notes": [
+    "Only the fixed loopback control:reopen session can reach the reopen facade.",
+    "Mismatch and inconclusive outcomes preserve revisit_required and never mint a revision automatically.",
+    "Verified outcomes require an explicit owner reason and owner identity.",
+    "Reopen only creates a new judgment; it never approves, executes, retries, rolls back, or verifies reality."
+  ]
+}

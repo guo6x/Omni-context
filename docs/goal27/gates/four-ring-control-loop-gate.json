@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "FOUR_RING_CONTROL_LOOP_GATE",
+  "status": "PASS",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "base_sha": "4659d16637bdff8b07cb135abaa12419e3fd6647",
+  "runtime_proof_sha": "b3f8adca0cb12c3ff57b5d96629c8758ddb71c83",
+  "feature_branch_sha": null,
+  "rings": {
+    "request_boundary": "PASS",
+    "evidence_boundary": "PASS",
+    "authority_boundary": "PASS",
+    "reality_boundary": "PASS"
+  },
+  "ring_controls": {
+    "request_boundary": ["strict reopen schema", "bounded identifiers", "no force/execute/retry/rollback fields"],
+    "evidence_boundary": ["qualification rerun", "coverage rerun", "historical context immutable", "evidence delta"],
+    "authority_boundary": ["owner-only control:reopen", "agent scope unchanged", "fresh approval lifecycle", "no generic mutation"],
+    "reality_boundary": ["trusted outcome binding", "native receipt/readback not caller supplied", "reopen execution count zero"]
+  },
+  "regressions": {
+    "brain_build": "PASS",
+    "brain_tests": "1330/1330 PASS",
+    "cli_tests": "44/44 PASS",
+    "rust_check": "PASS",
+    "rust_tests": "233 PASS / 0 FAIL / 9 IGNORED",
+    "desktop_build": "PASS",
+    "desktop_tests": "PASS",
+    "windows_cli_smoke": "PASS",
+    "controlled_verifier": "PASS",
+    "goal26_agent_authority": "PASS",
+    "goal26_desktop_control": "PASS",
+    "goal26_first_agent_loop": "PASS",
+    "d1b0": "PASS",
+    "d1b1": "PASS",
+    "d1b2": "PASS"
+  },
+  "authority_invariants": {
+    "agent_can_approve": false,
+    "agent_can_execute": false,
+    "agent_can_control_verify": false,
+    "agent_can_reopen": false,
+    "generic_execute_surface": false,
+    "public_execution_gateway": false,
+    "approval_executes": false,
+    "process_exit_direct_outcome": false,
+    "authority_relaxation": false
+  },
+  "posix_runtime_verification": "NOT_EXECUTED",
+  "real_external_write_count": 0,
+  "npm_published": false,
+  "secret_leaks": 0,
+  "protected_refs_touched": false,
+  "notes": [
+    "All runtime evidence in this gate is local controlled evidence on Windows.",
+    "No scientific benchmark or Holdback payload was opened.",
+    "Authoritative remote integration and milestone tagging are deliberately recorded after this local gate."
+  ]
+}
