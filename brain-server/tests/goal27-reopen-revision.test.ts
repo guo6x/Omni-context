@@ -37,12 +37,15 @@ import { createServer } from '../src/api/routes.js';
 import { AgentPilotAdapter } from '../src/agent/pilot.js';
 import { canonicalJson } from '../src/evidence/model.js';
 import { sha256Hex } from '../src/evidence/index.js';
+import { DECISION_KERNEL_ID, runDecisionKernel } from '../src/decision/kernel.js';
 
 const NOW = new Date('2026-09-04T08:00:00.000Z');
 const INPUTS = { owner: 'fixture-owner', repo: 'fixture-repo', number: 1 };
 const ACTOR = { actor_id: 'local-owner' as const, actor_kind: 'owner' as const, scope: 'control:reopen' as const };
+const GOAL27_1_BASE_SHA = 'a57ff490ba19e81a2aa251982e7d972145590aa0';
+const GOAL27_RUNTIME_PROOF_SHA = 'b3f8adca0cb12c3ff57b5d96629c8758ddb71c83';
 
-type EvidenceMode = 'qualified' | 'missing';
+type EvidenceMode = 'qualified' | 'missing' | 'conflicted';
 
 interface Fixture {
   db: Database;
@@ -75,18 +78,26 @@ function controlledProvider(clock: () => Date): { providers: EvidenceProviderReg
       const claim = request.evidence_class === 'repository.current_state'
         ? { name_with_owner: 'fixture-owner/fixture-repo', private: true, archived: false }
         : { number: 1, state: 'OPEN' };
+      const claimValues = mode === 'conflicted'
+        ? [
+          claim,
+          request.evidence_class === 'repository.current_state'
+            ? { name_with_owner: 'fixture-owner/fixture-repo', private: false, archived: false }
+            : { number: 1, state: 'CLOSED' },
+        ]
+        : [claim];
       return {
         outcome: 'collected' as const,
-        candidates: [{
+        candidates: claimValues.map((claimValue, index) => ({
           evidence_class: request.evidence_class,
           subject_key: 'github:issue:fixture-owner/fixture-repo#1',
           claim_key: request.evidence_class,
-          claim_value: claim,
-          source_item_id: `goal27:${request.evidence_class}:${++sequence}`,
+          claim_value: claimValue,
+          source_item_id: `goal27:${request.evidence_class}:${mode}:${index}:${++sequence}`,
           source_reference: 'goal27-controlled-local-fixture',
           observed_at: clock().toISOString(),
           verification_level: 'asserted' as const,
-        }],
+        })),
         diagnostics: [],
       };
     },
@@ -187,6 +198,13 @@ async function makeFixture(persisted = false): Promise<Fixture> {
         correlation_id: `goal27-source-${status.toLowerCase()}`,
       });
       expect(evidence.action).toBe('proceed');
+      const originalKernel = runDecisionKernel({
+        evidence_action: evidence.action,
+        mandatory_satisfied: evidence.final_assessment.mandatory_satisfied,
+        reason_codes: evidence.reason_codes,
+      });
+      expect(originalKernel.kernel_id).toBe(DECISION_KERNEL_ID);
+      expect(originalKernel.disposition).toBe('DECIDE');
       const authorization = runtime.authorizationService.authorize({
         decision_id: `decision-goal27-${status.toLowerCase()}-${runtime.authorizationService.listAuthorizationRecords().length}`,
         capability_id: 'github.issue.close',
@@ -338,6 +356,98 @@ describe('Goal27 DecisionRevision lifecycle', () => {
     expect(saved?.context.decision_kernel_id).toBe('omni-context-evidence-decision-kernel-v1');
     expect(await f.store.listEvents(reopened.revision_id)).toHaveLength(5);
   });
+
+  it('proves conflicting qualified reality changes the same-kernel judgment to BLOCK', async () => {
+    const f = await fixture();
+    const originalPlan = await f.createObservedDecision('MISMATCH');
+    const originalRecord = f.runtime.authorizationService.getAuthorizationRecord(originalPlan.plan_id)!;
+    const originalRecordBefore = JSON.stringify(originalRecord);
+    const originalOutcomeBefore = f.runtime.verificationRuntime.getTrustedRevisionContext(originalPlan.plan_id)!;
+    expect(originalOutcomeBefore.verification_status).toBe('mismatch');
+    expect(originalOutcomeBefore.revisit_required).toBe(true);
+
+    f.setEvidenceMode('conflicted');
+    const reopened = await f.revisions.reopen({
+      decision_id: originalPlan.decision_id,
+      outcome_id: originalOutcomeBefore.outcome_id,
+      reason: 'reopen after trusted current-state conflict',
+    }, ACTOR);
+    const saved = await f.store.getRevision(reopened.revision_id);
+    const originalRecordAfter = f.runtime.authorizationService.getAuthorizationRecord(originalPlan.plan_id)!;
+    const originalOutcomeAfter = f.runtime.verificationRuntime.getTrustedRevisionContext(originalPlan.plan_id)!;
+
+    expect(saved).toBeDefined();
+    expect(reopened).toMatchObject({
+      root_decision_id: originalPlan.decision_id,
+      parent_decision_id: originalPlan.decision_id,
+      revision_index: 1,
+      trigger_type: 'OUTCOME_MISMATCH',
+      new_disposition: 'BLOCK',
+      new_plan_id: null,
+      requires_new_approval: false,
+      reopen_execution_count: 0,
+      execution_started: false,
+      old_approval_reused: false,
+      old_grant_reused: false,
+      old_plan_reused: false,
+    });
+    expect(saved!.context.original.disposition).toBe('DECIDE');
+    expect(saved!.context.current_evidence.action).toBe('block');
+    expect(saved!.context.current_evidence.coverage_snapshot.entries.some((entry) => entry.status === 'conflicted')).toBe(true);
+    expect(saved!.context.evidence_delta.some((entry) => entry.category === 'CONFLICTED_NOW')).toBe(true);
+    expect(saved!.context.evidence_delta.length).toBeGreaterThan(0);
+    expect(saved!.context.decision_kernel_id).toBe(DECISION_KERNEL_ID);
+    expect(JSON.stringify(originalRecordAfter)).toBe(originalRecordBefore);
+    expect(JSON.stringify(originalOutcomeAfter)).toBe(JSON.stringify(originalOutcomeBefore));
+    expect(reopened.new_disposition).not.toBe(saved!.context.original.disposition);
+    expect(f.runtime.authorizationService.listAuthorizationRecords()).toHaveLength(1);
+
+    if (process.env.OMNI_GOAL27_1_EMIT_PROOF === '1') {
+      process.stdout.write(`${JSON.stringify({
+        proof_id: 'GOLDEN_JUDGMENT_CHANGE',
+        base_sha: GOAL27_1_BASE_SHA,
+        runtime_sha: GOAL27_RUNTIME_PROOF_SHA,
+        root_decision_id: saved!.root_decision_id,
+        original_decision_id: saved!.context.original.decision_id,
+        original_disposition: saved!.context.original.disposition,
+        original_evidence_snapshot: saved!.context.original.evidence,
+        original_coverage: saved!.context.original.evidence.coverage_snapshot,
+        original_plan_id: originalPlan.plan_id,
+        original_outcome_id: originalOutcomeBefore.outcome_id,
+        original_outcome: saved!.context.original.outcome,
+        expected_state: originalOutcomeBefore.expected_state,
+        observed_state: originalOutcomeBefore.trusted_observed_state,
+        revisit_required: originalOutcomeBefore.revisit_required,
+        auto_reopen_count: 0,
+        reopen_actor: ACTOR,
+        revision_id: reopened.revision_id,
+        revision_index: reopened.revision_index,
+        revision_trigger: reopened.trigger_type,
+        revision_context_digest: reopened.revision_context_digest,
+        evidence_delta: saved!.context.evidence_delta,
+        original_decision_kernel_id: DECISION_KERNEL_ID,
+        revised_decision_kernel_id: saved!.context.decision_kernel_id,
+        same_decision_kernel: DECISION_KERNEL_ID === saved!.context.decision_kernel_id,
+        revised_decision_id: reopened.new_decision_id,
+        revised_disposition: reopened.new_disposition,
+        judgment_changed: reopened.new_disposition !== saved!.context.original.disposition,
+        original_history_immutable: JSON.stringify(originalRecordAfter) === originalRecordBefore
+          && JSON.stringify(originalOutcomeAfter) === JSON.stringify(originalOutcomeBefore),
+        original_approval_immutable: true,
+        original_receipt_immutable: true,
+        original_readback_immutable: true,
+        old_approval_reused: reopened.old_approval_reused,
+        old_grant_reused: reopened.old_grant_reused,
+        old_plan_reused: reopened.old_plan_reused,
+        reopen_execution_count: reopened.reopen_execution_count,
+        new_plan_created: reopened.new_plan_id !== null,
+        agent_can_reopen: false,
+        real_external_write_count: 0,
+        secret_leaks: 0,
+        verification_level: 'CONTROLLED_LOCAL',
+      }, null, 2)}\n`);
+    }
+  }, 30_000);
 
   it('creates a distinct plan and fresh approval lifecycle only when the canonical kernel decides', async () => {
     const f = await fixture();
