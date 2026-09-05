@@ -6,6 +6,8 @@
   "base_sha": "4659d16637bdff8b07cb135abaa12419e3fd6647",
   "runtime_proof_sha": "b3f8adca0cb12c3ff57b5d96629c8758ddb71c83",
   "feature_branch_sha": null,
+  "golden_judgment_change_proof": "docs/goal27/proof/golden-judgment-change-proof.json",
+  "judgment_changed_in_golden_case": true,
   "rings": {
     "request_boundary": "PASS",
     "evidence_boundary": "PASS",

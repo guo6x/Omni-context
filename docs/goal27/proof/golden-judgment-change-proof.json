@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "proof_id": "GOLDEN_JUDGMENT_CHANGE",
+  "status": "PASS",
+  "verification_level": "CONTROLLED_LOCAL",
+  "base_sha": "a57ff490ba19e81a2aa251982e7d972145590aa0",
+  "runtime_sha": "c3202064ba23900520d7f3fbca2e3edf1e2d3be4",
+  "goal27_runtime_ancestor_sha": "b3f8adca0cb12c3ff57b5d96629c8758ddb71c83",
+  "root_decision_id": "decision-goal27-mismatch-0",
+  "original_decision_id": "decision-goal27-mismatch-0",
+  "original_disposition": "DECIDE",
+  "original_evidence_snapshot": {
+    "guard_run_id": "1f1e48f3-0413-4794-9785-e5bd128f3d30",
+    "coverage_snapshot": {
+      "entries": [
+        {
+          "evidence_class": "repository.current_state",
+          "status": "present",
+          "verification_level": "asserted",
+          "evidence_ids": [
+            "ba43b0f2dd54404f47032e1b919fd81c9b0d0cef9351866952b6f835eec9f914"
+          ],
+          "checked_at": "2026-09-04T08:00:00.000Z"
+        },
+        {
+          "evidence_class": "issue.current_state",
+          "status": "present",
+          "verification_level": "asserted",
+          "evidence_ids": [
+            "f15979e62be4f5dd200ab7cd195a41884f3a34309e4001c4c804618d70d22f84"
+          ],
+          "checked_at": "2026-09-04T08:00:00.000Z"
+        }
+      ]
+    },
+    "coverage_digest": "73a02b50b9c689ff66e06fb3a3171dcfe347847776579e8fc65668997dbb7c6c",
+    "qualified_evidence_ids": [
+      "ba43b0f2dd54404f47032e1b919fd81c9b0d0cef9351866952b6f835eec9f914",
+      "f15979e62be4f5dd200ab7cd195a41884f3a34309e4001c4c804618d70d22f84"
+    ]
+  },
+  "original_coverage": {
+    "entries": [
+      {
+        "evidence_class": "repository.current_state",
+        "status": "present",
+        "verification_level": "asserted",
+        "evidence_ids": [
+          "ba43b0f2dd54404f47032e1b919fd81c9b0d0cef9351866952b6f835eec9f914"
+        ],
+        "checked_at": "2026-09-04T08:00:00.000Z"
+      },
+      {
+        "evidence_class": "issue.current_state",
+        "status": "present",
+        "verification_level": "asserted",
+        "evidence_ids": [
+          "f15979e62be4f5dd200ab7cd195a41884f3a34309e4001c4c804618d70d22f84"
+        ],
+        "checked_at": "2026-09-04T08:00:00.000Z"
+      }
+    ]
+  },
+  "original_plan_id": "plan-a59269e8-05f3-4e64-9093-9be76d977a07",
+  "original_outcome_id": "out-525b5fdf-0e3e-47d9-afd8-565e85acd20b",
+  "original_outcome": {
+    "outcome_id": "out-525b5fdf-0e3e-47d9-afd8-565e85acd20b",
+    "verification_status": "mismatch",
+    "revisit_required": true,
+    "execution_receipt_id": "receipt-goal27-9be76d977a07",
+    "receipt_digest": "c7b02386a9c945699f1a0e6d269e4e4d687007e0ea55aa676e3bbcddf7e67117",
+    "expected_outcome_digest": "03e25e6d8c8b81f22c385f5a1ef6dbebffbde00da3fd36adcee0d56d3bfeccab",
+    "latest_observation_digest": "fae154f2d7cd427a5392b445745bcfa71d3dbaa03454ae44903dcd183315604c",
+    "observation_id": "observation-goal27-9be76d977a07",
+    "expected_state": {
+      "number": 1,
+      "owner": "fixture-owner",
+      "repo": "fixture-repo",
+      "state": "CLOSED"
+    },
+    "trusted_observed_state": {
+      "number": 1,
+      "state": "OPEN"
+    },
+    "reason_codes": [
+      "OUTCOME_MISMATCH"
+    ]
+  },
+  "expected_state": {
+    "owner": "fixture-owner",
+    "repo": "fixture-repo",
+    "number": 1,
+    "state": "CLOSED"
+  },
+  "observed_state": {
+    "number": 1,
+    "state": "OPEN"
+  },
+  "revisit_required": true,
+  "auto_reopen_count": 0,
+  "reopen_actor": {
+    "actor_id": "local-owner",
+    "actor_kind": "owner",
+    "scope": "control:reopen"
+  },
+  "revision_id": "rev-babd1adc-e67b-47ba-8725-5b7b23b86c11",
+  "revision_index": 1,
+  "revision_trigger": "OUTCOME_MISMATCH",
+  "revision_context_digest": "8e1679b119f6568304a12b7d96e93693ccdfe6c93de3d515f194b7528a2509df",
+  "evidence_delta": [
+    {
+      "evidence_class": "issue.current_state",
+      "category": "CONFLICTED_NOW",
+      "original_status": "present",
+      "current_status": "conflicted",
+      "original_evidence_ids": [
+        "f15979e62be4f5dd200ab7cd195a41884f3a34309e4001c4c804618d70d22f84"
+      ],
+      "current_evidence_ids": [
+        "3480dcc5f668b67d5c429351f8213ef0acf732e21dcaf7b10b52d440d10776b4",
+        "c360e4137ecb7d14bf5523fe612610fa968e5a0f27516dd9caa0a319c5eb43e0"
+      ]
+    },
+    {
+      "evidence_class": "repository.current_state",
+      "category": "CONFLICTED_NOW",
+      "original_status": "present",
+      "current_status": "conflicted",
+      "original_evidence_ids": [
+        "ba43b0f2dd54404f47032e1b919fd81c9b0d0cef9351866952b6f835eec9f914"
+      ],
+      "current_evidence_ids": [
+        "39d2b5aa2933505e6c9052473f6ac57e765c5bf41a26354fdd5d2512c0e0f07f",
+        "6c68ec0ee659a8e882a016364845d4a0a3812ade231a86b73eb10caa61fb632c"
+      ]
+    }
+  ],
+  "evidence_delta_present": true,
+  "evidence_delta_non_empty": true,
+  "evidence_requalified": true,
+  "coverage_rerun": true,
+  "original_decision_kernel_id": "omni-context-evidence-decision-kernel-v1",
+  "revised_decision_kernel_id": "omni-context-evidence-decision-kernel-v1",
+  "same_decision_kernel": true,
+  "revised_decision_id": "decision-revision-13098e3d-80da-4b8e-97c9-1cabba503e79",
+  "revised_disposition": "BLOCK",
+  "judgment_changed": true,
+  "original_history_immutable": true,
+  "original_decision_immutable": true,
+  "original_evidence_immutable": true,
+  "original_coverage_immutable": true,
+  "original_plan_immutable": true,
+  "original_approval_immutable": true,
+  "original_receipt_immutable": true,
+  "original_readback_immutable": true,
+  "original_outcome_immutable": true,
+  "old_approval_reused": false,
+  "old_grant_reused": false,
+  "old_plan_reused": false,
+  "reopen_execution_count": 0,
+  "new_plan_created": false,
+  "agent_can_reopen": false,
+  "human_can_reopen": true,
+  "auto_reopen": false,
+  "real_external_write_count": 0,
+  "secret_leaks": 0,
+  "verification_level_detail": "Two trusted asserted candidates per mandatory evidence class were requalified locally; the existing coverage conflict policy produced block, and the existing kernel mapped the block action to BLOCK.",
+  "verification_level": "CONTROLLED_LOCAL"
+}

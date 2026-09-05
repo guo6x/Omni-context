@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "GOLDEN_JUDGMENT_CHANGE_GATE",
+  "status": "PASS",
+  "verification_level": "VERIFIED_LOCAL_EVIDENCE",
+  "base_sha": "a57ff490ba19e81a2aa251982e7d972145590aa0",
+  "runtime_proof_sha": "c3202064ba23900520d7f3fbca2e3edf1e2d3be4",
+  "proof_artifact": "docs/goal27/proof/golden-judgment-change-proof.json",
+  "original_disposition": "DECIDE",
+  "revised_disposition": "BLOCK",
+  "judgment_changed": true,
+  "same_decision_kernel": true,
+  "evidence_requalified": true,
+  "coverage_rerun": true,
+  "evidence_delta_non_empty": true,
+  "evidence_delta_categories": [
+    "CONFLICTED_NOW"
+  ],
+  "original_history_immutable": true,
+  "auto_reopen": false,
+  "reopen_execution_count": 0,
+  "old_approval_reused": false,
+  "old_grant_reused": false,
+  "old_plan_reused": false,
+  "new_plan_created": false,
+  "agent_can_reopen": false,
+  "real_external_write_count": 0,
+  "secret_leaks": 0,
+  "four_ring_gate_updated": true,
+  "judgment_changed_in_golden_case": true,
+  "adversarial_matrix": {
+    "total": 72,
+    "failed": 0,
+    "unresolved_blocked": 0,
+    "unknown": 0
+  },
+  "npm_published": false,
+  "posix_runtime_verification": "NOT_EXECUTED",
+  "protected_refs_touched": false,
+  "goal28_started": false,
+  "notes": [
+    "The original Goal27 DECIDE-to-DECIDE proof remains unchanged.",
+    "This second controlled proof uses newly qualified conflicting evidence and the existing canonical Decision Kernel to produce BLOCK.",
+    "Reopen itself performed no execution and created no new executable plan."
+  ]
+}
