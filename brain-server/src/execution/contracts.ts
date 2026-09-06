@@ -58,7 +58,7 @@ export const EVIDENCE_STATUSES = ['present', 'missing', 'stale', 'conflicted', '
 export type EvidenceStatus = (typeof EVIDENCE_STATUSES)[number];
 
 export const PLAN_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{7,199}$/;
-export const ADAPTER_ID_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+export const ADAPTER_ID_PATTERN = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 
 export const TIMEOUT_MIN_MS = 100;
 export const TIMEOUT_MAX_MS = 86_400_000; // 24 hours

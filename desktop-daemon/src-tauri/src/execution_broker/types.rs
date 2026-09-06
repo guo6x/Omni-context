@@ -241,25 +241,25 @@ impl ExecutionPlanWire {
             .all(|b| b.is_ascii_alphanumeric() || *b == b'_' || *b == b'-')
     }
 
-    /// `ADAPTER_ID_PATTERN`: `^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`.
+    /// `ADAPTER_ID_PATTERN`: `^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$`.
     pub fn valid_adapter_id(id: &str) -> bool {
         if id.is_empty() || !id.as_bytes()[0].is_ascii_lowercase() {
             return false;
         }
-        let mut after_dash = false;
+        let mut after_separator = false;
         for b in id.as_bytes() {
-            if after_dash {
+            if after_separator {
                 if !b.is_ascii_lowercase() && !b.is_ascii_digit() {
                     return false;
                 }
-                after_dash = false;
-            } else if *b == b'-' {
-                after_dash = true;
+                after_separator = false;
+            } else if *b == b'-' || *b == b'.' {
+                after_separator = true;
             } else if !b.is_ascii_lowercase() && !b.is_ascii_digit() {
                 return false;
             }
         }
-        !after_dash
+        !after_separator
     }
 
     /// `CAPABILITY_ID_PATTERN`: `^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*){2,4}$`

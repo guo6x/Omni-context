@@ -188,6 +188,9 @@ function validateD1b2ControlSurface() {
   ]);
   const allowed = [
     '/api/control/approve',
+    // Goal27 adds a human-only reopen control surface; Goal28 does not add
+    // or widen any control route.
+    '/api/control/reopen',
     '/api/control/verify',
     // Goal26 adds these loopback-only native bridge paths. They are not
     // public control APIs: routes.ts requires the process-local bridge secret
@@ -196,6 +199,7 @@ function validateD1b2ControlSurface() {
     '/internal/control/native-verification',
     '/internal/control/plan/',
     '/internal/control/session',
+    '/internal/control/session/reopen',
     '/internal/control/session/revoke',
     '/internal/control/session/verify',
   ].sort();

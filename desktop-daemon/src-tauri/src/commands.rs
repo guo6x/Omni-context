@@ -618,6 +618,7 @@ pub async fn execute_ready_plan(plan_id: String) -> Result<serde_json::Value, St
     // Fixed semantic binding map. No caller-controlled binding_id is accepted.
     let binding_id = match (plan.capability_id.as_str(), plan.adapter_id.as_str()) {
         ("github.issue.close", "github-cli") => "github-cli.issue.close",
+        ("git.branch.create", "git.local") => "git-local.branch.create",
         _ => return Err("CAPABILITY_NOT_DESKTOP_EXECUTABLE".to_string()),
     };
     let result = crate::execution_broker::global_broker()

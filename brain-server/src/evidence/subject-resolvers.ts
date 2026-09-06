@@ -90,6 +90,38 @@ export const githubPrReadSubjectResolver: CapabilityEvidenceSubjectResolver = (_
 export const githubPrChecksReadSubjectResolver: CapabilityEvidenceSubjectResolver = githubPrReadSubjectResolver;
 
 /**
+ * Goal28 local Git subject binding.  The repository path is bound by the
+ * native adapter's approved-root check; the Brain subject intentionally uses
+ * only the branch identity so it remains stable across Windows/POSIX path
+ * rendering while the plan/receipt still carry the full repository binding.
+ */
+export const gitBranchSubjectResolver: CapabilityEvidenceSubjectResolver = (_capabilityId, inputs) => {
+  const repositoryPath = requiredString(inputs, 'repository_path');
+  const branchName = requiredString(inputs, 'branch_name');
+  if (!repositoryPath.startsWith('/') && !/^[A-Za-z]:[\\/]/.test(repositoryPath)) {
+    throw new EvidenceError(
+      'EVIDENCE_SUBJECT_KEY_INVALID',
+      'normalized_inputs.repository_path must be an absolute path',
+    );
+  }
+  if (
+    branchName.length > 200
+    || branchName.startsWith('-')
+    || branchName.includes('..')
+    || branchName.includes('@{')
+    || branchName.includes('\\')
+    || branchName.includes('//')
+    || /[\u0000-\u0020]/.test(branchName)
+  ) {
+    throw new EvidenceError(
+      'EVIDENCE_SUBJECT_KEY_INVALID',
+      'normalized_inputs.branch_name is not a safe local branch identifier',
+    );
+  }
+  return `git:branch:${branchName}`;
+};
+
+/**
  * A registry wired with the deterministic GitHub read-only subject bindings
  * declared by the CP6 evidence class catalog. Test/demo wiring only: no live
  * provider is registered here.
@@ -102,6 +134,8 @@ export function githubSubjectResolverRegistry(): CapabilityEvidenceSubjectResolv
   registry.register('github.issue.search', githubIssueSearchSubjectResolver);
   registry.register('github.pr.read', githubPrReadSubjectResolver);
   registry.register('github.pr.checks.read', githubPrChecksReadSubjectResolver);
+  registry.register('git.branch.create', gitBranchSubjectResolver);
+  registry.register('git.branch.read', gitBranchSubjectResolver);
   return registry;
 }
 

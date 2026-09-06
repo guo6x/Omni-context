@@ -28,6 +28,7 @@ import {
   type OutcomeRecord,
 } from '../outcome/index.js';
 import { GITHUB_ISSUE_CLOSE_EVALUATOR } from '../outcome/evaluators/github-issue-close-evaluator.js';
+import { GIT_BRANCH_CREATE_EVALUATOR } from '../outcome/evaluators/git-branch-create-evaluator.js';
 import { VerificationError } from './verification-facade.js';
 import { canonicalJson } from '../evidence/model.js';
 
@@ -221,6 +222,7 @@ export class ServerVerificationRuntime {
 
   constructor(private readonly lookupPlan: VerificationPlanLookup, private readonly clock: () => Date = () => new Date()) {
     this.registry.register(GITHUB_ISSUE_CLOSE_EVALUATOR);
+    this.registry.register(GIT_BRANCH_CREATE_EVALUATOR);
     this.service = new OutcomeService({
       receiptResolver: (receiptId) => this.receipts.get(receiptId) ?? null,
       observationResolver: (observationId) => this.observations.get(observationId) ?? null,

@@ -15,6 +15,8 @@ mod execution_broker;
 mod github_cli;
 mod hardware;
 mod hardware_actions;
+#[cfg_attr(not(test), allow(dead_code))]
+mod local_git;
 mod log_writer;
 mod mcp_helper;
 mod screen_capture;
@@ -80,6 +82,22 @@ async fn main() {
         println!(
             "[Omni-Context] GitHub CLI adapter unavailable: {}",
             gh_bootstrap.message
+        );
+    }
+    let git_bootstrap = local_git::bootstrap_production(
+        crate::execution_broker::global_broker(),
+        broker_data.join("git-workspaces"),
+    );
+    if let Some(path) = &git_bootstrap.resolved_git {
+        println!(
+            "[Omni-Context] local Git adapter ready: {} ({} bindings)",
+            path.display(),
+            git_bootstrap.registered_bindings
+        );
+    } else {
+        println!(
+            "[Omni-Context] local Git adapter unavailable: {}",
+            git_bootstrap.message
         );
     }
     println!("[Omni-Context] 启动桌面守护进程...");

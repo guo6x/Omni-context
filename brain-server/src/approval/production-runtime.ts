@@ -11,6 +11,7 @@
 import type { CapabilityDefinition } from '../capabilities/contracts.js';
 import { GITHUB_READONLY_CAPABILITIES } from '../capabilities/github-readonly.js';
 import { GITHUB_WRITE_CAPABILITIES } from '../capabilities/github-write.js';
+import { GIT_LOCAL_CAPABILITIES } from '../capabilities/git-local.js';
 import { HttpNativeApprovalClient } from '../control/native-bridge.js';
 import type { ControlApprovalRuntime } from '../control/approval-facade.js';
 import {
@@ -29,6 +30,7 @@ import { ServerVerificationRuntime } from '../control/verification-runtime.js';
 const PRODUCTION_CAPABILITIES: readonly CapabilityDefinition[] = [
   ...GITHUB_READONLY_CAPABILITIES,
   ...GITHUB_WRITE_CAPABILITIES,
+  ...GIT_LOCAL_CAPABILITIES,
 ];
 
 export interface ProductionAuthorizationRuntimeOptions {
