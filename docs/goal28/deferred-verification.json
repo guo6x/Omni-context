@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "goal": "Goal28 Lite",
+  "status": "DEFERRED",
+  "posix_runtime_verification": "NOT_EXECUTED",
+  "deferred_to": "Goal29",
+  "reason": "This workstation run executed the Windows native adapter and cross-language contract tests only. No POSIX runtime was available in the controlled verification scope.",
+  "windows_verification": {
+    "brain_contract_tests": "PASS",
+    "native_git_golden_e2e": "PASS",
+    "rust_full_tests": "236 passed, 0 failed, 9 ignored",
+    "windows_cli_smoke": "PASS",
+    "controlled_file_verifier": "PASS"
+  },
+  "cross_platform_claim": "Not upgraded beyond Windows evidence; POSIX execution remains explicitly deferred.",
+  "goal29_started": false,
+  "real_external_write_count": 0,
+  "npm_published": false,
+  "secret_leaks": 0
+}

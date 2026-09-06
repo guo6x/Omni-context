@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "goal": "Goal28 Lite",
+  "proof_id": "goal28-second-adapter-golden-0001",
+  "base_sha": "2a84008a419afce02a526c3247c622d2724891a6",
+  "runtime_sha": "093f122451f3311d7f07ae01a572d2feb49b2361",
+  "capability_id": "git.branch.create",
+  "adapter_id": "git.local",
+  "adapter_tool": "git",
+  "capability_schema": {
+    "version": "1.0.0",
+    "inputs": ["repository_path", "branch_name", "start_point"],
+    "forbidden_inputs": ["command", "args", "shell", "cwd", "env", "executable", "binding_id"],
+    "start_point_contract": "full lowercase 40-hex commit SHA",
+    "required_evidence": ["repository.current_state"],
+    "required_authority": "L1",
+    "risk_level": "medium",
+    "side_effect_class": "reversible_write",
+    "unknown_keys_rejected": true
+  },
+  "readback_strategy": {
+    "capability_id": "git.branch.read",
+    "binding_id": "git-local.branch.read.readback",
+    "risk": "read_only/low/L0",
+    "trusted_parser": "one lowercase 40-hex target_sha line",
+    "expected_source": "approved plan start_point"
+  },
+  "decision_kernel_id": "omni-context-evidence-decision-kernel-v1",
+  "decision_kernel_changed_for_capability": false,
+  "approval_model_changed_for_capability": false,
+  "outcome_model_changed_for_capability": false,
+  "reopen_model_changed_for_capability": false,
+  "golden_e2e": {
+    "test": "local_git::tests::goal28_git_branch_golden_e2e_uses_approval_receipt_and_readback",
+    "decision_id": "decision-goal28-git-golden-0001",
+    "plan_id": "plan-goal28-git-golden-0001",
+    "approval_required": true,
+    "approval_executes": false,
+    "explicit_execute_count": 1,
+    "receipt_id": "rcpt_da00648cdf88c3908e51e7aa40ca80ad",
+    "execution_state": "completed",
+    "branch": "goal28-fixture/verified",
+    "expected_state": {
+      "branch": "goal28-fixture/verified",
+      "target_sha": "9d49493d844d30549d80bbd29465ac9811f9b6a6"
+    },
+    "observed_state": {
+      "branch": "goal28-fixture/verified",
+      "target_sha": "9d49493d844d30549d80bbd29465ac9811f9b6a6"
+    },
+    "outcome_before_readback": "PENDING",
+    "outcome_after_readback": "VERIFIED",
+    "branch_points_to_expected_sha": true,
+    "execution_count": 1,
+    "approval_execution_count": 0,
+    "readback_attempts": 1,
+    "agent_execute_count": 0,
+    "replay_blocked": true,
+    "fixture_scope": "disposable local temporary Git repository"
+  },
+  "authority_invariants": {
+    "agent_can_approve": false,
+    "agent_can_execute": false,
+    "agent_can_control_verify": false,
+    "agent_can_reopen": false,
+    "generic_shell": false,
+    "generic_execute_gateway": false,
+    "arbitrary_args_accepted": false,
+    "plan_override_allowed": false,
+    "cross_capability_approval_reuse": false,
+    "approval_executes": false
+  },
+  "focused_tests": {
+    "brain": "tests/goal28-second-adapter.test.ts: 3 passed",
+    "native": "local_git::tests: 3 passed",
+    "full_rust": "236 passed, 0 failed, 9 ignored"
+  },
+  "real_external_write_count": 0,
+  "npm_published": false,
+  "secret_leaks": 0,
+  "posix_runtime_verification": "NOT_EXECUTED",
+  "verification_level": "CONTROLLED_LOCAL"
+}
