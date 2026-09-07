@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "artifact": "goal29-deferred-verification-resolution",
+  "goal28_deferred_items_total": 1,
+  "goal28_deferred_items_resolved": 0,
+  "goal28_deferred_items_remaining": 1,
+  "items": [
+    {
+      "item": "POSIX_RUNTIME",
+      "goal28_status": "DEFERRED",
+      "goal29_action": "Attempted to identify an available POSIX runtime; the authorized workstation scope provided Windows only. Windows portability and native runtime checks were executed.",
+      "goal29_result": "NOT_EXECUTED",
+      "evidence": [
+        "docs/goal28/deferred-verification.json",
+        "docs/goal29/proof/v1-freeze-proof.json"
+      ],
+      "final_disposition": "DEFERRED_WITH_REASON",
+      "blocking": false,
+      "claim_not_upgraded": true
+    }
+  ],
+  "no_deferred_item_silently_disappeared": true,
+  "status": "PASS_WITH_EXPLICIT_NON_BLOCKING_LIMITATION"
+}

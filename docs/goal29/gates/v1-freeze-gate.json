@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "GOAL29_V1_FREEZE_GATE",
+  "status": "PASS",
+  "base_sha": "69e3c12c1e9a0f4fca0080b96282c3d48025f464",
+  "runtime_freeze_sha": "f3850c8350dd44c599826d924f81c81dc6935306",
+  "feature_sha": null,
+  "checks": {
+    "feature_freeze": { "status": "PASS", "new_product_features_added": 0 },
+    "brain_regression": { "status": "PASS", "build": true, "tests": "72 files / 1336 passed / 0 failed" },
+    "cli_regression": { "status": "PASS", "tests": "44 passed / 0 failed", "smoke": true },
+    "rust_regression": { "status": "PASS", "check": true, "tests": "236 passed / 0 failed / 9 ignored" },
+    "desktop_regression": { "status": "PASS", "frontend_build": true, "controlled_verifier": true, "installed_e2e": "11 passed / 0 failed" },
+    "authority_master_gate": { "status": "PASS", "relaxation": false },
+    "capability_matrix": { "status": "PASS", "github_issue_close": true, "git_branch_create": true, "schema_negatives": true },
+    "cross_adapter_replay": { "status": "PASS", "all_cross_reuse_attempts_blocked": true },
+    "concurrency": { "status": "PASS", "single_use_preserved": true, "duplicate_mutation": false, "deadlock": false },
+    "adversarial": { "status": "PASS", "total": 72, "failed": 0, "unresolved_blocked": 0, "unknown": 0 },
+    "restart_recovery": { "status": "PASS" },
+    "crash_recovery": { "status": "PASS" },
+    "migration": { "status": "PASS", "old_data_readable": true, "destructive": false },
+    "clean_install": { "status": "PASS" },
+    "first_run": { "status": "PASS" },
+    "package_install": { "status": "PASS", "omctx_version": "0.1.0-alpha.0" },
+    "windows_runtime": { "status": "PASS" },
+    "linux_runtime": { "status": "NOT_EXECUTED", "blocking": false },
+    "macos_runtime": { "status": "NOT_EXECUTED", "blocking": false },
+    "long_run": { "status": "PASS", "iterations": 100, "failures": 0 },
+    "secret_scan": { "status": "PASS", "secret_leaks": 0 },
+    "readback_independence": { "status": "PASS" },
+    "reopen_regression": { "status": "PASS" },
+    "judgment_history": { "status": "PASS", "reconstructable": true },
+    "real_user_pilot": {
+      "status": "DEFERRED_WITH_REASON",
+      "blocking": false,
+      "reason": "Owner-operated local write pilot was not authorized; safe packaged UI E2E and disposable native local Git fixture were executed."
+    },
+    "documentation": { "status": "PASS", "root_causes_recorded": true, "deferred_items_explicit": true },
+    "main_promotion_readiness": {
+      "status": "PASS",
+      "main_pre_sha": "380648cafae5e7261373fed8dd5b1612d94abd47",
+      "authoritative_pre_sha": "69e3c12c1e9a0f4fca0080b96282c3d48025f464",
+      "fast_forward_possible": true,
+      "action": "only after this gate is committed and verified"
+    },
+    "npm_publication": { "status": "PASS", "published": false }
+  },
+  "authority_invariants": {
+    "agent_can_approve": false,
+    "agent_can_execute": false,
+    "agent_can_control_verify": false,
+    "agent_can_reopen": false,
+    "generic_shell": false,
+    "generic_execute_gateway": false,
+    "approval_executes": false,
+    "process_exit_direct_outcome": false,
+    "public_execution_gateway": false,
+    "authority_relaxation": false,
+    "silent_duplicate_execution_found": false
+  },
+  "non_blocking_limitations": [
+    "POSIX_RUNTIME_VERIFICATION=NOT_EXECUTED; Linux and macOS were not run.",
+    "REAL_USER_PILOT=DEFERRED_WITH_REASON; no owner-operated write pilot was authorized.",
+    "NPM_PUBLISHED=false; publication remains paused.",
+    "Tauri updater private signing was not performed; unsigned local NSIS installation was verified."
+  ],
+  "protected_refs": {
+    "release_branch_touched": false,
+    "holdback_touched": false,
+    "scientific_refs_touched": false,
+    "old_quarantined_clone_touched": false,
+    "real_external_write_count": 0,
+    "npm_published": false
+  },
+  "goal28_deferred_resolution": "docs/goal29/deferred-verification-resolution.json",
+  "proof_artifact": "docs/goal29/proof/v1-freeze-proof.json",
+  "verification_level": "VERIFIED_LOCAL_WINDOWS_CONTROLLED_EVIDENCE",
+  "goal30_started": false
+}

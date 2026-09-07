@@ -1,0 +1,216 @@
+{
+  "schema_version": "1.0",
+  "proof_id": "goal29-v1-freeze-proof",
+  "base_sha": "69e3c12c1e9a0f4fca0080b96282c3d48025f464",
+  "runtime_freeze_sha": "f3850c8350dd44c599826d924f81c81dc6935306",
+  "feature_sha": null,
+  "authoritative_sha": null,
+  "milestone_tag": "milestone/goal29-v1-freeze-gate-verified",
+  "feature_freeze": true,
+  "new_product_features_added": 0,
+  "product_semantics_changed": false,
+  "changed_files": [
+    { "path": "brain-server/src/db/sqlite.ts", "class": "WINDOWS_PORTABILITY_FIX" },
+    { "path": "brain-server/tests/agent-loop-abort-dedup.test.ts", "class": "TESTABILITY_FIX" },
+    { "path": "brain-server/tests/embedding-index-manifest.test.ts", "class": "REGRESSION_TEST" },
+    { "path": "brain-server/tests/goal24-skill-bridge.test.ts", "class": "WINDOWS_TEST_TIMEOUT_FIX" },
+    { "path": "brain-server/vitest.config.ts", "class": "WINDOWS_NATIVE_TEST_ISOLATION" },
+    { "path": "desktop-daemon/e2e-installed.cjs", "class": "INSTALLER_E2E_HARNESS_FIX" },
+    { "path": "package.json", "class": "CLI_PACKAGING_FIX" }
+  ],
+  "original_failures": [
+    {
+      "id": "fresh-install-entity-vector-dimension",
+      "classification": "WINDOWS_PORTABILITY_DEFECT",
+      "observed": "ENTITY_VECTOR_DIMENSION_MISMATCH: index=384 query=1024",
+      "root_cause": "A fresh install has the migration-created legacy entity vector table before the explicit profile rebuild creates its 1024-dimensional manifest.",
+      "resolution": "Normal mode uses the durable entity embedding blob while no entity manifest exists; explicit-manifest and evaluation-mode paths remain fail-closed.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "id": "fresh-install-assertion-manifest-rollback",
+      "classification": "DETERMINISTIC_BASELINE_DEFECT",
+      "observed": "EMBEDDING_INDEX_MANIFEST_MISSING: vec_assertions followed by FOREIGN KEY constraint failed",
+      "root_cause": "Seed transaction rolled back durable entities when optional assertion vector indexing was unavailable.",
+      "resolution": "Normal mode defers optional assertion vector rows until explicit rebuild while retaining durable assertions; evaluation mode remains fail-closed.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "id": "agent-loop-wall-clock-timeout",
+      "classification": "WINDOWS_TESTABILITY_DEFECT",
+      "observed": "Wall-clock timeout assertion was load-sensitive under Windows native module load.",
+      "root_cause": "The test measured scheduler time instead of driving the already-defined timeout contract.",
+      "resolution": "Vitest fake timers drive the existing 30ms timeout and assert the same abort/lock state.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "id": "brain-native-worker-race",
+      "classification": "WINDOWS_PORTABILITY_DEFECT",
+      "observed": "Native sqlite/sqlite-vec initialization could produce timeout or N-API noise under parallel file workers.",
+      "root_cause": "Windows native module initialization is not deterministic across simultaneous Vitest workers.",
+      "resolution": "Windows Brain tests run with one file worker; POSIX parallelism is unchanged.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "id": "installed-onboarding-race",
+      "classification": "TEST_INFRASTRUCTURE_DEFECT",
+      "observed": "Import could begin while asynchronous onboarding demo seeding was still running; stale child processes could block restart.",
+      "root_cause": "The installed-app harness did not await the seed response and had incomplete ownership cleanup.",
+      "resolution": "The harness awaits the seed response and cleans only the E2E profile Brain PID and reserved CDP listener.",
+      "semantic_behavior_changed": false
+    },
+    {
+      "id": "cli-pack-dry-target",
+      "classification": "DETERMINISTIC_BASELINE_DEFECT",
+      "observed": "Root cli:pack:dry reported omni-context@0.1.1 instead of omctx@0.1.0-alpha.0.",
+      "root_cause": "The root script invoked npm's default pack behavior in the package directory rather than the declared pack:dry script.",
+      "resolution": "The root script delegates to packages/omctx's pack:dry script without changing package contents or dependencies.",
+      "semantic_behavior_changed": false
+    }
+  ],
+  "toolchain": {
+    "os": {
+      "environment_version": "Microsoft Windows NT 10.0.26200.0",
+      "registry_product_name": "Windows 10 Home China",
+      "native_caption": "Microsoft Windows 11 家庭版 中文版",
+      "display_version": "25H2",
+      "current_build": "26200",
+      "ubr": 9278,
+      "edition_id": "CoreCountrySpecific",
+      "installation_type": "Client",
+      "architecture": "64-bit",
+      "identity_note": "Registry ProductName and native Caption disagree; both sources were recorded without modifying the OS."
+    },
+    "git": "2.55.0.windows.2",
+    "node": "22.15.1",
+    "npm": "10.9.2",
+    "rust": "1.95.0",
+    "cargo": "1.95.0",
+    "rustup": "1.29.0",
+    "github_cli": "2.100.0",
+    "codex": "codex-cli 0.144.1",
+    "windows_sdk": ["10.0.19041.0", "10.0.22621.0"],
+    "msvc_visual_studio_installation": "not independently detected; Rust MSVC target and Tauri cargo checks passed",
+    "python": "not installed; no repository command required it"
+  },
+  "regressions": {
+    "brain_build": { "status": "PASS", "command": "brain-server/npm run build" },
+    "brain_tests": { "status": "PASS", "test_files": 72, "tests": 1336, "failed": 0, "command": "brain-server/npm test" },
+    "brain_focused_goal26_goal27_goal28": { "status": "PASS", "test_files": 8, "tests": 150, "failed": 0 },
+    "cli_tests": { "status": "PASS", "tests": 44, "failed": 0, "command": "npm run cli:test" },
+    "cli_smoke": { "status": "PASS", "surfaces": ["help", "version", "version --json"] },
+    "rust_fmt": { "status": "PASS", "command": "cargo fmt --all -- --check" },
+    "rust_check": { "status": "PASS", "command": "cargo check --workspace" },
+    "rust_tests": { "status": "PASS", "passed": 236, "failed": 0, "ignored": 9, "command": "cargo test --all -- --test-threads=1" },
+    "desktop_frontend_build": { "status": "PASS", "command": "desktop-daemon/npm run build" },
+    "desktop_controlled_verifier": { "status": "PASS", "command": "desktop-daemon/npm run verify:controlled" },
+    "desktop_installed_e2e": {
+      "status": "PASS",
+      "passed_checkpoints": 11,
+      "failed_checkpoints": 0,
+      "install_dir": "D:\\AI_code\\Omni-context-worktrees\\goal29-installed-app-20260908",
+      "evidence_dir": "D:\\AI_code\\Omni-context-worktrees\\goal29-e2e-evidence-20260912",
+      "installer_sha256": "85A067095E0163D1EB160252AFFC392912111229CFEDE2DD278E2E5C9A69A814",
+      "app_sha256": "4CC0BE963EEEC2BC6BEDDCDCB1075F558BA8104FA8B212776BCB517BCEAA6481",
+      "checkpoints": ["local-llm-config", "launch-onboarding", "import", "search", "qa", "decision-a", "decision-b-lineage", "lineage-view", "restart-persistence", "export", "restore"]
+    },
+    "browser_extension": { "status": "PASS", "tests": 14, "failed": 0, "build": "PASS" },
+    "mobile": { "typecheck": "PASS", "product_mode": "PASS" },
+    "schema_check": { "status": "PASS" },
+    "d1b0": { "status": "PASS", "dependency_entries": 42 },
+    "d1b1": { "status": "PASS" },
+    "d1b2": { "status": "PASS", "fixture": "controlled local HTTP", "external_writes": 0 },
+    "goal27_adversarial": { "status": "PASS", "total": 72, "failed": 0, "unresolved_blocked": 0, "unknown": 0 },
+    "goal28_second_adapter": { "status": "PASS", "tests": 3 },
+    "security_scanner": { "status": "PASS" }
+  },
+  "runtime_surfaces": {
+    "brain_health": "PASS",
+    "control_protocol": "PASS / 1.0",
+    "mcp_smoke": "PASS",
+    "agent_pilot_smoke": { "status": "PASS", "scopes": ["agent:ask", "agent:inspect", "agent:history", "agent:outcome:read"] },
+    "omctx": { "help": "PASS", "version": "PASS", "doctor": "PASS", "tarball": "omctx@0.1.0-alpha.0" }
+  },
+  "authority": {
+    "master_gate": "PASS",
+    "agent_can_approve": false,
+    "agent_can_execute": false,
+    "agent_can_control_verify": false,
+    "agent_can_reopen": false,
+    "generic_shell": false,
+    "generic_execute_gateway": false,
+    "approval_executes": false,
+    "process_exit_direct_outcome": false,
+    "public_execution_gateway": false,
+    "authority_relaxation": false
+  },
+  "capabilities": {
+    "github_issue_close": "PASS / semantic binding and fail-closed negatives; no external write",
+    "git_branch_create": "PASS / controlled disposable local repository native golden E2E",
+    "cross_adapter_replay": "PASS / adapter and binding mutation rejected fail-closed",
+    "multi_capability_concurrency": "PASS / 8, 16, 32 concurrent attempts accept exactly one",
+    "capability_schema_negative_testing": "PASS"
+  },
+  "durability": {
+    "restart_recovery": "PASS / installed UI restart persistence and durable store tests",
+    "crash_recovery": "PASS / native approval and receipt crash matrix",
+    "silent_duplicate_execution_found": false,
+    "readback_independence": "PASS / trusted native read-back and D1B2",
+    "reopen_regression": "PASS / Goal27 revision tests and installed history surfaces",
+    "judgment_history_reconstructable": true,
+    "migration_test": "PASS / schema, ingestion, auth, embedding migration fixtures",
+    "old_data_readable": true,
+    "destructive_migration": false
+  },
+  "installation": {
+    "clean_install": "PASS / silent NSIS install exit 0",
+    "first_run": "PASS / packaged app onboarding and import",
+    "package_install": "PASS / local omctx tarball installed outside repository",
+    "desktop_release_build": "PASS / NSIS artifact built; private updater signing intentionally not performed",
+    "windows_native_runtime": "PASS",
+    "tarball_sha256": "AA39DA064E2D4A7E0536AA7D0D63A301C9096450A919D001C2D2BFB909FB7A12"
+  },
+  "long_run": {
+    "status": "PASS",
+    "mode": "controlled_local_health_soak",
+    "duration_ms": 125,
+    "iterations": 100,
+    "failures": 0,
+    "real_external_writes": 0
+  },
+  "cross_platform": {
+    "windows_runtime": "PASS",
+    "linux_runtime": "NOT_EXECUTED",
+    "macos_runtime": "NOT_EXECUTED",
+    "posix_runtime_verification": "NOT_EXECUTED",
+    "posix_reason": "No POSIX runtime was actually executed in this workstation scope."
+  },
+  "pilot": {
+    "status": "DEFERRED_WITH_REASON",
+    "reason": "Owner-operated local write pilot was not run; no production or external write was authorized.",
+    "covered_safe_surfaces": ["packaged Desktop onboarding/import/search/QA/lineage/export/restore", "local native git.branch.create disposable-repository fixture"],
+    "real_external_write_count": 0
+  },
+  "goal28_deferred": {
+    "total": 1,
+    "resolved": 0,
+    "remaining": 1,
+    "resolution_artifact": "docs/goal29/deferred-verification-resolution.json"
+  },
+  "protected_assets": {
+    "release_branch_touched": false,
+    "holdback_touched": false,
+    "scientific_refs_touched": false,
+    "old_quarantined_clone_touched": false,
+    "npm_published": false,
+    "real_external_write_count": 0
+  },
+  "secret_leaks": 0,
+  "verification_level": "VERIFIED_LOCAL_WINDOWS_CONTROLLED_EVIDENCE",
+  "notes": [
+    "The authoritative branch and protected refs were verified by exact SHA before repair.",
+    "The feature branch was created from the exact Goal29 base and no Goal30 branch was created.",
+    "External evidence directories and synthetic local fixtures are not repository source or credentials.",
+    "The final feature and authoritative SHAs are recorded in the final report after the bookkeeping commit and fast-forward integration."
+  ]
+}
