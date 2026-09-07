@@ -18,7 +18,7 @@
     "test:security-scanner": "node --test scripts/scan-secrets.test.mjs",
     "cli:test": "node --test packages/omctx/test/*.test.js",
     "cli:smoke": "node packages/omctx/bin/omctx.js --help && node packages/omctx/bin/omctx.js version && node packages/omctx/bin/omctx.js version --json",
-    "cli:pack:dry": "npm --prefix packages/omctx pack --dry-run"
+    "cli:pack:dry": "npm --prefix packages/omctx run pack:dry"
   },
   "keywords": [
     "ai",

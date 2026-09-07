@@ -57,6 +57,47 @@ describe('explicit embedding index manifests', () => {
     expect(table?.sql).toContain('FLOAT[1024]');
   });
 
+  it('uses durable entity blobs before a fresh install receives an explicit profile rebuild', async () => {
+    db.attachEmbeddingService({
+      getUsageProfile: () => ({ dimension: 1024 }),
+    } as any);
+    const embedding = new Array(1024).fill(0);
+    embedding[0] = 1;
+    const entity = await db.addEntity({
+      name: 'Fresh install entity',
+      type: 'concept',
+      description: 'stored before the embedding index is rebuilt',
+      embedding,
+    });
+
+    const results = await db.vectorSearch(embedding, 5);
+
+    expect(results).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: entity.id, similarity: expect.closeTo(1, 5) }),
+    ]));
+    expect(await db.getEmbeddingIndexManifest('vec_entities')).toBeUndefined();
+  });
+
+  it('keeps relationship assertions durable before a fresh install receives an explicit profile rebuild', async () => {
+    db.attachEmbeddingService({
+      embedPassage: async () => ({ embedding: new Array(1024).fill(0.01), dimensions: 1024 }),
+      getUsageProfile: () => ({ dimension: 1024 }),
+    } as any);
+    const source = await db.addEntity({ name: 'Fresh source', type: 'concept' });
+    const target = await db.addEntity({ name: 'Fresh target', type: 'concept' });
+
+    const relationship = await db.addRelationship({
+      source_id: source.id,
+      target_id: target.id,
+      type: 'relates_to',
+      weight: 1,
+    });
+
+    expect(relationship.source_id).toBe(source.id);
+    expect(await db.get('SELECT COUNT(*) AS count FROM assertions')).toEqual({ count: 1 });
+    expect(await db.getEmbeddingIndexManifest('vec_assertions')).toBeUndefined();
+  });
+
   it('archives the old manifest when a profile version forces an explicit rebuild', async () => {
     await db.prepareEmbeddingIndexes(specs);
     await db.activateEmbeddingIndex('vec_entities', 0);

@@ -56,16 +56,21 @@ describe('Task 12: AgentLoop cycle-level AbortController', () => {
     })) as any;
     const loop = new AgentLoop(db, undefined, { cycleTimeoutMs: 30 });
 
-    const started = Date.now();
-    void (loop as any).runCycle();
-    await vi.waitFor(() => {
-      expect(loop.getStatus().running).toBe(false);
-      expect(loop.getStatus().lastError?.message).toBe('Cycle timeout');
-      expect(loop.getStatus().timedOut).toBe(true);
-    }, { timeout: 450, interval: 5 });
-    const elapsedMs = Date.now() - started;
-    console.log(`[AgentLoop timeout proof] elapsed_ms=${elapsedMs} limit_ms=500`);
-    expect(elapsedMs).toBeLessThan(500);
+    // Drive the timeout with Vitest's clock instead of asserting a wall-clock
+    // duration.  The latter is load-sensitive on Windows (especially when
+    // this file runs in the serialized full suite) and does not prove the
+    // timeout/abort contract.
+    vi.useFakeTimers();
+    try {
+      const cycle = (loop as any).runCycle();
+      await vi.advanceTimersByTimeAsync(30);
+      await cycle;
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(loop.getStatus().running).toBe(false);
+    expect(loop.getStatus().lastError?.message).toBe('Cycle timeout');
+    expect(loop.getStatus().timedOut).toBe(true);
 
     // A fresh cycle must acquire the lock even though the first DB promise is
     // still unresolved. Releasing the old promise afterwards must not clobber

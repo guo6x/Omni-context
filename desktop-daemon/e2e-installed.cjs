@@ -34,6 +34,46 @@ async function waitFor(predicate, timeoutMs = 90_000) {
 function stopTree(pid) {
   if (!pid) return;
   spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+  try {
+    process.kill(pid);
+  } catch {
+    // The taskkill call may already have terminated the desktop process.
+  }
+  // The packaged desktop process can leave its Brain child alive after the
+  // WebView exits.  This profile is unique to the E2E run, so its pid file is
+  // the narrow ownership handle needed to release port 3001 before restart.
+  try {
+    const pidFile = path.join(profileDir, 'Local', 'omni-context', 'data', 'brain-server.pid');
+    const brainPid = Number(fs.readFileSync(pidFile, 'utf8').trim());
+    if (Number.isInteger(brainPid) && brainPid > 0 && brainPid !== process.pid && brainPid !== pid) {
+      spawnSync('taskkill', ['/PID', String(brainPid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+      try {
+        process.kill(brainPid);
+      } catch {
+        // taskkill may already have completed the termination.
+      }
+    }
+  } catch {
+    // The app may not have started Brain or may already have removed the pid.
+  }
+  // WebView2's remote-debugging child can outlive the desktop process. Reclaim
+  // only the listener on the port reserved by this E2E so the restart launches
+  // a fresh WebView instead of attaching to stale application state.
+  try {
+    const netstat = spawnSync('C:\\Windows\\System32\\netstat.exe', ['-ano'], {
+      windowsHide: true,
+      encoding: 'utf8',
+    }).stdout || '';
+    const listener = String(netstat).split(/\r?\n/).find((line) =>
+      line.includes(`127.0.0.1:${cdpPort}`) && line.includes('LISTENING'));
+    const match = listener?.match(/\s(\d+)\s*$/);
+    const webviewPid = match ? Number(match[1]) : 0;
+    if (Number.isInteger(webviewPid) && webviewPid > 0 && webviewPid !== process.pid && webviewPid !== pid) {
+      try { process.kill(webviewPid); } catch { /* already gone */ }
+    }
+  } catch {
+    // Port inspection is best-effort; the subsequent health/CDP wait is the gate.
+  }
 }
 
 function mockResponse(request) {
@@ -177,8 +217,25 @@ async function run() {
 
     const demo = page.getByRole('button', { name: /加载示例图谱|Onboarding Demo/ });
     if (await demo.isVisible().catch(() => false)) {
+      const demoResponsePromise = page.waitForResponse(
+        (response) => response.url().includes('/api/admin/seed-demo')
+          && response.request().method() === 'POST',
+        { timeout: 30_000 },
+      );
       await demo.click();
-      await page.getByText(/24 个实体|24 nodes/).first().waitFor({ state: 'hidden', timeout: 30_000 }).catch(() => {});
+      const demoResponse = await demoResponsePromise;
+      const demoPayload = await demoResponse.json().catch(() => null);
+      assert.equal(
+        demoResponse.ok(),
+        true,
+        `onboarding demo failed: HTTP ${demoResponse.status()} ${JSON.stringify(demoPayload)}`,
+      );
+      assert.equal(
+        demoPayload?.success === true || demoPayload?.skipped === true,
+        true,
+        `onboarding demo returned an unexpected payload: ${JSON.stringify(demoPayload)}`,
+      );
+      await demo.waitFor({ state: 'hidden', timeout: 30_000 }).catch(() => {});
     }
     console.log('installed-ui-launch-onboarding=PASS');
 

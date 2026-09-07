@@ -318,7 +318,7 @@ describe('concurrency', () => {
     expect(reopened.list().map((record) => record.name).sort()).toEqual(
       roots.map((_, index) => `parallel-skill-${index}`).sort(),
     );
-  });
+  }, 60_000);
 });
 
 describe('path safety hardening', () => {

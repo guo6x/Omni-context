@@ -2477,6 +2477,14 @@ export class Database {
     if (this.vecEnabled) {
       await this._resolveVecDimension();
       if (queryEmbedding.length !== this.vecDimension) {
+        // A fresh install still has the legacy 384-dimensional entity table
+        // from migration v4, while the default profile produces 1024-
+        // dimensional embeddings. Until the explicit embedding rebuild is
+        // run, normal mode can safely search the durable entity blobs. An
+        // active manifest mismatch and evaluation mode remain fail-closed.
+        if (await this.canUseUnmanagedEntityVectorFallback(queryEmbedding.length)) {
+          return this._vectorSearchFallback(queryEmbedding, limit);
+        }
         throw new Error(`ENTITY_VECTOR_DIMENSION_MISMATCH: index=${this.vecDimension} query=${queryEmbedding.length}`);
       }
       await this.assertEmbeddingIndexReady('vec_entities', queryEmbedding.length);
@@ -2556,6 +2564,18 @@ export class Database {
       .slice(0, limit);
 
     return results;
+  }
+
+  private async canUseUnmanagedEntityVectorFallback(queryDimension: number): Promise<boolean> {
+    if (process.env.OMNI_EVALUATION_MODE === '1' || !this.embeddingService) return false;
+    try {
+      const profile = this.embeddingService.getUsageProfile();
+      if (profile.dimension !== queryDimension) return false;
+      const manifest = await this.getEmbeddingIndexManifest('vec_entities');
+      return !manifest;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -3351,6 +3371,18 @@ export class Database {
     }
     const resolved = await this.getResolvedAssertion(assertionId);
     if (!resolved) throw new Error(`Assertion not found for embedding: ${assertionId}`);
+    // A fresh install may have the legacy vec table but no explicit manifest
+    // until the user selects a profile and runs the rebuild. Keep the durable
+    // assertion available in that normal-mode state; evaluation mode remains
+    // fail-closed and an existing manifest still enforces its dimension and
+    // lifecycle contract below.
+    const existingManifest = await this.getEmbeddingIndexManifest('vec_assertions');
+    if (!existingManifest) {
+      if (process.env.OMNI_EVALUATION_MODE === '1') {
+        throw new Error('EMBEDDING_INDEX_MANIFEST_MISSING: vec_assertions');
+      }
+      return;
+    }
     const result = await this.embeddingService.embedPassage(resolved.passage);
     const manifest = await this.getWritableEmbeddingManifest('vec_assertions', result.dimensions);
     const blob = Buffer.from(new Float32Array(result.embedding).buffer);
