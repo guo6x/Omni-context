@@ -91,9 +91,9 @@ Omni-Context 的产品核心是 **Judgment / Authority Core（判断与权威核
 
 > 真正属于你的，不只是记忆，而是一部会被现实纠错的判断史。
 
-> 注意：这是 category / product **thesis**，不是 DRG-2 前的
-> capability completeness claim。在 Public Launch 之前，capability 声明受
-> DRG v2 冻结约束（见第 11 章）。
+> 注意：这是 category / product **thesis**，不是 capability completeness claim。
+> DRG-2 已由真实、非 synthetic 的 GitHub issue-close E2E 满足；这不自动等于 Public Launch。
+> capability 声明仍必须受 repo + gate evidence 约束（见第 11 章）。
 
 ---
 
@@ -287,7 +287,7 @@ Memory → Evidence Qualification → Decision → Approval
 
 ## 8. Local-first / data sovereignty（本地优先与数据主权）
 
-- 数据全部在本地 SQLite，无云端、无账号、无公网鉴权。这是刻意设计，不是缺陷。
+- **持久数据与产品权威在本地**：核心状态保存在本地 SQLite，不需要 Omni-Context 云端账号、托管后端或公网鉴权。这是刻意设计，不是缺陷。若用户主动配置云端 LLM provider 用于抽取/生成，则发送给该 provider 的内容经过其数据通路并受其数据政策约束；这不改变 Omni-Context 本地存储与本地权威模型。
 - 桌面端本地内嵌 Brain Server；外部客户端经本机 HTTP / MCP 接入。
 - 信任锚保持：**Local-first, read-back verified, and owned by you.**
 - 旧 v1.2 的数据主权原则全部保留（详见附录 A 历史组件盘点）。
@@ -331,6 +331,7 @@ Memory → Evidence Qualification → Decision → Approval
 | Evidence qualification + surface guard | `checkpoint6-security-gate.json` PASS | 服务器自有资格、防伪造覆盖、无公开注册面 |
 | Approval binding + risk policy | `checkpoint7-security-gate.json` PASS | 单次授权、重放防御、无公开批准 IPC |
 | Outcome read-back + deterministic evaluator | `checkpoint8-security-gate.json` PASS（DRG1 SATISFIED） | 受信 resolver、跨语言状态映射 26 + 观测 35 向量 mismatch 0、synthetic E2E 6 例；无公开 readback IPC |
+| Real non-synthetic controlled E2E | `real-e2e/drg2-authoritative-gate.json` PASS（DRG2 SATISFIED） | 真实 GitHub issue-close：approval-gated execution → exit 0 后仍 PENDING → independent read-back CLOSED → deterministic evaluator VERIFIED；属于内部 runtime 证据，不代表 public CLI write feature |
 
 - 测试证据（CP8 全量）：Brain 1279 passed / 0 failed；Rust 206 passed / 0 failed / 7 ignored。
 - 状态表述必须是：**runtime verified on development branch**，
@@ -346,7 +347,6 @@ Memory → Evidence Qualification → Decision → Approval
 ### D. FUTURE（未来规划）
 
 - `omctx reopen` 用户 UX（runtime 未实现）
-- 真实（非 synthetic、用户能理解的）E2E
 - 外部 memory adapters（MindMemOS / basic-memory / 其他）
 - 多 runtime adapters（OpenClaw / NemoClaw / Claude Code / 其他，仅作 Capability Transport）
 - GitHub write 能力及其 read-back（CP8 现状：`issue_create=LOCATOR_GAP`、
@@ -379,11 +379,19 @@ Memory → Evidence Qualification → Decision → Approval
 **DRG-2**：至少一个**真实、非 synthetic、用户能理解**的 E2E 成立后，
 才允许 Public Launch。
 
-- DRG-2 前：**public capability claims = FREEZE**。
-  只能陈述有 repo + Gate 证据支持的当前事实。
-- 可以讨论：target architecture、thesis、future CLI UX、future ecosystem strategy，
-  但必须显式标 `TARGET` / `FUTURE` / `DESIGNED TO`。
-- CP8 的 synthetic E2E（6 例）**不满足** DRG-2 的「真实、非 synthetic」要求。
+- 当前状态：**DRG2 SATISFIED**。权威证据：
+  `docs/goal24/real-e2e/drg2-authoritative-gate.json`，
+  对应真实 GitHub issue-close 闭环：
+  approval-gated execution → exit 0 后仍 PENDING →
+  independent read-back CLOSED → deterministic evaluator VERIFIED。
+- 这意味着 Public Launch **不再被“缺少真实 E2E”阻塞**，但**不是自动发布授权**。
+  Packaging / Public CLI alpha / Demo / Launch package / Release claim audit
+  仍需按各自门槛完成。
+- Public capability claims 仍只能陈述有 repo + Gate 证据支持的当前事实；
+  target architecture、thesis、future CLI UX、future ecosystem strategy
+  必须显式标 `TARGET` / `FUTURE` / `DESIGNED TO`。
+- CP8 的 synthetic E2E（6 例）本身不满足 DRG-2；
+  DRG-2 的满足来自后续 authoritative real E2E，而不是回溯升级 synthetic 证据。
 
 ---
 

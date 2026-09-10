@@ -47,7 +47,7 @@ reality disagrees.
   "what the agent knows". They are a core part of the product, re-placed at the base of the
   judgment loop, not deleted.
 - **MCP is one interface surface**, not the product itself.
-- **Desktop** is the human control surface: inspect, approve, audit, and reopen decisions.
+- **Desktop** is the human control surface: inspect, approve, and audit current decision state; user-facing reopen UX remains FUTURE.
 
 Read the full thesis: [docs/goal24/narrative/thesis-note.en.md](docs/goal24/narrative/thesis-note.en.md) ·
 product vision: [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)
@@ -141,7 +141,7 @@ Read-back → Outcome → Reopen / Revision
 ## What makes it different
 
 - **Not a note app** — it is a decision-control layer. Tools don't need their own memory systems; they share one evidence substrate and one authority core.
-- **Not cloud** — SQLite on your disk. No accounts, no servers, no data ever leaves your machine.
+- **Local-first storage and authority** — durable state lives in local SQLite with no required cloud account or hosted Omni-Context backend. If you configure a cloud LLM provider for extraction or generation, the content sent to that provider is subject to that provider's data path and policy.
 - **Not locked to one AI** — MCP-based today; MCP clients share the same memory. MCP is an interface surface, not the product.
 - **Active, not passive** — the agent scans your graph for connections you've forgotten and surfaces them.
 - **Questions your thinking** — blind spot detection finds what you're missing. Anti-consensus insights challenge your assumptions.

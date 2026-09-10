@@ -1,3 +1,8 @@
+> [!WARNING]
+> **LEGACY NARRATIVE — DO NOT USE AS CURRENT LAUNCH COPY.**
+> This document predates the O1 positioning migration to **Evidence-grounded decision control for long-lived AI agents** and the Goal29 V1 freeze.
+> Keep it for historical reference only. Current release claims must follow `docs/PRODUCT-VISION.md` and `docs/post-goal29-release-claim-audit.md`.
+
 # 宣传文案底稿 / Marketing Copy
 
 > 草稿，供迭代。
