@@ -287,7 +287,7 @@ Memory → Evidence Qualification → Decision → Approval
 
 ## 8. Local-first / data sovereignty（本地优先与数据主权）
 
-- 数据全部在本地 SQLite，无云端、无账号、无公网鉴权。这是刻意设计，不是缺陷。
+- **持久数据与产品权威在本地**：核心状态保存在本地 SQLite，不需要 Omni-Context 云端账号、托管后端或公网鉴权。这是刻意设计，不是缺陷。若用户主动配置云端 LLM provider 用于抽取/生成，则发送给该 provider 的内容经过其数据通路并受其数据政策约束；这不改变 Omni-Context 本地存储与本地权威模型。
 - 桌面端本地内嵌 Brain Server；外部客户端经本机 HTTP / MCP 接入。
 - 信任锚保持：**Local-first, read-back verified, and owned by you.**
 - 旧 v1.2 的数据主权原则全部保留（详见附录 A 历史组件盘点）。
