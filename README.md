@@ -47,7 +47,7 @@ reality disagrees.
   "what the agent knows". They are a core part of the product, re-placed at the base of the
   judgment loop, not deleted.
 - **MCP is one interface surface**, not the product itself.
-- **Desktop** is the human control surface: inspect, approve, audit, and reopen decisions.
+- **Desktop** is the human control surface: inspect, approve, and audit current decision state; a verified internal Goal27 reopen/revision runtime exists, while a shipped Desktop user-facing reopen UX remains TARGET/FUTURE.
 
 Read the full thesis: [docs/goal24/narrative/thesis-note.en.md](docs/goal24/narrative/thesis-note.en.md) ·
 product vision: [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)
@@ -56,10 +56,11 @@ product vision: [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)
 
 ## Current state
 
-Capability status uses exactly three labels: **CURRENTLY_VERIFIED** (user-facing today),
-**TARGET** (target architecture), **FUTURE** (planned). "Runtime verified on the development
-branch" is not the same as "available today". Governance language is frozen in
-[docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md) (§ 14).
+Public capability state uses three classes: **CURRENTLY_VERIFIED** (user-facing today),
+**TARGET** (target architecture), and **FUTURE** (planned). Claim governance additionally uses
+**CURRENTLY_VERIFIED_INTERNAL** for gate-backed internal runtime evidence and **DO_NOT_CLAIM**
+for prohibited public claims. Internal verification is not the same as "available today".
+Governance language is frozen in [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md) (§ 14).
 
 ### A. Current user-facing — usable today
 
@@ -71,45 +72,40 @@ branch" is not the same as "available today". Governance language is frozen in
 - Saved decisions, decision lineage, and outcome recording
 - MCP integration — 26 tools, counted from [mcp_tool_manifest.json](mcp_tool_manifest.json)
 - Desktop capture / local desktop application (Windows installer via GitHub Releases)
+- Browser extension for page / selection capture
 
-### B. Development-branch runtime verified (CP3–CP8 internal gates)
+### B. Gate-backed internal runtime — verified, not automatically public
 
-Under active development on `dev/goal24-cli-skills`. Each item below has engineering
-gate evidence, **but no public invocation surface yet** — it is **runtime verified on the
-development branch**, not "available today":
+The following components have repository + Gate evidence in the current integrated codebase, but that does **not** make them public user invocation surfaces:
 
 | Component | Gate evidence |
 |---|---|
 | Restricted execution broker (spawn/kill/timeout, containment, output caps) | [checkpoint3-security-gate.json](docs/goal24/checkpoint3-security-gate.json) — PASS |
-| GitHub read-only CLI adapter (5 semantic capabilities, pinned executable, zero write bindings) | [checkpoint4-security-gate.json](docs/goal24/checkpoint4-security-gate.json) — PASS |
+| GitHub read-only CLI adapter (5 semantic capabilities, pinned executable) | [checkpoint4-security-gate.json](docs/goal24/checkpoint4-security-gate.json) — PASS |
 | Skills registry + importer (quarantine-by-default, integrity-verified) | [checkpoint5-security-gate.json](docs/goal24/checkpoint5-security-gate.json) — PASS |
 | Evidence qualification + surface guard (server-owned eligibility, forged-coverage closure) | [checkpoint6-security-gate.json](docs/goal24/checkpoint6-security-gate.json) — PASS |
 | Approval binding + risk policy (single-use grants, replay defense) | [checkpoint7-security-gate.json](docs/goal24/checkpoint7-security-gate.json) — PASS |
 | Outcome read-back + deterministic evaluator (trusted resolvers, cross-language state/observation vectors) | [checkpoint8-security-gate.json](docs/goal24/checkpoint8-security-gate.json) — PASS (DRG1 prerequisite satisfied) |
 | Real non-synthetic E2E: one approval-gated GitHub issue-close closed loop against real GitHub with independent read-back (exit 0 => PENDING => read-back CLOSED => VERIFIED) | [drg2-authoritative-gate.json](docs/goal24/real-e2e/drg2-authoritative-gate.json) — PASS (DRG2 satisfied) |
+| Human-only reopen / DecisionRevision: requalify current evidence → same deterministic Decision Kernel → fresh judgment/new unapproved plan at most; no execution/retry/rollback/old-authority reuse | [reopen-authority-gate.json](docs/goal27/gates/reopen-authority-gate.json), [revision-evidence-gate.json](docs/goal27/gates/revision-evidence-gate.json), [revision-integrity-gate.json](docs/goal27/gates/revision-integrity-gate.json) — PASS |
 
-CP8 full-suite evidence: Brain 1279 passed / 0 failed; Rust 206 passed / 0 failed / 7 ignored;
-cross-language vectors 26 (state) + 35 (observation), 0 mismatches.
+Historical CP8 full-suite evidence: Brain 1279 passed / 0 failed; Rust 206 passed / 0 failed / 7 ignored; cross-language vectors 26 (state) + 35 (observation), 0 mismatches. Goal29 later re-ran the integrated Windows baseline and records Brain 1336/0, CLI 44/0, Rust 236/0 (9 ignored), browser extension 14/0 and installed Desktop E2E 11/11.
 
-**Post-CP8 real E2E (development branch verified):** one real, non-synthetic, approval-gated GitHub issue-close closed-loop E2E has been demonstrated against real GitHub with independent read-back. Exit 0 was NOT treated as success — the outcome stayed PENDING until the trusted `github.issue.read` read-back observed CLOSED and the deterministic evaluator returned VERIFIED. This is **internal runtime** evidence: there is **no public CLI feature** for GitHub automation today. See [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json).
+**Post-CP8 real E2E:** one real, non-synthetic, approval-gated GitHub issue-close closed-loop E2E has been demonstrated against real GitHub with independent read-back. Exit 0 was NOT treated as success — the outcome stayed PENDING until the trusted `github.issue.read` read-back observed CLOSED and the deterministic evaluator returned VERIFIED. This is **internal runtime** evidence: there is **no public CLI feature** for GitHub automation today. See [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json).
 
-### C. Internal control / Future — not published
+### C. Internal control / Future user surfaces — not published
 
-- `omctx` CLI (`ask` / `inspect` / `approve` / `verify` / `history`) —
-  **CURRENTLY_VERIFIED_INTERNAL**. `approve` and `verify` require separate
-  short-lived Desktop control sessions; they never start execution, retry
-  writes or rollback. The package remains private and is not an npm user install.
-  See [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md).
-- `omctx reopen` user UX — **FUTURE** (runtime not implemented).
-- External memory adapters (e.g. MindMemOS, basic-memory) — **FUTURE**, via
-  EvidenceProvider Adapter → qualification → Evidence Guard. External memory never becomes
-  an evidence authority on its own.
-- Multi-runtime adapters (e.g. OpenClaw, NemoClaw, Claude Code) — **FUTURE**, as capability
-  transport only; runtimes never receive decision, approval, or outcome authority.
+- `omctx` private alpha (`doctor` / `ask` / `inspect` / `history` / `approve` / `verify` / `reopen`) — **CURRENTLY_VERIFIED_INTERNAL**. The package remains private/unpublished and is not an npm user install.
+- `approve`, `verify`, and `reopen` use separate short-lived Desktop-minted control sessions. `reopen` is human-only (`control:reopen`), requalifies current evidence, and creates a new judgment/revision lifecycle; it **never** starts execution, retries the original write, rolls back automatically, verifies reality by caller assertion, or reuses old approval/grant/plan authority.
+- Agent Pilot cannot reopen.
+- Desktop-visible / public user-facing reopen UX — **TARGET / FUTURE USER SURFACE**. Internal Goal27 runtime must not be marketed as a shipped Desktop feature.
+- External memory adapters (e.g. MindMemOS, basic-memory) — **FUTURE**, via EvidenceProvider Adapter → qualification → Evidence Guard. External memory never becomes an evidence authority on its own.
+- Multi-runtime adapters (e.g. OpenClaw, NemoClaw, Claude Code) — **FUTURE**, as capability transport only; runtimes never receive decision, approval, or outcome authority.
 
-> **DRG v2**: a real, non-synthetic, user-understandable E2E flow now exists and is verified
-> (see the Post-CP8 table row above and
-> [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json)).
+See [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md) for the control-surface boundary.
+
+> **DRG v2**: a real, non-synthetic, user-understandable E2E flow exists and is verified
+> (see [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json)).
 > Public capability claims remain frozen to what repo + gate evidence supports; anything else
 > is explicitly labeled **TARGET** / **FUTURE** / **DESIGNED TO**. Omni is *designed to* sit
 > between heterogeneous memory/evidence sources and heterogeneous agent runtimes — it does
@@ -141,7 +137,7 @@ Read-back → Outcome → Reopen / Revision
 ## What makes it different
 
 - **Not a note app** — it is a decision-control layer. Tools don't need their own memory systems; they share one evidence substrate and one authority core.
-- **Not cloud** — SQLite on your disk. No accounts, no servers, no data ever leaves your machine.
+- **Local-first storage and authority** — durable state lives in local SQLite with no required cloud account or hosted Omni-Context backend. If you configure a cloud LLM provider for extraction or generation, the content sent to that provider is subject to that provider's data path and policy.
 - **Not locked to one AI** — MCP-based today; MCP clients share the same memory. MCP is an interface surface, not the product.
 - **Active, not passive** — the agent scans your graph for connections you've forgotten and surfaces them.
 - **Questions your thinking** — blind spot detection finds what you're missing. Anti-consensus insights challenge your assumptions.
@@ -150,8 +146,7 @@ Read-back → Outcome → Reopen / Revision
 
 ## Tools
 
-Current MCP interface exposes 26 tools, grouped by what they do. Canonical count is generated in
-[`mcp_tool_manifest.json`](mcp_tool_manifest.json).
+Current MCP interface exposes 26 tools, grouped by what they do. Canonical count is generated in [`mcp_tool_manifest.json`](mcp_tool_manifest.json).
 
 ### Decision & retrieval — the "brain"
 
@@ -199,7 +194,7 @@ Full parameter schemas: see [docs/MCP-INTEGRATION.md](docs/MCP-INTEGRATION.md).
 
 ### Windows
 
-Download `Omni-Context-Setup-x64.msi` from [Releases](https://github.com/guo6x/Omni-context/releases/latest). Double-click, done. Fully offline — Node.js runtime and embedding models are bundled.
+Download `Omni-Context-Setup-x64.msi` from [Releases](https://github.com/guo6x/Omni-context/releases/latest). Double-click, done. Core storage and authority remain local; the installer bundles the Node.js runtime and embedding models. If you configure a cloud LLM provider for extraction or generation, data sent to that provider follows its data path and policy.
 
 ### macOS / Linux
 
@@ -214,8 +209,7 @@ npm run install:all
 npm run package
 ```
 
-> There is **no** `omctx` npm package to install today — it is a TARGET. Naming and
-> registry status: [docs/goal24/narrative/naming-audit.json](docs/goal24/narrative/naming-audit.json).
+> There is **no public `omctx` npm package to install today**. The private alpha implementation is internal only. Naming and registry status: [docs/goal24/narrative/naming-audit.json](docs/goal24/narrative/naming-audit.json).
 
 ---
 

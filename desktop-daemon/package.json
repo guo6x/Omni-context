@@ -16,7 +16,6 @@
     "@tauri-apps/api": "^1.5.0",
     "clsx": "^2.1.0",
     "lucide-react": "^0.309.0",
-    "next": "14.2.35",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -32,6 +31,7 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.17",
+    "next": "14.2.35",
     "postcss": "8.5.14",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"

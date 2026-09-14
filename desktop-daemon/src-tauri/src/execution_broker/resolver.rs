@@ -74,6 +74,62 @@ pub fn resolve_executable(
     }))
 }
 
+#[cfg(windows)]
+fn reject_windows_reparse_indirection(candidate: &Path) -> Result<(), BrokerError> {
+    use std::os::windows::fs::MetadataExt;
+
+    // FILE_ATTRIBUTE_REPARSE_POINT. Symlinks and junctions are represented as
+    // reparse points on Windows. We inspect every existing path component so
+    // parent-directory junctions cannot hide behind an otherwise regular final
+    // `.exe`.
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0000_0400;
+
+    let mut current = PathBuf::new();
+    for component in candidate.components() {
+        if matches!(
+            component,
+            std::path::Component::CurDir | std::path::Component::ParentDir
+        ) {
+            return Err(BrokerError::new(
+                ErrorCode::BrokerBlockedExecutable,
+                format!(
+                    "executable candidate may not contain relative path components: {}",
+                    candidate.display()
+                ),
+            ));
+        }
+
+        current.push(component.as_os_str());
+        if matches!(
+            component,
+            std::path::Component::Prefix(_) | std::path::Component::RootDir
+        ) {
+            continue;
+        }
+
+        let metadata = std::fs::symlink_metadata(&current).map_err(|_| {
+            BrokerError::new(
+                ErrorCode::BrokerBlockedExecutable,
+                format!(
+                    "executable path component metadata unavailable: {}",
+                    current.display()
+                ),
+            )
+        })?;
+        if metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+            return Err(BrokerError::new(
+                ErrorCode::BrokerBlockedExecutable,
+                format!(
+                    "executable candidate contains symlink/junction indirection: {}",
+                    current.display()
+                ),
+            ));
+        }
+    }
+
+    Ok(())
+}
+
 fn resolve_single(candidate: &Path) -> Result<ExecutableFingerprint, BrokerError> {
     if !candidate.is_absolute() {
         return Err(BrokerError::new(
@@ -105,6 +161,13 @@ fn resolve_single(candidate: &Path) -> Result<ExecutableFingerprint, BrokerError
                 ),
             ));
         }
+
+        // Reject the security-relevant indirection explicitly instead of
+        // comparing path strings. Windows may legitimately canonicalize the
+        // same physical path from an 8.3 alias (RUNNER~1), different casing, or
+        // a non-verbatim form into a long `\\?\` path. Those representation
+        // changes are not symlink/junction escapes.
+        reject_windows_reparse_indirection(candidate)?;
     }
 
     let canonical = std::fs::canonicalize(candidate).map_err(|_| {
@@ -114,25 +177,11 @@ fn resolve_single(candidate: &Path) -> Result<ExecutableFingerprint, BrokerError
         )
     })?;
 
-    // Reject candidates whose canonical on-disk identity differs from the
-    // requested path (symlink/junction indirection to another file is
-    // fail-closed for broker executables).
-    #[cfg(windows)]
-    {
-        let strip_verbatim = |s: &str| s.trim_start_matches("\\\\?\\").to_lowercase();
-        let canon_norm = strip_verbatim(&canonical.to_string_lossy());
-        let cand_norm = strip_verbatim(&candidate.to_string_lossy());
-        if canon_norm != cand_norm {
-            return Err(BrokerError::new(
-                ErrorCode::BrokerBlockedExecutable,
-                format!(
-                    "executable canonical identity differs from candidate: {} -> {}",
-                    candidate.display(),
-                    canonical.display()
-                ),
-            ));
-        }
-    }
+    // On Unix, retain the existing strict path identity check. On Windows the
+    // equivalent security property is enforced above by rejecting every
+    // reparse-point component before canonicalization; literal path equality is
+    // not a valid identity test because 8.3 aliases and verbatim prefixes can
+    // name the same file.
     #[cfg(not(windows))]
     {
         if canonical != candidate {

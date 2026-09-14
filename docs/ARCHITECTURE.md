@@ -24,16 +24,16 @@ Five components, one brain:
                   [Desktop Tauri App]   ← main console + system capture
 
                           ↑
-                          | mcp-proxy.js (stdio ↔ HTTP)
+                          | stdio proxy or loopback MCP HTTP
                           |
-                [Claude Desktop / Cursor / Cline / ...]
-                12+ MCP clients, one shared knowledge graph
+                 [Compatible MCP clients]
+                 shared local evidence substrate
 ```
 
 - **Brain Server** is the single data authority. All other components are its "senses" or "interfaces."
 - Desktop app launches Brain Server as a child process (bundled Node.js runtime).
-- Mobile, extension, and hardware connect over LAN to Brain Server — no local DB.
-- External AI clients use `mcp-proxy.js` over stdio, which forwards to local brain-server — all clients share one DB + one LLM config.
+- Mobile, extension, and hardware connect to Brain Server through their implemented local/LAN surfaces; they do not own the canonical database.
+- MCP is an interface surface, not the product boundary. Clients with a compatible MCP transport can use the stdio proxy or the authenticated loopback HTTP endpoint; concrete client compatibility depends on that client's MCP implementation and configuration.
 
 ## Component stack
 
@@ -54,7 +54,8 @@ Five components, one brain:
 | Browser Extension → Brain Server | HTTP (3001) | LAN, CORS allowed, local token auth |
 | Mobile → Brain Server | HTTP (3001) | LAN, pair code auth |
 | ESP32 → Desktop | UDP (9090) | One-way trigger only |
-| MCP Clients → mcp-proxy.js → Brain Server | stdio + HTTP (3001) | Proxy reads local token from disk |
+| MCP stdio clients → mcp-proxy.js → Brain Server | stdio + HTTP (3001) | Proxy reads local token from disk and forwards to the running Brain Server |
+| MCP HTTP clients → Brain Server | loopback HTTP `POST /mcp` | Bearer token required; Desktop/Brain must be running |
 
 There is no WebSocket, no mDNS, no cross-process push channel. Clients poll Brain Server's HTTP API. UDP 9090 listens on `127.0.0.1` by default.
 
@@ -63,8 +64,8 @@ There is no WebSocket, no mDNS, no cross-process push channel. Clients poll Brai
 ```
 omni-context-release/
 ├── brain-server/              # Brain: HTTP API + MCP + proxy + SQLite + Agent
-│   ├── src/mcp-server.ts           # MCP stdio + HTTP dual-mode (desktop embedded entry)
-│   ├── src/mcp-proxy.ts            # MCP proxy (clients spawn this)
+│   ├── src/mcp-server.ts           # standalone MCP stdio entry
+│   ├── src/mcp-proxy.ts            # stdio proxy to the running Brain HTTP service
 │   ├── src/mcp-tools.ts            # MCP definitions; generated count in /mcp_tool_manifest.json
 │   ├── src/agent/agent-loop.ts     # Agent cycle: consolidate → insight → blind spot → decay
 │   ├── src/agent/blindspot-detector.ts  # Cognitive blind spot detection (task 35-1)
@@ -80,7 +81,7 @@ omni-context-release/
 └── docs/
     ├── PRODUCT-VISION.md      # North star document
     ├── ARCHITECTURE.md        # This document
-    ├── MCP-INTEGRATION.md     # Third-party AI integration guide
+    ├── MCP-INTEGRATION.md     # MCP integration guide
     └── BUILDING.md            # Dev setup
 ```
 

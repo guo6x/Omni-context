@@ -45,10 +45,10 @@ Agent 已经会行动——写代码、开 issue、跑命令。但**记忆不是
 世界真的按你的意图改变了）。Omni-Context 补上的就是这个缺口：行动前审定证据资格，
 把执行绑定到为之负责的那次精确决策上，行动后读回现实，现实不符时重新打开那次决策。
 
-- **记忆与知识图谱**是长期**证据底座（Evidence Substrate）**——回答"Agent 知道什么"。
+- **记忆与知识图谱**是长期**证据底座（Evidence Substrate）**——回答“Agent 知道什么”。
   它们是产品的重要组成部分，被重新安置到判断闭环的底部，**没有被删除**。
 - **MCP 只是接口面之一**，不是产品本身。
-- **桌面端**是人类控制面：检查、批准、审计，并在必要时重新打开决策。
+- **桌面端**是人类控制面：检查、批准和审计当前决策状态；Goal27 已有内部验证的 reopen/revision runtime，但公开的 Desktop 可见重开 UX 仍属于 TARGET/FUTURE 用户面。
 
 完整论点：[docs/goal24/narrative/thesis-note.zh-CN.md](docs/goal24/narrative/thesis-note.zh-CN.md) ·
 产品愿景：[docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)
@@ -57,9 +57,10 @@ Agent 已经会行动——写代码、开 issue、跑命令。但**记忆不是
 
 ## 当前状态
 
-能力状态只用三种标签：**CURRENTLY_VERIFIED**（用户今天可直接使用）、**TARGET**（目标架构）、
-**FUTURE**（未来规划）。"开发分支 runtime 已验证"不等于"今天可用"。治理语言冻结在
-[docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)（第 14 章）。
+对外产品能力状态分为三类：**CURRENTLY_VERIFIED**（用户今天可直接使用）、**TARGET**（目标架构）和
+**FUTURE**（未来规划）。声明治理另外使用 **CURRENTLY_VERIFIED_INTERNAL** 表示已有 Gate 证据、
+但尚无公开调用面的内部 runtime 能力，并使用 **DO_NOT_CLAIM** 标记禁止对外宣称的内容。
+内部验证不等于“今天可用”。治理语言冻结在 [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)（第 14 章）。
 
 ### A. 当前用户可直接使用（CURRENTLY_VERIFIED）
 
@@ -71,44 +72,40 @@ Agent 已经会行动——写代码、开 issue、跑命令。但**记忆不是
 - 已保存的决策、决策谱系与结果记录
 - MCP 集成——26 个工具，数量以 [mcp_tool_manifest.json](mcp_tool_manifest.json) 为准
 - 桌面捕获 / 本地桌面应用（GitHub Releases 提供 Windows 安装包）
+- 浏览器插件（页面 / 选区捕获）
 
-### B. 开发分支 runtime 已验证（CP3–CP8 内部工程 Gate）
+### B. Gate 支撑的内部 runtime —— 已验证，但不自动等于公开能力
 
-正在 `dev/goal24-cli-skills` 上开发。以下各项均有工程 Gate 证据，**但尚无任何
-公开调用入口**——状态是 **runtime verified on development branch（开发分支 runtime 已验证）**，
-不是 "available today"：
+下列组件在当前已集成仓库状态中有 repo + Gate 证据，但这**不**意味着用户今天拥有公开调用入口：
 
 | 组件 | Gate 证据 |
 |---|---|
 | 受限执行 broker（spawn/kill/timeout、进程约束、输出上限） | [checkpoint3-security-gate.json](docs/goal24/checkpoint3-security-gate.json) — PASS |
-| GitHub 只读 CLI 适配器（5 个语义能力、可执行文件钉定、零写绑定） | [checkpoint4-security-gate.json](docs/goal24/checkpoint4-security-gate.json) — PASS |
+| GitHub 只读 CLI 适配器（5 个语义能力、可执行文件钉定） | [checkpoint4-security-gate.json](docs/goal24/checkpoint4-security-gate.json) — PASS |
 | Skills registry + importer（默认隔离、完整性校验） | [checkpoint5-security-gate.json](docs/goal24/checkpoint5-security-gate.json) — PASS |
 | 证据资格 + surface guard（服务器自有资格、防伪造覆盖闭合） | [checkpoint6-security-gate.json](docs/goal24/checkpoint6-security-gate.json) — PASS |
 | 批准绑定 + 风险策略（单次授权、重放防御） | [checkpoint7-security-gate.json](docs/goal24/checkpoint7-security-gate.json) — PASS |
 | 结果读回 + 确定性 evaluator（受信 resolver、跨语言状态/观测向量） | [checkpoint8-security-gate.json](docs/goal24/checkpoint8-security-gate.json) — PASS（DRG1 前置已满足） |
 | 真实非 synthetic E2E：一次经批准门控的 GitHub issue-close 闭环，针对真实 GitHub 且独立读回（exit 0 ⇒ PENDING ⇒ 读回 CLOSED ⇒ VERIFIED） | [drg2-authoritative-gate.json](docs/goal24/real-e2e/drg2-authoritative-gate.json) — PASS（DRG2 已满足） |
+| 人类专属 reopen / DecisionRevision：重新资格审定当前证据 → 同一确定性 Decision Kernel → 最多产生新的未批准 plan；绝不执行/重试/回滚/复用旧权威 | [reopen-authority-gate.json](docs/goal27/gates/reopen-authority-gate.json)、[revision-evidence-gate.json](docs/goal27/gates/revision-evidence-gate.json)、[revision-integrity-gate.json](docs/goal27/gates/revision-integrity-gate.json) — PASS |
 
-CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 failed / 7 ignored；
-跨语言向量 26（状态）+ 35（观测），mismatch 0。
+历史 CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 failed / 7 ignored；跨语言向量 26（状态）+ 35（观测），mismatch 0。Goal29 后续对已集成 Windows 基线重新验证并记录 Brain 1336/0、CLI 44/0、Rust 236/0（9 ignored）、浏览器插件 14/0、安装版 Desktop E2E 11/11。
 
-**Post-CP8 真实 E2E（开发分支已验证）：** 已在真实 GitHub 上演示一次真实、非 synthetic、经批准门控的 issue-close 闭环，并带独立读回——exit 0 不被当作成功（Outcome 保持 PENDING），直到受信的 `github.issue.read` 读回观测到 CLOSED、确定性 evaluator 返回 VERIFIED。这是 **internal runtime（内部运行时）** 证据：目前 **没有面向用户的 GitHub 自动化 CLI 功能**。详见 [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json)。
+**Post-CP8 真实 E2E：** 已在真实 GitHub 上演示一次真实、非 synthetic、经批准门控的 issue-close 闭环，并带独立读回——exit 0 不被当作成功（Outcome 保持 PENDING），直到受信的 `github.issue.read` 读回观测到 CLOSED、确定性 evaluator 返回 VERIFIED。这是 **internal runtime（内部运行时）** 证据：目前 **没有面向用户的 GitHub 自动化 CLI 功能**。详见 [docs/goal24/real-e2e/authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json)。
 
-### C. 内部控制面 / FUTURE —— 尚未发布
+### C. 内部控制面 / 未来用户面 —— 尚未公开发布
 
-- `omctx` CLI（`ask` / `inspect` / `approve` / `verify` / `history`）
-  —— **CURRENTLY_VERIFIED_INTERNAL**。`approve` 与 `verify` 分别需要
-  Desktop 短时 control session，绝不启动执行、重试写入或回滚；package
-  仍为 private，尚未作为 npm 用户安装面发布。详见
-  [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md)。
-- `omctx reopen` 用户 UX —— **FUTURE**（runtime 未实现）。
-- 外部记忆适配器（如 MindMemOS、basic-memory）—— **FUTURE**，只能经
-  EvidenceProvider Adapter → 资格审定 → Evidence Guard 接入；外部 Memory 不会自动
-  成为证据权威。
-- 多 runtime 适配器（如 OpenClaw、NemoClaw、Claude Code）—— **FUTURE**，仅作为
-  capability transport；runtime 不得获得决策 / 批准 / 结果权威。
+- `omctx` private alpha（`doctor` / `ask` / `inspect` / `history` / `approve` / `verify` / `reopen`）—— **CURRENTLY_VERIFIED_INTERNAL**。package 仍为 private / unpublished，不是 npm 用户安装面。
+- `approve`、`verify`、`reopen` 分别使用 Desktop 生成的短时 control session。`reopen` 为 human-only（`control:reopen`）：重新资格审定当前证据，进入新的 judgment/revision 生命周期；它**绝不**启动执行、重试原 write、自动回滚、接受 caller 自报“验证成功”，也不会复用旧 approval/grant/plan 权威。
+- Agent Pilot 不能 reopen。
+- Desktop 可见 / 公开的 user-facing reopen UX —— **TARGET / FUTURE USER SURFACE**。不得把 Goal27 内部 runtime 宣传成已发布 Desktop 功能。
+- 外部记忆适配器（如 MindMemOS、basic-memory）—— **FUTURE**，只能经 EvidenceProvider Adapter → 资格审定 → Evidence Guard 接入；外部 Memory 不会自动成为证据权威。
+- 多 runtime 适配器（如 OpenClaw、NemoClaw、Claude Code）—— **FUTURE**，仅作为 capability transport；runtime 不得获得决策 / 批准 / 结果权威。
 
-> **DRG v2**：在至少一个真实、非 synthetic、用户能理解的 E2E 成立之前，
-> 对外 capability 声明冻结为「有 repo + Gate 证据支持的当前事实」。
+控制面边界详见 [docs/goal24/narrative/cli-product-surface.md](docs/goal24/narrative/cli-product-surface.md)。
+
+> **DRG v2**：一个真实、非 synthetic、用户能理解的 E2E 已经存在并通过验证。
+> 对外 capability 声明仍只限于有 repo + Gate 证据支持的当前事实；
 > 其余一律显式标注 **TARGET** / **FUTURE** / **DESIGNED TO**。
 > Omni 是 *designed to* 站在异构记忆/证据源与异构 Agent runtime 之间——
 > **不**宣称今天就能对接任意 memory OS 或任意 runtime。
@@ -131,7 +128,7 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
 
 1. **捕获** —— 截图、拖入文件、剪藏网页，或按一个物理按钮。任何东西都行。
 2. **抽取** —— OCR + LLM 流水线把实体、关系与核心原则抽取进本地知识图谱。
-3. **资格与决策** —— 证据资格审定判断"这些信息现在还能不能信、够不够格支撑行动"。
+3. **资格与决策** —— 证据资格审定判断“这些信息现在还能不能信、够不够格支撑行动”。
 4. **执行与核验** —— 被批准的语义能力经受限 broker 执行，然后读回现实、与当初支撑决策的预期比对。
 
 ---
@@ -139,7 +136,7 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
 ## 它有什么不一样
 
 - **不是笔记应用** —— 它是决策控制层。工具不需要各自的记忆系统，共享同一份证据底座与同一个权威核心。
-- **不是云端** —— 数据存在你硬盘上的 SQLite 里。无需账号、无服务器，数据永不离开你的机器。
+- **本地优先的存储与权威** —— 持久状态保存在你硬盘上的 SQLite 中，不需要 Omni-Context 云端账号或托管后端。若你主动配置云端 LLM provider 用于抽取或生成，发送给该 provider 的内容会经过其数据通路并受其数据政策约束。
 - **不绑定单一 AI** —— 目前基于 MCP；MCP 客户端共享同一份记忆。MCP 是接口面，不是产品。
 - **主动而非被动** —— 智能体会主动扫描你的图谱，找出你已经遗忘的关联并主动浮现。
 - **会质疑你的认知** —— 盲区检测告诉你漏了什么，反共识洞见挑战你的已有假设。
@@ -150,7 +147,7 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
 
 当前 MCP 接口暴露 26 个工具，按用途分组。权威数量由 [`mcp_tool_manifest.json`](mcp_tool_manifest.json) 生成。
 
-### 决策与检索 —— "大脑"
+### 决策与检索 —— “大脑”
 
 - `get_decision_context` —— 给定一个情境，一次调用返回相关原则、先例、冲突与图谱邻域
 - `unified_memory_search` —— 一次自然语言查询完成三层融合检索（全文 + 向量 + 图谱遍历）
@@ -196,7 +193,7 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
 
 ### Windows
 
-从 [Releases](https://github.com/guo6x/Omni-context/releases/latest) 下载 `Omni-Context-Setup-x64.msi`，双击即可。完全离线 —— 已内置 Node.js 运行时和嵌入模型。
+从 [Releases](https://github.com/guo6x/Omni-context/releases/latest) 下载 `Omni-Context-Setup-x64.msi`，双击即可。核心存储与产品权威保持在本地；安装包已内置 Node.js 运行时和嵌入模型。若你主动配置云端 LLM provider 用于抽取或生成，发送给该 provider 的数据会经过其数据通路并受其数据政策约束。
 
 ### macOS / Linux
 
@@ -211,12 +208,12 @@ npm run install:all
 npm run package
 ```
 
-> 今天**没有**可安装的 `omctx` npm 包——它是 TARGET。命名与 registry 状态：
+> 今天**没有公开可安装的 `omctx` npm 包**；private alpha 仅用于内部验证。命名与 registry 状态：
 > [docs/goal24/narrative/naming-audit.json](docs/goal24/narrative/naming-audit.json)。
 
 ---
 
-## 为什么不是"光有记忆"？为什么不是"光有可观测性"？为什么不是"通用 runtime"？
+## 为什么不是“光有记忆”？为什么不是“光有可观测性”？为什么不是“通用 runtime”？
 
 - **光有记忆**：记得住，但分不清哪些记忆现在还够格支撑行动。Omni 在行动前先做证据资格。
 - **光有可观测性**：事后告诉你发生了什么，但不能把执行绑定到决策、也不能在事前拒绝一次坏行动。Omni 在事前与事中做绑定和闸门，事后做核验。

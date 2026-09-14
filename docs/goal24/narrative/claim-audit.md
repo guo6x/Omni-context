@@ -1,5 +1,7 @@
 # Claim Audit — Narrative Surface（对外声明审计）
 
+> **历史快照说明（2026-09）**：本文保留 2026-08-16 Narrative Lane 当时的审计结果、计数与 next actions，**不是当前发布声明权威**，也不应据此判断 DRG2 的当前状态。Post-Goal29 / DRG2 的最新 release truth 以 [`docs/post-goal29-release-claim-audit.md`](../../post-goal29-release-claim-audit.md)、[`public-claim-matrix.json`](public-claim-matrix.json) 以及对应 Gate 证据为准。下文中的“等待真实 E2E”、旧矩阵计数等内容仅代表当日历史状态。
+
 > 审计对象：Narrative Lane 所有权的对外叙事面文件。
 > 审计时间：2026-08-16。审计方法：基线全文阅读 + 关键字全文扫描 + 逐条归类。
 > 结论口径：`CURRENT` / `TARGET` / `FUTURE` / `DO_NOT_CLAIM`，
