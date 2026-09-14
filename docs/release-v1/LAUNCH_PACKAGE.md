@@ -27,6 +27,7 @@
 | README ZH | current narrative | final post-Goal29 consistency pass |
 | PRODUCT-VISION | DRG2 truth synced on release-doc branch | merge after review |
 | Landing | DRG2 truth synced on release-doc branch | merge after review |
+| GitHub repository metadata | public description still uses legacy Memory OS / fully-offline positioning | update repository description immediately before/with launch |
 | Windows installer | Goal29 controlled install PASS | choose release artifact + checksum |
 | Public demo | not recorded | record from `docs/release-v1/DEMO_SCRIPT.md` |
 | Screenshots | partial/unknown | capture 3–5 from frozen V1 |
@@ -40,7 +41,7 @@
 A release may proceed without adding new features if these are ready:
 
 1. Windows installer + SHA-256
-2. README / Landing aligned to Goal29 truth
+2. README / Landing / GitHub repository metadata aligned to Goal29 truth
 3. 90-second demo
 4. 3–5 screenshots
 5. install / MCP quick-start instructions
@@ -116,5 +117,6 @@ Before publishing or announcing, answer YES to all:
 - [ ] Does the demo avoid pretending internal GitHub writes are public?
 - [ ] Does the demo avoid pretending `reopen` is shipped?
 - [ ] Are installer/checksums from the chosen release artifact recorded?
+- [ ] Is the public GitHub repository description aligned with the Judgment Core positioning and free of the old `fully offline` absolute claim?
 - [ ] Are legacy memory-centric marketing files excluded from current launch copy?
 - [ ] Are no research claims expanded beyond the frozen paper evidence?
