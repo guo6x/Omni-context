@@ -56,10 +56,11 @@ product vision: [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)
 
 ## Current state
 
-Capability status uses exactly three labels: **CURRENTLY_VERIFIED** (user-facing today),
-**TARGET** (target architecture), **FUTURE** (planned). "Runtime verified on the development
-branch" is not the same as "available today". Governance language is frozen in
-[docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md) (§ 14).
+Public capability state uses three classes: **CURRENTLY_VERIFIED** (user-facing today),
+**TARGET** (target architecture), and **FUTURE** (planned). Claim governance additionally uses
+**CURRENTLY_VERIFIED_INTERNAL** for gate-backed internal runtime evidence and **DO_NOT_CLAIM**
+for prohibited public claims. "Runtime verified on the development branch" is not the same as
+"available today". Governance language is frozen in [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md) (§ 14).
 
 ### A. Current user-facing — usable today
 
@@ -71,6 +72,7 @@ branch" is not the same as "available today". Governance language is frozen in
 - Saved decisions, decision lineage, and outcome recording
 - MCP integration — 26 tools, counted from [mcp_tool_manifest.json](mcp_tool_manifest.json)
 - Desktop capture / local desktop application (Windows installer via GitHub Releases)
+- Browser extension for page / selection capture
 
 ### B. Development-branch runtime verified (CP3–CP8 internal gates)
 
@@ -199,7 +201,7 @@ Full parameter schemas: see [docs/MCP-INTEGRATION.md](docs/MCP-INTEGRATION.md).
 
 ### Windows
 
-Download `Omni-Context-Setup-x64.msi` from [Releases](https://github.com/guo6x/Omni-context/releases/latest). Double-click, done. Fully offline — Node.js runtime and embedding models are bundled.
+Download `Omni-Context-Setup-x64.msi` from [Releases](https://github.com/guo6x/Omni-context/releases/latest). Double-click, done. Core storage and authority remain local; the installer bundles the Node.js runtime and embedding models. If you configure a cloud LLM provider for extraction or generation, data sent to that provider follows its data path and policy.
 
 ### macOS / Linux
 
