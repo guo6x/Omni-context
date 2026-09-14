@@ -39,8 +39,8 @@ describe('vNext Desktop evidence diagnostics projection', () => {
         {
           evidence_class: 'state.unverified',
           status: 'unverified',
-          verification_level: 'observed',
-          evidence_ids: ['observed-1'],
+          verification_level: 'asserted',
+          evidence_ids: ['asserted-1'],
           checked_at: '2026-09-15T00:00:00.000Z',
         },
       ],
