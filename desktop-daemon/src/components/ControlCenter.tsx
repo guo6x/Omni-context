@@ -16,6 +16,31 @@ type OutcomeContext = {
   reason_codes: string[];
 };
 
+type EvidenceDiagnosticEntry = {
+  evidence_class: string;
+  status: string;
+  verification_level: string;
+  checked_at: string;
+  stale_since: string | null;
+  evidence_ids: string[];
+  evidence_ids_truncated: boolean;
+  conflict_evidence_ids: string[];
+  conflict_evidence_ids_truncated: boolean;
+};
+
+type EvidenceDiagnostics = {
+  projection_version: number;
+  source: "authorization_plan_snapshot";
+  guard_run_id: string;
+  guard_reason_codes: null;
+  guard_reason_codes_status: "NOT_AVAILABLE_FROM_PLAN_SNAPSHOT";
+  missing_classes: string[];
+  stale_classes: string[];
+  conflicted_classes: string[];
+  unverified_classes: string[];
+  entries: EvidenceDiagnosticEntry[];
+};
+
 type RevisionProjection = {
   root_decision_id: string;
   original_decision_id: string;
@@ -58,9 +83,11 @@ type PlanRecord = {
     normalized_inputs?: Record<string, unknown>; created_at?: string; expires_at?: string;
   };
   approval_request?: { status: string; expires_at?: string; side_effect_summary?: { side_effect_class: string; reversible: boolean }; evidence_summary?: { mandatory_satisfied: boolean } } | null;
+  guard_run_id?: string;
   blocked_reason?: string | null;
   outcome?: { status?: "PENDING" | "VERIFIED" | "MISMATCH" | "INCONCLUSIVE"; revisit_required?: boolean; readback_attempts?: number; verification_attempts?: number } | null;
   outcome_context?: OutcomeContext | null;
+  evidence_diagnostics?: EvidenceDiagnostics | null;
   revision?: RevisionProjection | null;
 };
 
@@ -74,6 +101,10 @@ function stateText(state: JsonObject | null): string {
   if (!state) return "NOT_AVAILABLE";
   const serialized = JSON.stringify(state, null, 2);
   return serialized.length > 2_000 ? `${serialized.slice(0, 2_000)}\n… bounded display truncated` : serialized;
+}
+
+function classSummary(label: string, values: string[]): string | null {
+  return values.length > 0 ? `${label}: ${values.join(", ")}` : null;
 }
 
 export default function ControlCenter({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -156,9 +187,17 @@ export default function ControlCenter({ isOpen, onClose }: { isOpen: boolean; on
         const receiptCaptured = Boolean(outcome); const outcomePending = outcome?.status === 'PENDING'; const entries = plan.evidence_coverage_snapshot?.entries ?? [];
         const canReopen = outcome?.status === 'MISMATCH' || outcome?.status === 'INCONCLUSIVE' || outcome?.status === 'VERIFIED';
         const revision = record.revision;
+        const diagnostics = record.evidence_diagnostics;
+        const diagnosticSummaries = diagnostics ? [
+          classSummary('Missing', diagnostics.missing_classes),
+          classSummary('Stale', diagnostics.stale_classes),
+          classSummary('Conflicted', diagnostics.conflicted_classes),
+          classSummary('Unverified', diagnostics.unverified_classes),
+        ].filter((value): value is string => Boolean(value)) : [];
         return <article key={plan.plan_id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <div className="flex items-start justify-between gap-3"><div><div className="font-medium text-white">{plan.capability_id}</div><div className="mt-1 font-mono text-[10px] text-gray-500">{plan.plan_id}</div></div><span className={`rounded-full px-2 py-1 text-[10px] uppercase ${pending ? 'bg-amber-500/20 text-amber-300' : ready ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-500/20 text-gray-300'}`}>{plan.state}</span></div>
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs"><div><span className="text-gray-500">Risk</span><div className="text-gray-200">{plan.risk_snapshot?.risk_level ?? 'unknown'}</div></div><div><span className="text-gray-500">Side effects</span><div className="text-gray-200">{plan.risk_snapshot?.side_effect_class ?? 'unknown'} · {plan.risk_snapshot?.reversible ? 'reversible' : 'not reversible'}</div></div><div><span className="text-gray-500">Evidence</span><div className="text-gray-200">{entries.map((entry) => `${entry.evidence_class}: ${entry.status}`).join(' · ') || 'not available'}</div></div><div><span className="text-gray-500">Expiry</span><div className="text-gray-200">{plan.expires_at ? new Date(plan.expires_at).toLocaleString() : 'bounded policy TTL'}</div></div></div>
+          {diagnostics && <div className="mt-3 rounded-lg border border-sky-500/20 bg-sky-950/20 p-3 text-xs text-sky-50"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-medium text-sky-200">Evidence snapshot diagnostics</div><div className="font-mono text-[9px] text-sky-400">guard {diagnostics.guard_run_id}</div></div><div className="mt-1 text-[10px] text-sky-200">Source: immutable authorization plan snapshot. Full Guard reason codes and retrieval trace are not reconstructed here.</div>{diagnosticSummaries.length > 0 ? <div className="mt-2 text-[10px] text-amber-200">{diagnosticSummaries.join(' · ')}</div> : <div className="mt-2 text-[10px] text-emerald-200">No missing / stale / conflicted / unverified evidence classes in this bound snapshot.</div>}<div className="mt-3 space-y-2">{diagnostics.entries.map((entry) => <div key={entry.evidence_class} className="rounded bg-black/20 p-2"><div className="flex flex-wrap justify-between gap-2"><span className="font-medium text-sky-100">{entry.evidence_class}</span><span className="text-[10px] uppercase text-sky-300">{entry.status} · {entry.verification_level}</span></div><div className="mt-1 text-[10px] text-gray-400">Checked {new Date(entry.checked_at).toLocaleString()}{entry.stale_since ? ` · stale since ${new Date(entry.stale_since).toLocaleString()}` : ''}</div><div className="mt-1 break-all font-mono text-[9px] text-gray-400">Evidence IDs: {entry.evidence_ids.length ? entry.evidence_ids.join(' · ') : 'none'}{entry.evidence_ids_truncated ? ' · … truncated' : ''}</div>{entry.conflict_evidence_ids.length > 0 && <div className="mt-1 break-all font-mono text-[9px] text-rose-300">Conflict IDs: {entry.conflict_evidence_ids.join(' · ')}{entry.conflict_evidence_ids_truncated ? ' · … truncated' : ''}</div>}</div>)}</div><div className="mt-2 text-[9px] text-gray-500">Guard reason codes: {diagnostics.guard_reason_codes_status}</div></div>}
           {pending && <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-950/20 p-3 text-xs text-amber-100">Human approval required. Approval only changes the plan to ready; it never starts execution.</div>}
           <div className="mt-3 grid grid-cols-3 gap-2 text-[11px] text-gray-400"><div>Process<br /><span className="text-gray-200">{receiptCaptured ? 'RECORDED' : 'NOT_STARTED'}</span></div><div>Receipt<br /><span className="text-gray-200">{receiptCaptured ? 'CAPTURED' : 'PENDING'}</span></div><div>Read-back<br /><span className="text-gray-200">{receiptCaptured ? `${outcome?.readback_attempts ?? 0} attempt(s)` : 'PENDING'}</span></div></div>
           <ol className="mt-4 space-y-1 border-l border-white/10 pl-3 text-[11px] text-gray-400"><li>Evidence qualified · {entries.length ? 'coverage captured' : 'not available'}</li><li>Decision {plan.decision_id} · plan created {plan.created_at ? new Date(plan.created_at).toLocaleString() : 'server-owned'}</li><li>Approval · {plan.approval_granted ? 'approved (execution not started by approval)' : pending ? 'awaiting human control' : 'not required / unavailable'}</li><li>Execution / receipt · {receiptCaptured ? 'native receipt captured' : 'not started'}</li><li>Read-back / outcome · {outcome?.status ?? 'pending execution'}</li></ol>

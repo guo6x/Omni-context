@@ -9,6 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { AuthorizationService } from '../approval/authorization-service.js';
 import type { PlanAuthorizationRecord } from '../approval/contracts.js';
+import type { EvidenceCoverageSnapshot } from '../execution/contracts.js';
 import type { EvidenceSurfaceRuntime } from '../evidence/runtime.js';
 import type { ServerVerificationRuntime } from '../control/verification-runtime.js';
 import type { DecisionRevisionService } from '../revision/service.js';
@@ -42,6 +43,53 @@ export interface AgentPilotAdapterOptions {
   verificationRuntime?: ServerVerificationRuntime;
   /** Read-only projection only. Agent Pilot never receives the reopen writer. */
   revisionRuntime?: Pick<DecisionRevisionService, 'projectionForDecision'>;
+}
+
+const MAX_DESKTOP_EVIDENCE_IDS_PER_ENTRY = 5;
+
+/**
+ * Read-only, bounded diagnostics derived from the immutable evidence snapshot
+ * already bound into an authorized plan. This deliberately does NOT pretend
+ * to be the full CP6 GuardRun/retrieval trace: GuardRunStore is memory-only and
+ * restart-invalidated by design. We therefore project only facts that remain
+ * present on the plan snapshot and label the source explicitly.
+ */
+export function projectDesktopEvidenceDiagnostics(
+  guardRunId: string,
+  coverage: EvidenceCoverageSnapshot,
+) {
+  const entries = coverage.entries.map((entry) => {
+    const evidenceIds = entry.evidence_ids.slice(0, MAX_DESKTOP_EVIDENCE_IDS_PER_ENTRY);
+    const conflictIds = (entry.conflict_evidence_ids ?? []).slice(0, MAX_DESKTOP_EVIDENCE_IDS_PER_ENTRY);
+    return {
+      evidence_class: entry.evidence_class,
+      status: entry.status,
+      verification_level: entry.verification_level,
+      checked_at: entry.checked_at,
+      stale_since: entry.stale_since ?? null,
+      evidence_ids: evidenceIds,
+      evidence_ids_truncated: entry.evidence_ids.length > evidenceIds.length,
+      conflict_evidence_ids: conflictIds,
+      conflict_evidence_ids_truncated: (entry.conflict_evidence_ids?.length ?? 0) > conflictIds.length,
+    };
+  });
+
+  const classesByStatus = (status: string) => entries
+    .filter((entry) => entry.status === status)
+    .map((entry) => entry.evidence_class);
+
+  return {
+    projection_version: 1,
+    source: 'authorization_plan_snapshot' as const,
+    guard_run_id: guardRunId,
+    guard_reason_codes: null,
+    guard_reason_codes_status: 'NOT_AVAILABLE_FROM_PLAN_SNAPSHOT' as const,
+    missing_classes: classesByStatus('missing'),
+    stale_classes: classesByStatus('stale'),
+    conflicted_classes: classesByStatus('conflicted'),
+    unverified_classes: classesByStatus('unverified'),
+    entries,
+  };
 }
 
 function sanitizePlanRecord(record: PlanAuthorizationRecord) {
@@ -155,10 +203,10 @@ export class AgentPilotAdapter {
   }
 
   /**
-   * Desktop Control Center gets expected-vs-observed display facts through
-   * its local decision-read route. Agent Pilot deliberately does not: its
-   * inspect/history surface is limited to the bounded revision projection and
-   * existing status-only outcome record.
+   * Desktop Control Center gets expected-vs-observed display facts and a
+   * bounded evidence-snapshot diagnostic projection through its local
+   * decision-read route. Agent Pilot deliberately does not receive these
+   * Desktop-only projections.
    */
   async desktopHistory() {
     return Promise.all(this.options.authorizationService.listAuthorizationRecords()
@@ -179,12 +227,16 @@ export class AgentPilotAdapter {
     return this.options.revisionRuntime.projectionForDecision(decisionId);
   }
 
-  private async projectRecord(record: PlanAuthorizationRecord, includeOutcomeContext: boolean) {
+  private async projectRecord(record: PlanAuthorizationRecord, includeDesktopContext: boolean) {
     return {
       ...sanitizePlanRecord(record),
       outcome: this.options.verificationRuntime?.observePlan(record.plan.plan_id) ?? null,
-      ...(includeOutcomeContext ? {
+      ...(includeDesktopContext ? {
         outcome_context: this.options.verificationRuntime?.getBoundedOutcomeProjection(record.plan.plan_id) ?? null,
+        evidence_diagnostics: projectDesktopEvidenceDiagnostics(
+          record.guard_run_id,
+          record.plan.evidence_coverage_snapshot,
+        ),
       } : {}),
       revision: await this.revisionProjection(record.plan.decision_id),
     };
