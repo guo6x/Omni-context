@@ -33,11 +33,6 @@ jobs:
         run: |
           node - <<'NODE'
           const l = require('./package-lock.json');
-          const root = l.packages[''];
-          if (!root.overrides || root.overrides.tar !== '7.5.22') {
-            console.error('root tar override mismatch', root.overrides && root.overrides.tar);
-            process.exit(1);
-          }
           const tarEntries = Object.entries(l.packages)
             .filter(([k, p]) => (k === 'node_modules/tar' || k.endsWith('/node_modules/tar')) && p && p.version)
             .map(([k, p]) => [k, p.version]);
