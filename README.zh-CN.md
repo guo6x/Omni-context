@@ -57,8 +57,10 @@ Agent 已经会行动——写代码、开 issue、跑命令。但**记忆不是
 
 ## 当前状态
 
-能力状态只用三种标签：**CURRENTLY_VERIFIED**（用户今天可直接使用）、**TARGET**（目标架构）、
-**FUTURE**（未来规划）。"开发分支 runtime 已验证"不等于"今天可用"。治理语言冻结在
+对外产品能力状态分为三类：**CURRENTLY_VERIFIED**（用户今天可直接使用）、**TARGET**（目标架构）和
+**FUTURE**（未来规划）。声明治理另外使用 **CURRENTLY_VERIFIED_INTERNAL** 表示已有 Gate 证据、
+但尚无公开调用面的内部 runtime 能力，并使用 **DO_NOT_CLAIM** 标记禁止对外宣称的内容。
+“开发分支 runtime 已验证”不等于“今天可用”。治理语言冻结在
 [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md)（第 14 章）。
 
 ### A. 当前用户可直接使用（CURRENTLY_VERIFIED）
@@ -71,6 +73,7 @@ Agent 已经会行动——写代码、开 issue、跑命令。但**记忆不是
 - 已保存的决策、决策谱系与结果记录
 - MCP 集成——26 个工具，数量以 [mcp_tool_manifest.json](mcp_tool_manifest.json) 为准
 - 桌面捕获 / 本地桌面应用（GitHub Releases 提供 Windows 安装包）
+- 浏览器插件（页面 / 选区捕获）
 
 ### B. 开发分支 runtime 已验证（CP3–CP8 内部工程 Gate）
 
@@ -107,8 +110,9 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
 - 多 runtime 适配器（如 OpenClaw、NemoClaw、Claude Code）—— **FUTURE**，仅作为
   capability transport；runtime 不得获得决策 / 批准 / 结果权威。
 
-> **DRG v2**：在至少一个真实、非 synthetic、用户能理解的 E2E 成立之前，
-> 对外 capability 声明冻结为「有 repo + Gate 证据支持的当前事实」。
+> **DRG v2**：一个真实、非 synthetic、用户能理解的 E2E 已经存在并通过验证
+> （见上面的 Post-CP8 行及 [authoritative-real-e2e-proof.json](docs/goal24/real-e2e/authoritative-real-e2e-proof.json)）。
+> 对外 capability 声明仍只限于有 repo + Gate 证据支持的当前事实；
 > 其余一律显式标注 **TARGET** / **FUTURE** / **DESIGNED TO**。
 > Omni 是 *designed to* 站在异构记忆/证据源与异构 Agent runtime 之间——
 > **不**宣称今天就能对接任意 memory OS 或任意 runtime。
@@ -196,7 +200,7 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
 
 ### Windows
 
-从 [Releases](https://github.com/guo6x/Omni-context/releases/latest) 下载 `Omni-Context-Setup-x64.msi`，双击即可。完全离线 —— 已内置 Node.js 运行时和嵌入模型。
+从 [Releases](https://github.com/guo6x/Omni-context/releases/latest) 下载 `Omni-Context-Setup-x64.msi`，双击即可。核心存储与产品权威保持在本地；安装包已内置 Node.js 运行时和嵌入模型。若你主动配置云端 LLM provider 用于抽取或生成，发送给该 provider 的数据会经过其数据通路并受其数据政策约束。
 
 ### macOS / Linux
 
