@@ -1,7 +1,7 @@
 # Omni-Context V1 Release Demo Script
 
 > Status: release-preparation draft
-> Truth baseline: Goal29 V1 feature freeze + DRG2 authoritative PASS
+> Truth baseline: Goal29 V1 feature freeze + DRG2 authoritative PASS + Goal27 internal reopen/revision gates
 > Rule: never present an INTERNAL capability as a public user-facing feature.
 
 ## Demo goal
@@ -15,6 +15,8 @@ The public demo has two clearly separated parts:
 - **Part A — User-facing today (CURRENTLY_VERIFIED):** installed Desktop flow.
 - **Part B — Controlled runtime proof (CURRENTLY_VERIFIED_INTERNAL):** the already-verified GitHub issue-close closed loop. This is evidence of the architecture, **not a public GitHub automation feature**.
 
+Goal27 also has a gate-verified **internal/private** human-only reopen/revision runtime. It is not required to be shown in this public demo and must not be presented as a shipped Desktop/public npm feature.
+
 ---
 
 ## 0. Pre-recording truth checks
@@ -23,7 +25,7 @@ Before recording:
 
 - Use the Goal29-frozen Windows V1 build or an artifact derived from the same verified baseline.
 - Do not show `omctx` as an npm-installed public product.
-- Do not show `omctx reopen` as implemented.
+- Do not present private/internal `omctx reopen` as a shipped public or Desktop user-facing feature. If it is referenced at all, label it **CURRENTLY_VERIFIED_INTERNAL** and human-only.
 - Do not say "works with any AI", "works with any runtime", or "provider-independent".
 - Do not imply process exit 0 means semantic success.
 - If Part B is shown, put the label **INTERNAL CONTROLLED RUNTIME PROOF — NOT A PUBLIC FEATURE** on screen.
@@ -89,7 +91,7 @@ Use only already verified public surfaces:
 
 > When the situation changes, Omni-Context preserves the earlier judgment and its lineage instead of silently overwriting history.
 
-Do **not** call this the `omctx reopen` user UX. That command remains FUTURE.
+Do **not** call this the shipped Desktop reopen UX. Goal27's human-only `omctx reopen` / DecisionRevision path is internally verified, but the public/Desktop reopen user surface is not what this shot demonstrates.
 
 ### Shot 5 — Persistence / ownership (52–62 s)
 
@@ -164,12 +166,17 @@ deterministic evaluator = VERIFIED
 - no "works with every runtime"
 - no public GitHub write automation claim
 - no public npm `omctx` claim
-- no implemented `omctx reopen` claim
+- no shipped Desktop/public reopen UX claim
+- no agent reopen authority
 - no automatic rollback
 - no LLM-as-judge
 - no generic shell agent
 - no deployment-readiness claim derived from the research benchmark
 - no cross-provider research claim
+
+Internal Goal27 fact that may be stated only when clearly labeled:
+
+> A human-only `control:reopen` path and DecisionRevision runtime are CURRENTLY_VERIFIED_INTERNAL. They requalify current evidence and create a fresh judgment/revision; they do not execute, retry, rollback, or reuse prior approval/grant/plan authority.
 
 ---
 

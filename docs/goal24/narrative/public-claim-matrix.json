@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "purpose": "Public claim matrix for the Omni-Context narrative surface. Every public claim must be listed here with an allowed status; claims not listed here must not be published on the narrative surface.",
   "status_vocabulary": [
     "CURRENTLY_VERIFIED",
@@ -13,7 +13,7 @@
     "internal_runtime",
     "target"
   ],
-  "rule": "runtime verified != publicly usable. CURRENTLY_VERIFIED_INTERNAL means gate evidence exists on the development branch but there is NO public invocation surface.",
+  "rule": "runtime verified != publicly usable. CURRENTLY_VERIFIED_INTERNAL means repo + Gate evidence exists for the internal/private runtime, but it does not create public user availability by itself.",
   "surfaces": [
     "README",
     "Landing",
@@ -21,6 +21,7 @@
     "ProductVision"
   ],
   "generated_at": "2026-08-25T14:18:43.682Z",
+  "last_truth_sync": "2026-09-15",
   "claims": [
     {
       "claim_id": "C-01",
@@ -32,54 +33,31 @@
         "README.md install section",
         "docs/PRODUCT-VISION.md §8"
       ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "C-02",
       "claim_text": "Knowledge graph of entities, relationships, and core principles.",
       "status": "CURRENTLY_VERIFIED",
       "availability": "user_facing",
-      "evidence": [
-        "brain-server/src/graphrag/",
-        "brain-server/src/memory/",
-        "README.md tools section"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["brain-server/src/graphrag/", "brain-server/src/memory/", "README.md tools section"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "C-03",
       "claim_text": "Hybrid retrieval: full-text + vector + graph traversal.",
       "status": "CURRENTLY_VERIFIED",
       "availability": "user_facing",
-      "evidence": [
-        "brain-server/src/retrieval/",
-        "brain-server/src/mcp-tools.ts (unified_memory_search)"
-      ],
-      "surface": [
-        "README",
-        "ProductVision"
-      ]
+      "evidence": ["brain-server/src/retrieval/", "brain-server/src/mcp-tools.ts (unified_memory_search)"],
+      "surface": ["README", "ProductVision"]
     },
     {
       "claim_id": "C-04",
       "claim_text": "Temporal / provenance-aware context.",
       "status": "CURRENTLY_VERIFIED",
       "availability": "user_facing",
-      "evidence": [
-        "brain-server/src/retrieval/temporal-layer.ts"
-      ],
-      "surface": [
-        "README",
-        "ProductVision"
-      ]
+      "evidence": ["brain-server/src/retrieval/temporal-layer.ts"],
+      "surface": ["README", "ProductVision"]
     },
     {
       "claim_id": "C-05",
@@ -90,131 +68,71 @@
         "brain-server/src/decision/decision-store.ts",
         "mcp_tool_manifest.json (save_decision / get_decision_lineage / record_decision_outcome)"
       ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "C-06",
       "claim_text": "MCP interface exposing 26 tools.",
       "status": "CURRENTLY_VERIFIED",
       "availability": "user_facing",
-      "evidence": [
-        "mcp_tool_manifest.json (toolCount: 26)"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["mcp_tool_manifest.json (toolCount: 26)"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "C-07",
       "claim_text": "Desktop capture application distributed as a Windows installer via GitHub Releases.",
       "status": "CURRENTLY_VERIFIED",
       "availability": "user_facing",
-      "evidence": [
-        "README.md install section",
-        ".github/workflows/release.yml",
-        "docs/PRODUCT-VISION.md appendix A.3 (Windows packaging msi + nsis)"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["README.md install section", ".github/workflows/release.yml", "docs/PRODUCT-VISION.md appendix A.3 (Windows packaging msi + nsis)"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "C-08",
       "claim_text": "Browser extension for page/selection capture.",
       "status": "CURRENTLY_VERIFIED",
       "availability": "user_facing",
-      "evidence": [
-        "browser-extension/",
-        "docs/PRODUCT-VISION.md appendix A.5"
-      ],
-      "surface": [
-        "README",
-        "ProductVision"
-      ]
+      "evidence": ["browser-extension/", "docs/PRODUCT-VISION.md appendix A.5"],
+      "surface": ["README", "ProductVision"]
     },
     {
       "claim_id": "I-01",
       "claim_text": "Restricted execution broker (spawn/kill/timeout, containment, output caps) — CP3 gate PASS.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/checkpoint3-security-gate.json (CHECKPOINT3_SECURITY_GATE_PASS)",
-        "desktop-daemon/src-tauri/src/execution_broker/"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint3-security-gate.json (CHECKPOINT3_SECURITY_GATE_PASS)", "desktop-daemon/src-tauri/src/execution_broker/"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-02",
-      "claim_text": "GitHub read-only CLI adapter: 5 semantic capabilities, pinned executable, zero write bindings — CP4 gate PASS.",
+      "claim_text": "GitHub read-only CLI adapter: 5 semantic capabilities, pinned executable — CP4 gate PASS.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/checkpoint4-security-gate.json (BLOCKED -> PASS)",
-        "brain-server/src/capabilities/github-readonly.ts"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint4-security-gate.json (BLOCKED -> PASS)", "brain-server/src/capabilities/github-readonly.ts"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-03",
       "claim_text": "Skills registry + importer with quarantine-by-default and integrity verification — CP5 gate PASS.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/checkpoint5-security-gate.json (PASS)",
-        "brain-server/src/skills/"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint5-security-gate.json (PASS)", "brain-server/src/skills/"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-04",
       "claim_text": "Evidence qualification + surface guard with server-owned eligibility and forged-coverage closure — CP6 gate PASS.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/checkpoint6-security-gate.json (PASS)",
-        "brain-server/src/evidence/"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint6-security-gate.json (PASS)", "brain-server/src/evidence/"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-05",
       "claim_text": "Approval binding + risk policy: single-use grants, durable replay defense — CP7 gate PASS.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/checkpoint7-security-gate.json (PASS)",
-        "brain-server/src/approval/",
-        "desktop-daemon/src-tauri/src/approval/"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint7-security-gate.json (PASS)", "brain-server/src/approval/", "desktop-daemon/src-tauri/src/approval/"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-06",
@@ -226,55 +144,34 @@
         "brain-server/src/outcome/",
         "desktop-daemon/src-tauri/src/execution_broker/readback/"
       ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-07",
       "claim_text": "Cross-language state mapping (26 vectors) and observation (35 vectors) with 0 mismatches.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (cross_language_state_vectors 26, observations 35, contract_mismatches 0)",
-        "docs/goal24/checkpoint8-manifest.json"
-      ],
-      "surface": [
-        "README",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint8-security-gate.json (cross_language_state_vectors 26, observations 35, contract_mismatches 0)", "docs/goal24/checkpoint8-manifest.json"],
+      "surface": ["README", "ProductVision"]
     },
     {
       "claim_id": "I-08",
-      "claim_text": "CP3-CP8 runtime has no public invocation surface (execute_ipc_enabled=false, no public approval/readback IPC); production write bindings = 1 (github.issue.close, Post-CP8).",
+      "claim_text": "Controlled execution runtime is internal; Post-CP8 has one production semantic write binding (github.issue.close) but no public generic execution surface.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
       "evidence": [
         "docs/goal24/post-cp8-integration-gate.json (execution_surface block)",
         "docs/goal24/checkpoint8-security-gate.json (CP8-time snapshot: production_write_bindings=0; superseded by the Post-CP8 state)"
       ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-09",
       "claim_text": "CP8 full suite: Brain 1279 passed / 0 failed; Rust 206 passed / 0 failed / 7 ignored.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (tests block)",
-        "docs/goal24/checkpoint8-manifest.json"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint8-security-gate.json (tests block)", "docs/goal24/checkpoint8-manifest.json"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-10",
@@ -282,34 +179,29 @@
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
       "evidence": [
-        "brain-server/src/capabilities/github-write.ts (reversible_write / medium / L2, approval required)",
-        "desktop-daemon/src-tauri/src/github_cli/close_binding.rs (restricted binding, fixed fused argv)",
-        "desktop-daemon/src-tauri/src/github_cli/readback.rs (trusted github.issue.read read-back binding)",
-        "docs/goal24/real-e2e/authoritative-real-e2e-proof.json (real E2E: exit 0 -> PENDING -> read-back CLOSED -> VERIFIED)",
+        "brain-server/src/capabilities/github-write.ts",
+        "desktop-daemon/src-tauri/src/github_cli/close_binding.rs",
+        "desktop-daemon/src-tauri/src/github_cli/readback.rs",
+        "docs/goal24/real-e2e/authoritative-real-e2e-proof.json",
         "docs/goal24/real-e2e/drg2-authoritative-gate.json"
       ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-11",
-      "claim_text": "omctx CLI alpha implementation is internally verified: authenticated read-only doctor / ask / inspect / history plus separate explicit Desktop-session approve and verify paths; neither starts execution or retries writes.",
+      "claim_text": "omctx private alpha is internally verified: doctor / ask / inspect / history plus explicit Desktop-session approve / verify / reopen control paths; none of those control commands starts or retries execution.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
       "evidence": [
-        "packages/omctx/ (private:true, version 0.1.0-alpha.0, zero runtime dependencies)",
-        "docs/goal24/distribution/omctx-alpha-candidate-gate.json (OMCTX_ALPHA_CANDIDATE_GATE=PASS)",
-        "docs/goal24/distribution/omctx-alpha-authoritative-gate.json (OMCTX_ALPHA_AUTHORITATIVE_GATE=PASS; real temporary Brain smoke)",
-        "docs/goal24/distribution/omctx-control-surface-status.json (approve and verify CURRENTLY_VERIFIED_INTERNAL; execution not implemented)"
+        "packages/omctx/ (private:true, version 0.1.0-alpha.0)",
+        "docs/goal24/distribution/omctx-alpha-candidate-gate.json",
+        "docs/goal24/distribution/omctx-alpha-authoritative-gate.json",
+        "packages/omctx/src/commands/locked.js",
+        "packages/omctx/src/cli.js",
+        "packages/omctx/test/reopen-command.test.js",
+        "docs/goal29/proof/v1-freeze-proof.json (CLI 44/44 PASS)"
       ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-12",
@@ -322,159 +214,101 @@
         "docs/goal24/distribution/d1b0/public-control-attack-surface.json",
         "docs/goal24/distribution/d1b0/d1b0-readiness-gate.json"
       ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "I-13",
-      "claim_text": "D1B-1 feature-branch approval gateway: explicit local Desktop control:approve session, loopback-only fixed route, server-owned awaiting plan, native single-use grant, and execution not started.",
+      "claim_text": "D1B-1 approval gateway: explicit local Desktop control:approve session, loopback-only fixed route, server-owned awaiting plan, native single-use grant, and execution not started.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/distribution/d1b1/d1b1-approval-gate.json",
-        "brain-server/src/control/",
-        "desktop-daemon/src-tauri/src/execution_broker/native_control.rs",
-        "packages/omctx/src/commands/locked.js"
-      ],
-      "surface": [
-        "README",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/distribution/d1b1/d1b1-approval-gate.json", "brain-server/src/control/", "desktop-daemon/src-tauri/src/execution_broker/native_control.rs", "packages/omctx/src/commands/locked.js"],
+      "surface": ["README", "ProductVision"]
     },
     {
       "claim_id": "I-14",
       "claim_text": "D1B-2 verification gateway: a separate local Desktop control:verify session resolves server-owned receipt and trusted read-back state through a deterministic evaluator; caller verdicts, receipts and observations are rejected.",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
+      "evidence": ["docs/goal24/distribution/d1b2/d1b2-verification-gate.json", "docs/goal24/distribution/d1b2/d1b2-adversarial-matrix.json", "brain-server/src/control/verification-facade.ts", "brain-server/src/control/verification-runtime.ts"],
+      "surface": ["README", "ProductVision"]
+    },
+    {
+      "claim_id": "I-15",
+      "claim_text": "Goal27 human-only reopen / DecisionRevision runtime is internally verified: control:reopen requalifies current evidence, runs the same deterministic Decision Kernel, preserves revision integrity, and may create a fresh unapproved plan; it never executes, retries, rolls back, reuses old approval/grant/plan authority, or gives agents reopen authority.",
+      "status": "CURRENTLY_VERIFIED_INTERNAL",
+      "availability": "internal_runtime",
       "evidence": [
-        "docs/goal24/distribution/d1b2/d1b2-verification-gate.json",
-        "docs/goal24/distribution/d1b2/d1b2-adversarial-matrix.json",
-        "brain-server/src/control/verification-facade.ts",
-        "brain-server/src/control/verification-runtime.ts"
+        "brain-server/src/revision/service.ts",
+        "docs/goal27/gates/reopen-authority-gate.json (PASS)",
+        "docs/goal27/gates/revision-evidence-gate.json (PASS)",
+        "docs/goal27/gates/revision-integrity-gate.json (PASS)",
+        "docs/goal29/proof/v1-freeze-proof.json (Goal27 adversarial/regression PASS)"
       ],
-      "surface": [
-        "README",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "T-01",
-      "claim_text": "omctx CLI binary: the portable execution surface of the decision-control layer.",
+      "claim_text": "Public omctx CLI distribution: the portable execution/control surface of the decision-control layer.",
       "status": "TARGET",
       "availability": "target",
-      "evidence": [
-        "docs/goal24/narrative/cli-product-surface.md"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/narrative/cli-product-surface.md"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "T-02",
-      "claim_text": "omctx ask / inspect / approve / verify / history command IA.",
+      "claim_text": "Public omctx command surface may expose the internally verified ask / inspect / history / approve / verify / reopen commands only after a separate public-alpha release decision and command-level capability audit.",
       "status": "TARGET",
       "availability": "target",
-      "evidence": [
-        "docs/goal24/narrative/cli-product-surface.md §3"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/narrative/cli-product-surface.md §3 and §6"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "T-03",
       "claim_text": "npm global install of omctx (registry name clear but not reserved; no placeholder publish).",
       "status": "TARGET",
       "availability": "target",
-      "evidence": [
-        "docs/goal24/narrative/naming-audit.json (omctx: CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED)"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/narrative/naming-audit.json (omctx: CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED)"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "T-04",
       "claim_text": "Three surfaces: MCP lets agents ask; CLI lets approved decisions touch the world; Desktop lets you inspect, approve, and reopen decisions.",
       "status": "TARGET",
       "availability": "target",
-      "evidence": [
-        "docs/PRODUCT-VISION.md §4",
-        "docs/index.html surfaces section"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/PRODUCT-VISION.md §4", "docs/index.html surfaces section"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "T-05",
-      "claim_text": "Desktop evolves into the human control surface (inspect / approve / audit / history / reopen).",
+      "claim_text": "Desktop evolves into the complete human control surface (inspect / approve / audit / history / reopen).",
       "status": "TARGET",
       "availability": "target",
-      "evidence": [
-        "docs/PRODUCT-VISION.md §4.3"
-      ],
-      "surface": [
-        "ProductVision",
-        "Landing"
-      ]
+      "evidence": ["docs/PRODUCT-VISION.md §4.3"],
+      "surface": ["ProductVision", "Landing"]
     },
     {
       "claim_id": "T-06",
       "claim_text": "External evidence pathway (designed to): External source → EvidenceProvider Adapter → provenance/freshness/verification qualification → Evidence Guard.",
       "status": "TARGET",
       "availability": "target",
-      "evidence": [
-        "docs/PRODUCT-VISION.md §6",
-        "docs/goal24/narrative/thesis-note.en.md §3"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision",
-        "Thesis"
-      ]
+      "evidence": ["docs/PRODUCT-VISION.md §6", "docs/goal24/narrative/thesis-note.en.md §3"],
+      "surface": ["README", "Landing", "ProductVision", "Thesis"]
     },
     {
       "claim_id": "F-01",
-      "claim_text": "omctx reopen user UX (reopen a historical decision; never auto-re-executes).",
+      "claim_text": "Desktop/public user-facing reopen UX. The internal Goal27 control:reopen / DecisionRevision runtime already exists, but it is not a shipped public/Desktop user surface.",
       "status": "FUTURE",
       "availability": "target",
-      "evidence": [
-        "docs/goal24/narrative/cli-product-surface.md §3.6"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/narrative/cli-product-surface.md §3.6", "docs/goal27/gates/reopen-authority-gate.json"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "F-02",
       "claim_text": "Real, non-synthetic, user-understandable E2E flow (DRG-2 requirement).",
       "status": "CURRENTLY_VERIFIED_INTERNAL",
       "availability": "internal_runtime",
-      "evidence": [
-        "docs/goal24/real-e2e/authoritative-real-e2e-proof.json (real non-synthetic GitHub issue-close E2E, runtime candidate e8befb3)",
-        "docs/goal24/real-e2e/drg2-authoritative-gate.json (DRG2_AUTHORITATIVE_GATE=PASS)",
-        "docs/goal24/post-cp8-integration-gate.json (POST_CP8_INTEGRATION_GATE=PASS)"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/real-e2e/authoritative-real-e2e-proof.json", "docs/goal24/real-e2e/drg2-authoritative-gate.json", "docs/goal24/post-cp8-integration-gate.json"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "F-03",
@@ -482,11 +316,7 @@
       "status": "FUTURE",
       "availability": "target",
       "evidence": null,
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "F-04",
@@ -494,24 +324,15 @@
       "status": "FUTURE",
       "availability": "target",
       "evidence": null,
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "F-05",
-      "claim_text": "Additional GitHub write capabilities with read-back (issue create/comment, PR merge) - issue.close is already verified and excluded from this FUTURE claim.",
+      "claim_text": "Additional GitHub write capabilities with read-back (issue create/comment, PR merge) — issue.close is already internally verified and excluded from this FUTURE claim.",
       "status": "FUTURE",
       "availability": "target",
-      "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (github_future_readback: issue_create LOCATOR_GAP, issue_comment READBACK_CAPABILITY_GAP, pr_merge MAPPED_PARTIAL)",
-        "docs/goal24/real-e2e/01-github-issue-close-contract.md (issue.close is MAPPED and integrated; this claim covers only the remaining writes)"
-      ],
-      "surface": [
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint8-security-gate.json (future write/read-back gaps)", "docs/goal24/real-e2e/01-github-issue-close-contract.md"],
+      "surface": ["ProductVision"]
     },
     {
       "claim_id": "D-01",
@@ -519,11 +340,7 @@
       "status": "DO_NOT_CLAIM",
       "availability": "target",
       "evidence": null,
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "D-02",
@@ -531,79 +348,51 @@
       "status": "DO_NOT_CLAIM",
       "availability": "target",
       "evidence": null,
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "D-03",
-      "claim_text": "omctx is installable today.",
+      "claim_text": "omctx is publicly installable today.",
       "status": "DO_NOT_CLAIM",
       "availability": "target",
-      "evidence": null,
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["packages/omctx/package.json (private alpha)", "docs/goal24/narrative/naming-audit.json"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "D-04",
       "claim_text": "GitHub write operations are a current public feature.",
       "status": "DO_NOT_CLAIM",
       "availability": "target",
-      "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (production_write_bindings 0)"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/post-cp8-integration-gate.json", "docs/goal24/real-e2e/drg2-authoritative-gate.json (internal proof only)"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "D-05",
-      "claim_text": "Reopen / revision is implemented in the runtime.",
+      "claim_text": "Reopen / revision is a current public/Desktop user-facing capability, or an agent can invoke reopen authority.",
       "status": "DO_NOT_CLAIM",
       "availability": "target",
       "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (rollback: automatic NO; eligibility flag only)"
+        "docs/goal27/gates/reopen-authority-gate.json (human_can_reopen=true, agent_can_reopen=false, public_execution_gateway=false)",
+        "docs/goal27/gates/revision-evidence-gate.json",
+        "packages/omctx/package.json (private/unpublished)"
       ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "D-06",
       "claim_text": "An LLM judge verifies outcomes.",
       "status": "DO_NOT_CLAIM",
       "availability": "target",
-      "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (llm_judge: NO)"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint8-security-gate.json (llm_judge: NO)"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "D-07",
       "claim_text": "Automatic rollback exists.",
       "status": "DO_NOT_CLAIM",
       "availability": "target",
-      "evidence": [
-        "docs/goal24/checkpoint8-security-gate.json (automatic_rollback: NO)"
-      ],
-      "surface": [
-        "README",
-        "Landing",
-        "ProductVision"
-      ]
+      "evidence": ["docs/goal24/checkpoint8-security-gate.json (automatic_rollback: NO)", "docs/goal27/gates/reopen-authority-gate.json (reopen does not rollback)"],
+      "surface": ["README", "Landing", "ProductVision"]
     },
     {
       "claim_id": "D-08",
@@ -611,11 +400,8 @@
       "status": "DO_NOT_CLAIM",
       "availability": "target",
       "evidence": null,
-      "surface": [
-        "README",
-        "Landing"
-      ]
+      "surface": ["README", "Landing"]
     }
   ],
-  "schema_note": "D1A reconciliation: omctx package candidate added as CURRENTLY_VERIFIED_INTERNAL (private, unpublished); 'installable from npm today' stays DO_NOT_CLAIM."
+  "schema_note": "Post-Goal29 truth reconciliation: private/internal omctx reopen + Goal27 DecisionRevision are CURRENTLY_VERIFIED_INTERNAL; public npm/Desktop reopen UX remains unshipped and must not be claimed as CURRENTLY_VERIFIED."
 }

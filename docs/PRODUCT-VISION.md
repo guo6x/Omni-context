@@ -26,11 +26,12 @@
 > `REPORT_ONLY` → `VERIFIED_LOCAL_EVIDENCE` → `REMOTE_INTEGRATED` → `GATE_VERIFIED`
 
 - **只有 `GATE_VERIFIED` 允许画正式绿色 ✅。**
-- 产品 capability 文档另外使用三类：`CURRENTLY_VERIFIED`（用户今天可直接使用）、
+- 对外产品 capability 使用：`CURRENTLY_VERIFIED`（用户今天可直接使用）、
   `TARGET`（目标架构）、`FUTURE`（未来规划）。
-- **不得混淆**「内部 runtime 已验证」与「用户今天可以直接使用」：
-  内部验证（如 Goal24 CP3–CP8 gate）若没有 public invocation surface，
-  只能写 "runtime verified on development branch"，不能写 "available today"。
+- 声明治理另外允许 `CURRENTLY_VERIFIED_INTERNAL`：repo + Gate 证据已存在，
+  但没有公开用户调用面或分发面。
+- **不得混淆**「内部 runtime 已验证」与「用户今天可以直接使用」。
+  Goal24–Goal29 的内部 Gate 证据只能升级事实状态，不能自动升级 public availability。
 
 ---
 
@@ -176,8 +177,9 @@ Omni-Context 的产品核心是 **Judgment / Authority Core（判断与权威核
 > Desktop 让人检查、批准，并在必要时重新打开决策。
 
 > ⚠ 状态标注：以上为 **TARGET architecture** copy。
-> `reopen` 目前尚无 user-facing verified 实现，
-> 因此这句话**不能放进 CURRENT capability claim**。
+> Goal27 已有 human-only 的内部 reopen / DecisionRevision runtime，
+> 但 `reopen` 目前尚无 **public/Desktop user-facing verified** 实现，
+> 因此这句话**不能放进 CURRENT public capability claim**。
 
 ---
 
@@ -273,6 +275,15 @@ Memory → Evidence Qualification → Decision → Approval
 7. **Outcome**：把观察到的现实与当时的预期比对，产出 VERIFIED / MISMATCH / INCONCLUSIVE。
 8. **Reopen / Revision**：现实不符时重开决策——重查证据、修正预期、重新决策或记录维持原判。
 
+Goal27 内部 runtime 已把第 8 步实现为 human-only correction path：
+
+- 由短时 Desktop `control:reopen` session 授权；Agent 不具备 reopen authority。
+- 重新资格审定**当前证据**，不把历史 evidence 自动当作现在仍有效。
+- 使用同一个 deterministic Decision Kernel。
+- 新结果若为 DECIDE，只创建新的未批准 plan，必须进入新的 approval lifecycle。
+- 保存 original/current evidence 与 evidence delta，维护 root/parent revision links。
+- 不执行、不 retry、不 rollback、不复用旧 approval/grant/plan。
+
 铁律：
 
 > Process exit 0 ≠ semantic success
@@ -319,47 +330,48 @@ Memory → Evidence Qualification → Decision → Approval
 - 浏览器插件（页面 / 选区捕获、popup 问大脑）
 - 移动端只读搜索 MVP（实验性，未完整真机验证）
 
-### B. 开发分支 runtime 已验证（内部 / 工程 Gate 证据；无 public user surface）
+### B. CURRENTLY_VERIFIED_INTERNAL（内部 / 工程 Gate 证据；不自动等于 public user surface）
 
-以下为 `dev/goal24-cli-skills` 上 CP3–CP8 的 gate 证据，**不代表用户今天可用**：
+以下组件已在当前已集成仓库状态中获得工程 Gate / freeze 证据，**不代表用户今天可直接使用其控制能力**：
 
 | 组件 | Gate 证据 | 说明 |
 |---|---|---|
-| Restricted execution broker | `checkpoint3-security-gate.json` PASS | spawn/kill/timeout、Job Object 约束、输出上限、环境清洗、cwd 约束；`execute_ipc_enabled=false` |
-| GitHub 只读 CLI 适配器（5 个语义能力） | `checkpoint4-security-gate.json` PASS | 可执行文件钉定、无写能力（write bindings = 0） |
+| Restricted execution broker | `checkpoint3-security-gate.json` PASS | spawn/kill/timeout、Job Object 约束、输出上限、环境清洗、cwd 约束 |
+| GitHub 只读 CLI 适配器（5 个语义能力） | `checkpoint4-security-gate.json` PASS | 可执行文件钉定；历史 CP4 时点无写能力 |
 | Skills registry + importer | `checkpoint5-security-gate.json` PASS | 纯 TS、隔离默认、无公开信任变更面 |
-| Evidence qualification + surface guard | `checkpoint6-security-gate.json` PASS | 服务器自有资格、防伪造覆盖、无公开注册面 |
-| Approval binding + risk policy | `checkpoint7-security-gate.json` PASS | 单次授权、重放防御、无公开批准 IPC |
-| Outcome read-back + deterministic evaluator | `checkpoint8-security-gate.json` PASS（DRG1 SATISFIED） | 受信 resolver、跨语言状态映射 26 + 观测 35 向量 mismatch 0、synthetic E2E 6 例；无公开 readback IPC |
-| Real non-synthetic controlled E2E | `real-e2e/drg2-authoritative-gate.json` PASS（DRG2 SATISFIED） | 真实 GitHub issue-close：approval-gated execution → exit 0 后仍 PENDING → independent read-back CLOSED → deterministic evaluator VERIFIED；属于内部 runtime 证据，不代表 public CLI write feature |
+| Evidence qualification + surface guard | `checkpoint6-security-gate.json` PASS | 服务器自有资格、防伪造覆盖 |
+| Approval binding + risk policy | `checkpoint7-security-gate.json` PASS | 单次授权、重放防御 |
+| Outcome read-back + deterministic evaluator | `checkpoint8-security-gate.json` PASS（DRG1 SATISFIED） | 受信 resolver、跨语言状态映射 26 + 观测 35 向量 mismatch 0 |
+| Real non-synthetic controlled E2E | `real-e2e/drg2-authoritative-gate.json` PASS（DRG2 SATISFIED） | 真实 GitHub issue-close：approval-gated execution → exit 0 后仍 PENDING → independent read-back CLOSED → deterministic evaluator VERIFIED；内部 runtime 证据，不代表 public CLI write feature |
+| `omctx` private alpha | Goal29 CLI 44/44 PASS + distribution gates | `doctor / ask / inspect / history / approve / verify / reopen` 实现存在；package private/unpublished |
+| Goal27 human-only Reopen / DecisionRevision | `goal27/gates/reopen-authority-gate.json`, `revision-evidence-gate.json`, `revision-integrity-gate.json` PASS | `control:reopen`；重资格审定当前 evidence → same Decision Kernel → fresh judgment/new unapproved plan at most；agent_can_reopen=false；execution/retry/rollback/old authority reuse = NO |
 
-- 测试证据（CP8 全量）：Brain 1279 passed / 0 failed；Rust 206 passed / 0 failed / 7 ignored。
-- 状态表述必须是：**runtime verified on development branch**，
-  而不是 "available today"。
+- Goal29 集成回归：Brain 1336 passed / 0 failed；CLI 44 / 0；Rust 236 / 0 / 9 ignored；browser extension 14 / 0；installed Desktop E2E 11 / 11。
+- 状态表述必须是：**CURRENTLY_VERIFIED_INTERNAL / internal runtime evidence**，而不是 "available today"。
 
-### C. TARGET（目标架构）
+### C. TARGET（目标架构 / 尚未公开成型的用户面）
 
-- `omctx` CLI：`ask / inspect / approve / verify / history`（信息架构见
-  `cli-product-surface.md`；**二进制本身 = TARGET**，npm 全局安装 = TARGET）
+- public `omctx` CLI / npm 分发（private alpha 已存在，但 public install 仍未发布）
 - 三面完整成型（MCP 接口面 + 受控执行面 + 人类控制面）
-- Desktop 升级为 Human Control Surface（inspect / approve / audit / history / reopen）
+- Desktop 升级为完整 Human Control Surface（inspect / approve / audit / history / reopen）
+- 将内部 evidence/revision/verification 事实以 bounded read-only projection 安全展示给用户，而不是复制一套新权威逻辑
 
 ### D. FUTURE（未来规划）
 
-- `omctx reopen` 用户 UX（runtime 未实现）
+- Desktop / public user-facing reopen workflow（内部 Goal27 runtime 已存在；这里指尚未发布的用户 UX）
 - 外部 memory adapters（MindMemOS / basic-memory / 其他）
 - 多 runtime adapters（OpenClaw / NemoClaw / Claude Code / 其他，仅作 Capability Transport）
-- GitHub write 能力及其 read-back（CP8 现状：`issue_create=LOCATOR_GAP`、
-  `issue_comment=READBACK_CAPABILITY_GAP`、`pr_merge=MAPPED_PARTIAL`、
-  production write bindings = 0）
+- 额外 GitHub write 能力及其 read-back（`github.issue.close` 已有内部验证；其他 write capability 仍按各自 locator/read-back 缺口治理）
 
 ### E. DO_NOT_CLAIM（禁止对外宣称）
 
 - "works with any memory OS / any runtime"（只能是 designed to）
-- `omctx` 今天可安装
+- `omctx` 今天已公开 npm 安装
 - github writes 为当前 public feature
-- Reopen 已实现
-- LLM judge 或自动回滚（两者在 CP8 gate 中均为 NO）
+- Desktop/public reopen UX 已发布
+- Agent 可以 reopen
+- reopen 会自动重试 / 执行 / rollback / 复用旧 approval
+- LLM judge 或自动回滚
 
 ---
 
@@ -388,7 +400,7 @@ Memory → Evidence Qualification → Decision → Approval
   Packaging / Public CLI alpha / Demo / Launch package / Release claim audit
   仍需按各自门槛完成。
 - Public capability claims 仍只能陈述有 repo + Gate 证据支持的当前事实；
-  target architecture、thesis、future CLI UX、future ecosystem strategy
+  target architecture、thesis、future user UX、future ecosystem strategy
   必须显式标 `TARGET` / `FUTURE` / `DESIGNED TO`。
 - CP8 的 synthetic E2E（6 例）本身不满足 DRG-2；
   DRG-2 的满足来自后续 authoritative real E2E，而不是回溯升级 synthetic 证据。
@@ -404,11 +416,10 @@ Memory → Evidence Qualification → Decision → Approval
 - ❌ Safari 插件
 - ❌ ESP32 双向通信
 - ❌ 移动端写入能力（移动端定位为只读）
-- ❌ LLM judge（判定成功与否不由 LLM 说了算；CP8 gate: `llm_judge=NO`）
-- ❌ 自动回滚（CP8 gate: `automatic_rollback=NO`；
-  `rollback_candidate` 仅资格标记）
-- ❌ 无约束的通用 shell agent（GOAL24_SCOPE_FREEZE.json 的 forbidden_designs）
-- ❌ 把 Enterprise governance suite 写成唯一目标（positioning non-goal）
+- ❌ LLM judge（判定成功与否不由 LLM 说了算）
+- ❌ 自动回滚（`rollback_candidate` 仅资格标记）
+- ❌ 无约束的通用 shell agent
+- ❌ 把 Enterprise governance suite 写成唯一目标
 - ❌ npm 占位包（0.0.0）与任何形式的先占式发布
 
 这些不是「以后做」，是这个产品形态**刻意不要**。
@@ -425,20 +436,21 @@ Memory → Evidence Qualification → Decision → Approval
 - Landing：GitHub Pages（`docs/index.html`，中英双语）。
 - MCP：桌面接入面板 + `mcp-proxy.js` stdio 转发。
 
-**`omctx` CLI 分发（TARGET，未发布）：**
+**`omctx` CLI 状态：private alpha CURRENTLY_VERIFIED_INTERNAL，public distribution = TARGET。**
 
+- private package：`omctx@0.1.0-alpha.0`，未发布到 npm 用户安装面。
+- 内部 command surface 已包括 read-only 命令和 human-only `approve` / `verify` / `reopen`。
 - 命名：`omctx`（npm registry 当前 CONFIRMED_CLEAR_ON_REGISTRY / NOT_RESERVED；
   `omni-context` / `mcp-omni-context` / `omni-context-cli` 均为第三方占用，
   详见 `docs/goal24/narrative/naming-audit.json`）。
-- 发布门槛（全部满足才允许发 alpha）：真实 CLI skeleton、真实 `--help`、
-  真实 version、真实 README、真实 repository metadata、
-  至少一个真实 non-dangerous command。
-- **禁止**：0.0.0 占位包、Narrative Lane 内 npm publish。
+- 真实 public alpha 发布仍需 package/repository metadata、command-level capability matrix、
+  install/uninstall smoke、security/secret scan、README 一致性和 Owner release decision。
+- **禁止**：0.0.0 占位包、无 Gate 的抢名 publish、把内部 control session 当成 public generic execution gateway。
 
 **纪律：**
 
-- 不直接 push main；不直接覆盖 `dev/goal24-cli-skills`。
-- Narrative 产物经 feature branch `docs/goal24-narrative-vnext` 走正常流程。
+- 不直接 push main。
+- release truth、产品开发、research refs 保持分离；research/Holdback 不因产品迭代重跑或改写。
 
 ---
 
@@ -451,14 +463,16 @@ Memory → Evidence Qualification → Decision → Approval
 - 只有 `GATE_VERIFIED` 允许画正式绿色 ✅。
 - feature branch push **不能叫** REMOTE_INTEGRATED；
   可另记 `remote_feature_pushed=true`。
-- 只有 authoritative dev branch 真实集成并 Gate PASS 才允许 GATE_VERIFIED。
+- 只有 authoritative integration + 对应 Gate PASS 才允许 GATE_VERIFIED。
 
-### 产品能力三类状态
+### 产品能力状态
 
 - `CURRENTLY_VERIFIED`：用户今天可直接使用（需 repo / release 证据）。
-- `TARGET`：目标架构（design）。
+- `CURRENTLY_VERIFIED_INTERNAL`：内部 runtime / private control surface 有 Gate 证据，但无 public availability。
+- `TARGET`：目标架构或待公开分发/UX。
 - `FUTURE`：未来规划。
-- 禁止把"内部 runtime 已验证"与"用户今天可以直接使用"混为一谈。
+- `DO_NOT_CLAIM`：禁止对外宣称。
+- 禁止把“内部 runtime 已验证”与“用户今天可以直接使用”混为一谈。
 
 ### 证据权威链（truth precedence）
 
@@ -469,8 +483,7 @@ Memory → Evidence Qualification → Decision → Approval
 > **> chat memory**
 
 - remote SHA 是 remote integration authority，**不是**本地 worktree existence authority。
-- 本 Narrative Lane 的最高验证级别：`VERIFIED_LOCAL_EVIDENCE`
-  （即便 feature branch 已 push；authoritative branch 仍是 `dev/goal24-cli-skills`）。
+- narrative/release truth 必须跟随当前 authoritative repo + Gate 证据；历史 Lane 文档若落后，必须明确降级为历史快照或更新。
 
 ---
 
