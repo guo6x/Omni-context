@@ -1,0 +1,45 @@
+name: Temporary Brain Lock Refresh
+
+on:
+  push:
+    branches:
+      - docs/post-goal29-release-truth-sync
+    paths:
+      - brain-server/package.json
+      - brain-server/package-lock.json
+      - .github/workflows/temp-refresh-brain-lock.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-lock:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/post-goal29-release-truth-sync
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: brain-server/package-lock.json
+      - name: Regenerate lockfile only
+        working-directory: brain-server
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify tar override resolution
+        working-directory: brain-server
+        run: |
+          node -e "const l=require('./package-lock.json'); const p=l.packages['node_modules/tar']; if (!p || p.version !== '7.5.22') { console.error('expected tar 7.5.22, got', p && p.version); process.exit(1) }"
+      - name: Commit regenerated lockfile
+        run: |
+          if git diff --quiet -- brain-server/package-lock.json; then
+            echo 'Lockfile already current.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add brain-server/package-lock.json
+          git commit -m 'fix(security): refresh brain lockfile for tar 7.5.22 [lock-refresh]'
+          git push origin HEAD:docs/post-goal29-release-truth-sync
