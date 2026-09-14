@@ -1,4 +1,7 @@
+import http from 'http';
 import { describe, expect, it } from 'vitest';
+import type { RequestContext } from '../src/api/routes.js';
+import { handleAgentRoutes } from '../src/api/handlers/agent.js';
 import type { EvidenceCoverageSnapshot } from '../src/execution/contracts.js';
 import { projectDesktopEvidenceDiagnostics } from '../src/agent/pilot.js';
 
@@ -73,5 +76,36 @@ describe('vNext Desktop evidence diagnostics projection', () => {
     expect(serialized).not.toContain('token_reference');
     expect(serialized).not.toContain('approval_reference');
     expect(serialized).not.toContain('receipt_digest');
+  });
+
+  it('rejects paired device principals before materializing the Desktop control projection', async () => {
+    const route = handleAgentRoutes.find((candidate) => candidate.path === '/api/control/plans');
+    expect(route).toBeDefined();
+
+    let responseBody = '';
+    const response = {
+      statusCode: 0,
+      end(payload?: string) { responseBody = payload ?? ''; },
+    } as unknown as http.ServerResponse;
+
+    const context = {
+      auth: {
+        kind: 'device',
+        deviceId: 'mobile-fixture',
+        scopes: new Set(['memory:read', 'decision:read']),
+      },
+    } as unknown as RequestContext;
+
+    const handler = route!.handler as (
+      req: http.IncomingMessage,
+      res: http.ServerResponse,
+      ctx: RequestContext,
+      params: Record<string, string>,
+    ) => Promise<void>;
+
+    await handler({} as http.IncomingMessage, response, context, {});
+
+    expect(response.statusCode).toBe(403);
+    expect(JSON.parse(responseBody)).toEqual({ error: 'CONTROL_SCOPE_INSUFFICIENT' });
   });
 });
