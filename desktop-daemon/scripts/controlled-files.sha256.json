@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-06T05:20:55.726Z",
+  "generatedAt": "2026-09-14T16:45:03.807Z",
   "files": {
-    "package.json": "660e90cca72346a52f6e9fdb086851b97dd6b8419eeb154c8d70a949db4f6353",
+    "package.json": "b577d53903cdb5fe36581cf9f65cea396c61c77467a50fbc2fc121f2f3c42bb6",
     "next.config.js": "36d83548dafb510e0b1934e337566ed9bc946613e1fa5699e3639389d5027f6a",
     "tsconfig.json": "544175439b71061747a8fc73def4fb963c024d33c0813fa971f55a484a717b4b",
     "tailwind.config.ts": "532a65cb01f40da5983a76b692e9386bf3af474e9eb78053b03c74297aea0704",
@@ -10,7 +10,7 @@
     "src-tauri/Cargo.toml": "2055210931a0844d4342126a34950f0baf5a350d990f5ecebdf4f7c19e6e57ab",
     "src-tauri/Cargo.lock": "aec6da212c0cf2851661a39d3f3452dcf5f14a21afbfc5049f7d8b06291d16b1",
     "src-tauri/build.rs": "7168c36b13189b57efe81852e181b3ac42bdd992465fee3791bff0dac0edff05",
-    "src-tauri/tauri.conf.json": "ef26b519b8b3a277a69315d8a63afb59c13a96d8d923c2ac56dfcd1b07a42f88",
+    "src-tauri/tauri.conf.json": "6db321afe3b4880638e679c42ad07871f9cdc9ae266ae98cc7099876841d6d8f",
     "src-tauri/tauri.prod.conf.json": "2df5066bb0e18fb89a6f00aea7dc237edd5679a20323f9f4d0389b6a5c20ccc0",
     "src-tauri/tauri.ci.conf.json": "fb3be915ae6a9ca3c53217a62ca77de3d01924780360171b5cf7d32c74249b58",
     "src-tauri/src/brain_server.rs": "3740daf24055cbf1a300159ec2af279760105a68dddb1bd008c489f283cd5542",
