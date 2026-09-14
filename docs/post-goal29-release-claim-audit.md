@@ -1,8 +1,9 @@
 # Post-Goal29 Release Claim Audit
 
-> Audit date: 2026-09-10
-> Truth baseline: `main@d4d61f1c9b73d8a127023129adc3376ec6d7db13`
-> Scope: public/release-facing narrative only. No product semantics, scientific artifacts, Holdback data, or release branch are modified.
+> Initial audit date: 2026-09-10
+> Last release-truth refresh: 2026-09-15
+> Truth baseline: `main@d4d61f1c9b73d8a127023129adc3376ec6d7db13` plus evidence-preserving release/security maintenance on PR #5
+> Scope: public/release-facing narrative. This audit does not alter research artifacts, Holdback data, research protocols, or evaluation results. PR #5 also contains separately documented dependency and Windows execution-broker security maintenance; those changes preserve the frozen product claim boundary and add no new product feature.
 
 ## 1. Authoritative facts
 
@@ -21,6 +22,9 @@ Verified facts relevant to release claims:
 - DRG2 satisfaction is not an automatic public release.
 - `omctx@0.1.0-alpha.0` is internally verified/private and is not an npm user install today.
 - `omctx reopen` remains FUTURE.
+- The current MCP manifest exposes 26 tools.
+- Browser-extension capture is a CURRENTLY_VERIFIED user-facing surface.
+- Local-first does not mean every optional data path is offline: if a cloud LLM provider is configured for extraction or generation, data sent to that provider follows its data path and policy.
 - No claim of working with any memory OS or any runtime is permitted.
 - No claim of generic shell execution, LLM judge, automatic rollback, or public GitHub automation is permitted.
 
@@ -30,8 +34,15 @@ Verified facts relevant to release claims:
 
 1. `docs/PRODUCT-VISION.md` still listed a real non-synthetic E2E as FUTURE and described DRG2 in pre-pass language.
 2. `docs/index.html` still showed a pre-pass DRG2 gate card even though the authoritative DRG2 gate is PASS.
+3. README EN/ZH described the capability vocabulary as exactly three labels while also using `CURRENTLY_VERIFIED_INTERNAL`; this is now separated into three public capability classes plus claim-governance qualifiers.
+4. README.zh-CN.md retained pre-DRG2 wording saying claims were frozen until a real E2E existed; it now records DRG2 as satisfied without treating that as automatic release authorization.
+5. README EN/ZH installer copy said `Fully offline / 完全离线`; this is now narrowed to the supported local-first storage/authority claim and explicitly discloses optional cloud LLM data paths.
+6. README EN/ZH omitted the browser-extension capture surface from the current user-facing list even though it is in the current claim matrix; it is now listed.
+7. `docs/goal24/narrative/claim-audit.md` contained an accurate but stale 2026-08-16 snapshot whose counts and pre-DRG2 next actions could be mistaken for current truth; it is now explicitly marked historical and points here.
 
-Both are synchronized on this branch without changing product semantics.
+### MUST FIX BEFORE PUBLIC RELEASE — repository metadata
+
+The GitHub repository description remains legacy metadata and is outside this branch's file diff. At the time of this audit it still uses the old memory-OS positioning, says `25 MCP tools`, and says `fully offline`. Before a public release announcement, update the repository description to current evidence-bounded positioning and the canonical 26-tool count. Do not copy the legacy description into release material.
 
 ### MUST NOT SHIP AS CURRENT COPY
 
@@ -71,16 +82,18 @@ Current public evidence must distinguish:
 - CURRENTLY_VERIFIED user-facing capabilities;
 - CURRENTLY_VERIFIED_INTERNAL runtime evidence;
 - TARGET architecture;
-- FUTURE capabilities.
+- FUTURE capabilities;
+- DO_NOT_CLAIM governance prohibitions.
 
 ## 4. Release sequence after Goal29
 
 DRG2 is no longer the blocker. The remaining release work is:
 
-1. Packaging
-2. Public CLI alpha decision
-3. Public demo
-4. Launch package
-5. Final release claim audit
+1. Packaging and clean release CI
+2. Repository metadata truth sync
+3. Public CLI alpha decision
+4. Public demo
+5. Launch package
+6. Final release claim audit
 
 No new paid model evaluation is required for this release sequence.
