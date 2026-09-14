@@ -25,6 +25,7 @@ Verified facts relevant to release claims:
 - The current MCP manifest exposes 26 tools.
 - Browser-extension capture is a CURRENTLY_VERIFIED user-facing surface.
 - Local-first does not mean every optional data path is offline: if a cloud LLM provider is configured for extraction or generation, data sent to that provider follows its data path and policy.
+- The installed stdio MCP proxy forwards to the running loopback Brain Server and does not directly open the SQLite database; `DB_PATH` belongs to standalone/server scenarios, not the normal installed-proxy path.
 - No claim of working with any memory OS or any runtime is permitted.
 - No claim of generic shell execution, LLM judge, automatic rollback, or public GitHub automation is permitted.
 
@@ -39,6 +40,10 @@ Verified facts relevant to release claims:
 5. README EN/ZH installer copy said `Fully offline / 完全离线`; this is now narrowed to the supported local-first storage/authority claim and explicitly discloses optional cloud LLM data paths.
 6. README EN/ZH omitted the browser-extension capture surface from the current user-facing list even though it is in the current claim matrix; it is now listed.
 7. `docs/goal24/narrative/claim-audit.md` contained an accurate but stale 2026-08-16 snapshot whose counts and pre-DRG2 next actions could be mistaken for current truth; it is now explicitly marked historical and points here.
+8. `docs/ARCHITECTURE.md` used an unmaintained `12+ MCP clients` count. It now describes the concrete stdio-proxy / loopback-HTTP architecture without turning client examples into a universal compatibility claim.
+9. `docs/MCP-INTEGRATION.md` said the current MCP count was 25 even though the generated manifest says 26. The document now delegates the canonical count to `mcp_tool_manifest.json` and treats its tables as selected/common tools rather than a complete hand-maintained list.
+10. `docs/MCP-INTEGRATION.md` incorrectly described the installed proxy as a second database-using Node process and pointed users toward an install-directory database. It now reflects the actual installed path: stdio proxy → authenticated loopback Brain Server → Desktop-managed local database; `DB_PATH` is documented only for standalone/source-server use.
+11. MCP integration prose previously used broad “any compatible AI client” wording as if it were an Omni compatibility guarantee. It now says compatibility depends on the client’s implemented MCP transport/configuration and explicitly does not claim “any AI / any runtime”.
 
 ### MUST FIX BEFORE PUBLIC RELEASE — repository metadata
 
@@ -56,12 +61,10 @@ Examples of stale positioning include "跨所有 AI 通用", "one memory, shared
 
 These files are marked LEGACY on this branch.
 
-### REVIEW BEFORE RELEASE, not currently proven stale
+### REVIEWED FOR RELEASE CONTEXT
 
-- `docs/ARCHITECTURE.md`
-- `docs/MCP-INTEGRATION.md`
-
-They primarily describe implementation/integration surfaces. Their client examples do not by themselves constitute the forbidden "works with any runtime" claim, but release-facing excerpts should be checked against current claim labels.
+- `docs/ARCHITECTURE.md` — reviewed and corrected for MCP transport/count/compatibility wording; it remains an implementation document, not a capability-completeness claim.
+- `docs/MCP-INTEGRATION.md` — reviewed against `mcp-proxy.ts`, Desktop Brain launch/data-path code, `/mcp` transport evidence, and `mcp_tool_manifest.json`; stale installed-DB and tool-count instructions are corrected on this branch.
 
 ## 3. Current launch-safe product story
 
