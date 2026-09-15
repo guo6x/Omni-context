@@ -27,7 +27,9 @@ A typed Git SHA alone is not enough to establish which binary was tested. Before
 
 Why content identity rather than requiring an empty `git status --porcelain`: on Windows, the Tauri/NSIS toolchain can leave a tracked file with a stat/index-only `.M` advisory even when its Git blob is byte-identical to `HEAD`, `git diff` is empty, and no staged content changed. This occurred during the first real gate attempt on `48f8def7ae45deb8a3fd6ddb4d8af91ccfe9152d`: `desktop-daemon/src-tauri/Cargo.toml` retained `.M` after `git update-index --refresh` / `git add --refresh`, while HEAD and worktree blob hashes were both `1d925069e43dfc3553c9ee20f74661b8426a0712` and working/cached diffs were empty. That attempt correctly remained `PREPARED_NOT_EXECUTED`; the harness was then corrected so future runs distinguish source-content drift from Windows stat-cache noise.
 
-The harness records porcelain output as an advisory but blocks only on actual tracked-content differences or non-ignored untracked source files. The result JSON records the declared/observed HEAD, staged/worktree content checks, any advisory porcelain rows, non-ignored untracked files, and both executable hashes. This gives the installed run a procedural source/build/install binding without treating Windows stat-cache noise as source drift.
+The harness records porcelain output as an advisory but blocks only on actual tracked-content differences or non-ignored untracked source files. A stat-only advisory is therefore evidence recorded in the result JSON, not by itself a gate failure.
+
+The result JSON records the declared/observed HEAD, staged/worktree content checks, any advisory porcelain rows, non-ignored untracked files, and both executable hashes. This gives the installed run a procedural source/build/install binding without treating Windows stat-cache noise as source drift.
 
 ## Controlled fixture
 
@@ -153,7 +155,9 @@ That protects the harness from syntax drift but is **not** an installed gate exe
 
 Do **not** call this gate PASS from source review, CI build success, syntax preflight success, or the existence of the harness.
 
-Promotion to `INSTALLED_WINDOWS_LOCAL_CONTROLLED = PASS` requires an actual run against the exact bound installed artifact and review of the result JSON plus screenshots. Until then the authoritative state remains:
+Promotion to `INSTALLED_WINDOWS_LOCAL_CONTROLLED = PASS` requires an actual run against the exact content-bound installed artifact and review of the result JSON plus screenshots. A porcelain-only `.M` does not block promotion when the recorded staged/worktree content checks match `HEAD` and there are no non-ignored untracked files.
+
+Until then the authoritative state remains:
 
 ```text
 VNEXT_CONTROL_CENTER_INSTALLED_GATE = PREPARED_NOT_EXECUTED
