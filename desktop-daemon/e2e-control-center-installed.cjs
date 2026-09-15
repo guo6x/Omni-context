@@ -64,16 +64,35 @@ function sha256File(file) {
   return createHash('sha256').update(fs.readFileSync(file)).digest('hex').toUpperCase();
 }
 
-function gitText(args) {
-  const result = spawnSync('git', args, {
+function gitRun(args) {
+  return spawnSync('git', args, {
     cwd: repoRoot,
     windowsHide: true,
     encoding: 'utf8',
   });
+}
+
+function gitText(args) {
+  const result = gitRun(args);
   if (result.status !== 0) {
     throw new Error(`git ${args.join(' ')} failed: ${String(result.stderr || result.stdout || '').trim()}`);
   }
   return String(result.stdout || '').trim();
+}
+
+function gitQuiet(args) {
+  const result = gitRun(args);
+  if (result.status !== 0 && result.status !== 1) {
+    throw new Error(`git ${args.join(' ')} failed: ${String(result.stderr || result.stdout || '').trim()}`);
+  }
+  return result.status === 0;
+}
+
+function splitNonEmptyLines(value) {
+  return String(value || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 function stopTree(pid) {
@@ -148,6 +167,11 @@ async function run() {
   let page = null;
   let currentSourceHeadSha = null;
   let trackedTreeClean = null;
+  let sourceIndexMatchesHead = null;
+  let sourceWorktreeMatchesHead = null;
+  let sourceUntrackedNonIgnored = [];
+  let sourcePorcelainAdvisory = [];
+  let statOnlyPorcelainDifferenceIgnored = false;
   let buildExecutableSha256 = null;
   let installedExecutableSha256 = null;
 
@@ -162,14 +186,19 @@ async function run() {
 
   const writeResult = (status, errorMessage = null) => {
     const result = {
-      schema_version: '1.1',
+      schema_version: '1.2',
       gate_id: 'vnext-control-center-installed-e2e',
       status,
       verification_level: 'INSTALLED_WINDOWS_LOCAL_CONTROLLED',
       declared_source_head_sha: expectedHeadSha || null,
       observed_source_head_sha: currentSourceHeadSha,
       tracked_source_tree_clean: trackedTreeClean,
-      source_head_binding: 'WORKING_TREE_HEAD_PLUS_BUILD_TO_INSTALLED_BINARY_SHA256',
+      source_index_matches_head: sourceIndexMatchesHead,
+      source_worktree_matches_head: sourceWorktreeMatchesHead,
+      source_untracked_nonignored: sourceUntrackedNonIgnored,
+      source_porcelain_advisory: sourcePorcelainAdvisory,
+      stat_only_porcelain_difference_ignored: statOnlyPorcelainDifferenceIgnored,
+      source_head_binding: 'HEAD_PLUS_CONTENT_DIFFS_PLUS_BUILD_TO_INSTALLED_BINARY_SHA256',
       build_executable_sha256: buildExecutableSha256,
       installed_executable_sha256: installedExecutableSha256,
       executable_hash_match: Boolean(
@@ -201,9 +230,21 @@ async function run() {
     assert.equal(fs.existsSync(executable), true, `installed executable not found: ${executable}`);
 
     currentSourceHeadSha = gitText(['rev-parse', 'HEAD']).toLowerCase();
-    trackedTreeClean = gitText(['status', '--porcelain', '--untracked-files=no']) === '';
+    sourceIndexMatchesHead = gitQuiet(['diff', '--cached', '--quiet', '--no-ext-diff', 'HEAD', '--']);
+    sourceWorktreeMatchesHead = gitQuiet(['diff', '--quiet', '--no-ext-diff', 'HEAD', '--']);
+    sourceUntrackedNonIgnored = splitNonEmptyLines(gitText(['ls-files', '--others', '--exclude-standard']));
+    sourcePorcelainAdvisory = splitNonEmptyLines(gitText(['status', '--porcelain=v2', '--untracked-files=no']));
+    trackedTreeClean = sourceIndexMatchesHead && sourceWorktreeMatchesHead && sourceUntrackedNonIgnored.length === 0;
+    statOnlyPorcelainDifferenceIgnored = trackedTreeClean && sourcePorcelainAdvisory.length > 0;
+
     assert.equal(currentSourceHeadSha, expectedHeadSha, `working tree HEAD ${currentSourceHeadSha} does not match declared build head ${expectedHeadSha}`);
-    assert.equal(trackedTreeClean, true, 'tracked source tree is dirty; rebuild from a clean exact head before running the installed gate');
+    assert.equal(sourceIndexMatchesHead, true, 'staged source content differs from HEAD');
+    assert.equal(sourceWorktreeMatchesHead, true, 'working-tree source content differs from HEAD');
+    assert.deepEqual(sourceUntrackedNonIgnored, [], 'non-ignored untracked source files are present; exact-source binding is ambiguous');
+    pass('source-content-identity', {
+      porcelain_advisory_count: sourcePorcelainAdvisory.length,
+      stat_only_porcelain_difference_ignored: statOnlyPorcelainDifferenceIgnored,
+    });
 
     buildExecutableSha256 = sha256File(buildExecutable);
     installedExecutableSha256 = sha256File(executable);
