@@ -197,19 +197,25 @@ async function run() {
     const planCount = await page.getByText('github.issue.close', { exact: true }).count();
     assert.ok(planCount >= 2, `expected at least two controlled plan cards, found ${planCount}`);
     await page.getByText(/Human approval required/i).first().waitFor({ timeout: 30_000 });
+    const approveCount = await page.getByRole('button', { name: 'Approve', exact: true }).count();
+    assert.ok(approveCount >= 2, `expected owner approval controls for both pending plans, found ${approveCount}`);
     assert.equal(await page.getByRole('button', { name: /Run approved action/i }).count(), 0);
-    pass('awaiting-approval-state', { visible_plan_cards: planCount });
+    pass('awaiting-approval-state', { visible_plan_cards: planCount, visible_approve_controls: approveCount });
 
-    await page.getByText('Live Guard trace', { exact: true }).first().waitFor({ timeout: 30_000 });
-    await page.getByText('proceed', { exact: true }).first().waitFor({ timeout: 30_000 });
-    await page.getByText(/d1b1-controlled-cp6-fixture@1\.0\.0/i).first().waitFor({ timeout: 30_000 });
-    await page.getByText(/Source:\s*d1b1-controlled-local-fixture/i).first().waitFor({ timeout: 30_000 });
+    const liveGuardHeading = page.getByText('Live Guard trace', { exact: true }).first();
+    await liveGuardHeading.waitFor({ timeout: 30_000 });
+    const liveGuardBlock = liveGuardHeading.locator('..').locator('..');
+    await liveGuardBlock.getByText('proceed', { exact: true }).waitFor({ timeout: 30_000 });
+    await liveGuardBlock.getByText(/d1b1-controlled-cp6-fixture@1\.0\.0/i).first().waitFor({ timeout: 30_000 });
+    await liveGuardBlock.getByText(/Source:\s*d1b1-controlled-local-fixture/i).first().waitFor({ timeout: 30_000 });
     pass('live-guard-provenance');
 
-    await page.getByText('Bound plan snapshot', { exact: true }).first().waitFor({ timeout: 30_000 });
-    await page.getByText(/Immutable authorization snapshot/i).first().waitFor({ timeout: 30_000 });
-    await page.getByText('repository.current_state', { exact: true }).first().waitFor({ timeout: 30_000 });
-    await page.getByText('issue.current_state', { exact: true }).first().waitFor({ timeout: 30_000 });
+    const boundSnapshotHeading = page.getByText('Bound plan snapshot', { exact: true }).first();
+    await boundSnapshotHeading.waitFor({ timeout: 30_000 });
+    const boundSnapshotBlock = boundSnapshotHeading.locator('..').locator('..');
+    await boundSnapshotBlock.getByText(/Immutable authorization snapshot/i).waitFor({ timeout: 30_000 });
+    await boundSnapshotBlock.getByText('repository.current_state', { exact: true }).waitFor({ timeout: 30_000 });
+    await boundSnapshotBlock.getByText('issue.current_state', { exact: true }).waitFor({ timeout: 30_000 });
     pass('bound-plan-snapshot');
 
     await page.getByText(/Approved ≠ Executed/i).first().waitFor({ timeout: 30_000 });
