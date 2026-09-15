@@ -13,16 +13,22 @@ if (process.platform !== 'win32') {
 const installDir = process.env.OMNI_VNEXT_E2E_INSTALL_DIR;
 const profileDir = process.env.OMNI_VNEXT_E2E_PROFILE_DIR;
 const evidenceDir = process.env.OMNI_VNEXT_E2E_EVIDENCE_DIR;
-const expectedHeadSha = process.env.OMNI_VNEXT_E2E_EXPECTED_SHA || null;
-if (!installDir || !profileDir || !evidenceDir) {
-  throw new Error('OMNI_VNEXT_E2E_INSTALL_DIR, OMNI_VNEXT_E2E_PROFILE_DIR and OMNI_VNEXT_E2E_EVIDENCE_DIR are required');
+const buildExecutable = process.env.OMNI_VNEXT_E2E_BUILD_EXE
+  ? path.resolve(process.env.OMNI_VNEXT_E2E_BUILD_EXE)
+  : null;
+const expectedHeadSha = String(process.env.OMNI_VNEXT_E2E_EXPECTED_SHA || '').trim().toLowerCase();
+if (!installDir || !profileDir || !evidenceDir || !buildExecutable || !expectedHeadSha) {
+  throw new Error('OMNI_VNEXT_E2E_INSTALL_DIR, OMNI_VNEXT_E2E_PROFILE_DIR, OMNI_VNEXT_E2E_EVIDENCE_DIR, OMNI_VNEXT_E2E_BUILD_EXE and OMNI_VNEXT_E2E_EXPECTED_SHA are required');
 }
 
+const repoRoot = path.resolve(__dirname, '..');
 const executable = path.join(installDir, 'Omni-Context.exe');
 const brainPort = 3001;
 const cdpPort = 9237;
 const fixtureOutput = path.join(evidenceDir, 'vnext-d1b1-controlled-fixture.json');
-const screenshotPath = path.join(evidenceDir, 'vnext-control-center-installed.png');
+const overviewScreenshotPath = path.join(evidenceDir, 'vnext-control-center-installed.png');
+const liveScreenshotPath = path.join(evidenceDir, 'vnext-control-center-live-guard.png');
+const boundScreenshotPath = path.join(evidenceDir, 'vnext-control-center-bound-snapshot.png');
 const resultPath = path.join(evidenceDir, 'vnext-control-center-installed-result.json');
 
 function wait(ms) {
@@ -56,6 +62,18 @@ async function portInUse(port) {
 
 function sha256File(file) {
   return createHash('sha256').update(fs.readFileSync(file)).digest('hex').toUpperCase();
+}
+
+function gitText(args) {
+  const result = spawnSync('git', args, {
+    cwd: repoRoot,
+    windowsHide: true,
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) {
+    throw new Error(`git ${args.join(' ')} failed: ${String(result.stderr || result.stdout || '').trim()}`);
+  }
+  return String(result.stdout || '').trim();
 }
 
 function stopTree(pid) {
@@ -119,33 +137,46 @@ async function run() {
   fs.rmSync(profileDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(profileDir, 'Local'), { recursive: true });
   fs.mkdirSync(path.join(profileDir, 'Roaming'), { recursive: true });
-  fs.rmSync(fixtureOutput, { force: true });
-  fs.rmSync(resultPath, { force: true });
-  fs.rmSync(screenshotPath, { force: true });
-
-  assert.equal(fs.existsSync(executable), true, `installed executable not found: ${executable}`);
-  assert.equal(await portInUse(brainPort), false, `127.0.0.1:${brainPort} is already in use; close the running Omni-Context instance before this gate`);
-  assert.equal(await portInUse(cdpPort), false, `127.0.0.1:${cdpPort} is already in use`);
+  for (const file of [fixtureOutput, resultPath, overviewScreenshotPath, liveScreenshotPath, boundScreenshotPath]) {
+    fs.rmSync(file, { force: true });
+  }
 
   const startedAt = new Date().toISOString();
   const checkpoints = [];
   let app = null;
   let browser = null;
   let page = null;
+  let currentSourceHeadSha = null;
+  let trackedTreeClean = null;
+  let buildExecutableSha256 = null;
+  let installedExecutableSha256 = null;
 
   const pass = (id, details = undefined) => {
     checkpoints.push({ id, status: 'PASS', ...(details ? { details } : {}) });
     console.log(`vnext-installed-${id}=PASS`);
   };
 
+  const screenshotFiles = () => [overviewScreenshotPath, liveScreenshotPath, boundScreenshotPath]
+    .filter((file) => fs.existsSync(file))
+    .map((file) => path.basename(file));
+
   const writeResult = (status, errorMessage = null) => {
     const result = {
-      schema_version: '1.0',
+      schema_version: '1.1',
       gate_id: 'vnext-control-center-installed-e2e',
       status,
       verification_level: 'INSTALLED_WINDOWS_LOCAL_CONTROLLED',
-      expected_head_sha: expectedHeadSha,
-      executable_sha256: fs.existsSync(executable) ? sha256File(executable) : null,
+      declared_source_head_sha: expectedHeadSha || null,
+      observed_source_head_sha: currentSourceHeadSha,
+      tracked_source_tree_clean: trackedTreeClean,
+      source_head_binding: 'WORKING_TREE_HEAD_PLUS_BUILD_TO_INSTALLED_BINARY_SHA256',
+      build_executable_sha256: buildExecutableSha256,
+      installed_executable_sha256: installedExecutableSha256,
+      executable_hash_match: Boolean(
+        buildExecutableSha256
+        && installedExecutableSha256
+        && buildExecutableSha256 === installedExecutableSha256
+      ),
       started_at: startedAt,
       completed_at: new Date().toISOString(),
       fixture: 'D1B1_CONTROLLED_LOCAL_ONLY',
@@ -158,13 +189,38 @@ async function run() {
         outcome_finalized: false,
       },
       checkpoints,
-      screenshot: fs.existsSync(screenshotPath) ? path.basename(screenshotPath) : null,
+      screenshots: screenshotFiles(),
       error: errorMessage,
     };
     fs.writeFileSync(resultPath, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
   };
 
   try {
+    assert.match(expectedHeadSha, /^[0-9a-f]{40}$/, 'OMNI_VNEXT_E2E_EXPECTED_SHA must be a full 40-character Git SHA');
+    assert.equal(fs.existsSync(buildExecutable), true, `build executable not found: ${buildExecutable}`);
+    assert.equal(fs.existsSync(executable), true, `installed executable not found: ${executable}`);
+
+    currentSourceHeadSha = gitText(['rev-parse', 'HEAD']).toLowerCase();
+    trackedTreeClean = gitText(['status', '--porcelain', '--untracked-files=no']) === '';
+    assert.equal(currentSourceHeadSha, expectedHeadSha, `working tree HEAD ${currentSourceHeadSha} does not match declared build head ${expectedHeadSha}`);
+    assert.equal(trackedTreeClean, true, 'tracked source tree is dirty; rebuild from a clean exact head before running the installed gate');
+
+    buildExecutableSha256 = sha256File(buildExecutable);
+    installedExecutableSha256 = sha256File(executable);
+    assert.equal(
+      installedExecutableSha256,
+      buildExecutableSha256,
+      'installed Omni-Context.exe does not match the exact build executable by SHA-256',
+    );
+    pass('artifact-identity', {
+      source_head_sha: currentSourceHeadSha,
+      executable_sha256: installedExecutableSha256,
+    });
+
+    assert.equal(await portInUse(brainPort), false, `127.0.0.1:${brainPort} is already in use; close the running Omni-Context instance before this gate`);
+    assert.equal(await portInUse(cdpPort), false, `127.0.0.1:${cdpPort} is already in use`);
+    pass('isolated-runtime-preflight');
+
     app = await startInstalledApp();
     pass('packaged-app-start');
 
@@ -208,6 +264,7 @@ async function run() {
     await liveGuardBlock.getByText('proceed', { exact: true }).waitFor({ timeout: 30_000 });
     await liveGuardBlock.getByText(/d1b1-controlled-cp6-fixture@1\.0\.0/i).first().waitFor({ timeout: 30_000 });
     await liveGuardBlock.getByText(/Source:\s*d1b1-controlled-local-fixture/i).first().waitFor({ timeout: 30_000 });
+    await liveGuardBlock.screenshot({ path: liveScreenshotPath });
     pass('live-guard-provenance');
 
     const boundSnapshotHeading = page.getByText('Bound plan snapshot', { exact: true }).first();
@@ -216,18 +273,19 @@ async function run() {
     await boundSnapshotBlock.getByText(/Immutable authorization snapshot/i).waitFor({ timeout: 30_000 });
     await boundSnapshotBlock.getByText('repository.current_state', { exact: true }).waitFor({ timeout: 30_000 });
     await boundSnapshotBlock.getByText('issue.current_state', { exact: true }).waitFor({ timeout: 30_000 });
+    await boundSnapshotBlock.screenshot({ path: boundScreenshotPath });
     pass('bound-plan-snapshot');
 
     await page.getByText(/Approved ≠ Executed/i).first().waitFor({ timeout: 30_000 });
     pass('authority-copy');
 
-    await page.screenshot({ path: screenshotPath, fullPage: true });
-    pass('screenshot-evidence', { file: path.basename(screenshotPath) });
+    await page.screenshot({ path: overviewScreenshotPath, fullPage: true });
+    pass('screenshot-evidence', { files: screenshotFiles() });
 
     writeResult('PASS');
   } catch (error) {
     if (page) {
-      await page.screenshot({ path: screenshotPath, fullPage: true }).catch(() => {});
+      await page.screenshot({ path: overviewScreenshotPath, fullPage: true }).catch(() => {});
     }
     writeResult('FAIL', error instanceof Error ? error.message : String(error));
     throw error;
