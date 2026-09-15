@@ -4,6 +4,15 @@ import type { RequestContext } from '../src/api/routes.js';
 import { handleAgentRoutes } from '../src/api/handlers/agent.js';
 import type { EvidenceCoverageSnapshot } from '../src/execution/contracts.js';
 import { projectDesktopEvidenceDiagnostics } from '../src/agent/pilot.js';
+import { createDesktopEvidenceDiagnosticsProjector } from '../src/evidence/desktop-diagnostics.js';
+import {
+  buildTestRig,
+  validProvider,
+  CLASS_A,
+  CLASS_B,
+  TEST_CAPABILITY_ID,
+  TEST_SUBJECT_INPUTS,
+} from './helpers/cp6-evidence-test-rig.js';
 
 describe('vNext Desktop evidence diagnostics projection', () => {
   it('projects bounded plan-snapshot facts without inventing Guard reason codes', () => {
@@ -76,6 +85,52 @@ describe('vNext Desktop evidence diagnostics projection', () => {
     expect(serialized).not.toContain('token_reference');
     expect(serialized).not.toContain('approval_reference');
     expect(serialized).not.toContain('receipt_digest');
+  });
+
+  it('projects live Guard reason/provenance only while the process-local ledger still exists', async () => {
+    const rig = buildTestRig();
+    rig.providers.register(validProvider(CLASS_A, 'alpha-ok'));
+    rig.providers.register(validProvider(CLASS_B, 'beta-ok'));
+
+    const evaluation = await rig.runtime.evaluateForCapability({
+      capability_id: TEST_CAPABILITY_ID,
+      capability_version: '1.0.0',
+      normalized_inputs: TEST_SUBJECT_INPUTS,
+    });
+    const projector = createDesktopEvidenceDiagnosticsProjector(
+      rig.guardRunStore,
+      rig.qualifiedStore,
+    );
+
+    const live = projector(evaluation.guard_run_id);
+    expect(live).toMatchObject({
+      projection_version: 1,
+      source: 'live_guard_run',
+      availability: 'AVAILABLE',
+      guard_run_id: evaluation.guard_run_id,
+      final_action: 'proceed',
+      aborted: false,
+      qualified_evidence_total: 2,
+      qualified_evidence_returned: 2,
+      qualified_evidence_truncated: false,
+      missing_lineage_count: 0,
+    });
+    if (live.availability !== 'AVAILABLE') throw new Error('expected live Guard diagnostics');
+    expect(live.qualified_evidence).toHaveLength(2);
+    expect(live.qualified_evidence.every((item) => item.source_reference.length > 0)).toBe(true);
+    expect(live.qualified_evidence.every((item) => item.provider_id.length > 0)).toBe(true);
+    expect(JSON.stringify(live)).not.toContain('claim_digest');
+    expect(JSON.stringify(live)).not.toContain('token_reference');
+    expect(JSON.stringify(live)).not.toContain('approval_reference');
+    expect(JSON.stringify(live)).not.toContain('receipt_digest');
+
+    expect(projector('guard-run-after-restart')).toEqual({
+      projection_version: 1,
+      source: 'live_guard_run',
+      availability: 'NOT_AVAILABLE',
+      availability_reason: 'GUARD_RUN_RESTART_INVALIDATED_OR_EVICTED',
+      guard_run_id: 'guard-run-after-restart',
+    });
   });
 
   it('rejects paired device principals before materializing the Desktop control projection', async () => {

@@ -11,6 +11,7 @@ import type { AuthorizationService } from '../approval/authorization-service.js'
 import type { PlanAuthorizationRecord } from '../approval/contracts.js';
 import type { EvidenceCoverageSnapshot } from '../execution/contracts.js';
 import type { EvidenceSurfaceRuntime } from '../evidence/runtime.js';
+import type { DesktopEvidenceDiagnosticsProjector } from '../evidence/desktop-diagnostics.js';
 import type { ServerVerificationRuntime } from '../control/verification-runtime.js';
 import type { DecisionRevisionService } from '../revision/service.js';
 import { runDecisionKernel, type DecisionDisposition } from '../decision/kernel.js';
@@ -41,6 +42,8 @@ export interface AgentPilotAdapterOptions {
   evidenceRuntime: EvidenceSurfaceRuntime;
   authorizationService: AuthorizationService;
   verificationRuntime?: ServerVerificationRuntime;
+  /** Desktop-only bounded read projection. Raw CP6 stores never cross this boundary. */
+  evidenceDiagnosticsProjector?: DesktopEvidenceDiagnosticsProjector;
   /** Read-only projection only. Agent Pilot never receives the reopen writer. */
   revisionRuntime?: Pick<DecisionRevisionService, 'projectionForDecision'>;
 }
@@ -203,10 +206,10 @@ export class AgentPilotAdapter {
   }
 
   /**
-   * Desktop Control Center gets expected-vs-observed display facts and a
-   * bounded evidence-snapshot diagnostic projection through its local
-   * decision-read route. Agent Pilot deliberately does not receive these
-   * Desktop-only projections.
+   * Desktop Control Center gets expected-vs-observed display facts, immutable
+   * plan-snapshot evidence diagnostics, and (when still present) a bounded
+   * live CP6 Guard/provenance projection. Agent Pilot deliberately receives
+   * none of these Desktop-only projections.
    */
   async desktopHistory() {
     return Promise.all(this.options.authorizationService.listAuthorizationRecords()
@@ -237,6 +240,7 @@ export class AgentPilotAdapter {
           record.guard_run_id,
           record.plan.evidence_coverage_snapshot,
         ),
+        guard_diagnostics: this.options.evidenceDiagnosticsProjector?.(record.guard_run_id) ?? null,
       } : {}),
       revision: await this.revisionProjection(record.plan.decision_id),
     };

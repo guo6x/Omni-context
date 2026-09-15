@@ -87,6 +87,7 @@ async function main() {
     evidenceRuntime: authorizationRuntime.evidenceRuntime,
     authorizationService: authorizationRuntime.authorizationService,
     verificationRuntime: authorizationRuntime.verificationRuntime,
+    evidenceDiagnosticsProjector: authorizationRuntime.desktopEvidenceDiagnostics,
     revisionRuntime,
   });
   await maybeCreateD1b2ControlledFixture(authorizationRuntime);
