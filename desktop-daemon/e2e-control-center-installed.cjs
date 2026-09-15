@@ -201,13 +201,13 @@ async function run() {
     pass('awaiting-approval-state', { visible_plan_cards: planCount });
 
     await page.getByText('Live Guard trace', { exact: true }).first().waitFor({ timeout: 30_000 });
-    await page.getByText(/Action\s*proceed/i).first().waitFor({ timeout: 30_000 });
+    await page.getByText('proceed', { exact: true }).first().waitFor({ timeout: 30_000 });
     await page.getByText(/d1b1-controlled-cp6-fixture@1\.0\.0/i).first().waitFor({ timeout: 30_000 });
-    await page.getByText('d1b1-controlled-local-fixture', { exact: true }).first().waitFor({ timeout: 30_000 });
+    await page.getByText(/Source:\s*d1b1-controlled-local-fixture/i).first().waitFor({ timeout: 30_000 });
     pass('live-guard-provenance');
 
     await page.getByText('Bound plan snapshot', { exact: true }).first().waitFor({ timeout: 30_000 });
-    await page.getByText(/immutable authorization plan snapshot/i).first().waitFor({ timeout: 30_000 });
+    await page.getByText(/Immutable authorization snapshot/i).first().waitFor({ timeout: 30_000 });
     await page.getByText('repository.current_state', { exact: true }).first().waitFor({ timeout: 30_000 });
     await page.getByText('issue.current_state', { exact: true }).first().waitFor({ timeout: 30_000 });
     pass('bound-plan-snapshot');
