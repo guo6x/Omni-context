@@ -58,6 +58,6 @@ describe('vNext controlled supersession fixture', () => {
 
     const currentAuthorization = authorizationRuntime.authorizationService.getAuthorizationRecord(fixture.current_plan_id);
     expect(currentAuthorization?.plan.state).toBe('awaiting_approval');
-    expect(currentAuthorization?.plan.approval).toBeUndefined();
+    expect(currentAuthorization?.plan.approval).toBeNull();
   });
 });
