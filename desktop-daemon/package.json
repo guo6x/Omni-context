@@ -10,7 +10,8 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build -c src-tauri/tauri.prod.conf.json",
     "verify:controlled": "node scripts/verify-controlled-files.mjs",
-    "snapshot:controlled": "node scripts/verify-controlled-files.mjs --snapshot scripts/controlled-files.sha256.json"
+    "snapshot:controlled": "node scripts/verify-controlled-files.mjs --snapshot scripts/controlled-files.sha256.json",
+    "e2e:vnext-control-center:installed": "node e2e-control-center-installed.cjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^1.5.0",

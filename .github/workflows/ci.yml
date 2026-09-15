@@ -72,6 +72,9 @@ jobs:
           cache-dependency-path: desktop-daemon/package-lock.json
       - run: npm ci
         working-directory: desktop-daemon
+      - name: Syntax-check installed Control Center gate harness
+        run: node --check e2e-control-center-installed.cjs
+        working-directory: desktop-daemon
       - run: npm run build
         working-directory: desktop-daemon
 

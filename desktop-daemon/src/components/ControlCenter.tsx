@@ -16,6 +16,83 @@ type OutcomeContext = {
   reason_codes: string[];
 };
 
+type EvidenceDiagnosticEntry = {
+  evidence_class: string;
+  status: string;
+  verification_level: string;
+  checked_at: string;
+  stale_since: string | null;
+  evidence_ids: string[];
+  evidence_ids_truncated: boolean;
+  conflict_evidence_ids: string[];
+  conflict_evidence_ids_truncated: boolean;
+};
+
+type EvidenceDiagnostics = {
+  projection_version: number;
+  source: "authorization_plan_snapshot";
+  guard_run_id: string;
+  guard_reason_codes: null;
+  guard_reason_codes_status: "NOT_AVAILABLE_FROM_PLAN_SNAPSHOT";
+  missing_classes: string[];
+  stale_classes: string[];
+  conflicted_classes: string[];
+  unverified_classes: string[];
+  entries: EvidenceDiagnosticEntry[];
+};
+
+type GuardDiagnosticsUnavailable = {
+  projection_version: number;
+  source: "live_guard_run";
+  availability: "NOT_AVAILABLE";
+  availability_reason: "GUARD_RUN_RESTART_INVALIDATED_OR_EVICTED";
+  guard_run_id: string;
+};
+
+type GuardDiagnosticsAvailable = {
+  projection_version: number;
+  source: "live_guard_run";
+  availability: "AVAILABLE";
+  availability_reason: null;
+  guard_run_id: string;
+  final_action: string;
+  reason_codes: string[];
+  rounds_used: number;
+  started_at: string;
+  finished_at: string;
+  aborted: boolean;
+  provider_outcomes: Array<{
+    evidence_class: string;
+    kind: string;
+    retryable: boolean;
+    alternate_provider_available: boolean;
+  }>;
+  provider_outcomes_truncated: boolean;
+  clarification_needs: Array<{
+    evidence_class: string;
+    clarification_key: string;
+  }>;
+  clarification_needs_truncated: boolean;
+  qualified_evidence_total: number;
+  qualified_evidence_returned: number;
+  qualified_evidence_truncated: boolean;
+  missing_lineage_count: number;
+  qualified_evidence: Array<{
+    evidence_id: string;
+    evidence_class: string;
+    provider_id: string;
+    provider_version: string;
+    source_item_id: string;
+    source_reference: string;
+    source_reference_truncated: boolean;
+    observed_at: string;
+    verification_level: string;
+    qualified_at: string;
+  }>;
+};
+
+type GuardDiagnostics = GuardDiagnosticsUnavailable | GuardDiagnosticsAvailable;
+
 type RevisionProjection = {
   root_decision_id: string;
   original_decision_id: string;
@@ -58,9 +135,12 @@ type PlanRecord = {
     normalized_inputs?: Record<string, unknown>; created_at?: string; expires_at?: string;
   };
   approval_request?: { status: string; expires_at?: string; side_effect_summary?: { side_effect_class: string; reversible: boolean }; evidence_summary?: { mandatory_satisfied: boolean } } | null;
+  guard_run_id?: string;
   blocked_reason?: string | null;
   outcome?: { status?: "PENDING" | "VERIFIED" | "MISMATCH" | "INCONCLUSIVE"; revisit_required?: boolean; readback_attempts?: number; verification_attempts?: number } | null;
   outcome_context?: OutcomeContext | null;
+  evidence_diagnostics?: EvidenceDiagnostics | null;
+  guard_diagnostics?: GuardDiagnostics | null;
   revision?: RevisionProjection | null;
 };
 
@@ -74,6 +154,10 @@ function stateText(state: JsonObject | null): string {
   if (!state) return "NOT_AVAILABLE";
   const serialized = JSON.stringify(state, null, 2);
   return serialized.length > 2_000 ? `${serialized.slice(0, 2_000)}\n… bounded display truncated` : serialized;
+}
+
+function classSummary(label: string, values: string[]): string | null {
+  return values.length > 0 ? `${label}: ${values.join(", ")}` : null;
 }
 
 export default function ControlCenter({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -156,9 +240,28 @@ export default function ControlCenter({ isOpen, onClose }: { isOpen: boolean; on
         const receiptCaptured = Boolean(outcome); const outcomePending = outcome?.status === 'PENDING'; const entries = plan.evidence_coverage_snapshot?.entries ?? [];
         const canReopen = outcome?.status === 'MISMATCH' || outcome?.status === 'INCONCLUSIVE' || outcome?.status === 'VERIFIED';
         const revision = record.revision;
+        const diagnostics = record.evidence_diagnostics;
+        const guardDiagnostics = record.guard_diagnostics;
+        const diagnosticSummaries = diagnostics ? [
+          classSummary('Missing', diagnostics.missing_classes),
+          classSummary('Stale', diagnostics.stale_classes),
+          classSummary('Conflicted', diagnostics.conflicted_classes),
+          classSummary('Unverified', diagnostics.unverified_classes),
+        ].filter((value): value is string => Boolean(value)) : [];
         return <article key={plan.plan_id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <div className="flex items-start justify-between gap-3"><div><div className="font-medium text-white">{plan.capability_id}</div><div className="mt-1 font-mono text-[10px] text-gray-500">{plan.plan_id}</div></div><span className={`rounded-full px-2 py-1 text-[10px] uppercase ${pending ? 'bg-amber-500/20 text-amber-300' : ready ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-500/20 text-gray-300'}`}>{plan.state}</span></div>
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs"><div><span className="text-gray-500">Risk</span><div className="text-gray-200">{plan.risk_snapshot?.risk_level ?? 'unknown'}</div></div><div><span className="text-gray-500">Side effects</span><div className="text-gray-200">{plan.risk_snapshot?.side_effect_class ?? 'unknown'} · {plan.risk_snapshot?.reversible ? 'reversible' : 'not reversible'}</div></div><div><span className="text-gray-500">Evidence</span><div className="text-gray-200">{entries.map((entry) => `${entry.evidence_class}: ${entry.status}`).join(' · ') || 'not available'}</div></div><div><span className="text-gray-500">Expiry</span><div className="text-gray-200">{plan.expires_at ? new Date(plan.expires_at).toLocaleString() : 'bounded policy TTL'}</div></div></div>
+          {guardDiagnostics && <div className="mt-3 rounded-lg border border-indigo-500/20 bg-indigo-950/20 p-3 text-xs text-indigo-50">
+            <div className="flex flex-wrap items-center justify-between gap-2"><div className="font-medium text-indigo-200">Live Guard trace</div><div className="font-mono text-[9px] text-indigo-400">guard {guardDiagnostics.guard_run_id}</div></div>
+            {guardDiagnostics.availability === 'NOT_AVAILABLE' ? <div className="mt-2 rounded bg-black/20 p-2 text-[10px] text-amber-200">Live Guard trace is unavailable because the process-local ledger was restarted or this run was evicted. Nothing is reconstructed. The immutable plan snapshot below remains the bound audit record.</div> : <>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-[10px]"><div><span className="text-indigo-300">Action</span><div className="font-semibold text-indigo-50">{guardDiagnostics.final_action}</div></div><div><span className="text-indigo-300">Retrieval rounds</span><div>{guardDiagnostics.rounds_used}{guardDiagnostics.aborted ? ' · aborted' : ''}</div></div><div><span className="text-indigo-300">Started</span><div>{new Date(guardDiagnostics.started_at).toLocaleString()}</div></div><div><span className="text-indigo-300">Finished</span><div>{new Date(guardDiagnostics.finished_at).toLocaleString()}</div></div></div>
+              <div className="mt-2 text-[10px] text-indigo-100">Reason codes: {guardDiagnostics.reason_codes.length ? guardDiagnostics.reason_codes.join(' · ') : 'none'}</div>
+              {guardDiagnostics.provider_outcomes.length > 0 && <div className="mt-3"><div className="text-[10px] uppercase tracking-wide text-indigo-300">Provider outcomes</div><div className="mt-1 flex flex-wrap gap-1">{guardDiagnostics.provider_outcomes.map((item, index) => <span key={`${item.evidence_class}:${item.kind}:${index}`} className="rounded bg-black/20 px-2 py-1 text-[9px]">{item.evidence_class}: {item.kind}{item.retryable ? ' · retryable' : ''}</span>)}{guardDiagnostics.provider_outcomes_truncated && <span className="rounded bg-black/20 px-2 py-1 text-[9px]">… truncated</span>}</div></div>}
+              {guardDiagnostics.clarification_needs.length > 0 && <div className="mt-3"><div className="text-[10px] uppercase tracking-wide text-indigo-300">Clarification needs</div><div className="mt-1 text-[10px] text-amber-200">{guardDiagnostics.clarification_needs.map((item) => `${item.evidence_class}: ${item.clarification_key}`).join(' · ')}{guardDiagnostics.clarification_needs_truncated ? ' · … truncated' : ''}</div></div>}
+              <div className="mt-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="text-[10px] uppercase tracking-wide text-indigo-300">Qualified provenance</div><div className="text-[9px] text-gray-500">{guardDiagnostics.qualified_evidence_returned}/{guardDiagnostics.qualified_evidence_total} shown{guardDiagnostics.qualified_evidence_truncated ? ' · bounded' : ''}</div></div>{guardDiagnostics.missing_lineage_count > 0 && <div className="mt-1 text-[9px] text-amber-300">{guardDiagnostics.missing_lineage_count} referenced evidence record(s) are no longer present in the live lineage store.</div>}<div className="mt-1 space-y-2">{guardDiagnostics.qualified_evidence.length ? guardDiagnostics.qualified_evidence.map((item) => <div key={item.evidence_id} className="rounded bg-black/20 p-2"><div className="flex flex-wrap justify-between gap-2"><span className="font-medium text-indigo-100">{item.evidence_class}</span><span className="text-[9px] text-indigo-300">{item.verification_level}</span></div><div className="mt-1 text-[9px] text-gray-300">{item.provider_id}@{item.provider_version} · observed {new Date(item.observed_at).toLocaleString()}</div><div className="mt-1 break-all text-[9px] text-gray-400">Source: {item.source_reference}{item.source_reference_truncated ? '…' : ''}</div><div className="mt-1 break-all font-mono text-[8px] text-gray-500">{item.evidence_id}</div></div>) : <div className="rounded bg-black/20 p-2 text-[10px] text-gray-400">No qualified provenance rows were retained for this Guard run.</div>}</div></div>
+            </>}
+          </div>}
+          {diagnostics && <div className="mt-3 rounded-lg border border-sky-500/20 bg-sky-950/20 p-3 text-xs text-sky-50"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-medium text-sky-200">Bound plan snapshot</div><div className="font-mono text-[9px] text-sky-400">guard {diagnostics.guard_run_id}</div></div><div className="mt-1 text-[10px] text-sky-200">Immutable authorization snapshot. Unlike the live Guard trace above, this remains part of the authorized plan record.</div>{diagnosticSummaries.length > 0 ? <div className="mt-2 text-[10px] text-amber-200">{diagnosticSummaries.join(' · ')}</div> : <div className="mt-2 text-[10px] text-emerald-200">No missing / stale / conflicted / unverified evidence classes in this bound snapshot.</div>}<div className="mt-3 space-y-2">{diagnostics.entries.map((entry) => <div key={entry.evidence_class} className="rounded bg-black/20 p-2"><div className="flex flex-wrap justify-between gap-2"><span className="font-medium text-sky-100">{entry.evidence_class}</span><span className="text-[10px] uppercase text-sky-300">{entry.status} · {entry.verification_level}</span></div><div className="mt-1 text-[10px] text-gray-400">Checked {new Date(entry.checked_at).toLocaleString()}{entry.stale_since ? ` · stale since ${new Date(entry.stale_since).toLocaleString()}` : ''}</div><div className="mt-1 break-all font-mono text-[9px] text-gray-400">Evidence IDs: {entry.evidence_ids.length ? entry.evidence_ids.join(' · ') : 'none'}{entry.evidence_ids_truncated ? ' · … truncated' : ''}</div>{entry.conflict_evidence_ids.length > 0 && <div className="mt-1 break-all font-mono text-[9px] text-rose-300">Conflict IDs: {entry.conflict_evidence_ids.join(' · ')}{entry.conflict_evidence_ids_truncated ? ' · … truncated' : ''}</div>}</div>)}</div><div className="mt-2 text-[9px] text-gray-500">Guard reason codes are not reconstructed from this snapshot.</div></div>}
           {pending && <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-950/20 p-3 text-xs text-amber-100">Human approval required. Approval only changes the plan to ready; it never starts execution.</div>}
           <div className="mt-3 grid grid-cols-3 gap-2 text-[11px] text-gray-400"><div>Process<br /><span className="text-gray-200">{receiptCaptured ? 'RECORDED' : 'NOT_STARTED'}</span></div><div>Receipt<br /><span className="text-gray-200">{receiptCaptured ? 'CAPTURED' : 'PENDING'}</span></div><div>Read-back<br /><span className="text-gray-200">{receiptCaptured ? `${outcome?.readback_attempts ?? 0} attempt(s)` : 'PENDING'}</span></div></div>
           <ol className="mt-4 space-y-1 border-l border-white/10 pl-3 text-[11px] text-gray-400"><li>Evidence qualified · {entries.length ? 'coverage captured' : 'not available'}</li><li>Decision {plan.decision_id} · plan created {plan.created_at ? new Date(plan.created_at).toLocaleString() : 'server-owned'}</li><li>Approval · {plan.approval_granted ? 'approved (execution not started by approval)' : pending ? 'awaiting human control' : 'not required / unavailable'}</li><li>Execution / receipt · {receiptCaptured ? 'native receipt captured' : 'not started'}</li><li>Read-back / outcome · {outcome?.status ?? 'pending execution'}</li></ol>
