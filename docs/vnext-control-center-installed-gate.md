@@ -15,15 +15,19 @@ This is an observability gate, not an execution gate.
 
 ## Exact-artifact binding
 
-A typed Git SHA alone is not enough to establish which binary was tested. Before launching the installed app, the harness now requires and verifies all of the following:
+A typed Git SHA alone is not enough to establish which binary was tested. Before launching the installed app, the harness requires and verifies all of the following:
 
 1. `OMNI_VNEXT_E2E_EXPECTED_SHA` is a full 40-character Git SHA.
 2. The current repository `HEAD` equals that SHA.
-3. The tracked working tree is clean (`git status --porcelain --untracked-files=no` is empty).
-4. `OMNI_VNEXT_E2E_BUILD_EXE` points to the exact Desktop executable produced by that build.
-5. SHA-256 of the build executable equals SHA-256 of the installed `Omni-Context.exe`.
+3. Staged tracked content matches `HEAD` (`git diff --cached --quiet --no-ext-diff HEAD --`).
+4. Working-tree tracked content matches `HEAD` (`git diff --quiet --no-ext-diff HEAD --`).
+5. There are no non-ignored untracked files (`git ls-files --others --exclude-standard`).
+6. `OMNI_VNEXT_E2E_BUILD_EXE` points to the exact Desktop executable produced by that build.
+7. SHA-256 of the build executable equals SHA-256 of the installed `Omni-Context.exe`.
 
-The result JSON records both hashes and the observed repository HEAD. This gives the installed run a procedural source/build/install binding rather than merely trusting an unbound SHA label.
+Why content identity rather than requiring an empty `git status --porcelain`: on Windows, the Tauri/NSIS toolchain can leave a tracked file with a stat/index-only `.M` advisory even when its Git blob is byte-identical to `HEAD`, `git diff` is empty, and no staged content changed. That metadata-only condition is not a source mutation. The harness therefore records porcelain output as an advisory but blocks only on actual tracked-content differences or non-ignored untracked source files.
+
+The result JSON records the declared/observed HEAD, staged/worktree content checks, any advisory porcelain rows, non-ignored untracked files, and both executable hashes. This gives the installed run a procedural source/build/install binding without treating Windows stat-cache noise as source drift.
 
 ## Controlled fixture
 
@@ -92,7 +96,7 @@ Preflight failures also write the result JSON when the evidence directory is wri
 
 ## Run on the exact installed artifact
 
-Build the exact clean head, install the produced package, then point the gate at both the build executable and installed directory.
+Build the exact content-clean head, install the produced package, then point the gate at both the build executable and installed directory.
 
 Windows PowerShell:
 
@@ -123,7 +127,10 @@ The result JSON records:
 
 - PASS / FAIL
 - declared and observed Git HEAD
-- tracked-tree cleanliness
+- staged tracked-content identity versus HEAD
+- working-tree tracked-content identity versus HEAD
+- non-ignored untracked files
+- advisory porcelain rows and whether they were stat-only
 - build executable SHA-256
 - installed executable SHA-256
 - whether the executable hashes match
