@@ -25,9 +25,9 @@ A typed Git SHA alone is not enough to establish which binary was tested. Before
 6. `OMNI_VNEXT_E2E_BUILD_EXE` points to the exact Desktop executable produced by that build.
 7. SHA-256 of the build executable equals SHA-256 of the installed `Omni-Context.exe`.
 
-Why content identity rather than requiring an empty `git status --porcelain`: on Windows, the Tauri/NSIS toolchain can leave a tracked file with a stat/index-only `.M` advisory even when its Git blob is byte-identical to `HEAD`, `git diff` is empty, and no staged content changed. That metadata-only condition is not a source mutation. The harness therefore records porcelain output as an advisory but blocks only on actual tracked-content differences or non-ignored untracked source files.
+Why content identity rather than requiring an empty `git status --porcelain`: on Windows, the Tauri/NSIS toolchain can leave a tracked file with a stat/index-only `.M` advisory even when its Git blob is byte-identical to `HEAD`, `git diff` is empty, and no staged content changed. This occurred during the first real gate attempt on `48f8def7ae45deb8a3fd6ddb4d8af91ccfe9152d`: `desktop-daemon/src-tauri/Cargo.toml` retained `.M` after `git update-index --refresh` / `git add --refresh`, while HEAD and worktree blob hashes were both `1d925069e43dfc3553c9ee20f74661b8426a0712` and working/cached diffs were empty. That attempt correctly remained `PREPARED_NOT_EXECUTED`; the harness was then corrected so future runs distinguish source-content drift from Windows stat-cache noise.
 
-The result JSON records the declared/observed HEAD, staged/worktree content checks, any advisory porcelain rows, non-ignored untracked files, and both executable hashes. This gives the installed run a procedural source/build/install binding without treating Windows stat-cache noise as source drift.
+The harness records porcelain output as an advisory but blocks only on actual tracked-content differences or non-ignored untracked source files. The result JSON records the declared/observed HEAD, staged/worktree content checks, any advisory porcelain rows, non-ignored untracked files, and both executable hashes. This gives the installed run a procedural source/build/install binding without treating Windows stat-cache noise as source drift.
 
 ## Controlled fixture
 
