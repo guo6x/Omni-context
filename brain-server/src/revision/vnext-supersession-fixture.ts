@@ -22,7 +22,11 @@ import type { DecisionRevisionService } from './service.js';
 
 const CAPABILITY_ID = 'github.issue.close';
 const CAPABILITY_VERSION = '1.0.0';
-const INPUTS = { owner: 'fixture-owner', repo: 'fixture-repo', number: 909 };
+// Keep the supersession fixture on the exact subject emitted by the existing
+// controlled D1B1 evidence provider. Using a different issue number would make
+// CP6 correctly reject the fixture before authorization because the evidence
+// subject would no longer bind to the requested capability inputs.
+const INPUTS = { owner: 'fixture-owner', repo: 'fixture-repo', number: 1 };
 
 export interface VnextSupersessionFixtureResult {
   fixture: 'VNEXT_SUPERSESSION_CONTROLLED_LOCAL_ONLY';
