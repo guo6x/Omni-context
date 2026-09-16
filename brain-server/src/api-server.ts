@@ -14,6 +14,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { AgentPilotAdapter } from './agent/pilot.js';
 import { createProductionRevisionRuntime } from './revision/production-runtime.js';
+import { createVnextSupersessionControlledFixture } from './revision/vnext-supersession-fixture.js';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -47,6 +48,23 @@ async function maybeCreateD1b2ControlledFixture(runtime: ReturnType<typeof creat
     ...fixture,
     secrets: 'REDACTED',
   }, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+}
+
+async function maybeCreateVnextSupersessionFixture(
+  runtime: ReturnType<typeof createProductionAuthorizationRuntime>,
+  revisionRuntime: ReturnType<typeof createProductionRevisionRuntime>,
+) {
+  if (process.env.OMNI_VNEXT_SUPERSESSION_E2E_FIXTURE !== '1') return;
+  if (process.env.OMNI_D1B1_E2E_FIXTURE !== '1') {
+    throw new Error('vNext supersession fixture requires OMNI_D1B1_E2E_FIXTURE=1 so evidence stays controlled and local-only');
+  }
+  const outputPath = process.env.OMNI_VNEXT_SUPERSESSION_E2E_FIXTURE_OUTPUT;
+  if (!outputPath) {
+    throw new Error('vNext supersession fixture requires OMNI_VNEXT_SUPERSESSION_E2E_FIXTURE_OUTPUT');
+  }
+  const fixture = await createVnextSupersessionControlledFixture(runtime, revisionRuntime);
+  await mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify(fixture, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
 }
 
 async function main() {
@@ -83,6 +101,7 @@ async function main() {
   const authorizationRuntime = await maybeCreateD1b1ControlledFixture()
     ?? createProductionAuthorizationRuntime();
   const revisionRuntime = createProductionRevisionRuntime(db, authorizationRuntime);
+  await maybeCreateVnextSupersessionFixture(authorizationRuntime, revisionRuntime);
   const agentPilot = new AgentPilotAdapter({
     evidenceRuntime: authorizationRuntime.evidenceRuntime,
     authorizationService: authorizationRuntime.authorizationService,
