@@ -832,7 +832,9 @@ R2  Route all existing acquisition paths through it
  ↓
 R3  Prove export → wipe derived state → rebuild
  ↓
-R4  Complete Personal Decision → Outcome → Lesson UI
+F1–F5  Frontend experience rebuild
+        Ask / Journey / Library / Advanced
+        (includes Personal Decision → Outcome → Lesson UI)
  ↓
 R5  Introduce MemoryProvider seam around current native implementation
  ↓
@@ -846,3 +848,28 @@ R8  Resume Action Safety / Control Center work as an advanced lane
 The first code change after this audit should therefore **not** be a new memory engine.
 
 It should be the canonical source-truth layer that makes memory engines safely replaceable.
+
+---
+
+## 15. Frontend redesign track
+
+The frontend is now a first-class product workstream, not a final cosmetic pass.
+
+See:
+
+- `docs/frontend-experience-reconciliation.md`
+
+Key rule:
+
+> Omni remains ambient-first, but when the Desktop is opened it must be human-centered rather than graph-centered.
+
+The frontend rebuild will preserve the current capture/HUD/browser/MCP interaction model while reorganizing the Desktop around four modes:
+
+```text
+Ask
+Journey
+Library
+Advanced
+```
+
+The current GraphViewer, DecisionTimeline, InsightsInbox, MemoryManager and ControlCenter are treated as reusable capability surfaces to be recomposed, not discarded wholesale.
