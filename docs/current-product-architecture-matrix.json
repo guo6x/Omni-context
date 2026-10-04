@@ -183,10 +183,39 @@
     "R1_CANONICAL_SOURCE_RAW_EVENT_LAYER",
     "R2_ROUTE_ALL_ACQUISITION_PATHS_THROUGH_SOURCE_LAYER",
     "R3_PROVE_EXPORT_WIPE_DERIVED_REBUILD",
-    "R4_COMPLETE_PERSONAL_DECISION_OUTCOME_LESSON_UI",
+    "F1_F5_FRONTEND_EXPERIENCE_REBUILD",
     "R5_MEMORY_PROVIDER_SEAM_AROUND_NATIVE",
     "R6_BENCHMARK_ONE_EXTERNAL_MEMORY_PROVIDER",
     "R7_DECIDE_NATIVE_MEMORY_RETIREMENT",
     "R8_RESUME_ACTION_SAFETY_AS_ADVANCED_LANE"
-  ]
+  ],
+  "frontend": {
+    "status": "PLANNED_FIRST_CLASS_WORKSTREAM",
+    "principle": "Ambient-first overall interaction; human-centered Desktop when opened.",
+    "current_problem": "GraphViewer is the default visual center while high-value personal cognition and action-safety surfaces are mixed in overlays/menus.",
+    "target_modes": [
+      "Ask",
+      "Journey",
+      "Library",
+      "Advanced"
+    ],
+    "reuse_mapping": {
+      "GraphViewer": "Split Ask interaction from graph visualization; graph moves to Library/expert evidence view.",
+      "DecisionTimeline": "Evolves into Journey.",
+      "InsightsInbox": "Feeds Journey and contextual proactive cards.",
+      "MemoryManager": "Evolves into Library.",
+      "ControlCenter": "Moves under Advanced.",
+      "FloatingHUD": "Keep as ambient independent surface."
+    },
+    "execution": [
+      "F0_UX_TRUTH_FREEZE",
+      "F1_SHELL_EXTRACTION",
+      "F2_ASK_FIRST",
+      "F3_JOURNEY",
+      "F4_LIBRARY_SOURCES",
+      "F5_ADVANCED_SEPARATION",
+      "F6_VISUAL_SYSTEM",
+      "F7_INSTALLED_APP_PRODUCT_TEST"
+    ]
+  }
 }
