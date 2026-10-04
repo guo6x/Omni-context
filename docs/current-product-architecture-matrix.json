@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-04",
+  "authoritative_baseline": {
+    "branch": "main",
+    "sha": "d4d61f1c9b73d8a127023129adc3376ec6d7db13",
+    "rule": "Current code wins over stale narrative docs; draft branches are recorded separately."
+  },
+  "product_definition": {
+    "primary_human_loop": "Personal AI Context & Decision Layer",
+    "advanced_side_effect_loop": "Agent Judgment / Authority Layer",
+    "source_truth_invariant": "Source truth is user-owned; derived intelligence is replaceable.",
+    "interaction_invariant": "Users should not have to maintain a memory database to benefit from long-term context.",
+    "safety_invariant": "Advice may be probabilistic; side effects require authority and independent read-back."
+  },
+  "terminology": {
+    "personal_decision": "Human/project/life choice stored via SaveDecisionSchema",
+    "decision_outcome_journal": "Human/AI-authored observed result; outcome_authority=journal, verified=false",
+    "action_judgment": "Authority judgment for a side-effecting capability",
+    "action_authorization": "Approval/grant/plan bound to an exact operation",
+    "execution_outcome": "CP8 trusted read-back result",
+    "judgment_revision": "Goal27 fresh authority judgment after evidence/reality changes"
+  },
+  "product_chains": [
+    {
+      "id": "capture",
+      "status": "USER_FACING",
+      "disposition": "OWN",
+      "notes": "Desktop/browser/files/chat import/MCP/ESP32; canonical source ledger is incomplete."
+    },
+    {
+      "id": "context_memory_retrieval",
+      "status": "USER_FACING",
+      "disposition": "KEEP_AND_ADAPTERIZE",
+      "notes": "Current native implementation remains useful but is not the long-term moat."
+    },
+    {
+      "id": "personal_decision",
+      "status": "USER_FACING",
+      "disposition": "OWN",
+      "notes": "Rich decision schema, lineage, revisit, outcome journal already exist."
+    },
+    {
+      "id": "proactive_cognition",
+      "status": "USER_FACING",
+      "disposition": "OWN",
+      "notes": "AgentLoop insights, blindspots, decay and decision review reminders."
+    },
+    {
+      "id": "ai_interface",
+      "status": "USER_FACING",
+      "disposition": "OWN_INTERFACE",
+      "notes": "26 MCP tools plus skill-guided read/write behavior."
+    },
+    {
+      "id": "action_authority",
+      "status": "MIXED_USER_FACING_INTERNAL",
+      "disposition": "ADVANCED_OPTIONAL",
+      "notes": "CP6/7/8 + broker + capability adapters."
+    },
+    {
+      "id": "outcome_revision",
+      "status": "SPLIT_SEMANTICS",
+      "disposition": "SEPARATE_NAMESPACES",
+      "notes": "Personal outcome journal and CP8 execution outcome must remain distinct."
+    }
+  ],
+  "key_surfaces": {
+    "desktop": [
+      "tray_daemon",
+      "floating_hud",
+      "screen_clipboard_capture",
+      "ask_brain",
+      "graph",
+      "memory_manager",
+      "decision_timeline",
+      "insights_inbox",
+      "control_center"
+    ],
+    "browser": [
+      "chatgpt_capture",
+      "claude_capture",
+      "gemini_capture",
+      "page_selection_capture",
+      "ask_memory",
+      "privacy_consent"
+    ],
+    "mobile": [
+      "memory_read",
+      "decision_read",
+      "search",
+      "graph_neighborhood"
+    ],
+    "hardware": [
+      "precipitate",
+      "decision",
+      "reset"
+    ],
+    "mcp": [
+      "retrieval",
+      "memory_write",
+      "decision_support",
+      "decision_persistence",
+      "outcome_journal"
+    ]
+  },
+  "data_ownership_findings": {
+    "file_and_browser_ingest": "Persist cleaned source in archival memory and ingestion chunks/documents.",
+    "chat_export_success_path": "Does not consistently persist each successful original conversation as a canonical raw source record before derivation.",
+    "export": "Broad database export exists and includes graph/memory/discussions/ingestion/behavior/proactive state.",
+    "priority_gap": "Create one canonical source/raw-event contract shared by all acquisition paths."
+  },
+  "module_disposition": {
+    "own": [
+      "source_vault",
+      "source_identity_and_provenance",
+      "capture_consent_and_privacy",
+      "portable_export_contract",
+      "personal_decisions",
+      "decision_outcome_journal",
+      "user_corrections_and_supersession",
+      "behavior_event_ledger",
+      "proactive_cognition_policy_and_feedback",
+      "cross_ai_permissions",
+      "provider_interfaces",
+      "mcp_api_contracts"
+    ],
+    "keep_not_moat": [
+      "sqlite_graph",
+      "temporal_assertions",
+      "native_retrieval",
+      "core_memory",
+      "archival_memory",
+      "entity_resolution",
+      "conflict_resolution"
+    ],
+    "adapterize": [
+      "memory_extraction",
+      "memory_consolidation",
+      "semantic_retrieval",
+      "temporal_graph_memory",
+      "embeddings",
+      "reranking",
+      "reasoning_model",
+      "bounded_decision_model"
+    ],
+    "advanced_optional": [
+      "cp6_evidence_qualification",
+      "cp7_action_binding",
+      "restricted_execution_broker",
+      "capability_adapters",
+      "cp8_readback",
+      "goal27_judgment_revision",
+      "control_center_evidence_diagnostics"
+    ],
+    "stop_as_primary_differentiation": [
+      "generic_proprietary_decision_kernel",
+      "generic_proprietary_memory_algorithm",
+      "mcp_as_moat",
+      "graph_visualization_as_product",
+      "control_center_as_primary_daily_consumer_ux"
+    ]
+  },
+  "draft_prs": {
+    "5": {
+      "branch": "docs/post-goal29-release-truth-sync",
+      "recommendation": "PRESERVE_LIKELY_LAND_BEFORE_STRUCTURAL_REFACTOR",
+      "reason": "Security/release truth maintenance and Windows resolver fixes."
+    },
+    "6": {
+      "branch": "feat/vnext-evidence-diagnostics",
+      "recommendation": "PRESERVE_HOLD_AS_ACTION_SAFETY_LANE",
+      "reason": "Useful advanced Control Center diagnostics, not next consumer-product priority."
+    },
+    "7": {
+      "branch": "feat/vnext-revision-supersession",
+      "recommendation": "PRESERVE_HOLD_AS_ACTION_SAFETY_LANE",
+      "reason": "Correct authority-history semantics; installed supersession gate remains prepared_not_executed."
+    }
+  },
+  "next_engineering_sequence": [
+    "R0_FREEZE_RECONCILIATION",
+    "R1_CANONICAL_SOURCE_RAW_EVENT_LAYER",
+    "R2_ROUTE_ALL_ACQUISITION_PATHS_THROUGH_SOURCE_LAYER",
+    "R3_PROVE_EXPORT_WIPE_DERIVED_REBUILD",
+    "F1_F5_FRONTEND_EXPERIENCE_REBUILD",
+    "R5_MEMORY_PROVIDER_SEAM_AROUND_NATIVE",
+    "R6_BENCHMARK_ONE_EXTERNAL_MEMORY_PROVIDER",
+    "R7_DECIDE_NATIVE_MEMORY_RETIREMENT",
+    "R8_RESUME_ACTION_SAFETY_AS_ADVANCED_LANE"
+  ],
+  "frontend": {
+    "status": "PLANNED_FIRST_CLASS_WORKSTREAM",
+    "principle": "Ambient-first overall interaction; human-centered Desktop when opened.",
+    "current_problem": "GraphViewer is the default visual center while high-value personal cognition and action-safety surfaces are mixed in overlays/menus.",
+    "target_modes": [
+      "Ask",
+      "Journey",
+      "Library",
+      "Advanced"
+    ],
+    "reuse_mapping": {
+      "GraphViewer": "Split Ask interaction from graph visualization; graph moves to Library/expert evidence view.",
+      "DecisionTimeline": "Evolves into Journey.",
+      "InsightsInbox": "Feeds Journey and contextual proactive cards.",
+      "MemoryManager": "Evolves into Library.",
+      "ControlCenter": "Moves under Advanced.",
+      "FloatingHUD": "Keep as ambient independent surface."
+    },
+    "execution": [
+      "F0_UX_TRUTH_FREEZE",
+      "F1_SHELL_EXTRACTION",
+      "F2_ASK_FIRST",
+      "F3_JOURNEY",
+      "F4_LIBRARY_SOURCES",
+      "F5_ADVANCED_SEPARATION",
+      "F6_VISUAL_SYSTEM",
+      "F7_INSTALLED_APP_PRODUCT_TEST"
+    ]
+  }
+}
