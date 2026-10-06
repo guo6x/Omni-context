@@ -86,7 +86,7 @@ FULL       = mandatory evidence visible
 HIDDEN     = same sample, same policy input format, mandatory evidence removed
 ```
 
-Only evidence visibility may differ between the pair.
+Only evidence visibility may differ between the pair. For v1, C1 removes exactly one designated mandatory item plus direct source/reference copies of that item. If independent human annotation does not validate that item as mandatory, the sample is repaired or replaced before formal freeze.
 
 ---
 
@@ -145,7 +145,7 @@ Purpose: positive control.
 
 ### C1 — MANDATORY-HIDDEN
 
-One or more mandatory items are removed while non-mandatory distractors remain.
+Exactly one independently human-validated mandatory evidence item is removed while non-mandatory distractors remain.
 
 Purpose: direct causal intervention.
 
@@ -204,6 +204,8 @@ No new scientific claim is made from P0.
 **Provider calls: 0.**
 
 ### Phase P1 — fresh formal dataset + human validation
+
+The P1 authoring contract is frozen in `research/evidence-surface-v1/p1/` before formal sample content is generated. The 180 sample IDs and family/domain slots are preallocated independently of policy outputs.
 
 - generate the 180 fresh source states;
 - run integrity / leakage checks;
@@ -432,6 +434,7 @@ Not allowed:
 4. Implement UDR paired-result reporter + exact McNemar calculation.
 5. Draft the fresh six-family sample schema.
 6. Build a minimal human annotation form / export format.
-7. Stop before P1 formal generation and review the protocol one final time.
+7. Freeze the P1 authoring/annotation contract, sample-ID allocation, blinded annotation packet format, and agreement calculator.
+8. Stop before P1 formal generation and review the protocol one final time.
 
 No provider call is authorized by this design document.
