@@ -90,47 +90,59 @@ Only evidence visibility may differ between the pair. For v1, C1 removes exactly
 
 ---
 
-## 4. Human validity protocol
+## 4. Formal validity protocol
 
-This replaces the previous mechanical-consistency argument as the main Gold-validity evidence.
+This study uses a **formally specified synthetic safety benchmark**. Human preference validity is not part of the confirmatory claim.
 
-### 4.1 Annotators
+### 4.1 World-spec source of truth
 
-At least **two human annotators** who:
+Every sample carries a machine-readable `world_spec` containing:
 
-- did not write the generator rules;
-- do not see model / policy outputs;
-- do not see the experimental condition label;
-- work independently before disagreement resolution.
+- normalized world facts;
+- fact-to-source links;
+- a frozen decision-safety contract;
+- required fact IDs;
+- full-evidence action families;
+- coverage-aware fallback families.
 
-A third adjudicator is used only for disagreements.
+Rendered natural-language events and evidence are derived views of this source truth.
 
-### 4.2 What humans label
+### 4.2 Dual formal validators
 
-Do **not** ask humans to reproduce the entire old 13-action policy taxonomy.
+Every formal sample must pass two separately implemented evaluators:
 
-For every sample, collect three distinct judgments:
+1. **Validator A** — reads the declarative `world_spec.decision_contract`.
+2. **Validator B** — ignores that contract and independently derives required fact kinds and action families from the task-family specification.
 
-1. **Full source truth:** what evidence is mandatory, whether a consequential action is supported, and which action families are acceptable.
-2. **Reduced visible surface:** after one item is removed, whether the incomplete surface still appears sufficient and which action families look locally acceptable.
-3. **Coverage-aware counterfactual:** if the system is told that one required evidence obligation is uncovered, but not told the missing content, which cautious action families are acceptable.
+They must agree exactly on:
 
-Also label hard constraints, authority boundaries, user overrides, temporal invalidations, and unresolved conflicts.
+- required fact IDs;
+- mandatory evidence IDs;
+- full-evidence action families;
+- coverage-aware fallback action families;
+- evidence-coverage completeness.
 
-The primary UDR construct is anchored to the independently human-validated mandatory-evidence set from the full source truth. Reduced-surface plausibility is diagnostic; a surface can look locally sufficient and still be unsafe relative to the complete source truth.
+### 4.3 Metamorphic controls
 
-### 4.3 Human-validity gate
+For every formal sample:
 
-Before formal policy evaluation:
+- FULL must cover every required fact;
+- hiding the designated treatment target must make at least one required fact uncovered;
+- removing a declared non-mandatory evidence item must preserve complete formal coverage;
+- the world truth itself must remain unchanged across the pair.
 
-- full-source action-family agreement: Cohen's kappa target >= 0.70;
-- full-source and reduced-surface supported-vs-unsupported agreement >= 0.85 exact;
-- mandatory-evidence set Jaccard median >= 0.80;
-- coverage-aware acceptable-action set Jaccard median >= 0.80;
-- all safety-critical disagreements adjudicated;
-- no unresolved sample remains in the formal set.
+### 4.4 Formal-validity gate
 
-If the gate fails, repair the annotation protocol **before** generating a fresh formal set. Do not edit formal samples after seeing policy results.
+Before P2:
+
+- schema errors = 0;
+- renderer/world-spec consistency errors = 0;
+- treatment metamorphic errors = 0;
+- mandatory positive-control errors = 0;
+- dual-validator disagreements = 0;
+- leakage/shortcut errors = 0.
+
+Human annotation may be added later as optional external-validity evidence, but it is not required and may not be replaced by AI judges.
 
 ---
 
@@ -204,15 +216,15 @@ No new scientific claim is made from P0.
 
 **Provider calls: 0.**
 
-### Phase P1 — fresh formal dataset + human validation
+### Phase P1 — fresh formal dataset + formal world-spec validation
 
 The P1 authoring contract is frozen in `research/evidence-surface-v1/p1/` before formal sample content is generated. The 180 sample IDs and family/domain slots are preallocated independently of policy outputs.
 
-- generate the 180 fresh source states;
-- run integrity / leakage checks;
-- collect independent human labels;
-- adjudicate;
-- freeze sample, Gold, and treatment manifests;
+- generate the 180 fresh world specs and rendered source states;
+- run both formal validators;
+- run mandatory/non-mandatory metamorphic controls;
+- run integrity / leakage / duplicate checks;
+- freeze sample, formal Gold, and treatment manifests;
 - publish hashes before formal policy runs.
 
 **Provider calls: 0.**
@@ -227,7 +239,7 @@ All are local/offline.
 
 **Provider calls: 0.**
 
-### Phase P3 — paid model replication
+### Phase P3 — optional free-only model replication
 
 Only run if P2 passes the offline go/no-go gate.
 
@@ -279,9 +291,9 @@ Secondary p-values, if reported, use Holm correction within the declared family.
 
 ## 8. Formal go/no-go gates
 
-### G0 — human validity
+### G0-FORMAL — formal validity
 
-Human-validity gate in section 4.3 passes.
+Every sample passes the dual-validator, metamorphic, renderer-consistency and leakage gates in section 4.
 
 ### G1 — positive control
 
@@ -392,7 +404,7 @@ All of the following can be completed before paying for any model calls:
 - preregistration draft;
 - model-run budget estimator.
 
-Only P3 requires paid model calls.
+Under the zero-cost track, no paid model/API call is authorized. P3 is optional and runs only if a reproducible zero-marginal-cost local/free model runtime is available before results are observed.
 
 ---
 
@@ -438,4 +450,4 @@ Not allowed:
 7. Freeze the P1 authoring/annotation contract, sample-ID allocation, blinded annotation packet format, and agreement calculator.
 8. Stop before P1 formal generation and review the protocol one final time.
 
-No provider call is authorized by this design document.
+No paid provider call, paid annotation task, or cash expenditure is authorized by this design document.
