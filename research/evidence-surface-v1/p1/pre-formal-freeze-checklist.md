@@ -31,6 +31,7 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] SOURCE_TRUTH and REDUCED_SURFACE packet builder defined.
 - [x] Two independent annotators required.
 - [x] Third-party adjudication required for disagreements.
+- [x] Full-source safety, reduced-surface plausibility, and coverage-aware mitigation are separated.
 - [x] Agreement gates frozen.
 - [x] Agreement calculator implemented.
 
