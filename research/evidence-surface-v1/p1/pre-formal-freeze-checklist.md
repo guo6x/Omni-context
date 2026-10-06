@@ -40,7 +40,8 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] Treatment target ID is not exposed as a condition label.
 - [x] Reduced-surface packet removes direct source event.
 - [x] Candidate direct evidence references are removed where present.
-- [ ] Formal leakage checker against authored P1 samples.
+- [x] Leakage / near-duplicate checker implemented and passed on the six-family toy batch.
+- [ ] Formal leakage checker against the future authored 180-sample set.
 - [ ] Near-duplicate check across the 180 authored samples.
 - [ ] Prompt/template fingerprint distribution audit.
 
@@ -50,8 +51,8 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] P0 FULL/HIDDEN treatment machinery constructed.
 - [x] Statistical helper implemented.
 - [ ] Repository-local Node tests executed in a checked-out runtime.
-- [ ] P1 authoring tooling run on a non-formal toy batch.
-- [ ] Human annotation dry run on at least 6 toy samples, one per family.
+- [x] P1 authoring/tooling run on a six-family non-formal toy batch.
+- [ ] Two real independent human annotators complete all 6 toy samples, followed by adjudication/metric review.
 - [ ] Final human review of protocol before formal authoring authorization.
 
 ## Authorization boundary
