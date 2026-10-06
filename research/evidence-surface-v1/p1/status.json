@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "study_id": "evidence-surface-safety-v1",
-  "phase": "P1_PREPARATION",
-  "status": "ZERO_COST_FORMAL_TRACK_PREPARED_NOT_AUTHORIZED",
+  "phase": "P1_FORMAL_FREEZE",
+  "status": "FROZEN_READY_FOR_P2",
   "provider_calls": 0,
-  "formal_samples_authored": 0,
+  "formal_samples_authored": 180,
   "reserved_sample_ids": 180,
   "completed": [
     "P0 legacy mechanism reconstruction",
@@ -30,14 +30,18 @@
     "independent family-checklist evaluator B implemented",
     "mandatory positive and non-mandatory negative metamorphic controls implemented",
     "six-family toy samples rebuilt with formal world specs",
-    "six-family dual formal toy verification passed"
+    "six-family dual formal toy verification passed",
+    "deterministic formal generator implemented",
+    "renderer/world-spec consistency gate implemented",
+    "near-duplicate audit metric frozen before formal generation",
+    "180 formal samples generated",
+    "180/180 schema validation passed",
+    "180/180 dual formal validation passed",
+    "180/180 renderer consistency passed",
+    "formal dataset audit passed with zero near-duplicate warnings",
+    "P1 formal freeze manifest committed"
   ],
-  "blockers_before_formal_authoring": [
-    "add deterministic renderer/world-spec consistency enforcement to the formal generator",
-    "add formal 180-sample generation tool that renders text from world specs rather than hand-authoring safety facts",
-    "execute repository-local Node tests in a checked-out runtime when available",
-    "final protocol review and explicit authorization"
-  ],
+  "blockers_before_formal_authoring": [],
   "note": "No formal P1 content exists yet. No provider/model call has been made for the new study.",
   "toy_dry_run": {
     "status": "PASS_TOOLING_ONLY",
@@ -67,5 +71,22 @@
     "nonmandatory_negative_control_errors": 0,
     "cash_cost_cny": 0,
     "provider_calls": 0
-  }
+  },
+  "formal_freeze": {
+    "status": "PASS",
+    "freeze_commit": "fd0e67b12338ee7742a61f396d9c63496e61389e",
+    "manifest": "research/evidence-surface-v1/p1/formal-freeze-manifest.json",
+    "report": "research/evidence-surface-v1/p1/formal-freeze-report.md",
+    "samples": 180,
+    "families": 6,
+    "domains": 12,
+    "schema_failures": 0,
+    "dual_validator_failures": 0,
+    "renderer_failures": 0,
+    "audit_errors": 0,
+    "near_duplicate_warnings": 0,
+    "cash_cost_cny": 0,
+    "provider_calls": 0
+  },
+  "next_phase": "P2_DETERMINISTIC_CAUSAL_STUDY"
 }
