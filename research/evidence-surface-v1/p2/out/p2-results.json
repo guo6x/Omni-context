@@ -1,0 +1,533 @@
+{
+  "schema_version": 1,
+  "study_id": "evidence-surface-safety-v1",
+  "phase": "P2_DETERMINISTIC_CAUSAL_STUDY",
+  "status": "COMPLETE",
+  "samples": 180,
+  "evaluations": 1080,
+  "provider_calls": 0,
+  "cash_cost_cny": 0,
+  "execution_note": "Artifact-level V8 replay against frozen GitHub files. No paid model/API calls. Repository-local Node rerun remains a reproducibility check.",
+  "conditions": [
+    "C0_FULL",
+    "C1_HIDDEN",
+    "C2_LEXICAL",
+    "C3_HASH_DENSE",
+    "C4_HYBRID",
+    "C5_COVERAGE_AWARE"
+  ],
+  "retrieval_config": {
+    "DIM": 256,
+    "RRF_K": 60,
+    "TOP_K": 2
+  },
+  "policy_config": {
+    "ROLE_WEIGHT": {
+      "override": 5,
+      "conflict_resolution": 4,
+      "outcome": 4,
+      "authority": 3,
+      "current_fact": 2,
+      "conflict_claim": 1,
+      "constraint": 1,
+      "preference": 0.5,
+      "stale_fact": 0.25,
+      "invalidation": 5
+    },
+    "CURRENTNESS_WEIGHT": {
+      "current": 1,
+      "unknown": 0.5,
+      "stale": 0.25,
+      "superseded": 0.1
+    }
+  },
+  "primary": {
+    "n": 180,
+    "b_full_safe_hidden_unsupported": 30,
+    "c_full_unsupported_hidden_safe": 0,
+    "full_udr": 0,
+    "hidden_udr": 0.16666666666666666,
+    "risk_difference_hidden_minus_full": 0.16666666666666666,
+    "risk_difference_bootstrap_95ci": [
+      0.11666666666666667,
+      0.2222222222222222
+    ],
+    "exact_mcnemar_two_sided_p": 1.8626451492309587e-9,
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 20261006
+  },
+  "summary": {
+    "by_condition": {
+      "C0_FULL": {
+        "n": 180,
+        "unsupported_count": 0,
+        "udr": 0,
+        "coverage_complete_count": 180,
+        "coverage_complete_rate": 1,
+        "mandatory_fact_recall_mean": 1,
+        "decisive_count": 180,
+        "decisive_rate": 1,
+        "safe_decisive_count": 180,
+        "safe_decisive_rate": 1,
+        "fallback_count": 0,
+        "fallback_rate": 0,
+        "action_correct_when_covered_rate": 1
+      },
+      "C1_HIDDEN": {
+        "n": 180,
+        "unsupported_count": 30,
+        "udr": 0.16666666666666666,
+        "coverage_complete_count": 0,
+        "coverage_complete_rate": 0,
+        "mandatory_fact_recall_mean": 0.16666666666666666,
+        "decisive_count": 30,
+        "decisive_rate": 0.16666666666666666,
+        "safe_decisive_count": 0,
+        "safe_decisive_rate": 0,
+        "fallback_count": 150,
+        "fallback_rate": 0.8333333333333334,
+        "action_correct_when_covered_rate": null
+      },
+      "C2_LEXICAL": {
+        "n": 180,
+        "unsupported_count": 56,
+        "udr": 0.3111111111111111,
+        "coverage_complete_count": 96,
+        "coverage_complete_rate": 0.5333333333333333,
+        "mandatory_fact_recall_mean": 0.6305555555555555,
+        "decisive_count": 152,
+        "decisive_rate": 0.8444444444444444,
+        "safe_decisive_count": 96,
+        "safe_decisive_rate": 0.5333333333333333,
+        "fallback_count": 28,
+        "fallback_rate": 0.15555555555555556,
+        "action_correct_when_covered_rate": 1
+      },
+      "C3_HASH_DENSE": {
+        "n": 180,
+        "unsupported_count": 61,
+        "udr": 0.3388888888888889,
+        "coverage_complete_count": 86,
+        "coverage_complete_rate": 0.4777777777777778,
+        "mandatory_fact_recall_mean": 0.5722222222222222,
+        "decisive_count": 147,
+        "decisive_rate": 0.8166666666666667,
+        "safe_decisive_count": 86,
+        "safe_decisive_rate": 0.4777777777777778,
+        "fallback_count": 33,
+        "fallback_rate": 0.18333333333333332,
+        "action_correct_when_covered_rate": 1
+      },
+      "C4_HYBRID": {
+        "n": 180,
+        "unsupported_count": 53,
+        "udr": 0.29444444444444445,
+        "coverage_complete_count": 93,
+        "coverage_complete_rate": 0.5166666666666667,
+        "mandatory_fact_recall_mean": 0.6,
+        "decisive_count": 146,
+        "decisive_rate": 0.8111111111111111,
+        "safe_decisive_count": 93,
+        "safe_decisive_rate": 0.5166666666666667,
+        "fallback_count": 34,
+        "fallback_rate": 0.18888888888888888,
+        "action_correct_when_covered_rate": 1
+      },
+      "C5_COVERAGE_AWARE": {
+        "n": 180,
+        "unsupported_count": 0,
+        "udr": 0,
+        "coverage_complete_count": 93,
+        "coverage_complete_rate": 0.5166666666666667,
+        "mandatory_fact_recall_mean": 0.6,
+        "decisive_count": 93,
+        "decisive_rate": 0.5166666666666667,
+        "safe_decisive_count": 93,
+        "safe_decisive_rate": 0.5166666666666667,
+        "fallback_count": 87,
+        "fallback_rate": 0.48333333333333334,
+        "action_correct_when_covered_rate": 1
+      }
+    },
+    "by_family": {
+      "F1": {
+        "C0_FULL": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 30,
+          "coverage_complete_rate": 1,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C1_HIDDEN": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 0,
+          "coverage_complete_rate": 0,
+          "decisive_count": 0,
+          "decisive_rate": 0
+        },
+        "C2_LEXICAL": {
+          "n": 30,
+          "unsupported_count": 20,
+          "udr": 0.6666666666666666,
+          "coverage_complete_count": 7,
+          "coverage_complete_rate": 0.23333333333333334,
+          "decisive_count": 27,
+          "decisive_rate": 0.9
+        },
+        "C3_HASH_DENSE": {
+          "n": 30,
+          "unsupported_count": 26,
+          "udr": 0.8666666666666667,
+          "coverage_complete_count": 4,
+          "coverage_complete_rate": 0.13333333333333333,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C4_HYBRID": {
+          "n": 30,
+          "unsupported_count": 21,
+          "udr": 0.7,
+          "coverage_complete_count": 8,
+          "coverage_complete_rate": 0.26666666666666666,
+          "decisive_count": 29,
+          "decisive_rate": 0.9666666666666667
+        },
+        "C5_COVERAGE_AWARE": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 8,
+          "coverage_complete_rate": 0.26666666666666666,
+          "decisive_count": 8,
+          "decisive_rate": 0.26666666666666666
+        }
+      },
+      "F2": {
+        "C0_FULL": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 30,
+          "coverage_complete_rate": 1,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C1_HIDDEN": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 0,
+          "coverage_complete_rate": 0,
+          "decisive_count": 0,
+          "decisive_rate": 0
+        },
+        "C2_LEXICAL": {
+          "n": 30,
+          "unsupported_count": 12,
+          "udr": 0.4,
+          "coverage_complete_count": 18,
+          "coverage_complete_rate": 0.6,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C3_HASH_DENSE": {
+          "n": 30,
+          "unsupported_count": 8,
+          "udr": 0.26666666666666666,
+          "coverage_complete_count": 22,
+          "coverage_complete_rate": 0.7333333333333333,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C4_HYBRID": {
+          "n": 30,
+          "unsupported_count": 2,
+          "udr": 0.06666666666666667,
+          "coverage_complete_count": 22,
+          "coverage_complete_rate": 0.7333333333333333,
+          "decisive_count": 24,
+          "decisive_rate": 0.8
+        },
+        "C5_COVERAGE_AWARE": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 22,
+          "coverage_complete_rate": 0.7333333333333333,
+          "decisive_count": 22,
+          "decisive_rate": 0.7333333333333333
+        }
+      },
+      "F3": {
+        "C0_FULL": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 30,
+          "coverage_complete_rate": 1,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C1_HIDDEN": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 0,
+          "coverage_complete_rate": 0,
+          "decisive_count": 0,
+          "decisive_rate": 0
+        },
+        "C2_LEXICAL": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 30,
+          "coverage_complete_rate": 1,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C3_HASH_DENSE": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 20,
+          "coverage_complete_rate": 0.6666666666666666,
+          "decisive_count": 20,
+          "decisive_rate": 0.6666666666666666
+        },
+        "C4_HYBRID": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 27,
+          "coverage_complete_rate": 0.9,
+          "decisive_count": 27,
+          "decisive_rate": 0.9
+        },
+        "C5_COVERAGE_AWARE": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 27,
+          "coverage_complete_rate": 0.9,
+          "decisive_count": 27,
+          "decisive_rate": 0.9
+        }
+      },
+      "F4": {
+        "C0_FULL": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 30,
+          "coverage_complete_rate": 1,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C1_HIDDEN": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 0,
+          "coverage_complete_rate": 0,
+          "decisive_count": 0,
+          "decisive_rate": 0
+        },
+        "C2_LEXICAL": {
+          "n": 30,
+          "unsupported_count": 6,
+          "udr": 0.2,
+          "coverage_complete_count": 17,
+          "coverage_complete_rate": 0.5666666666666667,
+          "decisive_count": 23,
+          "decisive_rate": 0.7666666666666667
+        },
+        "C3_HASH_DENSE": {
+          "n": 30,
+          "unsupported_count": 4,
+          "udr": 0.13333333333333333,
+          "coverage_complete_count": 18,
+          "coverage_complete_rate": 0.6,
+          "decisive_count": 22,
+          "decisive_rate": 0.7333333333333333
+        },
+        "C4_HYBRID": {
+          "n": 30,
+          "unsupported_count": 6,
+          "udr": 0.2,
+          "coverage_complete_count": 18,
+          "coverage_complete_rate": 0.6,
+          "decisive_count": 24,
+          "decisive_rate": 0.8
+        },
+        "C5_COVERAGE_AWARE": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 18,
+          "coverage_complete_rate": 0.6,
+          "decisive_count": 18,
+          "decisive_rate": 0.6
+        }
+      },
+      "F5": {
+        "C0_FULL": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 30,
+          "coverage_complete_rate": 1,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C1_HIDDEN": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 0,
+          "coverage_complete_rate": 0,
+          "decisive_count": 0,
+          "decisive_rate": 0
+        },
+        "C2_LEXICAL": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 12,
+          "coverage_complete_rate": 0.4,
+          "decisive_count": 12,
+          "decisive_rate": 0.4
+        },
+        "C3_HASH_DENSE": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 15,
+          "coverage_complete_rate": 0.5,
+          "decisive_count": 15,
+          "decisive_rate": 0.5
+        },
+        "C4_HYBRID": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 12,
+          "coverage_complete_rate": 0.4,
+          "decisive_count": 12,
+          "decisive_rate": 0.4
+        },
+        "C5_COVERAGE_AWARE": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 12,
+          "coverage_complete_rate": 0.4,
+          "decisive_count": 12,
+          "decisive_rate": 0.4
+        }
+      },
+      "F6": {
+        "C0_FULL": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 30,
+          "coverage_complete_rate": 1,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C1_HIDDEN": {
+          "n": 30,
+          "unsupported_count": 30,
+          "udr": 1,
+          "coverage_complete_count": 0,
+          "coverage_complete_rate": 0,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C2_LEXICAL": {
+          "n": 30,
+          "unsupported_count": 18,
+          "udr": 0.6,
+          "coverage_complete_count": 12,
+          "coverage_complete_rate": 0.4,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C3_HASH_DENSE": {
+          "n": 30,
+          "unsupported_count": 23,
+          "udr": 0.7666666666666667,
+          "coverage_complete_count": 7,
+          "coverage_complete_rate": 0.23333333333333334,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C4_HYBRID": {
+          "n": 30,
+          "unsupported_count": 24,
+          "udr": 0.8,
+          "coverage_complete_count": 6,
+          "coverage_complete_rate": 0.2,
+          "decisive_count": 30,
+          "decisive_rate": 1
+        },
+        "C5_COVERAGE_AWARE": {
+          "n": 30,
+          "unsupported_count": 0,
+          "udr": 0,
+          "coverage_complete_count": 6,
+          "coverage_complete_rate": 0.2,
+          "decisive_count": 6,
+          "decisive_rate": 0.2
+        }
+      }
+    }
+  },
+  "family_c1_minus_c0": {
+    "F1": 0,
+    "F2": 0,
+    "F3": 0,
+    "F4": 0,
+    "F5": 0,
+    "F6": 1
+  },
+  "retrieval_order": [
+    {
+      "condition": "C3_HASH_DENSE",
+      "recall": 0.5722222222222222,
+      "udr": 0.3388888888888889
+    },
+    {
+      "condition": "C4_HYBRID",
+      "recall": 0.6,
+      "udr": 0.29444444444444445
+    },
+    {
+      "condition": "C2_LEXICAL",
+      "recall": 0.6305555555555555,
+      "udr": 0.3111111111111111
+    }
+  ],
+  "retrieval_strict_monotonic": false,
+  "gates": {
+    "G0_FORMAL": true,
+    "G1": true,
+    "G2": true,
+    "G3": true,
+    "G4": true,
+    "G5": true
+  },
+  "all_required_gates_pass": true,
+  "interpretation_flags": {
+    "primary_effect_concentrated_in_F6": true,
+    "c1_positive_family_count": 1,
+    "c1_zero_effect_family_count": 5,
+    "G4_passes_preregistered_tolerance_but_strict_monotonicity": false,
+    "c5_uses_same_surface_as_c4": true
+  }
+}
