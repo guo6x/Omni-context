@@ -7,12 +7,16 @@ function readJsonl(p) {
 
 function clone(v) { return JSON.parse(JSON.stringify(v)); }
 
-function stripConstructor(sample) {
+function stripHiddenDesign(sample) {
   const {
     constructor_proposal,
     construction_provenance,
+    world_spec,
     ...visible
   } = sample;
+  if(Array.isArray(visible.evidence)){
+    visible.evidence=visible.evidence.map(({world_fact_ids,...e})=>e);
+  }
   return visible;
 }
 
@@ -25,13 +29,9 @@ function hideTarget(sample, targetEvidenceId) {
   base.evidence = base.evidence.filter((e) => e.evidence_id !== targetEvidenceId);
   base.source_events = base.source_events.filter((e) => e.event_id !== sourceId);
 
-  // Remove direct references in optional/free-form structures if present.
   for (const c of base.candidates ?? []) {
-    if (Array.isArray(c.evidence_refs)) {
-      c.evidence_refs = c.evidence_refs.filter((id) => id !== targetEvidenceId);
-    }
+    if (Array.isArray(c.evidence_refs)) c.evidence_refs = c.evidence_refs.filter((id) => id !== targetEvidenceId);
   }
-
   return base;
 }
 
@@ -41,8 +41,8 @@ export function buildAnnotationPackets(samples) {
     const target = sample.constructor_proposal?.treatment_target_evidence_id;
     if (!target) throw new Error(`${sample.sample_id}: constructor treatment target missing`);
 
-    const sourceTruth = stripConstructor(clone(sample));
-    const hidden = stripConstructor(hideTarget(sample, target));
+    const sourceTruth = stripHiddenDesign(clone(sample));
+    const hidden = stripHiddenDesign(hideTarget(sample, target));
 
     out.push({
       schema_version: 1,
