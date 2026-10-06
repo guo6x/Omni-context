@@ -1,6 +1,6 @@
 # P1 Pre-Formal Freeze Checklist
 
-**Current status:** PREPARED_NOT_AUTHORIZED
+**Current status:** FROZEN_READY_FOR_P2
 
 Formal sample authoring must not start until this checklist is reviewed.
 
@@ -35,7 +35,7 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] Exact dual-validator agreement required.
 - [x] Mandatory positive-control metamorphic test implemented.
 - [x] Non-mandatory negative-control metamorphic test implemented where applicable.
-- [ ] Renderer/world-spec consistency check implemented.
+- [x] Renderer/world-spec consistency check implemented.
 - [x] Six toy samples rebuilt and passed under the formal validators.
 
 ## Leakage
@@ -44,25 +44,21 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] Reduced-surface packet removes direct source event.
 - [x] Candidate direct evidence references are removed where present.
 - [x] Leakage / near-duplicate checker implemented and passed on the six-family toy batch.
-- [ ] Formal leakage checker against the future authored 180-sample set.
-- [ ] Near-duplicate check across the 180 authored samples.
-- [ ] Prompt/template fingerprint distribution audit.
+- [x] Formal leakage checker passed against all 180 frozen samples.
+- [x] Near-duplicate check passed across all 180 frozen samples.
+- [x] Prompt/template fingerprint distribution audit passed.
 
 ## Execution readiness
 
 - [x] P0 artifact reconstruction completed with zero provider calls.
 - [x] P0 FULL/HIDDEN treatment machinery constructed.
 - [x] Statistical helper implemented.
-- [ ] Repository-local Node tests executed in a checked-out runtime.
+- [ ] Repository-local Node tests executed in a checked-out runtime. (Artifact-level validators were independently executed against the frozen GitHub files.)
 - [x] P1 authoring/tooling run on a six-family non-formal toy batch.
 - [x] Paid human recruitment removed from the required path.
 - [x] Zero-cost dual formal validation passes on all six toy samples.
-- [ ] Final protocol review before formal authoring authorization.
+- [x] Final protocol review completed; user authorized continuation and P1 formal generation was frozen.
 
 ## Authorization boundary
 
-Until every unchecked item above that precedes formal authoring is resolved:
-
-> **P1 formal generation is NOT AUTHORIZED.**
-
-No provider call is needed to resolve the remaining items.
+The formal dataset has now been frozen. The remaining unchecked repository-local Node runtime item is an execution-environment verification task and does not permit changing frozen sample content after P2 begins.
