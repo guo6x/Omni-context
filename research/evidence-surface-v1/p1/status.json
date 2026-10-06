@@ -21,11 +21,12 @@
     "toy structural validation passed",
     "toy reduced-surface leakage audit passed",
     "toy near-duplicate audit passed",
-    "toy blinded annotation packets generated"
+    "toy blinded annotation packets generated",
+    "crowd-based independent annotator recruitment plan prepared"
   ],
   "blockers_before_formal_authoring": [
     "execute repository-local Node tests in checked-out runtime",
-    "run two-real-human independent annotation dry-run on all six toy samples",
+    "launch paid crowd toy task and obtain two independent human annotation files",
     "adjudicate any toy dry-run disagreements and inspect agreement metrics",
     "final protocol review and explicit authorization"
   ],
@@ -38,5 +39,11 @@
     "near_duplicates_at_0_5": 0,
     "direct_leakage_failures": 0,
     "human_gate": "NOT_RUN_REQUIRES_TWO_REAL_HUMANS"
+  },
+  "human_recruitment": {
+    "personal_contacts_required": false,
+    "plan": "research/evidence-surface-v1/p1/crowd-recruitment.md",
+    "task_brief": "research/evidence-surface-v1/p1/crowd-task-brief.md",
+    "toy_budget_ceiling_cny": 150
   }
 }
