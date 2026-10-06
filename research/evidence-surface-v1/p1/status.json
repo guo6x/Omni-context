@@ -15,7 +15,8 @@
     "P1 180-slot sample plan",
     "P1 blinded annotation packet builder",
     "P1 human agreement calculator",
-    "exact-one mandatory evidence treatment freeze"
+    "exact-one mandatory evidence treatment freeze",
+    "source-truth safety separated from reduced-surface plausibility and coverage-aware mitigation semantics"
   ],
   "blockers_before_formal_authoring": [
     "execute repository-local Node tests in checked-out runtime",
