@@ -1,4 +1,4 @@
-# When Missing Evidence Leaves No Trace: Silent Retrieval Failures in Agent Decision Safety
+# When Missing Evidence Leaves No Trace: Obligation Coverage and Silent Retrieval Failures in Agent Decision Safety
 
 > **Draft v0.1 — evidence-surface rewrite**
 >
@@ -22,6 +22,8 @@ A different failure occurs when evidence loss removes not only a required item b
 
 The distinction matters because many safety mechanisms operate downstream of retrieval. Abstention, approval checks, temporal filtering, conflict handling, and rule-based policies can only reason over the evidence delivered to them. A downstream policy can therefore be locally cautious yet globally unsafe if an upstream omission is invisible relative to the policy's checks.
 
+This failure is complementary to two nearby problems studied in recent agent-memory work. STALE studies whether agents can recognize that an older memory has become invalid when later evidence is available but requires state revision. Revocation-enforcement work studies the opposite read-path failure in which an already revoked record is still returned and acted upon. Our intervention isolates a different case: the superseding or invalidating record itself is absent from the decision surface, so the older record can remain locally coherent without an observable revocation cue. This distinction is central to our claim of novelty.
+
 We investigate three questions:
 
 1. **Causal visibility:** Does hiding formally required evidence, while holding task and policy fixed, increase unsupported decisive behavior?
@@ -42,7 +44,7 @@ Finally, the coverage-aware condition isolates the information requirement of th
 
 This paper makes five bounded contributions:
 
-- We formalize **silent evidence omission** as uncovered required evidence whose absence is not detectable by the downstream policy's visible-gap checks.
+- We formalize **silent evidence omission** as uncovered required evidence whose absence is not detectable by the downstream policy's visible-gap checks, distinguishing it from stale-memory resolution and from retrieval that incorrectly returns already-revoked records.
 - We provide a preregistered paired intervention that holds world state and policy fixed while changing only mandatory-evidence visibility.
 - We show strong heterogeneity across obligation types: direct hiding is benign under the frozen policy when the gap remains visible, but catastrophic for superseding override/invalidation evidence whose omission leaves a locally actionable surface.
 - We show that aggregate retrieval recall alone does not induce a strict monotonic safety ordering in our benchmark.
@@ -64,9 +66,13 @@ Selective prediction and abstention study when a system should decline to answer
 
 Our setting differs in two ways. First, the output is a bounded decision action rather than only a factual answer. Second, our main failure mode is *silent omission*: the visible evidence can look internally sufficient because the record that would reveal supersession or invalidation is itself absent. This shifts attention from assessing the content of visible evidence to assessing whether the evidence obligations themselves are covered.
 
-### 2.3 Temporal state, revision, and supersession
+### 2.3 Temporal state, revision, revocation, and supersession
 
-Persistent agents must reason over changing state. Temporal reasoning, belief revision, and truth-maintenance work provide formal foundations for updates, conflict, and supersession. Agent-memory systems increasingly incorporate temporal filtering and evolving beliefs. Our F3–F6 families instantiate related concerns—current versus stale state, conflicts, outcomes, revisions, overrides, and invalidations—but the present study focuses narrowly on what happens when the evidence that encodes the state transition is not visible at decision time.
+Persistent agents must reason over changing state. Temporal reasoning, belief revision, and truth-maintenance work provide formal foundations for updates, conflict, and supersession. Recent benchmarks make the problem concrete. STALE (Chao et al., 2026) studies *implicit conflict*: later observations invalidate earlier memory even without explicit negation, and evaluates whether agents resolve the current state, resist stale premises, and adapt downstream behavior. Memora similarly penalizes reliance on obsolete or invalidated memory in long-term personalized agents.
+
+A particularly close contemporary result is *Revoked but Still Authoritative* (Shen et al., 2026), which tests five agent-memory systems and finds that records already marked as revoked can still be returned, outrank their replacements, and induce unsafe actions. Its mitigation filters revoked or conflicting records before the agent sees them.
+
+Our failure mode is complementary rather than identical. Revocation-enforcement failures expose an invalid record that should have been withheld; our silent-omission intervention withholds the *superseding valid record* that would reveal that an older instruction is no longer actionable. STALE asks whether an agent can revise state when later evidence is available; we ask what happens when the evidence encoding that state change never reaches the downstream policy. In our F6 cases, the older instruction need not carry any visible stale or revoked marker after the later override disappears. A filter that only removes explicitly marked revoked records therefore addresses a different boundary.
 
 ### 2.4 Safety gates downstream of retrieval
 
@@ -109,6 +115,17 @@ A missing obligation is **silent relative to the policy** when both:
 In that case, the remaining evidence surface offers no local cue that a required item is absent.
 
 This definition is policy-relative: an omission that is silent for one policy may be detectable for another.
+
+The mechanism can be summarized by separating *formal coverage* from *policy-visible gap evidence*:
+
+| Formal obligation coverage | Visible gap cue | Expected policy state under our frozen rules |
+|---|---|---|
+| complete | irrelevant | decisive action may be supported |
+| incomplete | present | detectable gap → safe fallback |
+| incomplete | absent | **silent omission → unsupported-decision risk** |
+| incomplete + explicit coverage signal | gap may still be absent | coverage-aware fallback |
+
+This table is a mechanism taxonomy, not a claim that every real agent implements the same fallback rules.
 
 ### 3.4 Coverage-completeness signal
 
@@ -201,6 +218,8 @@ The preregistered primary test is a two-sided exact McNemar test with alpha = 0.
 
 Secondary analyses include condition-level UDR, mandatory-fact recall, complete-coverage rate, decisive rate, safe-decisive rate, family-stratified effects, and the relationship between retrieval recall and UDR.
 
+Because the benchmark is procedurally constructed rather than sampled from a defined real-world task population, the inferential statistics should not be read as estimates of real-world prevalence. They quantify the paired benchmark-level intervention under the frozen construction and analysis protocol; the mechanism and effect heterogeneity are the primary scientific objects.
+
 ## 6. Results
 
 ### 6.1 Hiding required evidence causally increases unsupported decisions overall
@@ -245,6 +264,17 @@ The three frozen retrievers produce:
 | C4 Hybrid | 60.00% | 51.67% | 29.44% | 81.11% | 51.67% |
 
 These conditions show that retrieval loss can induce unsupported decisions beyond the single-item C1 intervention. The family pattern also broadens under retrieval because top-k retrieval can omit combinations of evidence rather than exactly one preregistered target.
+
+| Family | C2 Lexical UDR | C3 Hash-dense UDR | C4 Hybrid UDR | C5 Coverage-aware UDR |
+|---|---:|---:|---:|---:|
+| F1 constraint | 66.67% | 86.67% | 70.00% | 0% |
+| F2 authority | 40.00% | 26.67% | 6.67% | 0% |
+| F3 temporal | 0% | 0% | 0% | 0% |
+| F4 conflict | 20.00% | 13.33% | 20.00% | 0% |
+| F5 outcome/revision | 0% | 0% | 0% | 0% |
+| F6 override/invalidation | 60.00% | 76.67% | 80.00% | 0% |
+
+This table is important for interpreting the F6 result. “Silent” is not simply a fixed synonym for the F6 family label. Under the single-item C1 intervention, F1–F5 retain enough structural cues to trigger fallback. Under top-k retrieval, multiple records or the cue-bearing record itself can disappear, creating silent surfaces in F1, F2, and F4 as well. F3 and F5 remain protected by the frozen policy under these retrievers. The relevant unit is therefore the *resulting evidence surface relative to the policy's checks*, not only the nominal task family.
 
 ### 6.4 Recall is relevant but not a strict monotonic safety surrogate
 
@@ -304,7 +334,21 @@ This makes supersession structurally different from many ordinary missing-fact c
 
 The result motivates treating superseding evidence as a first-class safety obligation in long-lived decision systems.
 
-### 7.3 Why an obligation-coverage interface may be more useful than another confidence score
+### 7.3 The failure is not equivalent to stale-memory or revocation-enforcement failure
+
+The nearest prior work makes the distinction sharper. STALE shows that an agent may retrieve changing evidence yet fail to infer that an older belief is no longer valid. Revocation-enforcement studies show that a memory system may retain and retrieve a record even after it has been explicitly marked revoked. Both are important failures, but both leave some representation of the update or revocation available somewhere in the state or retrieval path.
+
+Our controlled F6 intervention removes the later override/invalidation from the decision-visible surface. The older instruction then need not be contradictory, stale-marked, or revoked-marked from the downstream policy's perspective. The safety failure is therefore one of **missing transition evidence**, not merely incorrect adjudication of visible transition evidence.
+
+This difference also changes the mitigation boundary. A better state resolver helps when the update is visible. A revocation filter helps when the stale record is explicitly marked as invalid. An obligation-coverage mechanism is aimed at the case where the policy cannot establish that the evidence required to authorize a decision has actually been surfaced.
+
+### 7.4 Mechanism identification, not prevalence estimation
+
+The benchmark deliberately constructs controlled worlds and a deterministic policy so that evidence visibility can be intervened on without stochastic model confounds. This gives the study strong internal control but narrow external scope. The 16.67-point aggregate effect should not be interpreted as “16.67% of real agent decisions fail this way,” and the 100% F6 direct-treatment rate should not be interpreted as a field prevalence estimate.
+
+The contribution is instead a reproducible mechanism demonstration and boundary characterization: under a fixed policy with explicit visible-gap checks, some obligation omissions are self-revealing and others are not; top-k retrieval can convert additional families into silent surfaces; and an independently supplied completeness bit changes behavior on the same retrieved content.
+
+### 7.5 Why an obligation-coverage interface may be more useful than another confidence score
 
 A model-confidence score asks how confident the policy is given the evidence it received. Silent omission is specifically a case where the received evidence can be coherent enough to support high local confidence.
 
@@ -316,7 +360,7 @@ A practical architecture might therefore separate:
 - **obligation coverage:** whether required evidence classes are represented;
 - **decision policy:** what action is justified given the covered evidence.
 
-### 7.4 C5 moves rather than solves the hard problem
+### 7.6 C5 moves rather than solves the hard problem
 
 The main limitation of the mitigation is also its research implication. In our benchmark, `coverage_complete` is computed from a frozen formal world specification. Real systems rarely possess an oracle inventory of all facts that ought to exist.
 
@@ -324,7 +368,7 @@ The next technical problem is therefore not simply “add a boolean.” It is ho
 
 Coverage monitoring can itself fail silently. A deployment claim would require studying errors in the coverage signal, including false-complete and false-incomplete states.
 
-### 7.5 Why P3 is not required for the present claim
+### 7.7 Why P3 is not required for the present claim
 
 The primary result concerns a compositional property of a frozen evidence surface and a frozen downstream policy. P2 already identifies the mechanism through controlled evidence interventions with no stochastic model confound.
 
@@ -342,7 +386,9 @@ A model-based replication could test whether similar failure modes occur in inde
 
 **Top-k choice.** All retrieval conditions use frozen top-k = 2. Different budgets may change both coverage and failure patterns.
 
-**Family construction.** The direct C1 effect is concentrated entirely in F6. This is a substantive mechanism finding, but also means the aggregate +16.67 pp effect should not be generalized as homogeneous across obligation types.
+**Family and policy construction.** The direct C1 effect is concentrated entirely in F6. The frozen policy was intentionally designed with explicit visible-gap fallbacks for several other obligation types, so this heterogeneity is partly a property of the policy–benchmark pair. The result identifies a controlled mechanism; it does not estimate how often each failure type occurs in deployed agents.
+
+**Inferential scope.** McNemar and bootstrap results summarize the paired 180-scenario benchmark under its frozen construction. The scenarios are not a probability sample from a defined real-world population, so p-values and intervals should not be interpreted as population-prevalence estimates.
 
 **Coverage-signal errors are not studied.** C5 assumes the signal itself is correct. False-complete coverage is likely the most safety-relevant next failure mode.
 
@@ -377,6 +423,12 @@ Latimer, C., Boschi, N., Neeser, A., Bartholomew, C., Srivastava, G., Wang, X., 
 Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., et al. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. *NeurIPS 2020*.
 
 Qiu, J., Han, Z., & Huang, C. (2026). SURE-RAG: Sufficiency and Uncertainty-Aware Evidence Verification for Selective Retrieval-Augmented Generation. arXiv:2605.03534.
+
+Chao, H., Bai, Y., Sheng, R., Li, T., & Sun, Y. (2026). STALE: Can LLM Agents Know When Their Memories Are No Longer Valid? arXiv:2605.06527.
+
+Shen, Y. T., Toyoda, K., & Leung, A. (2026). Revoked but Still Authoritative: An Empirical Study of Revocation Enforcement in Agent-Memory Systems. arXiv:2609.08258.
+
+Uddin, M. N., Shubham, K., Blanco, E., Baral, C., & Wang, G. (2026). From Recall to Forgetting: Benchmarking Long-Term Memory for Personalized Agents. arXiv:2604.20006.
 
 Xu, W., Liang, Z., Mei, K., Gao, H., Tan, J., & Zhang, Y. (2025). A-Mem: Agentic Memory for LLM Agents. *NeurIPS 2025*.
 
