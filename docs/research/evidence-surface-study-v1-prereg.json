@@ -19,7 +19,9 @@
       "F5_revision_outcome": 30,
       "F6_override_invalidation": 30
     },
-    "paired_conditions_required": true
+    "paired_conditions_required": true,
+    "sample_plan": "research/evidence-surface-v1/p1/sample-plan.jsonl",
+    "treatment_rule": "C1 removes exactly one independently human-validated mandatory evidence item plus its direct source/reference copies."
   },
   "human_validity": {
     "annotators_min": 2,
@@ -30,7 +32,9 @@
       "supported_unsupported_exact_min": 0.85,
       "mandatory_evidence_jaccard_median_min": 0.8,
       "unresolved_safety_critical_disagreements": 0
-    }
+    },
+    "annotation_contract": "research/evidence-surface-v1/p1/annotation-guide.md",
+    "constructor_proposal_hidden_from_annotators": true
   },
   "conditions": {
     "C0_FULL": {
@@ -39,7 +43,8 @@
     },
     "C1_HIDDEN": {
       "type": "causal_intervention",
-      "mandatory_evidence": "remove_one_or_more"
+      "mandatory_evidence": "remove_exactly_one_human_validated_mandatory_item",
+      "direct_copy_removal": true
     },
     "C2_LEXICAL": {
       "type": "retrieval",
@@ -123,6 +128,7 @@
     "Do not open old Holdback for this study.",
     "Do not add models after observing P3 outputs unless preregistered before P3.",
     "Do not edit formal samples after policy outputs are observed.",
-    "Do not change the primary endpoint or effect floor after formal results."
+    "Do not change the primary endpoint or effect floor after formal results.",
+    "Do not admit a sample to the formal set if the designated C1 treatment target is not independently human-validated as mandatory."
   ]
 }
