@@ -187,7 +187,7 @@ Otherwise it chooses a decisive action from the visible evidence using frozen ro
 
 **C3 HASH-DENSE.** Frozen 256-dimensional signed feature hash over normalized character trigrams with cosine ranking, top-k = 2. This is a deterministic dense-vector baseline, not a pretrained semantic embedding model.
 
-**C4 HYBRID.** Reciprocal-rank fusion of C2 and C3 with (1/(60+	ext{rank})), top-k = 2.
+**C4 HYBRID.** Reciprocal-rank fusion of C2 and C3 with score `1 / (60 + rank)`, top-k = 2.
 
 **C5 COVERAGE-AWARE.** The exact same C4 retrieved surface plus the boolean `coverage_complete`. Missing content is not revealed.
 
@@ -195,11 +195,7 @@ All retrieval and policy parameters were frozen before P2 outcomes were observed
 
 ### 5.3 Endpoints and statistics
 
-The primary endpoint is the paired risk difference:
-
-[
-mathrm{UDR}(C1)-mathrm{UDR}(C0).
-]
+The primary endpoint is the paired risk difference `UDR(C1) - UDR(C0)`.
 
 The preregistered primary test is a two-sided exact McNemar test with alpha = 0.05. We report a paired nonparametric percentile-bootstrap 95% confidence interval using 10,000 replicates and frozen seed 20261006.
 
@@ -289,13 +285,7 @@ This experiment should be interpreted mechanistically. Because the C5 rule expli
 
 The strongest result is the contrast between F1–F5 and F6. The same formal fact—an obligation is uncovered—has different downstream consequences depending on whether the remaining surface advertises the gap.
 
-This suggests a useful decomposition:
-
-[
-	ext{decision safety risk}
-
-eq f(	ext{retrieval recall only}).
-]
+This suggests a useful decomposition: **decision safety risk is not a function of aggregate retrieval recall alone**.
 
 Instead, risk depends jointly on at least:
 
