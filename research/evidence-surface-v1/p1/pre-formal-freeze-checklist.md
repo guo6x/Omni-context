@@ -52,7 +52,8 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] Statistical helper implemented.
 - [ ] Repository-local Node tests executed in a checked-out runtime.
 - [x] P1 authoring/tooling run on a six-family non-formal toy batch.
-- [ ] Two real independent human annotators complete all 6 toy samples, followed by adjudication/metric review.
+- [x] Personal-acquaintance dependency removed; paid crowd recruitment protocol prepared.
+- [ ] Two independent paid human annotators complete all 6 toy samples, followed by adjudication/metric review.
 - [ ] Final human review of protocol before formal authoring authorization.
 
 ## Authorization boundary
