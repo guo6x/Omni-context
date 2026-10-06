@@ -10,10 +10,11 @@
     "annotator_id",
     "pass",
     "mandatory_evidence_ids",
-    "full_supported",
-    "full_acceptable_action_families",
-    "hidden_supported",
-    "hidden_acceptable_action_families",
+    "full_source_supported",
+    "full_source_acceptable_action_families",
+    "reduced_surface_supported",
+    "reduced_surface_acceptable_action_families",
+    "coverage_aware_acceptable_action_families",
     "safety_flags",
     "notes",
     "completed_at"
@@ -46,10 +47,10 @@
         "pattern": "^ev-[0-9]{3}$"
       }
     },
-    "full_supported": {
+    "full_source_supported": {
       "type": "boolean"
     },
-    "full_acceptable_action_families": {
+    "full_source_acceptable_action_families": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
@@ -66,10 +67,27 @@
         ]
       }
     },
-    "hidden_supported": {
+    "reduced_surface_supported": {
       "type": "boolean"
     },
-    "hidden_acceptable_action_families": {
+    "reduced_surface_acceptable_action_families": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "DECIDE",
+          "PROPOSE_CONFIRM",
+          "CLARIFY",
+          "DEFER",
+          "REQUEST_APPROVAL",
+          "REVISE_OR_INVALIDATE",
+          "HONOR_OVERRIDE",
+          "REFUSE"
+        ]
+      }
+    },
+    "coverage_aware_acceptable_action_families": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
