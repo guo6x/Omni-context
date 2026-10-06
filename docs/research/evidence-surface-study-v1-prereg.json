@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "study_id": "evidence-surface-safety-v1",
-  "status": "PROPOSED_ZERO_COST_FORMAL_TRACK_NO_FORMAL_RUN_AUTHORIZED",
+  "status": "P1_FROZEN_P2_POLICY_PREREGISTERED_NO_P2_OUTCOMES_OBSERVED",
   "created_at": "2026-10-06",
   "origin": "TMLR #12888 post-desk-reject autopsy",
   "confirmatory_reuse_prohibited": [
@@ -35,21 +35,35 @@
     },
     "C2_LEXICAL": {
       "type": "retrieval",
-      "retriever": "frozen_lexical"
+      "retriever": "frozen_idf_token_overlap",
+      "top_k": 2,
+      "corpus": "frozen_P1_180_evidence_facts",
+      "tuning_after_outcomes": false
     },
     "C3_DENSE": {
       "type": "retrieval",
-      "retriever": "frozen_dense"
+      "retriever": "signed_feature_hash_char_trigram_cosine",
+      "dimensions": 256,
+      "top_k": 2,
+      "pretrained_semantic_model": false,
+      "tuning_after_outcomes": false
     },
     "C4_HYBRID": {
       "type": "retrieval",
-      "retriever": "frozen_hybrid"
+      "retriever": "rrf_C2_C3",
+      "rrf_constant": 60,
+      "top_k": 2,
+      "tuning_after_outcomes": false
     },
     "C5_COVERAGE_AWARE": {
       "type": "mitigation",
-      "retriever": "best_frozen_C2_C4",
+      "retriever": "C4_HYBRID",
+      "top_k": 2,
       "coverage_signal": true,
-      "formal_reference": "coverage-aware fallback families derived from frozen formal rules"
+      "signal_content": "coverage_complete_boolean_only",
+      "missing_content_disclosed": false,
+      "base_retriever_selected_a_priori": true,
+      "formal_reference": "frozen formal evidence obligations"
     }
   },
   "phases": {
@@ -108,7 +122,8 @@
     "Do not claim human preference validity or human agreement.",
     "Do not substitute AI judges for independent human validation.",
     "Do not spend money on annotation or model/API calls under this track.",
-    "Do not admit a sample unless the designated C1 target is derived as required by both frozen formal validators."
+    "Do not admit a sample unless the designated C1 target is derived as required by both frozen formal validators.",
+    "Do not change P2 retriever top-k, hash dimension, fusion constant, policy rules, or C5 base retriever after P2 outcomes are observed."
   ],
   "formal_validity": {
     "source_of_truth": "world_spec",
@@ -131,6 +146,39 @@
       "status": "NOT_PLANNED_UNDER_ZERO_COST_CONSTRAINT",
       "may_be_added_later": true,
       "may_not_be_replaced_by_ai_judges": true
+    }
+  },
+  "downstream_policy": {
+    "id": "evidence-surface-deterministic-policy-v1",
+    "frozen_before_P2": true,
+    "reads": [
+      "question",
+      "visible evidence role",
+      "visible evidence currentness",
+      "visible evidence supports_candidates",
+      "candidates",
+      "prior_state"
+    ],
+    "forbidden_reads": [
+      "world_spec",
+      "constructor_proposal",
+      "construction_provenance",
+      "condition label",
+      "Gold",
+      "treatment target"
+    ],
+    "visible_gap_rules": {
+      "constraint_without_feasibility": "CLARIFY",
+      "authority_requirement_without_current_grant": "REQUEST_APPROVAL",
+      "stale_without_current_state": "DEFER",
+      "conflicting_claims_without_resolution": "CLARIFY",
+      "prior_conditional_decision_without_outcome_change": "DEFER"
+    },
+    "coverage_signal_behavior": "In C5 only, if coverage_complete=false return DEFER before normal policy logic.",
+    "decisive_mapping": {
+      "current_override": "HONOR_OVERRIDE",
+      "outcome_change_with_prior_decision": "REVISE_OR_INVALIDATE",
+      "otherwise": "DECIDE"
     }
   }
 }
