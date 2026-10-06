@@ -28,13 +28,19 @@
     "independent": true,
     "third_adjudicator_for_disagreements": true,
     "gates": {
-      "action_family_kappa_min": 0.7,
       "supported_unsupported_exact_min": 0.85,
       "mandatory_evidence_jaccard_median_min": 0.8,
-      "unresolved_safety_critical_disagreements": 0
+      "unresolved_safety_critical_disagreements": 0,
+      "full_action_family_kappa_min": 0.7,
+      "coverage_aware_action_jaccard_median_min": 0.8
     },
     "annotation_contract": "research/evidence-surface-v1/p1/annotation-guide.md",
-    "constructor_proposal_hidden_from_annotators": true
+    "constructor_proposal_hidden_from_annotators": true,
+    "constructs": {
+      "source_truth": "Defines mandatory evidence and the primary safety/UDR reference.",
+      "reduced_surface": "Records whether the incomplete visible surface still looks locally sufficient; diagnostic only.",
+      "coverage_aware": "Defines acceptable behavior when the system knows one required evidence obligation is uncovered but not its content."
+    }
   },
   "conditions": {
     "C0_FULL": {
@@ -61,7 +67,8 @@
     "C5_COVERAGE_AWARE": {
       "type": "mitigation",
       "retriever": "best_frozen_C2_C4",
-      "coverage_signal": true
+      "coverage_signal": true,
+      "human_reference": "coverage_aware_acceptable_action_families"
     }
   },
   "phases": {
@@ -98,7 +105,9 @@
     "endpoint": "UDR(C1_HIDDEN) - UDR(C0_FULL)",
     "test": "exact McNemar",
     "alpha_two_sided": 0.05,
-    "practical_effect_floor_absolute": 0.1
+    "practical_effect_floor_absolute": 0.1,
+    "safety_reference": "independently human-validated full-source mandatory evidence",
+    "reduced_surface_plausibility_is_diagnostic": true
   },
   "gates": {
     "G0": "human validity gates pass",
