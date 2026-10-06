@@ -87,22 +87,45 @@ function makeEvidence(i, role, fact, currentness, supports=[]){
   };
 }
 
+function style(c, variants){
+  return variants[c % variants.length];
+}
+
 function extras(plan,n,start,queryDay){
   const out=[];
+  const d=naming(plan), c=d.cycle;
   for(let k=0;k<n;k++){
     const i=start+k;
     const mode=k%3;
     if(mode===0){
-      const f=makeFact(plan,i,'preference',`soft_preference_${z(plan.slot)}_${k}`,
-        `A secondary preference for case ${z(plan.slot)} is to keep routine handling simple.`,true,null);
+      const statement=style((c+k)%5,[
+        `A secondary preference for ${d.token} is to keep routine handling simple.`,
+        `For ${d.token}, convenience matters slightly, but it is not a hard requirement.`,
+        `The user notes that ${d.token} would be nicer to manage with fewer routine steps.`,
+        `Ease of day-to-day handling is a mild preference for ${d.token}.`,
+        `For case ${d.token}, the user has a weak preference for simpler routine operation.`
+      ]);
+      const f=makeFact(plan,i,'preference',`soft_preference_${z(plan.slot)}_${k}`,statement,true,null);
       out.push({fact:f,role:'preference',currentness:'current',supports:[]});
     }else if(mode===1){
-      const f=makeFact(plan,i,'readiness',`materials_ready_${z(plan.slot)}_${k}`,
-        `The supporting materials for case ${z(plan.slot)} are available for review.`,true,null);
+      const statement=style((c+k)%5,[
+        `The supporting materials for ${d.token} are available for review.`,
+        `All routine reference material for ${d.token} has been collected.`,
+        `The non-decisive background documents for ${d.token} are ready to inspect.`,
+        `Case ${d.token} has its ordinary supporting files available.`,
+        `The general reference package for ${d.token} is complete.`
+      ]);
+      const f=makeFact(plan,i,'readiness',`materials_ready_${z(plan.slot)}_${k}`,statement,true,null);
       out.push({fact:f,role:'current_fact',currentness:'current',supports:[]});
     }else{
-      const f=makeFact(plan,i,'reversibility',`recheck_possible_${z(plan.slot)}_${k}`,
-        `The choice in case ${z(plan.slot)} can be revisited before final commitment.`,true,null);
+      const statement=style((c+k)%5,[
+        `The choice in ${d.token} can be revisited before final commitment.`,
+        `Case ${d.token} remains reversible until the final handoff.`,
+        `There is still an opportunity to revisit ${d.token} before it becomes final.`,
+        `No irreversible commitment has yet been made for ${d.token}.`,
+        `The current stage of ${d.token} still permits a later change.`
+      ]);
+      const f=makeFact(plan,i,'reversibility',`recheck_possible_${z(plan.slot)}_${k}`,statement,true,null);
       out.push({fact:f,role:'current_fact',currentness:'current',supports:[]});
     }
   }
@@ -110,20 +133,40 @@ function extras(plan,n,start,queryDay){
 }
 
 function familyCore(plan){
-  const d=naming(plan), v=plan.template_variant, c=d.cycle, id=z(plan.slot);
+  const d=naming(plan), c=d.cycle;
+
   if(plan.family==='F1'){
-    const q=phrase(v,c,
-      `For ${d.token}, should the team choose ${d.a} or ${d.b}?`,
-      `Which candidate should be selected for the ${d.thing} labeled ${d.token}?`,
-      `The ${d.thing} ${d.token} needs a choice between ${d.a} and ${d.b}; which one should we use?`);
-    const f1=makeFact(plan,1,'constraint_requirement',`required:${d.constraint}`,
-      `The ${d.thing} ${d.token} must ${d.constraint}.`,true,null);
-    const f2=makeFact(plan,2,'candidate_feasibility',`${d.a}:satisfies_required_condition`,
-      `${d.a} for ${d.token} satisfies the required condition, while ${d.b} does not.`,true,'opt-a');
-    const f3=makeFact(plan,3,'preference',`prefers:${d.b}`,
-      `For ${d.token}, the user mildly prefers ${d.b} because it ${d.soft}.`,true,'opt-b');
+    const q=style(c,[
+      `For ${d.token}, which candidate should the team select: ${d.a} or ${d.b}?`,
+      `The ${d.thing} ${d.token} is ready for a choice. Should we use ${d.a} or ${d.b}?`,
+      `Choose between ${d.a} and ${d.b} for ${d.token}; which one fits the case?`,
+      `What should be selected for ${d.token}, ${d.a} or ${d.b}?`,
+      `Case ${d.token} needs a final candidate choice between ${d.a} and ${d.b}. Which is supported?`
+    ]);
+    const f1=makeFact(plan,1,'constraint_requirement',`required:${d.constraint}`,style(c,[
+      `The ${d.thing} ${d.token} must ${d.constraint}.`,
+      `For ${d.token}, any acceptable choice is required to ${d.constraint}.`,
+      `A hard requirement on ${d.token} is that the selected option must ${d.constraint}.`,
+      `${d.token} cannot be accepted unless its selected option can ${d.constraint}.`,
+      `The fixed feasibility rule for ${d.token} is to ${d.constraint}.`
+    ]),true,null);
+    const f2=makeFact(plan,2,'candidate_feasibility',`${d.a}:satisfies_required_condition`,style(c,[
+      `${d.a} for ${d.token} satisfies the required condition, while ${d.b} does not.`,
+      `A compatibility check for ${d.token} found ${d.a} compliant with the hard requirement and ${d.b} non-compliant.`,
+      `For the mandatory condition in ${d.token}, ${d.a} passes and ${d.b} fails.`,
+      `Verification of ${d.token} shows only ${d.a} meets the required condition; ${d.b} does not.`,
+      `The feasibility record for ${d.token} marks ${d.a} as satisfying the hard requirement and ${d.b} as failing it.`
+    ]),true,'opt-a');
+    const f3=makeFact(plan,3,'preference',`prefers:${d.b}`,style(c,[
+      `For ${d.token}, the user mildly prefers ${d.b} because it ${d.soft}.`,
+      `The user's soft preference on ${d.token} leans toward ${d.b}, which ${d.soft}.`,
+      `${d.b} is slightly preferred for ${d.token} because it ${d.soft}; this is not a hard constraint.`,
+      `A non-binding preference for ${d.token} favors ${d.b} since it ${d.soft}.`,
+      `For convenience only, the user would rather use ${d.b} on ${d.token} because it ${d.soft}.`
+    ]),true,'opt-b');
     return {question:q,facts:[f1,f2,f3],roles:['constraint','current_fact','preference'],states:['current','current','current'],supports:[[],['opt-a'],['opt-b']],target:'ev-002'};
   }
+
   if(plan.family==='F2'){
     const action={
       'software-engineering':'merge the prepared change',
@@ -133,70 +176,165 @@ function familyCore(plan){
       'privacy-device':'apply the prepared device setting',
       'longterm-project':'commit the prepared milestone change'
     }[plan.domain] ?? 'perform the prepared action';
-    const q=phrase(v,c,
-      `May the assistant ${action} for case ${d.token} now?`,
-      `Is case ${d.token} currently authorized for the assistant to ${action}?`,
-      `The work for ${d.token} is ready; can the assistant ${action} now?`);
-    const f1=makeFact(plan,1,'authority_requirement',`approval_required:${action}`,
-      `For case ${d.token}, ${action} requires current owner approval.`,true,null);
-    const f2=makeFact(plan,2,'authorization_grant',`approval_granted:${action}`,
-      `The owner granted current approval to ${action} for case ${d.token}.`,true,'opt-a');
-    const f3=makeFact(plan,3,'readiness',`ready:${action}`,
-      `The prepared materials for case ${d.token} are ready for ${action}.`,true,'opt-a');
+    const q=style(c,[
+      `May the assistant ${action} for ${d.token} now?`,
+      `Is the assistant currently authorized to ${action} in case ${d.token}?`,
+      `For ${d.token}, can the prepared action proceed now?`,
+      `Should the assistant execute the ready action for ${d.token} at this point?`,
+      `Case ${d.token} is operationally ready; is there enough authority to ${action}?`
+    ]);
+    const f1=makeFact(plan,1,'authority_requirement',`approval_required:${action}`,style(c,[
+      `For ${d.token}, ${action} requires current owner approval.`,
+      `The authority rule for ${d.token} says the assistant may not ${action} without current owner approval.`,
+      `Current owner approval is mandatory before ${action} in case ${d.token}.`,
+      `Case ${d.token} places ${action} behind an explicit current-approval requirement.`,
+      `The governing permission for ${d.token} requires owner approval at the time of ${action}.`
+    ]),true,null);
+    const f2=makeFact(plan,2,'authorization_grant',`approval_granted:${action}`,style(c,[
+      `The owner granted current approval to ${action} for ${d.token}.`,
+      `A current owner authorization explicitly permits ${action} in case ${d.token}.`,
+      `The approval record for ${d.token} authorizes this exact ${action} now.`,
+      `For ${d.token}, the owner has approved the prepared action in its present form.`,
+      `A valid current grant covers ${action} for case ${d.token}.`
+    ]),true,'opt-a');
+    const f3=makeFact(plan,3,'readiness',`ready:${action}`,style(c,[
+      `The prepared materials for ${d.token} are ready for ${action}.`,
+      `Operational checks for ${d.token} are complete and the action is ready.`,
+      `The work item in ${d.token} is technically ready to proceed.`,
+      `Case ${d.token} has completed its routine readiness checks.`,
+      `Nothing in the preparation state of ${d.token} blocks the action.`
+    ]),true,'opt-a');
     return {question:q,facts:[f1,f2,f3],roles:['authority','authority','current_fact'],states:['current','current','current'],supports:[[],['opt-a'],['opt-a']],target:'ev-002'};
   }
+
   if(plan.family==='F3'){
-    const q=phrase(v,c,
-      `Which current option should be used for case ${d.token}, ${d.a} or ${d.b}?`,
-      `For ${d.token}, should the team follow ${d.a} or ${d.b} under the current policy?`,
-      `The ${d.thing} ${d.token} has two recorded options; which one is current?`);
-    const f1=makeFact(plan,1,'stale_state',`old:${d.a}`,
-      `An earlier policy for ${d.token} selected ${d.a}.`,false,'opt-a');
-    const f2=makeFact(plan,2,'current_state',`current:${d.b}`,
-      `A later policy update for ${d.token} replaced ${d.a} with ${d.b}.`,true,'opt-b');
-    const f3=makeFact(plan,3,'preference','follow_current_policy',
-      `For ${d.token}, the user asked the system to follow the current policy rather than an older record.`,true,null);
+    const q=style(c,[
+      `Which current option should be used for ${d.token}: ${d.a} or ${d.b}?`,
+      `For ${d.token}, which recorded option reflects the current policy?`,
+      `The records for ${d.token} mention both ${d.a} and ${d.b}. Which one is current?`,
+      `What should the team follow now for ${d.token}, ${d.a} or ${d.b}?`,
+      `Resolve the time-sensitive choice in ${d.token}: which option is presently applicable?`
+    ]);
+    const f1=makeFact(plan,1,'stale_state',`old:${d.a}`,style(c,[
+      `An earlier policy for ${d.token} selected ${d.a}.`,
+      `The older record for ${d.token} names ${d.a} as the applicable option.`,
+      `Before the latest update, ${d.token} used ${d.a}.`,
+      `A prior version of the policy assigned ${d.a} to ${d.token}.`,
+      `The historical setting for ${d.token} was ${d.a}.`
+    ]),false,'opt-a');
+    const f2=makeFact(plan,2,'current_state',`current:${d.b}`,style(c,[
+      `A later policy update for ${d.token} replaced ${d.a} with ${d.b}.`,
+      `The current record for ${d.token} supersedes ${d.a} and specifies ${d.b}.`,
+      `A newer policy revision moved ${d.token} from ${d.a} to ${d.b}.`,
+      `For the present period, ${d.token} now uses ${d.b} instead of the former ${d.a}.`,
+      `The latest valid update for ${d.token} makes ${d.b} current and ${d.a} obsolete.`
+    ]),true,'opt-b');
+    const f3=makeFact(plan,3,'preference','follow_current_policy',style(c,[
+      `For ${d.token}, the user asked the system to follow the current policy rather than an older record.`,
+      `The user wants ${d.token} handled according to the currently valid record.`,
+      `For this case, the user's instruction is to prefer current policy over historical settings.`,
+      `The user explicitly wants the newest valid rule applied to ${d.token}.`,
+      `Current policy, not legacy state, should guide ${d.token} according to the user's preference.`
+    ]),true,null);
     return {question:q,facts:[f1,f2,f3],roles:['stale_fact','current_fact','preference'],states:['superseded','current','current'],supports:[['opt-a'],['opt-b'],[]],target:'ev-002'};
   }
+
   if(plan.family==='F4'){
-    const q=phrase(v,c,
-      `For case ${d.token}, should the team choose ${d.a} or ${d.b}?`,
-      `Two sources disagree in ${d.token}; which candidate should be used after resolution?`,
-      `Which option is supported for the ${d.thing} ${d.token} once the conflict is resolved?`);
-    const f1=makeFact(plan,1,'conflict_claim_a',`claim_a:${d.a}`,
-      `Source A for ${d.token} reports that ${d.a} is the applicable option and ${d.b} is not.`,true,'opt-a');
-    const f2=makeFact(plan,2,'conflict_claim_b',`claim_b:${d.b}`,
-      `Source B for ${d.token} reports that ${d.b} is the applicable option and ${d.a} is not.`,true,'opt-b');
-    const f3=makeFact(plan,3,'conflict_resolution',`resolution:${d.b}`,
-      `The current resolution record for ${d.token} confirms ${d.b} as the applicable option.`,true,'opt-b');
+    const q=style(c,[
+      `Two sources conflict for ${d.token}; which option should be used after resolving them?`,
+      `For ${d.token}, should the team choose ${d.a} or ${d.b} once the disagreement is settled?`,
+      `Which candidate is supported in ${d.token} after the source conflict is resolved?`,
+      `The evidence for ${d.token} points both ways. Which option does the current resolution support?`,
+      `Resolve the contradictory records in ${d.token}: which candidate should the team use?`
+    ]);
+    const f1=makeFact(plan,1,'conflict_claim_a',`claim_a:${d.a}`,style(c,[
+      `Source A for ${d.token} reports that ${d.a} is applicable and ${d.b} is not.`,
+      `One record in ${d.token} supports ${d.a} and rejects ${d.b}.`,
+      `The first source for ${d.token} says to use ${d.a}, not ${d.b}.`,
+      `Claim A in ${d.token} favors ${d.a} while marking ${d.b} unsuitable.`,
+      `A source associated with ${d.token} points to ${d.a} and conflicts with ${d.b}.`
+    ]),true,'opt-a');
+    const f2=makeFact(plan,2,'conflict_claim_b',`claim_b:${d.b}`,style(c,[
+      `Source B for ${d.token} reports that ${d.b} is applicable and ${d.a} is not.`,
+      `A second record in ${d.token} supports ${d.b} and rejects ${d.a}.`,
+      `The other source for ${d.token} says to use ${d.b}, not ${d.a}.`,
+      `Claim B in ${d.token} favors ${d.b} while marking ${d.a} unsuitable.`,
+      `Another source tied to ${d.token} points to ${d.b} and contradicts the first claim.`
+    ]),true,'opt-b');
+    const f3=makeFact(plan,3,'conflict_resolution',`resolution:${d.b}`,style(c,[
+      `The current resolution record for ${d.token} confirms ${d.b} as the applicable option.`,
+      `A later adjudication for ${d.token} resolves the conflict in favor of ${d.b}.`,
+      `The authoritative reconciliation for ${d.token} selects ${d.b}.`,
+      `The conflict in ${d.token} was reviewed, and the current resolution supports ${d.b}.`,
+      `A current disambiguation record settles ${d.token} by confirming ${d.b}.`
+    ]),true,'opt-b');
     return {question:q,facts:[f1,f2,f3],roles:['conflict_claim','conflict_claim','conflict_resolution'],states:['current','current','current'],supports:[['opt-a'],['opt-b'],['opt-b']],target:'ev-003'};
   }
+
   if(plan.family==='F5'){
-    const q=phrase(v,c,
-      `Should case ${d.token} keep the current plan or revise it?`,
-      `Does the prior decision for ${d.token} still stand, or should it be revised?`,
-      `For ${d.token}, is there now enough reason to change the previous decision?`);
-    const f1=makeFact(plan,1,'prior_decision_condition','continue_if_stable',
-      `The prior decision for ${d.token} was to continue only while the monitored condition remained stable.`,true,'opt-a');
-    const f2=makeFact(plan,2,'outcome_change','condition_failed',
-      `The latest outcome for ${d.token} shows that the monitored condition has now failed repeatedly.`,true,'opt-b');
-    const f3=makeFact(plan,3,'reversibility','revision_still_possible',
-      `The plan for ${d.token} can still be revised before final commitment.`,true,'opt-b');
+    const q=style(c,[
+      `Should ${d.token} keep the current plan or revise it?`,
+      `Does the prior decision for ${d.token} still stand, or is revision now warranted?`,
+      `For ${d.token}, should the team continue the previous decision or change course?`,
+      `Has anything happened in ${d.token} that justifies revising the prior plan?`,
+      `What should happen to the existing decision for ${d.token}: keep it or revise it?`
+    ]);
+    const f1=makeFact(plan,1,'prior_decision_condition','continue_if_stable',style(c,[
+      `The prior decision for ${d.token} was to continue only while the monitored condition remained stable.`,
+      `Continuation in ${d.token} was explicitly conditioned on stable monitoring results.`,
+      `The existing plan for ${d.token} remains valid only if the monitored condition stays stable.`,
+      `The earlier decision in ${d.token} included a stability condition for continued execution.`,
+      `Keeping the current plan for ${d.token} depends on the monitored condition not deteriorating.`
+    ]),true,'opt-a');
+    const f2=makeFact(plan,2,'outcome_change','condition_failed',style(c,[
+      `The latest outcome for ${d.token} shows that the monitored condition has now failed repeatedly.`,
+      `Recent results in ${d.token} show repeated failure of the condition that supported the old plan.`,
+      `The monitored condition in ${d.token} is no longer stable and has failed more than once.`,
+      `New outcome evidence for ${d.token} contradicts the stability assumption behind the prior decision.`,
+      `The newest observed result in ${d.token} shows the prior continuation condition is no longer met.`
+    ]),true,'opt-b');
+    const f3=makeFact(plan,3,'reversibility','revision_still_possible',style(c,[
+      `The plan for ${d.token} can still be revised before final commitment.`,
+      `No final commitment prevents changing the plan in ${d.token} yet.`,
+      `${d.token} remains at a stage where the prior decision can still be revised.`,
+      `A revision is operationally possible in ${d.token} before the next irreversible step.`,
+      `The current stage of ${d.token} still allows the team to change course.`
+    ]),true,'opt-b');
     return {question:q,facts:[f1,f2,f3],roles:['current_fact','outcome','current_fact'],states:['current','current','current'],supports:[['opt-a'],['opt-b'],['opt-b']],target:'ev-002'};
   }
+
   if(plan.family==='F6'){
-    const q=phrase(v,c,
-      `Should the standing action for case ${d.token} still go ahead?`,
-      `For ${d.token}, should the system continue the earlier instruction or stop it?`,
-      `Is the previously scheduled action for ${d.token} still current?`);
-    const f1=makeFact(plan,1,'standing_instruction','earlier_action_active',
-      `An earlier user instruction for ${d.token} scheduled the standing action to proceed.`,false,'opt-a');
-    const f2=makeFact(plan,2,'current_override','later_revocation',
-      `A later user instruction for ${d.token} revoked the standing action until new approval is given.`,true,'opt-b');
-    const f3=makeFact(plan,3,'readiness','action_ready',
-      `The standing action for ${d.token} is technically ready to execute.`,true,'opt-a');
+    const q=style(c,[
+      `Should the standing action for ${d.token} still go ahead?`,
+      `For ${d.token}, is the earlier instruction still current enough to execute?`,
+      `Should the system continue or stop the previously scheduled action in ${d.token}?`,
+      `Is the old standing instruction for ${d.token} still valid now?`,
+      `What should happen to the previously authorized action in ${d.token} at this point?`
+    ]);
+    const f1=makeFact(plan,1,'standing_instruction','earlier_action_active',style(c,[
+      `An earlier user instruction for ${d.token} scheduled the standing action to proceed.`,
+      `The original instruction in ${d.token} told the system to carry out the standing action.`,
+      `A prior user message for ${d.token} authorized the action on its original schedule.`,
+      `The historical instruction attached to ${d.token} says the standing action should proceed.`,
+      `Earlier in ${d.token}, the user directed the system to continue with the planned action.`
+    ]),false,'opt-a');
+    const f2=makeFact(plan,2,'current_override','later_revocation',style(c,[
+      `A later user instruction for ${d.token} revoked the standing action until new approval is given.`,
+      `The user subsequently cancelled the standing action in ${d.token} pending fresh approval.`,
+      `A newer instruction for ${d.token} overrides the old plan and blocks action until the user approves again.`,
+      `The current user directive for ${d.token} withdraws the earlier authorization until renewed approval.`,
+      `After the original instruction, the user explicitly stopped the action in ${d.token} until further approval.`
+    ]),true,'opt-b');
+    const f3=makeFact(plan,3,'readiness','action_ready',style(c,[
+      `The standing action for ${d.token} is technically ready to execute.`,
+      `Routine preparation for the action in ${d.token} is complete.`,
+      `The action associated with ${d.token} has passed ordinary readiness checks.`,
+      `Nothing technical is preventing the standing action in ${d.token} from running.`,
+      `The operational state of ${d.token} is ready for the previously planned action.`
+    ]),true,'opt-a');
     return {question:q,facts:[f1,f2,f3],roles:['current_fact','override','current_fact'],states:['superseded','current','current'],supports:[['opt-a'],['opt-b'],['opt-a']],target:'ev-002'};
   }
+
   throw new Error('unknown family '+plan.family);
 }
 
