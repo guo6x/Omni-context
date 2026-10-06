@@ -1,12 +1,12 @@
 import fs from 'node:fs';
 
-const normalize = (s) => String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
+const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 
-function ngrams(text, n=8) {
-  const s=normalize(text);
+function wordNgrams(text, n=3) {
+  const words=normalize(text).split(/\s+/).filter(Boolean);
   const out=new Set();
-  if (s.length < n) { if (s) out.add(s); return out; }
-  for(let i=0;i<=s.length-n;i++) out.add(s.slice(i,i+n));
+  if(words.length<n){if(words.length)out.add(words.join(' '));return out;}
+  for(let i=0;i<=words.length-n;i++) out.add(words.slice(i,i+n).join(' '));
   return out;
 }
 
@@ -26,12 +26,14 @@ function sampleText(s) {
   ].join(' ');
 }
 
-export function auditDataset(samples, threshold=0.50) {
+export function auditDataset(samples, threshold=0.70) {
   const errors=[];
   const warnings=[];
   const ids=new Set();
   const familyCounts={};
   const domainCounts={};
+  const templateCounts={};
+  const exactText=new Map();
 
   for(const s of samples){
     if(ids.has(s.sample_id)) errors.push({type:'DUPLICATE_SAMPLE_ID',sample_id:s.sample_id});
@@ -39,44 +41,56 @@ export function auditDataset(samples, threshold=0.50) {
     familyCounts[s.family]=(familyCounts[s.family]||0)+1;
     domainCounts[s.domain]=(domainCounts[s.domain]||0)+1;
 
+    const template=s.construction_provenance?.template_id ?? 'missing';
+    templateCounts[template]=(templateCounts[template]||0)+1;
+
+    const normalized=normalize(sampleText(s));
+    if(exactText.has(normalized)) errors.push({type:'EXACT_TEXT_DUPLICATE',a:exactText.get(normalized),b:s.sample_id});
+    else exactText.set(normalized,s.sample_id);
+
     const target=s.constructor_proposal?.treatment_target_evidence_id;
     const ev=(s.evidence||[]).find(x=>x.evidence_id===target);
     if(!ev) errors.push({type:'TREATMENT_TARGET_MISSING',sample_id:s.sample_id,target});
 
     const promptText=normalize(s.question);
-    if(target && promptText.includes(normalize(target))) {
-      errors.push({type:'TARGET_ID_IN_QUESTION',sample_id:s.sample_id,target});
-    }
-    if(ev && normalize(ev.fact).length>=8 && promptText.includes(normalize(ev.fact))) {
-      errors.push({type:'TARGET_FACT_VERBATIM_IN_QUESTION',sample_id:s.sample_id,target});
-    }
+    if(target && promptText.includes(normalize(target))) errors.push({type:'TARGET_ID_IN_QUESTION',sample_id:s.sample_id,target});
+    if(ev && normalize(ev.fact).length>=8 && promptText.includes(normalize(ev.fact))) errors.push({type:'TARGET_FACT_VERBATIM_IN_QUESTION',sample_id:s.sample_id,target});
   }
 
-  const fingerprints=samples.map(s=>({sample_id:s.sample_id,family:s.family,grams:ngrams(sampleText(s),8)}));
+  const fingerprints=samples.map(s=>({sample_id:s.sample_id,family:s.family,domain:s.domain,grams:wordNgrams(sampleText(s),3)}));
   for(let i=0;i<fingerprints.length;i++){
     for(let j=i+1;j<fingerprints.length;j++){
       const score=jaccard(fingerprints[i].grams,fingerprints[j].grams);
       if(score>=threshold){
         warnings.push({
-          type:'NEAR_DUPLICATE',
-          a:fingerprints[i].sample_id,
-          b:fingerprints[j].sample_id,
+          type:'NEAR_DUPLICATE_WORD_TRIGRAM',
+          a:fingerprints[i].sample_id,b:fingerprints[j].sample_id,
           same_family:fingerprints[i].family===fingerprints[j].family,
+          same_domain:fingerprints[i].domain===fingerprints[j].domain,
           jaccard:Number(score.toFixed(4))
         });
       }
     }
   }
 
+  const maxTemplateCount=Math.max(0,...Object.values(templateCounts));
+  const maxTemplateFraction=samples.length?maxTemplateCount/samples.length:0;
+  if(maxTemplateFraction>0.10){
+    errors.push({type:'PROMPT_TEMPLATE_CONCENTRATION',max_template_count:maxTemplateCount,max_template_fraction:maxTemplateFraction});
+  }
+
   return {
-    schema_version:1,
+    schema_version:2,
     n_samples:samples.length,
     family_counts:familyCounts,
     domain_counts:domainCounts,
+    template_count:Object.keys(templateCounts).length,
+    max_template_count:maxTemplateCount,
+    max_template_fraction:Number(maxTemplateFraction.toFixed(4)),
+    near_duplicate_metric:'word-trigram Jaccard',
     near_duplicate_threshold:threshold,
-    errors,
-    warnings,
-    pass:errors.length===0
+    errors,warnings,
+    pass:errors.length===0 && warnings.length===0
   };
 }
 
