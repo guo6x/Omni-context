@@ -76,61 +76,45 @@ Agent-safety benchmarks and policy layers often constrain actions using approval
 
 ### 3.1 Evidence obligations
 
-For each decision instance (x), let (O(x)) be the set of evidence obligations required by a frozen formal safety contract. Each obligation corresponds to one or more source-truth facts that must be represented on the decision-visible surface before a consequential decisive action is supported.
+For each decision instance `x`, let `O(x)` be the set of evidence obligations required by a frozen formal safety contract. Each obligation corresponds to one or more source-truth facts that must be represented on the decision-visible surface before a consequential decisive action is supported.
 
-Let (S(x)) denote the evidence surface delivered to the downstream policy.
+Let `S(x)` denote the evidence surface delivered to the downstream policy.
 
-Define formal coverage:
+Define formal coverage `C(x, S)` as:
 
-[
-C(x,S)=
-egin{cases}
-1, & 	ext{if every required obligation in } O(x) 	ext{ is covered by } S,\
-0, & 	ext{otherwise.}
-end{cases}
-]
+- `C(x, S) = 1` if every required obligation in `O(x)` is covered by `S`;
+- `C(x, S) = 0` otherwise.
 
 Coverage is evaluated from the frozen formal world specification, not inferred by the downstream policy.
 
 ### 3.2 Unsupported decisive behavior
 
-Let (a(x,S)) be the policy action. Actions are partitioned into decisive actions and safe fallback actions such as CLARIFY, DEFER, or REQUEST_APPROVAL.
+Let `a(x, S)` be the policy action. Actions are partitioned into decisive actions and safe fallback actions such as CLARIFY, DEFER, or REQUEST_APPROVAL.
 
-We define an unsupported decision as:
-
-[
-U(x,S)=1
-]
-
-iff the policy issues a consequential decisive action while (C(x,S)=0). The **unsupported-decision rate (UDR)** is the mean of (U) over a condition.
+We define `U(x, S) = 1` iff the policy issues a consequential decisive action while `C(x, S) = 0`. The **unsupported-decision rate (UDR)** is the mean of `U` over a condition.
 
 This metric does not claim that a covered decisive action is human-preferred or real-world correct. It measures compliance with the frozen formal evidence-obligation contract.
 
 ### 3.3 Detectable gaps and silent omissions
 
-The downstream policy contains fixed visible-gap checks (G(S)). Examples include a visible authority requirement with no current grant, visible stale state without a current replacement, or visible conflicting claims without a resolution.
+The downstream policy contains fixed visible-gap checks `G(S)`. Examples include a visible authority requirement with no current grant, visible stale state without a current replacement, or visible conflicting claims without a resolution.
 
 A missing obligation is **detectable** when incomplete coverage also activates a visible-gap check that routes the policy to a safe fallback.
 
-A missing obligation is **silent relative to the policy** when:
+A missing obligation is **silent relative to the policy** when both:
 
-[
-C(x,S)=0 quad 	ext{and} quad G(S)=0,
-]
+- `C(x, S) = 0`; and
+- `G(S) = 0`.
 
-so the remaining evidence surface offers no local cue that a required item is absent.
+In that case, the remaining evidence surface offers no local cue that a required item is absent.
 
 This definition is policy-relative: an omission that is silent for one policy may be detectable for another.
 
 ### 3.4 Coverage-completeness signal
 
-C5 augments the policy input with a single boolean:
+C5 augments the policy input with a single boolean `z = C(x, S)`.
 
-[
-z = C(x,S).
-]
-
-No missing evidence content is disclosed. If (z=0), the frozen C5 rule returns DEFER before the ordinary decision logic. If (z=1), it executes the same decision logic as the coverage-blind conditions.
+No missing evidence content is disclosed. If `z = 0`, the frozen C5 rule returns DEFER before the ordinary decision logic. If `z = 1`, it executes the same decision logic as the coverage-blind conditions.
 
 C5 is therefore a mechanism test, not a learned retrieval improvement. It asks whether making obligation incompleteness observable is sufficient to prevent the measured unsupported-decision failure on a fixed surface.
 
@@ -227,15 +211,11 @@ Secondary analyses include condition-level UDR, mandatory-fact recall, complete-
 
 C0 FULL produces no unsupported decisions:
 
-[
-0/180 = 0%.
-]
+`0/180 = 0%`.
 
 C1 HIDDEN produces:
 
-[
-30/180 = 16.67%.
-]
+`30/180 = 16.67%`.
 
 The paired risk difference is **+16.67 percentage points**, with paired bootstrap 95% CI **[11.67, 22.22] percentage points**. The exact two-sided McNemar p-value is **1.8626451492309587×10^-9**.
 
