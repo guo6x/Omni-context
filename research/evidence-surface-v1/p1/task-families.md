@@ -364,27 +364,30 @@ Across all 180 samples:
 
 ## 11. Formal authoring lifecycle
 
+The zero-cost formal track uses machine-checkable world semantics rather than required human annotation.
+
 ```text
 sample-plan manifest
       ↓
-constructor writes base sample
+world_spec construction
       ↓
-structural validator
+deterministic natural-language rendering
       ↓
-blinded annotation packet
+schema + renderer consistency gate
       ↓
-annotator A
-annotator B
+Validator A: declarative decision contract
+Validator B: independent family rule derivation
       ↓
-agreement gate
+mandatory positive control
+non-mandatory negative control
       ↓
-adjudication where needed
+leakage / near-duplicate / template audit
       ↓
-freeze final human-validated sample
+formal freeze manifest
       ↓
-treatment manifest freeze
-      ↓
-P2 deterministic evaluation
+P2 deterministic causal evaluation
 ```
 
-No policy output is visible before the human-validity freeze.
+Human annotation tooling remains optional external-validity infrastructure only. It is not part of the confirmatory gate and must not be described as completed human validation.
+
+After the formal freeze, sample content may not be edited in response to P2 outcomes.
