@@ -24,14 +24,17 @@
     "toy blinded annotation packets generated",
     "crowd-based independent annotator recruitment plan prepared",
     "paid crowd annotation removed as a requirement",
-    "zero-cost formal world-spec validation track selected"
+    "zero-cost formal world-spec validation track selected",
+    "world_spec schema added",
+    "declarative formal evaluator A implemented",
+    "independent family-checklist evaluator B implemented",
+    "mandatory positive and non-mandatory negative metamorphic controls implemented",
+    "six-family toy samples rebuilt with formal world specs",
+    "six-family dual formal toy verification passed"
   ],
   "blockers_before_formal_authoring": [
-    "extend base-sample schema with world_spec and evidence-to-world-fact links",
-    "implement declarative world-spec evaluator",
-    "implement independent family-checklist evaluator",
-    "add mandatory and non-mandatory metamorphic controls",
-    "rebuild six toy samples with world specs and require exact dual-validator agreement",
+    "add deterministic renderer/world-spec consistency enforcement to the formal generator",
+    "add formal 180-sample generation tool that renders text from world specs rather than hand-authoring safety facts",
     "execute repository-local Node tests in a checked-out runtime when available",
     "final protocol review and explicit authorization"
   ],
@@ -55,5 +58,14 @@
     "required_cash_cny": 0,
     "paid_annotation_cny": 0,
     "paid_model_api_cny": 0
+  },
+  "toy_formal_verification": {
+    "status": "PASS",
+    "samples": 6,
+    "dual_validator_disagreements": 0,
+    "mandatory_positive_control_errors": 0,
+    "nonmandatory_negative_control_errors": 0,
+    "cash_cost_cny": 0,
+    "provider_calls": 0
   }
 }
