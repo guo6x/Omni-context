@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "study_id": "evidence-surface-safety-v1",
+  "status": "PROPOSED_NO_FORMAL_RUN_AUTHORIZED",
+  "created_at": "2026-10-06",
+  "origin": "TMLR #12888 post-desk-reject autopsy",
+  "confirmatory_reuse_prohibited": [
+    "existing V3 validation results",
+    "existing sealed Holdback"
+  ],
+  "research_question": "When an agent decision policy requires specific evidence before acting, how does upstream evidence visibility affect unsupported decisions?",
+  "formal_dataset": {
+    "samples": 180,
+    "task_families": {
+      "F1_constraint_sensitive_choice": 30,
+      "F2_authority_approval": 30,
+      "F3_temporal_validity": 30,
+      "F4_conflict_resolution": 30,
+      "F5_revision_outcome": 30,
+      "F6_override_invalidation": 30
+    },
+    "paired_conditions_required": true
+  },
+  "human_validity": {
+    "annotators_min": 2,
+    "independent": true,
+    "third_adjudicator_for_disagreements": true,
+    "gates": {
+      "action_family_kappa_min": 0.7,
+      "supported_unsupported_exact_min": 0.85,
+      "mandatory_evidence_jaccard_median_min": 0.8,
+      "unresolved_safety_critical_disagreements": 0
+    }
+  },
+  "conditions": {
+    "C0_FULL": {
+      "type": "oracle_visible",
+      "mandatory_evidence": "all"
+    },
+    "C1_HIDDEN": {
+      "type": "causal_intervention",
+      "mandatory_evidence": "remove_one_or_more"
+    },
+    "C2_LEXICAL": {
+      "type": "retrieval",
+      "retriever": "frozen_lexical"
+    },
+    "C3_DENSE": {
+      "type": "retrieval",
+      "retriever": "frozen_dense"
+    },
+    "C4_HYBRID": {
+      "type": "retrieval",
+      "retriever": "frozen_hybrid"
+    },
+    "C5_COVERAGE_AWARE": {
+      "type": "mitigation",
+      "retriever": "best_frozen_C2_C4",
+      "coverage_signal": true
+    }
+  },
+  "phases": {
+    "P0": {
+      "purpose": "diagnostic harness replication on old V3",
+      "provider_calls": 0,
+      "confirmatory": false
+    },
+    "P1": {
+      "purpose": "fresh dataset + human validation + freeze",
+      "provider_calls": 0,
+      "confirmatory": false
+    },
+    "P2": {
+      "purpose": "deterministic causal study C0-C5",
+      "evaluations": 1080,
+      "provider_calls": 0,
+      "confirmatory": true
+    },
+    "P3": {
+      "purpose": "two-model replication on preregistered 120-sample subset",
+      "samples": 120,
+      "conditions": [
+        "C0_FULL",
+        "C1_HIDDEN",
+        "C5_COVERAGE_AWARE"
+      ],
+      "models": 2,
+      "accepted_calls": 720,
+      "run_only_if": "G0-G5 pass"
+    }
+  },
+  "primary": {
+    "endpoint": "UDR(C1_HIDDEN) - UDR(C0_FULL)",
+    "test": "exact McNemar",
+    "alpha_two_sided": 0.05,
+    "practical_effect_floor_absolute": 0.1
+  },
+  "gates": {
+    "G0": "human validity gates pass",
+    "G1": "C0_FULL UDR <= 0.05",
+    "G2": "C1-C0 UDR >= 0.10 and exact McNemar p < 0.05",
+    "G3": "at least 4 of 6 task families show non-negative C1-C0 direction and no large unexplained reverse effect",
+    "G4": "aggregate mandatory-evidence recall across C2-C4 directionally tracks lower UDR",
+    "G5": "C5 reduces UDR relative to same retriever without collapsing useful-decision rate",
+    "G6": "both preregistered model families reproduce C1 > C0 direction"
+  },
+  "budget": {
+    "P0_P2_cny": 0,
+    "historical_reference": {
+      "accepted_provider_rows": 480,
+      "physical_calls": 491,
+      "total_cny": 4.127935,
+      "approx_cny_per_physical_call": 0.0084072,
+      "warning": "Historical reference only; not a current provider quote."
+    },
+    "P3_accepted_calls": 720,
+    "estimated_physical_calls_at_historical_retry_rate": 737,
+    "estimated_cny_at_historical_average": 6.2,
+    "hard_cap_cny": 50
+  },
+  "stop_rules": [
+    "Do not run P3 unless G0-G5 pass.",
+    "Do not open old Holdback for this study.",
+    "Do not add models after observing P3 outputs unless preregistered before P3.",
+    "Do not edit formal samples after policy outputs are observed.",
+    "Do not change the primary endpoint or effect floor after formal results."
+  ]
+}
