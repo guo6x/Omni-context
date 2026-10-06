@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "study_id": "evidence-surface-safety-v1",
+  "phase": "P1_PREPARATION",
+  "status": "PREPARED_NOT_AUTHORIZED",
+  "provider_calls": 0,
+  "formal_samples_authored": 0,
+  "reserved_sample_ids": 180,
+  "completed": [
+    "P0 legacy mechanism reconstruction",
+    "P0 FULL/HIDDEN treatment harness",
+    "P1 base sample schema",
+    "P1 annotation schema",
+    "P1 six-family specification",
+    "P1 180-slot sample plan",
+    "P1 blinded annotation packet builder",
+    "P1 human agreement calculator",
+    "exact-one mandatory evidence treatment freeze"
+  ],
+  "blockers_before_formal_authoring": [
+    "execute repository-local Node tests in checked-out runtime",
+    "run P1 tooling on non-formal toy batch",
+    "run human annotation dry-run on at least one toy sample per family",
+    "implement formal P1 leakage/near-duplicate checks",
+    "final protocol review and explicit authorization"
+  ],
+  "note": "No formal P1 content exists yet. No provider/model call has been made for the new study."
+}
