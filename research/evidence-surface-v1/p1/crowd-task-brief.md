@@ -1,3 +1,5 @@
+> **DEPRECATED / OPTIONAL ONLY:** The confirmatory study moved to the zero-cost formal-validation track. This file is retained for provenance and possible future external-validity work; it is not required for P1/P2 and no paid recruitment is authorized.
+
 # Crowd Task — Evidence Sufficiency Annotation
 
 ## Short description
