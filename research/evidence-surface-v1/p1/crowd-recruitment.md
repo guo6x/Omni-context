@@ -1,3 +1,5 @@
+> **DEPRECATED / OPTIONAL ONLY:** The confirmatory study moved to the zero-cost formal-validation track. This file is retained for provenance and possible future external-validity work; it is not required for P1/P2 and no paid recruitment is authorized.
+
 # Human Annotation Recruitment Plan
 
 **Status:** replaces "find two acquaintances" with paid independent crowd annotation.  
