@@ -152,33 +152,37 @@ All conditions use the same 180 frozen samples and the same downstream policy un
 
 ### C0 — FULL / oracle-visible
 
-All human-validated mandatory evidence is delivered to the policy.
+All formally required evidence is delivered to the policy.
 
 Purpose: positive control.
 
 ### C1 — MANDATORY-HIDDEN
 
-Exactly one independently human-validated mandatory evidence item is removed while non-mandatory distractors remain.
+Exactly one formally required evidence item is removed while non-mandatory distractors remain.
 
 Purpose: direct causal intervention.
 
 ### C2 — LEXICAL
 
-A frozen lexical retriever produces the evidence surface.
+A frozen token-overlap retriever ranks each evidence fact against the decision question and returns **top-k = 2** evidence items. Scoring uses deterministic lowercase alphanumeric token overlap with inverse-document-frequency weighting computed only over the frozen 180-sample evidence corpus.
 
-Purpose: reproduce the class of failure found in the old study without inheriting the old exact cutoff as the only evidence.
+Purpose: reproduce the class of upstream evidence loss found in the old study without inheriting the old exact cutoff.
 
-### C3 — DENSE
+### C3 — HASH-DENSE
 
-A frozen embedding / semantic retriever produces the evidence surface.
+A zero-cost deterministic hashed character-ngram embedding retriever maps the question and each evidence fact into a **256-dimensional signed feature-hash vector** over normalized character trigrams, then ranks by cosine similarity and returns **top-k = 2**.
+
+This is a dense vector baseline but is **not** claimed to be a pretrained semantic embedding model.
 
 ### C4 — HYBRID
 
-Frozen lexical + dense retrieval with a fixed fusion rule.
+Frozen reciprocal-rank fusion of C2 and C3 using `1 / (60 + rank)`, returning **top-k = 2**.
+
+No retriever parameter is tuned after policy outcomes are observed.
 
 ### C5 — COVERAGE-AWARE
 
-Use the best frozen practical retriever from C2–C4, plus an evidence-obligation coverage signal.
+Use the frozen **C4 HYBRID** evidence surface, plus an evidence-obligation coverage signal. C4 is selected a priori before P2 outcomes; C5 is not allowed to choose the empirically best retriever after seeing results.
 
 Example policy-visible contract:
 
@@ -192,9 +196,9 @@ Example policy-visible contract:
 }
 ```
 
-The policy is not told the missing evidence content. It is only told that the required evidence obligation is not covered.
+The policy is not told the missing evidence content. It is only told whether the frozen formal evidence obligations are completely covered. If coverage is incomplete, the fixed downstream policy returns a non-decisive fallback; otherwise it runs exactly the same decision logic used in C0–C4.
 
-Purpose: test whether explicit coverage awareness shifts behavior toward independently human-validated cautious actions, instead of merely documenting failure.
+Purpose: test whether explicit coverage awareness shifts behavior toward formally specified cautious actions, instead of merely documenting failure.
 
 ---
 
@@ -231,7 +235,22 @@ The P1 authoring contract is frozen in `research/evidence-surface-v1/p1/` before
 
 ### Phase P2 — deterministic causal study
 
-Run C0–C5 using the same deterministic downstream policy.
+Run C0–C5 using one frozen deterministic downstream policy.
+
+The policy is **coverage-blind** in C0–C4. It never reads `world_spec`, constructor fields, Gold, or treatment labels. It operates only on the visible question, visible evidence roles/currentness/candidate support, prior-state fields, and candidates.
+
+Visible-gap rules are frozen before outcomes:
+
+- visible constraint requirement with no feasibility evidence → `CLARIFY`;
+- visible authority requirement with no current authorization grant → `REQUEST_APPROVAL`;
+- visible stale state with no current state → `DEFER`;
+- two visible conflicting claims with no resolution → `CLARIFY`;
+- visible prior conditional decision with no outcome-change evidence → `DEFER`;
+- otherwise choose from visible candidate-support evidence using frozen role/currentness weights and issue the corresponding decisive family.
+
+This deliberately distinguishes **detectable gaps** from **silent omissions** such as a later override that disappears completely.
+
+C5 adds only the frozen coverage-completeness signal to that same policy.
 
 180 × 6 = **1,080 deterministic evaluations**.
 
@@ -329,7 +348,7 @@ Report both safety and useful-decision rate.
 
 For P3, both preregistered model families must show the same directional C1 > C0 effect. Significance is evaluated on the pooled preregistered replication analysis and reported per model descriptively unless powered otherwise.
 
-If G0–G5 fail, do not spend money on P3.
+If G0-FORMAL through G5 fail, do not run optional P3.
 
 ---
 
@@ -427,7 +446,7 @@ The formal study must fail closed if any of these occur:
 
 Allowed:
 
-> In a controlled decision-agent benchmark with independently human-validated evidence requirements, deliberately removing mandatory evidence from the policy-visible surface increased unsupported decisions under a fixed downstream policy. Oracle evidence coverage reduced these failures, and an explicit coverage signal recovered part of the safety loss.
+> In a controlled decision-agent benchmark with independently formally specified evidence obligations, deliberately removing mandatory evidence from the policy-visible surface increased unsupported decisions under a fixed downstream policy. Oracle evidence coverage reduced these failures, and an explicit coverage signal recovered part of the safety loss.
 
 Not allowed:
 
