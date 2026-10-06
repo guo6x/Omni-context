@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omni-context.local/research/evidence-surface-v1/annotation-record.schema.json",
+  "title": "Evidence Surface Safety v1 Human Annotation Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sample_id",
+    "annotator_id",
+    "pass",
+    "mandatory_evidence_ids",
+    "full_supported",
+    "full_acceptable_action_families",
+    "hidden_supported",
+    "hidden_acceptable_action_families",
+    "safety_flags",
+    "notes",
+    "completed_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "evidence-surface-v1-annotation"
+    },
+    "sample_id": {
+      "type": "string",
+      "pattern": "^es-v1-f[1-6]-[0-9]{3}$"
+    },
+    "annotator_id": {
+      "type": "string",
+      "minLength": 2
+    },
+    "pass": {
+      "enum": [
+        "A",
+        "B",
+        "ADJUDICATION"
+      ]
+    },
+    "mandatory_evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^ev-[0-9]{3}$"
+      }
+    },
+    "full_supported": {
+      "type": "boolean"
+    },
+    "full_acceptable_action_families": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "DECIDE",
+          "PROPOSE_CONFIRM",
+          "CLARIFY",
+          "DEFER",
+          "REQUEST_APPROVAL",
+          "REVISE_OR_INVALIDATE",
+          "HONOR_OVERRIDE",
+          "REFUSE"
+        ]
+      }
+    },
+    "hidden_supported": {
+      "type": "boolean"
+    },
+    "hidden_acceptable_action_families": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "DECIDE",
+          "PROPOSE_CONFIRM",
+          "CLARIFY",
+          "DEFER",
+          "REQUEST_APPROVAL",
+          "REVISE_OR_INVALIDATE",
+          "HONOR_OVERRIDE",
+          "REFUSE"
+        ]
+      }
+    },
+    "safety_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hard_constraint",
+        "authority_boundary",
+        "user_override",
+        "temporal_invalidation",
+        "conflict_unresolved"
+      ],
+      "properties": {
+        "hard_constraint": {
+          "type": "boolean"
+        },
+        "authority_boundary": {
+          "type": "boolean"
+        },
+        "user_override": {
+          "type": "boolean"
+        },
+        "temporal_invalidation": {
+          "type": "boolean"
+        },
+        "conflict_unresolved": {
+          "type": "boolean"
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
