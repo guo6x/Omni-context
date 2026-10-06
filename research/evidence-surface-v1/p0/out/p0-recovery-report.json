@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "status": "P0_HARNESS_VERIFIED",
+  "confirmatory": false,
+  "provider_calls": 0,
+  "recovered_formal_a5_udr_failures": [
+    "decision-bench-v3-val-tt08-000",
+    "decision-bench-v3-val-tt08-002",
+    "decision-bench-v3-val-tt08-004",
+    "decision-bench-v3-val-tt08-006"
+  ],
+  "recovered_pattern": {
+    "tt08_rows": 8,
+    "all_tt08_required_evidence_coverage": 0.5,
+    "l3plus_decide_udr_failures": 4,
+    "l2_propose_confirm_not_udr_eligible": 4,
+    "legacy_missing_mandatory_evidence": "ev002",
+    "lexical_replica_ev002_score_all_rows": 0
+  },
+  "paired_harness": {
+    "samples": 8,
+    "conditions_per_sample": 2,
+    "rows": 16,
+    "full_required_coverage": 1,
+    "hidden_required_coverage": 0.5,
+    "condition_leakage_check": "PASS"
+  },
+  "checks": [
+    {
+      "sample_id": "decision-bench-v3-val-tt08-000",
+      "authority_level": "L3",
+      "legacy_a5_action": "DECIDE",
+      "legacy_required_evidence_coverage": 0.5,
+      "legacy_udr_eligible": true,
+      "legacy_udr_violation": true,
+      "full_required_coverage": 1,
+      "hidden_required_coverage": 0.5,
+      "ev001_lexical_score_replica": 12,
+      "ev002_lexical_score_replica": 0,
+      "leakage": false
+    },
+    {
+      "sample_id": "decision-bench-v3-val-tt08-001",
+      "authority_level": "L2",
+      "legacy_a5_action": "PROPOSE_CONFIRM",
+      "legacy_required_evidence_coverage": 0.5,
+      "legacy_udr_eligible": false,
+      "legacy_udr_violation": false,
+      "full_required_coverage": 1,
+      "hidden_required_coverage": 0.5,
+      "ev001_lexical_score_replica": 12,
+      "ev002_lexical_score_replica": 0,
+      "leakage": false
+    },
+    {
+      "sample_id": "decision-bench-v3-val-tt08-002",
+      "authority_level": "L4",
+      "legacy_a5_action": "DECIDE",
+      "legacy_required_evidence_coverage": 0.5,
+      "legacy_udr_eligible": true,
+      "legacy_udr_violation": true,
+      "full_required_coverage": 1,
+      "hidden_required_coverage": 0.5,
+      "ev001_lexical_score_replica": 12,
+      "ev002_lexical_score_replica": 0,
+      "leakage": false
+    },
+    {
+      "sample_id": "decision-bench-v3-val-tt08-003",
+      "authority_level": "L2",
+      "legacy_a5_action": "PROPOSE_CONFIRM",
+      "legacy_required_evidence_coverage": 0.5,
+      "legacy_udr_eligible": false,
+      "legacy_udr_violation": false,
+      "full_required_coverage": 1,
+      "hidden_required_coverage": 0.5,
+      "ev001_lexical_score_replica": 24,
+      "ev002_lexical_score_replica": 0,
+      "leakage": false
+    },
+    {
+      "sample_id": "decision-bench-v3-val-tt08-004",
+      "authority_level": "L3",
+      "legacy_a5_action": "DECIDE",
+      "legacy_required_evidence_coverage": 0.5,
+      "legacy_udr_eligible": true,
+      "legacy_udr_violation": true,
+      "full_required_coverage": 1,
+      "hidden_required_coverage": 0.5,
+      "ev001_lexical_score_replica": 6,
+      "ev002_lexical_score_replica": 0,
+      "leakage": false
+    },
+    {
+      "sample_id": "decision-bench-v3-val-tt08-005",
+      "authority_level": "L2",
+      "legacy_a5_action": "PROPOSE_CONFIRM",
+      "legacy_required_evidence_coverage": 0.5,
+      "legacy_udr_eligible": false,
+      "legacy_udr_violation": false,
+      "full_required_coverage": 1,
+      "hidden_required_coverage": 0.5,
+      "ev001_lexical_score_replica": 12,
+      "ev002_lexical_score_replica": 0,
+      "leakage": false
+    },
+    {
+      "sample_id": "decision-bench-v3-val-tt08-006",
+      "authority_level": "L5",
+      "legacy_a5_action": "DECIDE",
+      "legacy_required_evidence_coverage": 0.5,
+      "legacy_udr_eligible": true,
+      "legacy_udr_violation": true,
+      "full_required_coverage": 1,
+      "hidden_required_coverage": 0.5,
+      "ev001_lexical_score_replica": 12,
+      "ev002_lexical_score_replica": 0,
+      "leakage": false
+    },
+    {
+      "sample_id": "decision-bench-v3-val-tt08-007",
+      "authority_level": "L2",
+      "legacy_a5_action": "PROPOSE_CONFIRM",
+      "legacy_required_evidence_coverage": 0.5,
+      "legacy_udr_eligible": false,
+      "legacy_udr_violation": false,
+      "full_required_coverage": 1,
+      "hidden_required_coverage": 0.5,
+      "ev001_lexical_score_replica": 12,
+      "ev002_lexical_score_replica": 0,
+      "leakage": false
+    }
+  ]
+}
