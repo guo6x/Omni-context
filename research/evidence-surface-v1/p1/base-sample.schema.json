@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omni-context.local/research/evidence-surface-v1/base-sample.schema.json",
+  "title": "Evidence Surface Safety v1 Base Sample",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sample_id",
+    "family",
+    "domain",
+    "question",
+    "query_time",
+    "risk",
+    "source_events",
+    "candidates",
+    "evidence",
+    "prior_state",
+    "constructor_proposal",
+    "construction_provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "evidence-surface-v1"
+    },
+    "sample_id": {
+      "type": "string",
+      "pattern": "^es-v1-f[1-6]-[0-9]{3}$"
+    },
+    "family": {
+      "enum": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ]
+    },
+    "domain": {
+      "type": "string",
+      "minLength": 2
+    },
+    "question": {
+      "type": "string",
+      "minLength": 8
+    },
+    "query_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "reversibility"
+      ],
+      "properties": {
+        "level": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "reversibility": {
+          "enum": [
+            "reversible",
+            "conditionally_reversible",
+            "irreversible"
+          ]
+        }
+      }
+    },
+    "source_events": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "at",
+          "actor_type",
+          "content"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "pattern": "^src-[0-9]{3}$"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actor_type": {
+            "enum": [
+              "user",
+              "agent",
+              "tool",
+              "document",
+              "external"
+            ]
+          },
+          "actor_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 3
+          },
+          "supersedes_event_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidate_id",
+          "label",
+          "description"
+        ],
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "pattern": "^opt-[a-d]$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence_id",
+          "role",
+          "fact",
+          "source_event_id",
+          "at",
+          "currentness"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "pattern": "^ev-[0-9]{3}$"
+          },
+          "role": {
+            "enum": [
+              "preference",
+              "constraint",
+              "authority",
+              "current_fact",
+              "stale_fact",
+              "conflict_claim",
+              "conflict_resolution",
+              "outcome",
+              "override",
+              "invalidation"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "minLength": 3
+          },
+          "source_event_id": {
+            "type": "string",
+            "pattern": "^src-[0-9]{3}$"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currentness": {
+            "enum": [
+              "current",
+              "stale",
+              "superseded",
+              "unknown"
+            ]
+          },
+          "supports_candidates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^opt-[a-d]$"
+            },
+            "uniqueItems": true
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "prior_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prior_decision",
+        "standing_instruction"
+      ],
+      "properties": {
+        "prior_decision": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "standing_instruction": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    },
+    "constructor_proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "treatment_target_evidence_id",
+        "full_acceptable_action_families",
+        "hidden_safe_action_families",
+        "rationale"
+      ],
+      "properties": {
+        "treatment_target_evidence_id": {
+          "type": "string",
+          "pattern": "^ev-[0-9]{3}$"
+        },
+        "full_acceptable_action_families": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "DECIDE",
+              "PROPOSE_CONFIRM",
+              "CLARIFY",
+              "DEFER",
+              "REQUEST_APPROVAL",
+              "REVISE_OR_INVALIDATE",
+              "HONOR_OVERRIDE",
+              "REFUSE"
+            ]
+          }
+        },
+        "hidden_safe_action_families": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "DECIDE",
+              "PROPOSE_CONFIRM",
+              "CLARIFY",
+              "DEFER",
+              "REQUEST_APPROVAL",
+              "REVISE_OR_INVALIDATE",
+              "HONOR_OVERRIDE",
+              "REFUSE"
+            ]
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 8
+        }
+      }
+    },
+    "construction_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constructor_id",
+        "template_id",
+        "authored_at",
+        "source_type"
+      ],
+      "properties": {
+        "constructor_id": {
+          "type": "string",
+          "minLength": 2
+        },
+        "template_id": {
+          "type": "string",
+          "minLength": 2
+        },
+        "authored_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_type": {
+          "enum": [
+            "human_design",
+            "pattern_synthesis",
+            "adversarial_boundary"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
