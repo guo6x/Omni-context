@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-const ACTIONS = new Set(['DECIDE','PROPOSE_CONFIRM','CLARIFY','DEFER','REQUEST_APPROVAL','REVISE_OR_INVALIDATE','HONOR_OVERRIDE','REFUSE']);
+const ACTIONS = new Set(["DECIDE","PROPOSE_CONFIRM","CLARIFY","DEFER","REQUEST_APPROVAL","REVISE_OR_INVALIDATE","HONOR_OVERRIDE","REFUSE"]);
 const FAMILIES = new Set(['F1','F2','F3','F4','F5','F6']);
 
 function fail(msg) { throw new Error(msg); }
@@ -29,22 +29,18 @@ export function validateBaseSample(s) {
     if (evidenceIds.has(e.evidence_id)) fail(`${s.sample_id}: duplicate evidence ${e.evidence_id}`);
     evidenceIds.add(e.evidence_id);
     if (!eventIds.has(e.source_event_id)) fail(`${s.sample_id}: evidence ${e.evidence_id} missing source event`);
-    for (const id of e.supports_candidates ?? []) {
-      if (!candidateIds.has(id)) fail(`${s.sample_id}: evidence ${e.evidence_id} unknown candidate ${id}`);
-    }
+    for (const id of e.supports_candidates ?? []) if (!candidateIds.has(id)) fail(`${s.sample_id}: evidence ${e.evidence_id} unknown candidate ${id}`);
   }
 
   const p = s.constructor_proposal;
   if (!p || !evidenceIds.has(p.treatment_target_evidence_id)) fail(`${s.sample_id}: invalid treatment target`);
-  for (const a of [...(p.full_acceptable_action_families ?? []), ...(p.hidden_safe_action_families ?? [])]) {
+  for (const a of [...(p.full_acceptable_action_families ?? []), ...(p.coverage_aware_safe_action_families ?? [])]) {
     if (!ACTIONS.has(a)) fail(`${s.sample_id}: invalid action family ${a}`);
   }
 
   const q = Date.parse(s.query_time);
   if (Number.isNaN(q)) fail(`${s.sample_id}: invalid query_time`);
-  for (const e of s.source_events) {
-    if (Date.parse(e.at) > q) fail(`${s.sample_id}: future source event ${e.event_id}`);
-  }
+  for (const e of s.source_events) if (Date.parse(e.at) > q) fail(`${s.sample_id}: future source event ${e.event_id}`);
 
   return true;
 }
@@ -54,9 +50,11 @@ export function validateAnnotation(a, sample) {
   if (a.sample_id !== sample.sample_id) fail('annotation sample mismatch');
   const ev = new Set(sample.evidence.map((x) => x.evidence_id));
   for (const id of a.mandatory_evidence_ids ?? []) if (!ev.has(id)) fail(`${a.sample_id}: annotation unknown evidence ${id}`);
-  for (const x of [...(a.full_acceptable_action_families ?? []), ...(a.hidden_acceptable_action_families ?? [])]) {
-    if (!ACTIONS.has(x)) fail(`${a.sample_id}: annotation bad action ${x}`);
-  }
+  for (const x of [
+    ...(a.full_source_acceptable_action_families ?? []),
+    ...(a.reduced_surface_acceptable_action_families ?? []),
+    ...(a.coverage_aware_acceptable_action_families ?? [])
+  ]) if (!ACTIONS.has(x)) fail(`${a.sample_id}: annotation bad action ${x}`);
   return true;
 }
 
