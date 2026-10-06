@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "study_id": "evidence-surface-safety-v1",
+  "phase": "P2_DETERMINISTIC_CAUSAL_STUDY",
+  "status": "COMPLETE_ALL_REQUIRED_GATES_PASS",
+  "executed_at": "2026-10-06T18:23:00+08:00",
+  "budget": {
+    "cash_cny": 0,
+    "provider_calls": 0
+  },
+  "prereg_freeze": {
+    "path": "research/evidence-surface-v1/p2/p2-freeze-manifest.json",
+    "sha": "483a132501e5e57288144c8609a11011d73f8a2b"
+  },
+  "outputs": {
+    "results": {
+      "path": "research/evidence-surface-v1/p2/out/p2-results.json",
+      "sha": "e8a749a6707dbf4614b20ef6248f81eb43dd89d4"
+    },
+    "report": {
+      "path": "research/evidence-surface-v1/p2/out/p2-report.md",
+      "sha": "8f7ad1af59cd3632bd506a81214d323ffeecd9c6"
+    },
+    "raw_rows": [
+      {
+        "family": "F1",
+        "path": "research/evidence-surface-v1/p2/out/f1-rows.jsonl",
+        "sha": "61b2989fbd34f178618e176dedce72c1df072ad0"
+      },
+      {
+        "family": "F2",
+        "path": "research/evidence-surface-v1/p2/out/f2-rows.jsonl",
+        "sha": "37d91b88736c510bba73668302d86d9617a4370e"
+      },
+      {
+        "family": "F3",
+        "path": "research/evidence-surface-v1/p2/out/f3-rows.jsonl",
+        "sha": "89a46737fbea707643952af49d7c62b8734c6d6e"
+      },
+      {
+        "family": "F4",
+        "path": "research/evidence-surface-v1/p2/out/f4-rows.jsonl",
+        "sha": "afd5a6d819ffe6d5ebf9c7d7791974b66c6f2770"
+      },
+      {
+        "family": "F5",
+        "path": "research/evidence-surface-v1/p2/out/f5-rows.jsonl",
+        "sha": "58c39a397ce74e6a4368a71eff93bc2ed5590ea2"
+      },
+      {
+        "family": "F6",
+        "path": "research/evidence-surface-v1/p2/out/f6-rows.jsonl",
+        "sha": "282420fbc35532fa6ab2c80aadb45c2db6b1d3ac"
+      }
+    ]
+  },
+  "primary": {
+    "c0_udr": 0,
+    "c1_udr": 0.16666666666666666,
+    "risk_difference": 0.16666666666666666,
+    "bootstrap_95ci": [
+      0.11666666666666667,
+      0.2222222222222222
+    ],
+    "exact_mcnemar_p": 1.8626451492309587e-9
+  },
+  "retrieval": {
+    "C2_LEXICAL": {
+      "recall": 0.6305555555555555,
+      "udr": 0.3111111111111111
+    },
+    "C3_HASH_DENSE": {
+      "recall": 0.5722222222222222,
+      "udr": 0.3388888888888889
+    },
+    "C4_HYBRID": {
+      "recall": 0.6,
+      "udr": 0.29444444444444445
+    },
+    "C5_COVERAGE_AWARE": {
+      "same_surface_as": "C4_HYBRID",
+      "udr": 0,
+      "safe_decisive_rate": 0.5166666666666667
+    }
+  },
+  "gates": {
+    "G0_FORMAL": "PASS",
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS",
+    "G4": "PASS_WITH_QUALIFIED_NONSTRICT_MONOTONICITY",
+    "G5": "PASS"
+  },
+  "heterogeneity": {
+    "direct_C1_effect_positive_families": [
+      "F6"
+    ],
+    "direct_C1_effect_zero_families": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5"
+    ],
+    "interpretation": "Direct mandatory hiding is unsafe when the omission is silent; F1-F5 expose visible gap cues under the frozen policy, whereas F6 removes a later override and leaves an older instruction locally actionable."
+  },
+  "reproducibility_note": "Results were replayed from frozen GitHub artifacts in a V8 execution environment. A repository-local Node rerun remains desirable as a runtime-equivalence check but cannot alter frozen samples, policy, retrievers, gates, or reported outcomes."
+}
