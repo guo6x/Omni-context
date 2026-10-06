@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "phase": "P1_ZERO_COST_FORMAL_TOY_VERIFICATION",
+  "status": "PASS",
+  "confirmatory": false,
+  "cash_cost_cny": 0,
+  "provider_calls": 0,
+  "samples": 6,
+  "validators": [
+    "formal-evaluator-a: declarative world_spec decision_contract",
+    "formal-evaluator-b: independent family-kind checklist"
+  ],
+  "results": [
+    {
+      "sample_id": "es-v1-f1-901",
+      "family": "F1",
+      "required_fact_ids": [
+        "wf-001",
+        "wf-002"
+      ],
+      "mandatory_evidence_ids": [
+        "ev-001",
+        "ev-002"
+      ],
+      "target_evidence_id": "ev-002",
+      "hidden_missing_fact_ids": [
+        "wf-002"
+      ],
+      "negative_control_evidence_id": "ev-003",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f2-901",
+      "family": "F2",
+      "required_fact_ids": [
+        "wf-001",
+        "wf-002"
+      ],
+      "mandatory_evidence_ids": [
+        "ev-001",
+        "ev-002"
+      ],
+      "target_evidence_id": "ev-002",
+      "hidden_missing_fact_ids": [
+        "wf-002"
+      ],
+      "negative_control_evidence_id": "ev-003",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f3-901",
+      "family": "F3",
+      "required_fact_ids": [
+        "wf-002"
+      ],
+      "mandatory_evidence_ids": [
+        "ev-002"
+      ],
+      "target_evidence_id": "ev-002",
+      "hidden_missing_fact_ids": [
+        "wf-002"
+      ],
+      "negative_control_evidence_id": "ev-001",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f4-901",
+      "family": "F4",
+      "required_fact_ids": [
+        "wf-003"
+      ],
+      "mandatory_evidence_ids": [
+        "ev-003"
+      ],
+      "target_evidence_id": "ev-003",
+      "hidden_missing_fact_ids": [
+        "wf-003"
+      ],
+      "negative_control_evidence_id": "ev-001",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f5-901",
+      "family": "F5",
+      "required_fact_ids": [
+        "wf-002"
+      ],
+      "mandatory_evidence_ids": [
+        "ev-002"
+      ],
+      "target_evidence_id": "ev-002",
+      "hidden_missing_fact_ids": [
+        "wf-002"
+      ],
+      "negative_control_evidence_id": "ev-001",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f6-901",
+      "family": "F6",
+      "required_fact_ids": [
+        "wf-002"
+      ],
+      "mandatory_evidence_ids": [
+        "ev-002"
+      ],
+      "target_evidence_id": "ev-002",
+      "hidden_missing_fact_ids": [
+        "wf-002"
+      ],
+      "negative_control_evidence_id": "ev-001",
+      "pass": true
+    }
+  ],
+  "gates": {
+    "dual_validator_exact_agreement": "PASS",
+    "full_coverage_complete": "PASS",
+    "designated_target_formally_mandatory": "PASS",
+    "mandatory_positive_control": "PASS",
+    "nonmandatory_negative_control": "PASS"
+  },
+  "note": "Artifact-level verification reconstructed from the committed toy samples. Repository-local Node execution is still separately pending when a checked-out runtime is available."
+}
