@@ -16,14 +16,27 @@
     "P1 blinded annotation packet builder",
     "P1 human agreement calculator",
     "exact-one mandatory evidence treatment freeze",
-    "source-truth safety separated from reduced-surface plausibility and coverage-aware mitigation semantics"
+    "source-truth safety separated from reduced-surface plausibility and coverage-aware mitigation semantics",
+    "six-family non-formal toy batch authored",
+    "toy structural validation passed",
+    "toy reduced-surface leakage audit passed",
+    "toy near-duplicate audit passed",
+    "toy blinded annotation packets generated"
   ],
   "blockers_before_formal_authoring": [
     "execute repository-local Node tests in checked-out runtime",
-    "run P1 tooling on non-formal toy batch",
-    "run human annotation dry-run on at least one toy sample per family",
-    "implement formal P1 leakage/near-duplicate checks",
+    "run two-real-human independent annotation dry-run on all six toy samples",
+    "adjudicate any toy dry-run disagreements and inspect agreement metrics",
     "final protocol review and explicit authorization"
   ],
-  "note": "No formal P1 content exists yet. No provider/model call has been made for the new study."
+  "note": "No formal P1 content exists yet. No provider/model call has been made for the new study.",
+  "toy_dry_run": {
+    "status": "PASS_TOOLING_ONLY",
+    "samples": 6,
+    "annotation_packets": 12,
+    "structural_errors": 0,
+    "near_duplicates_at_0_5": 0,
+    "direct_leakage_failures": 0,
+    "human_gate": "NOT_RUN_REQUIRES_TWO_REAL_HUMANS"
+  }
 }
