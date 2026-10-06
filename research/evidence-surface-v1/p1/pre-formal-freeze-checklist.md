@@ -28,15 +28,15 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] Human preference / crowd annotation removed from the confirmatory gate.
 - [x] Claim narrowed to formal safety-contract compliance.
 - [x] World-spec source-of-truth design documented.
-- [ ] Base-sample schema carries `world_spec`.
-- [ ] Evidence items map to world-fact IDs.
-- [ ] Declarative obligation evaluator implemented.
-- [ ] Independent family-checklist evaluator implemented.
-- [ ] Exact dual-validator agreement required.
-- [ ] Mandatory positive-control metamorphic test implemented.
-- [ ] Non-mandatory negative-control metamorphic test implemented where applicable.
+- [x] Base-sample schema carries `world_spec`.
+- [x] Evidence items map to world-fact IDs.
+- [x] Declarative obligation evaluator implemented.
+- [x] Independent family-checklist evaluator implemented.
+- [x] Exact dual-validator agreement required.
+- [x] Mandatory positive-control metamorphic test implemented.
+- [x] Non-mandatory negative-control metamorphic test implemented where applicable.
 - [ ] Renderer/world-spec consistency check implemented.
-- [ ] Six toy samples rebuilt and passed under the formal validators.
+- [x] Six toy samples rebuilt and passed under the formal validators.
 
 ## Leakage
 
@@ -56,7 +56,7 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [ ] Repository-local Node tests executed in a checked-out runtime.
 - [x] P1 authoring/tooling run on a six-family non-formal toy batch.
 - [x] Paid human recruitment removed from the required path.
-- [ ] Zero-cost dual formal validation passes on all six toy samples.
+- [x] Zero-cost dual formal validation passes on all six toy samples.
 - [ ] Final protocol review before formal authoring authorization.
 
 ## Authorization boundary
