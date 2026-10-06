@@ -10,7 +10,7 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] Primary endpoint frozen.
 - [x] Exact McNemar primary test frozen.
 - [x] 180-sample total and 6×30 family allocation frozen.
-- [x] C1 treatment narrowed to exactly one independently validated mandatory evidence item.
+- [x] C1 treatment narrowed to exactly one formally required evidence item.
 - [x] Old V3 / old Holdback excluded from confirmation.
 - [x] P3 remains gated behind offline G0–G5.
 
@@ -23,17 +23,20 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] Constructor proposal separated from runtime policy input.
 - [x] No real personal data permitted.
 
-## Human validation
+## Formal validity
 
-- [x] Coarse action-family vocabulary defined.
-- [x] Human annotation schema defined.
-- [x] Constructor proposal hidden from annotators.
-- [x] SOURCE_TRUTH and REDUCED_SURFACE packet builder defined.
-- [x] Two independent annotators required.
-- [x] Third-party adjudication required for disagreements.
-- [x] Full-source safety, reduced-surface plausibility, and coverage-aware mitigation are separated.
-- [x] Agreement gates frozen.
-- [x] Agreement calculator implemented.
+- [x] Human preference / crowd annotation removed from the confirmatory gate.
+- [x] Claim narrowed to formal safety-contract compliance.
+- [x] World-spec source-of-truth design documented.
+- [ ] Base-sample schema carries `world_spec`.
+- [ ] Evidence items map to world-fact IDs.
+- [ ] Declarative obligation evaluator implemented.
+- [ ] Independent family-checklist evaluator implemented.
+- [ ] Exact dual-validator agreement required.
+- [ ] Mandatory positive-control metamorphic test implemented.
+- [ ] Non-mandatory negative-control metamorphic test implemented where applicable.
+- [ ] Renderer/world-spec consistency check implemented.
+- [ ] Six toy samples rebuilt and passed under the formal validators.
 
 ## Leakage
 
@@ -52,9 +55,9 @@ Formal sample authoring must not start until this checklist is reviewed.
 - [x] Statistical helper implemented.
 - [ ] Repository-local Node tests executed in a checked-out runtime.
 - [x] P1 authoring/tooling run on a six-family non-formal toy batch.
-- [x] Personal-acquaintance dependency removed; paid crowd recruitment protocol prepared.
-- [ ] Two independent paid human annotators complete all 6 toy samples, followed by adjudication/metric review.
-- [ ] Final human review of protocol before formal authoring authorization.
+- [x] Paid human recruitment removed from the required path.
+- [ ] Zero-cost dual formal validation passes on all six toy samples.
+- [ ] Final protocol review before formal authoring authorization.
 
 ## Authorization boundary
 
