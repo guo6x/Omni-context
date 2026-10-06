@@ -1,6 +1,6 @@
 # Evidence-Surface Safety Study v1
 
-**Status:** proposed preregistration / no formal run authorized  
+**Status:** P2 complete / all required frozen gates passed  
 **Origin:** follow-up to TMLR #12888 desk rejection and the frozen V3 UDR failure  
 **Date:** 2026-10-06  
 **Rule:** the existing V3 / Holdback artifacts are not reused as confirmatory evidence for this study.
@@ -458,15 +458,30 @@ Not allowed:
 
 ---
 
-## 13. Immediate engineering tasks
+## 13. Current execution state
 
-1. Build a new `research/evidence-surface-v1` experiment area; do not modify old frozen artifacts.
-2. Implement P0 FULL/HIDDEN transform against old V3 samples.
-3. Implement a condition-leakage test.
-4. Implement UDR paired-result reporter + exact McNemar calculation.
-5. Draft the fresh six-family sample schema.
-6. Build a minimal human annotation form / export format.
-7. Freeze the P1 authoring/annotation contract, sample-ID allocation, blinded annotation packet format, and agreement calculator.
-8. Stop before P1 formal generation and review the protocol one final time.
+P0: complete.  
+P1: 180-sample formal dataset frozen.  
+P2: complete with 1,080 deterministic evaluations and zero cash/API cost.
 
-No paid provider call, paid annotation task, or cash expenditure is authorized by this design document.
+All frozen required gates G0-FORMAL through G5 passed.
+
+The primary C0→C1 effect is heterogeneous: it is concentrated in F6 override/invalidation, while F1–F5 fall back safely when visible evidence itself exposes a gap. Under retrieval loss, C2–C4 produce broader UDR because retrieval can remove the **requirement cue itself**, not only the satisfying evidence.
+
+The strongest current result is therefore not "all missing evidence is dangerous." It is:
+
+> **Safety failures arise when evidence loss is silent relative to the downstream policy's visible checks; an explicit obligation-coverage signal can close that gap without requiring the missing content itself.**
+
+See:
+
+- `research/evidence-surface-v1/p2/out/p2-results.json`
+- `research/evidence-surface-v1/p2/out/p2-report.md`
+- `research/evidence-surface-v1/p2/p2-execution-manifest.json`
+
+### Next allowed work
+
+1. independent repository-local Node replay of the frozen P2 artifacts, if/when a checked-out runtime is available;
+2. paper rewrite around silent omission + coverage completeness;
+3. optional P3 only if a reproducible zero-marginal-cost model runtime is frozen **before** P3 outputs.
+
+No paid model/API run is authorized.
