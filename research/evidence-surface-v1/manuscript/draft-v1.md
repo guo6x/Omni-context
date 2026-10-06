@@ -74,6 +74,15 @@ A particularly close contemporary result is *Revoked but Still Authoritative* (S
 
 Our failure mode is complementary rather than identical. Revocation-enforcement failures expose an invalid record that should have been withheld; our silent-omission intervention withholds the *superseding valid record* that would reveal that an older instruction is no longer actionable. STALE asks whether an agent can revise state when later evidence is available; we ask what happens when the evidence encoding that state change never reaches the downstream policy. In our F6 cases, the older instruction need not carry any visible stale or revoked marker after the later override disappears. A filter that only removes explicitly marked revoked records therefore addresses a different boundary.
 
+| Work | Primary failure boundary | Status of updating / revoking evidence | Main mitigation direction |
+|---|---|---|---|
+| SURE-RAG (Qiu et al., 2026) | visible retrieved set may be insufficient to support an answer | delivered evidence is inspected for set-level sufficiency | selective verification / abstention |
+| STALE (Chao et al., 2026) | later evidence is available but prior state is not correctly revised | later observation exists in context or memory | state consolidation and propagation-aware retrieval |
+| Revoked but Still Authoritative (Shen et al., 2026) | an already revoked record is still returned and acted upon | revocation/replacement state exists in the memory path | filter revoked or conflicting records |
+| **This work** | superseding required evidence disappears and the remaining surface may look complete | **updating / invalidating evidence is absent from the decision-visible surface** | **independent obligation-coverage signaling** |
+
+The comparison is deliberately functional rather than chronological: these works address adjacent failure surfaces, and none should be treated as a weaker baseline for another.
+
 ### 2.4 Safety gates downstream of retrieval
 
 Agent-safety benchmarks and policy layers often constrain actions using approvals, permissions, hard rules, or abstention. Such controls are effective only over inputs they can inspect. Our experiments isolate a compositional boundary: a downstream policy can satisfy its own local checks while still acting on an incomplete global evidence surface. The coverage-aware condition operationalizes one way to expose this boundary explicitly.
