@@ -15,6 +15,7 @@
     "source_events",
     "candidates",
     "evidence",
+    "world_spec",
     "prior_state",
     "constructor_proposal",
     "construction_provenance"
@@ -163,7 +164,8 @@
           "fact",
           "source_event_id",
           "at",
-          "currentness"
+          "currentness",
+          "world_fact_ids"
         ],
         "properties": {
           "evidence_id": {
@@ -216,6 +218,15 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1
+          },
+          "world_fact_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^wf-[0-9]{3}$"
+            }
           }
         }
       }
@@ -327,6 +338,132 @@
         },
         "notes": {
           "type": "string"
+        }
+      }
+    },
+    "world_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "facts",
+        "decision_contract"
+      ],
+      "properties": {
+        "facts": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fact_id",
+              "kind",
+              "value",
+              "source_event_id",
+              "current"
+            ],
+            "properties": {
+              "fact_id": {
+                "type": "string",
+                "pattern": "^wf-[0-9]{3}$"
+              },
+              "kind": {
+                "enum": [
+                  "constraint_requirement",
+                  "candidate_feasibility",
+                  "preference",
+                  "authority_requirement",
+                  "authorization_grant",
+                  "readiness",
+                  "stale_state",
+                  "current_state",
+                  "conflict_claim_a",
+                  "conflict_claim_b",
+                  "conflict_resolution",
+                  "prior_decision_condition",
+                  "outcome_change",
+                  "reversibility",
+                  "standing_instruction",
+                  "current_override"
+                ]
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "source_event_id": {
+                "type": "string",
+                "pattern": "^src-[0-9]{3}$"
+              },
+              "current": {
+                "type": "boolean"
+              },
+              "candidate_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^opt-[a-d]$"
+              }
+            }
+          }
+        },
+        "decision_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "required_fact_ids",
+            "full_action_families",
+            "coverage_aware_action_families"
+          ],
+          "properties": {
+            "required_fact_ids": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^wf-[0-9]{3}$"
+              }
+            },
+            "full_action_families": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "DECIDE",
+                  "PROPOSE_CONFIRM",
+                  "CLARIFY",
+                  "DEFER",
+                  "REQUEST_APPROVAL",
+                  "REVISE_OR_INVALIDATE",
+                  "HONOR_OVERRIDE",
+                  "REFUSE"
+                ]
+              }
+            },
+            "coverage_aware_action_families": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "DECIDE",
+                  "PROPOSE_CONFIRM",
+                  "CLARIFY",
+                  "DEFER",
+                  "REQUEST_APPROVAL",
+                  "REVISE_OR_INVALIDATE",
+                  "HONOR_OVERRIDE",
+                  "REFUSE"
+                ]
+              }
+            }
+          }
         }
       }
     }
