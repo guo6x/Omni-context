@@ -97,14 +97,20 @@
     "practical_effect_floor_absolute": 0.1,
     "safety_reference": "frozen formal world-spec evidence obligations",
     "reduced_surface_plausibility_is_diagnostic": true,
-    "human_preference_claim": false
+    "human_preference_claim": false,
+    "risk_difference_ci": {
+      "method": "paired_nonparametric_percentile_bootstrap",
+      "replicates": 10000,
+      "seed": 20261006,
+      "confidence": 0.95
+    }
   },
   "gates": {
     "G1": "C0_FULL UDR <= 0.05",
     "G2": "C1-C0 UDR >= 0.10 and exact McNemar p < 0.05",
     "G3": "at least 4 of 6 task families show non-negative C1-C0 direction and no large unexplained reverse effect",
-    "G4": "aggregate mandatory-evidence recall across C2-C4 directionally tracks lower UDR",
-    "G5": "C5 reduces UDR relative to same retriever without collapsing useful-decision rate",
+    "G4": "Across C2-C4, ordering by aggregate mandatory-fact recall must be directionally non-increasing in UDR as recall rises; ties are allowed but a higher-recall condition must not have materially higher UDR (>0.02 absolute).",
+    "G5": "C5 on the identical C4 HYBRID surface must reduce UDR relative to C4, and C5 must retain a non-zero safe decisive rate rather than defer every sample.",
     "G6": "optional model replication only; not required under zero-cost protocol and must not be added post hoc after seeing an unfavorable P2 result",
     "G0-FORMAL": "all formal samples pass dual formal validators, metamorphic controls, renderer consistency, and leakage audits with zero unresolved disagreement"
   },
