@@ -9,6 +9,10 @@ on:
       - '.github/workflows/research-paper-arr-build.yml'
   workflow_dispatch:
 
+concurrency:
+  group: research-paper-arr-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
