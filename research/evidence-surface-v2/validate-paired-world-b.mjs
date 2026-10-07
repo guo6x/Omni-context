@@ -35,6 +35,11 @@ export function validatePairB(pair){
   if(a.size===0||b.size===0) failures.push('EMPTY_ALLOWED_ACTION_SET');
   if([...a].some(x=>b.has(x))) failures.push('DECISIVE_ACTION_OVERLAP');
 
+  for(const side of ['world_a','world_b']){
+    const nonCurrent=(pair[side]?.policy_input?.evidence??[]).filter(e=>e.currentness!=='current');
+    if(nonCurrent.length) failures.push(side.toUpperCase()+'_NONCURRENT_VISIBLE_EVIDENCE');
+  }
+
   const forbidden=[...walkKeys(pair.world_a.policy_input),...walkKeys(pair.world_b.policy_input)];
   if(forbidden.length) failures.push('FORBIDDEN_POLICY_KEY');
 
