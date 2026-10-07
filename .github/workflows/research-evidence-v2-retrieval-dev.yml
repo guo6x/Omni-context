@@ -17,6 +17,8 @@ on:
       - 'research/evidence-surface-v2/RETRIEVAL_REPRODUCTION_BASELINE.json'
       - 'research/evidence-surface-v2/retrieval-input.schema.json'
       - 'research/evidence-surface-v2/retrieval-truth.schema.json'
+      - 'research/evidence-surface-v2/validate-retrieval-jsonl-schema.test.mjs'
+      - 'research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs'
       - 'research/evidence-surface-v2/RETRIEVAL_DEV_PROTOCOL.md'
       - '.github/workflows/research-evidence-v2-retrieval-dev.yml'
   workflow_dispatch:
@@ -61,6 +63,7 @@ jobs:
         run: |
           node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/retrieval-input.schema.json','utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/retrieval-truth.schema.json','utf8'))"
+          node --test research/evidence-surface-v2/validate-retrieval-jsonl-schema.test.mjs
 
       - name: Validate source-store construction
         run: node --test research/evidence-surface-v2/generate-dev-retrieval-store.test.mjs
