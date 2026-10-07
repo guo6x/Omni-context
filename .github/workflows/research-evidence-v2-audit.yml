@@ -27,6 +27,9 @@ on:
       - 'research/evidence-surface-v2/evaluate-paired-world-policies.test.mjs'
       - 'research/evidence-surface-v2/validate-paired-world-b.mjs'
       - 'research/evidence-surface-v2/validate-paired-world-cross.test.mjs'
+      - 'research/evidence-surface-v2/generate-dev-paired-worlds.mjs'
+      - 'research/evidence-surface-v2/generate-dev-paired-worlds.test.mjs'
+      - 'research/evidence-surface-v2/audit-dev-benchmark.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -70,9 +73,16 @@ jobs:
       - name: Validate paired-world policy invariance
         run: node --test research/evidence-surface-v2/evaluate-paired-world-policies.test.mjs
 
+      - name: Validate generated dev benchmark
+        run: node --test research/evidence-surface-v2/generate-dev-paired-worlds.test.mjs
+
       - name: Generate machine audit
         run: |
           rm -rf research/evidence-surface-v2/out-ci
+          node research/evidence-surface-v2/generate-dev-paired-worlds.mjs \
+            research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl
+          node research/evidence-surface-v2/audit-dev-benchmark.mjs > \
+            research/evidence-surface-v2/out-ci/generated-dev-audit.json
           node research/evidence-surface-v2/audit-v1-p2.mjs research/evidence-surface-v2/out-ci
           node research/evidence-surface-v2/validate-paired-world.mjs \
             research/evidence-surface-v2/dev/paired-world-toy.jsonl \
@@ -91,6 +101,8 @@ jobs:
           node research/evidence-surface-v2/evaluate-paired-world-policies.mjs \
             research/evidence-surface-v2/dev/paired-world-toy.jsonl \
             research/evidence-surface-v2/out-ci/paired-world-policy-replication.json
+          test -s research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl
+          test -s research/evidence-surface-v2/out-ci/generated-dev-audit.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.md
           test -s research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
@@ -123,6 +135,16 @@ jobs:
           console.log('Independent policy F6 C1', p.by_family.F6.C1_HIDDEN);
           const q=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/paired-world-policy-replication.json','utf8'));
           console.log('Paired-world policy replication', q.by_policy);
+          const d=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/generated-dev-audit.json','utf8'));
+          console.log('Generated dev benchmark', {
+            pairs:d.pairs,
+            family_counts:d.family_counts,
+            domain_counts:d.domain_counts,
+            max_template_concentration:d.max_template_concentration,
+            near_duplicates:d.near_duplicate_pairs.length,
+            max_word_trigram_jaccard:d.max_word_trigram_jaccard,
+            gates:d.gates
+          });
           NODE
 
       - name: Upload forensic audit
