@@ -1,0 +1,61 @@
+name: Evidence Surface V2 Forensic Audit
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v1/p1/formal/**'
+      - 'research/evidence-surface-v1/p2/out/**'
+      - 'research/evidence-surface-v2/audit-v1-p2.mjs'
+      - 'research/evidence-surface-v2/audit-v1-p2.test.mjs'
+      - '.github/workflows/research-evidence-v2-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-surface-v2-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Lock forensic invariants
+        run: node --test research/evidence-surface-v2/audit-v1-p2.test.mjs
+
+      - name: Generate machine audit
+        run: |
+          rm -rf research/evidence-surface-v2/out-ci
+          node research/evidence-surface-v2/audit-v1-p2.mjs research/evidence-surface-v2/out-ci
+          test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.json
+          test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.md
+
+      - name: Show key findings
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const a=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.json','utf8'));
+          console.log('C1', a.by_condition.C1_HIDDEN);
+          console.log('C2', a.by_condition.C2_LEXICAL);
+          console.log('C3', a.by_condition.C3_HASH_DENSE);
+          console.log('C4', a.by_condition.C4_HYBRID);
+          console.log('F6 cue audit', a.f6_cue_audit);
+          console.log('C5 oracle audit', a.c5_oracle_audit);
+          NODE
+
+      - name: Upload forensic audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-surface-v2-v1-forensic-audit
+          path: research/evidence-surface-v2/out-ci/
