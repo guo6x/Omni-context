@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "status": "RETRIEVAL_EXECUTION_SOURCES_FROZEN__OUTCOMES_NOT_AUTHORIZED",
+  "frozen_pair_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+  "confirmatory_retriever_input_sha256": "55cd2e6f988c7dc09c15ce51600e0606f5250db45732731549f52179b56321a1",
+  "confirmatory_scoring_truth_sha256": "553a9e234a4a7ad0fb9c8de180f538aec1c57ddcdd14aa484e017ea534fcc1d5",
+  "environment_lock_sha256": "52323d51db98a4649bd15161bb5b7d73cb6c149082f1ce0df9719a331c74b73b",
+  "dev_reproduction_run_id": 37651365166,
+  "dev_schema_valid_reproduction_run_id": 37652310883,
+  "retrievers": {
+    "BM25_OKAPI": {
+      "package": "rank-bm25",
+      "version": "0.2.2",
+      "budgets": [
+        2,
+        4,
+        6
+      ]
+    },
+    "BGE_SMALL_EN_V1_5": {
+      "model": "BAAI/bge-small-en-v1.5",
+      "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "sentence_transformers_version": "6.1.0",
+      "device": "cpu",
+      "budgets": [
+        2,
+        4,
+        6
+      ]
+    }
+  },
+  "git_blob_guards": {
+    "research/evidence-surface-v2/run-dev-retrievers.py": "a761c72e44a7b9c3e697309d1e91a902b378d943",
+    "research/evidence-surface-v2/score-dev-retrieval.mjs": "5ecf6d01c5ceec54f23377d417d25158cab7282e",
+    "research/evidence-surface-v2/requirements-retrieval-v2.lock.txt": "abbaf7bf169b39cebf75b4b5ab05162d8f088b8f",
+    "research/evidence-surface-v2/RETRIEVAL_REPRODUCTION_BASELINE.json": "2596a6d60775c2787da91458e57f7c55cced69df",
+    "research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json": "86aa863ee3bc584dd899e0c19023065b3d0edd13",
+    "research/evidence-surface-v2/retrieval-execution-results.schema.json": "7fca1f00727ff1dba9dd0f7bfb09f15180ea8c7b",
+    "research/evidence-surface-v2/retrieval-input.schema.json": "f3f16ee6b92a2a399b9d5b1a4c6b9fc658405694",
+    "research/evidence-surface-v2/retrieval-truth.schema.json": "60c484c1262c302ffe3b236160cd849363d646c4"
+  },
+  "declarations": {
+    "confirmatory_retrieval_ranking_executed": false,
+    "confirmatory_retrieval_policy_scoring_executed": false,
+    "confirmatory_execution_authorized": false
+  }
+}
