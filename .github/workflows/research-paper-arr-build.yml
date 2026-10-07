@@ -1,0 +1,69 @@
+name: Research paper ARR build
+
+on:
+  push:
+    branches:
+      - research/post-tmlr-12888-autopsy
+    paths:
+      - 'research/evidence-surface-v1/manuscript/**'
+      - '.github/workflows/research-paper-arr-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-arr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install TeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-pictures \
+            texlive-bibtex-extra \
+            poppler-utils
+
+      - name: Compile ARR review paper
+        working-directory: research/evidence-surface-v1/manuscript/arr
+        run: |
+          set -euo pipefail
+          export BIBINPUTS="../latex:"
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+
+      - name: Validate page and warning gates
+        working-directory: research/evidence-surface-v1/manuscript/arr
+        run: |
+          set -euo pipefail
+          pdfinfo main.pdf | grep '^Pages:'
+          marker="$(grep 'ARR_CONTENT_END_PAGE=' main.log | tail -1 | sed 's/.*ARR_CONTENT_END_PAGE=//')"
+          echo "ARR content end page: $marker"
+          test -n "$marker"
+          if [ "$marker" -gt 8 ]; then
+            echo "ARR content exceeds 8-page limit"
+            exit 1
+          fi
+          if grep -E 'Overfull \\hbox|Overfull \\vbox' main.log; then
+            echo "Overfull box detected"
+            exit 1
+          fi
+          if grep -E 'Citation .* undefined|Reference .* undefined|There were undefined references' main.log; then
+            echo "Unresolved citation/reference detected"
+            exit 1
+          fi
+
+      - name: Upload ARR PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: arr-review-paper
+          path: research/evidence-surface-v1/manuscript/arr/main.pdf
