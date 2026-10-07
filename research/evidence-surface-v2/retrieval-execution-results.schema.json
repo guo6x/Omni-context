@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/guo6x/Omni-context/research/evidence-surface-v2/retrieval-execution-results.schema.json",
+  "title": "Evidence Surface V2 retrieval execution results",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "rows",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case_id",
+          "pair_id",
+          "member",
+          "family",
+          "retriever",
+          "k",
+          "policy",
+          "target_present",
+          "target_hit",
+          "visible_base_recall",
+          "decisive",
+          "action",
+          "world_action_violation",
+          "correct_decisive"
+        ],
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "pattern": "^case-[a-f0-9]{16}$"
+          },
+          "pair_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "member": {
+            "enum": [
+              "A",
+              "B"
+            ]
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1
+          },
+          "retriever": {
+            "enum": [
+              "BM25_OKAPI",
+              "BGE_SMALL_EN_V1_5"
+            ]
+          },
+          "k": {
+            "enum": [
+              2,
+              4,
+              6
+            ]
+          },
+          "policy": {
+            "enum": [
+              "SURFACE_VOTE",
+              "CURRENTNESS_FIRST"
+            ]
+          },
+          "target_present": {
+            "type": "boolean"
+          },
+          "target_hit": {
+            "type": "boolean"
+          },
+          "visible_base_recall": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "decisive": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "object"
+          },
+          "world_action_violation": {
+            "type": "boolean"
+          },
+          "correct_decisive": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object"
+    }
+  }
+}
