@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "DEVELOPMENT_REPRODUCTION_BASELINE",
+  "reference_workflow_run_id": 37650756899,
+  "reference_workflow_head": "0f231b670fa220a76337e52576c2717a720d85f2",
+  "artifact_id": 11496028850,
+  "artifact_digest": "sha256:90bd9f633009a469b18f7baa02ddcd99fd8b1e8d7c74b6a70412da9364af79d8",
+  "python": "3.11.16",
+  "environment_lock_path": "research/evidence-surface-v2/requirements-retrieval-v2.lock.txt",
+  "environment_lock_sha256": "52323d51db98a4649bd15161bb5b7d73cb6c149082f1ce0df9719a331c74b73b",
+  "retrievers": {
+    "lexical": {
+      "algorithm": "BM25Okapi",
+      "package": "rank-bm25",
+      "version": "0.2.2"
+    },
+    "semantic": {
+      "model": "BAAI/bge-small-en-v1.5",
+      "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "sentence_transformers_version": "6.1.0",
+      "similarity": "cosine on normalized embeddings",
+      "device": "cpu"
+    }
+  },
+  "budgets": [
+    2,
+    4,
+    6
+  ],
+  "expected_hashes": {
+    "retriever_input_sha256": "69e0a3a93cea512f84fcbf733676d7733781d18931efe10cbadc9d4c5cac84a1",
+    "scoring_truth_sha256": "e50b73cd7b897625c4849831c626c44e2c35670822bb0e31fc22d1fbd1ef5d61",
+    "rankings_sha256": "bd6065d386582d797a1b3036286a610c1915ba039cf2fc9fdaabb7a5aeca6e08",
+    "scored_sha256": "e2bd34d8596fa141dfb6d6f1de7b1144b57dc50e7e755bbdb4e368891228cc50"
+  },
+  "confirmatory_retrieval_executed": false
+}
