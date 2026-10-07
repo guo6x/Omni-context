@@ -1,0 +1,83 @@
+name: Evidence Surface V2 Retrieval Execution Source Integrity
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/run-dev-retrievers.py'
+      - 'research/evidence-surface-v2/score-dev-retrieval.mjs'
+      - 'research/evidence-surface-v2/score-dev-retrieval.test.mjs'
+      - 'research/evidence-surface-v2/requirements-retrieval-v2.lock.txt'
+      - 'research/evidence-surface-v2/RETRIEVAL_REPRODUCTION_BASELINE.json'
+      - 'research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json'
+      - 'research/evidence-surface-v2/retrieval-execution-results.schema.json'
+      - 'research/evidence-surface-v2/retrieval-input.schema.json'
+      - 'research/evidence-surface-v2/retrieval-truth.schema.json'
+      - 'research/evidence-surface-v2/RETRIEVAL_EXECUTION_SOURCE_FREEZE.json'
+      - '.github/workflows/research-evidence-v2-retrieval-execution-source-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Use Python 3.11.16
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.16'
+
+      - name: Verify frozen retrieval source blob guards
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const cp=require('child_process');
+          const r=JSON.parse(fs.readFileSync('research/evidence-surface-v2/RETRIEVAL_EXECUTION_SOURCE_FREEZE.json','utf8'));
+          if(r.status!=='RETRIEVAL_EXECUTION_SOURCES_FROZEN__OUTCOMES_NOT_AUTHORIZED') throw new Error('bad retrieval source freeze status');
+          for(const [p,expected] of Object.entries(r.git_blob_guards)){
+            const actual=cp.execFileSync('git',['hash-object',p],{encoding:'utf8'}).trim();
+            console.log(p,{expected,actual});
+            if(actual!==expected) throw new Error('retrieval source blob mismatch: '+p);
+          }
+          for(const [k,v] of Object.entries(r.declarations)){
+            if(v!==false) throw new Error('retrieval source declaration must remain false: '+k);
+          }
+          NODE
+
+      - name: Verify environment lock and frozen construction binding
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const crypto=require('crypto');
+          const r=JSON.parse(fs.readFileSync('research/evidence-surface-v2/RETRIEVAL_EXECUTION_SOURCE_FREEZE.json','utf8'));
+          const baseline=JSON.parse(fs.readFileSync('research/evidence-surface-v2/RETRIEVAL_REPRODUCTION_BASELINE.json','utf8'));
+          const construction=JSON.parse(fs.readFileSync('research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json','utf8'));
+          const sha=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+          const lock=sha('research/evidence-surface-v2/requirements-retrieval-v2.lock.txt');
+          if(lock!==r.environment_lock_sha256) throw new Error('retrieval environment lock mismatch');
+          if(baseline.environment_lock_sha256!==r.environment_lock_sha256) throw new Error('baseline/lock mismatch');
+          if(construction.retriever_input_sha256!==r.confirmatory_retriever_input_sha256) throw new Error('confirmatory retriever input binding mismatch');
+          if(construction.scoring_truth_sha256!==r.confirmatory_scoring_truth_sha256) throw new Error('confirmatory scoring truth binding mismatch');
+          for(const [k,v] of Object.entries(construction.declarations)){
+            if(v!==false) throw new Error('construction declaration must remain false: '+k);
+          }
+          NODE
+
+      - name: Validate scorer semantics and retriever syntax
+        run: |
+          node --test research/evidence-surface-v2/score-dev-retrieval.test.mjs
+          python -m py_compile research/evidence-surface-v2/run-dev-retrievers.py
+
+      - name: Parse retrieval result contract
+        run: node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/retrieval-execution-results.schema.json','utf8'))"
