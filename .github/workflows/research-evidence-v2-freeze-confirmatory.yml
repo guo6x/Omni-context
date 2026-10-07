@@ -1,0 +1,181 @@
+name: Evidence Surface V2 Freeze Confirmatory Corpus
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - '.github/workflows/research-evidence-v2-freeze-confirmatory.yml'
+      - 'research/evidence-surface-v2/CONFIRMATORY_FREEZE_REQUEST.md'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: evidence-surface-v2-confirmatory-freeze
+  cancel-in-progress: false
+
+jobs:
+  freeze-structure-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enforce outcome embargo
+        run: node --test research/evidence-surface-v2/confirmatory-outcome-embargo.test.mjs
+
+      - name: Rebuild and validate frozen corpus candidate
+        run: |
+          set -euo pipefail
+          rm -rf research/evidence-surface-v2/.freeze-tmp
+          mkdir -p research/evidence-surface-v2/.freeze-tmp
+          node research/evidence-surface-v2/generate-confirmatory-candidate.mjs             research/evidence-surface-v2/.freeze-tmp/paired-worlds.jsonl
+          node research/evidence-surface-v2/audit-confirmatory-structure.mjs >             research/evidence-surface-v2/.freeze-tmp/structural-audit.json
+
+          ACTUAL="$(sha256sum research/evidence-surface-v2/.freeze-tmp/paired-worlds.jsonl | awk '{print $1}')"
+          EXPECTED="944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d"
+          echo "expected_corpus_sha256=$EXPECTED"
+          echo "actual_corpus_sha256=$ACTUAL"
+          test "$ACTUAL" = "$EXPECTED"
+
+      - name: Materialize immutable freeze files
+        run: |
+          set -euo pipefail
+          OUT="research/evidence-surface-v2/confirmatory/frozen"
+          mkdir -p "$OUT"
+          cp research/evidence-surface-v2/.freeze-tmp/paired-worlds.jsonl "$OUT/paired-worlds.jsonl"
+          cp research/evidence-surface-v2/.freeze-tmp/structural-audit.json "$OUT/structural-audit.json"
+
+          node research/evidence-surface-v2/make-confirmatory-structure-manifest.mjs             "$OUT/paired-worlds.jsonl"             "$OUT/structural-audit.json"             "$OUT/structure-manifest.json"
+
+          node - <<'NODE'
+          const fs=require('fs');
+          const crypto=require('crypto');
+          const path=require('path');
+          const out='research/evidence-surface-v2/confirmatory/frozen';
+          const manifest=JSON.parse(fs.readFileSync(path.join(out,'structure-manifest.json'),'utf8'));
+          const audit=JSON.parse(fs.readFileSync(path.join(out,'structural-audit.json'),'utf8'));
+          const sha=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+
+          const freeze={
+            schema_version:1,
+            status:'CORPUS_FROZEN__EXECUTION_NOT_AUTHORIZED',
+            freeze_source_git_head:process.env.GITHUB_SHA,
+            frozen_corpus_sha256:manifest.corpus.sha256,
+            frozen_structural_audit_sha256:sha(path.join(out,'structural-audit.json')),
+            generator_sha256:sha('research/evidence-surface-v2/generate-confirmatory-candidate.mjs'),
+            schema_sha256:sha('research/evidence-surface-v2/paired-world.schema.json'),
+            validator_a_sha256:sha('research/evidence-surface-v2/validate-paired-world.mjs'),
+            validator_b_sha256:sha('research/evidence-surface-v2/validate-paired-world-b.mjs'),
+            structural_audit_source_sha256:sha('research/evidence-surface-v2/audit-confirmatory-structure.mjs'),
+            preregistration_draft_sha256:sha('research/evidence-surface-v2/PREREGISTRATION_DRAFT.md'),
+            design_sha256:sha('research/evidence-surface-v2/CONFIRMATORY_DESIGN.md'),
+            pairs:audit.pairs,
+            worlds:audit.worlds,
+            family_counts:audit.family_counts,
+            domain_counts:audit.domain_counts,
+            ledger_profile_counts:audit.ledger_profile_counts,
+            gates:audit.gates,
+            prior_structure_runs:[
+              {
+                run_id:37631788176,
+                git_head:'a017903f6d96fda3d047338514287c066e4ba1dd',
+                corpus_sha256:'944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d',
+                artifact_digest:'sha256:5ba22723f1836e07b1c819b02694d719ab74c442dafbf617ec36cc6ed9904607'
+              },
+              {
+                run_id:37631877929,
+                git_head:'2ac18b803fb3fc63cfaf9462e42838643e3fc9c2',
+                corpus_sha256:'944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d',
+                artifact_digest:'sha256:9cffd90746214806fc1fdd3212e95693220f17fd6d83177686b539c097e8340a'
+              }
+            ],
+            declarations:{
+              confirmatory_policy_outcomes_executed_before_freeze:false,
+              confirmatory_monitor_action_outcomes_executed_before_freeze:false,
+              confirmatory_llm_outputs_executed_before_freeze:false,
+              confirmatory_retriever_downstream_outcomes_executed_before_freeze:false,
+              full_execution_preregistration_frozen:false,
+              confirmatory_execution_authorized:false
+            }
+          };
+          fs.writeFileSync(path.join(out,'FREEZE_RECORD.json'),JSON.stringify(freeze,null,2)+'\n');
+
+          const md=[
+            '# Evidence Surface V2 — Confirmatory Corpus Freeze',
+            '',
+            '**Status:** CORPUS FROZEN / CONFIRMATORY EXECUTION NOT AUTHORIZED',
+            '',
+            '- Pairs: **'+freeze.pairs+'**',
+            '- Worlds: **'+freeze.worlds+'**',
+            '- Corpus SHA-256: `'+freeze.frozen_corpus_sha256+'`',
+            '- Structural audit SHA-256: `'+freeze.frozen_structural_audit_sha256+'`',
+            '- Generator SHA-256: `'+freeze.generator_sha256+'`',
+            '- Schema SHA-256: `'+freeze.schema_sha256+'`',
+            '- Validator A SHA-256: `'+freeze.validator_a_sha256+'`',
+            '- Validator B SHA-256: `'+freeze.validator_b_sha256+'`',
+            '',
+            '## Balance',
+            '',
+            '- 5 transition families × 32 pairs = 160 pairs.',
+            '- 16 confirmatory-only domains × 10 pairs = 160 pairs.',
+            '- 4 ledger-fidelity profiles × 40 pairs = 160 pairs.',
+            '- Within every family, every ledger profile has exactly 8 pairs.',
+            '',
+            '## Structural gates',
+            '',
+            ...Object.entries(freeze.gates).map(([k,v])=>'- '+k+': **'+v+'**'),
+            '',
+            '## Pre-freeze outcome embargo',
+            '',
+            '- confirmatory policy outcomes executed: **false**',
+            '- confirmatory monitor-conditioned action outcomes executed: **false**',
+            '- confirmatory LLM outputs executed: **false**',
+            '- confirmatory retriever downstream outcomes executed: **false**',
+            '',
+            'Two independent structure-only CI runs produced the same corpus SHA before this repository freeze.',
+            '',
+            '## Important',
+            '',
+            'This record freezes only the confirmatory corpus and its structural contract.',
+            '**It does not authorize confirmatory execution.**',
+            'Execution remains blocked until policy/model/retriever conditions, primary estimands, thresholds, exclusions, seeds, and reporting rules are frozen in a separate execution preregistration.',
+            ''
+          ].join('\n');
+          fs.writeFileSync(path.join(out,'FREEZE_RECORD.md'),md);
+          NODE
+
+          rm -rf research/evidence-surface-v2/.freeze-tmp
+
+      - name: Verify frozen corpus hash and embargo declarations
+        run: |
+          set -euo pipefail
+          OUT="research/evidence-surface-v2/confirmatory/frozen"
+          test "$(sha256sum "$OUT/paired-worlds.jsonl" | awk '{print $1}')" =             "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d"
+          node - <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('research/evidence-surface-v2/confirmatory/frozen/FREEZE_RECORD.json','utf8'));
+          if(r.declarations.confirmatory_execution_authorized!==false) throw Error('execution must remain unauthorized');
+          for(const [k,v] of Object.entries(r.gates)) if(v!==true) throw Error('failed structural gate '+k);
+          NODE
+
+      - name: Commit frozen corpus
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/evidence-surface-v2/confirmatory/frozen/
+          if git diff --cached --quiet; then
+            echo "Freeze files already identical; nothing to commit."
+            exit 0
+          fi
+          git commit -m "research: freeze V2 confirmatory corpus before outcomes"
+          git push origin HEAD:research/evidence-surface-v2-strengthening
