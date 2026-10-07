@@ -32,13 +32,17 @@
       "type": "object",
       "required": [
         "requires_exact_policy_input_equality",
-        "requires_disjoint_decisive_truth"
+        "requires_disjoint_decisive_truth",
+        "requires_clean_current_surface"
       ],
       "properties": {
         "requires_exact_policy_input_equality": {
           "const": true
         },
         "requires_disjoint_decisive_truth": {
+          "const": true
+        },
+        "requires_clean_current_surface": {
           "const": true
         }
       },
