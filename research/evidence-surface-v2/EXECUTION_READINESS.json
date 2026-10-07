@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "status": "BLOCKED",
+  "confirmatory_execution_authorized": false,
+  "frozen_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+  "resolved": [
+    "confirmatory corpus frozen in Git",
+    "dual structural validators frozen",
+    "family/domain/ledger-profile balance frozen",
+    "primary metric definitions drafted",
+    "P0/P1 deterministic policy roles defined",
+    "M0-M4 monitor roles defined",
+    "pretrained semantic retriever model/revision selected"
+  ],
+  "blockers": [
+    {
+      "id": "R1",
+      "item": "retrieval source-store and distractor construction",
+      "required_before_authorization": true
+    },
+    {
+      "id": "R2",
+      "item": "retrieval budgets and exact Python dependency lock",
+      "required_before_authorization": true
+    },
+    {
+      "id": "L1",
+      "item": "exact LLM model identities or explicit no-LLM decision",
+      "required_before_authorization": true
+    },
+    {
+      "id": "L2",
+      "item": "LLM prompt/parser/retry freeze if LLM replication retained",
+      "required_before_authorization": true
+    },
+    {
+      "id": "E1",
+      "item": "deterministic policy and monitor source hashes",
+      "required_before_authorization": true
+    },
+    {
+      "id": "E2",
+      "item": "result table schema and execution manifest schema",
+      "required_before_authorization": true
+    },
+    {
+      "id": "E3",
+      "item": "separate signed/versioned execution authorization record",
+      "required_before_authorization": true
+    }
+  ],
+  "retriever_candidate": {
+    "lexical": {
+      "algorithm": "BM25Okapi",
+      "package": "rank-bm25",
+      "version": "0.2.2"
+    },
+    "semantic": {
+      "model": "BAAI/bge-small-en-v1.5",
+      "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "sentence_transformers_version": "6.1.0",
+      "similarity": "cosine on normalized embeddings"
+    }
+  }
+}
