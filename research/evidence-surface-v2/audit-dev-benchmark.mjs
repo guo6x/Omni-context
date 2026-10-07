@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 import { generateDevPairs, FAMILIES, DOMAINS } from './generate-dev-paired-worlds.mjs';
 import { validatePair } from './validate-paired-world.mjs';
@@ -72,8 +75,21 @@ export function auditDevPairs(pairs=generateDevPairs()){
   };
 }
 
-if(process.argv[1]&&process.argv[1].endsWith('audit-dev-benchmark.mjs')){
+const isMain=process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url);
+if(isMain){
   const r=auditDevPairs();
-  console.log(JSON.stringify(r,null,2));
+  if(process.argv[2]){
+    const out=path.resolve(process.argv[2]);
+    fs.mkdirSync(path.dirname(out),{recursive:true});
+    fs.writeFileSync(out,JSON.stringify(r,null,2)+'\n');
+  }
+  console.log(JSON.stringify({
+    status:Object.values(r.gates).every(Boolean)?'PASS':'FAIL',
+    pairs:r.pairs,
+    max_template_concentration:r.max_template_concentration,
+    near_duplicate_pairs:r.near_duplicate_pairs.length,
+    max_word_trigram_jaccard:r.max_word_trigram_jaccard,
+    gates:r.gates
+  },null,2));
   if(!Object.values(r.gates).every(Boolean))process.exit(1);
 }
