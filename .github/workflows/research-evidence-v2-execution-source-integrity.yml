@@ -12,6 +12,8 @@ on:
       - 'research/evidence-surface-v2/execution-kernel.test.mjs'
       - 'research/evidence-surface-v2/execution-results.schema.json'
       - 'research/evidence-surface-v2/execution-manifest.schema.json'
+      - 'research/evidence-surface-v2/retrieval-execution-results.schema.json'
+      - 'research/evidence-surface-v2/EXECUTION_MATRIX.json'
       - 'research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json'
       - 'research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl'
       - '.github/workflows/research-evidence-v2-execution-source-integrity.yml'
@@ -56,6 +58,8 @@ jobs:
         run: |
           node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/execution-results.schema.json','utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/execution-manifest.schema.json','utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/retrieval-execution-results.schema.json','utf8'))"
+          node -e "const m=JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/EXECUTION_MATRIX.json','utf8')); if(m.paired_surface_conditions.length!==9||m.retrieval_conditions.length!==12) process.exit(1)"
 
       - name: Verify frozen corpus binding
         run: |
