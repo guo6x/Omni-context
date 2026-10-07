@@ -96,7 +96,8 @@
         "world_id",
         "policy_input",
         "hidden_state",
-        "allowed_decisive_actions"
+        "allowed_decisive_actions",
+        "acquisition_context"
       ],
       "properties": {
         "world_id": {
@@ -116,6 +117,9 @@
             "$ref": "#/$defs/action"
           },
           "uniqueItems": true
+        },
+        "acquisition_context": {
+          "$ref": "#/$defs/acquisitionContext"
         }
       },
       "additionalProperties": false
@@ -160,7 +164,8 @@
       "type": "object",
       "required": [
         "candidate_id",
-        "label"
+        "label",
+        "action_family"
       ],
       "properties": {
         "candidate_id": {
@@ -168,6 +173,10 @@
           "minLength": 1
         },
         "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action_family": {
           "type": "string",
           "minLength": 1
         }
@@ -220,7 +229,8 @@
       "required": [
         "state_id",
         "transition_exists",
-        "hidden_events"
+        "hidden_events",
+        "surface_complete_truth"
       ],
       "properties": {
         "state_id": {
@@ -235,6 +245,9 @@
           "items": {
             "$ref": "#/$defs/hiddenEvent"
           }
+        },
+        "surface_complete_truth": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -283,6 +296,60 @@
             "string",
             "null"
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "acquisitionContext": {
+      "type": "object",
+      "required": [
+        "required_channels",
+        "channels"
+      ],
+      "properties": {
+        "required_channels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "channels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "channel_id",
+              "source_head_seq",
+              "retrieved_head_seq",
+              "index_complete",
+              "retrieval_complete"
+            ],
+            "properties": {
+              "channel_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_head_seq": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "retrieved_head_seq": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "index_complete": {
+                "type": "boolean"
+              },
+              "retrieval_complete": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
