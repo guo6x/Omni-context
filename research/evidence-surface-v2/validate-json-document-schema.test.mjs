@@ -19,3 +19,15 @@ test('validator enforces nested required, enum, pattern and additionalProperties
   assert.ok(bad.some(x=>x.includes('not in enum')));
   assert.ok(bad.some(x=>x.includes('additional property')));
 });
+
+test('validator applies schema-valued additionalProperties',()=>{
+  const schema={
+    type:'object',
+    properties:{fixed:{type:'string'}},
+    additionalProperties:{type:'string',pattern:'^[a-f0-9]{64}$'}
+  };
+  const ok={fixed:'x',a:'a'.repeat(64)};
+  assert.deepEqual(validateValue(schema,ok,'root',[]),[]);
+  const bad=validateValue(schema,{fixed:'x',a:'not-a-sha'},'root',[]);
+  assert.ok(bad.some(x=>x.includes('root.a')&&x.includes('pattern mismatch')));
+});
