@@ -30,6 +30,7 @@ on:
       - 'research/evidence-surface-v2/generate-dev-paired-worlds.mjs'
       - 'research/evidence-surface-v2/generate-dev-paired-worlds.test.mjs'
       - 'research/evidence-surface-v2/audit-dev-benchmark.mjs'
+      - 'research/evidence-surface-v2/generated-dev-behavior.test.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -76,6 +77,9 @@ jobs:
       - name: Validate generated dev benchmark
         run: node --test research/evidence-surface-v2/generate-dev-paired-worlds.test.mjs
 
+      - name: Validate generated dev behavior
+        run: node --test research/evidence-surface-v2/generated-dev-behavior.test.mjs
+
       - name: Generate machine audit
         run: |
           rm -rf research/evidence-surface-v2/out-ci
@@ -103,6 +107,8 @@ jobs:
             research/evidence-surface-v2/out-ci/paired-world-policy-replication.json
           test -s research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl
           test -s research/evidence-surface-v2/out-ci/generated-dev-audit.json
+          test -s research/evidence-surface-v2/out-ci/generated-dev-monitor.json
+          test -s research/evidence-surface-v2/out-ci/generated-dev-policy-replication.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.md
           test -s research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
@@ -145,6 +151,10 @@ jobs:
             max_word_trigram_jaccard:d.max_word_trigram_jaccard,
             gates:d.gates
           });
+          const gm=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/generated-dev-monitor.json','utf8'));
+          console.log('Generated dev monitors', gm.by_condition);
+          const gp=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/generated-dev-policy-replication.json','utf8'));
+          console.log('Generated dev policy replication', gp.by_policy);
           NODE
 
       - name: Upload forensic audit
