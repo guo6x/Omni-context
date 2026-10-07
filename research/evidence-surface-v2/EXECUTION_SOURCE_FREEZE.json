@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "status": "EXECUTION_SOURCES_FROZEN__EXECUTION_NOT_AUTHORIZED",
+  "frozen_pair_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+  "git_blob_guards": {
+    "research/evidence-surface-v2/policy-surface-vote.mjs": "701482ffcf8ee572adae00cda4c8ca209d955d98",
+    "research/evidence-surface-v2/policy-currentness-first.mjs": "a4a8b366bcaaaacb6e8c6640aa895b03839ab6d9",
+    "research/evidence-surface-v2/monitor-acquisition-ledger.mjs": "7deeec1abbef9ac06b25e159f589b6393f9310aa",
+    "research/evidence-surface-v2/execution-kernel.mjs": "de9041be29d5ce6d8d63da3d3e861d12fee83deb",
+    "research/evidence-surface-v2/execution-kernel.test.mjs": "fca4f44fdc66efaed9512842217ed2d2aa7591a2",
+    "research/evidence-surface-v2/execution-results.schema.json": "0e5e55a0417509ef7c7cac0c66cd02f77917bbb0",
+    "research/evidence-surface-v2/execution-manifest.schema.json": "6a78b11defce2b20e480abde934606a9d0e20a4b"
+  },
+  "frozen_conditions": {
+    "policies": [
+      "P0_SURFACE_VOTE",
+      "P1_CURRENTNESS_FIRST"
+    ],
+    "monitors": [
+      "M0_NO_MONITOR",
+      "M1_ALWAYS_DEFER",
+      "M2_SURFACE_ONLY_HEURISTIC",
+      "M3_ACQUISITION_LEDGER",
+      "M4_ORACLE_COMPLETENESS"
+    ],
+    "one_surface_one_policy_call_max": true
+  },
+  "declarations": {
+    "confirmatory_policy_outcomes_executed": false,
+    "confirmatory_monitor_action_outcomes_executed": false,
+    "confirmatory_retrieval_outcomes_executed": false,
+    "confirmatory_llm_outputs_executed": false,
+    "confirmatory_execution_authorized": false
+  }
+}
