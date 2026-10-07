@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "status": "CORPUS_FROZEN__EXECUTION_NOT_AUTHORIZED",
+  "freeze_source_git_head": "886492a61d6c06cc36b5e0770cef93c369d2b7fd",
+  "frozen_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+  "frozen_structural_audit_sha256": "d5fbd56a23a0aaa109ee5380d9b7adf3ec2eb2d993ee6610278586e39ccf424a",
+  "generator_sha256": "77f7470dd996ae91c85509a2b65e42ac4a7450a179c5f8b494b6c27e8a549c4d",
+  "schema_sha256": "fb8f6dbf96b372ff512d776856c120da1ba550e455f18007d00e1a920d64de67",
+  "validator_a_sha256": "6a5ad96581b1eac19d1a28e159ac46205c8cf2356a67796c2d21f96787977ea8",
+  "validator_b_sha256": "b25522ba32103ee8e7320c935c1bae21c1710c58a5bbbf0d60c834864d365a3e",
+  "structural_audit_source_sha256": "4d8edd5c5da6c2cee9ac2522837394effd4fd2fc592a5cb9bb3dcf497041b3a2",
+  "preregistration_draft_sha256": "1431df8b13a6c698df49c8794dbb833d05f41f5c03031d3b8530529fe6cd3801",
+  "design_sha256": "5ba664791b379323c1faf6fe7bda8ac230f2cc03d11568629fbfd4b01e89e06b",
+  "pairs": 160,
+  "worlds": 320,
+  "family_counts": {
+    "REVOCATION": 32,
+    "AUTHORITY_WITHDRAWAL": 32,
+    "CONSTRAINT_CHANGE": 32,
+    "OUTCOME_REVISION": 32,
+    "CONFLICT_RESOLUTION_UPDATE": 32
+  },
+  "domain_counts": {
+    "billing-cycle": 10,
+    "inventory-transfer": 10,
+    "certificate-rotation": 10,
+    "dataset-publication": 10,
+    "incident-remediation": 10,
+    "maintenance-window": 10,
+    "vendor-onboarding": 10,
+    "document-release": 10,
+    "account-migration": 10,
+    "archive-purge": 10,
+    "feature-flag": 10,
+    "batch-settlement": 10,
+    "schema-migration": 10,
+    "job-scheduler": 10,
+    "content-publishing": 10,
+    "key-rotation": 10
+  },
+  "ledger_profile_counts": {
+    "L0_CLEAN_TRACKED": 40,
+    "L1_BENIGN_ADVANCE": 40,
+    "L2_STALE_SOURCE_HEAD": 40,
+    "L3_UNTRACKED_CHANNEL": 40
+  },
+  "gates": {
+    "pair_count_160": true,
+    "five_families_32_each": true,
+    "sixteen_domains_10_each": true,
+    "four_profiles_40_each": true,
+    "every_family_has_each_profile_8": true,
+    "exact_surface_unique": true,
+    "no_near_duplicates_at_090": true,
+    "no_dev_confirmatory_leakage_at_085": true,
+    "template_concentration_le_2pct": true,
+    "all_clean_current": true,
+    "all_profile_shapes_valid": true,
+    "dual_validators_pass": true
+  },
+  "prior_structure_runs": [
+    {
+      "run_id": 37631788176,
+      "git_head": "a017903f6d96fda3d047338514287c066e4ba1dd",
+      "corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+      "artifact_digest": "sha256:5ba22723f1836e07b1c819b02694d719ab74c442dafbf617ec36cc6ed9904607"
+    },
+    {
+      "run_id": 37631877929,
+      "git_head": "2ac18b803fb3fc63cfaf9462e42838643e3fc9c2",
+      "corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+      "artifact_digest": "sha256:9cffd90746214806fc1fdd3212e95693220f17fd6d83177686b539c097e8340a"
+    }
+  ],
+  "declarations": {
+    "confirmatory_policy_outcomes_executed_before_freeze": false,
+    "confirmatory_monitor_action_outcomes_executed_before_freeze": false,
+    "confirmatory_llm_outputs_executed_before_freeze": false,
+    "confirmatory_retriever_downstream_outcomes_executed_before_freeze": false,
+    "full_execution_preregistration_frozen": false,
+    "confirmatory_execution_authorized": false
+  }
+}
