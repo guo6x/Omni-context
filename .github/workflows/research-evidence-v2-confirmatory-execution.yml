@@ -1,0 +1,228 @@
+name: Evidence Surface V2 Confirmatory Execution
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/EXECUTION_REQUEST.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-surface-v2-confirmatory-execution
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      TOKENIZERS_PARALLELISM: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Use Python 3.11.16
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.16'
+
+      - name: Validate execution authorization before outcomes
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const cp=require('child_process');
+          const crypto=require('crypto');
+          const req=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_REQUEST.json','utf8'));
+          const auth=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_AUTHORIZATION.json','utf8'));
+          const readiness=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_READINESS.json','utf8'));
+          if(req.execute!==true) throw new Error('execution request execute flag is not true');
+          if(req.authorization_id!==auth.authorization_id) throw new Error('authorization id mismatch');
+          if(auth.status!=='AUTHORIZED') throw new Error('authorization status is not AUTHORIZED');
+          if(auth.confirmatory_execution_authorized!==true) throw new Error('authorization flag is not true');
+          if(readiness.confirmatory_execution_authorized!==true) throw new Error('readiness is not authorized');
+          if(auth.llm_replication?.enabled!==false) throw new Error('LLM replication must remain disabled');
+          for(const [p,expected] of Object.entries(auth.git_blob_guards??{})){
+            const actual=cp.execFileSync('git',['hash-object',p],{encoding:'utf8'}).trim();
+            console.log(p,{expected,actual});
+            if(actual!==expected) throw new Error('authorization blob mismatch: '+p);
+          }
+          const corpus='research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl';
+          const actualCorpus=crypto.createHash('sha256').update(fs.readFileSync(corpus)).digest('hex');
+          if(actualCorpus!==auth.frozen_corpus_sha256) throw new Error('frozen corpus hash mismatch');
+          NODE
+
+      - name: Validate frozen source records before outcomes
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const execFreeze=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json','utf8'));
+          const retFreeze=JSON.parse(fs.readFileSync('research/evidence-surface-v2/RETRIEVAL_EXECUTION_SOURCE_FREEZE.json','utf8'));
+          const construction=JSON.parse(fs.readFileSync('research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json','utf8'));
+          if(execFreeze.status!=='EXECUTION_SOURCES_FROZEN__EXECUTION_NOT_AUTHORIZED') throw new Error('bad execution source freeze');
+          if(retFreeze.status!=='RETRIEVAL_EXECUTION_SOURCES_FROZEN__OUTCOMES_NOT_AUTHORIZED') throw new Error('bad retrieval source freeze');
+          if(construction.status!=='RETRIEVAL_CONSTRUCTION_FROZEN__OUTCOMES_NOT_AUTHORIZED') throw new Error('bad retrieval construction freeze');
+          for(const o of [execFreeze,retFreeze,construction]){
+            for(const [k,v] of Object.entries(o.declarations??{})){
+              if(v!==false) throw new Error('historical freeze declaration changed: '+k);
+            }
+          }
+          NODE
+
+      - name: Re-run pre-outcome deterministic tests
+        run: |
+          node --test research/evidence-surface-v2/execution-kernel.test.mjs
+          node --test research/evidence-surface-v2/run-paired-surface-matrix.test.mjs
+          node --test research/evidence-surface-v2/score-dev-retrieval.test.mjs
+          node --test research/evidence-surface-v2/validate-json-document-schema.test.mjs
+
+      - name: Install frozen retrieval environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r research/evidence-surface-v2/requirements-retrieval-v2.lock.txt
+          python -m pip freeze | sort > /tmp/pip-freeze.txt
+          diff -u research/evidence-surface-v2/requirements-retrieval-v2.lock.txt /tmp/pip-freeze.txt
+
+      - name: Regenerate and verify frozen confirmatory retrieval construction
+        run: |
+          rm -rf research/evidence-surface-v2/out-confirmatory-execution
+          mkdir -p research/evidence-surface-v2/out-confirmatory-execution
+          node research/evidence-surface-v2/generate-confirmatory-retrieval-bundle.mjs \
+            research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl \
+            research/evidence-surface-v2/out-confirmatory-execution/retriever-input.jsonl \
+            research/evidence-surface-v2/out-confirmatory-execution/scoring-truth.jsonl
+          node research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs \
+            research/evidence-surface-v2/retrieval-input.schema.json \
+            research/evidence-surface-v2/out-confirmatory-execution/retriever-input.jsonl
+          node research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs \
+            research/evidence-surface-v2/retrieval-truth.schema.json \
+            research/evidence-surface-v2/out-confirmatory-execution/scoring-truth.jsonl
+          node research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs \
+            research/evidence-surface-v2/out-confirmatory-execution/retriever-input.jsonl \
+            research/evidence-surface-v2/out-confirmatory-execution/scoring-truth.jsonl \
+            research/evidence-surface-v2/out-confirmatory-execution/retrieval-construction-audit.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const crypto=require('crypto');
+          const freeze=JSON.parse(fs.readFileSync('research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json','utf8'));
+          const sha=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+          const a=sha('research/evidence-surface-v2/out-confirmatory-execution/retriever-input.jsonl');
+          const b=sha('research/evidence-surface-v2/out-confirmatory-execution/scoring-truth.jsonl');
+          if(a!==freeze.retriever_input_sha256) throw new Error('confirmatory retriever input hash mismatch');
+          if(b!==freeze.scoring_truth_sha256) throw new Error('confirmatory scoring truth hash mismatch');
+          NODE
+
+      - name: Mark confirmatory outcome start
+        run: date -u +%Y-%m-%dT%H:%M:%SZ | tee research/evidence-surface-v2/out-confirmatory-execution/STARTED_AT.txt
+
+      - name: Execute frozen paired-surface matrix
+        run: |
+          node research/evidence-surface-v2/run-paired-surface-matrix.mjs \
+            research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl \
+            research/evidence-surface-v2/EXECUTION_MATRIX.json \
+            research/evidence-surface-v2/out-confirmatory-execution/paired-results.json \
+            CONFIRMATORY_RESULT
+          node research/evidence-surface-v2/validate-json-document-schema.mjs \
+            research/evidence-surface-v2/execution-results.schema.json \
+            research/evidence-surface-v2/out-confirmatory-execution/paired-results.json
+
+      - name: Execute frozen BM25 and BGE retrieval matrix
+        run: |
+          python research/evidence-surface-v2/run-dev-retrievers.py \
+            research/evidence-surface-v2/out-confirmatory-execution/retriever-input.jsonl \
+            research/evidence-surface-v2/out-confirmatory-execution/retrieval-rankings.json
+          node research/evidence-surface-v2/score-dev-retrieval.mjs \
+            research/evidence-surface-v2/out-confirmatory-execution/retriever-input.jsonl \
+            research/evidence-surface-v2/out-confirmatory-execution/scoring-truth.jsonl \
+            research/evidence-surface-v2/out-confirmatory-execution/retrieval-rankings.json \
+            research/evidence-surface-v2/out-confirmatory-execution/retrieval-results.json
+          node research/evidence-surface-v2/validate-json-document-schema.mjs \
+            research/evidence-surface-v2/retrieval-execution-results.schema.json \
+            research/evidence-surface-v2/out-confirmatory-execution/retrieval-results.json
+
+      - name: Validate frozen condition counts
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const paired=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-confirmatory-execution/paired-results.json','utf8'));
+          const retrieval=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-confirmatory-execution/retrieval-results.json','utf8'));
+          if(paired.rows.length!==160*9) throw new Error('paired row count mismatch: '+paired.rows.length);
+          if(retrieval.rows.length!==320*12) throw new Error('retrieval row count mismatch: '+retrieval.rows.length);
+          const m1=paired.rows.filter(x=>x.monitor==='M1_ALWAYS_DEFER');
+          if(m1.length!==160||m1.some(x=>x.policy!=='P_NONE'||x.policy_call_count!==0)) throw new Error('M1 baseline duplication/semantics mismatch');
+          NODE
+
+      - name: Build execution manifest and summary
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const crypto=require('crypto');
+          const cp=require('child_process');
+          const dir='research/evidence-surface-v2/out-confirmatory-execution';
+          const auth=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_AUTHORIZATION.json','utf8'));
+          const paired=JSON.parse(fs.readFileSync(dir+'/paired-results.json','utf8'));
+          const retrieval=JSON.parse(fs.readFileSync(dir+'/retrieval-results.json','utf8'));
+          const sha=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+          const sourcePaths=[
+            'research/evidence-surface-v2/policy-surface-vote.mjs',
+            'research/evidence-surface-v2/policy-currentness-first.mjs',
+            'research/evidence-surface-v2/monitor-acquisition-ledger.mjs',
+            'research/evidence-surface-v2/execution-kernel.mjs',
+            'research/evidence-surface-v2/run-paired-surface-matrix.mjs',
+            'research/evidence-surface-v2/run-dev-retrievers.py',
+            'research/evidence-surface-v2/score-dev-retrieval.mjs',
+            'research/evidence-surface-v2/EXECUTION_MATRIX.json',
+            'research/evidence-surface-v2/requirements-retrieval-v2.lock.txt'
+          ];
+          const source_hashes=Object.fromEntries(sourcePaths.map(p=>[p,sha(p)]));
+          const started=fs.readFileSync(dir+'/STARTED_AT.txt','utf8').trim();
+          const manifest={
+            schema_version:1,
+            status:'COMPLETE',
+            authorization_id:auth.authorization_id,
+            git_head:process.env.GITHUB_SHA,
+            frozen_corpus_sha256:paired.frozen_corpus_sha256,
+            source_hashes,
+            result_schema_sha256:sha('research/evidence-surface-v2/execution-results.schema.json'),
+            runtime:{
+              node:process.version,
+              python:cp.execFileSync('python',['--version'],{encoding:'utf8'}).trim(),
+              retrieval_environment_lock_sha256:sha('research/evidence-surface-v2/requirements-retrieval-v2.lock.txt')
+            },
+            llm_replication:{enabled:false,models:[]},
+            confirmatory_outcome_started:true,
+            started_at:started,
+            completed_at:new Date().toISOString()
+          };
+          fs.writeFileSync(dir+'/execution-manifest.json',JSON.stringify(manifest,null,2)+'\n');
+          const summary={
+            schema_version:1,
+            authorization_id:auth.authorization_id,
+            paired:paired.summary,
+            retrieval:retrieval.summary,
+            hashes:{
+              paired_results_sha256:sha(dir+'/paired-results.json'),
+              retrieval_rankings_sha256:sha(dir+'/retrieval-rankings.json'),
+              retrieval_results_sha256:sha(dir+'/retrieval-results.json')
+            }
+          };
+          fs.writeFileSync(dir+'/CONFIRMATORY_SUMMARY.json',JSON.stringify(summary,null,2)+'\n');
+          NODE
+          node research/evidence-surface-v2/validate-json-document-schema.mjs \
+            research/evidence-surface-v2/execution-manifest.schema.json \
+            research/evidence-surface-v2/out-confirmatory-execution/execution-manifest.json
+          sha256sum research/evidence-surface-v2/out-confirmatory-execution/* > \
+            research/evidence-surface-v2/out-confirmatory-execution/RESULT_HASHES.txt
+
+      - name: Upload immutable confirmatory result artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-surface-v2-confirmatory-results
+          path: research/evidence-surface-v2/out-confirmatory-execution/
