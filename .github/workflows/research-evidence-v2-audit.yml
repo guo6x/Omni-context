@@ -87,6 +87,12 @@ jobs:
             research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl
           node research/evidence-surface-v2/audit-dev-benchmark.mjs > \
             research/evidence-surface-v2/out-ci/generated-dev-audit.json
+          node research/evidence-surface-v2/run-dev-policy-monitor.mjs \
+            research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl \
+            research/evidence-surface-v2/out-ci/generated-dev-monitor.json
+          node research/evidence-surface-v2/evaluate-paired-world-policies.mjs \
+            research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl \
+            research/evidence-surface-v2/out-ci/generated-dev-policy-replication.json
           node research/evidence-surface-v2/audit-v1-p2.mjs research/evidence-surface-v2/out-ci
           node research/evidence-surface-v2/validate-paired-world.mjs \
             research/evidence-surface-v2/dev/paired-world-toy.jsonl \
