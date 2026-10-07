@@ -138,3 +138,7 @@ The eventual corpus-freeze record must contain:
 - statement that no confirmatory decision outcomes were executed before the freeze commit.
 
 The corpus freeze does not by itself authorize confirmatory execution. Full preregistration/model/policy freeze is a separate gate.
+
+## Structure workflow trigger status
+
+The structure-only CI workflow is enabled. This section exists only to trigger the first structural candidate run after the workflow file was added. The outcome embargo remains in force.
