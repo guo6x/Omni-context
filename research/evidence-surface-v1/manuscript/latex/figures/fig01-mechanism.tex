@@ -1,0 +1,32 @@
+% Conceptual figure: no empirical data.
+\begin{tikzpicture}[
+  node distance=6mm and 7mm,
+  every node/.style={font=\small},
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=5pt, minimum width=31mm},
+  decision/.style={draw, rounded corners=2pt, align=center, inner sep=5pt, minimum width=32mm, fill=black!4},
+  arrow/.style={-Latex, thick}
+]
+\node[box] (world) {Underlying world\\and source truth};
+\node[box, below=of world] (retrieval) {Evidence acquisition\\and retrieval};
+\node[box, below=of retrieval] (surface) {Decision-visible\\evidence surface};
+
+\node[decision, below left=10mm and 7mm of surface] (visible) {Obligation uncovered\\and gap cue visible};
+\node[decision, below right=10mm and 7mm of surface] (silent) {Obligation uncovered\\but no gap cue visible};
+
+\node[box, below=of visible] (fallback) {CLARIFY / DEFER /\\REQUEST APPROVAL};
+\node[box, below=of silent] (unsafe) {Older / local state\\still looks actionable};
+
+\node[box, below=of unsafe] (risk) {Unsupported-decision\\risk};
+\node[decision, right=14mm of risk] (coverage) {Independent\\coverage-complete signal};
+\node[box, below=of coverage] (safe2) {Coverage-aware\\fallback};
+
+\draw[arrow] (world) -- (retrieval);
+\draw[arrow] (retrieval) -- (surface);
+\draw[arrow] (surface) -- (visible);
+\draw[arrow] (surface) -- (silent);
+\draw[arrow] (visible) -- (fallback);
+\draw[arrow] (silent) -- (unsafe);
+\draw[arrow] (unsafe) -- (risk);
+\draw[arrow] (risk) -- node[above, font=\scriptsize]{if incompleteness is exposed} (coverage);
+\draw[arrow] (coverage) -- (safe2);
+\end{tikzpicture}
