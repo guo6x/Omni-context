@@ -95,6 +95,14 @@
         "generator_version": {
           "type": "string",
           "minLength": 1
+        },
+        "ledger_profile": {
+          "enum": [
+            "L0_CLEAN_TRACKED",
+            "L1_BENIGN_ADVANCE",
+            "L2_STALE_SOURCE_HEAD",
+            "L3_UNTRACKED_CHANNEL"
+          ]
         }
       },
       "additionalProperties": false
@@ -286,6 +294,10 @@
           "minLength": 1
         },
         "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "channel_id": {
           "type": "string",
           "minLength": 1
         }
