@@ -24,7 +24,8 @@ function toEvidence(doc){
     fact:doc.fact,
     currentness:doc.currentness,
     supports_candidates:doc.supports_candidates,
-    source_event_id:doc.source_event_id
+    source_event_id:doc.source_event_id,
+    at:doc.at??null
   };
 }
 
