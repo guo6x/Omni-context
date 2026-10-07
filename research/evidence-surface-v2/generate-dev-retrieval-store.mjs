@@ -16,7 +16,8 @@ function targetEvidence(pair){
     source_event_id:hidden.event_id,
     currentness:'current',
     supports_candidates:[correct.selected_candidate_id],
-    fact:hidden.statement
+    fact:hidden.statement,
+    at:hidden.at
   };
   if(family==='REVOCATION'||family==='AUTHORITY_WITHDRAWAL') return {...base,role:'override'};
   if(family==='CONSTRAINT_CHANGE') return {...base,role:'current_fact'};
@@ -25,6 +26,7 @@ function targetEvidence(pair){
 }
 
 function visibleDocs(pair){
+  const hiddenAt=new Date(pair.world_b.hidden_state.hidden_events[0].at).getTime();
   return pair.world_a.policy_input.evidence.map((e,i)=>({
     document_id:pair.pair_id+'-visible-'+String(i+1),
     kind:'visible_base',
@@ -34,7 +36,8 @@ function visibleDocs(pair){
     role:e.role,
     fact:e.fact,
     currentness:e.currentness,
-    supports_candidates:e.supports_candidates
+    supports_candidates:e.supports_candidates,
+    at:new Date(hiddenAt-(pair.world_a.policy_input.evidence.length-i)*3600_000).toISOString()
   }));
 }
 
@@ -58,7 +61,8 @@ function distractors(pair){
     role:'distractor',
     fact:fn(pair,i),
     currentness:'current',
-    supports_candidates:[]
+    supports_candidates:[],
+    at:null
   }));
 }
 
