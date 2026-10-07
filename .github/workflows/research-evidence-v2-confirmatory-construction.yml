@@ -1,0 +1,98 @@
+name: Evidence Surface V2 Confirmatory Construction
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/paired-world.schema.json'
+      - 'research/evidence-surface-v2/generate-dev-paired-worlds.mjs'
+      - 'research/evidence-surface-v2/generate-confirmatory-paired-worlds.mjs'
+      - 'research/evidence-surface-v2/audit-confirmatory-construction.mjs'
+      - 'research/evidence-surface-v2/audit-confirmatory-construction.test.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world-b.mjs'
+      - '.github/workflows/research-evidence-v2-confirmatory-construction.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-surface-v2-confirmatory-construction-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  construct-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Lock confirmatory construction gates
+        run: node --test research/evidence-surface-v2/audit-confirmatory-construction.test.mjs
+
+      - name: Generate confirmatory corpus without outcomes
+        run: |
+          rm -rf research/evidence-surface-v2/out-confirmatory
+          mkdir -p research/evidence-surface-v2/out-confirmatory
+          node research/evidence-surface-v2/generate-confirmatory-paired-worlds.mjs \
+            research/evidence-surface-v2/out-confirmatory/corpus.jsonl
+          node research/evidence-surface-v2/audit-confirmatory-construction.mjs \
+            research/evidence-surface-v2/out-confirmatory/construction-audit.json
+          node research/evidence-surface-v2/validate-paired-world.mjs \
+            research/evidence-surface-v2/out-confirmatory/corpus.jsonl \
+            research/evidence-surface-v2/out-confirmatory/validator-a.json
+          node research/evidence-surface-v2/validate-paired-world-b.mjs \
+            research/evidence-surface-v2/out-confirmatory/corpus.jsonl \
+            research/evidence-surface-v2/out-confirmatory/validator-b.json
+          sha256sum research/evidence-surface-v2/out-confirmatory/corpus.jsonl > \
+            research/evidence-surface-v2/out-confirmatory/SHA256SUMS.txt
+          sha256sum research/evidence-surface-v2/generate-confirmatory-paired-worlds.mjs >> \
+            research/evidence-surface-v2/out-confirmatory/SHA256SUMS.txt
+          sha256sum research/evidence-surface-v2/audit-confirmatory-construction.mjs >> \
+            research/evidence-surface-v2/out-confirmatory/SHA256SUMS.txt
+          test -s research/evidence-surface-v2/out-confirmatory/corpus.jsonl
+          test -s research/evidence-surface-v2/out-confirmatory/construction-audit.json
+          test -s research/evidence-surface-v2/out-confirmatory/validator-a.json
+          test -s research/evidence-surface-v2/out-confirmatory/validator-b.json
+          test -s research/evidence-surface-v2/out-confirmatory/SHA256SUMS.txt
+          echo "=== construction-only artifact inventory ==="
+          ls -lah research/evidence-surface-v2/out-confirmatory
+
+      - name: Verify no confirmatory outcome runner is invoked
+        run: |
+          if grep -E 'run-dev-policy-monitor|evaluate-paired-world-policies|evaluate-independent-policy|model_response|llm_output' \
+            research/evidence-surface-v2/out-confirmatory/construction-audit.json; then
+            echo "Outcome material found in construction audit"
+            exit 1
+          fi
+          echo "No outcome runner/output material found."
+
+      - name: Show construction summary
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const a=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-confirmatory/construction-audit.json','utf8'));
+          console.log({
+            pairs:a.pairs,
+            family_counts:a.family_counts,
+            acquisition_regime_counts:a.acquisition_regime_counts,
+            max_template_concentration:a.max_template_concentration,
+            within_confirmatory_similarity:a.within_confirmatory_similarity,
+            cross_dev_similarity:a.cross_dev_similarity,
+            corpus_sha256:a.corpus_sha256,
+            gates:a.gates
+          });
+          NODE
+
+      - name: Upload frozen-construction candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-surface-v2-confirmatory-construction
+          path: research/evidence-surface-v2/out-confirmatory/
