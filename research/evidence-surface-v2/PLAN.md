@@ -232,6 +232,85 @@ V2 target claim:
 
 This is stronger, cleaner, and less dependent on one hand-written policy.
 
+## Current development status — 2026-10-07
+
+### Phase A — V1 forensic audit: COMPLETE
+
+Machine replay and CI now separate support failure from action failure.
+
+Locked V1 decomposition:
+
+- C1: UDR 30, WAVR 30, all-output FEDD 180, decisive FEDD 30;
+- C2: UDR 56, WAVR 18;
+- C3: UDR 61, WAVR 23;
+- C4: UDR 53, WAVR 24;
+- F6 C1 visible `currentness=superseded` cue: 30/30;
+- C5 remains oracle-gate sanity check.
+
+### Phase B — surface-identical paired worlds: DEV GATE PASS
+
+Three development pairs currently cover:
+
+- revocation;
+- authority withdrawal;
+- constraint change.
+
+For every pair:
+
+- canonical policy input is exactly equal across worlds;
+- valid decisive-action sets are disjoint;
+- hidden-event IDs do not leak into visible source IDs;
+- policy input contains no Gold / treatment / coverage labels.
+
+Two independently implemented validators are required to agree.
+
+These are development cases only and are not confirmatory evidence.
+
+### Phase C — acquisition-ledger monitor: DEV PROTOTYPE
+
+The non-oracle monitor reads only acquisition metadata:
+
+- required channel inventory;
+- source head sequence;
+- retrieved head sequence;
+- index completion;
+- retrieval completion.
+
+On the clean 3-pair dev set it can match the oracle safety/completion pattern, but this is not treated as evidence of method success.
+
+A dedicated 7-case stress corpus deliberately exposes:
+
+- benign source advance → false incomplete;
+- stale source-head metadata → false complete;
+- untracked relevant channel → false complete;
+- explicit index/retrieval/missing-channel failures → detected incomplete.
+
+Expected stress summary is locked by tests:
+
+- 7 cases;
+- 4 correct;
+- 2 false complete;
+- 1 false incomplete.
+
+This establishes that M3 is **not** an oracle and makes its failure modes explicit before confirmatory freeze.
+
+### Phase D — independent deterministic policy: FIRST DEV REPLICATION
+
+A `currentness-first` policy was implemented independently from the V1 role-weight policy.
+
+Key design distinction:
+
+- `role=current_fact` with `currentness=stale/superseded` causes fallback;
+- `role=stale_fact` can be ignored when a current replacement is visible.
+
+Expected implication under frozen V1:
+
+- F6 C1's 30/30 failure should disappear for this policy because the supposedly silent surface contains an explicit superseded cue.
+
+On truly surface-identical V2 pairs, deterministic surface-only policies must still emit the same output in both worlds, so any decisive output remains invalid in at least one world when valid decisive-action sets are disjoint.
+
+No LLM confirmatory replication has been run.
+
 ## Stop / success gates
 
 Do not rewrite the final paper until:
