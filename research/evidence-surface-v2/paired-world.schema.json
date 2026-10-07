@@ -103,10 +103,6 @@
             "L2_STALE_SOURCE_HEAD",
             "L3_UNTRACKED_CHANNEL"
           ]
-        },
-        "acquisition_regime": {
-          "type": "string",
-          "minLength": 1
         }
       },
       "additionalProperties": false
