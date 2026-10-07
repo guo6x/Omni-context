@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/guo6x/Omni-context/research/evidence-surface-v2/execution-authorization.schema.json",
+  "title": "Evidence Surface V2 execution authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "authorization_id",
+    "status",
+    "confirmatory_execution_authorized",
+    "frozen_corpus_sha256",
+    "git_blob_guards",
+    "llm_replication",
+    "preregistration_snapshot"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "authorization_id": {
+      "type": "string",
+      "pattern": "^ESV2-CONF-[A-Z0-9._-]+$"
+    },
+    "status": {
+      "enum": [
+        "PREPARED_NOT_AUTHORIZED",
+        "AUTHORIZED",
+        "REVOKED"
+      ]
+    },
+    "confirmatory_execution_authorized": {
+      "type": "boolean"
+    },
+    "frozen_corpus_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "git_blob_guards": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{40}$"
+      }
+    },
+    "llm_replication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "models"
+      ],
+      "properties": {
+        "enabled": {
+          "const": false
+        },
+        "models": {
+          "type": "array",
+          "maxItems": 0,
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "preregistration_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "authorized_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
