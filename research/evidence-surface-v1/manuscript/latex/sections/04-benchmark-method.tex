@@ -10,11 +10,11 @@ records with timestamps and provenance, a rendered decision question, distractor
 explicit required facts, permissible action families, and a safe fallback when obligations
 are uncovered.
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{p{0.06\textwidth}p{0.19\textwidth}p{0.31\textwidth}p{0.34\textwidth}}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{p{0.06\columnwidth}p{0.18\columnwidth}p{0.29\columnwidth}p{0.35\columnwidth}}
 \toprule
 Family & Obligation & C1 visible-gap cue & Silent-failure route \\
 \midrule
@@ -30,7 +30,7 @@ F6 & Override / invalidation & None when later override is removed & Older instr
 possible silent surface under the frozen policy; it is not a universal property of the
 family.}
 \label{tab:families}
-\end{table*}
+\end{table}
 
 The benchmark is independent of the earlier TMLR validation benchmark and sealed Holdback;
 neither is reused as confirmatory evidence here.
@@ -72,11 +72,11 @@ using frozen role and currentness weights.
 
 \subsection{Conditions}
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{p{0.12\textwidth}p{0.33\textwidth}p{0.19\textwidth}p{0.25\textwidth}}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{p{0.11\columnwidth}p{0.29\columnwidth}p{0.18\columnwidth}p{0.29\columnwidth}}
 \toprule
 Condition & Evidence surface & Extra coverage input & Purpose \\
 \midrule
@@ -85,13 +85,13 @@ C1 HIDDEN & one designated mandatory item removed & none & paired causal interve
 C2 LEXICAL & IDF token overlap, top-$k=2$ & none & controlled lexical retrieval \\
 C3 HASH-DENSE & 256-D signed char-trigram hash, cosine, top-$k=2$ & none & controlled dense-vector baseline \\
 C4 HYBRID & RRF of C2+C3, constant 60, top-$k=2$ & none & fixed hybrid surface \\
-C5 COVERAGE-AWARE & \textbf{identical C4 surface} & \texttt{coverage\_complete} only & mechanism test \\
+C5 COVERAGE-AWARE & \textbf{identical C4 surface} & complete bit only & mechanism test \\
 \bottomrule
 \end{tabular}
 \caption{Frozen experimental conditions. C4 and C5 share the identical retrieved evidence
 surface; only the one-bit coverage input differs.}
 \label{tab:conditions}
-\end{table*}
+\end{table}
 
 C3 is a deterministic dense-vector baseline, not a pretrained semantic embedding model.
 No retriever parameter was tuned after observing P2 outcomes.
