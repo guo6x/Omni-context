@@ -40,3 +40,12 @@ test('validators agree on hidden event id leakage',()=>{
   assert.equal(validatePair(p).valid,false);
   assert.equal(validatePairB(p).valid,false);
 });
+
+
+test('validators agree on non-current visible cue',()=>{
+  const p=JSON.parse(JSON.stringify(pairs[0]));
+  p.world_a.policy_input.evidence[0].currentness='unknown';
+  p.world_b.policy_input.evidence[0].currentness='unknown';
+  assert.equal(validatePair(p).valid,false);
+  assert.equal(validatePairB(p).valid,false);
+});
