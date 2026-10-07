@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/guo6x/Omni-context/research/evidence-surface-v2/execution-results.schema.json",
+  "title": "Evidence Surface V2 paired-surface execution results",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "frozen_corpus_sha256",
+    "rows",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "status": {
+      "enum": [
+        "CONFIRMATORY_RESULT",
+        "DEVELOPMENT_RESULT"
+      ]
+    },
+    "frozen_corpus_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "pair_id",
+          "family",
+          "policy",
+          "monitor",
+          "policy_call_count",
+          "shared_policy_output",
+          "worlds"
+        ],
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "pair_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1
+          },
+          "policy": {
+            "enum": [
+              "P0_SURFACE_VOTE",
+              "P1_CURRENTNESS_FIRST"
+            ]
+          },
+          "monitor": {
+            "enum": [
+              "M0_NO_MONITOR",
+              "M1_ALWAYS_DEFER",
+              "M2_SURFACE_ONLY_HEURISTIC",
+              "M3_ACQUISITION_LEDGER",
+              "M4_ORACLE_COMPLETENESS"
+            ]
+          },
+          "policy_call_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "shared_policy_output": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "worlds": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "member",
+                "world_id",
+                "monitor_status",
+                "monitor_reasons",
+                "action",
+                "decisive",
+                "correct_decisive",
+                "world_action_violation"
+              ],
+              "properties": {
+                "member": {
+                  "enum": [
+                    "A",
+                    "B"
+                  ]
+                },
+                "world_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "monitor_status": {
+                  "enum": [
+                    "COMPLETE",
+                    "INCOMPLETE"
+                  ]
+                },
+                "monitor_reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "action": {
+                  "type": "object"
+                },
+                "decisive": {
+                  "type": "boolean"
+                },
+                "correct_decisive": {
+                  "type": "boolean"
+                },
+                "world_action_violation": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object"
+    }
+  }
+}
