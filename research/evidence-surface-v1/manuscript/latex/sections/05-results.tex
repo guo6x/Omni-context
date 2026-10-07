@@ -42,7 +42,7 @@ leaving a detectable trace.
 
 \subsection{Frozen retrievers induce broader unsupported-decision patterns}
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \small
 \begin{tabular}{lrrrrr}
@@ -60,13 +60,13 @@ C5 Coverage-aware & \HybridRecall & \CoverageCoverage & \CoverageUDR & \Coverage
 \caption{Aggregate P2 results, in percent. C1 required-fact recall is a mean over all
 required facts; complete coverage is 0/180.}
 \label{tab:aggregate}
-\end{table}
+\end{table*}
 
 Under C2--C4, UDR ranges from 29.44\% to 33.89\%. Top-$k$ retrieval can omit combinations
 of evidence rather than exactly one preregistered target, and the family pattern broadens:
 F1, F2, F4, and F6 show unsupported decisions under at least one frozen retriever.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \small
 \begin{tabular}{lrrrr}
@@ -84,7 +84,7 @@ F6 override/invalidation & \FsixLex & \FsixHash & \FsixHybrid & 0 \\
 \caption{Family-level UDR (\%) for the retrieval conditions. Silentness is a property of
 the resulting evidence surface relative to the policy, not a synonym for the F6 label.}
 \label{tab:family-retrieval}
-\end{table}
+\end{table*}
 
 \subsection{Aggregate recall is not a strict monotonic safety surrogate}
 
