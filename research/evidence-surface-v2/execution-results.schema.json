@@ -54,6 +54,7 @@
           },
           "policy": {
             "enum": [
+              "P_NONE",
               "P0_SURFACE_VOTE",
               "P1_CURRENTNESS_FIRST"
             ]
