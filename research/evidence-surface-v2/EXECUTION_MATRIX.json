@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_PRE_OUTCOME_MATRIX",
+  "paired_surface_conditions": [
+    {
+      "condition_id": "PS-M0-P0",
+      "policy": "P0_SURFACE_VOTE",
+      "monitor": "M0_NO_MONITOR"
+    },
+    {
+      "condition_id": "PS-M0-P1",
+      "policy": "P1_CURRENTNESS_FIRST",
+      "monitor": "M0_NO_MONITOR"
+    },
+    {
+      "condition_id": "PS-M1",
+      "policy": "P_NONE",
+      "monitor": "M1_ALWAYS_DEFER"
+    },
+    {
+      "condition_id": "PS-M2-P0",
+      "policy": "P0_SURFACE_VOTE",
+      "monitor": "M2_SURFACE_ONLY_HEURISTIC"
+    },
+    {
+      "condition_id": "PS-M2-P1",
+      "policy": "P1_CURRENTNESS_FIRST",
+      "monitor": "M2_SURFACE_ONLY_HEURISTIC"
+    },
+    {
+      "condition_id": "PS-M3-P0",
+      "policy": "P0_SURFACE_VOTE",
+      "monitor": "M3_ACQUISITION_LEDGER"
+    },
+    {
+      "condition_id": "PS-M3-P1",
+      "policy": "P1_CURRENTNESS_FIRST",
+      "monitor": "M3_ACQUISITION_LEDGER"
+    },
+    {
+      "condition_id": "PS-M4-P0",
+      "policy": "P0_SURFACE_VOTE",
+      "monitor": "M4_ORACLE_COMPLETENESS"
+    },
+    {
+      "condition_id": "PS-M4-P1",
+      "policy": "P1_CURRENTNESS_FIRST",
+      "monitor": "M4_ORACLE_COMPLETENESS"
+    }
+  ],
+  "retrieval_conditions": [
+    {
+      "condition_id": "RET-BM25_OKAPI-K2-P0",
+      "retriever": "BM25_OKAPI",
+      "k": 2,
+      "scorer_policy": "SURFACE_VOTE",
+      "canonical_policy": "P0_SURFACE_VOTE"
+    },
+    {
+      "condition_id": "RET-BM25_OKAPI-K2-P1",
+      "retriever": "BM25_OKAPI",
+      "k": 2,
+      "scorer_policy": "CURRENTNESS_FIRST",
+      "canonical_policy": "P1_CURRENTNESS_FIRST"
+    },
+    {
+      "condition_id": "RET-BM25_OKAPI-K4-P0",
+      "retriever": "BM25_OKAPI",
+      "k": 4,
+      "scorer_policy": "SURFACE_VOTE",
+      "canonical_policy": "P0_SURFACE_VOTE"
+    },
+    {
+      "condition_id": "RET-BM25_OKAPI-K4-P1",
+      "retriever": "BM25_OKAPI",
+      "k": 4,
+      "scorer_policy": "CURRENTNESS_FIRST",
+      "canonical_policy": "P1_CURRENTNESS_FIRST"
+    },
+    {
+      "condition_id": "RET-BM25_OKAPI-K6-P0",
+      "retriever": "BM25_OKAPI",
+      "k": 6,
+      "scorer_policy": "SURFACE_VOTE",
+      "canonical_policy": "P0_SURFACE_VOTE"
+    },
+    {
+      "condition_id": "RET-BM25_OKAPI-K6-P1",
+      "retriever": "BM25_OKAPI",
+      "k": 6,
+      "scorer_policy": "CURRENTNESS_FIRST",
+      "canonical_policy": "P1_CURRENTNESS_FIRST"
+    },
+    {
+      "condition_id": "RET-BGE_SMALL_EN_V1_5-K2-P0",
+      "retriever": "BGE_SMALL_EN_V1_5",
+      "k": 2,
+      "scorer_policy": "SURFACE_VOTE",
+      "canonical_policy": "P0_SURFACE_VOTE"
+    },
+    {
+      "condition_id": "RET-BGE_SMALL_EN_V1_5-K2-P1",
+      "retriever": "BGE_SMALL_EN_V1_5",
+      "k": 2,
+      "scorer_policy": "CURRENTNESS_FIRST",
+      "canonical_policy": "P1_CURRENTNESS_FIRST"
+    },
+    {
+      "condition_id": "RET-BGE_SMALL_EN_V1_5-K4-P0",
+      "retriever": "BGE_SMALL_EN_V1_5",
+      "k": 4,
+      "scorer_policy": "SURFACE_VOTE",
+      "canonical_policy": "P0_SURFACE_VOTE"
+    },
+    {
+      "condition_id": "RET-BGE_SMALL_EN_V1_5-K4-P1",
+      "retriever": "BGE_SMALL_EN_V1_5",
+      "k": 4,
+      "scorer_policy": "CURRENTNESS_FIRST",
+      "canonical_policy": "P1_CURRENTNESS_FIRST"
+    },
+    {
+      "condition_id": "RET-BGE_SMALL_EN_V1_5-K6-P0",
+      "retriever": "BGE_SMALL_EN_V1_5",
+      "k": 6,
+      "scorer_policy": "SURFACE_VOTE",
+      "canonical_policy": "P0_SURFACE_VOTE"
+    },
+    {
+      "condition_id": "RET-BGE_SMALL_EN_V1_5-K6-P1",
+      "retriever": "BGE_SMALL_EN_V1_5",
+      "k": 6,
+      "scorer_policy": "CURRENTNESS_FIRST",
+      "canonical_policy": "P1_CURRENTNESS_FIRST"
+    }
+  ],
+  "reporting": {
+    "paired_surface_primary_metrics": [
+      "completion_rate",
+      "wavr",
+      "pdvr",
+      "correct_decisive_worlds",
+      "policy_calls"
+    ],
+    "monitor_metrics": [
+      "false_complete",
+      "false_incomplete"
+    ],
+    "retrieval_metrics": [
+      "b_target_recall",
+      "completion_rate",
+      "wavr",
+      "correct_decisive_rate",
+      "mean_visible_base_recall"
+    ],
+    "mandatory_strata": [
+      "family"
+    ],
+    "m3_mandatory_additional_stratum": "ledger_profile",
+    "retrieval_mandatory_strata": [
+      "family"
+    ],
+    "no_single_scalar_risk_coverage_score": true
+  },
+  "declarations": {
+    "conditions_may_not_be_added_or_removed_after_first_confirmatory_outcome": true,
+    "llm_replication_enabled": false
+  }
+}
