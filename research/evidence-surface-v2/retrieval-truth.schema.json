@@ -103,6 +103,13 @@
           "minimum": 1
         }
       }
+    },
+    "ledger_profile": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
     }
   }
 }
