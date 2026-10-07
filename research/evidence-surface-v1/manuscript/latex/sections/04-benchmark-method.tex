@@ -10,11 +10,11 @@ records with timestamps and provenance, a rendered decision question, distractor
 explicit required facts, permissible action families, and a safe fallback when obligations
 are uncovered.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{p{0.08\linewidth}p{0.23\linewidth}p{0.31\linewidth}p{0.30\linewidth}}
+\begin{tabular}{p{0.06\textwidth}p{0.19\textwidth}p{0.31\textwidth}p{0.34\textwidth}}
 \toprule
 Family & Obligation & C1 visible-gap cue & Silent-failure route \\
 \midrule
@@ -30,7 +30,7 @@ F6 & Override / invalidation & None when later override is removed & Older instr
 possible silent surface under the frozen policy; it is not a universal property of the
 family.}
 \label{tab:families}
-\end{table}
+\end{table*}
 
 The benchmark is independent of the earlier TMLR validation benchmark and sealed Holdback;
 neither is reused as confirmatory evidence here.
@@ -72,11 +72,11 @@ using frozen role and currentness weights.
 
 \subsection{Conditions}
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{p{0.12\linewidth}p{0.31\linewidth}p{0.20\linewidth}p{0.27\linewidth}}
+\begin{tabular}{p{0.12\textwidth}p{0.33\textwidth}p{0.19\textwidth}p{0.25\textwidth}}
 \toprule
 Condition & Evidence surface & Extra coverage input & Purpose \\
 \midrule
@@ -91,7 +91,7 @@ C5 COVERAGE-AWARE & \textbf{identical C4 surface} & \texttt{coverage\_complete} 
 \caption{Frozen experimental conditions. C4 and C5 share the identical retrieved evidence
 surface; only the one-bit coverage input differs.}
 \label{tab:conditions}
-\end{table}
+\end{table*}
 
 C3 is a deterministic dense-vector baseline, not a pretrained semantic embedding model.
 No retriever parameter was tuned after observing P2 outcomes.
