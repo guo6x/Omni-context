@@ -4,7 +4,7 @@ import { buildAudit } from './audit-v1-p2.mjs';
 const a=buildAudit();
 
 test('frozen shape',()=>{assert.equal(a.source.samples,180);assert.equal(a.source.rows,1080);});
-test('C1 is 30 UDR / 30 WAVR / 30 FEDD',()=>{const m=a.by_condition.C1_HIDDEN;assert.deepEqual([m.unsupported_count,m.wavr_count,m.fedd_count],[30,30,30]);});
+test('C1 separates unsafe decisive divergence from safe fallback divergence',()=>{const m=a.by_condition.C1_HIDDEN;assert.deepEqual([m.unsupported_count,m.wavr_count,m.fedd_count,m.decisive_fedd_count],[30,30,180,30]);});
 test('retrieval UDR differs from WAVR',()=>{assert.deepEqual([
  [a.by_condition.C2_LEXICAL.unsupported_count,a.by_condition.C2_LEXICAL.wavr_count],
  [a.by_condition.C3_HASH_DENSE.unsupported_count,a.by_condition.C3_HASH_DENSE.wavr_count],
