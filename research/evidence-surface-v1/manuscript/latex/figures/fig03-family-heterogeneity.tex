@@ -1,0 +1,28 @@
+% Frozen direct-treatment family UDR.
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  ymin=0, ymax=105,
+  width=\linewidth,
+  height=5.8cm,
+  ylabel={C1 UDR (\%)},
+  symbolic x coords={F1,F2,F3,F4,F5,F6},
+  xtick=data,
+  bar width=15pt,
+  nodes near coords,
+  nodes near coords align={vertical},
+  ymajorgrids=true,
+  grid style={black!10},
+  fill=black!22,
+  draw=black
+]
+\addplot coordinates {
+  (F1,\FoneCOne)
+  (F2,\FtwoCOne)
+  (F3,\FthreeCOne)
+  (F4,\FfourCOne)
+  (F5,\FfiveCOne)
+  (F6,\FsixCOne)
+};
+\end{axis}
+\end{tikzpicture}
