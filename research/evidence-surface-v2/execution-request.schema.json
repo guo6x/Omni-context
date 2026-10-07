@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/guo6x/Omni-context/research/evidence-surface-v2/execution-request.schema.json",
+  "title": "Evidence Surface V2 one-shot execution request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "authorization_id",
+    "authorization_sha256",
+    "execute"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "authorization_id": {
+      "type": "string",
+      "pattern": "^ESV2-CONF-[A-Z0-9._-]+$"
+    },
+    "authorization_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "execute": {
+      "const": true
+    }
+  }
+}
