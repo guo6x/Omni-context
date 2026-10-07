@@ -16,6 +16,10 @@ on:
       - 'research/evidence-surface-v2/monitor-acquisition-ledger.mjs'
       - 'research/evidence-surface-v2/monitor-acquisition-ledger.test.mjs'
       - 'research/evidence-surface-v2/run-dev-policy-monitor.mjs'
+      - 'research/evidence-surface-v2/monitor-stress.schema.json'
+      - 'research/evidence-surface-v2/dev/monitor-stress.jsonl'
+      - 'research/evidence-surface-v2/evaluate-monitor-stress.mjs'
+      - 'research/evidence-surface-v2/evaluate-monitor-stress.test.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -46,6 +50,9 @@ jobs:
 
       - name: Validate non-oracle ledger monitor
         run: node --test research/evidence-surface-v2/monitor-acquisition-ledger.test.mjs
+
+      - name: Validate monitor stress errors
+        run: node --test research/evidence-surface-v2/evaluate-monitor-stress.test.mjs
 
       - name: Generate machine audit
         run: |
