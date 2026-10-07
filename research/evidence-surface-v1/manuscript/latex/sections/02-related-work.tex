@@ -13,15 +13,28 @@ remembering, reasoning, recommending, and the reuse of invalidated memory
 not propose another memory architecture. We treat retrieval as an upstream intervention and
 ask how evidence visibility changes downstream supportedness.
 
-\paragraph{Evidence sufficiency and selective answering.}
+\paragraph{Evidence sufficiency, coverage, and selective answering.}
 Retrieval relevance is not the same as evidential support. RAG established retrieval as a
 grounding mechanism \citep{lewis2020rag}; AbstentionBench shows that even strong reasoning
 models struggle to abstain on unanswerable inputs \citep{kirichenko2025abstentionbench}.
 SURE-RAG explicitly models whether a delivered evidence set supports, refutes, or is
-insufficient for an answer \citep{qiu2026surerag}. Our setting differs because the main
-failure can occur \emph{before} visible-evidence sufficiency is assessed: the evidence
-surface may look internally coherent precisely because the record that would reveal
-supersession or invalidation is absent.
+insufficient for an answer \citep{qiu2026surerag}. HALT frames stopping in search agents as
+evidence coverage over expected claims \citep{roh2026halt}, and
+Evidence-Obligation Pool-Gated Retrieval uses an explicit obligation ledger and warrant
+gate \citep{kim2026obligation}. We therefore do \emph{not} claim novelty for evidence
+sufficiency, evidence coverage, or evidence obligations as concepts.
+
+A particularly relevant methodological result is \emph{Before Answering}
+\citep{mondal2026before}, which shows that deleting supporting evidence can create a
+memory-size shortcut for insufficiency detection. Our benchmark does not train a detector
+of treatment status: the frozen policy receives no Gold, treatment label, or expected-count
+input. Nevertheless, surface cardinality can differ after removal, so we make the narrower
+claim that an omission is \emph{silent relative to the frozen policy's declared gap checks},
+not statistically undetectable to every possible classifier.
+
+Our main failure can occur before visible-evidence sufficiency is assessed: the delivered
+surface may look locally actionable precisely because the record that would reveal a state
+transition, supersession, or invalidation is absent.
 
 \paragraph{Temporal state, belief revision, and revocation.}
 Belief revision and truth-maintenance systems formalize how conclusions should change as
