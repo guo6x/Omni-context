@@ -34,6 +34,8 @@ on:
       - 'research/evidence-surface-v2/execution-manifest.schema.json'
       - 'research/evidence-surface-v2/execution-results.schema.json'
       - 'research/evidence-surface-v2/execution-kernel.test.mjs'
+      - 'research/evidence-surface-v2/run-paired-surface-matrix.test.mjs'
+      - 'research/evidence-surface-v2/run-paired-surface-matrix.mjs'
       - 'research/evidence-surface-v2/execution-kernel.mjs'
       - 'research/evidence-surface-v2/policy-surface-vote.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
@@ -88,6 +90,7 @@ jobs:
       - name: Validate execution kernel contract
         run: |
           node --test research/evidence-surface-v2/execution-kernel.test.mjs
+          node --test research/evidence-surface-v2/run-paired-surface-matrix.test.mjs
           node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/execution-results.schema.json','utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/execution-manifest.schema.json','utf8'))"
 
