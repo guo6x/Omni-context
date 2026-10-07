@@ -11,6 +11,7 @@ on:
       - 'research/evidence-surface-v2/confirmatory-retrieval-embargo.test.mjs'
       - 'research/evidence-surface-v2/retrieval-input.schema.json'
       - 'research/evidence-surface-v2/retrieval-truth.schema.json'
+      - 'research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs'
       - 'research/evidence-surface-v2/RETRIEVAL_CONFIRMATORY_DESIGN_DRAFT.md'
       - '.github/workflows/research-evidence-v2-confirmatory-retrieval-construction.yml'
   workflow_dispatch:
@@ -54,6 +55,15 @@ jobs:
             research/evidence-surface-v2/out-confirmatory-retrieval/retriever-input.jsonl \
             research/evidence-surface-v2/out-confirmatory-retrieval/scoring-truth.jsonl \
             research/evidence-surface-v2/out-confirmatory-retrieval/construction-audit.json
+
+      - name: Validate generated confirmatory retrieval rows
+        run: |
+          node research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs \
+            research/evidence-surface-v2/retrieval-input.schema.json \
+            research/evidence-surface-v2/out-confirmatory-retrieval/retriever-input.jsonl
+          node research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs \
+            research/evidence-surface-v2/retrieval-truth.schema.json \
+            research/evidence-surface-v2/out-confirmatory-retrieval/scoring-truth.jsonl
 
       - name: Record construction hashes
         run: |
