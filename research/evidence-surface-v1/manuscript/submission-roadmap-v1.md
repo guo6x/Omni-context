@@ -6,74 +6,59 @@
 
 ## Venue decision
 
-### Primary target: IJCAI 2027 — provisional
+### Primary submission window: ARR 2026 October cycle — **2026-10-12 AoE**
 
-Current official IJCAI 2027 dates:
+This is now the preferred route.
+
+Why:
+
+- NAACL 2027 and COLING 2027 both accept papers through the ARR 2026 October cycle;
+- ARR long papers allow **8 content pages**, with a required Limitations section outside the content-page count and unlimited references;
+- the paper fits the ACL/ARR topic surface through language agents, long-term memory, retrieval, evidence sufficiency, abstention, and evaluation;
+- most importantly, ACL/ARR explicitly permits generative-AI writing/coding assistance when its scope is disclosed in the Responsible NLP Checklist and Acknowledgements.
+
+After ARR reviews/meta-review, the paper can be committed to one eligible venue under that cycle's rules.
+
+Current target ordering:
+
+1. **ARR 2026-10-12** → decide NAACL 2027 vs COLING 2027 at commitment;
+2. **ARR 2027-01-04** → ACL 2027 if the October submission is not ready or needs revision;
+3. **ECAI 2027** as a later broad-AI backup.
+
+### IJCAI 2027 — paused for policy compliance
+
+IJCAI 2027 currently lists:
 
 - abstract deadline: **2027-01-04 AoE**
 - full paper deadline: **2027-01-11 AoE**
-- notification: **2027-04-21**
-- conference: Kyoto, Japan, 2027-08-07 to 2027-08-13
 
-Why it currently fits:
+However, the most recent available IJCAI main-track policy (2026) says LLMs may be used to polish style/language but not to write paper content, with violations subject to desk rejection.
 
-- broad AI scope rather than narrowly ML-statistical novelty;
-- paper concerns autonomous-agent decision safety, memory/retrieval boundaries, reasoning, and system architecture;
-- the contribution is a controlled mechanism finding rather than a new neural model;
-- enough time remains to produce a clean submission without contaminating frozen P2.
+Our actual workflow includes substantive generative-AI assistance in framing and drafting. Therefore IJCAI must **not** be treated as an active target unless the official IJCAI 2027 policy explicitly permits this workflow.
 
-Caveat: the 2027 site currently exposes the dates but the full author/formatting call must be rechecked when published. Do not lock page layout until the official 2027 author instructions are live.
+### ACL/ARR disclosure requirement
 
-### Secondary target: ACL 2027 via ARR
+For ARR submission:
 
-Current official ACL 2027 timeline:
-
-- ARR cycle deadline: **2027-01-04 AoE**
-- ACL main conference: Kyoto, Japan, 2027-08-20 to 2027-08-22
-
-ACL becomes attractive if the paper is positioned more strongly around:
-
-- memory-grounded language agents;
-- evidence sufficiency;
-- retrieval and selective decision behavior;
-- stale/superseding conversational memory.
-
-Risk: the deterministic policy and formal systems-safety framing may fit broad AI better than core NLP unless the language-agent relevance is made explicit.
-
-### Backup: ECAI 2027
-
-Current official full-paper deadline:
-
-- **2027-04-14**
-
-Useful as a later broad-AI backup if IJCAI/ARR positioning is not satisfactory.
-
-## Venues not actionable in this cycle
+- generative-AI writing/coding assistance must be disclosed truthfully;
+- the Responsible NLP Checklist must describe scope;
+- details should be retained for the Acknowledgements/camera-ready disclosure;
+- AI must not be listed as an author;
+- human authors remain responsible for every claim, citation, analysis, and submitted artifact.
 
 ### AAMAS 2027
-The topic fit is strong, especially its Generative and Agentic AI area, but:
 
-- abstract deadline: 2026-10-01 AoE — **missed**
-- full paper deadline: 2026-10-08 AoE
+The topic fit is strong, but the required abstract deadline (2026-10-01 AoE) has already passed. Do not attempt a noncompliant submission.
 
-A new submission cannot be started after missing the required abstract deadline. Do not rush or attempt a noncompliant submission.
+### ICLR / AISTATS / AAAI 2027
 
-### ICLR 2027
-- abstract deadline: 2026-09-18 AoE — passed
-- paper deadline: 2026-09-25 AoE — passed
-
-### AISTATS 2027
-- abstract deadline: 2026-09-29 AoE — passed
-- paper deadline: 2026-10-06 AoE — passed
-
-### AAAI 2027 main track
-- abstract deadline: 2026-07-21 AoE — passed
-- paper deadline: 2026-07-28 AoE — passed
+Their applicable main-track deadlines have already passed.
 
 ### TMLR
-Do not immediately resubmit a third version of the old architecture paper. The new manuscript is a materially different research story and should be treated as a new paper.
 
-## Work plan to IJCAI/ARR window
+Do not resubmit the old architecture paper. The current manuscript is a materially different study.
+
+## Work plan to ARR submission
 
 ### M1 — scientific narrative lock
 Target: now
