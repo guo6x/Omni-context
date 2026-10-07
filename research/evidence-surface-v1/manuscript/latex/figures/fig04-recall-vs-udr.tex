@@ -1,0 +1,29 @@
+% Three frozen retrieval conditions only. No fitted line by design.
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\linewidth,
+  height=5.6cm,
+  xmin=55, xmax=65,
+  ymin=27, ymax=36,
+  xlabel={Mandatory-fact recall (\%)},
+  ylabel={UDR (\%)},
+  grid=both,
+  grid style={black!10},
+  axis line style={black!60},
+  tick style={black!60}
+]
+\addplot[
+  only marks,
+  mark=*,
+  mark size=3pt,
+  black
+] coordinates {
+  (\HashRecall,\HashUDR)
+  (\HybridRecall,\HybridUDR)
+  (\LexRecall,\LexUDR)
+};
+\node[anchor=south west,font=\scriptsize] at (axis cs:\HashRecall,\HashUDR) {Hash-dense};
+\node[anchor=north west,font=\scriptsize] at (axis cs:\HybridRecall,\HybridUDR) {Hybrid};
+\node[anchor=south west,font=\scriptsize] at (axis cs:\LexRecall,\LexUDR) {Lexical};
+\end{axis}
+\end{tikzpicture}
