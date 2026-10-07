@@ -85,7 +85,7 @@ jobs:
           rm -rf research/evidence-surface-v2/out-ci
           node research/evidence-surface-v2/generate-dev-paired-worlds.mjs \
             research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl
-          node research/evidence-surface-v2/audit-dev-benchmark.mjs > \
+          node research/evidence-surface-v2/audit-dev-benchmark.mjs \
             research/evidence-surface-v2/out-ci/generated-dev-audit.json
           node research/evidence-surface-v2/run-dev-policy-monitor.mjs \
             research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl \
@@ -123,6 +123,8 @@ jobs:
           test -s research/evidence-surface-v2/out-ci/monitor-stress.json
           test -s research/evidence-surface-v2/out-ci/independent-policy-v1.json
           test -s research/evidence-surface-v2/out-ci/paired-world-policy-replication.json
+          echo "=== out-ci artifact inventory ==="
+          ls -lah research/evidence-surface-v2/out-ci
 
       - name: Show key findings
         run: |
