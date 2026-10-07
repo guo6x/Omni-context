@@ -1,4 +1,4 @@
-# When Missing Evidence Leaves No Trace: Obligation Coverage and Silent Retrieval Failures in Agent Decision Safety
+# When Missing Evidence Leaves No Trace: Silent Retrieval Failures in Agent Decision Safety
 
 > **Draft v0.1 — evidence-surface rewrite**
 >
@@ -42,7 +42,7 @@ Finally, the coverage-aware condition isolates the information requirement of th
 
 ### Contributions
 
-This paper makes five bounded contributions:
+This paper makes five bounded contributions. We do **not** claim to introduce evidence obligations or evidence coverage as concepts:
 
 - We formalize **silent evidence omission** as uncovered required evidence whose absence is not detectable by the downstream policy's visible-gap checks, distinguishing it from stale-memory resolution and from retrieval that incorrectly returns already-revoked records.
 - We provide a preregistered paired intervention that holds world state and policy fixed while changing only mandatory-evidence visibility.
@@ -62,9 +62,9 @@ Our study does not propose another memory architecture. It treats retrieval as a
 
 ### 2.2 Evidence sufficiency and selective answering
 
-Selective prediction and abstention study when a system should decline to answer. AbstentionBench shows that modern reasoning models still struggle with unanswerable or underspecified questions. Recent evidence-sufficiency work such as SURE-RAG explicitly separates topical retrieval from whether the retrieved set actually supports an answer, and evidence-sufficiency boundary training studies the transition from insufficient to sufficient evidence.
+Selective prediction and abstention study when a system should decline to answer. AbstentionBench shows that modern reasoning models still struggle with unanswerable or underspecified questions. Recent evidence-sufficiency work such as SURE-RAG explicitly separates topical retrieval from whether the retrieved set actually supports an answer. HALT frames retrieval stopping as evidence coverage over expected claims, while Evidence-Obligation Pool-Gated Retrieval uses an explicit obligation ledger and warrant gate. A September 2026 study, *Before Answering*, further shows that evidence-deletion benchmarks can leak insufficiency labels through surface-size shortcuts unless construction is controlled.
 
-Our setting differs in two ways. First, the output is a bounded decision action rather than only a factual answer. Second, our main failure mode is *silent omission*: the visible evidence can look internally sufficient because the record that would reveal supersession or invalidation is itself absent. This shifts attention from assessing the content of visible evidence to assessing whether the evidence obligations themselves are covered.
+Our setting therefore does **not** claim novelty for the ideas of evidence sufficiency, evidence coverage, or evidence obligations themselves. The narrower contribution is a policy-relative failure mechanism: the visible surface can remain locally actionable after a required state-transition record disappears. The output is a bounded decision action rather than only a factual answer, and our intervention asks when an uncovered requirement leaves no policy-visible gap. *Before Answering* is particularly relevant methodologically: our policy has no hidden treatment label, Gold access, or expected-count input, but because the surface cardinality can still differ after evidence removal, we do not claim that the omission is statistically undetectable to every possible classifier. “Silent” means silent relative to the frozen downstream policy's declared checks.
 
 ### 2.3 Temporal state, revision, revocation, and supersession
 
