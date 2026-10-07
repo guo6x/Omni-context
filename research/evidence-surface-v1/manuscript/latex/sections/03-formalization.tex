@@ -1,0 +1,64 @@
+
+\section{Problem Formulation}
+\label{sec:formal}
+
+For a decision instance $x$, let $O(x)$ be the set of evidence obligations required by a
+frozen formal safety contract, and let $S(x)$ be the evidence surface delivered to the
+downstream policy.
+
+\paragraph{Formal coverage.}
+Define
+\[
+C(x,S)=
+\begin{cases}
+1,& \text{if every obligation in } O(x) \text{ is covered by } S,\\
+0,& \text{otherwise.}
+\end{cases}
+\]
+Coverage is evaluated from the frozen formal world specification, not inferred by the
+downstream policy.
+
+\paragraph{Unsupported decisive behavior.}
+Let $a(x,S)$ be the policy action. Actions are partitioned into consequential decisive
+actions and safe fallback actions such as \textsc{Clarify}, \textsc{Defer}, or
+\textsc{RequestApproval}. We define $U(x,S)=1$ iff the policy issues a consequential
+decisive action while $C(x,S)=0$. The unsupported-decision rate (UDR) is the mean of $U$
+over a condition. UDR is a contract-level supportedness metric; it is not a human-preference,
+utility, or real-world correctness metric.
+
+\paragraph{Detectable gaps and silent omissions.}
+Let $G(S)=1$ when the frozen policy's visible-gap checks detect that required information is
+missing. An uncovered obligation is \emph{detectable} when $C(x,S)=0$ and $G(S)=1$, causing
+a safe fallback. It is \emph{silent relative to the policy} when
+\[
+C(x,S)=0 \quad \text{and} \quad G(S)=0.
+\]
+In that case, the delivered surface contains no local cue that a required obligation is
+uncovered. The definition is policy-relative: an omission silent for one policy may be
+detectable for another.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Formal coverage & Visible gap cue & Expected frozen-policy behavior \\
+\midrule
+Complete & irrelevant & decisive action may be supported \\
+Incomplete & present & safe fallback \\
+Incomplete & absent & silent-omission risk \\
+Incomplete + coverage signal & may be absent & coverage-aware fallback \\
+\bottomrule
+\end{tabular}
+\caption{Mechanism taxonomy. This is a property of the formal contract and frozen policy,
+not a claim that all deployed agents implement the same gap checks.}
+\label{tab:taxonomy}
+\end{table}
+
+\paragraph{Coverage-completeness signal.}
+C5 augments the policy input with one boolean $z=C(x,S)$. No missing evidence content is
+disclosed. If $z=0$, the frozen C5 rule returns \textsc{Defer} before the ordinary policy
+logic. If $z=1$, it executes the same logic as the coverage-blind conditions. C5 is
+therefore a mechanism test: it asks whether making obligation incompleteness observable is
+sufficient to prevent the measured unsupported-decision failure on an otherwise identical
+surface.
