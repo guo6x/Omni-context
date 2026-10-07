@@ -1,0 +1,39 @@
+
+\section{Reproducibility}
+\label{sec:repro}
+
+The study was preregistered before P2 outcomes. The 180 formal samples, dual validators,
+treatment contract, downstream policy, retrievers, top-$k$, hash dimension, RRF constant,
+primary endpoint, McNemar test, bootstrap procedure, seed, and formal gates were frozen
+before the confirmatory run.
+
+P2 contains \PtwoEvaluations{} deterministic evaluations across six conditions and uses
+zero provider/model calls and zero cash cost. The authoritative result artifact is
+\texttt{research/evidence-surface-v1/p2/out/p2-results.json}, frozen at blob SHA
+\texttt{e8a749a6707dbf4614b20ef6248f81eb43dd89d4}. The figure-value macros in this paper
+record that exact source SHA.
+
+The reported P2 results were produced by replaying the frozen GitHub artifacts and frozen
+JavaScript logic in a V8 execution environment. A repository-local Node replay remains
+desirable as a runtime-equivalence check. Such a replay cannot alter the frozen samples,
+policy, retriever parameters, statistical rules, gates, or reported outcomes.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+A downstream safety policy can only reason about the evidence it can see. In our formally
+specified synthetic benchmark, hiding a required item raises unsupported decisive behavior
+from 0\% to 16.67\%, but the effect is not generic: it is concentrated in
+override/invalidation cases where the omitted superseding record leaves no visible trace
+that anything is missing. Frozen top-$k$ retrieval produces UDRs near 30\%, and aggregate
+mandatory-fact recall is not a strictly monotonic safety surrogate.
+
+On an identical hybrid retrieval surface, a one-bit evidence-obligation completeness
+signal removes the measured unsupported decisions while preserving decisive behavior
+whenever formal coverage is complete. This does not imply that reliable coverage monitoring
+is easy. It isolates the architectural requirement: systems that place safety checks
+downstream of retrieval need a way to distinguish the visible evidence looking sufficient
+from the required evidence obligations actually being covered.
+
+The next research problem is therefore not only better retrieval. It is trustworthy
+evidence-obligation accounting under open-world, changing state.
