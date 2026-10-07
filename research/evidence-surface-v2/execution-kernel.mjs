@@ -50,6 +50,12 @@ function monitorStates(pair,name){
 }
 
 export function executePairedSurface(pair,{policy,monitor}){
+  if(monitor==='M1_ALWAYS_DEFER' && policy!=='P_NONE'){
+    throw new Error('M1_ALWAYS_DEFER must use P_NONE');
+  }
+  if(monitor!=='M1_ALWAYS_DEFER' && policy==='P_NONE'){
+    throw new Error('P_NONE is valid only for M1_ALWAYS_DEFER');
+  }
   if(stable(pair.world_a.policy_input)!==stable(pair.world_b.policy_input)){
     throw new Error('paired policy inputs are not canonically identical: '+pair.pair_id);
   }
