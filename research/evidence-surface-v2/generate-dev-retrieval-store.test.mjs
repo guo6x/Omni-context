@@ -10,8 +10,9 @@ test('retrieval dev store has 50 paired A/B cases',()=>{
   assert.equal(cases.filter(x=>x.member==='B').length,50);
 });
 
-test('A and B differ only by the hidden target document at source-store level',()=>{
+test('A and B have equal-size stores and a matched transition slot',()=>{
   const byPair=new Map();
+  const tokenize=s=>(s.toLowerCase().match(/[a-z0-9]+/g)??[]);
   for(const c of cases){
     if(!byPair.has(c.pair_id))byPair.set(c.pair_id,{});
     byPair.get(c.pair_id)[c.member]=c;
@@ -19,13 +20,27 @@ test('A and B differ only by the hidden target document at source-store level',(
   for(const {A,B} of byPair.values()){
     assert.equal(A.target_document_id,null);
     assert.ok(B.target_document_id);
-    assert.equal(A.documents.length,10);
+    assert.equal(A.documents.length,11);
     assert.equal(B.documents.length,11);
-    const aIds=new Set(A.documents.map(x=>x.document_id));
-    const extras=B.documents.filter(x=>!aIds.has(x.document_id));
-    assert.equal(extras.length,1);
-    assert.equal(extras[0].document_id,B.target_document_id);
-    assert.equal(extras[0].is_target,true);
+    assert.equal(A.transition_slot_document_id,B.transition_slot_document_id);
+    assert.equal(B.transition_slot_document_id,B.target_document_id);
+    assert.deepEqual(A.documents.map(x=>x.document_id),B.documents.map(x=>x.document_id));
+
+    const aById=new Map(A.documents.map(x=>[x.document_id,x]));
+    const bById=new Map(B.documents.map(x=>[x.document_id,x]));
+    for(const id of A.documents.map(x=>x.document_id)){
+      const a=aById.get(id),b=bById.get(id);
+      if(id===A.transition_slot_document_id){
+        assert.equal(a.kind,'matched_control');
+        assert.equal(a.is_target,false);
+        assert.deepEqual(a.supports_candidates,[]);
+        assert.equal(b.kind,'hidden_transition');
+        assert.equal(b.is_target,true);
+        assert.equal(tokenize(a.fact).length,tokenize(b.fact).length);
+      }else{
+        assert.deepEqual(a,b);
+      }
+    }
   }
 });
 
