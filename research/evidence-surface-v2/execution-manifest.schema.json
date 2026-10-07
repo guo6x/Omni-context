@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/guo6x/Omni-context/research/evidence-surface-v2/execution-manifest.schema.json",
+  "title": "Evidence Surface V2 execution manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "authorization_id",
+    "git_head",
+    "frozen_corpus_sha256",
+    "source_hashes",
+    "result_schema_sha256",
+    "runtime",
+    "confirmatory_outcome_started"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "status": {
+      "enum": [
+        "AUTHORIZED_NOT_RUN",
+        "RUNNING",
+        "COMPLETE",
+        "CORRECTED"
+      ]
+    },
+    "authorization_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "git_head": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "frozen_corpus_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "source_hashes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "result_schema_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "python",
+        "retrieval_environment_lock_sha256"
+      ],
+      "properties": {
+        "node": {
+          "type": "string",
+          "minLength": 1
+        },
+        "python": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retrieval_environment_lock_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "llm_replication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "models"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "confirmatory_outcome_started": {
+      "type": "boolean"
+    },
+    "started_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}
