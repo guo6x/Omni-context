@@ -20,6 +20,9 @@ on:
       - 'research/evidence-surface-v2/dev/monitor-stress.jsonl'
       - 'research/evidence-surface-v2/evaluate-monitor-stress.mjs'
       - 'research/evidence-surface-v2/evaluate-monitor-stress.test.mjs'
+      - 'research/evidence-surface-v2/policy-currentness-first.mjs'
+      - 'research/evidence-surface-v2/policy-currentness-first.test.mjs'
+      - 'research/evidence-surface-v2/evaluate-independent-policy-v1.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -53,6 +56,9 @@ jobs:
 
       - name: Validate monitor stress errors
         run: node --test research/evidence-surface-v2/evaluate-monitor-stress.test.mjs
+
+      - name: Validate independent currentness policy
+        run: node --test research/evidence-surface-v2/policy-currentness-first.test.mjs
 
       - name: Generate machine audit
         run: |
