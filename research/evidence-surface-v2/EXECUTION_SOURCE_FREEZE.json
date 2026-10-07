@@ -6,12 +6,14 @@
     "research/evidence-surface-v2/policy-surface-vote.mjs": "701482ffcf8ee572adae00cda4c8ca209d955d98",
     "research/evidence-surface-v2/policy-currentness-first.mjs": "a4a8b366bcaaaacb6e8c6640aa895b03839ab6d9",
     "research/evidence-surface-v2/monitor-acquisition-ledger.mjs": "7deeec1abbef9ac06b25e159f589b6393f9310aa",
-    "research/evidence-surface-v2/execution-kernel.mjs": "bdef5c769629a2aaad4445a065390ddeffba8ef5",
+    "research/evidence-surface-v2/execution-kernel.mjs": "cbf5d0e9b0678a7f201a62afe43cd57845a47a71",
     "research/evidence-surface-v2/execution-kernel.test.mjs": "0a946a0a1a94ab2a421715d86c5edc96d0db9e92",
-    "research/evidence-surface-v2/execution-results.schema.json": "7de8008da6694de6270b329550265822fce1bfb8",
+    "research/evidence-surface-v2/execution-results.schema.json": "242b84992da9da663271b10d496ee6bebb621ff4",
     "research/evidence-surface-v2/execution-manifest.schema.json": "6a78b11defce2b20e480abde934606a9d0e20a4b",
     "research/evidence-surface-v2/EXECUTION_MATRIX.json": "30a079609aece606ab413f2803dcdd8ab57c44ae",
-    "research/evidence-surface-v2/retrieval-execution-results.schema.json": "7fca1f00727ff1dba9dd0f7bfb09f15180ea8c7b"
+    "research/evidence-surface-v2/retrieval-execution-results.schema.json": "7fca1f00727ff1dba9dd0f7bfb09f15180ea8c7b",
+    "research/evidence-surface-v2/run-paired-surface-matrix.mjs": "846afb801dd9d8fe111aa4b796e68ed376a33363",
+    "research/evidence-surface-v2/run-paired-surface-matrix.test.mjs": "05c5f683d0921c58966b11f7c97f030244e43ba7"
   },
   "frozen_conditions": {
     "paired_surface_condition_count": 9,
@@ -32,7 +34,9 @@
       "M4_ORACLE_COMPLETENESS"
     ],
     "one_surface_one_policy_call_max": true,
-    "condition_matrix_path": "research/evidence-surface-v2/EXECUTION_MATRIX.json"
+    "condition_matrix_path": "research/evidence-surface-v2/EXECUTION_MATRIX.json",
+    "runner_path": "research/evidence-surface-v2/run-paired-surface-matrix.mjs",
+    "monitor_error_diagnostics": true
   },
   "declarations": {
     "confirmatory_policy_outcomes_executed": false,
