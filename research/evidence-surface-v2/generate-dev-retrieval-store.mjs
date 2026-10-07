@@ -4,13 +4,23 @@ import { fileURLToPath } from 'node:url';
 import { generateDevPairs } from './generate-dev-paired-worlds.mjs';
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
+const TOKEN_RE=/[a-z0-9]+/g;
+
+function tokenize(text){return text.toLowerCase().match(TOKEN_RE)??[];}
+function matchedControlFact(pair,targetFact){
+  const n=tokenize(targetFact).length;
+  const seed=('routine archival metadata record for '+pair.construction_provenance.domain_id+' documents an unrelated historical operation with no change to the present decision state').toLowerCase().match(TOKEN_RE)??[];
+  const out=[];
+  for(let i=0;i<n;i++)out.push(seed[i%seed.length]);
+  return out.join(' ');
+}
 
 function targetEvidence(pair){
   const family=pair.family;
   const hidden=pair.world_b.hidden_state.hidden_events[0];
   const correct=pair.world_b.allowed_decisive_actions[0];
   const base={
-    document_id:pair.pair_id+'-target',
+    document_id:pair.pair_id+'-transition-slot',
     kind:'hidden_transition',
     is_target:true,
     source_event_id:hidden.event_id,
@@ -52,6 +62,20 @@ const DISTRACTOR_BUILDERS=[
   (p,i)=>'Telemetry summary '+(i+1)+' reports routine measurements for the entity while explicitly containing no new decision instruction.'
 ];
 
+function matchedControl(pair,target){
+  return {
+    document_id:target.document_id,
+    kind:'matched_control',
+    is_target:false,
+    source_event_id:pair.pair_id+'-matched-control-src',
+    role:'distractor',
+    fact:matchedControlFact(pair,target.fact),
+    currentness:'current',
+    supports_candidates:[],
+    at:target.at
+  };
+}
+
 function distractors(pair){
   return DISTRACTOR_BUILDERS.map((fn,i)=>({
     document_id:pair.pair_id+'-distractor-'+String(i+1),
@@ -88,13 +112,16 @@ export function generateDevRetrievalCases(){
         prior_state:pair.world_a.policy_input.prior_state,
         documents:docs,
         target_document_id:member==='B'?target.document_id:null,
+        transition_slot_document_id:target.document_id,
         allowed_decisive_actions:world.allowed_decisive_actions,
         expected_visible_base_ids:visible.map(x=>x.document_id),
         construction:{
           split:'dev',
           generator_version:'retrieval-dev-source-store-0.1',
           distractor_count:noise.length,
-          target_present:member==='B'
+          target_present:member==='B',
+          matched_slot:true,
+          transition_slot_token_count:tokenize(target.fact).length
         }
       });
     }
