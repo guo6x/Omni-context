@@ -87,6 +87,14 @@
         },
         "notes": {
           "type": "string"
+        },
+        "domain_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generator_version": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": false
