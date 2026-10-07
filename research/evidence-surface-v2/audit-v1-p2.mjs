@@ -25,12 +25,12 @@ export function buildAudit(){
   for(const c of C){
     const rs=rows.filter(r=>r.condition===c), decisive=rs.filter(r=>r.decisive), u=rs.filter(r=>r.unsupported_decision);
     const wavr=decisive.filter(r=>!allowed(r));
-    const fedd=rs.filter(r=>!same(r,C0.get(r.sample_id)));
+    const fedd=rs.filter(r=>!same(r,C0.get(r.sample_id)));\n    const decisiveFedd=decisive.filter(r=>!same(r,C0.get(r.sample_id)));
     cond[c]={
       n:rs.length,
       unsupported_count:u.length,udr:round(u.length/rs.length),
       wavr_count:wavr.length,wavr:round(wavr.length/rs.length),
-      fedd_count:fedd.length,fedd:round(fedd.length/rs.length),
+      fedd_count:fedd.length,fedd:round(fedd.length/rs.length),\n      decisive_fedd_count:decisiveFedd.length,
       unsupported_but_c0_match_count:u.filter(r=>same(r,C0.get(r.sample_id))).length,
       decisive_count:decisive.length,
       fallback_count:rs.length-decisive.length,
@@ -76,7 +76,7 @@ export function buildAudit(){
     metric_definitions:{
       UDR:'decisive while required-fact coverage is incomplete',
       WAVR:'decisive action_family not allowed by the full-world decision contract',
-      FEDD:'(action_family,candidate) differs from the same sample under C0_FULL'
+      FEDD:'any output (action_family,candidate) differs from the same sample under C0_FULL',\n      decisive_FEDD:'decisive output differs from the same sample under C0_FULL; excludes conservative fallback-only changes'
     },
     by_condition:cond,
     by_family:family,
@@ -109,7 +109,7 @@ export function markdown(a){
   const L=['# V1 P2 Forensic Audit - Machine Replay','','| Condition | UDR | WAVR | FEDD | UDR but C0-match |','|---|---:|---:|---:|---:|'];
   for(const c of C){const m=a.by_condition[c];L.push('| '+c+' | '+m.unsupported_count+'/'+m.n+' ('+pct(m.udr)+') | '+m.wavr_count+'/'+m.n+' ('+pct(m.wavr)+') | '+m.fedd_count+'/'+m.n+' ('+pct(m.fedd)+') | '+m.unsupported_but_c0_match_count+' |');}
   L.push('','## Hard findings','',
-    '- C1: 30 UDR, 30 WAVR, 30 FEDD.',
+    '- C1: 30 UDR, 30 WAVR, 180 FEDD because all 150 safe fallbacks also differ from C0; decisive FEDD = 30.',
     '- C2/C3/C4: UDR = 56/61/53, but WAVR = 18/23/24.',
     '- All 30 F6 C1 surfaces retain visible `currentness=superseded` metadata.',
     '- C5 incomplete cases = '+a.c5_oracle_audit.incomplete_count+' and decisive among them = '+a.c5_oracle_audit.incomplete_decisive_count+'.',
