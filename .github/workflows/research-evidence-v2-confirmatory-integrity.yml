@@ -1,0 +1,75 @@
+name: Evidence Surface V2 Confirmatory Integrity
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/confirmatory/**'
+      - 'research/evidence-surface-v2/generate-confirmatory-paired-worlds.mjs'
+      - 'research/evidence-surface-v2/audit-confirmatory-construction.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world-b.mjs'
+      - '.github/workflows/research-evidence-v2-confirmatory-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Require frozen corpus files
+        run: |
+          test -s research/evidence-surface-v2/confirmatory/corpus.jsonl
+          test -s research/evidence-surface-v2/confirmatory/construction-audit.json
+          test -s research/evidence-surface-v2/confirmatory/SHA256SUMS.txt
+          test -s research/evidence-surface-v2/confirmatory/CONSTRUCTION_FREEZE.md
+
+      - name: Regenerate and compare byte-for-byte
+        run: |
+          rm -rf /tmp/es-v2-confirmatory-integrity
+          mkdir -p /tmp/es-v2-confirmatory-integrity
+          node research/evidence-surface-v2/generate-confirmatory-paired-worlds.mjs \
+            /tmp/es-v2-confirmatory-integrity/corpus.jsonl
+          node research/evidence-surface-v2/audit-confirmatory-construction.mjs \
+            /tmp/es-v2-confirmatory-integrity/construction-audit.json
+          cmp research/evidence-surface-v2/confirmatory/corpus.jsonl \
+            /tmp/es-v2-confirmatory-integrity/corpus.jsonl
+          cmp research/evidence-surface-v2/confirmatory/construction-audit.json \
+            /tmp/es-v2-confirmatory-integrity/construction-audit.json
+
+      - name: Re-run dual validators on frozen corpus
+        run: |
+          node research/evidence-surface-v2/validate-paired-world.mjs \
+            research/evidence-surface-v2/confirmatory/corpus.jsonl \
+            /tmp/es-v2-confirmatory-integrity/validator-a.json
+          node research/evidence-surface-v2/validate-paired-world-b.mjs \
+            research/evidence-surface-v2/confirmatory/corpus.jsonl \
+            /tmp/es-v2-confirmatory-integrity/validator-b.json
+
+      - name: Verify frozen SHA256
+        run: |
+          EXPECTED="$(awk '/corpus.jsonl$/ {print $1}' research/evidence-surface-v2/confirmatory/SHA256SUMS.txt)"
+          ACTUAL="$(sha256sum research/evidence-surface-v2/confirmatory/corpus.jsonl | awk '{print $1}')"
+          echo "expected=$EXPECTED"
+          echo "actual=$ACTUAL"
+          test "$EXPECTED" = "$ACTUAL"
+
+      - name: Outcome firewall
+        run: |
+          if grep -R -E '"(monitor_status|policy_output|world_action_violation|model_response|llm_output)"' \
+            research/evidence-surface-v2/confirmatory/corpus.jsonl \
+            research/evidence-surface-v2/confirmatory/construction-audit.json; then
+            echo "Outcome field found in construction-frozen material"
+            exit 1
+          fi
+          echo "Frozen construction remains outcome-free."
