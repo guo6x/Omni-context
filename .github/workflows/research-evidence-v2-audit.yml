@@ -25,6 +25,8 @@ on:
       - 'research/evidence-surface-v2/evaluate-independent-policy-v1.mjs'
       - 'research/evidence-surface-v2/evaluate-paired-world-policies.mjs'
       - 'research/evidence-surface-v2/evaluate-paired-world-policies.test.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world-b.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world-cross.test.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -53,6 +55,9 @@ jobs:
       - name: Validate paired-world construction contract
         run: node --test research/evidence-surface-v2/validate-paired-world.test.mjs
 
+      - name: Cross-check paired-world validators
+        run: node --test research/evidence-surface-v2/validate-paired-world-cross.test.mjs
+
       - name: Validate non-oracle ledger monitor
         run: node --test research/evidence-surface-v2/monitor-acquisition-ledger.test.mjs
 
@@ -72,12 +77,16 @@ jobs:
           node research/evidence-surface-v2/validate-paired-world.mjs \
             research/evidence-surface-v2/dev/paired-world-toy.jsonl \
             research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
+          node research/evidence-surface-v2/validate-paired-world-b.mjs \
+            research/evidence-surface-v2/dev/paired-world-toy.jsonl \
+            research/evidence-surface-v2/out-ci/paired-world-dev-validation-b.json
           node research/evidence-surface-v2/run-dev-policy-monitor.mjs \
             research/evidence-surface-v2/dev/paired-world-toy.jsonl \
             research/evidence-surface-v2/out-ci/paired-world-dev-monitor.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.md
           test -s research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
+          test -s research/evidence-surface-v2/out-ci/paired-world-dev-validation-b.json
           test -s research/evidence-surface-v2/out-ci/paired-world-dev-monitor.json
 
       - name: Show key findings
