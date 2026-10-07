@@ -25,12 +25,14 @@ export function buildAudit(){
   for(const c of C){
     const rs=rows.filter(r=>r.condition===c), decisive=rs.filter(r=>r.decisive), u=rs.filter(r=>r.unsupported_decision);
     const wavr=decisive.filter(r=>!allowed(r));
-    const fedd=rs.filter(r=>!same(r,C0.get(r.sample_id)));\n    const decisiveFedd=decisive.filter(r=>!same(r,C0.get(r.sample_id)));
+    const fedd=rs.filter(r=>!same(r,C0.get(r.sample_id)));
+    const decisiveFedd=decisive.filter(r=>!same(r,C0.get(r.sample_id)));
     cond[c]={
       n:rs.length,
       unsupported_count:u.length,udr:round(u.length/rs.length),
       wavr_count:wavr.length,wavr:round(wavr.length/rs.length),
-      fedd_count:fedd.length,fedd:round(fedd.length/rs.length),\n      decisive_fedd_count:decisiveFedd.length,
+      fedd_count:fedd.length,fedd:round(fedd.length/rs.length),
+      decisive_fedd_count:decisiveFedd.length,
       unsupported_but_c0_match_count:u.filter(r=>same(r,C0.get(r.sample_id))).length,
       decisive_count:decisive.length,
       fallback_count:rs.length-decisive.length,
@@ -76,7 +78,8 @@ export function buildAudit(){
     metric_definitions:{
       UDR:'decisive while required-fact coverage is incomplete',
       WAVR:'decisive action_family not allowed by the full-world decision contract',
-      FEDD:'any output (action_family,candidate) differs from the same sample under C0_FULL',\n      decisive_FEDD:'decisive output differs from the same sample under C0_FULL; excludes conservative fallback-only changes'
+      FEDD:'any output (action_family,candidate) differs from the same sample under C0_FULL',
+      decisive_FEDD:'decisive output differs from the same sample under C0_FULL; excludes conservative fallback-only changes'
     },
     by_condition:cond,
     by_family:family,
