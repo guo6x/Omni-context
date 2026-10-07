@@ -51,11 +51,12 @@ decision-visible surface. In STALE, later evidence is available but not correctl
 integrated; here, the evidence encoding the transition may never reach the downstream
 policy.
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{p{0.16\textwidth}p{0.27\textwidth}p{0.28\textwidth}p{0.20\textwidth}}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{p{0.19\columnwidth}p{0.29\columnwidth}p{0.27\columnwidth}p{0.19\columnwidth}}
 \toprule
 Work & Primary failure boundary & Updating / revoking evidence & Main direction \\
 \midrule
@@ -64,8 +65,9 @@ STALE & New evidence does not revise prior state & Later evidence exists & State
 Revoked but Still Authoritative & Revoked record is still returned & Revocation exists in memory path & Filter invalid records \\
 \textbf{This work} & Superseding evidence disappears without a visible gap & \textbf{Transition evidence absent from decision surface} & \textbf{Obligation coverage} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Functional boundary relative to the nearest contemporary work. The rows address
 adjacent failure surfaces and are not intended as a performance ranking.}
 \label{tab:nearest}
-\end{table*}
+\end{table}
