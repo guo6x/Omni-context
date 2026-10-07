@@ -37,11 +37,16 @@ export function validateValue(schema,value,p='root',errors=[]){
     const keys=Object.keys(value);
     if(schema.minProperties!==undefined&&keys.length<schema.minProperties)errors.push(p+': minProperties');
     for(const req of schema.required??[])if(!(req in value))errors.push(p+': missing required '+req);
+    const defined=schema.properties??{};
     if(schema.additionalProperties===false){
-      const allowed=new Set(Object.keys(schema.properties??{}));
+      const allowed=new Set(Object.keys(defined));
       for(const k of keys)if(!allowed.has(k))errors.push(p+': additional property '+k);
+    }else if(schema.additionalProperties&&typeof schema.additionalProperties==='object'){
+      for(const k of keys){
+        if(!(k in defined)) validateValue(schema.additionalProperties,value[k],p+'.'+k,errors);
+      }
     }
-    for(const [k,sub] of Object.entries(schema.properties??{})){
+    for(const [k,sub] of Object.entries(defined)){
       if(k in value)validateValue(sub,value[k],p+'.'+k,errors);
     }
   }
