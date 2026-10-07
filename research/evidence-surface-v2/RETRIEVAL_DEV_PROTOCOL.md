@@ -25,4 +25,31 @@
 
 The semantic model/revision and library version are selected before any confirmatory retrieval outcomes.
 
-The development workflow will record the exact resolved Python package environment. A lock file must be committed before confirmatory retrieval is authorized.
+## Truth firewall and matched-slot controls
+
+The development retrieval bundle is split physically into:
+
+- `retriever-input.jsonl` — the only file supplied to BM25/BGE;
+- `scoring-truth.jsonl` — joined only after ranking for evaluation.
+
+Retriever-visible case/document/source IDs are deterministic opaque hashes. They do not encode pair member, target/hidden/visible/distractor labels, transition family, or correctness.
+
+For each A/B pair:
+
+- document count is identical;
+- ordered document IDs are identical;
+- all non-transition-slot documents are identical;
+- a single shared opaque slot contains either a decision-irrelevant matched control (A) or the real hidden transition (B);
+- the A/B slot texts have equal tokenizer length under `[a-z0-9]+`.
+
+This removes corpus-size and obvious identifier/tie-break leakage while preserving the intended semantic retrieval contrast.
+
+## Reproducibility lock
+
+The exact successful Python environment is committed in:
+
+`requirements-retrieval-v2.lock.txt`
+
+Pinned interpreter: Python `3.11.16`.
+
+The final development reproduction gate must install from that lock and exactly reproduce the frozen development artifact hashes before confirmatory retrieval is authorized.
