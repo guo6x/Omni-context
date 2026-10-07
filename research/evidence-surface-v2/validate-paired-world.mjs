@@ -71,6 +71,27 @@ export function validatePair(pair){
     if(leaked.length) errors.push(worldName+' hidden event ids leak into visible source ids: '+leaked.join(', '));
   }
 
+
+  const aTruth=pair.world_a?.hidden_state?.surface_complete_truth;
+  const bTruth=pair.world_b?.hidden_state?.surface_complete_truth;
+  if(typeof aTruth!=='boolean'||typeof bTruth!=='boolean') errors.push('surface_complete_truth must be boolean in both worlds');
+  else if(aTruth===bTruth) errors.push('paired worlds must differ in surface_complete_truth');
+
+  for(const worldName of ['world_a','world_b']){
+    const ctx=pair[worldName]?.acquisition_context;
+    if(!ctx||!Array.isArray(ctx.required_channels)||!Array.isArray(ctx.channels)){
+      errors.push(worldName+' missing acquisition_context');
+      continue;
+    }
+    const ids=ctx.channels.map(x=>x.channel_id);
+    for(const required of ctx.required_channels){
+      if(ids.filter(x=>x===required).length!==1) errors.push(worldName+' required channel must appear exactly once: '+required);
+    }
+    for(const ch of ctx.channels){
+      if(ch.retrieved_head_seq>ch.source_head_seq) errors.push(worldName+' retrieved head exceeds source head: '+ch.channel_id);
+    }
+  }
+
   const fallbacks=pair.safe_fallback_actions??[];
   if(!Array.isArray(fallbacks)||fallbacks.length===0) errors.push('safe_fallback_actions must be nonempty');
 
@@ -86,6 +107,8 @@ export function validatePair(pair){
     allowed_decisive_actions_a:[...aActions].sort(),
     allowed_decisive_actions_b:[...bActions].sort(),
     decisive_truth_disjoint:overlap.length===0,
+    surface_complete_truth_a:aTruth,
+    surface_complete_truth_b:bTruth,
     deterministic_surface_only_bound:
       overlap.length===0 && aInput&&bInput && canonString(aInput)===canonString(bInput)
       ? 'A deterministic policy restricted to policy_input must emit the same output in both worlds; any decisive output can be valid in at most one world.'
