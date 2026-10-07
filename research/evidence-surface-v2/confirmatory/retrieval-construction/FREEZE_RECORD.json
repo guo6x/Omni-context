@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "status": "RETRIEVAL_CONSTRUCTION_FROZEN__OUTCOMES_NOT_AUTHORIZED",
+  "frozen_pair_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+  "construction_workflow_run_id": 37651597563,
+  "construction_workflow_head": "396879318003cab8c4780ea8d31ed0bcb093c1b8",
+  "construction_artifact_id": 11497225098,
+  "construction_artifact_digest": "sha256:0536020c01a15d852def8bd7c709083c804c12d58f4bc66b8a2847a2a506ad75",
+  "retriever_input_sha256": "55cd2e6f988c7dc09c15ce51600e0606f5250db45732731549f52179b56321a1",
+  "scoring_truth_sha256": "553a9e234a4a7ad0fb9c8de180f538aec1c57ddcdd14aa484e017ea534fcc1d5",
+  "generator_sha256": "80de11d067b1ba04c7430c21ef2dd41880206110e10de7338e8e821ce5913271",
+  "audit_source_sha256": "59324d8b5295d85e829ae37be45805188a4ec8fa3ee3bd1f8109126bb4af4ece",
+  "git_blob_guards": {
+    "retrieval_input_schema": "f3f16ee6b92a2a399b9d5b1a4c6b9fc658405694",
+    "retrieval_truth_schema": "1a0c324b2571a134e30163ac91cbdcb377227533",
+    "retrieval_design": "eee41cae5d2ffefdd1efb2974f3729473e4b457a",
+    "construction_workflow": "027cad7b1fb7676015f3d3ec973e199b568569c6"
+  },
+  "cases": 320,
+  "pairs": 160,
+  "family_counts": {
+    "AUTHORITY_WITHDRAWAL": 32,
+    "CONFLICT_RESOLUTION_UPDATE": 32,
+    "CONSTRAINT_CHANGE": 32,
+    "OUTCOME_REVISION": 32,
+    "REVOCATION": 32
+  },
+  "ledger_profile_counts": {
+    "L0_CLEAN_TRACKED": 40,
+    "L1_BENIGN_ADVANCE": 40,
+    "L2_STALE_SOURCE_HEAD": 40,
+    "L3_UNTRACKED_CHANNEL": 40
+  },
+  "gates": {
+    "input_cases_320": true,
+    "truth_cases_320": true,
+    "unique_case_ids": true,
+    "one_to_one_case_join": true,
+    "pairs_160": true,
+    "five_families_32_pairs_each": true,
+    "four_profiles_40_pairs_each": true,
+    "sixteen_domains_10_pairs_each": true,
+    "no_truth_fields_in_retriever_input": true,
+    "matched_pair_store_contract": true
+  },
+  "declarations": {
+    "confirmatory_retrieval_ranking_executed": false,
+    "confirmatory_retrieval_policy_scoring_executed": false,
+    "confirmatory_monitor_outcomes_executed": false,
+    "confirmatory_llm_outputs_executed": false,
+    "confirmatory_execution_authorized": false
+  }
+}
