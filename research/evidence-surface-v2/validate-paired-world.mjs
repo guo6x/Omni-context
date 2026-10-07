@@ -47,10 +47,16 @@ export function validatePair(pair){
   if(pair.world_a?.world_id===pair.world_b?.world_id) errors.push('world ids must differ');
   if(pair.pair_contract?.requires_exact_policy_input_equality!==true) errors.push('exact-input contract must be true');
   if(pair.pair_contract?.requires_disjoint_decisive_truth!==true) errors.push('disjoint-truth contract must be true');
+  if(pair.pair_contract?.requires_clean_current_surface!==true) errors.push('clean-current-surface contract must be true');
 
   const aInput=pair.world_a?.policy_input;
   const bInput=pair.world_b?.policy_input;
   if(canonString(aInput)!==canonString(bInput)) errors.push('policy inputs are not exactly equal');
+
+  for(const [label,input] of [['world_a',aInput],['world_b',bInput]]){
+    const nonCurrent=(input?.evidence??[]).filter(e=>e.currentness!=='current');
+    if(nonCurrent.length) errors.push(label+' visible evidence must all be current: '+nonCurrent.map(e=>e.evidence_id+'='+e.currentness).join(', '));
+  }
 
   const forbidden=[...scanForbidden(aInput),...scanForbidden(bInput)];
   if(forbidden.length) errors.push('forbidden policy-input fields: '+forbidden.join(', '));
