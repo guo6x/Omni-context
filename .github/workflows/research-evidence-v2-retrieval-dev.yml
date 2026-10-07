@@ -13,6 +13,10 @@ on:
       - 'research/evidence-surface-v2/score-dev-retrieval.test.mjs'
       - 'research/evidence-surface-v2/policy-currentness-first.test.mjs'
       - 'research/evidence-surface-v2/policy-currentness-first.mjs'
+      - 'research/evidence-surface-v2/requirements-retrieval-v2.lock.txt'
+      - 'research/evidence-surface-v2/RETRIEVAL_REPRODUCTION_BASELINE.json'
+      - 'research/evidence-surface-v2/retrieval-input.schema.json'
+      - 'research/evidence-surface-v2/retrieval-truth.schema.json'
       - 'research/evidence-surface-v2/RETRIEVAL_DEV_PROTOCOL.md'
       - '.github/workflows/research-evidence-v2-retrieval-dev.yml'
   workflow_dispatch:
@@ -35,21 +39,28 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Use Python 3.11
+      - name: Use Python 3.11.16
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.16'
 
-      - name: Install pinned retrieval dependencies
+      - name: Install fully locked retrieval environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install             sentence-transformers==6.1.0             rank-bm25==0.2.2
+          python -m pip install -r research/evidence-surface-v2/requirements-retrieval-v2.lock.txt
 
       - name: Record resolved environment
         run: |
           mkdir -p research/evidence-surface-v2/out-retrieval-dev
           python --version | tee research/evidence-surface-v2/out-retrieval-dev/python-version.txt
           python -m pip freeze | sort > research/evidence-surface-v2/out-retrieval-dev/pip-freeze.txt
+          diff -u research/evidence-surface-v2/requirements-retrieval-v2.lock.txt \
+            research/evidence-surface-v2/out-retrieval-dev/pip-freeze.txt
+
+      - name: Validate retrieval contract schemas
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/retrieval-input.schema.json','utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/retrieval-truth.schema.json','utf8'))"
 
       - name: Validate source-store construction
         run: node --test research/evidence-surface-v2/generate-dev-retrieval-store.test.mjs
@@ -101,6 +112,30 @@ jobs:
           };
           fs.writeFileSync(dir+'/summary.json',JSON.stringify(summary,null,2)+'\n');
           console.log(JSON.stringify(summary,null,2));
+          NODE
+
+      - name: Verify exact development reproduction baseline
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const crypto=require('crypto');
+          const dir='research/evidence-surface-v2/out-retrieval-dev';
+          const baseline=JSON.parse(fs.readFileSync('research/evidence-surface-v2/RETRIEVAL_REPRODUCTION_BASELINE.json','utf8'));
+          const sha=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+          const actual={
+            retriever_input_sha256:sha(dir+'/retriever-input.jsonl'),
+            scoring_truth_sha256:sha(dir+'/scoring-truth.jsonl'),
+            rankings_sha256:sha(dir+'/rankings.json'),
+            scored_sha256:sha(dir+'/scored.json')
+          };
+          console.log(JSON.stringify({expected:baseline.expected_hashes,actual},null,2));
+          for(const [k,v] of Object.entries(baseline.expected_hashes)){
+            if(actual[k]!==v) throw new Error('reproduction mismatch '+k+': expected '+v+' actual '+actual[k]);
+          }
+          const lockSha=sha('research/evidence-surface-v2/requirements-retrieval-v2.lock.txt');
+          if(lockSha!==baseline.environment_lock_sha256){
+            throw new Error('environment lock hash mismatch');
+          }
           NODE
 
       - name: Upload development retrieval artifact
