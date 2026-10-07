@@ -1,0 +1,102 @@
+name: Evidence Surface V2 Confirmatory Retrieval Integrity
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl'
+      - 'research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json'
+      - 'research/evidence-surface-v2/generate-confirmatory-retrieval-bundle.mjs'
+      - 'research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs'
+      - 'research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs'
+      - 'research/evidence-surface-v2/retrieval-input.schema.json'
+      - 'research/evidence-surface-v2/retrieval-truth.schema.json'
+      - 'research/evidence-surface-v2/RETRIEVAL_CONFIRMATORY_DESIGN_DRAFT.md'
+      - '.github/workflows/research-evidence-v2-confirmatory-retrieval-construction.yml'
+      - '.github/workflows/research-evidence-v2-confirmatory-retrieval-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify freeze declarations and blob guards
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const cp=require('child_process');
+          const r=JSON.parse(fs.readFileSync('research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json','utf8'));
+          if(r.status!=='RETRIEVAL_CONSTRUCTION_FROZEN__OUTCOMES_NOT_AUTHORIZED') throw new Error('bad freeze status');
+          for(const [k,v] of Object.entries(r.declarations)){
+            if(v!==false) throw new Error('freeze declaration must remain false: '+k);
+          }
+          for(const [p,expected] of Object.entries(r.git_blob_guards)){
+            const actual=cp.execFileSync('git',['hash-object',p],{encoding:'utf8'}).trim();
+            console.log(p,{expected,actual});
+            if(actual!==expected) throw new Error('blob guard mismatch: '+p);
+          }
+          NODE
+
+      - name: Verify frozen pair corpus binding
+        run: |
+          EXPECTED="$(node -p "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json','utf8')).frozen_pair_corpus_sha256")"
+          ACTUAL="$(sha256sum research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl | awk '{print $1}')"
+          echo "expected=$EXPECTED"
+          echo "actual=$ACTUAL"
+          test "$EXPECTED" = "$ACTUAL"
+
+      - name: Regenerate construction without retrieval outcomes
+        run: |
+          rm -rf /tmp/es-v2-confirmatory-retrieval
+          mkdir -p /tmp/es-v2-confirmatory-retrieval
+          node research/evidence-surface-v2/generate-confirmatory-retrieval-bundle.mjs \
+            research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl \
+            /tmp/es-v2-confirmatory-retrieval/retriever-input.jsonl \
+            /tmp/es-v2-confirmatory-retrieval/scoring-truth.jsonl
+          node research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs \
+            research/evidence-surface-v2/retrieval-input.schema.json \
+            /tmp/es-v2-confirmatory-retrieval/retriever-input.jsonl
+          node research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs \
+            research/evidence-surface-v2/retrieval-truth.schema.json \
+            /tmp/es-v2-confirmatory-retrieval/scoring-truth.jsonl
+          node research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs \
+            /tmp/es-v2-confirmatory-retrieval/retriever-input.jsonl \
+            /tmp/es-v2-confirmatory-retrieval/scoring-truth.jsonl \
+            /tmp/es-v2-confirmatory-retrieval/audit.json
+
+      - name: Verify regenerated hashes and source SHA256
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const crypto=require('crypto');
+          const r=JSON.parse(fs.readFileSync('research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json','utf8'));
+          const sha=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+          const checks={
+            retriever_input_sha256:sha('/tmp/es-v2-confirmatory-retrieval/retriever-input.jsonl'),
+            scoring_truth_sha256:sha('/tmp/es-v2-confirmatory-retrieval/scoring-truth.jsonl'),
+            generator_sha256:sha('research/evidence-surface-v2/generate-confirmatory-retrieval-bundle.mjs'),
+            audit_source_sha256:sha('research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs')
+          };
+          for(const [k,actual] of Object.entries(checks)){
+            const expected=r[k];
+            console.log(k,{expected,actual});
+            if(actual!==expected) throw new Error('hash mismatch: '+k);
+          }
+          const audit=JSON.parse(fs.readFileSync('/tmp/es-v2-confirmatory-retrieval/audit.json','utf8'));
+          if(audit.status!=='PASS') throw new Error('construction audit not PASS');
+          for(const [k,v] of Object.entries(r.gates)){
+            if(v!==true) throw new Error('frozen gate false: '+k);
+          }
+          NODE
