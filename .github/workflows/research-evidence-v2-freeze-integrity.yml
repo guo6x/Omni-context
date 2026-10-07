@@ -1,0 +1,49 @@
+name: Evidence Surface V2 Confirmatory Freeze Integrity
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/confirmatory/frozen/**'
+      - 'research/evidence-surface-v2/generate-confirmatory-candidate.mjs'
+      - 'research/evidence-surface-v2/paired-world.schema.json'
+      - 'research/evidence-surface-v2/validate-paired-world.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world-b.mjs'
+      - 'research/evidence-surface-v2/audit-confirmatory-structure.mjs'
+      - 'research/evidence-surface-v2/PREREGISTRATION_DRAFT.md'
+      - 'research/evidence-surface-v2/CONFIRMATORY_DESIGN.md'
+      - 'research/evidence-surface-v2/verify-confirmatory-freeze.mjs'
+      - 'research/evidence-surface-v2/verify-confirmatory-freeze.test.mjs'
+      - '.github/workflows/research-evidence-v2-freeze-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Lock frozen corpus invariants
+        run: node --test research/evidence-surface-v2/verify-confirmatory-freeze.test.mjs
+
+      - name: Verify all frozen source hashes
+        run: |
+          mkdir -p research/evidence-surface-v2/out-freeze-integrity
+          node research/evidence-surface-v2/verify-confirmatory-freeze.mjs             research/evidence-surface-v2/out-freeze-integrity/report.json
+          test -s research/evidence-surface-v2/out-freeze-integrity/report.json
+
+      - name: Upload integrity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-surface-v2-confirmatory-freeze-integrity
+          path: research/evidence-surface-v2/out-freeze-integrity/report.json
