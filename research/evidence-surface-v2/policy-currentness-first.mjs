@@ -65,5 +65,6 @@ export function currentnessFirstPolicy({evidence,candidates}){
   const best=bestCandidate(visible,candidates??[]);
   if(!best || best[1]<=0) return fallback('NO_POSITIVE_VISIBLE_SUPPORT');
 
-  return {action_family:'DECIDE',selected_candidate_id:best[0],decisive:true,reason:'VISIBLE_EVIDENCE_VOTE'};
+  const winner=(candidates??[]).find(x=>x.candidate_id===best[0]);
+  return {action_family:winner?.action_family??'DECIDE',selected_candidate_id:best[0],decisive:true,reason:'VISIBLE_EVIDENCE_VOTE'};
 }
