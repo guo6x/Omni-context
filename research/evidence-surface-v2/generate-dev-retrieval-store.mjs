@@ -97,9 +97,10 @@ export function generateDevRetrievalCases(){
     const visible=visibleDocs(pair);
     const noise=distractors(pair);
     const target=targetEvidence(pair);
+    const control=matchedControl(pair,target);
     for(const member of ['A','B']){
       const world=member==='A'?pair.world_a:pair.world_b;
-      const docs=member==='A'?[...visible,...noise]:[...visible,target,...noise];
+      const docs=member==='A'?[...visible,control,...noise]:[...visible,target,...noise];
       cases.push({
         schema_version:'evidence-surface-v2-retrieval-dev-v0',
         case_id:pair.pair_id+'-'+member,
@@ -117,7 +118,7 @@ export function generateDevRetrievalCases(){
         expected_visible_base_ids:visible.map(x=>x.document_id),
         construction:{
           split:'dev',
-          generator_version:'retrieval-dev-source-store-0.1',
+          generator_version:'retrieval-dev-source-store-0.2',
           distractor_count:noise.length,
           target_present:member==='B',
           matched_slot:true,
