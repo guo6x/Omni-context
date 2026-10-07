@@ -48,9 +48,16 @@ test('M0 calls a surface policy once and scores that shared output in both world
 });
 
 test('M1 performs no policy call',()=>{
-  const r=executePairedSurface(pair,{policy:'P1_CURRENTNESS_FIRST',monitor:'M1_ALWAYS_DEFER'});
+  const r=executePairedSurface(pair,{policy:'P_NONE',monitor:'M1_ALWAYS_DEFER'});
   assert.equal(r.policy_call_count,0);
   assert.equal(r.worlds.every(w=>!w.decisive),true);
+});
+
+test('M1 rejects duplicated policy-labelled baselines',()=>{
+  assert.throws(
+    ()=>executePairedSurface(pair,{policy:'P0_SURFACE_VOTE',monitor:'M1_ALWAYS_DEFER'}),
+    /must use P_NONE/
+  );
 });
 
 test('M3 calls the shared policy at most once and can gate worlds differently',()=>{
