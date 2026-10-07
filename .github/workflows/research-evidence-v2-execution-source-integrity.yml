@@ -1,0 +1,66 @@
+name: Evidence Surface V2 Execution Source Integrity
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/policy-surface-vote.mjs'
+      - 'research/evidence-surface-v2/policy-currentness-first.mjs'
+      - 'research/evidence-surface-v2/monitor-acquisition-ledger.mjs'
+      - 'research/evidence-surface-v2/execution-kernel.mjs'
+      - 'research/evidence-surface-v2/execution-kernel.test.mjs'
+      - 'research/evidence-surface-v2/execution-results.schema.json'
+      - 'research/evidence-surface-v2/execution-manifest.schema.json'
+      - 'research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json'
+      - 'research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl'
+      - '.github/workflows/research-evidence-v2-execution-source-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate execution kernel behavior
+        run: node --test research/evidence-surface-v2/execution-kernel.test.mjs
+
+      - name: Verify frozen source blob guards
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const cp=require('child_process');
+          const r=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json','utf8'));
+          if(r.status!=='EXECUTION_SOURCES_FROZEN__EXECUTION_NOT_AUTHORIZED') throw new Error('bad freeze status');
+          for(const [p,expected] of Object.entries(r.git_blob_guards)){
+            const actual=cp.execFileSync('git',['hash-object',p],{encoding:'utf8'}).trim();
+            console.log(p,{expected,actual});
+            if(actual!==expected) throw new Error('source blob mismatch: '+p);
+          }
+          for(const [k,v] of Object.entries(r.declarations)){
+            if(v!==false) throw new Error('declaration must remain false: '+k);
+          }
+          NODE
+
+      - name: Verify result contracts parse
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/execution-results.schema.json','utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/execution-manifest.schema.json','utf8'))"
+
+      - name: Verify frozen corpus binding
+        run: |
+          EXPECTED="$(node -p "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json','utf8')).frozen_pair_corpus_sha256")"
+          ACTUAL="$(sha256sum research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl | awk '{print $1}')"
+          echo "expected=$EXPECTED"
+          echo "actual=$ACTUAL"
+          test "$EXPECTED" = "$ACTUAL"
