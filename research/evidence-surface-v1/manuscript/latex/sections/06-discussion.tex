@@ -1,0 +1,101 @@
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Missing evidence is not the same as unknowably missing evidence}
+
+The contrast between F1--F5 and F6 shows why missing evidence is too coarse a safety
+category. The same formal condition---an obligation is uncovered---has different downstream
+consequences depending on whether the remaining surface advertises the gap.
+
+At minimum, risk depends jointly on (i) which obligation is missing, (ii) whether the
+remaining surface exposes that omission, (iii) how the downstream policy responds to
+visible gaps, and (iv) whether a separate coverage signal exists. This also explains why
+aggregate mandatory-fact recall is not strictly monotonic with UDR across C2--C4.
+
+\subsection{Superseding evidence creates an asymmetric omission}
+
+Override and invalidation records are asymmetric: a later record can cancel the
+actionability of an earlier one. If the later record is omitted, the older record does not
+necessarily look incomplete. It can look \emph{more} coherent because the contradiction
+has disappeared. This differs from many ordinary missing-fact cases, where the remaining
+surface can still expose a hole.
+
+This motivates treating superseding evidence as a first-class safety obligation in
+long-lived decision systems. The relevant question is not only whether an old record is
+stale, but whether the system can establish that all state-changing records required to
+authorize a current decision have been surfaced.
+
+\subsection{Relation to stale-memory and revocation-enforcement failures}
+
+The nearest prior work sharpens rather than erases our boundary. STALE shows that an agent
+may have access to later evidence yet fail to infer that an older belief is no longer valid
+\citep{chao2026stale}. Revocation-enforcement work shows that a memory backend may return a
+record even after it has been explicitly marked revoked \citep{shen2026revoked}. Both are
+important, but both retain some representation of the update or revocation in the relevant
+state or retrieval path.
+
+Our controlled F6 intervention removes the later override/invalidation from the
+decision-visible surface. The older instruction then need not be contradictory,
+stale-marked, or revoked-marked from the policy's perspective. The failure is one of
+\emph{missing transition evidence}, not merely incorrect adjudication of visible
+transition evidence.
+
+This also changes the mitigation boundary. A better state resolver helps when the update is
+visible. A revocation filter helps when an invalid record is explicitly marked as such.
+Obligation coverage addresses the complementary question: has the evidence acquisition
+layer surfaced the classes of evidence required to justify a consequential decision?
+
+\subsection{Mechanism identification, not prevalence estimation}
+
+The benchmark deliberately constructs controlled worlds and a deterministic policy so
+evidence visibility can be intervened on without stochastic model confounds. This gives
+strong internal control but narrow external scope. The +16.67 percentage-point aggregate
+effect is not a claim that 16.67\% of real agent decisions fail this way, and the 100\% F6
+direct-treatment rate is not a field prevalence estimate.
+
+The contribution is a reproducible mechanism demonstration and boundary characterization:
+under a fixed policy with explicit visible-gap checks, some obligation omissions are
+self-revealing and others are not; top-$k$ retrieval can turn additional families into
+silent surfaces; and independently supplied completeness information changes behavior on
+the same retrieved content.
+
+\subsection{Why obligation coverage differs from policy confidence}
+
+A policy-confidence score asks how confident the policy is \emph{given the evidence it
+received}. Silent omission is precisely a case in which the received evidence can be
+locally coherent enough to support high confidence.
+
+An obligation-coverage interface asks a different question: whether the evidence
+acquisition layer satisfied a predeclared set of evidence requirements. A practical
+architecture may therefore need to separate:
+\begin{enumerate}
+  \item retrieval relevance---which records appear useful;
+  \item obligation coverage---whether required evidence classes are represented; and
+  \item decision policy---what action is justified given the covered evidence.
+\end{enumerate}
+
+\subsection{C5 moves rather than solves the hard problem}
+
+The central limitation of C5 is also the next research problem. In the benchmark,
+\texttt{coverage\_complete} is computed from a frozen formal world specification. Real
+systems rarely possess an oracle inventory of every fact that ought to exist.
+
+The next technical problem is therefore not simply to add a boolean. It is how to
+construct trustworthy evidence obligations and coverage monitors from schemas, workflows,
+policies, provenance graphs, temporal update channels, or learned detectors without
+reintroducing silent failure at the monitoring layer. A coverage monitor can itself fail
+silently; false-complete and false-incomplete signals must be studied before any deployment
+claim.
+
+\subsection{Why P3 is not required for the present claim}
+
+The confirmatory claim concerns a compositional property of a frozen evidence surface and a
+frozen downstream policy. P2 identifies that mechanism through controlled evidence
+interventions with no stochastic model confound. A model-based replication could test
+whether similar failure modes occur in independently chosen LLM policies, but it is not
+required to establish the narrower deterministic causal result reported here.
+
+If a later P3 replication is run, model identities and prompts must be frozen before
+outputs and the results must remain a replication layer rather than a retroactive
+modification of P2.

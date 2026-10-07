@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "phase": "P1_TOY_DRY_RUN",
+  "status": "PASS",
+  "confirmatory": false,
+  "provider_calls": 0,
+  "toy_samples": 6,
+  "annotation_packets": 12,
+  "structural_errors": [],
+  "near_duplicate_threshold": 0.5,
+  "near_duplicates": [],
+  "leakage_checks": [
+    {
+      "sample_id": "es-v1-f1-901",
+      "target_evidence_id": "ev-002",
+      "source_event_id": "src-002",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f2-901",
+      "target_evidence_id": "ev-002",
+      "source_event_id": "src-002",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f3-901",
+      "target_evidence_id": "ev-002",
+      "source_event_id": "src-002",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f4-901",
+      "target_evidence_id": "ev-003",
+      "source_event_id": "src-003",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f5-901",
+      "target_evidence_id": "ev-002",
+      "source_event_id": "src-002",
+      "pass": true
+    },
+    {
+      "sample_id": "es-v1-f6-901",
+      "target_evidence_id": "ev-002",
+      "source_event_id": "src-002",
+      "pass": true
+    }
+  ],
+  "human_gate_status": "NOT_RUN_REQUIRES_TWO_REAL_HUMANS",
+  "note": "This validates tooling and treatment construction only. It does not satisfy the human-validity gate."
+}

@@ -1,0 +1,24 @@
+% Frozen values from paper-values.tex.
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  ymin=0, ymax=20,
+  width=0.78\linewidth,
+  height=5.2cm,
+  ylabel={Unsupported-decision rate (\%)},
+  symbolic x coords={C0 FULL,C1 HIDDEN},
+  xtick=data,
+  bar width=18pt,
+  nodes near coords,
+  nodes near coords align={vertical},
+  enlarge x limits=0.35,
+  ymajorgrids=true,
+  grid style={black!10},
+  axis line style={black!60},
+  tick style={black!60},
+  fill=black!22,
+  draw=black
+]
+\addplot coordinates {(C0 FULL,\CzeroUDR) (C1 HIDDEN,\ConeUDR)};
+\end{axis}
+\end{tikzpicture}

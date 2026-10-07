@@ -1,0 +1,67 @@
+\documentclass[10pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{xurl}
+
+\title{When Missing Evidence Leaves No Trace:\\
+Silent Retrieval Failures in Agent Decision Safety}
+
+\author{Anonymous Authors}
+
+\date{}
+
+\input{paper-values}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Decision-capable agents often rely on retrieved evidence before taking consequential actions.
+Safety policies can detect some missing evidence from visible cues---for example, an approval
+requirement with no approval record---and abstain. Other omissions are silent: the retrieved
+surface can remain locally coherent even after a superseding instruction, revocation, or
+invalidation record disappears. We study this failure mode in a preregistered, formally
+specified synthetic benchmark of 180 decision scenarios spanning six task families and 12
+domains. Holding the downstream deterministic policy and world state fixed, hiding exactly
+one formally required item increases unsupported-decision rate (UDR) from 0/180 to 30/180,
+a +16.67 percentage-point paired risk difference (95\% bootstrap CI [11.67, 22.22];
+exact two-sided McNemar $p=1.86\times10^{-9}$). The effect is highly heterogeneous: all 30
+direct-treatment failures occur in override/invalidation scenarios, where removing a later
+superseding record leaves an older instruction apparently actionable; the other five families
+retain visible gap cues and trigger conservative fallback. Across three frozen top-$k$
+retrievers, UDR ranges from 29.44\% to 33.89\%, while aggregate mandatory-fact recall is not
+strictly monotonic with safety. Finally, on the identical frozen hybrid retrieval surface,
+adding only a one-bit evidence-obligation completeness signal reduces UDR from 29.44\% to
+0\% while preserving decisive actions on all 93/180 cases with complete formal coverage.
+The results isolate a distinction between missing evidence and \emph{undetectably} missing
+evidence: retrieval quality matters, but downstream safety also depends on whether the policy
+can know that a required obligation is uncovered.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-formalization}
+\input{sections/04-benchmark-method}
+\input{sections/05-results}
+\input{sections/06-discussion}
+\input{sections/07-limitations}
+\input{sections/08-reproducibility-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

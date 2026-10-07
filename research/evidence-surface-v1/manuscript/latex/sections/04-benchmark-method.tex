@@ -1,0 +1,113 @@
+
+\section{Benchmark and Experimental Design}
+\label{sec:method}
+
+\subsection{Fresh formal benchmark}
+
+We construct 180 fresh scenarios: six task families with 30 samples each, distributed
+across 12 domains. Each sample contains a machine-readable \texttt{world\_spec}, source
+records with timestamps and provenance, a rendered decision question, distractor evidence,
+explicit required facts, permissible action families, and a safe fallback when obligations
+are uncovered.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{p{0.10\columnwidth}p{0.16\columnwidth}p{0.28\columnwidth}p{0.34\columnwidth}}
+\toprule
+Family & Obligation & C1 gap cue & Silent route \\
+\midrule
+F1 & Constraint / feasibility & Requirement remains while feasibility support is missing & Top-$k$ can remove cue-bearing context together with support \\
+F2 & Authority / approval & Authority requirement remains without current grant & Top-$k$ can surface action support without the requirement \\
+F3 & Temporal validity & Stale marker remains without current replacement & Not observed under frozen retrievers \\
+F4 & Conflict resolution & Conflicting claims remain without resolution & Top-$k$ can remove one side or the resolution structure \\
+F5 & Outcome / revision & Prior conditional decision remains without change evidence & Not observed under frozen retrievers \\
+F6 & Override / invalidation & None when later override is removed & Older instruction remains locally actionable \\
+\bottomrule
+\end{tabular}
+\caption{Task families and policy-relative gap structure. The last column describes a
+possible silent surface under the frozen policy; it is not a universal property of the
+family.}
+\label{tab:families}
+\end{table}
+
+The benchmark is independent of the earlier TMLR validation benchmark and sealed Holdback;
+neither is reused as confirmatory evidence here.
+
+\subsection{Formal validation and freeze}
+
+Every formal sample must pass two separately implemented validators:
+(1) a declarative evaluator reading the frozen \texttt{world\_spec.decision\_contract};
+and (2) a family-specific evaluator that independently derives required fact types and
+action families. They must agree exactly on required fact IDs, mandatory evidence IDs,
+full-evidence action families, fallback action families, and coverage completeness.
+
+Each sample also passes metamorphic controls:
+FULL covers every required obligation; hiding the designated treatment target makes at
+least one required obligation uncovered; removing a declared non-mandatory evidence item
+preserves complete coverage; and world truth is unchanged across the paired treatment.
+
+Before P2, the frozen dataset had zero schema failures, zero dual-validator disagreements,
+zero renderer/world-spec consistency failures, zero dataset-audit errors, and zero
+near-duplicate warnings.
+
+\subsection{Frozen downstream policy}
+
+P2 uses one deterministic policy frozen before outcomes. In C0--C4 it can read only the
+decision question, visible evidence role, evidence currentness, candidate support,
+candidate actions, and prior-state fields. It cannot read \texttt{world\_spec}, Gold,
+condition labels, treatment targets, or construction metadata.
+
+Its visible-gap rules are frozen as:
+\begin{itemize}
+  \item visible constraint requirement with no feasibility evidence $\rightarrow$ \textsc{Clarify};
+  \item visible authority requirement with no current grant $\rightarrow$ \textsc{RequestApproval};
+  \item visible stale state with no current state $\rightarrow$ \textsc{Defer};
+  \item visible conflicting claims with no resolution $\rightarrow$ \textsc{Clarify};
+  \item visible prior conditional decision with no outcome-change evidence $\rightarrow$ \textsc{Defer}.
+\end{itemize}
+Otherwise the policy chooses a decisive action from visible candidate-support evidence
+using frozen role and currentness weights.
+
+\subsection{Conditions}
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{p{0.15\columnwidth}p{0.25\columnwidth}p{0.18\columnwidth}p{0.29\columnwidth}}
+\toprule
+Condition & Evidence surface & Coverage input & Purpose \\
+\midrule
+C0 FULL & all formal evidence & none & positive control \\
+C1 HIDDEN & one designated mandatory item removed & none & paired causal intervention \\
+C2 LEXICAL & IDF token overlap, top-$k=2$ & none & controlled lexical retrieval \\
+C3 HASH-DENSE & 256-D signed char-trigram hash, cosine, top-$k=2$ & none & controlled dense-vector baseline \\
+C4 HYBRID & RRF of C2+C3, constant 60, top-$k=2$ & none & fixed hybrid surface \\
+C5 Aware & \textbf{identical C4 surface} & complete bit only & mechanism test \\
+\bottomrule
+\end{tabular}
+\caption{Frozen experimental conditions. C4 and C5 share the identical retrieved evidence
+surface; only the one-bit coverage input differs.}
+\label{tab:conditions}
+\end{table}
+
+C3 is a deterministic dense-vector baseline, not a pretrained semantic embedding model.
+No retriever parameter was tuned after observing P2 outcomes.
+
+\subsection{Endpoints and statistics}
+
+The primary endpoint is the paired risk difference
+$\mathrm{UDR}(C1)-\mathrm{UDR}(C0)$. The preregistered test is a two-sided exact McNemar
+test with $\alpha=0.05$. We report a paired nonparametric percentile-bootstrap 95\%
+confidence interval using 10,000 replicates and frozen seed 20261006.
+
+Secondary analyses include condition-level UDR, mandatory-fact recall, complete-coverage
+rate, decisive rate, safe-decisive rate, family-stratified effects, and the relationship
+between retrieval recall and UDR.
+
+Because the scenarios are procedurally constructed rather than sampled from a defined
+real-world task population, these inferential statistics summarize the paired benchmark
+intervention under the frozen protocol. They must not be interpreted as estimates of
+real-world failure prevalence.

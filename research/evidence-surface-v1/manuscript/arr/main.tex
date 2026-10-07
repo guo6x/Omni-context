@@ -1,0 +1,93 @@
+\documentclass[11pt]{article}
+
+\usepackage[review]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\makeatletter
+\def\input@path{{../latex/}{../latex/figures/}{../latex/sections/}}
+\makeatother
+
+\title{When Missing Evidence Leaves No Trace:\\
+Silent Retrieval Failures in Agent Decision Safety}
+
+\author{Anonymous Authors}
+
+\input{../latex/paper-values}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Decision-capable agents often rely on retrieved evidence before taking consequential actions.
+Safety policies can detect some missing evidence from visible cues---for example, an approval
+requirement with no approval record---and abstain. Other omissions are silent: the retrieved
+surface can remain locally coherent even after a superseding instruction, revocation, or
+invalidation record disappears. We study this failure mode in a preregistered, formally
+specified synthetic benchmark of 180 decision scenarios spanning six task families and 12
+domains. Holding the downstream deterministic policy and world state fixed, hiding exactly
+one formally required item increases unsupported-decision rate (UDR) from 0/180 to 30/180,
+a +16.67 percentage-point paired risk difference (95\% bootstrap CI [11.67, 22.22];
+exact two-sided McNemar $p=1.86\times10^{-9}$). The effect is highly heterogeneous: all 30
+direct-treatment failures occur in override/invalidation scenarios, where removing a later
+superseding record leaves an older instruction apparently actionable; the other five families
+retain visible gap cues and trigger conservative fallback. Across three frozen top-$k$
+retrievers, UDR ranges from 29.44\% to 33.89\%, while aggregate mandatory-fact recall is not
+strictly monotonic with safety. Finally, on the identical frozen hybrid retrieval surface,
+adding only a one-bit evidence-completeness signal reduces UDR from 29.44\% to 0\% while
+preserving decisive actions on all 93/180 cases with complete formal coverage. The results
+isolate a distinction between missing evidence and \emph{undetectably} missing evidence:
+retrieval quality matters, but downstream safety also depends on whether the policy can know
+that a required condition is uncovered.
+\end{abstract}
+
+\input{../latex/sections/01-introduction}
+\input{../latex/sections/02-related-work}
+\input{../latex/sections/03-formalization}
+\input{../latex/sections/04-benchmark-method}
+\input{../latex/sections/05-results}
+\input{../latex/sections/06-discussion}
+\input{../latex/sections/08-reproducibility-conclusion}
+\typeout{ARR_CONTENT_END_PAGE=\thepage}
+
+\section*{Limitations}
+The 180 scenarios are constructed from formal world specifications. This enables exact
+paired interventions, dual validation, and contract-level supportedness claims, but not
+human-preference or ecological-validity claims. The confirmatory study uses one frozen
+deterministic policy, so it isolates the evidence-surface mechanism but does not establish
+prevalence across LLM agents or other policies. The direct C1 effect is concentrated in F6,
+and the policy was intentionally designed with explicit visible-gap fallbacks for several
+other obligation types; the heterogeneity is therefore partly a property of the
+policy--benchmark pair. C5 receives an accurate completeness signal derived from the formal
+benchmark; producing such a signal robustly in open-world systems remains unresolved. C2 is
+lexical, C3 is a deterministic hash-vector baseline rather than a pretrained semantic
+encoder, and C4 is fixed reciprocal-rank fusion; none is a state-of-the-art retrieval claim.
+All retrieval conditions use frozen top-$k=2$. McNemar and bootstrap results summarize the
+paired benchmark rather than a probability sample from a real-world task population.
+Finally, C5 does not test false-complete or false-incomplete coverage signals, and the study
+does not establish deployment safety in high-stakes domains.
+
+\section*{Ethical Considerations}
+The study uses synthetic scenarios and no human subjects or private user data. Its topic is
+agent decision safety: the intended benefit is to expose a failure mode in which downstream
+checks operate on an incomplete evidence surface. A possible misuse is to treat the formal
+coverage signal or zero-UDR C5 result as evidence of deployment readiness. We explicitly
+avoid that interpretation and report the oracle-quality coverage assumption, synthetic
+benchmark scope, and deterministic-policy limitation.
+
+\bibliography{../latex/references}
+
+\end{document}

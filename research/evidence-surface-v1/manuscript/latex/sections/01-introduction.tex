@@ -1,0 +1,91 @@
+
+\section{Introduction}
+\label{sec:intro}
+
+Long-horizon agents increasingly act over state assembled from memory, retrieval, tools,
+logs, and prior decisions. The downstream decision policy rarely sees the entire underlying
+world state. Instead, it sees a \emph{decision-visible evidence surface}: a finite set of
+records selected by upstream retrieval and filtering stages.
+
+This creates a safety problem that ordinary relevance metrics do not fully capture. A
+policy can be conservative when missing information is itself visible. If an approval
+requirement remains visible but the approval record is absent, the policy can request
+approval. If a stale record is visible without a current replacement, the policy can
+defer. If two claims conflict and no resolution record is present, the policy can clarify.
+We call these \emph{detectable gaps}.
+
+A different failure occurs when evidence loss removes both a required item and the only
+cue that anything is missing. Consider an earlier instruction to execute an action followed
+by a later override cancelling it. If retrieval drops the cancellation, the remaining
+surface can contain a coherent older instruction plus readiness evidence. A downstream
+policy that checks only what it can see has no local signal that a later override exists.
+We call this a \emph{silent evidence omission}.
+
+\begin{figure}[t]
+\centering
+\resizebox{\linewidth}{!}{\input{figures/fig01-mechanism}}
+\caption{\textbf{Missing evidence is not a single failure mode.} A downstream policy can
+react safely when an uncovered obligation leaves a visible gap cue. A silent omission
+removes the required evidence without leaving such a cue. The coverage-aware condition
+tests a separate completeness signal without revealing the missing content.}
+\label{fig:mechanism}
+\end{figure}
+
+This failure is distinct from two nearby problems. STALE studies whether agents revise
+state correctly when later evidence is available but implicitly invalidates older memory
+\citep{chao2026stale}. Revocation-enforcement work studies the opposite read-path error:
+an already revoked record remains retrievable and authoritative
+\citep{shen2026revoked}. Our intervention removes the \emph{superseding valid record}
+from the decision-visible surface, so the older record can remain locally coherent without
+any observable revocation cue.
+
+We ask three questions:
+\begin{enumerate}
+  \item \textbf{Causal visibility:} does hiding formally required evidence, while holding
+  task and policy fixed, increase unsupported decisive behavior?
+  \item \textbf{Failure mechanism:} are all missing obligations equally dangerous, or are
+  failures concentrated where absence is silent relative to visible-gap checks?
+  \item \textbf{Coverage signaling:} can a signal that required obligations are incomplete
+  prevent unsupported decisions without revealing the missing content itself?
+\end{enumerate}
+
+We study these questions in a preregistered, formally specified synthetic benchmark with
+180 scenarios spanning six task families and 12 domains. Each scenario contains a
+machine-readable source truth, explicit evidence obligations, rendered evidence, a frozen
+decision-safety contract, and paired FULL/HIDDEN treatments. Two separately implemented
+formal validators must agree before a sample is admitted.
+
+The confirmatory experiment uses one frozen deterministic downstream policy and six
+conditions. C0 exposes all formal evidence. C1 removes exactly one designated mandatory
+item. C2--C4 use frozen lexical, hashed-dense, and hybrid top-$k$ retrieval. C5 reuses the
+\emph{identical C4 retrieval surface} and adds only a boolean
+\texttt{coverage\_complete} signal.
+
+The principal result is not that all missing evidence is dangerous. The paired C0$\to$C1
+intervention raises UDR from 0\% to 16.67\%, but all 30 direct-treatment failures occur in
+the override/invalidation family. In the other five families, the omission leaves a
+policy-visible structural cue and the frozen policy falls back conservatively. Under
+ordinary top-$k$ retrieval, however, unsupported decisions also appear in constraint,
+authority, and conflict families because retrieval can remove combinations of evidence
+or the cue-bearing record itself. Silentness is therefore a property of the
+\emph{resulting surface relative to the policy}, not merely a task-family label.
+
+Our contributions are:
+\begin{itemize}
+  \item a policy-relative formalization of \emph{silent evidence omission}, distinct from
+  stale-state resolution and from retrieval that returns explicitly revoked records;
+  \item a preregistered paired intervention that holds world state and downstream policy
+  fixed while changing mandatory-evidence visibility;
+  \item a boundary characterization showing that direct hiding is safe when a visible gap
+  remains, but unsafe for superseding override/invalidation evidence whose omission leaves
+  an apparently actionable surface;
+  \item evidence that aggregate mandatory-fact recall does not induce a strict monotonic
+  safety ordering across the frozen retrievers; and
+  \item a same-surface mechanism test showing that obligation-completeness information is
+  sufficient, under the formal benchmark, to remove the measured unsupported decisions
+  without suppressing decisions on complete-coverage cases.
+\end{itemize}
+
+Our claims are deliberately narrow. The benchmark is synthetic and formal. It does not
+establish human-preference validity, real-world failure prevalence, deployment safety, or
+a universal theorem about agents.

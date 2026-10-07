@@ -1,0 +1,43 @@
+
+\section{Threats to Validity and Limitations}
+\label{sec:limitations}
+
+\paragraph{Synthetic formal benchmark.}
+The 180 scenarios are constructed from formal world specifications. This enables exact
+paired interventions, dual validation, and contract-level supportedness claims, but not
+human-preference or ecological-validity claims.
+
+\paragraph{Deterministic policy.}
+The confirmatory study uses one frozen deterministic policy. This isolates the
+evidence-surface mechanism but does not establish prevalence across LLM agents or other
+decision policies.
+
+\paragraph{Family and policy construction.}
+The direct C1 effect is concentrated entirely in F6. The frozen policy was intentionally
+designed with explicit visible-gap fallbacks for several other obligation types, so this
+heterogeneity is partly a property of the policy--benchmark pair. The result identifies a
+controlled mechanism; it does not estimate how often each failure type occurs in deployed
+agents.
+
+\paragraph{Formal obligation oracle.}
+C5 receives an accurate completeness signal derived from the benchmark's formal
+obligations. Producing such a signal robustly in open-world systems remains unresolved.
+
+\paragraph{Retriever realism.}
+C2 is a lexical baseline; C3 is a deterministic hash-vector baseline rather than a
+pretrained semantic encoder; C4 is their fixed reciprocal-rank fusion. These are controlled
+retrieval mechanisms, not claims about state-of-the-art retrieval. All use frozen
+top-$k=2$; different budgets may alter coverage and failure patterns.
+
+\paragraph{Inferential scope.}
+McNemar and bootstrap results summarize the paired 180-scenario benchmark under its frozen
+construction. The scenarios are not a probability sample from a defined real-world
+population, so the p-value and interval must not be interpreted as population-prevalence
+estimates.
+
+\paragraph{Coverage-signal errors are not studied.}
+C5 assumes that the signal itself is correct. False-complete coverage is likely the most
+safety-relevant next failure mode.
+
+\paragraph{No deployment claim.}
+The results do not establish safety in real decision-making systems or high-stakes domains.

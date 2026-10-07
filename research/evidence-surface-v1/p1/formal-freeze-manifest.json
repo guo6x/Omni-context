@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "study_id": "evidence-surface-safety-v1",
+  "phase": "P1_FORMAL_DATASET_FREEZE",
+  "status": "FROZEN_READY_FOR_P2",
+  "frozen_at": "2026-10-06T18:23:00+08:00",
+  "budget": {
+    "cash_cny": 0,
+    "provider_calls": 0,
+    "paid_annotation": false,
+    "paid_model_api": false
+  },
+  "claim_scope": {
+    "benchmark_type": "formally specified synthetic safety benchmark",
+    "human_preference_validity": false,
+    "human_validated_gold": false,
+    "allowed_core_claim": "Under a frozen formal evidence-obligation contract, removing required evidence from an otherwise fixed decision surface can increase unsupported decisive behavior.",
+    "forbidden_claims": [
+      "human preference ground truth",
+      "real-world decision quality",
+      "universal agent-safety law",
+      "human-validated evidence obligations"
+    ]
+  },
+  "source_artifacts": {
+    "sample_plan": {
+      "path": "research/evidence-surface-v1/p1/sample-plan.jsonl",
+      "sha": "dd1a1fc45def313f6ba5bfd5df458404fa710a87"
+    },
+    "generator": {
+      "path": "research/evidence-surface-v1/p1/generate-formal-samples.mjs",
+      "sha": "b3c431a9f417ee08dc09bde3b8d6101a36f577b0"
+    },
+    "validator_a": {
+      "path": "research/evidence-surface-v1/p1/formal-evaluator-a.mjs",
+      "sha": "d4b630a69fc477b2e13c3f250562e461fb339493"
+    },
+    "validator_b": {
+      "path": "research/evidence-surface-v1/p1/formal-evaluator-b.mjs",
+      "sha": "48882bbf591462f7727d9cc69f2dfa6c167b2c33"
+    },
+    "renderer_gate": {
+      "path": "research/evidence-surface-v1/p1/check-renderer-consistency.mjs",
+      "sha": "f05d2058a16f765f51687d90d619d575d4bf7e2d"
+    },
+    "dataset_audit": {
+      "path": "research/evidence-surface-v1/p1/audit-p1-dataset.mjs",
+      "sha": "21f6a6f849096e764128e7416911bf541f5cc60d"
+    },
+    "schema_validator": {
+      "path": "research/evidence-surface-v1/p1/validate-p1-contract.mjs",
+      "sha": "e474fb346246d9761c5e02cdbf76440d38f2c743"
+    },
+    "preregistration": {
+      "path": "docs/research/evidence-surface-study-v1-prereg.json",
+      "sha": "fadd0335a7dbea05199feecb8dbc1c65b10c5f8d"
+    }
+  },
+  "formal_files": [
+    {
+      "family": "F1",
+      "path": "research/evidence-surface-v1/p1/formal/f1.jsonl",
+      "sha": "850b98a22337a8eeea9152ce9dbb8029c7e2f3e3",
+      "samples": 30
+    },
+    {
+      "family": "F2",
+      "path": "research/evidence-surface-v1/p1/formal/f2.jsonl",
+      "sha": "6d827bb7f2a61f4803c6c4b3375c6d5855d59464",
+      "samples": 30
+    },
+    {
+      "family": "F3",
+      "path": "research/evidence-surface-v1/p1/formal/f3.jsonl",
+      "sha": "26f405cac2c71a0237d4a2d9d0f39bfa045a3084",
+      "samples": 30
+    },
+    {
+      "family": "F4",
+      "path": "research/evidence-surface-v1/p1/formal/f4.jsonl",
+      "sha": "0da5a2ce59c98b023465b002eb1c383332064b2a",
+      "samples": 30
+    },
+    {
+      "family": "F5",
+      "path": "research/evidence-surface-v1/p1/formal/f5.jsonl",
+      "sha": "ccb4fec8006f59ed650a1c3334bc55e20c5bdf57",
+      "samples": 30
+    },
+    {
+      "family": "F6",
+      "path": "research/evidence-surface-v1/p1/formal/f6.jsonl",
+      "sha": "dc36e3321f73701d86b40e6f5c630104f2f25af6",
+      "samples": 30
+    }
+  ],
+  "counts": {
+    "total_samples": 180,
+    "task_families": 6,
+    "samples_per_family": 30,
+    "domains": 12,
+    "construction_templates": 180
+  },
+  "freeze_validation": {
+    "status": "PASS",
+    "schema_failures": 0,
+    "dual_formal_validation_failures": 0,
+    "renderer_consistency_failures": 0,
+    "dataset_audit_errors": 0,
+    "near_duplicate_warnings": 0,
+    "near_duplicate_metric": "word-trigram Jaccard",
+    "near_duplicate_threshold": 0.7,
+    "max_template_fraction": 0.0056,
+    "required_max_template_fraction": 0.1
+  },
+  "treatment_contract": {
+    "C0_FULL": "all evidence visible",
+    "C1_HIDDEN": "remove exactly one formally required evidence item plus direct source/reference copies",
+    "world_truth_changes": false,
+    "target_selected_before_P2": true,
+    "target_must_be_formally_mandatory": true,
+    "mandatory_positive_control_required": true,
+    "nonmandatory_negative_control_required": true
+  },
+  "next_phase_boundary": {
+    "P2_authorized": true,
+    "P2_outputs_observed": false,
+    "old_v3_as_confirmation": false,
+    "old_holdback_opened": false,
+    "formal_samples_may_not_be_edited_after_P2_begins": true
+  }
+}

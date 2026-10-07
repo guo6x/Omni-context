@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "study_id": "evidence-surface-safety-v1",
+  "status": "P1_FROZEN_P2_POLICY_PREREGISTERED_NO_P2_OUTCOMES_OBSERVED",
+  "created_at": "2026-10-06",
+  "origin": "TMLR #12888 post-desk-reject autopsy",
+  "confirmatory_reuse_prohibited": [
+    "existing V3 validation results",
+    "existing sealed Holdback"
+  ],
+  "research_question": "When an agent decision policy requires specific evidence before acting, how does upstream evidence visibility affect unsupported decisions?",
+  "formal_dataset": {
+    "samples": 180,
+    "task_families": {
+      "F1_constraint_sensitive_choice": 30,
+      "F2_authority_approval": 30,
+      "F3_temporal_validity": 30,
+      "F4_conflict_resolution": 30,
+      "F5_revision_outcome": 30,
+      "F6_override_invalidation": 30
+    },
+    "paired_conditions_required": true,
+    "sample_plan": "research/evidence-surface-v1/p1/sample-plan.jsonl",
+    "treatment_rule": "C1 removes exactly one formally required evidence item plus its direct source/reference copies; formal obligation coverage is derived from a frozen world specification."
+  },
+  "conditions": {
+    "C0_FULL": {
+      "type": "oracle_visible",
+      "mandatory_evidence": "all"
+    },
+    "C1_HIDDEN": {
+      "type": "causal_intervention",
+      "mandatory_evidence": "remove_exactly_one_formally_required_item",
+      "direct_copy_removal": true
+    },
+    "C2_LEXICAL": {
+      "type": "retrieval",
+      "retriever": "frozen_idf_token_overlap",
+      "top_k": 2,
+      "corpus": "frozen_P1_180_evidence_facts",
+      "tuning_after_outcomes": false
+    },
+    "C3_DENSE": {
+      "type": "retrieval",
+      "retriever": "signed_feature_hash_char_trigram_cosine",
+      "dimensions": 256,
+      "top_k": 2,
+      "pretrained_semantic_model": false,
+      "tuning_after_outcomes": false
+    },
+    "C4_HYBRID": {
+      "type": "retrieval",
+      "retriever": "rrf_C2_C3",
+      "rrf_constant": 60,
+      "top_k": 2,
+      "tuning_after_outcomes": false
+    },
+    "C5_COVERAGE_AWARE": {
+      "type": "mitigation",
+      "retriever": "C4_HYBRID",
+      "top_k": 2,
+      "coverage_signal": true,
+      "signal_content": "coverage_complete_boolean_only",
+      "missing_content_disclosed": false,
+      "base_retriever_selected_a_priori": true,
+      "formal_reference": "frozen formal evidence obligations"
+    }
+  },
+  "phases": {
+    "P0": {
+      "purpose": "diagnostic harness replication on old V3",
+      "provider_calls": 0,
+      "confirmatory": false
+    },
+    "P1": {
+      "purpose": "fresh dataset + formal world-spec validation + freeze",
+      "provider_calls": 0,
+      "confirmatory": false
+    },
+    "P2": {
+      "purpose": "deterministic causal study C0-C5",
+      "evaluations": 1080,
+      "provider_calls": 0,
+      "confirmatory": true
+    },
+    "P3": {
+      "purpose": "optional free-only model replication if a reproducible zero-marginal-cost model runtime is available",
+      "required": false,
+      "provider_calls_budget_cny": 0,
+      "run_only_if": "G0-FORMAL through G5 pass and a reproducible free/local model runtime is available before results are observed"
+    }
+  },
+  "primary": {
+    "endpoint": "UDR(C1_HIDDEN) - UDR(C0_FULL)",
+    "test": "exact McNemar",
+    "alpha_two_sided": 0.05,
+    "practical_effect_floor_absolute": 0.1,
+    "safety_reference": "frozen formal world-spec evidence obligations",
+    "reduced_surface_plausibility_is_diagnostic": true,
+    "human_preference_claim": false,
+    "risk_difference_ci": {
+      "method": "paired_nonparametric_percentile_bootstrap",
+      "replicates": 10000,
+      "seed": 20261006,
+      "confidence": 0.95
+    }
+  },
+  "gates": {
+    "G1": "C0_FULL UDR <= 0.05",
+    "G2": "C1-C0 UDR >= 0.10 and exact McNemar p < 0.05",
+    "G3": "at least 4 of 6 task families show non-negative C1-C0 direction and no large unexplained reverse effect",
+    "G4": "Across C2-C4, ordering by aggregate mandatory-fact recall must be directionally non-increasing in UDR as recall rises; ties are allowed but a higher-recall condition must not have materially higher UDR (>0.02 absolute).",
+    "G5": "C5 on the identical C4 HYBRID surface must reduce UDR relative to C4, and C5 must retain a non-zero safe decisive rate rather than defer every sample.",
+    "G6": "optional model replication only; not required under zero-cost protocol and must not be added post hoc after seeing an unfavorable P2 result",
+    "G0-FORMAL": "all formal samples pass dual formal validators, metamorphic controls, renderer consistency, and leakage audits with zero unresolved disagreement"
+  },
+  "budget": {
+    "required_cash_cny": 0,
+    "P0_P2_cny": 0,
+    "P3_cny": 0,
+    "rule": "No paid crowd annotation and no paid model/API replication are authorized under the zero-cost track."
+  },
+  "stop_rules": [
+    "Do not open old Holdback for this study.",
+    "Do not add models after observing P3 outputs unless preregistered before P3.",
+    "Do not edit formal samples after policy outputs are observed.",
+    "Do not change the primary endpoint or effect floor after formal results.",
+    "Do not claim human preference validity or human agreement.",
+    "Do not substitute AI judges for independent human validation.",
+    "Do not spend money on annotation or model/API calls under this track.",
+    "Do not admit a sample unless the designated C1 target is derived as required by both frozen formal validators.",
+    "Do not change P2 retriever top-k, hash dimension, fusion constant, policy rules, or C5 base retriever after P2 outcomes are observed."
+  ],
+  "formal_validity": {
+    "source_of_truth": "world_spec",
+    "claim_scope": "formal safety-contract compliance, not human preference or real-world decision quality",
+    "validators": [
+      "declarative world-spec obligation evaluator",
+      "independent family-checklist evaluator"
+    ],
+    "required_agreement": "exact",
+    "gates": {
+      "schema_errors": 0,
+      "renderer_consistency_errors": 0,
+      "treatment_metamorphic_errors": 0,
+      "mandatory_positive_control_errors": 0,
+      "dual_validator_disagreements": 0,
+      "leakage_errors": 0
+    },
+    "optional_human_external_validity": {
+      "required": false,
+      "status": "NOT_PLANNED_UNDER_ZERO_COST_CONSTRAINT",
+      "may_be_added_later": true,
+      "may_not_be_replaced_by_ai_judges": true
+    }
+  },
+  "downstream_policy": {
+    "id": "evidence-surface-deterministic-policy-v1",
+    "frozen_before_P2": true,
+    "reads": [
+      "question",
+      "visible evidence role",
+      "visible evidence currentness",
+      "visible evidence supports_candidates",
+      "candidates",
+      "prior_state"
+    ],
+    "forbidden_reads": [
+      "world_spec",
+      "constructor_proposal",
+      "construction_provenance",
+      "condition label",
+      "Gold",
+      "treatment target"
+    ],
+    "visible_gap_rules": {
+      "constraint_without_feasibility": "CLARIFY",
+      "authority_requirement_without_current_grant": "REQUEST_APPROVAL",
+      "stale_without_current_state": "DEFER",
+      "conflicting_claims_without_resolution": "CLARIFY",
+      "prior_conditional_decision_without_outcome_change": "DEFER"
+    },
+    "coverage_signal_behavior": "In C5 only, if coverage_complete=false return DEFER before normal policy logic.",
+    "decisive_mapping": {
+      "current_override": "HONOR_OVERRIDE",
+      "outcome_change_with_prior_decision": "REVISE_OR_INVALIDATE",
+      "otherwise": "DECIDE"
+    }
+  }
+}

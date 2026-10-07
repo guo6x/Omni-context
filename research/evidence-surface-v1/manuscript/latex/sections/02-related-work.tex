@@ -1,0 +1,73 @@
+
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Agent memory and retrieval.}
+Persistent-agent memory systems study how histories should be stored, retrieved, organized,
+and updated. MemGPT treats memory as an external substrate managed across context tiers
+\citep{packer2023memgpt}; A-Mem develops linked agentic memory
+\citep{xu2025amem}; and Hindsight combines vector, keyword, graph, and temporal retrieval
+over structured memory networks \citep{latimer2026hindsight}. Memora evaluates long-term
+remembering, reasoning, recommending, and the reuse of invalidated memory
+\citep{uddin2026memora}. These systems motivate the long-horizon setting, but our study does
+not propose another memory architecture. We treat retrieval as an upstream intervention and
+ask how evidence visibility changes downstream supportedness.
+
+\paragraph{Evidence sufficiency, coverage, and selective answering.}
+Retrieval relevance is not the same as evidential support. RAG established retrieval as a
+grounding mechanism \citep{lewis2020rag}; AbstentionBench shows that even strong reasoning
+models struggle to abstain on unanswerable inputs \citep{kirichenko2025abstentionbench}.
+SURE-RAG explicitly models whether a delivered evidence set supports, refutes, or is
+insufficient for an answer \citep{qiu2026surerag}. HALT frames stopping in search agents as
+evidence coverage over expected claims \citep{roh2026halt}, and
+Evidence-Obligation Pool-Gated Retrieval uses an explicit obligation ledger and warrant
+gate \citep{kim2026obligation}. We therefore do \emph{not} claim novelty for evidence
+sufficiency, evidence coverage, or evidence obligations as concepts.
+
+A particularly relevant methodological result is \emph{Before Answering}
+\citep{mondal2026before}, which shows that deleting supporting evidence can create a
+memory-size shortcut for insufficiency detection. Our benchmark does not train a detector
+of treatment status: the frozen policy receives no Gold, treatment label, or expected-count
+input. Nevertheless, surface cardinality can differ after removal, so we make the narrower
+claim that an omission is \emph{silent relative to the frozen policy's declared gap checks},
+not statistically undetectable to every possible classifier.
+
+Our main failure can occur before visible-evidence sufficiency is assessed: the delivered
+surface may look locally actionable precisely because the record that would reveal a state
+transition, supersession, or invalidation is absent.
+
+\paragraph{Temporal state, belief revision, and revocation.}
+Belief revision and truth-maintenance systems formalize how conclusions should change as
+evidence changes \citep{alchourron1985logic,doyle1979truth}; temporal reasoning formalizes
+validity over time \citep{allen1983maintaining}. STALE studies implicit conflict, where
+later observations are available but agents fail to resolve the current state
+\citep{chao2026stale}. \citet{shen2026revoked} study revocation enforcement: records already
+marked revoked can still be returned, outrank replacements, and drive actions.
+
+Our boundary is complementary. In revocation-enforcement failure, an invalid record is
+returned even though revocation/replacement state exists in the memory path. In our
+silent-omission intervention, the \emph{superseding valid record itself} is absent from the
+decision-visible surface. In STALE, later evidence is available but not correctly
+integrated; here, the evidence encoding the transition may never reach the downstream
+policy.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{p{0.19\columnwidth}p{0.29\columnwidth}p{0.27\columnwidth}p{0.19\columnwidth}}
+\toprule
+Work & Primary failure boundary & Updating / revoking evidence & Main direction \\
+\midrule
+SURE-RAG & Delivered set may be insufficient & Visible set is inspected & Verify / abstain \\
+STALE & New evidence does not revise prior state & Later evidence exists & State consolidation \\
+Revoked but Still Authoritative & Revoked record is still returned & Revocation exists in memory path & Filter invalid records \\
+\textbf{This work} & Superseding evidence disappears without a visible gap & \textbf{Transition evidence absent from decision surface} & \textbf{Obligation coverage} \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Functional boundary relative to the nearest contemporary work. The rows address
+adjacent failure surfaces and are not intended as a performance ranking.}
+\label{tab:nearest}
+\end{table}

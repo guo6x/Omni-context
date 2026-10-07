@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "study_id": "evidence-surface-safety-v1",
+  "phase": "P2_POLICY_RETRIEVAL_FREEZE",
+  "status": "FROZEN_READY_TO_EXECUTE",
+  "frozen_at": "2026-10-06T18:23:00+08:00",
+  "p2_outcomes_observed": false,
+  "budget": {
+    "cash_cny": 0,
+    "provider_calls": 0
+  },
+  "dataset_freeze_manifest": {
+    "path": "research/evidence-surface-v1/p1/formal-freeze-manifest.json",
+    "sha": "47793c3d1b1df22c60972d8b79564129d62b50b2"
+  },
+  "preregistration": {
+    "path": "docs/research/evidence-surface-study-v1-prereg.json",
+    "sha": "9901faf771639eb00b62dded943e3176306aea26"
+  },
+  "implementation": {
+    "retrievers": {
+      "path": "research/evidence-surface-v1/p2/retrievers.mjs",
+      "sha": "9f710b10097f84eb959c81a692c4b0ed4efd1a0b"
+    },
+    "policy": {
+      "path": "research/evidence-surface-v1/p2/policy.mjs",
+      "sha": "42c85ab35422bf9d1d6640dbe30ef64436c16a0c"
+    },
+    "stats": {
+      "path": "research/evidence-surface-v1/p2/stats.mjs",
+      "sha": "6d8932824dce99d3002039cb8fa570594baf531b"
+    },
+    "runner": {
+      "path": "research/evidence-surface-v1/p2/run-p2.mjs",
+      "sha": "1c792c5ee6ac685e399f5b06e173ffeb775e4d61"
+    }
+  },
+  "conditions": [
+    "C0_FULL",
+    "C1_HIDDEN",
+    "C2_LEXICAL",
+    "C3_HASH_DENSE",
+    "C4_HYBRID",
+    "C5_COVERAGE_AWARE"
+  ],
+  "retrieval": {
+    "top_k": 2,
+    "lexical": "IDF-weighted token overlap over frozen P1 evidence corpus",
+    "hash_dense": "256-dimensional signed feature hash over normalized character trigrams; cosine similarity",
+    "hybrid": "reciprocal-rank fusion C2+C3 with constant 60",
+    "c5_base": "C4_HYBRID selected a priori"
+  },
+  "downstream_policy": {
+    "id": "evidence-surface-deterministic-policy-v1",
+    "coverage_blind_conditions": [
+      "C0_FULL",
+      "C1_HIDDEN",
+      "C2_LEXICAL",
+      "C3_HASH_DENSE",
+      "C4_HYBRID"
+    ],
+    "c5_extra_input": "coverage_complete boolean only",
+    "forbidden_reads": [
+      "world_spec",
+      "constructor_proposal",
+      "construction_provenance",
+      "Gold",
+      "condition label",
+      "treatment target"
+    ]
+  },
+  "primary_test": {
+    "endpoint": "UDR(C1)-UDR(C0)",
+    "exact_test": "two-sided exact McNemar",
+    "alpha": 0.05,
+    "practical_effect_floor": 0.1,
+    "ci": "paired percentile bootstrap",
+    "bootstrap_replicates": 10000,
+    "seed": 20261006
+  },
+  "mutation_rule": "No P1 formal sample, P2 policy, retriever parameter, statistics method, or gate may be changed in response to P2 outcomes."
+}
