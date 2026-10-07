@@ -10,6 +10,8 @@ on:
       - 'research/evidence-surface-v2/generate-dev-retrieval-store.test.mjs'
       - 'research/evidence-surface-v2/run-dev-retrievers.py'
       - 'research/evidence-surface-v2/score-dev-retrieval.mjs'
+      - 'research/evidence-surface-v2/score-dev-retrieval.test.mjs'
+      - 'research/evidence-surface-v2/policy-currentness-first.test.mjs'
       - 'research/evidence-surface-v2/policy-currentness-first.mjs'
       - 'research/evidence-surface-v2/RETRIEVAL_DEV_PROTOCOL.md'
       - '.github/workflows/research-evidence-v2-retrieval-dev.yml'
@@ -51,6 +53,11 @@ jobs:
 
       - name: Validate source-store construction
         run: node --test research/evidence-surface-v2/generate-dev-retrieval-store.test.mjs
+
+      - name: Validate downstream scoring semantics
+        run: |
+          node --test research/evidence-surface-v2/policy-currentness-first.test.mjs
+          node --test research/evidence-surface-v2/score-dev-retrieval.test.mjs
 
       - name: Generate development retrieval source store
         run: |
