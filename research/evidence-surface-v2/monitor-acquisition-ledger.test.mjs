@@ -27,8 +27,13 @@ test('paired-world dev monitor trade-off is as designed',()=>{
     [0,0]
   );
   assert.deepEqual(
-    [r.by_condition.M2_SURFACE_ONLY.wavr_count,r.by_condition.M2_SURFACE_ONLY.decisive_count,r.by_condition.M2_SURFACE_ONLY.false_incomplete_count],
-    [0,0,3]
+    [
+      r.by_condition.M2_SURFACE_ONLY.wavr_count,
+      r.by_condition.M2_SURFACE_ONLY.decisive_count,
+      r.by_condition.M2_SURFACE_ONLY.false_complete_count,
+      r.by_condition.M2_SURFACE_ONLY.false_incomplete_count
+    ],
+    [3,6,3,0]
   );
   assert.deepEqual(
     [r.by_condition.M3_ACQUISITION_LEDGER.wavr_count,r.by_condition.M3_ACQUISITION_LEDGER.decisive_count,r.by_condition.M3_ACQUISITION_LEDGER.false_complete_count,r.by_condition.M3_ACQUISITION_LEDGER.false_incomplete_count],
