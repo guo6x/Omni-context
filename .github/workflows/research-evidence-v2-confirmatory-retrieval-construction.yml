@@ -1,0 +1,96 @@
+name: Evidence Surface V2 Confirmatory Retrieval Construction
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl'
+      - 'research/evidence-surface-v2/generate-confirmatory-retrieval-bundle.mjs'
+      - 'research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs'
+      - 'research/evidence-surface-v2/confirmatory-retrieval-embargo.test.mjs'
+      - 'research/evidence-surface-v2/retrieval-input.schema.json'
+      - 'research/evidence-surface-v2/retrieval-truth.schema.json'
+      - 'research/evidence-surface-v2/RETRIEVAL_CONFIRMATORY_DESIGN_DRAFT.md'
+      - '.github/workflows/research-evidence-v2-confirmatory-retrieval-construction.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-surface-v2-confirmatory-retrieval-construction-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  construct-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Lock retrieval outcome embargo
+        run: node --test research/evidence-surface-v2/confirmatory-retrieval-embargo.test.mjs
+
+      - name: Parse retrieval contract schemas
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/retrieval-input.schema.json','utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/retrieval-truth.schema.json','utf8'))"
+
+      - name: Construct confirmatory retrieval bundle only
+        run: |
+          rm -rf research/evidence-surface-v2/out-confirmatory-retrieval
+          mkdir -p research/evidence-surface-v2/out-confirmatory-retrieval
+          node research/evidence-surface-v2/generate-confirmatory-retrieval-bundle.mjs \
+            research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl \
+            research/evidence-surface-v2/out-confirmatory-retrieval/retriever-input.jsonl \
+            research/evidence-surface-v2/out-confirmatory-retrieval/scoring-truth.jsonl
+          node research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs \
+            research/evidence-surface-v2/out-confirmatory-retrieval/retriever-input.jsonl \
+            research/evidence-surface-v2/out-confirmatory-retrieval/scoring-truth.jsonl \
+            research/evidence-surface-v2/out-confirmatory-retrieval/construction-audit.json
+
+      - name: Record construction hashes
+        run: |
+          sha256sum research/evidence-surface-v2/out-confirmatory-retrieval/retriever-input.jsonl > \
+            research/evidence-surface-v2/out-confirmatory-retrieval/SHA256SUMS.txt
+          sha256sum research/evidence-surface-v2/out-confirmatory-retrieval/scoring-truth.jsonl >> \
+            research/evidence-surface-v2/out-confirmatory-retrieval/SHA256SUMS.txt
+          sha256sum research/evidence-surface-v2/generate-confirmatory-retrieval-bundle.mjs >> \
+            research/evidence-surface-v2/out-confirmatory-retrieval/SHA256SUMS.txt
+          sha256sum research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs >> \
+            research/evidence-surface-v2/out-confirmatory-retrieval/SHA256SUMS.txt
+          test -s research/evidence-surface-v2/out-confirmatory-retrieval/retriever-input.jsonl
+          test -s research/evidence-surface-v2/out-confirmatory-retrieval/scoring-truth.jsonl
+          test -s research/evidence-surface-v2/out-confirmatory-retrieval/construction-audit.json
+          test -s research/evidence-surface-v2/out-confirmatory-retrieval/SHA256SUMS.txt
+
+      - name: Show construction summary
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const a=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-confirmatory-retrieval/construction-audit.json','utf8'));
+          console.log({
+            status:a.status,
+            input_cases:a.input_cases,
+            truth_cases:a.truth_cases,
+            pairs:a.pairs,
+            family_counts:a.family_counts,
+            ledger_profile_counts:a.ledger_profile_counts,
+            domain_counts:a.domain_counts,
+            retriever_input_sha256:a.retriever_input_sha256,
+            scoring_truth_sha256:a.scoring_truth_sha256,
+            gates:a.gates
+          });
+          NODE
+
+      - name: Upload construction-only artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-surface-v2-confirmatory-retrieval-construction
+          path: research/evidence-surface-v2/out-confirmatory-retrieval/
