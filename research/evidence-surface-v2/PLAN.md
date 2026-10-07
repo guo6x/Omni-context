@@ -37,7 +37,7 @@ Required outputs:
 Let the formal world contract define allowed full-evidence action families.
 
 - **WAVR — World-Action Violation Rate:** fraction of all cases where a decisive action family is not allowed by the frozen world contract.
-- **FEDD — Full-Evidence Decision Divergence:** fraction of all cases whose `(action_family, selected_candidate_id)` differs from the same sample under C0.
+- **FEDD — Full-Evidence Decision Divergence:** fraction of all outputs whose `(action_family, selected_candidate_id)` differs from the same sample under C0; this includes conservative fallbacks.\n- **Decisive FEDD:** fraction/count of decisive outputs that differ from C0, excluding fallback-only changes.
 - **Unsupported-but-correct:** decisive action under incomplete coverage that nevertheless matches the C0 decision.
 - **Fallback rate:** fraction of non-decisive responses.
 
@@ -236,7 +236,7 @@ This is stronger, cleaner, and less dependent on one hand-written policy.
 
 Do not rewrite the final paper until:
 
-- Phase A forensic audit is complete;
+- Phase A forensic audit is complete and CI-replayed;
 - V2 preregistration is frozen;
 - S2 identical-surface construction passes exact equality checks;
 - non-oracle monitor is defined without Gold access;
