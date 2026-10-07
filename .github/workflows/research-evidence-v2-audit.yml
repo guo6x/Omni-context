@@ -9,6 +9,10 @@ on:
       - 'research/evidence-surface-v1/p2/out/**'
       - 'research/evidence-surface-v2/audit-v1-p2.mjs'
       - 'research/evidence-surface-v2/audit-v1-p2.test.mjs'
+      - 'research/evidence-surface-v2/paired-world.schema.json'
+      - 'research/evidence-surface-v2/validate-paired-world.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world.test.mjs'
+      - 'research/evidence-surface-v2/dev/paired-world-toy.jsonl'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -34,12 +38,19 @@ jobs:
       - name: Lock forensic invariants
         run: node --test research/evidence-surface-v2/audit-v1-p2.test.mjs
 
+      - name: Validate paired-world construction contract
+        run: node --test research/evidence-surface-v2/validate-paired-world.test.mjs
+
       - name: Generate machine audit
         run: |
           rm -rf research/evidence-surface-v2/out-ci
           node research/evidence-surface-v2/audit-v1-p2.mjs research/evidence-surface-v2/out-ci
+          node research/evidence-surface-v2/validate-paired-world.mjs \
+            research/evidence-surface-v2/dev/paired-world-toy.jsonl \
+            research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.md
+          test -s research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
 
       - name: Show key findings
         run: |
