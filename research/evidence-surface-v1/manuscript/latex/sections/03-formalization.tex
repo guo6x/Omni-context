@@ -30,10 +30,11 @@ In that case, the delivered surface contains no local cue that a required obliga
 uncovered. The definition is policy-relative: an omission silent for one policy may be
 detectable for another.
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
-\small
-\begin{tabular}{p{0.19\textwidth}p{0.19\textwidth}p{0.50\textwidth}}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{p{0.18\columnwidth}p{0.18\columnwidth}p{0.51\columnwidth}}
 \toprule
 Formal coverage & Visible gap cue & Expected frozen-policy behavior \\
 \midrule
@@ -46,7 +47,7 @@ Incomplete + coverage signal & may be absent & coverage-aware fallback \\
 \caption{Mechanism taxonomy. This is a property of the formal contract and frozen policy,
 not a claim that all deployed agents implement the same gap checks.}
 \label{tab:taxonomy}
-\end{table*}
+\end{table}
 
 \paragraph{Coverage-completeness signal.}
 C5 augments the policy input with one boolean $z=C(x,S)$. No missing evidence content is
