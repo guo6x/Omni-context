@@ -1,55 +1,64 @@
 {
-  "schema_version": 1,
-  "status": "BLOCKED",
+  "schema_version": 2,
+  "status": "BLOCKED_FINAL_AUTHORIZATION_ONLY",
   "confirmatory_execution_authorized": false,
   "frozen_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
   "resolved": [
-    "confirmatory corpus frozen in Git",
+    "confirmatory corpus frozen in Git and integrity-verified",
     "dual structural validators frozen",
     "family/domain/ledger-profile balance frozen",
-    "primary metric definitions drafted",
-    "P0/P1 deterministic policy roles defined",
-    "M0-M4 monitor roles defined",
-    "pretrained semantic retriever model/revision selected"
+    "primary metrics and reporting strata defined",
+    "R1 retrieval construction resolved: matched-slot equal-size A/B stores, opaque IDs, physical input/truth firewall, schema-valid dev and confirmatory construction, confirmatory construction integrity PASS",
+    "R2 retrieval environment resolved: Python 3.11.16, exact dependency lock, BM25/BGE budgets k={2,4,6}, exact four-hash development reproduction PASS",
+    "L1 resolved by pre-outcome explicit no-LLM confirmatory decision",
+    "L2 not applicable because LLM replication is frozen OFF for this confirmatory execution",
+    "E1 deterministic policy/monitor/kernel sources frozen with Git blob guards and integrity PASS",
+    "E2 paired-surface results schema, retrieval results schema, execution manifest schema, and 9+12 condition matrix frozen with integrity PASS"
   ],
+  "evidence": {
+    "corpus_integrity": {
+      "workflow_run_id": 37641911109,
+      "conclusion": "success"
+    },
+    "retrieval_dev_exact_reproduction": {
+      "workflow_run_id": 37651365166,
+      "conclusion": "success",
+      "python": "3.11.16",
+      "lock_sha256": "52323d51db98a4649bd15161bb5b7d73cb6c149082f1ce0df9719a331c74b73b",
+      "expected_equals_actual": true
+    },
+    "retrieval_dev_schema_valid_reproduction": {
+      "workflow_run_id": 37652310883,
+      "conclusion": "success"
+    },
+    "confirmatory_retrieval_construction": {
+      "workflow_run_id": 37652320497,
+      "conclusion": "success",
+      "retriever_input_sha256": "55cd2e6f988c7dc09c15ce51600e0606f5250db45732731549f52179b56321a1",
+      "scoring_truth_sha256": "553a9e234a4a7ad0fb9c8de180f538aec1c57ddcdd14aa484e017ea534fcc1d5",
+      "ranking_executed": false
+    },
+    "confirmatory_retrieval_integrity": {
+      "workflow_run_id": 37652657758,
+      "conclusion": "success"
+    },
+    "execution_source_integrity": {
+      "workflow_run_id": 37653225947,
+      "conclusion": "success"
+    },
+    "llm_decision_path": "research/evidence-surface-v2/LLM_REPLICATION_DECISION.md",
+    "execution_matrix_path": "research/evidence-surface-v2/EXECUTION_MATRIX.json",
+    "execution_source_freeze_path": "research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json",
+    "retrieval_construction_freeze_path": "research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json"
+  },
   "blockers": [
     {
-      "id": "R1",
-      "item": "retrieval source-store and distractor construction",
-      "required_before_authorization": true
-    },
-    {
-      "id": "R2",
-      "item": "retrieval budgets and exact Python dependency lock",
-      "required_before_authorization": true
-    },
-    {
-      "id": "L1",
-      "item": "exact LLM model identities or explicit no-LLM decision",
-      "required_before_authorization": true
-    },
-    {
-      "id": "L2",
-      "item": "LLM prompt/parser/retry freeze if LLM replication retained",
-      "required_before_authorization": true
-    },
-    {
-      "id": "E1",
-      "item": "deterministic policy and monitor source hashes",
-      "required_before_authorization": true
-    },
-    {
-      "id": "E2",
-      "item": "result table schema and execution manifest schema",
-      "required_before_authorization": true
-    },
-    {
       "id": "E3",
-      "item": "separate signed/versioned execution authorization record",
+      "item": "separate versioned execution authorization record after final preregistration snapshot",
       "required_before_authorization": true
     }
   ],
-  "retriever_candidate": {
+  "retriever_frozen": {
     "lexical": {
       "algorithm": "BM25Okapi",
       "package": "rank-bm25",
@@ -59,7 +68,18 @@
       "model": "BAAI/bge-small-en-v1.5",
       "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
       "sentence_transformers_version": "6.1.0",
-      "similarity": "cosine on normalized embeddings"
-    }
+      "similarity": "cosine on normalized embeddings",
+      "device": "cpu"
+    },
+    "budgets": [
+      2,
+      4,
+      6
+    ]
+  },
+  "llm_replication": {
+    "enabled": false,
+    "decision_frozen_before_outcomes": true,
+    "models": []
   }
 }
