@@ -59,17 +59,25 @@ jobs:
           node --test research/evidence-surface-v2/policy-currentness-first.test.mjs
           node --test research/evidence-surface-v2/score-dev-retrieval.test.mjs
 
-      - name: Generate development retrieval source store
+      - name: Generate development retrieval input and isolated truth
         run: |
-          node research/evidence-surface-v2/generate-dev-retrieval-store.mjs             research/evidence-surface-v2/out-retrieval-dev/source-store.jsonl
+          node research/evidence-surface-v2/generate-dev-retrieval-store.mjs \
+            research/evidence-surface-v2/out-retrieval-dev/retriever-input.jsonl \
+            research/evidence-surface-v2/out-retrieval-dev/scoring-truth.jsonl
 
-      - name: Run BM25 and pinned BGE
+      - name: Run BM25 and pinned BGE on retriever-only input
         run: |
-          python research/evidence-surface-v2/run-dev-retrievers.py             research/evidence-surface-v2/out-retrieval-dev/source-store.jsonl             research/evidence-surface-v2/out-retrieval-dev/rankings.json
+          python research/evidence-surface-v2/run-dev-retrievers.py \
+            research/evidence-surface-v2/out-retrieval-dev/retriever-input.jsonl \
+            research/evidence-surface-v2/out-retrieval-dev/rankings.json
 
-      - name: Score downstream development behavior
+      - name: Score downstream development behavior after truth join
         run: |
-          node research/evidence-surface-v2/score-dev-retrieval.mjs             research/evidence-surface-v2/out-retrieval-dev/source-store.jsonl             research/evidence-surface-v2/out-retrieval-dev/rankings.json             research/evidence-surface-v2/out-retrieval-dev/scored.json
+          node research/evidence-surface-v2/score-dev-retrieval.mjs \
+            research/evidence-surface-v2/out-retrieval-dev/retriever-input.jsonl \
+            research/evidence-surface-v2/out-retrieval-dev/scoring-truth.jsonl \
+            research/evidence-surface-v2/out-retrieval-dev/rankings.json \
+            research/evidence-surface-v2/out-retrieval-dev/scored.json
 
       - name: Build development summary
         run: |
@@ -83,7 +91,8 @@ jobs:
           const summary={
             schema_version:1,
             status:'DEVELOPMENT_ONLY',
-            source_store_sha256:sha(dir+'/source-store.jsonl'),
+            retriever_input_sha256:sha(dir+'/retriever-input.jsonl'),
+            scoring_truth_sha256:sha(dir+'/scoring-truth.jsonl'),
             rankings_sha256:sha(dir+'/rankings.json'),
             scored_sha256:sha(dir+'/scored.json'),
             retrievers:rankings.retrievers,
