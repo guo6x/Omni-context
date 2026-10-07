@@ -1,0 +1,31 @@
+% Same frozen retrieval surface: C4 and C5.
+\begin{tikzpicture}
+\begin{axis}[
+  ybar,
+  ymin=0, ymax=90,
+  width=\linewidth,
+  height=6.1cm,
+  ylabel={Rate (\%)},
+  symbolic x coords={UDR,Decisive,Safe decisive,Fallback},
+  xtick=data,
+  x tick label style={rotate=15,anchor=east},
+  bar width=9pt,
+  ymajorgrids=true,
+  grid style={black!10},
+  legend style={at={(0.5,1.02)},anchor=south,legend columns=2,draw=none}
+]
+\addplot[draw=black,fill=black!12] coordinates {
+  (UDR,\HybridUDR)
+  (Decisive,\HybridDecisive)
+  (Safe decisive,\HybridSafeDecisive)
+  (Fallback,\HybridFallback)
+};
+\addplot[draw=black,fill=black!48] coordinates {
+  (UDR,\CoverageUDR)
+  (Decisive,\CoverageDecisive)
+  (Safe decisive,\CoverageSafeDecisive)
+  (Fallback,\CoverageFallback)
+};
+\legend{C4 Hybrid,C5 Coverage-aware}
+\end{axis}
+\end{tikzpicture}
