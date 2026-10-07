@@ -41,7 +41,8 @@ export function currentnessFirstPolicy({evidence,candidates}){
   if(currentOverride.length){
     const supported=[...new Set(currentOverride.flatMap(e=>e.supports_candidates??[]))];
     if(supported.length===1){
-      return {action_family:'HONOR_OVERRIDE',selected_candidate_id:supported[0],decisive:true,reason:'CURRENT_OVERRIDE'};
+      const winner=(candidates??[]).find(x=>x.candidate_id===supported[0]);
+      return {action_family:winner?.action_family??'HONOR_OVERRIDE',selected_candidate_id:supported[0],decisive:true,reason:'CURRENT_OVERRIDE'};
     }
     return fallback('AMBIGUOUS_OVERRIDE');
   }
@@ -58,7 +59,8 @@ export function currentnessFirstPolicy({evidence,candidates}){
   if(outcome){
     const ids=outcome.supports_candidates??[];
     if(ids.length===1){
-      return {action_family:'REVISE_OR_INVALIDATE',selected_candidate_id:ids[0],decisive:true,reason:'CURRENT_OUTCOME'};
+      const winner=(candidates??[]).find(x=>x.candidate_id===ids[0]);
+      return {action_family:winner?.action_family??'REVISE_OR_INVALIDATE',selected_candidate_id:ids[0],decisive:true,reason:'CURRENT_OUTCOME'};
     }
   }
 
