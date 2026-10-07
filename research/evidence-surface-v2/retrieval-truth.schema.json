@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/guo6x/Omni-context/research/evidence-surface-v2/retrieval-truth.schema.json",
+  "title": "Evidence Surface V2 retrieval scoring truth sidecar",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "case_id",
+    "pair_id",
+    "member",
+    "family",
+    "domain_id",
+    "target_document_id",
+    "transition_slot_document_id",
+    "allowed_decisive_actions",
+    "expected_visible_base_ids",
+    "construction"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "evidence-surface-v2-retrieval-truth-v1"
+    },
+    "case_id": {
+      "type": "string",
+      "pattern": "^case-[a-f0-9]{16}$"
+    },
+    "pair_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "member": {
+      "enum": [
+        "A",
+        "B"
+      ]
+    },
+    "family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "domain_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_document_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^doc-[a-f0-9]{16}$"
+    },
+    "transition_slot_document_id": {
+      "type": "string",
+      "pattern": "^doc-[a-f0-9]{16}$"
+    },
+    "allowed_decisive_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object"
+      }
+    },
+    "expected_visible_base_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^doc-[a-f0-9]{16}$"
+      }
+    },
+    "construction": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "split",
+        "generator_version",
+        "distractor_count",
+        "target_present",
+        "matched_slot",
+        "transition_slot_token_count"
+      ],
+      "properties": {
+        "split": {
+          "type": "string"
+        },
+        "generator_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "distractor_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_present": {
+          "type": "boolean"
+        },
+        "matched_slot": {
+          "const": true
+        },
+        "transition_slot_token_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
