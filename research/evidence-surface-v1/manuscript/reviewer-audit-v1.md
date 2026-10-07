@@ -144,6 +144,36 @@ Allowed interpretation:
 
 > aggregate recall is an incomplete safety surrogate; obligation identity and detectability also matter.
 
+### R14. “Evidence obligation / coverage” is not novel terminology
+**Risk:** HIGH  
+**Status:** ADDRESSED; CLAIM REMOVED
+
+HALT (Roh & Han, 2026) frames search-agent stopping as evidence coverage over expected claims. Kim (2026), *Evidence-Obligation Pool-Gated Retrieval*, explicitly uses evidence obligations, an evidence ledger, and terminal coverage/gap states.
+
+Therefore the paper must **not** claim that it introduces evidence obligations, evidence coverage, or coverage-gated control.
+
+The remaining novelty claim is narrower:
+
+- controlled causal intervention on visibility of required state-transition evidence;
+- policy-relative distinction between detectable and silent omissions;
+- concentration of the direct effect in superseding override/invalidation cases;
+- same-surface demonstration that completeness information is sufficient to change downstream behavior.
+
+### R15. Evidence-deletion benchmark shortcut
+**Risk:** HIGH  
+**Status:** ADDRESSED AS CLAIM BOUNDARY
+
+Mondal et al. (2026), *Before Answering*, shows that deleting support can leak insufficiency labels through memory size.
+
+Our C1 also removes evidence, so a reviewer can ask whether “silent” is false because cardinality changes.
+
+Required response:
+
+- the frozen policy has no treatment label, Gold access, expected-count input, or learned insufficiency detector;
+- “silent” is explicitly **policy-relative**, meaning the declared downstream gap checks do not fire;
+- the paper does **not** claim that the reduced surface is statistically indistinguishable to every possible detector;
+- future learned coverage monitors must use size-matched or otherwise shortcut-resistant construction.
+
 ## P2 — presentation / reviewer-friction issues
 
 ### R11. Title breadth
@@ -151,7 +181,7 @@ Allowed interpretation:
 **Status:** IMPROVED
 
 Current:
-**When Missing Evidence Leaves No Trace: Obligation Coverage and Silent Retrieval Failures in Agent Decision Safety**
+**When Missing Evidence Leaves No Trace: Silent Retrieval Failures in Agent Decision Safety**
 
 The subtitle now names the differentiating construct: obligation coverage.
 
