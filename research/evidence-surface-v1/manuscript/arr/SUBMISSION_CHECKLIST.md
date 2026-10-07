@@ -18,6 +18,20 @@
 - [ ] AI assistance is not represented as authorship.
 - [ ] Any supplementary code/data bundle is anonymized.
 
+## OpenReview / sustainable-reviewing gates
+
+- [ ] Every author has a complete OpenReview profile.
+- [ ] Every author profile includes ORCID, affiliation history, career status, active email, COIs, and DBLP / ACL Anthology links when applicable.
+- [ ] A designated service contributor has been identified **or** the lottery risk has been consciously accepted.
+- [ ] If using a designated contributor, the ARR automated checker confirms that person is qualified.
+- [ ] The contributor has read enough of the paper to vouch that it is ready for top-tier consideration.
+- [ ] The contributor is not designated on more than 2 October-cycle submissions.
+- [ ] The contributor has explicitly agreed to perform the associated ARR service.
+- [ ] The contributor registration form is completed no later than **2026-10-14 AoE**.
+- [ ] No person was added as an author merely to satisfy the service requirement.
+
+See `SERVICE_CONTRIBUTOR_PLAN.md`.
+
 ## Scientific claim gates
 
 - [ ] Do not claim novelty for evidence sufficiency.
