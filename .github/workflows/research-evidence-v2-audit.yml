@@ -23,6 +23,8 @@ on:
       - 'research/evidence-surface-v2/policy-currentness-first.mjs'
       - 'research/evidence-surface-v2/policy-currentness-first.test.mjs'
       - 'research/evidence-surface-v2/evaluate-independent-policy-v1.mjs'
+      - 'research/evidence-surface-v2/evaluate-paired-world-policies.mjs'
+      - 'research/evidence-surface-v2/evaluate-paired-world-policies.test.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -59,6 +61,9 @@ jobs:
 
       - name: Validate independent currentness policy
         run: node --test research/evidence-surface-v2/policy-currentness-first.test.mjs
+
+      - name: Validate paired-world policy invariance
+        run: node --test research/evidence-surface-v2/evaluate-paired-world-policies.test.mjs
 
       - name: Generate machine audit
         run: |
