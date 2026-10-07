@@ -36,6 +36,25 @@ However, the most recent available IJCAI main-track policy (2026) says LLMs may 
 
 Our actual workflow includes substantive generative-AI assistance in framing and drafting. Therefore IJCAI must **not** be treated as an active target unless the official IJCAI 2027 policy explicitly permits this workflow.
 
+### ARR October 2026 service-capacity gate
+
+October 2026 introduces the ACL sustainable-reviewing policy.
+
+A paper is guaranteed review only when it brings a qualified designated service contributor. The contributor may be a non-author and does not need to match the paper's ARR track, but must be familiar with the manuscript, vouch for top-tier submission quality, be qualified under current ARR rules, support at most 2 submissions in the cycle, and complete the registration form within 48 hours after the submission deadline.
+
+Without a qualified contributor, the paper can still be submitted but enters the unsupported-submission lottery and may be desk rejected if capacity is insufficient.
+
+Operational policy for this paper:
+
+1. do not add a sham author;
+2. prefer a qualified non-author researcher who genuinely reads and endorses the paper;
+3. verify qualification through the ARR automated checker;
+4. secure explicit service agreement before final submission;
+5. complete contributor registration by **2026-10-14 AoE**;
+6. if no qualified contributor is secured, treat October submission as a conscious lottery decision rather than guaranteed review.
+
+Detailed plan: `arr/SERVICE_CONTRIBUTOR_PLAN.md`.
+
 ### ACL/ARR disclosure requirement
 
 For ARR submission:
