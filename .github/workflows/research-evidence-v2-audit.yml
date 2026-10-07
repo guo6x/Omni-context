@@ -83,11 +83,22 @@ jobs:
           node research/evidence-surface-v2/run-dev-policy-monitor.mjs \
             research/evidence-surface-v2/dev/paired-world-toy.jsonl \
             research/evidence-surface-v2/out-ci/paired-world-dev-monitor.json
+          node research/evidence-surface-v2/evaluate-monitor-stress.mjs \
+            research/evidence-surface-v2/dev/monitor-stress.jsonl \
+            research/evidence-surface-v2/out-ci/monitor-stress.json
+          node research/evidence-surface-v2/evaluate-independent-policy-v1.mjs \
+            research/evidence-surface-v2/out-ci/independent-policy-v1.json
+          node research/evidence-surface-v2/evaluate-paired-world-policies.mjs \
+            research/evidence-surface-v2/dev/paired-world-toy.jsonl \
+            research/evidence-surface-v2/out-ci/paired-world-policy-replication.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.md
           test -s research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
           test -s research/evidence-surface-v2/out-ci/paired-world-dev-validation-b.json
           test -s research/evidence-surface-v2/out-ci/paired-world-dev-monitor.json
+          test -s research/evidence-surface-v2/out-ci/monitor-stress.json
+          test -s research/evidence-surface-v2/out-ci/independent-policy-v1.json
+          test -s research/evidence-surface-v2/out-ci/paired-world-policy-replication.json
 
       - name: Show key findings
         run: |
@@ -100,6 +111,18 @@ jobs:
           console.log('C4', a.by_condition.C4_HYBRID);
           console.log('F6 cue audit', a.f6_cue_audit);
           console.log('C5 oracle audit', a.c5_oracle_audit);
+          const s=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/monitor-stress.json','utf8'));
+          console.log('Monitor stress', {
+            cases:s.cases,
+            correct:s.correct_count,
+            false_complete:s.false_complete_count,
+            false_incomplete:s.false_incomplete_count
+          });
+          const p=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/independent-policy-v1.json','utf8'));
+          console.log('Independent policy C1', p.by_condition.C1_HIDDEN);
+          console.log('Independent policy F6 C1', p.by_family.F6.C1_HIDDEN);
+          const q=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/paired-world-policy-replication.json','utf8'));
+          console.log('Paired-world policy replication', q.by_policy);
           NODE
 
       - name: Upload forensic audit
