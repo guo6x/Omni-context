@@ -1,0 +1,86 @@
+name: Evidence Surface V2 Confirmatory Structure
+
+on:
+  push:
+    branches:
+      - research/evidence-surface-v2-strengthening
+    paths:
+      - 'research/evidence-surface-v2/CONFIRMATORY_DESIGN.md'
+      - 'research/evidence-surface-v2/PREREGISTRATION_DRAFT.md'
+      - 'research/evidence-surface-v2/paired-world.schema.json'
+      - 'research/evidence-surface-v2/validate-paired-world.mjs'
+      - 'research/evidence-surface-v2/validate-paired-world-b.mjs'
+      - 'research/evidence-surface-v2/generate-dev-paired-worlds.mjs'
+      - 'research/evidence-surface-v2/generate-confirmatory-candidate.mjs'
+      - 'research/evidence-surface-v2/audit-confirmatory-structure.mjs'
+      - 'research/evidence-surface-v2/generate-confirmatory-candidate.test.mjs'
+      - 'research/evidence-surface-v2/make-confirmatory-structure-manifest.mjs'
+      - 'research/evidence-surface-v2/confirmatory-outcome-embargo.test.mjs'
+      - '.github/workflows/research-evidence-v2-confirmatory-structure.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-surface-v2-confirmatory-structure-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  structure-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enforce outcome embargo
+        run: node --test research/evidence-surface-v2/confirmatory-outcome-embargo.test.mjs
+
+      - name: Validate confirmatory structural candidate
+        run: node --test research/evidence-surface-v2/generate-confirmatory-candidate.test.mjs
+
+      - name: Generate structure-only candidate
+        run: |
+          rm -rf research/evidence-surface-v2/out-confirmatory-ci
+          mkdir -p research/evidence-surface-v2/out-confirmatory-ci
+          node research/evidence-surface-v2/generate-confirmatory-candidate.mjs \
+            research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-candidate.jsonl
+          node research/evidence-surface-v2/audit-confirmatory-structure.mjs > \
+            research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-audit.json
+          node research/evidence-surface-v2/make-confirmatory-structure-manifest.mjs \
+            research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-candidate.jsonl \
+            research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-audit.json \
+            research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-manifest.json
+          test -s research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-candidate.jsonl
+          test -s research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-audit.json
+          test -s research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-manifest.json
+
+      - name: Show structural gates only
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const a=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-audit.json','utf8'));
+          const m=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-confirmatory-ci/confirmatory-structure-manifest.json','utf8'));
+          console.log({
+            pairs:a.pairs,
+            family_counts:a.family_counts,
+            ledger_profile_counts:a.ledger_profile_counts,
+            max_template_concentration:a.max_template_concentration,
+            max_within_confirmatory_trigram_jaccard:a.max_within_confirmatory_trigram_jaccard,
+            max_dev_confirmatory_trigram_jaccard:a.max_dev_confirmatory_trigram_jaccard,
+            gates:a.gates,
+            corpus_sha256:m.corpus.sha256,
+            declarations:m.declarations
+          });
+          NODE
+
+      - name: Upload confirmatory structure candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-surface-v2-confirmatory-structure-candidate
+          path: research/evidence-surface-v2/out-confirmatory-ci/
