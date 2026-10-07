@@ -32,8 +32,10 @@
         "additionalProperties": false,
         "required": [
           "schema_version",
+          "condition_id",
           "pair_id",
           "family",
+          "ledger_profile",
           "policy",
           "monitor",
           "policy_call_count",
@@ -89,8 +91,11 @@
               "required": [
                 "member",
                 "world_id",
+                "surface_complete_truth",
                 "monitor_status",
                 "monitor_reasons",
+                "monitor_false_complete",
+                "monitor_false_incomplete",
                 "action",
                 "decisive",
                 "correct_decisive",
@@ -130,9 +135,28 @@
                 },
                 "world_action_violation": {
                   "type": "boolean"
+                },
+                "surface_complete_truth": {
+                  "type": "boolean"
+                },
+                "monitor_false_complete": {
+                  "type": "boolean"
+                },
+                "monitor_false_incomplete": {
+                  "type": "boolean"
                 }
               }
             }
+          },
+          "condition_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ledger_profile": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }
