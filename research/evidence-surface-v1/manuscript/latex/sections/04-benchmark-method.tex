@@ -16,7 +16,7 @@ are uncovered.
 \setlength{\tabcolsep}{2pt}
 \begin{tabular}{p{0.06\columnwidth}p{0.18\columnwidth}p{0.29\columnwidth}p{0.35\columnwidth}}
 \toprule
-Family & Obligation & C1 visible-gap cue & Silent-failure route \\
+Family & Obligation & C1 gap cue & Silent route \\
 \midrule
 F1 & Constraint / feasibility & Requirement remains while feasibility support is missing & Top-$k$ can remove cue-bearing context together with support \\
 F2 & Authority / approval & Authority requirement remains without current grant & Top-$k$ can surface action support without the requirement \\
@@ -78,14 +78,14 @@ using frozen role and currentness weights.
 \setlength{\tabcolsep}{2pt}
 \begin{tabular}{p{0.11\columnwidth}p{0.29\columnwidth}p{0.18\columnwidth}p{0.29\columnwidth}}
 \toprule
-Condition & Evidence surface & Extra coverage input & Purpose \\
+Condition & Evidence surface & Coverage input & Purpose \\
 \midrule
 C0 FULL & all formal evidence & none & positive control \\
 C1 HIDDEN & one designated mandatory item removed & none & paired causal intervention \\
 C2 LEXICAL & IDF token overlap, top-$k=2$ & none & controlled lexical retrieval \\
 C3 HASH-DENSE & 256-D signed char-trigram hash, cosine, top-$k=2$ & none & controlled dense-vector baseline \\
 C4 HYBRID & RRF of C2+C3, constant 60, top-$k=2$ & none & fixed hybrid surface \\
-C5 COVERAGE-AWARE & \textbf{identical C4 surface} & complete bit only & mechanism test \\
+C5 Aware & \textbf{identical C4 surface} & complete bit only & mechanism test \\
 \bottomrule
 \end{tabular}
 \caption{Frozen experimental conditions. C4 and C5 share the identical retrieved evidence
