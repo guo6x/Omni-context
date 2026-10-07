@@ -1,0 +1,291 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/evidence-surface-v2/paired-world.schema.json",
+  "title": "Evidence Surface V2 Paired World",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pair_id",
+    "family",
+    "pair_contract",
+    "world_a",
+    "world_b",
+    "safe_fallback_actions",
+    "construction_provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "evidence-surface-v2-paired-world-v0"
+    },
+    "pair_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "pair_contract": {
+      "type": "object",
+      "required": [
+        "requires_exact_policy_input_equality",
+        "requires_disjoint_decisive_truth"
+      ],
+      "properties": {
+        "requires_exact_policy_input_equality": {
+          "const": true
+        },
+        "requires_disjoint_decisive_truth": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "world_a": {
+      "$ref": "#/$defs/world"
+    },
+    "world_b": {
+      "$ref": "#/$defs/world"
+    },
+    "safe_fallback_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "construction_provenance": {
+      "type": "object",
+      "required": [
+        "split",
+        "template_id",
+        "source_type"
+      ],
+      "properties": {
+        "split": {
+          "enum": [
+            "dev",
+            "confirmatory"
+          ]
+        },
+        "template_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "world": {
+      "type": "object",
+      "required": [
+        "world_id",
+        "policy_input",
+        "hidden_state",
+        "allowed_decisive_actions"
+      ],
+      "properties": {
+        "world_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy_input": {
+          "$ref": "#/$defs/policyInput"
+        },
+        "hidden_state": {
+          "$ref": "#/$defs/hiddenState"
+        },
+        "allowed_decisive_actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/action"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "policyInput": {
+      "type": "object",
+      "required": [
+        "question",
+        "candidates",
+        "evidence",
+        "prior_state"
+      ],
+      "properties": {
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/candidate"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "prior_state": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "candidate_id",
+        "label"
+      ],
+      "properties": {
+        "candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "evidence_id",
+        "role",
+        "fact",
+        "currentness",
+        "supports_candidates",
+        "source_event_id"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "currentness": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supports_candidates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "source_event_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "hiddenState": {
+      "type": "object",
+      "required": [
+        "state_id",
+        "transition_exists",
+        "hidden_events"
+      ],
+      "properties": {
+        "state_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transition_exists": {
+          "type": "boolean"
+        },
+        "hidden_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hiddenEvent"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "hiddenEvent": {
+      "type": "object",
+      "required": [
+        "event_id",
+        "transition_type",
+        "at",
+        "statement"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transition_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "required": [
+        "action_family",
+        "selected_candidate_id"
+      ],
+      "properties": {
+        "action_family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selected_candidate_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
