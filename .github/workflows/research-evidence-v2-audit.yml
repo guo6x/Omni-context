@@ -13,6 +13,9 @@ on:
       - 'research/evidence-surface-v2/validate-paired-world.mjs'
       - 'research/evidence-surface-v2/validate-paired-world.test.mjs'
       - 'research/evidence-surface-v2/dev/paired-world-toy.jsonl'
+      - 'research/evidence-surface-v2/monitor-acquisition-ledger.mjs'
+      - 'research/evidence-surface-v2/monitor-acquisition-ledger.test.mjs'
+      - 'research/evidence-surface-v2/run-dev-policy-monitor.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -41,6 +44,9 @@ jobs:
       - name: Validate paired-world construction contract
         run: node --test research/evidence-surface-v2/validate-paired-world.test.mjs
 
+      - name: Validate non-oracle ledger monitor
+        run: node --test research/evidence-surface-v2/monitor-acquisition-ledger.test.mjs
+
       - name: Generate machine audit
         run: |
           rm -rf research/evidence-surface-v2/out-ci
@@ -48,9 +54,13 @@ jobs:
           node research/evidence-surface-v2/validate-paired-world.mjs \
             research/evidence-surface-v2/dev/paired-world-toy.jsonl \
             research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
+          node research/evidence-surface-v2/run-dev-policy-monitor.mjs \
+            research/evidence-surface-v2/dev/paired-world-toy.jsonl \
+            research/evidence-surface-v2/out-ci/paired-world-dev-monitor.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.json
           test -s research/evidence-surface-v2/out-ci/v1-p2-forensic-audit.md
           test -s research/evidence-surface-v2/out-ci/paired-world-dev-validation.json
+          test -s research/evidence-surface-v2/out-ci/paired-world-dev-monitor.json
 
       - name: Show key findings
         run: |
