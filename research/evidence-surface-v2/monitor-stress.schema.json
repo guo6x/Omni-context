@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/evidence-surface-v2/monitor-stress.schema.json",
+  "title": "Evidence Surface V2 Acquisition Monitor Stress Case",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "case_id",
+    "class",
+    "surface_complete_truth",
+    "acquisition_context",
+    "rationale"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "evidence-surface-v2-monitor-stress-v0"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "class": {
+      "enum": [
+        "CLEAN_COMPLETE",
+        "BENIGN_SOURCE_ADVANCE",
+        "STALE_SOURCE_HEAD",
+        "INDEX_INCOMPLETE",
+        "RETRIEVAL_INCOMPLETE",
+        "MISSING_REQUIRED_CHANNEL",
+        "UNTRACKED_RELEVANT_CHANNEL"
+      ]
+    },
+    "surface_complete_truth": {
+      "type": "boolean"
+    },
+    "acquisition_context": {
+      "type": "object",
+      "required": [
+        "required_channels",
+        "channels"
+      ],
+      "properties": {
+        "required_channels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "channel_id",
+              "source_head_seq",
+              "retrieved_head_seq",
+              "index_complete",
+              "retrieval_complete"
+            ],
+            "properties": {
+              "channel_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_head_seq": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "retrieved_head_seq": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "index_complete": {
+                "type": "boolean"
+              },
+              "retrieval_complete": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}
