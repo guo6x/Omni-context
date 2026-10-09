@@ -15,13 +15,37 @@ const guard='research/evidence-surface-v2/validate-json-document-schema.mjs';
 const corpus=path.join(here,'dev/paired-world-toy.jsonl');
 const prereg='research/evidence-surface-v2/EXECUTION_PREREGISTRATION_SNAPSHOT.json';
 
+function frozenGuards(){
+  const guards={};
+  const records=[
+    'research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json',
+    'research/evidence-surface-v2/RETRIEVAL_EXECUTION_SOURCE_FREEZE.json',
+    'research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json'
+  ];
+  for(const rel of records){
+    const record=JSON.parse(fs.readFileSync(path.join(root,rel),'utf8'));
+    Object.assign(guards,record.git_blob_guards??{});
+  }
+  for(const rel of [
+    ...records,prereg,'research/evidence-surface-v2/EXECUTION_MATRIX.json',
+    'research/evidence-surface-v2/EXECUTION_READINESS.json',
+    'research/evidence-surface-v2/execution-authorization.schema.json',
+    'research/evidence-surface-v2/execution-request.schema.json',
+    'research/evidence-surface-v2/validate-execution-authorization.mjs',
+    '.github/workflows/research-evidence-v2-confirmatory-execution.yml'
+  ]){
+    guards[rel]=cp.execFileSync('git',['hash-object',rel],{cwd:root,encoding:'utf8'}).trim();
+  }
+  return guards;
+}
+
 function fixture(o={}){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'v2-auth-'));
  const blob=cp.execFileSync('git',['hash-object',guard],{cwd:root,encoding:'utf8'}).trim();
  const auth={
   schema_version:1,authorization_id:'ESV2-CONF-TEST',status:'AUTHORIZED',
   confirmatory_execution_authorized:true,frozen_corpus_sha256:digest(corpus),
-  git_blob_guards:{[guard]:blob},llm_replication:{enabled:false,models:[]},
+  git_blob_guards:frozenGuards(),llm_replication:{enabled:false,models:[]},
   preregistration_snapshot:{path:prereg,sha256:digest(path.join(root,prereg))},
   ...o.auth
  };
