@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "authorization_id": "ESV2-CONF-20261009-V1",
-  "status": "PREPARED_NOT_AUTHORIZED",
-  "confirmatory_execution_authorized": false,
+  "status": "AUTHORIZED",
+  "confirmatory_execution_authorized": true,
   "frozen_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
   "git_blob_guards": {
     ".github/workflows/research-evidence-v2-confirmatory-execution.yml": "9d12f66557a7a89981105719cce5126dd57f4aef",
@@ -11,7 +11,7 @@
     "research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json": "86aa863ee3bc584dd899e0c19023065b3d0edd13",
     "research/evidence-surface-v2/EXECUTION_MATRIX.json": "30a079609aece606ab413f2803dcdd8ab57c44ae",
     "research/evidence-surface-v2/EXECUTION_PREREGISTRATION_SNAPSHOT.json": "1f8cd3901fb4d9c8c0cf83f170c3814997566a8d",
-    "research/evidence-surface-v2/EXECUTION_READINESS.json": "e19350f77082dde85adf5c1d54b13ea03ef6c5d3",
+    "research/evidence-surface-v2/EXECUTION_READINESS.json": "370d80735f57614956496e12dbc7e48b1dc7da95",
     "research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json": "59da756596263c4ae5a5d50168072c10a6b1782c",
     "research/evidence-surface-v2/execution-authorization.schema.json": "2785de324f2a1495fa17339cec914430f7fe9b45",
     "research/evidence-surface-v2/execution-kernel.mjs": "cbf5d0e9b0678a7f201a62afe43cd57845a47a71",
@@ -45,6 +45,6 @@
     "path": "research/evidence-surface-v2/EXECUTION_PREREGISTRATION_SNAPSHOT.json",
     "sha256": "a616981f668e5edc2dfeda6cedefac24240211ea9655ea15392dd868f5714c22"
   },
-  "authorized_at": null,
-  "notes": "Prepared candidate; outcome embargo intact. Evidence-preserving workflow guarded. Authorization/readiness still disabled until final gate."
+  "authorized_at": "2026-10-09T09:51:20.330Z",
+  "notes": "Versioned authorization following green prepared audit run 37913814514; confirms frozen 160-pair corpus, 9+12 matrix, exact retrieval lock and no LLM. EXECUTION_REQUEST has not yet been issued."
 }
