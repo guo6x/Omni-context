@@ -13,7 +13,7 @@ const root=path.resolve(here,'../..');
 const digest=f=>crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
 const guard='research/evidence-surface-v2/validate-json-document-schema.mjs';
 const corpus=path.join(here,'dev/paired-world-toy.jsonl');
-const prereg='research/evidence-surface-v2/EXECUTION_MATRIX.json';
+const prereg='research/evidence-surface-v2/EXECUTION_PREREGISTRATION_SNAPSHOT.json';
 
 function fixture(o={}){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'v2-auth-'));
