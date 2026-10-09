@@ -22,12 +22,13 @@ test('authorization validation occurs before any outcome-producing command',()=>
   const paired=text.indexOf('run-paired-surface-matrix.mjs');
   const retrieval=text.indexOf('run-dev-retrievers.py');
   assert.ok(auth>=0&&paired>auth&&retrieval>auth);
-  assert.ok(text.indexOf("confirmatory_execution_authorized!==true")>auth);
+  assert.ok(text.indexOf('validate-execution-authorization.mjs')>auth);
+  assert.ok(text.indexOf('validate-execution-authorization.mjs')<paired);
 });
 
 test('workflow freezes LLM replication off and uses the frozen corpus/matrix',()=>{
   const text=fs.readFileSync(workflow,'utf8').toLowerCase();
-  assert.match(text,/llm_replication\?\.enabled!==false/);
+  assert.match(text,/validate-execution-authorization\.mjs/);
   assert.match(text,/confirmatory\/frozen\/paired-worlds\.jsonl/);
   assert.match(text,/execution_matrix\.json/i);
   for(const token of ['openai','anthropic','gemini','ollama','litellm']){
