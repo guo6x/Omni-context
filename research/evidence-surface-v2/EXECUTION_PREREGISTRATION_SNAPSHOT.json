@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_PRE_OUTCOME_NOT_AUTHORIZED",
+  "frozen_pair_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+  "frozen_retrieval_input_sha256": "55cd2e6f988c7dc09c15ce51600e0606f5250db45732731549f52179b56321a1",
+  "frozen_retrieval_truth_sha256": "553a9e234a4a7ad0fb9c8de180f538aec1c57ddcdd14aa484e017ea534fcc1d5",
+  "source_of_conditions": "research/evidence-surface-v2/EXECUTION_MATRIX.json",
+  "pair_count": 160,
+  "world_count": 320,
+  "paired_surface_condition_count": 9,
+  "expected_paired_surface_rows": 1440,
+  "retrieval_case_count": 320,
+  "retrieval_condition_count": 12,
+  "expected_retrieval_scored_rows": 3840,
+  "experiment_scope": {
+    "formal_claim": "Paired worlds share exactly identical decision-visible policy input but have disjoint valid decisive-action sets; therefore a deterministic surface-only policy cannot make a valid decisive action in both worlds.",
+    "empirical_claim": "Controlled world-action violation and completion trade-offs for two frozen deterministic decision policies and bounded retrieval/monitor conditions on a procedural synthetic benchmark.",
+    "excluded_claims": [
+      "real-world incident prevalence",
+      "generalization across LLM families",
+      "reliability of arbitrary deployment coverage monitors",
+      "oracle as a deployable monitor",
+      "recall monotonicity beyond frozen configurations"
+    ]
+  },
+  "paired_surface": {
+    "policies": [
+      "P0_SURFACE_VOTE",
+      "P1_CURRENTNESS_FIRST"
+    ],
+    "monitor_conditions": [
+      "M0_NO_MONITOR",
+      "M1_ALWAYS_DEFER",
+      "M2_SURFACE_ONLY_HEURISTIC",
+      "M3_ACQUISITION_LEDGER",
+      "M4_ORACLE_COMPLETENESS"
+    ],
+    "policy_independent_reference": "P_NONE × M1_ALWAYS_DEFER only once",
+    "action_eval_rule": "Exact equality of (action_family, selected_candidate_id) with the hidden world's allowed decisive action set; abstentions are non-decisive.",
+    "one_shared_surface_policy_call_max": true
+  },
+  "retrieval": {
+    "methods": [
+      "BM25_OKAPI",
+      "BGE_SMALL_EN_V1_5"
+    ],
+    "budgets": [
+      2,
+      4,
+      6
+    ],
+    "scorer_policies": [
+      "SURFACE_VOTE",
+      "CURRENTNESS_FIRST"
+    ],
+    "model_id": "BAAI/bge-small-en-v1.5",
+    "model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "python": "3.11.16",
+    "dependency_lock": "research/evidence-surface-v2/requirements-retrieval-v2.lock.txt",
+    "tokenizer": "frozen source",
+    "cpu": true,
+    "paired_store_control": "11 documents in both A and B; same ordered opaque IDs, same token count in one differently semantic transition slot, all non-slot documents identical",
+    "truth_firewall": "retriever-input separate from scoring-truth; truth joined only after rankings are finalized"
+  },
+  "primary_reporting": {
+    "metrics": [
+      "WAVR",
+      "completion_rate",
+      "PDVR",
+      "correct_decisive_count",
+      "decisive_correctness",
+      "monitor_false_complete_rate",
+      "monitor_false_incomplete_rate"
+    ],
+    "primary_comparisons": [
+      "M3 versus M0 under each policy: jointly report WAVR and completion differences",
+      "M3 versus M1 always defer: recovered completion and residual violation risk",
+      "M3 versus M4 oracle: diagnostic distance only",
+      "M0 P0 and P1: surface-only mechanism realization"
+    ],
+    "mandatory_family_stratification": true,
+    "mandatory_m3_ledger_profile_stratification": true,
+    "ledger_profiles": [
+      "L0_CLEAN_TRACKED",
+      "L1_BENIGN_ADVANCE",
+      "L2_STALE_SOURCE_HEAD",
+      "L3_UNTRACKED_CHANNEL"
+    ],
+    "retrieval_mandatory_family_stratification": true,
+    "display_exact_count_denominator": true,
+    "no_single_scalar_safety_utility_score": true,
+    "no_binary_winner_threshold": true,
+    "no_population_prevalence_inference": true,
+    "intervals_if_reported": "Label only benchmark-resampling; preserve family × ledger-profile weights; never present as real-world sampling uncertainty.",
+    "missing_or_negative_results": "Report all preregistered conditions, including zero or harmful outcomes"
+  },
+  "llm_replication": {
+    "enabled": false,
+    "models": [],
+    "claim_allowed": false
+  },
+  "execution_rules": {
+    "outcome_run_permitted_now": false,
+    "launch_gate": "Separate versioned authorization and exact-sha EXECUTION_REQUEST.json required",
+    "exclude_cases": "No discretionary exclusions or posthoc removal; implementation failures require documented versioned correction",
+    "on_runtime_failure": "Preserve failed run and artifacts/logs; never substitute silently changed conditions",
+    "post_outcome_changes": "Keep original result and source; version correction, rerun all affected conditions, disclose reason",
+    "forbid_after_first_outcome": [
+      "change corpus, family/domain/profile weights or metrics",
+      "change monitoring rules or policy behavior",
+      "change retriever methods/budgets or model revision",
+      "add/remove LLM or policy conditions",
+      "choose favorable strata or suppress null results"
+    ]
+  },
+  "provenance": {
+    "frozen_corpus_record": "research/evidence-surface-v2/confirmatory/frozen/FREEZE_RECORD.json",
+    "frozen_retrieval_record": "research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json",
+    "execution_source_record": "research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json",
+    "retrieval_source_record": "research/evidence-surface-v2/RETRIEVAL_EXECUTION_SOURCE_FREEZE.json",
+    "no_llm_decision": "research/evidence-surface-v2/LLM_REPLICATION_DECISION.md",
+    "original_execution_draft": "research/evidence-surface-v2/EXECUTION_PREREGISTRATION_DRAFT.md"
+  }
+}
