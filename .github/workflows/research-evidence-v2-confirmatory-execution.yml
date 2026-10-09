@@ -203,11 +203,14 @@ jobs:
           node research/evidence-surface-v2/validate-json-document-schema.mjs \
             research/evidence-surface-v2/execution-manifest.schema.json \
             research/evidence-surface-v2/out-confirmatory-execution/execution-manifest.json
-          sha256sum research/evidence-surface-v2/out-confirmatory-execution/* > \
+          find research/evidence-surface-v2/out-confirmatory-execution -maxdepth 1 -type f \
+            ! -name RESULT_HASHES.txt -print0 | sort -z | xargs -0 -r sha256sum > \
             research/evidence-surface-v2/out-confirmatory-execution/RESULT_HASHES.txt
 
-      - name: Upload immutable confirmatory result artifact
+      - name: Upload confirmatory results or partial failure evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: evidence-surface-v2-confirmatory-results
+          if-no-files-found: warn
           path: research/evidence-surface-v2/out-confirmatory-execution/
