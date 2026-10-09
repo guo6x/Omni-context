@@ -27,16 +27,19 @@ export function auditPreparedAuthorization(){
   json('confirmatory/retrieval-construction/FREEZE_RECORD.json')
  ];
  const eq=(ok,reason)=>{if(!ok)errors.push(reason)};
- eq(auth.status==='PREPARED_NOT_AUTHORIZED','prepared status is not locked');
- eq(auth.confirmatory_execution_authorized===false,'authorization prematurely enabled');
- eq(readiness.confirmatory_execution_authorized===false,'readiness prematurely enabled');
+ const prepared=auth.status==='PREPARED_NOT_AUTHORIZED';
+ const authorized=auth.status==='AUTHORIZED';
+ eq(prepared||authorized,'authorization has unrecognized state');
+ eq(auth.confirmatory_execution_authorized===authorized,'authorization status/flag mismatch');
+ eq(readiness.confirmatory_execution_authorized===authorized,'readiness/authorization mismatch');
+ eq(readiness.status===(authorized?'AUTHORIZED':'BLOCKED_FINAL_AUTHORIZATION_ONLY'),'readiness status mismatch');
  eq(auth.llm_replication?.enabled===false&&auth.llm_replication?.models?.length===0,'LLM replication enabled');
  eq(auth.preregistration_snapshot.path===pref+'EXECUTION_PREREGISTRATION_SNAPSHOT.json','unrecognized snapshot');
  eq(auth.preregistration_snapshot.sha256===sha(location('EXECUTION_PREREGISTRATION_SNAPSHOT.json')),'prereg snapshot sha mismatch');
  eq(auth.frozen_corpus_sha256===frozen.frozen_corpus_sha256,'corpus record hash mismatch');
  eq(sha(location('confirmatory/frozen/paired-worlds.jsonl'))===frozen.frozen_corpus_sha256,'corpus bytes mismatch');
  eq(snap.status==='FROZEN_PRE_OUTCOME_NOT_AUTHORIZED','prereg not frozen');
- eq(!fs.existsSync(location('EXECUTION_REQUEST.json')),'execution request must not exist');
+ if(prepared)eq(!fs.existsSync(location('EXECUTION_REQUEST.json')),'prepared authorization cannot have execution request');
 
  const mandatory=new Set([
   pref+'EXECUTION_PREREGISTRATION_SNAPSHOT.json',
@@ -72,7 +75,7 @@ export function auditPreparedAuthorization(){
   preregistration_sha256:auth.preregistration_snapshot.sha256,
   guarded_file_count:Object.keys(auth.git_blob_guards).length,
   required_guard_count:mandatory.size,
-  ready_for_execution:false,
+  ready_for_execution:authorized,
   outcome_executed:false
  };
 }
