@@ -43,6 +43,48 @@ export function validateExecutionAuthorization({
   const corpusSha=sha256File(corpusFile);
   if(corpusSha!==auth.frozen_corpus_sha256)errors.push('frozen corpus hash mismatch');
 
+  const mandatorySnapshot='research/evidence-surface-v2/EXECUTION_PREREGISTRATION_SNAPSHOT.json';
+  if(auth.preregistration_snapshot.path!==mandatorySnapshot){
+    errors.push('preregistration snapshot must be the frozen execution snapshot');
+  }
+  const guardRecords=[
+    ['research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json',
+     'EXECUTION_SOURCES_FROZEN__EXECUTION_NOT_AUTHORIZED'],
+    ['research/evidence-surface-v2/RETRIEVAL_EXECUTION_SOURCE_FREEZE.json',
+     'RETRIEVAL_EXECUTION_SOURCES_FROZEN__OUTCOMES_NOT_AUTHORIZED'],
+    ['research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json',
+     'RETRIEVAL_CONSTRUCTION_FROZEN__OUTCOMES_NOT_AUTHORIZED']
+  ];
+  const requiredGuardPaths=new Set([
+    mandatorySnapshot,
+    'research/evidence-surface-v2/EXECUTION_MATRIX.json',
+    'research/evidence-surface-v2/EXECUTION_READINESS.json',
+    'research/evidence-surface-v2/execution-authorization.schema.json',
+    'research/evidence-surface-v2/execution-request.schema.json',
+    'research/evidence-surface-v2/validate-execution-authorization.mjs',
+    '.github/workflows/research-evidence-v2-confirmatory-execution.yml'
+  ]);
+  for(const [rel,expectedStatus] of guardRecords){
+    requiredGuardPaths.add(rel);
+    const file=path.resolve(repoRoot,rel);
+    if(!fs.existsSync(file)){errors.push('frozen guard record missing: '+rel);continue;}
+    const record=JSON.parse(fs.readFileSync(file,'utf8'));
+    if(record.status!==expectedStatus)errors.push('bad frozen record status: '+rel);
+    for(const [k,v] of Object.entries(record.declarations??{})){
+      if(v!==false)errors.push('frozen record outcome embargo violated: '+rel+':'+k);
+    }
+    for(const [p,expected] of Object.entries(record.git_blob_guards??{})){
+      requiredGuardPaths.add(p);
+      if(auth.git_blob_guards?.[p]!==expected){
+        errors.push('authorization does not match frozen source guard: '+p);
+      }
+    }
+  }
+  for(const p of requiredGuardPaths){
+    if(!Object.prototype.hasOwnProperty.call(auth.git_blob_guards??{},p)){
+      errors.push('authorization missing required source guard: '+p);
+    }
+  }
   const snapPath=path.resolve(repoRoot,auth.preregistration_snapshot.path);
   if(!fs.existsSync(snapPath))errors.push('preregistration snapshot missing');
   else if(sha256File(snapPath)!==auth.preregistration_snapshot.sha256)errors.push('preregistration snapshot sha256 mismatch');
