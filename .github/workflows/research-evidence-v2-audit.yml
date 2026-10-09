@@ -38,6 +38,9 @@ on:
       - 'research/evidence-surface-v2/run-paired-surface-matrix.mjs'
       - 'research/evidence-surface-v2/execution-kernel.mjs'
       - 'research/evidence-surface-v2/policy-surface-vote.mjs'
+      - 'research/evidence-surface-v2/audit-execution-preregistration.test.mjs'
+      - 'research/evidence-surface-v2/audit-execution-preregistration.mjs'
+      - 'research/evidence-surface-v2/EXECUTION_PREREGISTRATION_SNAPSHOT.json'
       - '.github/workflows/research-evidence-v2-confirmatory-execution.yml'
       - 'research/evidence-surface-v2/confirmatory-execution-workflow.test.mjs'
       - 'research/evidence-surface-v2/validate-execution-authorization.test.mjs'
@@ -107,6 +110,11 @@ jobs:
           node --test research/evidence-surface-v2/validate-json-document-schema.test.mjs
           node --test research/evidence-surface-v2/validate-execution-authorization.test.mjs
           node --test research/evidence-surface-v2/confirmatory-execution-workflow.test.mjs
+
+      - name: Validate frozen preregistration
+        run: |
+          node --test research/evidence-surface-v2/audit-execution-preregistration.test.mjs
+          node research/evidence-surface-v2/audit-execution-preregistration.mjs
 
       - name: Generate machine audit
         run: |
