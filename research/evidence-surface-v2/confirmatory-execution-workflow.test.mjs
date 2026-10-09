@@ -35,3 +35,15 @@ test('workflow freezes LLM replication off and uses the frozen corpus/matrix',()
     assert.equal(text.includes(token),false,'unexpected LLM provider token '+token);
   }
 });
+
+test('partial artifacts remain available after execution failure',()=>{
+  const text=fs.readFileSync(workflow,'utf8');
+  assert.match(text,/name: Upload confirmatory results or partial failure evidence\s+if: always\(\)/);
+  assert.match(text,/if-no-files-found: warn/);
+});
+
+test('result hash manifest does not hash itself',()=>{
+  const text=fs.readFileSync(workflow,'utf8');
+  assert.match(text,/! -name RESULT_HASHES\.txt/);
+  assert.match(text,/sort -z \| xargs -0 -r sha256sum/);
+});
