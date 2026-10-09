@@ -38,6 +38,14 @@ on:
       - 'research/evidence-surface-v2/run-paired-surface-matrix.mjs'
       - 'research/evidence-surface-v2/execution-kernel.mjs'
       - 'research/evidence-surface-v2/policy-surface-vote.mjs'
+      - '.github/workflows/research-evidence-v2-confirmatory-execution.yml'
+      - 'research/evidence-surface-v2/confirmatory-execution-workflow.test.mjs'
+      - 'research/evidence-surface-v2/validate-execution-authorization.test.mjs'
+      - 'research/evidence-surface-v2/validate-execution-authorization.mjs'
+      - 'research/evidence-surface-v2/execution-request.schema.json'
+      - 'research/evidence-surface-v2/execution-authorization.schema.json'
+      - 'research/evidence-surface-v2/validate-json-document-schema.test.mjs'
+      - 'research/evidence-surface-v2/validate-json-document-schema.mjs'
       - '.github/workflows/research-evidence-v2-audit.yml'
   workflow_dispatch:
 
@@ -93,6 +101,12 @@ jobs:
           node --test research/evidence-surface-v2/run-paired-surface-matrix.test.mjs
           node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/execution-results.schema.json','utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('research/evidence-surface-v2/execution-manifest.schema.json','utf8'))"
+
+      - name: Validate authorization and confirmatory workflow guards
+        run: |
+          node --test research/evidence-surface-v2/validate-json-document-schema.test.mjs
+          node --test research/evidence-surface-v2/validate-execution-authorization.test.mjs
+          node --test research/evidence-surface-v2/confirmatory-execution-workflow.test.mjs
 
       - name: Generate machine audit
         run: |
