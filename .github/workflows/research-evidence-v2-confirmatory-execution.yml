@@ -36,28 +36,11 @@ jobs:
 
       - name: Validate execution authorization before outcomes
         run: |
-          node - <<'NODE'
-          const fs=require('fs');
-          const cp=require('child_process');
-          const crypto=require('crypto');
-          const req=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_REQUEST.json','utf8'));
-          const auth=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_AUTHORIZATION.json','utf8'));
-          const readiness=JSON.parse(fs.readFileSync('research/evidence-surface-v2/EXECUTION_READINESS.json','utf8'));
-          if(req.execute!==true) throw new Error('execution request execute flag is not true');
-          if(req.authorization_id!==auth.authorization_id) throw new Error('authorization id mismatch');
-          if(auth.status!=='AUTHORIZED') throw new Error('authorization status is not AUTHORIZED');
-          if(auth.confirmatory_execution_authorized!==true) throw new Error('authorization flag is not true');
-          if(readiness.confirmatory_execution_authorized!==true) throw new Error('readiness is not authorized');
-          if(auth.llm_replication?.enabled!==false) throw new Error('LLM replication must remain disabled');
-          for(const [p,expected] of Object.entries(auth.git_blob_guards??{})){
-            const actual=cp.execFileSync('git',['hash-object',p],{encoding:'utf8'}).trim();
-            console.log(p,{expected,actual});
-            if(actual!==expected) throw new Error('authorization blob mismatch: '+p);
-          }
-          const corpus='research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl';
-          const actualCorpus=crypto.createHash('sha256').update(fs.readFileSync(corpus)).digest('hex');
-          if(actualCorpus!==auth.frozen_corpus_sha256) throw new Error('frozen corpus hash mismatch');
-          NODE
+          node research/evidence-surface-v2/validate-execution-authorization.mjs \
+            research/evidence-surface-v2/EXECUTION_REQUEST.json \
+            research/evidence-surface-v2/EXECUTION_AUTHORIZATION.json \
+            research/evidence-surface-v2/EXECUTION_READINESS.json \
+            research/evidence-surface-v2/confirmatory/frozen/paired-worlds.jsonl
 
       - name: Validate frozen source records before outcomes
         run: |
@@ -82,6 +65,8 @@ jobs:
           node --test research/evidence-surface-v2/run-paired-surface-matrix.test.mjs
           node --test research/evidence-surface-v2/score-dev-retrieval.test.mjs
           node --test research/evidence-surface-v2/validate-json-document-schema.test.mjs
+          node --test research/evidence-surface-v2/validate-execution-authorization.test.mjs
+          node --test research/evidence-surface-v2/confirmatory-execution-workflow.test.mjs
 
       - name: Install frozen retrieval environment
         run: |
