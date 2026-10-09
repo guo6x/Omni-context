@@ -5,7 +5,7 @@
   "confirmatory_execution_authorized": false,
   "frozen_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
   "git_blob_guards": {
-    ".github/workflows/research-evidence-v2-confirmatory-execution.yml": "c9d6ac9c3c60ff8dd4cde275466ffeee0a97f201",
+    ".github/workflows/research-evidence-v2-confirmatory-execution.yml": "9d12f66557a7a89981105719cce5126dd57f4aef",
     ".github/workflows/research-evidence-v2-confirmatory-retrieval-construction.yml": "61c7b58e10b61010369675bad8ed9092d9057b8f",
     "research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs": "14e34881238d4694f91a68fd6a76afcb46232a84",
     "research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json": "86aa863ee3bc584dd899e0c19023065b3d0edd13",
@@ -46,5 +46,5 @@
     "sha256": "a616981f668e5edc2dfeda6cedefac24240211ea9655ea15392dd868f5714c22"
   },
   "authorized_at": null,
-  "notes": "Prepared candidate only. Readiness stays blocked, no EXECUTION_REQUEST.json exists, no confirmatory outcome has been run. Refresh the readiness blob guard after authorizing readiness and before requesting execution."
+  "notes": "Prepared candidate; outcome embargo intact. Evidence-preserving workflow guarded. Authorization/readiness still disabled until final gate."
 }
