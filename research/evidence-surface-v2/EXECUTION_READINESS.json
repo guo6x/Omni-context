@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "status": "BLOCKED_FINAL_AUTHORIZATION_ONLY",
-  "confirmatory_execution_authorized": false,
+  "status": "AUTHORIZED",
+  "confirmatory_execution_authorized": true,
   "frozen_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
   "resolved": [
     "confirmatory corpus frozen in Git and integrity-verified",
@@ -13,7 +13,8 @@
     "L1 resolved by pre-outcome explicit no-LLM confirmatory decision",
     "L2 not applicable because LLM replication is frozen OFF for this confirmatory execution",
     "E1 deterministic policy/monitor/kernel sources frozen with Git blob guards and integrity PASS",
-    "E2 paired-surface results schema, retrieval results schema, execution manifest schema, and 9+12 condition matrix frozen with integrity PASS"
+    "E2 paired-surface results schema, retrieval results schema, execution manifest schema, and 9+12 condition matrix frozen with integrity PASS",
+    "E3 versioned execution authorization record prepared, preregistration snapshot and all frozen sources guarded; no execution requested at authorization stage"
   ],
   "evidence": {
     "corpus_integrity": {
@@ -49,15 +50,14 @@
     "llm_decision_path": "research/evidence-surface-v2/LLM_REPLICATION_DECISION.md",
     "execution_matrix_path": "research/evidence-surface-v2/EXECUTION_MATRIX.json",
     "execution_source_freeze_path": "research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json",
-    "retrieval_construction_freeze_path": "research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json"
-  },
-  "blockers": [
-    {
-      "id": "E3",
-      "item": "separate versioned execution authorization record after final preregistration snapshot",
-      "required_before_authorization": true
+    "retrieval_construction_freeze_path": "research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json",
+    "final_prepared_authorization_audit": {
+      "workflow_run_id": 37913814514,
+      "conclusion": "success",
+      "head": "26e3e9a726b7e232b3556ebb60d84f5b0a3c06fd"
     }
-  ],
+  },
+  "blockers": [],
   "retriever_frozen": {
     "lexical": {
       "algorithm": "BM25Okapi",
@@ -81,5 +81,6 @@
     "enabled": false,
     "decision_frozen_before_outcomes": true,
     "models": []
-  }
+  },
+  "authorization_id": "ESV2-CONF-20261009-V1"
 }
