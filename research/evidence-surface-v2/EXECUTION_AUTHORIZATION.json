@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "authorization_id": "ESV2-CONF-20261009-V1",
+  "status": "PREPARED_NOT_AUTHORIZED",
+  "confirmatory_execution_authorized": false,
+  "frozen_corpus_sha256": "944ab3ddf3726bc54f10d5336fc3a6fdab2cb95c5d2049db6c861259b25b755d",
+  "git_blob_guards": {
+    ".github/workflows/research-evidence-v2-confirmatory-execution.yml": "c9d6ac9c3c60ff8dd4cde275466ffeee0a97f201",
+    ".github/workflows/research-evidence-v2-confirmatory-retrieval-construction.yml": "61c7b58e10b61010369675bad8ed9092d9057b8f",
+    "research/evidence-surface-v2/audit-confirmatory-retrieval-bundle.mjs": "14e34881238d4694f91a68fd6a76afcb46232a84",
+    "research/evidence-surface-v2/confirmatory/retrieval-construction/FREEZE_RECORD.json": "86aa863ee3bc584dd899e0c19023065b3d0edd13",
+    "research/evidence-surface-v2/EXECUTION_MATRIX.json": "30a079609aece606ab413f2803dcdd8ab57c44ae",
+    "research/evidence-surface-v2/EXECUTION_PREREGISTRATION_SNAPSHOT.json": "1f8cd3901fb4d9c8c0cf83f170c3814997566a8d",
+    "research/evidence-surface-v2/EXECUTION_READINESS.json": "e19350f77082dde85adf5c1d54b13ea03ef6c5d3",
+    "research/evidence-surface-v2/EXECUTION_SOURCE_FREEZE.json": "59da756596263c4ae5a5d50168072c10a6b1782c",
+    "research/evidence-surface-v2/execution-authorization.schema.json": "2785de324f2a1495fa17339cec914430f7fe9b45",
+    "research/evidence-surface-v2/execution-kernel.mjs": "cbf5d0e9b0678a7f201a62afe43cd57845a47a71",
+    "research/evidence-surface-v2/execution-kernel.test.mjs": "0a946a0a1a94ab2a421715d86c5edc96d0db9e92",
+    "research/evidence-surface-v2/execution-manifest.schema.json": "6a78b11defce2b20e480abde934606a9d0e20a4b",
+    "research/evidence-surface-v2/execution-request.schema.json": "90ba6149bfc6a18a11e4f7a29166e851c6da348d",
+    "research/evidence-surface-v2/execution-results.schema.json": "242b84992da9da663271b10d496ee6bebb621ff4",
+    "research/evidence-surface-v2/generate-confirmatory-retrieval-bundle.mjs": "fd0a90ad73e1623503b6d9b723d51b8fd3b644f9",
+    "research/evidence-surface-v2/monitor-acquisition-ledger.mjs": "7deeec1abbef9ac06b25e159f589b6393f9310aa",
+    "research/evidence-surface-v2/policy-currentness-first.mjs": "a4a8b366bcaaaacb6e8c6640aa895b03839ab6d9",
+    "research/evidence-surface-v2/policy-surface-vote.mjs": "701482ffcf8ee572adae00cda4c8ca209d955d98",
+    "research/evidence-surface-v2/requirements-retrieval-v2.lock.txt": "abbaf7bf169b39cebf75b4b5ab05162d8f088b8f",
+    "research/evidence-surface-v2/RETRIEVAL_CONFIRMATORY_DESIGN_DRAFT.md": "eee41cae5d2ffefdd1efb2974f3729473e4b457a",
+    "research/evidence-surface-v2/RETRIEVAL_EXECUTION_SOURCE_FREEZE.json": "04e2ee16b0e272031aea73343fd1e7411e150fab",
+    "research/evidence-surface-v2/RETRIEVAL_REPRODUCTION_BASELINE.json": "2596a6d60775c2787da91458e57f7c55cced69df",
+    "research/evidence-surface-v2/retrieval-execution-results.schema.json": "7fca1f00727ff1dba9dd0f7bfb09f15180ea8c7b",
+    "research/evidence-surface-v2/retrieval-input.schema.json": "f3f16ee6b92a2a399b9d5b1a4c6b9fc658405694",
+    "research/evidence-surface-v2/retrieval-truth.schema.json": "60c484c1262c302ffe3b236160cd849363d646c4",
+    "research/evidence-surface-v2/run-dev-retrievers.py": "a761c72e44a7b9c3e697309d1e91a902b378d943",
+    "research/evidence-surface-v2/run-paired-surface-matrix.mjs": "846afb801dd9d8fe111aa4b796e68ed376a33363",
+    "research/evidence-surface-v2/run-paired-surface-matrix.test.mjs": "05c5f683d0921c58966b11f7c97f030244e43ba7",
+    "research/evidence-surface-v2/score-dev-retrieval.mjs": "5ecf6d01c5ceec54f23377d417d25158cab7282e",
+    "research/evidence-surface-v2/validate-execution-authorization.mjs": "c91e5893b3e24d257ebd27a877fbbcaef13cd60c",
+    "research/evidence-surface-v2/validate-retrieval-jsonl-schema.mjs": "6d49ac8e176ebd8811c6b73a66e2b8b659595cd1"
+  },
+  "llm_replication": {
+    "enabled": false,
+    "models": []
+  },
+  "preregistration_snapshot": {
+    "path": "research/evidence-surface-v2/EXECUTION_PREREGISTRATION_SNAPSHOT.json",
+    "sha256": "a616981f668e5edc2dfeda6cedefac24240211ea9655ea15392dd868f5714c22"
+  },
+  "authorized_at": null,
+  "notes": "Prepared candidate only. Readiness stays blocked, no EXECUTION_REQUEST.json exists, no confirmatory outcome has been run. Refresh the readiness blob guard after authorizing readiness and before requesting execution."
+}
