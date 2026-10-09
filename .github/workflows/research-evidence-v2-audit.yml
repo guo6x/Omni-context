@@ -162,6 +162,23 @@ jobs:
           echo "=== out-ci artifact inventory ==="
           ls -lah research/evidence-surface-v2/out-ci
 
+      - name: Validate dev execution artifact schema
+        run: |
+          node research/evidence-surface-v2/run-paired-surface-matrix.mjs \
+            research/evidence-surface-v2/out-ci/generated-dev-pairs.jsonl \
+            research/evidence-surface-v2/EXECUTION_MATRIX.json \
+            research/evidence-surface-v2/out-ci/dev-paired-results.json \
+            DEVELOPMENT_RESULT
+          node research/evidence-surface-v2/validate-json-document-schema.mjs \
+            research/evidence-surface-v2/execution-results.schema.json \
+            research/evidence-surface-v2/out-ci/dev-paired-results.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('research/evidence-surface-v2/out-ci/dev-paired-results.json','utf8'));
+          if(r.rows.length!==450)throw new Error('dev matrix must have 50*9=450 rows');
+          if(r.rows.filter(x=>x.monitor==='M1_ALWAYS_DEFER').length!==50)throw new Error('dev M1 count mismatch');
+          NODE
+
       - name: Show key findings
         run: |
           node - <<'NODE'
