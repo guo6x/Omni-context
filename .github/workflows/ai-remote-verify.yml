@@ -1,0 +1,41 @@
+name: AI Remote Verify - Benchmark
+
+# Private command vocabulary: exact issue title or a manual workflow dispatch.
+# Does not accept arbitrary shell commands, refs, URLs, or model/API secrets.
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-remote-verify-${{ github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' &&
+       github.event.issue.title == '[AI-RUN] benchmark' &&
+       (github.actor == 'guo6x' || github.actor == 'chatgpt-codex-connector[bot]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout locked main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Use Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Install benchmark dependencies without install scripts
+        working-directory: benchmark
+        run: npm ci --ignore-scripts --no-fund --no-audit
+      - name: Run deterministic benchmark tests
+        working-directory: benchmark
+        run: npm test
