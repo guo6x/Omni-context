@@ -532,7 +532,11 @@ fn executable_symlink_target_rejected() {
 fn toctou_post_spawn_replacement_ignored() {
     let _guard = child_test_lock();
     let tmp = TempDir::new("adv-toctou");
-    let copied = tmp.path().join("tool.exe");
+    // Canonicalize the fixture parent so Windows 8.3 short-path aliases do not
+    // trip the broker's intentionally strict executable-identity check.
+    let copied = std::fs::canonicalize(tmp.path())
+        .expect("canonicalize fixture root")
+        .join("tool.exe");
     std::fs::copy(std::env::current_exe().expect("current_exe"), &copied).expect("copy test exe");
     let broker = Arc::new(Broker::new());
     broker.register_binding(Box::new(
