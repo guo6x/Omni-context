@@ -1,0 +1,342 @@
+const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
+const { spawn, spawnSync } = require('node:child_process');
+const fs = require('node:fs');
+const net = require('node:net');
+const path = require('node:path');
+const { chromium } = require('playwright');
+
+if (process.platform !== 'win32') {
+  throw new Error('vNext installed Control Center gate is Windows-only');
+}
+
+const installDir = process.env.OMNI_VNEXT_E2E_INSTALL_DIR;
+const profileDir = process.env.OMNI_VNEXT_E2E_PROFILE_DIR;
+const evidenceDir = process.env.OMNI_VNEXT_E2E_EVIDENCE_DIR;
+const buildExecutable = process.env.OMNI_VNEXT_E2E_BUILD_EXE
+  ? path.resolve(process.env.OMNI_VNEXT_E2E_BUILD_EXE)
+  : null;
+const expectedHeadSha = String(process.env.OMNI_VNEXT_E2E_EXPECTED_SHA || '').trim().toLowerCase();
+if (!installDir || !profileDir || !evidenceDir || !buildExecutable || !expectedHeadSha) {
+  throw new Error('OMNI_VNEXT_E2E_INSTALL_DIR, OMNI_VNEXT_E2E_PROFILE_DIR, OMNI_VNEXT_E2E_EVIDENCE_DIR, OMNI_VNEXT_E2E_BUILD_EXE and OMNI_VNEXT_E2E_EXPECTED_SHA are required');
+}
+
+const repoRoot = path.resolve(__dirname, '..');
+const executable = path.join(installDir, 'Omni-Context.exe');
+const brainPort = 3001;
+const cdpPort = 9237;
+const fixtureOutput = path.join(evidenceDir, 'vnext-d1b1-controlled-fixture.json');
+const overviewScreenshotPath = path.join(evidenceDir, 'vnext-control-center-installed.png');
+const liveScreenshotPath = path.join(evidenceDir, 'vnext-control-center-live-guard.png');
+const boundScreenshotPath = path.join(evidenceDir, 'vnext-control-center-bound-snapshot.png');
+const resultPath = path.join(evidenceDir, 'vnext-control-center-installed-result.json');
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitFor(predicate, timeoutMs = 90_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const result = await predicate().catch(() => null);
+    if (result) return result;
+    await wait(250);
+  }
+  throw new Error(`condition timed out after ${timeoutMs}ms`);
+}
+
+async function portInUse(port) {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    const finish = (value) => {
+      socket.destroy();
+      resolve(value);
+    };
+    socket.setTimeout(500);
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+    socket.connect(port, '127.0.0.1');
+  });
+}
+
+function sha256File(file) {
+  return createHash('sha256').update(fs.readFileSync(file)).digest('hex').toUpperCase();
+}
+
+function gitRun(args) {
+  return spawnSync('git', args, {
+    cwd: repoRoot,
+    windowsHide: true,
+    encoding: 'utf8',
+  });
+}
+
+function gitText(args) {
+  const result = gitRun(args);
+  if (result.status !== 0) {
+    throw new Error(`git ${args.join(' ')} failed: ${String(result.stderr || result.stdout || '').trim()}`);
+  }
+  return String(result.stdout || '').trim();
+}
+
+function gitQuiet(args) {
+  const result = gitRun(args);
+  if (result.status !== 0 && result.status !== 1) {
+    throw new Error(`git ${args.join(' ')} failed: ${String(result.stderr || result.stdout || '').trim()}`);
+  }
+  return result.status === 0;
+}
+
+function splitNonEmptyLines(value) {
+  return String(value || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function stopTree(pid) {
+  if (!pid) return;
+  spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+  try { process.kill(pid); } catch { /* already gone */ }
+
+  try {
+    const pidFile = path.join(profileDir, 'Local', 'omni-context', 'data', 'brain-server.pid');
+    const brainPid = Number(fs.readFileSync(pidFile, 'utf8').trim());
+    if (Number.isInteger(brainPid) && brainPid > 0 && brainPid !== process.pid && brainPid !== pid) {
+      spawnSync('taskkill', ['/PID', String(brainPid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+      try { process.kill(brainPid); } catch { /* already gone */ }
+    }
+  } catch {
+    // The fixture profile may already be stopped or may never have started Brain.
+  }
+}
+
+async function startInstalledApp() {
+  const child = spawn(executable, [], {
+    env: {
+      ...process.env,
+      LOCALAPPDATA: path.join(profileDir, 'Local'),
+      APPDATA: path.join(profileDir, 'Roaming'),
+      OMNI_D1B1_E2E_FIXTURE: '1',
+      OMNI_D1B1_E2E_FIXTURE_OUTPUT: fixtureOutput,
+      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${cdpPort}`,
+    },
+    detached: false,
+    stdio: 'ignore',
+    windowsHide: false,
+  });
+
+  await waitFor(async () => {
+    const [health, cdp, fixtureReady] = await Promise.all([
+      fetch(`http://127.0.0.1:${brainPort}/health`).then((response) => response.ok),
+      fetch(`http://127.0.0.1:${cdpPort}/json/version`).then((response) => response.ok),
+      Promise.resolve(fs.existsSync(fixtureOutput)),
+    ]);
+    return health && cdp && fixtureReady;
+  }, 120_000);
+  return child;
+}
+
+async function connectMainPage() {
+  const browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`);
+  const context = browser.contexts()[0];
+  const page = await waitFor(async () => {
+    for (const candidate of context.pages()) {
+      const text = await candidate.locator('body').innerText().catch(() => '');
+      if (text.includes('Omni-Context') || text.includes('全域物理级 AI 记忆操作系统')) return candidate;
+    }
+    return null;
+  });
+  return { browser, page };
+}
+
+async function run() {
+  fs.mkdirSync(evidenceDir, { recursive: true });
+  fs.rmSync(profileDir, { recursive: true, force: true });
+  fs.mkdirSync(path.join(profileDir, 'Local'), { recursive: true });
+  fs.mkdirSync(path.join(profileDir, 'Roaming'), { recursive: true });
+  for (const file of [fixtureOutput, resultPath, overviewScreenshotPath, liveScreenshotPath, boundScreenshotPath]) {
+    fs.rmSync(file, { force: true });
+  }
+
+  const startedAt = new Date().toISOString();
+  const checkpoints = [];
+  let app = null;
+  let browser = null;
+  let page = null;
+  let currentSourceHeadSha = null;
+  let trackedTreeClean = null;
+  let sourceIndexMatchesHead = null;
+  let sourceWorktreeMatchesHead = null;
+  let sourceUntrackedNonIgnored = [];
+  let sourcePorcelainAdvisory = [];
+  let statOnlyPorcelainDifferenceIgnored = false;
+  let buildExecutableSha256 = null;
+  let installedExecutableSha256 = null;
+
+  const pass = (id, details = undefined) => {
+    checkpoints.push({ id, status: 'PASS', ...(details ? { details } : {}) });
+    console.log(`vnext-installed-${id}=PASS`);
+  };
+
+  const screenshotFiles = () => [overviewScreenshotPath, liveScreenshotPath, boundScreenshotPath]
+    .filter((file) => fs.existsSync(file))
+    .map((file) => path.basename(file));
+
+  const writeResult = (status, errorMessage = null) => {
+    const result = {
+      schema_version: '1.2',
+      gate_id: 'vnext-control-center-installed-e2e',
+      status,
+      verification_level: 'INSTALLED_WINDOWS_LOCAL_CONTROLLED',
+      declared_source_head_sha: expectedHeadSha || null,
+      observed_source_head_sha: currentSourceHeadSha,
+      tracked_source_tree_clean: trackedTreeClean,
+      source_index_matches_head: sourceIndexMatchesHead,
+      source_worktree_matches_head: sourceWorktreeMatchesHead,
+      source_untracked_nonignored: sourceUntrackedNonIgnored,
+      source_porcelain_advisory: sourcePorcelainAdvisory,
+      stat_only_porcelain_difference_ignored: statOnlyPorcelainDifferenceIgnored,
+      source_head_binding: 'HEAD_PLUS_CONTENT_DIFFS_PLUS_BUILD_TO_INSTALLED_BINARY_SHA256',
+      build_executable_sha256: buildExecutableSha256,
+      installed_executable_sha256: installedExecutableSha256,
+      executable_hash_match: Boolean(
+        buildExecutableSha256
+        && installedExecutableSha256
+        && buildExecutableSha256 === installedExecutableSha256
+      ),
+      started_at: startedAt,
+      completed_at: new Date().toISOString(),
+      fixture: 'D1B1_CONTROLLED_LOCAL_ONLY',
+      authority_invariants: {
+        approve_clicked: false,
+        execution_started: false,
+        github_writes: 0,
+        receipts_created: 0,
+        readback_started: false,
+        outcome_finalized: false,
+      },
+      checkpoints,
+      screenshots: screenshotFiles(),
+      error: errorMessage,
+    };
+    fs.writeFileSync(resultPath, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
+  };
+
+  try {
+    assert.match(expectedHeadSha, /^[0-9a-f]{40}$/, 'OMNI_VNEXT_E2E_EXPECTED_SHA must be a full 40-character Git SHA');
+    assert.equal(fs.existsSync(buildExecutable), true, `build executable not found: ${buildExecutable}`);
+    assert.equal(fs.existsSync(executable), true, `installed executable not found: ${executable}`);
+
+    currentSourceHeadSha = gitText(['rev-parse', 'HEAD']).toLowerCase();
+    sourceIndexMatchesHead = gitQuiet(['diff', '--cached', '--quiet', '--no-ext-diff', 'HEAD', '--']);
+    sourceWorktreeMatchesHead = gitQuiet(['diff', '--quiet', '--no-ext-diff', 'HEAD', '--']);
+    sourceUntrackedNonIgnored = splitNonEmptyLines(gitText(['ls-files', '--others', '--exclude-standard']));
+    sourcePorcelainAdvisory = splitNonEmptyLines(gitText(['status', '--porcelain=v2', '--untracked-files=no']));
+    trackedTreeClean = sourceIndexMatchesHead && sourceWorktreeMatchesHead && sourceUntrackedNonIgnored.length === 0;
+    statOnlyPorcelainDifferenceIgnored = trackedTreeClean && sourcePorcelainAdvisory.length > 0;
+
+    assert.equal(currentSourceHeadSha, expectedHeadSha, `working tree HEAD ${currentSourceHeadSha} does not match declared build head ${expectedHeadSha}`);
+    assert.equal(sourceIndexMatchesHead, true, 'staged source content differs from HEAD');
+    assert.equal(sourceWorktreeMatchesHead, true, 'working-tree source content differs from HEAD');
+    assert.deepEqual(sourceUntrackedNonIgnored, [], 'non-ignored untracked source files are present; exact-source binding is ambiguous');
+    pass('source-content-identity', {
+      porcelain_advisory_count: sourcePorcelainAdvisory.length,
+      stat_only_porcelain_difference_ignored: statOnlyPorcelainDifferenceIgnored,
+    });
+
+    buildExecutableSha256 = sha256File(buildExecutable);
+    installedExecutableSha256 = sha256File(executable);
+    assert.equal(
+      installedExecutableSha256,
+      buildExecutableSha256,
+      'installed Omni-Context.exe does not match the exact build executable by SHA-256',
+    );
+    pass('artifact-identity', {
+      source_head_sha: currentSourceHeadSha,
+      executable_sha256: installedExecutableSha256,
+    });
+
+    assert.equal(await portInUse(brainPort), false, `127.0.0.1:${brainPort} is already in use; close the running Omni-Context instance before this gate`);
+    assert.equal(await portInUse(cdpPort), false, `127.0.0.1:${cdpPort} is already in use`);
+    pass('isolated-runtime-preflight');
+
+    app = await startInstalledApp();
+    pass('packaged-app-start');
+
+    const fixture = JSON.parse(fs.readFileSync(fixtureOutput, 'utf8'));
+    assert.equal(fixture.fixture, 'D1B1_CONTROLLED_LOCAL_ONLY');
+    assert.equal(fixture.primary?.plan_state, 'awaiting_approval');
+    assert.equal(fixture.concurrency?.plan_state, 'awaiting_approval');
+    assert.equal(fixture.execution_started, false);
+    assert.equal(fixture.github_writes, 0);
+    assert.equal(fixture.receipts_created, 0);
+    assert.equal(fixture.readback_started, false);
+    assert.equal(fixture.outcome_finalized, false);
+    pass('controlled-fixture', { plan_count: 2 });
+
+    const connection = await connectMainPage();
+    browser = connection.browser;
+    page = connection.page;
+
+    const skip = page.getByRole('button', { name: /跳过|Skip/i });
+    if (await skip.isVisible().catch(() => false)) {
+      await skip.click();
+      await skip.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
+    }
+
+    await page.getByTitle(/更多|More/i).click();
+    await page.getByRole('button', { name: 'Control Center', exact: true }).click();
+    await page.getByRole('heading', { name: 'Decision Control Center', exact: true }).waitFor({ timeout: 30_000 });
+    pass('control-center-open');
+
+    const planCount = await page.getByText('github.issue.close', { exact: true }).count();
+    assert.ok(planCount >= 2, `expected at least two controlled plan cards, found ${planCount}`);
+    await page.getByText(/Human approval required/i).first().waitFor({ timeout: 30_000 });
+    const approveCount = await page.getByRole('button', { name: 'Approve', exact: true }).count();
+    assert.ok(approveCount >= 2, `expected owner approval controls for both pending plans, found ${approveCount}`);
+    assert.equal(await page.getByRole('button', { name: /Run approved action/i }).count(), 0);
+    pass('awaiting-approval-state', { visible_plan_cards: planCount, visible_approve_controls: approveCount });
+
+    const liveGuardHeading = page.getByText('Live Guard trace', { exact: true }).first();
+    await liveGuardHeading.waitFor({ timeout: 30_000 });
+    const liveGuardBlock = liveGuardHeading.locator('..').locator('..');
+    await liveGuardBlock.getByText('proceed', { exact: true }).waitFor({ timeout: 30_000 });
+    await liveGuardBlock.getByText(/d1b1-controlled-cp6-fixture@1\.0\.0/i).first().waitFor({ timeout: 30_000 });
+    await liveGuardBlock.getByText(/Source:\s*d1b1-controlled-local-fixture/i).first().waitFor({ timeout: 30_000 });
+    await liveGuardBlock.screenshot({ path: liveScreenshotPath });
+    pass('live-guard-provenance');
+
+    const boundSnapshotHeading = page.getByText('Bound plan snapshot', { exact: true }).first();
+    await boundSnapshotHeading.waitFor({ timeout: 30_000 });
+    const boundSnapshotBlock = boundSnapshotHeading.locator('..').locator('..');
+    await boundSnapshotBlock.getByText(/Immutable authorization snapshot/i).waitFor({ timeout: 30_000 });
+    await boundSnapshotBlock.getByText('repository.current_state', { exact: true }).waitFor({ timeout: 30_000 });
+    await boundSnapshotBlock.getByText('issue.current_state', { exact: true }).waitFor({ timeout: 30_000 });
+    await boundSnapshotBlock.screenshot({ path: boundScreenshotPath });
+    pass('bound-plan-snapshot');
+
+    await page.getByText(/Approved ≠ Executed/i).first().waitFor({ timeout: 30_000 });
+    pass('authority-copy');
+
+    await page.screenshot({ path: overviewScreenshotPath, fullPage: true });
+    pass('screenshot-evidence', { files: screenshotFiles() });
+
+    writeResult('PASS');
+  } catch (error) {
+    if (page) {
+      await page.screenshot({ path: overviewScreenshotPath, fullPage: true }).catch(() => {});
+    }
+    writeResult('FAIL', error instanceof Error ? error.message : String(error));
+    throw error;
+  } finally {
+    if (browser) await browser.close().catch(() => {});
+    if (app) stopTree(app.pid);
+  }
+}
+
+run().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

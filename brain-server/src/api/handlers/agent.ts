@@ -12,9 +12,13 @@ export const handleAgentRoutes = [
     method: 'GET' as const,
     path: '/api/control/plans',
     handler: async (_req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      // Desktop receives a dedicated local decision-read projection, including
-      // bounded expected-vs-observed facts. Agent inspect/history remain more
-      // constrained and never receive those state payloads.
+      // This projection carries Desktop-only control details (bounded outcome
+      // context and evidence diagnostics). A paired mobile/browser credential
+      // may have generic read scopes, but that must not widen this control
+      // surface. Agent inspect/history remain separately constrained.
+      if (ctx.auth.kind !== 'local_desktop') {
+        return sendError(res, 403, 'CONTROL_SCOPE_INSUFFICIENT');
+      }
       sendResponse(res, 200, { plans: await adapterOf(ctx).desktopHistory() });
     },
   },
@@ -62,9 +66,9 @@ export const handleAgentRoutes = [
     method: 'GET' as const,
     path: '/api/control/revisions/:decisionId',
     handler: async (_req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
-      // This is a fixed, read-only bounded projection for the Desktop. It is
-      // not a generic control mutation and cannot reveal revision context,
-      // approvals, grants, receipt internals, or native bridge material.
+      // This is a fixed, read-only bounded projection. It is not a generic
+      // control mutation and cannot reveal revision context, approvals,
+      // grants, receipt internals, or native bridge material.
       const result = await adapterOf(ctx).revisionProjection(params.decisionId);
       if (!result) return sendError(res, 404, 'REVISION_NOT_FOUND');
       sendResponse(res, 200, { revision: result });

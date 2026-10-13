@@ -23,6 +23,10 @@ import {
   githubSubjectResolverRegistry,
   type EvidenceSurfaceRuntimeOptions,
 } from '../evidence/index.js';
+import {
+  createDesktopEvidenceDiagnosticsProjector,
+  type DesktopEvidenceDiagnosticsProjector,
+} from '../evidence/desktop-diagnostics.js';
 import type { ApprovalGrantVerifier } from './contracts.js';
 import { AuthorizationService } from './authorization-service.js';
 import { ServerVerificationRuntime } from '../control/verification-runtime.js';
@@ -54,6 +58,8 @@ export interface ProductionAuthorizationRuntime {
   readonly authorizationService: AuthorizationService;
   /** CP6 entry point used by the server-owned decision/authorization path. */
   readonly evidenceRuntime: EvidenceSurfaceRuntime;
+  /** Read-only bounded Desktop projection; raw CP6 stores remain private. */
+  readonly desktopEvidenceDiagnostics: DesktopEvidenceDiagnosticsProjector;
   /** Narrow interface consumed by the fixed public approval facade. */
   readonly controlRuntime: ControlApprovalRuntime;
   /** Narrow server-owned verifier consumed by the fixed D1B-2 route. */
@@ -96,6 +102,10 @@ export function createProductionAuthorizationRuntime(
     qualifiedEvidenceStore,
     ...options.evidenceOptions,
   });
+  const desktopEvidenceDiagnostics = createDesktopEvidenceDiagnosticsProjector(
+    guardRunStore,
+    qualifiedEvidenceStore,
+  );
   const eligibility = new EvidenceEligibilityService({
     guardRunStore,
     qualifiedEvidenceStore,
@@ -120,6 +130,7 @@ export function createProductionAuthorizationRuntime(
   return {
     authorizationService,
     evidenceRuntime,
+    desktopEvidenceDiagnostics,
     controlRuntime: authorizationService,
     verificationRuntime,
   };
