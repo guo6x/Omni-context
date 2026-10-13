@@ -23,6 +23,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import DecisionTimeline from "@/components/DecisionTimeline";
 import ControlCenter from "@/components/ControlCenter";
+import WorkspaceNavigation, { WorkspaceSection } from "@/components/WorkspaceNavigation";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
 import { resolveNodeCap } from '@/lib/device';
@@ -136,7 +137,15 @@ function MainApp() {
   const [showDecisionLog, setShowDecisionLog] = useState(false);
   const [showControlCenter, setShowControlCenter] = useState(false);
   const [showMemoryManager, setShowMemoryManager] = useState(false);
+  const [workspaceSection, setWorkspaceSection] = useState<WorkspaceSection>("ask");
   const [memoryManagerFilter, setMemoryManagerFilter] = useState<{ type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }>({});
+  const navigateWorkspace = (section: WorkspaceSection) => {
+    setWorkspaceSection(section);
+    setShowDecisionLog(section === "journey");
+    setShowMemoryManager(section === "library");
+    setShowControlCenter(section === "advanced");
+    if (section !== "library") setMemoryManagerFilter({});
+  };
   // 启动遮罩兜底：brain-server 长时间起不来时也要放行进 App（由离线横幅接管），避免遮罩锁死 UI
   const [splashTimedOut, setSplashTimedOut] = useState(false);
   const [focusEntityId, setFocusEntityId] = useState<string | undefined>(undefined);
@@ -888,6 +897,8 @@ function MainApp() {
         </div>
       )}
 
+      <WorkspaceNavigation activeSection={workspaceSection} onNavigate={navigateWorkspace} />
+
       <main className="flex-1 overflow-hidden relative">
         {isLoadingGraph && (
           <div className="absolute top-0 left-0 right-0 z-30 h-0.5 bg-cyan-500/30 overflow-hidden">
@@ -944,7 +955,7 @@ function MainApp() {
             onLoadDemo={handleLoadDemo}
             isLoadingDemo={isLoadingDemo}
             onUploadClick={() => setShowUpload(true)}
-            onShowDecisionLog={() => setShowDecisionLog(true)}
+            onShowDecisionLog={() => { setWorkspaceSection("journey"); setShowDecisionLog(true); }}
             onConnectMcp={() => { setSettingsTab('mcp'); setShowSettings(true); }}
             onShowShortcuts={() => setShowShortcuts(true)}
             onDismiss={() => setEmptyDismissed(true)}
@@ -1028,6 +1039,7 @@ function MainApp() {
           }}
           entities={entities}
           onOpenMemoryManager={(filter) => {
+            setWorkspaceSection("library");
             setMemoryManagerFilter(filter);
             setShowMemoryManager(true);
           }}
@@ -1041,6 +1053,7 @@ function MainApp() {
             onClose={() => {
               setShowMemoryManager(false);
               setMemoryManagerFilter({});
+              setWorkspaceSection("ask");
             }}
           />
         )}
@@ -1051,13 +1064,13 @@ function MainApp() {
 
         <DecisionTimeline
           isOpen={showDecisionLog}
-          onClose={() => setShowDecisionLog(false)}
+          onClose={() => { setShowDecisionLog(false); setWorkspaceSection("ask"); }}
           onSelectEntity={(id) => {
             setFocusEntityId(id);
           }}
         />
 
-        <ControlCenter isOpen={showControlCenter} onClose={() => setShowControlCenter(false)} />
+        <ControlCenter isOpen={showControlCenter} onClose={() => { setShowControlCenter(false); setWorkspaceSection("ask"); }} />
 
         {/* [通用] 首次启动引导 */}
         {(!settings.behavior.onboarded || showWizardForce) && (
