@@ -845,7 +845,11 @@ fn executable_fingerprint_change_detected() {
     let _guard = child_test_lock();
     std::env::set_var("OMNI_BROKER_TEST_MODE", "echo");
     let tmp = TempDir::new("exe");
-    let copied = tmp.path().join("tool.exe");
+    // Canonicalize the fixture parent so Windows 8.3 short-path aliases do not
+    // trip the broker's intentionally strict executable-identity check.
+    let copied = std::fs::canonicalize(tmp.path())
+        .expect("canonicalize fixture root")
+        .join("tool.exe");
     std::fs::copy(std::env::current_exe().expect("current_exe"), &copied).expect("copy test exe");
 
     let broker = Broker::new();
