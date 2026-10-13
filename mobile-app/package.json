@@ -39,6 +39,9 @@
     "react-native-svg": "13.9.0",
     "zustand": "^4.4.7"
   },
+  "overrides": {
+    "tar": "7.5.22"
+  },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/node": "^20.10.0",

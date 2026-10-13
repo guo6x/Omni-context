@@ -92,9 +92,9 @@
         "icons/icon.ico"
       ],
       "category": "DeveloperTool",
-      "shortDescription": "全域物理级 AI 记忆操作系统",
-      "longDescription": "Omni-Context - 一个 OS 级别的常驻 AI 记忆中枢，融合了 Screenpipe 的静默抓取能力、GraphRAG 的知识图谱范式和 Letta 的多级内存架构。",
-      "copyright": "© 2024 Omni-Context Team",
+      "shortDescription": "Evidence-grounded decision control for long-lived AI agents",
+      "longDescription": "Omni-Context is a local-first evidence and decision context layer for long-lived AI agents. It keeps memory, sources, constraints, decisions, and revision lineage traceable through the verified Desktop and MCP surfaces.",
+      "copyright": "© 2026 Omni-Context",
       "deb": {
         "depends": [
           "libwebkit2gtk-4.0-37",

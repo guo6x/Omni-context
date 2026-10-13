@@ -1,3 +1,8 @@
+> [!WARNING]
+> **LEGACY NARRATIVE — DO NOT USE AS CURRENT LAUNCH COPY.**
+> This document predates the O1 positioning migration to **Evidence-grounded decision control for long-lived AI agents** and the Goal29 V1 freeze.
+> Keep it for historical reference only. Current release claims must follow `docs/PRODUCT-VISION.md` and `docs/post-goal29-release-claim-audit.md`.
+
 # Demo Scripts
 
 两个版本，先拍 **Demo B**——它是传播主力（杀手锏），把"跨 AI 中立 + 数据归你"一镜讲清楚。Demo A 是更完整的"怎么用"解说版，适合 README / 落地页深度展示。

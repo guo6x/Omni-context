@@ -1,59 +1,101 @@
-# 把 Omni-Context 当作 AI 的「记忆 / 决策脑子」接入（MCP）
+# 通过 MCP 接入 Omni-Context
 
-Brain Server 暴露了一个 **Model Context Protocol** 服务（stdio 传输）。任何兼容 MCP 的 AI 客户端
-都可以接上它，从而获得一个**有长期记忆、能基于历史做决策判断的外挂大脑**——这正是 Omni-Context
-的核心定位：它不只是个笔记库，而是一个可即插即用的 AI 记忆 / 决策层。
+Omni-Context 的 Brain Server 提供 MCP 接口，让支持相应 MCP 传输方式的客户端读取和写入当前的长期记忆 / 证据上下文，并调用决策相关工具。
 
-接进来之后，你的 AI 能做到：
-- 在给建议前，先查用户的**核心原则**和**历史先例**（`get_decision_context` / `get_core_context`）；
-- 用自然语言**语义检索**整张知识图谱（`unified_memory_search` / `vector_search`）；
-- 把新发现**写回图谱**，让记忆持续生长（`extract_from_capture` / `add_entity`）。
+> **定位边界**：MCP 是 Omni-Context 的一个接口面，不是产品本身。当前产品定位是 **Evidence-grounded decision control for long-lived AI agents**。本文只说明已经存在的 MCP 接入路径，不代表 Omni-Context 已与“任意 AI / 任意 runtime”完成兼容性验证。
 
-下面给出 Claude Desktop / Cursor / Cline 三个最常见客户端的接入方式。
+当前有两种接入方式：
+
+1. **stdio proxy（安装版推荐）**：客户端启动 `mcp-proxy.js`；proxy 读取本机 token，并把 MCP 调用转发到正在运行的 Desktop / Brain Server（`127.0.0.1:3001`）。proxy **不直接打开 SQLite**。
+2. **loopback MCP HTTP**：支持 HTTP MCP 传输的客户端可直接连接 `POST http://127.0.0.1:3001/mcp`，使用同一个本地 Bearer token。Desktop / Brain Server 必须正在运行。
+
+当前权威 MCP 工具数为 **26**，以仓库根目录 [`mcp_tool_manifest.json`](../mcp_tool_manifest.json) 为准。
 
 ---
 
-## 一、确认入口路径
+## 一、先确认你要用哪条接入路径
 
-MCP 入口是 `mcp-server.js`，路径取决于你怎么用 Omni-Context：
+### A. 已安装 Windows Desktop：优先用 `mcp-proxy.js`
 
-| 场景 | 路径（请改成你机器上的实际值） |
-|---|---|
-| 装了桌面安装包 (Windows MSI/NSIS) | `<安装目录>\brain-server\dist\mcp-proxy.js`（推荐，与桌面端共用正在运行的 Brain Server） |
-| macOS .app | `/Applications/Omni-Context.app/Contents/Resources/brain-server/dist/mcp-proxy.js` |
-| 直接从源码跑 | `<repo>\brain-server\dist\mcp-server.js`（独立模式，要先构建并正确设置 `DB_PATH`） |
+安装版的 stdio proxy 位于安装资源中的 Brain Server 目录，例如：
 
-打开终端验证入口能跑：
-
-```bash
-node "<安装目录>\brain-server\dist\mcp-proxy.js"
+```text
+<安装目录>\brain-server\dist\mcp-proxy.js
 ```
 
-会卡住等 stdio 输入，**没有报错就说明路径对**。Ctrl+C 退出。
+实际安装布局可能因安装方式变化；以已安装应用暴露的 MCP 配置 / 实际文件路径为准。
+
+proxy 的行为是：
+
+```text
+MCP client
+  ↓ stdio
+mcp-proxy.js
+  ↓ authenticated loopback HTTP
+Brain Server :3001
+  ↓
+Desktop-managed local database
+```
+
+因此安装版 proxy **不需要 `DB_PATH`**，也不会另外创建一份数据库。
+
+可以在终端做入口级检查：
+
+```bash
+node "<安装目录>\brain-server\dist\mcp-proxy.js" --help
+```
+
+正常情况下会打印 proxy 用法说明。真正连接时需要 Omni-Context Desktop / Brain Server 已启动。
+
+### B. 支持 MCP HTTP 的客户端：直接连 `/mcp`
+
+```text
+POST http://127.0.0.1:3001/mcp
+Authorization: Bearer <local token>
+```
+
+Windows Desktop 生成的 token 位于：
+
+```text
+%LOCALAPPDATA%\omni-context\local-token.txt
+```
+
+localhost 也要求 Bearer token；这用于防止本机恶意网页或无权限进程直接调用 Brain Server。
+
+### C. 源码独立运行 `mcp-server.js`
+
+只有你明确要启动独立的 stdio MCP server、让它自己打开 SQLite 时，才需要考虑 `DB_PATH`：
+
+```bash
+DB_PATH=<你的数据库路径> node brain-server/dist/mcp-server.js
+```
+
+代码默认值是：
+
+```text
+./data/omni-context.db
+```
+
+这条“独立 server”路径与安装版 `mcp-proxy.js → Desktop Brain` 是两种不同模式，不要混用数据库配置说明。
 
 ---
 
-## 二、关于数据库路径（`DB_PATH`）
+## 二、数据库与本地状态：安装版不要手动指向安装目录
 
-MCP 服务通过环境变量 **`DB_PATH`** 决定用哪个 SQLite 数据库文件：
+当前 Desktop 会把 Brain Server 的数据库放在**用户可写的数据目录**，而不是 Program Files / 安装目录；这样可以避免安装目录只读导致 SQLite 打不开。
 
-- **不设** → MCP 服务在自己的工作目录下新建 `./data/omni-context.db`（一个空库）。
-- **想和桌面应用共用同一份记忆** → 把 `DB_PATH` 指向桌面应用的数据库文件
-  （桌面应用默认用其安装目录下 `brain-server/data/omni-context.db`）。
-- **想完全隔离** → 给 MCP 单独指一个路径即可。
+对 Windows 安装版用户，重要规则只有两条：
 
-> ⚠️ 早期文档曾把这个变量写成 `OMNI_DB_PATH`，那是错的——代码读的是 `DB_PATH`。
+- 使用 `mcp-proxy.js` 或 `/mcp` HTTP 时，**不要手动设置 `DB_PATH`**；它们都连接正在运行的 Desktop Brain。
+- 本地 API token 与 Desktop 管理的运行时状态位于 `%LOCALAPPDATA%\omni-context\...`。
+
+`DB_PATH` 主要用于源码 / 独立 server / 测试场景。
 
 ---
 
-## 三、Claude Desktop
+## 三、Claude Desktop：stdio proxy 示例
 
-配置文件位置：
-
-- Windows：`%APPDATA%\Claude\claude_desktop_config.json`
-- macOS：`~/Library/Application Support/Claude/claude_desktop_config.json`
-
-加一段 `mcpServers`：
+以下是配置形态示例，实际配置路径和 MCP 配置格式以你使用的 Claude Desktop 版本为准：
 
 ```json
 {
@@ -68,18 +110,18 @@ MCP 服务通过环境变量 **`DB_PATH`** 决定用哪个 SQLite 数据库文�
 }
 ```
 
-注意：
+要点：
 
-- Windows 路径用双反斜杠 `\\`
-- 安装版优先使用 `mcp-proxy.js`，它读取本地 token 并转发到桌面端的 3001 服务，不需要配置 `DB_PATH`
-- 只有源码独立运行 `mcp-server.js` 时才需要配置 `DB_PATH`
-- 重启 Claude Desktop（任务栏右键退出再启动），会话里就能用 `omni-context` 工具
+- Windows JSON 路径使用双反斜杠 `\\`。
+- 安装版使用 `mcp-proxy.js`；它读取本地 token 后转发到 Desktop Brain，不需要 `DB_PATH`。
+- 连接前确保 Omni-Context Desktop / Brain Server 正在运行。
+- 客户端具体菜单、配置文件位置和 MCP 支持状态可能随客户端版本变化；本文不把客户端 UI 细节当成 Omni-Context 的兼容性保证。
 
 ---
 
-## 四、Cursor
+## 四、Cursor / IDE 类 stdio 客户端
 
-设置 → MCP（或编辑 `~/.cursor/mcp.json`）：
+对于支持 stdio MCP 且允许配置 `command + args` 的客户端，可使用同一 proxy 结构：
 
 ```json
 {
@@ -92,139 +134,162 @@ MCP 服务通过环境变量 **`DB_PATH`** 决定用哪个 SQLite 数据库文�
 }
 ```
 
-保存后在 Cursor 里 `@omni-context` 就能调用工具。
+若安装包内置了 Node，优先指向安装包自己的 `node.exe`，避免依赖系统 PATH。
+
+不同 IDE / 插件对 MCP 配置字段、自动批准、HTTP transport 的支持并不完全一致，因此按客户端实际实现调整，不要把一个客户端的配置直接视为“所有 runtime 都兼容”。
 
 ---
 
-## 五、Cline (VS Code)
+## 五、MCP HTTP 直连
 
-VS Code 里装 Cline 扩展，打开 Cline 面板 → 设置 → MCP Servers，添加：
+Brain Server 提供 loopback MCP HTTP 入口：
 
-```json
-{
-  "omni-context": {
-    "command": "node",
-    "args": ["C:\\path\\to\\Omni-Context\\brain-server\\dist\\mcp-proxy.js"],
-    "disabled": false,
-    "autoApprove": ["get_decision_context", "search_entities", "get_core_context", "get_stats"]
-  }
-}
+```text
+http://127.0.0.1:3001/mcp
 ```
 
-`autoApprove` 列出的工具不需每次手动批准，读类工具放进去比较省事。
+它使用 JSON-RPC MCP 请求，并要求本地 Bearer token。
 
----
+对支持 HTTP MCP transport 的客户端，配置逻辑是：
 
-## 五·五、HTTP 直连（streamable HTTP，免代理、免写配置文件）
-
-除了上面 stdio 代理那套，brain-server 现在直接暴露**标准 MCP 的 HTTP 传输端点**：
-
-```
-POST http://localhost:3001/mcp
-Authorization: Bearer <你的本地 token>
+```text
+URL = http://127.0.0.1:3001/mcp
+Authorization = Bearer <local token>
 ```
 
-支持 HTTP 传输的客户端（Claude Code、Codex 等）**不用启 stdio 进程、不用往各家配置文件里写路径**（也就没有 Claude Desktop MSIX 路径那类坑），连一个网址即可。token 在 `%LOCALAPPDATA%\omni-context\local-token.txt`。
+这条路径不需要再启动 `mcp-proxy.js`，但仍然要求 Desktop / Brain Server 已运行。
 
-> 仍需桌面应用开着（brain-server 在跑）。端点和其它接口一样要 Bearer token（localhost 也不豁免，防恶意网页扫端口）。
+客户端示例（仅作为配置形态示意，具体语法以客户端当前版本为准）：
 
-**Claude Code：**
-```bash
-claude mcp add --transport http omni-context http://localhost:3001/mcp --header "Authorization: Bearer <你的本地 token>"
-```
-
-**Codex（`~/.codex/config.toml`）：**
 ```toml
 [mcp_servers.omni-context]
-url = "http://localhost:3001/mcp"
+url = "http://127.0.0.1:3001/mcp"
 http_headers = { "Authorization" = "Bearer <你的本地 token>" }
 ```
 
-> 不支持 HTTP 传输的客户端（部分 IDE 插件、Claude Desktop 当前版本）继续用上面的 stdio 代理方式。两套并存、互补。
-
 ---
 
-## 六、常用工具（当前共 25 个）
+## 六、当前 MCP 工具：权威数量 26
 
-### 决策与检索 —— 当「脑子」用的核心
+工具数量不要手工维护。权威来源：
+
+```text
+mcp_tool_manifest.json
+```
+
+当前 `toolCount = 26`。完整 input schema 由 `brain-server/src/mcp-tools.ts` 生成到该 manifest。
+
+下面只列常用工具，不把这张表当成完整 26 项清单。
+
+### 决策与检索
 
 | 工具 | 用途 |
 |---|---|
-| **`get_decision_context`** | **头牌工具。** 给一个处境 / 待决问题，一次性返回相关原则、历史先例、历史冲突和图谱邻域。在你要给出依赖用户历史的建议前调它 |
-| `unified_memory_search` | 三层融合检索（全文 + 向量 + 图谱遍历），一次自然语言查询穿透整张图谱 |
-| `vector_search` | 纯语义向量检索：传一段文本，找概念相近的实体（即使用词不同） |
-| `search_entities` | 按名称 / 描述关键词找实体 |
-| `get_core_context` | 按当前主题取相关核心原则；不传主题时只返回精简概览 |
-| `get_entity` | 按 ID 取单个实体的完整信息和全部关系 |
-| `get_graph_neighborhood` | 取某实体周围 N 跳的子图，理解一个概念所处的生态 |
-| `list_entities` | 列出实体（可按类型过滤），用于概览 |
+| `get_decision_context` | 取得与当前情境相关的原则、历史、冲突和图谱上下文；不替用户做最终决定 |
+| `get_core_context` | 获取与当前主题相关的核心原则 |
+| `unified_memory_search` | 全文 + 向量 + 图谱融合检索 |
+| `vector_search` | 语义向量检索 |
+| `ask_memory` | 基于已检索记忆生成回答 |
+| `graph_answer` | 基于图谱证据回答并返回来源实体 |
+| `search_entities` | 按名称 / 描述检索实体 |
+| `get_entity` | 获取单个实体完整信息与关系 |
+| `get_graph_neighborhood` | 获取实体周围 N 跳子图 |
+| `list_entities` | 浏览 / 按类型列出实体 |
 
-### 写入 —— 让记忆持续生长
-
-| 工具 | 用途 |
-|---|---|
-| `extract_from_capture` | 给一段文本，自动抽取实体 + 关系 + 原则入图谱 |
-| `add_entity` | 新增一个实体 |
-| `add_relationship` | 在两个已存在实体间建关系 |
-| `update_entity` | 修改实体的名称 / 描述 / 标签 / 元数据 |
-| `record_capture` | 存一条捕获快照（截屏 / 剪贴板 / 文本） |
-
-### 元信息
+### 捕获与写入
 
 | 工具 | 用途 |
 |---|---|
-| `get_stats` | 实体 / 关系数量、类型分布等统计 |
-| `get_decay_report` | 哪些记忆已超过衰减阈值（候选清理） |
+| `record_capture` | 保存捕获快照 |
+| `extract_from_capture` | 从文本 / 捕获内容抽取实体、关系和原则 |
+| `add_entity` | 新增实体 |
+| `add_relationship` | 新增关系 |
+| `update_entity` | 修改实体 |
+| `set_core_principle` | 记录或更新核心原则 |
 
-全部工具及完整入参 schema 见 `brain-server/src/mcp-tools.ts`。
+### 决策沉淀与维护
 
----
+| 工具 | 用途 |
+|---|---|
+| `save_conclusion` | 保存值得长期保留的结论 |
+| `save_decision` | 保存决策及其上下文 |
+| `analyze_decision` | 分析决策一致性 / 冲突；需要配置相应 LLM 能力时会受当前 provider 配置约束 |
+| `discuss_decision` | 多角度讨论决策；同样受当前 LLM 配置约束 |
+| `get_decision_lineage` | 查看决策谱系 |
+| `record_decision_outcome` | 记录决策后的观察结果 |
+| `merge_entities` | 合并重复实体 |
+| `delete_entity` | 删除实体 |
+| `get_stats` | 查看实体 / 关系统计 |
+| `get_decay_report` | 查看衰减 / 清理候选 |
 
-## 七、推荐起手式
-
-把 Omni-Context 当决策脑子用时，一个典型流程：
-
-1. 对话开始 → `get_core_context`，先了解用户的原则与偏好。
-2. 遇到需要判断的具体处境 → `get_decision_context`，拿到相关历史 + 冲突。
-3. 基于返回的材料给建议——**判断由你做，Omni-Context 只负责把对的历史喂给你**。
-4. 产生了值得记住的新结论 → `add_entity` / `extract_from_capture` 写回图谱。
-
----
-
-## 八、和桌面应用同时跑会冲突吗
-
-**默认不冲突**。桌面应用的 brain-server 走 HTTP 听 `127.0.0.1:3001`；MCP 客户端启动的是另一个
-Node 进程，走 stdio 通信。两者用同一个 SQLite 文件（前提是 `DB_PATH` 指向同一个）。
-
-SQLite 的 WAL 模式支持多进程读写，但注意：
-
-- 同时开两个客户端做 `add_entity` 会偶发 `SQLITE_BUSY`，重试一次即可。
-- 想完全隔离，给 MCP 客户端单独指一个 `DB_PATH`。
+> 若工具表和本文文字发生冲突，以 `mcp_tool_manifest.json` 与运行中 Brain Server 的 `tools/list` 为准。
 
 ---
 
-## 九、连不上怎么排查
+## 七、推荐调用方式
+
+一个保守的使用模式：
+
+1. 只有当历史上下文会实质影响回答时，再调用 `unified_memory_search` / `get_core_context`。
+2. 用户在做重要选择、且历史原则 / 先例相关时，调用 `get_decision_context`。
+3. 把检索到的记忆视为**候选证据**，结合来源、时间和当前状态判断，不把“被记住”自动当成“现在仍然有效”。
+4. 只有对长期有价值的结论或明确决策才调用 `save_conclusion` / `save_decision`，避免把短期闲聊和猜测写成长记忆。
+
+---
+
+## 八、和 Desktop 同时运行会冲突吗
+
+### 安装版 `mcp-proxy.js`
+
+默认不会出现“两个进程同时打开同一 SQLite”的问题，因为 proxy **不访问数据库**：
+
+```text
+client → stdio proxy → HTTP :3001 → Desktop Brain → SQLite
+```
+
+### HTTP `/mcp`
+
+同样直接进入正在运行的 Desktop Brain，也不会额外创建数据库连接进程。
+
+### 独立 `mcp-server.js`
+
+这是另一种运行模式，它会根据 `DB_PATH` 自己打开 SQLite。只有在你明确选择该模式时，才需要自己承担数据库路径、并发和生命周期管理。
+
+---
+
+## 九、常见故障排查
 
 | 现象 | 排查 |
 |---|---|
-| 客户端启动后看不到 omni-context 工具 | 检查路径是否绝对、Windows 双反斜杠、`node -v` 在 PATH 里 |
-| `MCP error: command failed` | 终端手动跑 `node <path>` 看真实报错；常见是缺 native binding，重装一次依赖 |
-| 工具返回但永远空 | 检查 `DB_PATH`——指向了新文件，里面就是空的 |
-| 任务管理器里 node.exe 越积越多 | MCP 客户端没正确发 shutdown 信号；偶尔 kill 掉无主 node 进程即可 |
-| AI 报 `Tool's name ... is not available in given tool list` | AI 套用了标准 memory server 的工具名（`read_graph` / `search_nodes`），本服务没有这些。用实际工具名（`unified_memory_search` / `search_entities` …），或安装下方的使用 Skill 让 AI 自动用对 |
-
-> 顺带一提：MCP 客户端配置里给本服务**起名别叫 `Memory`**——AI 一看是 "Memory" 就容易默认它是标准 memory server 去猜工具名。建议命名为 `omni-context`。
+| 客户端看不到 `omni-context` 工具 | 先确认 Desktop / Brain 正在运行；stdio 模式再检查 proxy 路径与 Node 路径 |
+| proxy 报 Brain unreachable / fetch failed | 检查 `127.0.0.1:3001` 的 Brain Server 是否启动 |
+| HTTP `/mcp` 返回 401/403 | 检查 Bearer token；Windows token 文件为 `%LOCALAPPDATA%\omni-context\local-token.txt` |
+| 独立 `mcp-server.js` 返回空数据 | 检查独立模式的 `DB_PATH` 是否指向了预期数据库；不要把这个问题套到安装版 proxy 上 |
+| AI 猜出不存在的 memory-server 工具名 | 以运行时 `tools/list` / `mcp_tool_manifest.json` 为准，不要假定 Omni-Context 等同于其它 memory server |
 
 ---
 
-## 十、推荐：安装记忆使用 Skill（Claude Code / Claude）
+## 十、仓库内的记忆使用 Skill
 
-仓库里附带了一个 Agent Skill：`skills/omni-context-memory/SKILL.md`。它会告诉 AI 本服务的**正确工具名**和调用时机（对话开始先 `get_core_context` + `unified_memory_search`，结束 `save_conclusion`…），从根本上避免 AI 瞎猜 `read_graph` 这类不存在的工具。
+仓库包含：
 
-安装（任选其一）：
+```text
+skills/omni-context-memory/SKILL.md
+```
 
-- **Claude Code（项目级）**：把 `skills/omni-context-memory/` 整个目录复制到项目的 `.claude/skills/` 下。
-- **Claude Code（全局）**：复制到 `~/.claude/skills/`。
-- **Claude 桌面 / claude.ai**：在 Skills 设置里上传该目录（含 `SKILL.md`）。
+它用于告诉支持相应 Skill 机制的 AI 如何选择 Omni-Context 的真实工具名和调用时机。Skill 本身不能替代 MCP 连接，也不意味着所有客户端都支持同一种 Skill 安装机制。
 
-装好后无需手动触发——当对话涉及"回忆/沉淀长期记忆"时，Claude 会按 `description` 自动加载。
+在使用前，请同时满足：
+
+- Omni-Context Desktop / Brain Server 已运行；
+- 客户端已通过 stdio proxy 或 HTTP MCP 正确连接；
+- 客户端本身支持你所使用的 Skill / instruction 机制。
+
+---
+
+## 证据与状态边界
+
+- Goal29 的验证基线是 Windows；Linux/macOS 不应从本文推导为已完成同等 runtime 验证。
+- MCP 当前是公开接口面，但内部受控执行 / GitHub write proof 不因此自动变成公共 MCP 自动化能力。
+- `omctx` CLI 是否公开发布是另一条 release decision；本文不把它当成已公开 npm 产品。
+- 用户侧 `reopen` UX 仍为 FUTURE。
