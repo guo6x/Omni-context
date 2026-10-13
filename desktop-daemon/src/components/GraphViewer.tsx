@@ -1496,13 +1496,13 @@ export default function GraphViewer3D({
               placeholder={t('cmd.placeholder')}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />
-            <button onClick={openHistory} title={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
+            <button onClick={openHistory} title={t('cmd.history')} aria-label={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
               <History className="h-4 w-4" />
             </button>
             {gLoading ? (
               <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
             ) : (
-              <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
+              <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')} aria-label={t('cmd.send')}>
                 <Send className="h-4 w-4" />
               </button>
             )}
@@ -1571,6 +1571,7 @@ export default function GraphViewer3D({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={handleSearchKeyDown}
+              aria-label={t('graph.search_placeholder')}
               placeholder={t('graph.search_placeholder')}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />

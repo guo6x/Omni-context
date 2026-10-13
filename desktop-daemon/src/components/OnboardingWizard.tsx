@@ -240,7 +240,7 @@ export default function OnboardingWizard({
                 })()}
               </div>
               <div className="relative">
-                <input type={showApiKey ? "text" : "password"} value={apiKey} onChange={(e) => { setApiKey(e.target.value); setTestState('idle'); }} placeholder={t('onboarding.apikey_placeholder')} className="w-full bg-black/40 border border-white/10 rounded-lg pl-3 pr-10 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
+                <input type={showApiKey ? "text" : "password"} value={apiKey} onChange={(e) => { setApiKey(e.target.value); setTestState('idle'); }} aria-label={t('onboarding.apikey_placeholder')} placeholder={t('onboarding.apikey_placeholder')} className="w-full bg-black/40 border border-white/10 rounded-lg pl-3 pr-10 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
                 <button
                   type="button"
                   onClick={() => setShowApiKey(!showApiKey)}

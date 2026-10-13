@@ -617,6 +617,8 @@ function MainApp() {
     .map((s) => `${s.id}:${toTauriAccel(s.current)}`)
     .join(',');
   useEffect(() => {
+    // Static browser previews do not provide Tauri IPC; keep desktop-only shortcuts inert there.
+    if (typeof window === 'undefined' || typeof (window as any).__TAURI_IPC__ !== 'function') return;
     const globals = globalAccels.split(',').filter(Boolean).map((x) => {
       const i = x.indexOf(':');
       return { id: x.slice(0, i), accelerator: x.slice(i + 1) };
@@ -777,6 +779,7 @@ function MainApp() {
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
             title={floatingHudOn ? t('header.hide_hud') : t('header.show_hud')}
+            aria-label={floatingHudOn ? t('header.hide_hud') : t('header.show_hud')}
           >
             <PictureInPicture2 className="w-4 h-4" />
           </button>
@@ -784,6 +787,7 @@ function MainApp() {
             onClick={() => { fetchGraphData(); toast.success('已刷新图谱'); }}
             className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             title="刷新图谱（看新加进来的记忆）"
+            aria-label="刷新图谱（看新加进来的记忆）"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -792,6 +796,7 @@ function MainApp() {
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               title={t('nav.more')}
+              aria-label={t('nav.more')}
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -848,6 +853,7 @@ function MainApp() {
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            aria-label={t('nav.settings')}
           >
             <Settings className="w-4 h-4" />
             <span className="hidden lg:inline">{t('nav.settings')}</span>
