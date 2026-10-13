@@ -1,0 +1,67 @@
+name: Mobile Dependency Compatibility
+
+on:
+  pull_request:
+    paths:
+      - 'mobile-app/**'
+      - '.github/workflows/mobile-compat.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+  EXPO_NO_TELEMETRY: '1'
+  NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+
+jobs:
+  expo-consumers:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: mobile-app
+      - run: npm run test:expo-tar
+        working-directory: mobile-app
+      - run: npm run typecheck
+        working-directory: mobile-app
+      - run: npm run test:product-mode
+        working-directory: mobile-app
+      - run: npm audit --omit=dev --audit-level=critical
+        working-directory: mobile-app
+  android-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci --no-audit --no-fund
+        working-directory: mobile-app
+      - name: Prepare existing Android SDK requirements
+        run: sdkmanager 'platforms;android-33' 'build-tools;33.0.0' 'ndk;23.1.7779620'
+      - name: Generate disposable development signing key
+        working-directory: mobile-app/android/app
+        run: keytool -genkeypair -keystore debug.keystore -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 7 -dname 'CN=Disposable CI'
+      - name: Compile existing release task without publishing
+        working-directory: mobile-app/android
+        run: bash gradlew assembleRelease --no-daemon --max-workers=2
+      # No upload, app-store submission, deployment, production signing or secrets.
