@@ -57,6 +57,9 @@ jobs:
       - run: npm ci --no-audit --no-fund
         working-directory: mobile-app
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          # The pinned v3 action defaults to the removed `tools` package.
+          packages: platform-tools
       - name: Prepare Android SDK requirements
         run: sdkmanager 'platforms;android-33' 'build-tools;33.0.0' 'ndk;23.1.7779620'
       - name: Generate disposable development signing key
