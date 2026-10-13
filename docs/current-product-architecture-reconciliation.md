@@ -1,8 +1,8 @@
 # Omni-Context Current Product Architecture Reconciliation
 
 **Status:** architecture truth audit / implementation planning  
-**Authoritative code baseline:** `main@d4d61f1c9b73d8a127023129adc3376ec6d7db13`  
-**Date:** 2026-10-04
+**Authoritative code baseline:** `main@7157aa855734036c08ce2d7a011d3d511e3531c7`
+**Date:** 2026-10-13
 
 > This document reconciles the product that is actually implemented with the product narratives that accumulated over Goals 24–29.
 >
@@ -69,8 +69,8 @@ This preserves the valuable Goal24–29 work without forcing the entire product 
 Current `main` HEAD:
 
 ```text
-d4d61f1c9b73d8a127023129adc3376ec6d7db13
-docs(goal29): record V1 freeze gate
+7157aa855734036c08ce2d7a011d3d511e3531c7
+ci: add bounded benchmark-only AI remote verification
 ```
 
 Important implemented surfaces on `main` include:
@@ -97,11 +97,13 @@ Important implemented surfaces on `main` include:
 
 ### 2.2 Draft branches not yet in `main`
 
-Three open draft PRs currently sit directly on top of the same `main` baseline:
+The current product recovery queue contains these open draft PRs against `main` (the older architecture drafts still use the historical baseline in their branch metadata):
 
-- **PR #5** `docs/post-goal29-release-truth-sync` — 38 commits ahead. Release/security maintenance, dependency remediation, Windows resolver fix, post-Goal29 truth sync.
-- **PR #6** `feat/vnext-evidence-diagnostics` — 21 commits ahead. Desktop evidence diagnostics / Control Center observability; installed Windows gate passed on its branch.
-- **PR #7** `feat/vnext-revision-supersession` — 11 commits ahead. Makes current vs superseded authority judgments explicit in Control Center; installed supersession gate is prepared but not executed.
+- **PR #5** `docs/post-goal29-release-truth-sync` — release/security maintenance, dependency remediation, Windows resolver work and post-Goal29 truth sync. Its resolver hunk changes Windows identity handling and requires an independent safety review before merge.
+- **PR #6** `feat/vnext-evidence-diagnostics` — Desktop evidence diagnostics / Control Center observability; remains draft and unstable.
+- **PR #7** `feat/vnext-revision-supersession` — current vs superseded authority judgments; remains draft and unstable. PR #6 and #7 both modify `ControlCenter.tsx` and conflict when merged, so neither is integrated into the recovery candidate.
+- **PR #8** `docs/current-product-architecture-reconciliation` — this documentation reconciliation; its historical baseline is refreshed here, while implementation claims remain separated from the candidate.
+- **PRs #12–#16** — recovery/security queue. #12–#14 are represented in the existing integration candidate; #15 is integrated locally with a fail-closed Expo/tar compatibility patch; #16 is the earlier cloud integration draft and does not contain the verified Ask-first/mobile-combined SHA.
 
 These branches must not be treated as if they are already part of the stable product.
 
@@ -872,4 +874,4 @@ Library
 Advanced
 ```
 
-The current GraphViewer, DecisionTimeline, InsightsInbox, MemoryManager and ControlCenter are treated as reusable capability surfaces to be recomposed, not discarded wholesale.
+The current GraphViewer, DecisionTimeline, InsightsInbox, MemoryManager and ControlCenter are treated as reusable capability surfaces to be recomposed, not discarded wholesale. A verified but not-yet-pushed candidate implements the first vertical slice: commit `011e116` makes Ask the default, adds localized Ask/Journey/Library/Advanced navigation, preserves cited answers, and returns existing Journey/Library/Advanced overlays to Ask. The wide-viewport synthetic-only browser evidence and production build are recorded outside this architecture document; the installed Tauri product gate remains separate.

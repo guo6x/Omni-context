@@ -1,10 +1,11 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-04",
+  "generated_at": "2026-10-13",
   "authoritative_baseline": {
     "branch": "main",
-    "sha": "d4d61f1c9b73d8a127023129adc3376ec6d7db13",
-    "rule": "Current code wins over stale narrative docs; draft branches are recorded separately."
+    "sha": "7157aa855734036c08ce2d7a011d3d511e3531c7",
+    "rule": "Current code wins over stale narrative docs; draft branches are recorded separately.",
+    "commit": "ci: add bounded benchmark-only AI remote verification"
   },
   "product_definition": {
     "primary_human_loop": "Personal AI Context & Decision Layer",
@@ -217,5 +218,15 @@
       "F6_VISUAL_SYSTEM",
       "F7_INSTALLED_APP_PRODUCT_TEST"
     ]
+  },
+  "verified_candidate": {
+    "sha": "d366b7f931f10b3654589faa991bf77a0d768a78",
+    "ask_slice_commit": "011e116",
+    "status": "LOCAL_ONLY_NOT_MERGED",
+    "evidence": [
+      "recovery-evidence-20261013/ask-first-browser-report.json",
+      "recovery-evidence-20261013/ask-first-build-final.log"
+    ],
+    "notes": "Synthetic-only browser flow and production build passed; installed Tauri acceptance remains unestablished."
   }
 }
