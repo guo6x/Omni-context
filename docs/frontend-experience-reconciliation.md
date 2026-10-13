@@ -1,8 +1,8 @@
 # Omni-Context Frontend Experience Reconciliation
 
 **Status:** frontend product audit / redesign brief  
-**Code baseline:** `main@d4d61f1c9b73d8a127023129adc3376ec6d7db13`  
-**Date:** 2026-10-04
+**Code baseline:** `main@7157aa855734036c08ce2d7a011d3d511e3531c7`
+**Date:** 2026-10-13
 
 This document does not redefine Omni's interaction model. Omni remains ambient-first:
 
@@ -17,7 +17,7 @@ The purpose of the frontend rebuild is therefore not to turn Omni into a dashboa
 
 ## 1. Current frontend truth
 
-The current Desktop is functionally rich, but the information architecture grew feature-by-feature.
+The current Desktop is functionally rich, but the information architecture grew feature-by-feature. The current `main` baseline remains graph-centered; the Ask-first navigation described below exists only on the separately tested recovery candidate until its gates and cloud review are complete.
 
 The root screen is effectively:
 
@@ -552,9 +552,13 @@ Do not start this before the source-truth contract is sufficiently stable, becau
 
 ### F2 — Ask-first experience
 
-- extract current command bar / answer / discussion UX from GraphViewer;
-- make Ask the default Desktop workspace;
-- keep source citations and jump-to-context;
+**Verified candidate slice (not yet merged to `main`):** commit `011e116` extracts the navigation shell around the existing GraphViewer interaction, makes Ask the default Desktop workspace, keeps source citations, and keeps graph visualization as secondary evidence. Synthetic-only browser evidence at 1280×900 verified the default Ask state, suggested-question answer/citation, Journey, Library, Advanced, and return-to-Ask behavior. The candidate production build passed; browser-only Tauri IPC errors are not treated as installed Desktop acceptance.
+
+Remaining F2 work:
+
+- extract the command bar / answer / discussion UX from GraphViewer without regressing graph context;
+- preserve source citations and jump-to-context;
+- add installed-app acceptance;
 - keep graph as optional evidence visualization.
 
 ### F3 — Journey
