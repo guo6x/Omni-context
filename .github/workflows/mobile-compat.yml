@@ -56,7 +56,8 @@ jobs:
           java-version: '17'
       - run: npm ci --no-audit --no-fund
         working-directory: mobile-app
-      - name: Prepare existing Android SDK requirements
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+      - name: Prepare Android SDK requirements
         run: sdkmanager 'platforms;android-33' 'build-tools;33.0.0' 'ndk;23.1.7779620'
       - name: Generate disposable development signing key
         working-directory: mobile-app/android/app
