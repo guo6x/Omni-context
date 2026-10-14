@@ -1,9 +1,9 @@
 # Omni-context Restoration Report
 
-**Document type:** Explanation and reference report  
-**Audience:** Repository maintainers, reviewers, and release operators  
-**Goal:** Establish what was restored, what was actually verified, what remains risky, and what was deliberately not done.  
-**Evidence window:** 2026-10-13 through 2026-10-15 (Asia/Shanghai).  
+**Document type:** Explanation and reference report
+**Audience:** Repository maintainers, reviewers, and release operators
+**Goal:** Establish what was restored, what was actually verified, what remains risky, and what was deliberately not done.
+**Evidence window:** 2026-10-13 through 2026-10-15 (Asia/Shanghai).
 **Repository:** [guo6x/Omni-context](https://github.com/guo6x/Omni-context)
 
 ## Executive result
@@ -14,7 +14,7 @@ The product-line recovery was completed in an isolated worktree and merged to **
 - Reviewed recovery head: 11bbc647b647fd1a8d52820ec461fa652d2ff430.
 - Merge commit now on main: 7b732a51856e6fcb7bff4ae9e37f24b9b641540e.
 - Integration PR: [#19](https://github.com/guo6x/Omni-context/pull/19), merged 2026-10-14 17:50 UTC.
-- All five workflows associated with the exact PR head completed successfully, including both duplicate push/PR runs created by GitHub.
+- All required checks on the exact PR head passed. GitHub ran duplicate push/PR-triggered CI and Security workflows; all corresponding runs succeeded.
 - Post-merge main CI and Pages build also completed successfully: [main CI run 38610134259](https://github.com/guo6x/Omni-context/actions/runs/38610134259) and [Pages run 38610131665](https://github.com/guo6x/Omni-context/actions/runs/38610131665).
 - The temporary integration/restore-20261014 branch was deleted only after its 25 commits were reachable from main and no extra work remained. The deletion and recovery proof are recorded in [branch-cleanup-20261015.json](./branch-cleanup-20261015.json).
 
@@ -33,11 +33,11 @@ The merged Desktop slice is organized around the requested bounded journey:
 
 The implementation also includes accessibility names for icon-only controls and a guard that keeps Tauri-only global shortcut registration inert in a static browser preview. The guard does not alter the Tauri IPC path.
 
-Relevant evidence images:
+Relevant browser evidence images are stored outside this Git repository in the session evidence directory \`D:\AI_code\Omni-context\recovery-evidence-20261013\`:
 
-- [Ask-first restored workspace](../../recovery-evidence-20261013/ask-first-restore-20261014.png)
-- [Ask question entry](../../recovery-evidence-20261013/ask-question-20261014.png)
-- [Advanced Control Center](../../recovery-evidence-20261013/advanced-control-center-20261014.png)
+- \`ask-first-restore-20261014.png\` — restored workspace
+- \`ask-question-20261014.png\` — synthetic question entry
+- \`advanced-control-center-20261014.png\` — Advanced Control Center
 
 ## Integrated changes
 
@@ -103,7 +103,7 @@ The exact integrated history is preserved in PR #19 and its merged main ancestry
 
 ## Branch and PR audit
 
-At the baseline snapshot there were 17 remote branches. The temporary integration branch made 18 during review; after merge and safe deletion there are again 17. The complete SHA/ahead/behind/action ledger is in [branch-cleanup-20261015.json](./branch-cleanup-20261015.json).
+At the baseline snapshot there were 17 remote branches. The temporary integration branch made 18 during review; after merge and safe deletion there were again 17. The documentation report branch then raised the current count to 18; it is recorded separately in the manifest and remains open as PR #20. The complete SHA/ahead/behind/action ledger is in [branch-cleanup-20261015.json](./branch-cleanup-20261015.json).
 
 Current PR disposition at the time of the recovery audit:
 
@@ -114,6 +114,7 @@ Current PR disposition at the time of the recovery audit:
 | #10 | Merged | Retain branch/history. |
 | #12–#18 | Open drafts | Retain independently; proven-safe portions were integrated into #19, but originals were not closed or rewritten. |
 | #19 | Merged | Bounded recovery candidate; all exact-head gates passed. |
+| #20 | Open | Documentation-only report and branch manifest; awaiting review. |
 
 Tags were enumerated and left untouched, including release tags, Goal27/28/29 milestones, evaluation freezes, archive tags, and the scientific freeze tag. The ruleset audit confirmed deletion and non-fast-forward protections for the holdback branch and update/deletion protections for science/* tags.
 
