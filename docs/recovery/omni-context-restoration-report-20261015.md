@@ -16,7 +16,7 @@ The product-line recovery was completed in an isolated worktree and merged to **
 - Integration PR: [#19](https://github.com/guo6x/Omni-context/pull/19), merged 2026-10-14 17:50 UTC.
 - All required checks on the exact PR head passed. GitHub ran duplicate push/PR-triggered CI and Security workflows; all corresponding runs succeeded.
 - Post-merge main CI and Pages build also completed successfully: [main CI run 38610134259](https://github.com/guo6x/Omni-context/actions/runs/38610134259) and [Pages run 38610131665](https://github.com/guo6x/Omni-context/actions/runs/38610131665).
-- The temporary integration/restore-20261014 branch was deleted only after its 25 commits were reachable from main and no extra work remained. The deletion and recovery proof are recorded in [branch-cleanup-20261015.json](./branch-cleanup-20261015.json).
+- The temporary integration/restore-20261014 remote ref and task-created local ref were deleted only after its 25 commits were reachable from main and the local branch was absent from all worktrees. No extra work remained. The deletion and recovery proof are recorded in [branch-cleanup-20261015.json](./branch-cleanup-20261015.json).
 
 No research branch, scientific freeze tag, paper artifact, submission identifier, author mapping, deployment, paid API call, or external data upload was touched.
 
@@ -95,7 +95,7 @@ The exact integrated history is preserved in PR #19 and its merged main ancestry
 
 ### Not completed / deliberately excluded
 
-- No merge of historical PRs #5–#8 or #12–#18 was performed individually; they remain open drafts or independent historical branches. PR #19 is the only recovery merge.
+- PRs #12–#18 were closed as superseded after verifying each branch’s non-merge commits were patch-equivalent to the merged main history; all seven branch refs were retained. PRs #5–#8 remain independent open drafts. PR #19 is the only recovery merge.
 - No broad branch deletion was performed. Active product, release, research, and merged-history branches remain. Only the temporary recovery branch was deleted after reachability proof; the already-absent remote dev/goal24-cli-skills was not disturbed locally because its primary worktree is still in use.
 - No legacy branch protection was added to main; the repository reports no legacy main protection. The active scientific rulesets were observed and preserved: Protect Scientific Holdback protects the decision holdback branch, and Protect Scientific Freeze Tags protects science/* tags.
 - No production deployment, release publication, paid model/API request, external upload, anonymous-submission artifact handling, or research result modification was performed.
@@ -112,7 +112,7 @@ Current PR disposition at the time of the recovery audit:
 | #5–#8 | Open drafts | Retain independently; not assumed green and not merged wholesale. |
 | #9 | Closed research PR | Retain branch and freeze artifacts; no research mutation. |
 | #10 | Merged | Retain branch/history. |
-| #12–#18 | Open drafts | Retain independently; proven-safe portions were integrated into #19, but originals were not closed or rewritten. |
+| #12–#18 | Closed as superseded | Their changes were integrated and verified through #19; all branch refs and commit history were retained. |
 | #19 | Merged | Bounded recovery candidate; all exact-head gates passed. |
 | #20 | Open | Documentation-only report and branch manifest; awaiting review. |
 
