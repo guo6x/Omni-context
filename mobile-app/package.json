@@ -10,6 +10,8 @@
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "test:product-mode": "node scripts/verify-read-only.mjs",
+    "postinstall": "node scripts/patch-expo-tar.cjs",
+    "test:expo-tar": "node --test scripts/patch-expo-tar.test.cjs scripts/expo-tar-compat.test.cjs",
     "build:android": "cd android && gradlew.bat assembleRelease",
     "build:ios": "expo run:ios --configuration Release"
   },
@@ -49,5 +51,9 @@
     "tailwindcss": "3.3.2",
     "typescript": "^5.1.3"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "shell-quote": "1.11.0",
+    "tar": "7.5.22"
+  }
 }

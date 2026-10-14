@@ -1486,6 +1486,8 @@ export default function GraphViewer3D({
             <Brain className="h-4 w-4 shrink-0 text-cyan-300" />
             <input
               ref={cmdInputRef}
+              aria-label={t("ask.title")}
+              data-testid="ask-primary-input"
               value={cmdInput}
               onChange={(e) => setCmdInput(e.target.value)}
               onFocus={() => { setCmdFocused(true); setHistOpen(false); }}
@@ -1494,13 +1496,13 @@ export default function GraphViewer3D({
               placeholder={t('cmd.placeholder')}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />
-            <button onClick={openHistory} title={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
+            <button onClick={openHistory} title={t('cmd.history')} aria-label={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
               <History className="h-4 w-4" />
             </button>
             {gLoading ? (
               <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
             ) : (
-              <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
+              <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')} aria-label={t('cmd.send')}>
                 <Send className="h-4 w-4" />
               </button>
             )}
@@ -1569,6 +1571,7 @@ export default function GraphViewer3D({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={handleSearchKeyDown}
+              aria-label={t('graph.search_placeholder')}
               placeholder={t('graph.search_placeholder')}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />
@@ -1671,6 +1674,42 @@ export default function GraphViewer3D({
             )}
           </div>
         </div>
+
+        {!gAnswer && !selectedNode && entities.length > 0 && (
+          <section
+            data-testid="ask-first-empty-state"
+            aria-labelledby="ask-first-title"
+            className="pointer-events-none absolute inset-x-4 top-[56%] z-[5] flex -translate-y-1/2 justify-center"
+          >
+            <div className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-cyan-400/15 bg-gray-950/90 p-5 shadow-2xl shadow-black/40 backdrop-blur-md sm:p-7">
+              <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-cyan-300/80">
+                <Brain aria-hidden="true" className="h-4 w-4" />
+                <span>{t("nav.ask")}</span>
+              </div>
+              <h1 id="ask-first-title" className="text-xl font-semibold tracking-tight text-gray-100 sm:text-2xl">{t("ask.empty_title")}</h1>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-gray-400">{t("ask.empty_hint")}</p>
+              <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label={t("ask.title")}>
+                {["ask.example_1", "ask.example_2", "ask.example_3"].map((key) => {
+                  const prompt = t(key);
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      data-testid="ask-first-prompt"
+                      onClick={() => {
+                        setCmdInput(prompt);
+                        cmdInputRef.current?.focus();
+                      }}
+                      className="rounded-full border border-white/10 bg-white/[0.035] px-3.5 py-2 text-left text-xs text-gray-300 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/[0.06] hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                    >
+                      {prompt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* 时间轴面板：在控制栏正下方，随其换行高度自然下移 */}
         {showTimeSlider && timeBounds && (
@@ -2243,7 +2282,7 @@ export default function GraphViewer3D({
       )}
 
       {gAnswer && (
-        <aside style={{ width: answerWidth }} className="relative hidden shrink-0 flex-col border-l border-white/10 bg-gray-950/95 md:flex">
+        <aside data-testid="ask-answer-panel" style={{ width: answerWidth, maxWidth: "100%" }} className="absolute inset-y-0 right-0 z-20 flex min-w-0 max-w-full shrink-0 flex-col border-l border-white/10 bg-gray-950/95 md:relative md:inset-y-auto md:right-auto md:z-auto">
           <div
             onMouseDown={(e) => {
               e.preventDefault();

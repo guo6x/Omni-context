@@ -72,7 +72,11 @@ jobs:
           cache-dependency-path: desktop-daemon/package-lock.json
       - run: npm ci
         working-directory: desktop-daemon
+      - run: npm run verify:controlled
+        working-directory: desktop-daemon
       - run: npm run build
+        working-directory: desktop-daemon
+      - run: npm run verify:controlled
         working-directory: desktop-daemon
 
   desktop-rust:
@@ -87,7 +91,9 @@ jobs:
       - name: Build the Tauri frontend prerequisite
         run: |
           npm ci
+          npm run verify:controlled
           npm run build
+          npm run verify:controlled
         working-directory: desktop-daemon
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -160,7 +166,11 @@ jobs:
         working-directory: brain-server
       - run: npm ci
         working-directory: desktop-daemon
+      - run: npm run verify:controlled
+        working-directory: desktop-daemon
       - run: npm run build
+        working-directory: desktop-daemon
+      - run: npm run verify:controlled
         working-directory: desktop-daemon
       - name: Check the native Tauri application
         run: cargo check --manifest-path desktop-daemon/src-tauri/Cargo.toml

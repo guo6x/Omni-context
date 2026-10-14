@@ -23,6 +23,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import DecisionTimeline from "@/components/DecisionTimeline";
 import ControlCenter from "@/components/ControlCenter";
+import WorkspaceNavigation, { WorkspaceSection } from "@/components/WorkspaceNavigation";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
 import { resolveNodeCap } from '@/lib/device';
@@ -136,7 +137,15 @@ function MainApp() {
   const [showDecisionLog, setShowDecisionLog] = useState(false);
   const [showControlCenter, setShowControlCenter] = useState(false);
   const [showMemoryManager, setShowMemoryManager] = useState(false);
+  const [workspaceSection, setWorkspaceSection] = useState<WorkspaceSection>("ask");
   const [memoryManagerFilter, setMemoryManagerFilter] = useState<{ type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }>({});
+  const navigateWorkspace = (section: WorkspaceSection) => {
+    setWorkspaceSection(section);
+    setShowDecisionLog(section === "journey");
+    setShowMemoryManager(section === "library");
+    setShowControlCenter(section === "advanced");
+    if (section !== "library") setMemoryManagerFilter({});
+  };
   // 启动遮罩兜底：brain-server 长时间起不来时也要放行进 App（由离线横幅接管），避免遮罩锁死 UI
   const [splashTimedOut, setSplashTimedOut] = useState(false);
   const [focusEntityId, setFocusEntityId] = useState<string | undefined>(undefined);
@@ -608,6 +617,8 @@ function MainApp() {
     .map((s) => `${s.id}:${toTauriAccel(s.current)}`)
     .join(',');
   useEffect(() => {
+    // Static browser previews do not provide Tauri IPC; keep desktop-only shortcuts inert there.
+    if (typeof window === 'undefined' || typeof (window as any).__TAURI_IPC__ !== 'function') return;
     const globals = globalAccels.split(',').filter(Boolean).map((x) => {
       const i = x.indexOf(':');
       return { id: x.slice(0, i), accelerator: x.slice(i + 1) };
@@ -768,6 +779,7 @@ function MainApp() {
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
             title={floatingHudOn ? t('header.hide_hud') : t('header.show_hud')}
+            aria-label={floatingHudOn ? t('header.hide_hud') : t('header.show_hud')}
           >
             <PictureInPicture2 className="w-4 h-4" />
           </button>
@@ -775,6 +787,7 @@ function MainApp() {
             onClick={() => { fetchGraphData(); toast.success('已刷新图谱'); }}
             className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             title="刷新图谱（看新加进来的记忆）"
+            aria-label="刷新图谱（看新加进来的记忆）"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -783,6 +796,7 @@ function MainApp() {
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               title={t('nav.more')}
+              aria-label={t('nav.more')}
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -839,6 +853,7 @@ function MainApp() {
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            aria-label={t('nav.settings')}
           >
             <Settings className="w-4 h-4" />
             <span className="hidden lg:inline">{t('nav.settings')}</span>
@@ -887,6 +902,8 @@ function MainApp() {
           </div>
         </div>
       )}
+
+      <WorkspaceNavigation activeSection={workspaceSection} onNavigate={navigateWorkspace} />
 
       <main className="flex-1 overflow-hidden relative">
         {isLoadingGraph && (
@@ -944,7 +961,7 @@ function MainApp() {
             onLoadDemo={handleLoadDemo}
             isLoadingDemo={isLoadingDemo}
             onUploadClick={() => setShowUpload(true)}
-            onShowDecisionLog={() => setShowDecisionLog(true)}
+            onShowDecisionLog={() => { setWorkspaceSection("journey"); setShowDecisionLog(true); }}
             onConnectMcp={() => { setSettingsTab('mcp'); setShowSettings(true); }}
             onShowShortcuts={() => setShowShortcuts(true)}
             onDismiss={() => setEmptyDismissed(true)}
@@ -1028,6 +1045,7 @@ function MainApp() {
           }}
           entities={entities}
           onOpenMemoryManager={(filter) => {
+            setWorkspaceSection("library");
             setMemoryManagerFilter(filter);
             setShowMemoryManager(true);
           }}
@@ -1041,6 +1059,7 @@ function MainApp() {
             onClose={() => {
               setShowMemoryManager(false);
               setMemoryManagerFilter({});
+              setWorkspaceSection("ask");
             }}
           />
         )}
@@ -1051,13 +1070,13 @@ function MainApp() {
 
         <DecisionTimeline
           isOpen={showDecisionLog}
-          onClose={() => setShowDecisionLog(false)}
+          onClose={() => { setShowDecisionLog(false); setWorkspaceSection("ask"); }}
           onSelectEntity={(id) => {
             setFocusEntityId(id);
           }}
         />
 
-        <ControlCenter isOpen={showControlCenter} onClose={() => setShowControlCenter(false)} />
+        <ControlCenter isOpen={showControlCenter} onClose={() => { setShowControlCenter(false); setWorkspaceSection("ask"); }} />
 
         {/* [通用] 首次启动引导 */}
         {(!settings.behavior.onboarded || showWizardForce) && (
