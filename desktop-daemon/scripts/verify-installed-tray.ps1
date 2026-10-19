@@ -30,6 +30,7 @@ public static class OmniTrayInput {
 
 $root = [System.Windows.Automation.AutomationElement]::RootElement
 $nameProperty = [System.Windows.Automation.AutomationElement]::NameProperty
+$classNameProperty = [System.Windows.Automation.AutomationElement]::ClassNameProperty
 $processIdProperty = [System.Windows.Automation.AutomationElement]::ProcessIdProperty
 $treeScope = [System.Windows.Automation.TreeScope]::Descendants
 $trueCondition = [System.Windows.Automation.Condition]::TrueCondition
@@ -66,6 +67,15 @@ function Test-MainWindowVisible {
     return [OmniTrayInput]::IsWindowVisible([IntPtr]$MainWindowHandle)
 }
 
+function Wait-MainWindowVisible([int]$TimeoutMs = 3000) {
+    $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMs)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        if (Test-MainWindowVisible) { return $true }
+        Start-Sleep -Milliseconds 100
+    }
+    return (Test-MainWindowVisible)
+}
+
 function Click-Element($Element, [bool]$RightClick = $false) {
     $bounds = $Element.Current.BoundingRectangle
     if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) {
@@ -73,7 +83,11 @@ function Click-Element($Element, [bool]$RightClick = $false) {
     }
     $x = [int]($bounds.Left + ($bounds.Width / 2))
     $y = [int]($bounds.Top + ($bounds.Height / 2))
-    if (-not [OmniTrayInput]::SetCursorPos($x, $y)) {
+    Click-Point $x $y $RightClick
+}
+
+function Click-Point([int]$X, [int]$Y, [bool]$RightClick = $false) {
+    if (-not [OmniTrayInput]::SetCursorPos($X, $Y)) {
         throw 'Could not position the pointer on the Windows accessibility element.'
     }
     Start-Sleep -Milliseconds 100
@@ -89,6 +103,31 @@ function Click-Element($Element, [bool]$RightClick = $false) {
     }
 }
 
+function Get-TrayClickPoints($Element) {
+    $bounds = $Element.Current.BoundingRectangle
+    if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) {
+        return @()
+    }
+    $className = [string]$Element.Current.ClassName
+    if ($className -notmatch '(?i)^ToolbarWindow32$' -or $bounds.Width -le 24) {
+        return @([pscustomobject]@{
+            X = [int]($bounds.Left + ($bounds.Width / 2))
+            Y = [int]($bounds.Top + ($bounds.Height / 2))
+        })
+    }
+    # Classic shell toolbar buttons are exposed as one parent rectangle. Probe
+    # each 24px slot so the pointer never lands in the gap between two buttons.
+    $slotCount = [Math]::Max(1, [int][Math]::Ceiling($bounds.Width / 24))
+    $points = New-Object System.Collections.Generic.List[object]
+    for ($slot = 0; $slot -lt $slotCount; $slot++) {
+        $null = $points.Add([pscustomobject]@{
+            X = [int]($bounds.Left + (($slot * $bounds.Width / $slotCount) + ($bounds.Width / $slotCount / 2)))
+            Y = [int]($bounds.Top + ($bounds.Height / 2))
+        })
+    }
+    return $points.ToArray()
+}
+
 function Find-TrayIcon {
     # Windows exposes classic notification-area icons differently across runner
     # images: the same icon may be reported as Button, Image, Custom, or
@@ -96,13 +135,13 @@ function Find-TrayIcon {
     # an Explorer ProcessId here: Windows 11 runner images can expose the
     # notification-area provider through a shell proxy process. Restrict the
     # name match to shell tray classes so an app window title cannot qualify.
-    foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
+    foreach ($element in (Find-ShellTrayElements)) {
         try {
             $current = $element.Current
             $name = [string]$current.Name
             $className = [string]$current.ClassName
             if ($name -match '(?i)omni[\s-]*context' -and
-                $className -match '(?i)(SystemTray\.|NotifyIcon|TrayNotify|Shell_TrayWnd|ToolbarWindow32)' -and
+                $className -match '(?i)(SystemTray\.|NotifyIcon|TrayNotify|ToolbarWindow32)' -and
                 -not $current.BoundingRectangle.IsEmpty -and
                 $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
                 return $element
@@ -125,6 +164,15 @@ function Find-VisibleTrayElements {
     foreach ($element in (Find-ShellTrayElements)) {
         try {
             $name = [string]$element.Current.Name
+            $className = [string]$element.Current.ClassName
+            # Find-ShellTrayElements also returns the shell host/toolbars that
+            # contain the real buttons. They are useful as overflow-toggle
+            # targets, but must not be probed as application tray icons: a
+            # toolbar's bounds can remain visible even when its overflow popup
+            # is closed, which would make the fallback accept a false target.
+            if ($className -match '(?i)^(Shell_TrayWnd|TrayNotifyWnd|ToolbarWindow32)$') {
+                continue
+            }
             if ($name -notmatch '(?i)show hidden|\u663E\u793A\u9690\u85CF|more icons|\u66F4\u591A\u56FE\u6807') {
                 $null = $found.Add($element)
             }
@@ -143,6 +191,7 @@ function Find-ShellTrayElements {
     # notification-area providers and avoid using Explorer ProcessId as an
     # identity boundary.
     $found = New-Object System.Collections.Generic.List[object]
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]'
     foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
         try {
             $current = $element.Current
@@ -151,16 +200,46 @@ function Find-ShellTrayElements {
             # Windows Server 2022 may expose notification buttons as direct
             # ToolbarWindow32 descendants of TrayNotifyWnd instead of the
             # SystemTray.* proxy classes used by interactive Windows 11.
-            $isTrayClass = $className -match '(?i)^(SystemTray\.|NotifyIcon|TrayNotify|ToolbarWindow32)'
+            $isTrayClass = $className -match '(?i)^(SystemTray\.|NotifyIcon|TrayNotify)'
             $isTrayAutomationId = $automationId -match '(?i)(^|[._-])(?:SystemTrayIcon|NotifyIcon)(?:$|[._-])'
             if (-not ($isTrayClass -or $isTrayAutomationId)) { continue }
             $bounds = $current.BoundingRectangle
             if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) { continue }
-            $null = $found.Add($element)
+            $key = (([string]$current.NativeWindowHandle) + '|' + [string]$current.AutomationId + '|' +
+                [string]$current.ClassName + '|' + [int]$bounds.Left + '|' + [int]$bounds.Top + '|' +
+                [int]$bounds.Width + '|' + [int]$bounds.Height)
+            if ($seen.Add($key)) { $null = $found.Add($element) }
         }
         catch {
             continue
         }
+    }
+    # Classic Windows Server taskbars expose individual notification buttons as
+    # generic Button/Custom descendants of TrayNotifyWnd, not SystemTray.*.
+    # Walk those host descendants and retain only controls with concrete bounds
+    # so clicks still target real shell UIA elements.
+    $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
+    foreach ($host in ($root.FindAll($treeScope, $trayHostCondition))) {
+        try {
+            foreach ($element in ($host.FindAll($treeScope, $trueCondition))) {
+                try {
+                    $current = $element.Current
+                    $className = [string]$current.ClassName
+                    $controlType = [string]$current.ControlType.ProgrammaticName
+                    $bounds = $current.BoundingRectangle
+                    $isButton = $controlType -match '(?i)(Button|Custom|Image|ListItem|MenuItem|Thumb)$'
+                    $isToolbar = $className -match '(?i)^(ToolbarWindow32|SystemTray\.|NotifyIcon)'
+                    if (-not ($isButton -or $isToolbar) -or
+                        $bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) { continue }
+                    $key = (([string]$current.NativeWindowHandle) + '|' + [string]$current.AutomationId + '|' +
+                        $className + '|' + [int]$bounds.Left + '|' + [int]$bounds.Top + '|' +
+                        [int]$bounds.Width + '|' + [int]$bounds.Height)
+                    if ($seen.Add($key)) { $null = $found.Add($element) }
+                }
+                catch { continue }
+            }
+        }
+        catch { continue }
     }
     return $found.ToArray()
 }
@@ -170,7 +249,8 @@ function Find-OverflowToggle {
     foreach ($element in (Find-ShellTrayElements)) {
         try {
             $current = $element.Current
-            if ([string]$current.AutomationId -eq 'SystemTrayIcon') {
+            if ([string]$current.AutomationId -eq 'SystemTrayIcon' -or
+                [string]$current.ClassName -match '(?i)^ToolbarWindow32$') {
                 $null = $found.Add($element)
             }
         }
@@ -178,16 +258,18 @@ function Find-OverflowToggle {
             continue
         }
     }
-    return @($found.ToArray() | Sort-Object -Property @{ Expression = { $_.Current.BoundingRectangle.Left } })
+    return @($found.ToArray() | Sort-Object -Property @(
+        @{ Expression = { $_.Current.BoundingRectangle.Width } },
+        @{ Expression = { $_.Current.BoundingRectangle.Left } }
+    ))
 }
 
 function Open-HiddenIcons {
     $hiddenNamePatterns = @(
-        '^Show hidden icons$',
-        '^\u663E\u793A\u9690\u85CF\u56FE\u6807$',
-        '^\u663E\u793A\u9690\u85CF\u7684\u56FE\u6807$',
-        '^More icons$',
-        '^\u66F4\u591A\u56FE\u6807$'
+        '(?i)show hidden icons',
+        '(?i)\u663E\u793A\u9690\u85CF',
+        '(?i)more icons',
+        '(?i)\u66F4\u591A\u56FE\u6807'
     )
     foreach ($hiddenNamePattern in $hiddenNamePatterns) {
         foreach ($hiddenButton in (Find-ElementsMatchingName $hiddenNamePattern)) {
@@ -212,9 +294,17 @@ function Open-HiddenIcons {
     }
     foreach ($overflowToggle in (Find-OverflowToggle)) {
         try {
-            Click-Element $overflowToggle
-            Start-Sleep -Milliseconds 1000
-            if ((Find-VisibleTrayElements).Count -gt 0) { return $true }
+            foreach ($point in (Get-TrayClickPoints $overflowToggle)) {
+                Click-Point $point.X $point.Y
+                Start-Sleep -Milliseconds 1000
+                # A toolbar host is always present in the classic shell, so
+                # merely finding one is not evidence that the overflow popup
+                # opened. The caller separately probes toolbar slots and
+                # verifies this product's menu/window effect.
+                if ((Find-VisibleTrayElements | Where-Object {
+                    $_.Current.ClassName -notmatch '(?i)^ToolbarWindow32$'
+                }).Count -gt 0) { return $true }
+            }
         }
         catch {
             continue
@@ -233,7 +323,9 @@ function Find-ShowMainMenuItem {
     foreach ($menuNamePattern in $menuNamePatterns) {
         $elements = @(
             Find-ElementsMatchingName $menuNamePattern | Where-Object {
-                $_.Current.ControlType -eq [System.Windows.Automation.ControlType]::MenuItem
+                $bounds = $_.Current.BoundingRectangle
+                $_.Current.ControlType -eq [System.Windows.Automation.ControlType]::MenuItem -and
+                    -not $bounds.IsEmpty -and $bounds.Width -gt 0 -and $bounds.Height -gt 0
             }
         )
         if ($elements.Count -gt 0) {
@@ -241,6 +333,102 @@ function Find-ShowMainMenuItem {
         }
     }
     return $null
+}
+
+function Find-TrayToolbarElements {
+    # Classic Windows Server exposes notification icons as toolbar items rather
+    # than individual UIA elements. Keep the toolbar itself scoped to the shell
+    # TrayNotifyWnd; ToolbarWindow32 is a generic class used by many unrelated
+    # windows and must never be treated as a tray icon globally.
+    $found = New-Object System.Collections.Generic.List[object]
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]'
+    $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
+    foreach ($host in ($root.FindAll($treeScope, $trayHostCondition))) {
+        try {
+            foreach ($element in ($host.FindAll($treeScope, $trueCondition))) {
+                try {
+                    $current = $element.Current
+                    if ([string]$current.ClassName -notmatch '(?i)^ToolbarWindow32$') { continue }
+                    $bounds = $current.BoundingRectangle
+                    if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) { continue }
+                    $key = (([string]$current.NativeWindowHandle) + '|' + [string]$current.AutomationId + '|' +
+                        [int]$bounds.Left + '|' + [int]$bounds.Top + '|' + [int]$bounds.Width + '|' + [int]$bounds.Height)
+                    if ($seen.Add($key)) { $null = $found.Add($element) }
+                }
+                catch { continue }
+            }
+        }
+        catch { continue }
+    }
+    return $found.ToArray()
+}
+
+function Get-TrayProbePoints {
+    # A classic toolbar may expose a 48px host for two 24px notification
+    # buttons, while UIA provides no child buttons. Probe the center of each
+    # 24px slot inside each real tray toolbar; acceptance is still gated by the
+    # product-specific Show Main Window command or this app's HWND visibility.
+    $points = New-Object System.Collections.Generic.List[object]
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]'
+    foreach ($toolbar in (Find-TrayToolbarElements)) {
+        try {
+            $bounds = $toolbar.Current.BoundingRectangle
+            $left = [int][Math]::Ceiling($bounds.Left + 4)
+            $right = [int][Math]::Floor($bounds.Right - 4)
+            $top = [int][Math]::Ceiling($bounds.Top + ($bounds.Height / 2))
+            if ($right -lt $left) { continue }
+            $slotCount = [Math]::Max(1, [int][Math]::Ceiling(($right - $left + 1) / 24))
+            for ($slot = 0; $slot -lt $slotCount; $slot++) {
+                $x = [int][Math]::Min($right, $left + ($slot * 24) + 8)
+                $key = "$x|$top"
+                if ($seen.Add($key)) {
+                    $null = $points.Add([pscustomobject]@{ X = $x; Y = $top })
+                }
+            }
+        }
+        catch { continue }
+    }
+    return $points.ToArray()
+}
+
+function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show')][string]$Action) {
+    Dismiss-ContextMenu
+    try {
+        if ($Action -eq 'left-click') {
+            Click-Point $Point.X $Point.Y
+            return (Wait-MainWindowVisible)
+        }
+        Click-Point $Point.X $Point.Y $true
+        $menuItem = Find-ShowMainMenuItemWithin
+        if (-not $menuItem) { return $false }
+        try {
+            $invoke = $menuItem.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+            $invoke.Invoke()
+        }
+        catch {
+            Click-Element $menuItem
+        }
+        return (Wait-MainWindowVisible)
+    }
+    catch {
+        return $false
+    }
+    finally {
+        Dismiss-ContextMenu
+    }
+}
+
+function Find-AppTrayPoint([ValidateSet('left-click', 'menu-show')][string]$Action) {
+    for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        foreach ($point in (Get-TrayProbePoints)) {
+            if (Invoke-TrayPoint $point $Action) { return $true }
+        }
+        if ($attempt -lt 2) {
+            $null = Open-HiddenIcons
+            Start-Sleep -Milliseconds 500
+        }
+    }
+    return $false
 }
 
 function Try-ShowMainMenu($Element) {
@@ -264,7 +452,7 @@ function Try-ShowMainMenu($Element) {
     catch {
         Click-Element $menuItem
     }
-    return $true
+    return (Wait-MainWindowVisible)
 }
 
 function Dismiss-ContextMenu {
@@ -291,6 +479,10 @@ function Find-AppTrayCandidate {
     # because opening the overflow popup can invalidate UIA element handles.
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
         Dismiss-ContextMenu
+        if ($attempt -gt 0) {
+            $null = Open-HiddenIcons
+            Start-Sleep -Milliseconds 500
+        }
         $candidates = @(Find-VisibleTrayElements)
         $omniCandidates = @($candidates | Where-Object {
             $_.Current.ClassName -match '(?i)SystemTray\.OmniButton'
@@ -388,6 +580,12 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $icon) {
         continue
     }
     $candidates = @(Find-VisibleTrayElements)
+    if ($candidates.Count -eq 0) {
+        # A classic shell may expose only the toolbar host; that is enough to
+        # switch to the scoped native slot probe without waiting out the retry
+        # deadline for UIA children that will never be published.
+        $candidates = @(Find-TrayToolbarElements)
+    }
     if ($candidates.Count -gt 0) { break }
     Start-Sleep -Milliseconds 250
 }
@@ -410,12 +608,30 @@ if ($icon) {
 # this product's Show Main Window command before it can be used.
 $candidates = @($candidates + @(Find-VisibleTrayElements) | Select-Object -Unique)
 if ($candidates.Count -eq 0) {
+    if (Find-AppTrayPoint $Action) {
+        if ($Action -eq 'left-click') {
+            Write-Output 'PASS installed tray icon left click via classic toolbar slot'
+        }
+        else {
+            Write-Output 'PASS installed tray context menu Show Main Window via classic toolbar slot'
+        }
+        exit 0
+    }
     Write-TrayDiagnostics
     throw 'The installed Omni-Context notification-area icon was not exposed by Windows UI Automation (no named product tooltip or SystemTray.* candidate was available).'
 }
 
 $appCandidate = Find-AppTrayCandidate
 if (-not $appCandidate) {
+    if (Find-AppTrayPoint $Action) {
+        if ($Action -eq 'left-click') {
+            Write-Output 'PASS installed tray icon left click via classic toolbar slot'
+        }
+        else {
+            Write-Output 'PASS installed tray context menu Show Main Window via classic toolbar slot'
+        }
+        exit 0
+    }
     Write-TrayDiagnostics
     throw 'The installed Omni-Context SystemTray.* candidates did not expose its Show Main Window command.'
 }
