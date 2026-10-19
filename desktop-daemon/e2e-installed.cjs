@@ -461,6 +461,16 @@ async function run() {
     page.on('dialog', (dialog) => dialog.accept());
     trackUploadSubmissions(page, uploadSubmissions);
 
+    // A fresh installed profile opens the first-run wizard before the main
+    // controls can receive pointer events. Dismiss it explicitly so the
+    // installed journey exercises the same settings/import surface a user
+    // reaches after completing or skipping onboarding.
+    const onboardingDialog = page.getByRole('dialog').filter({ hasText: /首次使用引导|Omni-Context/i }).first();
+    if (await onboardingDialog.isVisible().catch(() => false)) {
+      await onboardingDialog.getByRole('button', { name: /跳过引导|Skip Tour/i }).click();
+      await onboardingDialog.waitFor({ state: 'hidden', timeout: 10_000 });
+    }
+
     await page.getByRole('button', { name: /^设置$|^Settings$/ }).click();
     await page.getByRole('button', { name: /大模型配置|LLM Provider|模型服务/i }).click();
     const llmPanel = page.getByRole('heading', { name: /大模型配置|LLM Provider|模型服务/i }).locator('..').locator('..');
