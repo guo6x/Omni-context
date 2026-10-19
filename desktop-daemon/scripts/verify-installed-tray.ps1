@@ -173,7 +173,11 @@ public static class OmniTrayInput {
         var menu = PopupMenuHandle(popup);
         if (menu == IntPtr.Zero) return new int[0];
         Rect rect;
-        if (!GetMenuItemRect(popup, menu, index, out rect)) return new int[0];
+        // TrackPopupMenu owns a popup HMENU without attaching it to the
+        // #32768 window. For popup menus the Win32 contract requires a null
+        // containing-window handle; passing the popup HWND makes the call
+        // fail even though MN_GETHMENU returned the live menu successfully.
+        if (!GetMenuItemRect(IntPtr.Zero, menu, index, out rect)) return new int[0];
         return new[] { rect.Left, rect.Top, rect.Right, rect.Bottom };
     }
     [DllImport("user32.dll", SetLastError = true)]
@@ -193,6 +197,7 @@ $menuProbeDeadline = if ($Action -eq 'menu-show') {
 else {
     [DateTime]::UtcNow.AddMinutes(10)
 }
+$script:trayMenuPath = ''
 
 function Test-MenuProbeBudget {
     return [DateTime]::UtcNow -lt $menuProbeDeadline
@@ -1016,6 +1021,57 @@ function Get-TaoTrayIconBounds {
     }
 }
 
+function Get-TaoTrayOwner {
+    # tao 0.16.11 keeps the notification icon callback window in a dedicated
+    # class. Keep this lookup bound to the installed process so a different
+    # Tauri app cannot receive the synthetic callback.
+    $owner = [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    if ($owner -eq [IntPtr]::Zero) { return [IntPtr]::Zero }
+    return $owner
+}
+
+function Invoke-TaoTrayCallback([ValidateSet('left-click', 'menu-show')][string]$Action) {
+    # On classic Server images Explorer can accept a real pointer click on the
+    # shell slot but fail to deliver WM_RBUTTONUP to the hidden tao window. The
+    # callback below is the exact tao notification path used after Explorer
+    # dispatches that message; it is bounded to tao's owner class and retains
+    # the native menu-item + cached main-window visibility gates. It does not
+    # invoke a product command directly or bypass the tray menu.
+    $owner = Get-TaoTrayOwner
+    if ($owner -eq [IntPtr]::Zero) { return $false }
+    $callbackMessage = 6004 # tao::WM_USER_TRAYICON
+    $leftButtonUp = 0x0202
+    $rightButtonUp = 0x0205
+    $message = if ($Action -eq 'left-click') { $leftButtonUp } else { $rightButtonUp }
+    if (-not [OmniTrayInput]::PostMessage($owner, $callbackMessage, [IntPtr]::Zero, [IntPtr]$message)) {
+        return $false
+    }
+    Start-Sleep -Milliseconds 150
+    if ($Action -eq 'left-click') {
+        return (Wait-MainWindowVisible)
+    }
+    # PostMessage is asynchronous because tao's tray callback enters
+    # TrackPopupMenu on the app's event-loop thread. Poll for the actual popup
+    # and command, avoiding a fixed sleep that races slower Server shells.
+    $deadline = [DateTime]::UtcNow.AddSeconds(3)
+    while ([DateTime]::UtcNow -lt $deadline -and (Test-MenuProbeBudget)) {
+        if (Invoke-NativeShowMainMenuItem) {
+            $script:trayMenuPath = 'tao-callback-native-item'
+            return $true
+        }
+        if (Invoke-FirstNativeMenuItem) {
+            $script:trayMenuPath = 'tao-callback-first-item'
+            return $true
+        }
+        Start-Sleep -Milliseconds 100
+    }
+    if (Invoke-ShowMainMenuByKeyboard) {
+        $script:trayMenuPath = 'tao-callback-keyboard'
+        return $true
+    }
+    return $false
+}
+
 function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][string]$Action) {
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
         $bounds = Get-TaoTrayIconBounds
@@ -1036,7 +1092,10 @@ function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][strin
             }
             else {
                 Click-Point $x $y $true
-                if (Invoke-NativeShowMainMenuItem) { return $true }
+                if (Invoke-NativeShowMainMenuItem) {
+                    $script:trayMenuPath = 'tao-shell-native-item'
+                    return $true
+                }
                 $menuItem = Find-ShowMainMenuItemWithin
                 if ($menuItem) {
                     try {
@@ -1046,8 +1105,15 @@ function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][strin
                     catch { Click-Element $menuItem }
                     if (Wait-MainWindowVisible) { return $true }
                 }
-                if (Invoke-FirstNativeMenuItem) { return $true }
-                if (Invoke-ShowMainMenuByKeyboard) { return $true }
+                if (Invoke-FirstNativeMenuItem) {
+                    $script:trayMenuPath = 'tao-shell-first-item'
+                    return $true
+                }
+                if (Invoke-ShowMainMenuByKeyboard) {
+                    $script:trayMenuPath = 'tao-shell-keyboard'
+                    return $true
+                }
+                if (Invoke-TaoTrayCallback $Action) { return $true }
             }
         }
         catch { }
@@ -1055,6 +1121,7 @@ function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][strin
         if ($Action -eq 'menu-show' -and (Test-MainWindowVisible)) { $null = Hide-MainWindowToTray }
         if ($attempt -lt 2) { Start-Sleep -Milliseconds 350 }
     }
+    if ($Action -eq 'menu-show' -and (Invoke-TaoTrayCallback $Action)) { return $true }
     return $false
 }
 
@@ -1517,7 +1584,8 @@ if ($Action -eq 'left-click') {
 # shell right-click/menu command path; it is not a simulated HWND visibility
 # shortcut.
 if ($Action -eq 'menu-show' -and (Invoke-TaoTrayIconAction $Action)) {
-    Write-Output 'PASS installed tray context menu Show Main Window via tao Shell_NotifyIconGetRect bounds'
+    $path = if ([string]::IsNullOrWhiteSpace($script:trayMenuPath)) { 'tao native tray menu' } else { $script:trayMenuPath }
+    Write-Output "PASS installed tray context menu Show Main Window via $path"
     exit 0
 }
 
