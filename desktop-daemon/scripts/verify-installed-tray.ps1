@@ -92,24 +92,24 @@ function Click-Element($Element, [bool]$RightClick = $false) {
 function Find-TrayIcon {
     # Windows exposes classic notification-area icons differently across runner
     # images: the same icon may be reported as Button, Image, Custom, or
-    # ListItem, and its tooltip can be decorated by the shell. Scope the search
-    # to every shell Explorer process, then match the stable product name.
-    foreach ($explorerProcessId in $explorerProcessIds) {
-        $explorerCondition = New-Object System.Windows.Automation.PropertyCondition($processIdProperty, $explorerProcessId)
-        foreach ($element in ($root.FindAll($treeScope, $explorerCondition))) {
-            try {
-                $current = $element.Current
-                $name = [string]$current.Name
-                if ($current.ProcessId -in $explorerProcessIds -and
-                    $name -match '(?i)omni[\s-]*context' -and
-                    -not $current.IsOffscreen -and -not $current.BoundingRectangle.IsEmpty -and
-                    $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
-                    return $element
-                }
+    # ListItem, and its tooltip can be decorated by the shell. Do not require
+    # an Explorer ProcessId here: Windows 11 runner images can expose the
+    # notification-area provider through a shell proxy process. Restrict the
+    # name match to shell tray classes so an app window title cannot qualify.
+    foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
+        try {
+            $current = $element.Current
+            $name = [string]$current.Name
+            $className = [string]$current.ClassName
+            if ($name -match '(?i)omni[\s-]*context' -and
+                $className -match '(?i)(SystemTray\.|NotifyIcon|TrayNotify|Shell_TrayWnd|ToolbarWindow32)' -and
+                -not $current.BoundingRectangle.IsEmpty -and
+                $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
+                return $element
             }
-            catch {
-                continue
-            }
+        }
+        catch {
+            continue
         }
     }
     return $null
@@ -122,14 +122,10 @@ function Find-VisibleTrayElements {
     # left/right click, while the caller verifies this app's cached native
     # window handle changes visibility.
     $found = New-Object System.Collections.Generic.List[object]
-    foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
+    foreach ($element in (Find-ShellTrayElements)) {
         try {
-            $current = $element.Current
-            $name = [string]$current.Name
-            if ([string]$current.ClassName -match '(?i)^SystemTray\.' -and
-                $name -notmatch '(?i)show hidden|\u663E\u793A\u9690\u85CF|more icons|\u66F4\u591A\u56FE\u6807' -and
-                -not $current.IsOffscreen -and -not $current.BoundingRectangle.IsEmpty -and
-                $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
+            $name = [string]$element.Current.Name
+            if ($name -notmatch '(?i)show hidden|\u663E\u793A\u9690\u85CF|more icons|\u66F4\u591A\u56FE\u6807') {
                 $null = $found.Add($element)
             }
         }
@@ -140,15 +136,38 @@ function Find-VisibleTrayElements {
     return $found.ToArray()
 }
 
-function Find-OverflowToggle {
+function Find-ShellTrayElements {
+    # Bounds are the only visibility gate. IsOffscreen is not reliable for
+    # overflow icons on hosted Windows 11 shells, but a non-empty rectangle
+    # still gives the real pointer a concrete target. Keep this list narrow to
+    # notification-area providers and avoid using Explorer ProcessId as an
+    # identity boundary.
     $found = New-Object System.Collections.Generic.List[object]
     foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
         try {
             $current = $element.Current
-            if ([string]$current.ClassName -match '(?i)^SystemTray\.' -and
-                [string]$current.AutomationId -eq 'SystemTrayIcon' -and
-                -not $current.IsOffscreen -and -not $current.BoundingRectangle.IsEmpty -and
-                $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
+            $className = [string]$current.ClassName
+            $automationId = [string]$current.AutomationId
+            $isTrayClass = $className -match '(?i)^(SystemTray\.|NotifyIcon|TrayNotify)'
+            $isTrayAutomationId = $automationId -match '(?i)(^|[._-])(?:SystemTrayIcon|NotifyIcon)(?:$|[._-])'
+            if (-not ($isTrayClass -or $isTrayAutomationId)) { continue }
+            $bounds = $current.BoundingRectangle
+            if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) { continue }
+            $null = $found.Add($element)
+        }
+        catch {
+            continue
+        }
+    }
+    return $found.ToArray()
+}
+
+function Find-OverflowToggle {
+    $found = New-Object System.Collections.Generic.List[object]
+    foreach ($element in (Find-ShellTrayElements)) {
+        try {
+            $current = $element.Current
+            if ([string]$current.AutomationId -eq 'SystemTrayIcon') {
                 $null = $found.Add($element)
             }
         }
@@ -170,9 +189,6 @@ function Open-HiddenIcons {
     foreach ($hiddenNamePattern in $hiddenNamePatterns) {
         foreach ($hiddenButton in (Find-ElementsMatchingName $hiddenNamePattern)) {
             try {
-                if ($hiddenButton.Current.ProcessId -notin $explorerProcessIds) {
-                    continue
-                }
                 # Prefer a real pointer click so the same shell path as a user
                 # opens the overflow popup. Invoke is only a fallback for a
                 # runner image that exposes the button without screen bounds.
@@ -191,11 +207,11 @@ function Open-HiddenIcons {
             }
         }
     }
-    foreach ($overflowToggle in (Find-OverflowToggle | Select-Object -First 1)) {
+    foreach ($overflowToggle in (Find-OverflowToggle)) {
         try {
             Click-Element $overflowToggle
             Start-Sleep -Milliseconds 1000
-            return $true
+            if ((Find-VisibleTrayElements).Count -gt 0) { return $true }
         }
         catch {
             continue
@@ -298,6 +314,54 @@ function Find-AppTrayCandidate {
     return $null
 }
 
+function Get-SafeTrayField([object]$Value, [int]$MaxLength = 64) {
+    $text = [string]$Value
+    # UIA names are shell-provided, but may contain localized/user-controlled
+    # text. Keep diagnostics bounded and printable before they enter CI logs.
+    $text = [regex]::Replace($text, '[^A-Za-z0-9._:/ -]', '?')
+    if ($text.Length -gt $MaxLength) { return $text.Substring(0, $MaxLength) + '...' }
+    return $text
+}
+
+function Write-TrayDiagnostics {
+    # This is deliberately read-only and capped. It records enough shell UIA
+    # shape to diagnose runner differences without dumping arbitrary desktop
+    # text or paths into the acceptance log.
+    $diagnostics = New-Object System.Collections.Generic.List[string]
+    foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
+        try {
+            $current = $element.Current
+            $className = [string]$current.ClassName
+            $automationId = [string]$current.AutomationId
+            $isTrayClass = $className -match '(?i)(SystemTray\.|NotifyIcon|TrayNotify|Shell_TrayWnd|ToolbarWindow32)'
+            $isTrayAutomationId = $automationId -match '(?i)(^|[._-])(?:SystemTrayIcon|NotifyIcon)(?:$|[._-])'
+            if (-not ($isTrayClass -or $isTrayAutomationId)) { continue }
+            $bounds = $current.BoundingRectangle
+            $boundsText = if ($bounds.IsEmpty) { 'empty' } else {
+                '{0},{1},{2}x{3}' -f [int]$bounds.Left, [int]$bounds.Top, [int]$bounds.Width, [int]$bounds.Height
+            }
+            $diagnostics.Add(('[tray-uia] class={0};automationId={1};controlType={2};pid={3};offscreen={4};bounds={5};name={6}' -f
+                (Get-SafeTrayField $className),
+                (Get-SafeTrayField $automationId),
+                (Get-SafeTrayField ([string]$current.ControlType)),
+                [int]$current.ProcessId,
+                [bool]$current.IsOffscreen,
+                $boundsText,
+                (Get-SafeTrayField ([string]$current.Name))))
+            if ($diagnostics.Count -ge 80) { break }
+        }
+        catch {
+            continue
+        }
+    }
+    if ($diagnostics.Count -eq 0) {
+        Write-Output '[tray-uia] no shell tray descendants matched the diagnostic filter'
+    }
+    else {
+        foreach ($line in $diagnostics) { Write-Output $line }
+    }
+}
+
 $icon = $null
 $candidates = @()
 $overflowAttempted = $false
@@ -334,11 +398,13 @@ if ($icon) {
 # this product's Show Main Window command before it can be used.
 $candidates = @($candidates + @(Find-VisibleTrayElements) | Select-Object -Unique)
 if ($candidates.Count -eq 0) {
+    Write-TrayDiagnostics
     throw 'The installed Omni-Context notification-area icon was not exposed by Windows UI Automation (no named product tooltip or SystemTray.* candidate was available).'
 }
 
 $appCandidate = Find-AppTrayCandidate
 if (-not $appCandidate) {
+    Write-TrayDiagnostics
     throw 'The installed Omni-Context SystemTray.* candidates did not expose its Show Main Window command.'
 }
 
