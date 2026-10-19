@@ -95,6 +95,28 @@ async function waitFor(predicate, timeoutMs = 90_000) {
   throw new Error(`condition timed out after ${timeoutMs}ms`);
 }
 
+async function clickAfterRerender(locator, timeoutMs = 30_000) {
+  // The first-run panel hydrates settings and locale independently of the
+  // native window/CDP readiness gate. During that short interval React may
+  // replace the button node while Playwright is waiting for actionability.
+  // Reacquire the locator in bounded, short attempts so a transient detached
+  // node cannot consume the whole acceptance step or turn into a false app
+  // failure. This remains a real pointer click through Playwright.
+  const deadline = Date.now() + timeoutMs;
+  let lastError;
+  while (Date.now() < deadline) {
+    const remaining = Math.max(500, deadline - Date.now());
+    try {
+      await locator.click({ timeout: Math.min(2_000, remaining) });
+      return;
+    } catch (error) {
+      lastError = error;
+      await wait(Math.min(250, Math.max(50, deadline - Date.now())));
+    }
+  }
+  throw lastError || new Error('the UI control did not become clickable before the timeout');
+}
+
 async function reserveLoopbackPort(transport = 'tcp', preferredPort = 0) {
   if (transport === 'udp') {
     const socket = dgram.createSocket('udp4');
@@ -526,10 +548,12 @@ async function run() {
     // controls can receive pointer events. Dismiss it explicitly so the
     // installed journey exercises the same settings/import surface a user
     // reaches after completing or skipping onboarding.
-    const onboardingSkip = page.getByRole('button', { name: /跳过引导|Skip Tour/i }).first();
+    const onboardingPanel = page.locator('[data-retained-panel="onboarding"]');
+    await onboardingPanel.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => {});
+    const onboardingSkip = onboardingPanel.getByRole('button', { name: /跳过引导|Skip Tour/i }).first();
     if (await onboardingSkip.isVisible().catch(() => false)) {
-      await onboardingSkip.click();
-      await page.locator('[data-retained-panel="onboarding"]').waitFor({ state: 'hidden', timeout: 10_000 });
+      await clickAfterRerender(onboardingSkip);
+      await onboardingPanel.waitFor({ state: 'hidden', timeout: 10_000 });
     }
 
     await page.getByRole('button', { name: /^设置$|^Settings$/ }).click();
@@ -781,6 +805,11 @@ async function run() {
     page = connection.page;
     page.on('dialog', (dialog) => dialog.accept());
     trackUploadSubmissions(page, uploadSubmissions);
+    // The retained import-task panel is mounted by the upload surface. Open
+    // that user-facing surface first, then locate the task restored from the
+    // interrupted run; querying the list before opening it races the panel's
+    // lazy mount on a fresh WebView2 session.
+    await page.getByRole('button', { name: /上传文件|Upload file/i }).click();
     const restoredTask = page.getByRole('list', { name: '导入任务' }).locator('li').filter({ hasText: '已恢复的文件导入任务' }).first();
     await restoredTask.getByRole('button', { name: /继续查询/ }).waitFor({ timeout: 30_000 });
     await restoredTask.getByRole('button', { name: /继续查询/ }).click();
