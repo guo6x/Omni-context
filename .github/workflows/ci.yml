@@ -45,9 +45,14 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: brain-server/package-lock.json
+          cache-dependency-path: |
+            brain-server/package-lock.json
+            desktop-daemon/package-lock.json
       - run: npm ci
         working-directory: brain-server
+      - name: Install desktop dependencies used by cross-product lifecycle tests
+        run: npm ci
+        working-directory: desktop-daemon
       - run: npm run lint
         working-directory: brain-server
       - run: npm run typecheck

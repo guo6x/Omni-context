@@ -38,12 +38,12 @@ function pass(check) {
   console.log(`${check}=PASS`);
 }
 
-async function reserveLoopbackPort() {
+async function reserveLoopbackPort(requestedPort = 0) {
   const net = require('node:net');
   const server = net.createServer();
   await new Promise((resolve, reject) => {
     server.once('error', reject);
-    server.listen(0, '127.0.0.1', resolve);
+    server.listen(requestedPort, '127.0.0.1', resolve);
   });
   const address = server.address();
   const port = address && typeof address === 'object' ? address.port : 0;
@@ -138,8 +138,10 @@ async function captureFixture(worker, fixtureUrl) {
 }
 
 async function main() {
-  apiPort = await reserveLoopbackPort();
   mockPort = await reserveLoopbackPort();
+  // The installed extension deliberately uses its production local API port.
+  // Fail closed if it is already occupied; never probe or pair with an unrelated service.
+  apiPort = await reserveLoopbackPort(3001);
   if (fs.existsSync(evidenceDir)) {
     throw new Error('Refusing to replace an existing browser-capture evidence directory');
   }
@@ -200,6 +202,8 @@ async function main() {
   let context;
   try {
     await waitFor(async () => (await fetch(`http://127.0.0.1:${apiPort}/health`)).ok);
+    const fixtureIdentity = await api('/api/stats', localToken);
+    assert.equal(fixtureIdentity.status, 200, 'the browser test did not reach its isolated Brain fixture');
     pass('fixture-brain-health');
     context = await openExtension(workDir);
     let worker = await getWorker(context);
