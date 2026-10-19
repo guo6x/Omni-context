@@ -9,6 +9,7 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build -c src-tauri/tauri.prod.conf.json",
+    "e2e:installed:ci": "node e2e-installed.cjs",
     "verify:controlled": "node scripts/verify-controlled-files.mjs",
     "snapshot:controlled": "node scripts/verify-controlled-files.mjs --snapshot scripts/controlled-files.sha256.json"
   },
@@ -32,6 +33,7 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.17",
+    "playwright": "1.64.1",
     "postcss": "8.5.29",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"

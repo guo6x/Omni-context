@@ -24,6 +24,7 @@ export default {
     hint: 'First launch loads the local model, please wait',
   },
   ask: {
+    imported_prompt: 'Summarize the important information in my imported memories, with sources and uncertainties.',
     title: 'Ask Your Brain',
     placeholder: 'Ask your second brain…  (Enter to send, Shift+Enter for newline)',
     send: 'Send',
@@ -116,6 +117,8 @@ export default {
   },
   upload: {
     title: 'Upload File',
+    close: 'Close file import',
+    fingerprint_unavailable: 'This client cannot safely verify the file, so nothing was uploaded. Update the desktop client and try again.',
     drop_hint: 'Drop files or click to select',
     supported_formats: 'Supports Markdown / Office / PDF / eBook / Code / Images · Max 30MB per file',
     size_limit: 'File exceeds {limit}MB limit',
@@ -679,7 +682,10 @@ export default {
     brain_server_restarting_detail: 'Please wait a few seconds, the status will refresh automatically.',
     restart_failed: 'Restart failed',
     file_extracted: '{filename} extracted',
+    file_partial: '{filename} partially imported',
+    file_partial_detail: 'The service reports {entities} extracted memories (not net-new saves); some content was not processed. Review the result.',
     file_extracted_detail: '{entities} entities / {relationships} relationships',
+    file_counts_unknown: 'The saved counts are not confirmed yet. Please check your library.',
     file_upload_failed: '{filename} upload failed',
     graph_saved: 'Saved',
     graph_saved_detail: '{name} updated successfully',

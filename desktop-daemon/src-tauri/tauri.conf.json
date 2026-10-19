@@ -19,8 +19,8 @@
         "height": 900,
         "resizable": true,
         "fullscreen": false,
-        "minWidth": 800,
-        "minHeight": 600,
+        "minWidth": 390,
+        "minHeight": 480,
         "center": true,
         "fileDropEnabled": true,
         "theme": "Dark"

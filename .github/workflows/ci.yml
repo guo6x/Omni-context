@@ -174,3 +174,160 @@ jobs:
         working-directory: desktop-daemon
       - name: Check the native Tauri application
         run: cargo check --manifest-path desktop-daemon/src-tauri/Cargo.toml
+
+  windows-installed-product:
+    name: Installed Windows product acceptance (MSI)
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            desktop-daemon/package-lock.json
+            brain-server/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install desktop dependencies
+        run: npm ci
+        working-directory: desktop-daemon
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      - name: Install Brain dependencies
+        run: npm ci
+        working-directory: brain-server
+      - name: Build the Brain Server
+        run: npm run build
+        working-directory: brain-server
+      - name: Build the controlled desktop frontend
+        run: |
+          npm run verify:controlled
+          npm run build
+          npm run verify:controlled
+        working-directory: desktop-daemon
+      - name: Stage the production Brain runtime for the Windows bundle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $resource = Join-Path $env:GITHUB_WORKSPACE 'desktop-daemon/src-tauri/brain-server'
+          New-Item -ItemType Directory -Path $resource -Force | Out-Null
+          $dist = Join-Path $resource 'dist'
+          New-Item -ItemType Directory -Path $dist | Out-Null
+          Copy-Item -Path (Join-Path $env:GITHUB_WORKSPACE 'brain-server/dist/*') -Destination $dist -Recurse
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'brain-server/package.json') -Destination $resource
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'brain-server/package-lock.json') -Destination $resource
+          Push-Location $resource
+          npm ci --omit=dev --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'Installing the embedded Brain production dependencies failed.' }
+          Pop-Location
+          $node = (Get-Command node.exe).Source
+          Copy-Item -LiteralPath $node -Destination (Join-Path $resource 'node.exe')
+      - name: Build the strict-CSP Tauri MSI
+        run: npx tauri build -c src-tauri/tauri.ci.conf.json --bundles msi
+        working-directory: desktop-daemon
+      - name: Install exact MSI and bind it to Windows Installer provenance
+        shell: pwsh
+        env:
+          OMNI_E2E_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $msiDirectory = Join-Path $env:GITHUB_WORKSPACE 'desktop-daemon/src-tauri/target/release/bundle/msi'
+          $msis = @(Get-ChildItem -LiteralPath $msiDirectory -Filter '*.msi' -File)
+          if ($msis.Count -ne 1) { throw "Expected exactly one Tauri MSI; found $($msis.Count)." }
+          $e2eRoot = Join-Path $env:RUNNER_TEMP 'omni-installed-windows-e2e'
+          if (Test-Path -LiteralPath $e2eRoot) { throw 'Refusing to reuse an existing installer-E2E directory.' }
+          New-Item -ItemType Directory -Path $e2eRoot | Out-Null
+          $evidencePath = Join-Path $e2eRoot 'windows-msi-install.json'
+          $installerLog = Join-Path $e2eRoot 'msiexec.log'
+          $msiVerifier = Join-Path $env:GITHUB_WORKSPACE 'desktop-daemon/scripts/install-verify-msi.ps1'
+          $buildExe = Join-Path $env:GITHUB_WORKSPACE 'desktop-daemon/src-tauri/target/release/Omni-Context.exe'
+          & $msiVerifier -MsiPath $msis[0].FullName -ExpectedExePath $buildExe -EvidencePath $evidencePath -InstallerLogPath $installerLog
+          $record = Get-Content -LiteralPath $evidencePath -Raw | ConvertFrom-Json
+          $env:OMNI_E2E_ROOT = $e2eRoot
+          $env:OMNI_E2E_PROFILE_DIR = Join-Path $e2eRoot 'profile'
+          $env:OMNI_E2E_EVIDENCE_DIR = Join-Path $e2eRoot 'evidence'
+          $env:OMNI_E2E_INSTALL_RECORD_PATH = $evidencePath
+          $env:OMNI_E2E_LEGACY_DB_PATH = Join-Path $e2eRoot 'legacy-v30.sqlite'
+          $env:OMNI_E2E_INSTALL_DIR = $record.install_dir
+          $env:OMNI_E2E_PRODUCT_CODE = $record.product_code
+          $env:OMNI_E2E_MSI_PATH = $msis[0].FullName
+          $env:OMNI_E2E_BUILD_EXE_PATH = $buildExe
+          Push-Location (Join-Path $env:GITHUB_WORKSPACE 'brain-server')
+          node --import tsx tests/fixtures/prepare-v30-desktop-db.ts $env:OMNI_E2E_LEGACY_DB_PATH
+          if ($LASTEXITCODE -ne 0) { throw 'Preparing the synthetic v30 database fixture failed.' }
+          Pop-Location
+          Push-Location (Join-Path $env:GITHUB_WORKSPACE 'desktop-daemon')
+          npm run e2e:installed:ci
+          if ($LASTEXITCODE -ne 0) { throw 'The installed-MSI product journey failed.' }
+          Pop-Location
+      - name: Upload sanitized MSI acceptance evidence and UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installed-product-acceptance
+          path: |
+            ${{ runner.temp }}/omni-installed-windows-e2e/windows-msi-install.json
+            ${{ runner.temp }}/omni-installed-windows-e2e/evidence/*.png
+            ${{ runner.temp }}/omni-installed-windows-e2e/evidence/*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  windows-browser-capture:
+    name: Windows browser capture fixture acceptance
+    runs-on: windows-2022
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            browser-extension/package-lock.json
+            brain-server/package-lock.json
+      - name: Install Brain dependencies
+        run: npm ci
+        working-directory: brain-server
+      - name: Build the Brain Server
+        run: npm run build
+        working-directory: brain-server
+      - name: Install browser-extension dependencies
+        run: npm ci
+        working-directory: browser-extension
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      - name: Install a temporary Chromium test runtime
+        run: npm exec playwright -- install chromium
+        working-directory: browser-extension
+      - name: Build and test browser capture with local synthetic content
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          npm test
+          if ($LASTEXITCODE -ne 0) { throw 'Browser extension unit tests failed.' }
+          npm run build
+          if ($LASTEXITCODE -ne 0) { throw 'Browser extension build failed.' }
+          $evidenceDir = Join-Path $env:RUNNER_TEMP 'omni-browser-capture-e2e'
+          $env:OMNI_BROWSER_EVIDENCE_DIR = $evidenceDir
+          $env:OMNI_CHROME_PATH = node -e "process.stdout.write(require('playwright').chromium.executablePath())"
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $env:OMNI_CHROME_PATH)) {
+            throw 'The installed Playwright Chromium test runtime could not be located.'
+          }
+          npm run e2e:browser:ci
+          if ($LASTEXITCODE -ne 0) { throw 'Windows browser-capture fixture acceptance failed.' }
+        working-directory: browser-extension
+      - name: Upload sanitized browser capture screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-browser-capture-fixture
+          path: |
+            ${{ runner.temp }}/omni-browser-capture-e2e/15-browser-*.png
+            ${{ runner.temp }}/omni-browser-capture-e2e/browser-capture-e2e-results.json
+          if-no-files-found: ignore
+          retention-days: 14

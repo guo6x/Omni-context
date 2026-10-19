@@ -21,6 +21,8 @@ export interface MergeCandidate {
 
 export interface ResolutionResult {
   entitiesToCreate: Entity[];
+  /** Completed writer calls, excluded from planned creates; an outer transaction may still roll them back. */
+  persistedEntities: Entity[];
   entitiesToUpdate: Array<{
     id: string;
     name: string;
@@ -44,6 +46,13 @@ export interface ResolutionResult {
     rejected: number;
     rejected_relationships: number;
   };
+}
+
+export interface ResolveEntitiesOptions {
+  /** Optional persistence boundary; existing callers retain their transaction semantics. */
+  persistEntity?: (entity: Entity) => Promise<Entity>;
+  /** Called synchronously after the writer resolves, before later work can fail; not an outer-commit hook. */
+  onEntityPersisted?: (entity: Entity) => void;
 }
 
 const AUTO_SEMANTIC_TYPES = new Set<EntityType>(['tool', 'architecture_pattern']);
@@ -258,6 +267,7 @@ export async function resolveEntities(
   relationships: Relationship[],
   db: Database,
   embeddingService?: EmbeddingService,
+  options: ResolveEntitiesOptions = {},
 ): Promise<ResolutionResult> {
   const localIdMap: Record<string, string> = {};
   const batch: Entity[] = [];
@@ -290,6 +300,13 @@ export async function resolveEntities(
   const finalIdMap: Record<string, string> = {};
   const mergeCandidates: MergeCandidate[] = [];
   const queuedEntityIds = new Set<string>();
+  const persistedEntities: Entity[] = [];
+  const persistForReview = async (entity: Entity): Promise<void> => {
+    const saved = await (options.persistEntity ? options.persistEntity(entity) : db.addEntity(entity));
+    persistedEntities.push(saved);
+    options.onEntityPersisted?.(saved);
+    queuedEntityIds.add(entity.id);
+  };
 
   for (const entity of batch) {
     const candidates = [
@@ -305,14 +322,12 @@ export async function resolveEntities(
     if (exact) {
       if (NEVER_AUTO_MERGE_TYPES.has(entity.type)) {
         if (!exact.isNew) {
-          await db.addEntity(entity);
-          queuedEntityIds.add(entity.id);
+          await persistForReview(entity);
           mergeCandidates.push(await queueCandidate(db, entity, exact, 1, 'exact_name_manual_only'));
         }
       } else if (CONTEXT_GATED_TYPES.has(entity.type) && !contextsCompatible(entity, exact)) {
         if (!exact.isNew) {
-          await db.addEntity(entity);
-          queuedEntityIds.add(entity.id);
+          await persistForReview(entity);
           mergeCandidates.push(await queueCandidate(db, entity, exact, 1, 'exact_name_context_mismatch'));
         }
       } else {
@@ -339,8 +354,7 @@ export async function resolveEntities(
         mergeReason = 'type_specific_semantic_match';
         mergeSimilarity = bestSimilarity;
       } else if (best && bestSimilarity >= REVIEW_SIMILARITY && !best.isNew) {
-        await db.addEntity(entity);
-        queuedEntityIds.add(entity.id);
+        await persistForReview(entity);
         mergeCandidates.push(await queueCandidate(db, entity, best, bestSimilarity, 'semantic_review_required'));
       }
     }
@@ -440,6 +454,7 @@ export async function resolveEntities(
 
   return {
     entitiesToCreate: [...newEntities, ...aliases],
+    persistedEntities,
     entitiesToUpdate: [...updates.values()],
     relationshipsToCreate,
     idMap: resolvedIdMap,

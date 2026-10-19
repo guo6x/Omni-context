@@ -1,21 +1,82 @@
 const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
 const { spawn, spawnSync } = require('node:child_process');
+const dgram = require('node:dgram');
 const fs = require('node:fs');
 const http = require('node:http');
+const net = require('node:net');
 const path = require('node:path');
 const { chromium } = require('playwright');
 
 const installDir = process.env.OMNI_E2E_INSTALL_DIR;
 const profileDir = process.env.OMNI_E2E_PROFILE_DIR;
 const evidenceDir = process.env.OMNI_E2E_EVIDENCE_DIR;
-if (!installDir || !profileDir || !evidenceDir) {
-  throw new Error('OMNI_E2E_INSTALL_DIR, OMNI_E2E_PROFILE_DIR and OMNI_E2E_EVIDENCE_DIR are required');
+const runnerTemp = process.env.RUNNER_TEMP;
+const e2eRoot = process.env.OMNI_E2E_ROOT;
+const msiPath = process.env.OMNI_E2E_MSI_PATH;
+const buildExecutable = process.env.OMNI_E2E_BUILD_EXE_PATH;
+const installRecordPath = process.env.OMNI_E2E_INSTALL_RECORD_PATH;
+const legacyDatabasePath = process.env.OMNI_E2E_LEGACY_DB_PATH;
+function isChildPath(parent, target) {
+  const relative = path.relative(path.resolve(parent), path.resolve(target));
+  return relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+}
+if (process.env.GITHUB_ACTIONS !== 'true') {
+  throw new Error('This test may only run on a disposable GitHub-hosted Windows runner');
+}
+if (!installDir || !profileDir || !evidenceDir || !runnerTemp || !e2eRoot
+  || !msiPath || !buildExecutable || !installRecordPath || !legacyDatabasePath) {
+  throw new Error('This test requires MSI provenance and isolated RUNNER_TEMP paths from the Windows CI job');
+}
+if (!isChildPath(runnerTemp, e2eRoot) || !isChildPath(e2eRoot, profileDir)
+  || !isChildPath(e2eRoot, evidenceDir) || !isChildPath(e2eRoot, installRecordPath)
+  || !isChildPath(e2eRoot, legacyDatabasePath)) {
+  throw new Error('Refusing to clean a profile or write evidence outside the unique runner temporary directory');
 }
 const executable = path.join(installDir, 'Omni-Context.exe');
 const fixturePath = path.join(evidenceDir, '15-windows-ui-fixture.txt');
 const exportPath = path.join(evidenceDir, '15-windows-export.json');
-const cdpPort = 9223;
-const mockPort = 3413;
+let brainPort;
+let cdpPort;
+let mockPort;
+let udpPort;
+const completedChecks = [];
+
+function pass(check) {
+  completedChecks.push(check);
+  console.log(`${check}=PASS`);
+}
+
+function sha256File(filePath) {
+  return createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+function verifyInstalledMsiProvenance() {
+  assert.ok(fs.existsSync(msiPath), 'the MSI used for installation is unavailable');
+  assert.ok(fs.existsSync(buildExecutable), 'the build output executable is unavailable');
+  assert.ok(fs.existsSync(installRecordPath), 'Windows Installer registry evidence is unavailable');
+  const record = JSON.parse(fs.readFileSync(installRecordPath, 'utf8'));
+  const msiHash = sha256File(msiPath);
+  const builtHash = sha256File(buildExecutable);
+  const installedHash = sha256File(executable);
+  assert.equal(record.evidence_kind, 'UNSIGNED_PR_MSI_INSTALLED_WINDOWS_FIXTURE_ACCEPTANCE');
+  assert.equal(record.source_commit, process.env.GITHUB_SHA);
+  assert.equal(record.pull_request_head_sha, process.env.OMNI_E2E_PR_HEAD_SHA);
+  assert.equal(record.install_dir && path.resolve(record.install_dir), path.resolve(installDir));
+  assert.equal(record.installed_exe && path.resolve(record.installed_exe), path.resolve(executable));
+  assert.equal(record.installed_from_windows_installer, true);
+  assert.equal(record.registry_product_code_matches_msi, true);
+  assert.equal(record.msi_product_name, 'Omni-Context');
+  assert.ok(typeof record.msi_product_version === 'string' && record.msi_product_version.length > 0);
+  assert.equal(record.installed_exe_matches_build_exe, true);
+  assert.equal(record.product_code, process.env.OMNI_E2E_PRODUCT_CODE);
+  assert.equal(record.msi_sha256, msiHash);
+  assert.equal(record.build_exe_sha256, builtHash);
+  assert.equal(record.installed_exe_sha256, installedHash);
+  assert.equal(installedHash, builtHash, 'the installed executable differs from the built MSI payload');
+  assert.ok(record.registry_key && /^HKLM\\/i.test(record.registry_key), 'MSI registry install record must be machine-scoped');
+  pass('installed-msi-registry-and-binary-provenance');
+}
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -31,6 +92,78 @@ async function waitFor(predicate, timeoutMs = 90_000) {
   throw new Error(`condition timed out after ${timeoutMs}ms`);
 }
 
+async function reserveLoopbackPort(transport = 'tcp') {
+  if (transport === 'udp') {
+    const socket = dgram.createSocket('udp4');
+    await new Promise((resolve, reject) => {
+      socket.once('error', reject);
+      socket.bind(0, '127.0.0.1', resolve);
+    });
+    const { port } = socket.address();
+    await new Promise((resolve) => socket.close(resolve));
+    assert.ok(port > 0, 'failed to reserve a loopback UDP test port');
+    return port;
+  }
+  const server = net.createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const address = server.address();
+  const port = address && typeof address === 'object' ? address.port : 0;
+  await new Promise((resolve) => server.close(resolve));
+  assert.ok(port > 0, 'failed to reserve a loopback test port');
+  return port;
+}
+
+async function initializePorts() {
+  brainPort = await reserveLoopbackPort();
+  cdpPort = await reserveLoopbackPort();
+  mockPort = await reserveLoopbackPort();
+  udpPort = await reserveLoopbackPort('udp');
+}
+
+function fixtureApiUrl(route) {
+  return `http://127.0.0.1:${brainPort}${route}`;
+}
+
+function readInstalledAppToken() {
+  const tokenPath = path.join(profileDir, 'Local', 'omni-context', 'local-token.txt');
+  const token = fs.readFileSync(tokenPath, 'utf8').trim();
+  assert.ok(token.length >= 32, 'installed app did not create its local authorization token');
+  return token;
+}
+
+function getWindowsRuntimeEnvironment() {
+  const allowed = [
+    'PATH', 'SYSTEMROOT', 'WINDIR', 'TEMP', 'TMP', 'USERPROFILE', 'ProgramFiles',
+    'ProgramFiles(x86)', 'ProgramData', 'PATHEXT', 'COMSPEC', 'PROCESSOR_ARCHITECTURE',
+  ];
+  return Object.fromEntries(allowed
+    .filter((name) => typeof process.env[name] === 'string')
+    .map((name) => [name, process.env[name]]));
+}
+
+async function installWindowBounds(pid, width, height) {
+  assert.ok(Number.isInteger(pid) && pid > 0);
+  assert.ok(width >= 390 && width <= 1600 && height >= 480 && height <= 1200);
+  const script = [
+    'Add-Type -TypeDefinition @"',
+    'using System; using System.Runtime.InteropServices; public static class OmniWindowBounds {',
+    '[DllImport("user32.dll", SetLastError=true)] public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);',
+    '}',
+    '"@',
+    `$process = Get-Process -Id ${pid} -ErrorAction Stop`,
+    'if ($process.MainWindowHandle -eq 0) { throw "Installed main window handle is unavailable" }',
+    `[OmniWindowBounds]::SetWindowPos($process.MainWindowHandle, [IntPtr]::Zero, 80, 80, ${width}, ${height}, 0x0040) | Out-Null`,
+  ].join('\n');
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+    windowsHide: true,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, `native installed-window resize failed: ${result.stderr || result.stdout}`);
+}
+
 function stopTree(pid) {
   if (!pid) return;
   spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
@@ -41,7 +174,7 @@ function stopTree(pid) {
   }
   // The packaged desktop process can leave its Brain child alive after the
   // WebView exits.  This profile is unique to the E2E run, so its pid file is
-  // the narrow ownership handle needed to release port 3001 before restart.
+  // the narrow ownership handle needed to release the Brain process before restart.
   try {
     const pidFile = path.join(profileDir, 'Local', 'omni-context', 'data', 'brain-server.pid');
     const brainPid = Number(fs.readFileSync(pidFile, 'utf8').trim());
@@ -76,6 +209,14 @@ function stopTree(pid) {
   }
 }
 
+function verifyTrayAction(action) {
+  const script = path.join(__dirname, 'scripts', 'verify-installed-tray.ps1');
+  const result = spawnSync('powershell.exe', [
+    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, '-Action', action,
+  ], { windowsHide: true, encoding: 'utf8' });
+  assert.equal(result.status, 0, `installed system-tray ${action} failed: ${result.stderr || result.stdout}`);
+}
+
 function mockResponse(request) {
   const messages = Array.isArray(request.messages) ? request.messages : [];
   const system = String(messages.find((message) => message.role === 'system')?.content || '');
@@ -83,7 +224,7 @@ function mockResponse(request) {
   if (system.includes('information extractor for a knowledge graph')) {
     return JSON.stringify({
       entities: [
-        { name: 'Project Aurora', type: 'project', description: 'A local-first memory project used by the installed E2E.' },
+        { name: 'Project Aurora', type: 'project', description: 'Project Aurora currently uses Option A for its local-first architecture. A local-first memory fixture used by the installed E2E.' },
         { name: 'Option A', type: 'concept', description: 'The first candidate architecture.' },
       ],
       facts: [{
@@ -111,6 +252,14 @@ function mockResponse(request) {
 }
 
 async function startMock() {
+  const state = {
+    disconnectExtractors: false,
+    holdNextExtraction: false,
+    disconnectedRequests: 0,
+    heldRequests: 0,
+    extractionCalls: 0,
+    askCalls: 0,
+  };
   const server = http.createServer((req, res) => {
     res.setHeader('Content-Type', 'application/json');
     if (req.url === '/v1/models') {
@@ -121,7 +270,25 @@ async function startMock() {
       let raw = '';
       req.on('data', (chunk) => { raw += chunk; });
       req.on('end', () => {
-        const request = JSON.parse(raw || '{}');
+        let request;
+        try { request = JSON.parse(raw || '{}'); }
+        catch { res.statusCode = 400; res.end(JSON.stringify({ error: 'invalid fixture payload' })); return; }
+        const system = String(request.messages?.find((message) => message.role === 'system')?.content || '');
+        const isExtraction = system.includes('information extractor for a knowledge graph');
+        if (isExtraction && state.disconnectExtractors) {
+          state.disconnectedRequests++;
+          req.socket.destroy();
+          return;
+        }
+        if (isExtraction && state.holdNextExtraction) {
+          state.holdNextExtraction = false;
+          state.heldRequests++;
+          // The installed process is intentionally stopped by the test while
+          // this loopback request is pending, modeling an interrupted import.
+          return;
+        }
+        if (isExtraction) state.extractionCalls++;
+        else state.askCalls++;
         res.end(JSON.stringify({
           choices: [{ finish_reason: 'stop', message: { content: mockResponse(request) } }],
         }));
@@ -135,16 +302,24 @@ async function startMock() {
     server.once('error', reject);
     server.listen(mockPort, '127.0.0.1', resolve);
   });
-  return server;
+  return {
+    server,
+    state,
+    setDisconnected(value) { state.disconnectExtractors = Boolean(value); },
+    holdNext() { state.holdNextExtraction = true; },
+  };
 }
 
 async function startInstalledApp() {
   const child = spawn(executable, [], {
     env: {
-      ...process.env,
+      ...getWindowsRuntimeEnvironment(),
       LOCALAPPDATA: path.join(profileDir, 'Local'),
       APPDATA: path.join(profileDir, 'Roaming'),
-      OMNI_UDP_BIND: '127.0.0.1:19090',
+      TEMP: path.join(e2eRoot, 'temp'),
+      TMP: path.join(e2eRoot, 'temp'),
+      OMNI_UDP_BIND: `127.0.0.1:${udpPort}`,
+      OMNI_BRAIN_PORT: String(brainPort),
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${cdpPort}`,
       LLM_API_URL: `http://127.0.0.1:${mockPort}/v1`,
       LLM_MODEL: 'omni-installed-e2e-mock',
@@ -153,13 +328,19 @@ async function startInstalledApp() {
     stdio: 'ignore',
     windowsHide: false,
   });
-  await waitFor(async () => {
-    const [health, cdp] = await Promise.all([
-      fetch('http://127.0.0.1:3001/health').then((response) => response.ok),
-      fetch(`http://127.0.0.1:${cdpPort}/json/version`).then((response) => response.ok),
-    ]);
-    return health && cdp;
-  });
+  try {
+    await waitFor(async () => {
+      if (child.exitCode !== null) return false;
+      const [health, cdp] = await Promise.all([
+        fetch(fixtureApiUrl('/health')).then((response) => response.ok),
+        fetch(`http://127.0.0.1:${cdpPort}/json/version`).then((response) => response.ok),
+      ]);
+      return health && cdp;
+    });
+  } catch (error) {
+    stopTree(child.pid);
+    throw error;
+  }
   return child;
 }
 
@@ -181,27 +362,88 @@ async function closeConnection(browser) {
   await browser.close().catch(() => {});
 }
 
+function trackUploadSubmissions(page, getCount) {
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/ingest/file') getCount.increment();
+  });
+}
+
 async function run() {
-  fs.mkdirSync(evidenceDir, { recursive: true });
-  fs.rmSync(profileDir, { recursive: true, force: true });
-  fs.mkdirSync(path.join(profileDir, 'Local'), { recursive: true });
+  await initializePorts();
+  assert.ok(fs.existsSync(executable), `MSI-installed executable not found: ${executable}`);
+  verifyInstalledMsiProvenance();
+  fs.mkdirSync(e2eRoot, { recursive: true });
+  assert.ok(!fs.existsSync(profileDir), 'refusing to replace an existing E2E profile directory');
+  assert.ok(!fs.existsSync(evidenceDir), 'refusing to replace an existing E2E evidence directory');
+  fs.mkdirSync(evidenceDir, { recursive: false });
+  fs.mkdirSync(path.join(e2eRoot, 'temp'), { recursive: true });
+  const localDataDir = path.join(profileDir, 'Local', 'omni-context', 'data');
+  fs.mkdirSync(localDataDir, { recursive: true });
   fs.mkdirSync(path.join(profileDir, 'Roaming'), { recursive: true });
+  assert.ok(fs.existsSync(legacyDatabasePath), 'synthetic v30 database fixture is unavailable');
+  const installedDatabasePath = path.join(localDataDir, 'omni-context.db');
+  assert.ok(!fs.existsSync(installedDatabasePath), 'refusing to overwrite the isolated installed-app database');
+  fs.copyFileSync(legacyDatabasePath, installedDatabasePath, fs.constants.COPYFILE_EXCL);
+  pass('synthetic-v30-database-staged-in-isolated-profile');
+  const interruptedFixturePath = path.join(evidenceDir, '15-windows-interrupted-fixture.txt');
   fs.writeFileSync(
     fixturePath,
-    'Project Aurora currently uses Option A for its local-first architecture. Option B remains the revision candidate.\n',
+    'E2E_RECOVERY_OUTAGE Project Aurora currently uses Option A for its local-first architecture. Option B remains the revision candidate.\n',
     'utf8',
   );
-  fs.rmSync(exportPath, { force: true });
-
+  fs.writeFileSync(interruptedFixturePath, 'E2E_HOLD_PENDING_IMPORT A controlled in-progress import used only for restart-recovery verification.\n', 'utf8');
   const mock = await startMock();
+  const uploadSubmissions = { value: 0, increment() { this.value++; } };
   let app = null;
   let browser = null;
   try {
     app = await startInstalledApp();
+    const localToken = readInstalledAppToken();
+    const unauthenticated = await fetch(fixtureApiUrl('/api/entities'));
+    assert.ok([401, 403].includes(unauthenticated.status), `unauthenticated local request returned ${unauthenticated.status}`);
+    const authenticated = await fetch(fixtureApiUrl('/api/entities'), { headers: { Authorization: `Bearer ${localToken}` } });
+    assert.equal(authenticated.status, 200, 'installed local token did not authorize the local API');
+    pass('installed-local-api-authorization');
+
+    const unauthenticatedMcp = await fetch(fixtureApiUrl('/mcp'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 'unauthenticated-list', method: 'tools/list', params: {} }),
+    });
+    assert.equal(unauthenticatedMcp.status, 401, 'MCP accepted a request without local authorization');
+    const mcpHeaders = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localToken}`,
+    };
+    const mcpListResponse = await fetch(fixtureApiUrl('/mcp'), {
+      method: 'POST',
+      headers: mcpHeaders,
+      body: JSON.stringify({ jsonrpc: '2.0', id: 'authorized-list', method: 'tools/list', params: {} }),
+    });
+    assert.equal(mcpListResponse.status, 200);
+    const mcpList = await mcpListResponse.json();
+    const mcpTools = mcpList.result?.tools || [];
+    assert.ok(mcpTools.some((tool) => tool.name === 'get_entity'), 'authorized MCP tool list omitted get_entity');
+    assert.ok(!mcpTools.some((tool) => tool.name.startsWith('agent_')), 'ordinary local authorization exposed Agent Pilot tools');
+    const legacyReadResponse = await fetch(fixtureApiUrl('/mcp'), {
+      method: 'POST',
+      headers: mcpHeaders,
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 'legacy-read', method: 'tools/call',
+        params: { name: 'get_entity', arguments: { id: 'legacy-v30-installed-fixture' } },
+      }),
+    });
+    assert.equal(legacyReadResponse.status, 200);
+    const legacyRead = await legacyReadResponse.json();
+    assert.ok(JSON.stringify(legacyRead.result).includes('legacy-v30-installed-fixture'), 'installed MCP could not read the preserved v30 record');
+    assert.ok(JSON.stringify(legacyRead.result).includes('Synthetic data from the pre-receipt desktop database.'), 'installed MCP returned unexpected legacy data');
+    pass('installed-mcp-auth-readonly-tools-and-v30-migration');
+
     let connection = await connectMainPage();
     browser = connection.browser;
     let page = connection.page;
     page.on('dialog', (dialog) => dialog.accept());
+    trackUploadSubmissions(page, uploadSubmissions);
 
     await page.getByRole('button', { name: /^设置$|^Settings$/ }).click();
     await page.getByRole('button', { name: /大模型配置|LLM Provider|模型服务/i }).click();
@@ -213,7 +455,7 @@ async function run() {
     await page.getByText(/连接成功|Connection successful/i).last().waitFor({ timeout: 30_000 });
     const settingsHeading = page.getByRole('heading', { name: /^设置$|^Settings$/ });
     await settingsHeading.locator('..').locator('..').locator('button').click();
-    console.log('installed-ui-local-llm-config=PASS');
+    pass('installed-ui-local-llm-config');
 
     const demo = page.getByRole('button', { name: /加载示例图谱|Onboarding Demo/ });
     if (await demo.isVisible().catch(() => false)) {
@@ -237,26 +479,32 @@ async function run() {
       );
       await demo.waitFor({ state: 'hidden', timeout: 30_000 }).catch(() => {});
     }
-    console.log('installed-ui-launch-onboarding=PASS');
+    pass('installed-ui-launch-onboarding');
 
     await page.getByRole('button', { name: /上传文件|Upload file/i }).click();
     const uploadInput = page.locator('input[type="file"]').first();
+    mock.setDisconnected(true);
     await uploadInput.setInputFiles(fixturePath);
-    const uploadTask = page.locator('li').filter({ hasText: path.basename(fixturePath) });
-    await uploadTask.waitFor({ timeout: 20_000 });
-    await page.waitForFunction(
-      (filename) => {
-        const item = [...document.querySelectorAll('li')].find((node) => node.textContent?.includes(filename));
-        if (!item) return false;
-        if (item.querySelector('svg[class*="text-red-400"]')) {
-          throw new Error(`Import failed: ${item.textContent}`);
-        }
-        return Boolean(item.querySelector('svg[class*="text-green-400"]'));
-      },
-      path.basename(fixturePath),
-      { timeout: 90_000 },
-    );
-    console.log('installed-ui-import=PASS');
+    await waitFor(() => uploadSubmissions.value === 1, 20_000);
+    await uploadInput.setInputFiles(fixturePath);
+    await page.getByRole('status').filter({ hasText: /已忽略 1 个重复文件/ }).waitFor({ timeout: 20_000 });
+    assert.equal(uploadSubmissions.value, 1, 'duplicate selection submitted a second import request');
+    const failedUpload = page.locator('ul[aria-label="导入任务"] li').filter({ hasText: path.basename(fixturePath) }).first();
+    await failedUpload.getByRole('button', { name: /已核对记忆库，允许重新选择/ }).waitFor({ timeout: 90_000 });
+    assert.ok(mock.state.disconnectedRequests > 0, 'the loopback provider outage did not interrupt extraction');
+    await page.screenshot({ path: path.join(evidenceDir, '15-windows-import-failure-recovery.png'), fullPage: true });
+    pass('installed-ui-import-outage-and-duplicate-guard');
+
+    mock.setDisconnected(false);
+    await failedUpload.getByRole('button', { name: /已核对记忆库，允许重新选择/ }).click();
+    await uploadInput.setInputFiles(fixturePath);
+    await waitFor(() => uploadSubmissions.value === 2, 20_000);
+    const completedUpload = page.locator('ul[aria-label="导入任务"] li[data-status="success"]')
+      .filter({ hasText: path.basename(fixturePath) }).first();
+    await completedUpload.waitFor({ timeout: 90_000 });
+    pass('installed-ui-explicit-import-recovery');
+
+    const uploadTask = completedUpload;
     const uploadOverlay = page.locator('div.absolute.inset-0.z-30').filter({ has: uploadTask });
     await uploadOverlay.getByRole('button', { name: 'close' }).click();
     await uploadOverlay.waitFor({ state: 'hidden' });
@@ -265,13 +513,80 @@ async function run() {
     await search.fill('Project Aurora');
     await search.press('Enter');
     await page.getByText('Project Aurora', { exact: true }).first().waitFor({ timeout: 30_000 });
-    console.log('installed-ui-search=PASS');
+    pass('installed-ui-search');
 
     const ask = page.locator('input[placeholder*="问问你的大脑"]');
     await ask.fill('What is Project Aurora?');
     await ask.press('Enter');
     await page.getByText('Project Aurora is grounded in the imported local-first fixture.', { exact: false }).waitFor({ timeout: 60_000 });
-    console.log('installed-ui-qa=PASS');
+    pass('installed-ui-qa');
+
+    const citation = page.getByTestId('ask-source-citation').first();
+    await citation.waitFor({ timeout: 30_000 });
+    const citedId = await citation.getAttribute('data-source-id');
+    assert.match(citedId || '', /^[0-9a-f-]{36}$/i, 'Ask citation did not carry a persistent entity ID');
+    await citation.click();
+    const sourceDialog = page.getByTestId('ask-source-dialog');
+    await sourceDialog.waitFor({ timeout: 20_000 });
+    await waitFor(async () => (await sourceDialog.getAttribute('data-source-status')) === 'ready', 20_000);
+    assert.equal(await sourceDialog.getAttribute('data-source-id'), citedId);
+    assert.match(await sourceDialog.innerText(), /来源记忆|Source memory/);
+    assert.match(await sourceDialog.innerText(), /Project Aurora currently uses Option A/,
+      'source details did not match the imported fixture content');
+    await page.screenshot({ path: path.join(evidenceDir, '15-windows-source-verification.png'), fullPage: true });
+    await sourceDialog.getByRole('button', { name: /关闭来源详情|Close source details/i }).click();
+    pass('installed-ui-source-id-readback');
+
+    const followUp = page.getByTestId('ask-follow-input');
+    const asksBeforeFollowUp = mock.state.askCalls;
+    await followUp.fill('Can you restate what the imported source says?');
+    await followUp.press('Enter');
+    await page.getByText('Project Aurora is grounded in the imported local-first fixture.', { exact: false }).last().waitFor({ timeout: 60_000 });
+    assert.ok(mock.state.askCalls > asksBeforeFollowUp, 'continuous Ask did not reach the local MCP-backed answer path');
+    pass('installed-ui-continuous-ask');
+
+    await installWindowBounds(app.pid, 420, 540);
+    await waitFor(async () => page.evaluate(() => window.innerWidth <= 450 && window.innerHeight <= 600), 20_000);
+    const narrowLayout = await page.evaluate(() => ({
+      width: window.innerWidth,
+      height: window.innerHeight,
+      documentWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+    }));
+    assert.ok(narrowLayout.width <= 450 && narrowLayout.height <= 600, `native window did not enter narrow bounds: ${JSON.stringify(narrowLayout)}`);
+    assert.ok(narrowLayout.documentWidth <= narrowLayout.width + 2, `narrow layout has horizontal overflow: ${JSON.stringify(narrowLayout)}`);
+    await page.screenshot({ path: path.join(evidenceDir, '15-windows-native-narrow-layout.png'), fullPage: true });
+    await installWindowBounds(app.pid, 1400, 900);
+    await waitFor(async () => page.evaluate(() => window.innerWidth > 800), 20_000);
+    pass('installed-native-window-narrow-layout');
+
+    const mainContext = browser.contexts()[0];
+    await page.getByRole('button', { name: /弹出悬浮 HUD|Show floating HUD/i }).click();
+    const hudPage = await waitFor(async () => {
+      for (const candidate of mainContext.pages()) {
+        if (candidate === page) continue;
+        if (await candidate.getByRole('heading', { name: 'OMNI-CONTEXT', exact: true }).isVisible().catch(() => false)) return candidate;
+      }
+      return null;
+    }, 20_000);
+    await hudPage.getByRole('heading', { name: 'OMNI-CONTEXT', exact: true }).waitFor();
+    await hudPage.screenshot({ path: path.join(evidenceDir, '15-windows-installed-hud.png'), fullPage: true });
+    await hudPage.getByRole('button', { name: /隐藏悬浮 HUD|Hide floating HUD|Hide HUD/i }).click();
+    pass('installed-native-hud-window');
+
+    await page.evaluate(() => window.__TAURI__.window.appWindow.close());
+    await waitFor(async () => !(await page.evaluate(() => window.__TAURI__.window.appWindow.isVisible()).catch(() => true)), 20_000);
+    assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true, 'closing the main window stopped Brain instead of hiding to tray');
+    verifyTrayAction('left-click');
+    await waitFor(async () => page.evaluate(() => window.__TAURI__.window.appWindow.isVisible()), 20_000);
+    pass('installed-tray-icon-left-click-reopens-main-window');
+    await page.evaluate(() => window.__TAURI__.window.appWindow.close());
+    await waitFor(async () => !(await page.evaluate(() => window.__TAURI__.window.appWindow.isVisible()).catch(() => true)), 20_000);
+    verifyTrayAction('menu-show');
+    await waitFor(async () => page.evaluate(() => window.__TAURI__.window.appWindow.isVisible()), 20_000);
+    assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true,
+      'choosing Show Main Window from the tray menu stopped Brain');
+    pass('installed-tray-context-menu-show-main-window');
 
     await ask.fill('Should we choose Option A for Project Aurora?');
     await ask.press('Enter');
@@ -279,9 +594,8 @@ async function run() {
     const saveDecision = page.getByRole('button', { name: /我已决定|保存.*决|Save.*decision/i });
     await saveDecision.click();
     await page.getByText(/已存为决策|Saved as decision/i).last().waitFor({ timeout: 30_000 });
-    console.log('installed-ui-decision-a=PASS');
+    pass('installed-ui-decision-a');
 
-    const followUp = page.locator('input[placeholder*="继续讨论"], input[placeholder*="follow-up"]');
     await followUp.fill('Update: should we choose Option B instead?');
     await followUp.press('Enter');
     await page.getByText('Decision B: revise the plan and choose Option B.', { exact: false }).waitFor({ timeout: 60_000 });
@@ -289,7 +603,7 @@ async function run() {
     await relation.selectOption('revises');
     await page.getByRole('button', { name: /我已决定|保存.*决|Save.*decision/i }).click();
     await page.getByText(/已存为决策|Saved as decision/i).last().waitFor({ timeout: 30_000 });
-    console.log('installed-ui-decision-b-lineage=PASS');
+    pass('installed-ui-decision-b-lineage');
 
     await page.getByTitle(/更多|More/).click();
     await page.getByRole('button', { name: /决策复盘|Decision log/i }).click();
@@ -299,20 +613,21 @@ async function run() {
     const timelineText = await page.locator('body').innerText();
     assert.match(timelineText, /Decision A: keep Option A/);
     assert.match(timelineText, /Decision B: revise the plan/);
-    console.log('installed-ui-lineage-view=PASS');
+    pass('installed-ui-lineage-view');
 
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-before-restart.png'), fullPage: true });
     await closeConnection(browser);
     browser = null;
     stopTree(app.pid);
     app = null;
-    await waitFor(async () => fetch('http://127.0.0.1:3001/health').then(() => false).catch(() => true), 20_000);
+    await waitFor(async () => fetch(fixtureApiUrl('/health')).then(() => false).catch(() => true), 20_000);
 
     app = await startInstalledApp();
     connection = await connectMainPage();
     browser = connection.browser;
     page = connection.page;
     page.on('dialog', (dialog) => dialog.accept());
+    trackUploadSubmissions(page, uploadSubmissions);
     const restartSearch = page.locator('input[placeholder*="搜索节点"]');
     await page.waitForTimeout(3_000);
     await waitFor(async () => {
@@ -320,7 +635,72 @@ async function run() {
       await restartSearch.press('Enter');
       return page.getByText('Project Aurora', { exact: true }).first().isVisible();
     }, 60_000);
-    console.log('installed-ui-restart-persistence=PASS');
+    pass('installed-ui-restart-persistence');
+
+    mock.holdNext();
+    await page.getByRole('button', { name: /上传文件|Upload file/i }).click();
+    const interruptedInput = page.locator('input[type="file"]').first();
+    const interruptedResponsePromise = page.waitForResponse(
+      (response) => response.url().includes('/api/ingest/file') && response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await interruptedInput.setInputFiles(interruptedFixturePath);
+    const interruptedResponse = await interruptedResponsePromise;
+    assert.equal(interruptedResponse.ok(), true, `interrupted import submission failed: HTTP ${interruptedResponse.status()}`);
+    const interruptedJobId = (await interruptedResponse.json()).jobId;
+    assert.equal(typeof interruptedJobId, 'string');
+    await waitFor(() => mock.state.heldRequests === 1, 30_000);
+    assert.equal(uploadSubmissions.value, 3);
+    // Verify the application persisted only the opaque job ID, without injecting
+    // test credentials or source data into its local recovery record.
+    const recoveryRecords = await page.evaluate(() => JSON.parse(localStorage.getItem('omni-context.pending-import-jobs.v1') || '[]'));
+    assert.ok(Array.isArray(recoveryRecords));
+    const recoveryRecord = recoveryRecords.find((record) => record.owner === 'file-drop' && record.jobId === interruptedJobId);
+    assert.ok(recoveryRecord);
+    assert.deepEqual(Object.keys(recoveryRecord).sort(), ['jobId', 'kind', 'owner', 'savedAt']);
+    assert.doesNotMatch(JSON.stringify(recoveryRecord), /source|filename|credential|token|E2E_HOLD_PENDING_IMPORT/i);
+    const runningReceipt = await waitFor(async () => {
+      const response = await fetch(fixtureApiUrl(`/api/ingest/job/${encodeURIComponent(interruptedJobId)}`), {
+        headers: { Authorization: `Bearer ${localToken}` },
+      });
+      if (!response.ok) return null;
+      const snapshot = await response.json();
+      return snapshot.status === 'running' ? snapshot : null;
+    }, 30_000);
+    assert.equal(runningReceipt.stage, 'extracting');
+    await page.screenshot({ path: path.join(evidenceDir, '15-windows-before-interrupted-restart.png'), fullPage: true });
+
+    const extractionsBeforeRestart = mock.state.extractionCalls;
+    await closeConnection(browser);
+    browser = null;
+    stopTree(app.pid);
+    app = null;
+    await waitFor(async () => fetch(fixtureApiUrl('/health')).then(() => false).catch(() => true), 20_000);
+
+    app = await startInstalledApp();
+    connection = await connectMainPage();
+    browser = connection.browser;
+    page = connection.page;
+    page.on('dialog', (dialog) => dialog.accept());
+    trackUploadSubmissions(page, uploadSubmissions);
+    const restoredTask = page.getByRole('list', { name: '导入任务' }).locator('li').filter({ hasText: '已恢复的文件导入任务' }).first();
+    await restoredTask.getByRole('button', { name: /继续查询/ }).waitFor({ timeout: 30_000 });
+    await restoredTask.getByRole('button', { name: /继续查询/ }).click();
+    await restoredTask.waitFor({ state: 'visible' });
+    await page.getByRole('list', { name: '导入任务' }).locator('li[data-status="partial"]')
+      .filter({ hasText: '已恢复的文件导入任务' }).first().waitFor({ timeout: 30_000 });
+    const acknowledgement = restoredTask.getByRole('button', { name: /已核对记忆库，允许重新选择/ });
+    await acknowledgement.waitFor({ timeout: 30_000 });
+    assert.equal(uploadSubmissions.value, 3, 'reopening the app silently re-uploaded the interrupted file');
+    assert.equal(mock.state.extractionCalls, extractionsBeforeRestart, 'reopening the app replayed the interrupted source to the provider');
+    const recoveredReceipt = await fetch(fixtureApiUrl(`/api/ingest/job/${encodeURIComponent(interruptedJobId)}`), {
+      headers: { Authorization: `Bearer ${localToken}` },
+    }).then((response) => response.json());
+    assert.equal(recoveredReceipt.status, 'partial');
+    assert.equal(recoveredReceipt.stage, 'interrupted');
+    assert.equal(recoveredReceipt.error, 'This import was interrupted by an app restart. Review your library before importing again.');
+    await page.screenshot({ path: path.join(evidenceDir, '15-windows-interrupted-import-recovered.png'), fullPage: true });
+    pass('installed-ui-close-reopen-import-recovery-no-replay');
 
     await page.getByRole('button', { name: /^设置$|^Settings$/ }).click();
     await page.getByRole('button', { name: /数据管理|Data management/i }).click();
@@ -329,21 +709,47 @@ async function run() {
     const download = await downloadPromise;
     await download.saveAs(exportPath);
     assert.ok(fs.statSync(exportPath).size > 1000);
-    console.log('installed-ui-export=PASS');
+    pass('installed-ui-export');
 
     const restoreInput = page.locator('input[type="file"][accept*="json"]').last();
     await restoreInput.setInputFiles(exportPath);
     await page.getByText(/恢复成功|Restore succeeded/i).waitFor({ timeout: 60_000 });
-    console.log('installed-ui-restore=PASS');
+    pass('installed-ui-restore');
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-after-restore.png'), fullPage: true });
   } finally {
     if (browser) await closeConnection(browser);
     if (app) stopTree(app.pid);
-    await new Promise((resolve) => mock.close(resolve));
+    await new Promise((resolve) => mock.server.close(resolve));
   }
 }
 
-run().catch((error) => {
+function writeResult(status) {
+  if (!evidenceDir || !fs.existsSync(evidenceDir)) return;
+  const installRecord = JSON.parse(fs.readFileSync(installRecordPath, 'utf8'));
+  const report = {
+    evidence_kind: 'WINDOWS_INSTALLED_MSI_FIXTURE_E2E',
+    status,
+    source_commit: installRecord.source_commit,
+    pull_request_head_sha: installRecord.pull_request_head_sha,
+    msi_sha256: installRecord.msi_sha256,
+    build_exe_sha256: installRecord.build_exe_sha256,
+    installed_exe_sha256: installRecord.installed_exe_sha256,
+    product_code: installRecord.product_code,
+    completed_checks: completedChecks,
+    not_verified: [
+      'signed release installer and SmartScreen reputation',
+      'real third-party model provider quality',
+      'human usability study',
+    ],
+  };
+  fs.writeFileSync(path.join(evidenceDir, 'windows-installed-e2e-results.json'),
+    `${JSON.stringify(report, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+}
+
+run().then(() => {
+  writeResult('PASS');
+}).catch((error) => {
+  try { writeResult('FAIL'); } catch { /* preserve the original acceptance failure */ }
   console.error(error.stack || String(error));
   process.exitCode = 1;
 });

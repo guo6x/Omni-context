@@ -185,10 +185,12 @@ function mergeWithDefaults(stored: any): AppSettings {
 
 export async function syncLlmToBrainServer(llmProvider: { apiUrl: string; apiKey: string; model: string }) {
   try {
-    await apiFetch('/api/settings/llm', {
+    const response = await apiFetch('/api/settings/llm', {
       method: 'POST',
       body: JSON.stringify(llmProvider),
     });
+    // The background sync ignores the payload, but must still release its body.
+    await response.arrayBuffer();
   } catch {
     // brain-server 未就绪时静默失败
   }

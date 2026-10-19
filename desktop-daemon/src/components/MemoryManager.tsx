@@ -4,6 +4,21 @@ import { X, Upload, Trash2, Star, Search, RefreshCw, Database, FileUp, Copy, Boo
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { useToast } from '@/hooks/useToast';
+import { useTranslation } from '@/hooks/useTranslation';
+import { IngestJobError, pollIngestJob, summarizeIngestJob, type IngestSummary } from '@/lib/ingest-job';
+import {
+  clearPersistedImportAttempt, createImportRecoveryAttemptId,
+  getPendingImportJobs, persistImportJob, persistUncertainImport,
+} from '@/lib/import-job-recovery';
+import {
+  acknowledgeImportRecovery,
+  createImportSubmission,
+  fingerprintImportContent,
+  releaseImportContentReservation,
+  reserveImportContent,
+  settleImportOutcome,
+  updateImportContentReservation,
+} from '@/lib/import-submission';
 
 interface ReviewItem {
   id: string;
@@ -49,18 +64,23 @@ function sourceBadge(it: ReviewItem): { text: string; cls: string } {
 
 interface MemoryManagerProps {
   onClose: () => void;
+  onDataChanged?: () => void;
   initialType?: string;
   initialCoreOnly?: boolean;
   initialUnlinkedOnly?: boolean;
+  filterRequestId?: number;
 }
 
 export default function MemoryManager({
   onClose,
+  onDataChanged,
   initialType = '',
   initialCoreOnly = false,
   initialUnlinkedOnly = false,
+  filterRequestId = 0,
 }: MemoryManagerProps) {
   const toast = useToast();
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'browse' | 'import' | 'favorites'>('browse');
 
   // ── 浏览 ──
@@ -78,6 +98,28 @@ export default function MemoryManager({
   const [detailItem, setDetailItem] = useState<ReviewItem | null>(null);
   const [batchBusy, setBatchBusy] = useState(false);
   const [reviewSummary, setReviewSummary] = useState<ReviewTaskSummary | null>(null);
+  const mountedRef = useRef(true);
+  const loadControllerRef = useRef<AbortController | null>(null);
+  const importControllerRef = useRef<AbortController | null>(null);
+  const importRunRef = useRef(0);
+  const importBusyRef = useRef(false);
+  const pendingJobRef = useRef<string | null>(null);
+  const pendingAttemptRef = useRef<string | null>(null);
+  const pendingContentFingerprintRef = useRef<string | null>(null);
+  const acknowledgementRequiredRef = useRef(false);
+
+  // 外部定位只同步浏览筛选，不用 key 重挂整页，避免清掉尚未确认的导入任务。
+  useEffect(() => {
+    setType(initialType);
+    setCoreOnly(initialCoreOnly);
+    setUnlinkedOnly(initialUnlinkedOnly);
+    setSource('');
+    setQ('');
+    setDebouncedQ('');
+    setTab('browse');
+    setMergeFrom(null);
+    setDetailItem(null);
+  }, [initialType, initialCoreOnly, initialUnlinkedOnly, filterRequestId]);
 
   // 搜索 debounce：300ms 内连续输入只触发一次 API
   useEffect(() => {
@@ -85,15 +127,39 @@ export default function MemoryManager({
     return () => clearTimeout(t);
   }, [q]);
 
-  // 导入轮询定时器 ref，组件卸载时清理
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
+      mountedRef.current = false;
+      importRunRef.current++;
+      importControllerRef.current?.abort();
+      loadControllerRef.current?.abort();
     };
   }, []);
 
+  useEffect(() => {
+    const recoveries = getPendingImportJobs().filter((record) => record.owner === 'library');
+    const recovery = recoveries[0];
+    if (!recovery) return;
+    if (recovery.kind === 'job') {
+      pendingJobRef.current = recovery.jobId;
+      setResumeJobId(recovery.jobId);
+      setImportTone('warning');
+      setImportMsg('已恢复上次导入任务。继续查询只读取原任务，不会重新上传。');
+    } else {
+      pendingAttemptRef.current = recovery.attemptId;
+      acknowledgementRequiredRef.current = true;
+      setRequiresAcknowledgement(true);
+      setImportTone('warning');
+      setImportMsg('上次提交结果未确认，无法安全判断是否已收到。请先检查记忆库，再确认后才能重新导入。');
+    }
+  }, []);
+
   const load = useCallback(async () => {
+    if (!mountedRef.current) return;
+    loadControllerRef.current?.abort();
+    const controller = new AbortController();
+    loadControllerRef.current = controller;
     setLoading(true);
     try {
       const params = new URLSearchParams({ limit: '80' });
@@ -103,21 +169,26 @@ export default function MemoryManager({
       if (unlinkedOnly) params.set('unlinkedOnly', 'true');
       if (debouncedQ.trim()) params.set('q', debouncedQ.trim());
       const [r, c, review] = await Promise.all([
-        apiFetch(`/api/entities/review?${params.toString()}`),
-        apiFetch('/api/entities/sources'),
-        apiFetch(`/api/review/tasks?targetCoreCount=${CORE_TARGET_COUNT}`),
+        apiFetch(`/api/entities/review?${params.toString()}`, { signal: controller.signal }),
+        apiFetch('/api/entities/sources', { signal: controller.signal }),
+        apiFetch(`/api/review/tasks?targetCoreCount=${CORE_TARGET_COUNT}`, { signal: controller.signal }),
       ]);
-      const data = await r.json();
+      if (!r.ok || !c.ok) throw new Error('加载失败');
+      const [data, sourceCounts, tasks] = await Promise.all([r.json(), c.json(), review.ok ? review.json() : null]);
+      if (!mountedRef.current || controller.signal.aborted || loadControllerRef.current !== controller) return;
       setItems(data.items || []);
       setTotal(data.total || 0);
-      setCounts((await c.json()) || {});
-      if (review.ok) setReviewSummary(await review.json());
+      setCounts(sourceCounts || {});
+      if (tasks) setReviewSummary(tasks);
     } catch {
-      toast.error('加载失败');
+      if (mountedRef.current && !controller.signal.aborted && loadControllerRef.current === controller) toast.error('加载失败');
     } finally {
-      setLoading(false);
+      if (mountedRef.current && !controller.signal.aborted && loadControllerRef.current === controller) setLoading(false);
     }
   }, [source, type, coreOnly, unlinkedOnly, debouncedQ, toast]);
+
+  const importCallbacksRef = useRef({ load, onDataChanged, toast });
+  useEffect(() => { importCallbacksRef.current = { load, onDataChanged, toast }; }, [load, onDataChanged, toast]);
 
   useEffect(() => { if (tab === 'browse') load(); }, [tab, source, type, coreOnly, unlinkedOnly, debouncedQ, load]);
 
@@ -233,52 +304,235 @@ export default function MemoryManager({
   const [importing, setImporting] = useState(false);
   const [prog, setProg] = useState<{ done: number; total: number; entities: number } | null>(null);
   const [importMsg, setImportMsg] = useState('');
+  const [importTone, setImportTone] = useState<'neutral' | 'success' | 'warning' | 'error'>('neutral');
+  const [importSummary, setImportSummary] = useState<IngestSummary | null>(null);
+  const [resumeJobId, setResumeJobId] = useState<string | null>(null);
+  const [requiresAcknowledgement, setRequiresAcknowledgement] = useState(false);
 
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setImporting(true); setProg(null); setImportMsg('解析中…');
+  function isCurrentImport(run: number, controller: AbortController) {
+    return mountedRef.current && importRunRef.current === run && importControllerRef.current === controller;
+  }
+
+  function refreshImportData() {
+    const current = importCallbacksRef.current;
+    void current.load();
+    try { current.onDataChanged?.(); }
+    catch { current.toast.warning('界面刷新未完成', '请手动刷新记忆库，核对已保存的内容。'); }
+  }
+
+  async function watchImport(jobId: string, run: number, controller: AbortController) {
     try {
-      const text = await f.text();
-      const body: any = { text };
-      if (limit.trim() && Number(limit) > 0) body.maxConversations = Number(limit);
-      const r = await apiFetch('/api/import/chat', { method: 'POST', body: JSON.stringify(body) });
-      if (!r.ok) { setImportMsg('解析失败：' + (await r.text())); setImporting(false); return; }
-      const { jobId, platform, parsed, importing: imp } = await r.json();
-      setImportMsg(`识别为 ${platform} · 解析到 ${parsed} 段，正在抽取 ${imp} 段`);
-      poll(jobId);
-    } catch (err: any) {
-      setImportMsg('出错：' + (err?.message || err)); setImporting(false);
-    } finally {
-      if (fileRef.current) fileRef.current.value = '';
+      const job = await pollIngestJob(jobId, {
+        signal: controller.signal,
+        onProgress: (snapshot) => {
+          if (isCurrentImport(run, controller) && snapshot.importProgress) setProg(snapshot.importProgress);
+        },
+      });
+      if (!isCurrentImport(run, controller)) return;
+      const summary = summarizeIngestJob(job);
+      const units = summary.total > 0 ? `成功处理 ${summary.completed}/${summary.total} 段 · ` : '';
+      const saved = summary.countsKnown
+        ? `已保存 ${summary.entities} 条记忆 / ${summary.relationships} 条关系`
+        : '已保存数量暂时无法确认，请检查记忆库';
+      const failures = summary.failures > 0 ? ` · ${summary.failures} 项未完成` : '';
+      const coverage = summary.coverage !== undefined ? ` · 覆盖 ${Math.round(summary.coverage * 100)}%` : '';
+      const detail = `${units}${saved}${failures}${coverage}`;
+      const requiresAcknowledgement = settleImportOutcome(
+        summary.outcome, 'library', pendingContentFingerprintRef.current, jobId, pendingAttemptRef.current,
+      );
+      importBusyRef.current = false;
+      if (requiresAcknowledgement) {
+        pendingJobRef.current = jobId;
+        acknowledgementRequiredRef.current = true;
+        setRequiresAcknowledgement(true);
+      } else {
+        pendingJobRef.current = null;
+        pendingAttemptRef.current = null;
+        pendingContentFingerprintRef.current = null;
+        acknowledgementRequiredRef.current = false;
+        setRequiresAcknowledgement(false);
+      }
+      setImporting(false);
+      setResumeJobId(null);
+      setImportSummary(summary);
+      setProg(summary.countsKnown ? { done: summary.completed, total: summary.total, entities: summary.entities } : null);
+      const current = importCallbacksRef.current;
+
+      if (summary.outcome === 'success' || summary.outcome === 'partial') {
+        const partial = summary.outcome === 'partial';
+        setImportTone(partial ? 'warning' : 'success');
+        setImportMsg(`${partial ? '部分导入完成' : '导入完成'} · ${detail}${partial
+          ? `。${job.error ? `${job.error}。` : ''}已保存内容不会回滚。请先核对记忆库；确认后才能重新选择文件，不会自动重新上传。`
+          : ''}`);
+        if (partial) current.toast.warning('部分导入完成', job.error ? `${detail} · ${job.error}` : detail);
+        else current.toast.success('导入完成', detail);
+      } else if (summary.outcome === 'cancelled') {
+        setImportTone('warning');
+        setImportMsg(`导入已取消 · ${detail}。已保存内容不会回滚。请先核对记忆库；确认后才能重新选择文件，不会自动重新上传。`);
+        current.toast.info('导入已取消', saved);
+      } else {
+        setImportTone('error');
+        setImportMsg(`导入失败：${job.error || '处理未完成'} · ${detail}。已保存内容不会回滚。请先核对记忆库；确认后才能重新选择文件，不会自动重新上传。`);
+        current.toast.error('导入失败', job.error || '请先检查已保存的记忆，再决定是否重新导入。');
+      }
+      // Failed and cancelled tasks may also have persisted content before stopping.
+      refreshImportData();
+    } catch (error) {
+      if (!isCurrentImport(run, controller)) return;
+      if (error instanceof Error && error.name === 'AbortError') return;
+      const expired = error instanceof IngestJobError && error.code === 'expired';
+      const invalid = error instanceof IngestJobError && error.code === 'invalid';
+      const needsAcknowledgement = expired || invalid;
+      importBusyRef.current = false;
+      setImporting(false);
+      if (needsAcknowledgement) {
+        updateImportContentReservation(pendingContentFingerprintRef.current, 'library', { phase: 'uncertain' });
+      }
+      setImportTone('warning');
+      setResumeJobId(needsAcknowledgement ? null : jobId);
+      if (needsAcknowledgement) {
+        acknowledgementRequiredRef.current = true;
+        setRequiresAcknowledgement(true);
+        setProg(null);
+        refreshImportData();
+      }
+      setImportMsg(error instanceof IngestJobError && error.code === 'unauthorized'
+        ? '连接未授权。请重新连接桌面端后继续查询，后台导入可能仍在进行。'
+        : expired ? '任务状态已过期。已保存内容不会回滚，请先浏览记忆库，避免重复导入。'
+        : invalid ? '任务状态无效，无法确认导入结果。请先核对记忆库，再决定是否开始新的导入。'
+        : error instanceof IngestJobError && error.code === 'timeout'
+          ? '查询超时，后台导入可能仍在进行。继续查询原任务，不会重新上传。'
+          : '暂时无法读取任务状态，后台导入可能仍在进行。继续查询原任务，不会重新上传。');
     }
   }
 
-  function poll(jobId: string) {
-    // 清理上一次未完成的轮询（防重入）
-    if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
-    pollTimerRef.current = setInterval(async () => {
-      try {
-        const r = await apiFetch(`/api/ingest/job/${jobId}`);
-        const j = await r.json();
-        if (j.importProgress) setProg(j.importProgress);
-        if (j.status === 'success') {
-          if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
-          setImporting(false); setImportMsg('导入完成'); toast.success('导入完成');
-        } else if (j.status === 'failed' || j.status === 'cancelled') {
-          if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null; }
-          setImporting(false); setImportMsg('导入中断');
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f || importBusyRef.current || pendingJobRef.current || acknowledgementRequiredRef.current || !mountedRef.current) return;
+    importBusyRef.current = true;
+    const run = ++importRunRef.current;
+    const controller = new AbortController();
+    importControllerRef.current = controller;
+    setImporting(true); setProg(null); setImportSummary(null); setResumeJobId(null); setImportTone('neutral'); setImportMsg('解析中…');
+    let submissionUncertain = false;
+    let fingerprint: string | null = null;
+    const submission = createImportSubmission(controller);
+    try {
+      const bytes = await submission.wait(() => f.arrayBuffer());
+      fingerprint = await submission.wait(() => fingerprintImportContent(bytes));
+      if (!isCurrentImport(run, controller)) return;
+      const reservation = reserveImportContent(fingerprint, 'library');
+      if (!reservation.reserved) {
+        importBusyRef.current = false;
+        setImporting(false);
+        setImportTone('warning');
+        setImportMsg(reservation.reason === 'fingerprint-unavailable'
+          ? t('upload.fingerprint_unavailable')
+          : reservation.reason === 'recovery-required'
+            ? '检测到上次导入尚未恢复或核对，已暂停新的上传。请先处理已有任务；不会自动重新上传。'
+            : `相同内容已在${reservation.existing.owner === 'onboarding' ? '首次使用引导' : reservation.existing.owner === 'file-drop' ? '文件导入' : '记忆库导入'}中处理或待核对，已阻止重复上传。请回到原任务查看结果。`);
+        return;
+      }
+      pendingContentFingerprintRef.current = fingerprint;
+      const text = new TextDecoder('utf-8').decode(bytes);
+      const body = submission.prepare(() => {
+        const payload: { text: string; maxConversations?: number } = { text };
+        if (limit.trim() && Number(limit) > 0) payload.maxConversations = Number(limit);
+        return JSON.stringify(payload);
+      });
+      const r = await submission.wait(() => {
+        pendingAttemptRef.current = createImportRecoveryAttemptId();
+        if (!persistUncertainImport('library', pendingAttemptRef.current)) {
+          pendingAttemptRef.current = null;
+          throw new Error('无法保存恢复标记，为避免重复导入，本次未提交。请检查本地存储后重试。');
         }
-      } catch { /* keep polling */ }
-    }, 1500);
+        submissionUncertain = true;
+        return apiFetch('/api/import/chat', { method: 'POST', body, signal: controller.signal });
+      });
+      if (!r.ok) {
+        submissionUncertain = r.status >= 500;
+        if (!submissionUncertain && pendingAttemptRef.current) {
+          clearPersistedImportAttempt('library', pendingAttemptRef.current);
+          pendingAttemptRef.current = null;
+        }
+        throw new Error(await submission.wait(() => r.text()));
+      }
+      const { jobId, platform, parsed, importing: imp } = await submission.wait(() => r.json());
+      if (!isCurrentImport(run, controller)) return;
+      if (controller.signal.aborted || typeof jobId !== 'string' || !jobId) throw new Error('未收到有效任务编号');
+      submission.dispose();
+      pendingJobRef.current = jobId;
+      const recoverySaved = persistImportJob('library', jobId, pendingAttemptRef.current || undefined);
+      if (recoverySaved) pendingAttemptRef.current = null;
+      updateImportContentReservation(fingerprint, 'library', { phase: 'running', jobId });
+      setImportMsg(`识别为 ${platform} · 解析到 ${parsed} 段，正在抽取 ${imp} 段${recoverySaved ? '' : '。本地无法保存恢复记录，请勿关闭应用，直至任务结束并核对结果。'}`);
+      await watchImport(jobId, run, controller);
+    } catch (err) {
+      if (!isCurrentImport(run, controller)) return;
+      importBusyRef.current = false;
+      setImporting(false);
+      setImportTone(submissionUncertain ? 'warning' : 'error');
+      if (submissionUncertain) {
+        updateImportContentReservation(fingerprint, 'library', { phase: 'uncertain' });
+        acknowledgementRequiredRef.current = true;
+        setRequiresAcknowledgement(true);
+        refreshImportData();
+      } else {
+        releaseImportContentReservation(fingerprint, 'library');
+        if (pendingAttemptRef.current) clearPersistedImportAttempt('library', pendingAttemptRef.current);
+        pendingAttemptRef.current = null;
+        pendingContentFingerprintRef.current = null;
+      }
+      setImportMsg(submissionUncertain
+        ? '未能确认提交结果，后台可能已收到文件。请先浏览记忆库，避免重复导入。'
+        : submission.timedOut
+          ? '读取或准备文件已超过 30 秒，尚未提交。可以重新选择文件。'
+          : `导入失败：${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      submission.dispose();
+    }
+  }
+
+  function resumeImport() {
+    const jobId = pendingJobRef.current;
+    if (!jobId || importBusyRef.current || acknowledgementRequiredRef.current || !mountedRef.current) return;
+    importBusyRef.current = true;
+    const run = ++importRunRef.current;
+    importControllerRef.current?.abort();
+    const controller = new AbortController();
+    importControllerRef.current = controller;
+    setImporting(true);
+    setResumeJobId(null);
+    setImportTone('neutral');
+    setImportMsg('继续查询原任务，不会重新上传…');
+    void watchImport(jobId, run, controller);
+  }
+
+  function acknowledgeImportUncertainty() {
+    if (!acknowledgementRequiredRef.current || importBusyRef.current || !mountedRef.current) return;
+    importRunRef.current++;
+    importControllerRef.current?.abort();
+    const jobId = pendingJobRef.current;
+    pendingJobRef.current = null;
+    acknowledgeImportRecovery('library', pendingContentFingerprintRef.current, jobId, pendingAttemptRef.current);
+    pendingAttemptRef.current = null;
+    acknowledgementRequiredRef.current = false;
+    pendingContentFingerprintRef.current = null;
+    setRequiresAcknowledgement(false);
+    setResumeJobId(null);
+    setProg(null);
+    setImportSummary(null);
+    setImportTone('neutral');
+    setImportMsg('已确认核对记忆库。现在可以选择新文件，不会自动提交。');
   }
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)] shadow-2xl shadow-black/50" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--color-border)]">
-          <div className="flex items-center gap-2 text-[var(--color-fg)] font-semibold"><Database className="w-4 h-4 text-cyan-400" /> 记忆管理</div>
-          <button onClick={onClose} className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-accent)]/10 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
+          <h2 id="memory-manager-dialog-title" className="flex items-center gap-2 text-[var(--color-fg)] font-semibold"><Database className="w-4 h-4 text-cyan-400" /> 记忆管理</h2>
+          <button onClick={onClose} aria-label="关闭记忆管理" className="p-1.5 text-[var(--color-fgMuted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-accent)]/10 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex gap-1 px-5 pt-3">
@@ -414,26 +668,35 @@ export default function MemoryManager({
           <div className="p-5 overflow-y-auto">
             <div className="text-sm text-[var(--color-fg)] font-medium">从 AI 聊天记录导入</div>
             <div className="text-xs text-[var(--color-fgMuted)] mt-1 leading-relaxed">把你和 ChatGPT / Claude / Gemini 的历史对话变成大脑记忆。对话的原始日期会保留，所以"上个月想了啥"也能召回。</div>
-            <div onClick={() => !importing && fileRef.current?.click()}
-              className={`mt-4 border border-dashed border-[var(--color-border)] rounded-xl py-8 text-center transition-colors ${importing ? 'opacity-60' : 'cursor-pointer hover:bg-[var(--color-accent)]/5 hover:border-[var(--color-accent)]/50'}`}>
+            <button type="button" disabled={importing || Boolean(resumeJobId) || requiresAcknowledgement} onClick={() => fileRef.current?.click()}
+              className="mt-4 w-full border border-dashed border-[var(--color-border)] rounded-xl py-8 text-center transition-colors disabled:opacity-60 enabled:cursor-pointer enabled:hover:bg-[var(--color-accent)]/5 enabled:hover:border-[var(--color-accent)]/50">
               <FileUp className="w-6 h-6 mx-auto text-[var(--color-accent)] animate-pulse" />
-              <div className="text-sm mt-2 text-[var(--color-fg)] font-medium">{importing ? '处理中…' : '选择导出文件'}</div>
+              <div className="text-sm mt-2 text-[var(--color-fg)] font-medium">{importing ? '处理中…' : requiresAcknowledgement ? '导入结果待确认，请先核对记忆库' : resumeJobId ? '已有导入任务，请继续查询' : '选择导出文件'}</div>
               <div className="text-[11px] text-[var(--color-fgMuted)] mt-1">conversations.json / chat.html（ChatGPT/Claude） · My Activity（Gemini，HTML 或 JSON 都行）</div>
-            </div>
-            <input ref={fileRef} type="file" accept=".json,.html,.htm,application/json,text/html" className="hidden" onChange={onFile} />
+            </button>
+            <input ref={fileRef} type="file" accept=".json,.html,.htm,application/json,text/html" disabled={importing || Boolean(resumeJobId) || requiresAcknowledgement} className="hidden" onChange={onFile} />
             <div className="mt-4 flex items-center gap-2 text-xs text-[var(--color-fgMuted)]">
-              导入最近 <input value={limit} onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))} placeholder="全部"
+              导入最近 <input value={limit} disabled={importing || Boolean(resumeJobId) || requiresAcknowledgement} onChange={(e) => setLimit(e.target.value.replace(/\D/g, ''))} placeholder="全部"
                 className="w-16 text-center bg-[var(--color-bgSubtle)] border border-[var(--color-border)] rounded px-2 py-1 text-[var(--color-fg)] outline-none" /> 段（留空 = 全部）
             </div>
             {(importMsg || prog) && (
-              <div className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bgSubtle)]/50 p-3">
-                <div className="text-xs text-[var(--color-fg)]">{importMsg}</div>
-                {prog && (
+              <div role="status" aria-live="polite" data-import-outcome={importSummary?.outcome || (requiresAcknowledgement ? 'unconfirmed' : resumeJobId ? 'paused' : importTone === 'error' ? 'error' : 'pending')}
+                className={`mt-4 rounded-lg border p-3 ${importTone === 'warning' ? 'border-amber-500/30 bg-amber-500/5' : importTone === 'error' ? 'border-red-500/30 bg-red-500/5' : 'border-[var(--color-border)] bg-[var(--color-bgSubtle)]/50'}`}>
+                <div className={`text-xs leading-5 break-words ${importTone === 'warning' ? 'text-amber-300' : importTone === 'error' ? 'text-red-300' : 'text-[var(--color-fg)]'}`}>{importMsg}</div>
+                {prog && prog.total > 0 && (
                   <>
-                    <div className="text-xs text-[var(--color-fgMuted)] mt-1">抽取 <b className="text-[var(--color-fg)]">{prog.done}/{prog.total}</b> 段 · 已生成 <b className="text-[var(--color-accent)]">{prog.entities}</b> 条记忆</div>
-                    <div className="h-1.5 bg-[var(--color-bgSubtle)] rounded mt-2 overflow-hidden"><div className="h-full bg-gradient-to-r from-cyan-400 to-purple-500 animate-shimmer-fast" style={{ width: `${prog.total ? Math.round(prog.done / prog.total * 100) : 0}%` }} /></div>
+                    <div className="text-xs text-[var(--color-fgMuted)] mt-1">{importSummary ? '成功处理' : '已处理（含失败项）'} <b className="text-[var(--color-fg)]">{prog.done}/{prog.total}</b> 段 · 已保存 <b className="text-[var(--color-accent)]">{prog.entities}</b> 条记忆</div>
+                    <div className="h-1.5 bg-[var(--color-bgSubtle)] rounded mt-2 overflow-hidden"><div className={`h-full ${importTone === 'warning' || importTone === 'error' ? 'bg-amber-400' : 'bg-gradient-to-r from-cyan-400 to-purple-500'} ${importing ? 'animate-shimmer-fast' : ''}`} style={{ width: `${Math.max(0, Math.min(100, Math.round(prog.done / prog.total * 100)))}%` }} /></div>
                   </>
                 )}
+                {resumeJobId && <button type="button" onClick={resumeImport}
+                  className="mt-3 rounded-md border border-amber-500/40 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/10">
+                  继续查询任务状态
+                </button>}
+                {requiresAcknowledgement && <button type="button" onClick={acknowledgeImportUncertainty}
+                  className="mt-3 rounded-md border border-amber-500/40 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/10">
+                  已核对记忆库，允许重新选择
+                </button>}
               </div>
             )}
             <div className="text-[11px] text-[var(--color-fgMuted)] mt-4">每段对话会跑一次 LLM 抽取（用你配置的模型）。导入在后台进行，可关闭此窗口。</div>

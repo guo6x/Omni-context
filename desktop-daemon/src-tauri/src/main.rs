@@ -129,7 +129,9 @@ async fn main() {
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(quit);
 
-    let system_tray = SystemTray::new().with_menu(tray_menu);
+    let system_tray = SystemTray::new()
+        .with_menu(tray_menu)
+        .with_tooltip("Omni-Context");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_autostart::init(

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import ModalDialog from '@/components/ModalDialog';
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
@@ -31,19 +32,6 @@ export default function ConfirmDialog({
   const confirmText = confirmTextProp ?? t('confirm.confirm_text');
   const cancelText = cancelTextProp ?? t('confirm.cancel_text');
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !busy) {
-        onCancel();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, busy, onCancel]);
 
   // Reset busy state when dialog closes so it can be reused.
   useEffect(() => {
@@ -79,12 +67,11 @@ export default function ConfirmDialog({
       onClick={handleCancel}
       role="presentation"
     >
-      <div
+      <ModalDialog
+        active={isOpen}
+        titleId="confirm-dialog-title"
+        onDismiss={handleCancel}
         className="bg-[#0a0b12]/95 border border-white/10 max-w-md w-full p-6 rounded-2xl relative"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
       >
         <button
           type="button"
@@ -132,7 +119,7 @@ export default function ConfirmDialog({
             {busy ? t('confirm.processing') : confirmText}
           </button>
         </div>
-      </div>
+      </ModalDialog>
     </div>
   );
 }

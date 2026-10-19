@@ -2,6 +2,7 @@ import sqlite3 from 'sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { createHash } from 'crypto';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import { Assertion, AssertionInput, Entity, Relationship, SINGLE_VALUED_REL_TYPES } from '../shared-types.js';
@@ -107,6 +108,35 @@ export interface FailedTaskRow {
   status: 'pending' | 'retrying' | 'resolved' | 'permanent_failure';
   created_at: string;
   updated_at: string;
+}
+
+export type ImportJobReceiptStatus = 'queued' | 'running' | 'success' | 'partial' | 'failed' | 'cancelled';
+
+/**
+ * Privacy-minimal import receipt. It deliberately excludes filenames, source
+ * text, conversation titles, provider responses, credentials, and paths so a
+ * completed or interrupted job can be recognized after a Brain restart.
+ */
+export interface ImportJobReceipt {
+  job_id: string;
+  status: ImportJobReceiptStatus;
+  stage?: string;
+  created_at: number;
+  completed_at?: number;
+  import_progress?: { done: number; total: number; entities: number };
+  retry_progress?: { done: number; total: number; recovered: number; failed: number; coverage: number };
+  result?: {
+    entities: number;
+    relationships: number;
+    principles: number;
+    failure_count: number;
+    chunk_total?: number;
+    chunk_processed?: number;
+    chunk_failures?: number;
+    chunk_coverage?: number;
+  };
+  error_code?: 'process_interrupted' | 'job_failed';
+  updated_at: number;
 }
 
 const MIGRATIONS: Migration[] = [
@@ -947,6 +977,43 @@ const MIGRATIONS: Migration[] = [
       END;
     `,
   },
+  {
+    version: 31,
+    name: 'persist_privacy_minimal_import_job_receipts',
+    up: `
+      -- Receipts let the UI recover a known outcome after the Brain process
+      -- restarts. Do not store uploaded payloads or user-identifying labels.
+      CREATE TABLE IF NOT EXISTS import_job_receipts (
+        job_id TEXT PRIMARY KEY,
+        status TEXT NOT NULL CHECK(status IN (
+          'queued', 'running', 'success', 'partial', 'failed', 'cancelled'
+        )),
+        stage TEXT,
+        created_at INTEGER NOT NULL,
+        completed_at INTEGER,
+        import_done INTEGER,
+        import_total INTEGER,
+        import_entities INTEGER,
+        retry_done INTEGER,
+        retry_total INTEGER,
+        retry_recovered INTEGER,
+        retry_failed INTEGER,
+        retry_coverage REAL,
+        result_entities INTEGER,
+        result_relationships INTEGER,
+        result_principles INTEGER,
+        result_failure_count INTEGER,
+        chunk_total INTEGER,
+        chunk_processed INTEGER,
+        chunk_failures INTEGER,
+        chunk_coverage REAL,
+        error_code TEXT CHECK(error_code IS NULL OR error_code IN ('process_interrupted', 'job_failed')),
+        updated_at INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_import_job_receipts_updated
+        ON import_job_receipts(updated_at DESC);
+    `,
+  },
 ];
 
 interface Migration {
@@ -963,11 +1030,17 @@ export class Database {
   private db: sqlite3.Database;
   private dbPath: string;
   private vecEnabled: boolean = false;
-  // sqlite3 serializes individual statements, but it does not keep statement
-  // groups from different async callers inside a single transaction. Queue
-  // transaction scopes so concurrent ingestion/background work cannot issue a
-  // second BEGIN on the same connection or commit another caller's work.
+  // A managed transaction owns the connection, not only other BEGIN calls.
+  // Drain statements already submitted before BEGIN, then gate foreign calls
+  // until COMMIT/ROLLBACK. Outside transactions, let sqlite3 schedule normal
+  // statement work directly instead of serializing every JS promise round-trip.
   private transactionTail: Promise<void> = Promise.resolve();
+  private inFlightOperations = new Set<Promise<void>>();
+  private pendingTransactions = 0;
+  private lastImportReceiptPruneAt = 0;
+  private transactionGate: Promise<void> | null = null;
+  private releaseTransactionGate: (() => void) | null = null;
+  private transactionContext = new AsyncLocalStorage<{ active: boolean }>();
   // vec_entities 当前维度。migration v4 建表时为 384，但实际维度可能因
   // embedding 模型不同而变（如 OpenAI 1536、bge 768/1024）。首次同步时
   // 从 sqlite_master 读取真实维度，写入维度不符则按需重建表。
@@ -983,51 +1056,75 @@ export class Database {
     this.vecEnabled = vecEnabled;
   }
 
+  private withConnection<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.transactionContext.getStore()?.active) return operation();
+
+    if (this.pendingTransactions > 0) {
+      const gate = this.transactionGate;
+      if (!gate) return Promise.reject(new Error('Database transaction gate is unavailable'));
+      return gate.then(() => this.withConnection(operation));
+    }
+
+    let result: Promise<T>;
+    try {
+      result = operation();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    const settled = result.then(() => undefined, () => undefined);
+    this.inFlightOperations.add(settled);
+    void settled.then(() => {
+      this.inFlightOperations.delete(settled);
+    });
+    return result;
+  }
+
   run(sql: string, params: any[] = []): Promise<sqlite3.RunResult> {
-    return new Promise((resolve, reject) => {
+    return this.withConnection(() => new Promise((resolve, reject) => {
       this.db.run(sql, params, function(err) {
         if (err) reject(err);
         else resolve(this);
       });
-    });
+    }));
   }
 
   get<T = any>(sql: string, params: any[] = []): Promise<T | undefined> {
-    return new Promise((resolve, reject) => {
+    return this.withConnection(() => new Promise((resolve, reject) => {
       this.db.get(sql, params, (err, row) => {
         if (err) reject(err);
         else resolve(row as T | undefined);
       });
-    });
+    }));
   }
 
   all<T = any>(sql: string, params: any[] = []): Promise<T[]> {
-    return new Promise((resolve, reject) => {
+    return this.withConnection(() => new Promise((resolve, reject) => {
       this.db.all(sql, params, (err, rows) => {
         if (err) reject(err);
         else resolve(rows as T[]);
       });
-    });
+    }));
   }
 
   exec(sql: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return this.withConnection(() => new Promise((resolve, reject) => {
       this.db.exec(sql, (err) => {
         if (err) reject(err);
         else resolve();
       });
-    });
+    }));
   }
 
   close(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return this.withConnection(() => new Promise((resolve, reject) => {
       this.db.close((err) => {
         if (err) reject(err);
         else resolve();
       });
-    });
+    }));
   }
 
+  /** Low-level escape hatch; raw operations bypass managed connection ownership. */
   getRaw(): sqlite3.Database {
     return this.db;
   }
@@ -2803,6 +2900,122 @@ export class Database {
     }
   }
 
+  async saveImportJobReceipt(receipt: ImportJobReceipt): Promise<void> {
+    await this.run(
+      `INSERT INTO import_job_receipts (
+        job_id, status, stage, created_at, completed_at,
+        import_done, import_total, import_entities,
+        retry_done, retry_total, retry_recovered, retry_failed, retry_coverage,
+        result_entities, result_relationships, result_principles, result_failure_count,
+        chunk_total, chunk_processed, chunk_failures, chunk_coverage,
+        error_code, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(job_id) DO UPDATE SET
+        status = excluded.status,
+        stage = excluded.stage,
+        completed_at = excluded.completed_at,
+        import_done = excluded.import_done,
+        import_total = excluded.import_total,
+        import_entities = excluded.import_entities,
+        retry_done = excluded.retry_done,
+        retry_total = excluded.retry_total,
+        retry_recovered = excluded.retry_recovered,
+        retry_failed = excluded.retry_failed,
+        retry_coverage = excluded.retry_coverage,
+        result_entities = excluded.result_entities,
+        result_relationships = excluded.result_relationships,
+        result_principles = excluded.result_principles,
+        result_failure_count = excluded.result_failure_count,
+        chunk_total = excluded.chunk_total,
+        chunk_processed = excluded.chunk_processed,
+        chunk_failures = excluded.chunk_failures,
+        chunk_coverage = excluded.chunk_coverage,
+        error_code = excluded.error_code,
+        updated_at = excluded.updated_at`,
+      [
+        receipt.job_id,
+        receipt.status,
+        receipt.stage ?? null,
+        receipt.created_at,
+        receipt.completed_at ?? null,
+        receipt.import_progress?.done ?? null,
+        receipt.import_progress?.total ?? null,
+        receipt.import_progress?.entities ?? null,
+        receipt.retry_progress?.done ?? null,
+        receipt.retry_progress?.total ?? null,
+        receipt.retry_progress?.recovered ?? null,
+        receipt.retry_progress?.failed ?? null,
+        receipt.retry_progress?.coverage ?? null,
+        receipt.result?.entities ?? null,
+        receipt.result?.relationships ?? null,
+        receipt.result?.principles ?? null,
+        receipt.result?.failure_count ?? null,
+        receipt.result?.chunk_total ?? null,
+        receipt.result?.chunk_processed ?? null,
+        receipt.result?.chunk_failures ?? null,
+        receipt.result?.chunk_coverage ?? null,
+        receipt.error_code ?? null,
+        receipt.updated_at,
+      ],
+    );
+
+    const now = Date.now();
+    if (now - this.lastImportReceiptPruneAt >= 5 * 60 * 1000) {
+      this.lastImportReceiptPruneAt = now;
+      const retentionCutoff = now - 30 * 24 * 60 * 60 * 1000;
+      await this.run('DELETE FROM import_job_receipts WHERE updated_at < ?', [retentionCutoff]);
+      await this.run(
+        `DELETE FROM import_job_receipts WHERE job_id IN (
+          SELECT job_id FROM import_job_receipts ORDER BY updated_at DESC LIMIT -1 OFFSET 1000
+        )`,
+      );
+    }
+  }
+
+  async getImportJobReceipt(jobId: string): Promise<ImportJobReceipt | null> {
+    const row = await this.get<any>('SELECT * FROM import_job_receipts WHERE job_id = ?', [jobId]);
+    if (!row) return null;
+    const hasImportProgress = row.import_done !== null && row.import_total !== null;
+    const hasRetryProgress = row.retry_done !== null && row.retry_total !== null;
+    const hasResult = row.result_entities !== null || row.result_relationships !== null
+      || row.result_principles !== null || row.result_failure_count !== null;
+    const hasChunking = row.chunk_total !== null || row.chunk_processed !== null
+      || row.chunk_failures !== null || row.chunk_coverage !== null;
+    return {
+      job_id: row.job_id,
+      status: row.status,
+      stage: row.stage ?? undefined,
+      created_at: row.created_at,
+      completed_at: row.completed_at ?? undefined,
+      import_progress: hasImportProgress ? {
+        done: row.import_done,
+        total: row.import_total,
+        entities: row.import_entities ?? 0,
+      } : undefined,
+      retry_progress: hasRetryProgress ? {
+        done: row.retry_done,
+        total: row.retry_total,
+        recovered: row.retry_recovered ?? 0,
+        failed: row.retry_failed ?? 0,
+        coverage: row.retry_coverage ?? 0,
+      } : undefined,
+      result: hasResult ? {
+        entities: row.result_entities ?? 0,
+        relationships: row.result_relationships ?? 0,
+        principles: row.result_principles ?? 0,
+        failure_count: row.result_failure_count ?? 0,
+        ...(hasChunking ? {
+          chunk_total: row.chunk_total ?? 0,
+          chunk_processed: row.chunk_processed ?? 0,
+          chunk_failures: row.chunk_failures ?? 0,
+          chunk_coverage: row.chunk_coverage ?? 0,
+        } : {}),
+      } : undefined,
+      error_code: row.error_code ?? undefined,
+      updated_at: row.updated_at,
+    };
+  }
+
   async getUnreadNotifications(): Promise<import('../shared-types.js').Notification[]> {
     const rows = await this.all<any>(
       'SELECT * FROM notifications WHERE read_status = 0 ORDER BY created_at DESC'
@@ -3016,6 +3229,7 @@ export class Database {
     );
   }
 
+  /** Low-level SQL control; use withTransaction for isolated async statement groups. */
   async beginTransaction(): Promise<void> {
     await this.run('BEGIN TRANSACTION');
   }
@@ -3028,32 +3242,62 @@ export class Database {
     await this.run('ROLLBACK');
   }
 
+  /** Owns the connection until completion. Nested scopes are unsupported and fail fast. */
   async withTransaction<T>(fn: () => Promise<T>): Promise<T> {
-    const previous = this.transactionTail;
-    let release!: () => void;
-    this.transactionTail = new Promise<void>((resolve) => {
-      release = resolve;
-    });
+    if (this.transactionContext.getStore()?.active) {
+      throw new Error('Nested withTransaction calls are not supported; use the current transaction scope');
+    }
 
-    await previous;
-    let began = false;
+    const previousTransaction = this.transactionTail;
+    let releaseThisTransaction!: () => void;
+    this.transactionTail = new Promise<void>((resolve) => {
+      releaseThisTransaction = resolve;
+    });
+    if (this.pendingTransactions === 0) {
+      this.transactionGate = new Promise<void>((resolve) => {
+        this.releaseTransactionGate = resolve;
+      });
+    }
+    this.pendingTransactions += 1;
+
     try {
-      await this.beginTransaction();
-      began = true;
-      const result = await fn();
-      await this.commit();
-      return result;
-    } catch (error) {
-      if (began) {
+      await previousTransaction;
+      // No new standalone calls start after the gate is installed, so this
+      // snapshot drains every operation submitted before the transaction.
+      await Promise.all(this.inFlightOperations);
+      const context = { active: true };
+      return await this.transactionContext.run(context, async () => {
+        let began = false;
         try {
-          await this.rollback();
-        } catch (rollbackError) {
-          console.error('[Database] transaction rollback failed:', rollbackError);
+          await this.beginTransaction();
+          began = true;
+          const result = await fn();
+          await this.commit();
+          return result;
+        } catch (error) {
+          if (began) {
+            try {
+              await this.rollback();
+            } catch (rollbackError) {
+              console.error('[Database] transaction rollback failed:', rollbackError);
+            }
+          }
+          throw error;
+        } finally {
+          // Detached async work inherits this object. Once the owner finishes,
+          // that work must queue normally rather than bypass a later owner.
+          context.active = false;
         }
-      }
-      throw error;
+      });
     } finally {
-      release();
+      this.pendingTransactions -= 1;
+      releaseThisTransaction();
+      if (this.pendingTransactions === 0) {
+        const releaseGate = this.releaseTransactionGate;
+        this.transactionGate = null;
+        this.releaseTransactionGate = null;
+        releaseGate?.();
+      }
     }
   }
 

@@ -8,16 +8,49 @@ const { chromium } = require('playwright');
 
 const extensionDir = __dirname;
 const repoDir = path.resolve(extensionDir, '..');
-const evidenceDir = path.join(repoDir, 'docs', 'delivery-v3.1', 'evidence');
+const runnerTemp = process.env.RUNNER_TEMP;
+const evidenceDir = process.env.OMNI_BROWSER_EVIDENCE_DIR;
 const workDir = path.join(evidenceDir, '.browser-e2e-profile');
 const dbPath = path.join(evidenceDir, 'browser-extension-e2e.db');
 const pairCodePath = path.join(evidenceDir, '.browser-pair-code');
 const serverLogPath = path.join(evidenceDir, '15-browser-brain-server.log');
 const chromePath = process.env.OMNI_CHROME_PATH;
-if (!chromePath) {
-  throw new Error('OMNI_CHROME_PATH is required; point it to an existing Chromium browser without downloading one');
+function isChildPath(parent, target) {
+  const relative = path.relative(path.resolve(parent), path.resolve(target));
+  return relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+}
+if (!runnerTemp || !evidenceDir || !isChildPath(runnerTemp, evidenceDir)) {
+  throw new Error('Browser capture E2E requires an evidence directory below the isolated RUNNER_TEMP');
+}
+if (process.env.GITHUB_ACTIONS !== 'true') {
+  throw new Error('Browser capture E2E may only run on a disposable GitHub-hosted runner');
+}
+if (!chromePath || !fs.existsSync(chromePath)) {
+  throw new Error('OMNI_CHROME_PATH must point to an installed Chromium-compatible browser; this test never downloads one');
 }
 const localToken = `local-e2e-${createHash('sha256').update(String(Date.now())).digest('hex')}`;
+let apiPort;
+let mockPort;
+const completedChecks = [];
+
+function pass(check) {
+  completedChecks.push(check);
+  console.log(`${check}=PASS`);
+}
+
+async function reserveLoopbackPort() {
+  const net = require('node:net');
+  const server = net.createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const address = server.address();
+  const port = address && typeof address === 'object' ? address.port : 0;
+  await new Promise((resolve) => server.close(resolve));
+  assert.ok(port > 0);
+  return port;
+}
 
 function freshPairCode() {
   return String(randomInt(0, 1_000_000)).padStart(6, '0');
@@ -34,7 +67,7 @@ async function waitFor(predicate, timeoutMs = 15_000) {
 }
 
 async function api(pathname, token, options = {}) {
-  return fetch(`http://127.0.0.1:3001${pathname}`, {
+  return fetch(`http://127.0.0.1:${apiPort}${pathname}`, {
     ...options,
     signal: AbortSignal.timeout(10_000),
     headers: {
@@ -105,9 +138,12 @@ async function captureFixture(worker, fixtureUrl) {
 }
 
 async function main() {
-  fs.mkdirSync(evidenceDir, { recursive: true });
-  fs.rmSync(workDir, { recursive: true, force: true });
-  for (const suffix of ['', '-shm', '-wal']) fs.rmSync(`${dbPath}${suffix}`, { force: true });
+  apiPort = await reserveLoopbackPort();
+  mockPort = await reserveLoopbackPort();
+  if (fs.existsSync(evidenceDir)) {
+    throw new Error('Refusing to replace an existing browser-capture evidence directory');
+  }
+  fs.mkdirSync(evidenceDir, { recursive: false });
   const firstPairCode = freshPairCode();
   fs.writeFileSync(pairCodePath, firstPairCode, 'utf8');
 
@@ -131,15 +167,20 @@ async function main() {
   });
   await new Promise((resolve, reject) => {
     mockLlm.once('error', reject);
-    mockLlm.listen(3412, '127.0.0.1', resolve);
+    mockLlm.listen(mockPort, '127.0.0.1', resolve);
   });
 
   const serverLog = fs.createWriteStream(serverLogPath, { flags: 'w' });
   const server = spawn(process.execPath, ['dist/api-server.js'], {
     cwd: path.join(repoDir, 'brain-server'),
     env: {
-      ...process.env,
-      PORT: '3001',
+      ...Object.fromEntries([
+        'PATH', 'PATHEXT', 'SYSTEMROOT', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC',
+        'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'APPDATA', 'LOCALAPPDATA', 'PROGRAMDATA',
+        'PROCESSOR_ARCHITECTURE',
+      ].filter((name) => typeof process.env[name] === 'string')
+        .map((name) => [name, process.env[name]])),
+      PORT: String(apiPort),
       HOST: '127.0.0.1',
       DB_PATH: dbPath,
       LOCAL_API_TOKEN: localToken,
@@ -147,19 +188,19 @@ async function main() {
       PAIR_CODE_TTL_MS: '600000',
       OMNI_EVALUATION_MODE: '1',
       INSIGHT_INTERVAL_MS: '3600000',
-      LLM_API_URL: 'http://127.0.0.1:3412/v1',
+      LLM_API_URL: `http://127.0.0.1:${mockPort}/v1`,
       LLM_MODEL: 'omni-browser-e2e-mock',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  const scrub = (chunk) => serverLog.write(String(chunk).split(repoDir).join('<repo>'));
+  const scrub = (chunk) => serverLog.write(String(chunk).split(repoDir).join('<repo>').split(localToken).join('<local-token>'));
   server.stdout.on('data', scrub);
   server.stderr.on('data', scrub);
 
   let context;
   try {
-    await waitFor(async () => (await fetch('http://127.0.0.1:3001/health')).ok);
-    console.log('brain-server health=PASS');
+    await waitFor(async () => (await fetch(`http://127.0.0.1:${apiPort}/health`)).ok);
+    pass('fixture-brain-health');
     context = await openExtension(workDir);
     let worker = await getWorker(context);
     const extensionId = new URL(worker.url()).host;
@@ -169,7 +210,7 @@ async function main() {
       return OmniPrivacy.mergeSettings(stored.settings);
     });
     assert.equal(initialSettings.autoCapture, false);
-    console.log('unpacked-loaded default-auto-capture-off=PASS');
+    pass('unpacked-extension-default-auto-capture-off');
 
     await pairFromPopup(context, extensionId, firstPairCode, '15-browser-pairing.png');
     const paired = await worker.evaluate(async () => chrome.storage.local.get([
@@ -178,7 +219,7 @@ async function main() {
     ]));
     assert.match(paired.localApiToken, /^ocd_/);
     assert.match(paired.browserDeviceId, /^browser-/);
-    console.log('pairing extension-token=PASS');
+    pass('pairing-issues-scoped-extension-token');
 
     await worker.evaluate(async () => {
       await chrome.storage.local.set({
@@ -209,11 +250,9 @@ async function main() {
     await fixture.goto(fixtureUrl);
     await fixture.waitForLoadState('networkidle');
     await fixture.waitForSelector('#omni-floating-container', { timeout: 10_000 });
-    await fixture.screenshot({ path: path.join(evidenceDir, '15-browser-chatgpt-fixture.png'), fullPage: true });
     await fixture.bringToFront();
 
     const capture = await captureFixture(worker, fixtureUrl);
-    console.log('fixture capture response', JSON.stringify(capture));
     assert.equal(capture.ok, true);
     assert.equal(capture.payloadChunks, 2);
     assert.equal(capture.jobIds.length, 2);
@@ -222,7 +261,7 @@ async function main() {
       const receipt = await api(`/api/ingest/job/${jobId}`, paired.localApiToken);
       assert.equal(receipt.status, 200);
     }
-    console.log('fixture-capture brain-receipt chunks=2 redaction=PASS');
+    pass('fixture-capture-brain-receipt-two-chunks-and-redaction');
 
     const blocked = await sendExtensionMessage(context, extensionId, {
       type: 'CAPTURE_PAGE',
@@ -235,7 +274,7 @@ async function main() {
     });
     assert.equal(blocked.ok, false);
     assert.equal(blocked.error, 'Capture blocked: sensitive-domain');
-    console.log('unauthorized-domain-no-capture=PASS');
+    pass('sensitive-domain-capture-denied');
 
     const revoke = await api(
       `/api/auth/devices/${encodeURIComponent(paired.browserDeviceId)}/revoke`,
@@ -253,7 +292,7 @@ async function main() {
       },
     });
     assert.equal(revokedCapture.ok, false);
-    console.log('revoked-token-request-fails=PASS');
+    pass('revoked-token-request-fails-closed');
 
     const secondPairCode = freshPairCode();
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -264,7 +303,7 @@ async function main() {
     assert.notEqual(repaired.localApiToken, paired.localApiToken);
     const repairedHealth = await api('/api/stats', repaired.localApiToken);
     assert.equal(repairedHealth.status, 200);
-    console.log('repairing-restores-access=PASS');
+    pass('re-pairing-restores-access-with-rotated-token');
 
     await fixture.close();
     await context.close();
@@ -277,7 +316,7 @@ async function main() {
     assert.equal(persisted.settings.allowedDomains.includes('chatgpt.com'), true);
     assert.equal(persisted.settings.autoCapture, false);
     assert.equal(persisted.localApiToken, repaired.localApiToken);
-    console.log('browser-restart-settings-token-persist=PASS');
+    pass('browser-restart-settings-and-token-persist');
 
     const exported = await waitFor(async () => {
       const response = await api('/api/admin/export', localToken);
@@ -300,7 +339,7 @@ async function main() {
     assert.equal(remove.status, 200);
     const afterDelete = await (await api('/api/admin/export', localToken)).json();
     assert.equal(afterDelete.ingestionDocuments.length, 0);
-    console.log('captured-content-delete=PASS');
+    pass('captured-content-can-be-deleted');
   } finally {
     if (context) await context.close().catch(() => {});
     server.kill();
@@ -313,10 +352,28 @@ async function main() {
     serverLog.end();
     fs.rmSync(workDir, { recursive: true, force: true });
     fs.rmSync(pairCodePath, { force: true });
+    for (const suffix of ['', '-shm', '-wal']) fs.rmSync(`${dbPath}${suffix}`, { force: true });
   }
 }
 
-main().catch((error) => {
+function writeResult(status) {
+  if (!evidenceDir || !fs.existsSync(evidenceDir)) return;
+  fs.writeFileSync(path.join(evidenceDir, 'browser-capture-e2e-results.json'), `${JSON.stringify({
+    evidence_kind: 'WINDOWS_BROWSER_EXTENSION_CONTROLLED_FIXTURE',
+    status,
+    completed_checks: completedChecks,
+    not_verified: [
+      'real signed browser-store extension installation',
+      'real user account or authenticated third-party page',
+      'real model provider inference',
+    ],
+  }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+}
+
+main().then(() => {
+  writeResult('PASS');
+}).catch((error) => {
+  try { writeResult('FAIL'); } catch { /* preserve the original acceptance failure */ }
   console.error(error.stack || String(error));
   process.exitCode = 1;
 });

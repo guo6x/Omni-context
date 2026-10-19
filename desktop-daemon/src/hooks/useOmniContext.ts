@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch } from '../lib/api-client';
 
 interface SystemStatus {
   brain_server_running: boolean;
@@ -17,12 +17,42 @@ interface LogEntry {
   type: "info" | "success" | "warning" | "error";
 }
 
+const HEALTH_PROBE_INTERVAL_MS = 3000;
+const HEALTH_PROBE_TIMEOUT_MS = 10_000;
+
+/** Native credential IPC and response bodies can ignore cancellation. */
+function readBrainHealth(signal: AbortSignal): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    const abortReason = () => signal.reason !== undefined
+      ? signal.reason
+      : new DOMException('Stopped checking Brain Server health', 'AbortError');
+    const onAbort = () => {
+      signal.removeEventListener('abort', onAbort);
+      reject(abortReason());
+    };
+    signal.addEventListener('abort', onAbort, { once: true });
+    if (signal.aborted) { onAbort(); return; }
+
+    void (async () => {
+      const response = await apiFetch('/health', { method: 'GET', signal });
+      if (signal.aborted) throw abortReason();
+      // Drain the small payload under the same deadline, including non-2xx.
+      await response.arrayBuffer();
+      return response.ok;
+    })().then(
+      (healthy) => { signal.removeEventListener('abort', onAbort); resolve(healthy); },
+      (error: unknown) => { signal.removeEventListener('abort', onAbort); reject(error); },
+    );
+  });
+}
+
 export function useOmniContext() {
   const [status, setStatus] = useState<SystemStatus>({
     brain_server_running: false,
     udp_listener_running: true,
     last_event: null,
   });
+  const brainServerRunningRef = useRef(false);
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -117,30 +147,51 @@ export function useOmniContext() {
   }, []);
 
   useEffect(() => {
-    // 真实检测 Brain Server 状态
+    let active = true;
+    let nextProbe: ReturnType<typeof setTimeout> | undefined;
+    let probeDeadline: ReturnType<typeof setTimeout> | undefined;
+    let currentRequest: AbortController | null = null;
+
+    const updateConnection = (running: boolean) => {
+      if (!active) return;
+      if (running) setHasConnectedOnce(true);
+      if (brainServerRunningRef.current === running) return;
+      brainServerRunningRef.current = running;
+      setStatus((prev) => ({ ...prev, brain_server_running: running }));
+      addLog(running ? "Brain Server 已连接并正常运行" : "Brain Server 连接断开", running ? "success" : "error");
+      // 离线 → 在线时主动触发图谱拉取，避免 EmptyState 卡死。
+      if (running) setRefreshTrigger((prev) => prev + 1);
+    };
+
+    // A completed/aborted probe schedules the next one; no overlapping interval
+    // requests or effect restarts when connection state changes.
     const checkBrainServer = async () => {
+      if (!active || currentRequest) return;
+      const controller = new AbortController();
+      currentRequest = controller;
+      const deadline = setTimeout(() => controller.abort(), HEALTH_PROBE_TIMEOUT_MS);
+      probeDeadline = deadline;
       try {
-        const res = await apiFetch('/health', { method: 'GET' });
-        if (res.ok) setHasConnectedOnce(true);
-        if (res.ok && !status.brain_server_running) {
-          setStatus((prev) => ({ ...prev, brain_server_running: true }));
-          addLog("Brain Server 已连接并正常运行", "success");
-          // 离线 → 在线时主动触发图谱拉取，避免 EmptyState 卡死
-          setRefreshTrigger((prev) => prev + 1);
-        }
-      } catch (e) {
-        if (status.brain_server_running) {
-          setStatus((prev) => ({ ...prev, brain_server_running: false }));
-          addLog("Brain Server 连接断开", "error");
-        }
+        const healthy = await readBrainHealth(controller.signal);
+        if (active && !controller.signal.aborted) updateConnection(healthy);
+      } catch {
+        if (active) updateConnection(false);
+      } finally {
+        clearTimeout(deadline);
+        if (probeDeadline === deadline) probeDeadline = undefined;
+        if (currentRequest === controller) currentRequest = null;
+        if (active) nextProbe = setTimeout(() => { void checkBrainServer(); }, HEALTH_PROBE_INTERVAL_MS);
       }
     };
 
-    const timer = setInterval(checkBrainServer, 3000);
-    checkBrainServer();
-
-    return () => clearInterval(timer);
-  }, [addLog, status.brain_server_running]);
+    void checkBrainServer();
+    return () => {
+      active = false;
+      clearTimeout(nextProbe);
+      clearTimeout(probeDeadline);
+      currentRequest?.abort();
+    };
+  }, [addLog]);
 
   return {
     status,

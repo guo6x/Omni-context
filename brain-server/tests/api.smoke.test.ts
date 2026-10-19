@@ -3,6 +3,7 @@ import http from 'http';
 import { AddressInfo } from 'net';
 import initDatabase, { Database } from '../src/db/sqlite.js';
 import { createServer } from '../src/api/routes.js';
+import { MemoryDecayScheduler } from '../src/memory/decay-scheduler.js';
 import { decodeEmbedding } from '../src/utils/math.js';
 import { LLMExtractorPipeline } from '../src/graphrag/llm-pipeline.js';
 import { E5_LARGE_USAGE_PROFILE, embeddingProfileFingerprint } from '../src/embedding/profiles.js';
@@ -58,7 +59,10 @@ beforeAll(async () => {
   db = initDatabase({ dbPath: ':memory:' });
   await db.runMigrations();
   await db.rebuildAllEmbeddings(testEmbeddingService as any);
-  server = createServer(db, undefined, testEmbeddingService as any);
+  // This file verifies HTTP route behavior, not the independent background
+  // decay scheduler. Keep its 10-second startup pass out of smoke-test timing.
+  const decayScheduler = new MemoryDecayScheduler(db, { autoStart: false });
+  server = createServer(db, undefined, testEmbeddingService as any, decayScheduler);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const port = (server.address() as AddressInfo).port;
   baseUrl = `http://127.0.0.1:${port}`;
@@ -709,7 +713,7 @@ describe('API smoke: admin export', () => {
     expect(status).toBe(200);
     expect(body).toMatchObject({
       version: 2,
-      schemaVersion: 30,
+      schemaVersion: 31,
       appVersion: '0.1.1',
       exportedAt: expect.any(String),
       entities: expect.any(Array),
