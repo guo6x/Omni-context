@@ -170,8 +170,10 @@ async function installWindowBounds(pid, width, height) {
   assert.equal(result.status, 0, `native installed-window resize failed: ${result.stderr || result.stdout}`);
 }
 
-function getInstalledWindowState(pid) {
+function getInstalledWindowState(pid, windowHandle = null) {
   assert.ok(Number.isInteger(pid) && pid > 0);
+  if (windowHandle !== null) assert.ok(Number.isInteger(windowHandle) && windowHandle > 0);
+  const handleExpression = windowHandle === null ? '$process.MainWindowHandle' : `[IntPtr]${windowHandle}`;
   const script = [
     'Add-Type -TypeDefinition @"',
     'using System; using System.Runtime.InteropServices; public static class OmniWindowState {',
@@ -179,8 +181,9 @@ function getInstalledWindowState(pid) {
     '}',
     '"@',
     `$process = Get-Process -Id ${pid} -ErrorAction Stop`,
-    'if ($process.MainWindowHandle -eq 0) { throw "Installed main window handle is unavailable" }',
-    '[pscustomobject]@{ handle = [int64]$process.MainWindowHandle; visible = [OmniWindowState]::IsWindowVisible($process.MainWindowHandle) } | ConvertTo-Json -Compress',
+    `$windowHandle = ${handleExpression}`,
+    'if ($windowHandle -eq [IntPtr]::Zero) { throw "Installed main window handle is unavailable" }',
+    '[pscustomobject]@{ handle = [int64]$windowHandle; visible = [OmniWindowState]::IsWindowVisible($windowHandle) } | ConvertTo-Json -Compress',
   ].join('\n');
   const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
     windowsHide: true,
@@ -197,8 +200,8 @@ function getInstalledWindowState(pid) {
   }
 }
 
-function requestInstalledWindowClose(pid) {
-  const state = getInstalledWindowState(pid);
+function requestInstalledWindowClose(pid, windowHandle = null) {
+  const state = getInstalledWindowState(pid, windowHandle);
   assert.ok(state, 'installed main window handle is unavailable');
   const script = [
     'Add-Type -TypeDefinition @"',
@@ -207,8 +210,8 @@ function requestInstalledWindowClose(pid) {
     '}',
     '"@',
     `$process = Get-Process -Id ${pid} -ErrorAction Stop`,
-    'if ($process.MainWindowHandle -eq 0) { throw "Installed main window handle is unavailable" }',
-    '$posted = [OmniWindowClose]::PostMessage($process.MainWindowHandle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero)',
+    `$windowHandle = [IntPtr]${state.handle}`,
+    '$posted = [OmniWindowClose]::PostMessage($windowHandle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero)',
     'if (-not $posted) { throw "Could not post WM_CLOSE to the installed main window" }',
   ].join('\n');
   const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
@@ -216,6 +219,7 @@ function requestInstalledWindowClose(pid) {
     encoding: 'utf8',
   });
   assert.equal(result.status, 0, `native installed-window WM_CLOSE failed: ${result.stderr || result.stdout}`);
+  return state.handle;
 }
 
 function stopTree(pid) {
@@ -661,16 +665,16 @@ async function run() {
     await hudPage.getByRole('button', { name: /隐藏悬浮 HUD|Hide floating HUD|Hide HUD/i }).click();
     pass('installed-native-hud-window');
 
-    requestInstalledWindowClose(app.pid);
-    await waitFor(() => getInstalledWindowState(app.pid)?.visible === false, 20_000);
+    const mainWindowHandle = requestInstalledWindowClose(app.pid);
+    await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === false, 20_000);
     assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true, 'closing the main window stopped Brain instead of hiding to tray');
     verifyTrayAction('left-click');
-    await waitFor(() => getInstalledWindowState(app.pid)?.visible === true, 20_000);
+    await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === true, 20_000);
     pass('installed-tray-icon-left-click-reopens-main-window');
-    requestInstalledWindowClose(app.pid);
-    await waitFor(() => getInstalledWindowState(app.pid)?.visible === false, 20_000);
+    requestInstalledWindowClose(app.pid, mainWindowHandle);
+    await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === false, 20_000);
     verifyTrayAction('menu-show');
-    await waitFor(() => getInstalledWindowState(app.pid)?.visible === true, 20_000);
+    await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === true, 20_000);
     assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true,
       'choosing Show Main Window from the tray menu stopped Brain');
     pass('installed-tray-context-menu-show-main-window');
