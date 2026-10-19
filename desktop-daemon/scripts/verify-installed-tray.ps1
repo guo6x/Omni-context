@@ -26,8 +26,13 @@ $root = [System.Windows.Automation.AutomationElement]::RootElement
 $nameProperty = [System.Windows.Automation.AutomationElement]::NameProperty
 $processIdProperty = [System.Windows.Automation.AutomationElement]::ProcessIdProperty
 $treeScope = [System.Windows.Automation.TreeScope]::Descendants
-$explorerProcess = Get-Process -Name explorer -ErrorAction Stop | Select-Object -First 1
-$explorerProcessId = $explorerProcess.Id
+$explorerProcessIds = @(
+    Get-Process -Name explorer -ErrorAction Stop |
+        ForEach-Object { [int]$_.Id }
+)
+if ($explorerProcessIds.Count -eq 0) {
+    throw 'The Windows shell explorer process is unavailable.'
+}
 
 function Find-NamedElements([string]$Name) {
     $condition = New-Object System.Windows.Automation.PropertyCondition($nameProperty, $Name)
@@ -63,12 +68,13 @@ function Find-TrayIcon {
     # ListItem, and its tooltip can be decorated by the shell.  Scope the
     # search to explorer first, then match the stable product name instead of
     # requiring one exact control type/name pair.
-    $explorerCondition = New-Object System.Windows.Automation.PropertyCondition($processIdProperty, $explorerProcessId)
-    foreach ($element in ($root.FindAll($treeScope, $explorerCondition))) {
+    foreach ($explorerProcessId in $explorerProcessIds) {
+        $explorerCondition = New-Object System.Windows.Automation.PropertyCondition($processIdProperty, $explorerProcessId)
+        foreach ($element in ($root.FindAll($treeScope, $explorerCondition))) {
         try {
             $current = $element.Current
             $name = [string]$current.Name
-            if ($current.ProcessId -eq $explorerProcessId -and
+            if ($current.ProcessId -in $explorerProcessIds -and
                 $name -match '(?i)omni[\s-]*context' -and
                 -not $current.IsOffscreen -and -not $current.BoundingRectangle.IsEmpty -and
                 $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
@@ -77,6 +83,7 @@ function Find-TrayIcon {
         }
         catch {
             continue
+        }
         }
     }
     return $null
@@ -90,8 +97,7 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $icon) {
     foreach ($hiddenName in @('Show hidden icons', '显示隐藏图标', '显示隐藏的图标', 'More icons', '更多图标')) {
         foreach ($hiddenButton in (Find-NamedElements $hiddenName)) {
             try {
-                if ($hiddenButton.Current.ProcessId -ne $explorerProcessId -or
-                    $hiddenButton.Current.ControlType -ne [System.Windows.Automation.ControlType]::Button) {
+                if ($hiddenButton.Current.ProcessId -notin $explorerProcessIds) {
                     continue
                 }
                 $pattern = $hiddenButton.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
