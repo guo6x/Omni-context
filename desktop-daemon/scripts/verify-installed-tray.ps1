@@ -41,6 +41,8 @@ public static class OmniTrayInput {
     public static extern IntPtr FindWindow(string className, string windowName);
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr SendMessage(IntPtr hWnd, uint message, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint message, IntPtr wParam, IntPtr lParam, uint flags, uint timeout, out IntPtr result);
     private const uint GW_OWNER = 4;
     private const uint WM_COMMAND = 0x0111;
     [DllImport("user32.dll", SetLastError = true)]
@@ -221,11 +223,19 @@ public static class OmniTrayInput {
         if (owner == IntPtr.Zero) return false;
         // The tao menu subclass intentionally returns LRESULT(0) after it
         // dispatches the command, so the return value is not an acknowledgement.
-        // Reaching a concrete owner and synchronously delivering WM_COMMAND is
-        // the observable native dispatch we need; the caller still requires
-        // the cached main-window visibility gate before accepting the result.
-        SendMessage(owner, WM_COMMAND, (IntPtr)command, IntPtr.Zero);
-        return true;
+        // Reaching a concrete owner and delivering WM_COMMAND is the observable
+        // native dispatch we need; the caller still requires the cached
+        // main-window visibility gate before accepting the result.
+        IntPtr result;
+        // Keep the fallback bounded if the tao thread is still unwinding a
+        // nested TrackPopupMenu loop. A timeout is only a dispatch guard; the
+        // caller still requires the cached main-window visibility gate.
+        var delivered = SendMessageTimeout(owner, WM_COMMAND, (IntPtr)command, IntPtr.Zero, 0x0002, 1000, out result);
+        if (delivered != IntPtr.Zero) return true;
+        // If the tao thread was still inside its popup loop, leave the exact
+        // verified command in its queue and let the visibility gate below
+        // prove whether it was eventually handled.
+        return PostMessage(owner, WM_COMMAND, (IntPtr)command, IntPtr.Zero);
     }
     [DllImport("user32.dll", SetLastError = true)]
     public static extern void keybd_event(byte virtualKey, byte scanCode, uint flags, UIntPtr extraInfo);
@@ -1443,7 +1453,9 @@ function Find-NativeShowMainMenuItem {
     # UI Automation does not publish native TrackPopupMenu children on the
     # Server 2022 image. Read the actual HMENU owned by the visible popup so
     # the acceptance can select the product command by text and its native
-    # screen rectangle, without guessing a row or invoking another command.
+    # command id. Prefer the screen rectangle when the shell provides one;
+    # some Server builds expose the HMENU but reject GetMenuItemRect while the
+    # popup is inside tao's nested TrackPopupMenu loop.
     $popup = Find-VisibleNativeMenuWindow
     if ($popup -eq [IntPtr]::Zero) { return $null }
     $popupOwner = [OmniTrayInput]::PopupMenuOwner($popup)
@@ -1481,18 +1493,19 @@ function Find-NativeShowMainMenuItem {
             $text = [OmniTrayInput]::PopupMenuItemText($popup, [uint32]$index)
             if ($text -notmatch '(?i)(显示主窗口|显示主界面|show\s+(?:the\s+)?main\s+window)') { continue }
             $bounds = [OmniTrayInput]::PopupMenuItemBounds($popup, [uint32]$index)
-            if ($bounds.Count -ne 4 -or $bounds[2] -le $bounds[0] -or $bounds[3] -le $bounds[1]) { continue }
             $command = [OmniTrayInput]::PopupMenuItemCommand($popup, [uint32]$index)
             if ($command -eq 0) { continue }
+            $hasBounds = $bounds.Count -eq 4 -and $bounds[2] -gt $bounds[0] -and $bounds[3] -gt $bounds[1]
             return [pscustomobject]@{
                 Popup = $popup
                 Owner = $dispatchOwner
                 Text = $text
                 Command = [uint32]$command
-                Left = [int]$bounds[0]
-                Top = [int]$bounds[1]
-                Right = [int]$bounds[2]
-                Bottom = [int]$bounds[3]
+                HasBounds = $hasBounds
+                Left = if ($hasBounds) { [int]$bounds[0] } else { 0 }
+                Top = if ($hasBounds) { [int]$bounds[1] } else { 0 }
+                Right = if ($hasBounds) { [int]$bounds[2] } else { 0 }
+                Bottom = if ($hasBounds) { [int]$bounds[3] } else { 0 }
             }
         }
         catch { continue }
@@ -1503,18 +1516,22 @@ function Find-NativeShowMainMenuItem {
 function Invoke-NativeShowMainMenuItem {
     $item = Find-NativeShowMainMenuItem
     if (-not $item) { return $false }
-    $x = [int](($item.Left + $item.Right) / 2)
-    $y = [int](($item.Top + $item.Bottom) / 2)
-    Click-Point $x $y
-    if (Wait-MainWindowVisible 1500) {
-        $script:trayMenuPath = 'native-item-click'
-        return $true
+    if ($item.HasBounds) {
+        $x = [int](($item.Left + $item.Right) / 2)
+        $y = [int](($item.Top + $item.Bottom) / 2)
+        Click-Point $x $y
+        if (Wait-MainWindowVisible 1500) {
+            $script:trayMenuPath = 'native-item-click'
+            return $true
+        }
     }
     # Some Server shells accept the real pointer click but do not deliver the
     # popup's WM_COMMAND back to the tao owner while TrackPopupMenu is nested.
-    # The item text, HMENU, command id, owner class, and process were all
-    # validated above; deliver that exact native menu command to the owner as
-    # a bounded recovery path, then require the cached main HWND to show.
+    # Other Server shells expose the item text and command id but no screen
+    # rectangle at all. In both cases the item text, HMENU, command id, owner
+    # class, and process were validated above; deliver that exact native menu
+    # command to the owner as a bounded recovery path, then require the cached
+    # main HWND to show.
     if ([OmniTrayInput]::SendMenuCommand([IntPtr]$item.Owner, [uint32]$item.Command) -and
         (Wait-MainWindowVisible 1500)) {
         $script:trayMenuPath = 'native-item-wm-command'
@@ -1535,13 +1552,49 @@ function Invoke-FirstNativeMenuItem {
     $width = $bounds[2] - $bounds[0]
     $height = $bounds[3] - $bounds[1]
     if ($width -le 20 -or $height -le 20) { return $false }
+
+    # Classic Server can ignore a pointer click while TrackPopupMenu is nested,
+    # even though the popup is the installed tao menu. Capture the first item's
+    # command before the click so the same native menu selection can be
+    # delivered through the tao owner as a bounded fallback. The product tray
+    # menu is constructed with Show Main Window as its first item (main.rs), and
+    # the popup/owner checks below prevent a shell menu from reaching this path.
+    $popupOwner = [OmniTrayInput]::PopupMenuOwner($popup)
+    $expectedOwner = if ($MainProcessId -gt 0) {
+        [OmniTrayInput]::FindWindowForProcessIdAndClass($MainProcessId, 'tao_system_tray_app')
+    }
+    elseif ($MainWindowHandle -gt 0) {
+        [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    }
+    else { [IntPtr]::Zero }
+    $expectedPid = if ($expectedOwner -ne [IntPtr]::Zero) {
+        [OmniTrayInput]::WindowProcessId($expectedOwner)
+    }
+    else { 0 }
+    $popupPid = [OmniTrayInput]::WindowProcessId($popup)
+    $ownerIsTao = $popupOwner -ne [IntPtr]::Zero -and
+        [OmniTrayInput]::WindowClassName($popupOwner) -eq 'tao_system_tray_app' -and
+        ($expectedPid -le 0 -or [OmniTrayInput]::WindowProcessId($popupOwner) -eq $expectedPid)
+    $popupBelongsToProcess = $expectedPid -gt 0 -and $popupPid -eq $expectedPid
+    if (-not $ownerIsTao -and -not ($popupOwner -eq [IntPtr]::Zero -and $popupBelongsToProcess)) {
+        return $false
+    }
+    $dispatchOwner = if ($ownerIsTao) { $popupOwner } else { $expectedOwner }
+    $firstCommand = [OmniTrayInput]::PopupMenuItemCommand($popup, 0)
+    if ($firstCommand -eq 0) { return $false }
+
     [OmniTrayInput]::SetForegroundWindow($popup) | Out-Null
     # Native popup borders are normally 1-2px and menu rows are 18-24px.
     # Keep the hit inside the first row and away from the border/separator.
     $x = [int]($bounds[0] + ($width / 2))
     $y = [int]($bounds[1] + [Math]::Min(14, [Math]::Max(8, $height / 12)))
     Click-Point $x $y
-    return (Wait-MainWindowVisible 1000)
+    if (Wait-MainWindowVisible 1000) { return $true }
+    if ([OmniTrayInput]::SendMenuCommand($dispatchOwner, [uint32]$firstCommand) -and
+        (Wait-MainWindowVisible 1500)) {
+        return $true
+    }
+    return $false
 }
 
 function Invoke-NativeMenuKeySequence([int[]]$Sequence) {
