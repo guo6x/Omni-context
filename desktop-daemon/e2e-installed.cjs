@@ -92,7 +92,7 @@ async function waitFor(predicate, timeoutMs = 90_000) {
   throw new Error(`condition timed out after ${timeoutMs}ms`);
 }
 
-async function reserveLoopbackPort(transport = 'tcp') {
+async function reserveLoopbackPort(transport = 'tcp', preferredPort = 0) {
   if (transport === 'udp') {
     const socket = dgram.createSocket('udp4');
     await new Promise((resolve, reject) => {
@@ -107,7 +107,7 @@ async function reserveLoopbackPort(transport = 'tcp') {
   const server = net.createServer();
   await new Promise((resolve, reject) => {
     server.once('error', reject);
-    server.listen(0, '127.0.0.1', resolve);
+    server.listen(preferredPort, '127.0.0.1', resolve);
   });
   const address = server.address();
   const port = address && typeof address === 'object' ? address.port : 0;
@@ -117,7 +117,10 @@ async function reserveLoopbackPort(transport = 'tcp') {
 }
 
 async function initializePorts() {
-  brainPort = await reserveLoopbackPort();
+  // The packaged renderer is built with the production loopback default
+  // (127.0.0.1:3001). Keep the installed acceptance harness on that same
+  // port, while probing it first so we never drive an unrelated local service.
+  brainPort = await reserveLoopbackPort('tcp', 3001);
   cdpPort = await reserveLoopbackPort();
   mockPort = await reserveLoopbackPort();
   udpPort = await reserveLoopbackPort('udp');
@@ -478,7 +481,11 @@ async function run() {
     await llmTextInputs.first().fill(`http://127.0.0.1:${mockPort}/v1`);
     await llmTextInputs.last().fill('omni-installed-e2e-mock');
     await page.getByRole('button', { name: /测试连接|Test connection/i }).click();
-    await page.getByText(/连接成功|Connection successful/i).last().waitFor({ timeout: 30_000 });
+    // The success copy is localized and the English translation is phrased
+    // as "Connected successfully! Config saved." rather than the noun phrase
+    // "Connection successful". Match the semantic success state across both
+    // locales so a healthy provider check cannot be reported as a timeout.
+    await page.getByText(/连接成功|Connected successfully|Connection successful/i).last().waitFor({ timeout: 30_000 });
     const settingsHeading = page.getByRole('heading', { name: /^设置$|^Settings$/ });
     await settingsHeading.locator('..').locator('..').locator('button').click();
     pass('installed-ui-local-llm-config');
@@ -739,7 +746,7 @@ async function run() {
 
     const restoreInput = page.locator('input[type="file"][accept*="json"]').last();
     await restoreInput.setInputFiles(exportPath);
-    await page.getByText(/恢复成功|Restore succeeded/i).waitFor({ timeout: 60_000 });
+    await page.getByText(/恢复成功|Restored successfully|Restore succeeded/i).waitFor({ timeout: 60_000 });
     pass('installed-ui-restore');
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-after-restore.png'), fullPage: true });
   } finally {
