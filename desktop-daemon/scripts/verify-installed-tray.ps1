@@ -376,18 +376,46 @@ function Find-TrayToolbarElements {
     return $found.ToArray()
 }
 
+function Get-TrayToolbarBounds {
+    # UIA elements for the classic shell toolbar can become stale between the
+    # tree query and Current.BoundingRectangle access. Capture plain rectangles
+    # immediately, retrying the narrow query a few times; callers must not hold
+    # a UIA element across a click or popup transition.
+    for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        $boundsList = New-Object System.Collections.Generic.List[object]
+        foreach ($toolbar in @(Find-TrayToolbarElements)) {
+            try {
+                $bounds = $toolbar.Current.BoundingRectangle
+                if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) { continue }
+                $null = $boundsList.Add([pscustomobject]@{
+                    Left = [double]$bounds.Left
+                    Top = [double]$bounds.Top
+                    Right = [double]$bounds.Right
+                    Bottom = [double]$bounds.Bottom
+                    Width = [double]$bounds.Width
+                    Height = [double]$bounds.Height
+                })
+            }
+            catch { continue }
+        }
+        if ($boundsList.Count -gt 0) { return $boundsList.ToArray() }
+        if ($attempt -lt 2) { Start-Sleep -Milliseconds 75 }
+    }
+    return @()
+}
+
 function Get-TrayProbePoints([ValidateSet('left-click', 'menu-show')][string]$Action = 'menu-show') {
     # A classic toolbar may expose a 48px host for two 24px notification
-    # buttons, while UIA provides no child buttons. Probe the center of each
-    # 24px slot inside each real tray toolbar. For the direct left-click path,
-    # add a narrow 4px grid around those slots to tolerate shell padding and a
-    # transient button-width change; every candidate remains gated by the
-    # cached main HWND becoming visible.
+    # buttons, while UIA provides no child buttons. Probe a narrow 4px grid
+    # around each 24px slot for both actions: shell padding and transient
+    # button widths can move the hit target away from the nominal center.
+    # Every candidate remains gated by the cached main HWND becoming visible
+    # (or by the product-specific Show Main Window command), so a neighboring
+    # shell icon cannot pass the check.
     $points = New-Object System.Collections.Generic.List[object]
     $seen = New-Object 'System.Collections.Generic.HashSet[string]'
-    foreach ($toolbar in (Find-TrayToolbarElements)) {
+    foreach ($bounds in (Get-TrayToolbarBounds)) {
         try {
-            $bounds = $toolbar.Current.BoundingRectangle
             $left = [int][Math]::Ceiling($bounds.Left + 4)
             $right = [int][Math]::Floor($bounds.Right - 4)
             $top = [int][Math]::Ceiling($bounds.Top + ($bounds.Height / 2))
@@ -396,12 +424,9 @@ function Get-TrayProbePoints([ValidateSet('left-click', 'menu-show')][string]$Ac
             for ($slot = 0; $slot -lt $slotCount; $slot++) {
                 $slotLeft = [int][Math]::Max($left, $left + ($slot * 24))
                 $slotRight = [int][Math]::Min($right, $slotLeft + 23)
-                $slotCenter = [int](($slotLeft + $slotRight) / 2)
-                $slotXs = if ($Action -eq 'left-click') {
-                    @($slotLeft + 4, $slotCenter, $slotRight - 4)
-                }
-                else {
-                    @($slotCenter)
+                $slotXs = @()
+                for ($x = $slotLeft + 2; $x -le $slotRight - 2; $x += 4) {
+                    $slotXs += $x
                 }
                 foreach ($x in $slotXs) {
                     if ($x -lt $left -or $x -gt $right) { continue }
@@ -424,9 +449,9 @@ function Get-TrayProbePoints([ValidateSet('left-click', 'menu-show')][string]$Ac
         foreach ($trayHost in ($root.FindAll($treeScope, $trayHostCondition))) {
             try {
                 $hostBounds = $trayHost.Current.BoundingRectangle
-                $toolbars = @(Find-TrayToolbarElements)
+                $toolbars = @(Get-TrayToolbarBounds)
                 $preToolbarRight = if ($toolbars.Count -gt 0) {
-                    [int](($toolbars | ForEach-Object { $_.Current.BoundingRectangle.Left } | Measure-Object -Minimum).Minimum) - 4
+                    [int](($toolbars | ForEach-Object { $_.Left } | Measure-Object -Minimum).Minimum) - 4
                 }
                 else {
                     [int]$hostBounds.Right - 4
