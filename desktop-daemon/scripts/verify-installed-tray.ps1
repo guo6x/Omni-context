@@ -323,6 +323,13 @@ function Get-SafeTrayField([object]$Value, [int]$MaxLength = 64) {
     return $text
 }
 
+function Get-TrayNameKind([string]$Name) {
+    if ([string]::IsNullOrWhiteSpace($Name)) { return 'empty' }
+    if ($Name -match '(?i)omni[\s-]*context') { return 'product' }
+    if ($Name -match '(?i)show hidden|more icons|\u663E\u793A\u9690\u85CF|\u66F4\u591A\u56FE\u6807') { return 'overflow' }
+    return 'other'
+}
+
 function Write-TrayDiagnostics {
     # This is deliberately read-only and capped. It records enough shell UIA
     # shape to diagnose runner differences without dumping arbitrary desktop
@@ -340,14 +347,16 @@ function Write-TrayDiagnostics {
             $boundsText = if ($bounds.IsEmpty) { 'empty' } else {
                 '{0},{1},{2}x{3}' -f [int]$bounds.Left, [int]$bounds.Top, [int]$bounds.Width, [int]$bounds.Height
             }
-            $diagnostics.Add(('[tray-uia] class={0};automationId={1};controlType={2};pid={3};offscreen={4};bounds={5};name={6}' -f
+            $name = [string]$current.Name
+            $diagnostics.Add(('[tray-uia] class={0};automationId={1};controlType={2};pid={3};offscreen={4};bounds={5};nameKind={6};nameLength={7}' -f
                 (Get-SafeTrayField $className),
                 (Get-SafeTrayField $automationId),
                 (Get-SafeTrayField ([string]$current.ControlType)),
                 [int]$current.ProcessId,
                 [bool]$current.IsOffscreen,
                 $boundsText,
-                (Get-SafeTrayField ([string]$current.Name))))
+                (Get-TrayNameKind $name),
+                $name.Length))
             if ($diagnostics.Count -ge 80) { break }
         }
         catch {
