@@ -641,6 +641,16 @@ function Write-TrayDiagnostics {
     else {
         foreach ($line in $diagnostics) { Write-Output $line }
     }
+    try {
+        $toolbars = @(Find-TrayToolbarElements)
+        $probePoints = @(Get-TrayProbePoints $Action)
+        $pointText = ($probePoints | ForEach-Object { '{0},{1}' -f [int]$_.X, [int]$_.Y }) -join '|'
+        Write-Output ('[tray-probe] action={0};toolbarCount={1};pointCount={2};points={3}' -f
+            $Action, $toolbars.Count, $probePoints.Count, $pointText)
+    }
+    catch {
+        Write-Output ('[tray-probe] action={0};diagnosticError=probe-unavailable' -f $Action)
+    }
 }
 
 $icon = $null
