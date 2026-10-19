@@ -39,6 +39,8 @@ public static class OmniTrayInput {
     public static extern IntPtr FindWindow(string className, string windowName);
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr SendMessage(IntPtr hWnd, uint message, IntPtr wParam, IntPtr lParam);
+    private const uint GW_OWNER = 4;
+    private const uint WM_COMMAND = 0x0111;
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr GetMenu(IntPtr hWnd);
     // TrackPopupMenu creates a native #32768 window without assigning its
@@ -189,6 +191,35 @@ public static class OmniTrayInput {
         // fail even though MN_GETHMENU returned the live menu successfully.
         if (!GetMenuItemRect(IntPtr.Zero, menu, index, out rect)) return new int[0];
         return new[] { rect.Left, rect.Top, rect.Right, rect.Bottom };
+    }
+    public static uint PopupMenuItemCommand(IntPtr popup, uint index) {
+        if (popup == IntPtr.Zero) return 0;
+        var menu = PopupMenuHandle(popup);
+        if (menu == IntPtr.Zero) return 0;
+        var info = new MenuItemInfo {
+            cbSize = (uint)Marshal.SizeOf(typeof(MenuItemInfo)),
+            fMask = 0x00000002, // MIIM_ID
+        };
+        if (!GetMenuItemInfo(menu, index, true, ref info)) return 0;
+        return info.wID;
+    }
+    public static IntPtr PopupMenuOwner(IntPtr popup) {
+        if (popup == IntPtr.Zero) return IntPtr.Zero;
+        return GetWindow(popup, GW_OWNER);
+    }
+    public static bool SendPopupMenuCommand(IntPtr popup, uint command) {
+        if (popup == IntPtr.Zero || command == 0) return false;
+        return SendMenuCommand(PopupMenuOwner(popup), command);
+    }
+    public static bool SendMenuCommand(IntPtr owner, uint command) {
+        if (owner == IntPtr.Zero) return false;
+        // The tao menu subclass intentionally returns LRESULT(0) after it
+        // dispatches the command, so the return value is not an acknowledgement.
+        // Reaching a concrete owner and synchronously delivering WM_COMMAND is
+        // the observable native dispatch we need; the caller still requires
+        // the cached main-window visibility gate before accepting the result.
+        SendMessage(owner, WM_COMMAND, (IntPtr)command, IntPtr.Zero);
+        return true;
     }
     [DllImport("user32.dll", SetLastError = true)]
     public static extern void keybd_event(byte virtualKey, byte scanCode, uint flags, UIntPtr extraInfo);
@@ -1239,27 +1270,29 @@ function Dismiss-ContextMenu {
 function Find-VisibleNativeMenuWindow {
     # Classic Server may expose the tray context menu as a native #32768
     # popup without publishing MenuItem descendants through UI Automation.
-    # Find only visible popup-menu windows, bounded to a finite top-level walk;
-    # never treat an arbitrary foreground window as the product menu.
-    $knownPopup = [OmniTrayInput]::FindWindow('#32768', $null)
-    if ($knownPopup -ne [IntPtr]::Zero -and [OmniTrayInput]::IsWindowVisible($knownPopup)) {
-        return $knownPopup
+    # Find only visible popup-menu windows owned by this installed tao tray
+    # window. FindWindow('#32768') returns the first shell popup and can select
+    # an unrelated menu (for example the overflow shell itself) while the real
+    # product menu is also open; that made text/command probing fail closed.
+    $expectedOwner = [IntPtr]::Zero
+    if ($MainWindowHandle -gt 0) {
+        $expectedOwner = [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
     }
-    $foreground = [OmniTrayInput]::GetForegroundWindow()
-    if ($foreground -ne [IntPtr]::Zero -and
-        [OmniTrayInput]::WindowClassName($foreground) -eq '#32768') {
-        return $foreground
+    $expectedPid = if ($expectedOwner -ne [IntPtr]::Zero) {
+        [OmniTrayInput]::WindowProcessId($expectedOwner)
     }
-    $activePopup = [OmniTrayInput]::GetLastActivePopup($foreground)
-    if ($activePopup -ne [IntPtr]::Zero -and
-        [OmniTrayInput]::WindowClassName($activePopup) -eq '#32768') {
-        return $activePopup
-    }
+    else { 0 }
     $window = [OmniTrayInput]::GetTopWindow([IntPtr]::Zero)
     for ($index = 0; $index -lt 256 -and $window -ne [IntPtr]::Zero; $index++) {
         if ([OmniTrayInput]::IsWindowVisible($window) -and
             [OmniTrayInput]::WindowClassName($window) -eq '#32768') {
-            return $window
+            $popupOwner = [OmniTrayInput]::WindowOwner($window)
+            $ownerMatches = $expectedOwner -ne [IntPtr]::Zero -and $popupOwner -eq $expectedOwner
+            $ownerProcessMatches = $expectedPid -gt 0 -and $popupOwner -ne [IntPtr]::Zero -and
+                [OmniTrayInput]::WindowProcessId($popupOwner) -eq $expectedPid
+            $popupProcessMatches = $expectedPid -gt 0 -and
+                [OmniTrayInput]::WindowProcessId($window) -eq $expectedPid
+            if ($ownerMatches -or $ownerProcessMatches -or $popupProcessMatches) { return $window }
         }
         $window = [OmniTrayInput]::GetWindow($window, 2) # GW_HWNDNEXT
     }
@@ -1332,6 +1365,24 @@ function Find-NativeShowMainMenuItem {
     # screen rectangle, without guessing a row or invoking another command.
     $popup = Find-VisibleNativeMenuWindow
     if ($popup -eq [IntPtr]::Zero) { return $null }
+    $popupOwner = [OmniTrayInput]::PopupMenuOwner($popup)
+    $mainProcessId = [OmniTrayInput]::WindowProcessId([IntPtr]$MainWindowHandle)
+    # TrackPopupMenu is owned by tao's dedicated tray HWND. Require the live
+    # popup owner to be that class and the installed process before reading or
+    # dispatching a command; a shell menu from another app must never pass.
+    $popupProcessId = [OmniTrayInput]::WindowProcessId($popup)
+    $ownerIsTao = $popupOwner -ne [IntPtr]::Zero -and
+        [OmniTrayInput]::WindowClassName($popupOwner) -eq 'tao_system_tray_app' -and
+        ($mainProcessId -le 0 -or [OmniTrayInput]::WindowProcessId($popupOwner) -eq $mainProcessId)
+    $popupBelongsToProcess = $mainProcessId -gt 0 -and $popupProcessId -eq $mainProcessId
+    if (-not $ownerIsTao -and -not ($popupOwner -eq [IntPtr]::Zero -and $popupBelongsToProcess)) {
+        Capture-NativeProbeSummary -Stage 'native-popup-owner-rejected' -Owner $popupOwner
+        return $null
+    }
+    $dispatchOwner = if ($ownerIsTao) { $popupOwner } else {
+        [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    }
+    if ($dispatchOwner -eq [IntPtr]::Zero) { return $null }
     $count = [OmniTrayInput]::PopupMenuItemCount($popup)
     if ($count -le 0) { return $null }
     for ($index = 0; $index -lt $count; $index++) {
@@ -1340,9 +1391,13 @@ function Find-NativeShowMainMenuItem {
             if ($text -notmatch '(?i)(显示主窗口|显示主界面|show\s+(?:the\s+)?main\s+window)') { continue }
             $bounds = [OmniTrayInput]::PopupMenuItemBounds($popup, [uint32]$index)
             if ($bounds.Count -ne 4 -or $bounds[2] -le $bounds[0] -or $bounds[3] -le $bounds[1]) { continue }
+            $command = [OmniTrayInput]::PopupMenuItemCommand($popup, [uint32]$index)
+            if ($command -eq 0) { continue }
             return [pscustomobject]@{
                 Popup = $popup
+                Owner = $dispatchOwner
                 Text = $text
+                Command = [uint32]$command
                 Left = [int]$bounds[0]
                 Top = [int]$bounds[1]
                 Right = [int]$bounds[2]
@@ -1360,7 +1415,22 @@ function Invoke-NativeShowMainMenuItem {
     $x = [int](($item.Left + $item.Right) / 2)
     $y = [int](($item.Top + $item.Bottom) / 2)
     Click-Point $x $y
-    return (Wait-MainWindowVisible 1500)
+    if (Wait-MainWindowVisible 1500) {
+        $script:trayMenuPath = 'native-item-click'
+        return $true
+    }
+    # Some Server shells accept the real pointer click but do not deliver the
+    # popup's WM_COMMAND back to the tao owner while TrackPopupMenu is nested.
+    # The item text, HMENU, command id, owner class, and process were all
+    # validated above; deliver that exact native menu command to the owner as
+    # a bounded recovery path, then require the cached main HWND to show.
+    if ([OmniTrayInput]::SendMenuCommand([IntPtr]$item.Owner, [uint32]$item.Command) -and
+        (Wait-MainWindowVisible 1500)) {
+        $script:trayMenuPath = 'native-item-wm-command'
+        return $true
+    }
+    Capture-NativeProbeSummary -Stage 'native-item-dispatch-failed' -Owner $item.Owner
+    return $false
 }
 
 function Invoke-FirstNativeMenuItem {
@@ -1506,6 +1576,10 @@ function Write-TrayDiagnostics {
     # shape to diagnose runner differences without dumping arbitrary desktop
     # text or paths into the acceptance log.
     $diagnostics = New-Object System.Collections.Generic.List[string]
+    # Capture one final owner/popup snapshot even when the earlier probe never
+    # reached the native-menu branch; this keeps the failure actionable without
+    # leaking arbitrary desktop text into CI logs.
+    Capture-NativeProbeSummary -Stage 'final-diagnostics'
     if (-not [string]::IsNullOrWhiteSpace($script:nativeProbeSummary)) {
         Write-Output $script:nativeProbeSummary
     }
