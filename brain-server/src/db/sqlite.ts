@@ -1386,7 +1386,11 @@ export class Database {
     const rows = await this.all<any>(
       `SELECT * FROM entities
        WHERE type = ? AND json_extract(metadata, '$.merged_into') IS NULL
-       ORDER BY updated_at DESC, id ASC LIMIT ?`,
+       -- ISO timestamps can legitimately collide for back-to-back writes. Use
+       -- SQLite's insertion rowid as the next tie-breaker so "newest first"
+       -- remains true for same-tick records while the stable id tie-breaker
+       -- keeps the result deterministic for copied/legacy rows.
+       ORDER BY updated_at DESC, created_at DESC, rowid DESC, id ASC LIMIT ?`,
       [type, limit]
     );
     return rows.map(row => this.rowToEntity(row));
