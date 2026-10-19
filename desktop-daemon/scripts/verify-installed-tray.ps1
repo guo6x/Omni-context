@@ -46,6 +46,21 @@ function Find-NamedElements([string]$Name) {
     return $root.FindAll($treeScope, $condition)
 }
 
+function Find-ElementsMatchingName([string]$Pattern) {
+    $found = New-Object System.Collections.Generic.List[object]
+    foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
+        try {
+            if ([string]$element.Current.Name -match $Pattern) {
+                $null = $found.Add($element)
+            }
+        }
+        catch {
+            continue
+        }
+    }
+    return $found.ToArray()
+}
+
 function Test-MainWindowVisible {
     if ($MainWindowHandle -le 0) { return $false }
     return [OmniTrayInput]::IsWindowVisible([IntPtr]$MainWindowHandle)
@@ -112,7 +127,7 @@ function Find-VisibleTrayElements {
             $current = $element.Current
             $name = [string]$current.Name
             if ([string]$current.ClassName -match '(?i)^SystemTray\.' -and
-                $name -notmatch '(?i)show hidden|显示隐藏|more icons|更多图标' -and
+                $name -notmatch '(?i)show hidden|\u663E\u793A\u9690\u85CF|more icons|\u66F4\u591A\u56FE\u6807' -and
                 -not $current.IsOffscreen -and -not $current.BoundingRectangle.IsEmpty -and
                 $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
                 $null = $found.Add($element)
@@ -125,9 +140,35 @@ function Find-VisibleTrayElements {
     return $found.ToArray()
 }
 
+function Find-OverflowToggle {
+    $found = New-Object System.Collections.Generic.List[object]
+    foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
+        try {
+            $current = $element.Current
+            if ([string]$current.ClassName -match '(?i)^SystemTray\.' -and
+                [string]$current.AutomationId -eq 'SystemTrayIcon' -and
+                -not $current.IsOffscreen -and -not $current.BoundingRectangle.IsEmpty -and
+                $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
+                $null = $found.Add($element)
+            }
+        }
+        catch {
+            continue
+        }
+    }
+    return @($found.ToArray() | Sort-Object -Property @{ Expression = { $_.Current.BoundingRectangle.Left } })
+}
+
 function Open-HiddenIcons {
-    foreach ($hiddenName in @('Show hidden icons', '显示隐藏图标', '显示隐藏的图标', 'More icons', '更多图标')) {
-        foreach ($hiddenButton in (Find-NamedElements $hiddenName)) {
+    $hiddenNamePatterns = @(
+        '^Show hidden icons$',
+        '^\u663E\u793A\u9690\u85CF\u56FE\u6807$',
+        '^\u663E\u793A\u9690\u85CF\u7684\u56FE\u6807$',
+        '^More icons$',
+        '^\u66F4\u591A\u56FE\u6807$'
+    )
+    foreach ($hiddenNamePattern in $hiddenNamePatterns) {
+        foreach ($hiddenButton in (Find-ElementsMatchingName $hiddenNamePattern)) {
             try {
                 if ($hiddenButton.Current.ProcessId -notin $explorerProcessIds) {
                     continue
@@ -150,14 +191,29 @@ function Open-HiddenIcons {
             }
         }
     }
+    foreach ($overflowToggle in (Find-OverflowToggle | Select-Object -First 1)) {
+        try {
+            Click-Element $overflowToggle
+            Start-Sleep -Milliseconds 1000
+            return $true
+        }
+        catch {
+            continue
+        }
+    }
     return $false
 }
 
-$menuNames = @('显示主窗口', '显示主界面', 'Show Main Window', 'Show main window')
+$menuNamePatterns = @(
+    '^\u663E\u793A\u4E3B\u7A97\u53E3$',
+    '^\u663E\u793A\u4E3B\u754C\u9762$',
+    '^Show Main Window$',
+    '^Show main window$'
+)
 function Find-ShowMainMenuItem {
-    foreach ($menuName in $menuNames) {
+    foreach ($menuNamePattern in $menuNamePatterns) {
         $elements = @(
-            Find-NamedElements $menuName | Where-Object {
+            Find-ElementsMatchingName $menuNamePattern | Where-Object {
                 $_.Current.ControlType -eq [System.Windows.Automation.ControlType]::MenuItem
             }
         )
