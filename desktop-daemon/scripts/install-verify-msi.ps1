@@ -67,9 +67,9 @@ $msiHash = Get-FileSha256 $MsiPath
 $buildExeHash = Get-FileSha256 $ExpectedExePath
 $windowsInstaller = New-Object -ComObject WindowsInstaller.Installer
 $msiDatabase = $windowsInstaller.OpenDatabase($MsiPath, 0)
-$msiProductName = Get-MsiProperty $msiDatabase 'ProductName'
-$msiProductVersion = Get-MsiProperty $msiDatabase 'ProductVersion'
-$msiProductCode = Get-MsiProperty $msiDatabase 'ProductCode'
+$msiProductName = ((Get-MsiProperty $msiDatabase 'ProductName') -replace '\s+', ' ').Trim()
+$msiProductVersion = ((Get-MsiProperty $msiDatabase 'ProductVersion') -replace '\s+', ' ').Trim()
+$msiProductCode = ((Get-MsiProperty $msiDatabase 'ProductCode') -replace '\s+', '').Trim()
 if ($msiProductName -ne 'Omni-Context' -or $msiProductCode -notmatch '^\{[0-9A-Fa-f-]{36}\}$') {
     throw "The exact MSI does not identify the expected Omni-Context Windows Installer product (ProductName='$msiProductName', ProductCode='$msiProductCode')."
 }
