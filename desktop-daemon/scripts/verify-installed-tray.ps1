@@ -24,6 +24,7 @@ public static class OmniTrayInput {
 
 $root = [System.Windows.Automation.AutomationElement]::RootElement
 $nameProperty = [System.Windows.Automation.AutomationElement]::NameProperty
+$processIdProperty = [System.Windows.Automation.AutomationElement]::ProcessIdProperty
 $treeScope = [System.Windows.Automation.TreeScope]::Descendants
 $explorerProcess = Get-Process -Name explorer -ErrorAction Stop | Select-Object -First 1
 $explorerProcessId = $explorerProcess.Id
@@ -57,12 +58,20 @@ function Click-Element($Element, [bool]$RightClick = $false) {
 }
 
 function Find-TrayIcon {
-    foreach ($element in (Find-NamedElements 'Omni-Context')) {
+    # Windows exposes classic notification-area icons differently across runner
+    # images: the same icon may be reported as Button, Image, Custom, or
+    # ListItem, and its tooltip can be decorated by the shell.  Scope the
+    # search to explorer first, then match the stable product name instead of
+    # requiring one exact control type/name pair.
+    $explorerCondition = New-Object System.Windows.Automation.PropertyCondition($processIdProperty, $explorerProcessId)
+    foreach ($element in ($root.FindAll($treeScope, $explorerCondition))) {
         try {
             $current = $element.Current
+            $name = [string]$current.Name
             if ($current.ProcessId -eq $explorerProcessId -and
-                $current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and
-                -not $current.IsOffscreen -and -not $current.BoundingRectangle.IsEmpty) {
+                $name -match '(?i)omni[\s-]*context' -and
+                -not $current.IsOffscreen -and -not $current.BoundingRectangle.IsEmpty -and
+                $current.BoundingRectangle.Width -gt 0 -and $current.BoundingRectangle.Height -gt 0) {
                 return $element
             }
         }
@@ -97,7 +106,7 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $icon) {
     Start-Sleep -Milliseconds 250
 }
 if (-not $icon) {
-    throw 'The installed Omni-Context notification-area icon was not exposed by Windows UI Automation.'
+    throw 'The installed Omni-Context notification-area icon was not exposed by Windows UI Automation (searched explorer descendants by product-name tooltip across shell control types).'
 }
 
 if ($Action -eq 'left-click') {
