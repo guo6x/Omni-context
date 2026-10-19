@@ -3,7 +3,9 @@ param(
     [ValidateSet('left-click', 'menu-show')]
     [string]$Action,
     [Parameter(Mandatory = $false)]
-    [long]$MainWindowHandle = 0
+    [long]$MainWindowHandle = 0,
+    [Parameter(Mandatory = $false)]
+    [int]$MainProcessId = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -113,11 +115,15 @@ public static class OmniTrayInput {
         if (knownWindow == IntPtr.Zero || GetWindowThreadProcessId(knownWindow, out expectedProcessId) == 0) {
             return IntPtr.Zero;
         }
+        return FindWindowForProcessIdAndClass((int)expectedProcessId, expectedClass);
+    }
+    public static IntPtr FindWindowForProcessIdAndClass(int expectedProcessId, string expectedClass) {
+        if (expectedProcessId <= 0) return IntPtr.Zero;
         IntPtr found = IntPtr.Zero;
         EnumWindows((hWnd, lParam) => {
             if (found != IntPtr.Zero) return false;
             uint processId;
-            if (GetWindowThreadProcessId(hWnd, out processId) == 0 || processId != expectedProcessId) return true;
+            if (GetWindowThreadProcessId(hWnd, out processId) == 0 || processId != (uint)expectedProcessId) return true;
             var className = WindowClassName(hWnd);
             if (string.Equals(className, expectedClass, StringComparison.Ordinal)) found = hWnd;
             return true;
@@ -1043,7 +1049,12 @@ function Get-TaoTrayIconBounds {
     # notification icon from a per-process `tao_system_tray_app` window and
     # uses UID 6001. Shell_NotifyIconGetRect gives the exact real icon bounds,
     # avoiding ambiguous classic ToolbarWindow32 slot geometry when available.
-    $owner = [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    $owner = if ($MainProcessId -gt 0) {
+        [OmniTrayInput]::FindWindowForProcessIdAndClass($MainProcessId, 'tao_system_tray_app')
+    }
+    else {
+        [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    }
     # The Windows shell can expose the Tauri main window through a different
     # process-owned HWND after WebView2/restart transitions even though tao's
     # tray owner remains the real application window. The class is unique to
@@ -1067,7 +1078,19 @@ function Get-TaoTrayOwner {
     # tao 0.16.11 keeps the notification icon callback window in a dedicated
     # class. Keep this lookup bound to the installed process so a different
     # Tauri app cannot receive the synthetic callback.
-    $owner = [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    $owner = if ($MainProcessId -gt 0) {
+        [OmniTrayInput]::FindWindowForProcessIdAndClass($MainProcessId, 'tao_system_tray_app')
+    }
+    else {
+        [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    }
+    # On WebView2 restart/close transitions the cached main HWND can belong to
+    # a different process-owned window even though tao's tray owner remains
+    # alive in the installed app. The class is tao-specific; retain the final
+    # native command + cached main-window visibility gates before accepting it.
+    if ($owner -eq [IntPtr]::Zero) {
+        $owner = [OmniTrayInput]::FindWindowForClass('tao_system_tray_app')
+    }
     if ($owner -eq [IntPtr]::Zero) { return [IntPtr]::Zero }
     return $owner
 }
@@ -1275,7 +1298,10 @@ function Find-VisibleNativeMenuWindow {
     # an unrelated menu (for example the overflow shell itself) while the real
     # product menu is also open; that made text/command probing fail closed.
     $expectedOwner = [IntPtr]::Zero
-    if ($MainWindowHandle -gt 0) {
+    if ($MainProcessId -gt 0) {
+        $expectedOwner = [OmniTrayInput]::FindWindowForProcessIdAndClass($MainProcessId, 'tao_system_tray_app')
+    }
+    elseif ($MainWindowHandle -gt 0) {
         $expectedOwner = [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
     }
     $expectedPid = if ($expectedOwner -ne [IntPtr]::Zero) {
@@ -1366,7 +1392,12 @@ function Find-NativeShowMainMenuItem {
     $popup = Find-VisibleNativeMenuWindow
     if ($popup -eq [IntPtr]::Zero) { return $null }
     $popupOwner = [OmniTrayInput]::PopupMenuOwner($popup)
-    $mainProcessId = [OmniTrayInput]::WindowProcessId([IntPtr]$MainWindowHandle)
+    $mainProcessId = if ($MainProcessId -gt 0) {
+        $MainProcessId
+    }
+    else {
+        [OmniTrayInput]::WindowProcessId([IntPtr]$MainWindowHandle)
+    }
     # TrackPopupMenu is owned by tao's dedicated tray HWND. Require the live
     # popup owner to be that class and the installed process before reading or
     # dispatching a command; a shell menu from another app must never pass.
@@ -1380,7 +1411,12 @@ function Find-NativeShowMainMenuItem {
         return $null
     }
     $dispatchOwner = if ($ownerIsTao) { $popupOwner } else {
-        [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+        if ($MainProcessId -gt 0) {
+            [OmniTrayInput]::FindWindowForProcessIdAndClass($MainProcessId, 'tao_system_tray_app')
+        }
+        else {
+            [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+        }
     }
     if ($dispatchOwner -eq [IntPtr]::Zero) { return $null }
     $count = [OmniTrayInput]::PopupMenuItemCount($popup)
@@ -1579,7 +1615,8 @@ function Write-TrayDiagnostics {
     # Capture one final owner/popup snapshot even when the earlier probe never
     # reached the native-menu branch; this keeps the failure actionable without
     # leaking arbitrary desktop text into CI logs.
-    Capture-NativeProbeSummary -Stage 'final-diagnostics'
+    $taoOwner = Get-TaoTrayOwner
+    Capture-NativeProbeSummary -Stage 'final-diagnostics' -Owner $taoOwner
     if (-not [string]::IsNullOrWhiteSpace($script:nativeProbeSummary)) {
         Write-Output $script:nativeProbeSummary
     }
