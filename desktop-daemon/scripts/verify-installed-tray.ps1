@@ -314,18 +314,31 @@ function Open-HiddenIcons {
 }
 
 $menuNamePatterns = @(
-    '^\u663E\u793A\u4E3B\u7A97\u53E3$',
-    '^\u663E\u793A\u4E3B\u754C\u9762$',
-    '^Show Main Window$',
-    '^Show main window$'
+    '^\s*\u663E\u793A\u4E3B\u7A97\u53E3\s*$',
+    '^\s*\u663E\u793A\u4E3B\u754C\u9762\s*$',
+    '(?i)^\s*show\s+(?:the\s+)?main\s+window\s*$'
 )
 function Find-ShowMainMenuItem {
     foreach ($menuNamePattern in $menuNamePatterns) {
         $elements = @(
             Find-ElementsMatchingName $menuNamePattern | Where-Object {
-                $bounds = $_.Current.BoundingRectangle
-                $_.Current.ControlType -eq [System.Windows.Automation.ControlType]::MenuItem -and
-                    -not $bounds.IsEmpty -and $bounds.Width -gt 0 -and $bounds.Height -gt 0
+                try {
+                    $current = $_.Current
+                    $bounds = $current.BoundingRectangle
+                    if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) {
+                        return $false
+                    }
+                    # Native Windows context menus are exposed as MenuItem on
+                    # some runner images, but as ListItem/Custom/Text on the
+                    # classic Server shell. The exact product label plus the
+                    # later cached-HWND visibility check remains the identity
+                    # gate; do not reject a real menu solely for its UIA type.
+                    $controlType = [string]$current.ControlType.ProgrammaticName
+                    return $controlType -match '(?i)(MenuItem|ListItem|Button|Custom|Text)'
+                }
+                catch {
+                    return $false
+                }
             }
         )
         if ($elements.Count -gt 0) {
@@ -400,7 +413,7 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
         }
         Click-Point $Point.X $Point.Y $true
         $menuItem = Find-ShowMainMenuItemWithin
-        if (-not $menuItem) { return $false }
+        if (-not $menuItem) { return (Invoke-ShowMainMenuByKeyboard) }
         try {
             $invoke = $menuItem.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
             $invoke.Invoke()
@@ -408,7 +421,8 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
         catch {
             Click-Element $menuItem
         }
-        return (Wait-MainWindowVisible)
+        if (Wait-MainWindowVisible) { return $true }
+        return (Invoke-ShowMainMenuByKeyboard)
     }
     catch {
         return $false
@@ -444,7 +458,7 @@ function Try-ShowMainMenu($Element) {
         $menuItem = Find-ShowMainMenuItem
         if (-not $menuItem) { Start-Sleep -Milliseconds 200 }
     }
-    if (-not $menuItem) { return $false }
+    if (-not $menuItem) { return (Invoke-ShowMainMenuByKeyboard) }
     try {
         $invoke = $menuItem.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
         $invoke.Invoke()
@@ -452,13 +466,34 @@ function Try-ShowMainMenu($Element) {
     catch {
         Click-Element $menuItem
     }
-    return (Wait-MainWindowVisible)
+    if (Wait-MainWindowVisible) { return $true }
+    return (Invoke-ShowMainMenuByKeyboard)
 }
 
 function Dismiss-ContextMenu {
     [OmniTrayInput]::keybd_event(0x1B, 0, 0, [UIntPtr]::Zero)
     [OmniTrayInput]::keybd_event(0x1B, 0, 0x0002, [UIntPtr]::Zero)
     Start-Sleep -Milliseconds 150
+}
+
+function Invoke-ShowMainMenuByKeyboard {
+    # The classic Server shell can render a real native popup menu without
+    # publishing its MenuItem descendants to UI Automation. The tray menu is
+    # intentionally ordered with Show Main Window first (see main.rs), so
+    # Home+Enter is the same user-visible command path while retaining the
+    # cached native HWND visibility gate below. If no popup is open, these
+    # keystrokes have no effect and the caller continues probing other slots.
+    try {
+        [OmniTrayInput]::keybd_event(0x24, 0, 0, [UIntPtr]::Zero) # VK_HOME
+        [OmniTrayInput]::keybd_event(0x24, 0, 0x0002, [UIntPtr]::Zero)
+        Start-Sleep -Milliseconds 80
+        [OmniTrayInput]::keybd_event(0x0D, 0, 0, [UIntPtr]::Zero) # VK_RETURN
+        [OmniTrayInput]::keybd_event(0x0D, 0, 0x0002, [UIntPtr]::Zero)
+        return (Wait-MainWindowVisible)
+    }
+    catch {
+        return $false
+    }
 }
 
 function Find-ShowMainMenuItemWithin {
