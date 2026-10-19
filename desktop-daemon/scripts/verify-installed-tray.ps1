@@ -148,7 +148,10 @@ function Find-ShellTrayElements {
             $current = $element.Current
             $className = [string]$current.ClassName
             $automationId = [string]$current.AutomationId
-            $isTrayClass = $className -match '(?i)^(SystemTray\.|NotifyIcon|TrayNotify)'
+            # Windows Server 2022 may expose notification buttons as direct
+            # ToolbarWindow32 descendants of TrayNotifyWnd instead of the
+            # SystemTray.* proxy classes used by interactive Windows 11.
+            $isTrayClass = $className -match '(?i)^(SystemTray\.|NotifyIcon|TrayNotify|ToolbarWindow32)'
             $isTrayAutomationId = $automationId -match '(?i)(^|[._-])(?:SystemTrayIcon|NotifyIcon)(?:$|[._-])'
             if (-not ($isTrayClass -or $isTrayAutomationId)) { continue }
             $bounds = $current.BoundingRectangle
