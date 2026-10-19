@@ -34,9 +34,9 @@ function Convert-DisplayIconToPath([string]$Value) {
 function Get-MsiProperty($Database, [string]$Name) {
     $query = 'SELECT `Value` FROM `Property` WHERE `Property` = ''' + $Name + ''''
     $view = $Database.OpenView($query)
-    $view.Execute()
+    $null = $view.Execute()
     $record = $view.Fetch()
-    $view.Close()
+    $null = $view.Close()
     if (-not $record) { throw "The MSI is missing required property $Name." }
     return ([string]$record.StringData(1)).Trim()
 }
