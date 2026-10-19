@@ -246,6 +246,7 @@ else {
 }
 $script:trayMenuPath = ''
 $script:nativeProbeSummary = ''
+$script:nativeProbeSummaries = New-Object 'System.Collections.Generic.List[string]'
 $script:verifiedOverflowPoint = $null
 
 function Test-MenuProbeBudget {
@@ -1168,6 +1169,7 @@ function Invoke-TaoTrayCallback([ValidateSet('left-click', 'menu-show')][string]
         }
         Start-Sleep -Milliseconds 100
     }
+    Capture-NativeProbeSummary -Stage 'after-tao-callback-timeout' -Owner $owner
     if (Invoke-ShowMainMenuByKeyboard) {
         $script:trayMenuPath = 'tao-callback-keyboard'
         return $true
@@ -1225,6 +1227,11 @@ function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][strin
         if ($Action -eq 'menu-show' -and (Test-MainWindowVisible)) { $null = Hide-MainWindowToTray }
         if ($attempt -lt 2) { Start-Sleep -Milliseconds 350 }
     }
+    # Shell_NotifyIconGetRect returned the exact tao UID=6001 icon bounds, so
+    # this callback replay remains bound to the installed app rather than a
+    # generic toolbar slot. Keep the generic-slot path gated by
+    # -VerifiedAppSlot above, while retaining the safe exact-owner fallback.
+    if ($Action -eq 'menu-show' -and (Invoke-TaoTrayCallback $Action)) { return $true }
     return $false
 }
 
@@ -1383,7 +1390,7 @@ function Capture-NativeProbeSummary {
         }
         $ownerClass = if ($Owner -ne [IntPtr]::Zero) { [OmniTrayInput]::WindowClassName($Owner) } else { '' }
         $popupOwner = if ($popup -ne [IntPtr]::Zero) { [OmniTrayInput]::WindowOwner($popup) } else { [IntPtr]::Zero }
-        $script:nativeProbeSummary = ('[tray-native] stage={0};owner={1};ownerClass={2};ownerPid={3};post={4};postError={5};foreground={6};foregroundClass={7};popup={8};popupClass={9};popupPid={10};popupOwner={11};popupOwnerClass={12};menu={13};menuCount={14};items={15}' -f
+        $summary = ('[tray-native] stage={0};owner={1};ownerClass={2};ownerPid={3};post={4};postError={5};foreground={6};foregroundClass={7};popup={8};popupClass={9};popupPid={10};popupOwner={11};popupOwnerClass={12};menu={13};menuCount={14};items={15}' -f
             $Stage,
             $Owner.ToInt64(),
             $ownerClass,
@@ -1400,9 +1407,13 @@ function Capture-NativeProbeSummary {
             $menu.ToInt64(),
             $count,
             (($texts -join '|') -replace '[;\r\n]', '?'))
+        $script:nativeProbeSummary = $summary
+        if ($script:nativeProbeSummaries.Count -lt 32) { $null = $script:nativeProbeSummaries.Add($summary) }
     }
     catch {
-        $script:nativeProbeSummary = "[tray-native] stage=$Stage;diagnosticError=$([regex]::Replace($_.Exception.Message, '[^A-Za-z0-9 .:/_-]', '?'))"
+        $summary = "[tray-native] stage=$Stage;diagnosticError=$([regex]::Replace($_.Exception.Message, '[^A-Za-z0-9 .:/_-]', '?'))"
+        $script:nativeProbeSummary = $summary
+        if ($script:nativeProbeSummaries.Count -lt 32) { $null = $script:nativeProbeSummaries.Add($summary) }
     }
 }
 
@@ -1654,7 +1665,10 @@ function Write-TrayDiagnostics {
     # leaking arbitrary desktop text into CI logs.
     $taoOwner = Get-TaoTrayOwner
     Capture-NativeProbeSummary -Stage 'final-diagnostics' -Owner $taoOwner
-    if (-not [string]::IsNullOrWhiteSpace($script:nativeProbeSummary)) {
+    if ($script:nativeProbeSummaries.Count -gt 0) {
+        foreach ($summary in $script:nativeProbeSummaries) { Write-Output $summary }
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($script:nativeProbeSummary)) {
         Write-Output $script:nativeProbeSummary
     }
     foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
