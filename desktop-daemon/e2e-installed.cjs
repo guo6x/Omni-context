@@ -17,6 +17,7 @@ const msiPath = process.env.OMNI_E2E_MSI_PATH;
 const buildExecutable = process.env.OMNI_E2E_BUILD_EXE_PATH;
 const installRecordPath = process.env.OMNI_E2E_INSTALL_RECORD_PATH;
 const legacyDatabasePath = process.env.OMNI_E2E_LEGACY_DB_PATH;
+const webviewUserDataDir = path.join(profileDir || '', 'WebView2');
 function isChildPath(parent, target) {
   const relative = path.relative(path.resolve(parent), path.resolve(target));
   return relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
@@ -400,6 +401,12 @@ async function startInstalledApp() {
       ...getWindowsRuntimeEnvironment(),
       LOCALAPPDATA: path.join(profileDir, 'Local'),
       APPDATA: path.join(profileDir, 'Roaming'),
+      // Keep WebView2's renderer storage in the same unique disposable profile
+      // as the native data directory. Without this explicit path, unpackaged
+      // WebView2 may resolve its default user-data directory outside the
+      // overridden LOCALAPPDATA, making localStorage-backed import recovery
+      // disappear across a real process restart.
+      WEBVIEW2_USER_DATA_FOLDER: webviewUserDataDir,
       TEMP: path.join(e2eRoot, 'temp'),
       TMP: path.join(e2eRoot, 'temp'),
       OMNI_UDP_BIND: `127.0.0.1:${udpPort}`,
@@ -468,6 +475,7 @@ async function run() {
   const localDataDir = path.join(profileDir, 'Local', 'omni-context', 'data');
   fs.mkdirSync(localDataDir, { recursive: true });
   fs.mkdirSync(path.join(profileDir, 'Roaming'), { recursive: true });
+  fs.mkdirSync(webviewUserDataDir, { recursive: true });
   assert.ok(fs.existsSync(legacyDatabasePath), 'synthetic v30 database fixture is unavailable');
   const installedDatabasePath = path.join(localDataDir, 'omni-context.db');
   assert.ok(!fs.existsSync(installedDatabasePath), 'refusing to overwrite the isolated installed-app database');
@@ -794,6 +802,12 @@ async function run() {
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-before-interrupted-restart.png'), fullPage: true });
 
     const extractionsBeforeRestart = mock.state.extractionCalls;
+    // WebView2 applies localStorage writes synchronously to the renderer, but
+    // its profile database can commit asynchronously. Give the real installed
+    // profile a bounded settle window before the intentionally hard process
+    // stop below; otherwise the test can manufacture a data-loss result that a
+    // normal user close would not observe.
+    await page.waitForTimeout(1_500);
     await closeConnection(browser);
     browser = null;
     stopTree(app.pid);
