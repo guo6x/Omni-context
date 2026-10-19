@@ -24,6 +24,23 @@ public static class OmniTrayInput {
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool IsWindowVisible(IntPtr hWnd);
     [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool PostMessage(IntPtr hWnd, uint message, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr GetTopWindow(IntPtr hWnd);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr GetWindow(IntPtr hWnd, uint command);
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder className, int maxCount);
+    public static string WindowClassName(IntPtr hWnd) {
+        if (hWnd == IntPtr.Zero) return string.Empty;
+        var buffer = new System.Text.StringBuilder(256);
+        return GetClassName(hWnd, buffer, buffer.Capacity) > 0 ? buffer.ToString() : string.Empty;
+    }
+    [DllImport("user32.dll", SetLastError = true)]
     public static extern void keybd_event(byte virtualKey, byte scanCode, uint flags, UIntPtr extraInfo);
 }
 '@
@@ -377,6 +394,11 @@ function Open-HiddenIcons {
 }
 
 $menuNamePatterns = @(
+    # The product tray label is currently Chinese in the native Tauri menu.
+    # Keep the code-point form alongside the English fallback so this check is
+    # independent of the runner's UI locale and source-file encoding.
+    ('^\s*' + [regex]::Escape(([char]0x663E + [char]0x793A + [char]0x4E3B + [char]0x7A97 + [char]0x53E3)) + '\s*$'),
+    ('^\s*' + [regex]::Escape(([char]0x663E + [char]0x793A + [char]0x4E3B + [char]0x754C + [char]0x9762)) + '\s*$'),
     '^\s*\u663E\u793A\u4E3B\u7A97\u53E3\s*$',
     '^\s*\u663E\u793A\u4E3B\u754C\u9762\s*$',
     '(?i)^\s*show\s+(?:the\s+)?main\s+window\s*$'
@@ -810,6 +832,52 @@ function Find-AppTrayPoint([ValidateSet('left-click', 'menu-show')][string]$Acti
     return $false
 }
 
+function Hide-MainWindowToTray {
+    if ($MainWindowHandle -le 0) { return $false }
+    # Reuse the same WM_CLOSE-to-tray path as the installed E2E harness. This
+    # keeps the process/Brain alive while returning the native window to the
+    # hidden state required for a genuine tray-menu verification.
+    if (-not [OmniTrayInput]::PostMessage([IntPtr]$MainWindowHandle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero)) {
+        return $false
+    }
+    $deadline = [DateTime]::UtcNow.AddSeconds(5)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        if (-not (Test-MainWindowVisible)) { return $true }
+        Start-Sleep -Milliseconds 100
+    }
+    return (-not (Test-MainWindowVisible))
+}
+
+function Find-AppTrayMenuViaKnownLeftClick {
+    # On classic Server the notification toolbar may expose no named icon and
+    # no UIA menu item. First locate Omni by the same real left-click/HWND gate
+    # used by the preceding tray acceptance, remember that exact shell slot,
+    # hide the window back to tray, then exercise a real right-click on the
+    # known slot. This removes neighboring-icon ambiguity without treating a
+    # visible window alone as a menu success.
+    for ($attempt = 0; $attempt -lt 2; $attempt++) {
+        foreach ($point in (Get-TrayProbePoints 'left-click')) {
+            try {
+                Dismiss-ContextMenu
+                Click-Point $point.X $point.Y
+                if (-not (Wait-MainWindowVisible)) { continue }
+                if (-not (Hide-MainWindowToTray)) { continue }
+                Start-Sleep -Milliseconds 250
+                if (Invoke-TrayPoint $point 'menu-show') { return $true }
+                if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
+            }
+            catch {
+                if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
+            }
+        }
+        if ($attempt -eq 0) {
+            $null = Open-HiddenIcons
+            Start-Sleep -Milliseconds 500
+        }
+    }
+    return $false
+}
+
 function Try-ShowMainMenu($Element) {
     try {
         Click-Element $Element $true
@@ -841,6 +909,37 @@ function Dismiss-ContextMenu {
     Start-Sleep -Milliseconds 150
 }
 
+function Find-VisibleNativeMenuWindow {
+    # Classic Server may expose the tray context menu as a native #32768
+    # popup without publishing MenuItem descendants through UI Automation.
+    # Find only visible popup-menu windows, bounded to a finite top-level walk;
+    # never treat an arbitrary foreground window as the product menu.
+    $window = [OmniTrayInput]::GetTopWindow([IntPtr]::Zero)
+    for ($index = 0; $index -lt 256 -and $window -ne [IntPtr]::Zero; $index++) {
+        if ([OmniTrayInput]::IsWindowVisible($window) -and
+            [OmniTrayInput]::WindowClassName($window) -eq '#32768') {
+            return $window
+        }
+        $window = [OmniTrayInput]::GetWindow($window, 2) # GW_HWNDNEXT
+    }
+    return [IntPtr]::Zero
+}
+
+function Focus-OpenContextMenu {
+    $popup = Find-VisibleNativeMenuWindow
+    if ($popup -ne [IntPtr]::Zero) {
+        [OmniTrayInput]::SetForegroundWindow($popup) | Out-Null
+        Start-Sleep -Milliseconds 80
+        return $true
+    }
+    $foreground = [OmniTrayInput]::GetForegroundWindow()
+    if ($foreground -ne [IntPtr]::Zero) {
+        [OmniTrayInput]::SetForegroundWindow($foreground) | Out-Null
+        Start-Sleep -Milliseconds 50
+    }
+    return $false
+}
+
 function Invoke-ShowMainMenuByKeyboard {
     # The classic Server shell can render a real native popup menu without
     # publishing its MenuItem descendants to UI Automation. The tray menu is
@@ -849,12 +948,25 @@ function Invoke-ShowMainMenuByKeyboard {
     # cached native HWND visibility gate below. If no popup is open, these
     # keystrokes have no effect and the caller continues probing other slots.
     try {
-        [OmniTrayInput]::keybd_event(0x24, 0, 0, [UIntPtr]::Zero) # VK_HOME
-        [OmniTrayInput]::keybd_event(0x24, 0, 0x0002, [UIntPtr]::Zero)
-        Start-Sleep -Milliseconds 80
-        [OmniTrayInput]::keybd_event(0x0D, 0, 0, [UIntPtr]::Zero) # VK_RETURN
-        [OmniTrayInput]::keybd_event(0x0D, 0, 0x0002, [UIntPtr]::Zero)
-        return (Wait-MainWindowVisible)
+        $null = Focus-OpenContextMenu
+        # Home is the normal path for a native popup whose first enabled item
+        # is Show Main Window. Down+Enter is a bounded fallback for shells that
+        # leave the first item unselected after a synthetic right-click.
+        $sequences = @(
+            @(0x24, 0x0D), # VK_HOME, VK_RETURN
+            @(0x28, 0x0D), # VK_DOWN, VK_RETURN
+            @(0x24, 0x28, 0x0D) # VK_HOME, VK_DOWN, VK_RETURN
+        )
+        foreach ($sequence in $sequences) {
+            foreach ($key in $sequence) {
+                [OmniTrayInput]::keybd_event([byte]$key, 0, 0, [UIntPtr]::Zero)
+                [OmniTrayInput]::keybd_event([byte]$key, 0, 0x0002, [UIntPtr]::Zero)
+                Start-Sleep -Milliseconds 60
+            }
+            if (Wait-MainWindowVisible 350) { return $true }
+            $null = Focus-OpenContextMenu
+        }
+        return $false
     }
     catch {
         return $false
@@ -1060,6 +1172,15 @@ if ($Action -eq 'left-click') {
             continue
         }
     }
+}
+
+# For menu-show, locate the exact app slot through the real left-click gate
+# before probing generic context menus. This is bounded and remains a genuine
+# shell right-click/menu command path; it is not a simulated HWND visibility
+# shortcut.
+if ($Action -eq 'menu-show' -and (Find-AppTrayMenuViaKnownLeftClick)) {
+    Write-Output 'PASS installed tray context menu Show Main Window via known classic toolbar slot'
+    exit 0
 }
 
 if ($candidates.Count -eq 0) {
