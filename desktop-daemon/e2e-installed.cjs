@@ -465,10 +465,10 @@ async function run() {
     // controls can receive pointer events. Dismiss it explicitly so the
     // installed journey exercises the same settings/import surface a user
     // reaches after completing or skipping onboarding.
-    const onboardingDialog = page.getByRole('dialog').filter({ hasText: /首次使用引导|Omni-Context/i }).first();
-    if (await onboardingDialog.isVisible().catch(() => false)) {
-      await onboardingDialog.getByRole('button', { name: /跳过引导|Skip Tour/i }).click();
-      await onboardingDialog.waitFor({ state: 'hidden', timeout: 10_000 });
+    const onboardingSkip = page.getByRole('button', { name: /跳过引导|Skip Tour/i }).first();
+    if (await onboardingSkip.isVisible().catch(() => false)) {
+      await onboardingSkip.click();
+      await page.locator('[data-retained-panel="onboarding"]').waitFor({ state: 'hidden', timeout: 10_000 });
     }
 
     await page.getByRole('button', { name: /^设置$|^Settings$/ }).click();
