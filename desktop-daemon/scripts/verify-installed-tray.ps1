@@ -872,6 +872,17 @@ function Invoke-TrayOverflowPoint([object]$Point, [ValidateSet('left-click', 'me
         else {
             Click-Point $Point.X $Point.Y $true
             $menuItem = Find-ShowMainMenuItemWithin
+            # Classic Server can swallow the shell's right-button notification
+            # before it reaches tao's callback window.  The cursor is still on
+            # this concrete overflow slot, so replay the exact tao callback
+            # before trying keyboard or row heuristics.  The callback helper
+            # remains fail-closed: it only accepts a verified native menu item
+            # and the cached installed main-window visibility gate.
+            if (-not $menuItem -and (Find-VisibleNativeMenuWindow) -eq [IntPtr]::Zero) {
+                if (Invoke-TaoTrayCallback $Action) {
+                    $success = $true
+                }
+            }
             if ($menuItem) {
                 try {
                     $invoke = $menuItem.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
@@ -1001,6 +1012,13 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
         }
         Click-Point $Point.X $Point.Y $true
         $menuItem = Find-ShowMainMenuItemWithin
+        # On the Windows Server shell the toolbar may receive the real pointer
+        # gesture without forwarding WM_RBUTTONUP to tao.  At this point the
+        # cursor is known to be on the candidate slot; use tao's own callback
+        # path to open the product menu, then require its native command gate.
+        if (-not $menuItem -and (Find-VisibleNativeMenuWindow) -eq [IntPtr]::Zero) {
+            if (Invoke-TaoTrayCallback $Action) { return $true }
+        }
         if (-not $menuItem) {
             $nativeSuccess = Invoke-NativeShowMainMenuItem
             if ($nativeSuccess) { return $true }
