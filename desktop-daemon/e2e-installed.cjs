@@ -267,10 +267,12 @@ function stopTree(pid) {
   }
 }
 
-function verifyTrayAction(action) {
+function verifyTrayAction(action, mainWindowHandle) {
+  assert.ok(Number.isInteger(mainWindowHandle) && mainWindowHandle > 0, 'tray verification requires the cached native main-window handle');
   const script = path.join(__dirname, 'scripts', 'verify-installed-tray.ps1');
   const result = spawnSync('powershell.exe', [
-    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, '-Action', action,
+    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script,
+    '-Action', action, '-MainWindowHandle', String(mainWindowHandle),
   ], { windowsHide: true, encoding: 'utf8' });
   assert.equal(result.status, 0, `installed system-tray ${action} failed: ${result.stderr || result.stdout}`);
 }
@@ -668,12 +670,12 @@ async function run() {
     const mainWindowHandle = requestInstalledWindowClose(app.pid);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === false, 20_000);
     assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true, 'closing the main window stopped Brain instead of hiding to tray');
-    verifyTrayAction('left-click');
+    verifyTrayAction('left-click', mainWindowHandle);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === true, 20_000);
     pass('installed-tray-icon-left-click-reopens-main-window');
     requestInstalledWindowClose(app.pid, mainWindowHandle);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === false, 20_000);
-    verifyTrayAction('menu-show');
+    verifyTrayAction('menu-show', mainWindowHandle);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === true, 20_000);
     assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true,
       'choosing Show Main Window from the tray menu stopped Brain');
