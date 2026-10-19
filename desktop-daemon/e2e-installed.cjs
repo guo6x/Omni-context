@@ -274,7 +274,8 @@ function verifyTrayAction(action, mainWindowHandle) {
     '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script,
     '-Action', action, '-MainWindowHandle', String(mainWindowHandle),
   ], { windowsHide: true, encoding: 'utf8' });
-  assert.equal(result.status, 0, `installed system-tray ${action} failed: ${result.stderr || result.stdout}`);
+  const output = [result.stderr, result.stdout].filter(Boolean).join('\n');
+  assert.equal(result.status, 0, `installed system-tray ${action} failed: ${output}`);
 }
 
 function mockResponse(request) {
