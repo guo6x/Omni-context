@@ -577,8 +577,11 @@ async function run() {
     const asksBeforeFollowUp = mock.state.askCalls;
     await followUp.fill('Can you restate what the imported source says?');
     await followUp.press('Enter');
+    // The previous turn has the same fixture conclusion. Wait for the new
+    // provider request before checking that conclusion, otherwise the locator
+    // can match the old answer and make the call-count assertion race.
+    await waitFor(() => mock.state.askCalls > asksBeforeFollowUp, 60_000);
     await page.getByText('Project Aurora is grounded in the imported local-first fixture.', { exact: false }).last().waitFor({ timeout: 60_000 });
-    assert.ok(mock.state.askCalls > asksBeforeFollowUp, 'continuous Ask did not reach the local MCP-backed answer path');
     pass('installed-ui-continuous-ask');
 
     await installWindowBounds(app.pid, 420, 540);
