@@ -33,6 +33,10 @@ async function main(): Promise<void> {
     await db.run('DELETE FROM migrations WHERE name = ?', ['persist_privacy_minimal_import_job_receipts']);
     assert.equal(await db.get('SELECT id FROM entities WHERE id = ?', ['legacy-v30-installed-fixture']) !== undefined, true);
     assert.equal(await db.get('SELECT name FROM sqlite_master WHERE type = ? AND name = ?', ['table', 'import_job_receipts']), undefined);
+    // The installed-app harness copies the database file as a single artifact.
+    // Checkpoint the WAL before closing so the compatibility record is present
+    // in that portable snapshot instead of stranded in a `-wal` sidecar.
+    await db.run('PRAGMA wal_checkpoint(TRUNCATE)');
   } finally {
     await db.close();
   }
