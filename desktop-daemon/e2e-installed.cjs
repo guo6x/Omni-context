@@ -85,7 +85,10 @@ function wait(ms) {
 async function waitFor(predicate, timeoutMs = 90_000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
-    const result = await predicate().catch(() => null);
+    // Accept both synchronous state predicates and async browser probes.
+    // Wrapping the invocation also turns a synchronous throw into a normal
+    // retry, matching the behavior of a rejected promise.
+    const result = await Promise.resolve().then(predicate).catch(() => null);
     if (result) return result;
     await wait(250);
   }

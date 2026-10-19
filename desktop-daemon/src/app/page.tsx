@@ -189,6 +189,9 @@ function MainApp() {
   const toast = useToast();
   const [settingsTab, setSettingsTab] = useState<'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about'>('shortcuts');
   const [showWizardForce, setShowWizardForce] = useState(false);
+  // The onboarding wizard owns the import state. Keep a synchronous mirror so
+  // the outer focus-trap Escape handler cannot hide the only recovery surface.
+  const onboardingImportPendingRef = useRef(false);
   const [isLoadingGraph, setIsLoadingGraph] = useState(false);
   const graphRequestRef = useRef(0);
 
@@ -1134,6 +1137,7 @@ function MainApp() {
             active={!settings.behavior.onboarded || showWizardForce}
             titleId="onboarding-dialog-title"
             onDismiss={() => {
+              if (onboardingImportPendingRef.current) return;
               updateBehavior({ onboarded: true });
               setShowWizardForce(false);
             }}
@@ -1142,6 +1146,7 @@ function MainApp() {
               settings={settings}
               visible={!settings.behavior.onboarded || showWizardForce}
               onImportComplete={fetchGraphData}
+              onImportPendingChange={(pending) => { onboardingImportPendingRef.current = pending; }}
               onAskImported={() => {
                 navigateWorkspace('ask');
                 updateBehavior({ onboarded: true });

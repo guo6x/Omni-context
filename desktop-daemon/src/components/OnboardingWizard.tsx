@@ -39,6 +39,8 @@ interface OnboardingWizardProps {
   onUpdateBehavior: (updates: Partial<AppSettings['behavior']>) => void;
   onUpdateLlmProvider: (updates: Partial<AppSettings['llmProvider']>) => void;
   onImportComplete?: () => void;
+  /** Keep parent-level modal dismissal in sync with the fail-closed import lock. */
+  onImportPendingChange?: (pending: boolean) => void;
   onAskImported?: () => void;
   onClose: () => void;
   onOpenSettings?: (tab: 'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about') => void;
@@ -70,7 +72,7 @@ function findProviderPreset(apiUrl: string): string {
 }
 
 export default function OnboardingWizard({
-  settings, visible = true, onUpdateBehavior, onUpdateLlmProvider, onImportComplete, onAskImported, onClose, onOpenSettings,
+  settings, visible = true, onUpdateBehavior, onUpdateLlmProvider, onImportComplete, onImportPendingChange, onAskImported, onClose, onOpenSettings,
 }: OnboardingWizardProps) {
   const [step, setStep] = useState(1);
   const { t } = useTranslation();
@@ -214,6 +216,7 @@ export default function OnboardingWizard({
 
   const setImportPendingLock = (pending: boolean) => {
     importPendingRef.current = pending;
+    onImportPendingChange?.(pending);
     setImportPending(pending);
   };
 
@@ -491,10 +494,22 @@ export default function OnboardingWizard({
   };
 
   const complete = () => {
+    if (importPendingRef.current) {
+      // The onboarding recovery record is the only UI that can clear an
+      // unresolved onboarding reservation. Keep it reachable until the user
+      // has checked the receipt or explicitly acknowledged the uncertainty.
+      setStep(2);
+      setImportAlert(true);
+      setImportMsg(importing
+        ? '导入仍在后台处理。请先等待或继续检查原任务；确认结果前不能关闭引导。'
+        : '请先检查原导入任务并确认结果；确认前不能关闭引导，也不会自动重新上传。');
+      return false;
+    }
     invalidateProviderTest();
     successfulProviderRef.current = null;
     onUpdateBehavior({ onboarded: true });
     onClose();
+    return true;
   };
 
   return (
@@ -684,15 +699,15 @@ export default function OnboardingWizard({
 
         {(importing || importPending) && step !== 2 && (
           <p role="status" className="px-6 pb-3 text-xs text-gray-400">{importing
-            ? '导入仍在后台处理。继续设置不会重新上传；关闭引导不会取消后台任务。'
-            : '原导入的最终结果尚未确认。可返回导入步骤检查原任务；不会自动重新上传。'}</p>
+            ? '导入仍在后台处理。请先返回导入步骤查看进度；确认结果前不能关闭引导，也不会重新上传。'
+            : '原导入的最终结果尚未确认。请返回导入步骤检查原任务；确认前不能关闭引导，也不会自动重新上传。'}</p>
         )}
         <div className="flex items-center justify-between px-6 py-4 border-t border-white/10 bg-black/20">
           <div>
             {step > 1 ? (
               <button onClick={() => setStep((s) => s - 1)} className="px-4 py-2 text-xs text-gray-400 hover:text-white flex items-center gap-1"><ChevronLeft className="w-4 h-4" /> {t('onboarding.prev')}</button>
             ) : (
-              onOpenSettings && <button onClick={() => { complete(); setTimeout(() => onOpenSettings('llm'), 200); }} className="text-[11px] text-cyan-400/80 hover:text-cyan-300 hover:underline">{t('onboarding.advanced_setup')}</button>
+              onOpenSettings && <button onClick={() => { if (complete()) setTimeout(() => onOpenSettings('llm'), 200); }} className="text-[11px] text-cyan-400/80 hover:text-cyan-300 hover:underline">{t('onboarding.advanced_setup')}</button>
             )}
           </div>
           <div className="flex items-center gap-2">
