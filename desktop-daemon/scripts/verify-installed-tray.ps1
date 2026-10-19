@@ -30,6 +30,8 @@ public static class OmniTrayInput {
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr GetLastActivePopup(IntPtr hWnd);
+    [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr GetTopWindow(IntPtr hWnd);
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr GetWindow(IntPtr hWnd, uint command);
@@ -37,6 +39,14 @@ public static class OmniTrayInput {
     public static extern IntPtr FindWindow(string className, string windowName);
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr SendMessage(IntPtr hWnd, uint message, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr GetMenu(IntPtr hWnd);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern int GetMenuItemCount(IntPtr hMenu);
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool GetMenuItemInfo(IntPtr hMenu, uint item, bool byPosition, ref MenuItemInfo info);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool GetMenuItemRect(IntPtr hWnd, IntPtr hMenu, uint item, out Rect rect);
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder className, int maxCount);
     [StructLayout(LayoutKind.Sequential)]
@@ -47,6 +57,21 @@ public static class OmniTrayInput {
         public IntPtr hWnd;
         public uint uID;
         public Guid guidItem;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MenuItemInfo {
+        public uint cbSize;
+        public uint fMask;
+        public uint fType;
+        public uint fState;
+        public uint wID;
+        public IntPtr hSubMenu;
+        public IntPtr hbmpChecked;
+        public IntPtr hbmpUnchecked;
+        public IntPtr dwItemData;
+        public IntPtr dwTypeData;
+        public uint cch;
+        public IntPtr hbmpItem;
     }
     private delegate bool EnumWindowsCallback(IntPtr hWnd, IntPtr lParam);
     [DllImport("user32.dll", SetLastError = true)]
@@ -83,6 +108,16 @@ public static class OmniTrayInput {
         }, IntPtr.Zero);
         return found;
     }
+    public static IntPtr FindWindowForClass(string expectedClass) {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((hWnd, lParam) => {
+            if (found != IntPtr.Zero) return false;
+            var className = WindowClassName(hWnd);
+            if (string.Equals(className, expectedClass, StringComparison.OrdinalIgnoreCase)) found = hWnd;
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
     public static int[] NotifyIconBounds(IntPtr ownerWindow, uint uid) {
         if (ownerWindow == IntPtr.Zero) return new int[0];
         var identifier = new NotifyIconIdentifier {
@@ -93,6 +128,40 @@ public static class OmniTrayInput {
         };
         Rect rect;
         if (Shell_NotifyIconGetRect(ref identifier, out rect) != 0) return new int[0];
+        return new[] { rect.Left, rect.Top, rect.Right, rect.Bottom };
+    }
+    public static int PopupMenuItemCount(IntPtr popup) {
+        if (popup == IntPtr.Zero) return 0;
+        var menu = GetMenu(popup);
+        if (menu == IntPtr.Zero) return 0;
+        return Math.Max(0, GetMenuItemCount(menu));
+    }
+    public static string PopupMenuItemText(IntPtr popup, uint index) {
+        if (popup == IntPtr.Zero) return string.Empty;
+        var menu = GetMenu(popup);
+        if (menu == IntPtr.Zero) return string.Empty;
+        var buffer = Marshal.AllocHGlobal(512);
+        try {
+            for (var offset = 0; offset < 512; offset += 2) Marshal.WriteInt16(buffer, offset, 0);
+            var info = new MenuItemInfo {
+                cbSize = (uint)Marshal.SizeOf(typeof(MenuItemInfo)),
+                fMask = 0x00000040, // MIIM_STRING
+                dwTypeData = buffer,
+                cch = 255,
+            };
+            if (!GetMenuItemInfo(menu, index, true, ref info)) return string.Empty;
+            return Marshal.PtrToStringUni(buffer) ?? string.Empty;
+        }
+        finally {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+    public static int[] PopupMenuItemBounds(IntPtr popup, uint index) {
+        if (popup == IntPtr.Zero) return new int[0];
+        var menu = GetMenu(popup);
+        if (menu == IntPtr.Zero) return new int[0];
+        Rect rect;
+        if (!GetMenuItemRect(popup, menu, index, out rect)) return new int[0];
         return new[] { rect.Left, rect.Top, rect.Right, rect.Bottom };
     }
     [DllImport("user32.dll", SetLastError = true)]
@@ -106,6 +175,17 @@ $classNameProperty = [System.Windows.Automation.AutomationElement]::ClassNamePro
 $processIdProperty = [System.Windows.Automation.AutomationElement]::ProcessIdProperty
 $treeScope = [System.Windows.Automation.TreeScope]::Descendants
 $trueCondition = [System.Windows.Automation.Condition]::TrueCondition
+$menuProbeDeadline = if ($Action -eq 'menu-show') {
+    [DateTime]::UtcNow.AddSeconds(120)
+}
+else {
+    [DateTime]::UtcNow.AddMinutes(10)
+}
+
+function Test-MenuProbeBudget {
+    return [DateTime]::UtcNow -lt $menuProbeDeadline
+}
+
 $explorerProcessIds = @(
     Get-Process -Name explorer -ErrorAction Stop |
         ForEach-Object { [int]$_.Id }
@@ -700,11 +780,13 @@ function Open-TrayOverflowPopup {
     $existing = @(Find-TrayOverflowWindows)
     if ($existing.Count -gt 0) { return $existing[0] }
     foreach ($point in (Get-TrayOverflowClickPoints)) {
+        if (-not (Test-MenuProbeBudget)) { return $null }
         try {
             Dismiss-ContextMenu
             Click-Point $point.X $point.Y
             $deadline = [DateTime]::UtcNow.AddSeconds(2)
             while ([DateTime]::UtcNow -lt $deadline) {
+                if (-not (Test-MenuProbeBudget)) { return $null }
                 $popup = @(Find-TrayOverflowWindows)
                 if ($popup.Count -gt 0) { return $popup[0] }
                 Start-Sleep -Milliseconds 100
@@ -735,6 +817,7 @@ function Invoke-TrayOverflowPoint([object]$Point, [ValidateSet('left-click', 'me
                 }
                 $success = Wait-MainWindowVisible
             }
+            if (-not $success) { $success = Invoke-NativeShowMainMenuItem }
             if (-not $success) { $success = Invoke-ShowMainMenuByKeyboard }
         }
     }
@@ -747,6 +830,7 @@ function Invoke-TrayOverflowPoint([object]$Point, [ValidateSet('left-click', 'me
 
 function Find-AppTrayOverflowPoint([ValidateSet('left-click', 'menu-show')][string]$Action) {
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        if (-not (Test-MenuProbeBudget)) { return $false }
         $popup = Open-TrayOverflowPopup
         if (-not $popup) { return $false }
 
@@ -782,6 +866,7 @@ function Find-AppTrayOverflowPoint([ValidateSet('left-click', 'menu-show')][stri
         catch { }
 
         foreach ($point in (Get-TrayOverflowProbePoints)) {
+            if (-not (Test-MenuProbeBudget)) { return $false }
             if (Invoke-TrayOverflowPoint $point $Action) { return $true }
             # A failed native slot click may close/rebuild the popup. Reopen it
             # before probing the next slot; never probe outside this popup.
@@ -851,7 +936,11 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
         }
         Click-Point $Point.X $Point.Y $true
         $menuItem = Find-ShowMainMenuItemWithin
-        if (-not $menuItem) { return (Invoke-ShowMainMenuByKeyboard) }
+        if (-not $menuItem) {
+            $nativeSuccess = Invoke-NativeShowMainMenuItem
+            if ($nativeSuccess) { return $true }
+            return (Invoke-ShowMainMenuByKeyboard)
+        }
         try {
             $invoke = $menuItem.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
             $invoke.Invoke()
@@ -860,6 +949,7 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
             Click-Element $menuItem
         }
         if (Wait-MainWindowVisible) { return $true }
+        if (Invoke-NativeShowMainMenuItem) { return $true }
         return (Invoke-ShowMainMenuByKeyboard)
     }
     catch {
@@ -872,11 +962,13 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
 
 function Find-AppTrayPoint([ValidateSet('left-click', 'menu-show')][string]$Action) {
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        if (-not (Test-MenuProbeBudget)) { return $false }
         # Hidden notification icons on classic Server are reachable only after
         # opening NotifyIconOverflowWindow. This path is scoped to that popup
         # and retains the cached-HWND acceptance gate for every slot.
         if (Find-AppTrayOverflowPoint $Action) { return $true }
         foreach ($point in (Get-TrayProbePoints $Action)) {
+            if (-not (Test-MenuProbeBudget)) { return $false }
             if (Invoke-TrayPoint $point $Action) { return $true }
         }
         if ($attempt -lt 2) {
@@ -893,6 +985,14 @@ function Get-TaoTrayIconBounds {
     # uses UID 6001. Shell_NotifyIconGetRect gives the exact real icon bounds,
     # avoiding ambiguous classic ToolbarWindow32 slot geometry when available.
     $owner = [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    # The Windows shell can expose the Tauri main window through a different
+    # process-owned HWND after WebView2/restart transitions even though tao's
+    # tray owner remains the real application window. The class is unique to
+    # tao's tray implementation, so a class-scoped fallback remains safe; the
+    # final cached main-window visibility gate still proves this is our app.
+    if ($owner -eq [IntPtr]::Zero) {
+        $owner = [OmniTrayInput]::FindWindowForClass('tao_system_tray_app')
+    }
     if ($owner -eq [IntPtr]::Zero) { return @() }
     $bounds = [OmniTrayInput]::NotifyIconBounds($owner, 6001)
     if ($bounds.Count -ne 4 -or ($bounds[2] -le $bounds[0]) -or ($bounds[3] -le $bounds[1])) { return @() }
@@ -924,6 +1024,7 @@ function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][strin
             }
             else {
                 Click-Point $x $y $true
+                if (Invoke-NativeShowMainMenuItem) { return $true }
                 $menuItem = Find-ShowMainMenuItemWithin
                 if ($menuItem) {
                     try {
@@ -973,6 +1074,7 @@ function Find-AppTrayMenuViaKnownLeftClick {
     # real left-click/HWND gate first, then exercise the same popup through a
     # real right-click after hiding the window again.
     for ($attempt = 0; $attempt -lt 2; $attempt++) {
+        if (-not (Test-MenuProbeBudget)) { return $false }
         try {
             $overflowLeftClick = Find-AppTrayOverflowPoint 'left-click'
             if ($overflowLeftClick -and (Hide-MainWindowToTray)) {
@@ -987,6 +1089,7 @@ function Find-AppTrayMenuViaKnownLeftClick {
         if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
 
         foreach ($point in (Get-TrayProbePoints 'left-click')) {
+            if (-not (Test-MenuProbeBudget)) { return $false }
             try {
                 Dismiss-ContextMenu
                 Click-Point $point.X $point.Y
@@ -1050,9 +1153,13 @@ function Find-VisibleNativeMenuWindow {
     }
     $foreground = [OmniTrayInput]::GetForegroundWindow()
     if ($foreground -ne [IntPtr]::Zero -and
-        [OmniTrayInput]::IsWindowVisible($foreground) -and
         [OmniTrayInput]::WindowClassName($foreground) -eq '#32768') {
         return $foreground
+    }
+    $activePopup = [OmniTrayInput]::GetLastActivePopup($foreground)
+    if ($activePopup -ne [IntPtr]::Zero -and
+        [OmniTrayInput]::WindowClassName($activePopup) -eq '#32768') {
+        return $activePopup
     }
     $window = [OmniTrayInput]::GetTopWindow([IntPtr]::Zero)
     for ($index = 0; $index -lt 256 -and $window -ne [IntPtr]::Zero; $index++) {
@@ -1078,6 +1185,44 @@ function Focus-OpenContextMenu {
         Start-Sleep -Milliseconds 50
     }
     return $false
+}
+
+function Find-NativeShowMainMenuItem {
+    # UI Automation does not publish native TrackPopupMenu children on the
+    # Server 2022 image. Read the actual HMENU owned by the visible popup so
+    # the acceptance can select the product command by text and its native
+    # screen rectangle, without guessing a row or invoking another command.
+    $popup = Find-VisibleNativeMenuWindow
+    if ($popup -eq [IntPtr]::Zero) { return $null }
+    $count = [OmniTrayInput]::PopupMenuItemCount($popup)
+    if ($count -le 0) { return $null }
+    for ($index = 0; $index -lt $count; $index++) {
+        try {
+            $text = [OmniTrayInput]::PopupMenuItemText($popup, [uint32]$index)
+            if ($text -notmatch '(?i)(显示主窗口|显示主界面|show\s+(?:the\s+)?main\s+window)') { continue }
+            $bounds = [OmniTrayInput]::PopupMenuItemBounds($popup, [uint32]$index)
+            if ($bounds.Count -ne 4 -or $bounds[2] -le $bounds[0] -or $bounds[3] -le $bounds[1]) { continue }
+            return [pscustomobject]@{
+                Popup = $popup
+                Text = $text
+                Left = [int]$bounds[0]
+                Top = [int]$bounds[1]
+                Right = [int]$bounds[2]
+                Bottom = [int]$bounds[3]
+            }
+        }
+        catch { continue }
+    }
+    return $null
+}
+
+function Invoke-NativeShowMainMenuItem {
+    $item = Find-NativeShowMainMenuItem
+    if (-not $item) { return $false }
+    $x = [int](($item.Left + $item.Right) / 2)
+    $y = [int](($item.Top + $item.Bottom) / 2)
+    Click-Point $x $y
+    return (Wait-MainWindowVisible 1500)
 }
 
 function Invoke-FirstNativeMenuItem {
@@ -1169,6 +1314,7 @@ function Find-AppTrayCandidate {
     # never accepted as the Omni-Context icon. Re-enumerate after each probe
     # because opening the overflow popup can invalidate UIA element handles.
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        if (-not (Test-MenuProbeBudget)) { return $null }
         Dismiss-ContextMenu
         if ($attempt -gt 0) {
             $null = Open-HiddenIcons
@@ -1183,6 +1329,7 @@ function Find-AppTrayCandidate {
         })
         $candidates = @($omniCandidates + $otherCandidates)
         foreach ($candidate in $candidates) {
+            if (-not (Test-MenuProbeBudget)) { return $null }
             try {
                 Click-Element $candidate $true
                 $menuItem = Find-ShowMainMenuItemWithin
