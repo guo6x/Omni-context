@@ -289,12 +289,13 @@ function stopTree(pid) {
   }
 }
 
-function verifyTrayAction(action, mainWindowHandle) {
+function verifyTrayAction(action, mainWindowHandle, mainProcessId) {
   assert.ok(Number.isInteger(mainWindowHandle) && mainWindowHandle > 0, 'tray verification requires the cached native main-window handle');
+  assert.ok(Number.isInteger(mainProcessId) && mainProcessId > 0, 'tray verification requires the installed process id');
   const script = path.join(__dirname, 'scripts', 'verify-installed-tray.ps1');
   const result = spawnSync('powershell.exe', [
     '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script,
-    '-Action', action, '-MainWindowHandle', String(mainWindowHandle),
+    '-Action', action, '-MainWindowHandle', String(mainWindowHandle), '-MainProcessId', String(mainProcessId),
   ], { windowsHide: true, encoding: 'utf8' });
   const output = [result.stderr, result.stdout].filter(Boolean).join('\n');
   assert.equal(result.status, 0, `installed system-tray ${action} failed: ${output}`);
@@ -695,12 +696,12 @@ async function run() {
     const mainWindowHandle = requestInstalledWindowClose(app.pid);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === false, 20_000);
     assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true, 'closing the main window stopped Brain instead of hiding to tray');
-    verifyTrayAction('left-click', mainWindowHandle);
+    verifyTrayAction('left-click', mainWindowHandle, app.pid);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === true, 20_000);
     pass('installed-tray-icon-left-click-reopens-main-window');
     requestInstalledWindowClose(app.pid, mainWindowHandle);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === false, 20_000);
-    verifyTrayAction('menu-show', mainWindowHandle);
+    verifyTrayAction('menu-show', mainWindowHandle, app.pid);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === true, 20_000);
     assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true,
       'choosing Show Main Window from the tray menu stopped Brain');

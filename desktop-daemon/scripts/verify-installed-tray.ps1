@@ -1084,13 +1084,6 @@ function Get-TaoTrayOwner {
     else {
         [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
     }
-    # On WebView2 restart/close transitions the cached main HWND can belong to
-    # a different process-owned window even though tao's tray owner remains
-    # alive in the installed app. The class is tao-specific; retain the final
-    # native command + cached main-window visibility gates before accepting it.
-    if ($owner -eq [IntPtr]::Zero) {
-        $owner = [OmniTrayInput]::FindWindowForClass('tao_system_tray_app')
-    }
     if ($owner -eq [IntPtr]::Zero) { return [IntPtr]::Zero }
     return $owner
 }
