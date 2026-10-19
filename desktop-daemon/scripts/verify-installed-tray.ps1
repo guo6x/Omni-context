@@ -62,6 +62,26 @@ function Find-ElementsMatchingName([string]$Pattern) {
     return $found.ToArray()
 }
 
+function Find-TrayHostElements {
+    # Classic Server shells publish the notification area as TrayNotifyWnd,
+    # while the hidden-icons popup uses a separate NotifyIconOverflowWindow.
+    # Keep both hosts explicit so popup toolbars are included without turning
+    # every ToolbarWindow32 on the desktop into a tray candidate.
+    $hostPattern = '(?i)^(TrayNotifyWnd|NotifyIconOverflowWindow(?:Class|32)?)$'
+    $found = New-Object System.Collections.Generic.List[object]
+    foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
+        try {
+            if ([string]$element.Current.ClassName -match $hostPattern) {
+                $null = $found.Add($element)
+            }
+        }
+        catch {
+            continue
+        }
+    }
+    return $found.ToArray()
+}
+
 function Test-MainWindowVisible {
     if ($MainWindowHandle -le 0) { return $false }
     return [OmniTrayInput]::IsWindowVisible([IntPtr]$MainWindowHandle)
@@ -218,8 +238,7 @@ function Find-ShellTrayElements {
     # generic Button/Custom descendants of TrayNotifyWnd, not SystemTray.*.
     # Walk those host descendants and retain only controls with concrete bounds
     # so clicks still target real shell UIA elements.
-    $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
-    foreach ($trayHost in ($root.FindAll($treeScope, $trayHostCondition))) {
+    foreach ($trayHost in (Find-TrayHostElements)) {
         try {
             foreach ($element in ($trayHost.FindAll($treeScope, $trueCondition))) {
                 try {
@@ -249,8 +268,10 @@ function Find-OverflowToggle {
     foreach ($element in (Find-ShellTrayElements)) {
         try {
             $current = $element.Current
-            if ([string]$current.AutomationId -eq 'SystemTrayIcon' -or
-                [string]$current.ClassName -match '(?i)^ToolbarWindow32$') {
+            $bounds = $current.BoundingRectangle
+            $isNarrowToolbar = [string]$current.ClassName -match '(?i)^ToolbarWindow32$' -and
+                -not $bounds.IsEmpty -and $bounds.Width -gt 0 -and $bounds.Width -le 32
+            if ([string]$current.AutomationId -eq 'SystemTrayIcon' -or $isNarrowToolbar) {
                 $null = $found.Add($element)
             }
         }
@@ -262,6 +283,43 @@ function Find-OverflowToggle {
         @{ Expression = { $_.Current.BoundingRectangle.Width } },
         @{ Expression = { $_.Current.BoundingRectangle.Left } }
     ))
+}
+
+function Get-TrayPreToolbarPoints {
+    # On classic Windows Server the hidden-icons chevron is an unnamed button
+    # immediately to the left of the notification toolbar. UIA exposes only
+    # the TrayNotifyWnd/toolbar rectangles, so probe this narrow strip rather
+    # than guessing across the clock or the rest of the taskbar.
+    $points = New-Object System.Collections.Generic.List[object]
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]'
+    foreach ($trayHost in (Find-TrayHostElements | Where-Object {
+        try { [string]$_.Current.ClassName -eq 'TrayNotifyWnd' } catch { $false }
+    })) {
+        try {
+            $hostBounds = $trayHost.Current.BoundingRectangle
+            if ($hostBounds.IsEmpty -or $hostBounds.Width -le 0 -or $hostBounds.Height -le 0) { continue }
+            $toolbars = @(Get-TrayToolbarBounds)
+            $preToolbarRight = if ($toolbars.Count -gt 0) {
+                [int](($toolbars | ForEach-Object { $_.Left } | Measure-Object -Minimum).Minimum) - 4
+            }
+            else {
+                [int]$hostBounds.Right - 4
+            }
+            $hostLeft = [int][Math]::Ceiling($hostBounds.Left + 4)
+            $hostTop = [int][Math]::Ceiling($hostBounds.Top + ($hostBounds.Height / 2))
+            if ($preToolbarRight -lt $hostLeft) { continue }
+            for ($x = $hostLeft; $x -le $preToolbarRight; $x += 4) {
+                $key = "$x|$hostTop"
+                if ($seen.Add($key)) {
+                    $null = $points.Add([pscustomobject]@{ X = $x; Y = $hostTop })
+                }
+            }
+        }
+        catch {
+            continue
+        }
+    }
+    return $points.ToArray()
 }
 
 function Open-HiddenIcons {
@@ -292,6 +350,11 @@ function Open-HiddenIcons {
             }
         }
     }
+    # Classic Server may expose no named "Show hidden icons" control. Use the
+    # bounded pre-toolbar arrow path and leave the popup open for the caller.
+    $overflowPopup = Open-TrayOverflowPopup
+    if ($overflowPopup) { return $true }
+
     foreach ($overflowToggle in (Find-OverflowToggle)) {
         try {
             foreach ($point in (Get-TrayClickPoints $overflowToggle)) {
@@ -355,8 +418,9 @@ function Find-TrayToolbarElements {
     # windows and must never be treated as a tray icon globally.
     $found = New-Object System.Collections.Generic.List[object]
     $seen = New-Object 'System.Collections.Generic.HashSet[string]'
-    $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
-    foreach ($trayHost in ($root.FindAll($treeScope, $trayHostCondition))) {
+    foreach ($trayHost in (Find-TrayHostElements | Where-Object {
+        try { [string]$_.Current.ClassName -eq 'TrayNotifyWnd' } catch { $false }
+    })) {
         try {
             foreach ($element in ($trayHost.FindAll($treeScope, $trueCondition))) {
                 try {
@@ -404,6 +468,254 @@ function Get-TrayToolbarBounds {
     return @()
 }
 
+function Find-TrayOverflowWindows {
+    # Windows Server's classic notification overflow is a separate native
+    # popup. Its UIA class is normally NotifyIconOverflowWindow; keep the
+    # automation-id form as a narrowly scoped fallback for shell builds that
+    # proxy the class name. Do not accept a generic Window/Popup as evidence.
+    $found = New-Object System.Collections.Generic.List[object]
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]'
+    foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
+        try {
+            $current = $element.Current
+            $className = [string]$current.ClassName
+            $automationId = [string]$current.AutomationId
+            if ($className -notmatch '(?i)^NotifyIconOverflowWindow(?:32|Class)?$' -and
+                $automationId -notmatch '(?i)^NotifyIconOverflowWindow$') { continue }
+            $bounds = $current.BoundingRectangle
+            if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) { continue }
+            $key = $className + '|' + $automationId + '|' + [int]$bounds.Left + '|' +
+                [int]$bounds.Top + '|' + [int]$bounds.Width + '|' + [int]$bounds.Height
+            if (-not $seen.Add($key)) { continue }
+            $null = $found.Add([pscustomobject]@{
+                Element = $element
+                ClassName = $className
+                AutomationId = $automationId
+                Left = [double]$bounds.Left
+                Top = [double]$bounds.Top
+                Right = [double]$bounds.Right
+                Bottom = [double]$bounds.Bottom
+                Width = [double]$bounds.Width
+                Height = [double]$bounds.Height
+            })
+        }
+        catch { continue }
+    }
+    return $found.ToArray()
+}
+
+function Get-TrayOverflowClickPoints {
+    # On the classic Server taskbar the overflow arrow is a narrow button
+    # immediately before the first notification toolbar. The toolbar itself
+    # may contain only unnamed ToolbarWindow32 slots, so use the host/toolbar
+    # rectangles to target that 24px strip. This is intentionally bounded to
+    # one arrow-width; it never sprays clicks across the clock or taskbar.
+    $points = New-Object System.Collections.Generic.List[object]
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]'
+    $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
+    foreach ($trayHost in ($root.FindAll($treeScope, $trayHostCondition))) {
+        try {
+            $hostBounds = $trayHost.Current.BoundingRectangle
+            if ($hostBounds.IsEmpty -or $hostBounds.Width -le 0 -or $hostBounds.Height -le 0) { continue }
+            $toolbars = @(Get-TrayToolbarBounds)
+            if ($toolbars.Count -eq 0) { continue }
+            $firstToolbarLeft = [double](($toolbars | ForEach-Object { $_.Left } | Measure-Object -Minimum).Minimum)
+            $stripLeft = [int][Math]::Ceiling([Math]::Max($hostBounds.Left, $firstToolbarLeft - 24))
+            $stripRight = [int][Math]::Floor([Math]::Min($hostBounds.Right - 1, $firstToolbarLeft - 1))
+            if ($stripRight - $stripLeft -lt 12) { continue }
+            $y = [int][Math]::Round($hostBounds.Top + ($hostBounds.Height / 2))
+            for ($x = $stripLeft + 4; $x -le $stripRight - 3; $x += 4) {
+                $key = "$x|$y"
+                if ($seen.Add($key)) {
+                    $null = $points.Add([pscustomobject]@{ X = $x; Y = $y })
+                }
+            }
+        }
+        catch { continue }
+    }
+    return $points.ToArray()
+}
+
+function Get-TrayOverflowToolbarBounds {
+    # Return plain rectangles only. Opening/closing a shell popup can make UIA
+    # element handles stale, so callers must re-enumerate before each click.
+    $boundsList = New-Object System.Collections.Generic.List[object]
+    foreach ($popup in (Find-TrayOverflowWindows)) {
+        try {
+            foreach ($toolbar in ($popup.Element.FindAll($treeScope, $trueCondition))) {
+                try {
+                    $current = $toolbar.Current
+                    if ([string]$current.ClassName -notmatch '(?i)^ToolbarWindow32$') { continue }
+                    $bounds = $current.BoundingRectangle
+                    if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) { continue }
+                    $null = $boundsList.Add([pscustomobject]@{
+                        Left = [double]$bounds.Left
+                        Top = [double]$bounds.Top
+                        Right = [double]$bounds.Right
+                        Bottom = [double]$bounds.Bottom
+                        Width = [double]$bounds.Width
+                        Height = [double]$bounds.Height
+                    })
+                }
+                catch { continue }
+            }
+        }
+        catch { continue }
+    }
+    return $boundsList.ToArray()
+}
+
+function Get-TrayOverflowProbePoints {
+    # UIA often exposes the overflow toolbar as one rectangle without child
+    # buttons. Probe only its 24px slots. If child controls are published,
+    # include their concrete rectangles as well; both paths remain scoped to
+    # NotifyIconOverflowWindow and are gated by the product HWND effect.
+    $points = New-Object System.Collections.Generic.List[object]
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]'
+    foreach ($popup in (Find-TrayOverflowWindows)) {
+        try {
+            foreach ($element in ($popup.Element.FindAll($treeScope, $trueCondition))) {
+                try {
+                    $current = $element.Current
+                    $className = [string]$current.ClassName
+                    $controlType = [string]$current.ControlType.ProgrammaticName
+                    $bounds = $current.BoundingRectangle
+                    if ($bounds.IsEmpty -or $bounds.Width -le 0 -or $bounds.Height -le 0) { continue }
+                    if ($className -notmatch '(?i)^ToolbarWindow32$') {
+                        $isButton = $controlType -match '(?i)(Button|Custom|Image|ListItem|MenuItem|Thumb)$'
+                        $isTrayClass = $className -match '(?i)^(SystemTray\.|NotifyIcon)'
+                        if (-not ($isButton -or $isTrayClass)) { continue }
+                        $x = [int][Math]::Round($bounds.Left + ($bounds.Width / 2))
+                        $y = [int][Math]::Round($bounds.Top + ($bounds.Height / 2))
+                        $key = "$x|$y"
+                        if ($seen.Add($key)) {
+                            $null = $points.Add([pscustomobject]@{ X = $x; Y = $y })
+                        }
+                        continue
+                    }
+
+                    $slotCount = [Math]::Max(1, [int][Math]::Ceiling($bounds.Width / 24))
+                    for ($slot = 0; $slot -lt $slotCount; $slot++) {
+                        $slotLeft = [double]$bounds.Left + ($slot * $bounds.Width / $slotCount)
+                        $slotRight = [double]$bounds.Left + (($slot + 1) * $bounds.Width / $slotCount)
+                        $slotStart = [int][Math]::Ceiling($slotLeft + 2)
+                        $slotEnd = [int][Math]::Floor($slotRight - 3)
+                        $y = [int][Math]::Round($bounds.Top + ($bounds.Height / 2))
+                        for ($x = $slotStart; $x -le $slotEnd; $x += 4) {
+                            $key = "$x|$y"
+                            if ($seen.Add($key)) {
+                                $null = $points.Add([pscustomobject]@{ X = $x; Y = $y })
+                            }
+                        }
+                    }
+                }
+                catch { continue }
+            }
+        }
+        catch { continue }
+    }
+    return $points.ToArray()
+}
+
+function Open-TrayOverflowPopup {
+    # Keep an already-open popup alive; callers may immediately probe its
+    # toolbar. Do not send ESC after a successful arrow click.
+    $existing = @(Find-TrayOverflowWindows)
+    if ($existing.Count -gt 0) { return $existing[0] }
+    foreach ($point in (Get-TrayOverflowClickPoints)) {
+        try {
+            Dismiss-ContextMenu
+            Click-Point $point.X $point.Y
+            $deadline = [DateTime]::UtcNow.AddSeconds(2)
+            while ([DateTime]::UtcNow -lt $deadline) {
+                $popup = @(Find-TrayOverflowWindows)
+                if ($popup.Count -gt 0) { return $popup[0] }
+                Start-Sleep -Milliseconds 100
+            }
+        }
+        catch { continue }
+    }
+    return $null
+}
+
+function Invoke-TrayOverflowPoint([object]$Point, [ValidateSet('left-click', 'menu-show')][string]$Action) {
+    $success = $false
+    try {
+        if ($Action -eq 'left-click') {
+            Click-Point $Point.X $Point.Y
+            $success = Wait-MainWindowVisible
+        }
+        else {
+            Click-Point $Point.X $Point.Y $true
+            $menuItem = Find-ShowMainMenuItemWithin
+            if ($menuItem) {
+                try {
+                    $invoke = $menuItem.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+                    $invoke.Invoke()
+                }
+                catch {
+                    Click-Element $menuItem
+                }
+                $success = Wait-MainWindowVisible
+            }
+            if (-not $success) { $success = Invoke-ShowMainMenuByKeyboard }
+        }
+    }
+    catch {
+        $success = $false
+    }
+    if (-not $success) { Dismiss-ContextMenu }
+    return $success
+}
+
+function Find-AppTrayOverflowPoint([ValidateSet('left-click', 'menu-show')][string]$Action) {
+    for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        $popup = Open-TrayOverflowPopup
+        if (-not $popup) { return $false }
+
+        # Prefer a named product element in the overflow popup, but never use
+        # the name alone as acceptance: the cached main HWND gate still has to
+        # change after a real click/context-menu command.
+        try {
+            $named = @($popup.Element.FindAll($treeScope, $trueCondition) | Where-Object {
+                try {
+                    $current = $_.Current
+                    $bounds = $current.BoundingRectangle
+                    return ([string]$current.Name -match '(?i)omni[\s-]*context' -and
+                        -not $bounds.IsEmpty -and $bounds.Width -gt 0 -and $bounds.Height -gt 0)
+                }
+                catch { return $false }
+            })
+            foreach ($candidate in $named) {
+                try {
+                    if ($Action -eq 'left-click') {
+                        Click-Element $candidate
+                        if (Wait-MainWindowVisible) { return $true }
+                    }
+                    elseif (Try-ShowMainMenu $candidate) {
+                        return $true
+                    }
+                }
+                catch { }
+                Dismiss-ContextMenu
+                $popup = Open-TrayOverflowPopup
+                if (-not $popup) { return $false }
+            }
+        }
+        catch { }
+
+        foreach ($point in (Get-TrayOverflowProbePoints)) {
+            if (Invoke-TrayOverflowPoint $point $Action) { return $true }
+            # A failed native slot click may close/rebuild the popup. Reopen it
+            # before probing the next slot; never probe outside this popup.
+            if (-not (Open-TrayOverflowPopup)) { break }
+        }
+        Dismiss-ContextMenu
+        Start-Sleep -Milliseconds 250
+    }
+    return $false
+}
+
 function Get-TrayProbePoints([ValidateSet('left-click', 'menu-show')][string]$Action = 'menu-show') {
     # A classic toolbar may expose a 48px host for two 24px notification
     # buttons, while UIA provides no child buttons. Probe a narrow 4px grid
@@ -441,31 +753,13 @@ function Get-TrayProbePoints([ValidateSet('left-click', 'menu-show')][string]$Ac
     }
 
     # Some classic shell images briefly publish TrayNotifyWnd before its
-    # toolbar child, or place the overflow button in the 24px strip immediately
-    # before the toolbar. Probe only that narrow pre-toolbar strip for left
-    # click recovery; do not spray right-click menu probes across the clock.
+    # toolbar child, or place the overflow button in the narrow strip immediately
+    # before the toolbar. Probe only that strip for left-click recovery; do not
+    # spray right-click menu probes across the clock.
     if ($Action -eq 'left-click') {
-        $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
-        foreach ($trayHost in ($root.FindAll($treeScope, $trayHostCondition))) {
-            try {
-                $hostBounds = $trayHost.Current.BoundingRectangle
-                $toolbars = @(Get-TrayToolbarBounds)
-                $preToolbarRight = if ($toolbars.Count -gt 0) {
-                    [int](($toolbars | ForEach-Object { $_.Left } | Measure-Object -Minimum).Minimum) - 4
-                }
-                else {
-                    [int]$hostBounds.Right - 4
-                }
-                $hostLeft = [int][Math]::Ceiling($hostBounds.Left + 4)
-                $hostTop = [int][Math]::Ceiling($hostBounds.Top + ($hostBounds.Height / 2))
-                for ($x = $hostLeft; $x -le $preToolbarRight; $x += 4) {
-                    $key = "$x|$hostTop"
-                    if ($seen.Add($key)) {
-                        $null = $points.Add([pscustomobject]@{ X = $x; Y = $hostTop })
-                    }
-                }
-            }
-            catch { continue }
+        foreach ($point in (Get-TrayPreToolbarPoints)) {
+            $key = "$($point.X)|$($point.Y)"
+            if ($seen.Add($key)) { $null = $points.Add($point) }
         }
     }
     return $points.ToArray()
@@ -501,6 +795,10 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
 
 function Find-AppTrayPoint([ValidateSet('left-click', 'menu-show')][string]$Action) {
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        # Hidden notification icons on classic Server are reachable only after
+        # opening NotifyIconOverflowWindow. This path is scoped to that popup
+        # and retains the cached-HWND acceptance gate for every slot.
+        if (Find-AppTrayOverflowPoint $Action) { return $true }
         foreach ($point in (Get-TrayProbePoints $Action)) {
             if (Invoke-TrayPoint $point $Action) { return $true }
         }
@@ -672,6 +970,18 @@ function Write-TrayDiagnostics {
         $pointText = ($probePoints | ForEach-Object { '{0},{1}' -f [int]$_.X, [int]$_.Y }) -join '|'
         Write-Output ('[tray-probe] action={0};toolbarCount={1};pointCount={2};points={3}' -f
             $Action, $toolbars.Count, $probePoints.Count, $pointText)
+        $overflowWindows = @(Find-TrayOverflowWindows)
+        $overflowToolbars = @(Get-TrayOverflowToolbarBounds)
+        $overflowClickPoints = @(Get-TrayOverflowClickPoints)
+        $overflowProbePoints = @(Get-TrayOverflowProbePoints)
+        $overflowPointText = ($overflowProbePoints | ForEach-Object { '{0},{1}' -f [int]$_.X, [int]$_.Y }) -join '|'
+        $overflowWindowText = ($overflowWindows | ForEach-Object {
+            '{0}@{1},{2},{3}x{4}' -f (Get-SafeTrayField $_.ClassName), [int]$_.Left,
+                [int]$_.Top, [int]$_.Width, [int]$_.Height
+        }) -join '|'
+        Write-Output ('[tray-overflow] popupCount={0};popups={1};toolbarCount={2};arrowPointCount={3};probePointCount={4};probePoints={5}' -f
+            $overflowWindows.Count, $overflowWindowText, $overflowToolbars.Count,
+            $overflowClickPoints.Count, $overflowProbePoints.Count, $overflowPointText)
     }
     catch {
         Write-Output ('[tray-probe] action={0};diagnosticError=probe-unavailable' -f $Action)
@@ -704,9 +1014,13 @@ while ([DateTime]::UtcNow -lt $deadline -and -not $icon) {
 
 if ($icon) {
     if ($Action -eq 'left-click') {
+        Dismiss-ContextMenu
         Click-Element $icon
-        Write-Output 'PASS installed tray icon left click'
-        exit 0
+        if (Wait-MainWindowVisible) {
+            Write-Output 'PASS installed tray icon left click'
+            exit 0
+        }
+        throw 'The installed Omni-Context named tray icon did not reopen the cached main window.'
     }
     if (Try-ShowMainMenu $icon) {
         Write-Output 'PASS installed tray context menu Show Main Window'
@@ -727,6 +1041,25 @@ $candidates = @($candidates + @(Find-VisibleTrayElements) | Select-Object -Uniqu
 if ($Action -eq 'left-click' -and (Find-AppTrayPoint $Action)) {
     Write-Output 'PASS installed tray icon left click via classic toolbar slot'
     exit 0
+}
+
+# UIA may expose a real SystemTray.* button without a product tooltip. For a
+# left click, try those concrete elements directly before context-menu probing;
+# the cached native HWND visibility change is still the only acceptance gate.
+if ($Action -eq 'left-click') {
+    foreach ($candidate in $candidates) {
+        try {
+            Dismiss-ContextMenu
+            Click-Element $candidate
+            if (Wait-MainWindowVisible) {
+                Write-Output 'PASS installed tray icon left click via UIA candidate'
+                exit 0
+            }
+        }
+        catch {
+            continue
+        }
+    }
 }
 
 if ($candidates.Count -eq 0) {
@@ -761,8 +1094,7 @@ if (-not $appCandidate) {
 if ($Action -eq 'left-click') {
     Dismiss-ContextMenu
     Click-Element $appCandidate.Icon
-    Start-Sleep -Milliseconds 250
-    if ($MainWindowHandle -le 0 -or (Test-MainWindowVisible)) {
+    if ($MainWindowHandle -le 0 -or (Wait-MainWindowVisible)) {
         Write-Output 'PASS installed tray icon left click via SystemTray UIA candidate'
         exit 0
     }
