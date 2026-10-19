@@ -246,6 +246,7 @@ else {
 }
 $script:trayMenuPath = ''
 $script:nativeProbeSummary = ''
+$script:verifiedOverflowPoint = $null
 
 function Test-MenuProbeBudget {
     return [DateTime]::UtcNow -lt $menuProbeDeadline
@@ -862,12 +863,19 @@ function Open-TrayOverflowPopup {
     return $null
 }
 
-function Invoke-TrayOverflowPoint([object]$Point, [ValidateSet('left-click', 'menu-show')][string]$Action) {
+function Invoke-TrayOverflowPoint(
+    [object]$Point,
+    [ValidateSet('left-click', 'menu-show')][string]$Action,
+    [switch]$VerifiedAppSlot
+) {
     $success = $false
     try {
         if ($Action -eq 'left-click') {
             Click-Point $Point.X $Point.Y
             $success = Wait-MainWindowVisible
+            if ($success) {
+                $script:verifiedOverflowPoint = [pscustomobject]@{ X = [int]$Point.X; Y = [int]$Point.Y }
+            }
         }
         else {
             Click-Point $Point.X $Point.Y $true
@@ -878,7 +886,7 @@ function Invoke-TrayOverflowPoint([object]$Point, [ValidateSet('left-click', 'me
             # before trying keyboard or row heuristics.  The callback helper
             # remains fail-closed: it only accepts a verified native menu item
             # and the cached installed main-window visibility gate.
-            if (-not $menuItem -and (Find-VisibleNativeMenuWindow) -eq [IntPtr]::Zero) {
+            if ($VerifiedAppSlot -and -not $menuItem -and (Find-VisibleNativeMenuWindow) -eq [IntPtr]::Zero) {
                 if (Invoke-TaoTrayCallback $Action) {
                     $success = $true
                 }
@@ -905,6 +913,9 @@ function Invoke-TrayOverflowPoint([object]$Point, [ValidateSet('left-click', 'me
 }
 
 function Find-AppTrayOverflowPoint([ValidateSet('left-click', 'menu-show')][string]$Action) {
+    if ($Action -eq 'left-click') {
+        $script:verifiedOverflowPoint = $null
+    }
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
         if (-not (Test-MenuProbeBudget)) { return $false }
         $popup = Open-TrayOverflowPopup
@@ -927,7 +938,16 @@ function Find-AppTrayOverflowPoint([ValidateSet('left-click', 'menu-show')][stri
                 try {
                     if ($Action -eq 'left-click') {
                         Click-Element $candidate
-                        if (Wait-MainWindowVisible) { return $true }
+                        if (Wait-MainWindowVisible) {
+                            $bounds = $candidate.Current.BoundingRectangle
+                            if (-not $bounds.IsEmpty -and $bounds.Width -gt 0 -and $bounds.Height -gt 0) {
+                                $script:verifiedOverflowPoint = [pscustomobject]@{
+                                    X = [int]($bounds.Left + ($bounds.Width / 2))
+                                    Y = [int]($bounds.Top + ($bounds.Height / 2))
+                                }
+                            }
+                            return $true
+                        }
                     }
                     elseif (Try-ShowMainMenu $candidate) {
                         return $true
@@ -1003,7 +1023,11 @@ function Get-TrayProbePoints([ValidateSet('left-click', 'menu-show')][string]$Ac
     return $points.ToArray()
 }
 
-function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show')][string]$Action) {
+function Invoke-TrayPoint(
+    [object]$Point,
+    [ValidateSet('left-click', 'menu-show')][string]$Action,
+    [switch]$VerifiedAppSlot
+) {
     Dismiss-ContextMenu
     try {
         if ($Action -eq 'left-click') {
@@ -1016,7 +1040,7 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
         # gesture without forwarding WM_RBUTTONUP to tao.  At this point the
         # cursor is known to be on the candidate slot; use tao's own callback
         # path to open the product menu, then require its native command gate.
-        if (-not $menuItem -and (Find-VisibleNativeMenuWindow) -eq [IntPtr]::Zero) {
+        if ($VerifiedAppSlot -and -not $menuItem -and (Find-VisibleNativeMenuWindow) -eq [IntPtr]::Zero) {
             if (Invoke-TaoTrayCallback $Action) { return $true }
         }
         if (-not $menuItem) {
@@ -1201,7 +1225,6 @@ function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][strin
         if ($Action -eq 'menu-show' -and (Test-MainWindowVisible)) { $null = Hide-MainWindowToTray }
         if ($attempt -lt 2) { Start-Sleep -Milliseconds 350 }
     }
-    if ($Action -eq 'menu-show' -and (Invoke-TaoTrayCallback $Action)) { return $true }
     return $false
 }
 
@@ -1236,9 +1259,12 @@ function Find-AppTrayMenuViaKnownLeftClick {
         if (-not (Test-MenuProbeBudget)) { return $false }
         try {
             $overflowLeftClick = Find-AppTrayOverflowPoint 'left-click'
-            if ($overflowLeftClick -and (Hide-MainWindowToTray)) {
+            if ($overflowLeftClick -and $script:verifiedOverflowPoint -and (Hide-MainWindowToTray)) {
                 Start-Sleep -Milliseconds 250
-                if (Find-AppTrayOverflowPoint 'menu-show') { return $true }
+                if ((Open-TrayOverflowPopup) -and
+                    (Invoke-TrayOverflowPoint $script:verifiedOverflowPoint 'menu-show' -VerifiedAppSlot)) {
+                    return $true
+                }
                 if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
             }
         }
@@ -1255,7 +1281,7 @@ function Find-AppTrayMenuViaKnownLeftClick {
                 if (-not (Wait-MainWindowVisible)) { continue }
                 if (-not (Hide-MainWindowToTray)) { continue }
                 Start-Sleep -Milliseconds 250
-                if (Invoke-TrayPoint $point 'menu-show') { return $true }
+                if (Invoke-TrayPoint $point 'menu-show' -VerifiedAppSlot) { return $true }
                 if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
             }
             catch {
