@@ -34,11 +34,66 @@ public static class OmniTrayInput {
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr GetWindow(IntPtr hWnd, uint command);
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern IntPtr FindWindow(string className, string windowName);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SendMessage(IntPtr hWnd, uint message, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern int GetClassName(IntPtr hWnd, System.Text.StringBuilder className, int maxCount);
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Rect { public int Left; public int Top; public int Right; public int Bottom; }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NotifyIconIdentifier {
+        public int cbSize;
+        public IntPtr hWnd;
+        public uint uID;
+        public Guid guidItem;
+    }
+    private delegate bool EnumWindowsCallback(IntPtr hWnd, IntPtr lParam);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool GetWindowRect(IntPtr hWnd, out Rect rect);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool EnumWindows(EnumWindowsCallback callback, IntPtr lParam);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+    [DllImport("shell32.dll", SetLastError = true)]
+    private static extern int Shell_NotifyIconGetRect(ref NotifyIconIdentifier identifier, out Rect rect);
     public static string WindowClassName(IntPtr hWnd) {
         if (hWnd == IntPtr.Zero) return string.Empty;
         var buffer = new System.Text.StringBuilder(256);
         return GetClassName(hWnd, buffer, buffer.Capacity) > 0 ? buffer.ToString() : string.Empty;
+    }
+    public static int[] WindowBounds(IntPtr hWnd) {
+        Rect rect;
+        if (hWnd == IntPtr.Zero || !GetWindowRect(hWnd, out rect)) return new[] { 0, 0, 0, 0 };
+        return new[] { rect.Left, rect.Top, rect.Right, rect.Bottom };
+    }
+    public static IntPtr FindWindowForProcessAndClass(IntPtr knownWindow, string expectedClass) {
+        uint expectedProcessId;
+        if (knownWindow == IntPtr.Zero || GetWindowThreadProcessId(knownWindow, out expectedProcessId) == 0) {
+            return IntPtr.Zero;
+        }
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((hWnd, lParam) => {
+            if (found != IntPtr.Zero) return false;
+            uint processId;
+            if (GetWindowThreadProcessId(hWnd, out processId) == 0 || processId != expectedProcessId) return true;
+            var className = WindowClassName(hWnd);
+            if (string.Equals(className, expectedClass, StringComparison.Ordinal)) found = hWnd;
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+    public static int[] NotifyIconBounds(IntPtr ownerWindow, uint uid) {
+        if (ownerWindow == IntPtr.Zero) return new int[0];
+        var identifier = new NotifyIconIdentifier {
+            cbSize = Marshal.SizeOf(typeof(NotifyIconIdentifier)),
+            hWnd = ownerWindow,
+            uID = uid,
+            guidItem = Guid.Empty,
+        };
+        Rect rect;
+        if (Shell_NotifyIconGetRect(ref identifier, out rect) != 0) return new int[0];
+        return new[] { rect.Left, rect.Top, rect.Right, rect.Bottom };
     }
     [DllImport("user32.dll", SetLastError = true)]
     public static extern void keybd_event(byte virtualKey, byte scanCode, uint flags, UIntPtr extraInfo);
@@ -832,6 +887,64 @@ function Find-AppTrayPoint([ValidateSet('left-click', 'menu-show')][string]$Acti
     return $false
 }
 
+function Get-TaoTrayIconBounds {
+    # tao 0.16.11 (the native Tauri dependency in this checkout) owns the
+    # notification icon from a per-process `tao_system_tray_app` window and
+    # uses UID 6001. Shell_NotifyIconGetRect gives the exact real icon bounds,
+    # avoiding ambiguous classic ToolbarWindow32 slot geometry when available.
+    $owner = [OmniTrayInput]::FindWindowForProcessAndClass([IntPtr]$MainWindowHandle, 'tao_system_tray_app')
+    if ($owner -eq [IntPtr]::Zero) { return @() }
+    $bounds = [OmniTrayInput]::NotifyIconBounds($owner, 6001)
+    if ($bounds.Count -ne 4 -or ($bounds[2] -le $bounds[0]) -or ($bounds[3] -le $bounds[1])) { return @() }
+    return [pscustomobject]@{
+        Left = [int]$bounds[0]
+        Top = [int]$bounds[1]
+        Right = [int]$bounds[2]
+        Bottom = [int]$bounds[3]
+    }
+}
+
+function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][string]$Action) {
+    for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        $bounds = Get-TaoTrayIconBounds
+        if ($bounds.Count -eq 0) {
+            if ($attempt -lt 2) {
+                $null = Open-HiddenIcons
+                Start-Sleep -Milliseconds 700
+            }
+            continue
+        }
+        $x = [int](($bounds.Left + $bounds.Right) / 2)
+        $y = [int](($bounds.Top + $bounds.Bottom) / 2)
+        try {
+            Dismiss-ContextMenu
+            if ($Action -eq 'left-click') {
+                Click-Point $x $y
+                if (Wait-MainWindowVisible) { return $true }
+            }
+            else {
+                Click-Point $x $y $true
+                $menuItem = Find-ShowMainMenuItemWithin
+                if ($menuItem) {
+                    try {
+                        $invoke = $menuItem.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+                        $invoke.Invoke()
+                    }
+                    catch { Click-Element $menuItem }
+                    if (Wait-MainWindowVisible) { return $true }
+                }
+                if (Invoke-FirstNativeMenuItem) { return $true }
+                if (Invoke-ShowMainMenuByKeyboard) { return $true }
+            }
+        }
+        catch { }
+        Dismiss-ContextMenu
+        if ($Action -eq 'menu-show' -and (Test-MainWindowVisible)) { $null = Hide-MainWindowToTray }
+        if ($attempt -lt 2) { Start-Sleep -Milliseconds 350 }
+    }
+    return $false
+}
+
 function Hide-MainWindowToTray {
     if ($MainWindowHandle -le 0) { return $false }
     # Reuse the same WM_CLOSE-to-tray path as the installed E2E harness. This
@@ -855,7 +968,24 @@ function Find-AppTrayMenuViaKnownLeftClick {
     # hide the window back to tray, then exercise a real right-click on the
     # known slot. This removes neighboring-icon ambiguity without treating a
     # visible window alone as a menu success.
+    # The preceding left-click acceptance may have reached the application in
+    # NotifyIconOverflowWindow rather than the visible toolbar. Reuse that
+    # real left-click/HWND gate first, then exercise the same popup through a
+    # real right-click after hiding the window again.
     for ($attempt = 0; $attempt -lt 2; $attempt++) {
+        try {
+            $overflowLeftClick = Find-AppTrayOverflowPoint 'left-click'
+            if ($overflowLeftClick -and (Hide-MainWindowToTray)) {
+                Start-Sleep -Milliseconds 250
+                if (Find-AppTrayOverflowPoint 'menu-show') { return $true }
+                if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
+            }
+        }
+        catch {
+            if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
+        }
+        if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
+
         foreach ($point in (Get-TrayProbePoints 'left-click')) {
             try {
                 Dismiss-ContextMenu
@@ -914,6 +1044,16 @@ function Find-VisibleNativeMenuWindow {
     # popup without publishing MenuItem descendants through UI Automation.
     # Find only visible popup-menu windows, bounded to a finite top-level walk;
     # never treat an arbitrary foreground window as the product menu.
+    $knownPopup = [OmniTrayInput]::FindWindow('#32768', $null)
+    if ($knownPopup -ne [IntPtr]::Zero -and [OmniTrayInput]::IsWindowVisible($knownPopup)) {
+        return $knownPopup
+    }
+    $foreground = [OmniTrayInput]::GetForegroundWindow()
+    if ($foreground -ne [IntPtr]::Zero -and
+        [OmniTrayInput]::IsWindowVisible($foreground) -and
+        [OmniTrayInput]::WindowClassName($foreground) -eq '#32768') {
+        return $foreground
+    }
     $window = [OmniTrayInput]::GetTopWindow([IntPtr]::Zero)
     for ($index = 0; $index -lt 256 -and $window -ne [IntPtr]::Zero; $index++) {
         if ([OmniTrayInput]::IsWindowVisible($window) -and
@@ -940,6 +1080,43 @@ function Focus-OpenContextMenu {
     return $false
 }
 
+function Invoke-FirstNativeMenuItem {
+    # TrackPopupMenu menus can be real #32768 windows while UIA exposes no
+    # children. The native Tauri menu puts Show Main Window first; click only
+    # that bounded first-row rectangle after a real product-icon right-click.
+    $popup = Find-VisibleNativeMenuWindow
+    if ($popup -eq [IntPtr]::Zero) { return $false }
+    $bounds = [OmniTrayInput]::WindowBounds($popup)
+    if ($bounds.Count -ne 4) { return $false }
+    $width = $bounds[2] - $bounds[0]
+    $height = $bounds[3] - $bounds[1]
+    if ($width -le 20 -or $height -le 20) { return $false }
+    [OmniTrayInput]::SetForegroundWindow($popup) | Out-Null
+    # Native popup borders are normally 1-2px and menu rows are 18-24px.
+    # Keep the hit inside the first row and away from the border/separator.
+    $x = [int]($bounds[0] + ($width / 2))
+    $y = [int]($bounds[1] + [Math]::Min(14, [Math]::Max(8, $height / 12)))
+    Click-Point $x $y
+    return (Wait-MainWindowVisible 1000)
+}
+
+function Invoke-NativeMenuKeySequence([int[]]$Sequence) {
+    # UI Automation is not guaranteed to publish native menu descendants on
+    # classic Server. Send the bounded keyboard sequence to the actual popup
+    # HWND discovered after a real tray right-click; this preserves the same
+    # user-visible command path without relying on the PowerShell host owning
+    # the foreground input queue.
+    $popup = Find-VisibleNativeMenuWindow
+    if ($popup -eq [IntPtr]::Zero) { return $false }
+    [OmniTrayInput]::SetForegroundWindow($popup) | Out-Null
+    foreach ($key in $Sequence) {
+        [OmniTrayInput]::SendMessage($popup, 0x0100, [IntPtr]$key, [IntPtr]::One) | Out-Null # WM_KEYDOWN
+        [OmniTrayInput]::SendMessage($popup, 0x0101, [IntPtr]$key, [IntPtr]::Zero) | Out-Null # WM_KEYUP
+        Start-Sleep -Milliseconds 60
+    }
+    return (Wait-MainWindowVisible 350)
+}
+
 function Invoke-ShowMainMenuByKeyboard {
     # The classic Server shell can render a real native popup menu without
     # publishing its MenuItem descendants to UI Automation. The tray menu is
@@ -948,6 +1125,7 @@ function Invoke-ShowMainMenuByKeyboard {
     # cached native HWND visibility gate below. If no popup is open, these
     # keystrokes have no effect and the caller continues probing other slots.
     try {
+        if (Invoke-FirstNativeMenuItem) { return $true }
         $null = Focus-OpenContextMenu
         # Home is the normal path for a native popup whose first enabled item
         # is Show Main Window. Down+Enter is a bounded fallback for shells that
@@ -958,6 +1136,7 @@ function Invoke-ShowMainMenuByKeyboard {
             @(0x24, 0x28, 0x0D) # VK_HOME, VK_DOWN, VK_RETURN
         )
         foreach ($sequence in $sequences) {
+            if (Invoke-NativeMenuKeySequence $sequence) { return $true }
             foreach ($key in $sequence) {
                 [OmniTrayInput]::keybd_event([byte]$key, 0, 0, [UIntPtr]::Zero)
                 [OmniTrayInput]::keybd_event([byte]$key, 0, 0x0002, [UIntPtr]::Zero)
@@ -1178,6 +1357,11 @@ if ($Action -eq 'left-click') {
 # before probing generic context menus. This is bounded and remains a genuine
 # shell right-click/menu command path; it is not a simulated HWND visibility
 # shortcut.
+if ($Action -eq 'menu-show' -and (Invoke-TaoTrayIconAction $Action)) {
+    Write-Output 'PASS installed tray context menu Show Main Window via tao Shell_NotifyIconGetRect bounds'
+    exit 0
+}
+
 if ($Action -eq 'menu-show' -and (Find-AppTrayMenuViaKnownLeftClick)) {
     Write-Output 'PASS installed tray context menu Show Main Window via known classic toolbar slot'
     exit 0
