@@ -436,10 +436,18 @@ async function run() {
     assert.equal(legacyReadResponse.status, 200);
     const legacyRead = await legacyReadResponse.json();
     assert.equal(legacyRead.result?.isError, undefined, `installed MCP could not read the preserved v30 record: ${JSON.stringify(legacyRead.result)}`);
-    assert.ok(JSON.stringify(legacyRead.result).includes('legacy-v30-installed-fixture'), 'installed MCP could not read the preserved v30 record');
-    assert.ok(
-      JSON.stringify(legacyRead.result).includes('Synthetic data from the pre-receipt desktop database.'),
-      `installed MCP returned unexpected legacy data: ${JSON.stringify(legacyRead.result)}`,
+    const legacyText = legacyRead.result?.content?.find((item) => item?.type === 'text')?.text;
+    let legacyPayload;
+    try { legacyPayload = JSON.parse(legacyText || ''); } catch { legacyPayload = null; }
+    assert.equal(
+      legacyPayload?.entity?.id,
+      'legacy-v30-installed-fixture',
+      `installed MCP returned unexpected legacy payload: ${JSON.stringify(legacyRead.result)}`,
+    );
+    assert.equal(
+      legacyPayload?.entity?.description,
+      'Synthetic data from the pre-receipt desktop database schema.',
+      `installed MCP returned unexpected legacy description: ${JSON.stringify(legacyRead.result)}`,
     );
     pass('installed-mcp-auth-readonly-tools-and-v30-migration');
 
