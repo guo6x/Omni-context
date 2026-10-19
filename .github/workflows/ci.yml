@@ -58,7 +58,7 @@ jobs:
       - run: npm run typecheck
         working-directory: brain-server
       - name: Unit, migration, and backup round-trip tests
-        run: npm test
+        run: npm test -- --fileParallelism=false --maxWorkers=1 --minWorkers=1
         working-directory: brain-server
       - run: npm run build
         working-directory: brain-server
