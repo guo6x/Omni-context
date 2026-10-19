@@ -38,7 +38,7 @@ function Get-MsiProperty($Database, [string]$Name) {
     $record = $view.Fetch()
     $view.Close()
     if (-not $record) { throw "The MSI is missing required property $Name." }
-    return [string]$record.StringData(1)
+    return ([string]$record.StringData(1)).Trim()
 }
 
 $workspaceRoot = [System.IO.Path]::GetFullPath($env:GITHUB_WORKSPACE)
@@ -71,7 +71,7 @@ $msiProductName = Get-MsiProperty $msiDatabase 'ProductName'
 $msiProductVersion = Get-MsiProperty $msiDatabase 'ProductVersion'
 $msiProductCode = Get-MsiProperty $msiDatabase 'ProductCode'
 if ($msiProductName -ne 'Omni-Context' -or $msiProductCode -notmatch '^\{[0-9A-Fa-f-]{36}\}$') {
-    throw 'The exact MSI does not identify the expected Omni-Context Windows Installer product.'
+    throw "The exact MSI does not identify the expected Omni-Context Windows Installer product (ProductName='$msiProductName', ProductCode='$msiProductCode')."
 }
 $msiexec = Join-Path $env:WINDIR 'System32\msiexec.exe'
 $arguments = '/i "' + $MsiPath + '" /qn /norestart /l*v "' + $InstallerLogPath + '"'
