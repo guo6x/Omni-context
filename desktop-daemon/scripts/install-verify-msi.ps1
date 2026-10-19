@@ -70,8 +70,11 @@ $msiDatabase = $windowsInstaller.OpenDatabase($MsiPath, 0)
 $msiProductName = (Get-MsiProperty $msiDatabase 'ProductName') -replace '[^A-Za-z0-9-]', ''
 $msiProductVersion = (Get-MsiProperty $msiDatabase 'ProductVersion') -replace '[^0-9.]', ''
 $msiProductCode = (Get-MsiProperty $msiDatabase 'ProductCode') -replace '[^0-9A-Fa-f{}-]', ''
-if ($msiProductName -ne 'Omni-Context' -or $msiProductCode -notmatch '^\{[0-9A-Fa-f-]{36}\}$') {
-    throw "The exact MSI does not identify the expected Omni-Context Windows Installer product (ProductName='$msiProductName', ProductCode='$msiProductCode')."
+if ($msiProductName -ne 'Omni-Context') {
+    throw "The exact MSI ProductName is unexpected (value='$msiProductName', length=$($msiProductName.Length))."
+}
+if ($msiProductCode -notmatch '^\{[0-9A-Fa-f-]{36}\}$') {
+    throw "The exact MSI ProductCode is not a GUID (value='$msiProductCode', length=$($msiProductCode.Length))."
 }
 $msiexec = Join-Path $env:WINDIR 'System32\msiexec.exe'
 $arguments = '/i "' + $MsiPath + '" /qn /norestart /l*v "' + $InstallerLogPath + '"'
