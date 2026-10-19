@@ -349,8 +349,12 @@ async function connectMainPage() {
   const context = browser.contexts()[0];
   const page = await waitFor(async () => {
     for (const candidate of context.pages()) {
-      const text = await candidate.locator('body').innerText().catch(() => '');
-      if (text.includes('全域物理级 AI 记忆操作系统')) return candidate;
+      // The fresh profile can select either locale from the hosted runner's
+      // Windows language. The main window has a stable semantic header; avoid
+      // tying CDP discovery to one translated subtitle or to transient splash
+      // copy, and do not accidentally attach to the HUD window.
+      const title = await candidate.locator('header h1').textContent().catch(() => '');
+      if (title?.includes('Omni-Context')) return candidate;
     }
     return null;
   });
