@@ -642,6 +642,16 @@ if ($icon) {
 # SystemTray.* elements. Each candidate is a real UIA element and must expose
 # this product's Show Main Window command before it can be used.
 $candidates = @($candidates + @(Find-VisibleTrayElements) | Select-Object -Unique)
+
+# A left click has a direct, observable acceptance gate: the cached main HWND
+# must become visible. Do this before any context-menu probing, because probing
+# other classic-toolbar slots can dismiss or reorder the native tray popup and
+# make the subsequent left-click path flaky on Server images.
+if ($Action -eq 'left-click' -and (Find-AppTrayPoint $Action)) {
+    Write-Output 'PASS installed tray icon left click via classic toolbar slot'
+    exit 0
+}
+
 if ($candidates.Count -eq 0) {
     if (Find-AppTrayPoint $Action) {
         if ($Action -eq 'left-click') {
