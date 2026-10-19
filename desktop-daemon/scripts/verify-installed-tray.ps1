@@ -91,6 +91,16 @@ public static class OmniTrayInput {
         var buffer = new System.Text.StringBuilder(256);
         return GetClassName(hWnd, buffer, buffer.Capacity) > 0 ? buffer.ToString() : string.Empty;
     }
+    public static int WindowProcessId(IntPtr hWnd) {
+        uint processId;
+        return hWnd == IntPtr.Zero || GetWindowThreadProcessId(hWnd, out processId) == 0 ? 0 : (int)processId;
+    }
+    public static IntPtr WindowOwner(IntPtr hWnd) {
+        return hWnd == IntPtr.Zero ? IntPtr.Zero : GetWindow(hWnd, 4); // GW_OWNER
+    }
+    public static int LastErrorCode() {
+        return Marshal.GetLastWin32Error();
+    }
     public static int[] WindowBounds(IntPtr hWnd) {
         Rect rect;
         if (hWnd == IntPtr.Zero || !GetWindowRect(hWnd, out rect)) return new[] { 0, 0, 0, 0 };
@@ -198,6 +208,7 @@ else {
     [DateTime]::UtcNow.AddMinutes(10)
 }
 $script:trayMenuPath = ''
+$script:nativeProbeSummary = ''
 
 function Test-MenuProbeBudget {
     return [DateTime]::UtcNow -lt $menuProbeDeadline
@@ -1043,7 +1054,10 @@ function Invoke-TaoTrayCallback([ValidateSet('left-click', 'menu-show')][string]
     $leftButtonUp = 0x0202
     $rightButtonUp = 0x0205
     $message = if ($Action -eq 'left-click') { $leftButtonUp } else { $rightButtonUp }
-    if (-not [OmniTrayInput]::PostMessage($owner, $callbackMessage, [IntPtr]::Zero, [IntPtr]$message)) {
+    $postResult = [OmniTrayInput]::PostMessage($owner, $callbackMessage, [IntPtr]::Zero, [IntPtr]$message)
+    $postError = if ($postResult) { 0 } else { [OmniTrayInput]::LastErrorCode() }
+    Capture-NativeProbeSummary -Stage 'after-tao-callback-post' -Owner $owner -PostResult $postResult -PostError $postError
+    if (-not $postResult) {
         return $false
     }
     Start-Sleep -Milliseconds 150
@@ -1092,6 +1106,7 @@ function Invoke-TaoTrayIconAction([ValidateSet('left-click', 'menu-show')][strin
             }
             else {
                 Click-Point $x $y $true
+                Capture-NativeProbeSummary -Stage 'after-shell-right-click'
                 if (Invoke-NativeShowMainMenuItem) {
                     $script:trayMenuPath = 'tao-shell-native-item'
                     return $true
@@ -1249,6 +1264,50 @@ function Find-VisibleNativeMenuWindow {
         $window = [OmniTrayInput]::GetWindow($window, 2) # GW_HWNDNEXT
     }
     return [IntPtr]::Zero
+}
+
+function Capture-NativeProbeSummary {
+    param(
+        [Parameter(Mandatory = $true)][string]$Stage,
+        [Parameter(Mandatory = $false)][IntPtr]$Owner = [IntPtr]::Zero,
+        [Parameter(Mandatory = $false)][bool]$PostResult = $false,
+        [Parameter(Mandatory = $false)][int]$PostError = 0
+    )
+    try {
+        $foreground = [OmniTrayInput]::GetForegroundWindow()
+        $popup = Find-VisibleNativeMenuWindow
+        $menu = if ($popup -ne [IntPtr]::Zero) { [OmniTrayInput]::PopupMenuHandle($popup) } else { [IntPtr]::Zero }
+        $count = if ($popup -ne [IntPtr]::Zero) { [OmniTrayInput]::PopupMenuItemCount($popup) } else { 0 }
+        $texts = New-Object System.Collections.Generic.List[string]
+        for ($index = 0; $index -lt [Math]::Min(16, [Math]::Max(0, $count)); $index++) {
+            $text = [string][OmniTrayInput]::PopupMenuItemText($popup, [uint32]$index)
+            $text = [regex]::Replace($text, '[^A-Za-z0-9._:/ -]', '?')
+            if ($text.Length -gt 48) { $text = $text.Substring(0, 48) + '...' }
+            $null = $texts.Add("$index=$text")
+        }
+        $ownerClass = if ($Owner -ne [IntPtr]::Zero) { [OmniTrayInput]::WindowClassName($Owner) } else { '' }
+        $popupOwner = if ($popup -ne [IntPtr]::Zero) { [OmniTrayInput]::WindowOwner($popup) } else { [IntPtr]::Zero }
+        $script:nativeProbeSummary = ('[tray-native] stage={0};owner={1};ownerClass={2};ownerPid={3};post={4};postError={5};foreground={6};foregroundClass={7};popup={8};popupClass={9};popupPid={10};popupOwner={11};popupOwnerClass={12};menu={13};menuCount={14};items={15}' -f
+            $Stage,
+            $Owner.ToInt64(),
+            $ownerClass,
+            [OmniTrayInput]::WindowProcessId($Owner),
+            $PostResult,
+            $PostError,
+            $foreground.ToInt64(),
+            [OmniTrayInput]::WindowClassName($foreground),
+            $popup.ToInt64(),
+            [OmniTrayInput]::WindowClassName($popup),
+            [OmniTrayInput]::WindowProcessId($popup),
+            $popupOwner.ToInt64(),
+            [OmniTrayInput]::WindowClassName($popupOwner),
+            $menu.ToInt64(),
+            $count,
+            (($texts -join '|') -replace '[;\r\n]', '?'))
+    }
+    catch {
+        $script:nativeProbeSummary = "[tray-native] stage=$Stage;diagnosticError=$([regex]::Replace($_.Exception.Message, '[^A-Za-z0-9 .:/_-]', '?'))"
+    }
 }
 
 function Focus-OpenContextMenu {
@@ -1447,6 +1506,9 @@ function Write-TrayDiagnostics {
     # shape to diagnose runner differences without dumping arbitrary desktop
     # text or paths into the acceptance log.
     $diagnostics = New-Object System.Collections.Generic.List[string]
+    if (-not [string]::IsNullOrWhiteSpace($script:nativeProbeSummary)) {
+        Write-Output $script:nativeProbeSummary
+    }
     foreach ($element in ($root.FindAll($treeScope, $trueCondition))) {
         try {
             $current = $element.Current
