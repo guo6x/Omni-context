@@ -739,7 +739,25 @@ async function run() {
     await page.getByTitle(/更多|More/).click();
     await page.getByRole('button', { name: /决策复盘|Decision log/i }).click();
     await page.getByText('Decision A: keep Option A for the initial release.', { exact: false }).first().waitFor({ timeout: 30_000 });
-    await page.getByRole('button', { name: /Decision B: revise the plan/ }).click();
+    const decisionBButton = page.getByRole('button', { name: /Decision B: revise the plan/ }).first();
+    const waitForDecisionB = () => waitFor(
+      () => decisionBButton.isVisible().catch(() => false),
+      30_000,
+    );
+    try {
+      // The timeline fetch can observe Decision A before the just-written
+      // Decision B is visible through the installed app's read path. Wait for
+      // the actual timeline button, not merely the Ask answer text elsewhere.
+      await waitForDecisionB();
+    } catch {
+      // Reopening the real panel forces one fresh list_entities read while
+      // retaining the same assertion and bounded timeout.
+      await page.getByTitle('Esc').click();
+      await page.getByTitle(/更多|More/).click();
+      await page.getByRole('button', { name: /决策复盘|Decision log/i }).click();
+      await waitForDecisionB();
+    }
+    await clickAfterRerender(decisionBButton);
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-decision-lineage.png'), fullPage: true });
     const timelineText = await page.locator('body').innerText();
     assert.match(timelineText, /Decision A: keep Option A/);
