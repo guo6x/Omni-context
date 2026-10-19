@@ -472,8 +472,8 @@ async function run() {
     }
 
     await page.getByRole('button', { name: /^设置$|^Settings$/ }).click();
-    await page.getByRole('button', { name: /大模型配置|LLM Provider|模型服务/i }).click();
-    const llmPanel = page.getByRole('heading', { name: /大模型配置|LLM Provider|模型服务/i }).locator('..').locator('..');
+    await page.getByRole('button', { name: /大模型配置|LLM Provider|LLM Configuration|模型服务/i }).click();
+    const llmPanel = page.getByRole('heading', { name: /大模型配置|LLM Provider|LLM Configuration|模型服务/i }).locator('..').locator('..');
     const llmTextInputs = llmPanel.locator('input[type="text"]');
     await llmTextInputs.first().fill(`http://127.0.0.1:${mockPort}/v1`);
     await llmTextInputs.last().fill('omni-installed-e2e-mock');
@@ -535,13 +535,13 @@ async function run() {
     await uploadOverlay.getByRole('button', { name: 'close' }).click();
     await uploadOverlay.waitFor({ state: 'hidden' });
 
-    const search = page.locator('input[placeholder*="搜索节点"]');
+    const search = page.getByRole('textbox', { name: /搜索节点|Search nodes/i });
     await search.fill('Project Aurora');
     await search.press('Enter');
     await page.getByText('Project Aurora', { exact: true }).first().waitFor({ timeout: 30_000 });
     pass('installed-ui-search');
 
-    const ask = page.locator('input[placeholder*="问问你的大脑"]');
+    const ask = page.getByTestId('ask-primary-input');
     await ask.fill('What is Project Aurora?');
     await ask.press('Enter');
     await page.getByText('Project Aurora is grounded in the imported local-first fixture.', { exact: false }).waitFor({ timeout: 60_000 });
@@ -654,7 +654,7 @@ async function run() {
     page = connection.page;
     page.on('dialog', (dialog) => dialog.accept());
     trackUploadSubmissions(page, uploadSubmissions);
-    const restartSearch = page.locator('input[placeholder*="搜索节点"]');
+    const restartSearch = page.getByRole('textbox', { name: /搜索节点|Search nodes/i });
     await page.waitForTimeout(3_000);
     await waitFor(async () => {
       await restartSearch.fill('Project Aurora');
