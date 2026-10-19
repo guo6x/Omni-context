@@ -1268,8 +1268,15 @@ function Find-AppTrayMenuViaKnownLeftClick {
             $overflowLeftClick = Find-AppTrayOverflowPoint 'left-click'
             if ($overflowLeftClick -and $script:verifiedOverflowPoint -and (Hide-MainWindowToTray)) {
                 Start-Sleep -Milliseconds 250
-                if ((Open-TrayOverflowPopup) -and
-                    (Invoke-TrayOverflowPoint $script:verifiedOverflowPoint 'menu-show' -VerifiedAppSlot)) {
+                # Reopening the overflow popup is best-effort: classic Server
+                # can close it while hiding the app, but the saved point was
+                # already proven to reopen this exact app window. Invoke the
+                # same verified slot even when the shell popup is unavailable;
+                # the helper performs the real right-click and tao callback
+                # fallback, then still requires the native Show Main Window
+                # command and cached HWND visibility gates.
+                $null = Open-TrayOverflowPopup
+                if (Invoke-TrayOverflowPoint $script:verifiedOverflowPoint 'menu-show' -VerifiedAppSlot) {
                     return $true
                 }
                 if (Test-MainWindowVisible) { $null = Hide-MainWindowToTray }
