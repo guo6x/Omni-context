@@ -685,7 +685,11 @@ async function run() {
     await ask.fill('Should we choose Option A for Project Aurora?');
     await ask.press('Enter');
     await page.getByText('Decision A: keep Option A for the initial release.', { exact: false }).waitFor({ timeout: 60_000 });
-    const saveDecision = page.getByRole('button', { name: /我已决定|保存.*决|Save.*decision/i });
+    // The installed runner can select either locale. The English command is
+    // currently "I've decided · save to graph" (rather than containing the
+    // word "decision"), so keep the assertion tied to the semantic command
+    // instead of one translated label.
+    const saveDecision = page.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i });
     await saveDecision.click();
     await page.getByText(/已存为决策|Saved as decision/i).last().waitFor({ timeout: 30_000 });
     pass('installed-ui-decision-a');
@@ -695,7 +699,7 @@ async function run() {
     await page.getByText('Decision B: revise the plan and choose Option B.', { exact: false }).waitFor({ timeout: 60_000 });
     const relation = page.locator('select:has(option[value="revises"])');
     await relation.selectOption('revises');
-    await page.getByRole('button', { name: /我已决定|保存.*决|Save.*decision/i }).click();
+    await page.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i }).click();
     await page.getByText(/已存为决策|Saved as decision/i).last().waitFor({ timeout: 30_000 });
     pass('installed-ui-decision-b-lineage');
 
