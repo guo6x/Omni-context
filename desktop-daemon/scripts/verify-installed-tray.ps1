@@ -219,9 +219,9 @@ function Find-ShellTrayElements {
     # Walk those host descendants and retain only controls with concrete bounds
     # so clicks still target real shell UIA elements.
     $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
-    foreach ($host in ($root.FindAll($treeScope, $trayHostCondition))) {
+    foreach ($trayHost in ($root.FindAll($treeScope, $trayHostCondition))) {
         try {
-            foreach ($element in ($host.FindAll($treeScope, $trueCondition))) {
+            foreach ($element in ($trayHost.FindAll($treeScope, $trueCondition))) {
                 try {
                     $current = $element.Current
                     $className = [string]$current.ClassName
@@ -343,9 +343,9 @@ function Find-TrayToolbarElements {
     $found = New-Object System.Collections.Generic.List[object]
     $seen = New-Object 'System.Collections.Generic.HashSet[string]'
     $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
-    foreach ($host in ($root.FindAll($treeScope, $trayHostCondition))) {
+    foreach ($trayHost in ($root.FindAll($treeScope, $trayHostCondition))) {
         try {
-            foreach ($element in ($host.FindAll($treeScope, $trueCondition))) {
+            foreach ($element in ($trayHost.FindAll($treeScope, $trueCondition))) {
                 try {
                     $current = $element.Current
                     if ([string]$current.ClassName -notmatch '(?i)^ToolbarWindow32$') { continue }
