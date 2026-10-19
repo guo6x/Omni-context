@@ -376,11 +376,13 @@ function Find-TrayToolbarElements {
     return $found.ToArray()
 }
 
-function Get-TrayProbePoints {
+function Get-TrayProbePoints([ValidateSet('left-click', 'menu-show')][string]$Action = 'menu-show') {
     # A classic toolbar may expose a 48px host for two 24px notification
     # buttons, while UIA provides no child buttons. Probe the center of each
-    # 24px slot inside each real tray toolbar; acceptance is still gated by the
-    # product-specific Show Main Window command or this app's HWND visibility.
+    # 24px slot inside each real tray toolbar. For the direct left-click path,
+    # add a narrow 4px grid around those slots to tolerate shell padding and a
+    # transient button-width change; every candidate remains gated by the
+    # cached main HWND becoming visible.
     $points = New-Object System.Collections.Generic.List[object]
     $seen = New-Object 'System.Collections.Generic.HashSet[string]'
     foreach ($toolbar in (Find-TrayToolbarElements)) {
@@ -392,14 +394,54 @@ function Get-TrayProbePoints {
             if ($right -lt $left) { continue }
             $slotCount = [Math]::Max(1, [int][Math]::Ceiling(($right - $left + 1) / 24))
             for ($slot = 0; $slot -lt $slotCount; $slot++) {
-                $x = [int][Math]::Min($right, $left + ($slot * 24) + 8)
-                $key = "$x|$top"
-                if ($seen.Add($key)) {
-                    $null = $points.Add([pscustomobject]@{ X = $x; Y = $top })
+                $slotLeft = [int][Math]::Max($left, $left + ($slot * 24))
+                $slotRight = [int][Math]::Min($right, $slotLeft + 23)
+                $slotCenter = [int](($slotLeft + $slotRight) / 2)
+                $slotXs = if ($Action -eq 'left-click') {
+                    @($slotLeft + 4, $slotCenter, $slotRight - 4)
+                }
+                else {
+                    @($slotCenter)
+                }
+                foreach ($x in $slotXs) {
+                    if ($x -lt $left -or $x -gt $right) { continue }
+                    $key = "$x|$top"
+                    if ($seen.Add($key)) {
+                        $null = $points.Add([pscustomobject]@{ X = $x; Y = $top })
+                    }
                 }
             }
         }
         catch { continue }
+    }
+
+    # Some classic shell images briefly publish TrayNotifyWnd before its
+    # toolbar child, or place the overflow button in the 24px strip immediately
+    # before the toolbar. Probe only that narrow pre-toolbar strip for left
+    # click recovery; do not spray right-click menu probes across the clock.
+    if ($Action -eq 'left-click') {
+        $trayHostCondition = New-Object System.Windows.Automation.PropertyCondition($classNameProperty, 'TrayNotifyWnd')
+        foreach ($trayHost in ($root.FindAll($treeScope, $trayHostCondition))) {
+            try {
+                $hostBounds = $trayHost.Current.BoundingRectangle
+                $toolbars = @(Find-TrayToolbarElements)
+                $preToolbarRight = if ($toolbars.Count -gt 0) {
+                    [int](($toolbars | ForEach-Object { $_.Current.BoundingRectangle.Left } | Measure-Object -Minimum).Minimum) - 4
+                }
+                else {
+                    [int]$hostBounds.Right - 4
+                }
+                $hostLeft = [int][Math]::Ceiling($hostBounds.Left + 4)
+                $hostTop = [int][Math]::Ceiling($hostBounds.Top + ($hostBounds.Height / 2))
+                for ($x = $hostLeft; $x -le $preToolbarRight; $x += 4) {
+                    $key = "$x|$hostTop"
+                    if ($seen.Add($key)) {
+                        $null = $points.Add([pscustomobject]@{ X = $x; Y = $hostTop })
+                    }
+                }
+            }
+            catch { continue }
+        }
     }
     return $points.ToArray()
 }
@@ -434,7 +476,7 @@ function Invoke-TrayPoint([object]$Point, [ValidateSet('left-click', 'menu-show'
 
 function Find-AppTrayPoint([ValidateSet('left-click', 'menu-show')][string]$Action) {
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
-        foreach ($point in (Get-TrayProbePoints)) {
+        foreach ($point in (Get-TrayProbePoints $Action)) {
             if (Invoke-TrayPoint $point $Action) { return $true }
         }
         if ($attempt -lt 2) {
