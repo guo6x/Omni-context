@@ -41,6 +41,10 @@ public static class OmniTrayInput {
     public static extern IntPtr SendMessage(IntPtr hWnd, uint message, IntPtr wParam, IntPtr lParam);
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr GetMenu(IntPtr hWnd);
+    // TrackPopupMenu creates a native #32768 window without assigning its
+    // HMENU through GetMenu(hwnd). MN_GETHMENU is the supported user32 menu
+    // window message used to recover the live menu handle while it is open.
+    private const uint MN_GETHMENU = 0x01E1;
     [DllImport("user32.dll", SetLastError = true)]
     private static extern int GetMenuItemCount(IntPtr hMenu);
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
@@ -130,15 +134,23 @@ public static class OmniTrayInput {
         if (Shell_NotifyIconGetRect(ref identifier, out rect) != 0) return new int[0];
         return new[] { rect.Left, rect.Top, rect.Right, rect.Bottom };
     }
+    public static IntPtr PopupMenuHandle(IntPtr popup) {
+        if (popup == IntPtr.Zero) return IntPtr.Zero;
+        var menu = SendMessage(popup, MN_GETHMENU, IntPtr.Zero, IntPtr.Zero);
+        if (menu != IntPtr.Zero) return menu;
+        // Keep GetMenu as a compatibility fallback for shell builds that do
+        // attach the HMENU directly to their popup window.
+        return GetMenu(popup);
+    }
     public static int PopupMenuItemCount(IntPtr popup) {
         if (popup == IntPtr.Zero) return 0;
-        var menu = GetMenu(popup);
+        var menu = PopupMenuHandle(popup);
         if (menu == IntPtr.Zero) return 0;
         return Math.Max(0, GetMenuItemCount(menu));
     }
     public static string PopupMenuItemText(IntPtr popup, uint index) {
         if (popup == IntPtr.Zero) return string.Empty;
-        var menu = GetMenu(popup);
+        var menu = PopupMenuHandle(popup);
         if (menu == IntPtr.Zero) return string.Empty;
         var buffer = Marshal.AllocHGlobal(512);
         try {
@@ -158,7 +170,7 @@ public static class OmniTrayInput {
     }
     public static int[] PopupMenuItemBounds(IntPtr popup, uint index) {
         if (popup == IntPtr.Zero) return new int[0];
-        var menu = GetMenu(popup);
+        var menu = PopupMenuHandle(popup);
         if (menu == IntPtr.Zero) return new int[0];
         Rect rect;
         if (!GetMenuItemRect(popup, menu, index, out rect)) return new int[0];
