@@ -245,7 +245,27 @@ function requestInstalledWindowClose(pid, windowHandle = null) {
   return state.handle;
 }
 
-function stopTree(pid) {
+function listeningPids(port) {
+  if (!Number.isInteger(port) || port <= 0) return [];
+  const netstat = spawnSync('C:\\Windows\\System32\\netstat.exe', ['-ano'], {
+    windowsHide: true,
+    encoding: 'utf8',
+  }).stdout || '';
+  const pids = new Set();
+  for (const line of String(netstat).split(/\r?\n/)) {
+    if (!line.includes(`:${port}`) || !line.includes('LISTENING')) continue;
+    const match = line.match(/\s(\d+)\s*$/);
+    const ownerPid = match ? Number(match[1]) : 0;
+    if (Number.isInteger(ownerPid) && ownerPid > 0) pids.add(ownerPid);
+  }
+  return [...pids];
+}
+
+async function waitForPortRelease(port, timeoutMs = 15_000) {
+  await waitFor(() => listeningPids(port).length === 0, timeoutMs);
+}
+
+async function stopTree(pid) {
   if (!pid) return;
   spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
   try {
@@ -273,21 +293,17 @@ function stopTree(pid) {
   // WebView2's remote-debugging child can outlive the desktop process. Reclaim
   // only the listener on the port reserved by this E2E so the restart launches
   // a fresh WebView instead of attaching to stale application state.
-  try {
-    const netstat = spawnSync('C:\\Windows\\System32\\netstat.exe', ['-ano'], {
-      windowsHide: true,
-      encoding: 'utf8',
-    }).stdout || '';
-    const listener = String(netstat).split(/\r?\n/).find((line) =>
-      line.includes(`127.0.0.1:${cdpPort}`) && line.includes('LISTENING'));
-    const match = listener?.match(/\s(\d+)\s*$/);
-    const webviewPid = match ? Number(match[1]) : 0;
-    if (Number.isInteger(webviewPid) && webviewPid > 0 && webviewPid !== process.pid && webviewPid !== pid) {
-      try { process.kill(webviewPid); } catch { /* already gone */ }
-    }
-  } catch {
-    // Port inspection is best-effort; the subsequent health/CDP wait is the gate.
+  for (const webviewPid of listeningPids(cdpPort)) {
+    if (webviewPid === process.pid || webviewPid === pid) continue;
+    // Use taskkill so a WebView2 child that outlives the desktop process is
+    // actually terminated before the next launch can claim this reserved CDP
+    // port; process.kill alone is not a reliable force-stop on Windows.
+    spawnSync('taskkill', ['/PID', String(webviewPid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+    try { process.kill(webviewPid); } catch { /* already gone */ }
   }
+  // Do not race a second installed launch against a stale WebView2 listener.
+  // The port was reserved exclusively for this disposable E2E profile.
+  await waitForPortRelease(cdpPort);
 }
 
 function verifyTrayAction(action, mainWindowHandle, mainProcessId) {
@@ -429,7 +445,7 @@ async function startInstalledApp() {
       return health && cdp;
     });
   } catch (error) {
-    stopTree(child.pid);
+    await stopTree(child.pid);
     throw error;
   }
   return child;
@@ -767,7 +783,7 @@ async function run() {
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-before-restart.png'), fullPage: true });
     await closeConnection(browser);
     browser = null;
-    stopTree(app.pid);
+    await stopTree(app.pid);
     app = null;
     await waitFor(async () => fetch(fixtureApiUrl('/health')).then(() => false).catch(() => true), 20_000);
 
@@ -821,14 +837,26 @@ async function run() {
 
     const extractionsBeforeRestart = mock.state.extractionCalls;
     // WebView2 applies localStorage writes synchronously to the renderer, but
-    // its profile database can commit asynchronously. Give the real installed
-    // profile a bounded settle window before the intentionally hard process
-    // stop below; otherwise the test can manufacture a data-loss result that a
-    // normal user close would not observe.
+    // its profile database can commit asynchronously. A renderer reload forces
+    // the real installed profile through its normal storage shutdown path before
+    // the intentionally hard process stop below; the bounded settle window then
+    // keeps the E2E from manufacturing a data-loss result that a normal user
+    // close would not observe.
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 120_000 });
+    await page.waitForFunction((jobId) => {
+      try {
+        const records = JSON.parse(localStorage.getItem('omni-context.pending-import-jobs.v1') || '[]');
+        return Array.isArray(records) && records.some((record) => (
+          record?.owner === 'file-drop' && record?.kind === 'job' && record?.jobId === jobId
+        ));
+      } catch {
+        return false;
+      }
+    }, interruptedJobId, { timeout: 30_000 });
     await page.waitForTimeout(1_500);
     await closeConnection(browser);
     browser = null;
-    stopTree(app.pid);
+    await stopTree(app.pid);
     app = null;
     await waitFor(async () => fetch(fixtureApiUrl('/health')).then(() => false).catch(() => true), 20_000);
 
@@ -878,7 +906,7 @@ async function run() {
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-after-restore.png'), fullPage: true });
   } finally {
     if (browser) await closeConnection(browser);
-    if (app) stopTree(app.pid);
+    if (app) await stopTree(app.pid);
     await new Promise((resolve) => mock.server.close(resolve));
   }
 }
