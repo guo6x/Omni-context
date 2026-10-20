@@ -1017,13 +1017,21 @@ async function run() {
 
     const followUp = page.getByTestId('ask-follow-input');
     const asksBeforeFollowUp = mock.state.askCalls;
+    const answerTurns = page.getByTestId('ask-answer-turn');
+    const answerTurnsBeforeFollowUp = await answerTurns.count();
     await followUp.fill('Can you restate what the imported source says?');
     await followUp.press('Enter');
-    // The previous turn has the same fixture conclusion. Wait for the new
-    // provider request before checking that conclusion, otherwise the locator
-    // can match the old answer and make the call-count assertion race.
+    // The previous turn has the same fixture conclusion. Wait for both the new
+    // provider request and a newly appended answer turn before checking that
+    // conclusion; matching the old answer would let the next native-window
+    // step race an in-flight request and leave the primary Ask control hidden
+    // behind its loading spinner after a tray restore.
     await waitFor(() => mock.state.askCalls > asksBeforeFollowUp, 60_000);
-    await page.getByText('Project Aurora is grounded in the imported local-first fixture.', { exact: false }).last().waitFor({ timeout: 60_000 });
+    await waitFor(() => answerTurns.count().then((count) => count > answerTurnsBeforeFollowUp), 60_000);
+    await answerTurns.nth(answerTurnsBeforeFollowUp)
+      .getByText('Project Aurora is grounded in the imported local-first fixture.', { exact: false })
+      .waitFor({ timeout: 60_000 });
+    await waitForPointerTarget(page, page.getByTestId('ask-primary-send'), 30_000);
     pass('installed-ui-continuous-ask');
 
     await installWindowBounds(app.pid, 420, 540);
