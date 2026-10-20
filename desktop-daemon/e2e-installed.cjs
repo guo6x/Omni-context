@@ -473,6 +473,27 @@ async function closeConnection(browser) {
   await browser.close().catch(() => {});
 }
 
+async function flushRendererStorage(page) {
+  // WebView2 commits localStorage asynchronously. Ask the renderer to expose
+  // the CDP storage flush when available, then keep the value alive in the
+  // page so the following hard process stop cannot race the profile commit.
+  const persisted = await page.evaluate(() => {
+    const key = 'omni-context.pending-import-jobs.v1';
+    const value = window.localStorage.getItem(key);
+    if (value !== null) window.localStorage.setItem(key, value);
+    return value;
+  });
+  assert.ok(persisted, 'installed renderer did not expose the pending import recovery record before restart');
+  try {
+    const client = await page.context().newCDPSession(page);
+    await client.send('Storage.flushDataForOrigin', { origin: new URL(page.url()).origin });
+    await client.detach().catch(() => {});
+  } catch {
+    // Older WebView2 builds may not expose this Chromium command. The
+    // renderer reload and the bounded settle window remain the fallback gate.
+  }
+}
+
 function trackUploadSubmissions(page, getCount) {
   page.on('request', (request) => {
     if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/ingest/file') getCount.increment();
@@ -853,7 +874,8 @@ async function run() {
         return false;
       }
     }, interruptedJobId, { timeout: 30_000 });
-    await page.waitForTimeout(1_500);
+    await flushRendererStorage(page);
+    await page.waitForTimeout(5_000);
     await closeConnection(browser);
     browser = null;
     await stopTree(app.pid);
@@ -866,6 +888,16 @@ async function run() {
     page = connection.page;
     page.on('dialog', (dialog) => dialog.accept());
     trackUploadSubmissions(page, uploadSubmissions);
+    await page.waitForFunction((jobId) => {
+      try {
+        const records = JSON.parse(localStorage.getItem('omni-context.pending-import-jobs.v1') || '[]');
+        return Array.isArray(records) && records.some((record) => (
+          record?.owner === 'file-drop' && record?.kind === 'job' && record?.jobId === jobId
+        ));
+      } catch {
+        return false;
+      }
+    }, interruptedJobId, { timeout: 30_000 });
     // The retained import-task panel is mounted by the upload surface. Open
     // that user-facing surface first, then locate the task restored from the
     // interrupted run; querying the list before opening it races the panel's
