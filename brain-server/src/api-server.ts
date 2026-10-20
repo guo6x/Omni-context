@@ -20,6 +20,12 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const HOST = process.env.HOST || '127.0.0.1';
 const DB_PATH = process.env.DB_PATH || './data/omni-context.db';
 const EMBEDDING_PREWARM_TIMEOUT_MS = 20_000;
+// Keep the proactive background loop out of the recovery-critical startup
+// window.  A forced desktop stop can leave a WAL/database checkpoint settling
+// while the first AgentLoop cycle performs several graph reads/writes.  The
+// Brain HTTP listener must remain responsive so the native supervisor can
+// prove readiness and hand the desktop back to the user first.
+const AGENT_LOOP_START_DELAY_MS = 15_000;
 
 /**
  * Warm the local embedding runtime after HTTP startup without making health or
@@ -114,9 +120,12 @@ async function main() {
   const insightIntervalMs = process.env.INSIGHT_INTERVAL_MS
     ? Number(process.env.INSIGHT_INTERVAL_MS)
     : 10 * 60 * 1000;
-  // The agent loop executes immediately before scheduling its next interval,
-  // so a long interval alone does not prevent evaluation contamination.
-  if (!evaluationMode) agentLoop.start(insightIntervalMs);
+  // The agent loop is started after the HTTP listener is up and the native
+  // supervisor has had a bounded window to observe /health.  Starting it
+  // before `listen()` made a hard-stop recovery race database settling with
+  // the first graph cycle and could strand the desktop with a live WebView but
+  // no healthy Brain service.  The timer is cleared during shutdown below.
+  let agentLoopStartTimer: ReturnType<typeof setTimeout> | undefined;
 
   // One server-owned authorization runtime serves both plan creation and the
   // fixed control facade. The facade receives this exact service as its
@@ -161,12 +170,22 @@ async function main() {
     const displayedDbPath = process.env.OMNI_EVALUATION_MODE === '1' ? path.basename(DB_PATH) : DB_PATH;
     console.log(`Database: ${displayedDbPath}`);
     startLocalEmbeddingPrewarm(embeddingService, evaluationMode);
+    if (!evaluationMode) {
+      agentLoopStartTimer = setTimeout(() => {
+        agentLoopStartTimer = undefined;
+        agentLoop.start(insightIntervalMs);
+      }, AGENT_LOOP_START_DELAY_MS);
+    }
   });
 
   let shuttingDown = false;
   const shutdown = async (reason: string) => {
     if (shuttingDown) return;
     shuttingDown = true;
+    if (agentLoopStartTimer !== undefined) {
+      clearTimeout(agentLoopStartTimer);
+      agentLoopStartTimer = undefined;
+    }
     console.log(`\nShutting down (${reason})...`);
     await agentLoop.stop();
     await new Promise<void>((resolve) => server.close(() => resolve()));
