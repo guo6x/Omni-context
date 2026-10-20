@@ -30,7 +30,21 @@ impl ProcessTree {
     pub fn spawn(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command)
+            Self::spawn_windows(command, false)
+        }
+        #[cfg(not(windows))]
+        {
+            Self::spawn_unix(command)
+        }
+    }
+
+    /// Spawn a background child without creating a visible console window.
+    /// This is used by the embedded Brain runtime; broker commands retain the
+    /// original `spawn` flags and behavior.
+    pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
+        #[cfg(windows)]
+        {
+            Self::spawn_windows(command, true)
         }
         #[cfg(not(windows))]
         {
@@ -126,7 +140,7 @@ impl ProcessTree {
     }
 
     #[cfg(windows)]
-    fn spawn_windows(command: &mut Command) -> Result<Self, BrokerError> {
+    fn spawn_windows(command: &mut Command, no_window: bool) -> Result<Self, BrokerError> {
         use std::os::windows::io::AsRawHandle;
         use std::os::windows::process::CommandExt;
         use windows::Win32::Foundation::{CloseHandle, HANDLE};
@@ -172,7 +186,8 @@ impl ProcessTree {
         }
 
         // 2. Spawn suspended so no child code runs before job assignment.
-        command.creation_flags(CREATE_SUSPENDED);
+        let hidden_flag = if no_window { 0x0800_0000 } else { 0 };
+        command.creation_flags(CREATE_SUSPENDED | hidden_flag);
         let mut child = match command.spawn() {
             Ok(c) => c,
             Err(e) => {

@@ -15,7 +15,7 @@
 
 mod output;
 mod policy;
-mod process_tree;
+pub(crate) mod process_tree;
 mod resolver;
 mod runner;
 mod types;

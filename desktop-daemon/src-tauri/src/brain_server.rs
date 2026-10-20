@@ -1,9 +1,7 @@
 use std::io::{BufRead, Read, Write};
 use std::net::{SocketAddr, TcpStream};
-#[cfg(windows)]
-use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -12,15 +10,12 @@ use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 #[cfg(windows)]
 use sha2::{Digest, Sha256};
 
+use crate::execution_broker::process_tree::ProcessTree;
 use crate::log_writer;
-
-/// Windows CREATE_NO_WINDOW —— 防止 spawn node.exe 时弹出黑色控制台窗口
-#[cfg(windows)]
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// [核心壁垒] Brain Server 进程管理器
 /// 使用 Mutex 替代 unsafe static mut，确保多线程安全
-static BRAIN_SERVER_PROCESS: std::sync::LazyLock<Mutex<Option<Child>>> =
+static BRAIN_SERVER_PROCESS: std::sync::LazyLock<Mutex<Option<ProcessTree>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 static BRAIN_SERVER_STARTING: AtomicBool = AtomicBool::new(false);
 
@@ -60,9 +55,9 @@ pub fn is_running() -> bool {
         Err(poisoned) => poisoned.into_inner(),
     };
 
-    if let Some(ref mut child) = *guard {
+    if let Some(ref mut process) = *guard {
         // try_wait 返回 Ok(None) 表示进程仍在运行
-        match child.try_wait() {
+        match process.try_wait() {
             Ok(None) => true,
             Ok(Some(_status)) => {
                 // 进程已退出，清理引用
@@ -104,10 +99,10 @@ fn health_check(timeout: Duration) -> bool {
         && response.contains("omni-context-brain-server")
 }
 
-fn wait_for_health(child: &mut Child, timeout: Duration) -> Result<(), String> {
+fn wait_for_health(process: &mut ProcessTree, timeout: Duration) -> Result<(), String> {
     let started = Instant::now();
     while started.elapsed() < timeout {
-        match child.try_wait() {
+        match process.try_wait() {
             Ok(None) => {
                 if health_check(Duration::from_millis(700)) {
                     return Ok(());
@@ -310,19 +305,17 @@ fn start_inner() -> Result<(), String> {
             .env("LOCAL_API_TOKEN", &local_token)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
-        #[cfg(windows)]
-        cmd.creation_flags(CREATE_NO_WINDOW);
-        let spawn_result = cmd.spawn();
+        let spawn_result = ProcessTree::spawn_hidden(&mut cmd);
 
         match spawn_result {
-            Ok(mut child) => {
+            Ok(mut process) => {
                 // 要在 store_process 之前取出 stdout/stderr，否则 move 后拿不到。
                 // 立即接日志，避免冷启动等待期间没有任何可诊断输出。
-                let stdout = child.stdout.take();
-                let stderr = child.stderr.take();
+                let stdout = process.child_mut().stdout.take();
+                let stderr = process.child_mut().stderr.take();
                 pipe_output_to_log(stdout, stderr);
 
-                match wait_for_health(&mut child, BRAIN_STARTUP_TIMEOUT) {
+                match wait_for_health(&mut process, BRAIN_STARTUP_TIMEOUT) {
                     Ok(()) => {
                         println!("[Brain Server] 已启动: {}", path.display());
 
@@ -330,10 +323,10 @@ fn start_inner() -> Result<(), String> {
                         // PID. Windows may reuse PIDs between a hard stop and the
                         // next launch; a bare PID is not sufficient authority to
                         // terminate a process during recovery.
-                        let pid = child.id();
+                        let pid = process.child_mut().id();
                         write_pid_file(pid);
 
-                        store_process(child);
+                        store_process(process);
                         return Ok(());
                     }
                     Err(e) => {
@@ -342,8 +335,8 @@ fn start_inner() -> Result<(), String> {
                             path.display(),
                             e
                         );
-                        let _ = child.kill();
-                        let _ = child.wait();
+                        let _ = process.terminate();
+                        let _ = process.wait();
                     }
                 }
             }
@@ -377,13 +370,15 @@ fn stop_inner(owns_startup_lock: bool) -> Result<(), String> {
         .lock()
         .map_err(|e| format!("锁获取失败: {}", e))?;
 
-    if let Some(mut child) = guard.take() {
-        let pid = child.id();
+    if let Some(mut process) = guard.take() {
+        let pid = process.child_mut().id();
         #[cfg(windows)]
         let process_start_time = process_creation_time(pid);
-        child.kill().map_err(|e| format!("终止进程失败: {}", e))?;
+        process
+            .terminate()
+            .map_err(|e| format!("终止进程树失败: {}", e))?;
         // 等待进程退出，回收资源
-        let _ = child.wait();
+        let _ = process.wait();
         // Remove only the record for the child we just stopped. A second
         // instance may have replaced it while this process was shutting down.
         #[cfg(windows)]
@@ -416,16 +411,16 @@ pub fn restart() -> Result<(), String> {
 
 /// 获取进程 PID（用于日志/调试）
 pub fn get_pid() -> Option<u32> {
-    let guard = BRAIN_SERVER_PROCESS.lock().ok()?;
-    guard.as_ref().map(|child| child.id())
+    let mut guard = BRAIN_SERVER_PROCESS.lock().ok()?;
+    guard.as_mut().map(|process| process.child_mut().id())
 }
 
-fn store_process(child: Child) {
+fn store_process(process: ProcessTree) {
     let mut guard = match BRAIN_SERVER_PROCESS.lock() {
         Ok(g) => g,
         Err(poisoned) => poisoned.into_inner(),
     };
-    *guard = Some(child);
+    *guard = Some(process);
 }
 
 /// 跨平台获取用户主目录
