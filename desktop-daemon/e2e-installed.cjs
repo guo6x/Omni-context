@@ -446,6 +446,11 @@ async function startInstalledApp() {
     windowsHide: false,
   });
   try {
+    // A hard-stop recovery can leave the packaged Brain child in its bounded
+    // 120 s startup window while Windows releases the isolated profile and
+    // native WebView2 resources. Keep the real health + CDP barrier intact,
+    // but allow a bounded margin instead of failing before the product's
+    // documented startup timeout can elapse.
     await waitFor(async () => {
       if (child.exitCode !== null) return false;
       const [health, cdp] = await Promise.all([
@@ -453,7 +458,7 @@ async function startInstalledApp() {
         fetch(`http://127.0.0.1:${cdpPort}/json/version`).then((response) => response.ok),
       ]);
       return health && cdp;
-    });
+    }, 180_000);
   } catch (error) {
     await stopTree(child.pid);
     throw error;
