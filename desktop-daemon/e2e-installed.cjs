@@ -1311,6 +1311,11 @@ async function run() {
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-interrupted-import-recovered.png'), fullPage: true });
     pass('installed-ui-close-reopen-import-recovery-no-replay');
 
+    // The upload surface is a modal and intentionally makes the rest of the
+    // app inert while it is open. Close it before moving to Settings so this
+    // acceptance flow follows the same explicit user action as the product.
+    await page.getByRole('button', { name: /关闭文件导入|Close file import/i }).click();
+    await page.getByRole('dialog', { name: /上传文件|Upload File/i }).waitFor({ state: 'hidden' });
     await page.getByRole('button', { name: /^设置$|^Settings$/ }).click();
     await page.getByRole('button', { name: /数据管理|Data management/i }).click();
     const downloadPromise = page.waitForEvent('download');
