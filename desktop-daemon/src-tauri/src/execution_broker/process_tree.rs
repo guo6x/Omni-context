@@ -3,7 +3,7 @@
 //! Windows (primary platform): every broker-spawned process is placed into a
 //! Job Object configured with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` BEFORE it
 //! can execute a single instruction (spawn with `CREATE_SUSPENDED`, assign to
-//! the job, resume the primary thread). Timeout, cancellation and broker
+//! the job, resume all published startup threads). Timeout, cancellation and broker
 //! teardown terminate the whole tree, so grandchildren cannot survive.
 //!
 //! `taskkill /T` is intentionally NOT used (it would itself be an extra
@@ -60,8 +60,9 @@ impl ProcessTree {
     /// is inside the kill-on-close Job Object. This is particularly important
     /// during a forced desktop stop: a native helper created before assignment
     /// would otherwise escape the Job and retain the profile database for the
-    /// next launch. The primary thread is resumed only after assignment, with
-    /// a bounded Toolhelp retry for the Windows thread-publication race.
+    /// next launch. All published startup threads are resumed only after
+    /// assignment, with a bounded Toolhelp retry for the Windows
+    /// thread-publication race.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
@@ -262,7 +263,7 @@ impl ProcessTree {
         // retry keeps this trusted startup path fail-closed without turning a
         // transient Windows loader race into a false startup failure.
         if start_suspended {
-            if let Err(e) = resume_primary_thread(child.id(), no_window) {
+            if let Err(e) = resume_process_threads(child.id(), no_window) {
                 if no_window {
                     log_spawn_diagnostic(child.id(), "resume_failed", &e.to_string());
                 }
@@ -312,11 +313,21 @@ impl Drop for ProcessTree {
     }
 }
 
-/// Find and resume the primary thread of a freshly created `CREATE_SUSPENDED`
-/// process. A suspended process has exactly one thread, so the first thread in
-/// the toolhelp snapshot owned by `pid` is the primary thread.
+/// Resume every thread Windows published for a freshly created
+/// `CREATE_SUSPENDED` process.
+///
+/// `std::process::Child` does not expose the `PROCESS_INFORMATION` primary
+/// thread handle. The old implementation therefore resumed the first thread
+/// returned by Toolhelp and assumed it was the primary thread. That assumption
+/// is not stable for a bundled Node process: loader/native startup can publish
+/// another thread before the snapshot is taken. Resuming that thread leaves
+/// the actual primary thread suspended, producing a live PID with no JS/Brain
+/// output after a hard desktop restart. A newborn process has no user work
+/// that should remain suspended, so drain the suspend count for every thread
+/// owned by the PID. Threads that are already running return a count of zero
+/// and are left unchanged.
 #[cfg(windows)]
-fn resume_primary_thread(pid: u32, diagnostics: bool) -> Result<(), BrokerError> {
+fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError> {
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Thread32First, Thread32Next, TH32CS_SNAPTHREAD, THREADENTRY32,
@@ -339,14 +350,13 @@ fn resume_primary_thread(pid: u32, diagnostics: bool) -> Result<(), BrokerError>
             }
         };
 
-        let mut tid: Option<u32> = None;
+        let mut thread_ids = Vec::new();
         let mut entry: THREADENTRY32 = unsafe { std::mem::zeroed() };
         entry.dwSize = std::mem::size_of::<THREADENTRY32>() as u32;
         if unsafe { Thread32First(snapshot, &mut entry) }.is_ok() {
             loop {
                 if entry.th32OwnerProcessID == pid {
-                    tid = Some(entry.th32ThreadID);
-                    break;
+                    thread_ids.push(entry.th32ThreadID);
                 }
                 if unsafe { Thread32Next(snapshot, &mut entry) }.is_err() {
                     break;
@@ -355,88 +365,78 @@ fn resume_primary_thread(pid: u32, diagnostics: bool) -> Result<(), BrokerError>
         }
         unsafe { CloseHandle(snapshot) }.ok();
 
-        let Some(thread_id) = tid else {
-            let message = format!("primary thread not found for suspended process {pid}");
+        if thread_ids.is_empty() {
+            let message = format!("no thread found for suspended process {pid}");
             if std::time::Instant::now() >= deadline {
                 break message;
             }
             std::thread::sleep(RETRY_INTERVAL);
             continue;
-        };
+        }
 
-        let thread = match unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) } {
-            Ok(thread) => thread,
-            Err(error) => {
-                let message = format!("OpenThread failed: {error}");
-                if std::time::Instant::now() >= deadline {
-                    break message;
+        let mut failed = None;
+        for thread_id in thread_ids {
+            let thread = match unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) } {
+                Ok(thread) => thread,
+                Err(error) => {
+                    failed = Some(format!("OpenThread failed for thread {thread_id}: {error}"));
+                    break;
                 }
-                std::thread::sleep(RETRY_INTERVAL);
-                continue;
-            }
-        };
+            };
 
-        // `CREATE_SUSPENDED` normally gives the primary thread a suspend
-        // count of one.  Windows can publish a larger count while process
-        // creation is being finalized (for example when a launcher or job
-        // policy suspends the process as well).  One ResumeThread call would
-        // then report success while leaving the child permanently suspended;
-        // the native supervisor would observe a live PID with no Brain logs
-        // until its health timeout.  Keep the handle open and drain the
-        // count to zero, bounded by the same startup retry deadline.
-        let resume_error = loop {
-            let previous_suspend_count = unsafe { ResumeThread(thread) };
-            if previous_suspend_count == u32::MAX {
-                let message = format!(
-                    "ResumeThread failed for pid={pid}: {}",
-                    std::io::Error::last_os_error()
-                );
+            // `CREATE_SUSPENDED` normally gives the primary thread a suspend
+            // count of one. Windows can publish a larger count while process
+            // creation is being finalized (for example when a launcher or job
+            // policy suspends the process as well). Drain each newborn thread
+            // to zero, bounded by the same startup retry deadline.
+            let mut thread_done = false;
+            while !thread_done {
+                let previous_suspend_count = unsafe { ResumeThread(thread) };
+                if previous_suspend_count == u32::MAX {
+                    failed = Some(format!(
+                        "ResumeThread failed for pid={pid} thread={thread_id}: {}",
+                        std::io::Error::last_os_error()
+                    ));
+                    break;
+                }
                 if diagnostics {
-                    log_spawn_diagnostic(pid, "resume_return", &message);
+                    log_spawn_diagnostic(
+                        pid,
+                        "resume_return",
+                        &format!(
+                            "thread_id={thread_id} previous_suspend_count={previous_suspend_count}"
+                        ),
+                    );
                 }
-                if std::time::Instant::now() >= deadline {
-                    break Some(message);
+                thread_done = previous_suspend_count <= 1;
+                if !thread_done && std::time::Instant::now() >= deadline {
+                    failed = Some(format!(
+                        "ResumeThread left pid={pid} thread={thread_id} suspended (previous count {previous_suspend_count})"
+                    ));
+                    break;
                 }
-                std::thread::sleep(RETRY_INTERVAL);
-                break Some(message);
             }
+            unsafe { CloseHandle(thread) }.ok();
+            if failed.is_some() {
+                break;
+            }
+        }
+
+        if let Some(message) = failed {
             if diagnostics {
-                log_spawn_diagnostic(
-                    pid,
-                    "resume_return",
-                    &format!("previous_suspend_count={previous_suspend_count}"),
-                );
+                log_spawn_diagnostic(pid, "resume_incomplete", &message);
             }
-            if previous_suspend_count <= 1 {
-                unsafe { CloseHandle(thread) }.ok();
-                if diagnostics {
-                    log_spawn_diagnostic(pid, "resume_complete", "suspend_count=0");
-                }
-                return Ok(());
-            }
-            if std::time::Instant::now() >= deadline {
-                let message = format!(
-                    "ResumeThread left pid={pid} suspended (previous count {previous_suspend_count})"
-                );
-                if diagnostics {
-                    log_spawn_diagnostic(pid, "resume_incomplete", &message);
-                }
-                break Some(message);
-            }
-            std::thread::sleep(RETRY_INTERVAL);
-        };
-        unsafe { CloseHandle(thread) }.ok();
-        if let Some(message) = resume_error {
             if std::time::Instant::now() >= deadline {
                 break message;
             }
             std::thread::sleep(RETRY_INTERVAL);
             continue;
         }
-        if std::time::Instant::now() >= deadline {
-            break "primary thread resume retry deadline exceeded".to_string();
+
+        if diagnostics {
+            log_spawn_diagnostic(pid, "resume_complete", "all_published_threads_resumed");
         }
-        std::thread::sleep(RETRY_INTERVAL);
+        return Ok(());
     };
 
     Err(BrokerError::new(
