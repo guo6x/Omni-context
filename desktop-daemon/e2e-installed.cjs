@@ -131,8 +131,30 @@ async function fillAndClickAsk(page, input, sendButton, text, timeoutMs = 30_000
   await input.fill(text);
   await waitFor(async () => (await input.inputValue().catch(() => '')) === text, 10_000);
   await waitFor(() => sendButton.isEnabled().catch(() => false), timeoutMs);
-  await waitForPointerTarget(page, sendButton, timeoutMs);
-  await clickAfterRerender(sendButton, timeoutMs);
+  await clickPointerTarget(page, sendButton, timeoutMs);
+}
+
+async function clickPointerTarget(page, locator, timeoutMs = 30_000) {
+  // A tray-restored WebView can keep Playwright's actionability stability
+  // probe pending while the control is already visibly hit-testable. After
+  // the geometry/enabled checks below, a coordinate click is still a real
+  // pointer event delivered through Playwright (not a DOM event injection or
+  // force click), and the caller gates success on the resulting Ask request.
+  const deadline = Date.now() + timeoutMs;
+  let lastError;
+  while (Date.now() < deadline) {
+    const remaining = Math.max(500, deadline - Date.now());
+    try {
+      const state = await waitForPointerTarget(page, locator, Math.min(2_000, remaining));
+      if (!(await locator.isEnabled())) throw new Error('pointer target is disabled');
+      await page.mouse.click(state.x, state.y);
+      return;
+    } catch (error) {
+      lastError = error;
+      await wait(Math.min(250, Math.max(50, deadline - Date.now())));
+    }
+  }
+  throw lastError || new Error('the pointer target did not accept a click before the timeout');
 }
 
 async function waitForPointerTarget(page, locator, timeoutMs = 30_000) {
@@ -184,6 +206,8 @@ async function waitForPointerTarget(page, locator, timeoutMs = 30_000) {
             && style.display !== 'none'
             && style.pointerEvents !== 'none'
             && (hit === element || Boolean(hit && element.contains(hit))),
+          x,
+          y,
           rect: [Math.round(rect.left), Math.round(rect.top), Math.round(rect.width), Math.round(rect.height)],
           hit: hit?.tagName || null,
           visibility: style.visibility,
@@ -192,7 +216,7 @@ async function waitForPointerTarget(page, locator, timeoutMs = 30_000) {
         };
       });
       lastState = JSON.stringify(state);
-      if (state.ready) return;
+      if (state.ready) return state;
     } catch (error) {
       lastState = String(error?.message || error);
     }
