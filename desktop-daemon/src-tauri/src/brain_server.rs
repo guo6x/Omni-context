@@ -955,7 +955,7 @@ fn process_creation_time(pid: u32) -> Option<u64> {
 }
 
 #[cfg(windows)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ProcessIdentityStatus {
     Match,
     Mismatch,
