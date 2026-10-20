@@ -193,6 +193,34 @@ describe('API smoke: MCP usage log', () => {
     expect(latest.success).toBe(true);
     expect(latest.matchedEntities.some((e: any) => e.name === 'MCP Usage Trace Entity')).toBe(true);
   });
+
+  it('returns an MCP mutation before local behavior telemetry settles', async () => {
+    let releaseTelemetry!: () => void;
+    const blockedTelemetry = new Promise<void>((resolve) => {
+      releaseTelemetry = resolve;
+    });
+    const telemetry = vi.spyOn(db, 'recordBehaviorEvents').mockReturnValue(blockedTelemetry);
+    const responsePromise = request('POST', '/api/mcp/tool/save_decision', {
+      arguments: {
+        situation: 'fixture response latency',
+        conclusion: 'fixture decision persists before telemetry',
+      },
+    });
+
+    try {
+      const response = await Promise.race([
+        responsePromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2_000)),
+      ]);
+      expect(response).not.toBeNull();
+      expect(response && response.status).toBe(200);
+      expect(response && response.body.id).toMatch(/^[0-9a-f-]{36}$/i);
+    } finally {
+      releaseTelemetry();
+      telemetry.mockRestore();
+      await responsePromise;
+    }
+  });
 });
 
 describe('API smoke: hybrid assertion retrieval', () => {
