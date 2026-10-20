@@ -229,12 +229,15 @@ async function openDecisionLog(page) {
   // The native tray path can restore a WebView before its localized title
   // attributes have rehydrated. The stable product test ids keep this real
   // pointer path independent of the runner's Windows locale.
+  await waitFor(() => page.locator('header h1').isVisible().catch(() => false), 30_000);
   const more = page.locator('[data-testid="header-more-menu"]').first();
-  await waitForPointerTarget(page, more);
-  await clickAfterRerender(more);
+  // Saving a decision refreshes graph state and can replace the header button
+  // between Playwright's actionability probe and locator.click(). Use the
+  // already-gated coordinate pointer path so a real click lands on the latest
+  // rendered control instead of retaining a detached React node.
+  await clickPointerTarget(page, more, 30_000);
   const decisionLog = page.locator('[data-testid="header-decision-log"]').first();
-  await waitForPointerTarget(page, decisionLog);
-  await clickAfterRerender(decisionLog);
+  await clickPointerTarget(page, decisionLog, 30_000);
 }
 
 async function reserveLoopbackPort(transport = 'tcp', preferredPort = 0) {
