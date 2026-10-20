@@ -118,13 +118,55 @@ async function clickAfterRerender(locator, timeoutMs = 30_000) {
   throw lastError || new Error('the UI control did not become clickable before the timeout');
 }
 
+async function waitForPointerTarget(page, locator, timeoutMs = 30_000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastState = 'not-probed';
+  while (Date.now() < deadline) {
+    const remaining = Math.max(500, deadline - Date.now());
+    try {
+      await page.bringToFront();
+      await locator.waitFor({ state: 'visible', timeout: Math.min(2_000, remaining) });
+      await locator.scrollIntoViewIfNeeded({ timeout: Math.min(2_000, remaining) });
+      const state = await locator.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        const x = rect.left + (rect.width / 2);
+        const y = rect.top + (rect.height / 2);
+        const hit = x >= 0 && y >= 0 && x < window.innerWidth && y < window.innerHeight
+          ? document.elementFromPoint(x, y)
+          : null;
+        return {
+          ready: rect.width > 0 && rect.height > 0
+            && style.visibility !== 'hidden'
+            && style.display !== 'none'
+            && style.pointerEvents !== 'none'
+            && (hit === element || Boolean(hit && element.contains(hit))),
+          rect: [Math.round(rect.left), Math.round(rect.top), Math.round(rect.width), Math.round(rect.height)],
+          hit: hit?.tagName || null,
+          visibility: style.visibility,
+          display: style.display,
+          pointerEvents: style.pointerEvents,
+        };
+      });
+      lastState = JSON.stringify(state);
+      if (state.ready) return;
+    } catch (error) {
+      lastState = String(error?.message || error);
+    }
+    await wait(Math.min(250, Math.max(50, deadline - Date.now())));
+  }
+  throw new Error(`pointer target did not settle before the timeout: ${lastState}`);
+}
+
 async function openDecisionLog(page) {
   // The native tray path can restore a WebView before its localized title
   // attributes have rehydrated. The stable product test ids keep this real
   // pointer path independent of the runner's Windows locale.
   const more = page.locator('[data-testid="header-more-menu"]').first();
+  await waitForPointerTarget(page, more);
   await clickAfterRerender(more);
   const decisionLog = page.locator('[data-testid="header-decision-log"]').first();
+  await waitForPointerTarget(page, decisionLog);
   await clickAfterRerender(decisionLog);
 }
 
@@ -763,8 +805,21 @@ async function run() {
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === false, 20_000);
     verifyTrayAction('menu-show', mainWindowHandle, app.pid);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === true, 20_000);
+    // A native tray restore can retain the pre-narrow bounds or return focus
+    // to the shell while WebView2 is repainting. Reassert the same real window
+    // size used by the product flow, then wait for the restored renderer to be
+    // visible before continuing with pointer-driven acceptance.
+    await installWindowBounds(app.pid, 1400, 900);
     await page.bringToFront();
-    await waitFor(() => page.locator('header h1').isVisible().catch(() => false), 20_000);
+    await waitFor(async () => {
+      const viewport = await page.evaluate(() => ({
+        visible: document.visibilityState === 'visible',
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })).catch(() => null);
+      return Boolean(viewport?.visible && viewport.width > 800 && viewport.height > 600
+        && await page.locator('header h1').isVisible().catch(() => false));
+    }, 20_000);
     assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true,
       'choosing Show Main Window from the tray menu stopped Brain');
     pass('installed-tray-context-menu-show-main-window');
