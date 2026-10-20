@@ -120,6 +120,21 @@ async function clickAfterRerender(locator, timeoutMs = 30_000) {
   throw lastError || new Error('the UI control did not become clickable before the timeout');
 }
 
+async function fillAndClickAsk(page, input, sendButton, text, timeoutMs = 30_000) {
+  // A tray restore can finish the native visibility transition before the
+  // WebView has an active pointer target. Drive the same user path explicitly:
+  // settle the input, verify React applied its value, wait for the real send
+  // control to become enabled, then click it through Playwright.
+  await waitForPointerTarget(page, input, timeoutMs);
+  await waitFor(() => page.evaluate(() => document.hasFocus()).catch(() => false), timeoutMs);
+  await waitFor(() => input.isEnabled().catch(() => false), timeoutMs);
+  await input.fill(text);
+  await waitFor(async () => (await input.inputValue().catch(() => '')) === text, 10_000);
+  await waitFor(() => sendButton.isEnabled().catch(() => false), timeoutMs);
+  await waitForPointerTarget(page, sendButton, timeoutMs);
+  await clickAfterRerender(sendButton, timeoutMs);
+}
+
 async function waitForPointerTarget(page, locator, timeoutMs = 30_000) {
   const deadline = Date.now() + timeoutMs;
   let lastState = 'not-probed';
@@ -930,8 +945,12 @@ async function run() {
       'choosing Show Main Window from the tray menu stopped Brain');
     pass('installed-tray-context-menu-show-main-window');
 
-    await ask.fill('Should we choose Option A for Project Aurora?');
-    await ask.press('Enter');
+    await fillAndClickAsk(
+      page,
+      ask,
+      page.getByTestId('ask-primary-send'),
+      'Should we choose Option A for Project Aurora?',
+    );
     await page.getByText('Decision A: keep Option A for the initial release.', { exact: false }).waitFor({ timeout: 60_000 });
     // The installed runner can select either locale. The English command is
     // currently "I've decided · save to graph" (rather than containing the
@@ -975,12 +994,15 @@ async function run() {
     pass('installed-ui-decision-a');
 
     const asksBeforeDecisionB = mock.state.askCalls;
-    await followUp.fill('Update: should we choose Option B instead?');
     // Use the visible send control so the installed test exercises the same
     // explicit action as a pointer user and waits until the second Ask request
     // actually reaches the loopback fixture before asserting its answer.
-    await page.bringToFront();
-    await page.getByTestId('ask-follow-send').click();
+    await fillAndClickAsk(
+      page,
+      followUp,
+      page.getByTestId('ask-follow-send'),
+      'Update: should we choose Option B instead?',
+    );
     await waitFor(() => mock.state.askCalls > asksBeforeDecisionB, 60_000);
     await page.getByText('Decision B: revise the plan and choose Option B.', { exact: false }).waitFor({ timeout: 60_000 });
     const decisionBTurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision B: revise the plan and choose Option B.' }).first();

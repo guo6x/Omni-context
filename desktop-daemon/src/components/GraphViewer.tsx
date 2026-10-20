@@ -1634,7 +1634,7 @@ export default function GraphViewer3D({
             {gLoading ? (
               <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
             ) : (
-              <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')} aria-label={t('cmd.send')}>
+              <button onClick={submitCommand} disabled={!cmdInput.trim()} data-testid="ask-primary-send" className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')} aria-label={t('cmd.send')}>
                 <Send className="h-4 w-4" />
               </button>
             )}
