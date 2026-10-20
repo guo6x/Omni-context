@@ -86,7 +86,9 @@ class OmniContextServer {
       decayFactor: 0.95,
       staleDays: 90,
       intervalMs: 60 * 60 * 1000, // 1 小时
-      autoStart: true,
+      // Database initialization and migrations must finish before any
+      // scheduler query can run after a forced process restart.
+      autoStart: false,
     });
 
     // 单一业务 dispatch 层：stdio 与 HTTP 共享同一实现
@@ -145,7 +147,9 @@ Use memory selectively:
   }
 
   async start(): Promise<void> {
+    await this.db.ready();
     await this.db.runMigrations();
+    this.decayScheduler.start();
 
     const transport = new StdioServerTransport();
     await this.server.connect(transport);

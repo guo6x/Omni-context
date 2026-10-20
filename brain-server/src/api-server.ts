@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import initDatabase from './db/sqlite.js';
-import { createServer } from './api/routes.js';
+import { createDefaultEmbeddingService, createServer } from './api/routes.js';
+import type { EmbeddingService } from './embedding/service.js';
 import { AgentLoop } from './agent/agent-loop.js';
 import { MemoryDecayScheduler } from './memory/decay-scheduler.js';
 import { createProductionAuthorizationRuntime } from './approval/production-runtime.js';
@@ -18,6 +19,42 @@ import { createProductionRevisionRuntime } from './revision/production-runtime.j
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const HOST = process.env.HOST || '127.0.0.1';
 const DB_PATH = process.env.DB_PATH || './data/omni-context.db';
+const EMBEDDING_PREWARM_TIMEOUT_MS = 20_000;
+
+/**
+ * Warm the local embedding runtime after HTTP startup without making health or
+ * schema readiness wait on model loading.  The timeout only bounds the
+ * startup observation; the underlying embedding promise is intentionally
+ * allowed to finish so a slow, valid local model can still serve the first
+ * user action.  Remote/API embedding is never probed implicitly because that
+ * could create an unrequested paid/network call.
+ */
+function startLocalEmbeddingPrewarm(embeddingService: EmbeddingService, evaluationMode: boolean): void {
+  if (evaluationMode || embeddingService.getInfo().mode !== 'local') return;
+
+  const startedAt = Date.now();
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`startup prewarm timed out after ${EMBEDDING_PREWARM_TIMEOUT_MS}ms`));
+    }, EMBEDDING_PREWARM_TIMEOUT_MS);
+  });
+
+  void Promise.race([
+    embeddingService.embedPassage('Omni-Context local embedding startup preflight'),
+    timeout,
+  ])
+    .then(() => {
+      console.log(`[EmbeddingService] local startup prewarm completed in ${Date.now() - startedAt}ms`);
+    })
+    .catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[EmbeddingService] local startup prewarm skipped: ${message}`);
+    })
+    .finally(() => {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    });
+}
 
 async function maybeCreateD1b1ControlledFixture() {
   if (process.env.OMNI_D1B1_E2E_FIXTURE !== '1') return null;
@@ -57,6 +94,10 @@ async function main() {
     busyTimeout: 5000,
   });
 
+  // Database startup is staged (foreign_keys -> busy_timeout -> WAL ->
+  // sqlite-vec). Wait for the recovery-sensitive stages before migrations so
+  // a forced-stop journal cannot race schema initialization.
+  await db.ready();
   await db.runMigrations();
 
   const decayScheduler = new MemoryDecayScheduler(db, {
@@ -90,10 +131,11 @@ async function main() {
     revisionRuntime,
   });
   await maybeCreateD1b2ControlledFixture(authorizationRuntime);
+  const embeddingService = createDefaultEmbeddingService();
   const server = createServer(
     db,
     agentLoop,
-    undefined,
+    embeddingService,
     decayScheduler,
     undefined,
     authorizationRuntime.controlRuntime,
@@ -118,6 +160,7 @@ async function main() {
     console.log(`Omni-Context API Server running on http://${HOST}:${PORT}`);
     const displayedDbPath = process.env.OMNI_EVALUATION_MODE === '1' ? path.basename(DB_PATH) : DB_PATH;
     console.log(`Database: ${displayedDbPath}`);
+    startLocalEmbeddingPrewarm(embeddingService, evaluationMode);
   });
 
   let shuttingDown = false;

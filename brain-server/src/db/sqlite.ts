@@ -41,6 +41,8 @@ export interface DatabaseConfig {
   dbPath: string;
   enableWAL?: boolean;
   busyTimeout?: number;
+  /** Maximum time allowed for each startup database initialization stage. */
+  initializationTimeoutMs?: number;
 }
 
 export interface VectorSearchResult {
@@ -1030,6 +1032,9 @@ export class Database {
   private db: sqlite3.Database;
   private dbPath: string;
   private vecEnabled: boolean = false;
+  private initialization: Promise<void> = Promise.resolve();
+  private initializationState: 'pending' | 'fulfilled' | 'rejected' = 'fulfilled';
+  private initializationError: unknown;
   // A managed transaction owns the connection, not only other BEGIN calls.
   // Drain statements already submitted before BEGIN, then gate foreign calls
   // until COMMIT/ROLLBACK. Outside transactions, let sqlite3 schedule normal
@@ -1050,19 +1055,62 @@ export class Database {
   private assertionVecDimensionResolved: boolean = false;
   private embeddingService: EmbeddingService | null = null;
 
-  constructor(db: sqlite3.Database, dbPath: string, vecEnabled: boolean = false) {
+  constructor(
+    db: sqlite3.Database,
+    dbPath: string,
+    vecEnabled: boolean = false,
+    initialization?: Promise<void>,
+  ) {
     this.db = db;
     this.dbPath = dbPath;
     this.vecEnabled = vecEnabled;
+    if (initialization) this.setInitialization(initialization);
+  }
+
+  /**
+   * Wait until sqlite pragmas and optional extensions have completed.  The
+   * API server awaits this explicitly before migrations; all regular DB
+   * operations also pass through the same gate so callers cannot race startup.
+   */
+  async ready(): Promise<void> {
+    await this.initialization;
+  }
+
+  setInitialization(initialization: Promise<void>): void {
+    this.initialization = initialization;
+    this.initializationState = 'pending';
+    this.initializationError = undefined;
+    void initialization.then(
+      () => { this.initializationState = 'fulfilled'; },
+      (error) => { this.initializationState = 'rejected'; this.initializationError = error; },
+    );
+  }
+
+  setVecEnabled(enabled: boolean): void {
+    this.vecEnabled = enabled;
   }
 
   private withConnection<T>(operation: () => Promise<T>): Promise<T> {
+    // Preserve the existing synchronous dispatch behavior once startup has
+    // completed. This matters for callers that intentionally observe overlap
+    // between independent sqlite3 statements; the readiness gate should only
+    // add a wait while initialization is actually pending.
+    if (this.initializationState === 'fulfilled') {
+      return this.withReadyConnection(operation);
+    }
+    if (this.initializationState === 'rejected') {
+      return Promise.reject(this.initializationError);
+    }
+    return this.initialization.then(() => this.withReadyConnection(operation));
+  }
+
+  private withReadyConnection<T>(operation: () => Promise<T>): Promise<T> {
     if (this.transactionContext.getStore()?.active) return operation();
 
     if (this.pendingTransactions > 0) {
       const gate = this.transactionGate;
       if (!gate) return Promise.reject(new Error('Database transaction gate is unavailable'));
-      return gate.then(() => this.withConnection(operation));
+      return gate.then(() => this.withReadyConnection(operation));
     }
 
     let result: Promise<T>;
@@ -4123,6 +4171,120 @@ export class Database {
   }
 }
 
+const DEFAULT_INITIALIZATION_TIMEOUT_MS = 15_000;
+
+function initializationTimeout(config: string | DatabaseConfig): number {
+  if (typeof config === 'object' && Number.isFinite(config.initializationTimeoutMs)) {
+    return Math.max(1, Math.floor(config.initializationTimeoutMs as number));
+  }
+  return DEFAULT_INITIALIZATION_TIMEOUT_MS;
+}
+
+function runInitializationStage(
+  db: sqlite3.Database,
+  stage: string,
+  sql: string,
+  timeoutMs: number,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error(`[Database] initialization stage timed out: ${stage} (${timeoutMs}ms)`));
+    }, timeoutMs);
+
+    console.log(`[Database] initialization stage started: ${stage}`);
+    try {
+      db.run(sql, (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (error) {
+          reject(new Error(`[Database] initialization stage failed: ${stage}: ${error.message}`, { cause: error }));
+          return;
+        }
+        console.log(`[Database] initialization stage completed: ${stage}`);
+        resolve();
+      });
+    } catch (error) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error);
+    }
+  });
+}
+
+function loadSqliteVec(
+  db: sqlite3.Database,
+  timeoutMs: number,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      console.warn(`[Database] sqlite-vec load timed out (${timeoutMs}ms); using JS vector fallback`);
+      resolve(false);
+    }, timeoutMs);
+
+    console.log('[Database] initialization stage started: sqlite-vec');
+    try {
+      // sqlite-vec.load() intentionally omits sqlite3's callback. Use the
+      // underlying API so startup cannot race migrations with extension load.
+      const getLoadablePath = (sqliteVec as unknown as { getLoadablePath: () => string }).getLoadablePath;
+      db.loadExtension(getLoadablePath(), (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (error) {
+          console.warn('[Database] sqlite-vec 扩展加载失败，将回退到 JS 内存向量搜索:', error);
+          resolve(false);
+          return;
+        }
+        console.log('[Database] initialization stage completed: sqlite-vec');
+        console.log('[Database] sqlite-vec 扩展加载成功 ✓');
+        resolve(true);
+      });
+    } catch (error) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      console.warn('[Database] sqlite-vec 扩展加载失败，将回退到 JS 内存向量搜索:', error);
+      resolve(false);
+    }
+  });
+}
+
+async function initializeDatabase(
+  db: sqlite3.Database,
+  config: string | DatabaseConfig,
+): Promise<boolean> {
+  const timeoutMs = initializationTimeout(config);
+
+  // Always enable foreign keys, and wait for sqlite3 to acknowledge it before
+  // any migrations or user queries can run.
+  await runInitializationStage(db, 'foreign_keys', 'PRAGMA foreign_keys = ON', timeoutMs);
+
+  if (typeof config === 'object') {
+    const busyTimeout = Number.isFinite(config.busyTimeout)
+      ? Math.max(0, Math.floor(config.busyTimeout as number))
+      : undefined;
+    // Set busy_timeout before WAL. WAL mode can take a lock while recovering
+    // a journal after a forced stop; ordering this first makes that wait
+    // bounded and observable instead of racing an unawaited PRAGMA.
+    if (busyTimeout !== undefined) {
+      await runInitializationStage(db, 'busy_timeout', `PRAGMA busy_timeout = ${busyTimeout}`, timeoutMs);
+    }
+    if (config.enableWAL) {
+      await runInitializationStage(db, 'journal_mode_wal', 'PRAGMA journal_mode = WAL', timeoutMs);
+    }
+  }
+
+  return loadSqliteVec(db, timeoutMs);
+}
+
 export function initDatabase(config: string | DatabaseConfig = './data/omni-context.db'): Database {
   const dbPath = typeof config === 'string' ? config : config.dbPath;
   const dbDir = path.dirname(dbPath);
@@ -4131,32 +4293,14 @@ export function initDatabase(config: string | DatabaseConfig = './data/omni-cont
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  const db = new sqlite3.Database(dbPath);
-
-  // 始终开启外键约束 — 关系表的 ON DELETE CASCADE 才会真正生效，
-  // 避免删除实体后留下大量孤儿 relationship 行。
-  db.run('PRAGMA foreign_keys = ON');
-
-  if (typeof config === 'object') {
-    if (config.enableWAL) {
-      db.run('PRAGMA journal_mode = WAL');
-    }
-    if (config.busyTimeout) {
-      db.run(`PRAGMA busy_timeout = ${config.busyTimeout}`);
-    }
-  }
-
-  // [核心壁垒] 加载 sqlite-vec 扩展（原生向量搜索）
-  let vecEnabled = false;
-  try {
-    sqliteVec.load(db);
-    vecEnabled = true;
-    console.log('[Database] sqlite-vec 扩展加载成功 ✓');
-  } catch (e) {
-    console.warn('[Database] sqlite-vec 扩展加载失败，将回退到 JS 内存向量搜索:', e);
-  }
-
-  return new Database(db, dbPath, vecEnabled);
+  const rawDb = new sqlite3.Database(dbPath);
+  const database = new Database(rawDb, dbPath, false);
+  database.setInitialization(
+    initializeDatabase(rawDb, config).then((vecEnabled) => {
+      database.setVecEnabled(vecEnabled);
+    }),
+  );
+  return database;
 }
 
 export default initDatabase;
