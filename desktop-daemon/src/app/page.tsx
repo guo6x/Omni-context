@@ -833,6 +833,7 @@ function MainApp() {
               className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               title={t('nav.more')}
               aria-label={t('nav.more')}
+              data-testid="header-more-menu"
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -850,6 +851,7 @@ function MainApp() {
                   <button
                     onClick={() => { setShowDecisionLog(true); setShowMoreMenu(false); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                    data-testid="header-decision-log"
                   >
                     <Scale className="w-4 h-4 text-cyan-400" />
                     {t('nav.decision_log')}

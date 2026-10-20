@@ -118,6 +118,16 @@ async function clickAfterRerender(locator, timeoutMs = 30_000) {
   throw lastError || new Error('the UI control did not become clickable before the timeout');
 }
 
+async function openDecisionLog(page) {
+  // The native tray path can restore a WebView before its localized title
+  // attributes have rehydrated. The stable product test ids keep this real
+  // pointer path independent of the runner's Windows locale.
+  const more = page.locator('[data-testid="header-more-menu"]').first();
+  await clickAfterRerender(more);
+  const decisionLog = page.locator('[data-testid="header-decision-log"]').first();
+  await clickAfterRerender(decisionLog);
+}
+
 async function reserveLoopbackPort(transport = 'tcp', preferredPort = 0) {
   if (transport === 'udp') {
     const socket = dgram.createSocket('udp4');
@@ -748,6 +758,8 @@ async function run() {
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === false, 20_000);
     verifyTrayAction('menu-show', mainWindowHandle, app.pid);
     await waitFor(() => getInstalledWindowState(app.pid, mainWindowHandle)?.visible === true, 20_000);
+    await page.bringToFront();
+    await waitFor(() => page.locator('header h1').isVisible().catch(() => false), 20_000);
     assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true,
       'choosing Show Main Window from the tray menu stopped Brain');
     pass('installed-tray-context-menu-show-main-window');
@@ -773,8 +785,7 @@ async function run() {
     await page.getByText(/已存为决策|Saved as decision/i).last().waitFor({ timeout: 30_000 });
     pass('installed-ui-decision-b-lineage');
 
-    await clickAfterRerender(page.getByTitle(/更多|More/));
-    await clickAfterRerender(page.getByRole('button', { name: /决策复盘|Decision log/i }));
+    await openDecisionLog(page);
     await page.getByText('Decision A: keep Option A for the initial release.', { exact: false }).first().waitFor({ timeout: 30_000 });
     const decisionBButton = page.getByRole('button', { name: /Decision B: revise the plan/ }).first();
     const waitForDecisionB = () => waitFor(
@@ -790,8 +801,7 @@ async function run() {
       // Reopening the real panel forces one fresh list_entities read while
       // retaining the same assertion and bounded timeout.
       await clickAfterRerender(page.getByTitle('Esc'));
-      await clickAfterRerender(page.getByTitle(/更多|More/));
-      await clickAfterRerender(page.getByRole('button', { name: /决策复盘|Decision log/i }));
+      await openDecisionLog(page);
       await waitForDecisionB();
     }
     await clickAfterRerender(decisionBButton);
