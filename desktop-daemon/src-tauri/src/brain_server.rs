@@ -93,6 +93,14 @@ pub fn is_ready() -> bool {
     health_check(Duration::from_millis(350))
 }
 
+/// Persist native startup/recovery failures next to the Brain child log.  The
+/// message contains only bounded state (phase, PIDs, paths and error kinds);
+/// credentials and request payloads are never part of this path.
+fn log_startup_event(message: &str) {
+    let line = format!("[Desktop] {message}");
+    log_writer::write_line(&log_writer::log_file_path(), &line, true);
+}
+
 fn health_check(timeout: Duration) -> bool {
     let addr = SocketAddr::from(([127, 0, 0, 1], brain_port()));
     let mut stream = match TcpStream::connect_timeout(&addr, timeout) {
@@ -203,10 +211,12 @@ pub fn start() -> Result<(), String> {
             }
             std::thread::sleep(Duration::from_millis(500));
         }
-        return Err(format!(
+        let error = format!(
             "Brain Server 正在启动，但 {} 秒内仍未就绪",
             BRAIN_STARTUP_RETRY_BUDGET.as_secs()
-        ));
+        );
+        log_startup_event(&error);
+        return Err(error);
     }
 
     let mut result = Err("Brain Server startup did not run".to_string());
@@ -217,6 +227,11 @@ pub fn start() -> Result<(), String> {
             break;
         }
         result = start_inner(remaining.min(BRAIN_STARTUP_TIMEOUT));
+        if let Err(error) = &result {
+            log_startup_event(&format!(
+                "startup attempt {attempt}/{START_ATTEMPTS} failed: {error}"
+            ));
+        }
         if result.is_ok() || attempt == START_ATTEMPTS {
             break;
         }
@@ -231,6 +246,9 @@ pub fn start() -> Result<(), String> {
         std::thread::sleep(retry_delay);
     }
     BRAIN_SERVER_STARTING.store(false, Ordering::Release);
+    if let Err(error) = &result {
+        log_startup_event(&format!("startup failed after bounded recovery: {error}"));
+    }
     result
 }
 
@@ -240,7 +258,13 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
     // A second instance must not mistake the first instance's live Brain child
     // for a zombie while that child is starting or recovering.
     let lock_timeout_ms = startup_timeout.as_millis().min(u128::from(u32::MAX)) as u32;
-    let _startup_lock = BrainStartupLock::acquire(lock_timeout_ms)?;
+    let _startup_lock = BrainStartupLock::acquire(lock_timeout_ms).map_err(|error| {
+        log_startup_event(&format!(
+            "startup lock unavailable after {} ms: {error}",
+            lock_timeout_ms
+        ));
+        error
+    })?;
 
     // A healthy service can belong to another desktop instance. Check it before
     // touching the recovery record or invalidating persisted sessions.
@@ -254,7 +278,10 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
             HealthyBrainOwnerState::Orphaned => {
                 // The old desktop process is gone but its Brain child survived.
                 // Reclaim only after the child and owner identities were verified.
-                kill_zombie_by_pid_file()?;
+                kill_zombie_by_pid_file().map_err(|error| {
+                    log_startup_event(&format!("orphan Brain recovery failed: {error}"));
+                    error
+                })?;
                 clear_control_session();
                 clear_verification_session();
                 clear_reopen_session();
@@ -272,7 +299,10 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
             return Ok(());
         }
     } else {
-        kill_zombie_by_pid_file()?;
+        kill_zombie_by_pid_file().map_err(|error| {
+            log_startup_event(&format!("stale Brain recovery failed: {error}"));
+            error
+        })?;
         // Only invalidate persisted sessions after recovery has established
         // that no other live desktop instance owns the Brain process.
         clear_control_session();
@@ -282,7 +312,9 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
 
     if is_running() {
         eprintln!("[Brain Server] 进程存在但 /health 未就绪，先停止后重新启动");
-        let _ = stop_inner(true);
+        if let Err(error) = stop_inner(true) {
+            log_startup_event(&format!("unready Brain cleanup failed: {error}"));
+        }
     }
 
     println!("[Brain Server] 正在启动...");
@@ -364,6 +396,11 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                 match wait_for_health(&mut process, health_timeout) {
                     Ok(()) => {
                         println!("[Brain Server] 已启动: {}", path.display());
+                        log_startup_event(&format!(
+                            "Brain child ready on loopback port {} (entry={})",
+                            brain_port(),
+                            path.display()
+                        ));
 
                         // On Windows, persist the process creation time with the
                         // PID. Windows may reuse PIDs between a hard stop and the
@@ -381,6 +418,10 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                             path.display(),
                             e
                         );
+                        log_startup_event(&format!(
+                            "Brain child entry {} did not become healthy: {e}",
+                            path.display()
+                        ));
                         let _ = process.terminate();
                         let _ = process.wait();
                     }
@@ -392,15 +433,21 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                     path.display(),
                     e
                 );
+                log_startup_event(&format!(
+                    "Brain child spawn failed at {}: {e}",
+                    path.display()
+                ));
             }
         }
     }
 
-    Err(format!(
+    let error = format!(
         "无法启动 Brain Server。\n  使用 node: {}\n  已尝试 JS 入口：\n    {}\n请确认：(1) node 可执行（系统 PATH 或内嵌均可）；(2) brain-server/dist 已构建。",
         node_exe,
         tried.join("\n    ")
-    ))
+    );
+    log_startup_event(&error);
+    Err(error)
 }
 
 pub fn stop() -> Result<(), String> {
@@ -1024,6 +1071,44 @@ fn process_identity_status_with_retry(
     }
 }
 
+/// A desktop process can be terminated between the identity check and the
+/// handle used to reclaim its Brain child.  In that case the termination call
+/// quite correctly returns `false` because there is no longer a process to
+/// open; a second identity check must treat an exited or replaced PID as a
+/// successful cleanup, while keeping an active or unverifiable process
+/// fail-closed.
+#[cfg(windows)]
+fn failed_termination_can_clear_record(status: ProcessIdentityStatus) -> bool {
+    matches!(
+        status,
+        ProcessIdentityStatus::Exited | ProcessIdentityStatus::Mismatch
+    )
+}
+
+/// During a forced app stop the owner process may still be in its Windows
+/// termination window.  Wait for that owner to disappear before deciding that
+/// another live instance owns the Brain child.  The bound is deliberately
+/// short and fail-closed: a still-live owner remains an error after the wait.
+#[cfg(windows)]
+fn wait_for_owner_release(
+    pid: u32,
+    start_time: u64,
+    executable_path: &str,
+) -> ProcessIdentityStatus {
+    let deadline = Instant::now() + PROCESS_IDENTITY_RETRY_TIMEOUT;
+    loop {
+        let status = process_identity_status(pid, start_time, executable_path);
+        if !matches!(
+            status,
+            ProcessIdentityStatus::Match | ProcessIdentityStatus::Unavailable
+        ) || Instant::now() >= deadline
+        {
+            return status;
+        }
+        std::thread::sleep(PROCESS_IDENTITY_RETRY_INTERVAL);
+    }
+}
+
 #[cfg(windows)]
 fn process_liveness(pid: u32) -> ProcessLiveness {
     use windows::Win32::Foundation::{CloseHandle, WAIT_OBJECT_0, WAIT_TIMEOUT};
@@ -1124,12 +1209,17 @@ fn terminate_process_if_identity_matches(record: &BrainPidRecord) -> bool {
 
 #[cfg(windows)]
 fn write_pid_file(pid: u32) {
-    let Some((process_start_time, executable_path)) = process_identity(pid) else {
+    // Windows can briefly deny one of the identity queries immediately after
+    // Node binds /health.  Keep the recovery record authoritative by waiting
+    // through that transient window; if identity still cannot be established,
+    // fail closed and do not publish a PID-only record.
+    let Some((process_start_time, executable_path)) = process_identity_with_retry(pid) else {
         eprintln!("[Brain Server] unable to verify process identity; skipping PID recovery record");
         return;
     };
     let owner_pid = std::process::id();
-    let Some((owner_process_start_time, owner_executable_path)) = process_identity(owner_pid)
+    let Some((owner_process_start_time, owner_executable_path)) =
+        process_identity_with_retry(owner_pid)
     else {
         eprintln!(
             "[Brain Server] unable to verify owner process identity; skipping PID recovery record"
@@ -1193,6 +1283,20 @@ fn process_identity(pid: u32) -> Option<(u64, String)> {
 }
 
 #[cfg(windows)]
+fn process_identity_with_retry(pid: u32) -> Option<(u64, String)> {
+    let deadline = Instant::now() + PROCESS_IDENTITY_RETRY_TIMEOUT;
+    loop {
+        if let Some(identity) = process_identity(pid) {
+            return Some(identity);
+        }
+        if Instant::now() >= deadline {
+            return None;
+        }
+        std::thread::sleep(PROCESS_IDENTITY_RETRY_INTERVAL);
+    }
+}
+
+#[cfg(windows)]
 fn remove_pid_file_if_unchanged(expected_contents: &str) {
     let path = pid_file_path();
     if std::fs::read_to_string(&path).ok().as_deref() == Some(expected_contents) {
@@ -1245,7 +1349,7 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
                     ProcessIdentityStatus::Match => {}
                 }
 
-                let owner_status = process_identity_status_with_retry(
+                let owner_status = wait_for_owner_release(
                     record.owner_pid,
                     record.owner_process_start_time,
                     &record.owner_executable_path,
@@ -1282,8 +1386,27 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
                     remove_pid_file_if_unchanged(&contents);
                     return Ok(());
                 }
+
+                // The child may have exited in the small window between the
+                // identity check above and OpenProcess/TerminateProcess.  A
+                // second bounded identity check distinguishes that benign
+                // race from an active or unverifiable process.  Only the
+                // former cases clear the record and allow startup to proceed.
+                let post_termination_status = process_identity_status_with_retry(
+                    record.pid,
+                    record.process_start_time,
+                    &record.executable_path,
+                );
+                if failed_termination_can_clear_record(post_termination_status) {
+                    eprintln!(
+                        "[Brain Server] stale process {} exited or changed during recovery; clearing record",
+                        record.pid
+                    );
+                    remove_pid_file_if_unchanged(&contents);
+                    return Ok(());
+                }
                 return Err(format!(
-                    "无法安全回收 Brain Server 进程 {}；PID 文件已保留",
+                    "无法安全回收 Brain Server 进程 {}；PID 文件已保留（终止后身份状态：{post_termination_status:?}）",
                     record.pid
                 ));
             }
@@ -1331,7 +1454,10 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
 mod brain_pid_record_tests {
     use super::BrainPidRecord;
     #[cfg(windows)]
-    use super::{classify_healthy_brain_owner, HealthyBrainOwnerState, ProcessIdentityStatus};
+    use super::{
+        classify_healthy_brain_owner, failed_termination_can_clear_record, HealthyBrainOwnerState,
+        ProcessIdentityStatus,
+    };
 
     #[test]
     fn process_identity_requires_both_pid_and_creation_time() {
@@ -1389,6 +1515,23 @@ mod brain_pid_record_tests {
             ),
             HealthyBrainOwnerState::Unverified
         );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn failed_reclaim_clears_only_exited_or_replaced_process_records() {
+        assert!(failed_termination_can_clear_record(
+            ProcessIdentityStatus::Exited
+        ));
+        assert!(failed_termination_can_clear_record(
+            ProcessIdentityStatus::Mismatch
+        ));
+        assert!(!failed_termination_can_clear_record(
+            ProcessIdentityStatus::Match
+        ));
+        assert!(!failed_termination_can_clear_record(
+            ProcessIdentityStatus::Unavailable
+        ));
     }
 }
 
