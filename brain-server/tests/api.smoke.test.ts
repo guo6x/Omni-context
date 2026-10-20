@@ -196,10 +196,10 @@ describe('API smoke: MCP usage log', () => {
 
   it('returns an MCP mutation before local behavior telemetry settles', async () => {
     let releaseTelemetry!: () => void;
-    const blockedTelemetry = new Promise<void>((resolve) => {
+    const blockedTelemetry = new Promise<string>((resolve) => {
       releaseTelemetry = resolve;
     });
-    const telemetry = vi.spyOn(db, 'recordBehaviorEvents').mockReturnValue(blockedTelemetry);
+    const telemetry = vi.spyOn(db, 'recordBehaviorEvent').mockReturnValue(blockedTelemetry);
     const responsePromise = request('POST', '/api/mcp/tool/save_decision', {
       arguments: {
         situation: 'fixture response latency',

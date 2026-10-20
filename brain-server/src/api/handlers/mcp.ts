@@ -255,7 +255,12 @@ export const handleMcpRoutes = [
         // business result.  Persist them after the response so a busy import
         // or recovery transaction cannot leave an explicit user action (for
         // example save_decision) stuck behind the telemetry transaction.
-        void ctx.db.recordBehaviorEvents(behaviorEvents).catch((behaviorError) => {
+        // Keep these writes outside Database.withTransaction().  The telemetry
+        // batch is non-critical, and a transaction gate here can delay the
+        // next user mutation (notably save_decision) behind an import or
+        // recovery transaction.  Individual best-effort writes preserve the
+        // response latency contract without adding a shared gate.
+        void Promise.all(behaviorEvents.map((event) => ctx.db.recordBehaviorEvent(event))).catch((behaviorError) => {
           console.warn(`[MCP behavior] failed to record ${toolName}:`, behaviorError);
         });
       } catch (error) {
