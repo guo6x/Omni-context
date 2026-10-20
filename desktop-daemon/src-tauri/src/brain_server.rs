@@ -19,6 +19,16 @@ static BRAIN_SERVER_PROCESS: std::sync::LazyLock<Mutex<Option<ProcessTree>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 static BRAIN_SERVER_STARTING: AtomicBool = AtomicBool::new(false);
 
+// A hard desktop stop can terminate Node while SQLite is checkpointing its WAL
+// or while Windows is still releasing the previous file handles.  In that
+// small window the first child can exit before it ever binds /health.  Keep the
+// recovery bounded and retry the *same* normal startup path a few times rather
+// than leaving the desktop alive with no Brain service.  This does not retry
+// requests or reuse an unverified process; every attempt still acquires the
+// profile startup lock and runs the ownership checks in start_inner().
+const START_ATTEMPTS: usize = 3;
+const START_RETRY_DELAY: Duration = Duration::from_secs(1);
+
 /// The production Brain transport is loopback-only. D1B1's real Desktop
 /// harness may select an isolated loopback port through `OMNI_BRAIN_PORT` so
 /// it never has to claim an unrelated application's listener. The value is
@@ -29,6 +39,11 @@ pub const DEFAULT_BRAIN_PORT: u16 = 3001;
 // wait for the real server instead of killing a healthy cold start at the
 // exact 60-second boundary.
 const BRAIN_STARTUP_TIMEOUT: Duration = Duration::from_secs(120);
+// Keep recovery within the installed-product startup gate. A cold first
+// launch may use the full 120 seconds, but a hard-stop retry must still have
+// a bounded window instead of multiplying the cold-start timeout by the
+// attempt count.
+const BRAIN_STARTUP_RETRY_BUDGET: Duration = Duration::from_secs(175);
 
 pub fn brain_port() -> u16 {
     match std::env::var("OMNI_BRAIN_PORT") {
@@ -182,25 +197,50 @@ pub fn start() -> Result<(), String> {
         .is_err()
     {
         let started = Instant::now();
-        while started.elapsed() < BRAIN_STARTUP_TIMEOUT + Duration::from_secs(5) {
+        while started.elapsed() < BRAIN_STARTUP_RETRY_BUDGET {
             if is_ready() {
                 return Ok(());
             }
             std::thread::sleep(Duration::from_millis(500));
         }
-        return Err("Brain Server 正在启动，但 65 秒内仍未就绪".to_string());
+        return Err(format!(
+            "Brain Server 正在启动，但 {} 秒内仍未就绪",
+            BRAIN_STARTUP_RETRY_BUDGET.as_secs()
+        ));
     }
 
-    let result = start_inner();
+    let mut result = Err("Brain Server startup did not run".to_string());
+    let deadline = Instant::now() + BRAIN_STARTUP_RETRY_BUDGET;
+    for attempt in 1..=START_ATTEMPTS {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            break;
+        }
+        result = start_inner(remaining.min(BRAIN_STARTUP_TIMEOUT));
+        if result.is_ok() || attempt == START_ATTEMPTS {
+            break;
+        }
+        eprintln!(
+            "[Brain Server] startup attempt {attempt}/{START_ATTEMPTS} failed: {}; retrying after a bounded recovery delay",
+            result.as_ref().err().unwrap()
+        );
+        let retry_delay = START_RETRY_DELAY.min(deadline.saturating_duration_since(Instant::now()));
+        if retry_delay.is_zero() {
+            break;
+        }
+        std::thread::sleep(retry_delay);
+    }
     BRAIN_SERVER_STARTING.store(false, Ordering::Release);
     result
 }
 
-fn start_inner() -> Result<(), String> {
+fn start_inner(startup_timeout: Duration) -> Result<(), String> {
+    let startup_deadline = Instant::now() + startup_timeout;
     // Serialize startup across app instances that share the same data profile.
     // A second instance must not mistake the first instance's live Brain child
     // for a zombie while that child is starting or recovering.
-    let _startup_lock = BrainStartupLock::acquire(180_000)?;
+    let lock_timeout_ms = startup_timeout.as_millis().min(u128::from(u32::MAX)) as u32;
+    let _startup_lock = BrainStartupLock::acquire(lock_timeout_ms)?;
 
     // A healthy service can belong to another desktop instance. Check it before
     // touching the recovery record or invalidating persisted sessions.
@@ -315,7 +355,13 @@ fn start_inner() -> Result<(), String> {
                 let stderr = process.child_mut().stderr.take();
                 pipe_output_to_log(stdout, stderr);
 
-                match wait_for_health(&mut process, BRAIN_STARTUP_TIMEOUT) {
+                let health_timeout = startup_deadline.saturating_duration_since(Instant::now());
+                if health_timeout.is_zero() {
+                    let _ = process.terminate();
+                    let _ = process.wait();
+                    break;
+                }
+                match wait_for_health(&mut process, health_timeout) {
                     Ok(()) => {
                         println!("[Brain Server] 已启动: {}", path.display());
 
@@ -879,6 +925,12 @@ enum ProcessLiveness {
 }
 
 #[cfg(windows)]
+const PROCESS_IDENTITY_RETRY_TIMEOUT: Duration = Duration::from_secs(5);
+
+#[cfg(windows)]
+const PROCESS_IDENTITY_RETRY_INTERVAL: Duration = Duration::from_millis(100);
+
+#[cfg(windows)]
 #[derive(Debug, PartialEq, Eq)]
 enum HealthyBrainOwnerState {
     Active,
@@ -951,6 +1003,27 @@ fn process_identity_status(
     status
 }
 
+/// A hard stop can leave a process in the short Windows termination window
+/// where `OpenProcess` succeeds but one of the identity queries is not yet
+/// available. Treat that as transient, not as an immediately unverified
+/// owner. The retry is bounded and still fails closed when the identity cannot
+/// be established, so it never authorizes terminating an unknown process.
+#[cfg(windows)]
+fn process_identity_status_with_retry(
+    pid: u32,
+    start_time: u64,
+    executable_path: &str,
+) -> ProcessIdentityStatus {
+    let deadline = Instant::now() + PROCESS_IDENTITY_RETRY_TIMEOUT;
+    loop {
+        let status = process_identity_status(pid, start_time, executable_path);
+        if status != ProcessIdentityStatus::Unavailable || Instant::now() >= deadline {
+            return status;
+        }
+        std::thread::sleep(PROCESS_IDENTITY_RETRY_INTERVAL);
+    }
+}
+
 #[cfg(windows)]
 fn process_liveness(pid: u32) -> ProcessLiveness {
     use windows::Win32::Foundation::{CloseHandle, WAIT_OBJECT_0, WAIT_TIMEOUT};
@@ -981,6 +1054,18 @@ fn process_liveness(pid: u32) -> ProcessLiveness {
 }
 
 #[cfg(windows)]
+fn process_liveness_with_retry(pid: u32) -> ProcessLiveness {
+    let deadline = Instant::now() + PROCESS_IDENTITY_RETRY_TIMEOUT;
+    loop {
+        let liveness = process_liveness(pid);
+        if liveness != ProcessLiveness::Unavailable || Instant::now() >= deadline {
+            return liveness;
+        }
+        std::thread::sleep(PROCESS_IDENTITY_RETRY_INTERVAL);
+    }
+}
+
+#[cfg(windows)]
 fn healthy_brain_owner_state() -> HealthyBrainOwnerState {
     let Ok(contents) = std::fs::read_to_string(pid_file_path()) else {
         return HealthyBrainOwnerState::Unverified;
@@ -989,12 +1074,12 @@ fn healthy_brain_owner_state() -> HealthyBrainOwnerState {
         return HealthyBrainOwnerState::Unverified;
     };
     classify_healthy_brain_owner(
-        process_identity_status(
+        process_identity_status_with_retry(
             record.pid,
             record.process_start_time,
             &record.executable_path,
         ),
-        process_identity_status(
+        process_identity_status_with_retry(
             record.owner_pid,
             record.owner_process_start_time,
             &record.owner_executable_path,
@@ -1142,7 +1227,7 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
     {
         match serde_json::from_str::<BrainPidRecord>(&contents) {
             Ok(record) => {
-                match process_identity_status(
+                match process_identity_status_with_retry(
                     record.pid,
                     record.process_start_time,
                     &record.executable_path,
@@ -1160,7 +1245,7 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
                     ProcessIdentityStatus::Match => {}
                 }
 
-                let owner_status = process_identity_status(
+                let owner_status = process_identity_status_with_retry(
                     record.owner_pid,
                     record.owner_process_start_time,
                     &record.owner_executable_path,
@@ -1215,7 +1300,7 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
                         "Brain Server PID recovery record is invalid; it was preserved and no process was terminated".to_string(),
                     );
                 };
-                match process_liveness(pid) {
+                match process_liveness_with_retry(pid) {
                     ProcessLiveness::Exited => {
                         remove_pid_file_if_unchanged(&contents);
                         return Ok(());

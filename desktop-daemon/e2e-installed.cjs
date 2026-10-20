@@ -424,6 +424,94 @@ function readBrainPidRecord() {
   }
 }
 
+function readSanitizedBrainLog(redactionToken = '') {
+  const logPath = path.join(profileDir, 'Local', 'omni-context', 'logs', 'brain-server.log');
+  try {
+    const raw = fs.readFileSync(logPath, 'utf8');
+    const profile = String(profileDir || '').replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+    const tokenCandidates = [redactionToken];
+    try {
+      tokenCandidates.push(fs.readFileSync(path.join(profileDir, 'Local', 'omni-context', 'local-token.txt'), 'utf8').trim());
+    } catch {
+      // Startup diagnostics may run before the token file is created.
+    }
+    const redactions = [
+      [new RegExp(`Bearer\\s+[^\\s]+`, 'gi'), 'Bearer [REDACTED]'],
+      [/(LOCAL_API_TOKEN|API[_-]?KEY|SECRET|PASSWORD)\s*[:=]\s*[^\s,;]+/gi, '$1=[REDACTED]'],
+      [/((?:token|api[_-]?key|authorization|secret|password)\s*["']?\s*[:=]\s*["']?)[^\s,"'}]+/gi, '$1[REDACTED]'],
+      [/(?:sk|ghp|github_pat|xox[baprs])-[-_A-Za-z0-9]+/g, '[REDACTED]'],
+      ...tokenCandidates.filter(Boolean).map((value) => {
+        const escaped = String(value).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+        return [new RegExp(escaped, 'g'), '[REDACTED]'];
+      }),
+      ...(profile ? [[new RegExp(profile, 'gi'), '<E2E_PROFILE>']] : []),
+    ];
+    return raw.split(/\r?\n/).slice(-120).map((line) => {
+      let sanitized = line;
+      for (const [pattern, replacement] of redactions) sanitized = sanitized.replace(pattern, replacement);
+      return sanitized;
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function captureImportRecoveryFailure(page, jobId, token) {
+  const diagnostic = {
+    job_id: jobId,
+    ui: null,
+    recovery_records: null,
+    receipt: null,
+    brain_log_tail: readSanitizedBrainLog(token),
+  };
+  try {
+    diagnostic.ui = await page.getByRole('list', { name: '导入任务' }).locator('li').evaluateAll((items) => items.map((item) => ({
+      status: item.getAttribute('data-status'),
+      buttons: Array.from(item.querySelectorAll('button')).map((button) => button.getAttribute('aria-label') || button.textContent?.trim() || ''),
+    })));
+    diagnostic.recovery_records = await page.evaluate((expectedJobId) => {
+      try {
+        const records = JSON.parse(localStorage.getItem('omni-context.pending-import-jobs.v1') || '[]');
+        return Array.isArray(records)
+          ? records.filter((record) => record?.jobId === expectedJobId).map((record) => Object.keys(record).sort())
+          : [];
+      } catch {
+        return [];
+      }
+    }, jobId);
+  } catch {
+    diagnostic.ui = { unavailable: true };
+  }
+  try {
+    const response = await fetch(fixtureApiUrl(`/api/ingest/job/${encodeURIComponent(jobId)}`), {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(5_000),
+    });
+    const body = await response.json().catch(() => ({}));
+    diagnostic.receipt = {
+      http_status: response.status,
+      job_id: typeof body?.jobId === 'string' ? body.jobId : null,
+      status: typeof body?.status === 'string' ? body.status : null,
+      stage: typeof body?.stage === 'string' ? body.stage : null,
+      error: typeof body?.error === 'string' ? body.error : null,
+    };
+  } catch (error) {
+    diagnostic.receipt = { error: String(error?.message || error) };
+  }
+  const diagnosticPath = path.join(evidenceDir, 'windows-import-recovery-failure.json');
+  fs.writeFileSync(diagnosticPath, `${JSON.stringify(diagnostic, null, 2)}\n`, { encoding: 'utf8', flag: 'w' });
+  await page.screenshot({ path: path.join(evidenceDir, '15-windows-interrupted-import-recovery-failure.png'), fullPage: true }).catch(() => {});
+  failureDiagnostics = {
+    phase: 'import-recovery',
+    job_id: diagnostic.job_id,
+    ui: diagnostic.ui,
+    recovery_records: diagnostic.recovery_records,
+    receipt: diagnostic.receipt,
+    brain_log_tail: diagnostic.brain_log_tail,
+  };
+  return diagnostic;
+}
+
 async function probeInstalledStartup(child, includeProcessDetails = false) {
   const [health, cdp] = await Promise.all([
     fetch(fixtureApiUrl('/health'), { signal: AbortSignal.timeout(1_000) })
@@ -665,6 +753,7 @@ async function startInstalledApp() {
       phase: 'installed-app-startup',
       timeout_ms: 180_000,
       last_probe: diagnostic,
+      brain_log_tail: readSanitizedBrainLog(),
     };
     let cleanupError = null;
     try {
@@ -1194,8 +1283,13 @@ async function run() {
     await restoredTask.getByRole('button', { name: /继续查询/ }).waitFor({ timeout: 30_000 });
     await restoredTask.getByRole('button', { name: /继续查询/ }).click();
     await restoredTask.waitFor({ state: 'visible' });
-    await page.getByRole('list', { name: '导入任务' }).locator('li[data-status="partial"]')
-      .filter({ hasText: '已恢复的文件导入任务' }).first().waitFor({ timeout: 30_000 });
+    try {
+      await page.getByRole('list', { name: '导入任务' }).locator('li[data-status="partial"]')
+        .filter({ hasText: '已恢复的文件导入任务' }).first().waitFor({ timeout: 30_000 });
+    } catch (error) {
+      await captureImportRecoveryFailure(page, interruptedJobId, localToken);
+      throw error;
+    }
     const acknowledgement = restoredTask.getByRole('button', { name: /已核对记忆库，允许重新选择/ });
     await acknowledgement.waitFor({ timeout: 30_000 });
     assert.equal(uploadSubmissions.value, 3, 'reopening the app silently re-uploaded the interrupted file');
