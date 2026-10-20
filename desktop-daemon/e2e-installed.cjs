@@ -42,6 +42,7 @@ let cdpPort;
 let mockPort;
 let udpPort;
 const completedChecks = [];
+let failureDiagnostics = null;
 
 function pass(check) {
   completedChecks.push(check);
@@ -314,48 +315,106 @@ function listeningPids(port) {
 }
 
 async function waitForPortRelease(port, timeoutMs = 15_000) {
-  await waitFor(() => listeningPids(port).length === 0, timeoutMs);
+  try {
+    await waitFor(() => listeningPids(port).length === 0, timeoutMs);
+  } catch (error) {
+    throw new Error(`loopback port ${port} did not release; listeners=${JSON.stringify(describeListeners(port))}; ${error.message}`);
+  }
 }
 
-async function stopTree(pid) {
-  if (!pid) return;
-  spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+function processImageName(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return null;
+  const result = spawnSync('C:\\Windows\\System32\\tasklist.exe', [
+    '/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH',
+  ], { windowsHide: true, encoding: 'utf8' });
+  const firstLine = String(result.stdout || '').split(/\r?\n/).find((line) => line.trim());
+  return firstLine?.match(/^\"([^\"]+)\"/)?.[1] || null;
+}
+
+function describeListeners(port) {
+  return listeningPids(port).map((pid) => ({ pid, image: processImageName(pid) }));
+}
+
+function readBrainPidRecord() {
+  const pidFile = path.join(profileDir, 'Local', 'omni-context', 'data', 'brain-server.pid');
   try {
-    process.kill(pid);
-  } catch {
-    // The taskkill call may already have terminated the desktop process.
-  }
-  // The packaged desktop process can leave its Brain child alive after the
-  // WebView exits.  This profile is unique to the E2E run, so its pid file is
-  // the narrow ownership handle needed to release the Brain process before restart.
-  try {
-    const pidFile = path.join(profileDir, 'Local', 'omni-context', 'data', 'brain-server.pid');
-    const brainPid = Number(fs.readFileSync(pidFile, 'utf8').trim());
-    if (Number.isInteger(brainPid) && brainPid > 0 && brainPid !== process.pid && brainPid !== pid) {
-      spawnSync('taskkill', ['/PID', String(brainPid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
-      try {
-        process.kill(brainPid);
-      } catch {
-        // taskkill may already have completed the termination.
-      }
+    const raw = fs.readFileSync(pidFile, 'utf8').trim();
+    try {
+      const record = JSON.parse(raw);
+      return {
+        pid: Number.isInteger(record?.pid) && record.pid > 0 ? record.pid : null,
+        hasProcessStartTime: Number.isSafeInteger(record?.process_start_time),
+        format: 'json',
+      };
+    } catch {
+      return {
+        pid: /^\d+$/.test(raw) ? Number(raw) : null,
+        hasProcessStartTime: false,
+        format: /^\d+$/.test(raw) ? 'legacy-numeric' : 'invalid',
+      };
     }
   } catch {
-    // The app may not have started Brain or may already have removed the pid.
+    return { pid: null, hasProcessStartTime: false, format: 'missing' };
+  }
+}
+
+async function probeInstalledStartup(child, includeProcessDetails = false) {
+  const [health, cdp] = await Promise.all([
+    fetch(fixtureApiUrl('/health'), { signal: AbortSignal.timeout(1_000) })
+      .then((response) => response.ok).catch(() => false),
+    fetch(`http://127.0.0.1:${cdpPort}/json/version`, { signal: AbortSignal.timeout(1_000) })
+      .then((response) => response.ok).catch(() => false),
+  ]);
+  const probe = {
+    app_pid: child.pid || null,
+    app_exit_code: child.exitCode,
+    app_signal_code: child.signalCode,
+    health_ready: health,
+    cdp_ready: cdp,
+  };
+  if (!includeProcessDetails) return probe;
+  const brainPidRecord = readBrainPidRecord();
+  return {
+    ...probe,
+    brain_listeners: describeListeners(brainPort),
+    cdp_listeners: describeListeners(cdpPort),
+    brain_pid_record: {
+      ...brainPidRecord,
+      image: brainPidRecord.pid ? processImageName(brainPidRecord.pid) : null,
+    },
+  };
+}
+
+async function stopTree(childOrPid) {
+  const child = typeof childOrPid === 'object' && childOrPid !== null ? childOrPid : null;
+  if (!child) throw new Error('stopTree requires the ChildProcess handle returned by spawn');
+  const pid = child.pid;
+  if (!pid) return;
+  if (child.exitCode === null && child.signalCode === null) {
+    const actualImage = processImageName(pid)?.toLowerCase();
+    const expectedImage = path.basename(executable).toLowerCase();
+    if (actualImage && actualImage !== expectedImage) {
+      throw new Error(`refusing to stop PID ${pid}: expected ${expectedImage}, found ${actualImage}`);
+    }
+    if (actualImage === expectedImage) {
+      spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+    }
+    await waitFor(() => child.exitCode !== null || child.signalCode !== null, 15_000)
+      .catch(() => {});
   }
   // WebView2's remote-debugging child can outlive the desktop process. Reclaim
-  // only the listener on the port reserved by this E2E so the restart launches
-  // a fresh WebView instead of attaching to stale application state.
+  // only a WebView2 listener on the port reserved by this E2E. Never use the
+  // Brain PID file as an ownership handle: Windows may reuse its numeric PID.
   for (const webviewPid of listeningPids(cdpPort)) {
     if (webviewPid === process.pid || webviewPid === pid) continue;
-    // Use taskkill so a WebView2 child that outlives the desktop process is
-    // actually terminated before the next launch can claim this reserved CDP
-    // port; process.kill alone is not a reliable force-stop on Windows.
+    if (processImageName(webviewPid)?.toLowerCase() !== 'msedgewebview2.exe') continue;
     spawnSync('taskkill', ['/PID', String(webviewPid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
-    try { process.kill(webviewPid); } catch { /* already gone */ }
   }
-  // Do not race a second installed launch against a stale WebView2 listener.
-  // The port was reserved exclusively for this disposable E2E profile.
+  // Do not race a second installed launch against a remaining native child.
   await waitForPortRelease(cdpPort);
+  // The desktop process tree owns Brain. Wait for the app's actual loopback
+  // listener to close instead of force-killing an unverified PID from disk.
+  await waitForPortRelease(brainPort);
 }
 
 function verifyTrayAction(action, mainWindowHandle, mainProcessId) {
@@ -487,23 +546,40 @@ async function startInstalledApp() {
     stdio: 'ignore',
     windowsHide: false,
   });
+  let lastStartupProbe = null;
   try {
     // A hard-stop recovery can leave the packaged Brain child in its bounded
-    // 120 s startup window while Windows releases the isolated profile and
-    // native WebView2 resources. Keep the real health + CDP barrier intact,
-    // but allow a bounded margin instead of failing before the product's
-    // documented startup timeout can elapse.
-    await waitFor(async () => {
-      if (child.exitCode !== null) return false;
-      const [health, cdp] = await Promise.all([
-        fetch(fixtureApiUrl('/health')).then((response) => response.ok),
-        fetch(`http://127.0.0.1:${cdpPort}/json/version`).then((response) => response.ok),
-      ]);
-      return health && cdp;
+    // 120 s startup window. Preserve the product health + native CDP barrier,
+    // but fail immediately when the installed process exits and keep safe,
+    // content-free state for diagnosing which half of startup did not recover.
+    const outcome = await waitFor(async () => {
+      lastStartupProbe = await probeInstalledStartup(child);
+      if (child.exitCode !== null || child.signalCode !== null) {
+        return { kind: 'exited', probe: lastStartupProbe };
+      }
+      if (lastStartupProbe.health_ready && lastStartupProbe.cdp_ready) {
+        return { kind: 'ready', probe: lastStartupProbe };
+      }
+      return null;
     }, 180_000);
+    if (outcome.kind === 'exited') {
+      throw new Error(`installed app exited during startup: ${JSON.stringify(outcome.probe)}`);
+    }
   } catch (error) {
-    await stopTree(child.pid);
-    throw error;
+    const diagnostic = await probeInstalledStartup(child, true).catch(() => lastStartupProbe);
+    failureDiagnostics = {
+      phase: 'installed-app-startup',
+      timeout_ms: 180_000,
+      last_probe: diagnostic,
+    };
+    let cleanupError = null;
+    try {
+      await stopTree(child);
+    } catch (stopError) {
+      cleanupError = String(stopError?.message || stopError);
+    }
+    const message = String(error?.message || error);
+    throw new Error(`${message}; startup diagnostics=${JSON.stringify(failureDiagnostics)}${cleanupError ? `; cleanup=${cleanupError}` : ''}`);
   }
   return child;
 }
@@ -837,8 +913,14 @@ async function run() {
     await decisionATurn.getByTestId('ask-decision-saved').waitFor({ timeout: 30_000 });
     pass('installed-ui-decision-a');
 
+    const asksBeforeDecisionB = mock.state.askCalls;
     await followUp.fill('Update: should we choose Option B instead?');
-    await followUp.press('Enter');
+    // Use the visible send control so the installed test exercises the same
+    // explicit action as a pointer user and waits until the second Ask request
+    // actually reaches the loopback fixture before asserting its answer.
+    await page.bringToFront();
+    await page.getByTestId('ask-follow-send').click();
+    await waitFor(() => mock.state.askCalls > asksBeforeDecisionB, 60_000);
     await page.getByText('Decision B: revise the plan and choose Option B.', { exact: false }).waitFor({ timeout: 60_000 });
     const decisionBTurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision B: revise the plan and choose Option B.' }).first();
     const relation = decisionBTurn.locator('select:has(option[value="revises"])');
@@ -876,7 +958,7 @@ async function run() {
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-before-restart.png'), fullPage: true });
     await closeConnection(browser);
     browser = null;
-    await stopTree(app.pid);
+    await stopTree(app);
     app = null;
     await waitFor(async () => fetch(fixtureApiUrl('/health')).then(() => false).catch(() => true), 20_000);
 
@@ -950,7 +1032,7 @@ async function run() {
     await page.waitForTimeout(5_000);
     await closeConnection(browser);
     browser = null;
-    await stopTree(app.pid);
+    await stopTree(app);
     app = null;
     await waitFor(async () => fetch(fixtureApiUrl('/health')).then(() => false).catch(() => true), 20_000);
 
@@ -1010,7 +1092,7 @@ async function run() {
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-after-restore.png'), fullPage: true });
   } finally {
     if (browser) await closeConnection(browser);
-    if (app) await stopTree(app.pid);
+    if (app) await stopTree(app);
     await new Promise((resolve) => mock.server.close(resolve));
   }
 }
@@ -1028,6 +1110,7 @@ function writeResult(status) {
     installed_exe_sha256: installRecord.installed_exe_sha256,
     product_code: installRecord.product_code,
     completed_checks: completedChecks,
+    ...(failureDiagnostics ? { failure_diagnostic: failureDiagnostics } : {}),
     not_verified: [
       'signed release installer and SmartScreen reputation',
       'real third-party model provider quality',

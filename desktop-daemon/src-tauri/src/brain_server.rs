@@ -9,6 +9,8 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+#[cfg(windows)]
+use sha2::{Digest, Sha256};
 
 use crate::log_writer;
 
@@ -78,7 +80,7 @@ pub fn is_running() -> bool {
 }
 
 pub fn is_ready() -> bool {
-    is_running() && health_check(Duration::from_millis(350))
+    health_check(Duration::from_millis(350))
 }
 
 fn health_check(timeout: Duration) -> bool {
@@ -96,11 +98,10 @@ fn health_check(timeout: Duration) -> bool {
         return false;
     }
 
-    let mut buf = [0_u8; 256];
-    match stream.read(&mut buf) {
-        Ok(n) if n > 0 => String::from_utf8_lossy(&buf[..n]).contains("200 OK"),
-        _ => false,
-    }
+    let mut response = String::new();
+    stream.read_to_string(&mut response).is_ok()
+        && response.contains("200 OK")
+        && response.contains("omni-context-brain-server")
 }
 
 fn wait_for_health(child: &mut Child, timeout: Duration) -> Result<(), String> {
@@ -181,11 +182,6 @@ fn find_node_executable() -> String {
 }
 
 pub fn start() -> Result<(), String> {
-    if is_ready() {
-        println!("[Brain Server] 已经运行中");
-        return Ok(());
-    }
-
     if BRAIN_SERVER_STARTING
         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
         .is_err()
@@ -206,22 +202,52 @@ pub fn start() -> Result<(), String> {
 }
 
 fn start_inner() -> Result<(), String> {
-    // A Brain/Desktop restart invalidates every previously persisted CLI
-    // control session, including Goal27's separate reopen-only session.
-    clear_control_session();
-    clear_verification_session();
-    clear_reopen_session();
-    // 先杀掉上一次遗留的 zombie 进程（防止配置的回环端口被占用）
-    kill_zombie_by_pid_file();
+    // Serialize startup across app instances that share the same data profile.
+    // A second instance must not mistake the first instance's live Brain child
+    // for a zombie while that child is starting or recovering.
+    let _startup_lock = BrainStartupLock::acquire(180_000)?;
 
-    if is_ready() {
-        println!("[Brain Server] 已经运行中");
-        return Ok(());
+    // A healthy service can belong to another desktop instance. Check it before
+    // touching the recovery record or invalidating persisted sessions.
+    if health_check(Duration::from_millis(350)) {
+        #[cfg(windows)]
+        match healthy_brain_owner_state() {
+            HealthyBrainOwnerState::Active => {
+                println!("[Brain Server] 已由活动的 Omni-context 实例提供服务");
+                return Ok(());
+            }
+            HealthyBrainOwnerState::Orphaned => {
+                // The old desktop process is gone but its Brain child survived.
+                // Reclaim only after the child and owner identities were verified.
+                kill_zombie_by_pid_file()?;
+                clear_control_session();
+                clear_verification_session();
+                clear_reopen_session();
+            }
+            HealthyBrainOwnerState::Unverified => {
+                // Old-format or unreadable recovery records are not authority to
+                // stop a healthy local server, especially during an upgrade.
+                println!("[Brain Server] 健康服务的所有者无法核验；保留现有服务");
+                return Ok(());
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            println!("[Brain Server] 已有健康 Brain Server，保留现有服务");
+            return Ok(());
+        }
+    } else {
+        kill_zombie_by_pid_file()?;
+        // Only invalidate persisted sessions after recovery has established
+        // that no other live desktop instance owns the Brain process.
+        clear_control_session();
+        clear_verification_session();
+        clear_reopen_session();
     }
 
     if is_running() {
         eprintln!("[Brain Server] 进程存在但 /health 未就绪，先停止后重新启动");
-        let _ = stop();
+        let _ = stop_inner(true);
     }
 
     println!("[Brain Server] 正在启动...");
@@ -300,9 +326,12 @@ fn start_inner() -> Result<(), String> {
                     Ok(()) => {
                         println!("[Brain Server] 已启动: {}", path.display());
 
-                        // 写入 PID 文件，下次启动时可清理 zombie
+                        // On Windows, persist the process creation time with the
+                        // PID. Windows may reuse PIDs between a hard stop and the
+                        // next launch; a bare PID is not sufficient authority to
+                        // terminate a process during recovery.
                         let pid = child.id();
-                        let _ = std::fs::write(pid_file_path(), pid.to_string());
+                        write_pid_file(pid);
 
                         store_process(child);
                         return Ok(());
@@ -336,16 +365,39 @@ fn start_inner() -> Result<(), String> {
 }
 
 pub fn stop() -> Result<(), String> {
+    // Shutdown must stay responsive even if another app instance is in its
+    // bounded startup wait. If the lock is unavailable, stop our own child but
+    // leave the recovery record for the next serialized startup to reconcile.
+    let startup_lock = BrainStartupLock::acquire(1_000).ok();
+    stop_inner(startup_lock.is_some())
+}
+
+fn stop_inner(owns_startup_lock: bool) -> Result<(), String> {
     let mut guard = BRAIN_SERVER_PROCESS
         .lock()
         .map_err(|e| format!("锁获取失败: {}", e))?;
 
     if let Some(mut child) = guard.take() {
+        let pid = child.id();
+        #[cfg(windows)]
+        let process_start_time = process_creation_time(pid);
         child.kill().map_err(|e| format!("终止进程失败: {}", e))?;
         // 等待进程退出，回收资源
         let _ = child.wait();
-        // 清理 PID 文件
-        let _ = std::fs::remove_file(pid_file_path());
+        // Remove only the record for the child we just stopped. A second
+        // instance may have replaced it while this process was shutting down.
+        #[cfg(windows)]
+        if owns_startup_lock {
+            if let Some(start_time) = process_start_time {
+                remove_pid_file_for_process(pid, start_time);
+            }
+        } else {
+            eprintln!("[Brain Server] startup lock unavailable during shutdown; keeping recovery record for next startup");
+        }
+        #[cfg(not(windows))]
+        if owns_startup_lock {
+            let _ = std::fs::remove_file(pid_file_path());
+        }
         clear_control_session();
         clear_verification_session();
         clear_reopen_session();
@@ -676,26 +728,587 @@ fn pid_file_path() -> PathBuf {
     user_data_dir().join("brain-server.pid")
 }
 
-/// 读取 PID 文件并尝试杀掉 zombie brain-server 进程
-fn kill_zombie_by_pid_file() {
-    let pid_path = pid_file_path();
-    if let Ok(pid_str) = std::fs::read_to_string(&pid_path) {
-        if let Ok(pid) = pid_str.trim().parse::<u32>() {
-            #[cfg(windows)]
-            {
-                let _ = std::process::Command::new("taskkill")
-                    .args(["/F", "/PID", &pid.to_string()])
-                    .creation_flags(CREATE_NO_WINDOW)
-                    .output();
-            }
-            #[cfg(not(windows))]
-            {
-                let _ = std::process::Command::new("kill")
-                    .args(["-9", &pid.to_string()])
-                    .output();
+#[cfg(windows)]
+struct BrainStartupLock {
+    handle: windows::Win32::Foundation::HANDLE,
+}
+
+#[cfg(windows)]
+impl BrainStartupLock {
+    fn acquire(timeout_ms: u32) -> Result<Self, String> {
+        use windows::core::PCWSTR;
+        use windows::Win32::Foundation::{
+            CloseHandle, WAIT_ABANDONED, WAIT_OBJECT_0, WAIT_TIMEOUT,
+        };
+        use windows::Win32::System::Threading::{CreateMutexW, WaitForSingleObject};
+
+        let profile = normalize_process_path(&user_data_dir().to_string_lossy());
+        let digest = Sha256::digest(profile.as_bytes());
+        let name = format!("Local\\OmniContextBrainStartup-{}", hex::encode(digest));
+        let mut wide_name = name.encode_utf16().collect::<Vec<_>>();
+        wide_name.push(0);
+        let handle = unsafe { CreateMutexW(None, false, PCWSTR(wide_name.as_ptr())) }
+            .map_err(|error| format!("创建 Brain Server 启动锁失败: {error}"))?;
+        let wait = unsafe { WaitForSingleObject(handle, timeout_ms) };
+        if wait == WAIT_OBJECT_0 || wait == WAIT_ABANDONED {
+            return Ok(Self { handle });
+        }
+
+        unsafe { CloseHandle(handle) }.ok();
+        if wait == WAIT_TIMEOUT {
+            Err("等待其他 Omni-context 实例完成 Brain Server 启动超时".to_string())
+        } else {
+            Err(format!("获取 Brain Server 启动锁失败: {:?}", wait))
+        }
+    }
+}
+
+#[cfg(windows)]
+impl Drop for BrainStartupLock {
+    fn drop(&mut self) {
+        use windows::Win32::Foundation::CloseHandle;
+        use windows::Win32::System::Threading::ReleaseMutex;
+
+        unsafe { ReleaseMutex(self.handle) }.ok();
+        unsafe { CloseHandle(self.handle) }.ok();
+    }
+}
+
+#[cfg(not(windows))]
+struct BrainStartupLock;
+
+#[cfg(not(windows))]
+impl BrainStartupLock {
+    fn acquire(_timeout_ms: u32) -> Result<Self, String> {
+        Ok(Self)
+    }
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+struct BrainPidRecord {
+    pid: u32,
+    process_start_time: u64,
+    executable_path: String,
+    owner_pid: u32,
+    owner_process_start_time: u64,
+    owner_executable_path: String,
+}
+
+impl BrainPidRecord {
+    fn matches_process(&self, pid: u32, process_start_time: u64, executable_path: &str) -> bool {
+        self.pid == pid
+            && self.process_start_time == process_start_time
+            && normalize_process_path(&self.executable_path)
+                == normalize_process_path(executable_path)
+    }
+
+    fn matches_owner_process(
+        &self,
+        pid: u32,
+        process_start_time: u64,
+        executable_path: &str,
+    ) -> bool {
+        self.owner_pid == pid
+            && self.owner_process_start_time == process_start_time
+            && normalize_process_path(&self.owner_executable_path)
+                == normalize_process_path(executable_path)
+    }
+}
+
+fn normalize_process_path(path: &str) -> String {
+    path.replace('/', "\\").to_lowercase()
+}
+
+#[cfg(windows)]
+fn process_start_time_for_handle(handle: windows::Win32::Foundation::HANDLE) -> Option<u64> {
+    use windows::Win32::Foundation::FILETIME;
+    use windows::Win32::System::Threading::GetProcessTimes;
+
+    let mut created = FILETIME::default();
+    let mut exited = FILETIME::default();
+    let mut kernel = FILETIME::default();
+    let mut user = FILETIME::default();
+    if unsafe { GetProcessTimes(handle, &mut created, &mut exited, &mut kernel, &mut user) }
+        .is_err()
+    {
+        return None;
+    }
+    Some(((created.dwHighDateTime as u64) << 32) | u64::from(created.dwLowDateTime))
+}
+
+#[cfg(windows)]
+fn process_image_path_for_handle(handle: windows::Win32::Foundation::HANDLE) -> Option<String> {
+    use windows::core::PWSTR;
+    use windows::Win32::System::Threading::{QueryFullProcessImageNameW, PROCESS_NAME_WIN32};
+
+    let mut path = vec![0u16; 32_768];
+    let mut length = path.len() as u32;
+    unsafe {
+        QueryFullProcessImageNameW(
+            handle,
+            PROCESS_NAME_WIN32,
+            PWSTR(path.as_mut_ptr()),
+            &mut length,
+        )
+    }
+    .ok()?;
+    Some(String::from_utf16_lossy(&path[..length as usize]))
+}
+
+#[cfg(windows)]
+fn process_creation_time(pid: u32) -> Option<u64> {
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
+
+    let handle = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) }.ok()?;
+    let start_time = process_start_time_for_handle(handle);
+    unsafe { CloseHandle(handle) }.ok();
+    start_time
+}
+
+#[cfg(windows)]
+#[derive(Debug, PartialEq, Eq)]
+enum ProcessIdentityStatus {
+    Match,
+    Mismatch,
+    Exited,
+    Unavailable,
+}
+
+#[cfg(windows)]
+#[derive(Debug, PartialEq, Eq)]
+enum ProcessLiveness {
+    Alive,
+    Exited,
+    Unavailable,
+}
+
+#[cfg(windows)]
+#[derive(Debug, PartialEq, Eq)]
+enum HealthyBrainOwnerState {
+    Active,
+    Orphaned,
+    Unverified,
+}
+
+#[cfg(windows)]
+fn classify_healthy_brain_owner(
+    child: ProcessIdentityStatus,
+    owner: ProcessIdentityStatus,
+) -> HealthyBrainOwnerState {
+    if child != ProcessIdentityStatus::Match {
+        return HealthyBrainOwnerState::Unverified;
+    }
+    match owner {
+        ProcessIdentityStatus::Match => HealthyBrainOwnerState::Active,
+        ProcessIdentityStatus::Mismatch | ProcessIdentityStatus::Exited => {
+            HealthyBrainOwnerState::Orphaned
+        }
+        ProcessIdentityStatus::Unavailable => HealthyBrainOwnerState::Unverified,
+    }
+}
+
+#[cfg(windows)]
+fn process_identity_status(
+    pid: u32,
+    start_time: u64,
+    executable_path: &str,
+) -> ProcessIdentityStatus {
+    use windows::Win32::Foundation::{CloseHandle, WAIT_OBJECT_0, WAIT_TIMEOUT};
+    use windows::Win32::System::Threading::{
+        OpenProcess, WaitForSingleObject, PROCESS_ACCESS_RIGHTS, PROCESS_QUERY_LIMITED_INFORMATION,
+    };
+
+    let handle = match unsafe {
+        OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_ACCESS_RIGHTS(0x0010_0000),
+            false,
+            pid,
+        )
+    } {
+        Ok(handle) => handle,
+        // OpenProcess reports ERROR_INVALID_PARAMETER when the PID no longer
+        // exists. All other failures remain unverifiable and fail closed.
+        Err(error) if error.code().0 == 0x8007_0057u32 as i32 => {
+            return ProcessIdentityStatus::Exited;
+        }
+        Err(_) => return ProcessIdentityStatus::Unavailable,
+    };
+
+    let status = match unsafe { WaitForSingleObject(handle, 0) } {
+        WAIT_OBJECT_0 => ProcessIdentityStatus::Exited,
+        WAIT_TIMEOUT => {
+            match process_start_time_for_handle(handle).zip(process_image_path_for_handle(handle)) {
+                Some((actual_start, actual_path))
+                    if actual_start == start_time
+                        && normalize_process_path(&actual_path)
+                            == normalize_process_path(executable_path) =>
+                {
+                    ProcessIdentityStatus::Match
+                }
+                Some(_) => ProcessIdentityStatus::Mismatch,
+                None => ProcessIdentityStatus::Unavailable,
             }
         }
+        _ => ProcessIdentityStatus::Unavailable,
+    };
+    unsafe { CloseHandle(handle) }.ok();
+    status
+}
+
+#[cfg(windows)]
+fn process_liveness(pid: u32) -> ProcessLiveness {
+    use windows::Win32::Foundation::{CloseHandle, WAIT_OBJECT_0, WAIT_TIMEOUT};
+    use windows::Win32::System::Threading::{
+        OpenProcess, WaitForSingleObject, PROCESS_ACCESS_RIGHTS, PROCESS_QUERY_LIMITED_INFORMATION,
+    };
+
+    let handle = match unsafe {
+        OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_ACCESS_RIGHTS(0x0010_0000),
+            false,
+            pid,
+        )
+    } {
+        Ok(handle) => handle,
+        Err(error) if error.code().0 == 0x8007_0057u32 as i32 => {
+            return ProcessLiveness::Exited;
+        }
+        Err(_) => return ProcessLiveness::Unavailable,
+    };
+    let liveness = match unsafe { WaitForSingleObject(handle, 0) } {
+        WAIT_OBJECT_0 => ProcessLiveness::Exited,
+        WAIT_TIMEOUT => ProcessLiveness::Alive,
+        _ => ProcessLiveness::Unavailable,
+    };
+    unsafe { CloseHandle(handle) }.ok();
+    liveness
+}
+
+#[cfg(windows)]
+fn healthy_brain_owner_state() -> HealthyBrainOwnerState {
+    let Ok(contents) = std::fs::read_to_string(pid_file_path()) else {
+        return HealthyBrainOwnerState::Unverified;
+    };
+    let Ok(record) = serde_json::from_str::<BrainPidRecord>(&contents) else {
+        return HealthyBrainOwnerState::Unverified;
+    };
+    classify_healthy_brain_owner(
+        process_identity_status(
+            record.pid,
+            record.process_start_time,
+            &record.executable_path,
+        ),
+        process_identity_status(
+            record.owner_pid,
+            record.owner_process_start_time,
+            &record.owner_executable_path,
+        ),
+    )
+}
+
+#[cfg(windows)]
+fn terminate_process_if_identity_matches(record: &BrainPidRecord) -> bool {
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::{
+        OpenProcess, TerminateProcess, WaitForSingleObject, PROCESS_ACCESS_RIGHTS,
+        PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_TERMINATE,
+    };
+
+    // Keep one process handle from identity check through termination. This
+    // closes the PID-reuse race between checking the process and calling
+    // taskkill with a numeric PID.
+    let Ok(handle) = (unsafe {
+        OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION
+                | PROCESS_TERMINATE
+                | PROCESS_ACCESS_RIGHTS(0x0010_0000),
+            false,
+            record.pid,
+        )
+    }) else {
+        return false;
+    };
+    let matches = process_start_time_for_handle(handle)
+        .zip(process_image_path_for_handle(handle))
+        .is_some_and(|(start_time, image_path)| {
+            record.matches_process(record.pid, start_time, &image_path)
+        });
+    let terminated = matches && unsafe { TerminateProcess(handle, 1) }.is_ok();
+    if terminated {
+        let _ = unsafe { WaitForSingleObject(handle, 5_000) };
+    }
+    unsafe { CloseHandle(handle) }.ok();
+    terminated
+}
+
+#[cfg(windows)]
+fn write_pid_file(pid: u32) {
+    let Some((process_start_time, executable_path)) = process_identity(pid) else {
+        eprintln!("[Brain Server] unable to verify process identity; skipping PID recovery record");
+        return;
+    };
+    let owner_pid = std::process::id();
+    let Some((owner_process_start_time, owner_executable_path)) = process_identity(owner_pid)
+    else {
+        eprintln!(
+            "[Brain Server] unable to verify owner process identity; skipping PID recovery record"
+        );
+        return;
+    };
+    let record = BrainPidRecord {
+        pid,
+        process_start_time,
+        executable_path,
+        owner_pid,
+        owner_process_start_time,
+        owner_executable_path,
+    };
+    match serde_json::to_vec(&record) {
+        Ok(contents) => {
+            let path = pid_file_path();
+            let temporary = path.with_file_name(format!("brain-server.pid.{pid}.tmp"));
+            if let Err(error) = std::fs::write(&temporary, contents) {
+                eprintln!("[Brain Server] unable to write PID recovery record: {error}");
+                return;
+            }
+            if let Err(error) = std::fs::rename(&temporary, &path) {
+                let _ = std::fs::remove_file(&temporary);
+                eprintln!(
+                    "[Brain Server] unable to atomically publish PID recovery record: {error}"
+                );
+            }
+        }
+        Err(error) => eprintln!("[Brain Server] unable to encode PID recovery record: {error}"),
+    }
+}
+
+#[cfg(not(windows))]
+fn write_pid_file(pid: u32) {
+    let _ = std::fs::write(pid_file_path(), pid.to_string());
+}
+
+#[cfg(windows)]
+fn process_identity(pid: u32) -> Option<(u64, String)> {
+    use windows::Win32::Foundation::{CloseHandle, WAIT_TIMEOUT};
+    use windows::Win32::System::Threading::{
+        OpenProcess, WaitForSingleObject, PROCESS_ACCESS_RIGHTS, PROCESS_QUERY_LIMITED_INFORMATION,
+    };
+
+    let handle = unsafe {
+        OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_ACCESS_RIGHTS(0x0010_0000),
+            false,
+            pid,
+        )
+    }
+    .ok()?;
+    let identity = if unsafe { WaitForSingleObject(handle, 0) } == WAIT_TIMEOUT {
+        process_start_time_for_handle(handle).zip(process_image_path_for_handle(handle))
+    } else {
+        None
+    };
+    unsafe { CloseHandle(handle) }.ok();
+    identity
+}
+
+#[cfg(windows)]
+fn remove_pid_file_if_unchanged(expected_contents: &str) {
+    let path = pid_file_path();
+    if std::fs::read_to_string(&path).ok().as_deref() == Some(expected_contents) {
+        let _ = std::fs::remove_file(path);
+    }
+}
+
+#[cfg(windows)]
+fn remove_pid_file_for_process(pid: u32, process_start_time: u64) {
+    let path = pid_file_path();
+    let Ok(contents) = std::fs::read_to_string(&path) else {
+        return;
+    };
+    if serde_json::from_str::<BrainPidRecord>(&contents)
+        .is_ok_and(|record| record.pid == pid && record.process_start_time == process_start_time)
+    {
+        remove_pid_file_if_unchanged(&contents);
+    }
+}
+
+/// Reclaim only a process whose PID *and* creation time match our record.
+/// Legacy numeric-only PID files do not prove ownership and are never used to
+/// terminate a process; this fail-closed behavior prevents killing a PID that
+/// Windows has since reused for another application or a new desktop instance.
+fn kill_zombie_by_pid_file() -> Result<(), String> {
+    let pid_path = pid_file_path();
+    let Ok(contents) = std::fs::read_to_string(&pid_path) else {
+        return Ok(());
+    };
+
+    #[cfg(windows)]
+    {
+        match serde_json::from_str::<BrainPidRecord>(&contents) {
+            Ok(record) => {
+                match process_identity_status(
+                    record.pid,
+                    record.process_start_time,
+                    &record.executable_path,
+                ) {
+                    ProcessIdentityStatus::Exited | ProcessIdentityStatus::Mismatch => {
+                        remove_pid_file_if_unchanged(&contents);
+                        return Ok(());
+                    }
+                    ProcessIdentityStatus::Unavailable => {
+                        return Err(format!(
+                            "无法安全核验旧 Brain Server 进程 {}；未终止该进程",
+                            record.pid
+                        ));
+                    }
+                    ProcessIdentityStatus::Match => {}
+                }
+
+                let owner_status = process_identity_status(
+                    record.owner_pid,
+                    record.owner_process_start_time,
+                    &record.owner_executable_path,
+                );
+                match owner_status {
+                    ProcessIdentityStatus::Match if record.owner_pid != std::process::id() => {
+                        return Err(format!(
+                            "Brain Server 仍由另一个 Omni-context 实例 (PID {}) 管理；未终止该进程",
+                            record.owner_pid
+                        ));
+                    }
+                    ProcessIdentityStatus::Match if is_running() => {
+                        // Let the current Child handle perform its normal stop
+                        // and wait path instead of terminating it behind the
+                        // supervisor's back.
+                        return Ok(());
+                    }
+                    ProcessIdentityStatus::Unavailable => {
+                        return Err(format!(
+                            "无法安全核验 Brain Server 所属实例 {}；未终止该进程",
+                            record.owner_pid
+                        ));
+                    }
+                    ProcessIdentityStatus::Match
+                    | ProcessIdentityStatus::Mismatch
+                    | ProcessIdentityStatus::Exited => {}
+                }
+
+                if terminate_process_if_identity_matches(&record) {
+                    eprintln!(
+                        "[Brain Server] reclaimed owned stale process {}",
+                        record.pid
+                    );
+                    remove_pid_file_if_unchanged(&contents);
+                    return Ok(());
+                }
+                return Err(format!(
+                    "无法安全回收 Brain Server 进程 {}；PID 文件已保留",
+                    record.pid
+                ));
+            }
+            Err(_) => {
+                let pid = contents.trim().parse::<u32>().ok().or_else(|| {
+                    serde_json::from_str::<serde_json::Value>(&contents)
+                        .ok()?
+                        .get("pid")?
+                        .as_u64()
+                        .and_then(|value| u32::try_from(value).ok())
+                });
+                let Some(pid) = pid.filter(|pid| *pid > 0) else {
+                    return Err(
+                        "Brain Server PID recovery record is invalid; it was preserved and no process was terminated".to_string(),
+                    );
+                };
+                match process_liveness(pid) {
+                    ProcessLiveness::Exited => {
+                        remove_pid_file_if_unchanged(&contents);
+                        return Ok(());
+                    }
+                    ProcessLiveness::Alive | ProcessLiveness::Unavailable => {
+                        return Err(format!(
+                            "旧版 Brain PID 记录缺少进程身份且 PID {pid} 仍无法排除为活动进程；未终止并保留记录"
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(not(windows))]
+    {
+        if let Ok(pid) = contents.trim().parse::<u32>() {
+            let _ = std::process::Command::new("kill")
+                .args(["-9", &pid.to_string()])
+                .output();
+        }
         let _ = std::fs::remove_file(&pid_path);
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod brain_pid_record_tests {
+    use super::BrainPidRecord;
+    #[cfg(windows)]
+    use super::{classify_healthy_brain_owner, HealthyBrainOwnerState, ProcessIdentityStatus};
+
+    #[test]
+    fn process_identity_requires_both_pid_and_creation_time() {
+        let record = BrainPidRecord {
+            pid: 42,
+            process_start_time: 1_700_000_000,
+            executable_path: "C:\\Omni\\node.exe".to_string(),
+            owner_pid: 100,
+            owner_process_start_time: 1_600_000_000,
+            owner_executable_path: "C:\\Omni\\Omni Context.exe".to_string(),
+        };
+
+        assert!(record.matches_process(42, 1_700_000_000, "C:/Omni/node.exe"));
+        assert!(!record.matches_process(43, 1_700_000_000, "C:/Omni/node.exe"));
+        assert!(!record.matches_process(42, 1_700_000_001, "C:/Omni/node.exe"));
+        assert!(!record.matches_process(42, 1_700_000_000, "C:/Other/node.exe"));
+        assert!(record.matches_owner_process(100, 1_600_000_000, "C:/Omni/Omni Context.exe"));
+        assert!(!record.matches_owner_process(101, 1_600_000_000, "C:/Omni/Omni Context.exe"));
+        assert!(!record.matches_owner_process(100, 1_600_000_001, "C:/Omni/Omni Context.exe"));
+    }
+
+    #[test]
+    fn legacy_numeric_pid_does_not_prove_process_ownership() {
+        assert!(serde_json::from_str::<BrainPidRecord>("42").is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn healthy_server_is_reused_only_for_a_verified_live_owner() {
+        assert_eq!(
+            classify_healthy_brain_owner(
+                ProcessIdentityStatus::Match,
+                ProcessIdentityStatus::Match
+            ),
+            HealthyBrainOwnerState::Active
+        );
+        assert_eq!(
+            classify_healthy_brain_owner(
+                ProcessIdentityStatus::Match,
+                ProcessIdentityStatus::Exited
+            ),
+            HealthyBrainOwnerState::Orphaned
+        );
+        assert_eq!(
+            classify_healthy_brain_owner(
+                ProcessIdentityStatus::Mismatch,
+                ProcessIdentityStatus::Exited
+            ),
+            HealthyBrainOwnerState::Unverified
+        );
+        assert_eq!(
+            classify_healthy_brain_owner(
+                ProcessIdentityStatus::Match,
+                ProcessIdentityStatus::Unavailable
+            ),
+            HealthyBrainOwnerState::Unverified
+        );
     }
 }
 

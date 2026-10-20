@@ -2586,7 +2586,7 @@ export default function GraphViewer3D({
               {gLoading ? (
                 <span className="block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
               ) : (
-                <button onClick={followUp} disabled={!followInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
+                <button onClick={followUp} disabled={!followInput.trim()} data-testid="ask-follow-send" className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
                   <Send className="h-3.5 w-3.5" />
                 </button>
               )}
