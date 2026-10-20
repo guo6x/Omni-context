@@ -30,7 +30,9 @@ impl ProcessTree {
     pub fn spawn(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, false)
+            // Broker executions are untrusted and must not execute before the
+            // Job Object containment boundary is installed.
+            Self::spawn_windows(command, false, true)
         }
         #[cfg(not(windows))]
         {
@@ -40,11 +42,15 @@ impl ProcessTree {
 
     /// Spawn a background child without creating a visible console window.
     /// This is used by the embedded Brain runtime; broker commands retain the
-    /// original `spawn` flags and behavior.
+    /// suspended-before-assign path above. Brain is a bundled, fixed entry
+    /// point rather than a user-selected command, so it is safer to let the
+    /// runtime initialize normally and attach it to the kill-on-close Job
+    /// Object immediately afterwards. This avoids a Windows loader/thread
+    /// resume race during hard-stop recovery while retaining tree cleanup.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true)
+            Self::spawn_windows(command, true, false)
         }
         #[cfg(not(windows))]
         {
@@ -140,7 +146,11 @@ impl ProcessTree {
     }
 
     #[cfg(windows)]
-    fn spawn_windows(command: &mut Command, no_window: bool) -> Result<Self, BrokerError> {
+    fn spawn_windows(
+        command: &mut Command,
+        no_window: bool,
+        start_suspended: bool,
+    ) -> Result<Self, BrokerError> {
         use std::os::windows::io::AsRawHandle;
         use std::os::windows::process::CommandExt;
         use windows::Win32::Foundation::{CloseHandle, HANDLE};
@@ -185,9 +195,12 @@ impl ProcessTree {
             return Err(e);
         }
 
-        // 2. Spawn suspended so no child code runs before job assignment.
+        // 2. Broker commands are spawned suspended so no child code runs
+        // before job assignment. The trusted Brain background path opts out
+        // of this flag to avoid the Windows loader/thread resume race.
         let hidden_flag = if no_window { 0x0800_0000 } else { 0 };
-        command.creation_flags(CREATE_SUSPENDED | hidden_flag);
+        let suspended_flag = if start_suspended { CREATE_SUSPENDED } else { 0 };
+        command.creation_flags(suspended_flag | hidden_flag);
         let mut child = match command.spawn() {
             Ok(c) => c,
             Err(e) => {
@@ -199,12 +212,18 @@ impl ProcessTree {
             }
         };
 
-        // 3. Assign the (still suspended) child to the job.
+        // 3. Assign the child to the job. For the trusted background path the
+        // child may already have executed a small amount of initialization;
+        // it is still contained before we return the handle to the caller.
         let assign_result =
             unsafe { AssignProcessToJobObject(job, HANDLE(child.as_raw_handle() as isize)) };
         if let Err(e) = assign_result {
-            // Cleanup: kill the suspended child via the job, reap it, close.
+            // Cleanup: the child is not a member of the job when assignment
+            // itself fails, so terminate the direct child explicitly before
+            // reaping it. This also covers the trusted background path where
+            // the child may already be running.
             let _ = unsafe { windows::Win32::System::JobObjects::TerminateJobObject(job, 1) };
+            let _ = child.kill();
             let _ = child.wait();
             unsafe { CloseHandle(job) }.ok();
             return Err(BrokerError::new(
@@ -213,12 +232,16 @@ impl ProcessTree {
             ));
         }
 
-        // 4. Resume the child's primary thread.
-        if let Err(e) = resume_primary_thread(child.id()) {
-            let _ = unsafe { windows::Win32::System::JobObjects::TerminateJobObject(job, 1) };
-            let _ = child.wait();
-            unsafe { CloseHandle(job) }.ok();
-            return Err(e);
+        // 4. Resume the broker child only after assignment. The Brain path is
+        // intentionally spawned normally, so it does not depend on a
+        // Toolhelp snapshot identifying a suspended primary thread.
+        if start_suspended {
+            if let Err(e) = resume_primary_thread(child.id()) {
+                let _ = unsafe { windows::Win32::System::JobObjects::TerminateJobObject(job, 1) };
+                let _ = child.wait();
+                unsafe { CloseHandle(job) }.ok();
+                return Err(e);
+            }
         }
 
         Ok(Self {
