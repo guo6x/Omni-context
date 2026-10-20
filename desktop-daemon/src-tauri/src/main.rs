@@ -20,6 +20,7 @@ mod local_git;
 mod log_writer;
 mod mcp_helper;
 mod screen_capture;
+mod startup_instance;
 mod udp_listener;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -45,61 +46,6 @@ pub struct SystemStatus {
 
 #[tokio::main]
 async fn main() {
-    // Native approval authority is initialized before Brain and uses durable
-    // app-data paths so replay protection survives a restart. The bridge
-    // secret is process-local and inherited only by the Brain child.
-    let broker_data = brain_server::user_data_dir();
-    std::fs::create_dir_all(&broker_data).expect("create native broker data directory");
-    execution_broker::configure_global_broker_with_persistence(
-        &broker_data.join("approval-store.json"),
-        &broker_data.join("plan-ledger.json"),
-        &broker_data.join("execution-receipts.json"),
-    );
-    let native_bridge = execution_broker::native_control::start();
-    std::env::set_var("NATIVE_BRIDGE_SECRET", &native_bridge.secret);
-    std::env::set_var(
-        "NATIVE_BRIDGE_URL",
-        format!("http://127.0.0.1:{}", native_bridge.port),
-    );
-
-    // CP4 + Post-CP8: best-effort production registration of the five
-    // read-only GitHub CLI bindings plus the single production write binding
-    // github.issue.close and the github.issue.read read-back binding
-    // (trusted config -> standard install -> PATH discovery). No
-    // machine-specific path is hardcoded in product source; this dev machine
-    // pins gh.exe through the trusted OMNI_GITHUB_CLI_EXE config.
-    let gh_bootstrap =
-        github_cli::bootstrap::bootstrap_production(crate::execution_broker::global_broker());
-    if let Some(path) = &gh_bootstrap.resolved_gh {
-        println!(
-            "[Omni-Context] GitHub CLI adapter ready: {} ({} read-only, {} write, {} read-back)",
-            path.display(),
-            gh_bootstrap.read_only_bindings,
-            gh_bootstrap.write_bindings,
-            gh_bootstrap.readback_bindings
-        );
-    } else {
-        println!(
-            "[Omni-Context] GitHub CLI adapter unavailable: {}",
-            gh_bootstrap.message
-        );
-    }
-    let git_bootstrap = local_git::bootstrap_production(
-        crate::execution_broker::global_broker(),
-        broker_data.join("git-workspaces"),
-    );
-    if let Some(path) = &git_bootstrap.resolved_git {
-        println!(
-            "[Omni-Context] local Git adapter ready: {} ({} bindings)",
-            path.display(),
-            git_bootstrap.registered_bindings
-        );
-    } else {
-        println!(
-            "[Omni-Context] local Git adapter unavailable: {}",
-            git_bootstrap.message
-        );
-    }
     println!("[Omni-Context] 启动桌面守护进程...");
 
     let show = CustomMenuItem::new("show_main".to_string(), "显示主窗口");
@@ -134,6 +80,20 @@ async fn main() {
         .with_tooltip("Omni-Context");
 
     tauri::Builder::default()
+        // Resolve the user-visible single-instance endpoint first: otherwise
+        // two near-simultaneous launches could win different independent locks.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_window("main") {
+                if window.is_minimized().unwrap_or(false) {
+                    let _ = window.unminimize();
+                }
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
+        // The plugin is a no-op on macOS. This lease still prevents duplicate
+        // processes from initializing Brain/broker services on every platform.
+        .plugin(startup_instance::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None::<Vec<&str>>,
@@ -203,6 +163,65 @@ async fn main() {
             _ => {}
         })
         .setup(|app| {
+            if !app.state::<startup_instance::StartupInstanceGate>().is_primary() {
+                println!("[Omni-Context] 已转交给正在运行的实例；跳过重复服务初始化");
+                app.app_handle().exit(0);
+                return Ok(());
+            }
+
+            // Native approval authority is initialized before Brain and uses
+            // durable app-data paths so replay protection survives a restart.
+            // The bridge secret is process-local and inherited only by Brain.
+            let broker_data = brain_server::user_data_dir();
+            std::fs::create_dir_all(&broker_data)?;
+            execution_broker::configure_global_broker_with_persistence(
+                &broker_data.join("approval-store.json"),
+                &broker_data.join("plan-ledger.json"),
+                &broker_data.join("execution-receipts.json"),
+            );
+            let native_bridge = execution_broker::native_control::start();
+            std::env::set_var("NATIVE_BRIDGE_SECRET", &native_bridge.secret);
+            std::env::set_var(
+                "NATIVE_BRIDGE_URL",
+                format!("http://127.0.0.1:{}", native_bridge.port),
+            );
+
+            // Best-effort registration of the supported GitHub CLI and local
+            // Git bindings happens only in the primary desktop process.
+            let gh_bootstrap = github_cli::bootstrap::bootstrap_production(
+                crate::execution_broker::global_broker(),
+            );
+            if let Some(path) = &gh_bootstrap.resolved_gh {
+                println!(
+                    "[Omni-Context] GitHub CLI adapter ready: {} ({} read-only, {} write, {} read-back)",
+                    path.display(),
+                    gh_bootstrap.read_only_bindings,
+                    gh_bootstrap.write_bindings,
+                    gh_bootstrap.readback_bindings
+                );
+            } else {
+                println!(
+                    "[Omni-Context] GitHub CLI adapter unavailable: {}",
+                    gh_bootstrap.message
+                );
+            }
+            let git_bootstrap = local_git::bootstrap_production(
+                crate::execution_broker::global_broker(),
+                broker_data.join("git-workspaces"),
+            );
+            if let Some(path) = &git_bootstrap.resolved_git {
+                println!(
+                    "[Omni-Context] local Git adapter ready: {} ({} bindings)",
+                    path.display(),
+                    git_bootstrap.registered_bindings
+                );
+            } else {
+                println!(
+                    "[Omni-Context] local Git adapter unavailable: {}",
+                    git_bootstrap.message
+                );
+            }
+
             let hardware_registry_path = app
                 .path_resolver()
                 .app_data_dir()

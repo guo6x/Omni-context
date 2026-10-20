@@ -43,6 +43,7 @@ let mockPort;
 let udpPort;
 const completedChecks = [];
 let failureDiagnostics = null;
+const decisionSaveDiagnostics = [];
 
 function pass(check) {
   completedChecks.push(check);
@@ -385,7 +386,7 @@ async function probeInstalledStartup(child, includeProcessDetails = false) {
   };
 }
 
-async function stopTree(childOrPid) {
+async function stopTree(childOrPid, releaseSharedServices = true) {
   const child = typeof childOrPid === 'object' && childOrPid !== null ? childOrPid : null;
   if (!child) throw new Error('stopTree requires the ChildProcess handle returned by spawn');
   const pid = child.pid;
@@ -402,6 +403,7 @@ async function stopTree(childOrPid) {
     await waitFor(() => child.exitCode !== null || child.signalCode !== null, 15_000)
       .catch(() => {});
   }
+  if (!releaseSharedServices) return;
   // WebView2's remote-debugging child can outlive the desktop process. Reclaim
   // only a WebView2 listener on the port reserved by this E2E. Never use the
   // Brain PID file as an ownership handle: Windows may reuse its numeric PID.
@@ -522,30 +524,57 @@ async function startMock() {
   };
 }
 
-async function startInstalledApp() {
-  const child = spawn(executable, [], {
-    env: {
-      ...getWindowsRuntimeEnvironment(),
-      LOCALAPPDATA: path.join(profileDir, 'Local'),
-      APPDATA: path.join(profileDir, 'Roaming'),
-      // Keep WebView2's renderer storage in the same unique disposable profile
-      // as the native data directory. Without this explicit path, unpackaged
-      // WebView2 may resolve its default user-data directory outside the
-      // overridden LOCALAPPDATA, making localStorage-backed import recovery
-      // disappear across a real process restart.
-      WEBVIEW2_USER_DATA_FOLDER: webviewUserDataDir,
-      TEMP: path.join(e2eRoot, 'temp'),
-      TMP: path.join(e2eRoot, 'temp'),
-      OMNI_UDP_BIND: `127.0.0.1:${udpPort}`,
-      OMNI_BRAIN_PORT: String(brainPort),
-      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${cdpPort}`,
-      LLM_API_URL: `http://127.0.0.1:${mockPort}/v1`,
-      LLM_MODEL: 'omni-installed-e2e-mock',
-    },
+function installedAppEnvironment() {
+  return {
+    ...getWindowsRuntimeEnvironment(),
+    LOCALAPPDATA: path.join(profileDir, 'Local'),
+    APPDATA: path.join(profileDir, 'Roaming'),
+    // Keep WebView2's renderer storage in the same unique disposable profile
+    // as the native data directory. Without this explicit path, unpackaged
+    // WebView2 may resolve its default user-data directory outside the
+    // overridden LOCALAPPDATA, making localStorage-backed import recovery
+    // disappear across a real process restart.
+    WEBVIEW2_USER_DATA_FOLDER: webviewUserDataDir,
+    TEMP: path.join(e2eRoot, 'temp'),
+    TMP: path.join(e2eRoot, 'temp'),
+    OMNI_UDP_BIND: `127.0.0.1:${udpPort}`,
+    OMNI_BRAIN_PORT: String(brainPort),
+    WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${cdpPort}`,
+    LLM_API_URL: `http://127.0.0.1:${mockPort}/v1`,
+    LLM_MODEL: 'omni-installed-e2e-mock',
+  };
+}
+
+function spawnInstalledApp() {
+  return spawn(executable, [], {
+    env: installedAppEnvironment(),
     detached: false,
     stdio: 'ignore',
     windowsHide: false,
   });
+}
+
+async function verifySingleInstance(app, page) {
+  const duplicate = spawnInstalledApp();
+  try {
+    await waitFor(() => duplicate.exitCode !== null || duplicate.signalCode !== null, 20_000);
+    assert.equal(duplicate.exitCode, 0, 'a second installed launch did not forward to the existing app and exit cleanly');
+    assert.equal(app.exitCode, null, 'the existing installed app exited when a duplicate launch was forwarded');
+    assert.equal(await fetch(fixtureApiUrl('/health')).then((response) => response.ok), true,
+      'forwarding a duplicate launch stopped the primary Brain service');
+    assert.equal(await fetch(`http://127.0.0.1:${cdpPort}/json/version`).then((response) => response.ok), true,
+      'forwarding a duplicate launch replaced the primary WebView');
+    await page.locator('header h1').waitFor({ state: 'visible', timeout: 10_000 });
+    pass('installed-single-instance-preserves-primary');
+  } finally {
+    if (duplicate.exitCode === null && duplicate.signalCode === null) {
+      await stopTree(duplicate, false);
+    }
+  }
+}
+
+async function startInstalledApp() {
+  const child = spawnInstalledApp();
   let lastStartupProbe = null;
   try {
     // A hard-stop recovery can leave the packaged Brain child in its bounded
@@ -722,6 +751,7 @@ async function run() {
     let page = connection.page;
     page.on('dialog', (dialog) => dialog.accept());
     trackUploadSubmissions(page, uploadSubmissions);
+    await verifySingleInstance(app, page);
 
     // A fresh installed profile opens the first-run wizard before the main
     // controls can receive pointer events. Dismiss it explicitly so the
@@ -908,9 +938,40 @@ async function run() {
     // word "decision"), so keep the assertion tied to the semantic command
     // instead of one translated label.
     const saveDecision = page.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i });
+    const saveDecisionResponsePromise = page.waitForResponse(
+      (response) => response.request().method() === 'POST'
+        && new URL(response.url()).pathname === '/api/mcp/tool/save_decision',
+      { timeout: 30_000 },
+    ).catch(() => null);
     await saveDecision.click();
     const decisionATurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision A: keep Option A for the initial release.' }).first();
-    await decisionATurn.getByTestId('ask-decision-saved').waitFor({ timeout: 30_000 });
+    const saveResponse = await saveDecisionResponsePromise;
+    if (saveResponse) {
+      let body = null;
+      try { body = await saveResponse.json(); } catch { /* record only response shape below */ }
+      decisionSaveDiagnostics.push({
+        status: saveResponse.status(),
+        ok: saveResponse.ok(),
+        body_keys: body && typeof body === 'object' ? Object.keys(body).sort() : [],
+        has_entity_id: typeof body?.id === 'string',
+        has_entity_uuid: typeof body?.id === 'string'
+          && /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(body.id),
+      });
+      assert.equal(saveResponse.ok(), true,
+        `save_decision returned HTTP ${saveResponse.status()} with keys ${JSON.stringify(decisionSaveDiagnostics.at(-1).body_keys)}`);
+      assert.equal(decisionSaveDiagnostics.at(-1).has_entity_uuid, true,
+        'save_decision returned success without a persisted entity UUID');
+    } else {
+      decisionSaveDiagnostics.push({ status: null, ok: false, body_keys: [], has_entity_id: false });
+      await page.screenshot({ path: path.join(evidenceDir, '15-windows-decision-save-failure.png'), fullPage: true });
+      throw new Error('save_decision did not return an HTTP response within 30 seconds');
+    }
+    try {
+      await decisionATurn.getByTestId('ask-decision-saved').waitFor({ timeout: 30_000 });
+    } catch (error) {
+      await page.screenshot({ path: path.join(evidenceDir, '15-windows-decision-save-failure.png'), fullPage: true });
+      throw new Error(`${error.message}; save_decision response=${JSON.stringify(decisionSaveDiagnostics.at(-1))}`);
+    }
     pass('installed-ui-decision-a');
 
     const asksBeforeDecisionB = mock.state.askCalls;
@@ -1111,6 +1172,7 @@ function writeResult(status) {
     product_code: installRecord.product_code,
     completed_checks: completedChecks,
     ...(failureDiagnostics ? { failure_diagnostic: failureDiagnostics } : {}),
+    ...(decisionSaveDiagnostics.length > 0 ? { decision_save_diagnostics: decisionSaveDiagnostics } : {}),
     not_verified: [
       'signed release installer and SmartScreen reputation',
       'real third-party model provider quality',

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-20T08:21:40.603Z",
+  "generatedAt": "2026-10-20T09:23:52.366Z",
   "files": {
     "package.json": "d9c82b1aa5c06968d5c714486855d200b57c3ddffe76b5b12c322b273b0c2bed",
     "next.config.js": "36d83548dafb510e0b1934e337566ed9bc946613e1fa5699e3639389d5027f6a",
     "tsconfig.json": "19e04ae10627f064a10940ad61b810dc020acfc633395d4f3b0b50636d421e81",
     "tailwind.config.ts": "532a65cb01f40da5983a76b692e9386bf3af474e9eb78053b03c74297aea0704",
     "postcss.config.js": "fa650b380adfabb151a0b352f7135e107e6352345f899060f1c5c231228f94bf",
-    "src-tauri/Cargo.toml": "2055210931a0844d4342126a34950f0baf5a350d990f5ecebdf4f7c19e6e57ab",
-    "src-tauri/Cargo.lock": "aec6da212c0cf2851661a39d3f3452dcf5f14a21afbfc5049f7d8b06291d16b1",
+    "src-tauri/Cargo.toml": "e3edce974e9f51f245b78453016815def306f98e9a7fe137d730d08495761954",
+    "src-tauri/Cargo.lock": "cf84053a2b279af66f711110b6e0525e0b42f5f71bbee4129fbf47c35c53734b",
     "src-tauri/build.rs": "7168c36b13189b57efe81852e181b3ac42bdd992465fee3791bff0dac0edff05",
     "src-tauri/tauri.conf.json": "db7f7a4ec3d90f5a12f297e4ea29efb23bc74b060da4a432191c974e9f019f50",
     "src-tauri/tauri.prod.conf.json": "2df5066bb0e18fb89a6f00aea7dc237edd5679a20323f9f4d0389b6a5c20ccc0",
@@ -19,9 +19,10 @@
     "src-tauri/src/hardware.rs": "26f70b6837f2f715657f89a16f9baf0baab2f8f84d5cb0f2f5a698ab4dce5239",
     "src-tauri/src/hardware_actions.rs": "6b97913abf9f91dd5edeeaa3b24e6ce32e4aef3767b02ae6c01620502e6475a3",
     "src-tauri/src/log_writer.rs": "c129e3ed97b142b92c3276c924e3b6520403d8f03fef606e068fe28f8c9aa95d",
-    "src-tauri/src/main.rs": "e973c4f7642cb7de0acca91d845cd92937a6c419c76c891f9f24eacf7b45978f",
+    "src-tauri/src/main.rs": "37fa0b427f364a4def27af805dcc7d8448a6ae44ecdb849095e69fdf3f840fb9",
     "src-tauri/src/mcp_helper.rs": "737eb4fb8b80cdf5935dd0705ca56748c358773553e5dfdf15ed1a1db02809a9",
     "src-tauri/src/screen_capture.rs": "31325d14cce361b57364304f40e43d2e9bd5d0f76a5e54770f4433f36eff05e1",
+    "src-tauri/src/startup_instance.rs": "e1679ed8d4820838fe17dd3b2ec736253300647f150748a6989750184d6ef299",
     "src-tauri/src/udp_listener.rs": "d6f783b27f4838fa30d0057fc790504b255f06f81dbb1b01d318b5a217c55507"
   }
 }
