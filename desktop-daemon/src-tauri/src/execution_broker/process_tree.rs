@@ -16,6 +16,19 @@ use std::process::{Child, Command};
 
 use crate::execution_broker::types::{BrokerError, ErrorCode};
 
+/// Keep the trusted Brain spawn path diagnosable without copying command
+/// arguments, paths, or request data into the persistent log.  The PID,
+/// lifecycle phase, and bounded Win32 return value are sufficient to tell a
+/// suspended-child recovery failure from a Brain/SQLite startup failure.
+#[cfg(windows)]
+fn log_spawn_diagnostic(pid: u32, phase: &str, detail: &str) {
+    crate::log_writer::write_line(
+        &crate::log_writer::log_file_path(),
+        &format!("[Desktop] ProcessTree pid={pid} phase={phase} {detail}"),
+        true,
+    );
+}
+
 /// A spawned process together with its containment mechanism.
 pub struct ProcessTree {
     child: Child,
@@ -214,6 +227,13 @@ impl ProcessTree {
                 ));
             }
         };
+        if start_suspended && no_window {
+            log_spawn_diagnostic(
+                child.id(),
+                "created_suspended",
+                "creation_flags=CREATE_SUSPENDED",
+            );
+        }
 
         // 3. Assign the still-suspended child to the job. No child code can
         // run before this boundary is installed.
@@ -233,13 +253,19 @@ impl ProcessTree {
                 format!("AssignProcessToJobObject failed: {e}"),
             ));
         }
+        if start_suspended && no_window {
+            log_spawn_diagnostic(child.id(), "job_assigned", "kill_on_job_close=true");
+        }
 
         // 4. Resume the child only after assignment. Toolhelp can briefly
         // publish no thread immediately after CreateProcessW; the bounded
         // retry keeps this trusted startup path fail-closed without turning a
         // transient Windows loader race into a false startup failure.
         if start_suspended {
-            if let Err(e) = resume_primary_thread(child.id()) {
+            if let Err(e) = resume_primary_thread(child.id(), no_window) {
+                if no_window {
+                    log_spawn_diagnostic(child.id(), "resume_failed", &e.to_string());
+                }
                 let _ = unsafe { windows::Win32::System::JobObjects::TerminateJobObject(job, 1) };
                 let _ = child.wait();
                 unsafe { CloseHandle(job) }.ok();
@@ -290,7 +316,7 @@ impl Drop for ProcessTree {
 /// process. A suspended process has exactly one thread, so the first thread in
 /// the toolhelp snapshot owned by `pid` is the primary thread.
 #[cfg(windows)]
-fn resume_primary_thread(pid: u32) -> Result<(), BrokerError> {
+fn resume_primary_thread(pid: u32, diagnostics: bool) -> Result<(), BrokerError> {
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Thread32First, Thread32Next, TH32CS_SNAPTHREAD, THREADENTRY32,
@@ -350,14 +376,65 @@ fn resume_primary_thread(pid: u32) -> Result<(), BrokerError> {
             }
         };
 
-        let previous_suspend_count = unsafe { ResumeThread(thread) };
+        // `CREATE_SUSPENDED` normally gives the primary thread a suspend
+        // count of one.  Windows can publish a larger count while process
+        // creation is being finalized (for example when a launcher or job
+        // policy suspends the process as well).  One ResumeThread call would
+        // then report success while leaving the child permanently suspended;
+        // the native supervisor would observe a live PID with no Brain logs
+        // until its health timeout.  Keep the handle open and drain the
+        // count to zero, bounded by the same startup retry deadline.
+        let resume_error = loop {
+            let previous_suspend_count = unsafe { ResumeThread(thread) };
+            if previous_suspend_count == u32::MAX {
+                let message = format!(
+                    "ResumeThread failed for pid={pid}: {}",
+                    std::io::Error::last_os_error()
+                );
+                if diagnostics {
+                    log_spawn_diagnostic(pid, "resume_return", &message);
+                }
+                if std::time::Instant::now() >= deadline {
+                    break Some(message);
+                }
+                std::thread::sleep(RETRY_INTERVAL);
+                break Some(message);
+            }
+            if diagnostics {
+                log_spawn_diagnostic(
+                    pid,
+                    "resume_return",
+                    &format!("previous_suspend_count={previous_suspend_count}"),
+                );
+            }
+            if previous_suspend_count <= 1 {
+                unsafe { CloseHandle(thread) }.ok();
+                if diagnostics {
+                    log_spawn_diagnostic(pid, "resume_complete", "suspend_count=0");
+                }
+                return Ok(());
+            }
+            if std::time::Instant::now() >= deadline {
+                let message = format!(
+                    "ResumeThread left pid={pid} suspended (previous count {previous_suspend_count})"
+                );
+                if diagnostics {
+                    log_spawn_diagnostic(pid, "resume_incomplete", &message);
+                }
+                break Some(message);
+            }
+            std::thread::sleep(RETRY_INTERVAL);
+        };
         unsafe { CloseHandle(thread) }.ok();
-        if previous_suspend_count != u32::MAX {
-            return Ok(());
+        if let Some(message) = resume_error {
+            if std::time::Instant::now() >= deadline {
+                break message;
+            }
+            std::thread::sleep(RETRY_INTERVAL);
+            continue;
         }
-        let message = format!("ResumeThread failed: {}", std::io::Error::last_os_error());
         if std::time::Instant::now() >= deadline {
-            break message;
+            break "primary thread resume retry deadline exceeded".to_string();
         }
         std::thread::sleep(RETRY_INTERVAL);
     };

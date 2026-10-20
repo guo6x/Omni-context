@@ -124,17 +124,37 @@ fn health_check(timeout: Duration) -> bool {
 
 fn wait_for_health(process: &mut ProcessTree, timeout: Duration) -> Result<(), String> {
     let started = Instant::now();
+    let pid = process.child_mut().id();
+    log_startup_event(&format!(
+        "waiting for Brain child health pid={pid} timeout_ms={}",
+        timeout.as_millis()
+    ));
+    let mut last_pending_log = Instant::now();
     while started.elapsed() < timeout {
         match process.try_wait() {
             Ok(None) => {
                 if health_check(Duration::from_millis(700)) {
+                    log_startup_event(&format!("Brain child health ready pid={pid}"));
                     return Ok(());
+                }
+                if last_pending_log.elapsed() >= Duration::from_secs(10) {
+                    log_startup_event(&format!(
+                        "Brain child still running without health pid={pid} job_empty={}",
+                        process.is_empty()
+                    ));
+                    last_pending_log = Instant::now();
                 }
             }
             Ok(Some(status)) => {
+                log_startup_event(&format!(
+                    "Brain child exited before health pid={pid} status={status}"
+                ));
                 return Err(format!("进程启动后退出（status: {}）", status));
             }
             Err(e) => {
+                log_startup_event(&format!(
+                    "Brain child status probe failed before health pid={pid}: {e}"
+                ));
                 return Err(format!("检查进程状态失败: {}", e));
             }
         }
@@ -377,10 +397,27 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
             .env("LOCAL_API_TOKEN", &local_token)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
+        let entry_name = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("<unknown-entry>");
+        let node_path = PathBuf::from(&node_exe);
+        let node_name = node_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("<unknown-node>");
+        log_startup_event(&format!(
+            "spawning Brain child entry_name={entry_name} node_name={node_name}"
+        ));
         let spawn_result = ProcessTree::spawn_hidden(&mut cmd);
 
         match spawn_result {
             Ok(mut process) => {
+                log_startup_event(&format!(
+                    "Brain child spawned pid={} entry_name={}",
+                    process.child_mut().id(),
+                    entry_name
+                ));
                 // 要在 store_process 之前取出 stdout/stderr，否则 move 后拿不到。
                 // 立即接日志，避免冷启动等待期间没有任何可诊断输出。
                 let stdout = process.child_mut().stdout.take();
