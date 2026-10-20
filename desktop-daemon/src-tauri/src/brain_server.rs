@@ -1175,6 +1175,7 @@ fn healthy_brain_owner_state() -> HealthyBrainOwnerState {
 #[cfg(windows)]
 fn terminate_process_if_identity_matches(record: &BrainPidRecord) -> bool {
     use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::Foundation::WAIT_OBJECT_0;
     use windows::Win32::System::Threading::{
         OpenProcess, TerminateProcess, WaitForSingleObject, PROCESS_ACCESS_RIGHTS,
         PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_TERMINATE,
@@ -1200,11 +1201,14 @@ fn terminate_process_if_identity_matches(record: &BrainPidRecord) -> bool {
             record.matches_process(record.pid, start_time, &image_path)
         });
     let terminated = matches && unsafe { TerminateProcess(handle, 1) }.is_ok();
-    if terminated {
-        let _ = unsafe { WaitForSingleObject(handle, 5_000) };
-    }
+    // TerminateProcess is asynchronous.  Do not clear the recovery record or
+    // let a replacement Brain open the same SQLite profile until Windows has
+    // confirmed that the old process object is signalled.  A hard stop can
+    // leave Node/native SQLite teardown in flight for several seconds; merely
+    // observing a successful TerminateProcess call is not an ownership proof.
+    let exited = terminated && unsafe { WaitForSingleObject(handle, 30_000) } == WAIT_OBJECT_0;
     unsafe { CloseHandle(handle) }.ok();
-    terminated
+    exited
 }
 
 #[cfg(windows)]

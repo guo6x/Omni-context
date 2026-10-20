@@ -43,14 +43,16 @@ impl ProcessTree {
     /// Spawn a background child without creating a visible console window.
     /// This is used by the embedded Brain runtime; broker commands retain the
     /// suspended-before-assign path above. Brain is a bundled, fixed entry
-    /// point rather than a user-selected command, so it is safer to let the
-    /// runtime initialize normally and attach it to the kill-on-close Job
-    /// Object immediately afterwards. This avoids a Windows loader/thread
-    /// resume race during hard-stop recovery while retaining tree cleanup.
+    /// point, so it must not execute any loader/native-module code before it
+    /// is inside the kill-on-close Job Object. This is particularly important
+    /// during a forced desktop stop: a native helper created before assignment
+    /// would otherwise escape the Job and retain the profile database for the
+    /// next launch. The primary thread is resumed only after assignment, with
+    /// a bounded Toolhelp retry for the Windows thread-publication race.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true, false)
+            Self::spawn_windows(command, true, true)
         }
         #[cfg(not(windows))]
         {
@@ -195,9 +197,10 @@ impl ProcessTree {
             return Err(e);
         }
 
-        // 2. Broker commands are spawned suspended so no child code runs
-        // before job assignment. The trusted Brain background path opts out
-        // of this flag to avoid the Windows loader/thread resume race.
+        // 2. Spawn every Windows child suspended so no child code runs before
+        // job assignment. The hidden flag only controls console visibility;
+        // the trusted Brain path uses the same containment boundary as broker
+        // commands and resumes through the bounded Toolhelp helper below.
         let hidden_flag = if no_window { 0x0800_0000 } else { 0 };
         let suspended_flag = if start_suspended { CREATE_SUSPENDED } else { 0 };
         command.creation_flags(suspended_flag | hidden_flag);
@@ -212,9 +215,8 @@ impl ProcessTree {
             }
         };
 
-        // 3. Assign the child to the job. For the trusted background path the
-        // child may already have executed a small amount of initialization;
-        // it is still contained before we return the handle to the caller.
+        // 3. Assign the still-suspended child to the job. No child code can
+        // run before this boundary is installed.
         let assign_result =
             unsafe { AssignProcessToJobObject(job, HANDLE(child.as_raw_handle() as isize)) };
         if let Err(e) = assign_result {
@@ -232,9 +234,10 @@ impl ProcessTree {
             ));
         }
 
-        // 4. Resume the broker child only after assignment. The Brain path is
-        // intentionally spawned normally, so it does not depend on a
-        // Toolhelp snapshot identifying a suspended primary thread.
+        // 4. Resume the child only after assignment. Toolhelp can briefly
+        // publish no thread immediately after CreateProcessW; the bounded
+        // retry keeps this trusted startup path fail-closed without turning a
+        // transient Windows loader race into a false startup failure.
         if start_suspended {
             if let Err(e) = resume_primary_thread(child.id()) {
                 let _ = unsafe { windows::Win32::System::JobObjects::TerminateJobObject(job, 1) };
@@ -294,46 +297,73 @@ fn resume_primary_thread(pid: u32) -> Result<(), BrokerError> {
     };
     use windows::Win32::System::Threading::{OpenThread, ResumeThread, THREAD_SUSPEND_RESUME};
 
-    let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) }.map_err(|e| {
-        BrokerError::new(
-            ErrorCode::BrokerCrash,
-            format!("CreateToolhelp32Snapshot failed: {e}"),
-        )
-    })?;
-
-    let mut tid: Option<u32> = None;
-    let mut entry: THREADENTRY32 = unsafe { std::mem::zeroed() };
-    entry.dwSize = std::mem::size_of::<THREADENTRY32>() as u32;
-    if unsafe { Thread32First(snapshot, &mut entry) }.is_ok() {
-        loop {
-            if entry.th32OwnerProcessID == pid {
-                tid = Some(entry.th32ThreadID);
-                break;
+    const RETRY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+    const RETRY_INTERVAL: std::time::Duration = std::time::Duration::from_millis(10);
+    let deadline = std::time::Instant::now() + RETRY_TIMEOUT;
+    let last_error = loop {
+        let snapshot = match unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) } {
+            Ok(snapshot) => snapshot,
+            Err(error) => {
+                let message = format!("CreateToolhelp32Snapshot failed: {error}");
+                if std::time::Instant::now() >= deadline {
+                    break message;
+                }
+                std::thread::sleep(RETRY_INTERVAL);
+                continue;
             }
-            if unsafe { Thread32Next(snapshot, &mut entry) }.is_err() {
-                break;
+        };
+
+        let mut tid: Option<u32> = None;
+        let mut entry: THREADENTRY32 = unsafe { std::mem::zeroed() };
+        entry.dwSize = std::mem::size_of::<THREADENTRY32>() as u32;
+        if unsafe { Thread32First(snapshot, &mut entry) }.is_ok() {
+            loop {
+                if entry.th32OwnerProcessID == pid {
+                    tid = Some(entry.th32ThreadID);
+                    break;
+                }
+                if unsafe { Thread32Next(snapshot, &mut entry) }.is_err() {
+                    break;
+                }
             }
         }
-    }
-    unsafe { CloseHandle(snapshot) }.ok();
+        unsafe { CloseHandle(snapshot) }.ok();
 
-    let thread_id = tid.ok_or_else(|| {
-        BrokerError::new(
-            ErrorCode::BrokerCrash,
-            format!("primary thread not found for suspended process {pid}"),
-        )
-    })?;
+        let Some(thread_id) = tid else {
+            let message = format!("primary thread not found for suspended process {pid}");
+            if std::time::Instant::now() >= deadline {
+                break message;
+            }
+            std::thread::sleep(RETRY_INTERVAL);
+            continue;
+        };
 
-    let thread = unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) }
-        .map_err(|e| BrokerError::new(ErrorCode::BrokerCrash, format!("OpenThread failed: {e}")))?;
+        let thread = match unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) } {
+            Ok(thread) => thread,
+            Err(error) => {
+                let message = format!("OpenThread failed: {error}");
+                if std::time::Instant::now() >= deadline {
+                    break message;
+                }
+                std::thread::sleep(RETRY_INTERVAL);
+                continue;
+            }
+        };
 
-    let previous_suspend_count = unsafe { ResumeThread(thread) };
-    unsafe { CloseHandle(thread) }.ok();
-    if previous_suspend_count == u32::MAX {
-        return Err(BrokerError::new(
-            ErrorCode::BrokerCrash,
-            format!("ResumeThread failed: {}", std::io::Error::last_os_error()),
-        ));
-    }
-    Ok(())
+        let previous_suspend_count = unsafe { ResumeThread(thread) };
+        unsafe { CloseHandle(thread) }.ok();
+        if previous_suspend_count != u32::MAX {
+            return Ok(());
+        }
+        let message = format!("ResumeThread failed: {}", std::io::Error::last_os_error());
+        if std::time::Instant::now() >= deadline {
+            break message;
+        }
+        std::thread::sleep(RETRY_INTERVAL);
+    };
+
+    Err(BrokerError::new(
+        ErrorCode::BrokerCrash,
+        format!("{} (after {} ms)", last_error, RETRY_TIMEOUT.as_millis()),
+    ))
 }
