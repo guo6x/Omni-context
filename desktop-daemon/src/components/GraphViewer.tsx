@@ -2450,7 +2450,12 @@ export default function GraphViewer3D({
             {gAnswer.turns.map((turn, ti) => {
               const isLast = ti === gAnswer.turns.length - 1;
               return (
-                <div key={ti} className={ti > 0 ? 'mt-5 border-t border-white/5 pt-5' : ''}>
+                <div
+                  key={ti}
+                  data-testid="ask-answer-turn"
+                  data-turn-index={ti}
+                  className={ti > 0 ? 'mt-5 border-t border-white/5 pt-5' : ''}
+                >
                   <p className="mb-3 text-xs text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{turn.question}</p>
                   <div className="text-base font-semibold leading-relaxed text-white">{turn.conclusion || t('cmd.no_answer')}</div>
                   {turn.questions.length > 0 && (
@@ -2542,7 +2547,10 @@ export default function GraphViewer3D({
                     </div>
                   )}
                   {turn.savedAsDecision && (
-                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-green-700/40 bg-green-950/20 px-3 py-2 text-[12.5px] font-medium text-green-300">
+                    <div
+                      data-testid="ask-decision-saved"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-green-700/40 bg-green-950/20 px-3 py-2 text-[12.5px] font-medium text-green-300"
+                    >
                       <Check className="h-3.5 w-3.5" /> {t('cmd.decision_saved')}
                     </div>
                   )}

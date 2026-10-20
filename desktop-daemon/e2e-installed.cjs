@@ -833,16 +833,18 @@ async function run() {
     // instead of one translated label.
     const saveDecision = page.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i });
     await saveDecision.click();
-    await page.getByText(/已存为决策|Saved as decision/i).last().waitFor({ timeout: 30_000 });
+    const decisionATurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision A: keep Option A for the initial release.' }).first();
+    await decisionATurn.getByTestId('ask-decision-saved').waitFor({ timeout: 30_000 });
     pass('installed-ui-decision-a');
 
     await followUp.fill('Update: should we choose Option B instead?');
     await followUp.press('Enter');
     await page.getByText('Decision B: revise the plan and choose Option B.', { exact: false }).waitFor({ timeout: 60_000 });
-    const relation = page.locator('select:has(option[value="revises"])');
+    const decisionBTurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision B: revise the plan and choose Option B.' }).first();
+    const relation = decisionBTurn.locator('select:has(option[value="revises"])');
     await relation.selectOption('revises');
-    await page.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i }).click();
-    await page.getByText(/已存为决策|Saved as decision/i).last().waitFor({ timeout: 30_000 });
+    await decisionBTurn.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i }).click();
+    await decisionBTurn.getByTestId('ask-decision-saved').waitFor({ timeout: 30_000 });
     pass('installed-ui-decision-b-lineage');
 
     await openDecisionLog(page);
