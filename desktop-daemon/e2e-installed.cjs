@@ -736,8 +736,8 @@ async function run() {
     await page.getByText(/已存为决策|Saved as decision/i).last().waitFor({ timeout: 30_000 });
     pass('installed-ui-decision-b-lineage');
 
-    await page.getByTitle(/更多|More/).click();
-    await page.getByRole('button', { name: /决策复盘|Decision log/i }).click();
+    await clickAfterRerender(page.getByTitle(/更多|More/));
+    await clickAfterRerender(page.getByRole('button', { name: /决策复盘|Decision log/i }));
     await page.getByText('Decision A: keep Option A for the initial release.', { exact: false }).first().waitFor({ timeout: 30_000 });
     const decisionBButton = page.getByRole('button', { name: /Decision B: revise the plan/ }).first();
     const waitForDecisionB = () => waitFor(
@@ -752,9 +752,9 @@ async function run() {
     } catch {
       // Reopening the real panel forces one fresh list_entities read while
       // retaining the same assertion and bounded timeout.
-      await page.getByTitle('Esc').click();
-      await page.getByTitle(/更多|More/).click();
-      await page.getByRole('button', { name: /决策复盘|Decision log/i }).click();
+      await clickAfterRerender(page.getByTitle('Esc'));
+      await clickAfterRerender(page.getByTitle(/更多|More/));
+      await clickAfterRerender(page.getByRole('button', { name: /决策复盘|Decision log/i }));
       await waitForDecisionB();
     }
     await clickAfterRerender(decisionBButton);
