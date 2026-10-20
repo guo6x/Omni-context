@@ -143,7 +143,25 @@ async function waitForPointerTarget(page, locator, timeoutMs = 30_000) {
     try {
       await page.bringToFront();
       await locator.waitFor({ state: 'visible', timeout: Math.min(2_000, remaining) });
-      await locator.scrollIntoViewIfNeeded({ timeout: Math.min(2_000, remaining) });
+      // The Ask composer footer is position-fixed within the native WebView.
+      // WebView2 can report a transient scroll container while the restored
+      // window is repainting; Playwright then waits for
+      // scrollIntoViewIfNeeded even though the control is already fully in
+      // the viewport. Probe the real bounds first and only request a scroll
+      // when the target is actually outside the viewport.
+      const bounds = await locator.boundingBox().catch(() => null);
+      const viewport = await page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }))
+        .catch(() => ({ width: 0, height: 0 }));
+      const inViewport = Boolean(bounds
+        && bounds.width > 0
+        && bounds.height > 0
+        && bounds.x + bounds.width > 0
+        && bounds.y + bounds.height > 0
+        && bounds.x < viewport.width
+        && bounds.y < viewport.height);
+      if (!inViewport) {
+        await locator.scrollIntoViewIfNeeded({ timeout: Math.min(2_000, remaining) });
+      }
       const state = await locator.evaluate((element) => {
         const rect = element.getBoundingClientRect();
         const style = window.getComputedStyle(element);
