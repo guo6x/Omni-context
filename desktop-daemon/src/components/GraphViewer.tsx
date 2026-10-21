@@ -1855,7 +1855,7 @@ export default function GraphViewer3D({
             aria-labelledby="ask-first-title"
             className="pointer-events-none absolute inset-x-4 top-[56%] z-[5] flex -translate-y-1/2 justify-center"
           >
-            <div className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-cyan-400/15 bg-gray-950/90 p-5 shadow-2xl shadow-black/40 backdrop-blur-md sm:p-7">
+            <div className="pointer-events-none w-full max-w-2xl rounded-2xl border border-cyan-400/15 bg-gray-950/90 p-5 shadow-2xl shadow-black/40 backdrop-blur-md sm:p-7">
               <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-cyan-300/80">
                 <Brain aria-hidden="true" className="h-4 w-4" />
                 <span>{t("nav.ask")}</span>
@@ -1874,7 +1874,7 @@ export default function GraphViewer3D({
                         setCmdInput(prompt);
                         cmdInputRef.current?.focus();
                       }}
-                      className="rounded-full border border-white/10 bg-white/[0.035] px-3.5 py-2 text-left text-xs text-gray-300 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/[0.06] hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                      className="pointer-events-auto rounded-full border border-white/10 bg-white/[0.035] px-3.5 py-2 text-left text-xs text-gray-300 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/[0.06] hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                     >
                       {prompt}
                     </button>
