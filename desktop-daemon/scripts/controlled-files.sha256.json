@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-21T06:30:10.338Z",
+  "generatedAt": "2026-10-21T07:48:55.808Z",
   "files": {
     "package.json": "d9c82b1aa5c06968d5c714486855d200b57c3ddffe76b5b12c322b273b0c2bed",
     "next.config.js": "36d83548dafb510e0b1934e337566ed9bc946613e1fa5699e3639389d5027f6a",
@@ -13,7 +13,7 @@
     "src-tauri/tauri.conf.json": "db7f7a4ec3d90f5a12f297e4ea29efb23bc74b060da4a432191c974e9f019f50",
     "src-tauri/tauri.prod.conf.json": "2df5066bb0e18fb89a6f00aea7dc237edd5679a20323f9f4d0389b6a5c20ccc0",
     "src-tauri/tauri.ci.conf.json": "f1754a45111c2870d849882b3a0aaeef2a88a17e5259848accc2d6ffc23a4228",
-    "src-tauri/src/brain_server.rs": "3e8cdec4c40566775cd8a33ba728ff40690245481491a5c71ea41d1cbfdd8759",
+    "src-tauri/src/brain_server.rs": "fc8de0a7c44b672645b8fa42c559a8d548e502e4ff92f3dac73e939c5cd6ec65",
     "src-tauri/src/clipboard.rs": "b987b57d92d39723593ee7369ea1404a263bd31b375e19fc946204f13ad49b38",
     "src-tauri/src/commands.rs": "7a5478d8899ce732270f0ffbb42dd97338e774138732f1c1186db7404de2353c",
     "src-tauri/src/hardware.rs": "26f70b6837f2f715657f89a16f9baf0baab2f8f84d5cb0f2f5a698ab4dce5239",

@@ -56,16 +56,17 @@ impl ProcessTree {
         }
     }
 
-    /// Spawn a background child without creating a visible console window.
-    /// Broker commands retain the suspended-before-assign path above. The
-    /// bundled Brain runtime is also held suspended until its stdout/stderr
-    /// readers are attached, then resumed by the caller. This keeps the
-    /// startup containment boundary and avoids a fast Node loader filling an
-    /// undrained diagnostic pipe before health can be observed.
+    /// Spawn the bundled Brain runtime without creating a visible console
+    /// window. Broker commands retain the suspended-before-assign path above;
+    /// Brain is a fixed, trusted entry point and starts normally to avoid
+    /// replaying a thread-resume scan against an already-running packaged Node
+    /// loader during hard-stop recovery. It is still assigned to a fresh
+    /// kill-on-close Job immediately after creation, so later teardown removes
+    /// the whole Brain tree.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true, true, false)
+            Self::spawn_windows(command, true, false, false)
         }
         #[cfg(not(windows))]
         {
@@ -87,20 +88,6 @@ impl ProcessTree {
     /// Access to the underlying child (used to take the piped handles).
     pub fn child_mut(&mut self) -> &mut Child {
         &mut self.child
-    }
-
-    /// Resume a child created with the deferred-start path. Broker children
-    /// are resumed inside `spawn`; the trusted Brain path calls this only
-    /// after its output pipes are connected to the persistent diagnostic log.
-    pub fn resume(&mut self) -> Result<(), BrokerError> {
-        #[cfg(windows)]
-        {
-            resume_process_threads(&mut self.child, true)
-        }
-        #[cfg(not(windows))]
-        {
-            Ok(())
-        }
     }
 
     /// True when no process remains inside the containment boundary.
@@ -249,10 +236,13 @@ impl ProcessTree {
             return Err(e);
         }
 
-        // 2. Spawn every Windows child suspended so no child code runs before
-        // job assignment. The hidden flag only controls console visibility;
-        // the trusted Brain path uses the same containment boundary and can
-        // defer its resume until the caller has attached output readers.
+        // 2. Broker commands are created suspended so untrusted code cannot
+        // run before the Job Object boundary is installed. The bundled Brain
+        // entry point is fixed and trusted; it starts normally to avoid
+        // replaying a Toolhelp thread-resume scan against the packaged Node
+        // loader during recovery, then is assigned to the same kill-on-close
+        // Job before this function returns. The hidden flag only controls
+        // console visibility.
         let hidden_flag = if no_window { 0x0800_0000 } else { 0 };
         let suspended_flag = if start_suspended { CREATE_SUSPENDED } else { 0 };
         command.creation_flags(suspended_flag | hidden_flag);
@@ -266,16 +256,19 @@ impl ProcessTree {
                 ));
             }
         };
-        if start_suspended && no_window {
-            log_spawn_diagnostic(
-                child.id(),
-                "created_suspended",
-                "creation_flags=CREATE_SUSPENDED",
-            );
+        if no_window {
+            let (phase, detail) = if start_suspended {
+                ("created_suspended", "creation_flags=CREATE_SUSPENDED")
+            } else {
+                ("created_running", "creation_flags=CREATE_NO_WINDOW")
+            };
+            log_spawn_diagnostic(child.id(), phase, detail);
         }
 
-        // 3. Assign the still-suspended child to the job. No child code can
-        // run before this boundary is installed.
+        // 3. Assign the child to the job. Broker children are still
+        // suspended here; the trusted Brain child may have run a small amount
+        // of initialization before assignment but is contained before the
+        // caller receives it.
         let assign_result =
             unsafe { AssignProcessToJobObject(job, HANDLE(child.as_raw_handle() as isize)) };
         if let Err(e) = assign_result {
@@ -292,14 +285,15 @@ impl ProcessTree {
                 format!("AssignProcessToJobObject failed: {e}"),
             ));
         }
-        if start_suspended && no_window {
+        if no_window {
             log_spawn_diagnostic(child.id(), "job_assigned", "kill_on_job_close=true");
         }
 
-        // 4. Resume the child only after assignment. Toolhelp can briefly
-        // publish no thread immediately after CreateProcessW; the bounded
-        // retry keeps this trusted startup path fail-closed without turning a
-        // transient Windows loader race into a false startup failure.
+        // 4. Resume only broker children that were created suspended.
+        // Toolhelp can briefly publish no thread immediately after
+        // CreateProcessW; the bounded retry keeps that untrusted path
+        // fail-closed without turning a transient publication race into a
+        // false startup failure.
         if start_suspended && resume_after_assign {
             if let Err(e) = resume_process_threads(&mut child, no_window) {
                 if no_window {
