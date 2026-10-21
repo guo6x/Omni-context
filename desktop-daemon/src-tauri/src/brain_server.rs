@@ -1385,6 +1385,183 @@ fn process_identity_with_retry(pid: u32) -> Option<(u64, String)> {
     }
 }
 
+/// A descendant identity captured before reclaiming an orphaned Brain.  The
+/// Toolhelp snapshot only gives us PID/parent PID edges; capture the native
+/// creation time and image path while each process is still queryable so a
+/// reused PID can never be treated as the old child during the drain wait.
+#[cfg(windows)]
+#[derive(Clone, Debug)]
+struct BrainDescendantIdentity {
+    pid: u32,
+    process_start_time: u64,
+    executable_path: String,
+}
+
+/// Read the process parent graph without opening or mutating any process.
+/// Toolhelp can fail after the snapshot is created (for example if a process
+/// exits while the snapshot is being walked); propagate that failure instead
+/// of claiming that the tree is empty.
+#[cfg(windows)]
+fn snapshot_process_parent_edges() -> Result<Vec<(u32, u32)>, String> {
+    use windows::Win32::Foundation::{CloseHandle, ERROR_NO_MORE_FILES};
+    use windows::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
+    };
+
+    let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }
+        .map_err(|error| format!("CreateToolhelp32Snapshot(processes) failed: {error}"))?;
+    let result = (|| {
+        let mut entry = PROCESSENTRY32::default();
+        entry.dwSize = std::mem::size_of::<PROCESSENTRY32>() as u32;
+        unsafe { Process32First(snapshot, &mut entry) }
+            .map_err(|error| format!("Process32First failed: {error}"))?;
+
+        let mut edges = Vec::new();
+        loop {
+            edges.push((entry.th32ProcessID, entry.th32ParentProcessID));
+            match unsafe { Process32Next(snapshot, &mut entry) } {
+                Ok(()) => {}
+                Err(error) if error.code().0 == ERROR_NO_MORE_FILES.0 as i32 => break,
+                Err(error) => return Err(format!("Process32Next failed: {error}")),
+            }
+        }
+        Ok(edges)
+    })();
+    unsafe { CloseHandle(snapshot) }.ok();
+    result
+}
+
+/// Capture every currently observable descendant of `root_pid`, including
+/// grandchildren.  A process that exits between the snapshot and identity
+/// query is harmless and skipped; any other identity-query failure is
+/// unverified and therefore blocks destructive recovery (fail closed).
+#[cfg(windows)]
+fn capture_descendant_identities(root_pid: u32) -> Result<Vec<BrainDescendantIdentity>, String> {
+    use std::collections::{HashMap, HashSet, VecDeque};
+
+    let edges = snapshot_process_parent_edges()?;
+    let mut children_by_parent: HashMap<u32, Vec<u32>> = HashMap::new();
+    for (pid, parent_pid) in edges {
+        if pid != 0 {
+            children_by_parent.entry(parent_pid).or_default().push(pid);
+        }
+    }
+
+    let mut pending = VecDeque::from([root_pid]);
+    let mut seen = HashSet::from([root_pid]);
+    let mut descendants = Vec::new();
+    while let Some(parent_pid) = pending.pop_front() {
+        for child_pid in children_by_parent
+            .get(&parent_pid)
+            .into_iter()
+            .flatten()
+            .copied()
+        {
+            if !seen.insert(child_pid) {
+                continue;
+            }
+            match process_identity(child_pid) {
+                Some((process_start_time, executable_path)) => {
+                    descendants.push(BrainDescendantIdentity {
+                        pid: child_pid,
+                        process_start_time,
+                        executable_path,
+                    });
+                    pending.push_back(child_pid);
+                }
+                None => match process_liveness(child_pid) {
+                    ProcessLiveness::Exited => {}
+                    ProcessLiveness::Alive | ProcessLiveness::Unavailable => {
+                        return Err(format!(
+                            "无法安全核验 Brain descendant process {child_pid}；未回收旧进程"
+                        ));
+                    }
+                },
+            }
+        }
+    }
+    Ok(descendants)
+}
+
+/// Wait until all identities captured from an orphaned Brain have exited or
+/// changed identity.  While a captured child is still alive, enumerate its
+/// direct children again so a late-spawned helper is included in the same
+/// identity-bound drain.  The root PID is intentionally not used after
+/// termination: it may be reused by an unrelated process.
+#[cfg(windows)]
+fn wait_for_descendants_drain(
+    descendants: &mut Vec<BrainDescendantIdentity>,
+) -> Result<(), String> {
+    use std::collections::HashSet;
+
+    const DRAIN_TIMEOUT: Duration = Duration::from_secs(30);
+    const DRAIN_INTERVAL: Duration = Duration::from_millis(100);
+    let deadline = Instant::now() + DRAIN_TIMEOUT;
+
+    loop {
+        let mut active_parent_pids = HashSet::new();
+        let mut pending = false;
+        let mut unavailable = false;
+        for identity in descendants.iter() {
+            match process_identity_status(
+                identity.pid,
+                identity.process_start_time,
+                &identity.executable_path,
+            ) {
+                ProcessIdentityStatus::Match => {
+                    pending = true;
+                    active_parent_pids.insert(identity.pid);
+                }
+                ProcessIdentityStatus::Unavailable => unavailable = true,
+                ProcessIdentityStatus::Exited | ProcessIdentityStatus::Mismatch => {}
+            }
+        }
+
+        // Discover helpers spawned by a still-verified descendant.  If the
+        // read-only snapshot itself cannot be verified, do not clear the
+        // recovery record while an unknown process may still be alive.
+        if !active_parent_pids.is_empty() {
+            let edges = snapshot_process_parent_edges()?;
+            for (child_pid, parent_pid) in edges {
+                if !active_parent_pids.contains(&parent_pid)
+                    || descendants.iter().any(|identity| identity.pid == child_pid)
+                {
+                    continue;
+                }
+                match process_identity(child_pid) {
+                    Some((process_start_time, executable_path)) => {
+                        descendants.push(BrainDescendantIdentity {
+                            pid: child_pid,
+                            process_start_time,
+                            executable_path,
+                        });
+                        pending = true;
+                    }
+                    None => match process_liveness(child_pid) {
+                        ProcessLiveness::Exited => {}
+                        ProcessLiveness::Alive | ProcessLiveness::Unavailable => {
+                            return Err(format!(
+                                "无法安全核验 late Brain descendant process {child_pid}"
+                            ));
+                        }
+                    },
+                }
+            }
+        }
+
+        if !pending && !unavailable {
+            return Ok(());
+        }
+        if Instant::now() >= deadline {
+            return Err(format!(
+                "Brain descendants did not drain within {} seconds; recovery record retained",
+                DRAIN_TIMEOUT.as_secs()
+            ));
+        }
+        std::thread::sleep(DRAIN_INTERVAL);
+    }
+}
+
 #[cfg(windows)]
 fn remove_pid_file_if_unchanged(expected_contents: &str) {
     let path = pid_file_path();
@@ -1443,6 +1620,23 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
                     &record.executable_path,
                 ) {
                     ProcessIdentityStatus::Exited | ProcessIdentityStatus::Mismatch => {
+                        // The recorded root is already gone (or its PID was
+                        // reused).  We may clear the record only when a
+                        // read-only Toolhelp walk proves that no descendant
+                        // remains under that PID; otherwise preserve it and
+                        // fail closed rather than racing a live helper.
+                        let descendants = capture_descendant_identities(record.pid)
+                            .map_err(|error| {
+                                format!(
+                                    "无法安全核验旧 Brain Server descendants；PID 文件已保留：{error}"
+                                )
+                            })?;
+                        if !descendants.is_empty() {
+                            return Err(format!(
+                                "旧 Brain Server 根进程已退出但仍有 {} 个 descendants；PID 文件已保留",
+                                descendants.len()
+                            ));
+                        }
                         remove_pid_file_if_unchanged(&contents);
                         return Ok(());
                     }
@@ -1484,7 +1678,17 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
                     | ProcessIdentityStatus::Exited => {}
                 }
 
+                let mut descendants = capture_descendant_identities(record.pid).map_err(|error| {
+                    format!(
+                        "无法安全核验旧 Brain Server descendants；未终止该进程且 PID 文件已保留：{error}"
+                    )
+                })?;
                 if terminate_process_if_identity_matches(&record) {
+                    wait_for_descendants_drain(&mut descendants).map_err(|error| {
+                        format!(
+                            "旧 Brain Server 根进程已终止但 descendants 未安全排空；PID 文件已保留：{error}"
+                        )
+                    })?;
                     eprintln!(
                         "[Brain Server] reclaimed owned stale process {}",
                         record.pid
@@ -1504,6 +1708,11 @@ fn kill_zombie_by_pid_file() -> Result<(), String> {
                     &record.executable_path,
                 );
                 if failed_termination_can_clear_record(post_termination_status) {
+                    wait_for_descendants_drain(&mut descendants).map_err(|error| {
+                        format!(
+                            "旧 Brain Server 已退出但 descendants 未安全排空；PID 文件已保留：{error}"
+                        )
+                    })?;
                     eprintln!(
                         "[Brain Server] stale process {} exited or changed during recovery; clearing record",
                         record.pid

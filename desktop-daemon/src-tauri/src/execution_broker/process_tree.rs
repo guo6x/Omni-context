@@ -78,7 +78,10 @@ impl ProcessTree {
     }
 
     pub fn wait(&mut self) -> std::io::Result<std::process::ExitStatus> {
-        self.child.wait()
+        let status = self.child.wait()?;
+        #[cfg(windows)]
+        self.wait_for_job_empty();
+        Ok(status)
     }
 
     /// Access to the underlying child (used to take the piped handles).
@@ -171,6 +174,27 @@ impl ProcessTree {
                     ),
                 ))
             }
+        }
+    }
+
+    #[cfg(windows)]
+    fn wait_for_job_empty(&self) {
+        // `Child::wait` only reaps the direct process.  A Brain/command
+        // runtime may have native helpers or grandchildren in the Job Object;
+        // keep the containment boundary alive until Windows reports that the
+        // complete tree has drained, with a bounded fail-closed wait.
+        const DRAIN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+        const DRAIN_INTERVAL: std::time::Duration = std::time::Duration::from_millis(25);
+        let deadline = std::time::Instant::now() + DRAIN_TIMEOUT;
+        while !self.is_empty() && std::time::Instant::now() < deadline {
+            std::thread::sleep(DRAIN_INTERVAL);
+        }
+        if !self.is_empty() {
+            log_spawn_diagnostic(
+                self.child.id(),
+                "job_drain_timeout",
+                "active_processes_remain_after_wait",
+            );
         }
     }
 
