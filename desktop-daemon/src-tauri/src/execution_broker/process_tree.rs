@@ -366,7 +366,6 @@ impl Drop for ProcessTree {
 /// and are left unchanged.
 #[cfg(windows)]
 fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError> {
-    use std::collections::HashSet;
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Thread32First, Thread32Next, TH32CS_SNAPTHREAD, THREADENTRY32,
@@ -377,7 +376,6 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
     const RETRY_INTERVAL: std::time::Duration = std::time::Duration::from_millis(10);
     const STABLE_ROUNDS: usize = 3;
     let deadline = std::time::Instant::now() + RETRY_TIMEOUT;
-    let mut seen_thread_ids = HashSet::new();
     let mut stable_rounds = 0usize;
     let last_error = loop {
         let snapshot = match unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) } {
@@ -418,9 +416,7 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
 
         let mut failed = None;
         let mut resumed_suspended_thread = false;
-        let mut new_thread_published = false;
         for thread_id in thread_ids {
-            new_thread_published |= seen_thread_ids.insert(thread_id);
             let thread = match unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) } {
                 Ok(thread) => thread,
                 Err(error) => {
@@ -479,13 +475,13 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
             continue;
         }
 
-        // Toolhelp may publish the primary thread before Node's loader has
-        // created its startup workers. Do not return after the first non-empty
-        // snapshot: take a few consecutive snapshots and drain every thread
-        // that appears. This keeps the caller's pipe/health barrier from
-        // observing a live PID whose real primary/loader thread is still
-        // suspended.
-        if resumed_suspended_thread || new_thread_published {
+        // Toolhelp may publish the primary thread before the process has
+        // finished its loader transition. Keep taking bounded snapshots, but
+        // only reset stability when a thread was actually observed suspended.
+        // Newly published *running* workers are normal for Node and for the
+        // test harness; treating every new thread as instability can prevent
+        // short-lived children from ever reaching the resume barrier.
+        if resumed_suspended_thread {
             stable_rounds = 0;
         } else {
             stable_rounds += 1;
