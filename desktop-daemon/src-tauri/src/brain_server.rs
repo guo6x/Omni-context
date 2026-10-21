@@ -424,6 +424,21 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                 let stderr = process.child_mut().stderr.take();
                 pipe_output_to_log(stdout, stderr);
 
+                // The Brain child was created suspended and assigned to its
+                // kill-on-close Job before any runtime code could execute.
+                // Resume it only after the pipe readers above are live; a
+                // fast Node/SQLite startup must never block on an undrained
+                // diagnostic pipe before it can bind /health.
+                if let Err(error) = process.resume() {
+                    log_startup_event(&format!(
+                        "Brain child resume failed pid={} entry_name={entry_name}: {error}",
+                        process.child_mut().id()
+                    ));
+                    let _ = process.terminate();
+                    let _ = process.wait();
+                    continue;
+                }
+
                 let health_timeout = startup_deadline.saturating_duration_since(Instant::now());
                 if health_timeout.is_zero() {
                     let _ = process.terminate();
