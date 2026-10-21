@@ -219,6 +219,11 @@ export default function GraphViewer3D({
   // Serialize saves within that discussion so a fast follow-up cannot create duplicate rows.
   const discussionRef = useRef<DiscussionSession>(createDiscussionSession());
   const lastDecisionIdRef = useRef<string | null>(null);
+  // Saving a decision must not tear down the active Ask panel before the user
+  // can continue the decision chain. Refresh the graph when that discussion is
+  // explicitly closed (or replaced), after the follow-up composer is no longer
+  // needed.
+  const pendingGraphRefreshRef = useRef(false);
   const [sourcePreview, setSourcePreview] = useState<SourcePreview | null>(null);
   const sourceRequestRef = useRef<AbortController | null>(null);
   const sourceTriggerRef = useRef<HTMLElement | null>(null);
@@ -255,13 +260,17 @@ export default function GraphViewer3D({
   const closeAnswer = useCallback(() => {
     invalidateAnswerRequests();
     closeSourcePreview(false);
+    if (pendingGraphRefreshRef.current) {
+      pendingGraphRefreshRef.current = false;
+      onDataChanged?.();
+    }
     discussionRef.current = createDiscussionSession();
     lastDecisionIdRef.current = null;
     setGAnswer(null);
     setCmdInput("");
     setFollowInput("");
     setSelectedNode(null);
-  }, [invalidateAnswerRequests, closeSourcePreview]);
+  }, [invalidateAnswerRequests, closeSourcePreview, onDataChanged]);
   // 导入后只准备问题并聚焦，由用户决定何时发送，不自动调用推理服务。
   useEffect(() => {
     if (!askRequest) return;
@@ -870,13 +879,13 @@ export default function GraphViewer3D({
       }
       saveSession(nextTurns, session); // 显式授权的决定已保存；仅更新其原讨论。
       toast.success(t('cmd.decision_saved'));
-      onDataChanged?.();
+      pendingGraphRefreshRef.current = true;
     } catch (e) {
       toast.error(t('cmd.error'));
     } finally {
       setGSaving(false);
     }
-  }, [gAnswer, gSaving, gLoading, onDataChanged, saveSession, toast, t, lineageRelation, entities]);
+  }, [gAnswer, gSaving, gLoading, saveSession, toast, t, lineageRelation, entities]);
 
   // 历史会话：打开列表 / 载入一条续聊 / 删除
   const openHistory = useCallback(async () => {
