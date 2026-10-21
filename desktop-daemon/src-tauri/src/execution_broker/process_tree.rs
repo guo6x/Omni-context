@@ -3,11 +3,8 @@
 //! Windows (primary platform): every broker-spawned process is placed into a
 //! Job Object configured with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` BEFORE it
 //! can execute a single instruction (spawn with `CREATE_SUSPENDED`, assign to
-//! the job, resume all published startup threads). The trusted, bundled Brain
-//! runtime uses the same kill-on-close Job but starts normally, because the
-//! packaged Node loader is not safe to resume through a Toolhelp thread scan.
-//! Timeout, cancellation and broker teardown terminate the whole tree, so
-//! grandchildren cannot survive.
+//! the job, resume all published startup threads). Timeout, cancellation and broker
+//! teardown terminate the whole tree, so grandchildren cannot survive.
 //!
 //! `taskkill /T` is intentionally NOT used (it would itself be an extra
 //! process execution and a PATH-dependent mechanism).
@@ -56,16 +53,20 @@ impl ProcessTree {
         }
     }
 
-    /// Spawn the bundled Brain runtime without creating a visible console
-    /// window. Broker commands retain the suspended-before-assign path above;
-    /// Brain is a fixed, trusted entry point and starts normally to avoid a
-    /// packaged Node loader/thread resume race observed during hard-stop
-    /// recovery. It is assigned to a fresh kill-on-close Job immediately after
-    /// creation, so later teardown still removes the whole Brain tree.
+    /// Spawn a background child without creating a visible console window.
+    /// This is used by the embedded Brain runtime; broker commands retain the
+    /// suspended-before-assign path above. Brain is a bundled, fixed entry
+    /// point, so it must not execute any loader/native-module code before it
+    /// is inside the kill-on-close Job Object. This is particularly important
+    /// during a forced desktop stop: a native helper created before assignment
+    /// would otherwise escape the Job and retain the profile database for the
+    /// next launch. All published startup threads are resumed only after
+    /// assignment, with a bounded Toolhelp retry for the Windows
+    /// thread-publication race.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true, false)
+            Self::spawn_windows(command, true, true)
         }
         #[cfg(not(windows))]
         {
@@ -210,11 +211,10 @@ impl ProcessTree {
             return Err(e);
         }
 
-        // 2. Broker commands are spawned suspended so no untrusted child code
-        // runs before job assignment. The trusted Brain path starts normally
-        // to avoid the packaged Node loader/thread resume race; it still uses
-        // the same kill-on-close Job and is assigned immediately below. The
-        // hidden flag only controls console visibility.
+        // 2. Spawn every Windows child suspended so no child code runs before
+        // job assignment. The hidden flag only controls console visibility;
+        // the trusted Brain path uses the same containment boundary as broker
+        // commands and resumes through the bounded Toolhelp helper below.
         let hidden_flag = if no_window { 0x0800_0000 } else { 0 };
         let suspended_flag = if start_suspended { CREATE_SUSPENDED } else { 0 };
         command.creation_flags(suspended_flag | hidden_flag);
@@ -228,18 +228,16 @@ impl ProcessTree {
                 ));
             }
         };
-        if no_window {
-            let (phase, detail) = if start_suspended {
-                ("created_suspended", "creation_flags=CREATE_SUSPENDED")
-            } else {
-                ("created_running", "creation_flags=CREATE_NO_WINDOW")
-            };
-            log_spawn_diagnostic(child.id(), phase, detail);
+        if start_suspended && no_window {
+            log_spawn_diagnostic(
+                child.id(),
+                "created_suspended",
+                "creation_flags=CREATE_SUSPENDED",
+            );
         }
 
-        // 3. Assign the child to the job. Broker children are still suspended
-        // at this point; the trusted Brain child may have run a small amount
-        // of initialization before assignment.
+        // 3. Assign the still-suspended child to the job. No child code can
+        // run before this boundary is installed.
         let assign_result =
             unsafe { AssignProcessToJobObject(job, HANDLE(child.as_raw_handle() as isize)) };
         if let Err(e) = assign_result {
@@ -256,15 +254,14 @@ impl ProcessTree {
                 format!("AssignProcessToJobObject failed: {e}"),
             ));
         }
-        if no_window {
+        if start_suspended && no_window {
             log_spawn_diagnostic(child.id(), "job_assigned", "kill_on_job_close=true");
         }
 
-        // 4. Resume only broker children that were created suspended.
-        // Toolhelp can briefly publish no thread immediately after
-        // CreateProcessW; the bounded retry keeps this untrusted path
-        // fail-closed without turning a transient publication race into a
-        // false startup failure.
+        // 4. Resume the child only after assignment. Toolhelp can briefly
+        // publish no thread immediately after CreateProcessW; the bounded
+        // retry keeps this trusted startup path fail-closed without turning a
+        // transient Windows loader race into a false startup failure.
         if start_suspended {
             if let Err(e) = resume_process_threads(child.id(), no_window) {
                 if no_window {
