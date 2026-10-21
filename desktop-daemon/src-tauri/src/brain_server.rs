@@ -1421,7 +1421,11 @@ fn snapshot_process_parent_edges() -> Result<Vec<(u32, u32)>, String> {
             edges.push((entry.th32ProcessID, entry.th32ParentProcessID));
             match unsafe { Process32Next(snapshot, &mut entry) } {
                 Ok(()) => {}
-                Err(error) if error.code().0 == ERROR_NO_MORE_FILES.0 as i32 => break,
+                // Toolhelp returns a `windows::core::Error` whose code is the
+                // HRESULT form (`0x80070012`), not the raw Win32 value 18.
+                // Compare against the canonical conversion so normal end of
+                // the snapshot is not misreported as a recovery failure.
+                Err(error) if error.code() == ERROR_NO_MORE_FILES.to_hresult() => break,
                 Err(error) => return Err(format!("Process32Next failed: {error}")),
             }
         }

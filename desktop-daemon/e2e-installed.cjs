@@ -1101,12 +1101,15 @@ async function run() {
       page.getByTestId('ask-primary-send'),
       'Should we choose Option A for Project Aurora?',
     );
-    await page.getByText('Decision A: keep Option A for the initial release.', { exact: false }).waitFor({ timeout: 60_000 });
+    const decisionATurn = page.getByTestId('ask-answer-turn')
+      .filter({ hasText: 'Decision A: keep Option A for the initial release.' }).last();
+    await decisionATurn.waitFor({ state: 'visible', timeout: 60_000 });
+    await decisionATurn.getByTestId('ask-decision-save').waitFor({ state: 'visible', timeout: 30_000 });
     // The installed runner can select either locale. The English command is
     // currently "I've decided · save to graph" (rather than containing the
     // word "decision"), so keep the assertion tied to the semantic command
     // instead of one translated label.
-    const saveDecision = page.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i });
+    const saveDecision = decisionATurn.getByTestId('ask-decision-save');
     const saveDecisionResponsePromise = page.waitForResponse(
       (response) => response.request().method() === 'POST'
         && new URL(response.url()).pathname === '/api/mcp/tool/save_decision',
@@ -1117,7 +1120,6 @@ async function run() {
     // real pointer click so the save handler cannot be lost to a stale React
     // node (the same gate used by the decision-log entrypoint below).
     await clickPointerTarget(page, saveDecision, 30_000);
-    const decisionATurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision A: keep Option A for the initial release.' }).first();
     const saveResponse = await saveDecisionResponsePromise;
     if (saveResponse) {
       let body = null;
@@ -1159,12 +1161,13 @@ async function run() {
     );
     await waitFor(() => mock.state.askCalls > asksBeforeDecisionB, 60_000);
     await page.getByText('Decision B: revise the plan and choose Option B.', { exact: false }).waitFor({ timeout: 60_000 });
-    const decisionBTurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision B: revise the plan and choose Option B.' }).first();
+    const decisionBTurn = page.getByTestId('ask-answer-turn')
+      .filter({ hasText: 'Decision B: revise the plan and choose Option B.' }).last();
     const relation = decisionBTurn.locator('select:has(option[value="revises"])');
     await relation.selectOption('revises');
     await clickPointerTarget(
       page,
-      decisionBTurn.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i }),
+      decisionBTurn.getByTestId('ask-decision-save'),
       30_000,
     );
     await decisionBTurn.getByTestId('ask-decision-saved').waitFor({ timeout: 30_000 });

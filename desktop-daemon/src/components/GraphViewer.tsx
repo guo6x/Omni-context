@@ -2539,6 +2539,7 @@ export default function GraphViewer3D({
                       <button
                         onClick={saveDecision}
                         disabled={gSaving || gLoading}
+                        data-testid="ask-decision-save"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
                       >
                         <Check className="h-3.5 w-3.5" />
