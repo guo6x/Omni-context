@@ -45,7 +45,7 @@ impl ProcessTree {
         {
             // Broker executions are untrusted and must not execute before the
             // Job Object containment boundary is installed.
-            Self::spawn_windows(command, false, true, true)
+            Self::spawn_windows(command, false, true)
         }
         #[cfg(not(windows))]
         {
@@ -60,16 +60,13 @@ impl ProcessTree {
     /// is inside the kill-on-close Job Object. This is particularly important
     /// during a forced desktop stop: a native helper created before assignment
     /// would otherwise escape the Job and retain the profile database for the
-    /// next launch. Broker children resume immediately after assignment, with
-    /// a bounded Toolhelp retry for the Windows thread-publication race. The
-    /// Brain child is resumed by the caller after its output pipes are live.
+    /// next launch. All published startup threads are resumed only after
+    /// assignment, with a bounded Toolhelp retry for the Windows
+    /// thread-publication race.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            // The Brain child remains suspended until the caller has attached
-            // stdout/stderr readers. This prevents a fast Node loader from
-            // filling the inherited pipe before diagnostics are draining it.
-            Self::spawn_windows(command, true, true, false)
+            Self::spawn_windows(command, true, true)
         }
         #[cfg(not(windows))]
         {
@@ -88,20 +85,6 @@ impl ProcessTree {
     /// Access to the underlying child (used to take the piped handles).
     pub fn child_mut(&mut self) -> &mut Child {
         &mut self.child
-    }
-
-    /// Resume a child created with the deferred-start path. Broker children
-    /// are resumed inside `spawn`; the trusted Brain path calls this only
-    /// after its output pipes are connected to the persistent diagnostic log.
-    pub fn resume(&mut self) -> Result<(), BrokerError> {
-        #[cfg(windows)]
-        {
-            resume_process_threads(self.child.id(), true)
-        }
-        #[cfg(not(windows))]
-        {
-            Ok(())
-        }
     }
 
     /// True when no process remains inside the containment boundary.
@@ -183,7 +166,6 @@ impl ProcessTree {
         command: &mut Command,
         no_window: bool,
         start_suspended: bool,
-        resume_after_assign: bool,
     ) -> Result<Self, BrokerError> {
         use std::os::windows::io::AsRawHandle;
         use std::os::windows::process::CommandExt;
@@ -280,7 +262,7 @@ impl ProcessTree {
         // publish no thread immediately after CreateProcessW; the bounded
         // retry keeps this trusted startup path fail-closed without turning a
         // transient Windows loader race into a false startup failure.
-        if start_suspended && resume_after_assign {
+        if start_suspended {
             if let Err(e) = resume_process_threads(child.id(), no_window) {
                 if no_window {
                     log_spawn_diagnostic(child.id(), "resume_failed", &e.to_string());
