@@ -1096,7 +1096,6 @@ async function run() {
     pass('installed-tray-context-menu-show-main-window');
 
     const asksBeforeDecisionA = mock.state.askCalls;
-    const answerTurnsBeforeDecisionA = await answerTurns.count();
     await fillAndClickAsk(
       page,
       ask,
@@ -1105,13 +1104,16 @@ async function run() {
     );
     // Tray restoration can leave the composer usable while the WebView is
     // still settling the newly submitted request. Gate the decision card on
-    // both the fixture request and a newly appended answer turn so an older
-    // answer cannot satisfy this step or race the save control.
+    // the fresh fixture request and the new Decision A text so an older
+    // answer cannot satisfy this step or race the save control. The primary
+    // composer intentionally starts a new discussion and replaces the prior
+    // answer panel, so its fresh card count may be lower than the previous
+    // continuous-Ask turn count.
     await waitFor(() => mock.state.askCalls > asksBeforeDecisionA, 60_000);
-    await waitFor(() => answerTurns.count().then((count) => count > answerTurnsBeforeDecisionA), 60_000);
-    const decisionATurn = answerTurns.nth(answerTurnsBeforeDecisionA);
-    await decisionATurn.getByText('Decision A: keep Option A for the initial release.', { exact: false })
-      .waitFor({ state: 'visible', timeout: 60_000 });
+    const decisionATurn = answerTurns
+      .filter({ hasText: 'Decision A: keep Option A for the initial release.' })
+      .last();
+    await decisionATurn.waitFor({ state: 'visible', timeout: 60_000 });
     await decisionATurn.getByTestId('ask-decision-save').waitFor({ state: 'visible', timeout: 30_000 });
     // The installed runner can select either locale. The English command is
     // currently "I've decided · save to graph" (rather than containing the
