@@ -95,7 +95,7 @@ impl ProcessTree {
     pub fn resume(&mut self) -> Result<(), BrokerError> {
         #[cfg(windows)]
         {
-            resume_process_threads(self.child.id(), true)
+            resume_process_threads(&mut self.child, true)
         }
         #[cfg(not(windows))]
         {
@@ -301,7 +301,7 @@ impl ProcessTree {
         // retry keeps this trusted startup path fail-closed without turning a
         // transient Windows loader race into a false startup failure.
         if start_suspended && resume_after_assign {
-            if let Err(e) = resume_process_threads(child.id(), no_window) {
+            if let Err(e) = resume_process_threads(&mut child, no_window) {
                 if no_window {
                     log_spawn_diagnostic(child.id(), "resume_failed", &e.to_string());
                 }
@@ -365,7 +365,7 @@ impl Drop for ProcessTree {
 /// owned by the PID. Threads that are already running return a count of zero
 /// and are left unchanged.
 #[cfg(windows)]
-fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError> {
+fn resume_process_threads(child: &mut Child, diagnostics: bool) -> Result<(), BrokerError> {
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Thread32First, Thread32Next, TH32CS_SNAPTHREAD, THREADENTRY32,
@@ -375,8 +375,10 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
     const RETRY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
     const RETRY_INTERVAL: std::time::Duration = std::time::Duration::from_millis(10);
     const STABLE_ROUNDS: usize = 3;
+    let pid = child.id();
     let deadline = std::time::Instant::now() + RETRY_TIMEOUT;
     let mut stable_rounds = 0usize;
+    let mut resumed_any_thread = false;
     let last_error = loop {
         let snapshot = match unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) } {
             Ok(snapshot) => snapshot,
@@ -406,6 +408,25 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
         unsafe { CloseHandle(snapshot) }.ok();
 
         if thread_ids.is_empty() {
+            // A short-lived command can finish between the first successful
+            // ResumeThread call and the next Toolhelp snapshot. Once at least
+            // one suspended thread was resumed, an exited child is a valid
+            // completion of this barrier, not a startup failure. Without this
+            // check the broker waits five seconds and reports a false
+            // "no thread found" crash for ordinary `cmd /c`-style commands.
+            if resumed_any_thread {
+                match child.try_wait() {
+                    Ok(Some(_)) => return Ok(()),
+                    Ok(None) => {}
+                    Err(error) => {
+                        if std::time::Instant::now() >= deadline {
+                            break format!(
+                                "unable to query suspended process {pid} after resume: {error}"
+                            );
+                        }
+                    }
+                }
+            }
             let message = format!("no thread found for suspended process {pid}");
             if std::time::Instant::now() >= deadline {
                 break message;
@@ -451,6 +472,7 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
                 }
                 thread_done = previous_suspend_count <= 1;
                 resumed_suspended_thread |= previous_suspend_count > 0;
+                resumed_any_thread |= previous_suspend_count > 0;
                 if !thread_done && std::time::Instant::now() >= deadline {
                     failed = Some(format!(
                         "ResumeThread left pid={pid} thread={thread_id} suspended (previous count {previous_suspend_count})"
