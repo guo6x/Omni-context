@@ -48,7 +48,7 @@ impl ProcessTree {
         {
             // Broker executions are untrusted and must not execute before the
             // Job Object containment boundary is installed.
-            Self::spawn_windows(command, false, true)
+            Self::spawn_windows(command, false, true, true)
         }
         #[cfg(not(windows))]
         {
@@ -56,16 +56,16 @@ impl ProcessTree {
         }
     }
 
-    /// Spawn the bundled Brain runtime without creating a visible console
-    /// window. Broker commands retain the suspended-before-assign path above;
-    /// Brain is a fixed, trusted entry point and starts normally to avoid a
-    /// packaged Node loader/thread resume race observed during hard-stop
-    /// recovery. It is assigned to a fresh kill-on-close Job immediately after
-    /// creation, so later teardown still removes the whole Brain tree.
+    /// Spawn a background child without creating a visible console window.
+    /// Broker commands retain the suspended-before-assign path above. The
+    /// bundled Brain runtime is also held suspended until its stdout/stderr
+    /// readers are attached, then resumed by the caller. This keeps the
+    /// startup containment boundary and avoids a fast Node loader filling an
+    /// undrained diagnostic pipe before health can be observed.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true, false)
+            Self::spawn_windows(command, true, true, false)
         }
         #[cfg(not(windows))]
         {
@@ -84,6 +84,20 @@ impl ProcessTree {
     /// Access to the underlying child (used to take the piped handles).
     pub fn child_mut(&mut self) -> &mut Child {
         &mut self.child
+    }
+
+    /// Resume a child created with the deferred-start path. Broker children
+    /// are resumed inside `spawn`; the trusted Brain path calls this only
+    /// after its output pipes are connected to the persistent diagnostic log.
+    pub fn resume(&mut self) -> Result<(), BrokerError> {
+        #[cfg(windows)]
+        {
+            resume_process_threads(self.child.id(), true)
+        }
+        #[cfg(not(windows))]
+        {
+            Ok(())
+        }
     }
 
     /// True when no process remains inside the containment boundary.
@@ -165,6 +179,7 @@ impl ProcessTree {
         command: &mut Command,
         no_window: bool,
         start_suspended: bool,
+        resume_after_assign: bool,
     ) -> Result<Self, BrokerError> {
         use std::os::windows::io::AsRawHandle;
         use std::os::windows::process::CommandExt;
@@ -210,11 +225,10 @@ impl ProcessTree {
             return Err(e);
         }
 
-        // 2. Broker commands are spawned suspended so no untrusted child code
-        // runs before job assignment. The trusted Brain path starts normally
-        // to avoid the packaged Node loader/thread resume race; it still uses
-        // the same kill-on-close Job and is assigned immediately below. The
-        // hidden flag only controls console visibility.
+        // 2. Spawn every Windows child suspended so no child code runs before
+        // job assignment. The hidden flag only controls console visibility;
+        // the trusted Brain path uses the same containment boundary and can
+        // defer its resume until the caller has attached output readers.
         let hidden_flag = if no_window { 0x0800_0000 } else { 0 };
         let suspended_flag = if start_suspended { CREATE_SUSPENDED } else { 0 };
         command.creation_flags(suspended_flag | hidden_flag);
@@ -228,18 +242,16 @@ impl ProcessTree {
                 ));
             }
         };
-        if no_window {
-            let (phase, detail) = if start_suspended {
-                ("created_suspended", "creation_flags=CREATE_SUSPENDED")
-            } else {
-                ("created_running", "creation_flags=CREATE_NO_WINDOW")
-            };
-            log_spawn_diagnostic(child.id(), phase, detail);
+        if start_suspended && no_window {
+            log_spawn_diagnostic(
+                child.id(),
+                "created_suspended",
+                "creation_flags=CREATE_SUSPENDED",
+            );
         }
 
-        // 3. Assign the child to the job. Broker children are still suspended
-        // at this point; the trusted Brain child may have run a small amount
-        // of initialization before assignment.
+        // 3. Assign the still-suspended child to the job. No child code can
+        // run before this boundary is installed.
         let assign_result =
             unsafe { AssignProcessToJobObject(job, HANDLE(child.as_raw_handle() as isize)) };
         if let Err(e) = assign_result {
@@ -256,7 +268,7 @@ impl ProcessTree {
                 format!("AssignProcessToJobObject failed: {e}"),
             ));
         }
-        if no_window {
+        if start_suspended && no_window {
             log_spawn_diagnostic(child.id(), "job_assigned", "kill_on_job_close=true");
         }
 
@@ -264,7 +276,7 @@ impl ProcessTree {
         // publish no thread immediately after CreateProcessW; the bounded
         // retry keeps this trusted startup path fail-closed without turning a
         // transient Windows loader race into a false startup failure.
-        if start_suspended {
+        if start_suspended && resume_after_assign {
             if let Err(e) = resume_process_threads(child.id(), no_window) {
                 if no_window {
                     log_spawn_diagnostic(child.id(), "resume_failed", &e.to_string());
@@ -330,6 +342,7 @@ impl Drop for ProcessTree {
 /// and are left unchanged.
 #[cfg(windows)]
 fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError> {
+    use std::collections::HashSet;
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Thread32First, Thread32Next, TH32CS_SNAPTHREAD, THREADENTRY32,
@@ -338,7 +351,10 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
 
     const RETRY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
     const RETRY_INTERVAL: std::time::Duration = std::time::Duration::from_millis(10);
+    const STABLE_ROUNDS: usize = 3;
     let deadline = std::time::Instant::now() + RETRY_TIMEOUT;
+    let mut seen_thread_ids = HashSet::new();
+    let mut stable_rounds = 0usize;
     let last_error = loop {
         let snapshot = match unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) } {
             Ok(snapshot) => snapshot,
@@ -377,7 +393,10 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
         }
 
         let mut failed = None;
+        let mut resumed_suspended_thread = false;
+        let mut new_thread_published = false;
         for thread_id in thread_ids {
+            new_thread_published |= seen_thread_ids.insert(thread_id);
             let thread = match unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) } {
                 Ok(thread) => thread,
                 Err(error) => {
@@ -411,6 +430,7 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
                     );
                 }
                 thread_done = previous_suspend_count <= 1;
+                resumed_suspended_thread |= previous_suspend_count > 0;
                 if !thread_done && std::time::Instant::now() >= deadline {
                     failed = Some(format!(
                         "ResumeThread left pid={pid} thread={thread_id} suspended (previous count {previous_suspend_count})"
@@ -435,10 +455,27 @@ fn resume_process_threads(pid: u32, diagnostics: bool) -> Result<(), BrokerError
             continue;
         }
 
-        if diagnostics {
-            log_spawn_diagnostic(pid, "resume_complete", "all_published_threads_resumed");
+        // Toolhelp may publish the primary thread before Node's loader has
+        // created its startup workers. Do not return after the first non-empty
+        // snapshot: take a few consecutive snapshots and drain every thread
+        // that appears. This keeps the caller's pipe/health barrier from
+        // observing a live PID whose real primary/loader thread is still
+        // suspended.
+        if resumed_suspended_thread || new_thread_published {
+            stable_rounds = 0;
+        } else {
+            stable_rounds += 1;
         }
-        return Ok(());
+        if stable_rounds >= STABLE_ROUNDS {
+            if diagnostics {
+                log_spawn_diagnostic(pid, "resume_complete", "all_published_threads_resumed");
+            }
+            return Ok(());
+        }
+        if std::time::Instant::now() >= deadline {
+            break format!("thread publication did not stabilize for suspended process {pid}");
+        }
+        std::thread::sleep(RETRY_INTERVAL);
     };
 
     Err(BrokerError::new(
