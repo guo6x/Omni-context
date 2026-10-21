@@ -1209,6 +1209,12 @@ async function run() {
     assert.match(timelineText, /Decision B: revise the plan/);
     pass('installed-ui-lineage-view');
 
+    // Leave the user-facing decision log before restarting. The real app keeps
+    // modal state in the WebView profile during a hard native restart; closing
+    // it here follows the normal user path and prevents the retained backdrop
+    // from intercepting the next real Upload File pointer action.
+    await clickAfterRerender(page.getByTitle('Esc').last());
+
     await page.screenshot({ path: path.join(evidenceDir, '15-windows-before-restart.png'), fullPage: true });
     await closeConnection(browser);
     browser = null;
