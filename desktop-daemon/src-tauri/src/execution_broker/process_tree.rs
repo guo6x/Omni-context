@@ -198,13 +198,14 @@ impl ProcessTree {
     }
 
     /// Spawn the bundled Brain runtime without creating a visible console
-    /// window. Brain uses the native suspended-before-assign path; its
-    /// primary thread is resumed by `resume` after output readers are ready.
-    /// Broker commands retain their separate untrusted path above.
+    /// window. Keep the known-good std::process path: CREATE_SUSPENDED is
+    /// assigned to the Job Object and the bounded Toolhelp resume completes
+    /// before this method returns. Broker commands retain their separate
+    /// untrusted path above.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true, true, true, true)
+            Self::spawn_windows(command, true, true, true, false)
         }
         #[cfg(not(windows))]
         {
