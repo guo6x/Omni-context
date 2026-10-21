@@ -28,7 +28,8 @@ use tauri::Manager;
 use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem};
 use tokio::sync::mpsc;
 
-pub static CLOSE_TO_TRAY: AtomicBool = AtomicBool::new(true); // 默认最小化到托盘
+// 默认最小化到托盘。
+pub static CLOSE_TO_TRAY: AtomicBool = AtomicBool::new(true);
 // The tray keeps the desktop process alive, so a Brain child that exits must
 // be recoverable without requiring the user to discover the settings panel.
 // This flag prevents the monitor from racing an intentional full shutdown.
