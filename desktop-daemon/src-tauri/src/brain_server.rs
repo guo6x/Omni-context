@@ -10,7 +10,7 @@ use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 #[cfg(windows)]
 use sha2::{Digest, Sha256};
 
-use crate::execution_broker::process_tree::ProcessTree;
+use crate::execution_broker::process_tree::{ProcessOutput, ProcessTree};
 use crate::log_writer;
 
 /// [核心壁垒] Brain Server 进程管理器
@@ -124,7 +124,7 @@ fn health_check(timeout: Duration) -> bool {
 
 fn wait_for_health(process: &mut ProcessTree, timeout: Duration) -> Result<(), String> {
     let started = Instant::now();
-    let pid = process.child_mut().id();
+    let pid = process.id();
     log_startup_event(&format!(
         "waiting for Brain child health pid={pid} timeout_ms={}",
         timeout.as_millis()
@@ -163,10 +163,7 @@ fn wait_for_health(process: &mut ProcessTree, timeout: Duration) -> Result<(), S
     Err(format!("{} 秒内 /health 未就绪", timeout.as_secs()))
 }
 
-fn pipe_output_to_log(
-    stdout: Option<std::process::ChildStdout>,
-    stderr: Option<std::process::ChildStderr>,
-) {
+fn pipe_output_to_log(stdout: Option<ProcessOutput>, stderr: Option<ProcessOutput>) {
     let log_path = log_writer::log_file_path();
     if let Some(stdout) = stdout {
         let lp = log_path.clone();
@@ -413,7 +410,7 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
 
         match spawn_result {
             Ok(mut process) => {
-                let pid = process.child_mut().id();
+                let pid = process.id();
                 log_startup_event(&format!(
                     "Brain child spawned pid={pid} entry_name={entry_name}"
                 ));
@@ -424,9 +421,24 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                 let process_record = write_pid_file(pid);
                 // 要在 store_process 之前取出 stdout/stderr，否则 move 后拿不到。
                 // 立即接日志，避免冷启动等待期间没有任何可诊断输出。
-                let stdout = process.child_mut().stdout.take();
-                let stderr = process.child_mut().stderr.take();
+                let stdout = process.take_stdout();
+                let stderr = process.take_stderr();
                 pipe_output_to_log(stdout, stderr);
+
+                // The native Windows Brain path retains the primary thread
+                // suspended until both diagnostic readers are attached. This
+                // prevents a cold Node loader from filling a pipe before the
+                // log threads can drain it; broker children still resume
+                // inside ProcessTree::spawn before control returns here.
+                if let Err(error) = process.resume() {
+                    log_startup_event(&format!(
+                        "Brain child primary thread resume failed pid={pid}: {error}"
+                    ));
+                    let _ = process.terminate();
+                    let _ = process.wait();
+                    remove_pid_file_for_current_process(pid, process_record);
+                    continue;
+                }
 
                 let health_timeout = startup_deadline.saturating_duration_since(Instant::now());
                 if health_timeout.is_zero() {
@@ -504,7 +516,7 @@ fn stop_inner(owns_startup_lock: bool) -> Result<(), String> {
         .map_err(|e| format!("锁获取失败: {}", e))?;
 
     if let Some(mut process) = guard.take() {
-        let pid = process.child_mut().id();
+        let pid = process.id();
         #[cfg(windows)]
         let process_start_time = process_creation_time(pid);
         process
@@ -544,8 +556,8 @@ pub fn restart() -> Result<(), String> {
 
 /// 获取进程 PID（用于日志/调试）
 pub fn get_pid() -> Option<u32> {
-    let mut guard = BRAIN_SERVER_PROCESS.lock().ok()?;
-    guard.as_mut().map(|process| process.child_mut().id())
+    let guard = BRAIN_SERVER_PROCESS.lock().ok()?;
+    guard.as_ref().map(ProcessTree::id)
 }
 
 fn store_process(process: ProcessTree) {

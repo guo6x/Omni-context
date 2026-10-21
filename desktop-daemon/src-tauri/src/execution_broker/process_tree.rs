@@ -3,11 +3,12 @@
 //! Windows (primary platform): every broker-spawned process is placed into a
 //! Job Object configured with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` BEFORE it
 //! can execute a single instruction (spawn with `CREATE_SUSPENDED`, assign to
-//! the job, then resume all published startup threads). The trusted, bundled
-//! Brain runtime uses the same kill-on-close Job but starts normally, because
-//! the packaged Node loader is not safe to resume through a Toolhelp thread
-//! scan. Timeout, cancellation and broker teardown terminate the whole tree,
-//! so grandchildren cannot survive.
+//! the job, then resume the published primary startup thread). The trusted,
+//! bundled Brain runtime uses a native CreateProcessW path so its
+//! `PROCESS_INFORMATION.hThread` is retained across assignment and resumed
+//! directly; untrusted broker commands retain the fail-closed Toolhelp
+//! fallback. Timeout, cancellation and broker teardown terminate the whole
+//! tree, so grandchildren cannot survive.
 //!
 //! `taskkill /T` is intentionally NOT used (it would itself be an extra
 //! process execution and a PATH-dependent mechanism).
@@ -33,13 +34,153 @@ fn log_spawn_diagnostic(pid: u32, phase: &str, detail: &str) {
 }
 
 /// A spawned process together with its containment mechanism.
+#[cfg(windows)]
+enum WindowsChild {
+    /// The broker path keeps using std::process::Command.  It is created
+    /// suspended and resumed only after Job assignment, preserving the
+    /// fail-closed untrusted execution boundary.
+    Std(Child),
+    /// The trusted Brain path is created through CreateProcessW so the
+    /// PROCESS_INFORMATION primary-thread handle can be retained until the
+    /// process is assigned to the Job and resumed directly.
+    Native(NativeChild),
+}
+
+#[cfg(windows)]
+struct NativeChild {
+    process: windows::Win32::Foundation::HANDLE,
+    primary_thread: Option<windows::Win32::Foundation::HANDLE>,
+    pid: u32,
+    stdout: Option<ProcessOutput>,
+    stderr: Option<ProcessOutput>,
+    exit_status: Option<std::process::ExitStatus>,
+}
+
+#[cfg(windows)]
+impl NativeChild {
+    fn id(&self) -> u32 {
+        self.pid
+    }
+
+    fn try_wait(&mut self) -> std::io::Result<Option<std::process::ExitStatus>> {
+        use windows::Win32::Foundation::{WAIT_FAILED, WAIT_OBJECT_0, WAIT_TIMEOUT};
+        use windows::Win32::System::Threading::WaitForSingleObject;
+
+        if let Some(status) = self.exit_status {
+            return Ok(Some(status));
+        }
+        let result = unsafe { WaitForSingleObject(self.process, 0) };
+        if result == WAIT_TIMEOUT {
+            return Ok(None);
+        }
+        if result == WAIT_FAILED {
+            return Err(std::io::Error::last_os_error());
+        }
+        if result != WAIT_OBJECT_0 {
+            return Err(std::io::Error::other(format!(
+                "unexpected WaitForSingleObject result: {result:?}"
+            )));
+        }
+        self.collect_exit_status()
+    }
+
+    fn wait(&mut self) -> std::io::Result<std::process::ExitStatus> {
+        use windows::Win32::Foundation::{WAIT_FAILED, WAIT_OBJECT_0};
+        use windows::Win32::System::Threading::{WaitForSingleObject, INFINITE};
+
+        if let Some(status) = self.exit_status {
+            return Ok(status);
+        }
+        let result = unsafe { WaitForSingleObject(self.process, INFINITE) };
+        if result == WAIT_FAILED {
+            return Err(std::io::Error::last_os_error());
+        }
+        if result != WAIT_OBJECT_0 {
+            return Err(std::io::Error::other(format!(
+                "unexpected WaitForSingleObject result: {result:?}"
+            )));
+        }
+        self.collect_exit_status()?
+            .ok_or_else(|| std::io::Error::other("process exited without status"))
+    }
+
+    fn collect_exit_status(&mut self) -> std::io::Result<Option<std::process::ExitStatus>> {
+        use std::os::windows::process::ExitStatusExt;
+        use windows::Win32::System::Threading::GetExitCodeProcess;
+
+        let mut code = 0u32;
+        unsafe { GetExitCodeProcess(self.process, &mut code) }
+            .map_err(|error| std::io::Error::other(error.to_string()))?;
+        let status = std::process::ExitStatus::from_raw(code);
+        unsafe { windows::Win32::Foundation::CloseHandle(self.process) }.ok();
+        self.process = windows::Win32::Foundation::HANDLE(0);
+        self.exit_status = Some(status);
+        Ok(Some(status))
+    }
+
+    fn resume_primary(&mut self) -> Result<(), BrokerError> {
+        use windows::Win32::System::Threading::ResumeThread;
+
+        let Some(thread) = self.primary_thread.take() else {
+            return Ok(());
+        };
+        // CREATE_SUSPENDED contributes one count.  A host policy may add a
+        // bounded extra count while process creation is finalized; drain it
+        // on the retained primary handle before closing that handle.
+        let mut previous_suspend_count = unsafe { ResumeThread(thread) };
+        let mut extra_resumes = 0u8;
+        while previous_suspend_count > 1 && previous_suspend_count != u32::MAX && extra_resumes < 8
+        {
+            previous_suspend_count = unsafe { ResumeThread(thread) };
+            extra_resumes += 1;
+        }
+        unsafe { windows::Win32::Foundation::CloseHandle(thread) }.ok();
+        if previous_suspend_count == u32::MAX || previous_suspend_count > 1 {
+            return Err(BrokerError::new(
+                ErrorCode::BrokerCrash,
+                format!(
+                    "ResumeThread(primary) failed or remained suspended (previous count {previous_suspend_count}): {}",
+                    std::io::Error::last_os_error(),
+                ),
+            ));
+        }
+        log_spawn_diagnostic(
+            self.pid,
+            "primary_resumed",
+            &format!("previous_suspend_count={previous_suspend_count}"),
+        );
+        Ok(())
+    }
+}
+
+#[cfg(windows)]
+impl Drop for NativeChild {
+    fn drop(&mut self) {
+        if let Some(thread) = self.primary_thread.take() {
+            unsafe { windows::Win32::Foundation::CloseHandle(thread) }.ok();
+        }
+        if !self.process.is_invalid() {
+            unsafe { windows::Win32::Foundation::CloseHandle(self.process) }.ok();
+            self.process = windows::Win32::Foundation::HANDLE(0);
+        }
+    }
+}
+
 pub struct ProcessTree {
+    #[cfg(windows)]
+    child: WindowsChild,
+    #[cfg(not(windows))]
     child: Child,
     #[cfg(windows)]
     job: Option<windows::Win32::Foundation::HANDLE>,
     #[cfg(unix)]
     pid: i32,
 }
+
+/// Unified read end for std::process pipes and native CreateProcessW pipes.
+/// ChildStdout/ChildStderr do not implement FromRawHandle on Windows, so the
+/// native path stores File-backed readers behind this narrow trait object.
+pub type ProcessOutput = Box<dyn std::io::Read + Send>;
 
 impl ProcessTree {
     /// Spawn `command` inside a fresh containment boundary.
@@ -48,7 +189,7 @@ impl ProcessTree {
         {
             // Broker executions are untrusted and must not execute before the
             // Job Object containment boundary is installed.
-            Self::spawn_windows(command, false, true, true)
+            Self::spawn_windows(command, false, true, true, false)
         }
         #[cfg(not(windows))]
         {
@@ -57,16 +198,13 @@ impl ProcessTree {
     }
 
     /// Spawn the bundled Brain runtime without creating a visible console
-    /// window. Broker commands retain the suspended-before-assign path above;
-    /// Brain is a fixed, trusted entry point and starts normally to avoid
-    /// replaying a thread-resume scan against an already-running packaged Node
-    /// loader during hard-stop recovery. It is still assigned to a fresh
-    /// kill-on-close Job immediately after creation, so later teardown removes
-    /// the whole Brain tree.
+    /// window. Brain uses the native suspended-before-assign path; its
+    /// primary thread is resumed by `resume` after output readers are ready.
+    /// Broker commands retain their separate untrusted path above.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true, false, false)
+            Self::spawn_windows(command, true, true, true, true)
         }
         #[cfg(not(windows))]
         {
@@ -75,19 +213,104 @@ impl ProcessTree {
     }
 
     pub fn try_wait(&mut self) -> std::io::Result<Option<std::process::ExitStatus>> {
-        self.child.try_wait()
+        #[cfg(windows)]
+        {
+            match &mut self.child {
+                WindowsChild::Std(child) => child.try_wait(),
+                WindowsChild::Native(child) => child.try_wait(),
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            self.child.try_wait()
+        }
     }
 
     pub fn wait(&mut self) -> std::io::Result<std::process::ExitStatus> {
+        #[cfg(windows)]
+        let status = match &mut self.child {
+            WindowsChild::Std(child) => child.wait()?,
+            WindowsChild::Native(child) => child.wait()?,
+        };
+        #[cfg(not(windows))]
         let status = self.child.wait()?;
         #[cfg(windows)]
         self.wait_for_job_empty();
         Ok(status)
     }
 
-    /// Access to the underlying child (used to take the piped handles).
-    pub fn child_mut(&mut self) -> &mut Child {
-        &mut self.child
+    /// Resume a trusted native Brain child after its stdout/stderr readers
+    /// are attached. Untrusted broker children resume inside `spawn` before
+    /// this method can be reached.
+    pub fn resume(&mut self) -> Result<(), BrokerError> {
+        #[cfg(windows)]
+        {
+            if let WindowsChild::Native(child) = &mut self.child {
+                child.resume_primary()?;
+            }
+            Ok(())
+        }
+        #[cfg(not(windows))]
+        {
+            Ok(())
+        }
+    }
+
+    /// Process identifier used for diagnostics and recovery records.
+    pub fn id(&self) -> u32 {
+        #[cfg(windows)]
+        {
+            match &self.child {
+                WindowsChild::Std(child) => child.id(),
+                WindowsChild::Native(child) => child.id(),
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            self.child.id()
+        }
+    }
+
+    /// Detach the child's stdout pipe for the bounded output/log reader.
+    pub fn take_stdout(&mut self) -> Option<ProcessOutput> {
+        #[cfg(windows)]
+        {
+            match &mut self.child {
+                WindowsChild::Std(child) => child
+                    .stdout
+                    .take()
+                    .map(|pipe| Box::new(pipe) as ProcessOutput),
+                WindowsChild::Native(child) => child.stdout.take(),
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            self.child
+                .stdout
+                .take()
+                .map(|pipe| Box::new(pipe) as ProcessOutput)
+        }
+    }
+
+    /// Detach the child's stderr pipe for the bounded output/log reader.
+    pub fn take_stderr(&mut self) -> Option<ProcessOutput> {
+        #[cfg(windows)]
+        {
+            match &mut self.child {
+                WindowsChild::Std(child) => child
+                    .stderr
+                    .take()
+                    .map(|pipe| Box::new(pipe) as ProcessOutput),
+                WindowsChild::Native(child) => child.stderr.take(),
+            }
+        }
+        #[cfg(not(windows))]
+        {
+            self.child
+                .stderr
+                .take()
+                .map(|pipe| Box::new(pipe) as ProcessOutput)
+        }
     }
 
     /// True when no process remains inside the containment boundary.
@@ -178,7 +401,7 @@ impl ProcessTree {
         }
         if !self.is_empty() {
             log_spawn_diagnostic(
-                self.child.id(),
+                self.id(),
                 "job_drain_timeout",
                 "active_processes_remain_after_wait",
             );
@@ -191,6 +414,7 @@ impl ProcessTree {
         no_window: bool,
         start_suspended: bool,
         resume_after_assign: bool,
+        native_primary_thread: bool,
     ) -> Result<Self, BrokerError> {
         use std::os::windows::io::AsRawHandle;
         use std::os::windows::process::CommandExt;
@@ -236,13 +460,21 @@ impl ProcessTree {
             return Err(e);
         }
 
+        // std::process::Child intentionally does not expose the
+        // PROCESS_INFORMATION primary-thread handle.  The trusted Brain path
+        // therefore uses a narrow native CreateProcessW adapter: it retains
+        // that handle across Job assignment so the caller can resume exactly
+        // the primary thread after attaching output readers, avoiding any
+        // Toolhelp scan against the packaged Node loader.
+        if native_primary_thread {
+            return Self::spawn_windows_native(command, job, no_window);
+        }
+
         // 2. Broker commands are created suspended so untrusted code cannot
-        // run before the Job Object boundary is installed. The bundled Brain
-        // entry point is fixed and trusted; it starts normally to avoid
-        // replaying a Toolhelp thread-resume scan against the packaged Node
-        // loader during recovery, then is assigned to the same kill-on-close
-        // Job before this function returns. The hidden flag only controls
-        // console visibility.
+        // run before the Job Object boundary is installed. The native Brain
+        // path takes the same suspended boundary but retains the primary
+        // PROCESS_INFORMATION thread handle and resumes it directly. The
+        // hidden flag only controls console visibility.
         let hidden_flag = if no_window { 0x0800_0000 } else { 0 };
         let suspended_flag = if start_suspended { CREATE_SUSPENDED } else { 0 };
         command.creation_flags(suspended_flag | hidden_flag);
@@ -265,10 +497,9 @@ impl ProcessTree {
             log_spawn_diagnostic(child.id(), phase, detail);
         }
 
-        // 3. Assign the child to the job. Broker children are still
-        // suspended here; the trusted Brain child may have run a small amount
-        // of initialization before assignment but is contained before the
-        // caller receives it.
+        // 3. Assign the std::process broker child to the job while it is
+        // still suspended. The native Brain branch performs the equivalent
+        // assignment before resuming its retained primary thread.
         let assign_result =
             unsafe { AssignProcessToJobObject(job, HANDLE(child.as_raw_handle() as isize)) };
         if let Err(e) = assign_result {
@@ -307,7 +538,360 @@ impl ProcessTree {
         }
 
         Ok(Self {
-            child,
+            child: WindowsChild::Std(child),
+            job: Some(job),
+        })
+    }
+
+    /// Native Brain-only CreateProcessW path.  Unlike std::process::Child,
+    /// PROCESS_INFORMATION gives us the primary thread handle.  Keeping it
+    /// until after AssignProcessToJobObject closes the startup race in which a
+    /// Toolhelp snapshot can observe a loader-created thread but miss the
+    /// primary thread that still carries CREATE_SUSPENDED's suspend count.
+    #[cfg(windows)]
+    fn spawn_windows_native(
+        command: &Command,
+        job: windows::Win32::Foundation::HANDLE,
+        no_window: bool,
+    ) -> Result<Self, BrokerError> {
+        use std::ffi::{OsStr, OsString};
+        use std::os::windows::ffi::OsStrExt;
+        use std::os::windows::io::{FromRawHandle, RawHandle};
+        use windows::core::{PCWSTR, PWSTR};
+        use windows::Win32::Foundation::{
+            CloseHandle, BOOL, HANDLE, HANDLE_FLAGS, HANDLE_FLAG_INHERIT,
+        };
+        use windows::Win32::Security::SECURITY_ATTRIBUTES;
+        use windows::Win32::System::JobObjects::AssignProcessToJobObject;
+        use windows::Win32::System::Pipes::CreatePipe;
+        use windows::Win32::System::Threading::{
+            CreateProcessW, DeleteProcThreadAttributeList, InitializeProcThreadAttributeList,
+            UpdateProcThreadAttribute, CREATE_NO_WINDOW, CREATE_SUSPENDED,
+            CREATE_UNICODE_ENVIRONMENT, EXTENDED_STARTUPINFO_PRESENT, LPPROC_THREAD_ATTRIBUTE_LIST,
+            PROCESS_INFORMATION, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, STARTF_USESTDHANDLES,
+            STARTUPINFOEXW,
+        };
+
+        fn wide(value: &OsStr) -> Vec<u16> {
+            value.encode_wide().chain(std::iter::once(0)).collect()
+        }
+
+        fn close(handle: HANDLE) {
+            if !handle.is_invalid() {
+                unsafe { CloseHandle(handle) }.ok();
+            }
+        }
+
+        fn create_pipe(child_reads: bool) -> Result<(HANDLE, HANDLE), BrokerError> {
+            let mut read = HANDLE(0);
+            let mut write = HANDLE(0);
+            let attrs = SECURITY_ATTRIBUTES {
+                nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
+                lpSecurityDescriptor: std::ptr::null_mut(),
+                bInheritHandle: BOOL(1),
+            };
+            unsafe { CreatePipe(&mut read, &mut write, Some(&attrs as *const _), 0) }.map_err(
+                |e| BrokerError::new(ErrorCode::SpawnFailed, format!("CreatePipe failed: {e}")),
+            )?;
+            // Keep only the end named in STARTF_USESTDHANDLES inheritable.
+            // stdout/stderr are child-write pipes; stdin is a child-read
+            // pipe, so the direction must be selected explicitly.
+            let parent_end = if child_reads { write } else { read };
+            if let Err(error) = unsafe {
+                windows::Win32::Foundation::SetHandleInformation(
+                    parent_end,
+                    HANDLE_FLAG_INHERIT.0,
+                    HANDLE_FLAGS(0),
+                )
+            } {
+                close(read);
+                close(write);
+                return Err(BrokerError::new(
+                    ErrorCode::SpawnFailed,
+                    format!("SetHandleInformation failed: {error}"),
+                ));
+            }
+            Ok((read, write))
+        }
+
+        fn quote_windows_arg(value: &OsStr) -> OsString {
+            // CommandLineToArgvW-compatible quoting.  Always quoting keeps
+            // paths with spaces and empty arguments unambiguous; literal
+            // backslashes are doubled only when they precede a quote or the
+            // closing quote.
+            let text = value.to_string_lossy();
+            let mut out = String::with_capacity(text.len() + 2);
+            out.push('"');
+            let mut slashes = 0usize;
+            for ch in text.chars() {
+                if ch == '\\' {
+                    slashes += 1;
+                    continue;
+                }
+                if ch == '"' {
+                    out.extend(std::iter::repeat_n('\\', slashes * 2 + 1));
+                    out.push('"');
+                } else {
+                    out.extend(std::iter::repeat_n('\\', slashes));
+                    out.push(ch);
+                }
+                slashes = 0;
+            }
+            out.extend(std::iter::repeat_n('\\', slashes * 2));
+            out.push('"');
+            OsString::from(out)
+        }
+
+        fn environment_block(command: &Command) -> Vec<u16> {
+            let mut entries: Vec<(OsString, OsString)> = std::env::vars_os().collect();
+            for (key, value) in command.get_envs() {
+                let key_text = key.to_string_lossy();
+                if let Some((_, existing_value)) = entries.iter_mut().find(|(existing, _)| {
+                    existing.to_string_lossy().eq_ignore_ascii_case(&key_text)
+                }) {
+                    if let Some(value) = value {
+                        *existing_value = value.to_os_string();
+                    } else {
+                        // Remove inherited values when Command::env_remove was
+                        // used.  Brain currently only overrides values, but
+                        // preserving this behavior keeps the adapter honest.
+                        entries.retain(|(existing, _)| {
+                            !existing.to_string_lossy().eq_ignore_ascii_case(&key_text)
+                        });
+                    }
+                } else if let Some(value) = value {
+                    entries.push((key.to_os_string(), value.to_os_string()));
+                }
+            }
+            entries.sort_by(|a, b| {
+                a.0.to_string_lossy()
+                    .to_ascii_lowercase()
+                    .cmp(&b.0.to_string_lossy().to_ascii_lowercase())
+            });
+            let mut block = Vec::new();
+            for (key, value) in entries {
+                if key.to_string_lossy().contains('=') || value.to_string_lossy().contains('\0') {
+                    continue;
+                }
+                block.extend(key.encode_wide());
+                block.push('=' as u16);
+                block.extend(value.encode_wide());
+                block.push(0);
+            }
+            // CreateProcessW requires a double-NUL-terminated environment
+            // block, including when the inherited environment is empty.
+            block.push(0);
+            block
+        }
+
+        let program = command.get_program();
+        let program_wide = wide(program);
+        let mut command_line = quote_windows_arg(program);
+        for arg in command.get_args() {
+            command_line.push(" ");
+            command_line.push(quote_windows_arg(arg));
+        }
+        let mut command_line_wide: Vec<u16> = command_line
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        let current_dir_wide = command.get_current_dir().map(|path| wide(path.as_os_str()));
+        let env_block = environment_block(command);
+
+        // Child gets stdin from a pipe whose write end is closed immediately;
+        // this is the native equivalent of Stdio::null without relying on
+        // inherited GUI-console handles.
+        let (stdin_read, stdin_write) = match create_pipe(true) {
+            Ok(pipe) => pipe,
+            Err(error) => {
+                close(job);
+                return Err(error);
+            }
+        };
+        let (stdout_read, stdout_write) = match create_pipe(false) {
+            Ok(pipe) => pipe,
+            Err(error) => {
+                close(stdin_read);
+                close(stdin_write);
+                close(job);
+                return Err(error);
+            }
+        };
+        let (stderr_read, stderr_write) = match create_pipe(false) {
+            Ok(pipe) => pipe,
+            Err(error) => {
+                close(stdin_read);
+                close(stdin_write);
+                close(stdout_read);
+                close(stdout_write);
+                close(job);
+                return Err(error);
+            }
+        };
+
+        let startup = windows::Win32::System::Threading::STARTUPINFOW {
+            dwFlags: STARTF_USESTDHANDLES,
+            hStdInput: stdin_read,
+            hStdOutput: stdout_write,
+            hStdError: stderr_write,
+            ..Default::default()
+        };
+        let inherited_handles = [stdin_read, stdout_write, stderr_write];
+        let mut attribute_size = 0usize;
+        // The sizing probe intentionally returns ERROR_INSUFFICIENT_BUFFER;
+        // the only authoritative result here is the size it writes.
+        let _ = unsafe {
+            InitializeProcThreadAttributeList(
+                LPPROC_THREAD_ATTRIBUTE_LIST::default(),
+                1,
+                0,
+                &mut attribute_size,
+            )
+        };
+        if attribute_size == 0 {
+            close(stdin_read);
+            close(stdin_write);
+            close(stdout_read);
+            close(stdout_write);
+            close(stderr_read);
+            close(stderr_write);
+            close(job);
+            return Err(BrokerError::new(
+                ErrorCode::SpawnFailed,
+                "InitializeProcThreadAttributeList sizing failed",
+            ));
+        }
+        let attribute_words = attribute_size.div_ceil(std::mem::size_of::<usize>());
+        let mut attribute_storage = vec![0usize; attribute_words];
+        let attribute_list =
+            LPPROC_THREAD_ATTRIBUTE_LIST(attribute_storage.as_mut_ptr() as *mut core::ffi::c_void);
+        if let Err(error) =
+            unsafe { InitializeProcThreadAttributeList(attribute_list, 1, 0, &mut attribute_size) }
+        {
+            close(stdin_read);
+            close(stdin_write);
+            close(stdout_read);
+            close(stdout_write);
+            close(stderr_read);
+            close(stderr_write);
+            close(job);
+            return Err(BrokerError::new(
+                ErrorCode::SpawnFailed,
+                format!("InitializeProcThreadAttributeList failed: {error}"),
+            ));
+        }
+        let handle_list_result = unsafe {
+            UpdateProcThreadAttribute(
+                attribute_list,
+                0,
+                PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
+                Some(inherited_handles.as_ptr() as *const core::ffi::c_void),
+                std::mem::size_of_val(&inherited_handles),
+                None,
+                None,
+            )
+        };
+        if let Err(error) = handle_list_result {
+            unsafe { DeleteProcThreadAttributeList(attribute_list) };
+            close(stdin_read);
+            close(stdin_write);
+            close(stdout_read);
+            close(stdout_write);
+            close(stderr_read);
+            close(stderr_write);
+            close(job);
+            return Err(BrokerError::new(
+                ErrorCode::SpawnFailed,
+                format!("UpdateProcThreadAttribute(handle list) failed: {error}"),
+            ));
+        }
+        let startup_ex = STARTUPINFOEXW {
+            StartupInfo: windows::Win32::System::Threading::STARTUPINFOW {
+                cb: std::mem::size_of::<STARTUPINFOEXW>() as u32,
+                ..startup
+            },
+            lpAttributeList: attribute_list,
+        };
+        let mut info = PROCESS_INFORMATION::default();
+        let mut flags =
+            CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT;
+        if no_window {
+            flags |= CREATE_NO_WINDOW;
+        }
+        let current_dir = current_dir_wide
+            .as_ref()
+            .map(|path| PCWSTR(path.as_ptr()))
+            .unwrap_or_else(PCWSTR::null);
+        let created = unsafe {
+            CreateProcessW(
+                PCWSTR(program_wide.as_ptr()),
+                PWSTR(command_line_wide.as_mut_ptr()),
+                None,
+                None,
+                true,
+                flags,
+                Some(env_block.as_ptr() as *const core::ffi::c_void),
+                current_dir,
+                &startup_ex as *const STARTUPINFOEXW
+                    as *const windows::Win32::System::Threading::STARTUPINFOW,
+                &mut info,
+            )
+        };
+        unsafe { DeleteProcThreadAttributeList(attribute_list) };
+        // The parent never uses child-side handles after CreateProcessW.
+        close(stdin_read);
+        close(stdin_write);
+        close(stdout_write);
+        close(stderr_write);
+        if let Err(error) = created {
+            close(stdout_read);
+            close(stderr_read);
+            close(job);
+            return Err(BrokerError::new(
+                ErrorCode::SpawnFailed,
+                format!("CreateProcessW failed: {error}"),
+            ));
+        }
+
+        log_spawn_diagnostic(
+            info.dwProcessId,
+            "created_suspended",
+            "creation_flags=CREATE_SUSPENDED",
+        );
+
+        if let Err(error) = unsafe { AssignProcessToJobObject(job, info.hProcess) } {
+            // The process is still suspended and has not crossed the Job
+            // boundary. Terminate and reap it before releasing the process
+            // handle so an assignment failure cannot leave a detached child
+            // behind outside the containment boundary.
+            unsafe {
+                windows::Win32::System::Threading::TerminateProcess(info.hProcess, 1).ok();
+                let _ =
+                    windows::Win32::System::Threading::WaitForSingleObject(info.hProcess, 5_000);
+            }
+            close(info.hThread);
+            close(info.hProcess);
+            close(stdout_read);
+            close(stderr_read);
+            unsafe { CloseHandle(job) }.ok();
+            return Err(BrokerError::new(
+                ErrorCode::BrokerCrash,
+                format!("AssignProcessToJobObject failed: {error}"),
+            ));
+        }
+        log_spawn_diagnostic(info.dwProcessId, "job_assigned", "kill_on_job_close=true");
+
+        let stdout = unsafe { std::fs::File::from_raw_handle(stdout_read.0 as RawHandle) };
+        let stderr = unsafe { std::fs::File::from_raw_handle(stderr_read.0 as RawHandle) };
+        Ok(Self {
+            child: WindowsChild::Native(NativeChild {
+                process: info.hProcess,
+                primary_thread: Some(info.hThread),
+                pid: info.dwProcessId,
+                stdout: Some(Box::new(stdout) as ProcessOutput),
+                stderr: Some(Box::new(stderr) as ProcessOutput),
+                exit_status: None,
+            }),
             job: Some(job),
         })
     }
@@ -430,13 +1014,27 @@ fn resume_process_threads(child: &mut Child, diagnostics: bool) -> Result<(), Br
         }
 
         let mut failed = None;
+        let mut stale_thread_observed = false;
         let mut resumed_suspended_thread = false;
         for thread_id in thread_ids {
             let thread = match unsafe { OpenThread(THREAD_SUSPEND_RESUME, false, thread_id) } {
                 Ok(thread) => thread,
                 Err(error) => {
-                    failed = Some(format!("OpenThread failed for thread {thread_id}: {error}"));
-                    break;
+                    // Toolhelp snapshots are not stable: a loader/worker
+                    // thread may exit between enumeration and OpenThread.
+                    // Treat that handle as stale and take another bounded
+                    // snapshot instead of retrying the same dead ID forever.
+                    // If the error is persistent, the stability barrier below
+                    // still fails closed at the deadline.
+                    stale_thread_observed = true;
+                    if diagnostics {
+                        log_spawn_diagnostic(
+                            pid,
+                            "stale_thread",
+                            &format!("thread_id={thread_id} open_error={error}"),
+                        );
+                    }
+                    continue;
                 }
             };
 
@@ -497,7 +1095,7 @@ fn resume_process_threads(child: &mut Child, diagnostics: bool) -> Result<(), Br
         // Newly published *running* workers are normal for Node and for the
         // test harness; treating every new thread as instability can prevent
         // short-lived children from ever reaching the resume barrier.
-        if resumed_suspended_thread {
+        if resumed_suspended_thread || stale_thread_observed {
             stable_rounds = 0;
         } else {
             stable_rounds += 1;
@@ -518,4 +1116,50 @@ fn resume_process_threads(child: &mut Child, diagnostics: bool) -> Result<(), Br
         ErrorCode::BrokerCrash,
         format!("{} (after {} ms)", last_error, RETRY_TIMEOUT.as_millis()),
     ))
+}
+
+#[cfg(all(test, windows))]
+mod native_spawn_tests {
+    use super::ProcessTree;
+    use std::io::Read;
+    use std::process::{Command, Stdio};
+
+    /// The Brain adapter must resume the PROCESS_INFORMATION primary thread
+    /// after Job assignment.  The test harness itself is a deterministic,
+    /// trusted executable fixture: `--help` exits without user code and keeps
+    /// the assertion independent of Node, SQLite, or the installed profile.
+    /// Concurrent drains ensure the child cannot block on a full diagnostic
+    /// pipe while the parent waits. The stdin direction is reviewed directly
+    /// in the native adapter: only `hStdInput`'s read end is inheritable.
+    #[test]
+    fn native_spawn_resumes_primary_thread_and_captures_pipes() {
+        let mut command = Command::new(std::env::current_exe().expect("current test exe"));
+        command
+            .arg("--help")
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        let mut tree = ProcessTree::spawn_hidden(&mut command).expect("native spawn");
+        let mut stdout = tree.take_stdout().expect("stdout pipe");
+        let mut stderr = tree.take_stderr().expect("stderr pipe");
+        let stdout_reader = std::thread::spawn(move || {
+            let mut text = String::new();
+            stdout.read_to_string(&mut text).expect("stdout read");
+            text
+        });
+        let stderr_reader = std::thread::spawn(move || {
+            let mut text = String::new();
+            stderr.read_to_string(&mut text).expect("stderr read");
+            text
+        });
+        tree.resume().expect("resume primary thread");
+        let status = tree.wait().expect("native child wait");
+        let stdout_text = stdout_reader.join().expect("stdout reader");
+        let stderr_text = stderr_reader.join().expect("stderr reader");
+        assert!(
+            status.success(),
+            "test child failed: {stdout_text}{stderr_text}"
+        );
+        assert!(tree.is_empty(), "native child job did not drain");
+    }
 }

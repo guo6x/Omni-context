@@ -543,7 +543,9 @@ fn toctou_post_spawn_replacement_ignored() {
         TestSelfBinding::new(tmp.path().to_path_buf()).with_candidate(copied.clone()),
     ));
     std::env::set_var("OMNI_BROKER_TEST_MODE", "sleep");
-    std::env::set_var("OMNI_BROKER_TEST_SLEEP_MS", "600");
+    // Leave a bounded window for the broker to publish its active marker after
+    // the Windows Job/thread-resume barrier completes on a loaded runner.
+    std::env::set_var("OMNI_BROKER_TEST_SLEEP_MS", "2000");
 
     let broker2 = broker.clone();
     let mut p = fresh_plan(ExecutionPlanStateWire::Ready);
@@ -552,10 +554,10 @@ fn toctou_post_spawn_replacement_ignored() {
 
     // Wait for the child to be running, then swap the executable bytes.
     let deadline = Instant::now() + Duration::from_secs(15);
-    assert!(
-        wait_until(deadline, || !broker.active_executions().is_empty()),
-        "execution never became active"
-    );
+    if !wait_until(deadline, || !broker.active_executions().is_empty()) {
+        let early_result = handle.join().expect("join");
+        panic!("execution never became active; early result={early_result:?}");
+    }
     let replacement = std::fs::copy(std::env::current_exe().expect("current_exe"), &copied);
     let _ = replacement;
 

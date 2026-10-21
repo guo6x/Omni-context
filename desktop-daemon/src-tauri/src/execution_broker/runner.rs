@@ -301,14 +301,10 @@ pub fn run_with_observer(
     registry.insert(execution_id.clone(), cancel.clone());
 
     let stdout = tree
-        .child_mut()
-        .stdout
-        .take()
+        .take_stdout()
         .ok_or_else(|| BrokerError::new(ErrorCode::SpawnFailed, "stdout pipe missing"))?;
     let stderr = tree
-        .child_mut()
-        .stderr
-        .take()
+        .take_stderr()
         .ok_or_else(|| BrokerError::new(ErrorCode::SpawnFailed, "stderr pipe missing"))?;
     let readers = OutputReaders::start(stdout, stderr, limits, cancel.clone());
 
