@@ -1112,7 +1112,11 @@ async function run() {
         && new URL(response.url()).pathname === '/api/mcp/tool/save_decision',
       { timeout: 30_000 },
     ).catch(() => null);
-    await saveDecision.click();
+    // A tray restore can replace the answer card while the decision button is
+    // being rendered. Reacquire the latest hit-testable control and deliver a
+    // real pointer click so the save handler cannot be lost to a stale React
+    // node (the same gate used by the decision-log entrypoint below).
+    await clickPointerTarget(page, saveDecision, 30_000);
     const decisionATurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision A: keep Option A for the initial release.' }).first();
     const saveResponse = await saveDecisionResponsePromise;
     if (saveResponse) {
@@ -1158,7 +1162,11 @@ async function run() {
     const decisionBTurn = page.getByTestId('ask-answer-turn').filter({ hasText: 'Decision B: revise the plan and choose Option B.' }).first();
     const relation = decisionBTurn.locator('select:has(option[value="revises"])');
     await relation.selectOption('revises');
-    await decisionBTurn.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i }).click();
+    await clickPointerTarget(
+      page,
+      decisionBTurn.getByRole('button', { name: /我已决定|保存.*决|I've decided|save.*(?:decision|graph)/i }),
+      30_000,
+    );
     await decisionBTurn.getByTestId('ask-decision-saved').waitFor({ timeout: 30_000 });
     pass('installed-ui-decision-b-lineage');
 
