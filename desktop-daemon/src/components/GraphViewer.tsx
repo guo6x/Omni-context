@@ -1652,7 +1652,7 @@ export default function GraphViewer3D({
         ) : null}
         {/* 控制栏 + 时间轴：统一放进 top 容器纵向堆叠，时间轴自然落在控制栏下方，
             不再用 top-[60px] 魔法数字，避免与摘要行重叠 */}
-        <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2">
+        <div className="absolute top-4 left-4 right-4 z-30 isolate flex flex-col gap-2">
         {/* 命令栏：问大脑 / 决策 / 找节点 的统一入口，回答出现在右栏答案卡 */}
         <div className="relative">
           <div className="flex items-center gap-2.5 rounded-xl border border-cyan-500/25 bg-gray-950/85 px-3.5 py-2.5 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm">
