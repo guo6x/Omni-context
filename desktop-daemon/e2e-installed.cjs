@@ -962,7 +962,9 @@ async function run() {
     }
     pass('installed-ui-launch-onboarding');
 
-    await page.getByRole('button', { name: /上传文件|Upload file/i }).click();
+    // Use the same real pointer path as the installed-user journey so the
+    // upload surface is exercised through its actual hit target.
+    await clickPointerTarget(page, page.getByRole('button', { name: /上传文件|Upload file/i }), 60_000);
     const uploadInput = page.locator('input[type="file"]').first();
     mock.setDisconnected(true);
     await uploadInput.setInputFiles(fixturePath);
@@ -1238,7 +1240,11 @@ async function run() {
     pass('installed-ui-restart-persistence');
 
     mock.holdNext();
-    await page.getByRole('button', { name: /上传文件|Upload file/i }).click();
+    // A freshly restarted native WebView can still be behind its cold-start
+    // splash even after the renderer exposes localStorage. Wait for the real
+    // hit-testable control and click it through the same pointer path a user
+    // takes; a plain locator click races the native foreground transition.
+    await clickPointerTarget(page, page.getByRole('button', { name: /上传文件|Upload file/i }), 60_000);
     const interruptedInput = page.locator('input[type="file"]').first();
     const interruptedResponsePromise = page.waitForResponse(
       (response) => response.url().includes('/api/ingest/file') && response.request().method() === 'POST',
@@ -1316,7 +1322,9 @@ async function run() {
     // that user-facing surface first, then locate the task restored from the
     // interrupted run; querying the list before opening it races the panel's
     // lazy mount on a fresh WebView2 session.
-    await page.getByRole('button', { name: /上传文件|Upload file/i }).click();
+    // The second restart has the same native foreground/splash transition;
+    // gate the real pointer click instead of bypassing it with force/DOM APIs.
+    await clickPointerTarget(page, page.getByRole('button', { name: /上传文件|Upload file/i }), 60_000);
     const restoredTask = page.getByRole('list', { name: '导入任务' }).locator('li').filter({ hasText: '已恢复的文件导入任务' }).first();
     await restoredTask.getByRole('button', { name: /继续查询/ }).waitFor({ timeout: 30_000 });
     await restoredTask.getByRole('button', { name: /继续查询/ }).click();
