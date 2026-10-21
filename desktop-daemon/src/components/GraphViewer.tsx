@@ -290,7 +290,11 @@ export default function GraphViewer3D({
     setCmdInput(askRequest.question);
     const frame = requestAnimationFrame(() => cmdInputRef.current?.focus());
     return () => cancelAnimationFrame(frame);
-  }, [askRequest?.id, askRequest?.question, closeAnswer]);
+    // `closeAnswer` is intentionally omitted: its callback identity can change
+    // when parent data-refresh props settle, but that must not close an active
+    // Ask/decision panel for the same imported request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askRequest?.id, askRequest?.question]);
   useEffect(() => () => {
     answerRequestRef.current?.controller.abort();
     answerRequestRef.current = null;
