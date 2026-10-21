@@ -18,6 +18,17 @@ use crate::log_writer;
 static BRAIN_SERVER_PROCESS: std::sync::LazyLock<Mutex<Option<ProcessTree>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 static BRAIN_SERVER_STARTING: AtomicBool = AtomicBool::new(false);
+static AUTO_RECOVERY_ENABLED: AtomicBool = AtomicBool::new(true);
+
+/// User-directed stop is intentionally sticky until an explicit start/restart
+/// action.  Unexpected child exits keep the default enabled recovery path.
+pub fn set_auto_recovery_enabled(enabled: bool) {
+    AUTO_RECOVERY_ENABLED.store(enabled, Ordering::SeqCst);
+}
+
+pub fn auto_recovery_enabled() -> bool {
+    AUTO_RECOVERY_ENABLED.load(Ordering::SeqCst)
+}
 
 // A hard desktop stop can terminate Node while SQLite is checkpointing its WAL
 // or while Windows is still releasing the previous file handles.  In that
@@ -503,6 +514,7 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
 }
 
 pub fn stop() -> Result<(), String> {
+    set_auto_recovery_enabled(false);
     // Shutdown must stay responsive even if another app instance is in its
     // bounded startup wait. If the lock is unavailable, stop our own child but
     // leave the recovery record for the next serialized startup to reconcile.
@@ -550,6 +562,10 @@ fn stop_inner(owns_startup_lock: bool) -> Result<(), String> {
 
 pub fn restart() -> Result<(), String> {
     let _ = stop();
+    // `stop` intentionally disables automatic recovery. Re-enable it only
+    // after the old child is gone so an explicit restart remains recoverable
+    // without racing a user-directed stop.
+    set_auto_recovery_enabled(true);
     std::thread::sleep(std::time::Duration::from_secs(1));
     start()
 }

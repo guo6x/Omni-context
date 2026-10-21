@@ -29,6 +29,10 @@ use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemT
 use tokio::sync::mpsc;
 
 pub static CLOSE_TO_TRAY: AtomicBool = AtomicBool::new(true); // 默认最小化到托盘
+// The tray keeps the desktop process alive, so a Brain child that exits must
+// be recoverable without requiring the user to discover the settings panel.
+// This flag prevents the monitor from racing an intentional full shutdown.
+pub static APP_SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ButtonEvent {
@@ -154,6 +158,7 @@ async fn main() {
                     }
                     "quit" => {
                         println!("[Omni-Context] 正在通过托盘菜单退出应用，清理 Brain Server...");
+                        APP_SHUTTING_DOWN.store(true, Ordering::SeqCst);
                         let _ = brain_server::stop();
                         std::process::exit(0);
                     }
@@ -254,6 +259,38 @@ async fn main() {
                     .tray_handle()
                     .get_item("server_status")
                     .set_title(status_text);
+            });
+
+            // Keep the user-visible desktop alive across a Brain child crash.
+            // The monitor only auto-recovers when the owned child is gone; a
+            // still-running but temporarily busy server remains untouched so
+            // an in-flight SQLite/LLM operation is never duplicated.  Startup
+            // itself is serialized by brain_server::start().
+            let monitor_handle = app.app_handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_secs(5));
+                while !APP_SHUTTING_DOWN.load(Ordering::SeqCst) {
+                    if brain_server::auto_recovery_enabled()
+                        && !brain_server::is_running()
+                        && !brain_server::is_ready()
+                    {
+                        let _ = monitor_handle
+                            .tray_handle()
+                            .get_item("server_status")
+                            .set_title("Brain Server: 重连中");
+                        let result = brain_server::start();
+                        let status_text = if result.is_ok() && brain_server::is_ready() {
+                            "Brain Server: 在线"
+                        } else {
+                            "Brain Server: 离线"
+                        };
+                        let _ = monitor_handle
+                            .tray_handle()
+                            .get_item("server_status")
+                            .set_title(status_text);
+                    }
+                    std::thread::sleep(std::time::Duration::from_secs(3));
+                }
             });
 
             // 启动 30 秒后检查更新（避免拖慢启动）。
@@ -357,6 +394,7 @@ async fn main() {
                         let _ = event.window().hide();
                     } else {
                         println!("[Omni-Context] 窗口关闭且配置为直接退出，正在清理...");
+                        APP_SHUTTING_DOWN.store(true, Ordering::SeqCst);
                         let _ = brain_server::stop();
                         std::process::exit(0);
                     }
@@ -364,6 +402,7 @@ async fn main() {
             }
             tauri::WindowEvent::Destroyed if event.window().label() == "main" => {
                 println!("[Omni-Context] 主窗口销毁，清理中...");
+                APP_SHUTTING_DOWN.store(true, Ordering::SeqCst);
                 if let Err(e) = brain_server::stop() {
                     eprintln!("[Omni-Context] Brain Server 停止失败: {}", e);
                 }
@@ -424,5 +463,6 @@ async fn main() {
 
     // Tauri 退出后的清理（保险措施）
     println!("[Omni-Context] 应用退出，清理 Brain Server...");
+    APP_SHUTTING_DOWN.store(true, Ordering::SeqCst);
     let _ = brain_server::stop();
 }

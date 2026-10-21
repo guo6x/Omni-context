@@ -515,6 +515,33 @@ async function captureImportRecoveryFailure(page, jobId, token) {
   return diagnostic;
 }
 
+async function captureDecisionSaveFailure(page, child, token) {
+  const diagnostic = {
+    health: null,
+    startup_probe: null,
+    brain_log_tail: readSanitizedBrainLog(token),
+  };
+  try {
+    const response = await fetch(fixtureApiUrl('/health'), { signal: AbortSignal.timeout(5_000) });
+    diagnostic.health = { http_status: response.status, ok: response.ok };
+  } catch (error) {
+    diagnostic.health = { error: String(error?.message || error) };
+  }
+  diagnostic.startup_probe = await probeInstalledStartup(child, true).catch((error) => ({
+    error: String(error?.message || error),
+  }));
+  const diagnosticPath = path.join(evidenceDir, 'windows-decision-save-failure.json');
+  fs.writeFileSync(diagnosticPath, `${JSON.stringify(diagnostic, null, 2)}\n`, { encoding: 'utf8', flag: 'w' });
+  await page.screenshot({ path: path.join(evidenceDir, '15-windows-decision-save-failure.png'), fullPage: true }).catch(() => {});
+  failureDiagnostics = {
+    phase: 'decision-save',
+    health: diagnostic.health,
+    startup_probe: diagnostic.startup_probe,
+    brain_log_tail: diagnostic.brain_log_tail,
+  };
+  return diagnostic;
+}
+
 async function probeInstalledStartup(child, includeProcessDetails = false) {
   const [health, cdp] = await Promise.all([
     fetch(fixtureApiUrl('/health'), { signal: AbortSignal.timeout(1_000) })
@@ -1097,6 +1124,18 @@ async function run() {
       'choosing Show Main Window from the tray menu stopped Brain');
     pass('installed-tray-context-menu-show-main-window');
 
+    // The primary composer starts a new discussion.  Explicitly finish the
+    // restored answer panel before starting that new user-visible flow so a
+    // stale loading state from the tray/WebView transition cannot replace the
+    // real send control with a spinner.  This is the same user action as
+    // choosing Done in the product, not a DOM or force-click shortcut.
+    const restoredAnswerPanel = page.getByTestId('ask-answer-panel');
+    const restoredDone = page.getByTestId('ask-done-button');
+    if (await restoredDone.isVisible().catch(() => false)) {
+      await clickPointerTarget(page, restoredDone, 30_000);
+      await restoredAnswerPanel.waitFor({ state: 'hidden', timeout: 30_000 });
+    }
+
     const asksBeforeDecisionA = mock.state.askCalls;
     await fillAndClickAsk(
       page,
@@ -1150,13 +1189,13 @@ async function run() {
         'save_decision returned success without a persisted entity UUID');
     } else {
       decisionSaveDiagnostics.push({ status: null, ok: false, body_keys: [], has_entity_id: false });
-      await page.screenshot({ path: path.join(evidenceDir, '15-windows-decision-save-failure.png'), fullPage: true });
+      await captureDecisionSaveFailure(page, app, localToken);
       throw new Error('save_decision did not return an HTTP response within 30 seconds');
     }
     try {
       await decisionATurn.getByTestId('ask-decision-saved').waitFor({ timeout: 30_000 });
     } catch (error) {
-      await page.screenshot({ path: path.join(evidenceDir, '15-windows-decision-save-failure.png'), fullPage: true });
+      await captureDecisionSaveFailure(page, app, localToken);
       throw new Error(`${error.message}; save_decision response=${JSON.stringify(decisionSaveDiagnostics.at(-1))}`);
     }
     pass('installed-ui-decision-a');

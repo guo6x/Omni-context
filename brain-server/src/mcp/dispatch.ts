@@ -2077,7 +2077,16 @@ ${gaConnBlock}`;
             let embedding: number[] | undefined;
             try {
               const embeddingText = `${decisionName}: ${fullDescription}`;
-              const embResult = await ctx.embeddingService.embed(embeddingText);
+              // Embedding is an enrichment, not a prerequisite for recording
+              // an explicit user decision. Bound local-model initialization so
+              // a cold/recovering Brain cannot hold the mutation HTTP response
+              // open indefinitely; the existing catch preserves the decision
+              // with no vector when the optional enrichment is unavailable.
+              const embResult = await withTimeout(
+                ctx.embeddingService.embed(embeddingText),
+                MCP_EMBEDDING_TIMEOUT_MS,
+                'embedding timeout',
+              );
               embedding = embResult.embedding;
             } catch {
               // ignore embedding failure

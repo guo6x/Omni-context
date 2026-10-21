@@ -130,6 +130,13 @@ interface DiscussionSession {
   saveTail: Promise<void>;
 }
 
+// Discussion history is a best-effort receipt.  It must never keep an
+// explicit user-authorized mutation (for example save_decision) pending
+// forever when Brain is restarting or SQLite is recovering a WAL.  Keep this
+// bound longer than the normal local round-trip, but short enough that the
+// next explicit action can make progress in the same interaction.
+const DISCUSSION_SAVE_TIMEOUT_MS = 8_000;
+
 function createDiscussionSession(id: string | null = null): DiscussionSession {
   return { id, saveTail: Promise.resolve() };
 }
@@ -730,9 +737,12 @@ export default function GraphViewer3D({
   const saveSession = useCallback((turns: AnswerTurn[], session: DiscussionSession) => {
     if (!turns.length) return;
     session.saveTail = session.saveTail.then(async () => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), DISCUSSION_SAVE_TIMEOUT_MS);
       try {
         const r = await apiFetch('/api/discussions', {
           method: 'POST',
+          signal: controller.signal,
           body: JSON.stringify({ id: session.id, title: (turns[0].question || '问大脑').slice(0, 80), turns }),
         });
         if (r.ok) {
@@ -740,6 +750,7 @@ export default function GraphViewer3D({
           if (typeof d?.id === 'string' && (!session.id || session.id === d.id)) session.id = d.id;
         }
       } catch { /* best effort; a failed save must not poison the next save */ }
+      finally { window.clearTimeout(timeout); }
     });
     return session.saveTail;
   }, []);
@@ -819,6 +830,19 @@ export default function GraphViewer3D({
     if (!turn || gSaving || gLoading) return;
     setGSaving(true);
     try {
+      // A completed answer starts an asynchronous discussion upsert. Give the
+      // queued history write a short opportunity to settle so normal ordering
+      // is preserved, but keep the explicit user-authorized decision bounded:
+      // a stale renderer request must never leave the Save button spinning
+      // forever or prevent the decision mutation from being attempted.
+      let saveWaitTimer: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        session.saveTail,
+        new Promise<void>((resolve) => {
+          saveWaitTimer = setTimeout(resolve, DISCUSSION_SAVE_TIMEOUT_MS);
+        }),
+      ]);
+      if (saveWaitTimer !== undefined) clearTimeout(saveWaitTimer);
       // Task 9: Build per-evidence metadata with source_span, role, is_current.
       // Entities cited in turn.reasons → 'supporting' with source_span = reason text.
       // Entities in citedEntityIds but not in any reason → 'neutral'.

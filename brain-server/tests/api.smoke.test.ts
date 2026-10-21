@@ -221,6 +221,28 @@ describe('API smoke: MCP usage log', () => {
       await responsePromise;
     }
   });
+
+  it('does not hold an explicit decision open on a cold embedding runtime', async () => {
+    const embedding = vi.spyOn(testEmbeddingService, 'embed').mockImplementation(
+      () => new Promise(() => { /* controlled cold-start stall */ }),
+    );
+    try {
+      const response = await Promise.race([
+        request('POST', '/api/mcp/tool/save_decision', {
+          arguments: {
+            situation: 'bounded embedding fixture',
+            conclusion: 'decision persists without waiting for optional vectors',
+          },
+        }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5_000)),
+      ]);
+      expect(response).not.toBeNull();
+      expect(response && response.status).toBe(200);
+      expect(response && response.body.id).toMatch(/^[0-9a-f-]{36}$/i);
+    } finally {
+      embedding.mockRestore();
+    }
+  });
 });
 
 describe('API smoke: hybrid assertion retrieval', () => {
