@@ -152,9 +152,17 @@ if ($installedExeHash -ne $buildExeHash) {
 }
 
 $registryPath = ($entry.root -replace '^HKLM:', 'HKLM') + '\' + $entry.key
+$sourceCommit = if (-not [string]::IsNullOrWhiteSpace($env:OMNI_E2E_PR_HEAD_SHA)) {
+    $env:OMNI_E2E_PR_HEAD_SHA
+} else {
+    $env:GITHUB_SHA
+}
+if ([string]::IsNullOrWhiteSpace($sourceCommit)) {
+    throw 'The MSI provenance source commit is unavailable.'
+}
 $evidence = [ordered]@{
     evidence_kind = 'UNSIGNED_PR_MSI_INSTALLED_WINDOWS_FIXTURE_ACCEPTANCE'
-    source_commit = $env:GITHUB_SHA
+    source_commit = $sourceCommit
     pull_request_head_sha = $env:OMNI_E2E_PR_HEAD_SHA
     scope = 'disposable_github_hosted_windows_runner'
     installer_signature = 'unsigned_ci_candidate_not_release'

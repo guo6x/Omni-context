@@ -63,7 +63,7 @@ function verifyInstalledMsiProvenance() {
   const builtHash = sha256File(buildExecutable);
   const installedHash = sha256File(executable);
   assert.equal(record.evidence_kind, 'UNSIGNED_PR_MSI_INSTALLED_WINDOWS_FIXTURE_ACCEPTANCE');
-  assert.equal(record.source_commit, process.env.GITHUB_SHA);
+  assert.equal(record.source_commit, process.env.OMNI_E2E_PR_HEAD_SHA || process.env.GITHUB_SHA);
   assert.equal(record.pull_request_head_sha, process.env.OMNI_E2E_PR_HEAD_SHA);
   assert.equal(record.install_dir && path.resolve(record.install_dir), path.resolve(installDir));
   assert.equal(record.installed_exe && path.resolve(record.installed_exe), path.resolve(executable));

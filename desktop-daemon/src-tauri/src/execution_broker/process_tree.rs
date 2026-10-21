@@ -3,12 +3,13 @@
 //! Windows (primary platform): every broker-spawned process is placed into a
 //! Job Object configured with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` BEFORE it
 //! can execute a single instruction (spawn with `CREATE_SUSPENDED`, assign to
-//! the job, then resume the published primary startup thread). The trusted,
-//! bundled Brain runtime uses a native CreateProcessW path so its
-//! `PROCESS_INFORMATION.hThread` is retained across assignment and resumed
-//! directly; untrusted broker commands retain the fail-closed Toolhelp
-//! fallback. Timeout, cancellation and broker teardown terminate the whole
-//! tree, so grandchildren cannot survive.
+//! the job, then resume the published primary startup thread). The bundled
+//! Brain runtime uses the same std::process containment path as the broker,
+//! but defers its bounded Toolhelp resume until stdout/stderr readers are
+//! attached; untrusted broker commands resume inside `spawn`. A narrow native
+//! CreateProcessW adapter is retained for the Windows-specific process-tree
+//! test. Timeout, cancellation and broker teardown terminate the whole tree,
+//! so grandchildren cannot survive.
 //!
 //! `taskkill /T` is intentionally NOT used (it would itself be an extra
 //! process execution and a PATH-dependent mechanism).
@@ -36,13 +37,13 @@ fn log_spawn_diagnostic(pid: u32, phase: &str, detail: &str) {
 /// A spawned process together with its containment mechanism.
 #[cfg(windows)]
 enum WindowsChild {
-    /// The broker path keeps using std::process::Command.  It is created
-    /// suspended and resumed only after Job assignment, preserving the
-    /// fail-closed untrusted execution boundary.
+    /// The broker and deferred Brain paths use std::process::Command. They are
+    /// created suspended and resumed after Job assignment; the Brain call is
+    /// deliberately deferred until its output readers are live.
     Std(Child),
-    /// The trusted Brain path is created through CreateProcessW so the
-    /// PROCESS_INFORMATION primary-thread handle can be retained until the
-    /// process is assigned to the Job and resumed directly.
+    /// A narrow native CreateProcessW path used by the Windows process-tree
+    /// test. Production Brain startup uses `Std` so it can share the known
+    /// installed-pass resume sequence.
     Native(NativeChild),
 }
 
@@ -199,13 +200,13 @@ impl ProcessTree {
 
     /// Spawn the bundled Brain runtime without creating a visible console
     /// window. Keep the known-good std::process path: CREATE_SUSPENDED is
-    /// assigned to the Job Object and the bounded Toolhelp resume completes
-    /// before this method returns. Broker commands retain their separate
-    /// untrusted path above.
+    /// assigned to the Job Object, output readers are attached by the caller,
+    /// and the bounded Toolhelp resume happens only after those readers are
+    /// live. Broker commands retain their separate untrusted path above.
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true, true, true, false)
+            Self::spawn_windows(command, true, true, false, false)
         }
         #[cfg(not(windows))]
         {
@@ -240,14 +241,17 @@ impl ProcessTree {
         Ok(status)
     }
 
-    /// Resume a trusted native Brain child after its stdout/stderr readers
-    /// are attached. Untrusted broker children resume inside `spawn` before
-    /// this method can be reached.
+    /// Resume a trusted Brain child after its stdout/stderr readers are
+    /// attached. Untrusted broker children resume inside `spawn` before this
+    /// method can be reached. The std::process Brain path intentionally keeps
+    /// its primary thread suspended until this call so a cold Node loader
+    /// cannot fill an undrained diagnostic pipe during hard-stop recovery.
     pub fn resume(&mut self) -> Result<(), BrokerError> {
         #[cfg(windows)]
         {
-            if let WindowsChild::Native(child) = &mut self.child {
-                child.resume_primary()?;
+            match &mut self.child {
+                WindowsChild::Std(child) => resume_process_threads(child, true)?,
+                WindowsChild::Native(child) => child.resume_primary()?,
             }
             Ok(())
         }
