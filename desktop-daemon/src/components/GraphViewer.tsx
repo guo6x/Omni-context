@@ -223,7 +223,7 @@ export default function GraphViewer3D({
   // can continue the decision chain. Refresh the graph when that discussion is
   // explicitly closed (or replaced), after the follow-up composer is no longer
   // needed.
-  const pendingGraphRefreshRef = useRef(false);
+  const pendingGraphRefreshRef = useRef<DiscussionSession | null>(null);
   const [sourcePreview, setSourcePreview] = useState<SourcePreview | null>(null);
   const sourceRequestRef = useRef<AbortController | null>(null);
   const sourceTriggerRef = useRef<HTMLElement | null>(null);
@@ -258,14 +258,19 @@ export default function GraphViewer3D({
     setGPendingQ(null);
   }, []);
   const closeAnswer = useCallback(() => {
+    const session = discussionRef.current;
     invalidateAnswerRequests();
     closeSourcePreview(false);
-    if (pendingGraphRefreshRef.current) {
-      pendingGraphRefreshRef.current = false;
+    if (pendingGraphRefreshRef.current === session) {
+      pendingGraphRefreshRef.current = null;
       onDataChanged?.();
+    } else {
+      // A late save from an older discussion must never refresh a newer one.
+      pendingGraphRefreshRef.current = null;
     }
     discussionRef.current = createDiscussionSession();
     lastDecisionIdRef.current = null;
+    setGSaving(false);
     setGAnswer(null);
     setCmdInput("");
     setFollowInput("");
@@ -873,17 +878,20 @@ export default function GraphViewer3D({
       if (!r.ok) throw new Error();
       const saved = await r.json().catch(() => null);
       const nextTurns = turns.map((tn, i) => (i === idx ? { ...tn, savedAsDecision: true } : tn));
-      if (discussionRef.current === session) {
+      const isSessionCurrent = discussionRef.current === session;
+      if (isSessionCurrent) {
         if (saved?.id) lastDecisionIdRef.current = saved.id;
         setGAnswer({ turns: nextTurns });
       }
       saveSession(nextTurns, session); // 显式授权的决定已保存；仅更新其原讨论。
-      toast.success(t('cmd.decision_saved'));
-      pendingGraphRefreshRef.current = true;
+      if (isSessionCurrent) {
+        toast.success(t('cmd.decision_saved'));
+        pendingGraphRefreshRef.current = session;
+      }
     } catch (e) {
-      toast.error(t('cmd.error'));
+      if (discussionRef.current === session) toast.error(t('cmd.error'));
     } finally {
-      setGSaving(false);
+      if (discussionRef.current === session) setGSaving(false);
     }
   }, [gAnswer, gSaving, gLoading, saveSession, toast, t, lineageRelation, entities]);
 
@@ -970,16 +978,16 @@ export default function GraphViewer3D({
 
   const submitCommand = useCallback(() => {
     const q = cmdInput.trim();
-    if (!q || gLoading) return;
+    if (!q || gLoading || gSaving) return;
     runAnswer(q, []);
-  }, [cmdInput, gLoading, runAnswer]);
+  }, [cmdInput, gLoading, gSaving, runAnswer]);
 
   const followUp = useCallback(() => {
     const q = followInput.trim();
-    if (!q || gLoading || !gAnswer) return;
+    if (!q || gLoading || gSaving || !gAnswer) return;
     setFollowInput("");
     runAnswer(q, gAnswer.turns);
-  }, [followInput, gLoading, gAnswer, runAnswer]);
+  }, [followInput, gLoading, gSaving, gAnswer, runAnswer]);
 
   useEffect(() => {
     if (focusEntityId) {
@@ -1635,15 +1643,16 @@ export default function GraphViewer3D({
               onBlur={() => setTimeout(() => setCmdFocused(false), 150)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitCommand(); } }}
               placeholder={t('cmd.placeholder')}
+              disabled={gSaving}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />
-            <button data-testid="ask-history-button" onClick={openHistory} title={t('cmd.history')} aria-label={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
+            <button data-testid="ask-history-button" onClick={openHistory} disabled={gSaving} title={t('cmd.history')} aria-label={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 disabled:opacity-30 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
               <History className="h-4 w-4" />
             </button>
             {gLoading ? (
               <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
             ) : (
-              <button onClick={submitCommand} disabled={!cmdInput.trim()} data-testid="ask-primary-send" className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')} aria-label={t('cmd.send')}>
+              <button onClick={submitCommand} disabled={!cmdInput.trim() || gSaving} data-testid="ask-primary-send" className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')} aria-label={t('cmd.send')}>
                 <Send className="h-4 w-4" />
               </button>
             )}
@@ -1672,7 +1681,7 @@ export default function GraphViewer3D({
                   {cmdExamples.map((ex, i) => (
                     <button
                       key={i}
-                      onMouseDown={(e) => { e.preventDefault(); if (gLoading) return; setCmdInput(ex); setCmdFocused(false); runAnswer(ex, []); }}
+                      onMouseDown={(e) => { e.preventDefault(); if (gLoading || gSaving) return; setCmdInput(ex); setCmdFocused(false); runAnswer(ex, []); }}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-gray-300 hover:bg-cyan-950/30 hover:text-cyan-100"
                     >
                       <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-400/80" />
@@ -2590,13 +2599,13 @@ export default function GraphViewer3D({
                 onChange={(e) => setFollowInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); followUp(); } }}
                 placeholder={t('cmd.follow_placeholder')}
-                disabled={gLoading}
+                disabled={gLoading || gSaving}
                 className="w-full bg-transparent text-[13px] text-gray-100 placeholder:text-gray-500 outline-none disabled:opacity-50"
               />
               {gLoading ? (
                 <span className="block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
               ) : (
-                <button onClick={followUp} disabled={!followInput.trim()} data-testid="ask-follow-send" className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
+                <button onClick={followUp} disabled={!followInput.trim() || gSaving} data-testid="ask-follow-send" className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
                   <Send className="h-3.5 w-3.5" />
                 </button>
               )}
