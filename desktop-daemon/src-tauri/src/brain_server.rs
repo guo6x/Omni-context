@@ -429,26 +429,31 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                 // before health or database initialization.  A hard desktop
                 // stop can occur during that window; the next instance must
                 // still have an identity-bound record it can safely reclaim.
-                let process_record = write_pid_file(pid);
+                let mut process_record = write_pid_file(pid);
                 // 要在 store_process 之前取出 stdout/stderr，否则 move 后拿不到。
                 // 立即接日志，避免冷启动等待期间没有任何可诊断输出。
                 let stdout = process.take_stdout();
                 let stderr = process.take_stderr();
                 pipe_output_to_log(stdout, stderr);
 
-                // The native Windows Brain path retains the primary thread
-                // suspended until both diagnostic readers are attached. This
-                // prevents a cold Node loader from filling a pipe before the
-                // log threads can drain it; broker children still resume
-                // inside ProcessTree::spawn before control returns here.
+                // The Windows Brain path retains startup suspended until both
+                // diagnostic readers are attached. This prevents a cold Node
+                // loader from filling a pipe before the log threads can drain
+                // it; broker children still resume inside ProcessTree::spawn.
                 if let Err(error) = process.resume() {
-                    log_startup_event(&format!(
-                        "Brain child primary thread resume failed pid={pid}: {error}"
-                    ));
+                    log_startup_event(&format!("Brain child resume failed pid={pid}: {error}"));
                     let _ = process.terminate();
                     let _ = process.wait();
                     remove_pid_file_for_current_process(pid, process_record);
                     continue;
+                }
+
+                // Windows can deny identity queries while a freshly-created
+                // process is still suspended. Repair the recovery record once
+                // the primary thread is live so a hard stop during startup
+                // cannot leave the previous instance's record in place.
+                if process_record.is_none() {
+                    process_record = write_pid_file(pid);
                 }
 
                 let health_timeout = startup_deadline.saturating_duration_since(Instant::now());
@@ -470,7 +475,31 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                         // On Windows, persist the process creation time with the
                         // PID. Windows may reuse PIDs between a hard stop and the
                         // next launch; a bare PID is not sufficient authority to
-                        // terminate a process during recovery.
+                        // terminate a process during recovery. The non-Windows
+                        // recovery format intentionally has no creation-time
+                        // value, so its `None` return is not a failed write.
+                        #[cfg(windows)]
+                        {
+                            // Health is the final startup gate. Refresh the
+                            // identity-bound record after it passes as a bounded
+                            // last chance for transient Windows query failures.
+                            process_record = write_pid_file(pid).or(process_record);
+                            if process_record.is_none() {
+                                let error = format!(
+                                    "Brain child health ready pid={pid} but recovery identity could not be persisted"
+                                );
+                                log_startup_event(&error);
+                                // A healthy child without an identity-bound record
+                                // is not safely recoverable after a hard desktop
+                                // stop. Tear it down and retry the full startup
+                                // path instead of publishing an orphan-prone
+                                // service as ready.
+                                let _ = process.terminate();
+                                let _ = process.wait();
+                                remove_pid_file_for_current_process(pid, process_record);
+                                continue;
+                            }
+                        }
                         store_process(process);
                         return Ok(());
                     }
@@ -1286,16 +1315,18 @@ fn write_pid_file(pid: u32) -> Option<u64> {
     // through that transient window; if identity still cannot be established,
     // fail closed and do not publish a PID-only record.
     let Some((process_start_time, executable_path)) = process_identity_with_retry(pid) else {
-        eprintln!("[Brain Server] unable to verify process identity; skipping PID recovery record");
+        let message = "Brain child identity unavailable; skipping PID recovery record".to_string();
+        eprintln!("[Brain Server] {message}");
+        log_startup_event(&message);
         return None;
     };
     let owner_pid = std::process::id();
     let Some((owner_process_start_time, owner_executable_path)) =
         process_identity_with_retry(owner_pid)
     else {
-        eprintln!(
-            "[Brain Server] unable to verify owner process identity; skipping PID recovery record"
-        );
+        let message = "Brain owner identity unavailable; skipping PID recovery record".to_string();
+        eprintln!("[Brain Server] {message}");
+        log_startup_event(&message);
         return None;
     };
     let record = BrainPidRecord {
@@ -1311,7 +1342,9 @@ fn write_pid_file(pid: u32) -> Option<u64> {
             let path = pid_file_path();
             let temporary = path.with_file_name(format!("brain-server.pid.{pid}.tmp"));
             if let Err(error) = std::fs::write(&temporary, contents) {
-                eprintln!("[Brain Server] unable to write PID recovery record: {error}");
+                let message = format!("unable to write PID recovery record: {error}");
+                eprintln!("[Brain Server] {message}");
+                log_startup_event(&message);
                 return None;
             }
             // `std::fs::rename` maps to MoveFileExW without
@@ -1339,15 +1372,17 @@ fn write_pid_file(pid: u32) -> Option<u64> {
             };
             if let Err(error) = publish_result {
                 let _ = std::fs::remove_file(&temporary);
-                eprintln!(
-                    "[Brain Server] unable to atomically publish PID recovery record: {error}"
-                );
+                let message = format!("unable to atomically publish PID recovery record: {error}");
+                eprintln!("[Brain Server] {message}");
+                log_startup_event(&message);
                 return None;
             }
             Some(process_start_time)
         }
         Err(error) => {
-            eprintln!("[Brain Server] unable to encode PID recovery record: {error}");
+            let message = format!("unable to encode PID recovery record: {error}");
+            eprintln!("[Brain Server] {message}");
+            log_startup_event(&message);
             None
         }
     }
