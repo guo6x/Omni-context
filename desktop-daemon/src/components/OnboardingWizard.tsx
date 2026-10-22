@@ -11,7 +11,8 @@ import { apiFetch } from '@/lib/api-client';
 import { pollIngestJob, summarizeIngestJob, type IngestJob } from '@/lib/ingest-job';
 import {
   clearPersistedImportAttempt, createImportRecoveryAttemptId,
-  getPendingImportJobs, persistImportJob, persistUncertainImport,
+  flushNativeImportRecovery, getPendingImportJobs, hydrateNativeImportRecovery,
+  persistImportJob, persistUncertainImport,
 } from '@/lib/import-job-recovery';
 import {
   acknowledgeImportRecovery, fingerprintImportContent, reserveImportContent,
@@ -98,6 +99,7 @@ export default function OnboardingWizard({
   const importRecoveryAttemptRef = useRef<string | null>(null);
   const importBusyRef = useRef(false);
   const importPendingRef = useRef(false);
+  const recoveryHydratedRef = useRef(false);
   const [dragOver, setDragOver] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importPending, setImportPending] = useState(false);
@@ -109,19 +111,26 @@ export default function OnboardingWizard({
   const [importReceipt, setImportReceipt] = useState<ReturnType<typeof summarizeIngestJob> | null>(null);
 
   useEffect(() => {
-    const recovery = getPendingImportJobs().find((record) => record.owner === 'onboarding');
-    if (!recovery) return;
-    setImportPendingLock(true);
-    setImportAlert(true);
-    if (recovery.kind === 'job') {
-      setImportJobId(recovery.jobId);
-      setCanResumeImport(true);
-      setImportMsg('已恢复上次引导中的导入任务。继续查询只读取原任务，不会重新上传。');
-    } else {
-      importRecoveryAttemptRef.current = recovery.attemptId;
-      setNeedsImportReview(true);
-      setImportMsg('上次提交结果未确认，无法安全判断是否已收到。请先检查记忆库，再确认后才能重新导入。');
-    }
+    let active = true;
+    void (async () => {
+      await hydrateNativeImportRecovery();
+      recoveryHydratedRef.current = true;
+      if (!active) return;
+      const recovery = getPendingImportJobs().find((record) => record.owner === 'onboarding');
+      if (!recovery) return;
+      setImportPendingLock(true);
+      setImportAlert(true);
+      if (recovery.kind === 'job') {
+        setImportJobId(recovery.jobId);
+        setCanResumeImport(true);
+        setImportMsg('已恢复上次引导中的导入任务。继续查询只读取原任务，不会重新上传。');
+      } else {
+        importRecoveryAttemptRef.current = recovery.attemptId;
+        setNeedsImportReview(true);
+        setImportMsg('上次提交结果未确认，无法安全判断是否已收到。请先检查记忆库，再确认后才能重新导入。');
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   // ③ 跨 AI
@@ -244,6 +253,7 @@ export default function OnboardingWizard({
       const requiresAcknowledgement = settleImportOutcome(
         receipt.outcome, 'onboarding', importFingerprintRef.current, jobId, importRecoveryAttemptRef.current,
       );
+      await flushNativeImportRecovery();
       setImportReceipt(receipt);
       setCanResumeImport(false);
       setImportAlert(receipt.outcome !== 'success');
@@ -312,11 +322,12 @@ export default function OnboardingWizard({
     await pollJob(importJobId, controller);
   };
 
-  const acknowledgeImportReview = () => {
+  const acknowledgeImportReview = async () => {
     if (importBusyRef.current || !needsImportReview) return;
     acknowledgeImportRecovery(
       'onboarding', importFingerprintRef.current, importJobId, importRecoveryAttemptRef.current,
     );
+    await flushNativeImportRecovery();
     importRecoveryAttemptRef.current = null;
     importFingerprintRef.current = null;
     setImportPendingLock(false);
@@ -329,6 +340,11 @@ export default function OnboardingWizard({
   };
 
   const processImport = async (file: File) => {
+    if (!recoveryHydratedRef.current) {
+      setImportAlert(true);
+      setImportMsg('正在恢复上次导入状态，请稍后再选择文件。');
+      return;
+    }
     if (importBusyRef.current || importPendingRef.current) return;
     importControllerRef.current?.abort();
     const controller = new AbortController();
@@ -384,6 +400,7 @@ export default function OnboardingWizard({
           importRecoveryAttemptRef.current = null;
           throw new Error('无法保存恢复标记，为避免重复导入，本次未提交。请检查本地存储后重试。');
         }
+        await flushNativeImportRecovery();
         submissionMayHavePersisted = true;
         const r = await abortableImport(apiFetch('/api/import/chat', { method: 'POST', body, signal: controller.signal }), controller.signal);
         assertSubmissionActive();
@@ -394,6 +411,7 @@ export default function OnboardingWizard({
           clearTimeout(submitTimer);
           setImportJobId(jobId);
           const recoverySaved = persistImportJob('onboarding', jobId, importRecoveryAttemptRef.current || undefined);
+          await flushNativeImportRecovery();
           if (recoverySaved) importRecoveryAttemptRef.current = null;
           updateImportContentReservation(fingerprint, 'onboarding', { phase: 'running', jobId });
           setImportMsg(`识别为 ${platform} · ${parsed} 段对话，正在处理…${recoverySaved ? '' : ' 本地无法保存恢复记录，请勿关闭应用，直至任务结束并核对结果。'}`);
@@ -403,7 +421,10 @@ export default function OnboardingWizard({
         submissionMayHavePersisted = !(r.status >= 400 && r.status < 500);
         if (!submissionMayHavePersisted) {
           releaseCurrentImportReservation();
-          if (importRecoveryAttemptRef.current) clearPersistedImportAttempt('onboarding', importRecoveryAttemptRef.current);
+          if (importRecoveryAttemptRef.current) {
+            clearPersistedImportAttempt('onboarding', importRecoveryAttemptRef.current);
+            await flushNativeImportRecovery();
+          }
           importRecoveryAttemptRef.current = null;
         }
         if (r.status !== 400 && r.status !== 422) {
@@ -429,11 +450,12 @@ export default function OnboardingWizard({
       else if (lower.endsWith('.json')) contentType = 'application/json';
       const body = JSON.stringify({ filename: file.name, contentType, base64 });
       assertSubmissionActive();
-        importRecoveryAttemptRef.current = createImportRecoveryAttemptId();
-        if (!persistUncertainImport('onboarding', importRecoveryAttemptRef.current)) {
-          importRecoveryAttemptRef.current = null;
-          throw new Error('无法保存恢复标记，为避免重复导入，本次未提交。请检查本地存储后重试。');
-        }
+      importRecoveryAttemptRef.current = createImportRecoveryAttemptId();
+      if (!persistUncertainImport('onboarding', importRecoveryAttemptRef.current)) {
+        importRecoveryAttemptRef.current = null;
+        throw new Error('无法保存恢复标记，为避免重复导入，本次未提交。请检查本地存储后重试。');
+      }
+      await flushNativeImportRecovery();
       submissionMayHavePersisted = true;
       const r2 = await abortableImport(apiFetch('/api/ingest/file', { method: 'POST', body, signal: controller.signal }), controller.signal);
       if (!r2.ok) {
@@ -447,6 +469,7 @@ export default function OnboardingWizard({
       clearTimeout(submitTimer);
       setImportJobId(d2.jobId);
       const recoverySaved = persistImportJob('onboarding', d2.jobId, importRecoveryAttemptRef.current || undefined);
+      await flushNativeImportRecovery();
       if (recoverySaved) importRecoveryAttemptRef.current = null;
       updateImportContentReservation(fingerprint, 'onboarding', { phase: 'running', jobId: d2.jobId });
       setImportMsg(`文件已提交，正在处理…${recoverySaved ? '' : ' 本地无法保存恢复记录，请勿关闭应用，直至任务结束并核对结果。'}`);
@@ -458,7 +481,10 @@ export default function OnboardingWizard({
         updateImportContentReservation(importFingerprintRef.current, 'onboarding', { phase: 'uncertain' });
       } else {
         releaseCurrentImportReservation();
-        if (importRecoveryAttemptRef.current) clearPersistedImportAttempt('onboarding', importRecoveryAttemptRef.current);
+        if (importRecoveryAttemptRef.current) {
+          clearPersistedImportAttempt('onboarding', importRecoveryAttemptRef.current);
+          await flushNativeImportRecovery();
+        }
         importRecoveryAttemptRef.current = null;
       }
       setImportAlert(true);

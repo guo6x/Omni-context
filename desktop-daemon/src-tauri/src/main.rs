@@ -15,6 +15,7 @@ mod execution_broker;
 mod github_cli;
 mod hardware;
 mod hardware_actions;
+mod import_recovery;
 #[cfg_attr(not(test), allow(dead_code))]
 mod local_git;
 mod log_writer;
@@ -454,6 +455,8 @@ async fn main() {
             commands::disable_cli_verification,
             commands::enable_cli_reopen,
             commands::disable_cli_reopen,
+            import_recovery::load_import_recovery,
+            import_recovery::save_import_recovery,
             hardware::list_hardware_devices,
             hardware::pair_hardware_device,
             hardware::unpair_hardware_device,

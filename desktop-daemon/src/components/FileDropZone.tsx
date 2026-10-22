@@ -7,7 +7,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { IngestJobError, pollIngestJob, summarizeIngestJob } from '@/lib/ingest-job';
 import {
   clearPersistedImportAttempt, createImportRecoveryAttemptId,
-  getPendingImportJobs, persistImportJob, persistUncertainImport,
+  flushNativeImportRecovery, getPendingImportJobs, hydrateNativeImportRecovery,
+  persistImportJob, persistUncertainImport,
 } from '@/lib/import-job-recovery';
 import {
   acknowledgeImportRecovery,
@@ -179,6 +180,7 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
     const [notice, setNotice] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
     const mountedRef = useRef(true);
+    const recoveryHydratedRef = useRef(false);
     const controlsRef = useRef(new Map<string, TaskControl>());
     const activeFilesRef = useRef(new Map<string, string>());
     const callbacksRef = useRef({ onSuccess, onError, onDataChanged });
@@ -196,37 +198,44 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
     }, []);
 
     useEffect(() => {
-      const recoveries = getPendingImportJobs().filter((record) => record.owner === 'file-drop');
-      if (!recoveries.length) return;
-      const restoredTasks: FileTask[] = [];
-      for (const recovery of recoveries) {
-        const recoveryIdentity = recovery.kind === 'job' ? recovery.jobId : recovery.attemptId;
-        const taskId = `restored-${recovery.kind}-${recoveryIdentity}`;
-        const key = `restored:${recoveryIdentity}`;
-        const hasJob = recovery.kind === 'job';
-        const filename = hasJob ? '已恢复的文件导入任务' : '待核对的文件导入';
-        const detail = hasJob
-          ? '检测到上次未完成的导入。继续查询只读取原任务，不会重新上传。'
-          : '上次提交结果未确认。请先核对记忆库；确认前不会允许再次导入。';
-        const control: TaskControl = {
-          key, filename, status: hasJob ? 'paused' : 'error',
-          jobId: recovery.kind === 'job' ? recovery.jobId : undefined,
-          recoveryAttemptId: recovery.kind === 'uncertain' ? recovery.attemptId : undefined,
-          controller: new AbortController(), version: 0, cancelRequested: false,
-          requiresAcknowledgement: !hasJob,
-        };
-        controlsRef.current.set(taskId, control);
-        activeFilesRef.current.set(key, taskId);
-        restoredTasks.push({
-          id: taskId, filename, status: control.status, jobId: control.jobId,
-          requiresAcknowledgement: control.requiresAcknowledgement, detail,
-        });
-      }
-      setTasks((existing) => [
-        ...restoredTasks,
-        ...existing.filter((task) => !restoredTasks.some((restored) => restored.id === task.id)),
-      ]);
-      setNotice('已恢复上次的导入状态。请继续查询原任务，或核对记忆库后确认；不会自动重新上传。');
+      let active = true;
+      void (async () => {
+        await hydrateNativeImportRecovery();
+        recoveryHydratedRef.current = true;
+        if (!active) return;
+        const recoveries = getPendingImportJobs().filter((record) => record.owner === 'file-drop');
+        if (!recoveries.length) return;
+        const restoredTasks: FileTask[] = [];
+        for (const recovery of recoveries) {
+          const recoveryIdentity = recovery.kind === 'job' ? recovery.jobId : recovery.attemptId;
+          const taskId = `restored-${recovery.kind}-${recoveryIdentity}`;
+          const key = `restored:${recoveryIdentity}`;
+          const hasJob = recovery.kind === 'job';
+          const filename = hasJob ? '已恢复的文件导入任务' : '待核对的文件导入';
+          const detail = hasJob
+            ? '检测到上次未完成的导入。继续查询只读取原任务，不会重新上传。'
+            : '上次提交结果未确认。请先核对记忆库；确认前不会允许再次导入。';
+          const control: TaskControl = {
+            key, filename, status: hasJob ? 'paused' : 'error',
+            jobId: recovery.kind === 'job' ? recovery.jobId : undefined,
+            recoveryAttemptId: recovery.kind === 'uncertain' ? recovery.attemptId : undefined,
+            controller: new AbortController(), version: 0, cancelRequested: false,
+            requiresAcknowledgement: !hasJob,
+          };
+          controlsRef.current.set(taskId, control);
+          activeFilesRef.current.set(key, taskId);
+          restoredTasks.push({
+            id: taskId, filename, status: control.status, jobId: control.jobId,
+            requiresAcknowledgement: control.requiresAcknowledgement, detail,
+          });
+        }
+        setTasks((existing) => [
+          ...restoredTasks,
+          ...existing.filter((task) => !restoredTasks.some((restored) => restored.id === task.id)),
+        ]);
+        setNotice('已恢复上次的导入状态。请继续查询原任务，或核对记忆库后确认；不会自动重新上传。');
+      })();
+      return () => { active = false; };
     }, []);
 
     const isCurrent = useCallback((taskId: string, control: TaskControl, version: number) => (
@@ -266,6 +275,7 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
         const requiresAcknowledgement = settleImportOutcome(
           summary.outcome, 'file-drop', control.fingerprint ?? null, control.jobId, control.recoveryAttemptId,
         );
+        await flushNativeImportRecovery();
         const units = summary.total > 0 ? ` · 成功处理 ${summary.completed}/${summary.total} 段` : '';
         const saved = summary.countsKnown
           ? `服务报告抽取 ${summary.entities} 条记忆 / ${summary.relationships} 条关系（非净新增数量）`
@@ -375,12 +385,13 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
           });
           control.status = 'uploading';
           updateTask(taskId, { status: 'uploading', stage: 'parsing' });
-          const submitRes = await submission.wait(() => {
+          const submitRes = await submission.wait(async () => {
             control.recoveryAttemptId = createImportRecoveryAttemptId();
             if (!persistUncertainImport('file-drop', control.recoveryAttemptId)) {
               control.recoveryAttemptId = undefined;
               throw new Error('无法保存恢复标记，为避免重复导入，本次未提交。请检查本地存储后重试。');
             }
+            await flushNativeImportRecovery();
             submissionUncertain = true;
             return apiFetch('/api/ingest/file', {
               method: 'POST',
@@ -393,6 +404,7 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
             submissionUncertain = submitRes.status >= 500;
             if (!submissionUncertain && control.recoveryAttemptId) {
               clearPersistedImportAttempt('file-drop', control.recoveryAttemptId);
+              await flushNativeImportRecovery();
               control.recoveryAttemptId = undefined;
             }
           }
@@ -410,6 +422,7 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
           const recoverySaved = control.recoveryAttemptId
             ? persistImportJob('file-drop', jobId, control.recoveryAttemptId)
             : persistImportJob('file-drop', jobId);
+          await flushNativeImportRecovery();
           if (recoverySaved) control.recoveryAttemptId = undefined;
           updateImportContentReservation(fingerprint, 'file-drop', { phase: 'running', jobId });
           updateTask(taskId, {
@@ -431,7 +444,10 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
             updateImportContentReservation(control.fingerprint ?? null, 'file-drop', { phase: 'uncertain' });
           } else {
             releaseImportContentReservation(control.fingerprint ?? null, 'file-drop');
-            if (control.recoveryAttemptId) clearPersistedImportAttempt('file-drop', control.recoveryAttemptId);
+            if (control.recoveryAttemptId) {
+              clearPersistedImportAttempt('file-drop', control.recoveryAttemptId);
+              await flushNativeImportRecovery();
+            }
             control.recoveryAttemptId = undefined;
           }
           updateTask(taskId, { status: 'error', stage: undefined, detail: message, requiresAcknowledgement: submissionUncertain });
@@ -451,6 +467,10 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
     const handleFiles = useCallback(
       async (fileList: File[] | TauriFileLike[] | FileList) => {
         if (!mountedRef.current) return;
+        if (!recoveryHydratedRef.current) {
+          setNotice('正在恢复上次导入状态，请稍后再选择文件。');
+          return;
+        }
         const selected = Array.from(fileList as ArrayLike<File | TauriFileLike>);
         const uploads: Array<{ file: File | TauriFileLike; task: FileTask }> = [];
         let duplicates = 0;
@@ -526,13 +546,14 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
       void watchTask(taskId, control);
     }, [updateTask, watchTask]);
 
-    const acknowledgeTaskUncertainty = useCallback((taskId: string) => {
+    const acknowledgeTaskUncertainty = useCallback(async (taskId: string) => {
       const control = controlsRef.current.get(taskId);
       if (!control?.requiresAcknowledgement || !mountedRef.current) return;
       control.version++;
       control.controller.abort();
       activeFilesRef.current.delete(control.key);
       acknowledgeImportRecovery('file-drop', control.fingerprint ?? null, control.jobId, control.recoveryAttemptId);
+      await flushNativeImportRecovery();
       controlsRef.current.delete(taskId);
       updateTask(taskId, {
         requiresAcknowledgement: false,

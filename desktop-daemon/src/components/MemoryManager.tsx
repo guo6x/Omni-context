@@ -8,7 +8,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { IngestJobError, pollIngestJob, summarizeIngestJob, type IngestSummary } from '@/lib/ingest-job';
 import {
   clearPersistedImportAttempt, createImportRecoveryAttemptId,
-  getPendingImportJobs, persistImportJob, persistUncertainImport,
+  flushNativeImportRecovery, getPendingImportJobs, hydrateNativeImportRecovery,
+  persistImportJob, persistUncertainImport,
 } from '@/lib/import-job-recovery';
 import {
   acknowledgeImportRecovery,
@@ -107,6 +108,7 @@ export default function MemoryManager({
   const pendingAttemptRef = useRef<string | null>(null);
   const pendingContentFingerprintRef = useRef<string | null>(null);
   const acknowledgementRequiredRef = useRef(false);
+  const recoveryHydratedRef = useRef(false);
 
   // 外部定位只同步浏览筛选，不用 key 重挂整页，避免清掉尚未确认的导入任务。
   useEffect(() => {
@@ -138,21 +140,28 @@ export default function MemoryManager({
   }, []);
 
   useEffect(() => {
-    const recoveries = getPendingImportJobs().filter((record) => record.owner === 'library');
-    const recovery = recoveries[0];
-    if (!recovery) return;
-    if (recovery.kind === 'job') {
-      pendingJobRef.current = recovery.jobId;
-      setResumeJobId(recovery.jobId);
-      setImportTone('warning');
-      setImportMsg('已恢复上次导入任务。继续查询只读取原任务，不会重新上传。');
-    } else {
-      pendingAttemptRef.current = recovery.attemptId;
-      acknowledgementRequiredRef.current = true;
-      setRequiresAcknowledgement(true);
-      setImportTone('warning');
-      setImportMsg('上次提交结果未确认，无法安全判断是否已收到。请先检查记忆库，再确认后才能重新导入。');
-    }
+    let active = true;
+    void (async () => {
+      await hydrateNativeImportRecovery();
+      recoveryHydratedRef.current = true;
+      if (!active) return;
+      const recoveries = getPendingImportJobs().filter((record) => record.owner === 'library');
+      const recovery = recoveries[0];
+      if (!recovery) return;
+      if (recovery.kind === 'job') {
+        pendingJobRef.current = recovery.jobId;
+        setResumeJobId(recovery.jobId);
+        setImportTone('warning');
+        setImportMsg('已恢复上次导入任务。继续查询只读取原任务，不会重新上传。');
+      } else {
+        pendingAttemptRef.current = recovery.attemptId;
+        acknowledgementRequiredRef.current = true;
+        setRequiresAcknowledgement(true);
+        setImportTone('warning');
+        setImportMsg('上次提交结果未确认，无法安全判断是否已收到。请先检查记忆库，再确认后才能重新导入。');
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const load = useCallback(async () => {
@@ -340,6 +349,7 @@ export default function MemoryManager({
       const requiresAcknowledgement = settleImportOutcome(
         summary.outcome, 'library', pendingContentFingerprintRef.current, jobId, pendingAttemptRef.current,
       );
+      await flushNativeImportRecovery();
       importBusyRef.current = false;
       if (requiresAcknowledgement) {
         pendingJobRef.current = jobId;
@@ -407,6 +417,12 @@ export default function MemoryManager({
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!recoveryHydratedRef.current) {
+      e.target.value = '';
+      setImportTone('warning');
+      setImportMsg('正在恢复上次导入状态，请稍后再选择文件。');
+      return;
+    }
     const f = e.target.files?.[0];
     e.target.value = '';
     if (!f || importBusyRef.current || pendingJobRef.current || acknowledgementRequiredRef.current || !mountedRef.current) return;
@@ -441,12 +457,13 @@ export default function MemoryManager({
         if (limit.trim() && Number(limit) > 0) payload.maxConversations = Number(limit);
         return JSON.stringify(payload);
       });
-      const r = await submission.wait(() => {
+      const r = await submission.wait(async () => {
         pendingAttemptRef.current = createImportRecoveryAttemptId();
         if (!persistUncertainImport('library', pendingAttemptRef.current)) {
           pendingAttemptRef.current = null;
           throw new Error('无法保存恢复标记，为避免重复导入，本次未提交。请检查本地存储后重试。');
         }
+        await flushNativeImportRecovery();
         submissionUncertain = true;
         return apiFetch('/api/import/chat', { method: 'POST', body, signal: controller.signal });
       });
@@ -454,6 +471,7 @@ export default function MemoryManager({
         submissionUncertain = r.status >= 500;
         if (!submissionUncertain && pendingAttemptRef.current) {
           clearPersistedImportAttempt('library', pendingAttemptRef.current);
+          await flushNativeImportRecovery();
           pendingAttemptRef.current = null;
         }
         throw new Error(await submission.wait(() => r.text()));
@@ -464,6 +482,7 @@ export default function MemoryManager({
       submission.dispose();
       pendingJobRef.current = jobId;
       const recoverySaved = persistImportJob('library', jobId, pendingAttemptRef.current || undefined);
+      await flushNativeImportRecovery();
       if (recoverySaved) pendingAttemptRef.current = null;
       updateImportContentReservation(fingerprint, 'library', { phase: 'running', jobId });
       setImportMsg(`识别为 ${platform} · 解析到 ${parsed} 段，正在抽取 ${imp} 段${recoverySaved ? '' : '。本地无法保存恢复记录，请勿关闭应用，直至任务结束并核对结果。'}`);
@@ -480,7 +499,10 @@ export default function MemoryManager({
         refreshImportData();
       } else {
         releaseImportContentReservation(fingerprint, 'library');
-        if (pendingAttemptRef.current) clearPersistedImportAttempt('library', pendingAttemptRef.current);
+        if (pendingAttemptRef.current) {
+          clearPersistedImportAttempt('library', pendingAttemptRef.current);
+          await flushNativeImportRecovery();
+        }
         pendingAttemptRef.current = null;
         pendingContentFingerprintRef.current = null;
       }
@@ -509,13 +531,14 @@ export default function MemoryManager({
     void watchImport(jobId, run, controller);
   }
 
-  function acknowledgeImportUncertainty() {
+  async function acknowledgeImportUncertainty() {
     if (!acknowledgementRequiredRef.current || importBusyRef.current || !mountedRef.current) return;
     importRunRef.current++;
     importControllerRef.current?.abort();
     const jobId = pendingJobRef.current;
     pendingJobRef.current = null;
     acknowledgeImportRecovery('library', pendingContentFingerprintRef.current, jobId, pendingAttemptRef.current);
+    await flushNativeImportRecovery();
     pendingAttemptRef.current = null;
     acknowledgementRequiredRef.current = false;
     pendingContentFingerprintRef.current = null;
