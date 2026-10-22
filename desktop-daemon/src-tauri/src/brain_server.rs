@@ -254,7 +254,11 @@ pub fn start() -> Result<(), String> {
         if remaining.is_zero() {
             break;
         }
-        result = start_inner(remaining.min(BRAIN_STARTUP_TIMEOUT));
+        // The first attempt keeps the strict suspended-before-Job boundary.
+        // If Windows leaves the bundled Node loader non-executable after a
+        // hard stop, retry the trusted Brain with the bounded running-child
+        // fallback; broker commands never use that fallback.
+        result = start_inner(remaining.min(BRAIN_STARTUP_TIMEOUT), attempt > 1);
         if let Err(error) = &result {
             log_startup_event(&format!(
                 "startup attempt {attempt}/{START_ATTEMPTS} failed: {error}"
@@ -280,7 +284,7 @@ pub fn start() -> Result<(), String> {
     result
 }
 
-fn start_inner(startup_timeout: Duration) -> Result<(), String> {
+fn start_inner(startup_timeout: Duration, use_running_fallback: bool) -> Result<(), String> {
     let startup_deadline = Instant::now() + startup_timeout;
     // Serialize startup across app instances that share the same data profile.
     // A second instance must not mistake the first instance's live Brain child
@@ -417,7 +421,14 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
         log_startup_event(&format!(
             "spawning Brain child entry_name={entry_name} node_name={node_name}"
         ));
-        let spawn_result = ProcessTree::spawn_hidden(&mut cmd);
+        let spawn_result = if use_running_fallback {
+            log_startup_event(&format!(
+                "using trusted Brain running-child recovery fallback entry_name={entry_name}"
+            ));
+            ProcessTree::spawn_hidden_running(&mut cmd)
+        } else {
+            ProcessTree::spawn_hidden(&mut cmd)
+        };
 
         match spawn_result {
             Ok(mut process) => {

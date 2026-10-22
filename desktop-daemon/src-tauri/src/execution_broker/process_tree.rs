@@ -219,6 +219,25 @@ impl ProcessTree {
         }
     }
 
+    /// Spawn the fixed, bundled Brain runtime without CREATE_SUSPENDED.
+    ///
+    /// This is a bounded recovery fallback for Windows only. The Brain entry
+    /// point and embedded Node binary are trusted product code; unlike broker
+    /// commands they never use this path. The child is assigned to the same
+    /// kill-on-close Job Object immediately after CreateProcess returns, so
+    /// normal shutdown still owns the complete process tree while avoiding a
+    /// Windows loader state that can remain non-executable after a hard stop.
+    pub fn spawn_hidden_running(command: &mut Command) -> Result<Self, BrokerError> {
+        #[cfg(windows)]
+        {
+            Self::spawn_windows(command, true, false, false, false)
+        }
+        #[cfg(not(windows))]
+        {
+            Self::spawn_unix(command)
+        }
+    }
+
     pub fn try_wait(&mut self) -> std::io::Result<Option<std::process::ExitStatus>> {
         #[cfg(windows)]
         {
