@@ -174,6 +174,8 @@ pub struct ProcessTree {
     child: Child,
     #[cfg(windows)]
     job: Option<windows::Win32::Foundation::HANDLE>,
+    #[cfg(windows)]
+    resume_required: bool,
     #[cfg(unix)]
     pid: i32,
 }
@@ -274,8 +276,16 @@ impl ProcessTree {
         #[cfg(windows)]
         {
             match &mut self.child {
-                WindowsChild::Std(child) => resume_process_threads(child, true)?,
-                WindowsChild::Native(child) => child.resume_primary()?,
+                WindowsChild::Std(child) => {
+                    if self.resume_required {
+                        resume_process_threads(child, true)?;
+                    }
+                }
+                WindowsChild::Native(child) => {
+                    if self.resume_required {
+                        child.resume_primary()?;
+                    }
+                }
             }
             Ok(())
         }
@@ -569,6 +579,7 @@ impl ProcessTree {
         Ok(Self {
             child: WindowsChild::Std(child),
             job: Some(job),
+            resume_required: start_suspended,
         })
     }
 
@@ -922,6 +933,7 @@ impl ProcessTree {
                 exit_status: None,
             }),
             job: Some(job),
+            resume_required: true,
         })
     }
 
