@@ -425,11 +425,11 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                 log_startup_event(&format!(
                     "Brain child spawned pid={pid} entry_name={entry_name}"
                 ));
-                // Publish the identity as soon as CreateProcessW succeeds,
-                // before health or database initialization.  A hard desktop
-                // stop can occur during that window; the next instance must
-                // still have an identity-bound record it can safely reclaim.
-                let mut process_record = write_pid_file(pid);
+                // Keep the recovery record tied to a child that has actually
+                // passed the health gate.  Publishing a pre-resume record can
+                // leave a stale owner during the short suspended-loader window
+                // and changes the recovery decision before the child is live.
+                let mut process_record = None;
                 // 要在 store_process 之前取出 stdout/stderr，否则 move 后拿不到。
                 // 立即接日志，避免冷启动等待期间没有任何可诊断输出。
                 let stdout = process.take_stdout();
@@ -446,14 +446,6 @@ fn start_inner(startup_timeout: Duration) -> Result<(), String> {
                     let _ = process.wait();
                     remove_pid_file_for_current_process(pid, process_record);
                     continue;
-                }
-
-                // Windows can deny identity queries while a freshly-created
-                // process is still suspended. Repair the recovery record once
-                // the primary thread is live so a hard stop during startup
-                // cannot leave the previous instance's record in place.
-                if process_record.is_none() {
-                    process_record = write_pid_file(pid);
                 }
 
                 let health_timeout = startup_deadline.saturating_duration_since(Instant::now());

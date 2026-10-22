@@ -206,7 +206,10 @@ impl ProcessTree {
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            Self::spawn_windows(command, true, true, false, false)
+            // Retain the native primary-thread handle for Brain startup so a
+            // hard restart cannot race a Toolhelp snapshot against Node's
+            // loader. The child remains inside the kill-on-close Job Object.
+            Self::spawn_windows(command, true, true, false, true)
         }
         #[cfg(not(windows))]
         {

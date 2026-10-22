@@ -410,9 +410,17 @@ function readBrainPidRecord() {
     const raw = fs.readFileSync(pidFile, 'utf8').trim();
     try {
       const record = JSON.parse(raw);
+      // Windows FILETIME values are larger than JavaScript's safe-integer
+      // range.  The installer writes the value as a JSON number, so a safe
+      // integer check would falsely report a valid identity record as absent.
+      const processStartTime = record?.process_start_time;
+      const hasProcessStartTime = typeof processStartTime === 'number'
+        ? Number.isFinite(processStartTime) && processStartTime > 0
+        : typeof processStartTime === 'string' && /^\d+$/.test(processStartTime)
+          && processStartTime !== '0';
       return {
         pid: Number.isInteger(record?.pid) && record.pid > 0 ? record.pid : null,
-        hasProcessStartTime: Number.isSafeInteger(record?.process_start_time),
+        hasProcessStartTime,
         format: 'json',
       };
     } catch {
