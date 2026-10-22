@@ -206,10 +206,12 @@ impl ProcessTree {
     pub fn spawn_hidden(command: &mut Command) -> Result<Self, BrokerError> {
         #[cfg(windows)]
         {
-            // Retain the native primary-thread handle for Brain startup so a
-            // hard restart cannot race a Toolhelp snapshot against Node's
-            // loader. The child remains inside the kill-on-close Job Object.
-            Self::spawn_windows(command, true, true, false, true)
+            // Keep the production Brain path on the verified std::process /
+            // Toolhelp sequence. The native primary-thread adapter remains
+            // available to the focused Windows probe, but the packaged
+            // restart gate has repeatedly passed with the same bounded
+            // Toolhelp resume path used by the broker.
+            Self::spawn_windows(command, true, true, false, false)
         }
         #[cfg(not(windows))]
         {
