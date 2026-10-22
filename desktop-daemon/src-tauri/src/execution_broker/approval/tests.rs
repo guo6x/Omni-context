@@ -174,6 +174,7 @@ fn read_only_low_l0_without_approval_executes() {
 
 #[test]
 fn write_binding_without_approval_rejected() {
+    let _guard = child_test_lock();
     let tmp = TempDir::new("cp7-risk-write-noapproval");
     let broker = broker_with_root(tmp.path());
     register_write_binding(&broker, tmp.path());

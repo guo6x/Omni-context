@@ -350,7 +350,11 @@ fn child_protocol_entry() {
             }
         }
         "exit-immediately" => {
-            std::thread::sleep(Duration::from_millis(150));
+            // ProcessTree installs the Windows Job boundary and resumes the
+            // child before the broker publishes its active-execution marker.
+            // Keep this fixture alive long enough for that lifecycle window
+            // on a loaded Windows runner while still exercising a quick exit.
+            std::thread::sleep(Duration::from_secs(2));
             std::process::exit(0);
         }
         "grandchild" => {

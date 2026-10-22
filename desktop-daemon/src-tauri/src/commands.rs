@@ -420,6 +420,7 @@ pub fn get_system_status() -> SystemStatus {
 
 #[tauri::command]
 pub async fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
+    brain_server::set_auto_recovery_enabled(true);
     tauri::async_runtime::spawn_blocking(brain_server::start)
         .await
         .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
@@ -438,6 +439,7 @@ pub async fn start_brain_server(app_handle: tauri::AppHandle) -> Result<String, 
 
 #[tauri::command]
 pub async fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
+    brain_server::set_auto_recovery_enabled(false);
     tauri::async_runtime::spawn_blocking(brain_server::stop)
         .await
         .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
@@ -456,6 +458,7 @@ pub async fn stop_brain_server(app_handle: tauri::AppHandle) -> Result<String, S
 
 #[tauri::command]
 pub async fn restart_brain_server(app_handle: tauri::AppHandle) -> Result<String, String> {
+    brain_server::set_auto_recovery_enabled(true);
     tauri::async_runtime::spawn_blocking(brain_server::restart)
         .await
         .map_err(|e| format!("执行线程阻塞错误: {}", e))??;
@@ -484,6 +487,7 @@ pub fn set_close_behavior(behavior: String) {
 #[tauri::command]
 pub fn quit_app() {
     println!("[Omni-Context] 前端触发完全退出，正在清理 Brain Server...");
+    crate::APP_SHUTTING_DOWN.store(true, std::sync::atomic::Ordering::SeqCst);
     let _ = brain_server::stop();
     std::process::exit(0);
 }

@@ -13,6 +13,8 @@ import EmptyState from "@/components/EmptyState";
 import FileDropZone, { FileDropZoneRef, ACCEPTED_EXTENSIONS, TauriFileLike } from "@/components/FileDropZone";
 import HardwarePairingPanel from "@/components/HardwarePairingPanel";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import RetainedPanel from "@/components/RetainedPanel";
+import ModalDialog from "@/components/ModalDialog";
 import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Sparkles, PictureInPicture2, Search, Scale, ChevronDown, ChevronUp, MoreHorizontal, Brain, RefreshCw } from "lucide-react";
 import { LogoMark } from "@/components/BrandMark";
 import { Entity, Relationship } from "@shared/types";
@@ -27,6 +29,12 @@ import WorkspaceNavigation, { WorkspaceSection } from "@/components/WorkspaceNav
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
 import { resolveNodeCap } from '@/lib/device';
+
+function activeElementForReturn(): HTMLElement | null {
+  if (typeof document === 'undefined') return null;
+  const active = document.activeElement;
+  return active instanceof HTMLElement && active !== document.body ? active : null;
+}
 
 // 需要"在任意窗口前都能按"的快捷键，注册为系统全局热键（其余保持应用内）
 const GLOBAL_SHORTCUT_IDS = ['precipitate'];
@@ -130,7 +138,16 @@ function MainApp() {
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   // 总览视图节点上限（后端 300）下，实际总数 / 已显示数，用于「显示 X / 共 Y」角标
   const [graphTotal, setGraphTotal] = useState(0);
-  const [showUpload, setShowUpload] = useState(false);
+  const [showUpload, setShowUploadState] = useState(false);
+  const uploadVisibleRef = useRef(false);
+  const uploadDispatchEpochRef = useRef(0);
+  const uploadReturnFocusRef = useRef<HTMLElement | null>(null);
+  const setShowUpload = useCallback((visible: boolean) => {
+    if (visible && !uploadVisibleRef.current) uploadReturnFocusRef.current = activeElementForReturn();
+    uploadVisibleRef.current = visible;
+    if (!visible) uploadDispatchEpochRef.current += 1;
+    setShowUploadState(visible);
+  }, []);
   const [showHardware, setShowHardware] = useState(false);
   const [emptyDismissed, setEmptyDismissed] = useState(false);
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
@@ -138,13 +155,24 @@ function MainApp() {
   const [showControlCenter, setShowControlCenter] = useState(false);
   const [showMemoryManager, setShowMemoryManager] = useState(false);
   const [workspaceSection, setWorkspaceSection] = useState<WorkspaceSection>("ask");
+  const memoryManagerReturnFocusRef = useRef<HTMLElement | null>(null);
+  const openMemoryManager = useCallback(() => {
+    if (!showMemoryManager) memoryManagerReturnFocusRef.current = activeElementForReturn();
+    setShowMemoryManager(true);
+  }, [showMemoryManager]);
+  const closeMemoryManager = useCallback(() => {
+    setShowMemoryManager(false);
+    setWorkspaceSection("ask");
+  }, []);
+  const [askRequest, setAskRequest] = useState<{ id: number; question: string }>();
   const [memoryManagerFilter, setMemoryManagerFilter] = useState<{ type?: string; coreOnly?: boolean; unlinkedOnly?: boolean }>({});
+  const [memoryManagerFilterRequestId, setMemoryManagerFilterRequestId] = useState(0);
   const navigateWorkspace = (section: WorkspaceSection) => {
     setWorkspaceSection(section);
     setShowDecisionLog(section === "journey");
-    setShowMemoryManager(section === "library");
+    if (section === "library") openMemoryManager();
+    else setShowMemoryManager(false);
     setShowControlCenter(section === "advanced");
-    if (section !== "library") setMemoryManagerFilter({});
   };
   // 启动遮罩兜底：brain-server 长时间起不来时也要放行进 App（由离线横幅接管），避免遮罩锁死 UI
   const [splashTimedOut, setSplashTimedOut] = useState(false);
@@ -161,10 +189,15 @@ function MainApp() {
   const toast = useToast();
   const [settingsTab, setSettingsTab] = useState<'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about'>('shortcuts');
   const [showWizardForce, setShowWizardForce] = useState(false);
+  // The onboarding wizard owns the import state. Keep a synchronous mirror so
+  // the outer focus-trap Escape handler cannot hide the only recovery surface.
+  const onboardingImportPendingRef = useRef(false);
   const [isLoadingGraph, setIsLoadingGraph] = useState(false);
+  const graphRequestRef = useRef(0);
 
   // 提到组件 scope，方便上传成功 / 手动操作后重拉
   const fetchGraphData = useCallback(async () => {
+    const requestId = ++graphRequestRef.current;
     setIsLoadingGraph(true);
     try {
       const response = await apiFetch('/api/graph/context', {
@@ -176,16 +209,17 @@ function MainApp() {
         throw new Error(`HTTP ${response.status}`);
       }
       const data = await response.json();
+      if (requestId !== graphRequestRef.current) return;
       setEntities(data.entities || []);
       setRelationships(data.relationships || []);
       setGraphTotal(typeof data.total === 'number' ? data.total : (data.entities || []).length);
     } catch (error) {
       // 第一次 brain-server 还没起就别打扰用户；只在已有数据时刷新失败提示
-      if (entities.length > 0) {
+      if (requestId === graphRequestRef.current && entities.length > 0) {
         toast.error(t('toast.refresh_failed'), String(error));
       }
     } finally {
-      setIsLoadingGraph(false);
+      if (requestId === graphRequestRef.current) setIsLoadingGraph(false);
     }
     // toast / t / entities.length 在依赖列表里反而会抖动，这里只跟随 refreshTrigger 和节点上限
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -208,10 +242,10 @@ function MainApp() {
     const fetchInsights = async () => {
       try {
         const res = await apiFetch('/api/notifications');
-        if (res.ok && active) {
+        if (res.ok) {
           const data = await res.json();
-          setInsightHighlights(Array.isArray(data) ? data : []);
-        }
+          if (active) setInsightHighlights(Array.isArray(data) ? data : []);
+        } else await res.arrayBuffer();
       } catch {
         // brain-server 未就绪时静默
       }
@@ -365,6 +399,7 @@ function MainApp() {
           setIsDraggingFile(false);
           const paths = event.payload;
           if (!paths || paths.length === 0) return;
+          const dispatchEpoch = uploadDispatchEpochRef.current;
 
           try {
             // 调用 Rust 命令，过滤和扫描出支持的物理文件
@@ -382,6 +417,7 @@ function MainApp() {
             }
 
             const proceed = async () => {
+              if (dispatchEpoch !== uploadDispatchEpochRef.current) return;
               // 自动弹出上传弹窗
               setShowUpload(true);
 
@@ -390,8 +426,8 @@ function MainApp() {
 
               // 稍微加个延迟，等 modal 完全渲染和 ref 挂载好
               setTimeout(() => {
-                if (dropZoneRef.current) {
-                  dropZoneRef.current.handleFiles(tauriFiles);
+                if (uploadVisibleRef.current && dispatchEpoch === uploadDispatchEpochRef.current && dropZoneRef.current) {
+                  void dropZoneRef.current.handleFiles(tauriFiles);
                 }
               }, 200);
             };
@@ -424,7 +460,7 @@ function MainApp() {
       if (unlistenCancelled) unlistenCancelled();
       if (unlistenDrop) unlistenDrop();
     };
-  }, [confirm, t, toast]);
+  }, [confirm, t, toast, setShowUpload]);
 
   // 当拖拽模式被卡住时，按 Esc 键可以退出
   useEffect(() => {
@@ -797,6 +833,7 @@ function MainApp() {
               className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               title={t('nav.more')}
               aria-label={t('nav.more')}
+              data-testid="header-more-menu"
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -814,6 +851,7 @@ function MainApp() {
                   <button
                     onClick={() => { setShowDecisionLog(true); setShowMoreMenu(false); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                    data-testid="header-decision-log"
                   >
                     <Scale className="w-4 h-4 text-cyan-400" />
                     {t('nav.decision_log')}
@@ -826,7 +864,7 @@ function MainApp() {
                     Control Center
                   </button>
                   <button
-                    onClick={() => { setShowMemoryManager(true); setShowMoreMenu(false); }}
+                    onClick={() => { openMemoryManager(); setShowMoreMenu(false); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                   >
                     <Brain className="w-4 h-4 text-cyan-400" />
@@ -917,6 +955,7 @@ function MainApp() {
         <GraphViewer
           entities={entities}
           relationships={relationships}
+          askRequest={askRequest}
           onDataChanged={fetchGraphData}
           focusEntityId={focusEntityId}
           onFocusEntityReset={() => setFocusEntityId(undefined)}
@@ -968,41 +1007,52 @@ function MainApp() {
           />
         )}
 
-        {showUpload && (
+        <RetainedPanel visible={showUpload} name="upload" modal>
           <div
-            className="absolute inset-0 z-30 flex items-center justify-center bg-black/60"
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 p-4"
             onClick={() => setShowUpload(false)}
           >
-            <div
-              className="bg-[#0a0b12]/95 w-full max-w-md p-6 rounded-2xl border border-white/10"
-              onClick={(e) => e.stopPropagation()}
+            <ModalDialog
+              active={showUpload}
+              titleId="upload-dialog-title"
+              onDismiss={() => setShowUpload(false)}
+              returnFocusRef={uploadReturnFocusRef}
+              className="bg-[#0a0b12]/95 w-full max-w-md max-h-full overflow-y-auto p-6 rounded-2xl border border-white/10"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-white font-semibold">
+                <h2 id="upload-dialog-title" className="flex items-center gap-2 text-white font-semibold">
                   <Upload className="w-4 h-4 text-cyan-400" />
                   {t('upload.title')}
-                </div>
+                </h2>
                 <button
                   onClick={() => setShowUpload(false)}
                   className="text-gray-400 hover:text-white"
-                  aria-label="close"
+                  aria-label={t('upload.close')}
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
               <FileDropZone
                 ref={dropZoneRef}
+                onDataChanged={fetchGraphData}
                 onSuccess={(r) => {
-                  toast.success(t('toast.file_extracted').replace('{filename}', r.filename), t('toast.file_extracted_detail').replace('{entities}', String(r.entities)).replace('{relationships}', String(r.relationships)));
-                  fetchGraphData();
+                  if (r.partial) {
+                    toast.warning(t('toast.file_partial').replace('{filename}', r.filename), r.countsKnown === true
+                      ? t('toast.file_partial_detail').replace('{entities}', String(r.entities))
+                      : t('toast.file_counts_unknown'));
+                  } else {
+                    toast.success(t('toast.file_extracted').replace('{filename}', r.filename), r.countsKnown === true
+                      ? t('toast.file_extracted_detail').replace('{entities}', String(r.entities)).replace('{relationships}', String(r.relationships))
+                      : t('toast.file_counts_unknown'));
+                  }
                 }}
                 onError={(filename, msg) => {
                   toast.error(t('toast.file_upload_failed').replace('{filename}', filename), msg);
                 }}
               />
-            </div>
+            </ModalDialog>
           </div>
-        )}
+        </RetainedPanel>
 
         {showShortcuts && (
           <ShortcutsHelp 
@@ -1047,22 +1097,27 @@ function MainApp() {
           onOpenMemoryManager={(filter) => {
             setWorkspaceSection("library");
             setMemoryManagerFilter(filter);
-            setShowMemoryManager(true);
+            setMemoryManagerFilterRequestId((requestId) => requestId + 1);
+            openMemoryManager();
           }}
         />
-        {showMemoryManager && (
-          <MemoryManager
-            key={`${memoryManagerFilter.type || 'all'}:${memoryManagerFilter.coreOnly ? 'core' : 'all'}:${memoryManagerFilter.unlinkedOnly ? 'unlinked' : 'all'}`}
-            initialType={memoryManagerFilter.type}
-            initialCoreOnly={memoryManagerFilter.coreOnly}
-            initialUnlinkedOnly={memoryManagerFilter.unlinkedOnly}
-            onClose={() => {
-              setShowMemoryManager(false);
-              setMemoryManagerFilter({});
-              setWorkspaceSection("ask");
-            }}
-          />
-        )}
+        <RetainedPanel visible={showMemoryManager} name="library" modal>
+          <ModalDialog
+            active={showMemoryManager}
+            titleId="memory-manager-dialog-title"
+            onDismiss={closeMemoryManager}
+            returnFocusRef={memoryManagerReturnFocusRef}
+          >
+            <MemoryManager
+              onDataChanged={fetchGraphData}
+              initialType={memoryManagerFilter.type}
+              initialCoreOnly={memoryManagerFilter.coreOnly}
+              initialUnlinkedOnly={memoryManagerFilter.unlinkedOnly}
+              filterRequestId={memoryManagerFilterRequestId}
+              onClose={closeMemoryManager}
+            />
+          </ModalDialog>
+        </RetainedPanel>
 
         <HardwarePairingPanel isOpen={showHardware} onClose={() => setShowHardware(false)} />
 
@@ -1079,22 +1134,42 @@ function MainApp() {
         <ControlCenter isOpen={showControlCenter} onClose={() => { setShowControlCenter(false); setWorkspaceSection("ask"); }} />
 
         {/* [通用] 首次启动引导 */}
-        {(!settings.behavior.onboarded || showWizardForce) && (
-          <OnboardingWizard
-            settings={settings}
-            onUpdateBehavior={updateBehavior}
-            onUpdateLlmProvider={updateLlmProvider}
-            triggerPrecipitate={handlePrecipitate}
-            onClose={() => {
+        <RetainedPanel visible={!settings.behavior.onboarded || showWizardForce} name="onboarding" modal>
+          <ModalDialog
+            active={!settings.behavior.onboarded || showWizardForce}
+            titleId="onboarding-dialog-title"
+            onDismiss={() => {
+              if (onboardingImportPendingRef.current) return;
               updateBehavior({ onboarded: true });
               setShowWizardForce(false);
             }}
-            onOpenSettings={(tab) => {
-              setSettingsTab(tab);
-              setShowSettings(true);
-            }}
-          />
-        )}
+          >
+            <OnboardingWizard
+              settings={settings}
+              visible={!settings.behavior.onboarded || showWizardForce}
+              onImportComplete={fetchGraphData}
+              onImportPendingChange={(pending) => { onboardingImportPendingRef.current = pending; }}
+              onAskImported={() => {
+                navigateWorkspace('ask');
+                updateBehavior({ onboarded: true });
+                setShowWizardForce(false);
+                setEmptyDismissed(true);
+                setAskRequest({ id: Date.now(), question: t('ask.imported_prompt') });
+              }}
+              onUpdateBehavior={updateBehavior}
+              onUpdateLlmProvider={updateLlmProvider}
+              triggerPrecipitate={handlePrecipitate}
+              onClose={() => {
+                updateBehavior({ onboarded: true });
+                setShowWizardForce(false);
+              }}
+              onOpenSettings={(tab) => {
+                setSettingsTab(tab);
+                setShowSettings(true);
+              }}
+            />
+          </ModalDialog>
+        </RetainedPanel>
       </main>
 
       {isDraggingFile && (

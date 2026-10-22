@@ -3,6 +3,7 @@ import http from 'http';
 import { AddressInfo } from 'net';
 import initDatabase, { Database } from '../src/db/sqlite.js';
 import { createServer } from '../src/api/routes.js';
+import { MemoryDecayScheduler } from '../src/memory/decay-scheduler.js';
 import { decodeEmbedding } from '../src/utils/math.js';
 import { LLMExtractorPipeline } from '../src/graphrag/llm-pipeline.js';
 import { E5_LARGE_USAGE_PROFILE, embeddingProfileFingerprint } from '../src/embedding/profiles.js';
@@ -58,7 +59,10 @@ beforeAll(async () => {
   db = initDatabase({ dbPath: ':memory:' });
   await db.runMigrations();
   await db.rebuildAllEmbeddings(testEmbeddingService as any);
-  server = createServer(db, undefined, testEmbeddingService as any);
+  // This file verifies HTTP route behavior, not the independent background
+  // decay scheduler. Keep its 10-second startup pass out of smoke-test timing.
+  const decayScheduler = new MemoryDecayScheduler(db, { autoStart: false });
+  server = createServer(db, undefined, testEmbeddingService as any, decayScheduler);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const port = (server.address() as AddressInfo).port;
   baseUrl = `http://127.0.0.1:${port}`;
@@ -188,6 +192,56 @@ describe('API smoke: MCP usage log', () => {
     expect(latest.query).toContain('MCP Usage Trace Entity');
     expect(latest.success).toBe(true);
     expect(latest.matchedEntities.some((e: any) => e.name === 'MCP Usage Trace Entity')).toBe(true);
+  });
+
+  it('returns an MCP mutation before local behavior telemetry settles', async () => {
+    let releaseTelemetry!: () => void;
+    const blockedTelemetry = new Promise<string>((resolve) => {
+      releaseTelemetry = resolve;
+    });
+    const telemetry = vi.spyOn(db, 'recordBehaviorEvent').mockReturnValue(blockedTelemetry);
+    const responsePromise = request('POST', '/api/mcp/tool/save_decision', {
+      arguments: {
+        situation: 'fixture response latency',
+        conclusion: 'fixture decision persists before telemetry',
+      },
+    });
+
+    try {
+      const response = await Promise.race([
+        responsePromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2_000)),
+      ]);
+      expect(response).not.toBeNull();
+      expect(response && response.status).toBe(200);
+      expect(response && response.body.id).toMatch(/^[0-9a-f-]{36}$/i);
+    } finally {
+      releaseTelemetry();
+      telemetry.mockRestore();
+      await responsePromise;
+    }
+  });
+
+  it('does not hold an explicit decision open on a cold embedding runtime', async () => {
+    const embedding = vi.spyOn(testEmbeddingService, 'embed').mockImplementation(
+      () => new Promise(() => { /* controlled cold-start stall */ }),
+    );
+    try {
+      const response = await Promise.race([
+        request('POST', '/api/mcp/tool/save_decision', {
+          arguments: {
+            situation: 'bounded embedding fixture',
+            conclusion: 'decision persists without waiting for optional vectors',
+          },
+        }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5_000)),
+      ]);
+      expect(response).not.toBeNull();
+      expect(response && response.status).toBe(200);
+      expect(response && response.body.id).toMatch(/^[0-9a-f-]{36}$/i);
+    } finally {
+      embedding.mockRestore();
+    }
   });
 });
 
@@ -709,7 +763,7 @@ describe('API smoke: admin export', () => {
     expect(status).toBe(200);
     expect(body).toMatchObject({
       version: 2,
-      schemaVersion: 30,
+      schemaVersion: 31,
       appVersion: '0.1.1',
       exportedAt: expect.any(String),
       entities: expect.any(Array),

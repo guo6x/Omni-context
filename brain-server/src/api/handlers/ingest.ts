@@ -1,5 +1,6 @@
 import http from 'http';
-import { RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
+import { HttpError, RequestContext, parseBody, sendResponse, sendError } from '../routes.js';
+import type { ImportJobReceipt } from '../../db/sqlite.js';
 import { OCRPipeline } from '../../ocr/pipeline.js';
 import { resolveConflicts } from '../../graphrag/conflict-resolver.js';
 import { resolveEntities } from '../../graphrag/entity-resolver.js';
@@ -161,7 +162,7 @@ async function extractTextFromPdf(buffer: Buffer): Promise<string> {
 // --- Async Job Store ---
 
 type JobStatus = 'queued' | 'running' | 'success' | 'partial' | 'failed' | 'cancelled';
-type JobStage = 'parsing' | 'ocr' | 'extracting' | 'resolving' | 'storing' | 'done';
+type JobStage = 'parsing' | 'ocr' | 'extracting' | 'resolving' | 'storing' | 'done' | 'receipt_unavailable';
 
 interface JobState {
   jobId: string;
@@ -175,6 +176,7 @@ interface JobState {
     entities: number;
     relationships: number;
     principles: number;
+      failure_count?: number;
     archivalId: string;
     summary: string;
     documentId?: string;
@@ -215,21 +217,74 @@ const JOB_TTL_MS = 5 * 60 * 1000; // 5 minutes after completion
 
 const jobStore = new Map<string, JobState>();
 
-function createJob(filename: string): JobState {
+function receiptFromJob(job: JobState): ImportJobReceipt {
+  const chunking = job.result?.chunking;
+  const chunkFailures = job.retryProgress?.failed ?? chunking?.failedChunks.length ?? 0;
+  const failures = job.result?.failure_count ?? (job.retryProgress
+    ? job.retryProgress.failed
+    : (job.result?.failed_conversations?.length ?? 0)
+      + (job.result?.conflict_failures?.length ?? 0)
+      + chunkFailures);
+  const hasResult = Boolean(job.result || job.retryProgress);
+
+  return {
+    job_id: job.jobId,
+    status: job.status,
+    stage: job.stage,
+    created_at: job.createdAt,
+    completed_at: job.completedAt,
+    import_progress: job.importProgress ? { ...job.importProgress } : undefined,
+    retry_progress: job.retryProgress ? {
+      done: job.retryProgress.done,
+      total: job.retryProgress.total,
+      recovered: job.retryProgress.recovered,
+      failed: job.retryProgress.failed,
+      coverage: job.retryProgress.coverage,
+    } : undefined,
+    result: hasResult ? {
+      entities: job.result?.entities ?? job.importProgress?.entities ?? 0,
+      relationships: job.result?.relationships ?? 0,
+      principles: job.result?.principles ?? 0,
+      failure_count: failures,
+      ...(chunking ? {
+        chunk_total: chunking.totalChunks,
+        chunk_processed: chunking.processedChunks,
+        chunk_failures: chunkFailures,
+        chunk_coverage: chunking.coverage,
+      } : {}),
+    } : undefined,
+    error_code: job.status === 'failed' ? 'job_failed' : undefined,
+    updated_at: Date.now(),
+  };
+}
+
+async function createJob(filename: string, db: RequestContext['db']): Promise<JobState> {
+  const job = createJobInMemory(filename);
+  try {
+    await db.saveImportJobReceipt(receiptFromJob(job));
+    return job;
+  } catch {
+    jobStore.delete(job.jobId);
+    throw new Error('Could not safely start the import task');
+  }
+}
+
+function createJobInMemory(filename: string): JobState {
   // Capacity protection: remove oldest completed/failed jobs first
   if (jobStore.size >= MAX_JOBS) {
     const entries = [...jobStore.entries()]
       .sort((a, b) => (a[1].completedAt || a[1].createdAt) - (b[1].completedAt || b[1].createdAt));
     for (const [id, job] of entries) {
-      if (job.status === 'success' || job.status === 'failed' || job.status === 'cancelled') {
+      if (job.status === 'success' || job.status === 'partial' || job.status === 'failed' || job.status === 'cancelled') {
         jobStore.delete(id);
         if (jobStore.size < MAX_JOBS) break;
       }
     }
-    // If still over, remove oldest running/queued
-    for (const [id] of entries) {
-      jobStore.delete(id);
-      if (jobStore.size < MAX_JOBS) break;
+    // Never evict active work: the pipeline checkpoints through this map and
+    // losing an active entry can cancel a write or make a live job look like
+    // an app-restart interruption. Back-pressure the caller instead.
+    if (jobStore.size >= MAX_JOBS) {
+      throw new HttpError(429, 'Too many active import tasks. Wait for a task to finish before starting another.');
     }
   }
 
@@ -244,17 +299,80 @@ function createJob(filename: string): JobState {
   return job;
 }
 
-function updateJob(jobId: string, updates: Partial<JobState>): void {
+async function updateJob(jobId: string, updates: Partial<JobState>, db: RequestContext['db']): Promise<void> {
   const job = jobStore.get(jobId);
-  if (job) Object.assign(job, updates);
+  if (!job) return;
+  Object.assign(job, updates);
+  try {
+    await db.saveImportJobReceipt(receiptFromJob(job));
+  } catch {
+    // Receipt persistence is best-effort after the task starts; never echo
+    // source data or database details into logs or the API response.
+    console.warn('[Ingest] Could not update the privacy-minimal job receipt');
+    if (updates.status === 'success' || updates.status === 'partial'
+      || updates.status === 'failed' || updates.status === 'cancelled') {
+      job.status = 'partial';
+      job.stage = 'receipt_unavailable';
+      job.error = 'The import finished, but its status could not be safely saved. Review your library before importing again.';
+    }
+  }
+}
+
+function responseFromReceipt(receipt: ImportJobReceipt) {
+  const interrupted = receipt.status === 'queued' || receipt.status === 'running'
+    || receipt.error_code === 'process_interrupted';
+  return {
+    jobId: receipt.job_id,
+    status: interrupted ? 'partial' : receipt.status,
+    stage: interrupted ? 'interrupted' : receipt.stage,
+    importProgress: receipt.import_progress,
+    retryProgress: receipt.retry_progress,
+    result: receipt.result ? {
+      entities: receipt.result.entities,
+      relationships: receipt.result.relationships,
+      principles: receipt.result.principles,
+      failure_count: receipt.result.failure_count,
+      summary: interrupted
+        ? 'This import was interrupted. Review your library before importing again.'
+        : receipt.result.failure_count > 0
+          ? 'Import completed with some items needing review.'
+          : receipt.status === 'success' ? 'Import completed.' : 'Import status restored.',
+      ...(receipt.result.chunk_total !== undefined ? {
+        chunking: {
+          totalChunks: receipt.result.chunk_total,
+          processedChunks: receipt.result.chunk_processed ?? 0,
+          failedCount: receipt.result.chunk_failures ?? 0,
+          coverage: receipt.result.chunk_coverage ?? 0,
+        },
+      } : {}),
+    } : interrupted ? {
+      summary: 'This import was interrupted. Review your library before importing again.',
+    } : undefined,
+    error: interrupted || receipt.error_code === 'process_interrupted'
+      ? 'This import was interrupted by an app restart. Review your library before importing again.'
+      : receipt.error_code === 'job_failed' ? 'Import failed. Review your library before retrying.' : undefined,
+  };
+}
+
+async function scheduleJob(jobId: string, db: RequestContext['db'], run: () => Promise<void>): Promise<void> {
+  setImmediate(() => {
+    void run().catch(async () => {
+      await updateJob(jobId, {
+        status: 'failed',
+        stage: 'done',
+        completedAt: Date.now(),
+        error: 'Import processing failed unexpectedly',
+      }, db);
+    });
+  });
 }
 
 function getJob(jobId: string): JobState | null {
   const job = jobStore.get(jobId);
   if (!job) return null;
 
-  // Cleanup: remove completed/cancelled jobs older than TTL
-  if ((job.status === 'success' || job.status === 'failed' || job.status === 'cancelled') && job.completedAt) {
+  // Cleanup: remove terminal jobs older than the in-memory TTL.
+  if ((job.status === 'success' || job.status === 'partial' || job.status === 'failed' || job.status === 'cancelled') && job.completedAt) {
     if (Date.now() - job.completedAt > JOB_TTL_MS) {
       jobStore.delete(jobId);
       return null;
@@ -266,12 +384,12 @@ function getJob(jobId: string): JobState | null {
 // --- Async Pipeline Runner ---
 
 async function runIngestPipeline(jobId: string, filename: string, contentType: string, base64: string, buffer: Buffer, ctx: RequestContext): Promise<void> {
-  const FAIL = (stage: JobStage, error: string) => {
-    updateJob(jobId, { status: 'failed', stage, completedAt: Date.now(), error });
+  const FAIL = async (stage: JobStage, error: string) => {
+    await updateJob(jobId, { status: 'failed', stage, completedAt: Date.now(), error }, ctx.db);
   };
 
-  const CANCEL = () => {
-    updateJob(jobId, { status: 'cancelled', stage: undefined, completedAt: Date.now() });
+  const CANCEL = async () => {
+    await updateJob(jobId, { status: 'cancelled', stage: undefined, completedAt: Date.now() }, ctx.db);
   };
 
   const CHECK_ABORT = (): boolean => {
@@ -283,7 +401,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
 
   // Stage: parsing
   if (CHECK_ABORT()) return CANCEL();
-  updateJob(jobId, { status: 'running', stage: 'parsing' });
+  await updateJob(jobId, { status: 'running', stage: 'parsing' }, ctx.db);
   let textContent = '';
   try {
     if (PDF_CONTENT_TYPES.has(contentType)) {
@@ -301,7 +419,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
       textContent = buffer.toString('utf-8');
     } else if (isImage) {
       // Stage: ocr
-      updateJob(jobId, { stage: 'ocr' });
+      await updateJob(jobId, { stage: 'ocr' }, ctx.db);
       const ocr = new OCRPipeline();
       try {
         const dataUrl = `data:${contentType};base64,${base64}`;
@@ -356,7 +474,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
 
   // Stage: extracting (LLM)
   if (CHECK_ABORT()) return CANCEL();
-  updateJob(jobId, { stage: 'extracting' });
+  await updateJob(jobId, { stage: 'extracting' }, ctx.db);
   let extractResult;
   try {
     extractResult = await ctx.extractor.extract({
@@ -435,7 +553,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
 
   // Stage: resolving
   if (CHECK_ABORT()) return CANCEL();
-  updateJob(jobId, { stage: 'resolving' });
+  await updateJob(jobId, { stage: 'resolving' }, ctx.db);
   const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
 
   for (const entity of resolution.entitiesToCreate) {
@@ -472,7 +590,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
 
   // Stage: storing
   if (CHECK_ABORT()) return CANCEL();
-  updateJob(jobId, { stage: 'storing' });
+  await updateJob(jobId, { stage: 'storing' }, ctx.db);
 
   // Principles
   const principleNow = new Date().toISOString();
@@ -526,7 +644,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
   const summary = await ctx.extractor.summarizeEntities(extractResult.entities);
 
   // Done
-  updateJob(jobId, {
+  await updateJob(jobId, {
     status: 'success',
     stage: 'done',
     completedAt: Date.now(),
@@ -550,7 +668,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
       } : undefined,
       preprocess: preprocessMeta || undefined,
     },
-  });
+  }, ctx.db);
 }
 
 // 导入：把解析好的对话逐段喂抽取管线。把会话原始时间写进 created_at（历史也能时间召回），
@@ -565,25 +683,36 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
       [`%"import_batch_id":"${importBatchId}"%`]
     );
     if (existing && existing.count > 0) {
-      updateJob(jobId, {
+      await updateJob(jobId, {
         status: 'success', stage: 'done', completedAt: Date.now(),
         importProgress: { done: conversations.length, total: conversations.length, entities: 0 },
         result: { entities: 0, relationships: 0, principles: 0, archivalId: '', summary: `Batch ${importBatchId} already imported (idempotent skip)` },
-      });
+      }, ctx.db);
       return;
     }
   } catch (err) {
     console.warn('[Import] idempotency check failed, proceeding:', err);
   }
 
-  updateJob(jobId, { status: 'running', stage: 'extracting', importProgress: { done: 0, total: conversations.length, entities: 0 } });
+  await updateJob(jobId, { status: 'running', stage: 'extracting', importProgress: { done: 0, total: conversations.length, entities: 0 } }, ctx.db);
   let done = 0;
   let entityCount = 0;
+  let relationshipCount = 0;
+  const savedEntityIds = new Set<string>();
+  const recordSavedEntity = (entity: Entity): void => {
+    savedEntityIds.add(entity.id);
+    entityCount = savedEntityIds.size;
+  };
+  // This initial-import runner owns its write boundaries and has no outer
+  // transaction. Keep the resolver's other callers' transaction semantics intact.
+  const persistEntity = (entity: Entity): Promise<Entity> =>
+    ctx.db.withTransaction(() => ctx.db.addEntity(entity));
+  const resolutionOptions = { persistEntity, onEntityPersisted: recordSavedEntity };
   const failedConversations: Array<{ title: string; error: string }> = [];
   const conflictFailures: Array<{ title: string; error: string }> = [];
   for (const conv of conversations) {
     const job = jobStore.get(jobId);
-    if (!job || job.aborted) { updateJob(jobId, { status: 'cancelled', completedAt: Date.now() }); return; }
+    if (!job || job.aborted) { await updateJob(jobId, { status: 'cancelled', completedAt: Date.now() }, ctx.db); return; }
     if (conv.text && conv.text.trim().length >= 10) {
       try {
         const documentId = `${jobId}:${done}`;
@@ -604,13 +733,18 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
           document_id: documentId,
           original_timestamp: conv.time,
         };
-        const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
-        for (const e of resolution.entitiesToCreate) {
+        const decorateImportedEntity = (e: Entity): void => {
           if (conv.time) e.created_at = conv.time;
           e.tags = Array.from(new Set([...(e.tags || []), 'imported', `import:${platform}`]));
-          e.metadata = { ...(e.metadata || {}), provenance: prov };
-          await ctx.db.addEntity(e);
-          entityCount++;
+          e.metadata = { ...(e.metadata || {}), provenance: { ...(e.metadata?.provenance || {}), ...prov } };
+        };
+        // Resolution can persist review candidates itself, so provenance must be
+        // attached before entering it, not only to its returned planned creates.
+        for (const entity of extractResult.entities) decorateImportedEntity(entity);
+        const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService, resolutionOptions);
+        for (const e of resolution.entitiesToCreate) {
+          decorateImportedEntity(e);
+          recordSavedEntity(await persistEntity(e));
         }
         for (const u of resolution.entitiesToUpdate) {
           await ctx.db.updateEntity(u.id, { description: u.description, tags: u.tags, embedding: u.embedding, metadata: u.metadata, created_at: u.created_at, access_count: u.access_count });
@@ -620,7 +754,12 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
           r.provenance = { ...(r.provenance || {}), ...prov };
         }
         try {
-          await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+          // Each relationship commits independently. Count only completed writes,
+          // retaining earlier commits if a later relationship fails and rolls back.
+          for (const relationship of resolution.relationshipsToCreate) {
+            const saved = await resolveConflicts([relationship], ctx.db, ctx.extractor);
+            relationshipCount += saved.length;
+          }
         } catch (err) {
           // Conflict resolution failure is a real failure — record it, do not silently continue.
           const errMsg = err instanceof Error ? err.message : String(err);
@@ -664,8 +803,9 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
             tags: ['imported', `import:${platform}`, p.type],
             metadata: { isCore: false, principleType: p.type, provenance: prov },
           };
-          const pr = await resolveEntities([pe], [], ctx.db, ctx.embeddingService);
-          for (const e of pr.entitiesToCreate) { await ctx.db.addEntity(e); entityCount++; }
+          decorateImportedEntity(pe);
+          const pr = await resolveEntities([pe], [], ctx.db, ctx.embeddingService, resolutionOptions);
+          for (const e of pr.entitiesToCreate) { recordSavedEntity(await persistEntity(e)); }
         }
       } catch (err: any) {
         const errMsg = err?.message || String(err);
@@ -693,7 +833,7 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
       }
     }
     done++;
-    updateJob(jobId, { importProgress: { done, total: conversations.length, entities: entityCount } });
+    await updateJob(jobId, { importProgress: { done, total: conversations.length, entities: entityCount } }, ctx.db);
   }
   // Job status accurately distinguishes success/partial/failed.
   const totalFailures = failedConversations.length + conflictFailures.length;
@@ -702,16 +842,17 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
     : totalFailures < conversations.length
       ? 'partial'
       : 'failed';
-  updateJob(jobId, {
+  await updateJob(jobId, {
     status: finalStatus, stage: 'done', completedAt: Date.now(),
     importProgress: { done, total: conversations.length, entities: entityCount },
     result: {
-      entities: entityCount, relationships: 0, principles: 0, archivalId: '',
+      entities: entityCount, relationships: relationshipCount, principles: 0, archivalId: '',
+      failure_count: totalFailures,
       summary: `Imported ${done - totalFailures}/${conversations.length} conversations`,
       failed_conversations: failedConversations,
       conflict_failures: conflictFailures,
     },
-  });
+  }, ctx.db);
 }
 
 // Task 5: Retry persisted chat-import failures from the failed_tasks table.
@@ -722,17 +863,26 @@ async function runFailedImportRetry(jobId: string, batchId: string, ctx: Request
   const total = tasks.length;
   let recovered = 0;
   let stillFailing = 0;
+  let entityCount = 0;
+  let relationshipCount = 0;
+  const savedEntityIds = new Set<string>();
+  const recordSavedEntity = (entity: Entity): void => {
+    savedEntityIds.add(entity.id);
+    entityCount = savedEntityIds.size;
+  };
+  const persistEntity = (entity: Entity): Promise<Entity> =>
+    ctx.db.withTransaction(() => ctx.db.addEntity(entity));
 
-  updateJob(jobId, {
+  await updateJob(jobId, {
     status: 'running',
     stage: 'extracting',
-    importProgress: { done: 0, total, entities: 0 },
-  });
+    importProgress: { done: 0, total, entities: entityCount },
+  }, ctx.db);
 
   for (const [index, task] of tasks.entries()) {
     const job = jobStore.get(jobId);
     if (!job || job.aborted) {
-      updateJob(jobId, { status: 'cancelled', completedAt: Date.now() });
+      await updateJob(jobId, { status: 'cancelled', completedAt: Date.now() }, ctx.db);
       return;
     }
 
@@ -772,12 +922,27 @@ async function runFailedImportRetry(jobId: string, batchId: string, ctx: Request
         retry_of: task.task_id,
       };
 
-      const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
+      const decorateImportedEntity = (entity: Entity): void => {
+        if (convTime) entity.created_at = convTime;
+        entity.tags = Array.from(new Set([...(entity.tags || []), 'imported', `import:${platform}`, 'retry']));
+        entity.metadata = {
+          ...(entity.metadata || {}),
+          provenance: { ...(entity.metadata?.provenance || {}), ...prov },
+        };
+      };
+      // The resolver can persist manual-review candidates internally. Attach
+      // provenance before resolution so those records are source-verifiable.
+      for (const entity of extractResult.entities) decorateImportedEntity(entity);
+      const resolution = await resolveEntities(
+        extractResult.entities,
+        extractResult.relationships,
+        ctx.db,
+        ctx.embeddingService,
+        { persistEntity, onEntityPersisted: recordSavedEntity },
+      );
       for (const e of resolution.entitiesToCreate) {
-        if (convTime) e.created_at = convTime;
-        e.tags = Array.from(new Set([...(e.tags || []), 'imported', `import:${platform}`, 'retry']));
-        e.metadata = { ...(e.metadata || {}), provenance: prov };
-        await ctx.db.addEntity(e);
+        decorateImportedEntity(e);
+        recordSavedEntity(await persistEntity(e));
       }
       for (const u of resolution.entitiesToUpdate) {
         await ctx.db.updateEntity(u.id, { description: u.description, tags: u.tags, embedding: u.embedding, metadata: u.metadata, created_at: u.created_at, access_count: u.access_count });
@@ -788,13 +953,17 @@ async function runFailedImportRetry(jobId: string, batchId: string, ctx: Request
           r.provenance = { ...(r.provenance || {}), ...prov };
         }
         try {
-          await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+          // Keep earlier committed relationships in the retry receipt if a later
+          // relationship in the same conversation fails.
+          for (const relationship of resolution.relationshipsToCreate) {
+            relationshipCount += (await resolveConflicts([relationship], ctx.db, ctx.extractor)).length;
+          }
         } catch (err) {
           // Conflict resolution still failing — keep the task as pending for another attempt.
           const errMsg = err instanceof Error ? err.message : String(err);
           await ctx.db.updateFailedTaskStatus(task.task_id, 'pending', `retry ${task.attempts + 1}: ${errMsg}`);
           stillFailing++;
-          updateJob(jobId, { importProgress: { done: index + 1, total, entities: 0 } });
+          await updateJob(jobId, { importProgress: { done: index + 1, total, entities: entityCount } }, ctx.db);
           continue;
         }
       }
@@ -820,23 +989,24 @@ async function runFailedImportRetry(jobId: string, batchId: string, ctx: Request
       console.error(`[Import-Retry] task ${task.task_id} still failing:`, errMsg);
     }
 
-    updateJob(jobId, { importProgress: { done: index + 1, total, entities: 0 } });
+    await updateJob(jobId, { importProgress: { done: index + 1, total, entities: entityCount } }, ctx.db);
   }
 
   const finalStatus = stillFailing === 0 ? 'success' : stillFailing < total ? 'partial' : 'failed';
-  updateJob(jobId, {
+  await updateJob(jobId, {
     status: finalStatus,
     stage: 'done',
     completedAt: Date.now(),
-    importProgress: { done: total, total, entities: 0 },
+    importProgress: { done: total, total, entities: entityCount },
     result: {
-      entities: 0,
-      relationships: 0,
+      entities: entityCount,
+      relationships: relationshipCount,
       principles: 0,
+      failure_count: stillFailing,
       archivalId: '',
       summary: `Retry: ${recovered}/${total} recovered, ${stillFailing} still failing`,
     },
-  });
+  }, ctx.db);
 }
 
 interface StoredChunk {
@@ -861,16 +1031,16 @@ async function runFailedChunkRetry(jobId: string, documentId: string, ctx: Reque
   );
   let recovered = 0;
   let failed = 0;
-  updateJob(jobId, {
+  await updateJob(jobId, {
     status: 'running',
     stage: 'extracting',
     retryProgress: { documentId, done: 0, total: chunks.length, recovered, failed, coverage: 0 },
-  });
+  }, ctx.db);
 
   for (const [index, chunk] of chunks.entries()) {
     const job = jobStore.get(jobId);
     if (!job || job.aborted) {
-      updateJob(jobId, { status: 'cancelled', completedAt: Date.now() });
+      await updateJob(jobId, { status: 'cancelled', completedAt: Date.now() }, ctx.db);
       return;
     }
     const now = new Date().toISOString();
@@ -999,11 +1169,32 @@ async function runFailedChunkRetry(jobId: string, documentId: string, ctx: Reque
        WHERE id = ?`,
       [processed?.count || 0, remainingFailed?.count || 0, coverage, status, now, documentId]
     );
-    updateJob(jobId, {
+    await updateJob(jobId, {
       retryProgress: { documentId, done: index + 1, total: chunks.length, recovered, failed, coverage },
-    });
+    }, ctx.db);
   }
-  updateJob(jobId, { status: 'success', stage: 'done', completedAt: Date.now() });
+  const finalStatus = failed === 0 ? 'success' : recovered > 0 ? 'partial' : 'failed';
+  const finalCoverage = jobStore.get(jobId)?.retryProgress?.coverage ?? 0;
+  await updateJob(jobId, {
+    status: finalStatus,
+    stage: 'done',
+    completedAt: Date.now(),
+    result: {
+      entities: 0,
+      relationships: 0,
+      principles: 0,
+      failure_count: failed,
+      archivalId: '',
+      summary: `Retry: ${recovered}/${chunks.length} chunks recovered, ${failed} still failing`,
+      chunking: {
+        totalChunks: chunks.length,
+        processedChunks: recovered,
+        failedChunks: [],
+        coverage: finalCoverage,
+        truncated: false,
+      },
+    },
+  }, ctx.db);
 }
 
 export const handleIngestRoutes = [
@@ -1035,12 +1226,8 @@ export const handleIngestRoutes = [
       if (buffer.length === 0) return sendError(res, 400, 'Decoded file is empty');
       if (buffer.length > MAX_INGEST_BYTES) return sendError(res, 413, `File too large. Limit is ${MAX_INGEST_BYTES} bytes`);
 
-      const job = createJob(filename);
-
-      // Fire-and-forget async pipeline
-      setImmediate(() => {
-        runIngestPipeline(job.jobId, filename, contentType, base64, buffer, ctx);
-      });
+      const job = await createJob(filename, ctx.db);
+      await scheduleJob(job.jobId, ctx.db, () => runIngestPipeline(job.jobId, filename, contentType, base64, buffer, ctx));
 
       sendResponse(res, 200, { jobId: job.jobId, status: job.status, filename: job.filename });
     },
@@ -1048,7 +1235,7 @@ export const handleIngestRoutes = [
   {
     method: 'POST' as const,
     path: '/api/ingest/job/:jobId/cancel',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, _ctx: RequestContext, params: Record<string, string>) => {
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
       const jobId = params.jobId;
       if (!jobId) return sendError(res, 400, 'jobId is required');
 
@@ -1060,29 +1247,50 @@ export const handleIngestRoutes = [
       }
 
       job.aborted = true;
+      await updateJob(jobId, {}, ctx.db);
       sendResponse(res, 200, { jobId, status: 'cancelling' });
     },
   },
   {
     method: 'GET' as const,
     path: '/api/ingest/job/:jobId',
-    handler: async (req: http.IncomingMessage, res: http.ServerResponse, _ctx: RequestContext, params: Record<string, string>) => {
+    handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
       const jobId = params.jobId;
       if (!jobId) return sendError(res, 400, 'jobId is required');
 
       const job = getJob(jobId);
-      if (!job) return sendError(res, 404, 'Job not found or expired');
+      if (job) {
+        sendResponse(res, 200, {
+          jobId: job.jobId,
+          status: job.status,
+          stage: job.stage,
+          filename: job.filename,
+          result: job.result,
+          importProgress: job.importProgress,
+          retryProgress: job.retryProgress,
+          error: job.error,
+        });
+        return;
+      }
 
-      sendResponse(res, 200, {
-        jobId: job.jobId,
-        status: job.status,
-        stage: job.stage,
-        filename: job.filename,
-        result: job.result,
-        importProgress: job.importProgress,
-        retryProgress: job.retryProgress,
-        error: job.error,
-      });
+      let receipt = await ctx.db.getImportJobReceipt(jobId);
+      if (!receipt || Date.now() - receipt.updated_at > 30 * 24 * 60 * 60 * 1000) {
+        return sendError(res, 404, 'Job not found or expired');
+      }
+
+      if (receipt.status === 'queued' || receipt.status === 'running') {
+        receipt = {
+          ...receipt,
+          status: 'partial',
+          stage: 'interrupted',
+          completed_at: Date.now(),
+          error_code: 'process_interrupted',
+          updated_at: Date.now(),
+        };
+        await ctx.db.saveImportJobReceipt(receipt);
+      }
+
+      sendResponse(res, 200, responseFromReceipt(receipt));
     },
   },
   {
@@ -1100,8 +1308,8 @@ export const handleIngestRoutes = [
         [documentId]
       );
       if (!failed?.count) return sendResponse(res, 200, { documentId, retried: 0, status: 'already_complete' });
-      const job = createJob(`retry:${document.source}`);
-      setImmediate(() => runFailedChunkRetry(job.jobId, documentId, ctx));
+      const job = await createJob(`retry:${document.source}`, ctx.db);
+      await scheduleJob(job.jobId, ctx.db, () => runFailedChunkRetry(job.jobId, documentId, ctx));
       sendResponse(res, 202, { jobId: job.jobId, documentId, retrying: failed.count });
     },
   },
@@ -1129,8 +1337,8 @@ export const handleIngestRoutes = [
         : Math.min(convs.length, 5000);
       const capped = convs.slice(0, cap);
 
-      const job = createJob(`import:${parsed.platform}`);
-      setImmediate(() => runImportPipeline(job.jobId, capped, parsed.platform, ctx));
+      const job = await createJob(`import:${parsed.platform}`, ctx.db);
+      await scheduleJob(job.jobId, ctx.db, () => runImportPipeline(job.jobId, capped, parsed.platform, ctx));
       sendResponse(res, 200, { jobId: job.jobId, platform: parsed.platform, parsed: convs.length, importing: capped.length });
     },
   },
@@ -1172,8 +1380,8 @@ export const handleIngestRoutes = [
       if (pending.length === 0) {
         return sendResponse(res, 200, { batchId, retried: 0, status: 'no_pending_failures' });
       }
-      const job = createJob(`import-retry:${batchId}`);
-      setImmediate(() => runFailedImportRetry(job.jobId, batchId, ctx));
+      const job = await createJob(`import-retry:${batchId}`, ctx.db);
+      await scheduleJob(job.jobId, ctx.db, () => runFailedImportRetry(job.jobId, batchId, ctx));
       sendResponse(res, 202, { jobId: job.jobId, batchId, retrying: pending.length });
     },
   },

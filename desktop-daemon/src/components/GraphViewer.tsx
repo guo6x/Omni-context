@@ -125,6 +125,29 @@ function getLinkEndpointId(endpoint: any): string {
   return typeof endpoint === "object" ? String(endpoint.id || "") : String(endpoint);
 }
 
+interface DiscussionSession {
+  id: string | null;
+  saveTail: Promise<void>;
+}
+
+// Discussion history is a best-effort receipt.  It must never keep an
+// explicit user-authorized mutation (for example save_decision) pending
+// forever when Brain is restarting or SQLite is recovering a WAL.  Keep this
+// bound longer than the normal local round-trip, but short enough that the
+// next explicit action can make progress in the same interaction.
+const DISCUSSION_SAVE_TIMEOUT_MS = 8_000;
+
+function createDiscussionSession(id: string | null = null): DiscussionSession {
+  return { id, saveTail: Promise.resolve() };
+}
+
+type AnswerSource = { id: string; name: string; type: string; description?: string };
+type SourcePreview = {
+  source: AnswerSource;
+  entity: Entity | null;
+  status: 'loading' | 'ready' | 'missing' | 'credentials' | 'identity' | 'error';
+};
+
 
 interface GraphViewer3DProps {
   entities: Entity[];
@@ -132,6 +155,7 @@ interface GraphViewer3DProps {
   onDataChanged?: () => void;
   focusEntityId?: string;
   onFocusEntityReset?: () => void;
+  askRequest?: { id: number; question: string };
 }
 
 export default function GraphViewer3D({ 
@@ -139,9 +163,10 @@ export default function GraphViewer3D({
   relationships, 
   onDataChanged,
   focusEntityId,
-  onFocusEntityReset
+  onFocusEntityReset,
+  askRequest,
 }: GraphViewer3DProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const toast = useToast();
 
   const { settings } = useSettings();
@@ -191,9 +216,26 @@ export default function GraphViewer3D({
   const [followInput, setFollowInput] = useState("");
   // 答案卡每一轮的完整结构：多轮追问时每轮都保留自己的结论/依据/引用，
   // 历史轮和当前轮用同一套富文本渲染，不再把旧轮降级成灰色折叠块
-  type AnswerTurn = { question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: Array<{ id: string; name: string; type: string; description?: string }>; citedEntityIds: string[]; savedAsDecision?: boolean; favorited?: boolean };
+  type AnswerTurn = { question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: AnswerSource[]; citedEntityIds: string[]; savedAsDecision?: boolean; favorited?: boolean };
   const [gAnswer, setGAnswer] = useState<{ turns: AnswerTurn[] } | null>(null);
   const [gLoading, setGLoading] = useState(false);
+  const answerRequestRef = useRef<{ id: number; controller: AbortController } | null>(null);
+  const answerRequestIdRef = useRef(0);
+  const historyRequestRef = useRef<AbortController | null>(null);
+  // IDs and pending saves belong to one discussion, never to whichever view is current later.
+  // Serialize saves within that discussion so a fast follow-up cannot create duplicate rows.
+  const discussionRef = useRef<DiscussionSession>(createDiscussionSession());
+  const lastDecisionIdRef = useRef<string | null>(null);
+  // Saving a decision must not tear down the active Ask panel before the user
+  // can continue the decision chain. Refresh the graph when that discussion is
+  // explicitly closed (or replaced), after the follow-up composer is no longer
+  // needed.
+  const pendingGraphRefreshRef = useRef<DiscussionSession | null>(null);
+  const [sourcePreview, setSourcePreview] = useState<SourcePreview | null>(null);
+  const sourceRequestRef = useRef<AbortController | null>(null);
+  const sourceTriggerRef = useRef<HTMLElement | null>(null);
+  const sourceDialogRef = useRef<HTMLDivElement | null>(null);
+  const sourceCloseRef = useRef<HTMLButtonElement | null>(null);
   // 追问加载时立刻显示用户刚问的这句（答案回来前先占位），更像正常聊天
   const [gPendingQ, setGPendingQ] = useState<string | null>(null);
   const [gSaving, setGSaving] = useState(false);
@@ -205,14 +247,70 @@ export default function GraphViewer3D({
   const [cmdFocused, setCmdFocused] = useState(false);
   const cmdInputRef = useRef<HTMLInputElement>(null);
   const answerScrollRef = useRef<HTMLDivElement>(null);
+  const closeSourcePreview = useCallback((restoreFocus = true) => {
+    sourceRequestRef.current?.abort();
+    sourceRequestRef.current = null;
+    setSourcePreview(null);
+    if (restoreFocus) {
+      const trigger = sourceTriggerRef.current;
+      requestAnimationFrame(() => { if (trigger?.isConnected) trigger.focus(); });
+    }
+  }, []);
+  const invalidateAnswerRequests = useCallback(() => {
+    answerRequestRef.current?.controller.abort();
+    answerRequestRef.current = null;
+    historyRequestRef.current?.abort();
+    historyRequestRef.current = null;
+    setGLoading(false);
+    setGPendingQ(null);
+  }, []);
+  const closeAnswer = useCallback(() => {
+    const session = discussionRef.current;
+    invalidateAnswerRequests();
+    closeSourcePreview(false);
+    if (pendingGraphRefreshRef.current === session) {
+      pendingGraphRefreshRef.current = null;
+      onDataChanged?.();
+    } else {
+      // A late save from an older discussion must never refresh a newer one.
+      pendingGraphRefreshRef.current = null;
+    }
+    discussionRef.current = createDiscussionSession();
+    lastDecisionIdRef.current = null;
+    setGSaving(false);
+    setGAnswer(null);
+    setCmdInput("");
+    setFollowInput("");
+    setSelectedNode(null);
+  }, [invalidateAnswerRequests, closeSourcePreview, onDataChanged]);
+  // 导入后只准备问题并聚焦，由用户决定何时发送，不自动调用推理服务。
+  useEffect(() => {
+    if (!askRequest) return;
+    closeAnswer();
+    setCmdInput(askRequest.question);
+    const frame = requestAnimationFrame(() => cmdInputRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+    // `closeAnswer` is intentionally omitted: its callback identity can change
+    // when parent data-refresh props settle, but that must not close an active
+    // Ask/decision panel for the same imported request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askRequest?.id, askRequest?.question]);
+  useEffect(() => () => {
+    answerRequestRef.current?.controller.abort();
+    answerRequestRef.current = null;
+    historyRequestRef.current?.abort();
+    historyRequestRef.current = null;
+    sourceRequestRef.current?.abort();
+    sourceRequestRef.current = null;
+    discussionRef.current = createDiscussionSession();
+  }, []);
+  useEffect(() => { if (sourcePreview) sourceCloseRef.current?.focus(); }, [!!sourcePreview]);
   // 新一轮 / 开始思考时把答案卡滚到底，露出最新内容
   useEffect(() => {
     const el = answerScrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [gAnswer?.turns.length, gLoading]);
-  // 会话历史（可续聊）：sessionIdRef = 当前会话；lastDecisionIdRef = 决策链上一个决策（用 ref 避免异步 state 读取）
-  const sessionIdRef = useRef<string | null>(null);
-  const lastDecisionIdRef = useRef<string | null>(null);
+  // 会话历史（可续聊）；决策链只属于当前讨论。
   const [lineageRelation, setLineageRelation] = useState<'continues' | 'revises' | 'supersedes' | 'reverses' | 'invalidates' | 'none'>('continues');
   const [histOpen, setHistOpen] = useState(false);
   const [histItems, setHistItems] = useState<Array<{ id: string; title: string; updated_at: string; turns: number }>>([]);
@@ -608,27 +706,78 @@ export default function GraphViewer3D({
     [graphData.nodes, entities, handleNodeClick]
   );
 
-  // 会话自动保存（upsert 到 discussions，可续聊）。best-effort，失败不打扰用户。
-  const saveSession = useCallback(async (turns: AnswerTurn[]) => {
-    if (!turns.length) return;
+  // Read the exact cited entity, independent of graph caps/filters. Answer summaries are
+  // not a fallback for a missing or unauthenticated source record.
+  const inspectSource = useCallback(async (source: AnswerSource, trigger?: HTMLElement) => {
+    sourceRequestRef.current?.abort();
+    const controller = new AbortController();
+    sourceRequestRef.current = controller;
+    if (trigger) sourceTriggerRef.current = trigger;
+    setSourcePreview({ source, entity: null, status: 'loading' });
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const r = await apiFetch('/api/discussions', {
-        method: 'POST',
-        body: JSON.stringify({ id: sessionIdRef.current, title: (turns[0].question || '问大脑').slice(0, 80), turns }),
-      });
-      if (r.ok) { const d = await r.json().catch(() => null); if (d?.id) sessionIdRef.current = d.id; }
-    } catch { /* best effort */ }
+      const response = await apiFetch(`/api/entities/${encodeURIComponent(source.id)}`, { signal: controller.signal });
+      if (sourceRequestRef.current !== controller) return;
+      if (!response.ok) {
+        setSourcePreview({ source, entity: null, status: response.status === 404 ? 'missing' : response.status === 401 ? 'credentials' : 'error' });
+        return;
+      }
+      const data = await response.json();
+      if (sourceRequestRef.current !== controller) return;
+      const entity = data?.entity;
+      if (!entity || entity.id !== source.id || typeof entity.name !== 'string' || typeof entity.type !== 'string' || typeof entity.description !== 'string') {
+        setSourcePreview({ source, entity: null, status: 'identity' });
+        return;
+      }
+      setSourcePreview({ source, entity, status: 'ready' });
+    } catch {
+      if (sourceRequestRef.current === controller) setSourcePreview({ source, entity: null, status: 'error' });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }, []);
+
+  // 会话自动保存（upsert 到 discussions，可续聊）。best-effort，失败不打扰用户。
+  const saveSession = useCallback((turns: AnswerTurn[], session: DiscussionSession) => {
+    if (!turns.length) return;
+    session.saveTail = session.saveTail.then(async () => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), DISCUSSION_SAVE_TIMEOUT_MS);
+      try {
+        const r = await apiFetch('/api/discussions', {
+          method: 'POST',
+          signal: controller.signal,
+          body: JSON.stringify({ id: session.id, title: (turns[0].question || '问大脑').slice(0, 80), turns }),
+        });
+        if (r.ok) {
+          const d = await r.json().catch(() => null);
+          if (typeof d?.id === 'string' && (!session.id || session.id === d.id)) session.id = d.id;
+        }
+      } catch { /* best effort; a failed save must not poison the next save */ }
+      finally { window.clearTimeout(timeout); }
+    });
+    return session.saveTail;
   }, []);
 
   // 调 graph_answer 跑一轮（首问/追问共用）：右栏切答案卡并高亮命中子图。
   // priorTurns 是此前已答的各轮，新的一轮追加到末尾；发给后端时把每轮压平成
   // user/assistant 消息（依据也带上），让模型看得到之前的分析。
   const runAnswer = useCallback(async (question: string, priorTurns: AnswerTurn[]) => {
+    invalidateAnswerRequests();
+    closeSourcePreview(false);
+    if (priorTurns.length === 0) {
+      discussionRef.current = createDiscussionSession();
+      lastDecisionIdRef.current = null;
+      setGAnswer(null);
+    }
+    const session = discussionRef.current;
+    const request = { id: ++answerRequestIdRef.current, controller: new AbortController() };
+    answerRequestRef.current = request;
+    const isCurrent = () => answerRequestRef.current === request && discussionRef.current === session && !request.controller.signal.aborted;
     setGLoading(true);
     setGPendingQ(question);
     setSelectedNode(null);
     setSelectedNodeIds(new Set());
-    if (priorTurns.length === 0) { sessionIdRef.current = null; lastDecisionIdRef.current = null; } // 首问 = 新会话
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
     for (const tn of priorTurns) {
       messages.push({ role: 'user', content: tn.question });
@@ -640,15 +789,18 @@ export default function GraphViewer3D({
     try {
       const res = await apiFetch('/api/mcp/tool/graph_answer', {
         method: 'POST',
+        signal: request.controller.signal,
         body: JSON.stringify({ arguments: { messages } }),
       });
       if (!res.ok) {
         const body = await res.text();
+        if (!isCurrent()) return;
         const conclusion = res.status === 400 && body.includes('LLM') ? t('cmd.need_llm') : t('cmd.error');
         append({ question, conclusion, reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
         return;
       }
       const data = await res.json();
+      if (!isCurrent()) return;
       const newTurn: AnswerTurn = {
         question,
         conclusion: data.conclusion || '',
@@ -660,24 +812,41 @@ export default function GraphViewer3D({
       };
       const allTurns = [...priorTurns, newTurn];
       setGAnswer({ turns: allTurns });
-      saveSession(allTurns); // 续聊：每答完一轮就存，关掉不丢
+      saveSession(allTurns, session); // 已答内容仍可保存到原讨论，不能污染后来打开的讨论。
     } catch (e) {
-      append({ question, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
+      if (isCurrent()) append({ question, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
     } finally {
-      setGLoading(false);
-      setGPendingQ(null);
+      if (isCurrent()) {
+        answerRequestRef.current = null;
+        setGLoading(false);
+        setGPendingQ(null);
+      }
     }
-  }, [t, saveSession]);
+  }, [t, saveSession, invalidateAnswerRequests, closeSourcePreview]);
 
   // 决策：把当前答案存为决定。存完【不关闭】——决策常是连续多个，方便继续讨论/做下一个；
   // 同一会话里的后续决策通过 lineage fields 挂成决策链，关系由用户选择（非自动）。
   const saveDecision = useCallback(async () => {
+    const session = discussionRef.current;
     const turns = gAnswer?.turns ?? [];
     const idx = turns.length - 1;
     const turn = idx >= 0 ? turns[idx] : null;
-    if (!turn || gSaving) return;
+    if (!turn || gSaving || gLoading) return;
     setGSaving(true);
     try {
+      // A completed answer starts an asynchronous discussion upsert. Give the
+      // queued history write a short opportunity to settle so normal ordering
+      // is preserved, but keep the explicit user-authorized decision bounded:
+      // a stale renderer request must never leave the Save button spinning
+      // forever or prevent the decision mutation from being attempted.
+      let saveWaitTimer: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        session.saveTail,
+        new Promise<void>((resolve) => {
+          saveWaitTimer = setTimeout(resolve, DISCUSSION_SAVE_TIMEOUT_MS);
+        }),
+      ]);
+      if (saveWaitTimer !== undefined) clearTimeout(saveWaitTimer);
       // Task 9: Build per-evidence metadata with source_span, role, is_current.
       // Entities cited in turn.reasons → 'supporting' with source_span = reason text.
       // Entities in citedEntityIds but not in any reason → 'neutral'.
@@ -736,18 +905,23 @@ export default function GraphViewer3D({
       });
       if (!r.ok) throw new Error();
       const saved = await r.json().catch(() => null);
-      if (saved?.id) lastDecisionIdRef.current = saved.id; // 决策链：下一个决策承接它
       const nextTurns = turns.map((tn, i) => (i === idx ? { ...tn, savedAsDecision: true } : tn));
-      setGAnswer({ turns: nextTurns });
-      saveSession(nextTurns); // 把"已存决策"状态也持久化
-      toast.success(t('cmd.decision_saved'));
-      onDataChanged?.();
+      const isSessionCurrent = discussionRef.current === session;
+      if (isSessionCurrent) {
+        if (saved?.id) lastDecisionIdRef.current = saved.id;
+        setGAnswer({ turns: nextTurns });
+      }
+      saveSession(nextTurns, session); // 显式授权的决定已保存；仅更新其原讨论。
+      if (isSessionCurrent) {
+        toast.success(t('cmd.decision_saved'));
+        pendingGraphRefreshRef.current = session;
+      }
     } catch (e) {
-      toast.error(t('cmd.error'));
+      if (discussionRef.current === session) toast.error(t('cmd.error'));
     } finally {
-      setGSaving(false);
+      if (discussionRef.current === session) setGSaving(false);
     }
-  }, [gAnswer, gSaving, onDataChanged, saveSession, toast, t, lineageRelation, entities]);
+  }, [gAnswer, gSaving, gLoading, saveSession, toast, t, lineageRelation, entities]);
 
   // 历史会话：打开列表 / 载入一条续聊 / 删除
   const openHistory = useCallback(async () => {
@@ -758,20 +932,24 @@ export default function GraphViewer3D({
     } catch { /* */ }
   }, []);
   const loadDiscussion = useCallback(async (id: string) => {
+    closeAnswer();
+    setHistOpen(false);
+    setCmdFocused(false);
+    const session = createDiscussionSession(id);
+    discussionRef.current = session;
+    const controller = new AbortController();
+    historyRequestRef.current = controller;
     try {
-      const r = await apiFetch(`/api/discussions/${id}`);
+      const r = await apiFetch(`/api/discussions/${encodeURIComponent(id)}`, { signal: controller.signal });
       if (!r.ok) return;
       const d = await r.json();
+      if (historyRequestRef.current !== controller || discussionRef.current !== session || controller.signal.aborted || d?.id !== id) return;
       const turns: AnswerTurn[] = Array.isArray(d.turns) ? d.turns : [];
       if (!turns.length) return;
-      sessionIdRef.current = d.id;
-      lastDecisionIdRef.current = null;
-      setHistOpen(false);
-      setCmdFocused(false);
-      setSelectedNode(null);
       setGAnswer({ turns });
     } catch { /* */ }
-  }, []);
+    finally { if (historyRequestRef.current === controller) historyRequestRef.current = null; }
+  }, [closeAnswer]);
   const deleteDiscussion = useCallback(async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try { await apiFetch(`/api/discussions/${id}`, { method: 'DELETE' }); setHistItems((xs) => xs.filter((x) => x.id !== id)); }
@@ -828,16 +1006,16 @@ export default function GraphViewer3D({
 
   const submitCommand = useCallback(() => {
     const q = cmdInput.trim();
-    if (!q || gLoading) return;
+    if (!q || gLoading || gSaving) return;
     runAnswer(q, []);
-  }, [cmdInput, gLoading, runAnswer]);
+  }, [cmdInput, gLoading, gSaving, runAnswer]);
 
   const followUp = useCallback(() => {
     const q = followInput.trim();
-    if (!q || gLoading || !gAnswer) return;
+    if (!q || gLoading || gSaving || !gAnswer) return;
     setFollowInput("");
     runAnswer(q, gAnswer.turns);
-  }, [followInput, gLoading, gAnswer, runAnswer]);
+  }, [followInput, gLoading, gSaving, gAnswer, runAnswer]);
 
   useEffect(() => {
     if (focusEntityId) {
@@ -872,6 +1050,11 @@ export default function GraphViewer3D({
   // Ctrl/Cmd+K 聚焦命令栏；Esc 关闭答案卡 / 退出多选
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (sourcePreview) {
+        if (e.key === 'Escape') closeSourcePreview();
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') e.preventDefault();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         cmdInputRef.current?.focus();
@@ -879,13 +1062,13 @@ export default function GraphViewer3D({
       }
       if (e.key === 'Escape') {
         if (histOpen) { setHistOpen(false); return; }
-        if (gAnswer) { setGAnswer(null); setCmdInput(""); setFollowInput(""); setSelectedNode(null); return; }
+        if (gAnswer || gLoading || historyRequestRef.current) { closeAnswer(); return; }
         if (selectedNodeIds.size > 0) { setSelectedNodeIds(new Set()); setSelectedNode(null); }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedNodeIds.size, gAnswer, histOpen]);
+  }, [selectedNodeIds.size, gAnswer, gLoading, histOpen, sourcePreview, closeAnswer, closeSourcePreview]);
 
   // 进入编辑模式：把当前选中节点字段填到表单
   const enterEditMode = useCallback(() => {
@@ -1438,37 +1621,6 @@ export default function GraphViewer3D({
     `;
   }, [t, relativeTime]);
 
-  if (graphLoadError) {
-    return (
-      <div className="flex h-full items-center justify-center bg-[#0a0b12]">
-        <div className="text-center max-w-md px-6">
-          <div className="text-red-400 text-sm mb-2">{t('graph.load_engine_failed')}</div>
-          <p className="text-xs text-gray-400 mb-4">{t('graph.load_engine_detail')}</p>
-          <pre className="text-[10px] text-gray-500 bg-black/40 p-3 rounded text-left overflow-auto max-h-32">
-            {graphLoadError}
-          </pre>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-1.5 text-xs text-cyan-400 border border-cyan-800 rounded hover:bg-cyan-900/20"
-          >
-            {t('graph.reload_page')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!ForceGraph && entities.length > 0) {
-    return (
-      <div className="flex h-full items-center justify-center bg-[#0a0b12]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-cyan-400 mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">{t('graph.loading_engine')}</p>
-        </div>
-      </div>
-    );
-  }
-
   // 答案态高亮跟随"最新一轮"的命中子图
   const gLastTurn = gAnswer && gAnswer.turns.length > 0 ? gAnswer.turns[gAnswer.turns.length - 1] : null;
   const gCited = gLastTurn?.citedEntityIds ?? [];
@@ -1477,9 +1629,34 @@ export default function GraphViewer3D({
     <div className="flex h-full">
       {/* 图谱主区域 */}
       <div className="relative min-w-0 flex-1" ref={containerRef}>
+        {/* Keep the command bar and its input mounted while the optional graph engine loads. */}
+        {graphLoadError ? (
+          <div data-testid="graph-engine-error" role="alert" className="absolute inset-0 z-[6] flex items-center justify-center bg-[#0a0b12]/95 px-6">
+            <div className="max-w-md rounded-xl border border-red-500/20 bg-gray-950/95 p-5 text-center shadow-2xl">
+              <div className="mb-2 text-sm text-red-400">{t('graph.load_engine_failed')}</div>
+              <p className="mb-4 text-xs text-gray-400">{t('graph.load_engine_detail')}</p>
+              <pre className="max-h-32 overflow-auto rounded bg-black/40 p-3 text-left text-[10px] text-gray-500">
+                {graphLoadError}
+              </pre>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 rounded border border-cyan-800 px-4 py-1.5 text-xs text-cyan-400 hover:bg-cyan-900/20"
+              >
+                {t('graph.reload_page')}
+              </button>
+            </div>
+          </div>
+        ) : !ForceGraph && entities.length > 0 ? (
+          <div data-testid="graph-engine-loading" role="status" aria-live="polite" className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center bg-[#0a0b12]/70">
+            <div className="rounded-xl border border-white/10 bg-gray-950/90 px-5 py-4 text-center shadow-xl">
+              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-t-2 border-cyan-400" />
+              <p className="text-sm text-gray-300">{t('graph.loading_engine')}</p>
+            </div>
+          </div>
+        ) : null}
         {/* 控制栏 + 时间轴：统一放进 top 容器纵向堆叠，时间轴自然落在控制栏下方，
             不再用 top-[60px] 魔法数字，避免与摘要行重叠 */}
-        <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2">
+        <div className="absolute top-4 left-4 right-4 z-30 isolate flex flex-col gap-2">
         {/* 命令栏：问大脑 / 决策 / 找节点 的统一入口，回答出现在右栏答案卡 */}
         <div className="relative">
           <div className="flex items-center gap-2.5 rounded-xl border border-cyan-500/25 bg-gray-950/85 px-3.5 py-2.5 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm">
@@ -1494,15 +1671,16 @@ export default function GraphViewer3D({
               onBlur={() => setTimeout(() => setCmdFocused(false), 150)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitCommand(); } }}
               placeholder={t('cmd.placeholder')}
+              disabled={gSaving}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />
-            <button onClick={openHistory} title={t('cmd.history')} aria-label={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
+            <button data-testid="ask-history-button" onClick={openHistory} disabled={gSaving} title={t('cmd.history')} aria-label={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 disabled:opacity-30 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
               <History className="h-4 w-4" />
             </button>
             {gLoading ? (
               <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
             ) : (
-              <button onClick={submitCommand} disabled={!cmdInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')} aria-label={t('cmd.send')}>
+              <button onClick={submitCommand} disabled={!cmdInput.trim() || gSaving} data-testid="ask-primary-send" className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')} aria-label={t('cmd.send')}>
                 <Send className="h-4 w-4" />
               </button>
             )}
@@ -1531,7 +1709,7 @@ export default function GraphViewer3D({
                   {cmdExamples.map((ex, i) => (
                     <button
                       key={i}
-                      onMouseDown={(e) => { e.preventDefault(); if (gLoading) return; setCmdInput(ex); setCmdFocused(false); runAnswer(ex, []); }}
+                      onMouseDown={(e) => { e.preventDefault(); if (gLoading || gSaving) return; setCmdInput(ex); setCmdFocused(false); runAnswer(ex, []); }}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-gray-300 hover:bg-cyan-950/30 hover:text-cyan-100"
                     >
                       <Sparkles className="h-3.5 w-3.5 shrink-0 text-cyan-400/80" />
@@ -1681,7 +1859,7 @@ export default function GraphViewer3D({
             aria-labelledby="ask-first-title"
             className="pointer-events-none absolute inset-x-4 top-[56%] z-[5] flex -translate-y-1/2 justify-center"
           >
-            <div className="pointer-events-auto w-full max-w-2xl rounded-2xl border border-cyan-400/15 bg-gray-950/90 p-5 shadow-2xl shadow-black/40 backdrop-blur-md sm:p-7">
+            <div className="pointer-events-none w-full max-w-2xl rounded-2xl border border-cyan-400/15 bg-gray-950/90 p-5 shadow-2xl shadow-black/40 backdrop-blur-md sm:p-7">
               <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-cyan-300/80">
                 <Brain aria-hidden="true" className="h-4 w-4" />
                 <span>{t("nav.ask")}</span>
@@ -1700,7 +1878,7 @@ export default function GraphViewer3D({
                         setCmdInput(prompt);
                         cmdInputRef.current?.focus();
                       }}
-                      className="rounded-full border border-white/10 bg-white/[0.035] px-3.5 py-2 text-left text-xs text-gray-300 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/[0.06] hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                      className="pointer-events-auto rounded-full border border-white/10 bg-white/[0.035] px-3.5 py-2 text-left text-xs text-gray-300 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/[0.06] hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                     >
                       {prompt}
                     </button>
@@ -1822,7 +2000,7 @@ export default function GraphViewer3D({
         </div>
         )}
 
-        {graphData.nodes.length === 0 && entities.length > 0 && (
+        {ForceGraph && graphData.nodes.length === 0 && entities.length > 0 && (
           <div className="absolute inset-0 z-[9] flex items-center justify-center bg-[#0a0b12]/70 px-6">
             <div className="max-w-lg rounded-xl border border-cyan-500/20 bg-gray-950/85 p-6 text-center shadow-2xl shadow-cyan-950/30">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10">
@@ -2305,7 +2483,8 @@ export default function GraphViewer3D({
             <Brain className="h-4 w-4 text-cyan-300" />
             <h3 className="text-sm font-semibold text-cyan-300">{t('cmd.answer_title')}</h3>
             <button
-              onClick={() => { setGAnswer(null); setCmdInput(""); setFollowInput(""); setSelectedNode(null); }}
+              onClick={closeAnswer}
+              data-testid="ask-done-button"
               className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-200"
               title={t('cmd.done')}
             >
@@ -2317,7 +2496,12 @@ export default function GraphViewer3D({
             {gAnswer.turns.map((turn, ti) => {
               const isLast = ti === gAnswer.turns.length - 1;
               return (
-                <div key={ti} className={ti > 0 ? 'mt-5 border-t border-white/5 pt-5' : ''}>
+                <div
+                  key={ti}
+                  data-testid="ask-answer-turn"
+                  data-turn-index={ti}
+                  className={ti > 0 ? 'mt-5 border-t border-white/5 pt-5' : ''}
+                >
                   <p className="mb-3 text-xs text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{turn.question}</p>
                   <div className="text-base font-semibold leading-relaxed text-white">{turn.conclusion || t('cmd.no_answer')}</div>
                   {turn.questions.length > 0 && (
@@ -2352,7 +2536,9 @@ export default function GraphViewer3D({
                                         key={id}
                                         onMouseEnter={() => setHovered(id)}
                                         onMouseLeave={() => setHovered(null)}
-                                        onClick={() => focusNodeById(id)}
+                                        onClick={(event) => inspectSource(s, event.currentTarget)}
+                                        data-testid="ask-source-citation"
+                                        data-source-id={id}
                                         className="inline-flex max-w-[140px] items-center gap-1 rounded-md border border-cyan-900/40 bg-cyan-950/30 px-1.5 py-0.5 text-[11px] text-cyan-300 hover:border-cyan-500/50 hover:bg-cyan-900/40"
                                       >
                                         <span className="truncate">{s.name}</span>
@@ -2398,7 +2584,8 @@ export default function GraphViewer3D({
                       )}
                       <button
                         onClick={saveDecision}
-                        disabled={gSaving}
+                        disabled={gSaving || gLoading}
+                        data-testid="ask-decision-save"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
                       >
                         <Check className="h-3.5 w-3.5" />
@@ -2407,7 +2594,10 @@ export default function GraphViewer3D({
                     </div>
                   )}
                   {turn.savedAsDecision && (
-                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-green-700/40 bg-green-950/20 px-3 py-2 text-[12.5px] font-medium text-green-300">
+                    <div
+                      data-testid="ask-decision-saved"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-green-700/40 bg-green-950/20 px-3 py-2 text-[12.5px] font-medium text-green-300"
+                    >
                       <Check className="h-3.5 w-3.5" /> {t('cmd.decision_saved')}
                     </div>
                   )}
@@ -2432,17 +2622,18 @@ export default function GraphViewer3D({
             )}
             <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2">
               <input
+                data-testid="ask-follow-input"
                 value={followInput}
                 onChange={(e) => setFollowInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); followUp(); } }}
                 placeholder={t('cmd.follow_placeholder')}
-                disabled={gLoading}
+                disabled={gLoading || gSaving}
                 className="w-full bg-transparent text-[13px] text-gray-100 placeholder:text-gray-500 outline-none disabled:opacity-50"
               />
               {gLoading ? (
                 <span className="block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
               ) : (
-                <button onClick={followUp} disabled={!followInput.trim()} className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
+                <button onClick={followUp} disabled={!followInput.trim() || gSaving} data-testid="ask-follow-send" className="shrink-0 text-cyan-300 transition-colors hover:text-cyan-200 disabled:opacity-30" title={t('cmd.send')}>
                   <Send className="h-3.5 w-3.5" />
                 </button>
               )}
@@ -2600,6 +2791,76 @@ export default function GraphViewer3D({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {sourcePreview && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-3" onClick={(event) => { if (event.target === event.currentTarget) closeSourcePreview(); }}>
+          <div
+            ref={sourceDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ask-source-title"
+            aria-describedby="ask-source-note"
+            data-testid="ask-source-dialog"
+            data-source-id={sourcePreview.source.id}
+            data-source-status={sourcePreview.status}
+            className="flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-cyan-500/30 bg-gray-950 text-gray-200 shadow-2xl"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                closeSourcePreview();
+              }
+              if (event.key === 'Tab') {
+                const controls = sourceDialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input, [tabindex="0"]');
+                if (!controls?.length) return;
+                const first = controls[0];
+                const last = controls[controls.length - 1];
+                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+              }
+            }}
+          >
+            <div className="flex shrink-0 items-start gap-3 border-b border-white/10 p-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-cyan-300">{language === 'zh' ? '来源记忆 · 只读' : 'Source memory · read only'}</p>
+                <h3 id="ask-source-title" className="mt-1 break-words text-base font-semibold text-white">{sourcePreview.entity?.name || sourcePreview.source.name}</h3>
+              </div>
+              <button ref={sourceCloseRef} onClick={() => closeSourcePreview()} aria-label={language === 'zh' ? '关闭来源详情' : 'Close source details'} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-gray-300 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="min-h-0 overflow-y-auto p-4">
+              <p id="ask-source-note" className="mb-4 text-xs leading-5 text-gray-400">{language === 'zh' ? '按引用 ID 读取当前本地记忆记录；记忆可能由 AI 提取，并不等于原始材料已被独立核实。关闭后可继续原来的讨论。' : 'Reads the current local memory by its cited ID. Memories may be AI-extracted; this does not independently verify the original material. Close to continue your discussion.'}</p>
+              <p className="mb-4 break-all font-mono text-xs text-gray-400">ID: {sourcePreview.source.id}</p>
+              {sourcePreview.status === 'loading' && <p role="status" className="text-sm text-cyan-300">{language === 'zh' ? '正在读取来源记忆…' : 'Loading source memory…'}</p>}
+              {sourcePreview.status !== 'loading' && sourcePreview.status !== 'ready' && (
+                <div role="alert" className="rounded-lg border border-amber-700/40 bg-amber-950/20 p-3 text-sm text-amber-200">
+                  <p>{sourcePreview.status === 'missing'
+                    ? (language === 'zh' ? '这条引用记忆已不存在，无法核查。答案中的摘要不能替代来源记录。' : 'This cited memory no longer exists and cannot be inspected. The answer summary is not a source record.')
+                    : sourcePreview.status === 'credentials'
+                      ? (language === 'zh' ? '本地连接凭证已失效，无法读取来源。请检查连接后重试。' : 'Local credentials expired. Check your connection and retry reading this source.')
+                      : sourcePreview.status === 'identity'
+                        ? (language === 'zh' ? '返回记录与引用身份不匹配，已停止显示详情。' : 'The returned record does not match the cited identity. Its details have not been displayed.')
+                        : (language === 'zh' ? '暂时无法读取来源记忆，请检查连接后重试。' : 'Could not read this source memory. Check your connection and retry.')}</p>
+                  <button onClick={() => inspectSource(sourcePreview.source)} className="mt-3 min-h-10 rounded-lg border border-amber-600/40 px-3 text-xs hover:bg-amber-900/30">{language === 'zh' ? '重新读取来源' : 'Retry source'}</button>
+                </div>
+              )}
+              {sourcePreview.status === 'ready' && sourcePreview.entity && (
+                <div className="space-y-4 text-sm">
+                  <div><p className="text-xs text-gray-500">{t('graph.type')}</p><p className="mt-1 break-words">{sourcePreview.entity.type}</p></div>
+                  <div><p className="text-xs text-gray-500">{t('graph.description')}</p><p className="mt-1 whitespace-pre-wrap break-words text-gray-200">{sourcePreview.entity.description || (language === 'zh' ? '这条记忆没有描述。' : 'This memory has no description.')}</p></div>
+                  {sourcePreview.entity.source_file && <div><p className="text-xs text-gray-500">{t('graph.source_file')}</p><p className="mt-1 break-all font-mono text-xs">{sourcePreview.entity.source_file}</p></div>}
+                  {['source', 'platform', 'title', 'import_batch_id', 'document_id', 'original_timestamp'].map((field) => {
+                    const value = sourcePreview.entity?.metadata?.provenance?.[field];
+                    return typeof value === 'string' && value ? <div key={field}><p className="text-xs text-gray-500">{field}</p><p className="mt-1 whitespace-pre-wrap break-all text-xs">{value}</p></div> : null;
+                  })}
+                  {sourcePreview.entity.created_at && <div><p className="text-xs text-gray-500">{t('graph.created_at')}</p><p className="mt-1 break-words text-xs">{sourcePreview.entity.created_at}</p></div>}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

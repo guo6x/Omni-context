@@ -4,7 +4,7 @@ import { CoreMemory } from '../src/memory/core-memory.js';
 import { ArchivalMemory } from '../src/memory/archival-memory.js';
 import { GraphRAGExtractor } from '../src/graphrag/extractor.js';
 import { resolveConflicts } from '../src/graphrag/conflict-resolver.js';
-import { toCompactEntity } from '../src/mcp-server.js';
+import { toCompactEntity } from '../src/mcp/dispatch.js';
 import { resolveEntities, normalizeName } from '../src/graphrag/entity-resolver.js';
 
 describe('Database', () => {

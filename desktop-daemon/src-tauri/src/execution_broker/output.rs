@@ -5,8 +5,8 @@
 //! blocks on a full pipe) but stops buffering; the result records the cap hit
 //! and the total byte count seen.
 
+use super::process_tree::ProcessOutput;
 use std::io::Read;
-use std::process::ChildStdout;
 
 /// Captured stream with truncation metadata.
 #[derive(Debug, Clone, Default)]
@@ -68,8 +68,8 @@ pub struct OutputReaders {
 
 impl OutputReaders {
     pub fn start(
-        stdout: ChildStdout,
-        stderr: std::process::ChildStderr,
+        stdout: ProcessOutput,
+        stderr: ProcessOutput,
         limits: crate::execution_broker::policy::OutputLimits,
         cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
     ) -> Self {

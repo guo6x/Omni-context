@@ -241,12 +241,6 @@ export const handleMcpRoutes = [
         if (toolName === 'save_decision') {
           behaviorEvents.push({ eventType: 'decided', entityId: typeof result?.id === 'string' ? result.id : undefined, topic: query, intent: 'action' });
         }
-        try {
-          await ctx.db.recordBehaviorEvents(behaviorEvents);
-        } catch (behaviorError) {
-          console.warn(`[MCP behavior] failed to record ${toolName}:`, behaviorError);
-        }
-
         ctx.db.addMcpUsageLog({
           toolName,
           client,
@@ -256,6 +250,19 @@ export const handleMcpRoutes = [
           durationMs: Date.now() - startedAt,
         }).catch(() => {});
         sendResponse(res, 200, result);
+
+        // Behavior events are local telemetry, not part of the tool's
+        // business result.  Persist them after the response so a busy import
+        // or recovery transaction cannot leave an explicit user action (for
+        // example save_decision) stuck behind the telemetry transaction.
+        // Keep these writes outside Database.withTransaction().  The telemetry
+        // batch is non-critical, and a transaction gate here can delay the
+        // next user mutation (notably save_decision) behind an import or
+        // recovery transaction.  Individual best-effort writes preserve the
+        // response latency contract without adding a shared gate.
+        void Promise.all(behaviorEvents.map((event) => ctx.db.recordBehaviorEvent(event))).catch((behaviorError) => {
+          console.warn(`[MCP behavior] failed to record ${toolName}:`, behaviorError);
+        });
       } catch (error) {
         console.error(`MCP tool execution error (${toolName}):`, error);
         ctx.db.addMcpUsageLog({

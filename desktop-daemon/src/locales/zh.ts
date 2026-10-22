@@ -24,6 +24,7 @@ export default {
     hint: '首次启动需加载本地模型，请稍候',
   },
   ask: {
+    imported_prompt: '请基于我已导入的记忆，概括其中的重要信息，并说明依据和不确定之处。',
     title: '问大脑',
     placeholder: '问问你的第二大脑…（Enter 发送，Shift+Enter 换行）',
     send: '发送',
@@ -116,6 +117,8 @@ export default {
   },
   upload: {
     title: '上传文件',
+    close: '关闭文件导入',
+    fingerprint_unavailable: '当前客户端无法安全校验文件内容，因此没有上传。请更新桌面客户端后重试。',
     drop_hint: '拖入文件 / 点击选择',
     supported_formats: '支持 Markdown / Office / PDF / 电子书 / 代码 / 图片 · 单文件 ≤ 30MB',
     size_limit: '文件超过 {limit}MB 上限',
@@ -679,7 +682,10 @@ export default {
     brain_server_restarting_detail: '请等待数秒，状态会自动刷新。',
     restart_failed: '重启失败',
     file_extracted: '{filename} 已抽取',
+    file_partial: '{filename} 已部分导入',
+    file_partial_detail: '服务报告抽取 {entities} 条记忆（非净新增数量）；仍有内容未处理，请查看导入结果。',
     file_extracted_detail: '{entities} 实体 / {relationships} 关系',
+    file_counts_unknown: '已保存数量暂时无法确认，请检查记忆库。',
     file_upload_failed: '{filename} 上传失败',
     graph_saved: '已保存',
     graph_saved_detail: '{name} 更新成功',

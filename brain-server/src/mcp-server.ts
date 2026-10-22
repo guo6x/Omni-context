@@ -28,6 +28,8 @@ import { BusinessError, formatToolResult, formatResourceResult } from './mcp/err
 import { createProductionAuthorizationRuntime } from './approval/production-runtime.js';
 import { AgentPilotAdapter } from './agent/pilot.js';
 import { createProductionRevisionRuntime } from './revision/production-runtime.js';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 // Backward-compatible re-export: `toCompactEntity` moved to the unified
 // business dispatch layer (mcp/dispatch.ts).
@@ -84,7 +86,9 @@ class OmniContextServer {
       decayFactor: 0.95,
       staleDays: 90,
       intervalMs: 60 * 60 * 1000, // 1 小时
-      autoStart: true,
+      // Database initialization and migrations must finish before any
+      // scheduler query can run after a forced process restart.
+      autoStart: false,
     });
 
     // 单一业务 dispatch 层：stdio 与 HTTP 共享同一实现
@@ -143,7 +147,9 @@ Use memory selectively:
   }
 
   async start(): Promise<void> {
+    await this.db.ready();
     await this.db.runMigrations();
+    this.decayScheduler.start();
 
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
@@ -223,7 +229,15 @@ async function main() {
   await server.start();
 }
 
-main().catch((error) => {
-  console.error('服务器错误:', error);
-  process.exit(1);
-});
+// Keep importing the adapter side-effect free. Vitest and other consumers
+// reuse the compatibility exports above; starting a database, scheduler, and
+// HTTP listener during import races their teardown with native sqlite work.
+// Only the actual `node dist/mcp-server.js` / `tsx src/mcp-server.ts` entry
+// point should start the long-lived server.
+const invokedScript = process.argv[1] ? pathToFileURL(resolve(process.argv[1])).href : null;
+if (invokedScript === import.meta.url) {
+  main().catch((error) => {
+    console.error('服务器错误:', error);
+    process.exit(1);
+  });
+}
