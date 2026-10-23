@@ -87,6 +87,7 @@ describe('CONTROLLED_FIXTURE: authenticated Desktop import HTTP path', () => {
         text,
         time: new Date(fixtureConversations[0].create_time * 1000).toISOString(),
         platform: 'chatgpt',
+        extractionMode: 'default',
       }),
     });
   }

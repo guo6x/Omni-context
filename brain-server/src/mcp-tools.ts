@@ -5,6 +5,13 @@ import {
   EntityTypeSchema,
   RelationshipTypeSchema,
 } from './schema/domain.js';
+import {
+  AskMessagesSchema,
+  ASK_HISTORY_MAX_CHARS,
+  ASK_MESSAGE_MAX_CHARS,
+  ASK_MESSAGES_MAX_ITEMS,
+  ASK_QUERY_MAX_CHARS,
+} from './mcp/ask-messages.js';
 
 export const RecordCaptureSchema = z.object({
   screenshot: z.string().optional(),
@@ -90,6 +97,7 @@ export const SaveConclusionSchema = z.object({
 });
 
 export const SaveDecisionSchema = z.object({
+  idempotency_key: z.string().min(1).max(512).optional(),
   situation: z.string().min(1, 'situation 不能为空'),
   conclusion: z.string().min(1, 'conclusion 不能为空'),
   decision_question: z.string().optional(),
@@ -165,7 +173,7 @@ export type AnalyzeClaim = z.infer<typeof AnalyzeClaimSchema>;
 export const DiscussDecisionSchema = z.object({
   situation: z.string().min(1, 'situation 不能为空'),
   messages: z.array(z.object({
-    role: z.enum(['user', 'assistant', 'system']),
+    role: z.enum(['user', 'assistant']),
     content: z.string(),
   })),
 });
@@ -176,6 +184,9 @@ export const GetDecisionLineageSchema = z.object({
 
 export const RecordDecisionOutcomeSchema = z.object({
   decision_id: z.string().min(1, 'decision_id 不能为空'),
+  // Optional so older MCP clients remain compatible. Desktop uses this to
+  // safely retry an outcome journal write when the response is lost.
+  idempotency_key: z.string().min(8).max(128).optional(),
   actual_outcome: z.string().min(1, 'actual_outcome 不能为空'),
   outcome_timestamp: z.string().datetime({ offset: true }),
   outcome_score: z.number().min(0).max(1),
@@ -203,10 +214,13 @@ export interface McpToolConfig {
 
 // 问大脑 / 决策助手：接受单个 query（外部 MCP 客户端）或多轮 messages（应用内命令栏）
 export const AskMemorySchema = z.object({
-  query: z.string().optional(),
-  messages: z.array(z.object({ role: z.string(), content: z.string() })).optional(),
-}).refine((data) => data.query || data.messages, {
-  message: '必须提供 query 或 messages 中至少一个参数',
+  query: z.string().max(ASK_QUERY_MAX_CHARS, `问题不能超过 ${ASK_QUERY_MAX_CHARS} 个字符`).optional(),
+  messages: AskMessagesSchema.optional(),
+}).refine((data) => {
+  const latestUserMessage = [...(data.messages || [])].reverse().find((message) => message.role === 'user');
+  return Boolean(data.query?.trim() || latestUserMessage?.content.trim());
+}, {
+  message: '必须提供非空 query 或包含非空用户消息的 messages',
 });
 export const GraphAnswerSchema = AskMemorySchema;
 
@@ -421,7 +435,7 @@ export const tools: McpToolConfig[] = [
   },
   {
     name: 'save_conclusion',
-    description: 'Call this when the conversation reaches a meaningful conclusion, a decision is made, or the user learns something worth remembering. ALWAYS proactively call this at the end of a substantive conversation to save key takeaways into long-term memory. Pass a short summary and (if relevant) related entity IDs from earlier search results.',
+    description: 'Save a user-requested summary or insight to long-term memory. Call this only when the user explicitly asks you to remember it; never proactively save an AI-generated conclusion. Treat saved content as AI-derived unless the user explicitly confirmed its wording. This tool does not grant execution authority. Pass a short summary and (if relevant) related entity IDs from earlier search results.',
     zodSchema: SaveConclusionSchema,
     inputSchema: {
       type: 'object',
@@ -440,6 +454,7 @@ export const tools: McpToolConfig[] = [
     inputSchema: {
       type: 'object',
       properties: {
+        idempotency_key: { type: 'string', minLength: 1, maxLength: 512, description: 'Stable client-generated key for safely retrying the same explicit decision save' },
         situation: { type: 'string', description: 'The situation/context that prompted the decision' },
         conclusion: { type: 'string', description: 'The final decision (1-2 sentences)' },
         cited_entity_ids: { type: 'array', items: { type: 'string' }, description: 'IDs of principles/history entities this decision references' },
@@ -473,7 +488,7 @@ export const tools: McpToolConfig[] = [
       type: 'object',
       properties: {
         situation: { type: 'string', description: 'The original decision situation' },
-        messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string' }, content: { type: 'string' } } }, description: 'Conversation history' },
+        messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string' } }, required: ['role', 'content'] }, description: 'Conversation history' },
       },
       required: ['situation', 'messages'],
     },
@@ -498,6 +513,7 @@ export const tools: McpToolConfig[] = [
       type: 'object',
       properties: {
         decision_id: { type: 'string' },
+        idempotency_key: { type: 'string', minLength: 8, maxLength: 128, description: 'Optional stable key for safe retries after an uncertain response' },
         actual_outcome: { type: 'string' },
         outcome_timestamp: { type: 'string', format: 'date-time' },
         outcome_score: { type: 'number', minimum: 0, maximum: 1 },
@@ -524,8 +540,8 @@ export const tools: McpToolConfig[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'The question to ask, in natural language' },
-        messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string' }, content: { type: 'string' } } }, description: 'Conversation history for multi-turn dialogue' },
+        query: { type: 'string', maxLength: ASK_QUERY_MAX_CHARS, description: 'The question to ask, in natural language' },
+        messages: { type: 'array', maxItems: ASK_MESSAGES_MAX_ITEMS, items: { type: 'object', properties: { role: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string', maxLength: ASK_MESSAGE_MAX_CHARS } }, required: ['role', 'content'] }, description: `Conversation history for multi-turn dialogue (up to ${ASK_MESSAGES_MAX_ITEMS} messages and ${ASK_HISTORY_MAX_CHARS} characters total)` },
       },
     },
   },
@@ -536,8 +552,8 @@ export const tools: McpToolConfig[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'The question or decision to reason about, in natural language' },
-        messages: { type: 'array', items: { type: 'object', properties: { role: { type: 'string' }, content: { type: 'string' } } }, description: 'Conversation history for multi-turn dialogue' },
+        query: { type: 'string', maxLength: ASK_QUERY_MAX_CHARS, description: 'The question or decision to reason about, in natural language' },
+        messages: { type: 'array', maxItems: ASK_MESSAGES_MAX_ITEMS, items: { type: 'object', properties: { role: { type: 'string', enum: ['user', 'assistant'] }, content: { type: 'string', maxLength: ASK_MESSAGE_MAX_CHARS } }, required: ['role', 'content'] }, description: `Conversation history for multi-turn dialogue (up to ${ASK_MESSAGES_MAX_ITEMS} messages and ${ASK_HISTORY_MAX_CHARS} characters total)` },
       },
     },
   },

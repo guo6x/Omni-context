@@ -3,7 +3,7 @@
 import { X, Check, RotateCcw, Palette, Keyboard, Sliders, Globe, Database as DatabaseIcon, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw, Share2, Search, Lightbulb, Camera, GitBranch, ChevronDown, ChevronRight, Shield, Info, ExternalLink, Copy, Plug, Eye, EyeOff } from 'lucide-react';
 import { useRef, useState, useEffect, useMemo, createElement } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { KeyboardShortcut, AppSettings } from '@/hooks/useSettings';
+import { KeyboardShortcut, AppSettings, useCapturePolicySyncStatus } from '@/hooks/useSettings';
 import { LLM_PRESETS, LlmPreset, LLM_API_KEY_URLS } from '@/lib/llm-presets';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
@@ -45,7 +45,7 @@ interface SettingsPanelProps {
   onUpdateShortcut: (id: string, shortcut: string) => void;
   onResetShortcuts: () => void;
   onUpdateAppearance: (updates: Partial<AppSettings['appearance']>) => void;
-  onUpdateBehavior: (updates: Partial<AppSettings['behavior']>) => void;
+  onUpdateBehavior: (updates: Partial<AppSettings['behavior']>) => Promise<boolean>;
   onUpdateLlmProvider: (updates: Partial<AppSettings['llmProvider']>) => void;
   onUpdateLanguage: (lang: 'zh' | 'en') => void;
   onClose: () => void;
@@ -67,6 +67,20 @@ export default function SettingsPanel({
   defaultTab,
 }: SettingsPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>(defaultTab || 'shortcuts');
+  const persistedCaptureBlocklist = (settings.behavior.captureBlocklist || []).join('\n');
+  const [captureBlocklistDraft, setCaptureBlocklistDraft] = useState(persistedCaptureBlocklist);
+  const [captureBlocklistDirty, setCaptureBlocklistDirty] = useState(false);
+  const captureBlocklistLines = captureBlocklistDraft
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const captureBlocklistInvalid = captureBlocklistLines.length > 100
+    || captureBlocklistLines.some((line) => line.length > 256 || /[\u0000-\u001f\u007f]/.test(line));
+  const captureBlocklistChanged = captureBlocklistLines.join('\n') !== persistedCaptureBlocklist;
+
+  useEffect(() => {
+    if (!captureBlocklistDirty) setCaptureBlocklistDraft(persistedCaptureBlocklist);
+  }, [captureBlocklistDirty, persistedCaptureBlocklist]);
 
   useEffect(() => {
     if (defaultTab) {
@@ -79,6 +93,7 @@ export default function SettingsPanel({
   const [capDraft, setCapDraft] = useState<number | null>(null);
   const { t } = useTranslation();
   const toast = useToast();
+  const { error: capturePolicySyncError, pending: capturePolicySyncPending, retry: retryCapturePolicySync, retrying: retryingCapturePolicySync } = useCapturePolicySyncStatus();
 
   const [diagnosticsData, setDiagnosticsData] = useState<any>(null);
   const [diagnosticsLoading, setDiagnosticsLoading] = useState(false);
@@ -1325,6 +1340,49 @@ export default function SettingsPanel({
                   <p className="text-xs text-gray-400 mt-1">{t('settings.privacy_pause_desc')}</p>
                 </div>
 
+                {capturePolicySyncPending && (
+                  <div role="status" aria-live="polite" className="rounded-lg border border-cyan-700/50 bg-cyan-950/30 p-3 text-xs text-cyan-100">
+                    {language === 'zh'
+                      ? '正在确认隐私设置已应用到本机；确认前仍显示原设置。'
+                      : 'Confirming the privacy setting on this device; the previous setting remains shown until confirmed.'}
+                  </div>
+                )}
+
+                {capturePolicySyncError && (
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+                    className="flex items-start gap-3 rounded-lg border border-amber-700/70 bg-amber-950/40 p-4 text-amber-100"
+                  >
+                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">
+                        {language === 'zh'
+                          ? '隐私策略未能同步到本机硬件监听器。'
+                          : 'Privacy settings could not be synced to the native hardware listener.'}
+                      </p>
+                      <p className="mt-1 text-xs text-amber-200/80">
+                        {language === 'zh'
+                          ? '物理沉淀按钮可能仍按上次确认的策略运行。请先不要触发沉淀，直到同步恢复。'
+                          : 'The physical capture button may still use the last confirmed policy. Avoid triggering capture until sync recovers.'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void retryCapturePolicySync()}
+                        disabled={retryingCapturePolicySync}
+                        aria-busy={retryingCapturePolicySync}
+                        className="mt-3 inline-flex items-center gap-2 rounded-md border border-amber-600/70 px-3 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-900/50 disabled:cursor-wait disabled:opacity-60"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${retryingCapturePolicySync ? 'animate-spin' : ''}`} aria-hidden="true" />
+                        {retryingCapturePolicySync
+                          ? (language === 'zh' ? '正在重试…' : 'Retrying…')
+                          : (language === 'zh' ? '重试同步' : 'Retry sync')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <div className="p-4 bg-cyan-950/20 rounded-lg border border-cyan-800/50 space-y-3">
                     <div>
@@ -1429,8 +1487,11 @@ export default function SettingsPanel({
                       <div className="text-xs text-gray-500">{t('settings.privacy_pause_desc')}</div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => onUpdateBehavior({ capturePaused: !settings.behavior.capturePaused })}
-                      className={`w-14 h-7 rounded-full transition-colors relative ${
+                      disabled={capturePolicySyncPending}
+                      aria-pressed={settings.behavior.capturePaused}
+                      className={`w-14 h-7 rounded-full transition-colors relative disabled:cursor-wait disabled:opacity-60 ${
                         settings.behavior.capturePaused ? 'bg-amber-600' : 'bg-gray-700'
                       }`}
                     >
@@ -1450,16 +1511,37 @@ export default function SettingsPanel({
                     </div>
                     <textarea
                       className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono min-h-[180px] resize-y"
-                      value={(settings.behavior.captureBlocklist || []).join('\n')}
+                      disabled={capturePolicySyncPending}
+                      value={captureBlocklistDraft}
                       onChange={(e) => {
-                        const lines = e.target.value
-                          .split('\n')
-                          .map((l) => l.trim())
-                          .filter((l) => l.length > 0);
-                        onUpdateBehavior({ captureBlocklist: lines });
+                        setCaptureBlocklistDraft(e.target.value);
+                        setCaptureBlocklistDirty(true);
                       }}
                       placeholder={t('settings.privacy_blocklist_placeholder')}
                     />
+                    {captureBlocklistInvalid && (
+                      <p role="alert" className="text-xs text-amber-300">
+                        {t('settings.privacy_blocklist_invalid')}
+                      </p>
+                    )}
+                    {captureBlocklistChanged && (
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          disabled={capturePolicySyncPending || captureBlocklistInvalid}
+                          onClick={async () => {
+                            const saved = await onUpdateBehavior({ captureBlocklist: captureBlocklistLines });
+                            if (saved) {
+                              setCaptureBlocklistDraft(captureBlocklistLines.join('\n'));
+                              setCaptureBlocklistDirty(false);
+                            }
+                          }}
+                          className="rounded-md bg-cyan-700 px-3 py-2 text-xs font-medium text-white hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {t('settings.privacy_blocklist_save')}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

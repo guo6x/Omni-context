@@ -68,8 +68,17 @@ async function planSemanticResolutions(
   source: EntityLabel | undefined,
   target: EntityLabel | undefined,
   extractor: GraphRAGExtractor,
+  localOnly: boolean,
 ): Promise<PlannedResolution[]> {
   if (existing.length === 0) return [];
+  if (localOnly) {
+    return existing.map((old) => ({
+      old,
+      status: 'review',
+      confidence: 0,
+      reason: 'local-only import; semantic conflict needs human review',
+    }));
+  }
   const llmConfig = extractor.getLlmConfig();
   if (!llmConfig.apiUrl) {
     return existing.map((old) => ({
@@ -144,6 +153,7 @@ export async function resolveConflicts(
   newRelationships: Relationship[],
   db: Database,
   extractor: GraphRAGExtractor,
+  options: { localOnly?: boolean } = {},
 ): Promise<Relationship[]> {
   const saved: Relationship[] = [];
   for (const newRelationship of newRelationships || []) {
@@ -195,6 +205,7 @@ export async function resolveConflicts(
       labelById.get(newRelationship.source_id),
       labelById.get(newRelationship.target_id),
       extractor,
+      options.localOnly === true,
     ));
 
     await db.withTransaction(async () => {

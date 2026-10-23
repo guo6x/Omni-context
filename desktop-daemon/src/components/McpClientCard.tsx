@@ -212,12 +212,12 @@ export default function McpClientCard({
             {status.configured ? (
               <span className="px-2.5 py-0.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-xs font-semibold flex items-center gap-1">
                 <CheckCircle className="w-3.5 h-3.5" />
-                {t('settings.mcp_connected')}
+                {t('settings.mcp_configured')}
               </span>
             ) : (
               <span className="px-2.5 py-0.5 bg-white/5 text-gray-400 border border-white/10 rounded-full text-xs flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5" />
-                {t('settings.mcp_not_connected')}
+                {t('settings.mcp_not_configured')}
               </span>
             )}
           </div>

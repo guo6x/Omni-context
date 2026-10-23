@@ -320,7 +320,17 @@ export async function resolveEntities(
     let mergeSimilarity: number | undefined;
 
     if (exact) {
-      if (NEVER_AUTO_MERGE_TYPES.has(entity.type)) {
+      const incomingMetadata = asRecord(entity.metadata);
+      const exactMetadata = asRecord(exact.metadata);
+      const protectsConfirmedMemory = entity.type === 'memory'
+        && exactMetadata.user_confirmed === true
+        && incomingMetadata.authority === 'ai_derived';
+      if (protectsConfirmedMemory) {
+        if (!exact.isNew) {
+          await persistForReview(entity);
+          mergeCandidates.push(await queueCandidate(db, entity, exact, 1, 'confirmed_memory_update_requires_review'));
+        }
+      } else if (NEVER_AUTO_MERGE_TYPES.has(entity.type)) {
         if (!exact.isNew) {
           await persistForReview(entity);
           mergeCandidates.push(await queueCandidate(db, entity, exact, 1, 'exact_name_manual_only'));

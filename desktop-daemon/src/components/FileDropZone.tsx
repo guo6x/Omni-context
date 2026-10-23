@@ -280,6 +280,9 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
         const saved = summary.countsKnown
           ? `服务报告抽取 ${summary.entities} 条记忆 / ${summary.relationships} 条关系（非净新增数量）`
           : '已保存数量暂时无法确认，请检查记忆库';
+        const modeWarning = summary.extractionMode === 'unknown'
+          ? '处理方式未知：回执未记录是否使用配置的 AI 服务或仅本地处理；Omni 不作本地或云端承诺。'
+          : '';
         const failures = summary.failures > 0 ? ` · ${summary.failures} 项未完成` : '';
         const coverage = summary.coverage !== undefined ? ` · 覆盖 ${Math.round(summary.coverage * 100)}%` : '';
         const status: Status = summary.outcome === 'failed' ? 'error' : summary.outcome;
@@ -292,9 +295,9 @@ const FileDropZone = React.forwardRef<FileDropZoneRef, FileDropZoneProps>(
           status,
           stage: undefined,
           requiresAcknowledgement,
-          detail: summary.outcome === 'failed' ? `${job.error || '处理失败'}；${saved}。已保存内容不会回滚。${reviewPrompt}`
-            : summary.outcome === 'cancelled' ? `${job.error ? `${job.error}；` : ''}已取消；${saved}。已保存内容不会回滚。${reviewPrompt}`
-            : `${job.error ? `${job.error}。` : ''}${summary.outcome === 'partial' ? '部分完成 · ' : ''}${saved}${units}${failures}${coverage}${reviewPrompt ? `。${reviewPrompt}` : ''}`,
+          detail: summary.outcome === 'failed' ? `${job.error || '处理失败'}；${modeWarning ? `${modeWarning} ` : ''}${saved}。已保存内容不会回滚。${reviewPrompt}`
+            : summary.outcome === 'cancelled' ? `${job.error ? `${job.error}；` : ''}${modeWarning ? `${modeWarning} ` : ''}已取消；${saved}。已保存内容不会回滚。${reviewPrompt}`
+            : `${job.error ? `${job.error}。` : ''}${modeWarning ? `${modeWarning} ` : ''}${summary.outcome === 'partial' ? '部分完成 · ' : ''}${saved}${units}${failures}${coverage}${reviewPrompt ? `。${reviewPrompt}` : ''}`,
         });
         if (!requiresAcknowledgement) {
           activeFilesRef.current.delete(control.key);

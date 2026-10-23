@@ -749,7 +749,7 @@ function MainApp() {
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden">
       {/* 冷启动遮罩：brain-server 内嵌进程启动较慢，未首次连上前盖一层过渡画面 */}
       {!hasConnectedOnce && !splashTimedOut && (
-        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-background">
+        <div data-testid="startup-splash" role="status" aria-live="polite" className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-background">
           <LogoMark size={72} className="animate-pulse-glow" />
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
@@ -930,15 +930,16 @@ function MainApp() {
 
       {/* LLM 未配置警告横幅 */}
       {settings.behavior.onboarded && !settings.llmProvider.apiKey && !settings.llmProvider.apiUrl.includes('localhost') && !settings.llmProvider.apiUrl.includes('127.0.0.1') && (
-        <div
-          onClick={() => setShowSettings(true)}
-          className="px-4 py-2 bg-amber-950/40 border-b border-amber-900/60 flex items-center gap-3 cursor-pointer hover:bg-amber-900/20 transition-colors"
+        <button
+          type="button"
+          onClick={() => { setSettingsTab('llm'); setShowSettings(true); }}
+          className="w-full px-4 py-2 bg-amber-950/40 border-b border-amber-900/60 flex items-center gap-3 text-left cursor-pointer hover:bg-amber-900/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400"
         >
           <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
           <div className="flex-1 min-w-0 text-xs text-amber-200 truncate">
             {t('onboarding.warning_banner')}
           </div>
-        </div>
+        </button>
       )}
 
       <WorkspaceNavigation activeSection={workspaceSection} onNavigate={navigateWorkspace} />
@@ -956,6 +957,8 @@ function MainApp() {
           entities={entities}
           relationships={relationships}
           askRequest={askRequest}
+          onReviewDecisions={() => { setWorkspaceSection('journey'); setShowDecisionLog(true); }}
+          onOpenLlmSettings={() => { setSettingsTab('llm'); setShowSettings(true); }}
           onDataChanged={fetchGraphData}
           focusEntityId={focusEntityId}
           onFocusEntityReset={() => setFocusEntityId(undefined)}

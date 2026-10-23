@@ -2,7 +2,7 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::Deserialize;
 use std::time::Duration;
 
-use crate::{brain_server, clipboard, screen_capture};
+use crate::{brain_server, capture_policy, clipboard, screen_capture};
 
 #[derive(Debug, Deserialize)]
 struct SubmitResponse {
@@ -16,7 +16,7 @@ struct JobResponse {
     error: Option<String>,
 }
 
-async fn submit_and_wait(
+async fn submit(
     client: &reqwest::Client,
     base_url: &str,
     token: &str,
@@ -42,39 +42,64 @@ async fn submit_and_wait(
         ));
     }
     let submitted: SubmitResponse = response.json().await.map_err(|error| error.to_string())?;
+    Ok(submitted.job_id)
+}
 
+async fn wait_for_job(
+    client: &reqwest::Client,
+    base_url: &str,
+    token: &str,
+    job_id: &str,
+) -> Result<String, String> {
     for _ in 0..120 {
         tokio::time::sleep(Duration::from_millis(500)).await;
         let response = client
-            .get(format!("{base_url}/api/ingest/job/{}", submitted.job_id))
+            .get(format!("{base_url}/api/ingest/job/{job_id}"))
             .bearer_auth(token)
             .send()
             .await
-            .map_err(|error| format!("failed to poll {}: {error}", submitted.job_id))?;
+            .map_err(|error| format!("failed to poll {job_id}: {error}"))?;
         if !response.status().is_success() {
             return Err(format!(
-                "failed to poll {}: HTTP {}",
-                submitted.job_id,
+                "failed to poll {job_id}: HTTP {}",
                 response.status()
             ));
         }
         let job: JobResponse = response.json().await.map_err(|error| error.to_string())?;
         match job.status.as_str() {
-            "success" => return Ok(submitted.job_id),
+            "success" => return Ok(job_id.to_string()),
             "failed" => return Err(job.error.unwrap_or_else(|| "ingest job failed".to_string())),
             _ => {}
         }
     }
-    Err(format!("ingest job {} timed out", submitted.job_id))
+    Err(format!("ingest job {job_id} timed out"))
+}
+
+#[cfg(test)]
+async fn submit_and_wait(
+    client: &reqwest::Client,
+    base_url: &str,
+    token: &str,
+    filename: &str,
+    content_type: &str,
+    base64: &str,
+) -> Result<String, String> {
+    let job_id = submit(client, base_url, token, filename, content_type, base64).await?;
+    wait_for_job(client, base_url, token, &job_id).await
 }
 
 pub async fn execute_precipitate() -> Result<Vec<String>, String> {
-    let screenshot = screen_capture::capture_screen_base64()
-        .await
-        .map_err(|error| format!("screen capture failed: {error}"))?;
-    let clipboard = clipboard::get_clipboard_content()
-        .await
-        .map_err(|error| format!("clipboard read failed: {error}"))?;
+    let ((screenshot, clipboard), authorization) =
+        capture_policy::run_current_if_allowed_with_authorization(|| async {
+            let screenshot = screen_capture::capture_screen_base64()
+                .await
+                .map_err(|error| format!("screen capture failed: {error}"))?;
+            let clipboard = clipboard::get_clipboard_content()
+                .await
+                .map_err(|error| format!("clipboard read failed: {error}"))?;
+            Ok((screenshot, clipboard))
+        })
+        .await?;
     // Keep hardware ingestion on the same loopback Brain selected by the
     // Desktop process. A legacy URL override is accepted only when it is a
     // loopback URL; test ports are configured with OMNI_BRAIN_PORT instead.
@@ -97,9 +122,8 @@ pub async fn execute_precipitate() -> Result<Vec<String>, String> {
         .build()
         .map_err(|error| error.to_string())?;
 
-    let mut jobs = Vec::new();
-    jobs.push(
-        submit_and_wait(
+    let screen_job = capture_policy::run_with_capture_authorization(&authorization, || async {
+        submit(
             &client,
             &base_url,
             &token,
@@ -107,20 +131,26 @@ pub async fn execute_precipitate() -> Result<Vec<String>, String> {
             "image/png",
             &screenshot,
         )
-        .await?,
-    );
+        .await
+    })
+    .await?;
+    let mut jobs = vec![wait_for_job(&client, &base_url, &token, &screen_job).await?];
     if let Some(text) = clipboard.filter(|value| !value.trim().is_empty()) {
-        jobs.push(
-            submit_and_wait(
-                &client,
-                &base_url,
-                &token,
-                "hardware-clipboard.txt",
-                "text/plain",
-                &STANDARD.encode(text.as_bytes()),
-            )
-            .await?,
-        );
+        let content = STANDARD.encode(text.as_bytes());
+        let clipboard_job =
+            capture_policy::run_with_capture_authorization(&authorization, || async {
+                submit(
+                    &client,
+                    &base_url,
+                    &token,
+                    "hardware-clipboard.txt",
+                    "text/plain",
+                    &content,
+                )
+                .await
+            })
+            .await?;
+        jobs.push(wait_for_job(&client, &base_url, &token, &clipboard_job).await?);
     }
     Ok(jobs)
 }

@@ -49,7 +49,7 @@ describe('import result truth', () => {
 describe('bounded, read-only import polling', () => {
   it.each(['success', 'partial', 'failed', 'cancelled'] as const)('stops on %s without another request', async status => {
     fetchStatus.mockResolvedValue(respond(job(status)));
-    await expect(pollIngestJob('task-1')).resolves.toEqual(job(status));
+    await expect(pollIngestJob('task-1')).resolves.toEqual({ ...job(status), extractionMode: 'unknown' });
     await vi.advanceTimersByTimeAsync(10_000);
     expect(fetchStatus).toHaveBeenCalledTimes(1);
     expect(fetchStatus.mock.calls[0][1]).not.toHaveProperty('method');

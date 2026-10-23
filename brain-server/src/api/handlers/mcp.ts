@@ -5,6 +5,7 @@ import type { AgentPilotAdapter } from '../../agent/pilot.js';
 import { BRAIN_PRODUCT_VERSION } from '../protocol.js';
 import { McpBusinessDispatcher } from '../../mcp/dispatch.js';
 import { BusinessError, businessErrorToHttpStatus, formatToolResult } from '../../mcp/errors.js';
+import { MCP_SERVER_INSTRUCTIONS } from '../../mcp/instructions.js';
 import { tools as mcpToolDefs } from '../../mcp-tools.js';
 
 // Agent tools are a separate profile surface, intentionally excluded from the
@@ -25,16 +26,6 @@ const AGENT_PILOT_TOOL_DEFS = [
  * All business semantics live in `mcp/dispatch.ts` (McpBusinessDispatcher),
  * shared with the stdio adapter (`mcp-server.ts`). Same input -> same result.
  */
-
-const MCP_HTTP_INSTRUCTIONS = `You are connected to Omni-Context, the user's long-term memory and decision support system.
-
-Before answering any substantive question:
-1. Call \`unified_memory_search\` with key terms from the user's question to check whether they've discussed this topic before.
-2. If the user is choosing between options or making a decision, call \`get_decision_context\` with their situation as the \`situation\` argument.
-3. Cite matched memories by name in your answer so the user can verify.
-4. At the end of a substantive conversation that produced a conclusion, call \`save_conclusion\` to persist the key takeaway.
-
-These tools are read-cheap; over-call rather than under-call.`;
 
 function getClientLabel(req: http.IncomingMessage): string {
   const explicit = req.headers['x-omni-client'];
@@ -129,7 +120,7 @@ async function handleMcpRpcMessage(msg: any, principal: AuthPrincipal, dispatche
         protocolVersion: typeof params.protocolVersion === 'string' ? params.protocolVersion : '2025-06-18',
         capabilities: { tools: {} },
         serverInfo: { name: 'omni-context', version: BRAIN_PRODUCT_VERSION },
-        instructions: MCP_HTTP_INSTRUCTIONS,
+        instructions: MCP_SERVER_INSTRUCTIONS,
       });
     }
     if (method === 'ping') return rpcResult(id, {});

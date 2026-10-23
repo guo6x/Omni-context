@@ -202,16 +202,18 @@ describe('CONTROLLED_FIXTURE: import receipt recovery across Brain restarts', ()
     await fixture!.db.run(
       `INSERT INTO ingestion_documents (
          id, source, title, content_sha256, character_count, total_chunks,
-         processed_chunks, failed_chunks, coverage, status, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [documentId, 'synthetic-retry.txt', 'synthetic-retry.txt', '0'.repeat(64), content.length, 1, 0, 1, 0, 'failed', now, now],
+         processed_chunks, failed_chunks, coverage, status, created_at, updated_at,
+         extraction_mode
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [documentId, 'synthetic-retry.txt', 'synthetic-retry.txt', '0'.repeat(64), content.length, 1, 0, 1, 0, 'failed', now, now, 'default'],
     );
     await fixture!.db.run(
       `INSERT INTO ingestion_chunks (
          id, document_id, ordinal, source, content, source_span, start_offset,
-         end_offset, source_timestamp, status, attempts, error, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [chunkId, documentId, 0, 'synthetic-retry.txt', content, content, 0, content.length, now, 'failed', 1, 'CONTROLLED_FIXTURE_FAILURE', now, now],
+         end_offset, source_timestamp, status, attempts, error, created_at, updated_at,
+         extraction_mode
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [chunkId, documentId, 0, 'synthetic-retry.txt', content, content, 0, content.length, now, 'failed', 1, 'CONTROLLED_FIXTURE_FAILURE', now, now, 'default'],
     );
 
     const submitted = await request('POST', `/api/ingest/document/${documentId}/retry`);
@@ -244,19 +246,21 @@ describe('CONTROLLED_FIXTURE: import receipt recovery across Brain restarts', ()
     await fixture!.db.run(
       `INSERT INTO ingestion_documents (
          id, source, title, content_sha256, character_count, total_chunks,
-         processed_chunks, failed_chunks, coverage, status, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         processed_chunks, failed_chunks, coverage, status, created_at, updated_at,
+         extraction_mode
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [documentId, 'synthetic-retry-checkpoint.txt', 'synthetic-retry-checkpoint.txt', '1'.repeat(64),
-        chunks.join('').length, chunks.length, 0, chunks.length, 0, 'failed', now, now],
+        chunks.join('').length, chunks.length, 0, chunks.length, 0, 'failed', now, now, 'default'],
     );
     for (const [ordinal, content] of chunks.entries()) {
       await fixture!.db.run(
         `INSERT INTO ingestion_chunks (
            id, document_id, ordinal, source, content, source_span, start_offset,
-           end_offset, source_timestamp, status, attempts, error, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           end_offset, source_timestamp, status, attempts, error, created_at, updated_at,
+           extraction_mode
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [`${documentId}-${ordinal}`, documentId, ordinal, 'synthetic-retry-checkpoint.txt', content,
-          content, 0, content.length, now, 'failed', 1, 'CONTROLLED_FIXTURE_FAILURE', now, now],
+          content, 0, content.length, now, 'failed', 1, 'CONTROLLED_FIXTURE_FAILURE', now, now, 'default'],
       );
     }
 

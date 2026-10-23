@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Upload, Sparkles, Keyboard, X, Scale, GitBranch, Plug, ArrowRight, Brain } from 'lucide-react';
+import { Upload, Keyboard, X, GitBranch, Plug, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LogoMark } from '@/components/BrandMark';
 
@@ -27,8 +27,8 @@ export default function EmptyState({
   const { t } = useTranslation();
 
   const guide = [
-    { icon: <Plug className="w-4 h-4" />, label: t('empty.guide_mcp'), how: t('empty.guide_mcp_how'), onClick: onConnectMcp, accent: true },
-    { icon: <Upload className="w-4 h-4" />, label: t('empty.guide_upload'), how: t('empty.guide_upload_how'), onClick: onUploadClick },
+    { icon: <Upload className="w-4 h-4" />, label: t('empty.guide_upload'), how: t('empty.guide_upload_how'), onClick: onUploadClick, accent: true },
+    { icon: <Plug className="w-4 h-4" />, label: t('empty.guide_mcp'), how: t('empty.guide_mcp_how'), onClick: onConnectMcp },
     { icon: <GitBranch className="w-4 h-4" />, label: t('empty.guide_log'), how: t('empty.guide_log_how'), onClick: onShowDecisionLog },
   ];
 
@@ -57,41 +57,26 @@ export default function EmptyState({
           </div>
         </div>
 
-        {/* Primary: load demo */}
+        {/* Primary: use real personal context, not seeded sample data. */}
         <div className="text-xs uppercase tracking-wider text-cyan-400/70 mb-2 flex items-center gap-2">
-          <Sparkles className="w-3 h-3" />
+          <Upload className="w-3 h-3" />
           {t('empty.start_here')}
         </div>
         <button
-          onClick={onLoadDemo}
-          disabled={isLoadingDemo}
-          className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
-            isLoadingDemo
-              ? 'bg-cyan-900/20 border-cyan-700/30 opacity-70 cursor-not-allowed'
-              : 'bg-gradient-to-r from-cyan-600/25 to-purple-600/15 border-cyan-500/40 hover:border-cyan-400/60 hover:from-cyan-600/30'
-          }`}
+          type="button"
+          onClick={onUploadClick}
+          className="w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all bg-gradient-to-r from-cyan-600/25 to-purple-600/15 border-cyan-500/40 hover:border-cyan-400/60 hover:from-cyan-600/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
         >
           <span className="shrink-0 text-cyan-300">
-            {isLoadingDemo ? (
-              <span className="block w-6 h-6 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-            ) : (
-              <Sparkles className="w-6 h-6" />
-            )}
+            <Upload className="w-6 h-6" />
           </span>
           <span className="flex-1 min-w-0">
             <span className="block text-base font-semibold text-white">
-              {t('empty.load_demo')}
-              {!isLoadingDemo && (
-                <span className="ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 align-middle">
-                  {t('empty.recommended')}
-                </span>
-              )}
+              {t('empty.upload_primary')}
             </span>
-            <span className="block text-xs text-gray-400 mt-0.5">
-              {isLoadingDemo ? t('empty.generating_vectors') : t('empty.demo_primary_hint')}
-            </span>
+            <span className="block text-xs text-gray-400 mt-0.5">{t('empty.upload_primary_hint')}</span>
           </span>
-          {!isLoadingDemo && <ArrowRight className="w-4 h-4 text-cyan-400 shrink-0" />}
+          <ArrowRight className="w-4 h-4 text-cyan-400 shrink-0" />
         </button>
 
         {/* Feature guide */}
@@ -119,6 +104,20 @@ export default function EmptyState({
               <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-gray-400 shrink-0 mt-1 transition-colors" />
             </button>
           ))}
+        </div>
+
+        <div className="mt-5 rounded-lg border border-white/5 bg-white/[0.02] p-3">
+          <p id="empty-demo-disclosure" className="text-[11px] leading-relaxed text-gray-500">{t('empty.demo_disclosure')}</p>
+          <button
+            type="button"
+            onClick={onLoadDemo}
+            disabled={isLoadingDemo}
+            aria-describedby="empty-demo-disclosure"
+            className="mt-2 inline-flex min-h-9 items-center gap-2 rounded-md px-2 text-xs text-gray-400 underline decoration-gray-600 underline-offset-2 hover:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-wait disabled:opacity-60"
+          >
+            {isLoadingDemo && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" aria-hidden="true" />}
+            {t(isLoadingDemo ? 'empty.generating_vectors' : 'empty.load_demo_optional')}
+          </button>
         </div>
 
         <button

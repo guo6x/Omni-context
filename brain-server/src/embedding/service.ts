@@ -227,6 +227,11 @@ export class EmbeddingService {
     return this.pipeline ? 'local' : 'hash-fallback';
   }
 
+  /** Returns the configured privacy mode even before the model initializes. */
+  getConfiguredMode(): 'local' | 'api' {
+    return this.config.mode;
+  }
+
   async reload(): Promise<void> {
     this.pipeline = null;
     this.initialized = false;

@@ -11,7 +11,9 @@ import {
   buildSchemaManifest,
 } from '../scripts/generate-schema-artifacts.js';
 import initDatabase from '../src/db/sqlite.js';
-import { AddRelationshipSchema, tools } from '../src/mcp-tools.js';
+import { AddRelationshipSchema, DiscussDecisionSchema, tools } from '../src/mcp-tools.js';
+import { MCP_SERVER_INSTRUCTIONS } from '../src/mcp/instructions.js';
+import { OMNI_SKILL_CONTENT } from '../../desktop-daemon/src/lib/omni-skill.js';
 import {
   ENTITY_TYPES,
   NOTIFICATION_TYPES,
@@ -37,6 +39,31 @@ describe('generated domain contract', () => {
     const definition = tools.find((tool) => tool.name === 'add_relationship');
     const properties = definition?.inputSchema.properties as Record<string, { enum?: string[] }> | undefined;
     expect(properties?.type.enum).toEqual([...RELATIONSHIP_TYPES]);
+
+    const discussDecision = tools.find((tool) => tool.name === 'discuss_decision');
+    const discussMessages = discussDecision?.inputSchema.properties?.messages as {
+      items?: { properties?: { role?: { enum?: string[] } }; required?: string[] };
+    } | undefined;
+    expect(discussMessages?.items?.properties?.role?.enum).toEqual(['user', 'assistant']);
+    expect(discussMessages?.items?.required).toEqual(['role', 'content']);
+    expect(DiscussDecisionSchema.safeParse({
+      situation: 'test decision',
+      messages: [{ role: 'system', content: 'must be rejected' }],
+    }).success).toBe(false);
+
+    const saveConclusion = tools.find((tool) => tool.name === 'save_conclusion');
+    expect(saveConclusion?.description).toContain('only when the user explicitly asks');
+    expect(saveConclusion?.description).not.toContain('ALWAYS proactively');
+    expect(MCP_SERVER_INSTRUCTIONS).toContain('only when the user explicitly asks');
+    expect(MCP_SERVER_INSTRUCTIONS).toContain('Never proactively save an AI-generated summary');
+    expect(MCP_SERVER_INSTRUCTIONS).not.toContain('At the end of a substantive conversation');
+    expect(OMNI_SKILL_CONTENT).toMatch(/only\s+when the user explicitly asks/);
+    expect(OMNI_SKILL_CONTENT).toContain('Never proactively');
+    expect(OMNI_SKILL_CONTENT).not.toContain('proactively call `save_conclusion`');
+
+    const saveDecision = tools.find((tool) => tool.name === 'save_decision');
+    const decisionProperties = saveDecision?.inputSchema.properties as Record<string, { minLength?: number; maxLength?: number }> | undefined;
+    expect(decisionProperties?.idempotency_key).toMatchObject({ minLength: 1, maxLength: 512 });
   });
 
   it('keeps checked-in manifests and generated client types deterministic', async () => {

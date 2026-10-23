@@ -9,6 +9,7 @@ import { BusinessError, formatResourceResult } from './errors.js';
 import { resolveEntities } from '../graphrag/entity-resolver.js';
 import { resolveConflicts } from '../graphrag/conflict-resolver.js';
 import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'node:crypto';
 import type { EntityType, RelationshipType, Entity, Assertion } from '../shared-types.js';
 import {
   RecordCaptureSchema,
@@ -30,12 +31,15 @@ import {
   DiscussDecisionSchema,
   GetDecisionLineageSchema,
   RecordDecisionOutcomeSchema,
+  AskMemorySchema,
+  GraphAnswerSchema,
   GetCoreContextSchema,
   DeleteEntitySchema,
   SetCoreSchema,
   MergeEntitiesSchema,
   tools as mcpToolDefs,
 } from '../mcp-tools.js';
+import { resolveAskTurn } from './ask-messages.js';
 import { buildDecisionMetadata, getRecursiveDecisionLineage, recordDecisionOutcome } from '../decision/decision-store.js';
 import { parseTimeWindow } from '../utils/time-window.js';
 import {
@@ -100,6 +104,17 @@ export function toCompactEntity(entity: any): any {
     compact.description = description;
   }
 
+  // Keep the compact entity projection metadata-free, but preserve the two
+  // narrow authority markers for both memory suggestions and explicit decisions.
+  const authority = entity.metadata?.authority;
+  const userConfirmed = entity.metadata?.user_confirmed;
+  const knownAuthorityPair = (authority === 'ai_derived' && userConfirmed === false)
+    || (authority === 'user_confirmed' && userConfirmed === true);
+  if (knownAuthorityPair) {
+    compact.authority = authority;
+    compact.user_confirmed = userConfirmed;
+  }
+
   if (entity.similarity !== undefined) {
     compact.similarity = entity.similarity;
   }
@@ -118,6 +133,14 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+function decisionEntityIdFromRequestDigest(digest: string): string {
+  const bytes = Buffer.from(digest.slice(0, 32), 'hex');
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 function rethrowEvaluationEmbeddingFailure(error: unknown): void {
@@ -386,43 +409,6 @@ async function buildGroundingEnvelope(
     confidence: Number(confidence.toFixed(3)),
     evidence,
   };
-}
-
-// ── Focus-Stack 适配：话题沉淀 ──
-// 多轮"问大脑/决策"聊出结论后，自动把该话题压缩成一条长期记忆。按"首问"去重：
-// 同一话题越聊越深就更新同一条，不重复堆。打 auto_sediment 标记，可追溯/可过滤。
-async function sedimentThread(
-  ctx: DispatchCtx,
-  firstQuestion: string,
-  conclusion: string,
-  citedIds: string[],
-): Promise<void> {
-  try {
-    const title = (firstQuestion || '').trim().replace(/\s+/g, ' ').slice(0, 40);
-    if (!title || !conclusion) return;
-    const existing = await ctx.db.searchEntities(title, 5, 'memory' as any);
-    const dup = existing.find((e: any) => e.type === 'memory' && (e.name || '').trim() === title);
-    if (dup) {
-      await ctx.db.updateEntity(dup.id, { description: conclusion });
-      ctx.db.bumpAccessCounts([dup.id]).catch(() => {});
-      return;
-    }
-    let embedding: number[] | undefined;
-    try { embedding = (await ctx.embeddingService.embed(`${title}: ${conclusion}`)).embedding; } catch { /* 无向量也存 */ }
-    const ent = await ctx.db.addEntity({
-      name: title,
-      type: 'memory' as any,
-      description: conclusion,
-      metadata: { provenance: { source: 'auto_sediment', tool: 'graph_answer', at: new Date().toISOString() } },
-      embedding,
-    });
-    // 连到引用过的记忆，让沉淀进图谱（最多 3 条）
-    for (const cid of (citedIds || []).slice(0, 3)) {
-      if (cid && cid !== ent.id) {
-        try { await ctx.db.addRelationship({ source_id: ent.id, target_id: cid, type: 'references' as any, description: '自动沉淀引用', weight: 1 }); } catch { /* 边失败不阻塞 */ }
-      }
-    }
-  } catch { /* 沉淀失败绝不影响回答 */ }
 }
 
 // ── shared: retrieve decision context ──
@@ -1727,11 +1713,8 @@ ${conflictBlock}`;
           case 'ask_memory': {
             // App 内「问大脑」：每轮都基于用户最新问题真实检索图谱，再让 LLM 据此作答。
             // 与 discuss_decision 不同——后者只基于既定 situation 聊天，不自查图谱。
-            const messages: Array<{ role: string; content: string }> = Array.isArray(args.messages)
-              ? args.messages.filter((m: any) => m && typeof m.content === 'string')
-              : [];
-            const lastUser = [...messages].reverse().find((m) => m.role === 'user');
-            const question = (lastUser?.content || (typeof args.query === 'string' ? args.query : '') || '').trim();
+            const parsed = AskMemorySchema.parse(args);
+            const { messages, question } = resolveAskTurn(parsed.query, parsed.messages);
 
             const llmConfig = ctx.extractor.getLlmConfig();
             if (!llmConfig.apiUrl) {
@@ -1829,11 +1812,8 @@ ${principleBlock}`;
           }
           case 'graph_answer': {
             // 图谱原生回答：结构化输出(结论 + 每条依据引用节点) + 命中子图的边，供右栏答案卡 + 图谱高亮
-            const gaMessages: Array<{ role: string; content: string }> = Array.isArray(args.messages)
-              ? args.messages.filter((m: any) => m && typeof m.content === 'string')
-              : [];
-            const gaLastUser = [...gaMessages].reverse().find((m) => m.role === 'user');
-            const gaQuestion = (gaLastUser?.content || (typeof args.query === 'string' ? args.query : '') || '').trim();
+            const parsed = GraphAnswerSchema.parse(args);
+            const { messages: gaMessages, question: gaQuestion } = resolveAskTurn(parsed.query, parsed.messages);
 
             const gaLlm = ctx.extractor.getLlmConfig();
             if (!gaLlm.apiUrl) { throw new BusinessError('LLM_NOT_CONFIGURED', 'LLM_NOT_CONFIGURED'); return; }
@@ -1974,11 +1954,6 @@ ${gaConnBlock}`;
                 citedEntityIds: gaCapped.map((s) => s.id),
                 grounding: gaGrounding,
               };
-              // 多轮话题聊出结论 → 自动沉淀（按首问去重，越聊越深更新同一条）。不阻塞返回。
-              const gaUserTurns = gaMessages.filter((m) => m.role === 'user');
-              if (gaUserTurns.length >= 2 && typeof parsed.conclusion === 'string' && parsed.conclusion.trim()) {
-                void sedimentThread(ctx, gaUserTurns[0].content, parsed.conclusion.trim(), gaCapped.map((s) => s.id));
-              }
             } catch (e: any) {
               if (e?.message === 'LLM_NOT_CONFIGURED') { throw new BusinessError('LLM_NOT_CONFIGURED', 'LLM_NOT_CONFIGURED'); return; }
               console.error('[graph_answer] Failed:', e);
@@ -1995,15 +1970,36 @@ ${gaConnBlock}`;
               timestamp: new Date().toISOString(),
             };
             const extractResult = await ctx.extractor.extract(input);
-            const resolution = await resolveEntities(extractResult.entities, extractResult.relationships, ctx.db, ctx.embeddingService);
+            const extractionTime = new Date().toISOString();
+            const aiDerivedEntities = extractResult.entities.map((entity) => ({
+              ...entity,
+              metadata: {
+                ...((entity as any).metadata || {}),
+                provenance: {
+                  ...((entity as any).metadata?.provenance
+                    && typeof (entity as any).metadata.provenance === 'object'
+                    && !Array.isArray((entity as any).metadata.provenance)
+                    ? (entity as any).metadata.provenance
+                    : {}),
+                  source: 'external_ai',
+                  tool: 'save_conclusion',
+                  at: extractionTime,
+                },
+                authority: 'ai_derived',
+                user_confirmed: false,
+              },
+            }));
+            const resolution = await resolveEntities(aiDerivedEntities, extractResult.relationships, ctx.db, ctx.embeddingService);
 
-            const savedEntityIds: string[] = [];
+            // Review candidates are persisted by the resolver before being
+            // returned. Include them in the receipt without counting planned
+            // creates twice.
+            const savedEntityIds: string[] = resolution.persistedEntities.map((entity) => entity.id);
             for (const entity of resolution.entitiesToCreate) {
-              // provenance：save_conclusion 是外部 AI 把对话结论写回图谱，标注来源
               const saved = await ctx.db.addEntity({
                 ...entity,
                 tags: [...new Set([...(entity.tags || []), ...(tags || [])])],
-                metadata: { ...((entity as any).metadata || {}), provenance: { source: 'external_ai', tool: 'save_conclusion', at: new Date().toISOString() } },
+                metadata: (entity as any).metadata || {},
               });
               savedEntityIds.push(saved.id);
             }
@@ -2066,6 +2062,25 @@ ${gaConnBlock}`;
           case 'save_decision': {
             const parsed = SaveDecisionSchema.parse(args);
             const { situation, conclusion, cited_entity_ids, confidence, alternatives, previous_decision_id, supersedes_decision_id, lineage_relation } = parsed;
+            const requestDigest = parsed.idempotency_key
+              ? createHash('sha256').update(parsed.idempotency_key).digest('hex')
+              : undefined;
+            const requestFingerprint = parsed.idempotency_key
+              ? createHash('sha256').update(JSON.stringify(parsed)).digest('hex')
+              : undefined;
+            const decisionId = requestDigest ? decisionEntityIdFromRequestDigest(requestDigest) : undefined;
+            if (decisionId && requestDigest && requestFingerprint) {
+              const existing = await ctx.db.peekEntity(decisionId);
+              if (existing) {
+                if (existing.type !== 'decision'
+                  || existing.metadata?.save_request_digest !== requestDigest
+                  || existing.metadata?.save_request_fingerprint !== requestFingerprint) {
+                  throw new BusinessError('INVALID_PARAMS', 'IDEMPOTENCY_KEY_REUSED');
+                }
+                result = existing;
+                break;
+              }
+            }
 
             // Build full description: situation + decision
             const confidenceLabel = { high: '高', medium: '中', low: '低' }[confidence];
@@ -2092,14 +2107,25 @@ ${gaConnBlock}`;
               // ignore embedding failure
             }
 
-            // Create the decision entity
+            // Keep the idempotency row, entity, links, and archive write in one
+            // SQLite transaction. A retry after a lost HTTP response sees the
+            // committed deterministic entity ID and returns the same receipt.
+            try {
+              await ctx.db.withTransaction(async () => {
             const decisionEntity = await ctx.db.addEntity({
+              id: decisionId,
               name: decisionName,
               type: 'decision',
               description: fullDescription,
               tags: ['decision', `confidence-${confidence}`],
               embedding,
-              metadata: buildDecisionMetadata(parsed),
+              metadata: {
+                ...buildDecisionMetadata(parsed),
+                ...(requestDigest && requestFingerprint ? {
+                  save_request_digest: requestDigest,
+                  save_request_fingerprint: requestFingerprint,
+                } : {}),
+              },
               valid_from: parsed.valid_from,
               valid_until: parsed.valid_until,
             });
@@ -2130,17 +2156,13 @@ ${gaConnBlock}`;
             ];
             if (evidenceLinks.length > 0) {
               for (const link of evidenceLinks) {
-                try {
-                  await ctx.db.addRelationship({
-                    source_id: decisionEntity.id,
-                    target_id: link.id,
-                    type: link.type,
-                    description: `Decision evidence: ${link.type}`,
-                    weight: 1.0,
-                  });
-                } catch (e) {
-                  // duplicate relationship is expected
-                }
+                await ctx.db.addRelationship({
+                  source_id: decisionEntity.id,
+                  target_id: link.id,
+                  type: link.type,
+                  description: `Decision evidence: ${link.type}`,
+                  weight: 1.0,
+                });
               }
               // Bump importance of cited entities (反哺：被引用的实体获得权重提升)
               try {
@@ -2152,17 +2174,13 @@ ${gaConnBlock}`;
 
             // 同一会话里显式承接上一个决策（决策链：A→B→C）
             if (previous_decision_id && previous_decision_id !== decisionEntity.id) {
-              try {
-                await ctx.db.addRelationship({
-                  source_id: decisionEntity.id,
-                  target_id: previous_decision_id,
-                  type: lineage_relation,
-                  description: `Explicit decision lineage: ${lineage_relation}`,
-                  weight: 1.0,
-                });
-              } catch {
-                // duplicate is fine
-              }
+              await ctx.db.addRelationship({
+                source_id: decisionEntity.id,
+                target_id: previous_decision_id,
+                type: lineage_relation,
+                description: `Explicit decision lineage: ${lineage_relation}`,
+                weight: 1.0,
+              });
             }
 
             if (supersedes_decision_id && supersedes_decision_id !== decisionEntity.id) {
@@ -2191,19 +2209,31 @@ ${gaConnBlock}`;
               console.warn('[save_decision] lineage linking failed:', e);
             }
 
-            // Write to archival memory
-            try {
-              await ctx.archivalMemory.add(fullDescription, {
-                summary: `决策: ${conclusion} (置信度: ${confidenceLabel})`,
-                tags: ['decision', 'user-decision', `confidence-${confidence}`],
-                embedding,
-                importance: confidence === 'high' ? 8 : confidence === 'medium' ? 7 : 5,
-              });
-            } catch (e) {
-              console.warn('[save_decision] 写入 archival memory 失败:', e);
-            }
+            // Archival memory shares the SQLite connection, so a failed write
+            // must roll the explicit decision and its evidence links back too.
+            await ctx.archivalMemory.add(fullDescription, {
+              summary: `决策: ${conclusion} (置信度: ${confidenceLabel})`,
+              tags: ['decision', 'user-decision', `confidence-${confidence}`],
+              embedding,
+              importance: confidence === 'high' ? 8 : confidence === 'medium' ? 7 : 5,
+            });
 
             result = await ctx.db.getEntity(decisionEntity.id);
+              });
+            } catch (error) {
+              // Two identical requests can race before the transaction starts.
+              // The unique entity ID makes the loser wait, then return the
+              // winner's committed entity; mismatched reuse fails closed.
+              if (!decisionId || !requestDigest || !requestFingerprint) throw error;
+              const existing = await ctx.db.peekEntity(decisionId);
+              if (!existing) throw error;
+              if (existing.type !== 'decision'
+                || existing.metadata?.save_request_digest !== requestDigest
+                || existing.metadata?.save_request_fingerprint !== requestFingerprint) {
+                throw new BusinessError('INVALID_PARAMS', 'IDEMPOTENCY_KEY_REUSED');
+              }
+              result = existing;
+            }
             break;
           }
           case 'get_decision_lineage': {

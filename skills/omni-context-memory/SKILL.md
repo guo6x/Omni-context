@@ -3,8 +3,8 @@ name: omni-context-memory
 description: >-
   Use the user's Omni-Context long-term memory when it is connected over MCP.
   Trigger this whenever you need to recall what the user has done, decided, or
-  prefers across past conversations, or when a conversation reaches something
-  worth remembering. Omni-Context is a local knowledge graph — NOT the standard
+  prefers across past conversations. Do not write anything unless the user
+  explicitly asks to save or remember it. Omni-Context is a local knowledge graph — NOT the standard
   @modelcontextprotocol/server-memory — so use the exact tool names below
   (e.g. unified_memory_search, save_conclusion), never read_graph / search_nodes.
 ---
@@ -12,9 +12,10 @@ description: >-
 # Omni-Context memory
 
 Omni-Context exposes a **local knowledge graph** (entities + relationships +
-vectors + full-text) over MCP. Treat it as the user's long-term memory: read
-from it before giving advice that depends on their history, and write back to it
-when something worth remembering happens.
+vectors + full-text) over MCP. Read from it before giving advice that depends
+on the user's history. Write only after the user explicitly asks to save or
+remember something; never proactively persist an AI summary, inferred fact,
+preference, or conclusion.
 
 ## Correct tool names
 
@@ -35,14 +36,14 @@ here** — calling them returns "not available in given tool list". Use these:
 **Persist (write)**
 - `add_entity` — record a concept, tool, person, project, pattern, etc.
 - `add_relationship` — connect two entities (depends_on, conflicts_with, extends, …).
-- `save_conclusion` — save a key takeaway at the end of a substantive conversation.
+- `save_conclusion` — save an AI-derived conclusion only after the user explicitly asks; the server marks it as unconfirmed and does not independently verify it.
 - `update_entity` — correct/enrich an existing entity.
 - `extract_from_capture` — auto-extract entities/relationships from a block of text.
 
 **Decisions**
 - `get_decision_context` — pull principles, history, and conflicts relevant to a situation (does not decide for you).
 - `analyze_decision` / `discuss_decision` — LLM-assisted analysis grounded in the graph (requires an LLM configured in Omni-Context).
-- `save_decision` — record a decision the user made, citing the entities it referenced.
+- `save_decision` — record a decision only after the user explicitly asks; MCP cannot prove that a caller's tool invocation represents human confirmation.
 - `get_decision_lineage` — trace what a decision cited and how decisions chain.
 
 > The client may namespace these (e.g. the user configured the server under a
@@ -57,9 +58,8 @@ here** — calling them returns "not available in given tool list". Use these:
 - **Mid-conversation recall**: when you need something specific, prefer
   `unified_memory_search`; fall back to `search_entities` / `vector_search`,
   then `get_entity` / `get_graph_neighborhood` for detail.
-- **Something worth remembering happens**: `add_entity` + `add_relationship`.
-- **A conclusion or decision is reached**: proactively call `save_conclusion`
-  (insights) or `save_decision` (concrete choices) so it persists for next time.
+- **The user explicitly asks to remember something**: choose the least broad write tool that fits. If that request is absent or ambiguous, do not write.
+- **Before any MCP write**: consider that the server cannot verify human intent from tool arguments alone; never claim an MCP write was user-confirmed unless the client provides a separate, trustworthy confirmation record.
 
 ## Prerequisites
 
@@ -67,3 +67,4 @@ here** — calling them returns "not available in given tool list". Use these:
 - Decision *analysis* tools (`analyze_decision` / `discuss_decision`) need an LLM
   configured in Omni-Context settings; without it they return `LLM_NOT_CONFIGURED`.
   Recall and persist tools work fully offline regardless.
+- MCP tool instructions are guidance, not a server-enforced consent gate. Configure clients to require approval for write tools; memory tools do not grant Agent execution permission.

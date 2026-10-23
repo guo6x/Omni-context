@@ -55,15 +55,27 @@ export interface DecisionNode {
   situation: string;
   timestamp: string;
   confidence?: "high" | "medium" | "low";
+  outcomes?: DecisionOutcomeJournal[];
+}
+
+export interface DecisionOutcomeJournal {
+  outcome_id: string;
+  outcome_entity_id?: string;
+  actual_outcome: string;
+  outcome_timestamp: string;
+  outcome_score: number;
+  outcome_authority?: string;
+  verified?: boolean;
 }
 
 export interface DecisionLineage {
   current: DecisionNode;
   sources: Array<{
-    entityId: string;
-    entityName: string;
-    entityType: string;
+    entity_id: string;
+    entity_name: string;
+    entity_type: string;
     relationship: string;
+    direction?: "incoming" | "outgoing";
   }>;
   chain: DecisionNode[];
 }

@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod brain_server;
+mod capture_policy;
 mod clipboard;
 mod commands;
 // CP3 wires only the read-only broker status surface; the execution core is
@@ -153,7 +154,9 @@ async fn main() {
                         }
                     }
                     "pause_capture" => {
-                        // 发送事件给前端切换暂停状态
+                        // Deny new native captures immediately; the renderer will persist and
+                        // confirm the resulting pause/unpause state before capture resumes.
+                        capture_policy::mark_invalidated();
                         if let Some(window) = app.get_window("main") {
                             let _ = window.emit("toggle-capture-pause", ());
                         }
@@ -412,6 +415,8 @@ async fn main() {
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
+            capture_policy::sync_capture_policy,
+            capture_policy::invalidate_capture_policy,
             commands::start_listening,
             commands::capture_screen,
             commands::capture_all_screens,
