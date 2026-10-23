@@ -310,6 +310,7 @@ describe('Task 5: POST /api/import/chat/failed/:batchId/retry', () => {
         text: 'some conversation text here',
         time: '2026-01-01T00:00:00Z',
         platform: 'chatgpt',
+        extractionMode: 'default',
       }),
     });
   });
@@ -394,6 +395,6 @@ describe('Task 5: current schema verification', () => {
     const row = await db.get<{ version: number }>(
       "SELECT MAX(id) AS version FROM migrations",
     );
-    expect(row?.version).toBe(31);
+    expect(row?.version).toBe(32);
   });
 });

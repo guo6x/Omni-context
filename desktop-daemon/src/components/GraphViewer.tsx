@@ -7,9 +7,14 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
+import { createDiscussionSession, createPendingDecisionWriteGate, saveDiscussion, DISCUSSION_SAVE_TIMEOUT_MS, type DiscussionSession, type DiscussionSaveState } from '@/lib/discussion-session';
+import { createAskAnswerBookmark, normalizePersistedAnswerTurns, type PersistedAnswerTurn } from '@/lib/answer-turn-compat';
+import { createRequestDeadline, type RequestDeadlineResult } from '@/lib/request-deadline';
 import { getRelationshipStyle } from '@/lib/relationship-styles';
 import { useSettings } from "@/hooks/useSettings";
 import { THEMES, NODE_TYPE_TO_THEME_KEY } from "@/lib/themes";
+
+const ASK_REQUEST_TIMEOUT_MS = 30_000;
 
 // 3D 图谱节点数据结构
 interface GraphNode {
@@ -125,23 +130,96 @@ function getLinkEndpointId(endpoint: any): string {
   return typeof endpoint === "object" ? String(endpoint.id || "") : String(endpoint);
 }
 
-interface DiscussionSession {
-  id: string | null;
-  saveTail: Promise<void>;
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-// Discussion history is a best-effort receipt.  It must never keep an
-// explicit user-authorized mutation (for example save_decision) pending
-// forever when Brain is restarting or SQLite is recovering a WAL.  Keep this
-// bound longer than the normal local round-trip, but short enough that the
-// next explicit action can make progress in the same interaction.
-const DISCUSSION_SAVE_TIMEOUT_MS = 8_000;
-
-function createDiscussionSession(id: string | null = null): DiscussionSession {
-  return { id, saveTail: Promise.resolve() };
+type AnswerSource = PersistedAnswerTurn['sources'][number];
+type DecisionSaveArguments = Record<string, unknown>;
+interface PersistedDecisionRequestSnapshot {
+  version: 1;
+  discussionId: string;
+  turnId: string;
+  arguments: DecisionSaveArguments;
+  sourceIds: string[];
 }
 
-type AnswerSource = { id: string; name: string; type: string; description?: string };
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function parseDecisionRequestSnapshot(value: string): PersistedDecisionRequestSnapshot | null {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!isRecord(parsed)
+      || parsed.version !== 1
+      || typeof parsed.discussionId !== 'string'
+      || typeof parsed.turnId !== 'string'
+      || !isRecord(parsed.arguments)
+      || !Array.isArray(parsed.sourceIds)
+      || parsed.sourceIds.some((id) => typeof id !== 'string')) return null;
+    return parsed as unknown as PersistedDecisionRequestSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+function patchDecisionTurn(
+  turns: PersistedAnswerTurn[],
+  turnId: string,
+  requestKey: string,
+  fingerprint: string,
+  patch: Partial<PersistedAnswerTurn>,
+): PersistedAnswerTurn[] | null {
+  let matched = false;
+  const nextTurns = turns.map((turn) => {
+    if (turn.id !== turnId
+      || turn.decisionRequestKey !== requestKey
+      || turn.decisionRequestFingerprint !== fingerprint) return turn;
+    matched = true;
+    return { ...turn, ...patch };
+  });
+  return matched ? nextTurns : null;
+}
+
+function isDeterministicDecisionRejection(status: number, errorCode: string | null): boolean {
+  return status >= 400
+    && status < 500
+    && status !== 408
+    && status !== 425
+    && status !== 429
+    && errorCode !== 'IDEMPOTENCY_KEY_REUSED';
+}
+
+async function readDecisionErrorCode(response: Response): Promise<string | null> {
+  try {
+    const body: unknown = await response.clone().json();
+    return isRecord(body) && typeof body.error === 'string' ? body.error : null;
+  } catch {
+    return null;
+  }
+}
+
+type DecisionSaveResponse =
+  | { kind: 'saved'; id: string | null }
+  | { kind: 'rejected'; status: number; errorCode: string | null };
+
+function requestDecisionSave(args: DecisionSaveArguments, signal: AbortSignal): Promise<DecisionSaveResponse> {
+  return (async () => {
+    const response = await apiFetch('/api/mcp/tool/save_decision', {
+      method: 'POST',
+      signal,
+      body: JSON.stringify({ arguments: args }),
+    });
+    if (!response.ok) {
+      return { kind: 'rejected', status: response.status, errorCode: await readDecisionErrorCode(response) };
+    }
+    const saved = await response.json().catch(() => null);
+    return { kind: 'saved', id: typeof saved?.id === 'string' && saved.id ? saved.id : null };
+  })();
+}
+
 type SourcePreview = {
   source: AnswerSource;
   entity: Entity | null;
@@ -156,6 +234,8 @@ interface GraphViewer3DProps {
   focusEntityId?: string;
   onFocusEntityReset?: () => void;
   askRequest?: { id: number; question: string };
+  onReviewDecisions?: () => void;
+  onOpenLlmSettings?: () => void;
 }
 
 export default function GraphViewer3D({ 
@@ -165,6 +245,8 @@ export default function GraphViewer3D({
   focusEntityId,
   onFocusEntityReset,
   askRequest,
+  onReviewDecisions,
+  onOpenLlmSettings,
 }: GraphViewer3DProps) {
   const { t, language } = useTranslation();
   const toast = useToast();
@@ -216,21 +298,27 @@ export default function GraphViewer3D({
   const [followInput, setFollowInput] = useState("");
   // 答案卡每一轮的完整结构：多轮追问时每轮都保留自己的结论/依据/引用，
   // 历史轮和当前轮用同一套富文本渲染，不再把旧轮降级成灰色折叠块
-  type AnswerTurn = { question: string; conclusion: string; reasons: Array<{ text: string; entityIds: string[] }>; questions: string[]; isDecision: boolean; sources: AnswerSource[]; citedEntityIds: string[]; savedAsDecision?: boolean; favorited?: boolean };
+  type AnswerTurn = PersistedAnswerTurn;
   const [gAnswer, setGAnswer] = useState<{ turns: AnswerTurn[] } | null>(null);
   const [gLoading, setGLoading] = useState(false);
   const answerRequestRef = useRef<{ id: number; controller: AbortController } | null>(null);
   const answerRequestIdRef = useRef(0);
   const historyRequestRef = useRef<AbortController | null>(null);
+  const historyListRequestRef = useRef<AbortController | null>(null);
+  const decisionSaveAttemptsRef = useRef(new Set<string>());
+  const decisionWriteGate = useMemo(() => createPendingDecisionWriteGate(), []);
   // IDs and pending saves belong to one discussion, never to whichever view is current later.
   // Serialize saves within that discussion so a fast follow-up cannot create duplicate rows.
-  const discussionRef = useRef<DiscussionSession>(createDiscussionSession());
+  const discussionRef = useRef<DiscussionSession<AnswerTurn>>(createDiscussionSession());
+  const [discussionSaveState, setDiscussionSaveState] = useState<DiscussionSaveState>('idle');
+  const [decisionDraft, setDecisionDraft] = useState<string | null>(null);
+  const [activeDecisionRequestKey, setActiveDecisionRequestKey] = useState<string | null>(null);
   const lastDecisionIdRef = useRef<string | null>(null);
   // Saving a decision must not tear down the active Ask panel before the user
   // can continue the decision chain. Refresh the graph when that discussion is
   // explicitly closed (or replaced), after the follow-up composer is no longer
   // needed.
-  const pendingGraphRefreshRef = useRef<DiscussionSession | null>(null);
+  const pendingGraphRefreshRef = useRef<DiscussionSession<AnswerTurn> | null>(null);
   const [sourcePreview, setSourcePreview] = useState<SourcePreview | null>(null);
   const sourceRequestRef = useRef<AbortController | null>(null);
   const sourceTriggerRef = useRef<HTMLElement | null>(null);
@@ -266,6 +354,7 @@ export default function GraphViewer3D({
   }, []);
   const closeAnswer = useCallback(() => {
     const session = discussionRef.current;
+    if (session.id && decisionWriteGate.isPending(session.id)) return;
     invalidateAnswerRequests();
     closeSourcePreview(false);
     if (pendingGraphRefreshRef.current === session) {
@@ -276,30 +365,22 @@ export default function GraphViewer3D({
       pendingGraphRefreshRef.current = null;
     }
     discussionRef.current = createDiscussionSession();
+    setDiscussionSaveState('idle');
+    setDecisionDraft(null);
     lastDecisionIdRef.current = null;
     setGSaving(false);
     setGAnswer(null);
     setCmdInput("");
     setFollowInput("");
     setSelectedNode(null);
-  }, [invalidateAnswerRequests, closeSourcePreview, onDataChanged]);
-  // 导入后只准备问题并聚焦，由用户决定何时发送，不自动调用推理服务。
-  useEffect(() => {
-    if (!askRequest) return;
-    closeAnswer();
-    setCmdInput(askRequest.question);
-    const frame = requestAnimationFrame(() => cmdInputRef.current?.focus());
-    return () => cancelAnimationFrame(frame);
-    // `closeAnswer` is intentionally omitted: its callback identity can change
-    // when parent data-refresh props settle, but that must not close an active
-    // Ask/decision panel for the same imported request.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [askRequest?.id, askRequest?.question]);
+  }, [invalidateAnswerRequests, closeSourcePreview, decisionWriteGate, onDataChanged]);
   useEffect(() => () => {
     answerRequestRef.current?.controller.abort();
     answerRequestRef.current = null;
     historyRequestRef.current?.abort();
     historyRequestRef.current = null;
+    historyListRequestRef.current?.abort();
+    historyListRequestRef.current = null;
     sourceRequestRef.current?.abort();
     sourceRequestRef.current = null;
     discussionRef.current = createDiscussionSession();
@@ -314,6 +395,9 @@ export default function GraphViewer3D({
   const [lineageRelation, setLineageRelation] = useState<'continues' | 'revises' | 'supersedes' | 'reverses' | 'invalidates' | 'none'>('continues');
   const [histOpen, setHistOpen] = useState(false);
   const [histItems, setHistItems] = useState<Array<{ id: string; title: string; updated_at: string; turns: number }>>([]);
+  const [histLoading, setHistLoading] = useState(false);
+  const [histError, setHistError] = useState<string | null>(null);
+  const [histLoadingId, setHistLoadingId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<string>("all");
   const [activeTag, setActiveTag] = useState<string>("all");
   const [graphLoadError, setGraphLoadError] = useState<string | null>(null);
@@ -737,36 +821,95 @@ export default function GraphViewer3D({
     }
   }, []);
 
-  // 会话自动保存（upsert 到 discussions，可续聊）。best-effort，失败不打扰用户。
-  const saveSession = useCallback((turns: AnswerTurn[], session: DiscussionSession) => {
-    if (!turns.length) return;
-    session.saveTail = session.saveTail.then(async () => {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), DISCUSSION_SAVE_TIMEOUT_MS);
-      try {
-        const r = await apiFetch('/api/discussions', {
-          method: 'POST',
-          signal: controller.signal,
-          body: JSON.stringify({ id: session.id, title: (turns[0].question || '问大脑').slice(0, 80), turns }),
-        });
-        if (r.ok) {
-          const d = await r.json().catch(() => null);
-          if (typeof d?.id === 'string' && (!session.id || session.id === d.id)) session.id = d.id;
-        }
-      } catch { /* best effort; a failed save must not poison the next save */ }
-      finally { window.clearTimeout(timeout); }
-    });
-    return session.saveTail;
-  }, []);
+  // A receipt is shown only for the current discussion. Late saves can still
+  // finish their own history row without changing a newer Ask panel.
+  const saveSession = useCallback((turns: AnswerTurn[], session: DiscussionSession<AnswerTurn>) => (
+    saveDiscussion(session, turns, (savedSession) => {
+      if (discussionRef.current === savedSession) setDiscussionSaveState(savedSession.state);
+    })
+  ), []);
+  const updateDecisionRequestTurn = useCallback((
+    session: DiscussionSession<AnswerTurn>,
+    turnId: string,
+    requestKey: string,
+    fingerprint: string,
+    patch: Partial<AnswerTurn>,
+  ) => {
+    const nextTurns = patchDecisionTurn(session.turns, turnId, requestKey, fingerprint, patch);
+    if (!nextTurns) return false;
+    saveSession(nextTurns, session);
+    if (discussionRef.current === session) {
+      setGAnswer((current) => {
+        if (!current || discussionRef.current !== session) return current;
+        const currentTurns = patchDecisionTurn(current.turns, turnId, requestKey, fingerprint, patch);
+        return currentTurns ? { turns: currentTurns } : current;
+      });
+    }
+    return true;
+  }, [saveSession]);
+  const leavingDiscussionRef = useRef(false);
+  const canLeaveDiscussion = useCallback(async () => {
+    const session = discussionRef.current;
+    if (leavingDiscussionRef.current) return false;
+    leavingDiscussionRef.current = true;
+    try {
+      if (session.id && !await decisionWriteGate.waitFor(session.id, DISCUSSION_SAVE_TIMEOUT_MS)) return false;
+      if (discussionRef.current !== session) return false;
+      if (!session.turns.length || session.state === 'saved') return true;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        session.saveTail,
+        new Promise<void>((resolve) => { timer = setTimeout(resolve, DISCUSSION_SAVE_TIMEOUT_MS); }),
+      ]);
+      clearTimeout(timer);
+      if (discussionRef.current !== session) return false;
+      if ((session.state as DiscussionSaveState) === 'saved') return true;
+      const leave = await confirm({
+        title: t('cmd.history_unsaved_title'),
+        message: t('cmd.history_unsaved_message'),
+        confirmText: t('cmd.history_leave'),
+        cancelText: t('cmd.history_stay'),
+      });
+      return leave && discussionRef.current === session;
+    } finally { leavingDiscussionRef.current = false; }
+  }, [confirm, decisionWriteGate, t]);
+  const finishDiscussion = useCallback(async () => {
+    if (await canLeaveDiscussion()) closeAnswer();
+  }, [canLeaveDiscussion, closeAnswer]);
+
+  // An imported Ask request is only prepared after the current discussion and
+  // any confirmed decision write have safely settled. Sending remains explicit.
+  useEffect(() => {
+    if (!askRequest) return;
+    let active = true;
+    let frame: number | undefined;
+    void (async () => {
+      if (!await canLeaveDiscussion() || !active) return;
+      closeAnswer();
+      setCmdInput(askRequest.question);
+      frame = requestAnimationFrame(() => cmdInputRef.current?.focus());
+    })();
+    return () => {
+      active = false;
+      if (frame !== undefined) cancelAnimationFrame(frame);
+    };
+    // `closeAnswer` is intentionally omitted: its callback identity can change
+    // when parent data-refresh props settle, but must not replace an active
+    // discussion for the same imported request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askRequest?.id, askRequest?.question, canLeaveDiscussion]);
 
   // 调 graph_answer 跑一轮（首问/追问共用）：右栏切答案卡并高亮命中子图。
   // priorTurns 是此前已答的各轮，新的一轮追加到末尾；发给后端时把每轮压平成
   // user/assistant 消息（依据也带上），让模型看得到之前的分析。
   const runAnswer = useCallback(async (question: string, priorTurns: AnswerTurn[]) => {
+    if (priorTurns.length === 0 && !await canLeaveDiscussion()) return;
     invalidateAnswerRequests();
     closeSourcePreview(false);
+    setDecisionDraft(null);
     if (priorTurns.length === 0) {
       discussionRef.current = createDiscussionSession();
+      setDiscussionSaveState('idle');
       lastDecisionIdRef.current = null;
       setGAnswer(null);
     }
@@ -786,22 +929,38 @@ export default function GraphViewer3D({
     }
     messages.push({ role: 'user', content: question });
     const append = (turn: AnswerTurn) => setGAnswer({ turns: [...priorTurns, turn] });
+    const deadline = createRequestDeadline(ASK_REQUEST_TIMEOUT_MS, request.controller.signal);
     try {
-      const res = await apiFetch('/api/mcp/tool/graph_answer', {
+      const answerResult = await deadline.race(apiFetch('/api/mcp/tool/graph_answer', {
         method: 'POST',
-        signal: request.controller.signal,
+        signal: deadline.signal,
         body: JSON.stringify({ arguments: { messages } }),
-      });
+      }));
+      if (answerResult.timedOut) {
+        if (isCurrent()) append({
+          question,
+          conclusion: t('cmd.answer_timeout'),
+          reasons: [],
+          questions: [],
+          isDecision: false,
+          sources: [],
+          citedEntityIds: [],
+        });
+        return;
+      }
+      const res = answerResult.value;
       if (!res.ok) {
         const body = await res.text();
         if (!isCurrent()) return;
-        const conclusion = res.status === 400 && body.includes('LLM') ? t('cmd.need_llm') : t('cmd.error');
-        append({ question, conclusion, reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
+        const needsLlmSetup = res.status === 400 && body.includes('LLM');
+        const conclusion = needsLlmSetup ? t('cmd.need_llm') : t('cmd.error');
+        append({ question, conclusion, reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [], ...(needsLlmSetup ? { needsLlmSetup: true } : {}) });
         return;
       }
       const data = await res.json();
       if (!isCurrent()) return;
       const newTurn: AnswerTurn = {
+        id: crypto.randomUUID(),
         question,
         conclusion: data.conclusion || '',
         reasons: Array.isArray(data.reasons) ? data.reasons : [],
@@ -809,6 +968,18 @@ export default function GraphViewer3D({
         isDecision: !!data.isDecision,
         sources: Array.isArray(data.sources) ? data.sources : [],
         citedEntityIds: Array.isArray(data.citedEntityIds) ? data.citedEntityIds : [],
+        grounding: data.grounding
+          && (data.grounding.status === 'grounded' || data.grounding.status === 'insufficient_evidence')
+          && (data.grounding.answerClassification === 'inference' || data.grounding.answerClassification === 'unknown')
+          && (data.grounding.evidenceCoverage === 'partial' || data.grounding.evidenceCoverage === 'none')
+          && Number.isFinite(data.grounding.confidence)
+          ? {
+              status: data.grounding.status,
+              answerClassification: data.grounding.answerClassification,
+              evidenceCoverage: data.grounding.evidenceCoverage,
+              confidence: Math.max(0, Math.min(1, data.grounding.confidence)),
+            }
+          : undefined,
       };
       const allTurns = [...priorTurns, newTurn];
       setGAnswer({ turns: allTurns });
@@ -816,13 +987,14 @@ export default function GraphViewer3D({
     } catch (e) {
       if (isCurrent()) append({ question, conclusion: t('cmd.error'), reasons: [], questions: [], isDecision: false, sources: [], citedEntityIds: [] });
     } finally {
+      deadline.clear();
       if (isCurrent()) {
         answerRequestRef.current = null;
         setGLoading(false);
         setGPendingQ(null);
       }
     }
-  }, [t, saveSession, invalidateAnswerRequests, closeSourcePreview]);
+  }, [t, saveSession, invalidateAnswerRequests, closeSourcePreview, canLeaveDiscussion]);
 
   // 决策：把当前答案存为决定。存完【不关闭】——决策常是连续多个，方便继续讨论/做下一个；
   // 同一会话里的后续决策通过 lineage fields 挂成决策链，关系由用户选择（非自动）。
@@ -831,130 +1003,352 @@ export default function GraphViewer3D({
     const turns = gAnswer?.turns ?? [];
     const idx = turns.length - 1;
     const turn = idx >= 0 ? turns[idx] : null;
-    if (!turn || gSaving || gLoading) return;
+    const confirmedConclusion = decisionDraft?.trim();
+    if (!turn || !confirmedConclusion || turn.savedAsDecision || turn.decisionSaveUncertain || gSaving || gLoading) return;
+    session.id ??= crypto.randomUUID();
+    const turnId = turn.id ?? `legacy-${idx}`;
+    const attemptId = `${session.id}:${turnId}`;
+    // Freeze the full write payload before sending it. The discussion upsert
+    // is the recovery record if the decision receipt is lost; retry must not
+    // rebuild evidence from a later graph snapshot or choose a new lineage.
+    const evidenceMap = new Map<string, { role: 'supporting' | 'opposing' | 'neutral'; source_span?: string; is_current?: boolean }>();
+    for (const reason of turn.reasons) {
+      for (const entityId of reason.entityIds) {
+        const entity = entities.find((candidate) => candidate.id === entityId);
+        let isCurrent: boolean | undefined;
+        if (entity?.valid_until) isCurrent = new Date(entity.valid_until).getTime() > Date.now();
+        else if (entity) isCurrent = true;
+        evidenceMap.set(entityId, { role: 'supporting', source_span: reason.text, is_current: isCurrent });
+      }
+    }
+    for (const entityId of turn.citedEntityIds) {
+      if (evidenceMap.has(entityId)) continue;
+      const entity = entities.find((candidate) => candidate.id === entityId);
+      let isCurrent: boolean | undefined;
+      if (entity?.valid_until) isCurrent = new Date(entity.valid_until).getTime() > Date.now();
+      else if (entity) isCurrent = true;
+      evidenceMap.set(entityId, { role: 'neutral', is_current: isCurrent });
+    }
+    const evidence = Array.from(evidenceMap.entries()).map(([entity_id, meta]) => ({ entity_id, ...meta }));
+    const requestArguments: DecisionSaveArguments = {
+      situation: turn.question,
+      conclusion: confirmedConclusion,
+      cited_entity_ids: turn.citedEntityIds,
+      evidence,
+      confidence: 'medium',
+      alternatives: '',
+    };
+    // Lineage: user-selected relation to the previous decision in this session.
+    // 'supersedes' goes through supersedes_decision_id; others through previous_decision_id.
+    // 'none' means no lineage link (standalone decision).
+    const previousDecisionId = lastDecisionIdRef.current;
+    if (previousDecisionId && lineageRelation !== 'none') {
+      if (lineageRelation === 'supersedes') {
+        requestArguments.supersedes_decision_id = previousDecisionId;
+        requestArguments.lineage_relation = 'supersedes';
+      } else {
+        requestArguments.previous_decision_id = previousDecisionId;
+        requestArguments.lineage_relation = lineageRelation;
+      }
+    }
+    const requestFingerprint = JSON.stringify({
+      version: 1,
+      discussionId: session.id,
+      turnId,
+      sourceIds: turn.sources.map((source) => source.id),
+      arguments: requestArguments,
+    });
+    if (decisionSaveAttemptsRef.current.has(attemptId)) return;
+    decisionSaveAttemptsRef.current.add(attemptId);
+    const finishDecisionWrite = decisionWriteGate.begin(session.id);
     setGSaving(true);
+    let decisionRequestKey = turn.decisionRequestKey && turn.decisionRequestFingerprint === requestFingerprint
+      ? turn.decisionRequestKey
+      : '';
+    if (!decisionRequestKey) {
+      try {
+        decisionRequestKey = `decision:${await sha256Hex(requestFingerprint)}`;
+      } catch {
+        decisionSaveAttemptsRef.current.delete(attemptId);
+        finishDecisionWrite();
+        if (discussionRef.current === session) {
+          setGSaving(false);
+          toast.error(t('cmd.error'), language === 'zh' ? '无法生成本轮请求校验值，决定尚未提交。' : 'Unable to prepare the request fingerprint; the decision was not submitted.');
+        }
+        return;
+      }
+    }
+    setActiveDecisionRequestKey(decisionRequestKey);
+    const keyedTurns = turns.map((candidate, index) => index === idx ? {
+      ...candidate,
+      id: candidate.id ?? turnId,
+      decisionRequestKey,
+      decisionRequestFingerprint: requestFingerprint,
+      decisionConclusion: confirmedConclusion,
+      // Persist this before dispatch so app/window close during the write is
+      // recovered as an ambiguous save, not as an invitation for a new key.
+      decisionSaveUncertain: true,
+    } : candidate);
+    if (discussionRef.current === session) setGAnswer({ turns: keyedTurns });
+    const requestSnapshotSave = saveSession(keyedTurns, session);
+    const requestSnapshotRevision = session.revision;
+    let writeUncertain = false;
     try {
-      // A completed answer starts an asynchronous discussion upsert. Give the
-      // queued history write a short opportunity to settle so normal ordering
-      // is preserved, but keep the explicit user-authorized decision bounded:
-      // a stale renderer request must never leave the Save button spinning
-      // forever or prevent the decision mutation from being attempted.
       let saveWaitTimer: ReturnType<typeof setTimeout> | undefined;
       await Promise.race([
-        session.saveTail,
+        requestSnapshotSave,
         new Promise<void>((resolve) => {
           saveWaitTimer = setTimeout(resolve, DISCUSSION_SAVE_TIMEOUT_MS);
         }),
       ]);
       if (saveWaitTimer !== undefined) clearTimeout(saveWaitTimer);
-      // Task 9: Build per-evidence metadata with source_span, role, is_current.
-      // Entities cited in turn.reasons → 'supporting' with source_span = reason text.
-      // Entities in citedEntityIds but not in any reason → 'neutral'.
-      const evidenceMap = new Map<string, { role: 'supporting' | 'opposing' | 'neutral'; source_span?: string; is_current?: boolean }>();
-      for (const r of turn.reasons) {
-        for (const eid of r.entityIds) {
-          // is_current: false if the entity has valid_until in the past
-          const ent = entities.find((e) => e.id === eid);
-          let isCurrent: boolean | undefined = undefined;
-          if (ent?.valid_until) {
-            isCurrent = new Date(ent.valid_until).getTime() > Date.now();
-          } else if (ent) {
-            isCurrent = true; // no valid_until = still current
-          }
-          evidenceMap.set(eid, { role: 'supporting', source_span: r.text, is_current: isCurrent });
-        }
+      if (session.savedRevision < requestSnapshotRevision) {
+        throw new Error('DECISION_RETRY_SNAPSHOT_NOT_PERSISTED');
       }
-      for (const eid of turn.citedEntityIds) {
-        if (!evidenceMap.has(eid)) {
-          const ent = entities.find((e) => e.id === eid);
-          let isCurrent: boolean | undefined = undefined;
-          if (ent?.valid_until) {
-            isCurrent = new Date(ent.valid_until).getTime() > Date.now();
-          } else if (ent) {
-            isCurrent = true;
-          }
-          evidenceMap.set(eid, { role: 'neutral', is_current: isCurrent });
-        }
-      }
-      const evidence = Array.from(evidenceMap.entries()).map(([entity_id, meta]) => ({ entity_id, ...meta }));
 
-      const args: Record<string, unknown> = {
-        situation: turn.question,
-        conclusion: turn.conclusion,
-        cited_entity_ids: turn.citedEntityIds,
-        evidence,
-        confidence: 'medium',
-        alternatives: '',
-      };
-      // Lineage: user-selected relation to the previous decision in this session.
-      // 'supersedes' goes through supersedes_decision_id; others through previous_decision_id.
-      // 'none' means no lineage link (standalone decision).
-      const prevId = lastDecisionIdRef.current;
-      if (prevId && lineageRelation !== 'none') {
-        if (lineageRelation === 'supersedes') {
-          args.supersedes_decision_id = prevId;
-          args.lineage_relation = 'supersedes';
-        } else {
-          args.previous_decision_id = prevId;
-          args.lineage_relation = lineageRelation;
+      const args = { ...requestArguments, idempotency_key: decisionRequestKey };
+      writeUncertain = true;
+      const deadline = createRequestDeadline(DISCUSSION_SAVE_TIMEOUT_MS);
+      let decisionResult: RequestDeadlineResult<DecisionSaveResponse>;
+      try {
+        decisionResult = await deadline.race(requestDecisionSave(args, deadline.signal));
+      } finally {
+        deadline.clear();
+      }
+      if (decisionResult.timedOut) throw new Error('DECISION_SAVE_TIMEOUT');
+      if (decisionResult.value.kind === 'rejected') {
+        if (isDeterministicDecisionRejection(decisionResult.value.status, decisionResult.value.errorCode)) {
+          writeUncertain = false;
+          updateDecisionRequestTurn(session, turnId, decisionRequestKey, requestFingerprint, {
+            decisionSaveUncertain: false,
+            decisionConclusion: confirmedConclusion,
+          });
+          if (discussionRef.current === session) {
+            toast.error(t('cmd.error'), `HTTP ${decisionResult.value.status}: ${language === 'zh' ? '服务端明确拒绝，请修正决定后重试。' : 'The server rejected this request; correct the decision and retry.'}`);
+          }
+          return;
         }
+        throw new Error(`DECISION_SAVE_HTTP_${decisionResult.value.status}`);
       }
-      const r = await apiFetch('/api/mcp/tool/save_decision', {
-        method: 'POST',
-        body: JSON.stringify({ arguments: args }),
+      if (!decisionResult.value.id) throw new Error('DECISION_SAVE_RECEIPT_MISSING');
+      writeUncertain = false;
+      const updated = updateDecisionRequestTurn(session, turnId, decisionRequestKey, requestFingerprint, {
+        savedAsDecision: true,
+        savedDecisionId: decisionResult.value.id,
+        decisionConclusion: confirmedConclusion,
+        decisionSaveUncertain: false,
       });
-      if (!r.ok) throw new Error();
-      const saved = await r.json().catch(() => null);
-      const nextTurns = turns.map((tn, i) => (i === idx ? { ...tn, savedAsDecision: true } : tn));
-      const isSessionCurrent = discussionRef.current === session;
-      if (isSessionCurrent) {
-        if (saved?.id) lastDecisionIdRef.current = saved.id;
-        setGAnswer({ turns: nextTurns });
-      }
-      saveSession(nextTurns, session); // 显式授权的决定已保存；仅更新其原讨论。
-      if (isSessionCurrent) {
+      if (updated && discussionRef.current === session) {
+        lastDecisionIdRef.current = decisionResult.value.id;
+        setDecisionDraft(null);
         toast.success(t('cmd.decision_saved'));
         pendingGraphRefreshRef.current = session;
       }
-    } catch (e) {
-      if (discussionRef.current === session) toast.error(t('cmd.error'));
+    } catch {
+      if (writeUncertain) {
+        updateDecisionRequestTurn(session, turnId, decisionRequestKey, requestFingerprint, {
+          decisionSaveUncertain: true,
+          decisionConclusion: confirmedConclusion,
+        });
+        if (discussionRef.current === session) {
+          setDecisionDraft(null);
+          pendingGraphRefreshRef.current = session;
+        }
+      } else {
+        updateDecisionRequestTurn(session, turnId, decisionRequestKey, requestFingerprint, {
+          decisionSaveUncertain: false,
+          decisionConclusion: confirmedConclusion,
+        });
+        if (discussionRef.current === session) {
+          setDecisionDraft(confirmedConclusion);
+          toast.error(t('cmd.error'), language === 'zh'
+            ? '本轮原始请求快照未能持久保存，决定尚未提交。请稍后重试。'
+            : 'The original request snapshot was not persisted, so the decision was not submitted. Please retry.');
+        }
+      }
     } finally {
+      decisionSaveAttemptsRef.current.delete(attemptId);
+      finishDecisionWrite();
+      setActiveDecisionRequestKey((activeKey) => activeKey === decisionRequestKey ? null : activeKey);
       if (discussionRef.current === session) setGSaving(false);
     }
-  }, [gAnswer, gSaving, gLoading, saveSession, toast, t, lineageRelation, entities]);
+  }, [gAnswer, gSaving, gLoading, decisionDraft, decisionWriteGate, saveSession, updateDecisionRequestTurn, toast, t, language, lineageRelation, entities]);
+
+  const retryUncertainDecision = useCallback(async (turnId: string, requestKey: string, fingerprint: string) => {
+    const session = discussionRef.current;
+    const turn = session.turns.find((candidate) => candidate.id === turnId
+      && candidate.decisionRequestKey === requestKey
+      && candidate.decisionRequestFingerprint === fingerprint);
+    if (!session.id || !turn?.decisionSaveUncertain || turn.savedAsDecision || gSaving || gLoading) return;
+
+    const snapshot = parseDecisionRequestSnapshot(fingerprint);
+    const sourceIds = turn.sources.map((source) => source.id);
+    if (!snapshot
+      || snapshot.discussionId !== session.id
+      || snapshot.turnId !== turnId
+      || snapshot.arguments.situation !== turn.question
+      || snapshot.arguments.conclusion !== turn.decisionConclusion
+      || JSON.stringify(snapshot.arguments.cited_entity_ids) !== JSON.stringify(turn.citedEntityIds)
+      || JSON.stringify(snapshot.sourceIds) !== JSON.stringify(sourceIds)
+      || !Array.isArray(snapshot.arguments.evidence)) {
+      toast.error(t('cmd.error'), language === 'zh'
+        ? '本轮没有完整保存原始请求，无法安全重试。请先核对决策日志。'
+        : 'The original request snapshot is incomplete, so a safe retry is unavailable. Review the decision log.');
+      return;
+    }
+    if (turn.decisionConclusion?.trim() !== snapshot.arguments.conclusion) return;
+
+    const attemptId = `${session.id}:${turnId}`;
+    if (decisionSaveAttemptsRef.current.has(attemptId)) return;
+    decisionSaveAttemptsRef.current.add(attemptId);
+    const finishDecisionWrite = decisionWriteGate.begin(session.id);
+    setActiveDecisionRequestKey(requestKey);
+    setGSaving(true);
+    let requestDispatched = false;
+    try {
+      // Verify the saved key belongs to this exact persisted payload; never
+      // generate a replacement key or rebuild sources/evidence/lineage here.
+      if (requestKey !== `decision:${await sha256Hex(fingerprint)}`) {
+        throw new Error('DECISION_RETRY_KEY_MISMATCH');
+      }
+      const args = { ...snapshot.arguments, idempotency_key: requestKey };
+      requestDispatched = true;
+      const deadline = createRequestDeadline(DISCUSSION_SAVE_TIMEOUT_MS);
+      let decisionResult: RequestDeadlineResult<DecisionSaveResponse>;
+      try {
+        decisionResult = await deadline.race(requestDecisionSave(args, deadline.signal));
+      } finally {
+        deadline.clear();
+      }
+      if (decisionResult.timedOut) throw new Error('DECISION_SAVE_TIMEOUT');
+      if (decisionResult.value.kind === 'rejected') {
+        if (isDeterministicDecisionRejection(decisionResult.value.status, decisionResult.value.errorCode)) {
+          updateDecisionRequestTurn(session, turnId, requestKey, fingerprint, { decisionSaveUncertain: false });
+          if (discussionRef.current === session) {
+            setDecisionDraft(turn.decisionConclusion ?? null);
+            toast.error(t('cmd.error'), `HTTP ${decisionResult.value.status}: ${language === 'zh' ? '服务端明确拒绝，请修正决定后重试。' : 'The server rejected this request; correct the decision and retry.'}`);
+          }
+          return;
+        }
+        throw new Error(`DECISION_SAVE_HTTP_${decisionResult.value.status}`);
+      }
+      if (!decisionResult.value.id) throw new Error('DECISION_SAVE_RECEIPT_MISSING');
+      const updated = updateDecisionRequestTurn(session, turnId, requestKey, fingerprint, {
+        savedAsDecision: true,
+        savedDecisionId: decisionResult.value.id,
+        decisionConclusion: turn.decisionConclusion,
+        decisionSaveUncertain: false,
+      });
+      if (updated && discussionRef.current === session) {
+        lastDecisionIdRef.current = decisionResult.value.id;
+        setDecisionDraft(null);
+        toast.success(t('cmd.decision_saved'));
+        pendingGraphRefreshRef.current = session;
+      }
+    } catch {
+      if (discussionRef.current === session) {
+        toast.error(t('cmd.error'), language === 'zh'
+          ? requestDispatched
+            ? '仍未收到回执；本轮内容和请求编号保持不变，可以安全重试。'
+            : '原始请求校验未通过，没有发送重试请求；请核对决策日志。'
+          : requestDispatched
+            ? 'No receipt was received. The original payload and request key are unchanged; retry is safe.'
+            : 'The original request could not be verified, so no retry was sent. Review the decision log.');
+      }
+    } finally {
+      decisionSaveAttemptsRef.current.delete(attemptId);
+      finishDecisionWrite();
+      setActiveDecisionRequestKey((activeKey) => activeKey === requestKey ? null : activeKey);
+      if (discussionRef.current === session) setGSaving(false);
+    }
+  }, [gSaving, gLoading, decisionWriteGate, updateDecisionRequestTurn, toast, t, language]);
 
   // 历史会话：打开列表 / 载入一条续聊 / 删除
-  const openHistory = useCallback(async () => {
-    setHistOpen((v) => !v);
+  const refreshHistory = useCallback(async () => {
+    historyListRequestRef.current?.abort();
+    const controller = new AbortController();
+    historyListRequestRef.current = controller;
+    setHistLoading(true);
+    setHistError(null);
+    const timeout = setTimeout(() => controller.abort(), DISCUSSION_SAVE_TIMEOUT_MS);
     try {
-      const r = await apiFetch('/api/discussions');
-      if (r.ok) setHistItems(await r.json());
-    } catch { /* */ }
-  }, []);
-  const loadDiscussion = useCallback(async (id: string) => {
-    closeAnswer();
-    setHistOpen(false);
+      const r = await apiFetch('/api/discussions', { signal: controller.signal });
+      if (!r.ok) throw new Error();
+      const items = await r.json();
+      if (!Array.isArray(items)) throw new Error();
+      if (historyListRequestRef.current === controller) setHistItems(items);
+    } catch {
+      if (historyListRequestRef.current === controller) setHistError(t('cmd.history_load_error'));
+    } finally {
+      clearTimeout(timeout);
+      if (historyListRequestRef.current === controller) {
+        historyListRequestRef.current = null;
+        setHistLoading(false);
+      }
+    }
+  }, [t]);
+  const openHistory = useCallback(() => {
+    setHistOpen(!histOpen);
     setCmdFocused(false);
-    const session = createDiscussionSession(id);
-    discussionRef.current = session;
+    if (!histOpen) void refreshHistory();
+  }, [histOpen, refreshHistory]);
+  const loadDiscussion = useCallback(async (id: string) => {
+    if (!await canLeaveDiscussion()) return;
+    historyRequestRef.current?.abort();
+    const owner = discussionRef.current;
     const controller = new AbortController();
     historyRequestRef.current = controller;
+    setHistLoadingId(id);
+    setHistError(null);
+    const timeout = setTimeout(() => controller.abort(), DISCUSSION_SAVE_TIMEOUT_MS);
     try {
       const r = await apiFetch(`/api/discussions/${encodeURIComponent(id)}`, { signal: controller.signal });
-      if (!r.ok) return;
+      if (!r.ok) throw new Error();
       const d = await r.json();
-      if (historyRequestRef.current !== controller || discussionRef.current !== session || controller.signal.aborted || d?.id !== id) return;
-      const turns: AnswerTurn[] = Array.isArray(d.turns) ? d.turns : [];
-      if (!turns.length) return;
+      if (historyRequestRef.current !== controller || discussionRef.current !== owner || controller.signal.aborted) return;
+      if (d?.id !== id) throw new Error();
+      const normalizedTurns = normalizePersistedAnswerTurns(d.turns);
+      if (!normalizedTurns?.length) throw new Error();
+      // Older clients persisted a key/fingerprint only after the request was
+      // already dispatched. Without a full v1 payload snapshot that state
+      // cannot be replayed safely, so keep it ambiguous instead of generating
+      // a new key on resume.
+      const turns = normalizedTurns.map((turn) => (
+        turn.decisionRequestKey
+        && turn.decisionRequestFingerprint
+        && !turn.savedAsDecision
+        && !turn.decisionSaveUncertain
+        && !parseDecisionRequestSnapshot(turn.decisionRequestFingerprint)
+          ? { ...turn, decisionSaveUncertain: true }
+          : turn
+      ));
+      closeAnswer();
+      const session = createDiscussionSession<AnswerTurn>(id);
+      session.turns = turns;
+      session.state = 'saved';
+      discussionRef.current = session;
+      lastDecisionIdRef.current = [...turns].reverse().find((turn) => turn.savedAsDecision && typeof turn.savedDecisionId === 'string')?.savedDecisionId ?? null;
+      setLineageRelation('continues');
+      setDiscussionSaveState('saved');
       setGAnswer({ turns });
-    } catch { /* */ }
-    finally { if (historyRequestRef.current === controller) historyRequestRef.current = null; }
-  }, [closeAnswer]);
+      setHistOpen(false);
+      setCmdFocused(false);
+    } catch {
+      if (historyRequestRef.current === controller) setHistError(t('cmd.history_load_error'));
+    } finally {
+      clearTimeout(timeout);
+      if (historyRequestRef.current === controller) historyRequestRef.current = null;
+      setHistLoadingId((loadingId) => loadingId === id ? null : loadingId);
+    }
+  }, [closeAnswer, canLeaveDiscussion, t]);
   const deleteDiscussion = useCallback(async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try { await apiFetch(`/api/discussions/${id}`, { method: 'DELETE' }); setHistItems((xs) => xs.filter((x) => x.id !== id)); }
-    catch { /* */ }
-  }, []);
+    try {
+      const response = await apiFetch(`/api/discussions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error();
+      setHistItems((xs) => xs.filter((x) => x.id !== id));
+    } catch { setHistError(t('cmd.history_delete_error')); }
+  }, [t]);
 
   // 答案卡：复制 / 收藏一轮的洞见（结论 + 依据）
   const turnText = (turn: AnswerTurn) => [turn.conclusion, ...turn.reasons.map((r) => '· ' + r.text)].filter(Boolean).join('\n');
@@ -964,15 +1358,19 @@ export default function GraphViewer3D({
   }, [toast, t]);
   const favoriteAnswer = useCallback(async (turn: AnswerTurn, idx: number) => {
     if (turn.favorited) { toast.success(t('actions.favorited')); return; }
-    const content = turnText(turn);
+    const bookmark = createAskAnswerBookmark(turn, {
+      title: t('cmd.bookmark_record_title'),
+      summaryPrefix: t('cmd.bookmark_summary_prefix'),
+      note: t('cmd.bookmark_record_note'),
+    });
     try {
       // 去重：已有一模一样的收藏就不再重复存
       const existing = await apiFetch('/api/memory/archival').then((r) => (r.ok ? r.json() : [])).catch(() => []);
-      const dup = Array.isArray(existing) && existing.some((x: any) => Array.isArray(x.tags) && x.tags.includes('收藏') && x.content === content);
+      const dup = Array.isArray(existing) && existing.some((x: any) => Array.isArray(x.tags) && x.tags.includes('收藏') && x.content === bookmark.content);
       if (!dup) {
         const r = await apiFetch('/api/memory/archival', {
           method: 'POST',
-          body: JSON.stringify({ content, summary: turn.question || turn.conclusion.slice(0, 60), tags: ['收藏'], importance: 0.8 }),
+          body: JSON.stringify({ ...bookmark, importance: 0.8 }),
         });
         if (!r.ok) throw new Error();
       }
@@ -1062,13 +1460,13 @@ export default function GraphViewer3D({
       }
       if (e.key === 'Escape') {
         if (histOpen) { setHistOpen(false); return; }
-        if (gAnswer || gLoading || historyRequestRef.current) { closeAnswer(); return; }
+        if (gAnswer || gLoading || historyRequestRef.current) { void finishDiscussion(); return; }
         if (selectedNodeIds.size > 0) { setSelectedNodeIds(new Set()); setSelectedNode(null); }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedNodeIds.size, gAnswer, gLoading, histOpen, sourcePreview, closeAnswer, closeSourcePreview]);
+  }, [selectedNodeIds.size, gAnswer, gLoading, histOpen, sourcePreview, finishDiscussion, closeSourcePreview]);
 
   // 进入编辑模式：把当前选中节点字段填到表单
   const enterEditMode = useCallback(() => {
@@ -1626,7 +2024,7 @@ export default function GraphViewer3D({
   const gCited = gLastTurn?.citedEntityIds ?? [];
 
   return (
-    <div className="flex h-full">
+    <div className="relative flex h-full">
       {/* 图谱主区域 */}
       <div className="relative min-w-0 flex-1" ref={containerRef}>
         {/* Keep the command bar and its input mounted while the optional graph engine loads. */}
@@ -1656,7 +2054,7 @@ export default function GraphViewer3D({
         ) : null}
         {/* 控制栏 + 时间轴：统一放进 top 容器纵向堆叠，时间轴自然落在控制栏下方，
             不再用 top-[60px] 魔法数字，避免与摘要行重叠 */}
-        <div className="absolute top-4 left-4 right-4 z-30 isolate flex flex-col gap-2">
+        <div data-testid="graph-toolbar" className={`absolute top-4 left-4 right-4 z-30 isolate flex flex-col gap-2 ${gAnswer ? 'max-md:hidden' : ''}`}>
         {/* 命令栏：问大脑 / 决策 / 找节点 的统一入口，回答出现在右栏答案卡 */}
         <div className="relative">
           <div className="flex items-center gap-2.5 rounded-xl border border-cyan-500/25 bg-gray-950/85 px-3.5 py-2.5 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm">
@@ -1674,8 +2072,9 @@ export default function GraphViewer3D({
               disabled={gSaving}
               className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 outline-none"
             />
-            <button data-testid="ask-history-button" onClick={openHistory} disabled={gSaving} title={t('cmd.history')} aria-label={t('cmd.history')} className={`shrink-0 transition-colors hover:text-cyan-200 disabled:opacity-30 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
+            <button data-testid="ask-history-button" onClick={openHistory} disabled={gSaving} title={t('cmd.history')} aria-label={t('cmd.history')} className={`flex shrink-0 items-center gap-1 text-xs transition-colors hover:text-cyan-200 disabled:opacity-30 ${histOpen ? 'text-cyan-300' : 'text-gray-400'}`}>
               <History className="h-4 w-4" />
+              <span>{t('cmd.history_resume')}</span>
             </button>
             {gLoading ? (
               <span className="block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
@@ -1721,17 +2120,24 @@ export default function GraphViewer3D({
             </div>
           )}
           {histOpen && (
-            <div className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-80 overflow-y-auto rounded-xl border border-white/10 bg-gray-950/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-sm">
+            <div data-testid="ask-history-list" className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-[min(20rem,60vh)] overflow-y-auto rounded-xl border border-white/10 bg-gray-950/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-sm">
               <div className="px-2 pb-1.5 pt-1 text-[10px] uppercase tracking-wider text-gray-500">{t('cmd.history')}</div>
-              {histItems.length === 0 ? (
+              {histLoading && <p role="status" className="px-2 py-3 text-xs text-cyan-300">{t('cmd.history_loading')}</p>}
+              {histError && (
+                <div role="alert" data-testid="ask-history-error" className="m-1 rounded-lg border border-amber-700/40 bg-amber-950/20 p-3 text-xs text-amber-200">
+                  <p>{histError}</p>
+                  <button onClick={refreshHistory} className="mt-2 underline underline-offset-2">{t('cmd.history_retry')}</button>
+                </div>
+              )}
+              {!histLoading && !histError && histItems.length === 0 ? (
                 <div className="px-2 py-3 text-[13px] text-gray-500">{t('cmd.history_empty')}</div>
               ) : (
                 histItems.map((h) => (
                   <div key={h.id} className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
-                    <button onClick={() => loadDiscussion(h.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                    <button onClick={() => loadDiscussion(h.id)} disabled={histLoadingId !== null} data-testid="ask-history-item" className="flex min-w-0 flex-1 items-center gap-2 text-left disabled:opacity-50">
                       <Clock className="h-3.5 w-3.5 shrink-0 text-cyan-400/70" />
                       <span className="flex-1 truncate text-[13px] text-gray-200">{h.title}</span>
-                      <span className="shrink-0 text-[10px] text-gray-600">{h.updated_at?.slice(5, 10)}</span>
+                      <span className="shrink-0 text-[10px] text-gray-500">{histLoadingId === h.id ? t('cmd.history_loading') : h.updated_at?.slice(5, 10)}</span>
                     </button>
                     <button onClick={(e) => deleteDiscussion(h.id, e)} title="删除" className="shrink-0 text-gray-600 opacity-0 transition-opacity hover:text-rose-400 group-hover:opacity-100">
                       <Trash2 className="h-3.5 w-3.5" />
@@ -2460,7 +2866,7 @@ export default function GraphViewer3D({
       )}
 
       {gAnswer && (
-        <aside data-testid="ask-answer-panel" style={{ width: answerWidth, maxWidth: "100%" }} className="absolute inset-y-0 right-0 z-20 flex min-w-0 max-w-full shrink-0 flex-col border-l border-white/10 bg-gray-950/95 md:relative md:inset-y-auto md:right-auto md:z-auto">
+        <aside data-testid="ask-answer-panel" style={{ '--answer-width': `${answerWidth}px` } as React.CSSProperties} className="absolute inset-0 z-20 flex w-full min-w-0 max-w-full shrink-0 flex-col border-l border-white/10 bg-gray-950/95 md:relative md:inset-y-auto md:left-auto md:right-auto md:w-[var(--answer-width)] md:z-auto">
           <div
             onMouseDown={(e) => {
               e.preventDefault();
@@ -2483,15 +2889,25 @@ export default function GraphViewer3D({
             <Brain className="h-4 w-4 text-cyan-300" />
             <h3 className="text-sm font-semibold text-cyan-300">{t('cmd.answer_title')}</h3>
             <button
-              onClick={closeAnswer}
+              onClick={finishDiscussion}
+              disabled={gSaving}
+              aria-busy={gSaving}
               data-testid="ask-done-button"
-              className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-200"
+              className="ml-auto flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-200 disabled:cursor-wait disabled:opacity-50"
               title={t('cmd.done')}
             >
               <Check className="h-3.5 w-3.5" />
               {t('cmd.done')}
             </button>
           </div>
+          {discussionSaveState !== 'idle' && (
+            <div data-testid="ask-save-receipt" data-state={discussionSaveState} role={discussionSaveState === 'error' ? 'alert' : 'status'} className={`border-b px-4 py-2 text-[11px] leading-relaxed ${discussionSaveState === 'error' ? 'border-amber-700/30 bg-amber-950/20 text-amber-200' : 'border-white/10 text-gray-400'}`}>
+              {t(`cmd.history_save_${discussionSaveState}`)}
+              {discussionSaveState === 'error' && (
+                <button data-testid="ask-save-retry" disabled={gSaving || gLoading} onClick={() => saveSession(discussionRef.current.turns, discussionRef.current)} className="ml-2 text-cyan-300 underline underline-offset-2 disabled:opacity-40">{t('cmd.history_retry')}</button>
+              )}
+            </div>
+          )}
           <div ref={answerScrollRef} className="flex-1 min-h-0 overflow-y-auto p-4">
             {gAnswer.turns.map((turn, ti) => {
               const isLast = ti === gAnswer.turns.length - 1;
@@ -2503,7 +2919,28 @@ export default function GraphViewer3D({
                   className={ti > 0 ? 'mt-5 border-t border-white/5 pt-5' : ''}
                 >
                   <p className="mb-3 text-xs text-gray-500"><span className="text-gray-600">{t('cmd.you_asked')}</span>{turn.question}</p>
+                  <p className="mb-1 text-[10px] text-gray-500">{t('cmd.ai_analysis')}</p>
+                  {turn.grounding && (
+                    <p
+                      data-testid="ask-grounding-status"
+                      role="status"
+                      className={`mb-3 rounded-md border px-2.5 py-1.5 text-[11px] leading-relaxed ${turn.grounding.status === 'insufficient_evidence' ? 'border-amber-700/40 bg-amber-950/20 text-amber-200' : 'border-cyan-800/40 bg-cyan-950/20 text-cyan-100/80'}`}
+                    >
+                      {turn.grounding.status === 'insufficient_evidence'
+                        ? t('cmd.grounding_insufficient')
+                        : t('cmd.grounding_partial').replace('{confidence}', String(Math.round(turn.grounding.confidence * 100)))}
+                    </p>
+                  )}
                   <div className="text-base font-semibold leading-relaxed text-white">{turn.conclusion || t('cmd.no_answer')}</div>
+                  {turn.needsLlmSetup && onOpenLlmSettings && (
+                    <button
+                      type="button"
+                      onClick={onOpenLlmSettings}
+                      className="mt-3 inline-flex min-h-9 items-center rounded-lg border border-cyan-500/40 px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-950/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                    >
+                      {t('cmd.configure_model')}
+                    </button>
+                  )}
                   {turn.questions.length > 0 && (
                     <div className="mt-3 rounded-lg border border-violet-700/30 bg-violet-950/20 p-3">
                       <div className="mb-1.5 text-[11px] uppercase tracking-wider text-violet-300/80">{t('cmd.clarify')}</div>
@@ -2565,8 +3002,44 @@ export default function GraphViewer3D({
                       </button>
                     </div>
                   )}
-                  {isLast && turn.isDecision && !!turn.conclusion && turn.reasons.length > 0 && !turn.savedAsDecision && (
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {turn.decisionSaveUncertain && (
+                    <div data-testid="ask-decision-uncertain" role="alert" className="mt-4 rounded-lg border border-amber-700/40 bg-amber-950/20 p-3 text-xs leading-relaxed text-amber-200">
+                      {activeDecisionRequestKey === turn.decisionRequestKey ? (
+                        <p data-testid="ask-decision-saving" role="status">{t('cmd.saving')}</p>
+                      ) : (
+                        <>
+                          <p>{language === 'zh'
+                            ? '未收到保存回执，写入结果不确定。重试会复用本轮已确认内容、来源/证据和原请求编号，不会重新询问 AI。'
+                            : 'No save receipt was received, so the result is uncertain. Retry reuses this turn’s confirmed decision, sources/evidence, and original request key; it does not ask the AI again.'}</p>
+                          {turn.id && turn.decisionRequestKey && turn.decisionRequestFingerprint && parseDecisionRequestSnapshot(turn.decisionRequestFingerprint) ? (
+                            <button
+                              type="button"
+                              data-testid="ask-decision-retry"
+                              disabled={gSaving || gLoading}
+                              aria-busy={gSaving}
+                              onClick={() => void retryUncertainDecision(turn.id!, turn.decisionRequestKey!, turn.decisionRequestFingerprint!)}
+                              className="mt-2 rounded-md border border-amber-600/60 px-2.5 py-1 text-amber-100 hover:bg-amber-900/40 disabled:cursor-wait disabled:opacity-50"
+                            >{t('cmd.history_retry')}</button>
+                          ) : (
+                            <p className="mt-2">{language === 'zh'
+                              ? '旧记录未保存完整请求快照，无法安全自动重试；请先核对决策日志。'
+                              : 'This older record lacks the complete request snapshot, so automatic retry is unsafe. Review the decision log first.'}</p>
+                          )}
+                          {onReviewDecisions && <button onClick={onReviewDecisions} className="ml-3 mt-2 text-cyan-300 underline">{t('cmd.decision_review_log')}</button>}
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {isLast && turn.isDecision && !!turn.conclusion && turn.reasons.length > 0 && !turn.savedAsDecision && !turn.decisionSaveUncertain && (
+                    <div className="mt-4 space-y-2">
+                      {decisionDraft !== null && (
+                        <div className="rounded-lg border border-cyan-800/40 bg-cyan-950/20 p-3">
+                          <label htmlFor="ask-decision-conclusion" className="mb-2 block text-xs font-medium text-cyan-200">{t('cmd.my_decision')}</label>
+                          <textarea id="ask-decision-conclusion" data-testid="ask-decision-draft" value={decisionDraft} onChange={(event) => setDecisionDraft(event.target.value)} disabled={gSaving} maxLength={8000} rows={4} className="w-full resize-y rounded-md border border-white/10 bg-gray-950 p-2 text-sm text-gray-100 outline-none focus:border-cyan-500/50" />
+                          <p className="mt-2 text-[11px] leading-relaxed text-gray-400">{t('cmd.decision_confirm_hint')}</p>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap items-center gap-2">
                       {lastDecisionIdRef.current && (
                         <select
                           value={lineageRelation}
@@ -2583,22 +3056,25 @@ export default function GraphViewer3D({
                         </select>
                       )}
                       <button
-                        onClick={saveDecision}
-                        disabled={gSaving || gLoading}
+                        onClick={() => { if (decisionDraft === null) setDecisionDraft(turn.conclusion); else void saveDecision(); }}
+                        disabled={gSaving || gLoading || (decisionDraft !== null && !decisionDraft.trim())}
                         data-testid="ask-decision-save"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50"
                       >
                         <Check className="h-3.5 w-3.5" />
-                        {gSaving ? t('cmd.saving') : t('cmd.save_decision')}
+                        {gSaving ? t('cmd.saving') : decisionDraft === null ? t('cmd.save_decision') : t('cmd.decision_confirm_save')}
                       </button>
+                      {decisionDraft !== null && <button onClick={() => setDecisionDraft(null)} disabled={gSaving} className="text-xs text-gray-400 hover:text-white">{t('cmd.decision_cancel')}</button>}
+                      </div>
                     </div>
                   )}
                   {turn.savedAsDecision && (
                     <div
                       data-testid="ask-decision-saved"
-                      className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-green-700/40 bg-green-950/20 px-3 py-2 text-[12.5px] font-medium text-green-300"
+                      className="mt-4 rounded-lg border border-green-700/40 bg-green-950/20 px-3 py-2 text-[12.5px] font-medium text-green-300"
                     >
-                      <Check className="h-3.5 w-3.5" /> {t('cmd.decision_saved')}
+                      <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5" /> {t('cmd.decision_saved')}</span>
+                      {turn.decisionConclusion && <p data-testid="ask-confirmed-decision" className="mt-2 whitespace-pre-wrap text-gray-200">{turn.decisionConclusion}</p>}
                     </div>
                   )}
                 </div>

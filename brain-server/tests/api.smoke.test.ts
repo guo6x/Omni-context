@@ -713,16 +713,16 @@ describe('API smoke: ingest file', () => {
     await db.run(
       `INSERT INTO ingestion_documents (
          id, source, title, content_sha256, character_count, total_chunks,
-         processed_chunks, failed_chunks, coverage, status, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [documentId, 'retry.txt', 'retry.txt', '0'.repeat(64), content.length, 1, 0, 1, 0, 'failed', now, now]
+         processed_chunks, failed_chunks, coverage, status, created_at, updated_at, extraction_mode
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [documentId, 'retry.txt', 'retry.txt', '0'.repeat(64), content.length, 1, 0, 1, 0, 'failed', now, now, 'default']
     );
     await db.run(
       `INSERT INTO ingestion_chunks (
          id, document_id, ordinal, source, content, source_span, start_offset,
-         end_offset, source_timestamp, status, attempts, error, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [chunkId, documentId, 0, 'retry.txt', content, content, 0, content.length, now, 'failed', 1, 'initial failure', now, now]
+         end_offset, source_timestamp, status, attempts, error, created_at, updated_at, extraction_mode
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [chunkId, documentId, 0, 'retry.txt', content, content, 0, content.length, now, 'failed', 1, 'initial failure', now, now, 'default']
     );
 
     const retry = await request('POST', `/api/ingest/document/${documentId}/retry`);
@@ -763,7 +763,7 @@ describe('API smoke: admin export', () => {
     expect(status).toBe(200);
     expect(body).toMatchObject({
       version: 2,
-      schemaVersion: 31,
+      schemaVersion: 32,
       appVersion: '0.1.1',
       exportedAt: expect.any(String),
       entities: expect.any(Array),

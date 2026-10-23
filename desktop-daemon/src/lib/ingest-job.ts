@@ -1,8 +1,12 @@
 import { apiFetch } from './api-client';
+import { normalizeIngestExtractionMode, normalizeIngestJobSnapshot, type IngestExtractionMode } from './ingest-extraction-mode';
+
+export { ingestExtractionModeNotice, normalizeIngestExtractionMode, normalizeIngestJobSnapshot } from './ingest-extraction-mode';
 
 export interface IngestJob {
   jobId: string;
   status: 'queued' | 'running' | 'success' | 'partial' | 'failed' | 'cancelled';
+  extractionMode?: 'configured' | 'local' | 'unknown' | 'default' | 'local_only';
   stage?: string;
   error?: string;
   importProgress?: { done: number; total: number; entities: number };
@@ -37,6 +41,7 @@ export class IngestJobError extends Error {
 
 export interface IngestSummary {
   outcome: 'success' | 'partial' | 'failed' | 'cancelled';
+  extractionMode: IngestExtractionMode;
   countsKnown: boolean;
   countBasis: 'saved' | 'extracted';
   entities: number;
@@ -73,6 +78,7 @@ export function summarizeIngestJob(job: IngestJob): IngestSummary {
     : job.status === 'partial' || incomplete ? 'partial' : 'success';
   return {
     outcome,
+    extractionMode: normalizeIngestExtractionMode(job.extractionMode),
     countsKnown: typeof result?.entities === 'number' && Number.isFinite(result.entities) && result.entities >= 0
       && typeof result?.relationships === 'number' && Number.isFinite(result.relationships) && result.relationships >= 0,
     // Initial chat imports report persisted counts; file jobs report extraction
@@ -164,7 +170,7 @@ export async function pollIngestJob(jobId: string, options: PollOptions = {}): P
       if (!snapshot || snapshot.jobId !== jobId || !JOB_STATUSES.has(snapshot.status)) {
         throw new IngestJobError('invalid', 'Invalid import task status');
       }
-      job = snapshot;
+      job = normalizeIngestJobSnapshot(snapshot as IngestJob);
     } catch (error) {
       throwIfAborted(signal);
       if (error instanceof IngestJobError) throw error;

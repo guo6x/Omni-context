@@ -8,8 +8,8 @@ name: omni-context-memory
 description: >-
   Use the user's Omni-Context long-term memory when it is connected over MCP.
   Trigger this whenever you need to recall what the user has done, decided, or
-  prefers across past conversations, or when a conversation reaches something
-  worth remembering. Omni-Context is a local knowledge graph — NOT the standard
+  prefers across past conversations, or when the user explicitly asks to save
+  a durable conclusion. Omni-Context is a local knowledge graph — NOT the standard
   @modelcontextprotocol/server-memory — so use the exact tool names below
   (e.g. unified_memory_search, save_conclusion), never read_graph / search_nodes.
 ---
@@ -18,8 +18,9 @@ description: >-
 
 Omni-Context exposes a **local knowledge graph** (entities + relationships +
 vectors + full-text) over MCP. Treat it as the user's long-term memory: read
-from it before giving advice that depends on their history, and write back to it
-when something worth remembering happens.
+from it before giving advice that depends on their history. Write to it only
+when the user explicitly asks; AI-generated content remains AI-derived and is
+not user-confirmed unless the user confirms it.
 
 ## Correct tool names
 
@@ -40,7 +41,9 @@ here** — calling them returns "not available in given tool list". Use these:
 **Persist (write)**
 - \`add_entity\` — record a concept, tool, person, project, pattern, etc.
 - \`add_relationship\` — connect two entities (depends_on, conflicts_with, extends, …).
-- \`save_conclusion\` — save a key takeaway at the end of a substantive conversation.
+- \`save_conclusion\` — save a user-requested conclusion. Never proactively
+  save an AI-generated conclusion; saved content remains AI-derived unless the
+  user explicitly confirms its wording.
 - \`update_entity\` — correct/enrich an existing entity.
 - \`extract_from_capture\` — auto-extract entities/relationships from a block of text.
 
@@ -62,9 +65,10 @@ here** — calling them returns "not available in given tool list". Use these:
 - **Mid-conversation recall**: when you need something specific, prefer
   \`unified_memory_search\`; fall back to \`search_entities\` / \`vector_search\`,
   then \`get_entity\` / \`get_graph_neighborhood\` for detail.
-- **Something worth remembering happens**: \`add_entity\` + \`add_relationship\`.
-- **A conclusion or decision is reached**: proactively call \`save_conclusion\`
-  (insights) or \`save_decision\` (concrete choices) so it persists for next time.
+- **The user asks you to remember something durable**: call \`save_conclusion\`;
+  do not save summaries, guesses, or conclusions proactively.
+- **The user asks to record a decision they made**: call \`save_decision\` and
+  keep that record distinct from permission to execute the decision.
 
 ## Prerequisites
 

@@ -7,7 +7,9 @@ Brain Server 暴露了一个 **Model Context Protocol** 服务（stdio 传输）
 接进来之后，你的 AI 能做到：
 - 在给建议前，先查用户的**核心原则**和**历史先例**（`get_decision_context` / `get_core_context`）；
 - 用自然语言**语义检索**整张知识图谱（`unified_memory_search` / `vector_search`）；
-- 把新发现**写回图谱**，让记忆持续生长（`extract_from_capture` / `add_entity`）。
+- 只在用户明确要求记录时才使用写入工具；AI 推断或总结不应被静默保存。
+
+写入工具受 MCP 客户端配置的权限控制，但 Omni 不能从一次工具调用本身验证是否真的有人提出了保存请求。请勿让客户端自动批准写入工具；`save_conclusion` 保存的是 AI 推导内容，并标为未由用户确认。桌面 Ask 的“确认并保存我的决定”是另一条显式确认路径。任何记忆写入都不会授权 Agent 执行决定。
 
 下面给出 Claude Desktop / Cursor / Cline 三个最常见客户端的接入方式。
 
@@ -187,7 +189,7 @@ http_headers = { "Authorization" = "Bearer <你的本地 token>" }
 1. 对话开始 → `get_core_context`，先了解用户的原则与偏好。
 2. 遇到需要判断的具体处境 → `get_decision_context`，拿到相关历史 + 冲突。
 3. 基于返回的材料给建议——**判断由你做，Omni-Context 只负责把对的历史喂给你**。
-4. 产生了值得记住的新结论 → `add_entity` / `extract_from_capture` 写回图谱。
+4. 只有用户明确要求保存时，才调用合适的写入工具；否则把结论留在当前对话中。不要把工具说明当作服务端可验证的用户授权。
 
 ---
 
@@ -219,7 +221,7 @@ SQLite 的 WAL 模式支持多进程读写，但注意：
 
 ## 十、推荐：安装记忆使用 Skill（Claude Code / Claude）
 
-仓库里附带了一个 Agent Skill：`skills/omni-context-memory/SKILL.md`。它会告诉 AI 本服务的**正确工具名**和调用时机（对话开始先 `get_core_context` + `unified_memory_search`，结束 `save_conclusion`…），从根本上避免 AI 瞎猜 `read_graph` 这类不存在的工具。
+仓库里附带了一个 Agent Skill：`skills/omni-context-memory/SKILL.md`。它列出本服务的正确工具名，并指导 AI 在相关时检索记忆；写入仅应响应用户明确的保存请求。请勿自动批准 MCP 写入工具，也不要把 AI 推导内容描述成已核实事实。
 
 安装（任选其一）：
 

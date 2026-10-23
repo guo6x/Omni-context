@@ -225,15 +225,37 @@ async function capturePage() {
     try { await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ['extractor.js'] }); } catch {}
     const [res] = await chrome.scripting.executeScript({
       target: { tabId: t.id },
-      func: () => {
+      func: async () => {
         const conv = globalThis.__omniExtractConversation && globalThis.__omniExtractConversation();
-        if (conv) return conv;
+        if (conv) {
+          if (typeof globalThis.__omniConversationSignature !== 'function' || !Number.isSafeInteger(conv.turns) || conv.turns < 0) {
+            return { ...conv, captureSignatureError: true };
+          }
+          try {
+            const sig = await globalThis.__omniConversationSignature(conv);
+            if (!/^\d+:[a-f0-9]{64}$/i.test(sig)) return { ...conv, captureSignatureError: true };
+            return {
+              ...conv,
+              captureSignature: {
+                key: `${location.origin}${location.pathname}`,
+                sig,
+                count: conv.turns,
+              },
+            };
+          } catch {
+            return { ...conv, captureSignatureError: true };
+          }
+        }
         return { url: location.href, title: document.title, content: (document.body?.innerText || '').slice(0, 10000) };
       },
     });
     page = res?.result;
   } catch {
     showNotification('这个页面读不了（如 chrome:// 或 PDF），换个普通网页');
+    return;
+  }
+  if (page?.source && page.captureSignatureError) {
+    showNotification('无法计算对话去重签名，请刷新页面后重试');
     return;
   }
   if (!page?.content) { showNotification('页面没有可读文本'); return; }
@@ -246,7 +268,15 @@ async function capturePage() {
   if (!confirmed) return;
 
   showNotification(page.source ? `正在沉淀 ${page.source} 对话（${page.turns} 轮）…` : '正在沉淀…');
-  const result = await sendCapture({ url: page.url || tab.url, title: page.title || tab.title, content: page.content, source: page.source, preformatted: !!page.source, previewConfirmed: true });
+  const result = await sendCapture({
+    url: page.url || tab.url,
+    title: page.title || tab.title,
+    content: page.content,
+    source: page.source,
+    preformatted: !!page.source,
+    previewConfirmed: true,
+    ...(page.captureSignature ? { captureSignature: page.captureSignature } : {}),
+  });
   showNotification(result?.ok ? `✓ 已发送 ${result.sentCharacters} 字符 / ${result.payloadChunks} 块，后台抽取中` : `✗ ${result?.error || '提交失败'}`);
   loadStats();
 }

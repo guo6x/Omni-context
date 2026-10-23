@@ -343,9 +343,12 @@ export default function MemoryManager({
       const saved = summary.countsKnown
         ? `已保存 ${summary.entities} 条记忆 / ${summary.relationships} 条关系`
         : '已保存数量暂时无法确认，请检查记忆库';
+      const modeWarning = summary.extractionMode === 'unknown'
+        ? '处理方式未知：回执未记录是否使用配置的 AI 服务或仅本地处理；Omni 不作本地或云端承诺。'
+        : '';
       const failures = summary.failures > 0 ? ` · ${summary.failures} 项未完成` : '';
       const coverage = summary.coverage !== undefined ? ` · 覆盖 ${Math.round(summary.coverage * 100)}%` : '';
-      const detail = `${units}${saved}${failures}${coverage}`;
+      const detail = `${modeWarning ? `${modeWarning} · ` : ''}${units}${saved}${failures}${coverage}`;
       const requiresAcknowledgement = settleImportOutcome(
         summary.outcome, 'library', pendingContentFingerprintRef.current, jobId, pendingAttemptRef.current,
       );

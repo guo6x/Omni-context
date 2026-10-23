@@ -8,7 +8,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/useToast';
 import { AppSettings } from '@/hooks/useSettings';
 import { apiFetch } from '@/lib/api-client';
-import { pollIngestJob, summarizeIngestJob, type IngestJob } from '@/lib/ingest-job';
+import { getImportErrorCode, responseImportErrorCode } from '@/lib/import-error';
+import { ingestExtractionModeNotice, pollIngestJob, summarizeIngestJob, type IngestJob } from '@/lib/ingest-job';
 import {
   clearPersistedImportAttempt, createImportRecoveryAttemptId,
   flushNativeImportRecovery, getPendingImportJobs, hydrateNativeImportRecovery,
@@ -72,6 +73,24 @@ function findProviderPreset(apiUrl: string): string {
   return LLM_PRESETS.find((preset) => preset.apiUrl && preset.apiUrl.replace(/\/+$/, '') === normalized)?.id || 'custom';
 }
 
+function formatOnboardingMessage(
+  translate: (key: string) => string,
+  key: string,
+  values: Record<string, string | number>,
+): string {
+  return Object.entries(values).reduce(
+    (message, [name, value]) => message.split(`{${name}}`).join(String(value)),
+    translate(key),
+  );
+}
+
+class LocalImportPolicyError extends Error {
+  constructor() {
+    super('LOCAL_ONLY_REMOTE_EMBEDDINGS');
+    this.name = 'LocalImportPolicyError';
+  }
+}
+
 export default function OnboardingWizard({
   settings, visible = true, onUpdateBehavior, onUpdateLlmProvider, onImportComplete, onImportPendingChange, onAskImported, onClose, onOpenSettings,
 }: OnboardingWizardProps) {
@@ -91,6 +110,7 @@ export default function OnboardingWizard({
   const [testState, setTestState] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
   const [testError, setTestError] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
+  const [localExtractionOnly, setLocalExtractionOnly] = useState(false);
 
   // ② 上传只提交一次；断线后恢复的是同一个任务的只读状态查询。
   const fileRef = useRef<HTMLInputElement>(null);
@@ -109,6 +129,8 @@ export default function OnboardingWizard({
   const [importJobId, setImportJobId] = useState<string | null>(null);
   const [canResumeImport, setCanResumeImport] = useState(false);
   const [importReceipt, setImportReceipt] = useState<ReturnType<typeof summarizeIngestJob> | null>(null);
+  const [localImportBlocked, setLocalImportBlocked] = useState(false);
+  const extractionModeNotice = ingestExtractionModeNotice(importReceipt?.extractionMode, localExtractionOnly);
 
   useEffect(() => {
     let active = true;
@@ -123,11 +145,11 @@ export default function OnboardingWizard({
       if (recovery.kind === 'job') {
         setImportJobId(recovery.jobId);
         setCanResumeImport(true);
-        setImportMsg('已恢复上次引导中的导入任务。继续查询只读取原任务，不会重新上传。');
+        setImportMsg(t('onboarding.alpha_recovery_job'));
       } else {
         importRecoveryAttemptRef.current = recovery.attemptId;
         setNeedsImportReview(true);
-        setImportMsg('上次提交结果未确认，无法安全判断是否已收到。请先检查记忆库，再确认后才能重新导入。');
+        setImportMsg(t('onboarding.alpha_recovery_uncertain'));
       }
     })();
     return () => { active = false; };
@@ -207,6 +229,7 @@ export default function OnboardingWizard({
       if (!isCurrent()) return;
       if (res.ok && data.healthy) {
         successfulProviderRef.current = testedProvider;
+        setLocalExtractionOnly(false);
         setTestState('success');
         onUpdateLlmProvider(testedProvider);
         toast.success(t('onboarding.test_success'));
@@ -242,9 +265,9 @@ export default function OnboardingWizard({
           if (!isCurrentImport(controller)) return;
           if (progress.importProgress) {
             const { done, total, entities } = progress.importProgress;
-            setImportMsg(`已处理 ${done}/${total} 段 · 已保存 ${entities} 条记忆`);
+            setImportMsg(formatOnboardingMessage(t, 'onboarding.alpha_progress', { done, total, entities }));
           } else {
-            setImportMsg(progress.status === 'queued' ? '任务已排队，等待处理…' : '正在处理文件，完成后显示实际导入结果…');
+            setImportMsg(t(progress.status === 'queued' ? 'onboarding.alpha_queued' : 'onboarding.alpha_processing'));
           }
         },
       });
@@ -269,10 +292,10 @@ export default function OnboardingWizard({
         setNeedsImportReview(false);
       }
       setImportMsg({
-        success: '导入完成，请查看实际保存结果。',
-        partial: `部分内容已导入，仍有内容未完成。${job.error ? `${job.error}。` : ''}已保存内容不会回滚。请先核对记忆库；确认后才能重新选择文件，不会自动重新上传。`,
-        failed: `导入失败${job.error ? `：${job.error}` : ''}。已保存内容不会回滚。请先核对记忆库；确认后才能重新选择文件，不会自动重新上传。`,
-        cancelled: '导入已取消。此前已保存的内容不会回滚。请先核对记忆库；确认后才能重新选择文件，不会自动重新上传。',
+        success: t('onboarding.alpha_import_success'),
+        partial: formatOnboardingMessage(t, 'onboarding.alpha_import_partial', { detail: job.error ? ` ${job.error}.` : '' }),
+        failed: formatOnboardingMessage(t, 'onboarding.alpha_import_failed', { detail: job.error ? `: ${job.error}` : '' }),
+        cancelled: t('onboarding.alpha_import_cancelled'),
       }[receipt.outcome]);
       // 失败/取消前也可能已写入；即使回执缺少数量，父级记忆库仍须刷新。
       onImportComplete?.();
@@ -284,14 +307,14 @@ export default function OnboardingWizard({
       setCanResumeImport(code === 'disconnected' || code === 'timeout' || code === 'unauthorized');
       setNeedsImportReview(code !== 'disconnected' && code !== 'timeout' && code !== 'unauthorized');
       setImportMsg(code === 'unauthorized'
-        ? '连接凭证已失效。请先在设置中重新连接；不会自动重新上传。'
+        ? t('onboarding.alpha_recovery_unauthorized')
         : code === 'expired'
-          ? '任务记录已过期，无法确认最终状态。请先在记忆库检查，避免重复导入。'
+          ? t('onboarding.alpha_recovery_expired')
           : code === 'timeout'
-            ? '已暂停等待，后台任务可能仍在处理。可继续检查原任务，不会重新上传。'
+            ? t('onboarding.alpha_recovery_timeout')
             : code === 'disconnected'
-              ? '暂时无法连接本地服务。恢复连接后可继续检查原任务，不会重新上传。'
-              : '无法确认任务状态。请先在记忆库检查已保存的内容；不会自动重新上传。');
+              ? t('onboarding.alpha_recovery_disconnected')
+              : t('onboarding.alpha_recovery_unknown'));
     } finally {
       if (ownsCurrentImport(controller)) {
         importBusyRef.current = false;
@@ -318,7 +341,7 @@ export default function OnboardingWizard({
     importBusyRef.current = true;
     updateImportContentReservation(importFingerprintRef.current, 'onboarding', { phase: 'running', jobId: importJobId });
     setImporting(true); setImportAlert(false); setCanResumeImport(false);
-    setImportMsg('继续检查原任务状态，不会重新上传…');
+    setImportMsg(t('onboarding.alpha_resume_status'));
     await pollJob(importJobId, controller);
   };
 
@@ -336,13 +359,13 @@ export default function OnboardingWizard({
     setImportJobId(null);
     setImportReceipt(null);
     setImportAlert(false);
-    setImportMsg('已确认检查记忆库。现在可以选择新的文件；已有内容不会自动删除。');
+    setImportMsg(t('onboarding.alpha_review_acknowledged'));
   };
 
   const processImport = async (file: File) => {
     if (!recoveryHydratedRef.current) {
       setImportAlert(true);
-      setImportMsg('正在恢复上次导入状态，请稍后再选择文件。');
+      setImportMsg(t('onboarding.alpha_recovery_hydrating'));
       return;
     }
     if (importBusyRef.current || importPendingRef.current) return;
@@ -352,8 +375,8 @@ export default function OnboardingWizard({
     importBusyRef.current = true;
     setImportPendingLock(true);
     setNeedsImportReview(false);
-    setImporting(true); setImportAlert(false); setImportReceipt(null);
-    setImportJobId(null); setCanResumeImport(false); setImportMsg('正在提交文件…');
+    setImporting(true); setImportAlert(false); setImportReceipt(null); setLocalImportBlocked(false);
+    setImportJobId(null); setCanResumeImport(false); setImportMsg(t('onboarding.alpha_submitting'));
     let submissionMayHavePersisted = false;
     let submissionTimedOut = false;
     const submissionDeadline = Date.now() + IMPORT_SUBMIT_TIMEOUT_MS;
@@ -381,10 +404,14 @@ export default function OnboardingWizard({
             throw new Error(t('upload.fingerprint_unavailable'));
           }
           if (reservation.reason === 'recovery-required') {
-            throw new Error('检测到上次导入尚未恢复或核对。请先处理已有任务；不会自动重新上传。');
+            throw new Error(t('onboarding.alpha_recovery_required'));
           }
-          const entry = { onboarding: '首次引导', library: '记忆库', 'file-drop': '文件导入' }[reservation.existing.owner];
-          throw new Error(`已阻止重复导入：相同内容已有${entry}任务或结果待确认。请返回该入口查看原任务，不会再次上传。`);
+          const entry = {
+            onboarding: t('onboarding.alpha_entry_onboarding'),
+            library: t('onboarding.alpha_entry_library'),
+            'file-drop': t('onboarding.alpha_entry_file_drop'),
+          }[reservation.existing.owner];
+          throw new Error(formatOnboardingMessage(t, 'onboarding.alpha_duplicate_import', { entry }));
         }
         importFingerprintRef.current = fingerprint;
       };
@@ -393,12 +420,12 @@ export default function OnboardingWizard({
       if (lower.endsWith('.json')) {
         const text = new TextDecoder().decode(ab);
         assertSubmissionActive();
-        const body = JSON.stringify({ text });
+        const body = JSON.stringify({ text, useLocalExtraction: localExtractionOnly });
         assertSubmissionActive();
         importRecoveryAttemptRef.current = createImportRecoveryAttemptId();
         if (!persistUncertainImport('onboarding', importRecoveryAttemptRef.current)) {
           importRecoveryAttemptRef.current = null;
-          throw new Error('无法保存恢复标记，为避免重复导入，本次未提交。请检查本地存储后重试。');
+          throw new Error(t('onboarding.alpha_recovery_marker_failed'));
         }
         await flushNativeImportRecovery();
         submissionMayHavePersisted = true;
@@ -407,14 +434,18 @@ export default function OnboardingWizard({
         if (r.ok) {
           const { jobId, platform, parsed } = await abortableImport(r.json(), controller.signal);
           assertSubmissionActive();
-          if (typeof jobId !== 'string' || !jobId.trim()) throw new Error('服务未返回任务编号。请先在记忆库检查，避免重复导入。');
+          if (typeof jobId !== 'string' || !jobId.trim()) throw new Error(t('onboarding.alpha_missing_job_id'));
           clearTimeout(submitTimer);
           setImportJobId(jobId);
           const recoverySaved = persistImportJob('onboarding', jobId, importRecoveryAttemptRef.current || undefined);
           await flushNativeImportRecovery();
           if (recoverySaved) importRecoveryAttemptRef.current = null;
           updateImportContentReservation(fingerprint, 'onboarding', { phase: 'running', jobId });
-          setImportMsg(`识别为 ${platform} · ${parsed} 段对话，正在处理…${recoverySaved ? '' : ' 本地无法保存恢复记录，请勿关闭应用，直至任务结束并核对结果。'}`);
+          setImportMsg(formatOnboardingMessage(t, 'onboarding.alpha_chat_progress', {
+            platform,
+            parsed,
+            notice: recoverySaved ? '' : ` ${t('onboarding.alpha_recovery_record_warning')}`,
+          }));
           await pollJob(jobId, controller);
           return;
         }
@@ -427,10 +458,13 @@ export default function OnboardingWizard({
           }
           importRecoveryAttemptRef.current = null;
         }
+        if (await responseImportErrorCode(r) === 'LOCAL_ONLY_REMOTE_EMBEDDINGS') {
+          throw new LocalImportPolicyError();
+        }
         if (r.status !== 400 && r.status !== 422) {
           throw new Error(r.status === 401 || r.status === 403
-            ? '连接凭证已失效。请先在设置中重新连接；未尝试普通文件上传。'
-            : `聊天记录提交未被确认（HTTP ${r.status}）。请先检查记忆库；不会自动重新上传。`);
+            ? t('onboarding.alpha_chat_unauthorized')
+            : formatOnboardingMessage(t, 'onboarding.alpha_chat_submit_uncertain', { status: r.status }));
         }
         submissionMayHavePersisted = false;
         await abortableImport(r.arrayBuffer(), controller.signal);
@@ -448,12 +482,12 @@ export default function OnboardingWizard({
       if (lower.endsWith('.md')) contentType = 'text/markdown';
       else if (lower.endsWith('.pdf')) contentType = 'application/pdf';
       else if (lower.endsWith('.json')) contentType = 'application/json';
-      const body = JSON.stringify({ filename: file.name, contentType, base64 });
+      const body = JSON.stringify({ filename: file.name, contentType, base64, useLocalExtraction: localExtractionOnly });
       assertSubmissionActive();
       importRecoveryAttemptRef.current = createImportRecoveryAttemptId();
       if (!persistUncertainImport('onboarding', importRecoveryAttemptRef.current)) {
         importRecoveryAttemptRef.current = null;
-        throw new Error('无法保存恢复标记，为避免重复导入，本次未提交。请检查本地存储后重试。');
+        throw new Error(t('onboarding.alpha_recovery_marker_failed'));
       }
       await flushNativeImportRecovery();
       submissionMayHavePersisted = true;
@@ -464,19 +498,28 @@ export default function OnboardingWizard({
       }
       const d2 = await abortableImport(r2.json(), controller.signal);
       assertSubmissionActive();
-      if (!r2.ok) throw new Error(d2.error || '上传失败');
-      if (typeof d2.jobId !== 'string' || !d2.jobId.trim()) throw new Error('服务未返回任务编号。请先在记忆库检查，避免重复导入。');
+      if (!r2.ok) {
+        if (getImportErrorCode(d2) === 'LOCAL_ONLY_REMOTE_EMBEDDINGS') {
+          throw new LocalImportPolicyError();
+        }
+        throw new Error(d2.error || t('onboarding.alpha_upload_failed'));
+      }
+      if (typeof d2.jobId !== 'string' || !d2.jobId.trim()) throw new Error(t('onboarding.alpha_missing_job_id'));
       clearTimeout(submitTimer);
       setImportJobId(d2.jobId);
       const recoverySaved = persistImportJob('onboarding', d2.jobId, importRecoveryAttemptRef.current || undefined);
       await flushNativeImportRecovery();
       if (recoverySaved) importRecoveryAttemptRef.current = null;
       updateImportContentReservation(fingerprint, 'onboarding', { phase: 'running', jobId: d2.jobId });
-      setImportMsg(`文件已提交，正在处理…${recoverySaved ? '' : ' 本地无法保存恢复记录，请勿关闭应用，直至任务结束并核对结果。'}`);
+      setImportMsg(formatOnboardingMessage(t, 'onboarding.alpha_file_progress', {
+        notice: recoverySaved ? '' : ` ${t('onboarding.alpha_recovery_record_warning')}`,
+      }));
       await pollJob(d2.jobId, controller);
     } catch (err) {
       // 截止时间触发的 abort 仍属于本次操作，必须显示结果；卸载则不再改 UI。
       if (!ownsCurrentImport(controller)) return;
+      const blockedByRemoteEmbedding = err instanceof LocalImportPolicyError;
+      setLocalImportBlocked(blockedByRemoteEmbedding);
       if (submissionMayHavePersisted) {
         updateImportContentReservation(importFingerprintRef.current, 'onboarding', { phase: 'uncertain' });
       } else {
@@ -490,13 +533,15 @@ export default function OnboardingWizard({
       setImportAlert(true);
       setNeedsImportReview(submissionMayHavePersisted);
       setImportPendingLock(submissionMayHavePersisted);
-      setImportMsg(submissionMayHavePersisted
+      setImportMsg(blockedByRemoteEmbedding
+        ? t('onboarding.alpha_local_import_blocked')
+        : submissionMayHavePersisted
         ? submissionTimedOut
-          ? '等待提交结果已超过 30 秒，后台可能已接收文件，但尚未确认任务编号。请先检查记忆库，确认后才能开始新的导入；不会自动重新上传。'
-          : `提交结果尚未确认：${err instanceof Error ? err.message : String(err)}。请先检查记忆库，确认后才能开始新的导入；不会自动重新上传。`
+          ? t('onboarding.alpha_submit_timeout_uncertain')
+          : formatOnboardingMessage(t, 'onboarding.alpha_submit_uncertain', { error: err instanceof Error ? err.message : String(err) })
         : submissionTimedOut
-          ? '读取文件已超过 30 秒，尚未提交。可以重新选择文件。'
-          : `文件未提交：${err instanceof Error ? err.message : String(err)}。可以重新选择文件。`);
+          ? t('onboarding.alpha_read_timeout')
+          : formatOnboardingMessage(t, 'onboarding.alpha_file_not_submitted', { error: err instanceof Error ? err.message : String(err) }));
     } finally {
       clearTimeout(submitTimer);
       if (ownsCurrentImport(controller)) {
@@ -527,8 +572,8 @@ export default function OnboardingWizard({
       setStep(2);
       setImportAlert(true);
       setImportMsg(importing
-        ? '导入仍在后台处理。请先等待或继续检查原任务；确认结果前不能关闭引导。'
-        : '请先检查原导入任务并确认结果；确认前不能关闭引导，也不会自动重新上传。');
+        ? t('onboarding.alpha_close_while_processing')
+        : t('onboarding.alpha_close_while_uncertain'));
       return false;
     }
     invalidateProviderTest();
@@ -543,7 +588,7 @@ export default function OnboardingWizard({
       <div className="bg-[#0a0b12]/95 w-full max-w-2xl rounded-2xl border border-white/10 overflow-hidden flex flex-col max-h-[90vh] shadow-[0_0_50px_rgba(6,182,212,0.15)]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
           <h2 id="onboarding-dialog-title" className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 text-sm tracking-wide">
-            Omni-Context <span className="sr-only">首次使用引导</span>
+            Omni-Context <span className="sr-only">{t('onboarding.alpha_screen_reader_label')}</span>
           </h2>
           <div className="flex items-center gap-2">
             {[1, 2, 3, 4].map((s) => (
@@ -553,20 +598,21 @@ export default function OnboardingWizard({
           <button onClick={complete} className="text-gray-400 hover:text-white text-xs flex items-center gap-1">{t('onboarding.skip')} <X className="w-3.5 h-3.5" /></button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
           {/* ① LLM */}
           {step === 1 && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2"><Brain className="w-5 h-5 text-cyan-400" /> 先选个"思考引擎"</h2>
-                <p className="text-xs text-gray-400 leading-relaxed">你的大脑负责记忆，思考交给一个 AI。选一个、填 key、测通——之后导入和回答都靠它。便宜的就够用。</p>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2"><Brain className="w-5 h-5 text-cyan-400" /> {t('onboarding.alpha_welcome_title')}</h2>
+                <p className="text-xs text-gray-400 leading-relaxed">{t('onboarding.alpha_welcome_desc')}</p>
+                <p className="text-xs text-gray-400 leading-relaxed">{t('onboarding.alpha_model_privacy')}</p>
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[
-                  {id: 'deepseek', emoji: '🐳', name: 'DeepSeek', cost: '极便宜' },
-                  { id: 'ollama', emoji: '🏠', name: 'Ollama', cost: '本地·免费' },
-                  { id: 'openai', emoji: '🤖', name: 'GPT-4o mini', cost: '便宜' },
-                  { id: 'custom', emoji: '⚙️', name: '自定义', cost: '任意' },
+                  { id: 'deepseek', emoji: '🐳', name: 'DeepSeek', cost: t('onboarding.alpha_cost_low') },
+                  { id: 'ollama', emoji: '🏠', name: 'Ollama', cost: t('onboarding.alpha_cost_local_free') },
+                  { id: 'openai', emoji: '🤖', name: 'GPT-4o mini', cost: t('onboarding.alpha_cost_low') },
+                  { id: 'custom', emoji: '⚙️', name: t('onboarding.alpha_provider_custom'), cost: t('onboarding.alpha_cost_custom') },
                 ].map((p) => (
                   <button key={p.id} onClick={() => selectPreset(p.id)} className={`p-3 rounded-xl border text-center transition-all ${selectedPresetId === p.id ? 'bg-cyan-950/20 border-cyan-400 text-white' : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10'}`}>
                     <div className="text-lg">{p.emoji}</div><div className="font-bold text-xs truncate mt-1">{p.name}</div><div className="text-[9px] text-gray-500">{p.cost}</div>
@@ -575,8 +621,8 @@ export default function OnboardingWizard({
               </div>
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-3">
-                  <input value={apiUrl} onChange={(e) => { editProvider(); setApiUrl(e.target.value); setSelectedPresetId(findProviderPreset(e.target.value)); }} aria-label="API URL" placeholder="API URL" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
-                  <input value={model} onChange={(e) => { editProvider(); setModel(e.target.value); }} aria-label="Model" placeholder="Model" className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
+                  <input value={apiUrl} onChange={(e) => { editProvider(); setApiUrl(e.target.value); setSelectedPresetId(findProviderPreset(e.target.value)); }} aria-label={t('onboarding.alpha_api_url')} placeholder={t('onboarding.alpha_api_url')} className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
+                  <input value={model} onChange={(e) => { editProvider(); setModel(e.target.value); }} aria-label={t('onboarding.alpha_model')} placeholder={t('onboarding.alpha_model')} className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-mono focus:outline-none focus:border-cyan-500" />
                 </div>
                 {/* Model Quick-Tags */}
                 {(() => {
@@ -584,7 +630,7 @@ export default function OnboardingWizard({
                   if (matchedPreset && matchedPreset.recommendedModels && matchedPreset.recommendedModels.length > 0) {
                     return (
                       <div className="flex flex-wrap gap-1.5 pt-0.5">
-                        <span className="text-[10px] text-gray-500 flex items-center mr-1">推荐:</span>
+                        <span className="text-[10px] text-gray-500 flex items-center mr-1">{t('onboarding.alpha_recommended')}</span>
                         {matchedPreset.recommendedModels.map((m) => (
                           <button
                             key={m}
@@ -614,7 +660,7 @@ export default function OnboardingWizard({
                   type="button"
                   onClick={() => setShowApiKey(!showApiKey)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                  aria-label={showApiKey ? "Hide API Key" : "Show API Key"}
+                  aria-label={t(showApiKey ? 'onboarding.alpha_hide_api_key' : 'onboarding.alpha_show_api_key')}
                 >
                   {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -623,6 +669,17 @@ export default function OnboardingWizard({
                 {testState === 'testing' ? <><Loader2 className="w-4 h-4 animate-spin" />{t('onboarding.testing')}</> : testState === 'success' ? <><Check className="w-4 h-4" />{t('onboarding.test_success')}</> : <span>{t('onboarding.test_btn')}</span>}
               </button>
               {testState === 'failed' && <p className="text-[10px] text-rose-400 text-center">{testError}</p>}
+              <div className="rounded-xl border border-white/10 bg-black/20 p-3 space-y-2">
+                <p className="text-[11px] leading-relaxed text-gray-400">{t('onboarding.alpha_local_import_desc')}</p>
+                <button
+                  type="button"
+                  data-testid="onboarding-local-import"
+                  onClick={() => { invalidateProviderTest(); setLocalExtractionOnly(true); setStep(2); }}
+                  className="text-xs font-medium text-cyan-300 underline underline-offset-2 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                >
+                  {t('onboarding.alpha_local_import_cta')}
+                </button>
+              </div>
             </div>
           )}
 
@@ -630,11 +687,16 @@ export default function OnboardingWizard({
           {step === 2 && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2"><Upload className="w-5 h-5 text-cyan-400" /> 先导入一份熟悉的记录</h2>
-                <p className="text-xs text-gray-400 leading-relaxed">选择你和 AI 的<b>聊天记录导出</b>(ChatGPT/Claude/Gemini)，或一份<b>文档/笔记</b>(md/txt/pdf)。处理时间取决于文件和模型；完成后先看实际保存结果，再自己提问验证。</p>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2"><Upload className="w-5 h-5 text-cyan-400" /> {t('onboarding.alpha_import_title')}</h2>
+                <p className="text-xs text-gray-400 leading-relaxed">{t('onboarding.alpha_import_desc')}</p>
               </div>
+              {extractionModeNotice === 'local' && (
+                <p data-testid="onboarding-local-extraction-note" role="note" className="rounded-lg border border-cyan-700/40 bg-cyan-950/20 p-3 text-[11px] leading-relaxed text-cyan-100/80">
+                  {t('onboarding.alpha_local_import_notice')}
+                </p>
+              )}
               <button type="button"
-                aria-label="选择或拖入聊天记录、文档或笔记"
+                aria-label={t('onboarding.alpha_drop_zone_label')}
                 aria-describedby="onboarding-import-hint"
                 aria-busy={importing}
                 disabled={importing || importPending}
@@ -647,39 +709,53 @@ export default function OnboardingWizard({
                 onClick={() => { if (!importBusyRef.current && !importPendingRef.current) fileRef.current?.click(); }}
                 className={`w-full border-2 rounded-xl p-6 min-h-[150px] flex flex-col justify-center items-center text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${dragOver ? 'border-cyan-400 bg-cyan-950/10' : 'border-dashed border-cyan-900/60 bg-white/5 hover:border-cyan-600/40'} ${importing || importPending ? 'opacity-70' : 'cursor-pointer'}`}>
                 {importing ? <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" /> : <Upload className="w-8 h-8 text-cyan-400" />}
-                <span className="text-sm font-semibold text-white mt-2">{importing ? '处理中…' : importPending ? '先确认原导入的结果' : '拖入或选择文件'}</span>
-                <span id="onboarding-import-hint" className="text-[10px] text-gray-500 mt-1">聊天记录 conversations.json / My Activity.json · 或 md/txt/pdf 文档笔记</span>
+                <span className="text-sm font-semibold text-white mt-2">{t(importing ? 'onboarding.alpha_importing' : importPending ? 'onboarding.alpha_review_first' : 'onboarding.alpha_choose_file')}</span>
+                <span id="onboarding-import-hint" className="text-[10px] text-gray-500 mt-1">{t('onboarding.alpha_import_formats')}</span>
               </button>
-              <input ref={fileRef} type="file" aria-label="导入聊天记录、文档或笔记" accept=".json,.md,.txt,.pdf,application/json" disabled={importing || importPending} className="hidden" onChange={(e) => { if (!importBusyRef.current && !importPendingRef.current && e.target.files?.[0]) processImport(e.target.files[0]); }} />
+              <input ref={fileRef} type="file" aria-label={t('onboarding.alpha_file_input_label')} accept=".json,.md,.txt,.pdf,application/json" disabled={importing || importPending} className="hidden" onChange={(e) => { if (!importBusyRef.current && !importPendingRef.current && e.target.files?.[0]) processImport(e.target.files[0]); }} />
               {importMsg && (
                 <div role={importAlert ? 'alert' : 'status'} aria-atomic="true" className={`text-xs rounded-lg border p-2.5 ${importAlert ? 'text-amber-200 bg-amber-950/20 border-amber-500/30' : 'text-gray-300 bg-gray-800/50 border-white/10'}`}>
                   {importMsg}
                   {canResumeImport && importJobId && (
                     <button type="button" onClick={resumeImport} disabled={importing} className="mt-3 block rounded-lg border border-cyan-500/40 px-3 py-2 font-medium text-cyan-300 hover:bg-cyan-950/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:opacity-50">
-                      继续检查原任务
+                      {t('onboarding.alpha_resume_original')}
                     </button>
                   )}
                   {needsImportReview && (
                     <button type="button" onClick={acknowledgeImportReview} disabled={importing} className="mt-3 block rounded-lg border border-amber-500/40 px-3 py-2 font-medium text-amber-200 hover:bg-amber-950/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 disabled:opacity-50">
-                      已核对记忆库，允许重新选择
+                      {t('onboarding.alpha_acknowledge_review')}
+                    </button>
+                  )}
+                  {localImportBlocked && onOpenSettings && (
+                    <button type="button" onClick={() => onOpenSettings('diagnostics')} className="mt-3 block rounded-lg border border-cyan-500/40 px-3 py-2 font-medium text-cyan-200 hover:bg-cyan-950/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
+                      {t('onboarding.alpha_local_import_diagnostics')}
                     </button>
                   )}
                 </div>
               )}
               {importReceipt && (
-                <section aria-label="导入结果" data-testid="onboarding-import-receipt" className="rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-2">
-                  <h3 className="text-sm font-semibold text-white">{importReceipt.countBasis === 'saved' ? '实际保存结果' : '导入处理结果'}</h3>
+                <section aria-label={t('onboarding.alpha_import_receipt')} data-testid="onboarding-import-receipt" className="rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-2">
+                  <h3 className="text-sm font-semibold text-white">{t(importReceipt.countBasis === 'saved' ? 'onboarding.alpha_saved_result' : 'onboarding.alpha_processed_result')}</h3>
+                  {extractionModeNotice === 'local' && <p data-testid="onboarding-import-extraction-mode" className="text-xs leading-relaxed text-cyan-100/80">{t('onboarding.alpha_local_receipt')}</p>}
+                  {extractionModeNotice === 'unknown' && <p data-testid="onboarding-unknown-extraction-mode" role="alert" className="rounded-lg border border-amber-500/40 bg-amber-950/20 p-3 text-[11px] leading-relaxed text-amber-100">{t('onboarding.alpha_unknown_extraction_mode')}</p>}
                   <p className="text-xs text-gray-200">{importReceipt.countsKnown
-                    ? importReceipt.countBasis === 'saved'
-                      ? `已保存 ${importReceipt.entities} 条记忆 · ${importReceipt.relationships} 个关联`
-                      : `服务报告抽取 ${importReceipt.entities} 条记忆 · ${importReceipt.relationships} 个关联（非净新增数量）`
-                    : '已保存数量暂时无法确认，请检查记忆库'}</p>
-                  {importReceipt.total > 0 && <p className="text-xs text-gray-400">成功处理 {importReceipt.completed}/{importReceipt.total} 段{importReceipt.failures > 0 ? ` · ${importReceipt.failures} 段未完成` : ''}</p>}
-                  {importReceipt.coverage !== undefined && <p className="text-xs text-gray-400">文件处理覆盖率 {Math.round(importReceipt.coverage * 100)}%</p>}
-                  <p className="text-xs leading-relaxed text-gray-400">这是导入回执，不代表 Omni 已完整理解内容。问一个你知道答案的问题，并核对回答里的来源。</p>
+                    ? formatOnboardingMessage(t, importReceipt.countBasis === 'saved' ? 'onboarding.alpha_saved_counts' : 'onboarding.alpha_reported_counts', {
+                      entities: importReceipt.entities,
+                      relationships: importReceipt.relationships,
+                    })
+                    : t('onboarding.alpha_counts_unknown')}</p>
+                  {importReceipt.total > 0 && <p className="text-xs text-gray-400">{formatOnboardingMessage(t, 'onboarding.alpha_processed_segments', {
+                    completed: importReceipt.completed,
+                    total: importReceipt.total,
+                    failureNote: importReceipt.failures > 0
+                      ? ` · ${formatOnboardingMessage(t, 'onboarding.alpha_segments_incomplete', { failures: importReceipt.failures })}`
+                      : '',
+                  })}</p>}
+                  {importReceipt.coverage !== undefined && <p className="text-xs text-gray-400">{formatOnboardingMessage(t, 'onboarding.alpha_coverage', { percent: Math.round(importReceipt.coverage * 100) })}</p>}
+                  <p className="text-xs leading-relaxed text-gray-400">{t('onboarding.alpha_receipt_disclaimer')}</p>
                   {onAskImported && importReceipt.countsKnown && (importReceipt.entities > 0 || importReceipt.relationships > 0) && (
                     <button type="button" onClick={onAskImported} className="mt-2 inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
-                      用这些记忆提问 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('onboarding.alpha_ask_with_import')} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
                   )}
                 </section>
@@ -691,18 +767,18 @@ export default function OnboardingWizard({
           {step === 3 && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2"><Sparkles className="w-5 h-5 text-cyan-400" /> 现在，换个 AI 试试</h2>
-                <p className="text-xs text-gray-400 leading-relaxed">一键把大脑接到任何 AI。接上后去那个 AI 里问一句关于你自己的事——它会答出你导入的东西，<b>而你从没在它那说过</b>。这就是"换谁来想都还是你"。</p>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2"><Sparkles className="w-5 h-5 text-cyan-400" /> {t('onboarding.alpha_mcp_title')}</h2>
+                <p className="text-xs text-gray-400 leading-relaxed">{t('onboarding.alpha_mcp_desc')}</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {[{ id: 'claude', name: 'Claude Desktop' }, { id: 'cursor', name: 'Cursor' }, { id: 'cline', name: 'Cline (VS Code)' }, { id: 'other', name: '稍后/其他' }].map((c) => (
+                {[{ id: 'claude', name: 'Claude Desktop' }, { id: 'cursor', name: 'Cursor' }, { id: 'cline', name: 'Cline (VS Code)' }, { id: 'other', name: t('onboarding.alpha_client_later') }].map((c) => (
                   <button key={c.id} onClick={() => { setSelectedClient(c.id as any); setMcpState('idle'); }} className={`p-4 rounded-xl border text-left transition-all ${selectedClient === c.id ? 'bg-cyan-950/20 border-cyan-400 text-white' : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/10'}`}>
                     <div className="font-semibold text-sm flex items-center justify-between">{c.name}{selectedClient === c.id && <Check className="w-4 h-4 text-cyan-400" />}</div>
                   </button>
                 ))}
               </div>
               <button onClick={connectMcp} disabled={mcpState === 'connecting'} className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 border ${mcpState === 'success' ? 'bg-emerald-950/30 border-emerald-500 text-emerald-400' : mcpState === 'failed' ? 'bg-rose-950/30 border-rose-500 text-rose-400' : 'bg-cyan-600 hover:bg-cyan-500 text-white border-transparent'}`}>
-                {mcpState === 'connecting' ? <><Loader2 className="w-4 h-4 animate-spin" />{t('onboarding.client_connecting')}</> : mcpState === 'success' ? <><Check className="w-4 h-4" />已接入，重启该 AI 客户端即可</> : selectedClient === 'other' ? <><span>{t('onboarding.next')}</span><ArrowRight className="w-4 h-4" /></> : <><Copy className="w-4 h-4" /><span>一键接入（自动复制配置/token）</span></>}
+                {mcpState === 'connecting' ? <><Loader2 className="w-4 h-4 animate-spin" />{t('onboarding.client_connecting')}</> : mcpState === 'success' ? <><Check className="w-4 h-4" />{t('onboarding.client_configured')}</> : selectedClient === 'other' ? <><span>{t('onboarding.next')}</span><ArrowRight className="w-4 h-4" /></> : <><Copy className="w-4 h-4" /><span>{t('onboarding.alpha_connect_client')}</span></>}
               </button>
             </div>
           )}
@@ -711,22 +787,22 @@ export default function OnboardingWizard({
           {step === 4 && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2"><Database className="w-5 h-5 text-cyan-400" /> 让它越用越是你</h2>
-                <p className="text-xs text-gray-400 leading-relaxed">以后每个想明白的点、每个决策——按一下<b>沉淀热键</b>(可在设置改，已是全局，任意窗口前都能按)抓当前屏幕，或对任何接入的 AI 说"记一下"。攒得越多，它越懂你怎么想。</p>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2"><Database className="w-5 h-5 text-cyan-400" /> {t('onboarding.alpha_habit_title')}</h2>
+                <p className="text-xs text-gray-400 leading-relaxed">{t('onboarding.alpha_habit_desc')}</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-black/30 p-4 text-center">
-                <div className="text-xs text-gray-400">全局沉淀热键</div>
+                <div className="text-xs text-gray-400">{t('onboarding.alpha_capture_shortcut')}</div>
                 <div className="text-lg font-mono text-cyan-300 mt-1">Ctrl + Shift + P</div>
               </div>
-              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/10 p-3 text-center text-xs text-cyan-200/90">透镜帮你看清，下注的手一直是你的。它只负责记住你走过的路。</div>
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/10 p-3 text-center text-xs text-cyan-200/90">{t('onboarding.alpha_decision_boundary')}</div>
             </div>
           )}
         </div>
 
         {(importing || importPending) && step !== 2 && (
           <p role="status" className="px-6 pb-3 text-xs text-gray-400">{importing
-            ? '导入仍在后台处理。请先返回导入步骤查看进度；确认结果前不能关闭引导，也不会重新上传。'
-            : '原导入的最终结果尚未确认。请返回导入步骤检查原任务；确认前不能关闭引导，也不会自动重新上传。'}</p>
+            ? t('onboarding.alpha_return_to_import_processing')
+            : t('onboarding.alpha_return_to_import_uncertain')}</p>
         )}
         <div className="flex items-center justify-between px-6 py-4 border-t border-white/10 bg-black/20">
           <div>

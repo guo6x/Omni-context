@@ -736,6 +736,23 @@ describe('toCompactEntity', () => {
     expect(compacted.description).toBeUndefined();
     expect(compacted.similarity).toBeUndefined();
   });
+
+  it('preserves only the narrow provenance markers for decision entities', () => {
+    const compacted = toCompactEntity({
+      id: 'decision-ai-derived',
+      name: 'Suggested decision',
+      type: 'decision',
+      metadata: {
+        authority: 'ai_derived',
+        user_confirmed: false,
+        private_detail: 'must not be exposed',
+      },
+    });
+
+    expect(compacted.authority).toBe('ai_derived');
+    expect(compacted.user_confirmed).toBe(false);
+    expect(compacted.metadata).toBeUndefined();
+  });
 });
 
 describe('Entity Resolution & Remapping', () => {

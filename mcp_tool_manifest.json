@@ -414,7 +414,7 @@
     },
     {
       "name": "save_conclusion",
-      "description": "Call this when the conversation reaches a meaningful conclusion, a decision is made, or the user learns something worth remembering. ALWAYS proactively call this at the end of a substantive conversation to save key takeaways into long-term memory. Pass a short summary and (if relevant) related entity IDs from earlier search results.",
+      "description": "Save a user-requested summary or insight to long-term memory. Call this only when the user explicitly asks you to remember it; never proactively save an AI-generated conclusion. Treat saved content as AI-derived unless the user explicitly confirmed its wording. This tool does not grant execution authority. Pass a short summary and (if relevant) related entity IDs from earlier search results.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -447,6 +447,12 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "Stable client-generated key for safely retrying the same explicit decision save"
+          },
           "situation": {
             "type": "string",
             "description": "The situation/context that prompted the decision"
@@ -537,12 +543,20 @@
               "type": "object",
               "properties": {
                 "role": {
-                  "type": "string"
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "assistant"
+                  ]
                 },
                 "content": {
                   "type": "string"
                 }
-              }
+              },
+              "required": [
+                "role",
+                "content"
+              ]
             },
             "description": "Conversation history"
           }
@@ -577,6 +591,12 @@
         "properties": {
           "decision_id": {
             "type": "string"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "description": "Optional stable key for safe retries after an uncertain response"
           },
           "actual_outcome": {
             "type": "string"
@@ -647,22 +667,33 @@
         "properties": {
           "query": {
             "type": "string",
+            "maxLength": 8000,
             "description": "The question to ask, in natural language"
           },
           "messages": {
             "type": "array",
+            "maxItems": 8,
             "items": {
               "type": "object",
               "properties": {
                 "role": {
-                  "type": "string"
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "assistant"
+                  ]
                 },
                 "content": {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 4000
                 }
-              }
+              },
+              "required": [
+                "role",
+                "content"
+              ]
             },
-            "description": "Conversation history for multi-turn dialogue"
+            "description": "Conversation history for multi-turn dialogue (up to 8 messages and 32000 characters total)"
           }
         }
       }
@@ -675,22 +706,33 @@
         "properties": {
           "query": {
             "type": "string",
+            "maxLength": 8000,
             "description": "The question or decision to reason about, in natural language"
           },
           "messages": {
             "type": "array",
+            "maxItems": 8,
             "items": {
               "type": "object",
               "properties": {
                 "role": {
-                  "type": "string"
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "assistant"
+                  ]
                 },
                 "content": {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 4000
                 }
-              }
+              },
+              "required": [
+                "role",
+                "content"
+              ]
             },
-            "description": "Conversation history for multi-turn dialogue"
+            "description": "Conversation history for multi-turn dialogue (up to 8 messages and 32000 characters total)"
           }
         }
       }

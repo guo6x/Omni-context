@@ -127,6 +127,8 @@ export interface ImportJobReceipt {
   completed_at?: number;
   import_progress?: { done: number; total: number; entities: number };
   retry_progress?: { done: number; total: number; recovered: number; failed: number; coverage: number };
+  /** Old receipts have no recorded mode and are surfaced as `unknown`. */
+  extraction_mode?: 'default' | 'local_only' | 'unknown';
   result?: {
     entities: number;
     relationships: number;
@@ -1014,6 +1016,20 @@ const MIGRATIONS: Migration[] = [
       );
       CREATE INDEX IF NOT EXISTS idx_import_job_receipts_updated
         ON import_job_receipts(updated_at DESC);
+    `,
+  },
+  {
+    version: 32,
+    name: 'persist_import_extraction_mode',
+    up: `
+      -- Nullable additions intentionally leave existing documents, chunks, and
+      -- receipts unknown instead of guessing how those historical imports ran.
+      ALTER TABLE ingestion_documents ADD COLUMN extraction_mode TEXT
+        CHECK(extraction_mode IS NULL OR extraction_mode IN ('default', 'local_only'));
+      ALTER TABLE ingestion_chunks ADD COLUMN extraction_mode TEXT
+        CHECK(extraction_mode IS NULL OR extraction_mode IN ('default', 'local_only'));
+      ALTER TABLE import_job_receipts ADD COLUMN extraction_mode TEXT
+        CHECK(extraction_mode IS NULL OR extraction_mode IN ('default', 'local_only'));
     `,
   },
 ];
@@ -2960,8 +2976,8 @@ export class Database {
         retry_done, retry_total, retry_recovered, retry_failed, retry_coverage,
         result_entities, result_relationships, result_principles, result_failure_count,
         chunk_total, chunk_processed, chunk_failures, chunk_coverage,
-        error_code, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        error_code, extraction_mode, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(job_id) DO UPDATE SET
         status = excluded.status,
         stage = excluded.stage,
@@ -2983,6 +2999,7 @@ export class Database {
         chunk_failures = excluded.chunk_failures,
         chunk_coverage = excluded.chunk_coverage,
         error_code = excluded.error_code,
+        extraction_mode = excluded.extraction_mode,
         updated_at = excluded.updated_at`,
       [
         receipt.job_id,
@@ -3007,6 +3024,7 @@ export class Database {
         receipt.result?.chunk_failures ?? null,
         receipt.result?.chunk_coverage ?? null,
         receipt.error_code ?? null,
+        receipt.extraction_mode === 'unknown' ? null : receipt.extraction_mode ?? null,
         receipt.updated_at,
       ],
     );
@@ -3064,6 +3082,7 @@ export class Database {
         } : {}),
       } : undefined,
       error_code: row.error_code ?? undefined,
+      extraction_mode: row.extraction_mode ?? 'unknown',
       updated_at: row.updated_at,
     };
   }

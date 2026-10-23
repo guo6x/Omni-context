@@ -70,6 +70,8 @@ export interface ExtractionInput {
   source?: string;
   forceChunking?: boolean;
   requireLlmSuccess?: boolean;
+  /** Request-scoped opt-out; never mutates the shared extractor configuration. */
+  useLocalExtraction?: boolean;
   sourceMap?: {
     urls?: Record<string, string>;
     [key: string]: any;
@@ -345,6 +347,7 @@ export class GraphRAGExtractor {
   }
 
   async extract(input: ExtractionInput): Promise<GraphRAGOutput> {
+    const useLocalExtraction = this.config.useLocalExtraction === true || input.useLocalExtraction === true;
     const textContent = await this.combineInputs(input);
     const { cleaned, suspicious } = sanitizeForExtraction(textContent);
     const rawEvents = parseRawEventReferences(textContent, {
@@ -366,7 +369,7 @@ export class GraphRAGExtractor {
     let skippedFactsMissingSubject = 0;
 
     // 第二层：LLM 语义提取（深度理解，补充正则的盲区）
-    if (this.llmPipeline.isEnabled() && !this.config.useLocalExtraction) {
+    if (this.llmPipeline.isEnabled() && !useLocalExtraction) {
       try {
         const configuredAttempts = Number(process.env.LLM_EXTRACTION_MAX_ATTEMPTS);
         const maxAttempts = Number.isInteger(configuredAttempts) && configuredAttempts > 0
@@ -703,6 +706,7 @@ export class GraphRAGExtractor {
     input: ExtractionInput,
     suspicious: string[],
   ): Promise<GraphRAGOutput> {
+    const useLocalExtraction = this.config.useLocalExtraction === true || input.useLocalExtraction === true;
     const documentId = input.documentId || uuidv4();
     const chunks = chunkDocument(text, {
       documentId,
@@ -727,7 +731,8 @@ export class GraphRAGExtractor {
           sourceMap: input.sourceMap,
           documentId,
           source: chunk.source,
-          requireLlmSuccess: this.llmPipeline.isEnabled() && !this.config.useLocalExtraction,
+          requireLlmSuccess: this.llmPipeline.isEnabled() && !useLocalExtraction,
+          useLocalExtraction,
         });
         successfulChunks.push(chunk);
         llmCalls.push(...result.diagnostics.llm_calls);

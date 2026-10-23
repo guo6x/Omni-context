@@ -24,6 +24,7 @@ import { MemoryDecayScheduler } from './memory/decay-scheduler.js';
 import { AgentLoop } from './agent/agent-loop.js';
 import { createServer } from './api/routes.js';
 import { McpBusinessDispatcher } from './mcp/dispatch.js';
+import { MCP_SERVER_INSTRUCTIONS } from './mcp/instructions.js';
 import { BusinessError, formatToolResult, formatResourceResult } from './mcp/errors.js';
 import { createProductionAuthorizationRuntime } from './approval/production-runtime.js';
 import { AgentPilotAdapter } from './agent/pilot.js';
@@ -109,13 +110,7 @@ class OmniContextServer {
           tools: {},
           resources: {},
         },
-        instructions: `You are connected to Omni-Context, the user's long-term memory and decision support system.
-
-Use memory selectively:
-1. Call \`unified_memory_search\` when prior user context, project history, preferences, or past decisions could materially improve the answer. Skip it for simple factual, transient, or unrelated requests.
-2. Call \`get_decision_context\` when the user is making a meaningful choice and historical context is relevant.
-3. Cite matched memories by name and ignore results that do not clearly match the current topic.
-4. Call \`save_conclusion\` only for durable, useful conclusions or explicit user preferences. Do not save small talk, temporary details, guesses, or duplicate conclusions.`,
+        instructions: MCP_SERVER_INSTRUCTIONS,
       }
     );
 

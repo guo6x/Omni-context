@@ -35,7 +35,7 @@ export const fixtureRelationshipConversations = [
   conversation('受控关系记录二', relationshipFixtureText),
 ];
 
-interface FixtureOptions { port?: number; llmPort?: number; dbPath?: string }
+interface FixtureOptions { port?: number; llmPort?: number; dbPath?: string; decisionAnswers?: boolean }
 interface FixtureCalls {
   extractions: number;
   graphAnswers: number;
@@ -111,7 +111,7 @@ function completion(response: http.ServerResponse, content: unknown): void {
   });
 }
 
-function createFixtureLlm(calls: FixtureCalls): http.Server {
+function createFixtureLlm(calls: FixtureCalls, decisionAnswers = false): http.Server {
   return http.createServer(async (request, response) => {
     try {
       calls.receivedAuthorization ||= Boolean(request.headers.authorization);
@@ -179,7 +179,7 @@ function createFixtureLlm(calls: FixtureCalls): http.Server {
         completion(response, {
           conclusion: source ? source[3] : '没有足够的已导入来源。',
           reasons: source ? [{ text: `导入记录「${source[2]}」：${source[3]}`, refs: [Number(source[1])] }] : [],
-          questions: [], is_decision: false,
+          questions: [], is_decision: decisionAnswers,
         });
         return;
       }
@@ -237,7 +237,7 @@ export async function startDesktopImportFixture(options: FixtureOptions = {}): P
     releaseHeldExtractions = () => {
       for (const release of llmCalls.releaseHeldExtractions.splice(0)) release();
     };
-    llm = createFixtureLlm(llmCalls);
+    llm = createFixtureLlm(llmCalls, options.decisionAnswers);
     await listen(llm, llmPort);
     const llmUrl = `http://127.0.0.1:${(llm.address() as AddressInfo).port}/v1`;
     scratch = await mkdtemp(path.join(tmpdir(), 'omni-desktop-import-fixture-'));
@@ -270,7 +270,15 @@ export async function startDesktopImportFixture(options: FixtureOptions = {}): P
       return originalExtract.call(this, { ...input, requireLlmSuccess: true });
     };
     GraphRAGExtractor.prototype.setLlmConfig = function (config) {
-      if (config.apiUrl.replace(/\/+$/, '') !== llmUrl) throw new Error('CONTROLLED_FIXTURE_LLM_ONLY');
+      const requestedUrl = config.apiUrl.replace(/\/+$/, '');
+      const defaultLocalUrl = 'http://localhost:11434/v1';
+      if (requestedUrl !== llmUrl.replace(/\/+$/, '') && requestedUrl !== defaultLocalUrl) {
+        throw new Error('CONTROLLED_FIXTURE_LLM_ONLY');
+      }
+      // Keep the desktop's first-run loopback default intact in the UI, while
+      // routing the fixture process only to its own deterministic loopback
+      // model. A caller may supply a dummy key to exercise the settings path,
+      // but it is deliberately discarded and never reaches the fixture model.
       return originalSetLlm.call(this, { apiUrl: llmUrl, apiKey: '', model: FIXTURE_MODEL });
     };
     GraphRAGExtractor.prototype.getLlmConfig = () => ({ apiUrl: llmUrl, apiKey: '', model: FIXTURE_MODEL });

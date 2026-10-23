@@ -47,6 +47,63 @@ interface IngestFilePayload {
   filename?: string;
   contentType?: string;
   base64?: string;
+  useLocalExtraction?: boolean;
+}
+
+type ExtractionMode = 'default' | 'local_only' | 'unknown';
+type PersistedExtractionMode = Exclude<ExtractionMode, 'unknown'>;
+const LOCAL_ONLY_REMOTE_EMBEDDINGS = 'LOCAL_ONLY_REMOTE_EMBEDDINGS';
+const UNKNOWN_EXTRACTION_MODE = 'UNKNOWN_EXTRACTION_MODE_NEEDS_REIMPORT';
+const UNKNOWN_EXTRACTION_MODE_MESSAGE = 'This retry was not started because the saved task does not record whether extraction used configured AI or local-only processing. No AI or embedding request was sent. Re-import the source, explicitly choose the processing mode, and confirm before starting again.';
+
+function normalizedExtractionMode(value: unknown): ExtractionMode {
+  return value === 'local_only' || value === 'default' ? value : 'unknown';
+}
+
+function extractionModeFromRequest(value: unknown): PersistedExtractionMode | null {
+  if (value !== undefined && typeof value !== 'boolean') return null;
+  return value === true ? 'local_only' : 'default';
+}
+
+function isLocalOnly(mode: ExtractionMode): boolean {
+  return mode === 'local_only';
+}
+
+function rejectRemoteEmbeddingLocalOnly(res: http.ServerResponse): void {
+  sendResponse(res, 409, {
+    error: LOCAL_ONLY_REMOTE_EMBEDDINGS,
+    error_code: LOCAL_ONLY_REMOTE_EMBEDDINGS,
+  });
+}
+
+function rejectUnknownExtractionMode(res: http.ServerResponse): void {
+  sendResponse(res, 409, {
+    error: UNKNOWN_EXTRACTION_MODE,
+    error_code: UNKNOWN_EXTRACTION_MODE,
+    message: UNKNOWN_EXTRACTION_MODE_MESSAGE,
+    action: 'reimport_with_explicit_mode',
+  });
+}
+
+function hasRemoteEmbeddings(ctx: RequestContext): boolean {
+  // Local-only is allowed only when the server positively confirms local mode.
+  // Missing/stub/unknown capability is not evidence that no network call occurs.
+  return ctx.embeddingService.getConfiguredMode?.() !== 'local';
+}
+
+function failedTaskExtractionMode(payloadSnapshot: string | null | undefined): ExtractionMode {
+  try {
+    const payload = JSON.parse(payloadSnapshot || '{}') as { extractionMode?: unknown };
+    return normalizedExtractionMode(payload.extractionMode);
+  } catch {
+    return 'unknown';
+  }
+}
+
+function commonFailedTaskExtractionMode(tasks: Array<{ payload_snapshot?: string | null }>): ExtractionMode {
+  const modes = tasks.map((task) => failedTaskExtractionMode(task.payload_snapshot));
+  if (modes.length === 0 || modes[0] === 'unknown' || modes.some((mode) => mode !== modes[0])) return 'unknown';
+  return modes[0];
 }
 
 function normalizeContentType(ct: string): string {
@@ -169,6 +226,7 @@ interface JobState {
   status: JobStatus;
   stage?: JobStage;
   filename: string;
+  extractionMode?: ExtractionMode;
   createdAt: number;
   completedAt?: number;
   aborted?: boolean;
@@ -230,6 +288,7 @@ function receiptFromJob(job: JobState): ImportJobReceipt {
   return {
     job_id: job.jobId,
     status: job.status,
+    extraction_mode: normalizedExtractionMode(job.extractionMode),
     stage: job.stage,
     created_at: job.createdAt,
     completed_at: job.completedAt,
@@ -258,8 +317,12 @@ function receiptFromJob(job: JobState): ImportJobReceipt {
   };
 }
 
-async function createJob(filename: string, db: RequestContext['db']): Promise<JobState> {
-  const job = createJobInMemory(filename);
+async function createJob(
+  filename: string,
+  db: RequestContext['db'],
+  extractionMode: ExtractionMode = 'default',
+): Promise<JobState> {
+  const job = createJobInMemory(filename, extractionMode);
   try {
     await db.saveImportJobReceipt(receiptFromJob(job));
     return job;
@@ -269,7 +332,7 @@ async function createJob(filename: string, db: RequestContext['db']): Promise<Jo
   }
 }
 
-function createJobInMemory(filename: string): JobState {
+function createJobInMemory(filename: string, extractionMode: ExtractionMode = 'default'): JobState {
   // Capacity protection: remove oldest completed/failed jobs first
   if (jobStore.size >= MAX_JOBS) {
     const entries = [...jobStore.entries()]
@@ -293,6 +356,7 @@ function createJobInMemory(filename: string): JobState {
     jobId,
     status: 'queued',
     filename,
+    extractionMode,
     createdAt: Date.now(),
   };
   jobStore.set(jobId, job);
@@ -325,6 +389,7 @@ function responseFromReceipt(receipt: ImportJobReceipt) {
     jobId: receipt.job_id,
     status: interrupted ? 'partial' : receipt.status,
     stage: interrupted ? 'interrupted' : receipt.stage,
+    extractionMode: receipt.extraction_mode ?? 'unknown',
     importProgress: receipt.import_progress,
     retryProgress: receipt.retry_progress,
     result: receipt.result ? {
@@ -383,7 +448,15 @@ function getJob(jobId: string): JobState | null {
 
 // --- Async Pipeline Runner ---
 
-async function runIngestPipeline(jobId: string, filename: string, contentType: string, base64: string, buffer: Buffer, ctx: RequestContext): Promise<void> {
+async function runIngestPipeline(
+  jobId: string,
+  filename: string,
+  contentType: string,
+  base64: string,
+  buffer: Buffer,
+  extractionMode: PersistedExtractionMode,
+  ctx: RequestContext,
+): Promise<void> {
   const FAIL = async (stage: JobStage, error: string) => {
     await updateJob(jobId, { status: 'failed', stage, completedAt: Date.now(), error }, ctx.db);
   };
@@ -485,6 +558,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
       documentId: jobId,
       source: filename,
       forceChunking: true,
+      useLocalExtraction: isLocalOnly(extractionMode),
     });
   } catch (err: any) {
     return FAIL('extracting', `LLM extraction failed: ${err?.message || err}`);
@@ -501,8 +575,9 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
         await ctx.db.run(
           `INSERT OR REPLACE INTO ingestion_documents (
              id, source, title, content_sha256, character_count, total_chunks,
-             processed_chunks, failed_chunks, coverage, status, created_at, updated_at
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             processed_chunks, failed_chunks, coverage, status, created_at, updated_at,
+             extraction_mode
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             extractResult.chunking!.document_id,
             filename,
@@ -516,6 +591,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
             documentStatus,
             now,
             now,
+            extractionMode,
           ]
         );
         for (const chunk of extractResult.chunking!.chunks) {
@@ -524,8 +600,8 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
             `INSERT OR REPLACE INTO ingestion_chunks (
                id, document_id, ordinal, source, content, source_span, start_offset,
                end_offset, source_timestamp, status, attempts, error, extracted_at,
-               created_at, updated_at
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+               created_at, updated_at, extraction_mode
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               chunk.chunk_id,
               chunk.document_id,
@@ -542,6 +618,7 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
               error ? null : now,
               now,
               now,
+              extractionMode,
             ]
           );
         }
@@ -572,7 +649,9 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
   }
 
   try {
-    await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+    await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor, {
+      localOnly: isLocalOnly(extractionMode),
+    });
   } catch (err) {
     return FAIL('resolving', `Transactional conflict resolution failed: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -674,7 +753,13 @@ async function runIngestPipeline(jobId: string, filename: string, contentType: s
 // 导入：把解析好的对话逐段喂抽取管线。把会话原始时间写进 created_at（历史也能时间召回），
 // 打 provenance.source='import'。逐段容错，单段失败不影响其余。
 // 关系写入走 resolveConflicts（内部会 addRelationship + 冲突检测 + 审计），不直接 addRelationship。
-async function runImportPipeline(jobId: string, conversations: ParsedConversation[], platform: string, ctx: RequestContext): Promise<void> {
+async function runImportPipeline(
+  jobId: string,
+  conversations: ParsedConversation[],
+  platform: string,
+  extractionMode: PersistedExtractionMode,
+  ctx: RequestContext,
+): Promise<void> {
   // 幂等键：jobId 本身是 UUID，复用为 import_batch_id。重试同一批次时若已写入则跳过。
   const importBatchId = jobId;
   try {
@@ -722,6 +807,7 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
           sourceType: 'manual',
           documentId,
           source: `import:${platform}:${conv.title}`,
+          useLocalExtraction: isLocalOnly(extractionMode),
         });
         const prov = {
           source: 'import',
@@ -757,7 +843,9 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
           // Each relationship commits independently. Count only completed writes,
           // retaining earlier commits if a later relationship fails and rolls back.
           for (const relationship of resolution.relationshipsToCreate) {
-            const saved = await resolveConflicts([relationship], ctx.db, ctx.extractor);
+            const saved = await resolveConflicts([relationship], ctx.db, ctx.extractor, {
+              localOnly: isLocalOnly(extractionMode),
+            });
             relationshipCount += saved.length;
           }
         } catch (err) {
@@ -780,6 +868,7 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
                 time: conv.time,
                 platform,
                 documentId,
+                extractionMode,
               }),
             });
           } catch (persistErr) {
@@ -825,6 +914,7 @@ async function runImportPipeline(jobId: string, conversations: ParsedConversatio
               text: conv.text,
               time: conv.time,
               platform,
+              extractionMode,
             }),
           });
         } catch (persistErr) {
@@ -886,11 +976,26 @@ async function runFailedImportRetry(jobId: string, batchId: string, ctx: Request
       return;
     }
 
-    let payload: { title?: string; text?: string; time?: string; platform?: string; documentId?: string };
+    let payload: {
+      title?: string;
+      text?: string;
+      time?: string;
+      platform?: string;
+      documentId?: string;
+      extractionMode?: unknown;
+    };
     try {
       payload = JSON.parse(task.payload_snapshot || '{}');
     } catch {
       payload = {};
+    }
+
+    const extractionMode = normalizedExtractionMode(payload.extractionMode);
+    if (extractionMode === 'unknown') {
+      await ctx.db.updateFailedTaskStatus(task.task_id, 'pending', UNKNOWN_EXTRACTION_MODE_MESSAGE);
+      stillFailing++;
+      await updateJob(jobId, { importProgress: { done: index + 1, total, entities: entityCount } }, ctx.db);
+      continue;
     }
 
     await ctx.db.updateFailedTaskStatus(task.task_id, 'retrying');
@@ -901,6 +1006,7 @@ async function runFailedImportRetry(jobId: string, batchId: string, ctx: Request
       const convTime = payload.time;
       const platform = payload.platform || 'unknown';
       const documentId = payload.documentId || `${batchId}:retry:${task.task_id}`;
+      const localOnly = isLocalOnly(extractionMode);
 
       const extractResult = await ctx.extractor.extract({
         textContent: `对话标题：${convTitle}\n${convText}`,
@@ -908,6 +1014,7 @@ async function runFailedImportRetry(jobId: string, batchId: string, ctx: Request
         sourceType: 'manual',
         documentId,
         source: `import-retry:${platform}:${convTitle}`,
+        useLocalExtraction: localOnly,
       });
 
       const prov = {
@@ -956,7 +1063,9 @@ async function runFailedImportRetry(jobId: string, batchId: string, ctx: Request
           // Keep earlier committed relationships in the retry receipt if a later
           // relationship in the same conversation fails.
           for (const relationship of resolution.relationshipsToCreate) {
-            relationshipCount += (await resolveConflicts([relationship], ctx.db, ctx.extractor)).length;
+            relationshipCount += (await resolveConflicts([relationship], ctx.db, ctx.extractor, {
+              localOnly,
+            })).length;
           }
         } catch (err) {
           // Conflict resolution still failing — keep the task as pending for another attempt.
@@ -1020,6 +1129,7 @@ interface StoredChunk {
   end_offset: number;
   source_timestamp: string;
   attempts: number;
+  extraction_mode?: string | null;
 }
 
 async function runFailedChunkRetry(jobId: string, documentId: string, ctx: RequestContext): Promise<void> {
@@ -1031,6 +1141,24 @@ async function runFailedChunkRetry(jobId: string, documentId: string, ctx: Reque
   );
   let recovered = 0;
   let failed = 0;
+  if (chunks.some((chunk) => normalizedExtractionMode(chunk.extraction_mode) === 'unknown')) {
+    const message = UNKNOWN_EXTRACTION_MODE_MESSAGE;
+    const now = new Date().toISOString();
+    await ctx.db.run(
+      `UPDATE ingestion_chunks SET error = ?, updated_at = ?
+       WHERE document_id = ? AND status = 'failed'
+         AND (extraction_mode IS NULL OR extraction_mode NOT IN ('default', 'local_only'))`,
+      [message, now, documentId],
+    );
+    await updateJob(jobId, {
+      status: 'failed',
+      stage: 'done',
+      completedAt: Date.now(),
+      error: message,
+      retryProgress: { documentId, done: 0, total: chunks.length, recovered, failed: chunks.length, coverage: 0 },
+    }, ctx.db);
+    return;
+  }
   await updateJob(jobId, {
     status: 'running',
     stage: 'extracting',
@@ -1051,13 +1179,16 @@ async function runFailedChunkRetry(jobId: string, documentId: string, ctx: Reque
       [now, chunk.id]
     );
     try {
+      const extractionMode = normalizedExtractionMode(chunk.extraction_mode);
+      const localOnly = isLocalOnly(extractionMode);
       const result = await ctx.extractor.extract({
         textContent: chunk.content,
         timestamp: chunk.source_timestamp,
         sourceType: 'manual',
         documentId,
         source: chunk.source,
-        requireLlmSuccess: true,
+        requireLlmSuccess: !localOnly,
+        useLocalExtraction: localOnly,
       });
       const provenance = {
         document_id: documentId,
@@ -1090,7 +1221,7 @@ async function runFailedChunkRetry(jobId: string, documentId: string, ctx: Reque
           access_count: update.access_count,
         });
       }
-      await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor);
+      await resolveConflicts(resolution.relationshipsToCreate, ctx.db, ctx.extractor, { localOnly });
       for (const a of result.assertions || []) {
         const subjectId = resolution.idMap[a.subject_id] || a.subject_id;
         const objectId = a.object_id ? (resolution.idMap[a.object_id] || a.object_id) : undefined;
@@ -1203,6 +1334,8 @@ export const handleIngestRoutes = [
     path: '/api/ingest/file',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
       const body = await parseBody<IngestFilePayload>(req);
+      const extractionMode = extractionModeFromRequest(body.useLocalExtraction);
+      if (!extractionMode) return sendError(res, 400, 'useLocalExtraction must be a boolean');
 
       const filename = (body.filename || '').toString().trim();
       const contentType = normalizeContentType(body.contentType || '');
@@ -1216,6 +1349,10 @@ export const handleIngestRoutes = [
         return sendError(res, 415, `Unsupported contentType: ${contentType}`);
       }
 
+      if (isLocalOnly(extractionMode) && hasRemoteEmbeddings(ctx)) {
+        return rejectRemoteEmbeddingLocalOnly(res);
+      }
+
       let buffer: Buffer;
       try {
         buffer = Buffer.from(base64, 'base64');
@@ -1226,8 +1363,10 @@ export const handleIngestRoutes = [
       if (buffer.length === 0) return sendError(res, 400, 'Decoded file is empty');
       if (buffer.length > MAX_INGEST_BYTES) return sendError(res, 413, `File too large. Limit is ${MAX_INGEST_BYTES} bytes`);
 
-      const job = await createJob(filename, ctx.db);
-      await scheduleJob(job.jobId, ctx.db, () => runIngestPipeline(job.jobId, filename, contentType, base64, buffer, ctx));
+      const job = await createJob(filename, ctx.db, extractionMode);
+      await scheduleJob(job.jobId, ctx.db, () => runIngestPipeline(
+        job.jobId, filename, contentType, base64, buffer, extractionMode, ctx,
+      ));
 
       sendResponse(res, 200, { jobId: job.jobId, status: job.status, filename: job.filename });
     },
@@ -1265,6 +1404,7 @@ export const handleIngestRoutes = [
           status: job.status,
           stage: job.stage,
           filename: job.filename,
+          extractionMode: normalizedExtractionMode(job.extractionMode),
           result: job.result,
           importProgress: job.importProgress,
           retryProgress: job.retryProgress,
@@ -1298,8 +1438,8 @@ export const handleIngestRoutes = [
     path: '/api/ingest/document/:documentId/retry',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext, params: Record<string, string>) => {
       const documentId = params.documentId;
-      const document = await ctx.db.get<{ source: string }>(
-        'SELECT source FROM ingestion_documents WHERE id = ?',
+      const document = await ctx.db.get<{ source: string; extraction_mode: string | null }>(
+        'SELECT source, extraction_mode FROM ingestion_documents WHERE id = ?',
         [documentId]
       );
       if (!document) return sendError(res, 404, 'Ingestion document not found');
@@ -1308,7 +1448,19 @@ export const handleIngestRoutes = [
         [documentId]
       );
       if (!failed?.count) return sendResponse(res, 200, { documentId, retried: 0, status: 'already_complete' });
-      const job = await createJob(`retry:${document.source}`, ctx.db);
+      const extractionMode = normalizedExtractionMode(document.extraction_mode);
+      const failedChunks = await ctx.db.all<{ extraction_mode: string | null }>(
+        `SELECT extraction_mode FROM ingestion_chunks WHERE document_id = ? AND status = 'failed'`,
+        [documentId],
+      );
+      if (extractionMode === 'unknown' || failedChunks.some((chunk) => normalizedExtractionMode(chunk.extraction_mode) === 'unknown')) {
+        return rejectUnknownExtractionMode(res);
+      }
+      const hasLocalOnlyChunk = failedChunks.some((chunk) => isLocalOnly(normalizedExtractionMode(chunk.extraction_mode)));
+      if ((isLocalOnly(extractionMode) || hasLocalOnlyChunk) && hasRemoteEmbeddings(ctx)) {
+        return rejectRemoteEmbeddingLocalOnly(res);
+      }
+      const job = await createJob(`retry:${document.source}`, ctx.db, extractionMode);
       await scheduleJob(job.jobId, ctx.db, () => runFailedChunkRetry(job.jobId, documentId, ctx));
       sendResponse(res, 202, { jobId: job.jobId, documentId, retrying: failed.count });
     },
@@ -1317,7 +1469,17 @@ export const handleIngestRoutes = [
     method: 'POST' as const,
     path: '/api/import/chat',
     handler: async (req: http.IncomingMessage, res: http.ServerResponse, ctx: RequestContext) => {
-      const body = await parseBody<{ base64?: string; text?: string; maxConversations?: number }>(req);
+      const body = await parseBody<{
+        base64?: string;
+        text?: string;
+        maxConversations?: number;
+        useLocalExtraction?: boolean;
+      }>(req);
+      const extractionMode = extractionModeFromRequest(body.useLocalExtraction);
+      if (!extractionMode) return sendError(res, 400, 'useLocalExtraction must be a boolean');
+      if (isLocalOnly(extractionMode) && hasRemoteEmbeddings(ctx)) {
+        return rejectRemoteEmbeddingLocalOnly(res);
+      }
       let raw = '';
       if (body.text) raw = body.text;
       else if (body.base64) {
@@ -1337,8 +1499,10 @@ export const handleIngestRoutes = [
         : Math.min(convs.length, 5000);
       const capped = convs.slice(0, cap);
 
-      const job = await createJob(`import:${parsed.platform}`, ctx.db);
-      await scheduleJob(job.jobId, ctx.db, () => runImportPipeline(job.jobId, capped, parsed.platform, ctx));
+      const job = await createJob(`import:${parsed.platform}`, ctx.db, extractionMode);
+      await scheduleJob(job.jobId, ctx.db, () => runImportPipeline(
+        job.jobId, capped, parsed.platform, extractionMode, ctx,
+      ));
       sendResponse(res, 200, { jobId: job.jobId, platform: parsed.platform, parsed: convs.length, importing: capped.length });
     },
   },
@@ -1380,7 +1544,15 @@ export const handleIngestRoutes = [
       if (pending.length === 0) {
         return sendResponse(res, 200, { batchId, retried: 0, status: 'no_pending_failures' });
       }
-      const job = await createJob(`import-retry:${batchId}`, ctx.db);
+      if (pending.some((task) => failedTaskExtractionMode(task.payload_snapshot) === 'unknown')) {
+        return rejectUnknownExtractionMode(res);
+      }
+      const hasLocalOnlyTask = pending.some((task) => isLocalOnly(failedTaskExtractionMode(task.payload_snapshot)));
+      if (hasLocalOnlyTask && hasRemoteEmbeddings(ctx)) {
+        return rejectRemoteEmbeddingLocalOnly(res);
+      }
+      const extractionMode = commonFailedTaskExtractionMode(pending);
+      const job = await createJob(`import-retry:${batchId}`, ctx.db, extractionMode);
       await scheduleJob(job.jobId, ctx.db, () => runFailedImportRetry(job.jobId, batchId, ctx));
       sendResponse(res, 202, { jobId: job.jobId, batchId, retrying: pending.length });
     },

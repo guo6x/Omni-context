@@ -344,18 +344,24 @@ pub async fn start_listening() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn capture_screen() -> Result<String, String> {
-    match screen_capture::capture_screen_base64().await {
-        Ok(base64_data) => Ok(base64_data),
-        Err(e) => Err(format!("屏幕捕获失败: {}", e)),
-    }
+    crate::capture_policy::run_current_if_allowed(|| async {
+        match screen_capture::capture_screen_base64().await {
+            Ok(base64_data) => Ok(base64_data),
+            Err(e) => Err(format!("屏幕捕获失败: {}", e)),
+        }
+    })
+    .await
 }
 
 #[tauri::command]
 pub async fn capture_all_screens() -> Result<Vec<screen_capture::ScreenCaptureResult>, String> {
-    match screen_capture::capture_all_screens().await {
-        Ok(results) => Ok(results),
-        Err(e) => Err(format!("多屏幕捕获失败: {}", e)),
-    }
+    crate::capture_policy::run_current_if_allowed(|| async {
+        match screen_capture::capture_all_screens().await {
+            Ok(results) => Ok(results),
+            Err(e) => Err(format!("多屏幕捕获失败: {}", e)),
+        }
+    })
+    .await
 }
 
 #[tauri::command]
@@ -365,27 +371,36 @@ pub async fn capture_screen_region(
     width: u32,
     height: u32,
 ) -> Result<String, String> {
-    match screen_capture::capture_screen_region(x, y, width, height).await {
-        Ok(png_data) => Ok(STANDARD.encode(&png_data)),
-        Err(e) => Err(format!("区域捕获失败: {}", e)),
-    }
+    crate::capture_policy::run_current_if_allowed(|| async {
+        match screen_capture::capture_screen_region(x, y, width, height).await {
+            Ok(png_data) => Ok(STANDARD.encode(&png_data)),
+            Err(e) => Err(format!("区域捕获失败: {}", e)),
+        }
+    })
+    .await
 }
 
 #[tauri::command]
 pub async fn get_clipboard() -> Result<String, String> {
-    match clipboard::get_clipboard_content().await {
-        Ok(Some(text)) => Ok(text),
-        Ok(None) => Ok("".to_string()),
-        Err(e) => Err(format!("读取剪贴板失败: {}", e)),
-    }
+    crate::capture_policy::run_current_if_allowed(|| async {
+        match clipboard::get_clipboard_content().await {
+            Ok(Some(text)) => Ok(text),
+            Ok(None) => Ok("".to_string()),
+            Err(e) => Err(format!("读取剪贴板失败: {}", e)),
+        }
+    })
+    .await
 }
 
 #[tauri::command]
 pub async fn get_clipboard_detailed() -> Result<clipboard::ClipboardContent, String> {
-    match clipboard::get_clipboard_detailed().await {
-        Ok(content) => Ok(content),
-        Err(e) => Err(format!("读取剪贴板详情失败: {}", e)),
-    }
+    crate::capture_policy::run_current_if_allowed(|| async {
+        match clipboard::get_clipboard_detailed().await {
+            Ok(content) => Ok(content),
+            Err(e) => Err(format!("读取剪贴板详情失败: {}", e)),
+        }
+    })
+    .await
 }
 
 #[tauri::command]

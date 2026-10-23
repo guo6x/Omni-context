@@ -1,7 +1,7 @@
 # Omni-Context 浏览器插件
 
-手写的 Manifest V3 浏览器插件，兼容 Chrome / Edge / Firefox 109+。
-默认仅与本机 Brain Server（`http://localhost:3001`）通信，**不向任何第三方发送请求**。
+手写的 Manifest V3 浏览器插件，当前面向 Chrome / Edge；Firefox 兼容性尚未验证。
+扩展自身只把捕获内容发送到本机 Brain Server（`http://localhost:3001`）。若 Omni 配置了云端模型，Brain 可能会把相关资料片段发送给该模型提供方；请先查看 Omni 中的模型与隐私设置。
 
 ## 技术栈
 
@@ -44,21 +44,19 @@ browser-extension/
     "http://127.0.0.1:3001/*"
   ],
   "content_scripts": [
-    { "matches": ["<all_urls>"], "js": ["content.js"], "css": ["content.css"] }
+    { "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*", "https://claude.ai/*", "https://gemini.google.com/*"], "js": ["privacy.js", "extractor.js", "content.js"], "css": ["content.css"] }
   ]
 }
 ```
 
-注：`<all_urls>` 仅出现在 `content_scripts.matches`（划词捕获要在所有页面工作），
-插件**不申请任意域名的 host 权限**——所有出站 fetch 都被限制在 localhost。
-也未声明 `clipboardRead/Write`、`tabs`、`webRequest` 等敏感权限。
+常驻 content script 仅注入清单中的 AI 对话站点。其他网页只能在用户主动点击扩展、选择捕获或使用右键菜单时，通过 `activeTab` 临时读取当前标签页；插件不申请任意域名的 host 权限，也未声明 `clipboardRead/Write`、`tabs`、`webRequest` 等权限。
 
 ## 对话捕获（跨 AI）
 
-在 **ChatGPT / Claude / Gemini** 页面，`extractor.js` 会识别各自的对话 DOM，按角色拆成干净的「我 / AI」轮次，再整段沉淀进大脑；其余网页回退到「整页 innerText」捕获。
+在 **ChatGPT / Claude / Gemini** 页面，`extractor.js` 会识别各自的对话 DOM，按角色拆成「我 / AI」轮次；其他网页仅在用户主动捕获时读取当前页面文本。
 
-- **手动**：弹窗按钮、悬浮按钮、右键菜单——在上述站点会自动走对话提取。
-- **自动**（`settings.autoCapture`，弹窗里有开关，默认开）：仅在上述三个站点挂 `MutationObserver`，对话稳定 3.5s（流式输出结束）后自动沉淀；用「轮数+内容哈希」按会话去重，内容没变/被虚拟列表截短都不会重复提交。
+- **手动**：用户从弹窗或右键菜单发起捕获；支持的 AI 站点会尝试按对话轮次提取。默认要求预览确认并启用敏感字段脱敏。
+- **自动**（`settings.autoCapture`，默认关）：仅在支持的 AI 站点、用户主动开启自动捕获并把域名加入允许列表后运行；暂停或阻止列表仍优先生效。对话稳定后自动提交，并按会话内容签名去重。
 
 ## 通信协议
 
@@ -72,7 +70,7 @@ GET  http://localhost:3001/api/ingest/job/:jobId  # 轮询抽取结果
 POST http://localhost:3001/api/mcp/tool/ask_memory # 弹窗「问大脑」
 ```
 
-所有请求带 `Authorization: Bearer <本地 token>`（`/health` 除外）。不使用 WebSocket，没有云端组件。
+所有扩展请求带 `Authorization: Bearer <本地 token>`（`/health` 除外）。扩展传输不使用 WebSocket 或云端中转；Brain 后续处理仍遵循 Omni 已配置的模型提供方与数据流设置。
 
 ## 开发与构建
 
@@ -86,7 +84,7 @@ npm run watch       # 开发期热编译
 加载方式：
 
 - **Chrome / Edge**: `chrome://extensions` → 开发者模式 → "加载已解压的扩展程序" → 选 `browser-extension/` 根目录
-- **Firefox 109+**: `about:debugging` → 此 Firefox → 临时载入附加组件 → 选 `manifest.json`
+Firefox 尚未列为已验证支持的平台。
 
 ## 发布打包
 
@@ -99,7 +97,8 @@ npm run watch       # 开发期热编译
 
 ## 隐私与安全
 
-- 仅与本机 Brain Server 通信；Brain Server 默认只听 `127.0.0.1:3001`
+- 扩展只与本机 Brain Server 通信；Brain Server 默认只听 `127.0.0.1:3001`，但所选云端模型可能接收相关资料片段
 - host_permissions 限定 localhost / 127.0.0.1
-- content_scripts 的 `<all_urls>` 仅用于划词触发，不向外上传页面正文
+- 常驻 content script 仅覆盖 manifest 列出的 AI 对话站点；其他页面由用户主动发起的当前标签页捕获读取
+- 自动捕获默认关闭；启用时仍要求用户显式允许站点，并遵守暂停、阻止列表和敏感站点规则
 - 未连接 Brain Server 时插件功能优雅降级（仅本地 chrome.storage）

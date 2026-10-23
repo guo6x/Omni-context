@@ -78,21 +78,13 @@
       return;
     }
     payload.previewConfirmed = true;
+    await attachCaptureSignature(payload);
     showToast(payload.source ? `正在沉淀 ${payload.source} 对话（${payload.turns} 轮）…` : '正在沉淀当前页面…');
-    chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: payload }, async (resp) => {
+    chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: payload }, (resp) => {
       busy = false;
       button.style.opacity = '1';
       if (chrome.runtime.lastError) { showToast('✗ 连不上大脑（确认桌面端在运行、token 已配）'); return; }
       if (resp && resp.ok) {
-        // 手动捕获后记下签名，避免自动观察器紧接着重复沉淀同一段对话
-        if (payload.source) {
-          try {
-            const sig = await globalThis.__omniConversationSignature(payload);
-            await setAutoSig(urlKey(), { sig, count: payload.turns });
-          } catch (error) {
-            console.warn('[Omni-Context] Unable to update capture signature', error);
-          }
-        }
         showToast(payload.source ? `✓ 已捕获 ${payload.turns} 轮对话，后台抽取中` : '✓ 已捕获，正在后台抽取');
       } else {
         showToast('✗ ' + ((resp && resp.error) || '提交失败'));
@@ -122,6 +114,7 @@
         const payload = getPagePayload();
         if (!(await confirmManualCapture(payload))) return sendResponse({ ok: false, cancelled: true });
         payload.previewConfirmed = true;
+        await attachCaptureSignature(payload);
         chrome.runtime.sendMessage({ type: 'CAPTURE_PAGE', data: payload }, sendResponse);
       })().catch((error) => {
         console.warn('[Omni-Context] Page preview capture failed', error);
@@ -206,8 +199,36 @@
   let autoObserver = null;
   let autoTimer = null;
   let autoInFlight = false;
+  const attemptedCaptureSignatures = new Map();
 
   function urlKey() { return location.origin + location.pathname; }
+
+  async function attachCaptureSignature(payload) {
+    if (!payload || !payload.source || typeof globalThis.__omniConversationSignature !== 'function') return;
+    try {
+      const key = urlKey();
+      const sig = await globalThis.__omniConversationSignature(payload);
+      const captureSignature = { key, sig, count: payload.turns };
+      payload.captureSignature = captureSignature;
+      rememberCaptureAttempt(key, sig);
+    } catch (error) {
+      console.warn('[Omni-Context] Unable to prepare capture signature', error);
+    }
+  }
+
+  function hasCaptureAttempt(key, sig) {
+    return attemptedCaptureSignatures.get(key)?.has(sig) || false;
+  }
+
+  function rememberCaptureAttempt(key, sig) {
+    let signatures = attemptedCaptureSignatures.get(key);
+    if (!signatures) {
+      signatures = new Set();
+      attemptedCaptureSignatures.set(key, signatures);
+    }
+    signatures.add(sig);
+    while (signatures.size > 20) signatures.delete(signatures.values().next().value);
+  }
 
   async function getAutoSig(key) {
     try { const r = await chrome.storage.local.get('autoSig'); return (r.autoSig || {})[key] || null; }
@@ -216,19 +237,6 @@
       return null;
     }
   }
-  async function setAutoSig(key, entry) {
-    try {
-      const r = await chrome.storage.local.get('autoSig');
-      const map = r.autoSig || {};
-      map[key] = entry;
-      const keys = Object.keys(map);
-      if (keys.length > 200) delete map[keys[0]]; // 控制体积
-      await chrome.storage.local.set({ autoSig: map });
-    } catch (error) {
-      console.warn('[Omni-Context] Unable to persist automatic capture signature', error);
-    }
-  }
-
   async function tryAutoCapture() {
     if (!autoEnabled || autoInFlight) return;
     const conv = globalThis.__omniExtractConversation && globalThis.__omniExtractConversation();
@@ -242,16 +250,19 @@
     }
     const key = urlKey();
     const prev = await getAutoSig(key);
-    if (prev && (prev.sig === sig || conv.turns <= prev.count)) return; // 没新内容/被虚拟列表截短
+    if (prev && (prev.sig === sig || conv.turns < prev.count)) return; // 没新内容/被虚拟列表截短
+    if (hasCaptureAttempt(key, sig)) return; // 同一内容失败时不循环重试；内容变化后可重新捕获
+    const captureSignature = { key, sig, count: conv.turns };
+    rememberCaptureAttempt(key, sig);
     autoInFlight = true;
     showToast(`自动沉淀 ${conv.source} 对话（${conv.turns} 轮）…`);
     chrome.runtime.sendMessage({
       type: 'CAPTURE_PAGE',
-      data: { url: conv.url, title: conv.title, content: conv.content, source: conv.source, turns: conv.turns, preformatted: true, automatic: true },
+      data: { url: conv.url, title: conv.title, content: conv.content, source: conv.source, turns: conv.turns, preformatted: true, automatic: true, captureSignature },
     }, (resp) => {
       autoInFlight = false;
       if (chrome.runtime.lastError) return;
-      if (resp && resp.ok) { setAutoSig(key, { sig, count: conv.turns }); showToast(`✓ 已自动沉淀 ${conv.turns} 轮对话`); }
+      if (resp && resp.ok) showToast(`✓ 已提交 ${conv.turns} 轮对话，正在后台处理`);
     });
   }
 

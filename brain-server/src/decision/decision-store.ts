@@ -1,8 +1,9 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import type { Database } from '../db/sqlite.js';
 import type { Entity } from '../shared-types.js';
 import type { z } from 'zod';
 import type { RecordDecisionOutcomeSchema, SaveDecisionSchema } from '../mcp-tools.js';
+import { BusinessError } from '../mcp/errors.js';
 
 export type SaveDecisionInput = z.infer<typeof SaveDecisionSchema>;
 export type DecisionOutcomeInput = z.infer<typeof RecordDecisionOutcomeSchema>;
@@ -12,6 +13,8 @@ const EVIDENCE_TYPES = new Set(['decision_referenced', 'supported_by', 'opposed_
 
 export function buildDecisionMetadata(input: SaveDecisionInput): Record<string, unknown> {
   return {
+    authority: 'user_confirmed',
+    user_confirmed: true,
     situation: input.situation,
     decision_question: input.decision_question ?? input.situation,
     goals: input.goals,
@@ -118,49 +121,87 @@ export async function getRecursiveDecisionLineage(db: Database, decisionId: stri
  * module and accepts only trusted receipt/observation ids.
  */
 export async function recordDecisionOutcome(db: Database, input: DecisionOutcomeInput) {
-  const decision = await db.getEntity(input.decision_id);
-  if (!decision || decision.type !== 'decision') return null;
-  const outcomeId = randomUUID();
-  const outcome = {
-    outcome_id: outcomeId,
-    actual_outcome: input.actual_outcome,
-    outcome_timestamp: input.outcome_timestamp,
-    outcome_score: input.outcome_score,
-    assumption_failures: input.assumption_failures,
-    unexpected_factors: input.unexpected_factors,
-    lessons_learned: input.lessons_learned,
-    confidence_calibration: input.confidence_calibration,
-    follow_up_actions: input.follow_up_actions,
-    provenance: input.provenance,
-    recorded_at: new Date().toISOString(),
-    // CP8 closure markers: journal-only, never verified authority.
-    outcome_authority: 'journal',
-    verified: false,
-  };
-  const previousOutcomes = Array.isArray(decision.metadata?.outcomes) ? decision.metadata.outcomes : [];
-  await db.updateEntity(decision.id, {
-    metadata: { ...decision.metadata, outcomes: [...previousOutcomes, outcome] },
+  const { idempotency_key: _idempotencyKey, ...requestPayload } = input;
+  const requestFingerprint = createHash('sha256').update(JSON.stringify(requestPayload)).digest('hex');
+
+  // Keep the journal metadata, event, and relationship in one DB transaction.
+  // This also serializes retries that race with each other.
+  return db.withTransaction(async () => {
+    const decision = await db.getEntity(input.decision_id);
+    if (!decision || decision.type !== 'decision') return null;
+    const decisionProvenance = decision.metadata?.provenance;
+    const isExplicitAiDerived = decision.metadata?.authority === 'ai_derived'
+      && decision.metadata?.user_confirmed === false;
+    // Older save_conclusion writes predate authority flags. Recognize only that
+    // exact legacy provenance so unmarked historical user decisions remain usable.
+    const isLegacyAiConclusion = decisionProvenance?.source === 'external_ai'
+      && decisionProvenance?.tool === 'save_conclusion';
+    if (isExplicitAiDerived || isLegacyAiConclusion) {
+      throw new BusinessError('INVALID_PARAMS', 'DECISION_NOT_USER_CONFIRMED');
+    }
+    const previousOutcomes = Array.isArray(decision.metadata?.outcomes) ? decision.metadata.outcomes : [];
+
+    if (input.idempotency_key) {
+      const existing = previousOutcomes.find((entry: any) => entry?.idempotency_key === input.idempotency_key);
+      if (existing) {
+        if (existing.request_fingerprint !== requestFingerprint) {
+          throw new BusinessError('INVALID_PARAMS', 'IDEMPOTENCY_KEY_REUSED');
+        }
+        return {
+          decision_id: decision.id,
+          outcome_entity_id: existing.outcome_entity_id,
+          outcome: existing,
+          replayed: true,
+        };
+      }
+    }
+
+    const outcomeId = randomUUID();
+    const outcome: Record<string, unknown> = {
+      outcome_id: outcomeId,
+      actual_outcome: input.actual_outcome,
+      outcome_timestamp: input.outcome_timestamp,
+      outcome_score: input.outcome_score,
+      assumption_failures: input.assumption_failures,
+      unexpected_factors: input.unexpected_factors,
+      lessons_learned: input.lessons_learned,
+      confidence_calibration: input.confidence_calibration,
+      follow_up_actions: input.follow_up_actions,
+      provenance: input.provenance,
+      recorded_at: new Date().toISOString(),
+      ...(input.idempotency_key ? {
+        idempotency_key: input.idempotency_key,
+        request_fingerprint: requestFingerprint,
+      } : {}),
+      // CP8 closure markers: journal-only, never verified authority.
+      outcome_authority: 'journal',
+      verified: false,
+    };
+    const outcomeEntity = await db.addEntity({
+      name: `Decision outcome: ${input.actual_outcome.slice(0, 80)}`,
+      type: 'event',
+      description: input.actual_outcome,
+      tags: ['decision-outcome'],
+      event_time: input.outcome_timestamp,
+      observed_at: input.outcome_timestamp,
+      valid_from: input.outcome_timestamp,
+      metadata: outcome,
+    });
+    outcome.outcome_entity_id = outcomeEntity.id;
+    await db.updateEntity(decision.id, {
+      metadata: { ...decision.metadata, outcomes: [...previousOutcomes, outcome] },
+    });
+    await db.addRelationship({
+      source_id: outcomeEntity.id,
+      target_id: decision.id,
+      type: 'outcome_of',
+      description: 'Observed result of the decision; does not automatically modify principles',
+      weight: 1,
+      event_time: input.outcome_timestamp,
+      observed_at: input.outcome_timestamp,
+      valid_from: input.outcome_timestamp,
+      provenance: input.provenance,
+    });
+    return { decision_id: decision.id, outcome_entity_id: outcomeEntity.id, outcome, replayed: false };
   });
-  const outcomeEntity = await db.addEntity({
-    name: `Decision outcome: ${input.actual_outcome.slice(0, 80)}`,
-    type: 'event',
-    description: input.actual_outcome,
-    tags: ['decision-outcome'],
-    event_time: input.outcome_timestamp,
-    observed_at: input.outcome_timestamp,
-    valid_from: input.outcome_timestamp,
-    metadata: outcome,
-  });
-  await db.addRelationship({
-    source_id: outcomeEntity.id,
-    target_id: decision.id,
-    type: 'outcome_of',
-    description: 'Observed result of the decision; does not automatically modify principles',
-    weight: 1,
-    event_time: input.outcome_timestamp,
-    observed_at: input.outcome_timestamp,
-    valid_from: input.outcome_timestamp,
-    provenance: input.provenance,
-  });
-  return { decision_id: decision.id, outcome_entity_id: outcomeEntity.id, outcome };
 }
