@@ -63,7 +63,7 @@ branch" is not the same as "available today". Governance language is frozen in
 
 ### A. Current user-facing — usable today
 
-- Persistent local memory — SQLite on your disk, no accounts, no servers
+- Persistent local memory — SQLite on your disk by default; no account is required
 - Knowledge graph of entities, relationships, and core principles
 - Hybrid retrieval (full-text + vector + graph traversal)
 - Temporal / provenance-aware context
@@ -141,7 +141,10 @@ Read-back → Outcome → Reopen / Revision
 ## What makes it different
 
 - **Not a note app** — it is a decision-control layer. Tools don't need their own memory systems; they share one evidence substrate and one authority core.
-- **Not cloud** — SQLite on your disk. No accounts, no servers, no data ever leaves your machine.
+- **Local-first, with an explicit network boundary** — the memory database stays on your
+  device by default. If you configure a remote/cloud model, only the requests needed for
+  that operation (which can include relevant excerpts) are sent to that provider and may
+  incur its charges. Omni does not automatically upload your whole database.
 - **Not locked to one AI** — MCP-based today; MCP clients share the same memory. MCP is an interface surface, not the product.
 - **Active, not passive** — the agent scans your graph for connections you've forgotten and surfaces them.
 - **Questions your thinking** — blind spot detection finds what you're missing. Anti-consensus insights challenge your assumptions.
@@ -199,7 +202,13 @@ Full parameter schemas: see [docs/MCP-INTEGRATION.md](docs/MCP-INTEGRATION.md).
 
 ### Windows
 
-Download `Omni-Context-Setup-x64.msi` from [Releases](https://github.com/guo6x/Omni-context/releases/latest). Double-click, done. Fully offline — Node.js runtime and embedding models are bundled.
+The Windows Alpha format is NSIS (`Omni-Context_<version>_x64-setup.exe`). No installer is
+currently approved for external trial; do not treat `Releases/latest` as an Alpha asset.
+Once a separate trial release is authorized, verify its exact SHA-256 and source commit
+before installation. Unsigned candidates may show a SmartScreen **Unknown publisher**
+warning; do not disable Defender or SmartScreen. See the
+[Windows Alpha installation and privacy guide](docs/alpha/INSTALL-WINDOWS.md) for data,
+backup and uninstall guidance.
 
 ### macOS / Linux
 
