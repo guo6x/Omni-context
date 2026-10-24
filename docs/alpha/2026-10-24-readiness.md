@@ -87,3 +87,18 @@
 当前重新 fetch 后 `HEAD` 与 `origin/main` 均为 `17449aaaee389224439e32ff370f913fbd078a74`。本地修复仍未提交，未推送/创建 PR/合并；这既避免把未验收修复标成发布，也避免本轮触发 GitHub Actions。此前记录的未签名 0.1.1 安装器 SHA 是历史构建证据；截至本补充记录，工作区和仓库根目录的预期文件位置均没有该安装器，且它不绑定当前源代码，不能交付。
 
 最终状态仍为 **`TRIAL_BLOCKED`**。下一道硬门禁仍是使用隔离环境，对与精确干净 commit 绑定的 NSIS 候选实际安装并运行 Tauri UI，完成原生隐私同步/重启交互并保存真实截图与日志；之后还需安装、退出、卸载/数据保留核验、候选 SHA/来源记录和私下反馈渠道。自动化闭锁回归不代表 Windows GUI P0 已通过。
+
+## 2026-10-25 后续收尾：提交与候选构建
+
+以下记录更新上面“尚无提交/候选包”的前序状态；原生安装版 P0 仍未通过：
+
+- 本轮修复分为三个逻辑提交，PR #23 为 Draft，基于 `main` `17449aaaee389224439e32ff370f913fbd078a74`。提交均带 `[skip ci]`；GitHub PR 检查为空，未创建 Actions run、未消耗 CI 预算；PR 未合并。
+- 本地 `npm run build` 与 Tauri Release/NSIS 构建成功。候选包只在本地构建目录，不在仓库、PR 附件或公开 Release 中。
+- 候选包：`Omni-Context_0.1.1_x64-setup.exe`，版本 `0.1.1`，构建源 commit `b4cd090e32c47e83e1769d13035fb7db6c2ed021`，源码 tree `add2789227d8702f47c7fa6394964b665bff0c95`；大小 `100429630` bytes；SHA-256 `F9AB6CE404618A70B60F4EB176BC97E796CD5CFCB53CAE0371FF5B711AB59F8D`；Authenticode `NotSigned`。这与历史安装包不同，但版本号仍为 `0.1.1`，不可仅凭文件名区分，必须匹配 commit 和 SHA。
+- 主机只读检查发现当前用户已有 `Omni-Context 0.1.1` 卸载注册，`%LOCALAPPDATA%\omni-context` 与 `%LOCALAPPDATA%\com.omni-context.app` 已存在；候选与旧版共用 `com.omni-context.app` 标识并加载 single-instance 插件。虽然检查时没有 Omni 进程，3001/3002 端口也未监听，但安装注册、配置和个人数据没有隔离。仅改安装目录不能证明安全，因此没有运行安装器、启动 UI、退出/卸载或接触数据库，也没有真实安装截图/日志。
+- 最新针对性自动化证据：Rust `capture_policy` 20/20 PASS；Brain TypeScript 检查 PASS，时间层日志隐私测试 1/1 PASS；此前隔离桌面隐私/设置测试 29/29 PASS 与 Desktop TypeScript 检查 PASS 未因后续 Rust 测试改动而重复。`desktop-import-http.test.ts` 新增的日志脱敏断言仍未验证：本工作树 Vitest 无法加载 `sqlite3` 原生绑定，属于环境加载失败，不是断言 PASS。受控文件检查和全树/暂存 secret scan PASS。
+- 构建输出提示两个既有 dead-code warning；仅请求 NSIS 时，Tauri 不生成 updater bundle。这不影响生成 NSIS 包，但本候选不是签名或发布产物。未签名可能触发 SmartScreen/未知发布者警告；不得关闭 Defender 或 SmartScreen。
+- 隐私设置代码在动作前再次核对前台，并在动作后拒绝过期结果；自动化测试覆盖可控的切换点。不过 Windows 全屏采集 API 不能把“前台身份检查”和屏幕像素读取做成原子操作，仍有很窄的系统级 TOCTOU 边界；这不是实际泄露证据，也不能描述为零竞态保证。
+- 安装阻断的最小解除条件：在本机使用一个没有 Omni 注册和数据的独立标准 Windows 用户配置文件，并先确认该配置下的安装身份/单实例/热键行为；不能通过覆盖当前用户安装来替代。试用材料已准备，但项目尚无安全的私下反馈渠道；提供该渠道前仍不要邀请外部用户。
+
+最终结论仍为 **`TRIAL_BLOCKED`**：本地源码提交和可追溯 NSIS 候选已交付到 Draft PR，但真实安装后 Tauri UI、持久数据隔离、暂停/恢复交互、正常退出、重启、卸载及数据保留都没有验收。没有真实 UI 截图，绝不以单测或浏览器模拟替代。
