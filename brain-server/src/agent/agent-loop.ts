@@ -385,7 +385,7 @@ export class AgentLoop {
             insightRelatedEntities = best.related_entities;
           }
 
-          console.log(`[AgentLoop] 图分析产出 ${candidates.length} 个候选，选中: [${best.category}] ${best.title}`);
+          console.log(`[AgentLoop] 图分析产出 ${candidates.length} 个候选，选中类别: [${best.category}]`);
         }
       } catch (e) {
         console.warn('[AgentLoop] 图分析洞见生成失败，将 fallback 到旧逻辑:', e);
@@ -408,7 +408,7 @@ export class AgentLoop {
         // proactive_insights was never queried before creating a new insight,
         // so the same insight could fire every cycle.
         if (await this.awaitCycle(this.db.hasRecentNotification(result.insight.title, 1), cycleSignal)) {
-          console.log(`[AgentLoop] 跳过重复洞见通知: ${result.insight.title}`);
+          console.log('[AgentLoop] 跳过重复洞见通知');
         } else {
         this.assertCycleActive(cycleSignal);
         const notification = await this.awaitCycle(this.db.addNotification({
@@ -429,7 +429,7 @@ export class AgentLoop {
           reason: selectedGraphInsight?.content || 'LLM fallback over consolidation candidates',
           cooldownUntil,
         }), cycleSignal);
-        console.log(`[AgentLoop] 产生新洞见: ${result.insight.title}`);
+        console.log('[AgentLoop] 产生新洞见');
         } // end of dedup else
           } else {
             console.log('[AgentLoop] 本轮未产生有效洞见');
@@ -510,7 +510,7 @@ export class AgentLoop {
             // inference breaks or related_entities changes, this guard still
             // prevents duplicate notifications with the same title.
             if (await this.awaitCycle(this.db.hasRecentNotification(bs.title, 1), cycleSignal)) {
-              console.log(`[AgentLoop] 跳过重复盲区通知: ${bs.title}`);
+              console.log('[AgentLoop] 跳过重复盲区通知');
               continue;
             }
             this.assertCycleActive(cycleSignal);
