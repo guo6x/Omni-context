@@ -89,6 +89,8 @@ async fn submit_and_wait(
 }
 
 pub async fn execute_precipitate() -> Result<Vec<String>, String> {
+    // The native capture lease covers both reads and commits their result only
+    // if policy and foreground authorization still win against a tray revoke.
     let ((screenshot, clipboard), authorization) =
         capture_policy::run_current_if_allowed_with_authorization(|| async {
             let screenshot = screen_capture::capture_screen_base64()
@@ -122,6 +124,8 @@ pub async fn execute_precipitate() -> Result<Vec<String>, String> {
         .build()
         .map_err(|error| error.to_string())?;
 
+    // Each upload gets a separate lease. If pause/revoke wins after local
+    // capture but before this admission point, the HTTP request is never sent.
     let screen_job = capture_policy::run_with_capture_authorization(&authorization, || async {
         submit(
             &client,

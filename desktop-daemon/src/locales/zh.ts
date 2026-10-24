@@ -242,7 +242,7 @@ export default {
     privacy_pause_desc: '暂停时沉淀快捷键和物理按钮都不会截屏或读取剪贴板',
     privacy_blocklist_label: '敏感应用排除列表',
     privacy_blocklist_placeholder: '每行一个应用名称（子串匹配，大小写不敏感）\n例如：KeePass\n1Password\nWeChat',
-    privacy_blocklist_hint: '当前前台窗口的进程名或标题包含任一规则时，沉淀操作自动跳过。按子串匹配，宽泛词可能误拦；最多 100 条，每条不超过 256 字符。',
+    privacy_blocklist_hint: '前台应用名或窗口标题命中规则时才会跳过（不区分大小写子串）。黑名单不会遮挡主屏幕整幅截图中的后台窗口/通知，也无法判断剪贴板内容来源；启用前请确认当前画面和剪贴板都可用于处理。宽泛规则可能误拦；最多 100 条，每条 256 字符。',
     privacy_blocklist_invalid: '最多填写 100 条，每条不超过 256 个字符，且不能包含控制字符。',
     privacy_blocklist_save: '保存排除列表',
     restart_tour_desc: '重新清理引导完成标志并再次展现 4 步引导向导。',

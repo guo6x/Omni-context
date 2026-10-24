@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { THEMES, ThemeId } from '@/lib/themes';
-import { createCapturePolicySynchronizer } from '@/lib/capture-policy-sync';
-import { capturePolicySyncErrorFromSave, persistSettingsWhileLocked } from '@/lib/settings-persistence';
+import { CapturePolicyReconfirmationRequiredError, createCapturePolicySynchronizer, NativeCaptureRevocationUnconfirmedError } from '@/lib/capture-policy-sync';
+import { CapturePolicySaveNotAppliedError, capturePolicySyncErrorFromSave, persistSettingsWhileLocked, withNativeCaptureRevocation } from '@/lib/settings-persistence';
 
 async function safeInvoke(cmd: string, args?: any) {
   if (typeof window === 'undefined') return;
@@ -47,7 +47,13 @@ function runExclusiveSettingsLock<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 function publishCapturePolicySyncResult(error: unknown = null) {
-  const message = error ? '无法确认隐私设置已同步到本机硬件监听器。' : null;
+  const message = error instanceof NativeCaptureRevocationUnconfirmedError
+    ? '无法确认原生捕获已停止；请立即停止捕获并退出应用。'
+    : error instanceof CapturePolicySaveNotAppliedError
+      ? '隐私设置未能保存；本机捕获保持撤销。请先保存“保持暂停”，再明确选择是否恢复。'
+    : error instanceof CapturePolicyReconfirmationRequiredError
+      ? '隐私策略变更尚未确认；本机捕获保持撤销。请先保存“保持暂停”，再明确选择是否恢复。'
+    : error ? '无法确认隐私设置已同步到本机硬件监听器。' : null;
   capturePolicySyncError = message;
   capturePolicySyncSubscribers.forEach((subscriber) => subscriber(message, capturePolicySyncPending));
   if (error) console.error('同步本机硬件隐私策略失败:', error);
@@ -58,12 +64,12 @@ function publishCapturePolicySyncPending(pending: boolean) {
   capturePolicySyncSubscribers.forEach((subscriber) => subscriber(capturePolicySyncError, pending));
 }
 
-async function enqueueCapturePolicySync(): Promise<boolean> {
+async function enqueueCapturePolicySync(explicitConfirmation = false): Promise<boolean> {
   if (!isTauriRuntime()) {
     publishCapturePolicySyncResult();
     return true;
   }
-  return withCapturePolicySyncActivity(() => getCapturePolicySynchronizer().sync());
+  return withCapturePolicySyncActivity(() => getCapturePolicySynchronizer().sync(explicitConfirmation));
 }
 
 function getCapturePolicySynchronizer() {
@@ -109,7 +115,9 @@ export function useCapturePolicySyncStatus() {
   const retry = useCallback(async () => {
     setRetrying(true);
     try {
-      await enqueueCapturePolicySync();
+      // Retry is an explicit user action; it confirms reapplying the stored
+      // preference. A failed settings write uses a separate save-paused path.
+      await enqueueCapturePolicySync(true);
     } finally {
       setRetrying(false);
     }
@@ -333,6 +341,24 @@ export function useSettings() {
 
   useEffect(() => {
     let active = true;
+    let unlisten: (() => void) | undefined;
+    void import('@tauri-apps/api/event').then(({ listen }) =>
+      listen<string>('capture-policy-revocation-failed', (event) => {
+        if (!active) return;
+        publishCapturePolicySyncResult(new NativeCaptureRevocationUnconfirmedError(event.payload));
+      }),
+    ).then((stop) => {
+      if (active) unlisten = stop;
+      else stop();
+    }).catch(() => {});
+    return () => {
+      active = false;
+      unlisten?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
     const reconcileFromAnotherWindow = async () => {
       const synchronized = await enqueueCapturePolicySync();
       if (!active || !synchronized) return;
@@ -390,26 +416,36 @@ export function useSettings() {
   ): Promise<boolean> => {
     const storageKey = 'omnicontext-settings';
     try {
-      const persist = () => getCapturePolicySynchronizer().withExclusive((syncLatestPolicy, invalidatePolicy) =>
-        persistSettingsWhileLocked({
-          storage: localStorage,
-          storageKey,
-          defaults: DEFAULT_SETTINGS.behavior,
-          currentFromStorage: readSettingsFromStorage,
-          update,
-          isNativeRuntime: isTauriRuntime(),
-          invalidateCapturePolicy: invalidatePolicy,
-          syncCapturePolicy: async () => {
-            try {
-              await syncLatestPolicy();
-              publishCapturePolicySyncResult(null);
-            } catch (error) {
-              publishCapturePolicySyncResult(error);
-              throw error;
-            }
-          },
-        }),
-      );
+      const persist = async () => {
+        const synchronizer = getCapturePolicySynchronizer();
+        const nativeRuntime = isTauriRuntime();
+        return withNativeCaptureRevocation(
+          capturePolicyUpdate,
+          nativeRuntime,
+          () => synchronizer.invalidate(),
+          () => synchronizer.withExclusive((syncLatestPolicy, invalidatePolicy) =>
+            persistSettingsWhileLocked({
+              storage: localStorage,
+              storageKey,
+              defaults: DEFAULT_SETTINGS.behavior,
+              currentFromStorage: readSettingsFromStorage,
+              update,
+              isNativeRuntime: nativeRuntime,
+              nativePolicyAlreadyInvalidated: capturePolicyUpdate && nativeRuntime,
+              invalidateCapturePolicy: invalidatePolicy,
+              syncCapturePolicy: async () => {
+                try {
+                  await syncLatestPolicy();
+                  publishCapturePolicySyncResult(null);
+                } catch (error) {
+                  publishCapturePolicySyncResult(error);
+                  throw error;
+                }
+              },
+            }),
+          ),
+        );
+      };
       const result = capturePolicyUpdate
         ? await withCapturePolicySyncActivity(persist)
         : await persist();

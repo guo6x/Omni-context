@@ -11,6 +11,7 @@ import { apiFetch } from '@/lib/api-client';
 import { MCP_CLIENTS } from '@/lib/mcp-clients';
 import { MCP_SCENARIOS } from '@/lib/mcp-scenarios';
 import { findSystemConflict, normalizeShortcut } from '@/lib/known-system-shortcuts';
+import { getCapturePolicyTogglePresentation, isCapturePolicyRevokedError } from '@/lib/capture-policy-presentation';
 import McpClientCard from './McpClientCard';
 import Console from './Console';
 import { THEMES } from '@/lib/themes';
@@ -94,6 +95,12 @@ export default function SettingsPanel({
   const { t } = useTranslation();
   const toast = useToast();
   const { error: capturePolicySyncError, pending: capturePolicySyncPending, retry: retryCapturePolicySync, retrying: retryingCapturePolicySync } = useCapturePolicySyncStatus();
+  const capturePolicyToggle = getCapturePolicyTogglePresentation(
+    settings.behavior.capturePaused,
+    capturePolicySyncError,
+    capturePolicySyncPending,
+  );
+  const capturePolicyNeedsSafeRecovery = isCapturePolicyRevokedError(capturePolicySyncError);
 
   const [diagnosticsData, setDiagnosticsData] = useState<any>(null);
   const [diagnosticsLoading, setDiagnosticsLoading] = useState(false);
@@ -1343,8 +1350,8 @@ export default function SettingsPanel({
                 {capturePolicySyncPending && (
                   <div role="status" aria-live="polite" className="rounded-lg border border-cyan-700/50 bg-cyan-950/30 p-3 text-xs text-cyan-100">
                     {language === 'zh'
-                      ? '正在确认隐私设置已应用到本机；确认前仍显示原设置。'
-                      : 'Confirming the privacy setting on this device; the previous setting remains shown until confirmed.'}
+                      ? '正在由本机确认隐私设置；确认前不要认为暂停或恢复已生效，已开始的操作可能仍在收尾。'
+                      : 'The native privacy policy is being confirmed. Until it completes, do not assume pause or resume took effect; an already-started action may still be finishing.'}
                   </div>
                 )}
 
@@ -1363,22 +1370,61 @@ export default function SettingsPanel({
                           : 'Privacy settings could not be synced to the native hardware listener.'}
                       </p>
                       <p className="mt-1 text-xs text-amber-200/80">
-                        {language === 'zh'
-                          ? '物理沉淀按钮可能仍按上次确认的策略运行。请先不要触发沉淀，直到同步恢复。'
-                          : 'The physical capture button may still use the last confirmed policy. Avoid triggering capture until sync recovers.'}
+                        {capturePolicySyncError.includes('无法确认原生捕获已停止')
+                          ? language === 'zh'
+                            ? '无法确认原生捕获已停止；请立即停止捕获并退出应用。'
+                            : 'Native capture may still be active. Stop capture and exit the app now.'
+                          : capturePolicyNeedsSafeRecovery
+                            ? language === 'zh'
+                              ? '本机捕获保持撤销；此前的隐私设置未能保存或确认。请先保存“保持暂停”，再单独选择是否恢复。'
+                              : 'Native capture remains revoked because the privacy change was not saved or confirmed. Save with capture paused before separately choosing whether to resume.'
+                          : language === 'zh'
+                            ? '捕获保持拒绝，直到隐私策略同步成功。'
+                            : 'Capture remains blocked until the privacy policy synchronization succeeds.'}
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => void retryCapturePolicySync()}
-                        disabled={retryingCapturePolicySync}
-                        aria-busy={retryingCapturePolicySync}
-                        className="mt-3 inline-flex items-center gap-2 rounded-md border border-amber-600/70 px-3 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-900/50 disabled:cursor-wait disabled:opacity-60"
-                      >
-                        <RefreshCw className={`h-3.5 w-3.5 ${retryingCapturePolicySync ? 'animate-spin' : ''}`} aria-hidden="true" />
-                        {retryingCapturePolicySync
-                          ? (language === 'zh' ? '正在重试…' : 'Retrying…')
-                          : (language === 'zh' ? '重试同步' : 'Retry sync')}
-                      </button>
+                      {capturePolicySyncError.includes('无法确认原生捕获已停止') ? (
+                        <button
+                          type="button"
+                          data-testid="capture-policy-exit-on-unknown"
+                          onClick={async () => {
+                            try {
+                              const { invoke } = await import('@tauri-apps/api/tauri');
+                              await invoke('quit_app');
+                            } catch (error) {
+                              toast.error(language === 'zh' ? '无法安全退出 Omni-Context' : 'Unable to exit Omni-Context safely', String(error));
+                            }
+                          }}
+                          className="mt-3 inline-flex items-center gap-2 rounded-md border border-red-500/80 px-3 py-1.5 text-xs font-medium text-red-50 hover:bg-red-950/70"
+                        >
+                          {language === 'zh' ? '退出 Omni-Context' : 'Exit Omni-Context'}
+                        </button>
+                      ) : capturePolicyNeedsSafeRecovery ? (
+                        <button
+                          type="button"
+                          onClick={() => void onUpdateBehavior({ capturePaused: true })}
+                          disabled={capturePolicySyncPending}
+                          aria-busy={capturePolicySyncPending}
+                          data-testid="capture-policy-save-paused-recovery"
+                          className="mt-3 inline-flex items-center gap-2 rounded-md border border-amber-500/80 px-3 py-1.5 text-xs font-medium text-amber-50 hover:bg-amber-900/60 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {capturePolicySyncPending
+                            ? (language === 'zh' ? '正在保存并保持暂停…' : 'Saving with capture paused…')
+                            : (language === 'zh' ? '保存并保持暂停' : 'Save and keep capture paused')}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void retryCapturePolicySync()}
+                          disabled={retryingCapturePolicySync}
+                          aria-busy={retryingCapturePolicySync}
+                          className="mt-3 inline-flex items-center gap-2 rounded-md border border-amber-600/70 px-3 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-900/50 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 ${retryingCapturePolicySync ? 'animate-spin' : ''}`} aria-hidden="true" />
+                          {retryingCapturePolicySync
+                            ? (language === 'zh' ? '正在重试…' : 'Retrying…')
+                            : (language === 'zh' ? '重试同步' : 'Retry sync')}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1486,21 +1532,51 @@ export default function SettingsPanel({
                       <div className="text-white font-medium">{t('settings.privacy_pause')}</div>
                       <div className="text-xs text-gray-500">{t('settings.privacy_pause_desc')}</div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => onUpdateBehavior({ capturePaused: !settings.behavior.capturePaused })}
-                      disabled={capturePolicySyncPending}
-                      aria-pressed={settings.behavior.capturePaused}
-                      className={`w-14 h-7 rounded-full transition-colors relative disabled:cursor-wait disabled:opacity-60 ${
-                        settings.behavior.capturePaused ? 'bg-amber-600' : 'bg-gray-700'
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                          settings.behavior.capturePaused ? 'transform translate-x-7' : ''
+                    <div className="flex shrink-0 items-center gap-2">
+                      {(capturePolicyToggle.state === 'unknown' || capturePolicyToggle.state === 'revoked') && (
+                        <span
+                          role="status"
+                          data-testid={capturePolicyToggle.state === 'revoked' ? 'capture-policy-toggle-revoked' : 'capture-policy-toggle-unknown'}
+                          className="rounded-md border border-gray-500/70 bg-gray-800 px-2 py-1 text-xs text-gray-200"
+                        >
+                          {capturePolicyToggle.state === 'revoked'
+                            ? (language === 'zh' ? '捕获已撤销' : 'Capture revoked')
+                            : (language === 'zh' ? '状态未知' : 'Status unknown')}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        data-testid="capture-policy-toggle"
+                        onClick={() => {
+                          if (!capturePolicyToggle.disabled) {
+                            onUpdateBehavior({ capturePaused: !settings.behavior.capturePaused });
+                          }
+                        }}
+                        disabled={capturePolicyToggle.disabled}
+                        aria-label={capturePolicyToggle.state === 'unknown'
+                          ? (language === 'zh' ? '捕获状态未知' : 'Capture state unknown')
+                          : capturePolicyToggle.state === 'revoked'
+                            ? (language === 'zh' ? '捕获已撤销；隐私设置未保存' : 'Capture revoked; privacy setting was not saved')
+                            : `${language === 'zh' ? '暂停捕获' : 'Pause capture'}: ${capturePolicyToggle.state}`}
+                        {...('pressed' in capturePolicyToggle ? { 'aria-pressed': capturePolicyToggle.pressed } : {})}
+                        className={`relative h-7 w-14 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-80 ${
+                          capturePolicyToggle.state === 'unknown' || capturePolicyToggle.state === 'revoked'
+                            ? 'cursor-not-allowed border border-gray-500/70 bg-gray-700'
+                            : capturePolicyToggle.state === 'paused' ? 'bg-amber-600' : 'bg-gray-700'
                         }`}
-                      />
-                    </button>
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-semibold text-gray-700 transition-transform ${
+                            capturePolicyToggle.state === 'paused'
+                              ? 'translate-x-7'
+                            : capturePolicyToggle.state === 'unknown' || capturePolicyToggle.state === 'revoked' ? 'translate-x-[14px]' : ''
+                          }`}
+                        >
+                          {capturePolicyToggle.state === 'unknown' ? '?' : capturePolicyToggle.state === 'revoked' ? '!' : null}
+                        </span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* 敏感应用排除列表 */}
@@ -1511,7 +1587,7 @@ export default function SettingsPanel({
                     </div>
                     <textarea
                       className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 font-mono min-h-[180px] resize-y"
-                      disabled={capturePolicySyncPending}
+                      disabled={capturePolicyToggle.disabled}
                       value={captureBlocklistDraft}
                       onChange={(e) => {
                         setCaptureBlocklistDraft(e.target.value);
@@ -1528,7 +1604,7 @@ export default function SettingsPanel({
                       <div className="flex justify-end">
                         <button
                           type="button"
-                          disabled={capturePolicySyncPending || captureBlocklistInvalid}
+                          disabled={capturePolicyToggle.disabled || captureBlocklistInvalid}
                           onClick={async () => {
                             const saved = await onUpdateBehavior({ captureBlocklist: captureBlocklistLines });
                             if (saved) {

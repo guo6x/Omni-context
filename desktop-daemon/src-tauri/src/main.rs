@@ -154,12 +154,24 @@ async fn main() {
                         }
                     }
                     "pause_capture" => {
-                        // Deny new native captures immediately; the renderer will persist and
-                        // confirm the resulting pause/unpause state before capture resumes.
-                        capture_policy::mark_invalidated();
-                        if let Some(window) = app.get_window("main") {
-                            let _ = window.emit("toggle-capture-pause", ());
-                        }
+                        // Acknowledge the tray toggle only after the native action gate has
+                        // drained and the current policy is revoked. The UI must not display
+                        // a confirmed pause while a previously admitted capture is still active.
+                        let app_handle = (*app).clone();
+                        tauri::async_runtime::spawn(async move {
+                            match capture_policy::mark_invalidated().await {
+                                Ok(_) => {
+                                    if let Some(window) = app_handle.get_window("main") {
+                                        let _ = window.emit("toggle-capture-pause", ());
+                                    }
+                                }
+                                Err(error) => {
+                                    if let Some(window) = app_handle.get_window("main") {
+                                        let _ = window.emit("capture-policy-revocation-failed", error);
+                                    }
+                                }
+                            }
+                        });
                     }
                     "quit" => {
                         println!("[Omni-Context] 正在通过托盘菜单退出应用，清理 Brain Server...");

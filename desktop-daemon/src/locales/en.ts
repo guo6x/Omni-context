@@ -242,7 +242,7 @@ export default {
     privacy_pause_desc: 'When paused, precipitate shortcut and button triggers will not screenshot or read clipboard',
     privacy_blocklist_label: 'Sensitive App Exclusion List',
     privacy_blocklist_placeholder: 'One app name per line (substring match, case-insensitive)\nExample: KeePass\n1Password\nWeChat',
-    privacy_blocklist_hint: 'Precipitate skips when the foreground process name or window title contains a rule (case-insensitive substring match). Broad terms may block unrelated windows; up to 100 rules, 256 characters each.',
+    privacy_blocklist_hint: 'Capture is skipped only when the foreground app name or window title matches a rule (case-insensitive substring). The blocklist does not hide background windows/notifications from a full primary-display screenshot and cannot identify where clipboard text came from. Enable capture only when the current screen and clipboard are safe to process. Broad rules may block unrelated windows; up to 100 rules, 256 characters each.',
     privacy_blocklist_invalid: 'Use at most 100 rules, each no longer than 256 characters and without control characters.',
     privacy_blocklist_save: 'Save exclusion list',
     restart_tour_desc: 'Clear the onboarding complete flag and restart the 4-step setup wizard.',
