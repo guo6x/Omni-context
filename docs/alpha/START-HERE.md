@@ -2,6 +2,8 @@
 
 本指南面向个人用户：先用一份不敏感、自己熟悉的资料，验证 Omni 是否能帮你接着上次的事思考。它不是自主执行授权，也不是已核实事实的保证。
 
+当前候选尚未获准外部试用。先核对 [最新交付状态](2026-10-25-goal24-readiness.md)；只有明确 `ALPHA_USER_TRIAL_READY` 且邀请方批准后，才开始安装。
+
 Windows 安装、校验值、数据目录和卸载请先看
 [Windows Alpha 安装与隐私说明](INSTALL-WINDOWS.md)；试用步骤可直接照着
 [一页试用流程](ONE-PAGE-TRIAL.md) 做。试用后请使用[反馈表](TRIAL-FEEDBACK.md)，
