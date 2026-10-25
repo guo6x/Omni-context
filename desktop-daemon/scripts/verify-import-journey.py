@@ -300,7 +300,8 @@ def main() -> None:
                 question = page.get_by_test_id("ask-primary-input")
                 expect(question).to_be_focused(timeout=15000)
                 expect(question).to_have_value("请基于我已导入的记忆，概括其中的重要信息，并说明依据和不确定之处。")
-                expect(page.get_by_test_id("ask-first-empty-state")).to_be_visible(timeout=15000)
+                expect(page.get_by_test_id("ask-first-empty-state")).to_have_count(0)
+                expect(question).to_be_visible()
                 passed("import_refreshes_home_and_hands_off_without_auto_asking")
                 with page.expect_response(lambda r: r.url.endswith("/api/mcp/tool/graph_answer")) as answer_response:
                     page.get_by_role("button", name="发送", exact=True).click()

@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Retain layout-critical graph styles even when production tree-shaking
+ * omits a dependency's runtime style injection. */
+.omni-graph-view .scene-nav-info {
+  display: none;
+}
+.omni-graph-view .float-tooltip-kap {
+  position: absolute;
+  width: max-content;
+  max-width: min(360px, 100%);
+  pointer-events: none;
+  z-index: 15;
+}
+
 @layer base {
   body {
     @apply bg-background text-foreground;
