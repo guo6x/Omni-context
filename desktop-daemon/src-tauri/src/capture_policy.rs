@@ -406,6 +406,12 @@ impl PolicyRuntime {
         Fut: Future<Output = Result<T, String>>,
     {
         let _gate = self.gate.lock().await;
+        // A denied/paused policy does not need the current window's identity.
+        // Check it before evaluating the foreground callback so even denied
+        // entry points do not inspect unrelated applications' window titles.
+        if self.current()?.capture_paused {
+            return Err("capture is paused; hardware capture denied".to_string());
+        }
         let authorization = self.authorize_foreground(foreground())?;
         // Re-read the foreground immediately before invoking the capture
         // action.  A window can change between the initial authorization and
@@ -803,6 +809,33 @@ mod tests {
         .await;
         assert!(result.unwrap_err().contains("paused"));
         assert_eq!(calls.load(Ordering::SeqCst), 0);
+    }
+
+    #[tokio::test]
+    async fn unknown_or_paused_runtime_does_not_query_foreground_or_read_content() {
+        for paused in [None, Some(true)] {
+            let runtime = PolicyRuntime::default();
+            if let Some(paused) = paused {
+                confirm_policy(&runtime, paused, vec![]).await;
+            }
+            let foreground_calls = AtomicUsize::new(0);
+            let action_calls = AtomicUsize::new(0);
+            let result = runtime
+                .run_with_foreground(
+                    || {
+                        foreground_calls.fetch_add(1, Ordering::SeqCst);
+                        foreground("synthetic.exe", "Synthetic window")
+                    },
+                    || async {
+                        action_calls.fetch_add(1, Ordering::SeqCst);
+                        Ok(())
+                    },
+                )
+                .await;
+            assert!(result.is_err());
+            assert_eq!(foreground_calls.load(Ordering::SeqCst), 0);
+            assert_eq!(action_calls.load(Ordering::SeqCst), 0);
+        }
     }
 
     #[tokio::test]

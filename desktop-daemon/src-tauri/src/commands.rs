@@ -942,6 +942,12 @@ pub fn register_global_shortcuts(
     use tauri::{GlobalShortcutManager, Manager};
     let mut mgr = app.global_shortcut_manager();
     let _ = mgr.unregister_all();
+    if crate::low_resource_evaluation_enabled(std::env::var("OMNI_EVALUATION_MODE").ok().as_deref())
+    {
+        // Never claim another application's key during a controlled native
+        // observation. Normal desktop registration remains unchanged.
+        return Ok(());
+    }
     for s in shortcuts {
         let app2 = app.clone();
         let id = s.id.clone();

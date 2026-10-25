@@ -291,7 +291,7 @@ describe('CONTROLLED_FIXTURE: authenticated Desktop import HTTP path', () => {
     expect(terminal.importProgress).toEqual({ done: 2, total: 2, entities: 1 });
     expect(terminal.result.failed_conversations).toHaveLength(1);
     expect(terminal.result.failed_conversations[0].title).toBe(fixtureConversations[1].title);
-    expect(errorLog).toHaveBeenCalledWith('[Import] conversation processing failed:', 'Error');
+    expect(errorLog).toHaveBeenCalledWith('[Import] conversation processing failed:', 'GraphRAGExtractionError');
     const loggedErrors = errorLog.mock.calls.flat().join(' ');
     expect(loggedErrors).not.toContain(fixtureConversations[1].title);
     expect(loggedErrors).not.toContain('CONTROLLED_FIXTURE_EXTRACTION_FAILURE');

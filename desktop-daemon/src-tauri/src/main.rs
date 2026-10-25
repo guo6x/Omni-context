@@ -37,6 +37,24 @@ pub static CLOSE_TO_TRAY: AtomicBool = AtomicBool::new(true);
 // This flag prevents the monitor from racing an intentional full shutdown.
 pub static APP_SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 
+// Reuse the Brain's explicit low-resource evaluation opt-in. This only keeps
+// a controlled native observation from taking focus/global shortcuts; it does
+// not change capture policy, authorization, or ordinary desktop startup.
+pub(crate) fn low_resource_evaluation_enabled(value: Option<&str>) -> bool {
+    value == Some("1")
+}
+
+fn configure_evaluation_windows(
+    windows: &mut [tauri::utils::config::WindowConfig],
+    evaluation_mode: Option<&str>,
+) {
+    if low_resource_evaluation_enabled(evaluation_mode) {
+        for window in windows.iter_mut().filter(|window| window.label == "main") {
+            window.focus = false;
+        }
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ButtonEvent {
     Precipitate,
@@ -54,6 +72,13 @@ pub struct SystemStatus {
 #[tokio::main]
 async fn main() {
     println!("[Omni-Context] 启动桌面守护进程...");
+
+    let mut context = tauri::generate_context!();
+    let evaluation_mode = std::env::var("OMNI_EVALUATION_MODE").ok();
+    configure_evaluation_windows(
+        &mut context.config_mut().tauri.windows,
+        evaluation_mode.as_deref(),
+    );
 
     let show = CustomMenuItem::new("show_main".to_string(), "显示主窗口");
     let status_text = if brain_server::is_ready() {
@@ -479,11 +504,67 @@ async fn main() {
             hardware::unpair_hardware_device,
             hardware::forget_hardware_device,
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 
     // Tauri 退出后的清理（保险措施）
     println!("[Omni-Context] 应用退出，清理 Brain Server...");
     APP_SHUTTING_DOWN.store(true, Ordering::SeqCst);
     let _ = brain_server::stop();
+}
+
+#[cfg(test)]
+mod low_resource_evaluation_tests {
+    use super::{configure_evaluation_windows, low_resource_evaluation_enabled};
+    use tauri::utils::config::WindowConfig;
+
+    #[test]
+    fn requires_the_exact_evaluation_opt_in() {
+        assert!(low_resource_evaluation_enabled(Some("1")));
+        for value in [
+            None,
+            Some(""),
+            Some("0"),
+            Some("true"),
+            Some("01"),
+            Some(" 1"),
+        ] {
+            assert!(!low_resource_evaluation_enabled(value));
+        }
+    }
+
+    #[test]
+    fn ordinary_window_configuration_is_unchanged() {
+        for value in [None, Some("0"), Some("true")] {
+            let mut windows = vec![WindowConfig::default()];
+            let before = serde_json::to_value(&windows).unwrap();
+            configure_evaluation_windows(&mut windows, value);
+            assert_eq!(serde_json::to_value(&windows).unwrap(), before);
+        }
+    }
+
+    #[test]
+    fn evaluation_only_removes_main_startup_focus() {
+        let mut windows = vec![
+            WindowConfig {
+                label: "main".into(),
+                focus: true,
+                visible: true,
+                ..WindowConfig::default()
+            },
+            WindowConfig {
+                label: "hud".into(),
+                focus: false,
+                visible: false,
+                ..WindowConfig::default()
+            },
+        ];
+        let mut expected = windows.clone();
+        expected[0].focus = false;
+        configure_evaluation_windows(&mut windows, Some("1"));
+        assert_eq!(
+            serde_json::to_value(&windows).unwrap(),
+            serde_json::to_value(&expected).unwrap()
+        );
+    }
 }

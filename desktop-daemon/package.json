@@ -8,7 +8,9 @@
     "start": "next start",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
+    "pretauri:build": "node scripts/prepare-brain-bundle.cjs",
     "tauri:build": "tauri build -c src-tauri/tauri.prod.conf.json --bundles nsis",
+    "test:brain-bundle": "node --test scripts/prepare-brain-bundle.test.cjs",
     "e2e:installed:ci": "node e2e-installed.cjs",
     "verify:controlled": "node scripts/verify-controlled-files.mjs",
     "snapshot:controlled": "node scripts/verify-controlled-files.mjs --snapshot scripts/controlled-files.sha256.json"
