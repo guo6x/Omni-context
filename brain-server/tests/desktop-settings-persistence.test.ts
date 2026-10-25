@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { capturePolicySyncErrorFromSave, persistSettingsWhileLocked } from '../../desktop-daemon/src/lib/settings-persistence';
+import { CapturePolicySaveNotAppliedError, capturePolicySyncErrorFromSave, persistSettingsWhileLocked, withNativeCaptureRevocation } from '../../desktop-daemon/src/lib/settings-persistence';
 
 type FixtureSettings = {
   appearance: { theme: string };
@@ -64,6 +64,17 @@ function options(
 }
 
 describe('cross-window settings persistence', () => {
+  it('revokes native capture before a failing cross-window lock', async () => {
+    const events: string[] = [];
+    await expect(withNativeCaptureRevocation(
+      true,
+      true,
+      async () => { events.push('invalidate'); },
+      async () => { events.push('lock'); throw new Error('lock unavailable'); },
+    )).rejects.toBeInstanceOf(CapturePolicySaveNotAppliedError);
+    expect(events).toEqual(['invalidate', 'lock']);
+  });
+
   it('does not label an ordinary settings persistence error as a hardware privacy-policy failure', () => {
     const unrelatedStorageError = new Error('theme storage unavailable');
 
@@ -178,6 +189,82 @@ describe('cross-window settings persistence', () => {
     expect(publishes).toBe(0);
   });
 
+  it.each([
+    ['localStorage getItem throws', () => { throw new Error('storage unavailable'); }],
+    ['persisted settings are malformed', () => '{malformed json'],
+  ])('keeps capture revoked when %s during a privacy update', async (_case, readValue) => {
+    const events: string[] = [];
+    let writes = 0;
+    let publishes = 0;
+    const storage = {
+      getItem: () => {
+        events.push('read');
+        return readValue();
+      },
+      setItem: () => { writes += 1; },
+      removeItem: () => {},
+    };
+
+    const result = await withNativeCaptureRevocation(
+      true,
+      true,
+      async () => { events.push('invalidate'); },
+      () => persistSettingsWhileLocked({
+        ...options(
+          storage,
+          (current) => ({ ...current, behavior: { ...current.behavior, capturePaused: true } }),
+          async () => { publishes += 1; },
+        ),
+        nativePolicyAlreadyInvalidated: true,
+      }),
+    );
+
+    expect(events).toEqual(['invalidate', 'read']);
+    expect(result.ok).toBe(false);
+    expect(result.error).toBeInstanceOf(CapturePolicySaveNotAppliedError);
+    expect(capturePolicySyncErrorFromSave(true, result)).toBe(result.error);
+    expect(writes).toBe(0);
+    expect(publishes).toBe(0);
+  });
+
+  it('revokes capture and does not republish an older permissive policy when a privacy write fails', async () => {
+    const original: FixtureSettings = {
+      appearance: { theme: 'dark' },
+      behavior: { capturePaused: false, captureBlocklist: ['KeePass'] },
+    };
+    const storage = createStorage(original);
+    const events: string[] = [];
+    const failingStorage = {
+      ...storage,
+      setItem: () => { throw new Error('storage full'); },
+    };
+    const result = await withNativeCaptureRevocation(
+      true,
+      true,
+      async () => { events.push('invalidate'); },
+      () => persistSettingsWhileLocked({
+        ...options(
+          {
+            ...failingStorage,
+            setItem: () => {
+              events.push('persist');
+              throw new Error('storage full');
+            },
+          },
+          (current) => ({ ...current, behavior: { ...current.behavior, capturePaused: true } }),
+          async () => { events.push('publish'); },
+        ),
+        nativePolicyAlreadyInvalidated: true,
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.error).toBeInstanceOf(CapturePolicySaveNotAppliedError);
+    expect(JSON.parse(storage.getItem(storageKey) as string)).toEqual(original);
+    expect(events).toEqual(['invalidate', 'persist']);
+    expect(capturePolicySyncErrorFromSave(true, result)).toBe(result.error);
+  });
+
   it('keeps the requested privacy setting and leaves capture invalidated when publication fails', async () => {
     const storage = createStorage({
       appearance: { theme: 'dark' },
@@ -200,5 +287,70 @@ describe('cross-window settings persistence', () => {
     expect(JSON.parse(storage.getItem(storageKey) as string).behavior.capturePaused).toBe(false);
     expect(publishes).toBe(1);
     expect(invalidations).toBe(2);
+  });
+
+  it('revokes native capture again when the final read fails after policy publication', async () => {
+    const original: FixtureSettings = {
+      appearance: { theme: 'dark' },
+      behavior: { capturePaused: false, captureBlocklist: ['KeePass'] },
+    };
+    const backingStorage = createStorage(original);
+    const events: string[] = [];
+    let reads = 0;
+    let revocations = 0;
+    let publications = 0;
+    const storage = {
+      ...backingStorage,
+      getItem: (key: string) => {
+        reads += 1;
+        events.push(`read-${reads}`);
+        if (reads === 3) throw new Error('final settings read failed');
+        return backingStorage.getItem(key);
+      },
+      setItem: (key: string, value: string) => {
+        events.push('persist');
+        backingStorage.setItem(key, value);
+      },
+    };
+    const invalidateCapturePolicy = async () => {
+      revocations += 1;
+      events.push(`invalidate-${revocations}`);
+    };
+
+    const result = await withNativeCaptureRevocation(
+      true,
+      true,
+      invalidateCapturePolicy,
+      () => persistSettingsWhileLocked({
+        ...options(
+          storage,
+          (current) => ({ ...current, behavior: { ...current.behavior, capturePaused: true } }),
+          async () => {
+            publications += 1;
+            events.push('publish');
+          },
+          invalidateCapturePolicy,
+        ),
+        nativePolicyAlreadyInvalidated: true,
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.settings).toBeNull();
+    expect(result.error).toBeInstanceOf(CapturePolicySaveNotAppliedError);
+    expect(capturePolicySyncErrorFromSave(true, result)).toBe(result.error);
+    expect(JSON.parse(backingStorage.getItem(storageKey) as string).behavior.capturePaused).toBe(true);
+    expect(reads).toBe(3);
+    expect(publications).toBe(1);
+    expect(revocations).toBe(2);
+    expect(events).toEqual([
+      'invalidate-1',
+      'read-1',
+      'persist',
+      'publish',
+      'read-2',
+      'read-3',
+      'invalidate-2',
+    ]);
   });
 });

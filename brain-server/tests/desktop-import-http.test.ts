@@ -284,15 +284,21 @@ describe('CONTROLLED_FIXTURE: authenticated Desktop import HTTP path', () => {
     expectImportSource(added[0], terminal.jobId);
   });
 
-  it('derives genuine partial status and persisted failure records from one rejected extraction', async () => {
+  it('keeps rejected import recovery detail locally while redacting it from logs', async () => {
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
     const terminal = await importConversations(fixtureConversations);
     expect(terminal.status).toBe('partial');
     expect(terminal.importProgress).toEqual({ done: 2, total: 2, entities: 1 });
     expect(terminal.result.failed_conversations).toHaveLength(1);
     expect(terminal.result.failed_conversations[0].title).toBe(fixtureConversations[1].title);
+    expect(errorLog).toHaveBeenCalledWith('[Import] conversation processing failed:', 'GraphRAGExtractionError');
+    const loggedErrors = errorLog.mock.calls.flat().join(' ');
+    expect(loggedErrors).not.toContain(fixtureConversations[1].title);
+    expect(loggedErrors).not.toContain('CONTROLLED_FIXTURE_EXTRACTION_FAILURE');
     const failures = await fixture!.db.getFailedTasks(terminal.jobId);
     expect(failures).toHaveLength(1);
     expect(failures[0]).toMatchObject({ task_type: 'chat_import', status: 'pending', stage: 'extracting' });
+    expect(failures[0].conversation_title).toBe(fixtureConversations[1].title);
     expect(failures[0].payload_snapshot).toContain('[fixture-fail]');
     const failureReadback = await request('GET', `/api/import/chat/failed?batchId=${terminal.jobId}`);
     expect(failureReadback.status).toBe(200);

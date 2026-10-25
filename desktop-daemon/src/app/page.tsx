@@ -19,7 +19,7 @@ import { Zap, Settings, Minimize2, HelpCircle, Bell, X, Upload, AlertCircle, Spa
 import { LogoMark } from "@/components/BrandMark";
 import { Entity, Relationship } from "@shared/types";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useSettings, syncLlmToBrainServer } from "@/hooks/useSettings";
+import { useCapturePolicySyncStatus, useSettings, syncLlmToBrainServer } from "@/hooks/useSettings";
 import { useOmniContext } from "@/hooks/useOmniContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/useToast";
@@ -29,6 +29,7 @@ import WorkspaceNavigation, { WorkspaceSection } from "@/components/WorkspaceNav
 import { useConfirm } from "@/components/ConfirmDialog";
 import { apiFetch } from '@/lib/api-client';
 import { resolveNodeCap } from '@/lib/device';
+import { isCapturePolicyRevokedError } from '@/lib/capture-policy-presentation';
 
 function activeElementForReturn(): HTMLElement | null {
   if (typeof document === 'undefined') return null;
@@ -184,9 +185,57 @@ function MainApp() {
   const { confirm, dialog } = useConfirm();
 
   const { settings, showSettings, setShowSettings, updateShortcut, resetShortcuts, updateAppearance, updateBehavior, updateLlmProvider } = useSettings();
+  // The settings panel also subscribes to this status, but a failed tray toggle
+  // must remain visible after the panel is closed. Keep the fail-closed state in
+  // the main window with a direct subscription and expose an explicit retry.
+  const {
+    error: capturePolicySyncError,
+    pending: capturePolicySyncPending,
+    retry: retryCapturePolicySync,
+    retrying: retryingCapturePolicySync,
+  } = useCapturePolicySyncStatus();
+  const capturePolicyNeedsSafeRecovery = isCapturePolicyRevokedError(capturePolicySyncError);
   const { status, hasConnectedOnce, addLog, triggerPrecipitate, triggerDecision, triggerReset, refreshTrigger } = useOmniContext();
   const { t, language, setLanguage } = useTranslation();
   const toast = useToast();
+  const policySyncHudPreviousRef = useRef<{ status: typeof hudStatus; message: string } | null>(null);
+
+  // Keep an already-open floating HUD consistent with the main-window
+  // fail-closed state. The main banner remains the durable recovery surface;
+  // this broadcast only updates HUD content and never forces a window to show.
+  useEffect(() => {
+    if (capturePolicySyncError) {
+      if (!policySyncHudPreviousRef.current) {
+        policySyncHudPreviousRef.current = { status: hudStatus, message: hudMessage };
+      }
+      const revocationUnconfirmed = capturePolicySyncError.includes('无法确认原生捕获已停止');
+      const message = revocationUnconfirmed
+        ? language === 'zh'
+          ? '无法确认原生捕获已停止；请立即停止捕获并退出应用。'
+          : 'Native capture may still be active. Stop capture and exit the app now.'
+        : capturePolicyNeedsSafeRecovery
+          ? language === 'zh'
+            ? '本机捕获保持撤销；此前的隐私设置未能保存或确认。请先保存“保持暂停”。'
+            : 'Native capture remains revoked because the privacy change was not saved or confirmed. Save with capture paused first.'
+        : language === 'zh'
+          ? '捕获保持拒绝，直到隐私策略同步成功。'
+          : 'Capture remains blocked until the privacy policy synchronization succeeds.';
+      setHudStatus('error');
+      setHudMessage(message);
+      void pushFloatingHUD('error', message);
+      return;
+    }
+
+    // A successful retry clears the warning. Restore whatever the HUD was
+    // showing before the policy failure instead of leaving a stale error.
+    const previous = policySyncHudPreviousRef.current;
+    if (!previous) return;
+    policySyncHudPreviousRef.current = null;
+    setHudStatus(previous.status);
+    setHudMessage(previous.message);
+    void pushFloatingHUD(previous.status, previous.message || t('hud.welcome'));
+  }, [capturePolicySyncError, hudMessage, hudStatus, language, t]);
+
   const [settingsTab, setSettingsTab] = useState<'shortcuts' | 'appearance' | 'behavior' | 'llm' | 'data' | 'mcp' | 'diagnostics' | 'privacy' | 'about'>('shortcuts');
   const [showWizardForce, setShowWizardForce] = useState(false);
   // The onboarding wizard owns the import state. Keep a synchronous mirror so
@@ -940,6 +989,93 @@ function MainApp() {
             {t('onboarding.warning_banner')}
           </div>
         </button>
+      )}
+
+      {/* A native-policy sync failure can be triggered from the tray while this
+          window is hidden. Keep the safe-deny state visible in the main window
+          until an explicit retry confirms the native policy. */}
+      {capturePolicySyncPending && (
+        <div role="status" aria-live="polite" className="border-b border-cyan-700/50 bg-cyan-950/30 px-4 py-2">
+          <div className="flex items-center gap-3 text-xs text-cyan-100">
+            <RefreshCw className="h-4 w-4 shrink-0 animate-spin text-cyan-300" aria-hidden="true" />
+            <span className="min-w-0 flex-1">
+              {language === 'zh'
+                ? '正在由本机确认隐私策略；暂停或恢复尚未确认，已开始的捕获/提交可能仍在收尾。请等待状态确认后再判断。'
+                : 'The native privacy policy is being confirmed. Pause/resume is not confirmed yet, and an already-started capture or submission may still be finishing. Wait for confirmation before assuming its state.'}
+            </span>
+          </div>
+        </div>
+      )}
+      {capturePolicySyncError && (
+        <div
+          data-testid="capture-policy-sync-alert"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          className="border-b border-amber-700/70 bg-amber-950/50 px-4 py-3"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <AlertCircle className="h-5 w-5 shrink-0 text-amber-400" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-amber-100">
+                {language === 'zh'
+                  ? '隐私策略未能同步到本机。'
+                  : 'The privacy policy could not be synchronized to this device.'}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-amber-200/90">
+                        {capturePolicySyncError.includes('无法确认原生捕获已停止')
+                          ? language === 'zh'
+                            ? '无法确认原生捕获已停止；请立即停止捕获并退出应用。'
+                            : 'Native capture may still be active. Stop capture and exit the app now.'
+                          : capturePolicyNeedsSafeRecovery
+                            ? language === 'zh'
+                              ? '本机捕获保持撤销；此前的隐私设置未能保存或确认。请先保存“保持暂停”，再单独选择是否恢复。'
+                              : 'Native capture remains revoked because the privacy change was not saved or confirmed. Save with capture paused before separately choosing whether to resume.'
+                          : language === 'zh'
+                            ? '捕获保持拒绝，直到隐私策略同步成功。'
+                            : 'Capture remains blocked until the privacy policy synchronization succeeds.'}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {capturePolicySyncError.includes('无法确认原生捕获已停止') ? (
+                <button
+                  type="button"
+                  data-testid="capture-policy-sync-exit"
+                  onClick={async () => {
+                    try {
+                      await invoke('quit_app');
+                    } catch (error) {
+                      toast.error(language === 'zh' ? '无法安全退出 Omni-Context' : 'Unable to exit Omni-Context safely', String(error));
+                    }
+                  }}
+                  className="rounded-md border border-red-500/80 px-3 py-1.5 text-xs font-medium text-red-50 hover:bg-red-950/70"
+                >
+                  {language === 'zh' ? '退出 Omni-Context' : 'Exit Omni-Context'}
+                </button>
+              ) : !capturePolicyNeedsSafeRecovery && <button
+                type="button"
+                onClick={() => void retryCapturePolicySync()}
+                disabled={retryingCapturePolicySync || capturePolicySyncPending}
+                aria-busy={retryingCapturePolicySync}
+                data-testid="capture-policy-sync-retry"
+                className="inline-flex items-center gap-2 rounded-md border border-amber-500/80 px-3 py-1.5 text-xs font-medium text-amber-100 transition-colors hover:bg-amber-900/60 disabled:cursor-wait disabled:opacity-60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${retryingCapturePolicySync ? 'animate-spin' : ''}`} aria-hidden="true" />
+                {retryingCapturePolicySync
+                  ? (language === 'zh' ? '正在重试…' : 'Retrying…')
+                  : (language === 'zh' ? '重试同步' : 'Retry sync')}
+              </button>}
+              {!capturePolicySyncError.includes('无法确认原生捕获已停止') && <button
+                type="button"
+                onClick={() => { setSettingsTab('privacy'); setShowSettings(true); }}
+                data-testid="capture-policy-sync-open-settings"
+                className="rounded-md px-2 py-1.5 text-xs text-amber-200/90 transition-colors hover:bg-amber-900/40 hover:text-amber-100"
+              >
+                {language === 'zh' ? '打开隐私设置' : 'Open privacy settings'}
+              </button>}
+            </div>
+          </div>
+        </div>
       )}
 
       <WorkspaceNavigation activeSection={workspaceSection} onNavigate={navigateWorkspace} />

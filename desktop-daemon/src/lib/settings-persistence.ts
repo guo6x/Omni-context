@@ -1,5 +1,12 @@
 import { CapturePolicySnapshot, hasCapturePolicyChanged } from './capture-policy-sync';
 
+export class CapturePolicySaveNotAppliedError extends Error {
+  constructor(cause: unknown) {
+    super(`Capture-policy change was not applied: ${String(cause)}`);
+    this.name = 'CapturePolicySaveNotAppliedError';
+  }
+}
+
 export interface SettingsStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
@@ -13,8 +20,28 @@ export interface PersistSettingsOptions<T> {
   currentFromStorage: (persisted: string | null) => T;
   update: (current: T) => T;
   isNativeRuntime: boolean;
+  /** The caller has already revoked native capture before entering its lock. */
+  nativePolicyAlreadyInvalidated?: boolean;
   invalidateCapturePolicy: () => Promise<void>;
   syncCapturePolicy: () => Promise<void>;
+}
+
+/** Revoke first so a failed cross-window lock cannot leave stale capture access active. */
+export async function withNativeCaptureRevocation<T>(
+  isCapturePolicyUpdate: boolean,
+  isNativeRuntime: boolean,
+  invalidateCapturePolicy: () => Promise<void>,
+  operation: () => Promise<T>,
+): Promise<T> {
+  if (isCapturePolicyUpdate && isNativeRuntime) await invalidateCapturePolicy();
+  try {
+    return await operation();
+  } catch (error) {
+    if (isCapturePolicyUpdate && isNativeRuntime) {
+      throw new CapturePolicySaveNotAppliedError(error);
+    }
+    throw error;
+  }
 }
 
 export type PersistSettingsResult<T> =
@@ -51,13 +78,21 @@ export async function persistSettingsWhileLocked<T extends { behavior: { capture
     next = update(current);
     nextRaw = JSON.stringify(next);
   } catch (error) {
-    return { ok: false, settings: null, error };
+    return {
+      ok: false,
+      settings: null,
+      error: options.nativePolicyAlreadyInvalidated
+        ? new CapturePolicySaveNotAppliedError(error)
+        : error,
+    };
   }
 
-  const policyChanged = isNativeRuntime
-    && hasCapturePolicyChanged(previousRaw, nextRaw, options.defaults);
+  const policyChanged = isNativeRuntime && (
+    options.nativePolicyAlreadyInvalidated === true
+    || hasCapturePolicyChanged(previousRaw, nextRaw, options.defaults)
+  );
 
-  if (policyChanged) {
+  if (policyChanged && !options.nativePolicyAlreadyInvalidated) {
     try {
       // The native command marks capture denied immediately, then waits for
       // any already-authorized local capture action to finish before returning.
@@ -70,20 +105,13 @@ export async function persistSettingsWhileLocked<T extends { behavior: { capture
   try {
     storage.setItem(storageKey, nextRaw);
   } catch (error) {
-    let recoveryError: unknown;
-    if (policyChanged) {
-      try {
-        await syncCapturePolicy();
-      } catch (restoreError) {
-        recoveryError = restoreError;
-        try {
-          await invalidateCapturePolicy();
-        } catch {
-          // Keep the first failed recovery detail; callers already show the sync warning.
-        }
-      }
-    }
-    return { ok: false, settings: current, error, ...(recoveryError ? { recoveryError } : {}) };
+    // Do not republish the previous (possibly permissive) snapshot after a
+    // failed privacy write. The explicit retry path can reconcile later.
+    return {
+      ok: false,
+      settings: current,
+      error: policyChanged ? new CapturePolicySaveNotAppliedError(error) : error,
+    };
   }
 
   if (!policyChanged) {
@@ -125,6 +153,22 @@ export async function persistSettingsWhileLocked<T extends { behavior: { capture
     }
     return { ok: true, settings: currentFromStorage(storage.getItem(storageKey)) };
   } catch (error) {
+    if (policyChanged) {
+      try {
+        // A post-publication read/reconciliation failure means the renderer
+        // cannot safely expose the effective preference. Revoke again rather
+        // than leaving a newly permissive native snapshot active behind stale
+        // UI state.
+        await invalidateCapturePolicy();
+        return {
+          ok: false,
+          settings: null,
+          error: new CapturePolicySaveNotAppliedError(error),
+        };
+      } catch (recoveryError) {
+        return { ok: false, settings: null, error, recoveryError };
+      }
+    }
     return { ok: false, settings: null, error };
   }
 }

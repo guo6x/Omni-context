@@ -260,7 +260,11 @@ export function parseTemporalQuery(query: string): ParsedTemporalQuery {
   }
 
   // No temporal keyword found — log so silent defaults are visible.
-  console.warn(`[temporal] parseTemporalQuery: no temporal keyword in query "${query.slice(0, 80)}", defaulting to current mode`);
+  // Query text can contain private user context. Keep diagnostics useful
+  // without copying the query into logs or support bundles.
+  console.warn(
+    `[temporal] parseTemporalQuery: no temporal keyword (query_length=${query.length}), defaulting to current mode`,
+  );
   return { mode: 'current' };
 }
 

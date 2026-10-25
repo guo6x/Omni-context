@@ -67,9 +67,6 @@
       "window": {
         "all": true
       },
-      "clipboard": {
-        "all": true
-      },
       "globalShortcut": {
         "all": true
       }

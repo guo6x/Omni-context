@@ -63,7 +63,7 @@ Agent 已经会行动——写代码、开 issue、跑命令。但**记忆不是
 
 ### A. 当前用户可直接使用（CURRENTLY_VERIFIED）
 
-- 本地持久记忆——你硬盘上的 SQLite，无账号、无服务器
+- 本地持久记忆——默认保存在你硬盘上的 SQLite；不需要账号
 - 由实体、关系与核心原则构成的知识图谱
 - 混合检索（全文 + 向量 + 图谱遍历）
 - 时间 / 来源感知的上下文
@@ -139,7 +139,9 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
 ## 它有什么不一样
 
 - **不是笔记应用** —— 它是决策控制层。工具不需要各自的记忆系统，共享同一份证据底座与同一个权威核心。
-- **不是云端** —— 数据存在你硬盘上的 SQLite 里。无需账号、无服务器，数据永不离开你的机器。
+- **本地优先，但网络边界明确** —— 记忆数据库默认保存在你的设备上。若配置远程/云端模型，
+  为完成对应操作而需要的请求（可能包含相关资料片段）会发送给该提供方，并可能产生其服务费用。
+  Omni 不会自动上传整个数据库。
 - **不绑定单一 AI** —— 目前基于 MCP；MCP 客户端共享同一份记忆。MCP 是接口面，不是产品。
 - **主动而非被动** —— 智能体会主动扫描你的图谱，找出你已经遗忘的关联并主动浮现。
 - **会质疑你的认知** —— 盲区检测告诉你漏了什么，反共识洞见挑战你的已有假设。
@@ -196,7 +198,11 @@ CP8 全量测试证据：Brain 1279 passed / 0 failed；Rust 206 passed / 0 fail
 
 ### Windows
 
-从 [Releases](https://github.com/guo6x/Omni-context/releases/latest) 下载 `Omni-Context-Setup-x64.msi`，双击即可。完全离线 —— 已内置 Node.js 运行时和嵌入模型。
+Windows Alpha 使用 NSIS 安装器（`Omni-Context_<version>_x64-setup.exe`）。
+当前没有批准外部试用的安装包；不要把 `Releases/latest` 中的文件当作 Alpha 候选版。
+未来只有在单独的试用发布记录给出精确 SHA-256 和来源 commit 后才可安装。
+未签名候选包可能触发 SmartScreen“未知发布者”提示；不要关闭 Defender 或 SmartScreen。
+数据目录、备份和卸载步骤见[Windows Alpha 安装与隐私说明](docs/alpha/INSTALL-WINDOWS.md)。
 
 ### macOS / Linux
 

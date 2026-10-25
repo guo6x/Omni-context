@@ -852,7 +852,8 @@ async function runImportPipeline(
           // Conflict resolution failure is a real failure — record it, do not silently continue.
           const errMsg = err instanceof Error ? err.message : String(err);
           conflictFailures.push({ title: conv.title, error: errMsg });
-          console.error(`[Import] conflict resolution failed for "${conv.title}":`, errMsg);
+          const errorKind = err instanceof Error ? err.name : typeof err;
+          console.error('[Import] conflict resolution failed:', errorKind);
           // Task 5: Persist to failed_tasks so it survives jobStore TTL and can be retried.
           try {
             await ctx.db.recordFailedTask({
@@ -899,7 +900,8 @@ async function runImportPipeline(
       } catch (err: any) {
         const errMsg = err?.message || String(err);
         failedConversations.push({ title: conv.title, error: errMsg });
-        console.error(`[Import] 跳过一段对话 "${conv.title}":`, errMsg);
+        const errorKind = err instanceof Error ? err.name : typeof err;
+        console.error('[Import] conversation processing failed:', errorKind);
         // Task 5: Persist to failed_tasks so it survives jobStore TTL and can be retried.
         try {
           await ctx.db.recordFailedTask({
