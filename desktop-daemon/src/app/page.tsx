@@ -906,18 +906,18 @@ function MainApp() {
                     {t('nav.decision_log')}
                   </button>
                   <button
-                    onClick={() => { setShowControlCenter(true); setShowMoreMenu(false); }}
+                    onClick={() => { navigateWorkspace("advanced"); setShowMoreMenu(false); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                   >
                     <Scale className="w-4 h-4 text-emerald-400" />
-                    Control Center
+                    {t('nav.action_approvals')}
                   </button>
                   <button
-                    onClick={() => { openMemoryManager(); setShowMoreMenu(false); }}
+                    onClick={() => { navigateWorkspace("library"); setShowMoreMenu(false); }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                   >
                     <Brain className="w-4 h-4 text-cyan-400" />
-                    记忆管理
+                    {t('nav.library')}
                   </button>
                   <button
                     onClick={() => { setShowShortcuts(!showShortcuts); setShowMoreMenu(false); }}

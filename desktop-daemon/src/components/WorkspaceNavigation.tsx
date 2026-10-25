@@ -30,6 +30,7 @@ export default function WorkspaceNavigation({ activeSection, onNavigate }: Works
             type="button"
             data-testid={"workspace-nav-" + id}
             aria-current={active ? "page" : undefined}
+            title={id === "advanced" ? t("nav.advanced_hint") : undefined}
             onClick={() => onNavigate(id)}
             className={"flex min-h-10 shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 " + (active ? "border-cyan-400/25 bg-cyan-400/[0.08] text-cyan-200" : "border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.035] hover:text-gray-100")}
           >

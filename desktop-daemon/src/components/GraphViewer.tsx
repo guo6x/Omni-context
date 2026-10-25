@@ -261,6 +261,12 @@ export default function GraphViewer3D({
     return currentTheme.graphNodeColors[themeKey] || currentTheme.fgMuted;
   }, [currentTheme]);
 
+  const nodeTypeLabel = useCallback((type: string): string => {
+    const key = `graph.node_types.${type}`;
+    const label = t(key);
+    return typeof label !== 'string' || label === key ? type.replace(/_/g, ' ') : label;
+  }, [t]);
+
   function relativeTime(iso: string): string {
     if (!iso) return '';
     const then = new Date(iso).getTime();
@@ -1997,7 +2003,7 @@ export default function GraphViewer3D({
     const safeDesc = node.description
       ? String(node.description).replace(/</g, "&lt;").slice(0, 300)
       : "";
-    const type = String(node.type || "").replace(/_/g, " ");
+    const type = nodeTypeLabel(String(node.type || "")).replace(/</g, "&lt;");
     const last = node.lastAccessed ? relativeTime(node.lastAccessed) : "";
     return `
       <div style="
@@ -2017,14 +2023,14 @@ export default function GraphViewer3D({
         ${safeDesc ? `<div style="color:#cbd5e1;font-size:11px;margin-top:6px;line-height:1.4;">${safeDesc}</div>` : ""}
       </div>
     `;
-  }, [t, relativeTime]);
+  }, [t, relativeTime, nodeTypeLabel]);
 
   // 答案态高亮跟随"最新一轮"的命中子图
   const gLastTurn = gAnswer && gAnswer.turns.length > 0 ? gAnswer.turns[gAnswer.turns.length - 1] : null;
   const gCited = gLastTurn?.citedEntityIds ?? [];
 
   return (
-    <div className="relative flex h-full">
+    <div className="omni-graph-view relative flex h-full">
       {/* 图谱主区域 */}
       <div className="relative min-w-0 flex-1" ref={containerRef}>
         {/* Keep the command bar and its input mounted while the optional graph engine loads. */}
@@ -2097,7 +2103,7 @@ export default function GraphViewer3D({
                     >
                       <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: getThemeColor(m.type) }} />
                       <span className="flex-1 truncate">{m.name}</span>
-                      <span className="shrink-0 text-[10px] text-gray-600">{m.type.replace(/_/g, ' ')}</span>
+                      <span className="shrink-0 text-[10px] text-gray-600">{nodeTypeLabel(m.type)}</span>
                     </button>
                   ))}
                   <div className="mt-1 border-t border-white/5 px-2 pt-1.5 text-[11px] text-gray-500">{t('cmd.enter_hint')}</div>
@@ -2169,7 +2175,7 @@ export default function GraphViewer3D({
             <option value="all">{t('graph.all_types')}</option>
             {availableTypes.map((type) => (
               <option key={type} value={type}>
-                {type.replace(/_/g, " ")}
+                {nodeTypeLabel(type)}
               </option>
             ))}
           </select>
@@ -2259,42 +2265,6 @@ export default function GraphViewer3D({
           </div>
         </div>
 
-        {!gAnswer && !selectedNode && entities.length > 0 && (
-          <section
-            data-testid="ask-first-empty-state"
-            aria-labelledby="ask-first-title"
-            className="pointer-events-none absolute inset-x-4 top-[56%] z-[5] flex -translate-y-1/2 justify-center"
-          >
-            <div className="pointer-events-none w-full max-w-2xl rounded-2xl border border-cyan-400/15 bg-gray-950/90 p-5 shadow-2xl shadow-black/40 backdrop-blur-md sm:p-7">
-              <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-cyan-300/80">
-                <Brain aria-hidden="true" className="h-4 w-4" />
-                <span>{t("nav.ask")}</span>
-              </div>
-              <h1 id="ask-first-title" className="text-xl font-semibold tracking-tight text-gray-100 sm:text-2xl">{t("ask.empty_title")}</h1>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-gray-400">{t("ask.empty_hint")}</p>
-              <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label={t("ask.title")}>
-                {["ask.example_1", "ask.example_2", "ask.example_3"].map((key) => {
-                  const prompt = t(key);
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      data-testid="ask-first-prompt"
-                      onClick={() => {
-                        setCmdInput(prompt);
-                        cmdInputRef.current?.focus();
-                      }}
-                      className="pointer-events-auto rounded-full border border-white/10 bg-white/[0.035] px-3.5 py-2 text-left text-xs text-gray-300 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/[0.06] hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-                    >
-                      {prompt}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* 时间轴面板：在控制栏正下方，随其换行高度自然下移 */}
         {showTimeSlider && timeBounds && (
           <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-gray-950/95 px-4 py-2.5 shadow-2xl shadow-black/30">
@@ -2378,7 +2348,7 @@ export default function GraphViewer3D({
                           style={{ backgroundColor: color }}
                         />
                         <span className="text-[11px] text-gray-300 truncate flex-1">
-                          {type.replace(/_/g, ' ')}
+                          {nodeTypeLabel(type)}
                         </span>
                         <span className="text-[10px] text-gray-500 font-mono">{count}</span>
                       </button>
@@ -2511,6 +2481,8 @@ export default function GraphViewer3D({
             })}
             // 3D 模式配置
             {...(is3D && {
+              // Localized camera help already exists in the graph overview.
+              showNavInfo: false,
               nodeThreeObjectExtend: true,
               nodeThreeObject,
             })}
@@ -2622,7 +2594,7 @@ export default function GraphViewer3D({
                         style={{ backgroundColor: getThemeColor(e.type) }}
                       />
                       <span className="text-xs text-gray-200 truncate flex-1">{e.name}</span>
-                      <span className="text-[10px] text-gray-500 shrink-0">{e.type.replace(/_/g, " ")}</span>
+                      <span className="text-[10px] text-gray-500 shrink-0">{nodeTypeLabel(e.type)}</span>
                     </button>
                   </li>
                 ))}
@@ -2717,7 +2689,7 @@ export default function GraphViewer3D({
                 >
                   {TYPE_ICONS[selectedNode.type] || <Info className="w-4 h-4" />}
                 </div>
-                <span style={{ color: getThemeColor(selectedNode.type) }}>{selectedNode.type.replace(/_/g, " ")}</span>
+                <span style={{ color: getThemeColor(selectedNode.type) }}>{nodeTypeLabel(selectedNode.type)}</span>
               </div>
             </div>
 
@@ -3163,7 +3135,7 @@ export default function GraphViewer3D({
                     >
                       <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                        <span className="min-w-0 flex-1 truncate text-xs text-gray-300">{type.replace(/_/g, ' ')}</span>
+                        <span className="min-w-0 flex-1 truncate text-xs text-gray-300">{nodeTypeLabel(type)}</span>
                         <span className="font-mono text-[10px] text-gray-500">{count}</span>
                       </div>
                       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
@@ -3197,7 +3169,7 @@ export default function GraphViewer3D({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs text-gray-200 group-hover:text-cyan-200">{entity.name}</span>
-                      <span className="block truncate text-[10px] text-gray-500">{entity.type.replace(/_/g, ' ')} · {connectionCounts[entity.id] || 0} {t('graph.connections_label_html')}</span>
+                      <span className="block truncate text-[10px] text-gray-500">{nodeTypeLabel(entity.type)} · {connectionCounts[entity.id] || 0} {t('graph.connections_label_html')}</span>
                     </span>
                   </button>
                 ))}
@@ -3325,7 +3297,7 @@ export default function GraphViewer3D({
               )}
               {sourcePreview.status === 'ready' && sourcePreview.entity && (
                 <div className="space-y-4 text-sm">
-                  <div><p className="text-xs text-gray-500">{t('graph.type')}</p><p className="mt-1 break-words">{sourcePreview.entity.type}</p></div>
+                  <div><p className="text-xs text-gray-500">{t('graph.type')}</p><p className="mt-1 break-words">{nodeTypeLabel(sourcePreview.entity.type)}</p></div>
                   <div><p className="text-xs text-gray-500">{t('graph.description')}</p><p className="mt-1 whitespace-pre-wrap break-words text-gray-200">{sourcePreview.entity.description || (language === 'zh' ? '这条记忆没有描述。' : 'This memory has no description.')}</p></div>
                   {sourcePreview.entity.source_file && <div><p className="text-xs text-gray-500">{t('graph.source_file')}</p><p className="mt-1 break-all font-mono text-xs">{sourcePreview.entity.source_file}</p></div>}
                   {['source', 'platform', 'title', 'import_batch_id', 'document_id', 'original_timestamp'].map((field) => {
